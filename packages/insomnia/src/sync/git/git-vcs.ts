@@ -124,8 +124,6 @@ export class GitVCS {
   // @ts-expect-error -- TSCONVERSION not initialized with required properties
   _baseOpts: BaseOpts = gitCallbacks();
 
-  initializedRepoId = '';
-
   async init({ directory, fs, gitDirectory, gitCredentials, uri = '', repoId }: InitOptions) {
     this._baseOpts = {
       ...this._baseOpts,
