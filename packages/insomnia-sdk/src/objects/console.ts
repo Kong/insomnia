@@ -6,13 +6,6 @@ export interface Row {
     timestamp: number;
 }
 
-const escapeMap: Record<string, string> = {
-    '\\f': '\f',
-    '\\n': '\n',
-    '\\t': '\t',
-    '\\v': '\v',
-};
-
 class Console {
     rows: Row[] = [];
 
@@ -23,14 +16,7 @@ class Console {
         try {
             const content = values.map(
                 (value: any) => {
-                    const valueStr = JSON.stringify(value, null, 2);
-
-                    let escapedValueStr = valueStr;
-                    Object.keys(escapeMap).forEach(toEscape => {
-                        escapedValueStr = escapedValueStr.replace(toEscape, escapeMap[toEscape]);
-                    });
-
-                    return escapedValueStr;
+                    return typeof value === 'string' ? value : JSON.stringify(value, null, 2);
                 }
             ).join(' ');
 
