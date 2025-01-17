@@ -81,7 +81,24 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
             reflectionApi: activeRequest.reflectionApi,
           },
         });
-      const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
+
+      const workspaceClientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+      const clientCertificate = workspaceClientCertificates.find(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), rendered.url, false));
+      const caCertificate = (await models.caCertificate.findByParentId(workspaceId));
+      const caCertificatePath = caCertificate && !caCertificate.disabled ? caCertificate.path : undefined;
+      const clientCert = clientCertificate?.cert ? await readFile(clientCertificate?.cert, 'utf8') : undefined;
+      const clientKey = clientCertificate?.key ? await readFile(clientCertificate?.key, 'utf8') : undefined;
+
+      const renderedWithCertificates = {
+        ...rendered,
+        rejectUnauthorized: settings.validateSSL,
+        ...(activeRequest.url.toLowerCase().startsWith('grpcs:') ? {
+          clientCert,
+          clientKey,
+          caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
+        } : {}),
+      };
+      const methods = await window.main.grpc.loadMethodsFromReflection(renderedWithCertificates);
       setGrpcState({ ...grpcState, methods });
     }
   });
