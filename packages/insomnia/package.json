@@ -57,7 +57,7 @@
     "fastq": "^1.17.1",
     "graphql": "^16.8.1",
     "graphql-ws": "^5.16.0",
-    "grpc-reflection-js": "jackkav/grpc-reflection-js#remove-lodash-set",
+    "grpc-reflection-js": "ryanexus/grpc-reflection-js#path-prefix",
     "hawk": "9.0.2",
     "hkdf": "^0.0.2",
     "hosted-git-info": "5.2.1",
