@@ -6,6 +6,13 @@ export interface Row {
     timestamp: number;
 }
 
+const escapeMap: Record<string, string> = {
+    '\\f': '\f',
+    '\\n': '\n',
+    '\\t': '\t',
+    '\\v': '\v',
+};
+
 class Console {
     rows: Row[] = [];
 
@@ -14,10 +21,20 @@ class Console {
     // TODO: support replacing substitution
     printLog = (rows: Row[], level: LogLevel, ...values: any) => {
         try {
-            const content = values.map((a: any) => JSON.stringify(a, null, 2).replace('\\n', '\n'))
-                .join(' ');
+            const content = values.map(
+                (value: any) => {
+                    const valueStr = JSON.stringify(value, null, 2);
+
+                    let escapedValueStr = valueStr;
+                    Object.keys(escapeMap).forEach(toEscape => {
+                        escapedValueStr = escapedValueStr.replace(toEscape, escapeMap[toEscape]);
+                    });
+
+                    return escapedValueStr;
+                }
+            ).join(' ');
+
             const row = {
-                // TODO: also support formating e.g. \t
                 value: `${level}: ${content}`,
                 name: 'Text',
                 timestamp: Date.now(),

@@ -29,7 +29,7 @@ test.describe('after-response script features tests', async () => {
 
         const responsePane = page.getByTestId('response-pane');
         await expect(responsePane).toContainText('PASS');
-        await expect(responsePane).toContainText('FAILunhappy tests | AssertionError: expected 199 to deeply equal 200After-response Test');
+        await expect(responsePane).toContainText('FAILunhappy tests | error: AssertionError: expected 199 to deeply equal 200 | ACTUAL: 199 | EXPECTED: 200');
     });
 
     test('environment and baseEnvironment can be persisted', async ({ page }) => {
