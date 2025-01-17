@@ -1458,7 +1458,9 @@ export const checkGitCanPush = async (projectId: string) => {
 
     // update workspace meta with git sync data, use for show unpushed changes on collection card
     // @TODO Project Git hasUnpushedChanges
-  } catch (e) { }
+  } catch (e) {
+    return;
+  }
 };
 
 export const stageChangesAction: ActionFunction = async ({
