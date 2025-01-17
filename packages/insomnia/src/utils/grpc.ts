@@ -4,6 +4,9 @@ const GRPC_CONNECTION_ERROR_STRINGS = {
   SERVER_CANCELED: 'CANCELLED',
   TLS_NOT_SUPPORTED: 'WRONG_VERSION_NUMBER',
   BAD_LOCAL_ROOT_CERT: 'unable to get local issuer certificate',
+  UNIMPLEMENTED: 'UNIMPLEMENTED',
+  // this next one will break if we rename the call made from the pane
+  CANNOT_REFLECT: "'grpc.loadMethodsFromReflection': Error: 12",
 };
 
 export function isGrpcConnectionError(error: Error) {
@@ -34,6 +37,12 @@ export function getGrpcConnectionErrorDetails(error: Error) {
   } else if (error.message.includes(GRPC_CONNECTION_ERROR_STRINGS.BAD_LOCAL_ROOT_CERT)) {
     title = 'Local Root Certificate Error';
     message = 'The local root certificate enabled for the host is not valid.\nEither disable the root certificate, or update it with a valid one.';
+  } else if (error.message.includes(GRPC_CONNECTION_ERROR_STRINGS.CANNOT_REFLECT)) {
+    title = 'Reflection Not Supported';
+    message = 'The server has indicated that it does not support reflection. You may need to manually enable it server-side.';
+  } else if (error.message.includes(GRPC_CONNECTION_ERROR_STRINGS.UNIMPLEMENTED)) {
+    title = 'Unimplemented Method';
+    message = 'The server does not support the requested method. Is the .proto file correct?';
   }
 
   return {
