@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+// This uses zod in order to ensure the parsed input matches our types before we insert it into the database
+
 const literalSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 
 type Literal = z.infer<typeof literalSchema>;

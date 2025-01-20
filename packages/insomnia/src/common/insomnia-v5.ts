@@ -15,7 +15,7 @@ import type { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace, WorkspaceScope } from '../models/workspace';
 import { EXPORT_TYPE_API_SPEC, EXPORT_TYPE_COOKIE_JAR, EXPORT_TYPE_ENVIRONMENT, EXPORT_TYPE_GRPC_REQUEST, EXPORT_TYPE_MOCK_ROUTE, EXPORT_TYPE_MOCK_SERVER, EXPORT_TYPE_REQUEST, EXPORT_TYPE_REQUEST_GROUP, EXPORT_TYPE_UNIT_TEST, EXPORT_TYPE_UNIT_TEST_SUITE, EXPORT_TYPE_WEBSOCKET_REQUEST, EXPORT_TYPE_WORKSPACE } from './constants';
 import { database } from './database';
-import { type InsomniaFile, insomniaFileSchema, type Meta, WebsocketRequestSchema, type Z_GRPCRequest, type Z_Request, type Z_RequestGroup, type Z_WebsocketRequest } from './schema';
+import { type InsomniaFile, insomniaFileSchema, type Meta, WebsocketRequestSchema, type Z_GRPCRequest, type Z_Request, type Z_RequestGroup, type Z_WebsocketRequest } from './import-v5-parser';
 
 type WithExportType<T extends models.BaseModel> = T & { _type: string };
 
