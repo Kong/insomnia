@@ -116,7 +116,7 @@ describe('inso dev bundle', () => {
       if (result.code !== 0) {
         console.log(result);
       }
-      expect(result.stdout).toContain('log: "we did it: 200"');
+      expect(result.stdout).toContain('log: we did it: 200');
     });
 
     it('iterationData and iterationCount args work', async () => {
