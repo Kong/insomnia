@@ -254,7 +254,7 @@ function getCollection(file: InsomniaFile): (Request | WebSocketRequest | GrpcRe
             afterResponseScript: item.scripts?.afterResponse || '',
             authentication: item.authentication || {},
             environment: item.environment as Record<string, any> || {},
-            // 🚧 WARNING 🚧 If we set the order to an empty object instead of undefined it will remove the environment from the folder due to filtering logic
+            // 🚧 WARNING 🚧 If we set the order to an empty object instead of undefined it will remove the environment from the folder due to filtering logic (related to json-order)
             environmentPropertyOrder: item.environmentPropertyOrder as Record<string, any> || undefined,
           };
 
@@ -528,18 +528,6 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
     const baseEnvironment = resources.find(environment => environment.parentId.startsWith('wrk_'));
     if (!baseEnvironment) {
       throw new Error('Base environment not found');
-      // return {
-      //   name: 'Base Environment',
-      //   meta: {
-      //     id: '__BASE_ENVIRONMENT_ID__',
-      //     created: Date.now(),
-      //     modified: Date.now(),
-      //     isPrivate: false,
-      //   },
-      //   data: {},
-      //   color: null,
-      //   subEnvironments: [],
-      // };
     }
 
     const subEnvironments = resources.filter(environment => environment.parentId === baseEnvironment?._id);
