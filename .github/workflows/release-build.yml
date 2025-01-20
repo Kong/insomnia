@@ -52,6 +52,9 @@ jobs:
           - os: ubuntu-latest
             csc_link_secret: ''
             csc_key_password_secret: ''
+          - os: ubuntu-24.04-arm
+            csc_link_secret: ''
+            csc_key_password_secret: ''
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4
@@ -84,7 +87,7 @@ jobs:
           CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
 
       - name: Package app (Linux only)
-        if: matrix.os == 'ubuntu-latest'
+        if: startsWith(matrix.os, 'ubuntu')
         shell: bash
         run: npm run app-package
         env:
