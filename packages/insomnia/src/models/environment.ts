@@ -9,7 +9,6 @@ import { type BaseModel } from './index';
 export const name = 'Environment';
 export const type = 'Environment';
 export const prefix = 'env';
-export const vaultEnvironmentPath = 'vault';
 export const vaultEnvironmentMaskValue = '••••••';
 export const canDuplicate = true;
 export const canSync = true;
