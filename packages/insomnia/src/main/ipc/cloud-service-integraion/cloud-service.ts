@@ -1,11 +1,8 @@
-import type { AuthenticationResult as AzureOAuthCredential } from '@azure/msal-node';
 
 import * as models from '../../../models';
 import type { AWSTemporaryCredential, BaseCloudCredential, CloudProviderName } from '../../../models/cloud-credential';
 import { ipcMainHandle, ipcMainOn } from '../electron';
 import { type AWSGetSecretConfig, AWSService } from './aws-service';
-import { AzureService } from './azure-service';
-import { type GCPGetSecretConfig, GCPService } from './gcp-servcie';
 import { type MaxAgeUnit, VaultCache } from './vault-cache';
 
 // in-memory cache for fetched vault secrets
@@ -16,8 +13,6 @@ export interface cloudServiceBridgeAPI {
   getSecret: typeof getSecret;
   clearCache: typeof clearVaultCache;
   setCacheMaxAge: typeof setCacheMaxAge;
-  openAuthUrl: typeof openAuthUrl;
-  exchangeCode: typeof exchangeCode;
 }
 export interface CloudServiceAuthOption {
   provider: CloudProviderName;
@@ -27,13 +22,11 @@ export interface CloudServiceSecretOption<T extends {}> extends CloudServiceAuth
   secretId: string;
   config: T;
 }
-export type CloudServiceGetSecretConfig = AWSGetSecretConfig | GCPGetSecretConfig;
+export type CloudServiceGetSecretConfig = AWSGetSecretConfig;
 
 export function registerCloudServiceHandlers() {
   ipcMainHandle('cloudService.authenticate', (_event, options) => cspAuthentication(options));
   ipcMainHandle('cloudService.getSecret', (_event, options) => getSecret(options));
-  ipcMainHandle('cloudService.exchangeCode', (_event, type, data) => exchangeCode(type, data));
-  ipcMainOn('cloudService.openAuthUrl', (_event, type) => openAuthUrl(type));
   ipcMainOn('cloudService.clearCache', () => clearVaultCache());
   ipcMainOn('cloudService.setCacheMaxAge', (_event, { maxAge, unit }) => setCacheMaxAge(maxAge, unit));
 }
@@ -44,10 +37,6 @@ class ServiceFactory {
     switch (name) {
       case 'aws':
         return new AWSService(credential as AWSTemporaryCredential);
-      case 'azure':
-        return new AzureService(credential as AzureOAuthCredential);
-      case 'gcp':
-        return new GCPService(credential as string);
       default:
         throw new Error('Invalid cloud service provider name');
     }
@@ -60,24 +49,6 @@ const clearVaultCache = () => {
 
 const setCacheMaxAge = (newAge: number, unit: MaxAgeUnit = 'min') => {
   return vaultCache.setMaxAge(newAge, unit);
-};
-
-const openAuthUrl = (type: 'azure') => {
-  switch (type) {
-    case 'azure':
-      AzureService.openAuthUrl();
-      break;
-    default:
-      return;
-  }
-};
-
-const exchangeCode = async (type: 'azure', data: any) => {
-  // eslint-disable-next-line default-case
-  switch (type) {
-    case 'azure':
-      return AzureService.exchangeCode(data);
-  }
 };
 
 // authenticate with cloud service provider

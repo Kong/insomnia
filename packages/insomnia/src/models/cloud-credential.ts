@@ -1,5 +1,3 @@
-import type { AuthenticationResult as AzureOAuthCredential } from '@azure/msal-node';
-
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
@@ -23,17 +21,7 @@ export interface AWSCloudCredential extends IBaseCloudCredential {
   provider: 'aws';
   credentials: AWSTemporaryCredential;
 }
-export interface AzureCloudCredential extends IBaseCloudCredential {
-  name: string;
-  provider: 'azure';
-  credentials: AzureOAuthCredential;
-}
-export interface GCPCloudCredential extends IBaseCloudCredential {
-  name: string;
-  provider: 'gcp';
-  credentials: string;
-}
-export type BaseCloudCredential = AWSCloudCredential | AzureCloudCredential | GCPCloudCredential;
+export type BaseCloudCredential = AWSCloudCredential;
 export type CloudProviderCredential = BaseModel & BaseCloudCredential;
 
 export const name = 'Cloud Credential';

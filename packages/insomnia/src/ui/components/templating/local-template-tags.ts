@@ -35,8 +35,6 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           type: 'enum',
           options: [
             { displayName: 'AWS Secrets Manager', value: 'aws' },
-            { displayName: 'Azure Key Vault', value: 'azure' },
-            { displayName: 'GCP Secret Manager', value: 'gcp' },
           ],
         },
         {

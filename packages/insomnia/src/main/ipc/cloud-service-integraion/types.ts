@@ -22,25 +22,4 @@ export interface AWSSecretConfig {
   SecretKey?: string;
 };
 
-export type AzureSecretType = 'secret' | 'key';
-export interface AzureSecretConfig {
-  secretIdentifier: string;
-  secretType: AzureSecretType;
-}
-
-export interface GCPSecretConfig {
-  secretName: string;
-  version?: string;
-}
-
-export type ExternalVaultConfig = AWSSecretConfig | AzureSecretConfig | GCPSecretConfig;
-
-export abstract class OAuthCloudService {
-  static async openAuthUrl() {
-    throw new Error('Subclasses must implement the static method openAuthUrl');
-  };
-
-  static async exchangeCode(data: any): Promise<any> {
-    throw new Error(`Subclasses must implement the static method exchangeCode with ${data}`);
-  };
-};
+export type ExternalVaultConfig = AWSSecretConfig;

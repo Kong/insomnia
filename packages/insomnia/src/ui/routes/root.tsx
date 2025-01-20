@@ -22,7 +22,6 @@ import { AskModal } from '../components/modals/ask-modal';
 import { ImportModal } from '../components/modals/import-modal';
 import {
   SettingsModal,
-  TAB_CLOUD_CREDENTIAL,
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../components/modals/settings-modal';
@@ -213,38 +212,6 @@ const Root = () => {
                 });
               },
             );
-            break;
-          }
-
-          case 'insomnia://oauth/azure/authenticate': {
-            const { code } = params;
-            if (typeof code === 'string') {
-              const authResult = await window.main.cloudService.exchangeCode('azure', { code });
-              const { success, result, error } = authResult;
-              if (success) {
-                const { account, uniqueId } = result!;
-                const name = account?.username || uniqueId;
-                actionFetcher.submit(
-                  JSON.stringify({
-                    name,
-                    credentials: result,
-                    provider: 'azure',
-                    isAuthenticated: true,
-                  }),
-                  {
-                    action: '/cloud-credential/new',
-                    method: 'post',
-                    encType: 'application/json',
-                  }
-                );
-                showModal(SettingsModal, { tab: TAB_CLOUD_CREDENTIAL });
-              } else {
-                showError({
-                  title: 'Error authorizing Azure',
-                  message: error?.errorMessage,
-                });
-              }
-            }
             break;
           }
 
