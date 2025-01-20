@@ -359,7 +359,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       </Button>
       <div className='flex items-center justify-start flex-shrink-0 flex-grow border-b border-solid border-[--hl-sm]'>
         <MenuTrigger>
-          <Button aria-label="Menu" className="w-[40px] text-center">
+          <Button aria-label="Tab Plus" className="w-[40px] text-center">
             <Icon icon="plus" className='cursor-pointer' />
           </Button>
           <Popover>
