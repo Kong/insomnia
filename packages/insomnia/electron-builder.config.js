@@ -101,7 +101,7 @@ const config = {
     artifactName: `${BINARY_PREFIX}-\${version}-portable.\${ext}`,
   },
   linux: {
-    artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
+    artifactName: `${BINARY_PREFIX}-\${version}-\${arch}.\${ext}`,
     executableName: 'insomnia',
     synopsis: 'The Collaborative API Client and Design Tool',
     category: 'Development',
