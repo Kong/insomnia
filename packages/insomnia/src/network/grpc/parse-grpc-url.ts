@@ -2,28 +2,12 @@ export const parseGrpcUrl = (grpcUrl: string): { url: string; enableTls: boolean
   if (!grpcUrl) {
     return { url: '', enableTls: false, path: '' };
   }
-  const lcUrl = grpcUrl.toLowerCase();
-  let url = {
-    protocol: 'grpc:',
-    hostname: lcUrl,
-    pathname: '',
-    port: undefined,
-  } as unknown as URL;
-  if (lcUrl.includes('://')) {
-    try {
-      url = new URL(grpcUrl.toLowerCase());
-    } catch (e) { }
-  }
-  const result = {
-    url: `${url.hostname}` + (url.port ? `:${url.port}` : ''),
-    enableTls: false,
-    path: url.pathname,
+  const url = new URL((grpcUrl.includes('://') ? '' : 'grpc://') + grpcUrl.toLowerCase());
+  return {
+    url: url.host,
+    enableTls: url.protocol === 'grpcs:',
+    // remove trailing slashes from pathname; the full request
+    // path is a concatenation of this parsed path + method path
+    path: url.pathname.endsWith('/') ? url.pathname.slice(0, -1) : url.pathname,
   };
-  if (url.protocol.toLowerCase() === 'grpcs:') {
-    result.enableTls = true;
-  }
-  if (result.path === '/') {
-    result.path = '';
-  }
-  return result;
 };
