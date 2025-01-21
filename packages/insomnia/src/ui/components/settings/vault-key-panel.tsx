@@ -1,4 +1,3 @@
-import fs from 'fs';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useFetcher } from 'react-router-dom';
@@ -28,14 +27,10 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
       return;
     }
 
-    const to = fs.createWriteStream(outputPath);
-
-    to.on('error', err => {
-      console.warn('Failed to save vault key', err);
+    await window.main.writeFile({
+      path: outputPath,
+      content: vaultKey,
     });
-
-    to.write(vaultKey);
-    to.end();
   };
 
   return (
