@@ -31,6 +31,7 @@ export interface RendererToMainBridgeAPI {
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
   writeFile: (options: { path: string; content: string }) => Promise<string>;
+  readFile: (options: { path: string }) => Promise<string>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
   on: (channel: RendererOnChannels, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
@@ -90,12 +91,13 @@ export function registerMainHandlers() {
   });
 
   ipcMainHandle('writeFile', async (_, options: { path: string; content: string }) => {
-    try {
-      await fs.promises.writeFile(options.path, options.content);
-      return options.path;
-    } catch (err) {
-      throw new Error(err);
-    }
+    await fs.promises.writeFile(options.path, options.content);
+    return options.path;
+  });
+
+  ipcMainHandle('readFile', async (_, options: { path: string }) => {
+    const content = await fs.promises.readFile(options.path, 'utf-8');
+    return content;
   });
 
   ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => {

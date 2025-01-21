@@ -680,7 +680,8 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         }
 
         const sanitizedFilter = filter.trim();
-        const bodyBuffer = context.util.models.response.getBodyBuffer(response, '');
+        const bodyBuffer = response.bodyPath ? await fs.promises.readFile(response.bodyPath) : Buffer.from('');
+
         const match = response.contentType && response.contentType.match(/charset=([\w-]+)/);
         const charset = match && match.length >= 2 ? match[1] : 'utf-8';
         if (field === 'url') {

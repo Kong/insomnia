@@ -144,7 +144,7 @@ export async function exportHarResponse(response: Response | null) {
     httpVersion: 'HTTP/1.1',
     cookies: getResponseCookies(response),
     headers: getResponseHeaders(response),
-    content: getResponseContent(response),
+    content: await getResponseContent(response),
     redirectURL: '',
     headersSize: -1,
     bodySize: -1,
@@ -343,8 +343,8 @@ function mapCookie(cookie: ToughCookie) {
   return harCookie;
 }
 
-function getResponseContent(response: Response) {
-  let body = models.response.getBodyBuffer(response);
+async function getResponseContent(response: Response) {
+  let body = response.bodyPath && await fs.promises.readFile(response.bodyPath);
 
   if (body === null) {
     body = Buffer.alloc(0);

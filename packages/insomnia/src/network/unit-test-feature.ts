@@ -1,5 +1,4 @@
 import { stats } from '../models';
-import { getBodyBuffer } from '../models/response';
 import { parseGraphQLReqeustBody } from '../utils/graph-ql';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from './network';
 
@@ -33,8 +32,7 @@ export function getSendRequestCallback() {
     const res = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
     const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
     const headers = headerArray?.reduce((acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }), []);
-    const bodyBuffer = await getBodyBuffer(res) as Buffer;
-    const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
+    const data = res.bodyPath && await window.main.readFile({ path: res.bodyPath });
     return { status, statusMessage, data, headers, responseTime };
 
   };

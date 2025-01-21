@@ -20,6 +20,7 @@ export type HandleChannels =
   | 'installPlugin'
   | 'open-channel-to-hidden-browser-window'
   | 'readCurlResponse'
+  | 'readFile'
   | 'restoreBackup'
   | 'showOpenDialog'
   | 'showSaveDialog'

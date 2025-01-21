@@ -79,7 +79,7 @@ export type PluginTemplateTagContext = HelperContext & {
       };
       response: {
         getLatestForRequestId: (id: string) => Promise<Response | null>;
-        getBodyBuffer: (response: Response, fallback?: any) => Promise<Buffer | null>;
+        getBodyBuffer: (response: Response) => Promise<Buffer | null>;
       };
     };
   };

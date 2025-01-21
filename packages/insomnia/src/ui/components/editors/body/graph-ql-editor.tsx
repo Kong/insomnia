@@ -158,9 +158,10 @@ const fetchGraphQLSchemaForRequest = async ({
         },
       };
     }
-    const bodyBuffer = models.response.getBodyBuffer(response);
-    if (bodyBuffer) {
-      const { data, errors } = JSON.parse(bodyBuffer.toString());
+    const body = response.bodyPath && await window.main.readFile({ path: response.bodyPath });
+
+    if (body) {
+      const { data, errors } = JSON.parse(body);
       if (errors?.length) {
         return { schemaFetchError: errors[0] };
       }

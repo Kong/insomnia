@@ -1,7 +1,10 @@
+import fs from 'fs';
+
 import { database as db } from '../common/database';
 import * as models from '../models/index';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
+import type { Response } from '../models/response';
 import type { Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context';
 import type { PluginTemplateTag } from './extensions';
@@ -142,7 +145,7 @@ export default class BaseExtension {
           },
           response: {
             getLatestForRequestId: models.response.getLatestForRequest,
-            getBodyBuffer: models.response.getBodyBuffer,
+            getBodyBuffer: (response: Response) => fs.readFileSync(response?.bodyPath),
           },
         },
       },

@@ -135,7 +135,7 @@ export const MockResponsePane = () => {
             error={activeResponse.error}
             filter={''}
             filterHistory={[]}
-            getBody={() => models.response.getBodyBuffer(activeResponse)}
+            getBody={async () => activeResponse.bodyPath && await window.main.readFile({ path: activeResponse.bodyPath })}
             previewMode={previewMode}
             responseId={activeResponse._id}
             updateFilter={activeResponse.error ? undefined : () => { }}
@@ -280,8 +280,8 @@ const PreviewModeDropdown = ({ activeResponse, previewMode, setPreviewMode }: { 
             icon="copy"
             label="Copy raw response"
             onClick={async () => {
-              const bodyBuffer = await models.response.getBodyBuffer(activeResponse);
-              bodyBuffer && window.clipboard.writeText(bodyBuffer.toString('utf8'));
+              const body = await window.main.readFile({ path: activeResponse.bodyPath });
+              window.clipboard.writeText(body);
             }}
           />
         </DropdownItem>
@@ -290,17 +290,17 @@ const PreviewModeDropdown = ({ activeResponse, previewMode, setPreviewMode }: { 
             icon="save"
             label="Export raw response"
             onClick={async () => {
-              const bodyBuffer = await models.response.getBodyBuffer(activeResponse);
+              const body = await window.main.readFile({ path: activeResponse.bodyPath });
               const { canceled, filePath } = await window.dialog.showSaveDialog({
                 title: 'Save Full Response',
                 buttonLabel: 'Save',
                 defaultPath: `response-${Date.now()}.txt`,
               });
 
-              if (canceled || !filePath || !bodyBuffer) {
+              if (canceled || !filePath || !body) {
                 return;
               }
-              fs.promises.writeFile(filePath, bodyBuffer.toString('utf8'));
+              fs.promises.writeFile(filePath, body);
             }}
           />
         </DropdownItem>
@@ -310,17 +310,17 @@ const PreviewModeDropdown = ({ activeResponse, previewMode, setPreviewMode }: { 
               icon="save"
               label="Export prettified response"
               onClick={async () => {
-                const bodyBuffer = await models.response.getBodyBuffer(activeResponse);
+                const body = await window.main.readFile({ path: activeResponse.bodyPath });
                 const { canceled, filePath } = await window.dialog.showSaveDialog({
                   title: 'Save Full Response',
                   buttonLabel: 'Save',
                   defaultPath: `response-${Date.now()}.txt`,
                 });
 
-                if (canceled || !filePath || !bodyBuffer) {
+                if (canceled || !filePath || !body) {
                   return;
                 }
-                fs.promises.writeFile(filePath, jsonPrettify(bodyBuffer.toString('utf8')));
+                fs.promises.writeFile(filePath, jsonPrettify(body));
               }}
             />
           }

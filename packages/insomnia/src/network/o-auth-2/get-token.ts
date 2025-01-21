@@ -167,7 +167,7 @@ export const getOAuth2Token = async (
   const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
   const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
   return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(
-    oauthResponseToAccessToken(authentication.accessTokenUrl, response)
+    await oauthResponseToAccessToken(authentication.accessTokenUrl, response)
   ));
 };
 // 1. get token from db and return if valid
@@ -210,7 +210,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   const response = await sendAccessTokenRequest(requestId, authentication, params, []);
 
   const statusCode = response.statusCode || 0;
-  const bodyBuffer = models.response.getBodyBuffer(response);
+  const content = await window.main.readFile({ path: response.bodyPath });
 
   if (statusCode === 401) {
     // If the refresh token was rejected due an unauthorized request, we will
@@ -221,10 +221,10 @@ async function getExistingAccessTokenAndRefreshIfExpired(
     return null;
   }
   const isSuccessful = statusCode >= 200 && statusCode < 300;
-  const hasBodyAndIsError = bodyBuffer && statusCode === 400;
+  const hasBodyAndIsError = content && statusCode === 400;
   if (!isSuccessful) {
     if (hasBodyAndIsError) {
-      const body = tryToParse(bodyBuffer.toString());
+      const body = tryToParse(content);
       // If the refresh token was rejected due an oauth2 invalid_grant error, we will
       // return a null access_token to trigger an authentication request to fetch
       // brand new refresh and access tokens.
@@ -238,8 +238,8 @@ async function getExistingAccessTokenAndRefreshIfExpired(
 
     throw new Error(`[oauth2] Failed to refresh token url=${authentication.accessTokenUrl} status=${statusCode}`);
   }
-  invariant(bodyBuffer, `[oauth2] No body returned from ${authentication.accessTokenUrl}`);
-  const data = tryToParse(bodyBuffer.toString());
+  invariant(content, `[oauth2] No body returned from ${authentication.accessTokenUrl}`);
+  const data = tryToParse(content);
   if (!data) {
     return null;
   }
@@ -250,9 +250,10 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   }));
 }
 
-export const oauthResponseToAccessToken = (accessTokenUrl: string, response: Response) => {
-  const bodyBuffer = models.response.getBodyBuffer(response);
-  if (!bodyBuffer) {
+export const oauthResponseToAccessToken = async (accessTokenUrl: string, response: Response) => {
+  const content = await window.main.readFile({ path: response.bodyPath });
+
+  if (!content) {
     return {
       xResponseId: response._id,
       xError: `No body returned from ${accessTokenUrl}`,
@@ -264,8 +265,7 @@ export const oauthResponseToAccessToken = (accessTokenUrl: string, response: Res
       xError: `Failed to fetch token url=${accessTokenUrl} status=${response.statusCode}`,
     };
   }
-  const body = bodyBuffer.toString('utf8');
-  const data = tryToParse(body);
+  const data = tryToParse(content);
   return {
     ...data,
     xResponseId: response._id,

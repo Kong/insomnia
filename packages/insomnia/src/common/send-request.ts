@@ -6,7 +6,6 @@ import * as models from '../models';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
-import { getBodyBuffer } from '../models/response';
 import type { Settings } from '../models/settings';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import {
@@ -172,8 +171,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
 
     const headers = headerArray?.reduce((acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }), []);
-    const bodyBuffer = await getBodyBuffer(res) as Buffer;
-    const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
+    const data = res.bodyPath && await fs.readFile(res.bodyPath, 'utf8');
 
     const testResults = [...(mutatedContext.requestTestResults || []), ...(postMutatedContext.requestTestResults || [])];
     return {

@@ -230,42 +230,6 @@ export const getBodyStream = (
     return fs.createReadStream(response?.bodyPath);
   }
 };
-export const readCurlResponse = async (options: { bodyPath?: string; bodyCompression?: Compression }) => {
-  const readFailureMsg = '[main/curlBridgeAPI] failed to read response body message';
-  const bodyBufferOrErrMsg = getBodyBuffer(options, readFailureMsg);
-  // TODO(jackkav): simplify the fail msg and reuse in other getBodyBuffer renderer calls
-
-  if (!bodyBufferOrErrMsg) {
-    return { body: '', error: readFailureMsg };
-  } else if (typeof bodyBufferOrErrMsg === 'string') {
-    if (bodyBufferOrErrMsg === readFailureMsg) {
-      return { body: '', error: readFailureMsg };
-    }
-    return { body: '', error: `unknown error in loading response body: ${bodyBufferOrErrMsg}` };
-  }
-
-  return { body: bodyBufferOrErrMsg.toString('utf8'), error: '' };
-};
-export const getBodyBuffer = (
-  response?: { bodyPath?: string; bodyCompression?: Compression },
-  readFailureValue?: string,
-): Buffer | string | null => {
-  if (!response?.bodyPath) {
-    // No body, so return empty Buffer
-    return Buffer.alloc(0);
-  }
-  try {
-    const rawBuffer = fs.readFileSync(response?.bodyPath);
-    if (response?.bodyCompression === 'zip') {
-      return zlib.gunzipSync(rawBuffer);
-    } else {
-      return rawBuffer;
-    }
-  } catch (err) {
-    console.warn('Failed to read response body', err.message);
-    return readFailureValue === undefined ? null : readFailureValue;
-  }
-};
 
 export function getTimeline(response: Response, showBody?: boolean) {
   const { timelinePath, bodyPath } = response;

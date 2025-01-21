@@ -63,18 +63,11 @@ export const ResponsePane: FC<Props> = ({
     responseFilterHistory.unshift(responseFilter);
     patchRequestMeta(requestId, { responseFilterHistory });
   };
-  const handleGetResponseBody = useCallback(() => {
-    if (!activeResponse) {
-      return null;
-    }
-    return models.response.getBodyBuffer(activeResponse);
-  }, [activeResponse]);
+
   const handleCopyResponseToClipboard = useCallback(async () => {
-    const bodyBuffer = handleGetResponseBody();
-    if (bodyBuffer) {
-      window.clipboard.writeText(bodyBuffer.toString('utf8'));
-    }
-  }, [handleGetResponseBody]);
+    const body = activeResponse?.bodyPath && await window.main.readFile({ path: activeResponse.bodyPath });
+    body && window.clipboard.writeText(body);
+  }, [activeResponse?.bodyPath]);
 
   const { isExecuting, steps } = useExecutionState({ requestId: activeRequest._id });
 
@@ -247,7 +240,11 @@ export const ResponsePane: FC<Props> = ({
             error={activeResponse.error}
             filter={filter}
             filterHistory={filterHistory}
-            getBody={handleGetResponseBody}
+            getBody={async () => {
+              // TODO: unpack this
+              const body = activeResponse?.bodyPath && await window.main.readFile({ path: activeResponse.bodyPath });
+              return body;
+            }}
             previewMode={activeResponse.error ? PREVIEW_MODE_SOURCE : previewMode}
             responseId={activeResponse._id}
             updateFilter={activeResponse.error ? undefined : handleSetFilter}
