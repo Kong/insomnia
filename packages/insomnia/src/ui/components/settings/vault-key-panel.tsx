@@ -1,11 +1,12 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useFetcher } from 'react-router-dom';
+import { useInterval } from 'react-use';
 
 import { getProductName } from '../../../common/constants';
 import { decryptVaultKeyFromSession, deleteVaultKeyFromStorage, saveVaultKeyIfNecessary } from '../../../utils/vault';
 import { useRootLoaderData } from '../../routes/root';
-import { type CopyBtnHanlde, CopyButton } from '../base/copy-button';
+import { CopyButton } from '../base/copy-button';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 import { showError, showModal } from '../modals';
@@ -14,7 +15,11 @@ import { InputVaultKeyModal } from '../modals/input-vault-key-modal';
 import { BooleanSetting } from './boolean-setting';
 
 export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
-  const copyBtnRef = useRef<CopyBtnHanlde>(null);
+  const [showCopyConfirmation, setShowCopyConfirmation] = useState(false);
+
+  useInterval(() => {
+    setShowCopyConfirmation(false);
+  }, 2000);
 
   const donwloadVaultKey = async () => {
     const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
@@ -35,12 +40,24 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
 
   return (
     <div className="flex items-center gap-3 bg-[--hl-xs] px-2 py-1 border border-solid border-[--hl-sm] w-full">
-      <div className="w-[calc(100%-50px)] truncate" onDoubleClick={() => copyBtnRef.current?.copy()}>{vaultKey}</div>
+      <div
+        className="w-[calc(100%-50px)] truncate"
+        onDoubleClick={(event: React.MouseEvent) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (vaultKey) {
+            window.clipboard.writeText(vaultKey);
+          };
+          setShowCopyConfirmation(true);
+        }}
+      >
+        {vaultKey}
+      </div>
       <CopyButton
         size="small"
-        ref={copyBtnRef}
         content={vaultKey}
         title="Copy Vault Key"
+        showConfirmation={showCopyConfirmation}
         style={{ borderWidth: 0 }}
       >
         <i className="fa fa-copy" />

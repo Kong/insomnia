@@ -1,25 +1,23 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react';
+import React, { type FC, useCallback, useState } from 'react';
 import { useInterval } from 'react-use';
 
 import { Button, type ButtonProps } from '../themed-button';
 
-export interface CopyBtnHanlde {
-  copy: () => void;
-}
 interface Props extends ButtonProps {
   confirmMessage?: string;
+  showConfirmation?: boolean;
   content: string;
   title?: string;
 }
 
-export const CopyButton = forwardRef<CopyBtnHanlde, Props>((props, ref) => {
-  const {
-    children,
-    confirmMessage,
-    content,
-    title,
-    ...buttonProps
-  } = props;
+export const CopyButton: FC<Props> = ({
+  children,
+  confirmMessage,
+  showConfirmation: showConfirmationProp = false,
+  content,
+  title,
+  ...buttonProps
+}) => {
   const [showConfirmation, setshowConfirmation] = useState(false);
   const onClick = useCallback(async (event: React.MouseEvent) => {
     event.preventDefault();
@@ -35,15 +33,6 @@ export const CopyButton = forwardRef<CopyBtnHanlde, Props>((props, ref) => {
     setshowConfirmation(false);
   }, 2000);
 
-  useImperativeHandle(ref, () => ({
-    copy: () => {
-      if (content) {
-        window.clipboard.writeText(content);
-        setshowConfirmation(true);
-      }
-    },
-  }), [content]);
-
   const confirm = typeof confirmMessage === 'string' ? confirmMessage : 'Copied';
   return (
     <Button
@@ -51,7 +40,7 @@ export const CopyButton = forwardRef<CopyBtnHanlde, Props>((props, ref) => {
       title={title}
       onClick={onClick}
     >
-      {showConfirmation ? (
+      {(showConfirmation || showConfirmationProp) ? (
         <span>
           {confirm} <i className="fa fa-check-circle-o" />
         </span>
@@ -60,4 +49,4 @@ export const CopyButton = forwardRef<CopyBtnHanlde, Props>((props, ref) => {
       )}
     </Button>
   );
-});
+};
