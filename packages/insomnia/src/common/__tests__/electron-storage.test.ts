@@ -2,59 +2,59 @@ import fs from 'fs';
 import path from 'path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import LocalStorage from '../../main/local-storage';
+import ElectronStorage from '../../main/electron-storage';
 
-describe('LocalStorage()', () => {
+describe('Test electron storage()', () => {
   afterEach(() => {
     vi.clearAllTimers();
   });
 
   it('create directory', () => {
-    const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
+    const basePath = `/tmp/insomnia-electronstorage-${Math.random()}`;
 
-    const ls = new LocalStorage(basePath);
-    expect(ls).toBeInstanceOf(LocalStorage);
+    const ls = new ElectronStorage(basePath);
+    expect(ls).toBeInstanceOf(ElectronStorage);
 
     const dir = fs.readdirSync(basePath);
     expect(dir.length).toEqual(0);
   });
 
   it('does basic operations', () => {
-    const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
-    const localStorage = new LocalStorage(basePath);
+    const basePath = `/tmp/insomnia-electronstorage-${Math.random()}`;
+    const electronStorage = new ElectronStorage(basePath);
 
     // Test get and set
-    localStorage.setItem('foo', 'bar 1');
-    localStorage.setItem('foo', 'bar');
-    expect(localStorage.getItem('foo', 'BAD')).toBe('bar');
+    electronStorage.setItem('foo', 'bar 1');
+    electronStorage.setItem('foo', 'bar');
+    expect(electronStorage.getItem('foo', 'BAD')).toBe('bar');
 
     // Test Object storage
-    localStorage.setItem('obj', {
+    electronStorage.setItem('obj', {
       foo: 'bar',
       arr: [1, 2, 3],
     });
-    expect(localStorage.getItem('obj')).toEqual({
+    expect(electronStorage.getItem('obj')).toEqual({
       foo: 'bar',
       arr: [1, 2, 3],
     });
 
     // Test default values
-    expect(localStorage.getItem('dne', 'default')).toEqual('default');
-    expect(localStorage.getItem('dne')).toEqual('default');
+    expect(electronStorage.getItem('dne', 'default')).toEqual('default');
+    expect(electronStorage.getItem('dne')).toEqual('default');
   });
 
   it('does handles malformed files', () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
-    const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
-    const localStorage = new LocalStorage(basePath);
+    const basePath = `/tmp/insomnia-electronstorage-${Math.random()}`;
+    const electronStorage = new ElectronStorage(basePath);
 
     // Assert default is returned on bad JSON
     fs.writeFileSync(path.join(basePath, 'key'), '{bad JSON');
-    expect(localStorage.getItem('key', 'default')).toBe('default');
+    expect(electronStorage.getItem('key', 'default')).toBe('default');
 
     // Assert that writing our file actually works
     fs.writeFileSync(path.join(basePath, 'key'), '{"good": "JSON"}');
-    expect(localStorage.getItem('key', 'default')).toEqual({
+    expect(electronStorage.getItem('key', 'default')).toEqual({
       good: 'JSON',
     });
     expect(consoleErrorSpy).toHaveBeenCalled();
@@ -62,22 +62,22 @@ describe('LocalStorage()', () => {
 
   it('does handles failing to write file', () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
-    const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
-    const localStorage = new LocalStorage(basePath);
+    const basePath = `/tmp/insomnia-electronstorage-${Math.random()}`;
+    const electronStorage = new ElectronStorage(basePath);
     fs.rmdirSync(basePath);
-    localStorage.setItem('key', 'value');
+    electronStorage.setItem('key', 'value');
 
     // Since the above operation failed to write, we should now get back
     // the default value
-    expect(localStorage.getItem('key', 'different')).toBe('different');
+    expect(electronStorage.getItem('key', 'different')).toBe('different');
     expect(consoleErrorSpy).toHaveBeenCalled();
   });
 
   it('stores a key', () => {
     vi.useFakeTimers();
-    const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
-    const localStorage = new LocalStorage(basePath);
-    localStorage.setItem('foo', 'bar');
+    const basePath = `/tmp/insomnia-electronstorage-${Math.random()}`;
+    const electronStorage = new ElectronStorage(basePath);
+    electronStorage.setItem('foo', 'bar');
 
     // Force debouncer to flush
     vi.runOnlyPendingTimers();
@@ -92,11 +92,11 @@ describe('LocalStorage()', () => {
 
   it('debounces key sets', () => {
     vi.useFakeTimers();
-    const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
-    const localStorage = new LocalStorage(basePath);
-    localStorage.setItem('foo', 'bar1');
-    localStorage.setItem('another', 10);
-    localStorage.setItem('foo', 'bar3');
+    const basePath = `/tmp/insomnia-electronstorage-${Math.random()}`;
+    const electronStorage = new ElectronStorage(basePath);
+    electronStorage.setItem('foo', 'bar1');
+    electronStorage.setItem('another', 10);
+    electronStorage.setItem('foo', 'bar3');
     expect(fs.readdirSync(basePath).length).toEqual(0);
 
     // Force debouncer to flush
