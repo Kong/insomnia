@@ -30,8 +30,8 @@ import { docsBase } from '../common/documentation';
 import * as log from '../common/log';
 import { APP_START_TIME, SentryMetrics } from '../common/sentry';
 import { invariant } from '../utils/invariant';
+import ElectronStorage from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
-import LocalStorage from './local-storage';
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
@@ -39,7 +39,7 @@ const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
 
 const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
-let localStorage: LocalStorage | null = null;
+let electronStorage: ElectronStorage | null = null;
 let hiddenWindowIsBusy = false;
 
 interface Bounds {
@@ -50,7 +50,7 @@ interface Bounds {
 }
 
 export function init() {
-  initLocalStorage();
+  initElectronStorage();
 }
 const stopAndWaitForHiddenBrowserWindow = async (runningHiddenBrowserWindow: BrowserWindow) => {
   return await new Promise<void>(resolve => {
@@ -741,11 +741,11 @@ function saveBounds() {
 
   // Only save the size if we're not in fullscreen
   if (!fullscreen) {
-    localStorage?.setItem('bounds', browserWindow?.getBounds());
-    localStorage?.setItem('maximize', browserWindow?.isMaximized());
-    localStorage?.setItem('fullscreen', false);
+    electronStorage?.setItem('bounds', browserWindow?.getBounds());
+    electronStorage?.setItem('maximize', browserWindow?.isMaximized());
+    electronStorage?.setItem('fullscreen', false);
   } else {
-    localStorage?.setItem('fullscreen', true);
+    electronStorage?.setItem('fullscreen', true);
   }
 }
 
@@ -755,9 +755,9 @@ function getBounds() {
   let maximize = false;
 
   try {
-    bounds = localStorage?.getItem('bounds', {});
-    fullscreen = localStorage?.getItem('fullscreen', false);
-    maximize = localStorage?.getItem('maximize', false);
+    bounds = electronStorage?.getItem('bounds', {});
+    fullscreen = electronStorage?.getItem('fullscreen', false);
+    maximize = electronStorage?.getItem('maximize', false);
   } catch (error) {
     // This should never happen, but if it does...!
     console.error('Failed to parse window bounds', error);
@@ -776,7 +776,7 @@ const ZOOM_MIN = 0.05;
 
 const getZoomFactor = () => {
   try {
-    return localStorage?.getItem('zoomFactor', ZOOM_DEFAULT);
+    return electronStorage?.getItem('zoomFactor', ZOOM_DEFAULT);
   } catch (error) {
     // This should never happen, but if it does...!
     console.error('Failed to parse zoomFactor', error);
@@ -797,12 +797,12 @@ export const setZoom = (transformer: (current: number) => number) => () => {
   const actual = Math.min(Math.max(ZOOM_MIN, desired), ZOOM_MAX);
 
   browserWindow.webContents.setZoomLevel(actual);
-  localStorage?.setItem('zoomFactor', actual);
+  electronStorage?.setItem('zoomFactor', actual);
 };
 
-function initLocalStorage() {
-  const localStoragePath = path.join(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'localStorage');
-  localStorage = new LocalStorage(localStoragePath);
+function initElectronStorage() {
+  const electronStoragePath = path.join(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'localStorage');
+  electronStorage = new ElectronStorage(electronStoragePath);
 }
 
 export function createWindowsAndReturnMain({ firstLaunch }: { firstLaunch?: boolean } = {}) {

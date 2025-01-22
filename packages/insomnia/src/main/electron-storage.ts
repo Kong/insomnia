@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-class LocalStorage {
+class ElectronStorage {
   _buffer: Record<string, string> = {};
   _timeouts: Record<string, NodeJS.Timeout> = {};
   _basePath: string | null = null;
@@ -11,7 +11,7 @@ class LocalStorage {
     // Debounce writes on a per key basis
     fs.mkdirSync(basePath, { recursive: true });
 
-    console.log(`[localstorage] Initialized at ${basePath}`);
+    console.log(`[ElectronStorage] Initialized at ${basePath}`);
   }
 
   setItem<T>(key: string, obj?: T) {
@@ -39,7 +39,7 @@ class LocalStorage {
     try {
       return JSON.parse(contents);
     } catch (error) {
-      console.error(`[localstorage] Failed to parse item from LocalStorage: ${error}`);
+      console.error(`[ElectronStorage] Failed to parse item from electron storage: ${error}`);
       return defaultObj;
     }
   }
@@ -61,7 +61,7 @@ class LocalStorage {
       try {
         fs.writeFileSync(path, contents);
       } catch (error) {
-        console.error(`[localstorage] Failed to save to LocalStorage: ${error}`);
+        console.error(`[ElectronStorage] Failed to save to electron storage: ${error}`);
       }
     }
   }
@@ -72,4 +72,4 @@ class LocalStorage {
   }
 }
 
-export default LocalStorage;
+export default ElectronStorage;
