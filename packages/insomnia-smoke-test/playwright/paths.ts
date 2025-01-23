@@ -28,14 +28,28 @@ export const randomDataPath = () => path.join(os.tmpdir(), 'insomnia-smoke-test'
 export const INSOMNIA_DATA_PATH = randomDataPath();
 
 // Packaged app paths
-const pathLookup: Record<string, string> = {
+const pathLookup: Record<string, string | Record<string, string>> = {
   win32: path.join('win-unpacked', 'Insomnia.exe'),
   darwin: path.join('mac-universal', 'Insomnia.app', 'Contents', 'MacOS', 'Insomnia'),
-  linux: path.join('linux-unpacked', 'insomnia'),
+  linux: {
+    x64: path.join('linux-unpacked', 'insomnia'),
+    arm64: path.join('linux-arm64-unpacked', 'insomnia'),
+  },
 };
+
+let binaryPath: string;
+const platformPath = pathLookup[process.platform]
+if (typeof platformPath === 'string') {
+  binaryPath = platformPath
+} else if (process.arch in platformPath) {
+  binaryPath = platformPath[process.arch]
+} else {
+  throw new Error(`Cannot find binary path for ${process.platform} ${process.arch}`)
+}
+
 export const cwd = path.resolve(__dirname, '..', '..', 'insomnia');
 const repoRoot = path.resolve(__dirname, '..', '..', '..');
-const insomniaBinary = path.join(cwd, 'dist', pathLookup[process.platform]);
+const insomniaBinary = path.join(cwd, 'dist', binaryPath);
 const electronBinary = path.join(repoRoot, 'node_modules', '.bin', process.platform === 'win32' ? 'electron.cmd' : 'electron');
 
 export const executablePath = bundleType() === 'package' ? insomniaBinary : electronBinary;
