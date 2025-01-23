@@ -654,6 +654,7 @@ export interface sendCurlAndWriteTimelineResponse extends ResponsePatch {
   statusMessage: string;
   cookies: Cookie[];
   timeline: string[];
+  bytesRead: number;
 }
 
 export async function sendCurlAndWriteTimeline(
