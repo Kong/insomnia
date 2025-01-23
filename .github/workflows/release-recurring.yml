@@ -55,7 +55,7 @@ jobs:
       - name: Package
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
-      
+
       # - name: Set publish metadata # Checksum for provenance must be calculated before moving artifacts temporarily
       #   id: metadata
       #   run: |
@@ -66,6 +66,11 @@ jobs:
       #     ARTIFACT_PATH: "packages"
       #     CLI_ARTIFACT_SHAFILE: ${{runner.temp}}/cli.sha256
       #     ELECTRON_ARTIFACT_SHAFILE: ${{runner.temp}}/electron.sha256
+
+      # See https://github.com/electron/electron/issues/42510#issuecomment-2171583086
+      - if: ${{ runner.os == 'Linux' }}
+        name: Lift unprivileged user namespace restrictions
+        run: sudo sysctl kernel/apparmor_restrict_unprivileged_userns=0
 
       - name: Test critical path on packaged electron app
         run: npm run test:package -w packages/insomnia-smoke-test -- --project=Critical
