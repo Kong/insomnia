@@ -373,7 +373,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
         aria-label='Environment Key Value Pair'
         selectionMode='none'
         dragAndDropHooks={dragAndDropHooks}
-        dependencies={[kvPairError, data]}
+        dependencies={[kvPairError, data, symmetricKey]}
         className="p-[--padding-sm] w-full overflow-y-auto h-full"
         items={kvPairs}
       >
