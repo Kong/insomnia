@@ -8,6 +8,7 @@ import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { AI } from '../settings/ai';
 import { BooleanSetting } from '../settings/boolean-setting';
+import { CloudServiceCredentialList } from '../settings/cloud-service-credentials';
 import { General } from '../settings/general';
 import { ImportExport } from '../settings/import-export';
 import { MaskedSetting } from '../settings/masked-setting';
@@ -27,6 +28,7 @@ export const TAB_INDEX_SHORTCUTS = 'keyboard';
 export const TAB_INDEX_THEMES = 'themes';
 export const TAB_INDEX_PLUGINS = 'plugins';
 export const TAB_INDEX_AI = 'ai';
+export const TAB_CLOUD_CREDENTIAL = 'cloudCred';
 
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const [defaultTabKey, setDefaultTabKey] = useState('general');
@@ -100,6 +102,12 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
             </Tab>
             <Tab
               className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+              id='cloudCred'
+            >
+              Cloud Credentials
+            </Tab>
+            <Tab
+              className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
               id='ai'
             >
               AI
@@ -152,6 +160,9 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           </TabPanel>
           <TabPanel className='w-full h-full overflow-y-auto p-4' id='plugins'>
             <Plugins />
+          </TabPanel>
+          <TabPanel className='w-full h-full overflow-y-auto p-4' id='cloudCred'>
+            <CloudServiceCredentialList />
           </TabPanel>
           <TabPanel className='w-full h-full overflow-y-auto p-4' id='ai'>
             <AI />

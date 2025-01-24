@@ -33,7 +33,8 @@ export type HandleChannels =
   | 'secretStorage.getSecret'
   | 'secretStorage.deleteSecret'
   | 'secretStorage.encryptString'
-  | 'secretStorage.decryptString';
+  | 'secretStorage.decryptString'
+  | 'cloudService.authenticate';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
