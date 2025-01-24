@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import { debounce } from '../../../../common/misc';
-import type { AWSSecretConfig, ExternalVaultConfig } from '../../../../main/ipc/cloud-service-integraion/types';
+import type { AWSSecretConfig, ExternalVaultConfig } from '../../../../main/ipc/cloud-service-integration/types';
 import { type CloudProviderCredential, type CloudProviderName, type } from '../../../../models/cloud-credential';
 import { Icon } from '../../icon';
 import { CloudCredentialModal } from '../../modals/cloud-credential-modal/cloud-credential-modal';

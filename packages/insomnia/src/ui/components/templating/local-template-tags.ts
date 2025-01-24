@@ -8,7 +8,7 @@ import { CookieJar } from 'tough-cookie';
 import * as uuid from 'uuid';
 
 import type { RenderPurpose } from '../../../common/render';
-import type { ExternalVaultConfig } from '../../../main/ipc/cloud-service-integraion/types';
+import type { ExternalVaultConfig } from '../../../main/ipc/cloud-service-integration/types';
 import * as models from '../../../models';
 import type { CloudProviderCredential, CloudProviderName } from '../../../models/cloud-credential';
 import { vaultEnvironmentMaskValue } from '../../../models/environment';

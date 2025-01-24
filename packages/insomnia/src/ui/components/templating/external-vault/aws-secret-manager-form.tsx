@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import type { AWSSecretConfig } from '../../../../main/ipc/cloud-service-integraion/types';
+import type { AWSSecretConfig } from '../../../../main/ipc/cloud-service-integration/types';
 import type { NunjucksParsedTag } from '../../../../templating/utils';
 import { HelpTooltip } from '../../help-tooltip';
 

@@ -1,6 +1,6 @@
-import type { AWSGetSecretConfig } from '../../../main/ipc/cloud-service-integraion/aws-service';
-import type { CloudServiceSecretOption } from '../../../main/ipc/cloud-service-integraion/cloud-service';
-import type { AWSSecretConfig, ExternalVaultConfig } from '../../../main/ipc/cloud-service-integraion/types';
+import type { AWSGetSecretConfig } from '../../../main/ipc/cloud-service-integration/aws-service';
+import type { CloudServiceSecretOption } from '../../../main/ipc/cloud-service-integration/cloud-service';
+import type { AWSSecretConfig, ExternalVaultConfig } from '../../../main/ipc/cloud-service-integration/types';
 import type { CloudProviderCredential, CloudProviderName } from '../../../models/cloud-credential';
 
 export const getExternalVault = async (provider: CloudProviderName, providerCredential: CloudProviderCredential, secretConfig: ExternalVaultConfig) => {

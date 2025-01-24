@@ -14,7 +14,7 @@ import type { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { addExecutionStep, completeExecutionStep, getExecution, startExecution, type TimingStep, updateLatestStepName } from '../network/request-timing';
 import type { WebSocketBridgeAPI } from '../network/websocket';
-import type { cloudServiceBridgeAPI } from './cloud-service-integraion/cloud-service';
+import type { cloudServiceBridgeAPI } from './cloud-service-integration/cloud-service';
 import { ipcMainHandle, ipcMainOn, ipcMainOnce, type RendererOnChannels } from './electron';
 import extractPostmanDataDumpHandler from './extractPostmanDataDump';
 import type { gRPCBridgeAPI } from './grpc';

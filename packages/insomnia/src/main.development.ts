@@ -12,7 +12,7 @@ import log, { initializeLogging } from './common/log';
 import { SegmentEvent, trackSegmentEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
-import { registerCloudServiceHandlers } from './main/ipc/cloud-service-integraion/cloud-service';
+import { registerCloudServiceHandlers } from './main/ipc/cloud-service-integration/cloud-service';
 import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';

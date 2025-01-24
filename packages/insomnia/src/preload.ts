@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-import type { cloudServiceBridgeAPI } from './main/ipc/cloud-service-integraion/cloud-service';
+import type { cloudServiceBridgeAPI } from './main/ipc/cloud-service-integration/cloud-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { CurlBridgeAPI } from './main/network/curl';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
