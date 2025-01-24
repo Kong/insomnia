@@ -1461,3 +1461,67 @@ export const toggleExpandAllRequestGroupsAction: ActionFunction = async ({ param
   }));
   return null;
 };
+
+export const createCloudCredentialAction: ActionFunction = async ({ request }) => {
+  const patch = await request.json();
+  const { name, provider, credentials, isAuthenticated } = patch;
+  invariant(typeof name === 'string', 'Name is required');
+  invariant(provider, 'Cloud Provier name is required');
+  if (name && provider && credentials) {
+    if (isAuthenticated) {
+      // find credential with same name for oauth authenticated cloud service
+      const existingCredential = await models.cloudCrendential.getByName(name, provider);
+      if (existingCredential.length === 0) {
+        await models.cloudCrendential.create(patch);
+      } else {
+        await models.cloudCrendential.update(existingCredential[0], patch);
+      }
+      return credentials;
+    } else {
+      const authenciateResponse = await window.main.cloudService.authenticate({ provider, credentials });
+      const { success, error, result } = authenciateResponse!;
+      if (success) {
+        await models.cloudCrendential.create(patch);
+      } else {
+        return {
+          error: error?.errorMessage,
+        };
+      }
+      return result;
+    }
+  }
+  return { error: 'Invalid paramters for creating cloud credential' };
+};
+
+export const updateCloudCredentialAction: ActionFunction = async ({ request, params }) => {
+  const { cloudCredentialId } = params;
+  invariant(typeof cloudCredentialId === 'string', 'Credential ID is required');
+  const patch = await request.json();
+  const { name, provider, credentials } = patch;
+  invariant(typeof name === 'string', 'Name is required');
+  invariant(provider, 'Cloud Provier name is required');
+  if (name && provider && credentials) {
+    const authenciateResponse = await window.main.cloudService.authenticate({ provider, credentials });
+    const { success, error, result } = authenciateResponse!;
+    if (success) {
+      const originCredential = await models.cloudCrendential.getById(cloudCredentialId);
+      invariant(originCredential, 'No Cloud Credential found');
+      await models.cloudCrendential.update(originCredential, patch);
+    } else {
+      return {
+        error: error?.errorMessage,
+      };
+    }
+    return result;
+  }
+  return { error: 'Invalid paramters for updating cloud credential' };
+};
+
+export const deleteCloudCredentialAction: ActionFunction = async ({ params }) => {
+  const { cloudCredentialId } = params;
+  invariant(typeof cloudCredentialId === 'string', 'Cloud Credential ID is required');
+  const cloudCredential = await models.cloudCrendential.getById(cloudCredentialId);
+  invariant(cloudCredential, 'Cloud Credential not found');
+  await models.cloudCrendential.remove(cloudCredential);
+  return null;
+};

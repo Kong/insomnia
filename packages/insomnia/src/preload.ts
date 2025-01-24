@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils as _webUtils } from 'electron';
 
+import type { cloudServiceBridgeAPI } from './main/ipc/cloud-service-integration/cloud-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { CurlBridgeAPI } from './main/network/curl';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
@@ -40,6 +41,10 @@ const grpc: gRPCBridgeAPI = {
   loadMethods: options => ipcRenderer.invoke('grpc.loadMethods', options),
   loadMethodsFromReflection: options => ipcRenderer.invoke('grpc.loadMethodsFromReflection', options),
 };
+
+const cloudService: cloudServiceBridgeAPI = {
+  authenticate: options => ipcRenderer.invoke('cloudService.authenticate', options),
+};
 const main: Window['main'] = {
   startExecution: options => ipcRenderer.send('startExecution', options),
   addExecutionStep: options => ipcRenderer.send('addExecutionStep', options),
@@ -67,6 +72,7 @@ const main: Window['main'] = {
   webSocket,
   grpc,
   curl,
+  cloudService,
   trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
   showContextMenu: options => ipcRenderer.send('show-context-menu', options),

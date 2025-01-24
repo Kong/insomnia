@@ -14,6 +14,7 @@ import type { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { addExecutionStep, completeExecutionStep, getExecution, startExecution, type TimingStep, updateLatestStepName } from '../network/request-timing';
 import type { WebSocketBridgeAPI } from '../network/websocket';
+import type { cloudServiceBridgeAPI } from './cloud-service-integration/cloud-service';
 import { ipcMainHandle, ipcMainOn, ipcMainOnce, type RendererOnChannels } from './electron';
 import extractPostmanDataDumpHandler from './extractPostmanDataDump';
 import type { gRPCBridgeAPI } from './grpc';
@@ -37,6 +38,7 @@ export interface RendererToMainBridgeAPI {
   webSocket: WebSocketBridgeAPI;
   grpc: gRPCBridgeAPI;
   curl: CurlBridgeAPI;
+  cloudService: cloudServiceBridgeAPI;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   showContextMenu: (options: { key: string; nunjucksTag?: { template: string; range: MarkerRange } }) => void;
