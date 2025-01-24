@@ -1,0 +1,78 @@
+_type: export
+__export_format: 4
+__export_date: 2025-01-23T07:52:47.609Z
+__export_source: insomnia.desktop.app:v10.3.1-beta.0
+resources:
+  - _id: wrk_11afcca54849448ca59100f5f31e556b
+    type: Workspace
+    parentId: proj_668d3ef4abb1456f9926ee9e0adee62b
+    modified: 1735021392122
+    created: 1735021392122
+    name: Global env with secret vault
+    description: ""
+    scope: environment
+    _type: workspace
+  - _id: env_214ce88837cd0a36c40a0ea6a84c7c6177663206
+    type: Environment
+    parentId: wrk_11afcca54849448ca59100f5f31e556b
+    modified: 1736751370415
+    created: 1735021392123
+    name: Base Environment
+    data:
+      from: global env with secert vault
+    dataPropertyOrder: null
+    color: null
+    isPrivate: false
+    metaSortKey: 1735021392123
+    environmentType: kv
+    kvPairData:
+      - id: envPair_1eefc750fae74ab0870d8e77b31023f6
+        name: from
+        value: global env with secert vault
+        type: str
+        enabled: true
+      - id: envPair_c2edecbf93744867acae6b9846c2fb48
+        name: vault
+        value: base_vault
+        type: str
+        enabled: false
+    _type: environment
+  - _id: env_01dcda3f8c3b4ce2b53266538f894137
+    type: Environment
+    parentId: env_214ce88837cd0a36c40a0ea6a84c7c6177663206
+    modified: 1737618683837
+    created: 1735021423365
+    name: vault env
+    data:
+      __insomnia_vault:
+        secret: eyJpdiI6ImY2NTAzYmVjMDIyYTE2YzNlNTNkMWY5MiIsInQiOiI3YzgwMGVkZGVhZGZmN2MxMjVmNmVmNzlkODY2NGM0YyIsImFkIjoiIiwiZCI6IjU2YzdlODU0NDA3MjdmOTQifQ==
+        foo: eyJpdiI6IjA1YjdmMjFlOWY0OGU0ZTY5NmZiNzY3OCIsInQiOiIyOTRmODZkMTc4MTMxMDVmZTc5MWMwMmZjYWU2YjM5MSIsImFkIjoiIiwiZCI6ImJkZGI3MiJ9
+        hello: eyJpdiI6ImRjNjQwMDNlMWEyOTc1ODhmMTYzNzRhZSIsInQiOiIxNWZmYWQ0MzdlYjdiOTJkOWRiYzMwMWIzNjQyMjJjOCIsImFkIjoiIiwiZCI6Ijc1MmM1MmUyZjkifQ==
+    dataPropertyOrder:
+      "&":
+        - __insomnia_vault
+      "&~|__insomnia_vault":
+        - secret
+        - foo
+        - hello
+    color: null
+    isPrivate: true
+    metaSortKey: 1735021423366
+    environmentType: kv
+    kvPairData:
+      - id: envPair_81f3c2479f9a48da8f8aaf8a3887554e
+        name: secret
+        value: eyJpdiI6ImY2NTAzYmVjMDIyYTE2YzNlNTNkMWY5MiIsInQiOiI3YzgwMGVkZGVhZGZmN2MxMjVmNmVmNzlkODY2NGM0YyIsImFkIjoiIiwiZCI6IjU2YzdlODU0NDA3MjdmOTQifQ==
+        type: secret
+        enabled: true
+      - id: envPair_943d0b39be9347c4abaf9b12f2373278
+        name: foo
+        value: eyJpdiI6IjA1YjdmMjFlOWY0OGU0ZTY5NmZiNzY3OCIsInQiOiIyOTRmODZkMTc4MTMxMDVmZTc5MWMwMmZjYWU2YjM5MSIsImFkIjoiIiwiZCI6ImJkZGI3MiJ9
+        type: secret
+        enabled: true
+      - id: envPair_692e1e97b162451da1ab3d9c54d103d9
+        name: hello
+        value: eyJpdiI6ImRjNjQwMDNlMWEyOTc1ODhmMTYzNzRhZSIsInQiOiIxNWZmYWQ0MzdlYjdiOTJkOWRiYzMwMWIzNjQyMjJjOCIsImFkIjoiIiwiZCI6Ijc1MmM1MmUyZjkifQ==
+        type: secret
+        enabled: true
+    _type: environment

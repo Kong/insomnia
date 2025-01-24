@@ -71,7 +71,12 @@ const encryptString = (raw: string) => {
 const decryptString = (cipherText: string) => {
   const buffer = Buffer.from(cipherText, 'hex');
   if (safeStorage.isEncryptionAvailable()) {
-    return safeStorage.decryptString(buffer);
+    try {
+      return safeStorage.decryptString(buffer);
+    } catch (error) {
+      console.error(`Can not decrypt secret ${error.toString()}`);
+      return cipherText;
+    }
   }
   return cipherText;
 };

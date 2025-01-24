@@ -1,3 +1,5 @@
+
+import { getInsomniaVaultKey } from '../common/constants';
 import { settings } from '../models';
 
 export const base64encode = (input: string | JsonWebKey) => {
@@ -19,6 +21,11 @@ export const base64decode = (base64Str: string, toObject: boolean) => {
 };
 
 export const decryptVaultKeyFromSession = async (vaultKey: string, toJsonWebKey: boolean) => {
+  if (process.env.PLAYWRIGHT) {
+    const testVaultKey = getInsomniaVaultKey() || '';
+    // return vault key from environmet variable directly when running playwright tests
+    return toJsonWebKey ? base64decode(testVaultKey, true) : testVaultKey;
+  }
   if (vaultKey) {
     const decryptedVaultKey = await window.main.secretStorage.decryptString(vaultKey);
     if (toJsonWebKey) {
