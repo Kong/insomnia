@@ -107,15 +107,6 @@ jobs:
           release_id: ${{ steps.core_tag_and_release.outputs.id }}
           tag_name: ${{ env.RELEASE_CORE_TAG }}
           file: "./artifacts/*-artifacts/insomnia/dist/Insomnia.*;./artifacts/*-artifacts/insomnia/dist/squirrel-windows/*;./artifacts/*-artifacts/insomnia-inso/artifacts/inso-*;./artifacts/**/*sbom.{spdx,cyclonedx}.json"
-          # /github/workspace/artifacts/windows-latest-artifacts/***/dist/squirrel-windows/Insomnia.Core-9.3.0-beta.1.exe
-          # /github/workspace/artifacts/windows-latest-artifacts/***/dist/squirrel-windows/Insomnia.Core-9.3.0-beta.1-full.nupkg
-          # /github/workspace/artifacts/windows-latest-artifacts/***/dist/squirrel-windows/RELEASES
-          # /home/runner/work/***/***/artifacts/macos-13-artifacts/***/dist/Insomnia.Core-9.3.0-alpha.7.dmg
-          # /home/runner/work/***/***/artifacts/ubuntu-latest-artifacts/***/dist/Insomnia.Core-9.3.0-alpha.7.deb
-          # /home/runner/work/***/***/artifacts/ubuntu-latest-artifacts/***-inso/artifacts/inso-linux-9.3.0-alpha.7.tar.xz
-          # /home/runner/work/***/***/artifacts/macos-13-artifacts/***-inso/artifacts/inso-macos-13-9.3.0-alpha.7.pkg
-          # /home/runner/work/***/***/artifacts/image-inso-Linux-sbom.spdx.json/image-inso-Linux-sbom.spdx.json
-          # /home/runner/work/***/***/artifacts/sbom.cyclonedx.json/sbom.cyclonedx.json
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
 
@@ -153,9 +144,10 @@ jobs:
           RELEASE_VERSION: ${{ env.INSO_VERSION }}
           RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
+      # TODO: also take care of aarch64 image
       - name: Load the Inso CLI Docker Archive
         run: |
-          docker load -i ./artifacts/ubuntu-latest-artifacts/insomnia-inso/artifacts/inso-docker-image.tar
+          docker load -i ./artifacts/Linux-X64-artifacts/insomnia-inso/artifacts/inso-docker-image.tar
           docker image ls
 
       - name: Login to Docker Hub
@@ -177,7 +169,6 @@ jobs:
           sep-tags: ","
 
       - name: Push Inso CLI docker image tags to Docker Hub
-        id: publish_isno_docker_image
         run: |
           for tag in ${IMAGE_TAGS//,/ }; do \
             docker tag insomnia-inso:temp $tag
@@ -241,15 +232,25 @@ jobs:
         env:
           RELEASE_GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
 
-      - name: Upload to snapcraft (beta and stable only)
+      - name: Upload x64 Linux snap to snapcraft (beta and stable only)
         if: ${{ !contains(github.event.inputs.version, 'alpha') }}
         uses: canonical/action-publish@v1
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN_FILE_NEW }}
         with:
-          snap: artifacts/ubuntu-latest-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap
+          snap: artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}-x64.snap
           release: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
+      - name: Upload arm64 Linux to snapcraft (beta and stable only)
+        if: ${{ !contains(github.event.inputs.version, 'alpha') }}
+        uses: canonical/action-publish@v1
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN_FILE_NEW }}
+        with:
+          snap: artifacts/Linux-ARM64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}-arm64.snap
+          release: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
+
+      # TODO: also release for aarch64 Linux?
       - name: Upload .deb to pulp and/or cloudsmith (stable only)
         if: ${{ !contains(github.event.inputs.version, 'alpha') && !contains(github.event.inputs.version, 'beta') }}
         uses: docker://kong/release-script:latest
@@ -267,7 +268,7 @@ jobs:
           entrypoint: /entrypoint.sh
           args: >
             release
-            --file artifacts/ubuntu-latest-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.deb
+            --file artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}-x64.deb
             --dist-name ubuntu
             --dist-version focal
             --package-type insomnia

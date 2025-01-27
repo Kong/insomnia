@@ -87,7 +87,7 @@ jobs:
           CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
 
       - name: Package app (Linux only)
-        if: startsWith(matrix.os, 'ubuntu')
+        if: runner.os == 'Linux'
         shell: bash
         run: npm run app-package
         env:
@@ -198,7 +198,7 @@ jobs:
         run: npm run artifacts -w insomnia-inso
 
       - name: Create inso Docker Image artifacts
-        if: matrix.os == 'ubuntu-latest'
+        if: runner.os == 'Linux'
         run: |
           DOCKER_BUILDKIT=1 docker build --tag ${{ env.INSO_PACKAGE_NAME }}:temp ./packages/${{ env.INSO_PACKAGE_NAME }}
           docker save ${{ env.INSO_PACKAGE_NAME }}:temp -o ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/${{ env.INSO_DOCKER_TAR }}
@@ -207,10 +207,10 @@ jobs:
       # Automatically uploads to workflow assets
       - name: Scan inso docker artifacts
         id: sbom_action
-        if: matrix.os == 'ubuntu-latest'
+        if: runner.os == 'Linux'
         uses: Kong/public-shared-actions/security-actions/scan-docker-image@28d20a1f492927f35b00b317acd78f669c45f88b # v2.7.3
         with:
-          asset_prefix: image-inso-${{ runner.os }}
+          asset_prefix: image-inso-${{ runner.os }}-${{ runner.arch }}
           image: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/${{ env.INSO_DOCKER_TAR }}
           upload-sbom-release-assets: false # No release is publushed yet. Uploads as workflow assets
           skip_cis_scan: true
@@ -221,7 +221,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: ignore
-          name: ${{ matrix.os }}-artifacts
+          name: ${{ runner.os }}-${{ runner.arch }}-artifacts
           path: |
             packages/insomnia/dist/*.exe
             packages/insomnia/dist/squirrel-windows/*
@@ -237,7 +237,7 @@ jobs:
       - name: Upload source assets for Sentry
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os }}-sentry
+          name: ${{ runner.os }}-${{ runner.arch }}-sentry
           path: |
             packages/insomnia/build/*.js
             packages/insomnia/build/*.map
