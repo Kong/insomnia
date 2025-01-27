@@ -1,5 +1,6 @@
 // This file is responsible for compressing the binaries for each architecture
 import fs from 'node:fs/promises';
+import process from 'node:process';
 
 import { ProcessEnvOptions, spawn } from 'child_process';
 import path from 'path';
@@ -27,7 +28,7 @@ const spawnCompressProcess = (cwd: ProcessEnvOptions['cwd']) => {
       platform === 'win32' ? '-a -cf' : '-cJf',
       platform === 'win32'
         ? `inso-windows-${version}.zip`
-        : `inso-linux-${version}.tar.xz`,
+        : `inso-linux-${process.arch}-${version}.tar.xz`,
       platform === 'win32' ? 'inso.exe' : 'inso',
     ], { cwd, shell: platform === 'win32' });
   }
