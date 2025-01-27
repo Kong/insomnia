@@ -5,13 +5,15 @@ import { useParams, useRouteLoaderData } from 'react-router-dom';
 import { useMount } from 'react-use';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
-import { documentationLinks } from '../../../common/documentation';
+import { database as db } from '../../../common/database';
 import { generateId } from '../../../common/misc';
 import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage } from '../../../common/render';
 import type { GrpcMethodType } from '../../../main/ipc/grpc';
 import * as models from '../../../models';
-import type { GrpcRequestHeader } from '../../../models/grpc-request';
+import type { GrpcRequest, GrpcRequestHeader } from '../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
+import { isRequestGroup, type RequestGroup } from '../../../models/request-group';
+import { getOrInheritHeaders } from '../../../network/network';
 import { urlMatchesCertHost } from '../../../network/url-matches-cert-host';
 import { getGrpcConnectionErrorDetails } from '../../../utils/grpc';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
@@ -33,10 +35,8 @@ import { showAlert, showError, showModal } from '../modals';
 import { ErrorModal } from '../modals/error-modal';
 import { ProtoFilesModal } from '../modals/proto-files-modal';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
-import { SvgIcon } from '../svg-icon';
 import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
-import { EmptyStatePane } from './empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from './pane';
 interface Props {
   grpcState: GrpcRequestState;
@@ -71,13 +71,14 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
       const methods = await window.main.grpc.loadMethods(activeRequest.protoFileId);
       setGrpcState({ ...grpcState, methods });
     } else if (activeRequest.url && activeRequest.reflectionApi) {
+      const requestGroups = (await db.withAncestors<GrpcRequest | RequestGroup>(activeRequest, [models.requestGroup.type])).filter(isRequestGroup);
       const rendered =
         await tryToInterpolateRequestOrShowRenderErrorModal({
           request: activeRequest,
           environmentId,
           payload: {
             url: activeRequest.url,
-            metadata: activeRequest.metadata,
+            metadata: getOrInheritHeaders({ request: { headers: activeRequest.metadata }, requestGroups }),
             reflectionApi: activeRequest.reflectionApi,
           },
         });
@@ -114,8 +115,10 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   const handleRequestSend = async () => {
     if (method && !running) {
       try {
+        const requestGroups = (await db.withAncestors<GrpcRequest | RequestGroup>(activeRequest, [models.requestGroup.type])).filter(isRequestGroup);
         const request = await getRenderedGrpcRequest({
-          request: activeRequest,
+          // split off the metadata from the request
+          request: { ...activeRequest, metadata: getOrInheritHeaders({ request: { headers: activeRequest.metadata }, requestGroups }) },
           environment: environmentId,
           purpose: 'send',
           skipBody: canClientStream(methodType),
@@ -223,13 +226,14 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 disabled={!activeRequest.url}
                 onClick={async () => {
                   try {
+                    const requestGroups = (await db.withAncestors<GrpcRequest | RequestGroup>(activeRequest, [models.requestGroup.type])).filter(isRequestGroup);
                     let rendered =
                       await tryToInterpolateRequestOrShowRenderErrorModal({
                         request: activeRequest,
                         environmentId,
                         payload: {
                           url: activeRequest.url,
-                          metadata: activeRequest.metadata,
+                          metadata: getOrInheritHeaders({ request: { headers: activeRequest.metadata }, requestGroups }),
                           reflectionApi: activeRequest.reflectionApi,
                         },
                       });
@@ -281,19 +285,21 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
           </div>
         </PaneHeader>
         <PaneBody>
-          {methodType && (
             <Tabs aria-label='Grpc request pane tabs' className="flex-1 w-full h-full flex flex-col">
               <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+              {methodType && (
                 <Tab
                   className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
                   id='method-type'
                 >
                   {GrpcMethodTypeName[methodType]}
                 </Tab>
+              )}
                 <Tab className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300' id='headers'>
                   Headers
                 </Tab>
               </TabList>
+            {methodType && (
               <TabPanel className={'w-full h-full overflow-y-auto'} id='method-type'>
                 <>
                   {running && canClientStream(methodType) && (
@@ -367,6 +373,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                   </Tabs>
                 </>
               </TabPanel>
+            )}
               <TabPanel className={'w-full h-full overflow-y-auto'} id='headers'>
                 <ErrorBoundary key={uniquenessKey} errorClassName="font-error pad text-center">
                   <KeyValueEditor
@@ -381,16 +388,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                   />
                 </ErrorBoundary>
               </TabPanel>
-            </Tabs>
-          )}
-          {!methodType && (
-            <EmptyStatePane
-              icon={<SvgIcon icon="bug" />}
-              documentationLinks={[documentationLinks.introductionToInsomnia]}
-              secondaryAction="Select a body type from above to send data in the body of a request"
-              title="Enter a URL and send to get a response"
-            />
-          )}
+          </Tabs>
         </PaneBody>
       </Pane>
       {isProtoModalOpen && <ProtoFilesModal

@@ -26,7 +26,7 @@ import type { Environment, UserUploadEnvironment } from '../models/environment';
 import type { MockRoute } from '../models/mock-route';
 import type { MockServer } from '../models/mock-server';
 import { isProject, type Project } from '../models/project';
-import { isRequest, type Request, type RequestAuthentication, type RequestHeader, type RequestParameter } from '../models/request';
+import { type BaseRequest, isRequest, type Request, type RequestAuthentication, type RequestHeader, type RequestParameter } from '../models/request';
 import { isRequestGroup, type RequestGroup } from '../models/request-group';
 import type { Settings } from '../models/settings';
 import type { WebSocketRequest } from '../models/websocket-request';
@@ -63,7 +63,7 @@ export const getOrInheritAuthentication = ({ request, requestGroups }: { request
   // if no auth is specified on request or folders, default to none
   return { type: 'none' };
 };
-export function getOrInheritHeaders({ request, requestGroups }: { request: Request; requestGroups: RequestGroup[] }): RequestHeader[] {
+export function getOrInheritHeaders({ request, requestGroups }: { request: Pick<BaseRequest, 'headers'>; requestGroups: RequestGroup[] }): RequestHeader[] {
   // recurse over each parent folder to append headers
   // in case of duplicate, node-libcurl joins on comma
   const headers = requestGroups

@@ -218,7 +218,7 @@ const getMethodsFromReflection = async (
       url,
       getChannelCredentials({ url: host, caCertificate, clientCert, clientKey, rejectUnauthorized }),
       grpcOptions,
-      filterDisabledMetaData(metadata),
+      filterDisabledOrInvalidMetaData(metadata),
       path
     );
     const services = await client.listServices();
@@ -414,7 +414,7 @@ export const start = (
             method.requestSerialize,
             method.responseDeserialize,
             messageBody,
-            filterDisabledMetaData(request.metadata),
+            filterDisabledOrInvalidMetaData(request.metadata),
             onUnaryResponse(event, request._id),
           );
           unaryCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
@@ -425,7 +425,7 @@ export const start = (
             requestPath,
             method.requestSerialize,
             method.responseDeserialize,
-            filterDisabledMetaData(request.metadata),
+            filterDisabledOrInvalidMetaData(request.metadata),
             onUnaryResponse(event, request._id));
           clientCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
           grpcCalls.set(request._id, clientCall);
@@ -436,7 +436,7 @@ export const start = (
             method.requestSerialize,
             method.responseDeserialize,
             messageBody,
-            filterDisabledMetaData(request.metadata),
+            filterDisabledOrInvalidMetaData(request.metadata),
           );
           onStreamingResponse(event, serverCall, request._id);
           grpcCalls.set(request._id, serverCall);
@@ -446,7 +446,7 @@ export const start = (
             requestPath,
             method.requestSerialize,
             method.responseDeserialize,
-            filterDisabledMetaData(request.metadata));
+            filterDisabledOrInvalidMetaData(request.metadata));
           onStreamingResponse(event, bidiCall, request._id);
           grpcCalls.set(request._id, bidiCall);
           break;
@@ -538,10 +538,10 @@ const onUnaryResponse = (event: IpcMainEvent, requestId: string) => (err: Servic
   grpcCalls.delete(requestId);
 };
 
-const filterDisabledMetaData = (metadata: GrpcRequestHeader[]): Metadata => {
+const filterDisabledOrInvalidMetaData = (metadata: GrpcRequestHeader[]): Metadata => {
   const grpcMetadata = new Metadata();
   for (const entry of metadata) {
-    if (!entry.disabled) {
+    if (!entry.disabled && entry.name) {
       grpcMetadata.add(entry.name, entry.value);
     }
   }
