@@ -11,7 +11,7 @@ COPY ./artifacts/inso-linux-*.tar.xz /tmp/inso.tar.xz
 RUN apt-get update && apt-get install -y xz-utils && rm -rf /var/lib/apt/lists/*
 RUN tar -C /usr/bin -xvf /tmp/inso.tar.xz
 
-FROM --platform=linux/amd64 docker.io/ubuntu:22.04
+FROM docker.io/ubuntu:22.04
 COPY --from=fetch /usr/bin/inso /usr/bin/inso
 RUN chmod +x /usr/bin/inso
 RUN apt-get update && apt-get install -y libstdc++6 && rm -rf /var/lib/apt/lists/*
