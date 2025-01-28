@@ -71,6 +71,17 @@ jobs:
         run: |
           echo "INSO_VERSION=$(jq .version ./packages/${{ env.INSO_PACKAGE_NAME }}/package.json -rj)" >> $GITHUB_ENV
 
+      - name: Install snapcraft (Linux arm64 only)
+        if: runner.os == 'Linux' && runner.arch == 'arm64'
+        shell: bash
+        run: sudo snap install snapcraft --classic 
+
+      - name: Package app (Linux only)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: npm run app-package
+        env:
+          NODE_OPTIONS: '--max_old_space_size=6144'
 
       # If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
       - name: Package app (MacOS only)
@@ -83,13 +94,6 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ runner.os == 'macOS' && secrets.DESIGNER_APPLE_ID_PASSWORD || '' }}
           CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
           CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
-
-      - name: Package app (Linux only)
-        if: runner.os == 'Linux'
-        shell: bash
-        run: npm run app-package
-        env:
-          NODE_OPTIONS: '--max_old_space_size=6144'
 
       # creates unpacked electron-builder contents that can be signed afterwards
       - name: Package unpacked app (Windows only)
