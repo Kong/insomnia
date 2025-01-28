@@ -41,9 +41,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # macos-13 supports both intel and apple silicon on inso cli properly
-          # macos-latest is defaulting to apple silicon and breaks inso cli retrocompatibility
-          - os: macos-13
+          - os: macos-latest-large
             csc_link_secret: DESIGNER_MAC_CSC_LINK
             csc_key_password_secret: DESIGNER_MAC_CSC_KEY_PASSWORD
           - os: windows-latest
@@ -52,7 +50,7 @@ jobs:
           - os: ubuntu-latest
             csc_link_secret: ''
             csc_key_password_secret: ''
-          - os: ubuntu-24.04-arm
+          - os: ubuntu-latest-arm
             csc_link_secret: ''
             csc_key_password_secret: ''
     steps:
@@ -76,13 +74,13 @@ jobs:
 
       # If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
       - name: Package app (MacOS only)
-        if: matrix.os == 'macos-13'
+        if: runner.os == 'macOS'
         shell: bash
         run: npm run app-package
         env:
           NODE_OPTIONS: '--max_old_space_size=6144'
-          APPLE_ID: ${{ matrix.os == 'macos-13' && secrets.DESIGNER_APPLE_ID || '' }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ matrix.os == 'macos-13' && secrets.DESIGNER_APPLE_ID_PASSWORD || '' }}
+          APPLE_ID: ${{ runner.os == 'macOS' && secrets.DESIGNER_APPLE_ID || '' }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ runner.os == 'macOS' && secrets.DESIGNER_APPLE_ID_PASSWORD || '' }}
           CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
           CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
 
@@ -95,12 +93,12 @@ jobs:
 
       # creates unpacked electron-builder contents that can be signed afterwards
       - name: Package unpacked app (Windows only)
-        if: matrix.os == 'windows-latest'
+        if: runner.os == 'Windows'
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:unpacked -w insomnia
 
       - name: Move .dll and .exe files to /tosign (PowerShell)
-        if: matrix.os == 'windows-latest'
+        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           New-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -ItemType Directory -Force
@@ -110,7 +108,7 @@ jobs:
 
       # signs unpacked electron-builder contents, in this case only the .exe
       - name: Code-sign unpacked .exe (Windows only)
-        if: matrix.os == 'windows-latest'
+        if: runner.os == 'Windows'
         uses: sslcom/esigner-codesign@develop
         with:
           command: batch_sign
@@ -123,7 +121,7 @@ jobs:
           override: true
 
       - name: Move .dll and .exe files back to win-unpacked and delete /tosign
-        if: matrix.os == 'windows-latest'
+        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           Get-ChildItem -Path "packages/insomnia/dist/win-unpacked/signed" -Filter *.dll | Move-Item -Destination "packages/insomnia/dist/win-unpacked"
@@ -133,7 +131,7 @@ jobs:
 
       # re-packages the now code-signed electron-builder contents into a squirrel installer
       - name: Package dist app (Windows only)
-        if: matrix.os == 'windows-latest'
+        if: runner.os == 'Windows'
         shell: bash
         run: |
           docker pull ghcr.io/sslcom/codesigner-win:latest
@@ -155,7 +153,7 @@ jobs:
           VERSION: ${{ env.INSO_VERSION }}
 
       - name: Code-sign & create Inso CLI installer (macOS only)
-        if: matrix.os == 'macos-13'
+        if: runner.os == 'macOS'
         run: ./src/scripts/macos-pkg.sh
         shell: bash
         working-directory: ./packages/${{ env.INSO_PACKAGE_NAME }}
@@ -168,7 +166,7 @@ jobs:
           VERSION: ${{ env.INSO_VERSION }}
 
       - name: Notarize Inso CLI installer (macOS only)
-        if:  matrix.os == 'macos-13'
+        if:  runner.os == 'macOS'
         uses: lando/notarize-action@v2
         with:
           product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
@@ -179,13 +177,13 @@ jobs:
           verbose: true
 
       - name: Staple Inso CLI installer (macOS only)
-        if: matrix.os == 'macos-13'
+        if: runner.os == 'macOS'
         uses: BoundfoxStudios/action-xcode-staple@v1
         with:
           product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
 
       - name: Notarize Inso CLI binary (macOS only)
-        if: matrix.os == 'macos-13'
+        if: runner.os == 'macOS'
         uses: lando/notarize-action@v2
         with:
           product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/binaries/inso
