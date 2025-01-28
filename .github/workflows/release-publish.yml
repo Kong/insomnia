@@ -1,4 +1,5 @@
 name: Release Publish
+run-name: Publish ${{ github.event.inputs.version }} channel by @${{ github.actor }}
 
 on:
   workflow_dispatch:
@@ -217,21 +218,6 @@ jobs:
 
           sentry-cli sourcemaps upload -r ${{ env.RELEASE_VERSION }} ./artifacts/*-latest-sentry
 
-      - name: Configure Git user
-        uses: Homebrew/actions/git-user-config@master
-        with:
-          username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
-
-      - name: Merge git branch into develop
-        run: |
-          remote_repo="https://${GITHUB_ACTOR}:${RELEASE_GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git checkout develop
-          git merge --no-ff ${{ env.RELEASE_BRANCH }}
-          git status
-          git push "${remote_repo}"
-        env:
-          RELEASE_GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
-
       - name: Upload x64 Linux snap to snapcraft (beta and stable only)
         if: ${{ !contains(github.event.inputs.version, 'alpha') }}
         uses: canonical/action-publish@v1
@@ -273,6 +259,21 @@ jobs:
             --dist-version focal
             --package-type insomnia
             ${{ env.IS_PRERELEASE == 'true' && '--internal' || '--publish' }}
+
+      - name: Configure Git user
+        uses: Homebrew/actions/git-user-config@master
+        with:
+          username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
+          
+      - name: Merge git branch into develop
+        run: |
+          remote_repo="https://${GITHUB_ACTOR}:${RELEASE_GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git checkout develop
+          git merge --no-ff ${{ env.RELEASE_BRANCH }}
+          git status
+          git push "${remote_repo}"
+        env:
+          RELEASE_GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
 
   artifact-provenance:
     needs: [publish]

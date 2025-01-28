@@ -1,4 +1,5 @@
 name: Release Start
+run-name: Deploy ${{ github.event.inputs.version}} to ${{ github.event.inputs.channel }} channel by @${{ github.actor }}
 
 on:
   workflow_dispatch:
