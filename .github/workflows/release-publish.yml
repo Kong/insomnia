@@ -20,7 +20,7 @@ env:
 jobs:
   publish:
     timeout-minutes: 15
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       NOTARY_REPOSITORY: ${{ env.NOTARY_REPOSITORY }}
       INSO_BINARY_ARTIFACTS_SUBJECTS_AS_FILE: ${{ steps.cli_binary_hashes.outputs.handle }}

@@ -8,7 +8,7 @@ on:
 
 jobs:
   update:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     permissions:
       # Give the default GITHUB_TOKEN write permission to commit and push the

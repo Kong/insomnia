@@ -13,7 +13,7 @@ jobs:
   semgrep:
     timeout-minutes: 5
     name: Semgrep SAST
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       # required for all workflows
       security-events: write

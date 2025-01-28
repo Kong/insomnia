@@ -18,7 +18,7 @@ concurrency:
 jobs:
   Test:
     timeout-minutes: 10
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4
@@ -53,7 +53,7 @@ jobs:
         shell: bash
         run: |
           INSO_VERSION="$(jq .version packages/insomnia-inso/package.json -rj)-run.${{ github.run_number }}"
-          PKG_NAME="inso-ubuntu-latest-$INSO_VERSION"
+          PKG_NAME="inso-ubuntu-24.04-$INSO_VERSION"
           echo "pkg-name=$PKG_NAME" >> $GITHUB_OUTPUT
           echo "inso-version=$INSO_VERSION" >> $GITHUB_OUTPUT
 

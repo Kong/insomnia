@@ -30,9 +30,9 @@ jobs:
             build-targets: zip
           - os: windows-latest
             build-targets: portable
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             build-targets: tar.gz
-          - os: ubuntu-latest-arm
+          - os: ubuntu-24.04-arm
             build-targets: tar.gz
     steps:
       - name: Checkout branch
