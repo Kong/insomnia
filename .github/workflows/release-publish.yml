@@ -224,7 +224,7 @@ jobs:
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN_FILE_NEW }}
         with:
-          snap: artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}-x64.snap
+          snap: artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}-amd64.snap
           release: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
       - name: Upload arm64 Linux to snapcraft (beta and stable only)
@@ -254,7 +254,7 @@ jobs:
           entrypoint: /entrypoint.sh
           args: >
             release
-            --file artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}-x64.deb
+            --file artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}-amd64.deb
             --dist-name ubuntu
             --dist-version focal
             --package-type insomnia
