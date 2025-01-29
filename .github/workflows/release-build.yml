@@ -74,9 +74,10 @@ jobs:
       - name: Package app (Linux ARM64 only)
         if: runner.os == 'Linux' && runner.arch == 'ARM64'
         shell: bash
-        run: BUILD_TARGETS='tar.gz' npm run app-package
+        run:  npm run app-package
         env:
           NODE_OPTIONS: '--max_old_space_size=6144'
+          BUILD_TARGETS: appimage,tar.gz
 
       - name: Package app (Linux X64 only)
         if: runner.os == 'Linux' && runner.arch == 'X64'
