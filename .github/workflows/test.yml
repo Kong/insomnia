@@ -18,7 +18,7 @@ concurrency:
 jobs:
   Test:
     timeout-minutes: 20
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4
@@ -44,6 +44,10 @@ jobs:
 
       - name: Unit Tests
         run: npm test
+
+      # See https://github.com/electron/electron/issues/42510#issuecomment-2171583086
+      - name: Lift unprivileged user namespace restrictions
+        run: sudo sysctl kernel/unprivileged_userns_clone=1 kernel/apparmor_restrict_unprivileged_userns=0
 
       - name: Build app for smoke tests
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build

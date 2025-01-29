@@ -12,7 +12,7 @@ concurrency:
 jobs:
   # shared kong github action for security checking
   generate-sbom-and-upload-assets:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       packages: write
       contents: write # publish sbom to GH releases/tag assets
@@ -47,10 +47,10 @@ jobs:
           - os: windows-latest
             csc_link_secret: ''
             csc_key_password_secret: ''
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             csc_link_secret: ''
             csc_key_password_secret: ''
-          - os: ubuntu-22.04-arm
+          - os: ubuntu-24.04-arm
             csc_link_secret: ''
             csc_key_password_secret: ''
     steps:
@@ -71,18 +71,40 @@ jobs:
         run: |
           echo "INSO_VERSION=$(jq .version ./packages/${{ env.INSO_PACKAGE_NAME }}/package.json -rj)" >> $GITHUB_ENV
 
-      - name: Package app (Linux ARM64 only)
-        if: runner.os == 'Linux' && runner.arch == 'ARM64'
-        shell: bash
-        run: BUILD_TARGETS='tar.gz' npm run app-package
-        env:
-          NODE_OPTIONS: '--max_old_space_size=6144'
+      - name: Install dependencies (Linux only)
+        if: runner.os == 'Linux'
+        run: |
+          # install snapcraft
+          sudo snap install snapcraft --classic
 
-      - name: Package app (Linux X64 only)
-        if: runner.os == 'Linux' && runner.arch == 'X64'
+          # install fpm for electron-builder
+          sudo gem install fpm
+          fpm --version
+
+      - name: Apply runner system workarounds (ARM64 Linux only)
+        if: runner.os == 'Linux' && runner.arch == 'ARM64'
+        run: |
+          # install LXD for snap building
+          sudo snap install lxd
+
+          # initialize lxd default profile
+          sudo lxd init --auto
+
+          # add runner user to lxd group
+          sudo gpasswd -a $USER lxd
+
+          # workaround network issues when docker is started before lxc
+          sudo iptables  -I DOCKER-USER -i lxdbr0 -j ACCEPT
+          sudo iptables  -I DOCKER-USER -o lxdbr0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
+      - name: Package app (Linux only)
+        if: runner.os == 'Linux'
         shell: bash
-        run: npm run app-package
+        # run with sudo to let the lxd group membership take effect
+        run: sudo --user $USER --preserve-env -- bash -c 'npm run app-package'
         env:
+          # https://github.com/electron-userland/electron-builder/issues/6116
+          USE_SYSTEM_FPM: 'true'
           NODE_OPTIONS: '--max_old_space_size=6144'
 
       # If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
@@ -250,7 +272,7 @@ jobs:
   update-pull-request:
     timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     needs: build-and-upload-release-artifacts
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Get release version
         id: release_version
