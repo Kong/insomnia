@@ -12,7 +12,7 @@ concurrency:
 jobs:
   # shared kong github action for security checking
   generate-sbom-and-upload-assets:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       packages: write
       contents: write # publish sbom to GH releases/tag assets
@@ -47,10 +47,10 @@ jobs:
           - os: windows-latest
             csc_link_secret: ''
             csc_key_password_secret: ''
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             csc_link_secret: ''
             csc_key_password_secret: ''
-          - os: ubuntu-22.04-arm
+          - os: ubuntu-24.04-arm
             csc_link_secret: ''
             csc_key_password_secret: ''
     steps:
@@ -250,7 +250,7 @@ jobs:
   update-pull-request:
     timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     needs: build-and-upload-release-artifacts
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Get release version
         id: release_version
