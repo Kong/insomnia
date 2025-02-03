@@ -259,19 +259,17 @@ async function curlOutputToResponse(
             originalRequest,
         });
     }
-    const nodejsReadCurlResponse = process.type === 'renderer' ? window.main.readFile : ({ path }) => fs.promises.readFile(path);
+    const nodejsReadCurlResponse = process.type === 'renderer' ? window.main.readFile : ({ path }: { path: string }) => fs.promises.readFile(path, 'utf8');
     const bodyResult = await nodejsReadCurlResponse({
         path: result.responseBodyPath,
     });
-    if (bodyResult.error) {
-        throw Error(bodyResult.error);
-    }
+
     return new Response({
         code: lastRedirect.code,
         reason: lastRedirect.reason,
         header: headers,
         cookie: cookies as CookieOptions[],
-        body: bodyResult.body,
+        body: bodyResult,
         // stream is always undefined
         // because it is inaccurate to differentiate if body is binary
         stream: undefined,

@@ -318,13 +318,10 @@ export async function readBodyFromPath(response: sendCurlAndWriteTimelineRespons
     } else if (!response.bodyPath) {
         return '';
     }
-    const nodejsReadCurlResponse = process.type === 'renderer' ? window.main.readFile : ({ path }) => fs.promises.readFile(path);
+    const nodejsReadCurlResponse = process.type === 'renderer' ? window.main.readFile : ({ path }: { path: string }) => fs.promises.readFile(path, 'utf8');
     const readResponseResult = await nodejsReadCurlResponse({
         path: response.bodyPath,
     });
 
-    if (readResponseResult.error) {
-        throw Error(`Failed to read body: ${readResponseResult.error}`);
-    }
-    return readResponseResult.body;
+    return readResponseResult;
 }

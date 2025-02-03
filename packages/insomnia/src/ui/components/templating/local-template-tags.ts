@@ -680,7 +680,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         }
 
         const sanitizedFilter = filter.trim();
-        const bodyBuffer = response.bodyPath ? await fs.promises.readFile(response.bodyPath) : Buffer.from('');
+        const bodyBuffer = response.bodyPath ? fs.readFileSync(response.bodyPath) : Buffer.from('');
 
         const match = response.contentType && response.contentType.match(/charset=([\w-]+)/);
         const charset = match && match.length >= 2 ? match[1] : 'utf-8';

@@ -12,7 +12,6 @@ import type { CookieJar } from '../../models/cookie-jar';
 import type { Environment } from '../../models/environment';
 import type { RequestAuthentication, RequestHeader } from '../../models/request';
 import type { Response } from '../../models/response';
-import { readCurlResponse } from '../../models/response';
 import { filterClientCertificates } from '../../network/certificate';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { invariant } from '../../utils/invariant';
@@ -378,7 +377,6 @@ export const registerCurlHandlers = () => {
   ipcMainOn('curl.closeAll', closeAllCurlConnections);
   ipcMainHandle('curl.readyState', (_, options: Parameters<typeof getCurlReadyState>[0]) => getCurlReadyState(options));
   ipcMainHandle('curl.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
-  ipcMainHandle('readCurlResponse', (_, options: Parameters<typeof readCurlResponse>[0]) => readCurlResponse(options));
 };
 
 electron.app.on('window-all-closed', closeAllCurlConnections);
