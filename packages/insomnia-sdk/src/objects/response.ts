@@ -318,7 +318,7 @@ export async function readBodyFromPath(response: sendCurlAndWriteTimelineRespons
     } else if (!response.bodyPath) {
         return '';
     }
-    const nodejsReadCurlResponse = process.type === 'renderer' ? window.main.readFile : ({ path }: { path: string }) => fs.promises.readFile(path, 'utf8');
+    const nodejsReadCurlResponse = process.type === 'renderer' ? window.bridge.readFile : ({ path }: { path: string }) => fs.promises.readFile(path, 'utf8');
     const readResponseResult = await nodejsReadCurlResponse({
         path: response.bodyPath,
     });
