@@ -10,6 +10,7 @@ export interface HiddenBrowserWindowToMainBridgeAPI {
   requireInterceptor: (module: string) => any;
   onmessage: (listener: (data: any, callback: (result: any) => void) => void) => void;
   curlRequest: (options: any) => Promise<any>;
+  readFile: (options: { path: string }) => Promise<string>;
   setBusy: (busy: boolean) => void;
   appendFile: (logPath: string, logContent: string) => Promise<void>;
   asyncTasksAllSettled: () => Promise<void>;
@@ -34,6 +35,7 @@ const bridge: HiddenBrowserWindowToMainBridgeAPI = {
   },
   requireInterceptor,
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
+  readFile: options => ipcRenderer.invoke('readFile', options),
   setBusy: busy => ipcRenderer.send('set-hidden-window-busy-status', busy),
   // TODO: following methods are for simulating current behavior of running async tasks
   // in the future, it should be better to keep standard way of handling async tasks to avoid confusion

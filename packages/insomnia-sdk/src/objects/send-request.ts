@@ -259,7 +259,7 @@ async function curlOutputToResponse(
             originalRequest,
         });
     }
-    const nodejsReadCurlResponse = process.type === 'renderer' ? window.main.readFile : ({ path }: { path: string }) => fs.promises.readFile(path, 'utf8');
+    const nodejsReadCurlResponse = process.type === 'renderer' ? window.bridge.readFile : ({ path }: { path: string }) => fs.promises.readFile(path, 'utf8');
     const bodyResult = await nodejsReadCurlResponse({
         path: result.responseBodyPath,
     });
