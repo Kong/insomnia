@@ -795,6 +795,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             }
           }
         }
+        throw new Error('Missing field argument');
       },
     },
   },
