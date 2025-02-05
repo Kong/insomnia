@@ -62,6 +62,14 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   const { isOwner, isEnterprisePlan } = usePlanData();
   const { handleRender, handleGetRenderContext } = useNunjucks();
 
+  const getKeyMap = useCallback(() => {
+    let keyMap = 'default';
+    if (!readOnly && !settings.disableKeyMapForInlineTextEditors && settings.editorKeyMap) {
+      keyMap = settings.editorKeyMap;
+    }
+    return keyMap;
+  }, [settings.disableKeyMapForInlineTextEditors, settings.editorKeyMap, readOnly]);
+
   const initEditor = useCallback(() => {
     if (!textAreaRef.current) {
       return;
@@ -81,6 +89,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       return [tagDef];
     };
     const canAutocomplete = !!(handleGetRenderContext || getAutocompleteConstants);
+
     const initialOptions: EditorConfiguration = {
       lineNumbers: false,
       placeholder: placeholder || '',
@@ -100,7 +109,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       showCursorWhenSelecting: false,
       cursorScrollMargin: 12,
       // Only set keyMap if we're not read-only. This is so things like ctrl-a work on read-only mode.
-      keyMap: !readOnly && settings.editorKeyMap ? settings.editorKeyMap : 'default',
+      keyMap: getKeyMap(),
       extraKeys: CodeMirror.normalizeKeyMap({
         'Ctrl-Space': 'autocomplete',
         [isMac() ? 'Cmd-F' : 'Ctrl-F']: () => { },
@@ -204,7 +213,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         id,
       );
     }
-  }, [defaultValue, getAutocompleteConstants, handleGetRenderContext, handleRender, onBlur, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, eventListeners, id]);
+  }, [defaultValue, getAutocompleteConstants, handleGetRenderContext, handleRender, onBlur, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, getKeyMap, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, eventListeners, id]);
 
   const cleanUpEditor = useCallback(() => {
     codeMirror.current?.toTextArea();
@@ -231,9 +240,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       // we have a unique key for request panel, when connect to websocket, unique will change and component will mount again automatically
       // but when disconnect, the unique key will not change, so we need to update some configurations manually
       codeMirror.current.setOption('readOnly', readOnly);
-      codeMirror.current.setOption('keyMap', !readOnly && settings.editorKeyMap ? settings.editorKeyMap : 'default');
+      codeMirror.current.setOption('keyMap', getKeyMap());
     }
-  }, [readOnly, settings.editorKeyMap]);
+  }, [readOnly, getKeyMap]);
 
   useEffect(() => {
       // Prevent these things if we're type === "password"

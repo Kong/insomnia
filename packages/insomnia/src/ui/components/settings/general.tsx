@@ -158,6 +158,12 @@ export const General: FC = () => {
           ]}
         />
       </div>
+      <div className="form-row">
+        <BooleanSetting
+          label="Disable Key Map for one-line editors (e.g. headers, query parameters, urls, etc.)"
+          setting="disableKeyMapForInlineTextEditors"
+        />
+      </div>
 
       <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Request / Response</h2>
 
