@@ -48,7 +48,7 @@ export function init(response?: MaybeResponse) {
       },
 
       getBody() {
-        return fs.readFileSync(response.bodyPath || '');
+        return response.bodyPath ? fs.readFileSync(response.bodyPath) : '';
       },
 
       getBodyStream() {
