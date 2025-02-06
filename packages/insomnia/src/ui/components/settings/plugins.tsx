@@ -1,8 +1,9 @@
 import * as path from 'path';
 import React, { type FC, useEffect, useState } from 'react';
-import { Button } from 'react-aria-components';
+import { Button, FileTrigger } from 'react-aria-components';
 
 import {
+  ACCEPTED_NODE_CA_FILE_EXTS,
   NPM_PACKAGE_BASE,
   PLUGIN_HUB_BASE,
 } from '../../../common/constants';
@@ -25,9 +26,13 @@ interface State {
   installPluginErrMsg: string;
   isInstallingFromNpm: boolean;
   isRefreshingPlugins: boolean;
+  pluginNodeExtraCerts: string;
 }
 
 export const Plugins: FC = () => {
+  const {
+    settings,
+  } = useRootLoaderData();
   const [state, setState] = useState<State>({
     plugins: [],
     npmPluginValue: '',
@@ -35,6 +40,7 @@ export const Plugins: FC = () => {
     installPluginErrMsg: '',
     isInstallingFromNpm: false,
     isRefreshingPlugins: false,
+    pluginNodeExtraCerts: settings.pluginNodeExtraCerts,
   });
   const {
     plugins,
@@ -44,13 +50,14 @@ export const Plugins: FC = () => {
     isRefreshingPlugins,
     npmPluginValue,
   } = state;
-  const {
-    settings,
-  } = useRootLoaderData();
 
   useEffect(() => {
     refreshPlugins();
   }, []);
+
+  useEffect(() => {
+    setState(state => ({ ...state, pluginNodeExtraCerts: settings.pluginNodeExtraCerts }));
+  }, [settings.pluginNodeExtraCerts]);
 
   async function refreshPlugins() {
     setState(state => ({ ...state, isRefreshingPlugins: true }));
@@ -274,6 +281,43 @@ export const Plugins: FC = () => {
           Reload Plugins
           {isRefreshingPlugins && <i className="fa fa-refresh fa-spin space-left" />}
         </Button>
+      </div>
+
+      <div className="form-row mt-6">
+        <div className="form-control">
+          <span>Plugin Installation Trusted Certificates File ({ACCEPTED_NODE_CA_FILE_EXTS.join(', ')})</span>
+        </div>
+      </div>
+      <div className="form-row">
+        <div className="form-control form-control--outlined">
+          <input
+            disabled={true}
+            type="text"
+            value={state.pluginNodeExtraCerts}
+          />
+        </div>
+        <div className="form-control width-auto">
+          <FileTrigger
+            allowsMultiple={false}
+            acceptedFileTypes={ACCEPTED_NODE_CA_FILE_EXTS}
+            onSelect={fileList => {
+              if (!fileList) {
+                return;
+              }
+              const files = Array.from(fileList);
+              if (files.length === 0) {
+                return;
+              }
+              patchSettings({ pluginNodeExtraCerts: window.webUtils.getPathForFile(files[0]) });
+            }}
+          >
+            <Button
+              className="m-1 px-[--padding-md] h-[--line-height-xs] py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all border border-solid border-[--hl-lg] rounded-[--radius-md]"
+            >
+              Browse...
+            </Button>
+          </FileTrigger>
+        </div>
       </div>
     </div >
   );

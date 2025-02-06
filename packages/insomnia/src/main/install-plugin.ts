@@ -6,6 +6,7 @@ import { app } from 'electron';
 import path from 'path';
 
 import { isDevelopment, isWindows } from '../common/constants';
+import * as models from '../models';
 
 const YARN_DEPRECATED_WARN = /(?<keyword>warning)(?<dependencies>[^>:].+[>:])(?<issue>.+)/;
 
@@ -92,7 +93,7 @@ export default async function(lookupName: string) {
 }
 
 async function _isInsomniaPlugin(lookupName: string) {
-  return new Promise<InsomniaPlugin>((resolve, reject) => {
+  return new Promise<InsomniaPlugin>(async (resolve, reject) => {
     console.log('[plugins] Fetching module info from npm');
     childProcess.execFile(
       escape(process.execPath),
@@ -107,10 +108,7 @@ async function _isInsomniaPlugin(lookupName: string) {
         timeout: 5 * 60 * 1000,
         maxBuffer: 1024 * 1024,
         shell: true,
-        env: {
-          NODE_ENV: 'production',
-          ELECTRON_RUN_AS_NODE: 'true',
-        },
+        env: await _getYarnEnvValues(),
       },
       (err, stdout, stderr) => {
         if (stderr) {
@@ -158,6 +156,15 @@ async function _isInsomniaPlugin(lookupName: string) {
   });
 }
 
+async function _getYarnEnvValues() {
+  const settings = await models.settings.get();
+  return {
+    NODE_ENV: 'production',
+    ELECTRON_RUN_AS_NODE: 'true',
+    ...(settings.pluginNodeExtraCerts ? { NODE_EXTRA_CA_CERTS: settings.pluginNodeExtraCerts } : {}),
+  };
+}
+
 async function _installPluginToTmpDir(lookupName: string) {
   return new Promise<{ tmpDir: string }>(async (resolve, reject) => {
     const tmpDir = path.join(electron.app.getPath('temp'), `${lookupName}-${Date.now()}`);
@@ -188,10 +195,7 @@ async function _installPluginToTmpDir(lookupName: string) {
         cwd: tmpDir,
         shell: true,
         // Some package installs require a shell
-        env: {
-          NODE_ENV: 'production',
-          ELECTRON_RUN_AS_NODE: 'true',
-        },
+        env: await _getYarnEnvValues(),
       },
       (err, stdout, stderr) => {
         console.log('[plugins] Install complete', { err, stdout, stderr });
