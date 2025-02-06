@@ -168,8 +168,13 @@ export async function initInsomniaObject(
         localVars: localVariables,
     });
 
-    // replace all variables in the raw URL before parsing it; remove underscores, single quotes & square brackets
-    const sanitizedRawUrl = `${rawObj.request.url}`.replace(/{{\s*\_\./g, '{{').replace(/[_'[\]]/g, '');
+    // sanitize URL, see _updateElementText in nunjuncks-tags.ts
+    const sanitizedRawUrl = rawObj.request.url.replace(/\\/g, '')
+        .replace(/^{%/, '')
+        .replace(/%}$/, '')
+        .replace(/^{{/, '')
+        .replace(/}}$/, '')
+        .trim();
     const renderedRawUrl = variables.replaceIn(sanitizedRawUrl);
     const renderedUrl = toUrlObject(renderedRawUrl);
 
