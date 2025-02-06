@@ -35,7 +35,7 @@ resources:
     modified: 1738847468596
     created: 1738847375384
     url: "{{ _['examplehost']}}"
-    name: INS-4962 Environment custom tag
+    name: Special template tag format
     description: ""
     method: GET
     body: {}

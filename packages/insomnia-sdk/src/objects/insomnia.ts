@@ -168,15 +168,9 @@ export async function initInsomniaObject(
         localVars: localVariables,
     });
 
-    // replace all variables in the raw URL before parsing it
-    const sanitizedRawUrl = `${rawObj.request.url}`.replace(/{{\s*\_\./g, '{{');
-    let renderedRawUrl = sanitizedRawUrl;
-
-    // FIXME: hack to solve INS-4962, remove underscores, single quotes & square brackets
-    const tmpSanitizedRawUrl = sanitizedRawUrl.replace(/[_'[\]]/g, '');
-    renderedRawUrl = variables.replaceIn(tmpSanitizedRawUrl);
-
-    // parse the URL to get the host + protocol
+    // replace all variables in the raw URL before parsing it; remove underscores, single quotes & square brackets
+    const sanitizedRawUrl = `${rawObj.request.url}`.replace(/{{\s*\_\./g, '{{').replace(/[_'[\]]/g, '');
+    const renderedRawUrl = variables.replaceIn(sanitizedRawUrl);
     const renderedUrl = toUrlObject(renderedRawUrl);
 
     // filter client certificates by the rendered base URL

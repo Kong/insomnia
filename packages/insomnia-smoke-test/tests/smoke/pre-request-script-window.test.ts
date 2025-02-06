@@ -31,8 +31,7 @@ test.describe('test hidden window handling', async () => {
     // check the response pane message
     await page.click('text=Request was cancelled');
 
-    // check special environment variable case INS-4962
-    await page.getByText('INS-4962 Environment custom').click();
+    await page.getByText('Special template tag format').click();
     await page.getByRole('button', { name: 'Send' }).click();
     await page.getByText('200 OK').click();
   });
