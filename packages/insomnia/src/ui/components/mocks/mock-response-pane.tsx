@@ -135,7 +135,7 @@ export const MockResponsePane = () => {
             error={activeResponse.error}
             filter={''}
             filterHistory={[]}
-            getBody={async () => activeResponse.bodyPath && await window.main.readFile({ path: activeResponse.bodyPath })}
+            getBody={() => activeResponse?.bodyPath ? fs.readFileSync(activeResponse.bodyPath, 'utf8') : ''}
             previewMode={previewMode}
             responseId={activeResponse._id}
             updateFilter={activeResponse.error ? undefined : () => { }}

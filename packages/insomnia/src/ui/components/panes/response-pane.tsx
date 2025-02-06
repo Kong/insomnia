@@ -240,11 +240,7 @@ export const ResponsePane: FC<Props> = ({
             error={activeResponse.error}
             filter={filter}
             filterHistory={filterHistory}
-            getBody={async () => {
-              // TODO: unpack this
-              const body = activeResponse?.bodyPath && await window.main.readFile({ path: activeResponse.bodyPath });
-              return body;
-            }}
+            getBody={() => activeResponse?.bodyPath ? fs.readFileSync(activeResponse.bodyPath, 'utf8') : ''}
             previewMode={activeResponse.error ? PREVIEW_MODE_SOURCE : previewMode}
             responseId={activeResponse._id}
             updateFilter={activeResponse.error ? undefined : handleSetFilter}

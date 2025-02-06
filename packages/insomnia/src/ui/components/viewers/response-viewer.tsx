@@ -1,7 +1,6 @@
 import iconv from 'iconv-lite';
 import React, {
   Fragment,
-  useEffect,
   useRef,
   useState,
 } from 'react';
@@ -74,28 +73,24 @@ export const ResponseViewer = ({
   const hugeResponse = bytes > HUGE_RESPONSE_MB * 1024 * 1024;
   const [blockingBecauseTooLarge, setBlockingBecauseTooLarge] = useState(!alwaysShowLargeResponses && largeResponse);
   const [parseError, setParseError] = useState('');
-  const [bodyBuffer, setBodyBuffer] = useState<Buffer | null>(null);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        if (!blockingBecauseTooLarge) {
-          setBodyBuffer(await getBody());
-        }
-      } catch (err) {
-        setParseError(`Failed reading response from filesystem: ${err.stack}`);
-      }
+  let initialBody = null;
+  try {
+    if (!blockingBecauseTooLarge) {
+      initialBody = getBody();
     }
-    fetchData();
-  }, [getBody, blockingBecauseTooLarge]);
+  } catch (err) {
+    setParseError(`Failed reading response from filesystem: ${err.stack}`);
+  }
+  const [bodyBuffer, setBodyBuffer] = useState<Buffer | null>(initialBody);
 
   const editorRef = useRef<CodeEditorHandle>(null);
 
-  async function _handleDismissBlocker() {
+  function _handleDismissBlocker() {
     setBlockingBecauseTooLarge(false);
 
     try {
-      const bodyBuffer = await getBody();
+      const bodyBuffer = getBody();
       setBodyBuffer(bodyBuffer);
       setBlockingBecauseTooLarge(false);
     } catch (err) {
