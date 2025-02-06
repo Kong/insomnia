@@ -414,7 +414,7 @@ test.describe('pre-request features tests', async () => {
         expect(responsePane).toContainText('PASShappy tests');
     });
 
-    test.only('environment and baseEnvironment can be persisted', async ({ page }) => {
+    test('environment and baseEnvironment can be persisted', async ({ page }) => {
         const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
         await page.getByLabel('Request Collection').getByTestId('persist environment').press('Enter');
 
