@@ -414,7 +414,7 @@ test.describe('pre-request features tests', async () => {
         expect(responsePane).toContainText('PASShappy tests');
     });
 
-    test('environment and baseEnvironment can be persisted', async ({ page }) => {
+    test.only('environment and baseEnvironment can be persisted', async ({ page }) => {
         const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
         await page.getByLabel('Request Collection').getByTestId('persist environment').press('Enter');
 
@@ -438,6 +438,13 @@ test.describe('pre-request features tests', async () => {
             '__fromScript2': 'collection',
             '__fromScript': 'environment',
             'examplehost': 'https://mock.insomnia.rest',
+            'a': {
+                'b': {
+                    'c': {
+                        'url': 'https://mock.insomnia.rest',
+                    },
+                },
+            },
         });
     });
 });

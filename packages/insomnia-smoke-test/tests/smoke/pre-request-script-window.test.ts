@@ -34,6 +34,10 @@ test.describe('test hidden window handling', async () => {
     await page.getByText('Special template tag format').click();
     await page.getByRole('button', { name: 'Send' }).click();
     await page.getByText('200 OK').click();
+
+    await page.getByText('Multiple template tags format').click();
+    await page.getByRole('button', { name: 'Send' }).click();
+    await page.getByText('200 OK').click();
   });
 
   test('handle hidden browser window getting closed', async ({ app, page }) => {

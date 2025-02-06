@@ -55,6 +55,31 @@ resources:
     settingRebuildPath: true
     settingFollowRedirects: global
     _type: request
+  - _id: req_8737ee72c809428d9a187cf1feb0bc05
+    parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
+    modified: 1738856398102
+    created: 1738856350541
+    url: "{{_['a']['b']['c']['url']}}"
+    name: Multiple template tags format
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers:
+      - name: User-Agent
+        value: insomnia/10.3.1-beta.3
+    authentication: {}
+    preRequestScript: console.log('test')
+    metaSortKey: -1738810244689.5
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
   - _id: wrk_6b9b8455fd784462ae19cd51d7156f86
     parentId: null
     modified: 1707808692801
@@ -245,6 +270,10 @@ resources:
     name: Base Environment
     data:
       examplehost: "https://mock.insomnia.rest"
+      a:
+        b:
+          c:
+            url: "https://mock.insomnia.rest"
     dataPropertyOrder: null
     color: null
     isPrivate: false
