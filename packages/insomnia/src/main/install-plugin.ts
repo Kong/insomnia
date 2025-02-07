@@ -158,11 +158,25 @@ async function _isInsomniaPlugin(lookupName: string) {
 
 async function _getYarnEnvValues() {
   const settings = await models.settings.get();
-  return {
+  const yarnEnv: Record<string, string> = {
     NODE_ENV: 'production',
     ELECTRON_RUN_AS_NODE: 'true',
-    ...(settings.pluginNodeExtraCerts ? { NODE_EXTRA_CA_CERTS: settings.pluginNodeExtraCerts } : {}),
   };
+  if (settings.pluginNodeExtraCerts) {
+    yarnEnv.NODE_EXTRA_CA_CERTS = settings.pluginNodeExtraCerts;
+  }
+  if (settings.proxyEnabled) {
+    if (settings.httpProxy) {
+      yarnEnv.HTTP_PROXY = settings.httpProxy;
+    }
+    if (settings.httpsProxy) {
+      yarnEnv.HTTPS_PROXY = settings.httpsProxy;
+    }
+    if (settings.noProxy) {
+      yarnEnv.NO_PROXY = settings.noProxy;
+    }
+  }
+  return yarnEnv;
 }
 
 async function _installPluginToTmpDir(lookupName: string) {
