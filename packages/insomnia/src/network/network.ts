@@ -125,10 +125,6 @@ export const fetchRequestData = async (requestId: string) => {
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'failed to find workspace');
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-  // check for authentication overrides in parent folders
-  const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
-  request.authentication = getOrInheritAuthentication({ request, requestGroups });
-  request.headers = getOrInheritHeaders({ request, requestGroups });
   // fallback to base environment
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
   const activeEnvironment = activeEnvironmentId && await models.environment.getById(activeEnvironmentId);
