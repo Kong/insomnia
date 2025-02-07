@@ -19,6 +19,7 @@ import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 import { showAlert, showPrompt } from '../modals';
+import { Tooltip } from '../tooltip';
 interface State {
   plugins: Plugin[];
   npmPluginValue: string;
@@ -285,7 +286,15 @@ export const Plugins: FC = () => {
 
       <div className="form-row mt-6">
         <div className="form-control">
-          <span>Plugin Installation Trusted Certificates File ({ACCEPTED_NODE_CA_FILE_EXTS.join(', ')})</span>
+          <span className="mr-2">Plugin Installation Trusted Certificates File ({ACCEPTED_NODE_CA_FILE_EXTS.join(', ')})</span>
+          <Tooltip
+            className="cursor-pointer"
+            message={
+              <span>You can bundle multiple root certificates into a single file. <a className="underline" href="https://github.com/Kong/insomnia/wiki/Combining-Multiple-Root-CAs-into-a-single-file">See instructions <i className="fa fa-external-link" /></a></span>
+            }
+          >
+            <i className="fa fa-info-circle" />
+          </Tooltip>
         </div>
       </div>
       <div className="form-row">
