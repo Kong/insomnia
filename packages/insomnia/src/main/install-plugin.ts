@@ -103,6 +103,8 @@ async function _isInsomniaPlugin(lookupName: string) {
         'info',
         lookupName,
         '--json',
+        '--registry',
+        'https://registry.npmjs.org/',
       ],
       {
         timeout: 5 * 60 * 1000,
@@ -202,6 +204,8 @@ async function _installPluginToTmpDir(lookupName: string) {
         '--production',
         '--no-progress',
         '--ignore-workspace-root-check',
+        '--registry',
+        'https://registry.npmjs.org/',
       ],
       {
         timeout: 5 * 60 * 1000,
