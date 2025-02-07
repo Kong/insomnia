@@ -69,7 +69,7 @@ npm run serve -w insomnia-smoke-test
 npm run start -w insomnia-inso
 
 # run api test with dev bundle
-$PWD/packages/insomnia-inso/bin/inso run test "Echo Test Suite" --src $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose
+$PWD/packages/insomnia-inso/bin/inso run test "Echo Test Suite" -w $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose
 ```
 
 ## How to debug pkg
@@ -77,7 +77,7 @@ $PWD/packages/insomnia-inso/bin/inso run test "Echo Test Suite" --src $PWD/packa
 ```sh
 # run modify package command and then a unit test
 npm run package -w insomnia-inso && \
-$PWD/packages/insomnia-inso/binaries/inso run test "Echo Test Suite" --src $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose
+$PWD/packages/insomnia-inso/binaries/inso run test "Echo Test Suite" -w $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose
 
 ```
 
@@ -95,15 +95,15 @@ The `.gitignore` file will explicitly ignore certain database files, to keep the
 
 ## How to run inso with the `inso-nedb` fixture locally?
 
-Set the `--src` argument pointed to `packages/insomnia-smoke-test/fixtures/inso-nedb`:
+Set the `-w` argument pointed to `packages/insomnia-smoke-test/fixtures/inso-nedb`:
 
 ```bash
 # if installed globally
-inso --src <INSO_NEDB_PATH>
+inso -w <INSO_NEDB_PATH>
 
 # using the package bin
-./packages/insomnia-inso/bin/inso --src <INSO_NEDB_PATH>
+./packages/insomnia-inso/bin/inso -w <INSO_NEDB_PATH>
 
 # using a binary
-./packages/insomnia-inso/binaries/insomnia-inso --src <INSO_NEDB_PATH>
+./packages/insomnia-inso/binaries/insomnia-inso -w <INSO_NEDB_PATH>
 ```
