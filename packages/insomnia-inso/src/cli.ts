@@ -373,9 +373,9 @@ export const go = (args?: string[]) => {
     .option('-b, --bail', 'abort ("bail") after first test failure', false)
     .option('--keepFile', 'do not delete the generated test file', false)
     .option('-k, --disableCertValidation', 'disable certificate validation for requests with SSL', false)
-    .option('--httpsProxy <proxy>', 'proxy server for https requests', proxySettings.httpsProxy)
-    .option('--httpProxy <proxy>', 'proxy server for http requests', proxySettings.httpProxy)
-    .option('--noProxy <proxy>', 'proxy server for no proxy requests', proxySettings.noProxy)
+    .option('--httpsProxy <proxy>', 'URL for the proxy server for https requests.', proxySettings.httpsProxy)
+    .option('--httpProxy <proxy>', 'URL for the proxy server for http requests.', proxySettings.httpProxy)
+    .option('--noProxy <comma_separated_list_of_hostnames>', 'Comma separated list of hostnames that do not require a proxy to get reached, even if one is specified.', proxySettings.noProxy)
     .action(async (identifier, cmd: { env: string; testNamePattern: string; reporter: TestReporter; bail: boolean; keepFile: boolean; disableCertValidation: boolean; ci: boolean; httpsProxy?: string; httpProxy?: string; noProxy?: string }) => {
       const globals: GlobalOptions = program.optsWithGlobals();
       const commandOptions = { ...globals, ...cmd };
@@ -488,9 +488,9 @@ export const go = (args?: string[]) => {
     .option('-r, --reporter <reporter>', `reporter to use, options are [${reporterTypes.join(', ')}]`, defaultReporter)
     .option('-b, --bail', 'abort ("bail") after first non-200 response', false)
     .option('--disableCertValidation', 'disable certificate validation for requests with SSL', false)
-    .option('--httpsProxy <proxy>', 'proxy server for https requests', proxySettings.httpsProxy)
-    .option('--httpProxy <proxy>', 'proxy server for http requests', proxySettings.httpProxy)
-    .option('--noProxy <proxy>', 'proxy server for no proxy requests', proxySettings.noProxy)
+    .option('--httpsProxy <proxy>', 'URL for the proxy server for https requests.', proxySettings.httpsProxy)
+    .option('--httpProxy <proxy>', 'URL for the proxy server for http requests.', proxySettings.httpProxy)
+    .option('--noProxy <comma_separated_list_of_hostnames>', 'Comma separated list of hostnames that do not require a proxy to get reached, even if one is specified.', proxySettings.noProxy)
     .action(async (identifier, cmd: { env: string; globals: string; disableCertValidation: boolean; requestNamePattern: string; bail: boolean; item: string[]; delayRequest: string; iterationCount: string; iterationData: string; envVar: string[]; httpsProxy?: string; httpProxy?: string; noProxy?: string }) => {
       const globals: { config: string; workingDir: string; exportFile: string; ci: boolean; printOptions: boolean; verbose: boolean } = program.optsWithGlobals();
 
