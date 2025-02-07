@@ -318,6 +318,15 @@ export const Plugins: FC = () => {
             </Button>
           </FileTrigger>
         </div>
+        <div className="form-control width-auto">
+          <Button
+            className="m-1 px-[--padding-md] h-[--line-height-xs] py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all border border-solid border-[--hl-lg] rounded-[--radius-md]"
+            onPress={() => {
+              patchSettings({ pluginNodeExtraCerts: '' });
+            }}
+            isDisabled={state.pluginNodeExtraCerts === ''}
+          >Clear</Button>
+        </div>
       </div>
     </div >
   );
