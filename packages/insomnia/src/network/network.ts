@@ -64,14 +64,20 @@ export const getOrInheritAuthentication = ({ request, requestGroups }: { request
   return { type: 'none' };
 };
 export function getOrInheritHeaders({ request, requestGroups }: { request: Pick<BaseRequest, 'headers'>; requestGroups: RequestGroup[] }): RequestHeader[] {
-  // recurse over each parent folder to append headers
-  // in case of duplicate, node-libcurl joins on comma
-  const headers = requestGroups
-    .reverse()
+  const httpHeaders = new Headers();
+  const originalCaseMap = new Map<string, string>();
+  [...requestGroups
+    .reverse(), request]
     .map(({ headers }) => headers || [])
-    .flat();
-  // if parent has foo: bar and child has foo: baz, request will have foo: bar, baz
-  return [...headers, ...request.headers];
+    .flat().forEach(({ name, value, disabled }) => {
+      if (disabled) {
+      return;
+    }
+      // appending to headers will join matching headers with a comma
+      httpHeaders.append(name, value);
+      originalCaseMap.set(name.toLowerCase(), name);
+  });
+  return Array.from(httpHeaders.entries()).map(([name, value]) => ({ name: originalCaseMap.get(name)!, value }));
 }
 // (only used for getOAuth2 token) Intended to gather all required database objects and initialize ids
 export const fetchRequestGroupData = async (requestGroupId: string) => {
