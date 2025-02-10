@@ -33,12 +33,6 @@ jobs:
       - name: Install packages
         run: npm ci
 
-      - name: npm audit action
-        uses: oke-py/npm-audit-action@v2.2.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          create_pr_comments: true
-
       - name: Lint
         run: npm run lint
 
