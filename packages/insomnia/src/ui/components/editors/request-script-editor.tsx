@@ -1,5 +1,6 @@
 import type { Snippet } from 'codemirror';
 import { CookieObject, Environment, Execution, InsomniaObject, Request as ScriptRequest, RequestInfo, Url, Variables } from 'insomnia-sdk';
+import { ParentFolders } from 'insomnia-sdk/src/objects/folders';
 import React, { type FC, useRef } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuTrigger, Popover, Section, Toolbar } from 'react-aria-components';
 
@@ -541,7 +542,7 @@ export const RequestScriptEditor: FC<Props> = ({
       execution: new Execution({
         location: ['path'],
       }),
-      parentFolders: [],
+      parentFolders: new ParentFolders([]),
     }),
     'insomnia',
   );
