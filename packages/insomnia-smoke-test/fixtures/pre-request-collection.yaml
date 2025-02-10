@@ -1319,3 +1319,73 @@ resources:
           "onlySetByFolderPreScript": {{ onlySetByFolderPreScript }}
         }
     _type: request
+  - _id: fld_01de564274824ecaad272330339ea6b3
+    parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
+    modified: 1668533312225
+    created: 1668533312225
+    name: folder1
+    description: ""
+    environment:
+      val: "1"
+    environmentPropertyOrder: null
+    metaSortKey: -1668533312225
+    _type: request_group
+    preRequestScript: ""
+    afterResponseScript: ""
+  - _id: fld_01de564274824ecaad272330339ea6b4
+    parentId: fld_01de564274824ecaad272330339ea6b3
+    modified: 1668533312225
+    created: 1668533312225
+    name: folder2
+    description: ""
+    environment:
+      val: "2"
+    environmentPropertyOrder: null
+    metaSortKey: -1668533312225
+    _type: request_group
+    preRequestScript: ""
+    afterResponseScript: ""
+  - _id: req_89dade2ee9ee42fbb22d588783a9df21
+    parentId: fld_01de564274824ecaad272330339ea6b4
+    modified: 1636707449231
+    created: 1636141014552
+    url: http://127.0.0.1:4010/echo
+    name: manipulate folder envs
+    description: ""
+    method: POST
+    parameters: []
+    headers:
+      - name: 'Content-Type'
+        value: 'application/json'
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      const valFromFolder1 = insomnia.parentFolders.get('folder1').environment.get('val');
+      const valFromFolder1ByName = insomnia.parentFolders.getByName('folder1').environment.get('val');
+      const valFromFolder2 = insomnia.parentFolders.get('folder2').environment.get('val');
+      const valFromFolder2ByName = insomnia.parentFolders.getByName('folder2').environment.get('val');
+      const valFound = insomnia.parentFolders.findValue('val');
+
+      insomnia.environment.set('valFromFolder1', valFromFolder1);
+      insomnia.environment.set('valFromFolder1ByName', valFromFolder1ByName);
+      insomnia.environment.set('valFromFolder2', valFromFolder2);
+      insomnia.environment.set('valFromFolder2ByName', valFromFolder2ByName);
+      insomnia.environment.set('valFound', valFound);
+    body:
+      mimeType: "application/json"
+      text: |-
+        {
+          "valFromFolder1": {{ valFromFolder1 }},
+          "valFromFolder1ByName": {{ valFromFolder1ByName }},
+          "valFromFolder2": {{ valFromFolder2 }},
+          "valFromFolder2ByName": {{ valFromFolder2ByName }},
+          "valFound": {{ valFound }}
+        }
+    _type: request

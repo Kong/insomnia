@@ -1,0 +1,48 @@
+import { Environment } from './environments';
+
+// Folder reprensents a request folder in Insomnia.
+export class Folder {
+    id: string;
+    name: string;
+    environment: Environment;
+
+    constructor(id: string, name: string, environmentObject: object | undefined) {
+        this.id = id;
+        this.name = name;
+        this.environment = new Environment(`${id}.environment`, environmentObject);
+    }
+
+    toObject = () => {
+        return {
+            id: this.id,
+            name: this.name,
+            environment: this.environment.toObject(),
+        };
+    };
+}
+
+// ParentFolders reprensents ancestor folders of the active request
+export class ParentFolders {
+    constructor(private folders: Folder[]) { }
+
+    get = (idOrName: string) => {
+        return this.folders.find(folder => folder.name === idOrName || folder.id === idOrName);
+    };
+
+    getById = (id: string) => {
+        return this.folders.find(folder => folder.id === id);
+    };
+
+    getByName = (folderName: string) => {
+        return this.folders.find(folder => folder.name === folderName);
+    };
+
+    findValue = (valueKey: string) => {
+        const targetEnv = [...this.folders].reverse().find(folder => folder.environment.has(valueKey));
+        return targetEnv !== undefined ? targetEnv.environment.get(valueKey) : undefined;
+    };
+
+    toObject = () => {
+        return this.folders.map(folder => folder.toObject());
+    };
+}
