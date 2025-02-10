@@ -57,4 +57,8 @@ export class ParentFolders {
     toObject = () => {
         return this.folders.map(folder => folder.toObject());
     };
+
+    getEnvironments = () => {
+        return this.folders.map(folder => folder.environment);
+    };
 }

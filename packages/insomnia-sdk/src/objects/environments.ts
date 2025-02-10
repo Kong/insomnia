@@ -47,12 +47,20 @@ export class Environment {
     };
 }
 
+function mergeFolderLevelVars(folderLevelVars: Environment[]) {
+    const mergedFolderLevelObject = folderLevelVars.reduce((merged: object, folderLevelEnv: Environment) => {
+        return { ...merged, ...folderLevelEnv.toObject() };
+    }, {});
+    return new Environment('mergedFolderLevelVars', mergedFolderLevelObject);
+}
+
 export class Variables {
     // TODO: support vars for all levels
     private globalVars: Environment;
     private collectionVars: Environment;
     private environmentVars: Environment;
     private iterationDataVars: Environment;
+    private folderLevelVars: Environment[];
     private localVars: Environment;
 
     constructor(
@@ -61,6 +69,7 @@ export class Variables {
             collectionVars: Environment;
             environmentVars: Environment;
             iterationDataVars: Environment;
+            folderLevelVars: Environment[];
             localVars: Environment;
         },
     ) {
@@ -68,6 +77,7 @@ export class Variables {
         this.collectionVars = args.collectionVars;
         this.environmentVars = args.environmentVars;
         this.iterationDataVars = args.iterationDataVars;
+        this.folderLevelVars = args.folderLevelVars;
         this.localVars = args.localVars;
     }
 
@@ -76,15 +86,17 @@ export class Variables {
         const collectionVarsHas = this.collectionVars.has(variableName);
         const environmentVarsHas = this.environmentVars.has(variableName);
         const iterationDataVarsHas = this.iterationDataVars.has(variableName);
+        const folderLevelVarsHas = this.folderLevelVars.some(vars => vars.has(variableName));
         const localVarsHas = this.localVars.has(variableName);
 
-        return globalVarsHas || collectionVarsHas || environmentVarsHas || iterationDataVarsHas || localVarsHas;
+        return globalVarsHas || collectionVarsHas || environmentVarsHas || iterationDataVarsHas || folderLevelVarsHas || localVarsHas;
     };
 
     get = (variableName: string) => {
         let finalVal: boolean | number | string | object | undefined = undefined;
         [
             this.localVars,
+            mergeFolderLevelVars(this.folderLevelVars),
             this.iterationDataVars,
             this.environmentVars,
             this.collectionVars,
@@ -119,6 +131,7 @@ export class Variables {
             this.collectionVars,
             this.environmentVars,
             this.iterationDataVars,
+            mergeFolderLevelVars(this.folderLevelVars),
             this.localVars,
         ].map(
             vars => vars.toObject()

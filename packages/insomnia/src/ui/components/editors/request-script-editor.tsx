@@ -543,6 +543,7 @@ export const RequestScriptEditor: FC<Props> = ({
         environmentVars: new Environment('environment', {}),
         collectionVars: new Environment('collection', {}),
         iterationDataVars: new Environment('data', {}),
+        folderLevelVars: [], // folderLevelVars
         localVars: new Environment('data', {}),
       }),
       vault: settings.enableVaultInScripts ? new Vault('vault', {}, settings.enableVaultInScripts) : undefined,
