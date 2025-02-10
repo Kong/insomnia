@@ -75,7 +75,7 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
 
     if (type === 'request' || type === 'mockRoute') {
       return (
-        <span className={`w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center ${REQUEST_METHOD_STYLE_MAP[tab?.method || tab?.tag || '']}`}>{tab.tag}</span>
+        <span aria-label='Tab Tag' className={`w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center ${REQUEST_METHOD_STYLE_MAP[tab?.method || tab?.tag || '']}`}>{tab.tag}</span>
       );
     }
 
@@ -123,7 +123,7 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
 
   return (
     <GridListItem
-      textValue='tab'
+      textValue={`tab-${tab.name}`}
       id={tab.id}
       className="outline-none aria-selected:text-[--color-font] aria-selected:bg-[--hl-sm] hover:bg-[--hl-xs]"
       ref={scrollIntoView}
