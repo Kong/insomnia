@@ -106,9 +106,9 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
           <div className="form-control form-control--outlined">
             <label>
               {strings.collection.plural}:
-              <select name="workspaceId" value={selectedWorkspaceId} onChange={e => setSelectedWorkspaceId(e.target.value)}>
+              <select aria-label='Select Workspace' name="workspaceId" value={selectedWorkspaceId} onChange={e => setSelectedWorkspaceId(e.target.value)}>
                 {workspaceOptions.map(workspace => (
-                  <option key={workspace._id} value={workspace._id}>
+                  <option aria-label={workspace.name} key={workspace._id} value={workspace._id}>
                     {workspace.name}{workspace._id === currentWorkspaceId && ' (current)'}
                   </option>
                 ))}

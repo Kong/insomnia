@@ -99,14 +99,14 @@ test.describe('Dashboard', async () => {
       await page.getByTestId('project').click();
 
       // Rename document
-      await page.getByLabel('my-spec.yaml').getByRole('button').click();
+      await page.getByLabel('Files').getByLabel('my-spec.yaml').getByRole('button').click();
       await page.getByRole('menuitem', { name: 'Rename' }).click();
       await page.locator('text=Rename DocumentName Rename >> input[type="text"]').fill('test123');
       await page.click('#root button:has-text("Rename")');
       await expect(page.locator('.app')).toContainText('test123');
 
       // Duplicate document
-      await page.getByLabel('test123').getByRole('button').click();
+      await page.getByLabel('Files').getByLabel('test123').getByRole('button').click();
       await page.getByRole('menuitem', { name: 'Duplicate' }).click();
       await page.locator('input[name="name"]').fill('test123-duplicate');
       await page.click('[role="dialog"] button:has-text("Duplicate")');
@@ -114,7 +114,7 @@ test.describe('Dashboard', async () => {
       await page.getByTestId('project').click();
 
       // Delete document
-      await page.getByLabel('test123-duplicate').getByRole('button').click();
+      await page.getByLabel('Files').getByLabel('test123-duplicate').getByRole('button').click();
       await page.getByRole('menuitem', { name: 'Delete' }).click();
       await page.getByRole('button', { name: 'Delete' }).click();
       // @TODO: Re-enable - Requires mocking VCS operations
@@ -141,7 +141,7 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).toContainText('test123');
 
       // Duplicate collection
-      await page.getByLabel('test123').getByRole('button').click();
+      await page.getByLabel('Files').getByLabel('test123').getByRole('button').click();
       await page.getByRole('menuitem', { name: 'Duplicate' }).click();
       await page.locator('input[name="name"]').fill('test123-duplicate');
       await page.click('[role="dialog"] button:has-text("Duplicate")');
@@ -149,7 +149,7 @@ test.describe('Dashboard', async () => {
       await page.getByTestId('project').click();
 
       // Delete collection
-      await page.getByLabel('test123-duplicate').getByRole('button').click();
+      await page.getByLabel('Files').getByLabel('test123-duplicate').getByRole('button').click();
       await page.getByRole('menuitem', { name: 'Delete' }).click();
       await page.getByRole('button', { name: 'Delete' }).click();
       // @TODO: Re-enable - Requires mocking VCS operations
