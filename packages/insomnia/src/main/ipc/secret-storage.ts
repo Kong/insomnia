@@ -1,7 +1,7 @@
 import { safeStorage } from 'electron';
 
-import LocalStorage from '../local-storage';
-import { initLocalStorage } from '../window-utils';
+import LocalStorage from '../electron-storage';
+import { initElectronStorage } from '../window-utils';
 import { ipcMainHandle } from './electron';
 
 export interface secretStorageBridgeAPI {
@@ -24,7 +24,7 @@ let localStorage: LocalStorage | null = null;
 
 const getLocalStorage = () => {
   if (!localStorage) {
-    localStorage = initLocalStorage();
+    localStorage = initElectronStorage();
   }
   return localStorage;
 };
