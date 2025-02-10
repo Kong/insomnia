@@ -4,6 +4,7 @@ import type { ExecutionOption, RequestContext, RequestTestResult } from 'insomni
 import orderedJSON from 'json-order';
 import { join as pathJoin } from 'path';
 
+import { SINGLE_VALUE_HEADERS } from '../common/common-headers';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
 import {
@@ -71,12 +72,18 @@ export function getOrInheritHeaders({ request, requestGroups }: { request: Pick<
     .map(({ headers }) => headers || [])
     .flat().forEach(({ name, value, disabled }) => {
       if (disabled) {
-      return;
-    }
-      // appending to headers will join matching headers with a comma
-      httpHeaders.append(name, value);
-      originalCaseMap.set(name.toLowerCase(), name);
-  });
+        return;
+      }
+      const normalizedCase = name.toLowerCase();
+      // prevent multiplied headers (Content-Type, etc)
+      if (SINGLE_VALUE_HEADERS.includes(normalizedCase)) {
+        httpHeaders.set(normalizedCase, value);
+      } else {
+        // appending will join matching header values with a comma
+        httpHeaders.append(normalizedCase, value);
+      }
+      originalCaseMap.set(normalizedCase, name);
+    });
   return Array.from(httpHeaders.entries()).map(([name, value]) => ({ name: originalCaseMap.get(name)!, value }));
 }
 // (only used for getOAuth2 token) Intended to gather all required database objects and initialize ids
