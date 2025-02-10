@@ -39,6 +39,7 @@ export interface TransformedExecuteScriptContext {
     cookieJar: CookieJar;
     requestTestResults?: RequestTestResult[];
     userUploadEnvironment?: UserUploadEnvironment;
+    parentFolders: { id: string; name: string; environment: Record<string, any> }[];
 }
 
 interface Task {

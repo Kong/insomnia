@@ -541,6 +541,7 @@ export const RequestScriptEditor: FC<Props> = ({
       execution: new Execution({
         location: ['path'],
       }),
+      parentFolders: [],
     }),
     'insomnia',
   );
