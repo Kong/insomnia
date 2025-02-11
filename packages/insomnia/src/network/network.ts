@@ -23,7 +23,7 @@ import * as models from '../models';
 import type { CaCertificate } from '../models/ca-certificate';
 import type { ClientCertificate } from '../models/client-certificate';
 import type { Cookie, CookieJar } from '../models/cookie-jar';
-import type { Environment, UserUploadEnvironment } from '../models/environment';
+import { type Environment, EnvironmentType, getKVPairFromData, type UserUploadEnvironment } from '../models/environment';
 import type { MockRoute } from '../models/mock-route';
 import type { MockServer } from '../models/mock-server';
 import { isProject, type Project } from '../models/project';
@@ -298,34 +298,31 @@ export async function savePatchesMadeByScript(
   // when base environment is activated, `mutatedContext.environment` points to it
   const isActiveEnvironmentBase = mutatedContext.environment?._id === baseEnvironment._id;
   const hasEnvironmentAndIsNotBase = mutatedContext.environment && !isActiveEnvironmentBase;
-  if (hasEnvironmentAndIsNotBase) {
+  const updateEnvironment = async (originEnvironment: Environment, mutatedContextEnvironment: Environment) => {
+    const { environmentType } = originEnvironment;
+    const { data, dataPropertyOrder } = mutatedContextEnvironment;
     await models.environment.update(
-      environment,
+      originEnvironment,
       {
-        data: mutatedContext.environment.data,
-        dataPropertyOrder: mutatedContext.environment.dataPropertyOrder,
-      }
+        data, dataPropertyOrder,
+        // also update kvPairData when environment type is table view(kv pair)
+        ...(environmentType === EnvironmentType.KVPAIR && {
+          kvPairData: getKVPairFromData(data, dataPropertyOrder),
+        }),
+      },
     );
+  };
+
+  if (hasEnvironmentAndIsNotBase) {
+    await updateEnvironment(environment, mutatedContext.environment);
   }
   if (mutatedContext.baseEnvironment) {
-    await models.environment.update(
-      baseEnvironment,
-      {
-        data: mutatedContext.baseEnvironment.data,
-        dataPropertyOrder: mutatedContext.baseEnvironment.dataPropertyOrder,
-      }
-    );
+    await updateEnvironment(baseEnvironment, mutatedContext.baseEnvironment);
   }
 
   if (activeGlobalEnvironment && mutatedContext) {
     invariant(mutatedContext.globals, 'globals must be defined when there is selected one');
-    await models.environment.update(
-      activeGlobalEnvironment,
-      {
-        data: mutatedContext.globals.data,
-        dataPropertyOrder: mutatedContext.globals.dataPropertyOrder,
-      }
-    );
+    await updateEnvironment(activeGlobalEnvironment, mutatedContext.globals);
   }
 }
 

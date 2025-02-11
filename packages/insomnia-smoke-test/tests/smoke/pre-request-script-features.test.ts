@@ -447,6 +447,32 @@ test.describe('pre-request features tests', async () => {
             },
         });
     });
+
+    test('kv pair environment can be updated', async ({ page }) => {
+        const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
+        await page.getByLabel('Request Collection').getByTestId('update kv pair environment').press('Enter');
+        // switch to table view environment
+        await page.getByLabel('Manage Environments').click();
+        await page.getByRole('button', { name: 'Manage collection environments' }).click();
+        await page.getByLabel('Table Edit').click();
+        await page.getByRole('button', { name: 'Close' }).click();
+        await page.getByTestId('underlay').click();
+
+        // send request
+        await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+        // verify response
+        await page.waitForSelector('[data-testid="response-status-tag"]:visible');
+        await expect(statusTag).toContainText('200 OK');
+
+        // verify persisted environment
+        await page.getByRole('button', { name: 'Manage Environments' }).click();
+        await page.getByRole('button', { name: 'Manage collection environments' }).click();
+        // check new environment value
+        await page.getByText('__environment_type').click();
+        await page.getByText('__environment_value_kv').click();
+        await page.getByText('http://url-from-script').click();
+    });
 });
 
 test.describe('unhappy paths', async () => {
