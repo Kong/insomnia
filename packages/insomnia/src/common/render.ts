@@ -291,6 +291,14 @@ export async function render<T>(
     ) {
       // Do nothing to these types
     } else if (typeof x === 'string') {
+      // Ref: SEC-1323
+      if (/require\s*\(/ig.test(x)) {
+        // TODO: Push to Sentry instead of logging so we can approximately quantify real-world impact.
+        console.warn('Short-circuiting `render`; string contains possible "require" invocation:', x);
+
+        return x;
+      }
+
       try {
         // @ts-expect-error -- TSCONVERSION
         x = await templating.render(x, { context, path, ignoreUndefinedEnvVariable });
