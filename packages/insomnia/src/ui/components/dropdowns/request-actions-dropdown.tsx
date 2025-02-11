@@ -28,6 +28,7 @@ import { AlertModal } from '../modals/alert-modal';
 import { AskModal } from '../modals/ask-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
+import { getRenderedRequestAndContext } from '../../../common/render';
 
 interface Props {
   activeEnvironment: Environment;
@@ -104,9 +105,18 @@ export const RequestActionsDropdown = ({
     }
   };
 
-  const generateCode = () => {
+  const generateCode = async () => {
     if (isRequest(request)) {
-      showModal(GenerateCodeModal, { request });
+      try {
+        //checks if there are any undefined environment varaiables
+        await getRenderedRequestAndContext({ request, environment: activeEnvironment._id });
+        showModal(GenerateCodeModal, { request });
+      } catch (err) {
+        showModal(AlertModal, {
+          title: "Could not generate code",
+          message: err instanceof Error ? err.message : 'Error generating code'
+        })
+      }
     }
   };
 

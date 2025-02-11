@@ -118,6 +118,8 @@ import type {
 import { useRootLoaderData } from './root';
 import Runner from './runner';
 import type { Child, WorkspaceLoaderData } from './workspace';
+import { getRenderedRequestAndContext } from '../../common/render';
+import { AlertModal } from '../components/modals/alert-modal';
 
 export interface GrpcMessage {
   id: string;
@@ -436,9 +438,18 @@ export const Debug: FC = () => {
     environment_showEditor: () => setEnvironmentModalOpen(true),
     environment_showSwitchMenu: () => setIsEnvironmentPickerOpen(true),
     showCookiesEditor: () => setIsCookieModalOpen(true),
-    request_showGenerateCodeEditor: () => {
+    request_showGenerateCodeEditor: async () => {
       if (activeRequest && isRequest(activeRequest)) {
-        showModal(GenerateCodeModal, { request: activeRequest });
+        try {
+          //checks if there are any undefined variables and raises error
+          await getRenderedRequestAndContext({ request: activeRequest, environment: activeEnvironment._id })
+          showModal(GenerateCodeModal, { request: activeRequest });
+        } catch (err) {
+          showModal(AlertModal, {
+            title: "Could not generate code",
+            message: err instanceof Error ? err.message : 'Error generating code'
+          })
+        }
       }
     },
   });
