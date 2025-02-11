@@ -58,7 +58,7 @@ try {
   // we need to inject state into localStorage
   const skipOnboarding = getSkipOnboarding();
   if (skipOnboarding) {
-    window.localStorage.setItem('hasSeenOnboardingV10', skipOnboarding.toString());
+    window.localStorage.setItem('hasSeenOnboardingV11', skipOnboarding.toString());
     window.localStorage.setItem('hasUserLoggedInBefore', skipOnboarding.toString());
   }
 } catch (e) {
