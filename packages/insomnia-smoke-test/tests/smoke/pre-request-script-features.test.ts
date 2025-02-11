@@ -465,10 +465,9 @@ test.describe('pre-request features tests', async () => {
         await page.waitForSelector('[data-testid="response-status-tag"]:visible');
         await expect(statusTag).toContainText('200 OK');
 
-        // verify persisted environment
+        // verify table environments have been updated
         await page.getByRole('button', { name: 'Manage Environments' }).click();
         await page.getByRole('button', { name: 'Manage collection environments' }).click();
-        // check new environment value
         await page.getByText('__environment_type').click();
         await page.getByText('__environment_value_kv').click();
         await page.getByText('http://url-from-script').click();
