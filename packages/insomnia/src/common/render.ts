@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/electron/renderer';
 import clone from 'clone';
 import orderedJSON from 'json-order';
 
@@ -291,6 +292,13 @@ export async function render<T>(
     ) {
       // Do nothing to these types
     } else if (typeof x === 'string') {
+      // Detect if the string contains a require statement
+      if (/require\s*\(/ig.test(x)) {
+        console.warn('Short-circuiting `render`; string contains possible "require" invocation:', x);
+        Sentry.captureException(new Error(`Short-circuiting 'render'; string contains possible "require" invocation: ${x}`));
+        return x;
+      }
+
       try {
         // @ts-expect-error -- TSCONVERSION
         x = await templating.render(x, { context, path, ignoreUndefinedEnvVariable });
