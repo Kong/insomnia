@@ -77,7 +77,7 @@ jobs:
         run:  npm run app-package
         env:
           NODE_OPTIONS: '--max_old_space_size=6144'
-          BUILD_TARGETS: appimage,tar.gz
+          BUILD_TARGETS: AppImage,tar.gz
 
       - name: Package app (Linux X64 only)
         if: runner.os == 'Linux' && runner.arch == 'X64'
