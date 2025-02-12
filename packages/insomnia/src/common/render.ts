@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/electron/renderer';
 import clone from 'clone';
 import orderedJSON from 'json-order';
 
@@ -291,11 +292,10 @@ export async function render<T>(
     ) {
       // Do nothing to these types
     } else if (typeof x === 'string') {
-      // Ref: SEC-1323
+      // Detect if the string contains a require statement
       if (/require\s*\(/ig.test(x)) {
-        // TODO: Push to Sentry instead of logging so we can approximately quantify real-world impact.
         console.warn('Short-circuiting `render`; string contains possible "require" invocation:', x);
-
+        Sentry.captureException(new Error(`Short-circuiting 'render'; string contains possible "require" invocation: ${x}`));
         return x;
       }
 
