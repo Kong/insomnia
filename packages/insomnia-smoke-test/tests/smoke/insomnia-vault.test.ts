@@ -128,7 +128,7 @@ test.describe('Test Insomnia Vault', async () => {
     // activate request
     await page.getByTestId('legacy-invalid-vault').getByLabel('GET legacy-invalid-vault', { exact: true }).click();
     await page.getByRole('button', { name: 'Send' }).click();    // Expect to see error message
-    // wait for https://github.com/Kong/insomnia/pull/8277 to me merged to make test pass
+    // validate vault reserved key error message
     await expect(page.getByText('Unexpected Request Failure')).toBeVisible();
     await expect(page.getByText('vault is a reserved key for insomnia vault')).toBeVisible();
   });
