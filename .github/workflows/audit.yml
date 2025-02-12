@@ -11,9 +11,10 @@ jobs:
   security_audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: npm audit
-        uses: oke-py/npm-audit-action@v2.4.4
+      - uses: actions/checkout@v3 
+      - name: install dependencies
+        run: npm ci
+      - uses: oke-py/npm-audit-action@v2.4.4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           create_pr_comments: true
