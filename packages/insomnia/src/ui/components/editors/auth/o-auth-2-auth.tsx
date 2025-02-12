@@ -92,7 +92,7 @@ const credentialsInBodyOptions = [
 
 const getFields = (authentication: Extract<RequestAuthentication, { type: typeof AUTH_OAUTH_2 }>) => {
   const clientId = <AuthInputRow label='Client ID' property='clientId' key='clientId' />;
-  const clientSecret = <AuthInputRow label='Client Secret' property='clientSecret' key='clientSecret' />;
+  const clientSecret = <AuthInputRow label='Client Secret' property='clientSecret' key='clientSecret' mask />;
   const usePkce = <AuthToggleRow label='Use PKCE' property='usePkce' key='usePkce' onTitle='Disable PKCE' offTitle='Enable PKCE' />;
   const pkceMethod = <AuthSelectRow
     label='Code Challenge Method'
