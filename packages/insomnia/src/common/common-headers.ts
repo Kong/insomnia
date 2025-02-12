@@ -5,6 +5,19 @@ import allEncodings from '../datasets/encodings';
 import allHeaderNames from '../datasets/header-names';
 import type { RequestHeader } from '../models/request';
 
+export const SINGLE_VALUE_HEADERS = [
+  'proxy-authorization',
+  'content-length',
+  'content-type',
+  'content-encoding',
+  'content-location',
+  'connection',
+  'host',
+  'upgrade',
+  'range',
+  'trailer',
+];
+
 export const getCommonHeaderValues = (pair: RequestHeader): any[] => {
   switch (pair.name.toLowerCase()) {
     case 'content-type':

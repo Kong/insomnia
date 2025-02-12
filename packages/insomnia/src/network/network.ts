@@ -4,6 +4,7 @@ import type { ExecutionOption, RequestContext, RequestTestResult } from 'insomni
 import orderedJSON from 'json-order';
 import { join as pathJoin } from 'path';
 
+import { SINGLE_VALUE_HEADERS } from '../common/common-headers';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
 import {
@@ -63,15 +64,28 @@ export const getOrInheritAuthentication = ({ request, requestGroups }: { request
   // if no auth is specified on request or folders, default to none
   return { type: 'none' };
 };
-export function getOrInheritHeaders({ request, requestGroups }: { request: Pick<BaseRequest, 'headers'>; requestGroups: RequestGroup[] }): RequestHeader[] {
-  // recurse over each parent folder to append headers
-  // in case of duplicate, node-libcurl joins on comma
-  const headers = requestGroups
-    .reverse()
-    .map(({ headers }) => headers || [])
-    .flat();
-  // if parent has foo: bar and child has foo: baz, request will have foo: bar, baz
-  return [...headers, ...request.headers];
+export function getOrInheritHeaders({ request, requestGroups }: { request: Pick<BaseRequest, 'headers'>; requestGroups: Pick<RequestGroup, 'headers'>[] }): RequestHeader[] {
+  const httpHeaders = new Headers();
+  const originalCaseMap = new Map<string, string>();
+  // parent folders, then child folders, then request
+  const headerContexts = [...requestGroups.reverse(), request];
+  const headers = headerContexts.map(({ headers }) => headers || []).flat();
+  headers.forEach(({ name, value, disabled }) => {
+    if (disabled) {
+      return;
+    }
+    const normalizedCase = name.toLowerCase();
+    // preserves the casing of the last header with the same name
+    originalCaseMap.set(normalizedCase, name);
+    const isStrictValueHeader = SINGLE_VALUE_HEADERS.includes(normalizedCase);
+    if (isStrictValueHeader) {
+      httpHeaders.set(normalizedCase, value);
+      return;
+    }
+    // appending will join matching header values with a comma
+    httpHeaders.append(normalizedCase, value);
+  });
+  return Array.from(httpHeaders.entries()).map(([name, value]) => ({ name: originalCaseMap.get(name)!, value }));
 }
 // (only used for getOAuth2 token) Intended to gather all required database objects and initialize ids
 export const fetchRequestGroupData = async (requestGroupId: string) => {
@@ -125,10 +139,6 @@ export const fetchRequestData = async (requestId: string) => {
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'failed to find workspace');
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-  // check for authentication overrides in parent folders
-  const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
-  request.authentication = getOrInheritAuthentication({ request, requestGroups });
-  request.headers = getOrInheritHeaders({ request, requestGroups });
   // fallback to base environment
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
   const activeEnvironment = activeEnvironmentId && await models.environment.getById(activeEnvironmentId);
