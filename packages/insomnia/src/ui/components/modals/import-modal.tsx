@@ -528,9 +528,7 @@ const ScanResourcesForm = ({
           )}
         </form>
         {scanResults && (
-          <div
-            className='margin-top-sm overflow-y-auto'
-          >
+          <div className='margin-top-sm overflow-y-auto'>
             <ScanResultsTable scanResults={scanResults} />
           </div>
         )}
@@ -645,8 +643,15 @@ const ImportResourcesForm = ({
       </div>
 
       <div
-        className='flex gap-[var(--padding-sm)] w-full justify-end items-end'
+        className='flex gap-[var(--padding-sm)] w-full justify-between items-end'
       >
+        <div>
+          <div
+            className='pb-[var(--padding-sm)]'
+          >
+            Insomnia provides features that may automatically execute code. Only import files from trusted sources.
+          </div>
+        </div>
         <Button
           variant="contained"
           bg="surprise"
