@@ -16,6 +16,6 @@ jobs:
         run: npm ci
       - uses: oke-py/npm-audit-action@v2.4.4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.RELEASE_GH_TOKEN }}
           create_pr_comments: true
           audit_level: high
