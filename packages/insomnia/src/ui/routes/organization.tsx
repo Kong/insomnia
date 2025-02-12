@@ -687,7 +687,7 @@ const OrganizationRoute = () => {
     <InsomniaEventStreamProvider>
       <div className="w-full h-full">
         <div className={`w-full h-full divide-x divide-solid divide-[--hl-md] ${isOrganizationSidebarOpen ? 'with-navbar' : ''} ${isScratchPadBannerVisible ? 'with-banner' : ''} grid-template-app-layout grid relative bg-[--color-bg]`}>
-          {isMinimal && <header className="[grid-area:Header] grid grid-cols-3 items-center border-b border-solid border-[--hl-md]">
+          {!isMinimal && <header className="[grid-area:Header] grid grid-cols-3 items-center border-b border-solid border-[--hl-md]">
             <div className="flex items-center gap-2">
               <div className="flex shrink-0 w-[50px] justify-center py-2">
                 <InsomniaLogo loading={loadingAI} />
@@ -1028,7 +1028,7 @@ const OrganizationRoute = () => {
                 <ToggleButton
                   className="flex-grow-0 w-[10px] h-[10px] gap-2 text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all rotate-90"
                   onChange={setIsMinimal}
-                  isSelected={isMinimal}
+                  isSelected={!isMinimal}
                 >
                   {({ isSelected }) => {
                     return (
@@ -1061,7 +1061,7 @@ const OrganizationRoute = () => {
                 </Tooltip>
               </TooltipTrigger>
             </div>
-            <div className={`grid grid-cols-3 gap-2 w-full items-center ${!isMinimal && 'min-w-[1100px]'}`}>
+            <div className={`grid grid-cols-3 gap-2 w-full items-center ${isMinimal && 'min-w-[1100px]'}`}>
               <div className="flex h-full">
                 <TooltipTrigger>
                   <Button
@@ -1084,7 +1084,7 @@ const OrganizationRoute = () => {
                     />
                   </Tooltip>
                 </TooltipTrigger>
-                {(hasUntrackedData && isMinimal) ? <div>
+                {(hasUntrackedData && !isMinimal) ? <div>
                   <Button
                     className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-warning] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
                     onPress={() => showModal(SettingsModal, { tab: 'data' })}
@@ -1092,7 +1092,7 @@ const OrganizationRoute = () => {
                     <Icon icon="exclamation-circle" /> We have detected orphaned projects on your computer, click here to view them.
                   </Button>
                 </div> : null}
-                {(hasUntrackedData && !isMinimal) ? (
+                {(hasUntrackedData && isMinimal) ? (
                   <TooltipTrigger delay={500}>
                     <Button
                       className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-warning] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
@@ -1109,10 +1109,10 @@ const OrganizationRoute = () => {
                     </Tooltip>
                   </TooltipTrigger>
                 ) : null}
-                {!isMinimal && <NetworkAndSyncIndicator user={user} asyncTaskStatus={asyncTaskStatus} settings={settings} sync={syncOrgsAndProjects} />}
+                {isMinimal && <NetworkAndSyncIndicator user={user} asyncTaskStatus={asyncTaskStatus} settings={settings} sync={syncOrgsAndProjects} />}
               </div>
               <div>
-                {!isMinimal && (
+                {isMinimal && (
                   <CommandPalette style={{ width: '100%' }} />
                 )}
               </div>
@@ -1148,8 +1148,8 @@ const OrganizationRoute = () => {
                       )}
                     </ProgressBar>
                   )}
-                  {isMinimal && <NetworkAndSyncIndicator user={user} asyncTaskStatus={asyncTaskStatus} settings={settings} sync={syncOrgsAndProjects} />}
-                  {isMinimal && (
+                  {!isMinimal && <NetworkAndSyncIndicator user={user} asyncTaskStatus={asyncTaskStatus} settings={settings} sync={syncOrgsAndProjects} />}
+                  {!isMinimal && (
                     <Link>
                       <a
                         className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
@@ -1162,7 +1162,7 @@ const OrganizationRoute = () => {
                     </Link>
                   )}
                 </div>
-                {!isMinimal && (
+                {isMinimal && (
                   <div className="flex gap-[--padding-sm] items-center justify-end p-2">
                     {user ? (
                       <Fragment>
