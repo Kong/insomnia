@@ -64,26 +64,27 @@ export const getOrInheritAuthentication = ({ request, requestGroups }: { request
   // if no auth is specified on request or folders, default to none
   return { type: 'none' };
 };
-export function getOrInheritHeaders({ request, requestGroups }: { request: Pick<BaseRequest, 'headers'>; requestGroups: RequestGroup[] }): RequestHeader[] {
+export function getOrInheritHeaders({ request, requestGroups }: { request: Pick<BaseRequest, 'headers'>; requestGroups: Pick<RequestGroup, 'headers'>[] }): RequestHeader[] {
   const httpHeaders = new Headers();
   const originalCaseMap = new Map<string, string>();
-  [...requestGroups
-    .reverse(), request]
-    .map(({ headers }) => headers || [])
-    .flat().forEach(({ name, value, disabled }) => {
-      if (disabled) {
-        return;
-      }
-      const normalizedCase = name.toLowerCase();
-      // prevent multiplied headers (Content-Type, etc)
-      if (SINGLE_VALUE_HEADERS.includes(normalizedCase)) {
-        httpHeaders.set(normalizedCase, value);
-      } else {
-        // appending will join matching header values with a comma
-        httpHeaders.append(normalizedCase, value);
-      }
-      originalCaseMap.set(normalizedCase, name);
-    });
+  // parent folders, then child folders, then request
+  const headerContexts = [...requestGroups.reverse(), request];
+  const headers = headerContexts.map(({ headers }) => headers || []).flat();
+  headers.forEach(({ name, value, disabled }) => {
+    if (disabled) {
+      return;
+    }
+    const normalizedCase = name.toLowerCase();
+    // preserves the casing of the last header with the same name
+    originalCaseMap.set(normalizedCase, name);
+    const isStrictValueHeader = SINGLE_VALUE_HEADERS.includes(normalizedCase);
+    if (isStrictValueHeader) {
+      httpHeaders.set(normalizedCase, value);
+      return;
+    }
+    // appending will join matching header values with a comma
+    httpHeaders.append(normalizedCase, value);
+  });
   return Array.from(httpHeaders.entries()).map(([name, value]) => ({ name: originalCaseMap.get(name)!, value }));
 }
 // (only used for getOAuth2 token) Intended to gather all required database objects and initialize ids

@@ -6,7 +6,6 @@ import allHeaderNames from '../datasets/header-names';
 import type { RequestHeader } from '../models/request';
 
 export const SINGLE_VALUE_HEADERS = [
-  'authorization',
   'proxy-authorization',
   'content-length',
   'content-type',
@@ -15,9 +14,7 @@ export const SINGLE_VALUE_HEADERS = [
   'connection',
   'host',
   'upgrade',
-  'keep-alive',
   'range',
-  'te',
   'trailer',
 ];
 
