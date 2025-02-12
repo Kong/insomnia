@@ -328,7 +328,7 @@ export async function savePatchesMadeByScript(
     if (originalFolder) {
       models.requestGroup.update(originalFolder, {
         environment: mutatedFolder.environment,
-        // also update kvPairData when environment type is table view(kv pair)
+        // also update kvPairData when folder environment type is table view(kv pair)
         ...(originalFolder.environmentType === EnvironmentType.KVPAIR && {
           kvPairData: getKVPairFromData(mutatedFolder.environment, originalFolder.environmentPropertyOrder),
         }),
