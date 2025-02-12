@@ -70,7 +70,7 @@ import { OrganizationTabList } from '../components/tabs/tabList';
 import { formatMethodName } from '../components/tags/method-tag';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useAIContext } from '../context/app/ai-context';
-import { useInsomniaTab } from '../hooks/use-insomnia-tab';
+// import { useInsomniaTab } from '../hooks/use-insomnia-tab';
 import {
   useActiveApiSpecSyncVCSVersion,
   useGitVCSVersion,
@@ -455,13 +455,13 @@ const Design: FC = () => {
     }
   }, [settings.forceVerticalLayout, direction]);
 
-  useInsomniaTab({
-    organizationId,
-    projectId,
-    workspaceId,
-    activeWorkspace,
-    activeProject,
-  });
+  // useInsomniaTab({
+  //   organizationId,
+  //   projectId,
+  //   workspaceId,
+  //   activeWorkspace,
+  //   activeProject,
+  // });
 
   return (
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
@@ -1000,7 +1000,7 @@ const Design: FC = () => {
       </Panel>
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
       <Panel className='flex flex-col'>
-        <OrganizationTabList />
+        <OrganizationTabList activeWorkspace={activeWorkspace} activeProject={activeProject} />
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
           <Panel id="pane-one" minSize={10} className='pane-one theme--pane'>
             <div className="flex flex-col h-full w-full overflow-hidden divide-y divide-solid divide-[--hl-md]">

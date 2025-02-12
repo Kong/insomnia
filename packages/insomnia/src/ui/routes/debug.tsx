@@ -107,7 +107,7 @@ import { WebSocketRequestPane } from '../components/websockets/websocket-request
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useCloseConnection } from '../hooks/use-close-connection';
 import { useExecutionState } from '../hooks/use-execution-state';
-import { useInsomniaTab } from '../hooks/use-insomnia-tab';
+// import { useInsomniaTab } from '../hooks/use-insomnia-tab';
 import { useReadyState } from '../hooks/use-ready-state';
 import {
   type CreateRequestType,
@@ -752,15 +752,15 @@ export const Debug: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useInsomniaTab({
-    organizationId,
-    projectId,
-    workspaceId,
-    activeWorkspace,
-    activeProject,
-    activeRequest,
-    activeRequestGroup,
-  });
+  // useInsomniaTab({
+  //   organizationId,
+  //   projectId,
+  //   workspaceId,
+  //   activeWorkspace,
+  //   activeProject,
+  //   activeRequest,
+  //   activeRequestGroup,
+  // });
 
   return (
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
@@ -1151,7 +1151,11 @@ export const Debug: FC = () => {
       </Panel>
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
       <Panel className='flex flex-col'>
-        <OrganizationTabList currentPage='debug' />
+        <OrganizationTabList
+          currentPage='debug'
+          activeRequest={activeRequest}
+          activeRequestGroup={activeRequestGroup}
+        />
         <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
           <Routes>
             <Route

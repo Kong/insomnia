@@ -1,6 +1,6 @@
 import { type RequestContext } from 'insomnia-sdk';
 import porderedJSON from 'json-order';
-import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
 import { Panel, PanelResizeHandle } from 'react-resizable-panels';
 import { type ActionFunction, type LoaderFunction, useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router-dom';
@@ -13,6 +13,8 @@ import type { ResponseTimelineEntry } from '../../main/network/libcurl-promise';
 import type { TimingStep } from '../../main/network/request-timing';
 import * as models from '../../models';
 import type { UserUploadEnvironment } from '../../models/environment';
+import { isRequest } from '../../models/request';
+import { isRequestGroup } from '../../models/request-group';
 import type { RunnerResultPerRequest, RunnerTestResult } from '../../models/runner-test-result';
 import { cancelRequestById } from '../../network/cancellation';
 import { moveAfter, moveBefore } from '../../utils';
@@ -32,10 +34,10 @@ import { ResponseTimer } from '../components/response-timer';
 import { getTimeAndUnit } from '../components/tags/time-tag';
 import { ResponseTimelineViewer } from '../components/viewers/response-timeline-viewer';
 import { useRunnerContext } from '../context/app/runner-context';
-import { useRunnerRequestList } from '../hooks/use-runner-request-list';
 import type { OrganizationLoaderData } from './organization';
 import { type CollectionRunnerContext, defaultSendActionRuntime, type RunnerSource, sendActionImplementation } from './request';
 import { useRootLoaderData } from './root';
+import type { Child, WorkspaceLoaderData } from './workspace';
 
 const inputStyle = 'placeholder:italic py-0.5 mr-1.5 px-1 w-24 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
 const iterationInputStyle = 'placeholder:italic py-0.5 mr-1.5 px-1 w-16 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
@@ -138,11 +140,61 @@ export const Runner: FC<{}> = () => {
   const [showCLIModal, setShowCLIModal] = useState(false);
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
 
-  const { runnerStateMap, updateRunnerState } = useRunnerContext();
+  const { runnerStateMap, updateRunnerState, runnerStateRef } = useRunnerContext();
   const { iterationCount = 1, delay = 0, selectedKeys = new Set<Key>(), advancedConfig = defaultAdvancedConfig, uploadData = [], file } = runnerStateMap?.[organizationId]?.[runnerId] || {};
   invariant(iterationCount, 'iterationCount should not be null');
 
-  const { reqList, requestRows, entityMap } = useRunnerRequestList(organizationId, targetFolderId, runnerId);
+  const { collection } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const entityMapRef = useRef(new Map<string, Child>());
+
+  const requestRows: RequestRow[] = useMemo(() => {
+    return collection
+      .filter(item => {
+        entityMapRef.current.set(item.doc._id, item);
+        return isRequest(item.doc);
+      })
+      .map((item: Child) => {
+        const ancestorNames: string[] = [];
+        const ancestorIds: string[] = [];
+        if (item.ancestors) {
+          item.ancestors.forEach(ancestorId => {
+            const ancestor = entityMapRef.current.get(ancestorId);
+            if (ancestor && isRequestGroup(ancestor?.doc)) {
+              ancestorNames.push(ancestor?.doc.name);
+              ancestorIds.push(ancestor?.doc._id);
+            }
+          });
+        }
+
+        const requestDoc = item.doc as unknown as Request;
+        invariant('method' in item.doc, 'Only Request is supported at the moment');
+        return {
+          id: item.doc._id,
+          name: item.doc.name,
+          ancestorNames,
+          ancestorIds,
+          method: requestDoc.method,
+          url: item.doc.url,
+          parentId: item.doc.parentId,
+        };
+      })
+      .filter(item => {
+        if (targetFolderId) {
+          return item.ancestorIds.includes(targetFolderId);
+        }
+        return true;
+      });
+  }, [collection, targetFolderId]);
+
+  useEffect(() => {
+    if (!runnerStateRef?.current?.[organizationId]?.[runnerId]) {
+      updateRunnerState(organizationId, runnerId, {
+        reqList: requestRows,
+      });
+    }
+  }, [organizationId, requestRows, runnerId, runnerStateRef, updateRunnerState]);
+
+  const reqList = useMemo(() => runnerStateMap[organizationId]?.[runnerId]?.reqList || [], [organizationId, runnerId, runnerStateMap]);
 
   useEffect(() => {
     if (settings.forceVerticalLayout) {
@@ -178,7 +230,7 @@ export const Runner: FC<{}> = () => {
   const { dragAndDropHooks: requestsDnD } = useDragAndDrop({
     getItems: keys => {
       return [...keys].map(key => {
-        const name = entityMap.get(key as string)?.doc.name || '';
+        const name = entityMapRef.current.get(key as string)?.doc.name || '';
         return {
           'text/plain': key.toString(),
           name,

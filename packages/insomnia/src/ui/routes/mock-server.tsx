@@ -2,7 +2,7 @@ import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Breadcrumb, Breadcrumbs, Button, GridList, GridListItem, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { type LoaderFunction, NavLink, Route, Routes, useFetcher, useLoaderData, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
+import { type LoaderFunction, NavLink, Route, Routes, useFetcher, useLoaderData, useNavigate, useParams } from 'react-router-dom';
 
 import { DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import * as models from '../../models';
@@ -21,10 +21,9 @@ import { SvgIcon } from '../components/svg-icon';
 import { OrganizationTabList } from '../components/tabs/tabList';
 import { formatMethodName } from '../components/tags/method-tag';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
-import { useInsomniaTab } from '../hooks/use-insomnia-tab';
+// import { useInsomniaTab } from '../hooks/use-insomnia-tab';
 import { MockRouteResponse, MockRouteRoute, useMockRoutePatcher } from './mock-route';
 import { useRootLoaderData } from './root';
-import type { WorkspaceLoaderData } from './workspace';
 export interface MockServerLoaderData {
   mockServerId: string;
   mockRoutes: MockRoute[];
@@ -56,10 +55,6 @@ const MockServerRoute = () => {
   };
   const { settings } = useRootLoaderData();
   const { mockServerId, mockRoutes } = useLoaderData() as MockServerLoaderData;
-
-  const { activeProject, activeWorkspace } = useRouteLoaderData(
-    ':workspaceId'
-  ) as WorkspaceLoaderData;
 
   const fetcher = useFetcher();
   const navigate = useNavigate();
@@ -181,14 +176,14 @@ const MockServerRoute = () => {
     }
   }, [settings.forceVerticalLayout, direction]);
 
-  useInsomniaTab({
-    organizationId,
-    projectId,
-    workspaceId,
-    activeWorkspace,
-    activeProject,
-    activeMockRoute: mockRoutes.find(s => s._id === mockRouteId),
-  });
+  // useInsomniaTab({
+  //   organizationId,
+  //   projectId,
+  //   workspaceId,
+  //   activeWorkspace,
+  //   activeProject,
+  //   activeMockRoute: mockRoutes.find(s => s._id === mockRouteId),
+  // });
 
   return (
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
@@ -373,7 +368,7 @@ const MockServerRoute = () => {
       </Panel>
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
       <Panel className='flex flex-col'>
-        <OrganizationTabList />
+        <OrganizationTabList activeMockRoute={mockRoutes.find(s => s._id === mockRouteId)} />
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
           <Panel id="pane-one" minSize={10} className='pane-one theme--pane'>
             <Routes>

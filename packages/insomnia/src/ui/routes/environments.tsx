@@ -19,7 +19,7 @@ import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showAlert } from '../components/modals';
 import { OrganizationTabList } from '../components/tabs/tabList';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
-import { useInsomniaTab } from '../hooks/use-insomnia-tab';
+// import { useInsomniaTab } from '../hooks/use-insomnia-tab';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
 import type { WorkspaceLoaderData } from './workspace';
 
@@ -43,7 +43,6 @@ const Environments = () => {
     activeEnvironment,
     subEnvironments,
     activeWorkspaceMeta,
-    activeWorkspace,
   } = routeData;
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
   const isUsingInsomniaCloudSync = Boolean(isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
@@ -260,13 +259,13 @@ const Environments = () => {
     sidebar_toggle: toggleSidebar,
   });
 
-  useInsomniaTab({
-    organizationId,
-    projectId,
-    workspaceId,
-    activeWorkspace,
-    activeProject,
-  });
+  // useInsomniaTab({
+  //   organizationId,
+  //   projectId,
+  //   workspaceId,
+  //   activeWorkspace,
+  //   activeProject,
+  // });
 
   return (
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>

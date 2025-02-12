@@ -50,7 +50,7 @@ import { CertificatesModal } from '../components/modals/workspace-certificates-m
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '../components/tabs/tabList';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
-import { useInsomniaTab } from '../hooks/use-insomnia-tab';
+// import { useInsomniaTab } from '../hooks/use-insomnia-tab';
 import { useRootLoaderData } from './root';
 import { TestRunStatus } from './test-results';
 import TestSuiteRoute from './test-suite';
@@ -97,7 +97,6 @@ const TestRoute: FC = () => {
 
   const {
     activeProject,
-    activeWorkspace,
     activeCookieJar,
     caCertificate,
     clientCertificates,
@@ -292,14 +291,14 @@ const TestRoute: FC = () => {
     }
   }, [settings.forceVerticalLayout, direction]);
 
-  useInsomniaTab({
-    organizationId,
-    projectId,
-    workspaceId,
-    activeWorkspace,
-    unitTestSuite,
-    activeProject,
-  });
+  // useInsomniaTab({
+  //   organizationId,
+  //   projectId,
+  //   workspaceId,
+  //   activeWorkspace,
+  //   unitTestSuite,
+  //   activeProject,
+  // });
 
   return (
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
@@ -473,7 +472,7 @@ const TestRoute: FC = () => {
       </Panel>
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
       <Panel className='flex flex-col'>
-        <OrganizationTabList />
+        <OrganizationTabList unitTestSuite={unitTestSuite} />
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
           <Panel id="pane-one" minSize={10} className='pane-one theme--pane relative overflow-hidden'>
             <Routes>
