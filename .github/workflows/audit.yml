@@ -1,11 +1,11 @@
 name: Audit
 
 on:
-  push:
+  # push:
   pull_request:
-    paths:
-      - "**/package-lock.json"
-      - "**/audit.yml"
+    # paths:
+    #   - "**/package-lock.json"
+    #   - "**/audit.yml"
 
 jobs:
   security_audit:
