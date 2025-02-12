@@ -89,7 +89,7 @@ const runScript = async (
   const mutatedContextObject = mutatedInsomniaObject.toObject();
   const updatedRequest = mergeRequests(context.request, mutatedContextObject.request);
   const updatedSettings = mergeSettings(context.settings, mutatedContextObject.request);
-  const updatedCertificates = mergeClientCertificates(context.clientCertificates, mutatedContextObject.request);
+  const updatedCertificates = mergeClientCertificates(mutatedContextObject.clientCertificates, mutatedContextObject.request);
   const updatedCookieJar = mergeCookieJar(context.cookieJar, mutatedContextObject.cookieJar);
 
   return {

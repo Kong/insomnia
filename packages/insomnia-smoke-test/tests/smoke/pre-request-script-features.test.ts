@@ -374,14 +374,14 @@ test.describe('pre-request features tests', async () => {
         await expect(responsePane).toContainText('Trying 127.0.0.1:8888'); // updated proxy
     });
 
-    test('insomnia.request / update clientCertificate', async ({ page }) => {
+    test('update clientCertificate if request url contains tag', async ({ page }) => {
         const responsePane = page.getByTestId('response-pane');
         const fixturePath = getFixturePath('certificates');
 
         // update proxy configuration
         await page.locator('text=Add Certificates').click();
         await page.locator('text=Add client certificate').click();
-        await page.locator('[name="host"]').fill('127.0.0.1');
+        await page.locator('[name="host"]').fill('127.0.0.1:4010');
         await page.locator('[data-key="pfx"]').click();
 
         const fileChooserPromise = page.waitForEvent('filechooser');
@@ -391,13 +391,26 @@ test.describe('pre-request features tests', async () => {
         await page.getByRole('button', { name: 'Add certificate' }).click();
         await page.getByRole('button', { name: 'Done' }).click();
 
+        await page.getByLabel('Request Collection').getByTestId('test certificate manipulation with tagged url').press('Enter');
+
+        // send
+        await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+        // verify
+        await page.getByRole('tab', { name: 'Console' }).click();
+        await expect(responsePane).toContainText('* Adding SSL PEM certificate');
+        await expect(responsePane).toContainText('Adding SSL KEY certificate');
+    });
+
+    test('insomnia.request / update clientCertificate', async ({ page }) => {
+        const responsePane = page.getByTestId('response-pane');
         await page.getByLabel('Request Collection').getByTestId('test certificate manipulation').press('Enter');
 
         // send
         await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
         // verify
         await page.getByRole('tab', { name: 'Console' }).click();
-        await expect(responsePane).toContainText('fixtures/certificates/fake.pfx'); // original proxy
+        await expect(responsePane).toContainText('Adding SSL PEM certificate');
+        await expect(responsePane).toContainText('Adding SSL KEY certificate');
     });
 
     test('pre: insomnia.test and insomnia.expect can work together', async ({ page }) => {

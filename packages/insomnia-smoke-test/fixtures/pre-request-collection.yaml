@@ -326,7 +326,7 @@ resources:
     parentId: fld_01de564274824ecaad272330339ea6b2
     modified: 1636707449231
     created: 1636141014552
-    url: http://127.0.0.1:4010/echo
+    url: "http://127.0.0.1:4010/echo"
     name: test certificate manipulation
     description: ""
     method: POST
@@ -344,10 +344,10 @@ resources:
     settingFollowRedirects: global
     preRequestScript: |-
       // print the original one
-      console.log('key:', insomnia.request.certificate.key.src);
-      console.log('cert:', insomnia.request.certificate.cert.src);
+      console.log('key:', insomnia.request.certificate.key);
+      console.log('cert:', insomnia.request.certificate.cert);
       console.log('passphrass:', insomnia.request.certificate.passphrass);
-      console.log('pfx:', insomnia.request.certificate.pfx.src);
+      console.log('pfx:', insomnia.request.certificate.pfx);
       // update
       insomnia.request.certificate.update({
           disabled: true,
@@ -356,6 +356,40 @@ resources:
           passphrase: '',
           pfx: {src: ''},
       });
+    _type: request
+  - _id: req_89dade2ee9ee42fbb22d588783a9da3d
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1636707449231
+    created: 1636141014552
+    url: "{{ _['serverURL'] }}/echo"
+    name: test certificate manipulation with tagged url
+    description: ""
+    method: POST
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1636141014553
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    preRequestScript: |-
+      insomnia.environment.set('serverURL', 'http://127.0.0.1:4010');
+      insomnia.clientCertificates = []; // remove all existing ones or it will still be selected
+      // update
+      insomnia.request.certificate.update({
+          disabled: true,
+          key: {src: 'invalid.key'},
+          cert: {src: 'invalid.cert'},
+          passphrase: '',
+          pfx: undefined,
+      });
+    afterResponseScript: |-
+      insomnia.environment.unset('serverURL');
     _type: request
   - _id: req_89dade2ee9ee42fbb22d588783a9df3e
     parentId: fld_01de564274824ecaad272330339ea6b2
