@@ -337,7 +337,13 @@ export async function savePatchesMadeByScript(
   mutatedContext.parentFolders.forEach(mutatedFolder => {
     const originalFolder = originalRequestGroups.find(originalFolder => originalFolder._id === mutatedFolder.id);
     if (originalFolder) {
-      models.requestGroup.update(originalFolder, { environment: mutatedFolder.environment });
+      models.requestGroup.update(originalFolder, {
+        environment: mutatedFolder.environment,
+        // also update kvPairData when folder environment type is table view(kv pair)
+        ...(originalFolder.environmentType === EnvironmentType.KVPAIR && {
+          kvPairData: getKVPairFromData(mutatedFolder.environment, originalFolder.environmentPropertyOrder),
+        }),
+      });
     }
   });
 }
