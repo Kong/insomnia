@@ -193,7 +193,6 @@ const Design: FC = () => {
     activeCookieJar,
     caCertificate,
     clientCertificates,
-    activeWorkspace,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const { settings } = useRootLoaderData();
 
@@ -1000,7 +999,7 @@ const Design: FC = () => {
       </Panel>
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
       <Panel className='flex flex-col'>
-        <OrganizationTabList activeWorkspace={activeWorkspace} activeProject={activeProject} />
+        <OrganizationTabList />
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
           <Panel id="pane-one" minSize={10} className='pane-one theme--pane'>
             <div className="flex flex-col h-full w-full overflow-hidden divide-y divide-solid divide-[--hl-md]">
