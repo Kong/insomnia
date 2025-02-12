@@ -55,6 +55,7 @@ test.describe('after-response script features tests', async () => {
             '__fromAfterScript1': 'baseEnvironment',
             '__fromAfterScript2': 'collection',
             '__fromAfterScript': 'environment',
+            'base_url': 'http://localhost:4010',
         });
     });
 

@@ -15,7 +15,7 @@ resources:
     parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
     modified: 1707809218855
     created: 1707808697304
-    url: http://127.0.0.1:4010/echo
+    url: '{{_.base_url}}/echo'
     name: tests with expect and test
     description: ""
     method: POST
@@ -128,7 +128,7 @@ resources:
     modified: 1707808692805
     created: 1707808692805
     name: Base Environment
-    data: {}
+    data: {"base_url": "http://localhost:4010"}
     dataPropertyOrder: null
     color: null
     isPrivate: false

@@ -168,13 +168,16 @@ export async function initInsomniaObject(
         localVars: localVariables,
     });
 
-    // sanitize URL, see _updateElementText in nunjuncks-tags.ts
-    const sanitizedRawUrl = rawObj.request.url.replace(/\\/g, '')
-        .replace(/^{%/, '')
-        .replace(/%}$/, '')
-        .replace(/^{{/, '')
-        .replace(/}}$/, '')
-        .trim();
+    // todo: find a way to make this less hacky
+    // (╯°□°）╯︵ ┻━┻
+    const sanitizedRawUrl = `${rawObj.request.url}`
+        // converts all bracketed key references to dot notation, e.g.
+        // `{{ _['key']['frame'] }}` -> `{{ _.key.frame }}`
+        .replaceAll(/\[[\'\"](.+?)[\'\"]\]/g, '.$1')
+        // drop the `_.` prefix from all expressions, e.g.
+        // `{{ _.key }}` -> `{{ key }}`
+        // `{{ _..key }}` -> `{{ key }}`
+        .replaceAll(/{{\s*_\.+?/g, '{{');
     const renderedRawUrl = variables.replaceIn(sanitizedRawUrl);
     const renderedUrl = toUrlObject(renderedRawUrl);
 
