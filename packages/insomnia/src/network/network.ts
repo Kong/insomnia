@@ -23,11 +23,7 @@ import * as models from '../models';
 import type { CaCertificate } from '../models/ca-certificate';
 import type { ClientCertificate } from '../models/client-certificate';
 import type { Cookie, CookieJar } from '../models/cookie-jar';
-<<<<<<< HEAD
-import { type Environment, EnvironmentType, getKVPairFromData, type UserUploadEnvironment } from '../models/environment';
-=======
-import { type Environment, type UserUploadEnvironment, vaultEnvironmentPath } from '../models/environment';
->>>>>>> 10d138ac0 (1.Add insomnia.vault to insomnia script)
+import { type Environment, EnvironmentType, getKVPairFromData, type UserUploadEnvironment, vaultEnvironmentPath } from '../models/environment';
 import type { MockRoute } from '../models/mock-route';
 import type { MockServer } from '../models/mock-server';
 import { isProject, type Project } from '../models/project';
