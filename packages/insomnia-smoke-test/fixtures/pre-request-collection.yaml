@@ -1393,8 +1393,19 @@ resources:
     environmentPropertyOrder: null
     metaSortKey: -1668533312225
     _type: request_group
-    preRequestScript: ""
     afterResponseScript: ""
+    preRequestScript: |-
+      const folder1ValByFolder1 = insomnia.parentFolders.get('folder1').environment.get('val');
+      const folder1ValByFolder1ByName = insomnia.parentFolders.getByName('folder1').environment.get('val');
+      const folder2ValByFolder1 = insomnia.parentFolders.get('folder2').environment.get('val');
+      const folder2ValByFolder1ByName = insomnia.parentFolders.getByName('folder2').environment.get('val');
+      const valFoundByFolder1 = insomnia.parentFolders.findValue('val');
+
+      insomnia.environment.set('folder1ValByFolder1', folder1ValByFolder1);
+      insomnia.environment.set('folder1ValByFolder1ByName', folder1ValByFolder1ByName);
+      insomnia.environment.set('folder2ValByFolder1', folder2ValByFolder1);
+      insomnia.environment.set('folder2ValByFolder1ByName', folder2ValByFolder1ByName);
+      insomnia.environment.set('valFoundByFolder1', valFoundByFolder1);
   - _id: fld_01de564274824ecaad272330339ea6b4
     parentId: fld_01de564274824ecaad272330339ea6b3
     modified: 1668533312225
@@ -1406,8 +1417,19 @@ resources:
     environmentPropertyOrder: null
     metaSortKey: -1668533312225
     _type: request_group
-    preRequestScript: ""
     afterResponseScript: ""
+    preRequestScript: |-
+      const folder1ValByFolder2 = insomnia.parentFolders.get('folder1').environment.get('val');
+      const folder1ValByFolder2ByName = insomnia.parentFolders.getByName('folder1').environment.get('val');
+      const folder2ValByFolder2 = insomnia.parentFolders.get('folder2').environment.get('val');
+      const folder2ValByFolder2ByName = insomnia.parentFolders.getByName('folder2').environment.get('val');
+      const valFoundByFolder2 = insomnia.parentFolders.findValue('val');
+
+      insomnia.environment.set('folder1ValByFolder2', folder1ValByFolder2);
+      insomnia.environment.set('folder1ValByFolder2ByName', folder1ValByFolder2ByName);
+      insomnia.environment.set('folder2ValByFolder2', folder2ValByFolder2);
+      insomnia.environment.set('folder2ValByFolder2ByName', folder2ValByFolder2ByName);
+      insomnia.environment.set('valFoundByFolder2', valFoundByFolder2);
   - _id: req_89dade2ee9ee42fbb22d588783a9df21
     parentId: fld_01de564274824ecaad272330339ea6b4
     modified: 1636707449231
@@ -1430,25 +1452,37 @@ resources:
     settingRebuildPath: true
     settingFollowRedirects: global
     preRequestScript: |-
-      const valFromFolder1 = insomnia.parentFolders.get('folder1').environment.get('val');
-      const valFromFolder1ByName = insomnia.parentFolders.getByName('folder1').environment.get('val');
-      const valFromFolder2 = insomnia.parentFolders.get('folder2').environment.get('val');
-      const valFromFolder2ByName = insomnia.parentFolders.getByName('folder2').environment.get('val');
+      const folder1ValByReq = insomnia.parentFolders.get('folder1').environment.get('val');
+      const folder1ValByReqByName = insomnia.parentFolders.getByName('folder1').environment.get('val');
+      const folder2ValByReq = insomnia.parentFolders.get('folder2').environment.get('val');
+      const folder2ValByReqByName = insomnia.parentFolders.getByName('folder2').environment.get('val');
       const valFound = insomnia.parentFolders.findValue('val');
 
-      insomnia.environment.set('valFromFolder1', valFromFolder1);
-      insomnia.environment.set('valFromFolder1ByName', valFromFolder1ByName);
-      insomnia.environment.set('valFromFolder2', valFromFolder2);
-      insomnia.environment.set('valFromFolder2ByName', valFromFolder2ByName);
+      insomnia.environment.set('folder1ValByReq', folder1ValByReq);
+      insomnia.environment.set('folder1ValByReqByName', folder1ValByReqByName);
+      insomnia.environment.set('folder2ValByReq', folder2ValByReq);
+      insomnia.environment.set('folder2ValByReqByName', folder2ValByReqByName);
       insomnia.environment.set('valFound', valFound);
     body:
       mimeType: "application/json"
       text: |-
         {
-          "valFromFolder1": {{ valFromFolder1 }},
-          "valFromFolder1ByName": {{ valFromFolder1ByName }},
-          "valFromFolder2": {{ valFromFolder2 }},
-          "valFromFolder2ByName": {{ valFromFolder2ByName }},
-          "valFound": {{ valFound }}
+          "folder1ValByReq": {{ folder1ValByReq }},
+          "folder1ValByReqByName": {{ folder1ValByReqByName }},
+          "folder2ValByReq": {{ folder2ValByReq }},
+          "folder2ValByReqByName": {{ folder2ValByReqByName }},
+          "valFound": {{ valFound }},
+
+          "folder1ValByFolder1": {{ folder1ValByFolder1 }},
+          "folder1ValByFolder1ByName": {{ folder1ValByFolder1ByName }},
+          "folder2ValByFolder1": {{ folder2ValByFolder1 }},
+          "folder2ValByFolder1ByName": {{ folder2ValByFolder1ByName }},
+          "valFoundByFolder1": {{ valFoundByFolder1 }},
+
+          "folder1ValByFolder2": {{ folder1ValByFolder2 }},
+          "folder1ValByFolder2ByName": {{ folder1ValByFolder2ByName }},
+          "folder2ValByFolder2": {{ folder2ValByFolder2 }},
+          "folder2ValByFolder2ByName": {{ folder2ValByFolder2ByName }},
+          "valFoundByFolder2": {{ valFoundByFolder2 }}
         }
     _type: request

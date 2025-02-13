@@ -26,15 +26,27 @@ export class ParentFolders {
     constructor(private folders: Folder[]) { }
 
     get = (idOrName: string) => {
-        return this.folders.find(folder => folder.name === idOrName || folder.id === idOrName);
+        const folder = this.folders.find(folder => folder.name === idOrName || folder.id === idOrName);
+        if (!folder) {
+            throw Error(`Folder "${idOrName}" not found`);
+        }
+        return folder;
     };
 
     getById = (id: string) => {
-        return this.folders.find(folder => folder.id === id);
+        const folder = this.folders.find(folder => folder.id === id);
+        if (!folder) {
+            throw Error(`Folder "${id}" not found`);
+        }
+        return folder;
     };
 
     getByName = (folderName: string) => {
-        return this.folders.find(folder => folder.name === folderName);
+        const folder = this.folders.find(folder => folder.name === folderName);
+        if (!folder) {
+            throw Error(`Folder "${folderName}" not found`);
+        }
+        return folder;
     };
 
     findValue = (valueKey: string) => {
