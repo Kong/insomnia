@@ -660,7 +660,7 @@ const OrganizationRoute = () => {
   const hasUntrackedData = untrackedProjects.length > 0 || untrackedWorkspaces.length > 0;
 
   const [isOrganizationSidebarOpen, setIsOganizationSidebarOpen] = useLocalStorage('organizationSidebarOpen', true);
-  const [isMinimal, setIsMinimal] = useLocalStorage('isMinimal', true);
+  const [isMinimal, setIsMinimal] = useLocalStorage('isMinimal', false);
 
   const {
     generating: loadingAI,
@@ -1027,7 +1027,9 @@ const OrganizationRoute = () => {
               <TooltipTrigger>
                 <ToggleButton
                   className="flex-grow-0 w-[10px] h-[10px] gap-2 text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all rotate-90"
-                  onChange={setIsMinimal}
+                  onChange={flag => {
+                    setIsMinimal(!flag);
+                  }}
                   isSelected={!isMinimal}
                 >
                   {({ isSelected }) => {
@@ -1061,8 +1063,8 @@ const OrganizationRoute = () => {
                 </Tooltip>
               </TooltipTrigger>
             </div>
-            <div className={`grid grid-cols-3 gap-2 w-full items-center ${isMinimal && 'min-w-[1100px]'}`}>
-              <div className="flex h-full">
+            <div className="flex gap-2 w-full items-center">
+              <div className="flex-grow flex-shrink basis-1/3 flex items-center h-full">
                 <TooltipTrigger>
                   <Button
                     data-testid="settings-button"
@@ -1111,12 +1113,12 @@ const OrganizationRoute = () => {
                 ) : null}
                 {isMinimal && <NetworkAndSyncIndicator user={user} asyncTaskStatus={asyncTaskStatus} settings={settings} sync={syncOrgsAndProjects} />}
               </div>
-              <div>
+              <div className='flex-grow flex-shrink basis-1/3 min-w-[120px]'>
                 {isMinimal && (
                   <CommandPalette style={{ width: '100%' }} />
                 )}
               </div>
-              <div className='flex justify-end'>
+              <div className='flex-grow flex-shrink basis-1/3 flex justify-end'>
                 <div className='flex items-center gap-2 divide'>
                   {loadingAI && (
                     <ProgressBar
