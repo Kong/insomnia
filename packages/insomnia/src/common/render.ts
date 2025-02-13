@@ -293,11 +293,24 @@ export async function render<T>(
     ) {
       // Do nothing to these types
     } else if (typeof x === 'string') {
-      // Detect if the string contains a require statement
-      if (/require\s*\(/ig.test(x)) {
-        console.warn('Short-circuiting `render`; string contains possible "require" invocation:', x);
-        Sentry.captureException(new Error(`Short-circuiting 'render'; string contains possible "require" invocation: ${x}`));
-        return x;
+      // Allowed modules could have valid use cases within templates, and we know for a fact that these modules cannot be
+      // used as part of an exploit.
+      const allowedModules = ['crypto', 'path'];
+      const matches = [...x.matchAll(/require\s*\(\s*["'`]([^'"`]*)['"`]/gi)].map(match => match[1]);
+
+      if (matches.length) {
+        // Only allow the string to be rendered if required modules are *all* in the allowed modules list. If any modules
+        // outside of the allowed list is detected, we short-circuit rendering and return the raw string.
+        for (const match of matches) {
+          if (allowedModules.includes(match)) {
+            continue;
+          } else {
+            console.warn('Short-circuiting `render`; string contains at least one disallowed "require" invocation:', x);
+            Sentry.captureException(new Error(`Short-circuiting 'render'; string contains at least one disallowed "require" invocation: ${x}`));
+
+            return x;
+          }
+        }
       }
 
       try {
