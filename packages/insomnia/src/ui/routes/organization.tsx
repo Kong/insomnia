@@ -43,15 +43,15 @@ import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { AsyncTask, getInitialRouteForOrganization } from '../../utils/router';
 import { getLoginUrl } from '../auth-session-provider';
-import { Avatar } from '../components/avatar';
 import { CommandPalette } from '../components/command-palette';
 import { GitHubStarsButton } from '../components/github-stars-button';
+import { HeaderInviteButton } from '../components/header-invite-button';
+import { HeaderUserButton } from '../components/header-user-button';
 import { Hotkey } from '../components/hotkey';
 import { Icon } from '../components/icon';
 import { InsomniaAI } from '../components/insomnia-ai-icon';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { showAlert, showModal } from '../components/modals';
-import { InviteModalContainer } from '../components/modals/invite-modal/invite-modal';
 import { SettingsModal, showSettingsModal } from '../components/modals/settings-modal';
 import { OrganizationAvatar } from '../components/organization-avatar';
 import { PresentUsers } from '../components/present-users';
@@ -73,7 +73,7 @@ export interface OrganizationsResponse {
   organizations: Organization[];
 }
 
-interface UserProfileResponse {
+export interface UserProfileResponse {
   id: string;
   email: string;
   name: string;
@@ -87,23 +87,8 @@ interface UserProfileResponse {
   family_name: string;
 }
 
-type PersonalPlanType = 'free' | 'individual' | 'team' | 'enterprise' | 'enterprise-member';
-const formatCurrentPlanType = (type: PersonalPlanType) => {
-  switch (type) {
-    case 'free':
-      return 'Hobby';
-    case 'individual':
-      return 'Individual';
-    case 'team':
-      return 'Pro';
-    case 'enterprise':
-      return 'Enterprise';
-    case 'enterprise-member':
-      return 'Enterprise Member';
-    default:
-      return 'Free';
-  }
-};
+export type PersonalPlanType = 'free' | 'individual' | 'team' | 'enterprise' | 'enterprise-member';
+
 type PaymentSchedules = 'month' | 'year';
 
 export interface CurrentPlan {
@@ -463,45 +448,6 @@ export const useOrganizationLoaderData = () => {
   return useRouteLoaderData('/organization') as OrganizationLoaderData;
 };
 
-const UpgradeButton = ({
-  currentPlan,
-}: {
-  currentPlan: CurrentPlan;
-}) => {
-
-  // For the enterprise-member plan we don't show the upgrade button.
-  if (currentPlan?.type === 'enterprise-member') {
-    return null;
-  }
-
-  // If user has a team or enterprise plan we navigate them to the Enterprise contact page.
-  if (['team', 'enterprise'].includes(currentPlan?.type || '')) {
-    return (
-      <a
-        className="px-4 text-[--color-font] hover:bg-[--hl-xs] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-        href={'https://insomnia.rest/pricing/contact'}
-      >
-        {currentPlan?.type === 'enterprise' ? '+ Add more seats' : 'Upgrade'}
-      </a>
-    );
-  }
-
-  let to = '/app/subscription/update?plan=individual&pay_schedule=year';
-
-  if (currentPlan?.type === 'individual') {
-    to = `/app/subscription/update?plan=team&pay_schedule=${currentPlan?.period}`;
-  }
-
-  return (
-    <a
-      href={getAppWebsiteBaseURL() + to}
-      className="px-4 text-[--color-font] hover:bg-[--hl-xs] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-    >
-      Upgrade
-    </a>
-  );
-};
-
 interface IndicatorProps {
   user?: UserProfileResponse;
   asyncTaskStatus: 'error' | 'idle' | 'loading' | 'submitting';
@@ -603,7 +549,7 @@ const OrganizationRoute = () => {
   const workspaceData = useRouteLoaderData(
     ':workspaceId',
   ) as WorkspaceLoaderData | null;
-  const logoutFetcher = useFetcher();
+
   const navigate = useNavigate();
   const [isScratchPadBannerDismissed, setIsScratchPadBannerDismissed] = useLocalStorage('scratchpad-banner-dismissed', '');
   const isScratchpadWorkspace =
@@ -681,8 +627,6 @@ const OrganizationRoute = () => {
     }
   }, [organizationId]);
 
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-
   return (
     <InsomniaEventStreamProvider>
       <div className="w-full h-full">
@@ -724,93 +668,8 @@ const OrganizationRoute = () => {
               {user ? (
                 <Fragment>
                   <PresentUsers />
-                  <Button
-                    aria-label="Invite collaborators"
-                    className="px-4 text-[--color-font-surprise] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] py-2 h-full font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-md hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                    onPress={() => setIsInviteModalOpen(true)}
-                  >
-                    <Icon icon="user-plus" />
-                    <span className="truncate">
-                      Invite
-                    </span>
-                  </Button>
-                  <InviteModalContainer
-                    {...{
-                      isOpen: isInviteModalOpen,
-                      setIsOpen: setIsInviteModalOpen,
-                    }}
-                  />
-                  <MenuTrigger>
-                    <Button data-testid='user-dropdown' className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-md text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                      <Avatar
-                        src={user.picture}
-                        alt={user.name}
-                      />
-                      <span className="truncate">
-                        {user.name}
-                      </span>
-                      <Icon className='w-4 pr-2' icon="caret-down" />
-                    </Button>
-                    <Popover className="min-w-max border select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none">
-                      {currentPlan && Boolean(currentPlan.type) && (
-                        <div className='flex gap-2 justify-between items-center pb-2 px-[--padding-md] border-b border-solid border-[--hl-sm] text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap capitalize'>
-                          <span>{currentPlan?.planName ?? formatCurrentPlanType(currentPlan.type)} Plan</span>
-                          <UpgradeButton currentPlan={currentPlan} />
-                        </div>
-                      )}
-                      <Menu
-                        className='focus:outline-none'
-                        onAction={action => {
-                          if (action === 'logout') {
-                            logoutFetcher.submit(
-                              {},
-                              {
-                                action: '/auth/logout',
-                                method: 'POST',
-                              },
-                            );
-                          }
-
-                          if (action === 'account-settings') {
-                            window.main.openInBrowser(
-                              `${getAppWebsiteBaseURL()}/app/settings/account`,
-                            );
-                          }
-
-                          if (action === 'manage-organizations') {
-                            window.main.openInBrowser(
-                              `${getAppWebsiteBaseURL()}/app/dashboard/organizations`
-                            );
-                          }
-                        }}
-                      >
-                        <MenuItem
-                          id="manage-organizations"
-                          className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                          aria-label="Manage organizations"
-                        >
-                          <Icon icon="users" />
-                          <span>Manage Organizations</span>
-                        </MenuItem>
-                        <MenuItem
-                          id="account-settings"
-                          className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                          aria-label="Account settings"
-                        >
-                          <Icon icon="gear" />
-                          <span>Account Settings</span>
-                        </MenuItem>
-                        <MenuItem
-                          id="logout"
-                          className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                          aria-label="logout"
-                        >
-                          <Icon icon="sign-out" />
-                          <span>Log out</span>
-                        </MenuItem>
-                      </Menu>
-                    </Popover>
-                  </MenuTrigger>
+                  <HeaderInviteButton className="font-semibold border border-solid border-[--hl-md] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))]" />
+                  <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
                 </Fragment>
               ) : (
                 <Fragment>
@@ -1169,93 +1028,8 @@ const OrganizationRoute = () => {
                     {user ? (
                       <Fragment>
                         <PresentUsers />
-                        <Button
-                          aria-label="Invite collaborators"
-                          className="px-4 text-[--color-font-surprise] py-2 h-full font-semibold flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-md hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent transition-all text-sm"
-                          onPress={() => setIsInviteModalOpen(true)}
-                        >
-                          <Icon icon="user-plus" />
-                          <span className="truncate">
-                            Invite
-                          </span>
-                        </Button>
-                        <InviteModalContainer
-                          {...{
-                            isOpen: isInviteModalOpen,
-                            setIsOpen: setIsInviteModalOpen,
-                          }}
-                        />
-                        <MenuTrigger>
-                          <Button data-testid='user-dropdown' className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-md text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                            <Avatar
-                              src={user.picture}
-                              alt={user.name}
-                            />
-                            <span className="truncate">
-                              {user.name}
-                            </span>
-                            <Icon className='w-4 pr-2' icon="caret-up" />
-                          </Button>
-                          <Popover className="min-w-max border select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none">
-                            {currentPlan && Boolean(currentPlan.type) && (
-                              <div className='flex gap-2 justify-between items-center pb-2 px-[--padding-md] border-b border-solid border-[--hl-sm] text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap capitalize'>
-                                <span>{currentPlan?.planName ?? formatCurrentPlanType(currentPlan.type)} Plan</span>
-                                <UpgradeButton currentPlan={currentPlan} />
-                              </div>
-                            )}
-                            <Menu
-                              className='focus:outline-none'
-                              onAction={action => {
-                                if (action === 'logout') {
-                                  logoutFetcher.submit(
-                                    {},
-                                    {
-                                      action: '/auth/logout',
-                                      method: 'POST',
-                                    },
-                                  );
-                                }
-
-                                if (action === 'account-settings') {
-                                  window.main.openInBrowser(
-                                    `${getAppWebsiteBaseURL()}/app/settings/account`,
-                                  );
-                                }
-
-                                if (action === 'manage-organizations') {
-                                  window.main.openInBrowser(
-                                    `${getAppWebsiteBaseURL()}/app/dashboard/organizations`
-                                  );
-                                }
-                              }}
-                            >
-                              <MenuItem
-                                id="manage-organizations"
-                                className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                                aria-label="Manage organizations"
-                              >
-                                <Icon icon="users" />
-                                <span>Manage Organizations</span>
-                              </MenuItem>
-                              <MenuItem
-                                id="account-settings"
-                                className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                                aria-label="Account settings"
-                              >
-                                <Icon icon="gear" />
-                                <span>Account Settings</span>
-                              </MenuItem>
-                              <MenuItem
-                                id="logout"
-                                className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                                aria-label="logout"
-                              >
-                                <Icon icon="sign-out" />
-                                <span>Log out</span>
-                              </MenuItem>
-                            </Menu>
-                          </Popover>
-                        </MenuTrigger>
+                        <HeaderInviteButton />
+                        <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
                       </Fragment>
                     ) : (
                       <Fragment>
