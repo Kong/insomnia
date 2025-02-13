@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/electron/renderer';
 import clone from 'clone';
 import orderedJSON from 'json-order';
 
@@ -10,6 +11,7 @@ import { PATH_PARAMETER_REGEX, type Request } from '../models/request';
 import { isRequestGroup, type RequestGroup } from '../models/request-group';
 import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
+import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
 import * as templating from '../templating';
 import * as templatingUtils from '../templating/utils';
 import { setDefaultProtocol } from '../utils/url/protocol';
@@ -291,6 +293,13 @@ export async function render<T>(
     ) {
       // Do nothing to these types
     } else if (typeof x === 'string') {
+      // Detect if the string contains a require statement
+      if (/require\s*\(/ig.test(x)) {
+        console.warn('Short-circuiting `render`; string contains possible "require" invocation:', x);
+        Sentry.captureException(new Error(`Short-circuiting 'render'; string contains possible "require" invocation: ${x}`));
+        return x;
+      }
+
       try {
         // @ts-expect-error -- TSCONVERSION
         x = await templating.render(x, { context, path, ignoreUndefinedEnvVariable });
@@ -601,6 +610,8 @@ export async function getRenderedRequestAndContext(
 ): Promise<RequestAndContext> {
   const ancestors = await getRenderContextAncestors(request);
   const workspace = ancestors.find(isWorkspace);
+  const requestGroups = ancestors.filter(isRequestGroup);
+
   const parentId = workspace ? workspace._id : 'n/a';
   const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
   const renderContext = await getRenderContext({ request, environment, ancestors, purpose, extraInfo, baseEnvironment, userUploadEnvironment, transientVariables });
@@ -618,6 +629,9 @@ export async function getRenderedRequestAndContext(
   // Render description separately because it's lower priority
   const description = request.description;
   request.description = '';
+
+  request.headers = getOrInheritHeaders({ request, requestGroups });
+  request.authentication = getOrInheritAuthentication({ request, requestGroups });
   // Render all request properties
   const renderResult = await render(
     {

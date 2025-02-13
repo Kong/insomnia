@@ -1051,3 +1051,21 @@ describe('getCurrentUrl for tough-cookie', () => {
     expect(networkUtils.getCurrentUrl({ headerResults, finalUrl })).toEqual(finalUrl + '/biscuit');
   });
 });
+
+describe('getOrInheritHeaders', () => {
+  it('should combine headers', () => {
+    const requestGroups = [{ headers: [{ name: 'foo', value: 'bar' }] }, { headers: [{ name: 'baz', value: 'qux' }] }];
+    const request = { headers: [{ name: 'foo', value: 'bar' }, { name: 'baz', value: 'qux' }] };
+    expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([{ name: 'baz', value: 'qux, qux' }, { name: 'foo', value: 'bar, bar' }]);
+  });
+  it('should use last header casing', () => {
+    const requestGroups = [{ headers: [{ name: 'x-foo', value: 'bar' }] }];
+    const request = { headers: [{ name: 'X-Foo', value: 'baz' }] };
+    expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([{ name: 'X-Foo', value: 'bar, baz' }]);
+  });
+  it('should not combine special headers', () => {
+    const requestGroups = [{ headers: [{ name: 'content-type', value: 'application/json' }, { name: 'Connection', value: 'close' }] }];
+    const request = { headers: [{ name: 'Content-Type', value: 'text/plain' }, { name: 'connection', value: 'keep-alive' }] };
+    expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([{ name: 'connection', value: 'keep-alive' }, { name: 'Content-Type', value: 'text/plain' }]);
+  });
+});

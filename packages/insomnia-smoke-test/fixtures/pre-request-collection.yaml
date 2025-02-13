@@ -263,6 +263,35 @@ resources:
     settingRebuildPath: true
     settingFollowRedirects: global
     _type: request
+  - _id: req_66ec1468f5ba410baac7dee5a71b9d82
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1739257792104
+    created: 1739257376971
+    url: http://127.0.0.1:4010/echo
+    name: update kv pair environment
+    description: ""
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{}"
+    parameters: []
+    headers:
+      - name: Content-Type
+        value: application/json
+    authentication: {}
+    preRequestScript: |-
+      insomnia.environment.set('__environment_type', '__environment_value_kv');
+      insomnia.environment.set('examplehost', 'http://url-from-script');
+    metaSortKey: -1636141014503
+    isPrivate: false
+    pathParameters: []
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
   - _id: env_f9ef1d097c5e00986051fcb4f7a921eea1a86916
     parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
     modified: 1707808692805

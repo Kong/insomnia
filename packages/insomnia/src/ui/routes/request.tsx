@@ -433,6 +433,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
   } catch (err) {
     console.log('[request] Failed to send request', err);
     const e = err.error || err;
+    const url = new URL(request.url);
 
     // when after-script error, there is no error in response, we need to set error info into response, so that we can show it in response viewer
     if (err.response && err.requestMeta && err.response._id) {
@@ -445,15 +446,16 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       const existingResponse = await models.response.getById(err.response._id);
       const response = existingResponse || await models.response.create(err.response, err.maxHistoryResponses);
       await models.requestMeta.update(err.requestMeta, { activeResponseId: response._id });
+    } else {
+      // if the error is not from response, we need to set it to url param and show it in modal
+      url.searchParams.set('error', e);
+      if (e?.extraInfo && e?.extraInfo?.subType === RenderErrorSubType.EnvironmentVariable) {
+        url.searchParams.set('envVariableMissing', '1');
+        url.searchParams.set('undefinedEnvironmentVariables', e?.extraInfo?.undefinedEnvironmentVariables);
+      }
     }
 
     window.main.completeExecutionStep({ requestId });
-    const url = new URL(request.url);
-    url.searchParams.set('error', e);
-    if (e?.extraInfo && e?.extraInfo?.subType === RenderErrorSubType.EnvironmentVariable) {
-      url.searchParams.set('envVariableMissing', '1');
-      url.searchParams.set('undefinedEnvironmentVariables', e?.extraInfo?.undefinedEnvironmentVariables);
-    }
     return redirect(`${url.pathname}?${url.searchParams}`);
   }
 };
