@@ -47,6 +47,7 @@ test.describe('multiple-tab feature test', () => {
     await page.getByLabel('HTTP Request').click();
     const tab = await page.getByLabel('Insomnia Tabs').getByLabel(`tab-${DEFAULT_REQUEST_NAME}`, { exact: true });
     expect(tab).toBeVisible();
+    await page.getByTestId('New Request').click();
     await page.getByTestId('Dropdown-New-Request').click();
     await page.getByLabel('Delete').click();
     await page.getByRole('button', { name: 'Delete', exact: true }).click();
