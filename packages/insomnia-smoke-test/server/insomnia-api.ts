@@ -2,6 +2,9 @@ import { randomUUID } from 'crypto';
 import type { Application } from 'express';
 import { json } from 'express';
 
+import { Collaborator, CollaboratorType } from '../../insomnia/src/ui/routes/invite';
+import { getRandomId, getTeamName, getUserEmail } from '../tests/smoke/test-utils';
+
 const currentPlan = {
   isActive: true,
   period: 'year',
@@ -80,9 +83,27 @@ const user = {
 
 const whoami = {
   'sessionExpiry': 4838400,
-  'publicKey': '{"alg":"RSA-OAEP-256","e":"AQAB","ext":true,"key_ops":["encrypt"],"kty":"RSA","n":"pTQVaUaiqggIldSKm6ib6eFRLLoGj9W-2O4gTbiorR-2b8-ZmKUwQ0F-jgYX71AjYaFn5VjOHOHSP6byNAjN7WzJ6A_Z3tytNraLoZfwK8KdfflOCZiZzQeD3nO8BNgh_zEgCHStU61b6N6bSpCKjbyPkmZcOkJfsz0LJMAxrXvFB-I42WYA2vJKReTJKXeYx4d6L_XGNIoYtmGZit8FldT4AucfQUXgdlKvr4_OZmt6hgjwt_Pjcu-_jO7m589mMWMebfUhjte3Lp1jps0MqTOvgRb0FQf5eoBHnL01OZjvFPDKeqlvoz7II9wFNHIKzSvgAKnyemh6DiyPuIukyQ"}',
-  'encPrivateKey': '{"iv":"4a09fba2c412d7ea205b6168","t":"a4fa1a524e89e668444de654f1bd1ba8","d":"b695b6ec7d41327b723e395b3788cc08c89dcf7b4db0811c3e91af4aa9ed1c9cb8132b591fe24498ffcc48c0055c1c0985a48d9e96962961c049cea508b6c38e83dfc831a4b1a82ad3e79a26d6ed3c1c9b73043a0e266cfe6eac661a75f4b9862afe2a81362d640bb2fdb6d0015204d04c322f1cb7f33faa593b538b58bda75b0c5e56583d5a55eea89e74d96ce29d862614414ee298f56105ea3dbc479aea9330618ba3e94efe874b33cd99954b12f27d7ff9e7f981310381fa0b3f1a05fbac71862ecc67ddbf7062f718d1d8bbf03f35afc3a8b1b36b177f278ab8dd12c14c862bca52a2c63bca05c7fc9bd8f1000ddc328ad1b5a72b96f110c3443294129db416bd385d19c73a1b342b4887feffa17639cc96b7b7154903c2de183f73d3116d98c8d32ea8b9627d0a5200da98d28c89c34008d4e6fa4cfbd7e1b7e1f36cfec6d0020b306c7def8d24c6091252764bde2eef74f35bdaa605dc27fcd302d179fcf65d6c7d18d3dd36cf6380bd40a29198a0398a6cb1ab79a71be00f7783b6559a146f1f825d25a990162e923e2dbfdd1ee868c8b63844f9394415ebab9f397c8d78608de00369728744b8344724e5c2f1e4ba95522406bd7042fc271793af32bfa1c2724defc8a88185cc5c2825c0453fcb39dc5ac9147d3ba60006fccca855678521da06b426dfd04333511b7d8184a8960dadefb1ef89f5fa648304adcd79734fea763f7dbd0c2788c64ea302f8e33602ab041aec619661167b2f167a4b2cadc6b7cf0c22867fcdd73528fb5585b9d13f6d90ab36c5ef231bd4f2464650e541e6dead1753487b45a8ade3fe46e2327fd0e32d8adafd4e1d2ffcb2df1ed50718d0d29829f8bf4bc33da524640388b0cb9f640b70f9ef0a1d073bc80abdf975fe77b35f07aee5135e2924661d26e5d299a432c563a3bbc5ff21d1fde07ff2336b32b17067c01adc6697568aabf3ff4882530763f77d96cef2fcc7336e3f8e4a2b8de5df42aaeaeccd9e3681604e677fad555148ced6057d99cab03389bb566b27cc4ea3946a640f05593e5944c74adf5d0649941b8032dc6959bdef917fd7d2da3139b1d3770d411b52752c9299f789ce5de64e802740a8210e1c70e0ffb8aa45a3647b837e2c5d1a7dd676b238268ac7c060bcc771285f21a283c2f0eefb54254086770a4f09140f7b6a118a7df1e06445379080c2cb6a8840b9d70411521107b47751634e3ff6437974ac2e5897e7e15ac8bdbb5325bb1dd09c20f8ac37fa1eaf2765671fd1434460cbf3cc97bf67b19f88b2bfbde99836c27c338b7f19fc20aad90b91e268c87b81aa17026ac5ac74f47c3525fd2d0d584d3b1d75dd360f105f78b2831481802b6a40e88938660d1598947ffb4e7cf75cd67308d6f910be2fb9beafb68d5ea7c3d2f79c3b66223d610a70a6f9ce3c3447bc0acf74e84687c2da5a137b6c14631971e19133a61bfa94c247ae99d771d8efc11d983e2ea904dab4ca479fa00be3b0372e100225311ffb5b95faed4c32b5794cc618ded1027e6f2a54328a5cd322da6c6ef91151cacfa456680547adf18cde5323869bc03b2c7edd731f5e5c9b9eaa7b2f57d4246d324047482a48d7472650b8d0614a0e133e849a09d37bc9f7921d05397b98e398cd3411dde80d9bd6be4384289a2d1a0416cd914e7520cae962493d31b652a520a9fca7d7e6e9e5df53d719e518125b73ea49af30b720a6d0a71089dcaf04da9ee05c4ede6d0ba376c86282293248a4b36a2ac07a3297d569ad4e958c918317a4d526dae47b07f8c6615a77f5831d146c063b88246e2b3ce7b8f4b75291c339c317e3fbc84563694cd749f021b1e0c076521d685f87497831f19cba89601a344c5d1d08f12b2de9d5d068daf760bf87993e89a2912ab29e3fc79af39db18e982bfe0ee0374c84487cabc1f59bc216d71c38654805cddbc338fc8c14413849ea3ef79444ac6078fb2403ecd84de5b678538be0b2580ecb1926e03643ff29464f943cd729ad386daf1f81ea385e79260cdf78d579281adb72946692d54e94a2fd8530dfb8e5923ce642ec92ccee28f6b21efdff24ec820b4eff26f493278acb485af055881e077cdf3017bc6104b2394fee39343b7c71c20cbf7a3ea96b0c7b603a2ff998d27b16833b028bf30ab668041c8d82225d58bd95f9246de742815067046adbf55eddfddfbc30fea3b8c6659d2756c702f2012395245035bf5338427051b4eb392225aa10179d8b042ba77bc1a37cd66a655ec03aa3aa3c75e05aad4ad38240ee0e6c5af85bc7813f2c0de6eccf5cfba2f6295daf448c042c50c6eba6127f170848cc2034bd61698747a3bee155146d2ab73ba79d969cffcba737bd85b20123a5e3080edba483d831c38c9a4aee9a2fdeb0819665cf28aab91f2317f77d22b29f49d6dbd4ae5b82f9529fb208824f22fdd48666dfc0abe4a9d00dd7d552f4bf6fade29b63ad080614bfe04d9fdca7cff96378e201f6e71cc665e6ae8abd64d125a8c222b03f9153824251db960b4eae41280b681a9fa6c1ec76e94bcd9656aa3df3b57f2da9","ad":""}',
-  'encSymmetricKey': '{"iv":"0146bfcc7b89a3aa055bedae","t":"7559a4ef7ca495c9605516cc846007a3","d":"4de3ab37e73dd6fc294257fe4cb1af26229434297ecdd309e93a941bd1f9913b5916dfe55d62f0d4015c46f66d8fdf4c84ab88c22e4d24428d5fe6c1affce1e14b33760a382b67b4a37262f9ca5a44cb9760b151bbd0748fc18f8f438545df356d99a66c74ff22b623b2b67d9765f80ac6f18af01684e6e3efbce947832ac0bea010c1cde00390e1f3d2187286ff00a43aef8ddc13a98d8f4f771bba1694712623b115f0b2c0e891eccd074ade0b551737b915d0f1242ffcbc1c65555ff7","ad":""}',
+  'publicKey': {
+    'alg': 'RSA-OAEP-256',
+    'e': 'AQAB',
+    'ext': true,
+    'key_ops': ['encrypt'],
+    'kty': 'RSA',
+    'n': 'pTQVaUaiqggIldSKm6ib6eFRLLoGj9W-2O4gTbiorR-2b8-ZmKUwQ0F-jgYX71AjYaFn5VjOHOHSP6byNAjN7WzJ6A_Z3tytNraLoZfwK8KdfflOCZiZzQeD3nO8BNgh_zEgCHStU61b6N6bSpCKjbyPkmZcOkJfsz0LJMAxrXvFB-I42WYA2vJKReTJKXeYx4d6L_XGNIoYtmGZit8FldT4AucfQUXgdlKvr4_OZmt6hgjwt_Pjcu-_jO7m589mMWMebfUhjte3Lp1jps0MqTOvgRb0FQf5eoBHnL01OZjvFPDKeqlvoz7II9wFNHIKzSvgAKnyemh6DiyPuIukyQ',
+  },
+  'encPrivateKey': {
+    'iv': '3a1f2bdb8acbf15f469d57a2',
+    't': '904d6b1bc0ece8e5df6fefb9efefda7c',
+    'd': '2a7b0c4beb773fa3e3c2158f0bfa654a88c4041184c3b1e01b4ddd2da2c647244a0d66d258b6abb6a9385251bf5d79e6b03ef35bdfafcb400547f8f88adb8bceb7020f2d873d5a74fb5fc561e7bd67cea0a37c49107bf5c96631374dc44ddb1e4a8b5688dc6560fc6143294ed92c3ad8e1696395dfdf15975aa67b9212366dbfcb31191e4f4fe3559c89a92fb1f0f1cc6cbf90d8a062307fce6e7701f6f5169d9247c56dae79b55fba1e10fde562b971ca708c9a4d87e6e9d9e890b88fa0480360420e610c4e41459570e52ae72f349eadf84fc0a68153722de3280becf8a1762e7faebe964f0ad706991c521feda3440d3e1b22f2c221a80490359879bd47c0d059ace81213c74a1e192dbebd8a80cf58c9eb1fe461a971b88d3899baf4c4ef7141623c93fb4a54758f5e1cf9ee35cd00777fa89b24e4ded57219e770de2670619c6e971935c61ae72e3276cf8db49dfa0e91c68222f02d7e0c69b399af505de7e5a90852d83e0a30934b0362db986f3aaefaaf1a96fef3e8165287a3a7f0ee1e072d9dee3aefb86194e1d877d6b34529d45a70ec4573c35a7fe27833c77c3154b0ad02187e4fcecd408bcf4b29a85a5dc358cb479140f4983fcd936141f581764669651530af97d2b7d9416aea7de67e787f3e29ae3eba6672bcd934dc1e308783aa63a4ab46d48d213cf53ad6bd8828011f5bfa3aa5ee24551c694e829b54c93b1dda6c3ddda04756d68a28bec8d044c8af4147680dc5b972d0ca74299b0ab6306b9e7b99bf0557558df120455a272145b7aa792654730f3d670b76d72408f5ce1cf5fbd453d2903fa72cf26397437854ba8abbb731a8107f6a86a01fa98edc81bb42a4c1330f779e7a0fbd1820eaed78e03e40a996e03884b707556be06fd14ee8f4035469210d1d2bb8f58285fc2ab6de3d3cc0e4e1f40c6d9d24b50dc8e2e2374a0aff52031b3736c2982133bb19dd551ce1f953f4ba02b0cf53382c15752e202c138cb42b2322df103ff17fd886dfd5f992b711673cdf16048c4bff19038138b161c2e1783b85fc7b965a91ac4795fcbfebf827940cacdeae57946863aee027df43b36612f3cb8f34dc44396e87c564bf10f5b1a9dfbd6da3d7f4f65024b0b4f8ce51d01c230840941fc4523b17eb1c2522032f410e8328239a11a15ab755c32945ce52966d5bfb4666909ed2ca04d536e4bf92091563dd44d46cbb35e53c2481400058ab3b52a0280d262551073f61db125ee280e2cc1ec0bdf9c4817824261465011e34c2296411384f7f5e16742157c5520f137631edf498aa39c7c32b107e3634cbeb70feea19a233c8bd939d665135c9f7c1bb33cb47edc58bdbbcde9b0b9eb73a46642e4639289a62638fb7813e1eeaadd105c803de8357236f33c4bcf31a876b5867591af8f165eba0b35cf0b0886af17dab35a6a39f8f576387d6ffb9e677ee46fc0f11ff069a2a068fce441ff8f4125095fad228c2bf45c788d641941ed13c0a16fffcafd7c7eff11bb7550c0b7d54eebdbd2066e3bbdb47aaee2b5f1e499726324a40015458c7de1db0abe872594d8e6802deff7ea9518bdb3a3e46f07139267fd67dc570ba8ab04c2b37ce6a34ec73b802c7052a2eef0cae1b0979322ef86395535db80cf2a9a88aa7c2e5cc28a93612a8dafe1982f741d7cec28a866f6c09dba5b99ead24c3df0ca03c6c5afae41f3d39608a8f49b0d6a0b541a159409791c25ede103eb4f79cfbd0cc9c9aa6b591755c1e9fd07b5b9e38ed85b5939e65d127256f6a4c078f8c9d655c4f072f9cbcfb2e1e17eaa83dc62aaab2a6dc3735ee76ce7a215740f795f1fbe7136c7734ae3714438015e8fc383d63775a8abddb23cbc5f906c046bb0b5b31d492a7c151b40ea82c7c966e25820641c55b343b89d6378f90de5983fa76547e9d6c634effdf019a0fd9b6d3e488a5aa94f0710d517ba4f7c1ed82f9f3072612e953e036c0ec7f3c618368362f6da6f3af76056a66aef914805cc8b628f1c11695f760b535ded9ff66727273ae7e12d67a01243d75f22fec8ed1b043122a211c923aa92ecbbe01dd0d7195c3c0e09a2a6ab3eca354963122d5a0ec16e2b2b81b0ddce6ec0a312c492a96a4fd392f1deb6a1f3318541a3f87e5c9e73ee7edd3b855910f412789e25038108e1eaae04dcfb02b4d958c00c630dc8caa87a40798ce7156d2ade882e68832d39fe8f9bce6a995249a7383013a5093c4af55c3b7232de0f2593d82c30b8dabd0784455037f25f6bb66a6d0d8f72bc7be0dee2d0a8af44bb4e143257d873268d331722c3253ea5c004e72daf04c875e2054f2b4b2bca2979fd046a1e835600045edf2f159d851a540a91a1ab8fbcb64594d21942bbaa2160535d32496ba7ce4a76c6bdeb9bb4c5cab7bed1ae26564058d0be125803d7019b83b3953c4b0cc1f8299c4edcf6a5faa4765092412d368b277689900e71fb5d47581057adaa2dd494e0f66dc1aa16f3741973b0d9ffa1728aeafab84b777394a7afae0f8eabaa6b740f1c60ca26469f0c9356ec880ad6f4dc01b99bd14d7a4bb8afc97662a9e68b0155e4cdf3caa3402819ac6ce562c8fe06edb50a31cfd7a',
+    'ad': '',
+  },
+  'symmetricKey': {
+    'alg': 'A256GCM',
+    'ext': true,
+    'k': 'w62OJNWF4G8iWA8ZrTpModiY8dICyHI7ko1vMLb877g=',
+    'key_ops': ['encrypt', 'decrypt'],
+    'kty': 'oct',
+  },
   'email': 'insomnia-user@konghq.com',
   'accountId': 'acct_64a477e6b59d43a5a607f84b4f73e3ce',
   'firstName': 'Rick',
@@ -231,6 +252,155 @@ const invites = {
   ],
 };
 
+interface CollaboratorSearchResultItem {
+  id: string;
+  picture: string;
+  type: CollaboratorType;
+  name: string;
+};
+
+interface EmailsList {
+  invitesCount: number;
+  membersCount: number;
+  groupsCount: number;
+};
+
+const getEmailsForInviteSearch = ({
+  invitesCount = 0,
+  membersCount = 0,
+  groupsCount = 0,
+}: EmailsList) => {
+  const emails: CollaboratorSearchResultItem[] = [];
+
+  for (let i = 0; i < groupsCount; i++) {
+    emails.push({
+      id: getRandomId(),
+      picture: 'https://static.insomnia.rest/insomnia-coffee.png',
+      type: 'group',
+      name: getTeamName(),
+    });
+  }
+
+  for (let i = 0; i < invitesCount; i++) {
+    emails.push({
+      id: getRandomId(),
+      picture: 'https://static.insomnia.rest/insomnia-gorilla.png',
+      type: 'invite',
+      name: getUserEmail(),
+    });
+  }
+
+  for (let i = 0; i < membersCount; i++) {
+    emails.push({
+      id: getRandomId(),
+      picture: 'https://static.insomnia.rest/insomnia-gorilla.png',
+      type: 'member',
+      name: getUserEmail(),
+    });
+  }
+
+  return emails;
+};
+
+const emailsAndGroupsToInvite = getEmailsForInviteSearch({
+  invitesCount: 2,
+  membersCount: 1,
+  groupsCount: 1,
+});
+
+const emailsAndGroupsToSearch = getEmailsForInviteSearch({
+  invitesCount: 6,
+  membersCount: 4,
+  groupsCount: 1,
+}).concat(emailsAndGroupsToInvite);
+
+const OWNER_ROLE_ID = 'role_b3cf4fed-9208-497a-93c6-ae1a82b7b889';
+const ADMIN_ROLE_ID = 'role_1c7938bc-c53b-49a1-819e-72f0c3a5baa6';
+const MEMBER_ROLE_ID = 'role_4c924f55-7706-4de8-94ab-0a2085890641';
+
+const getCollaborators = ({
+  invitesCount = 0,
+  membersCount = 0,
+  groupsCount = 0,
+}: EmailsList) => {
+  const collaborators: Collaborator[] = [];
+
+  for (let i = 0; i < groupsCount; i++) {
+    collaborators.push({
+      id: getRandomId(),
+      picture: 'https://static.insomnia.rest/insomnia-coffee.png',
+      type: 'group',
+      name: getTeamName(),
+      createdAt: '2024-09-14T10:16:10.513Z',
+      metadata: {
+        groupId: getRandomId(),
+        groupTotal: 3,
+      },
+    });
+  }
+
+  for (let i = 0; i < invitesCount; i++) {
+    collaborators.push({
+      id: getRandomId(),
+      picture: 'https://static.insomnia.rest/insomnia-gorilla.png',
+      type: 'invite',
+      name: getUserEmail(),
+      createdAt: '2024-09-14T10:16:10.513Z',
+      metadata: {
+        invitationId: getRandomId(),
+        roleId: i % 2 === 0 ? MEMBER_ROLE_ID : ADMIN_ROLE_ID,
+        email: getUserEmail(),
+        expiresAt: '2077-09-21T10:16:10.513Z',
+      },
+    });
+  }
+
+  for (let i = 0; i < membersCount; i++) {
+    collaborators.push({
+      id: getRandomId(),
+      picture: 'https://static.insomnia.rest/insomnia-gorilla.png',
+      type: 'member',
+      name: getUserEmail(),
+      createdAt: '2024-09-14T10:16:10.513Z',
+      metadata: {
+        userId: getRandomId(),
+        roleId: i === 0 ? OWNER_ROLE_ID : i % 2 === 0 ? ADMIN_ROLE_ID : MEMBER_ROLE_ID,
+        email: getUserEmail(),
+      },
+    });
+  }
+
+  return {
+    collaborators,
+    start: 0,
+    limit: 15,
+    length: 0,
+    total: invitesCount + membersCount + groupsCount,
+    next: '',
+  };
+};
+
+const collaboratorsList = getCollaborators({
+  invitesCount: 6,
+  membersCount: 4,
+  groupsCount: 1,
+});
+
+emailsAndGroupsToInvite.forEach((collaborator, index) => {
+  collaboratorsList.collaborators.push({
+    ...collaborator,
+    createdAt: '2024-09-14T10:16:10.513Z',
+    metadata: {
+      invitationId: getRandomId(),
+      roleId: index % 2 === 0 ? MEMBER_ROLE_ID : ADMIN_ROLE_ID,
+      email: collaborator.name,
+      expiresAt: '2077-09-21T10:16:10.513Z',
+    },
+  });
+});
+
+collaboratorsList.total = collaboratorsList.collaborators.length + emailsAndGroupsToInvite.length;
+
 export default (app: Application) => {
   // User
   app.get('/v1/user/profile', (_req, res) => {
@@ -367,5 +537,79 @@ export default (app: Application) => {
 
   app.get('/v1/organizations/:organizationId/invites', (_req, res) => {
     res.json(invites);
+  });
+
+  app.get('/v1/desktop/organizations/:organizationId/collaborators', (_req, res) => {
+    res.json(collaboratorsList);
+  });
+
+  app.post('/v1/desktop/organizations/:organizationId/collaborators/start-adding', (_req, res) => {
+    res.json({
+      'acct_2346c8e88dae47e2a1a5cae04dc68ea3': {
+        'accountId': 'acct_2346c8e88dae47e2a1a5cae04dc68ea3',
+        'publicKey': '{"alg":"RSA-OAEP-256","e":"AQAB","ext":true,"key_ops":["encrypt"],"kty":"RSA","n":"o7QI0X9cue5ErinBTTz24YuTXGCbQQfhuqXKEq8xpBinqL8lW0CgTe3HqDDyGN6Ip3kE2wCCBLNTTheSS3FB0172VhsqE2mnlBsopfGWbNmFT-cT517464u9yrsFK2ywVDURDDjdh2BSl1T-3axy1P74BjvcOz7nzlAMNfT8Wp41Dwzb5o9-HPU_1nJQYzOb1zJlV1pwKzeufq81tNecT7td1QB3mnXhJAFFbRINiGu-uIaP7gl-J4ICOTh0Tjzzn7fKC-3EUbfLRvFUZBtRcZncWa5OjuGB5DhgHj8mcWvGyP_3gKzvOB2b4piE6N3NnbwO9-skIw5MdY-kQMvJLQ=="}',
+        'autoLinked': false,
+      },
+      'acct_2a1f5086018442b98fbb15120b75a27e': {
+        'accountId': 'acct_2a1f5086018442b98fbb15120b75a27e',
+        'publicKey': '{"alg":"RSA-OAEP-256","e":"AQAB","ext":true,"key_ops":["encrypt"],"kty":"RSA","n":"nvmA4jWOAUiopX7Ct9Z5mH6mmTB7I4SlSgDNCMtVxHKjEEegXuxTqkScklHnrZCT7ohmWY-6ouJW4ocjln3Falu8lxxB0V7YqBrxgf81lKlDIGr5f0VYp-R9JSBtR6btVj3xV-3I3APGH5lRBW0VGTdgrBaRAl7o9_4hy7xLSy_hqgqdH2-CS2gEZfRjN-1kjSI4nvqD1BSMfyWhu-pbhP6WdhmOa3JkWLPRtxQInv14Kp1-gWjsAfXYOEvldTH4DvCGYkvEBYvSr9FQ6NQKJFOHho4NAyXJhagvuqwc134XuwiFDgCmK0bh1jXR2fy-OR255S0NseArZPkY3l2Tjw=="}',
+        'autoLinked': false,
+      },
+      'acct_6694e55cce2c4dacb69c86844ba92d91': {
+        'accountId': 'acct_6694e55cce2c4dacb69c86844ba92d91',
+        'publicKey': '{"alg":"RSA-OAEP-256","e":"AQAB","ext":true,"key_ops":["encrypt"],"kty":"RSA","n":"wCd42bJqAZz5lRMk8MdMoF35ga9yhIjirMUhUXXKvA29LUYGsT6J_LxF6pXWV7CSZdxZPrf8Ur8L2AC7gz0ESHfV-uAVPBFnPrGBTiiHTBCDAtkt8tW3hqullJxfLS8PsGL6IYGYloq9gbKXiz-u37ba282vYQbbzkWO_382QJKS6eYAlE5JOpxmtNl7r5a3Okxz8JekBN5WhZrxEQzOv7ov7zmmRZPBgCm3Xo7RzAuUpBam1EkO5UvGL3DEjnc_Kx7R9jVbmLgDcryJDooKiCVLWv-tyg9H5QYMVd76uxAcQE9fJNoxSX-UU-Tu78-6CHk68IyTa2Rf4BwvSZJw-Q=="}',
+        'autoLinked': false,
+      },
+      'acct_72196d3295b243b48ea4de15391873b7': {
+        'accountId': 'acct_72196d3295b243b48ea4de15391873b7',
+        'publicKey': '{"alg":"RSA-OAEP-256","e":"AQAB","ext":true,"key_ops":["encrypt"],"kty":"RSA","n":"94S0IWkw5RgnhJy1Dspynt1gsRnOrG_A5UqI2sbp8fNCdlU9Z0M-r9O-ern0Wgupxxqt8s3xpQzaRYSPcCOK4z9F-w2MT6wIKn7EKKWCpXa94pra4J5abVukwtbPILIi9-uKu8RisnaeYT82OfZKAaQi-J24yzRI7qYLyS0GCrSxWgr1-wVzeRrE8gnwQU677TVAyGDTioz3EQ2-pB4fTkXdrBlVZ8qQkruwcTJ--rr550MD1cRK95J0jT1qGn8e0bTMW5lHP3dZH7vveFj1RP3cD7jnO6b3pD7jhDaMLJqXw0Nvxru__lToP-_r054Ea8ffEWVjygtqvplxq4R3Cw=="}',
+        'autoLinked': false,
+      },
+      'acct_fe023b1398ab48fd8f9d3dfb622f5bf6': {
+        'accountId': 'acct_fe023b1398ab48fd8f9d3dfb622f5bf6',
+        'publicKey': '{"alg":"RSA-OAEP-256","e":"AQAB","ext":true,"key_ops":["encrypt"],"kty":"RSA","n":"s0W6IbaPmPaMgzf2-rGOffm4tNg8_ZykiX2C6ZgFdC-GsMGiF08pSjD7UfGTPSTIWFv4Ncz6D0J8wbFBa87IYTuIZhewbNAqRcX1eu_g0-4dNIw9KqhvIoy_O-r-MT1T11TuU5gWWyHw8mY2Aax9Z_JDdDMQc-dP_FqxGCTIHfe52xQNaCL3AgMp0nU5sDUp_vo3YXSWk0yuERqQ9TMcB9l27hQhbHZHDfsdHTodXutbBG5MwpcDBppriBVlMVjY8M7QHt61C7KF5mhgniEd2msF0bAZZaVz1ibZ9QNdFHHPrdfLLQvPyZFD4m8a7Wt0Qcq9FfrFubWv1208Ocet3Q=="}',
+        'autoLinked': false,
+      },
+    });
+  });
+
+  app.get('/v1/organizations/:organizationId/my-project-keys', (_req, res) => {
+    res.json({ 'projectKeys': [], 'members': [] });
+  });
+
+  app.post('/v1/organizations/:organizationId/reconcile-keys', (_req, res) => {
+    res.json(null);
+  });
+
+  app.post('/v1/desktop/organizations/:organizationId/collaborators/finish-adding', (_req, res) => {
+    res.json(null);
+  });
+
+  app.get('/v1/desktop/organizations/:organizationId/collaborators/search/*', (_req, res) => {
+    res.json(emailsAndGroupsToSearch);
+  });
+
+  app.post('/v1/organizations/:organizationId/invites/:invitationId/reinvite', (_req, res) => {
+    res.json({ enabled: true });
+  });
+
+  app.patch('/v1/organizations/:organizationId/members/:accountId/roles', (_req, res) => {
+    res.json({ enabled: true });
+  });
+
+  app.patch('/v1/organizations/:organizationId/invites/:invitationId', (_req, res) => {
+    res.json({ enabled: true });
+  });
+
+  app.delete('/v1/organizations/:organizationId/members/:userId', (_req, res) => {
+    res.json(null);
+  });
+
+  app.delete('/v1/organizations/:organizationId/invites/:invitationId', (_req, res) => {
+    res.json(null);
+  });
+
+  app.delete('/v1/desktop/organizations/:organizationId/collaborators/:collaboratorId/unlink', (_req, res) => {
+    res.json(null);
   });
 };

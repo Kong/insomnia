@@ -232,6 +232,60 @@ async function renderApp() {
                       ).accessAIApiAction(...args),
                   },
                   {
+                    path: 'collaborators',
+                    loader: async (...args) =>
+                      (
+                        await import('./routes/invite')
+                      ).collaboratorsListLoader(...args),
+                  },
+                  {
+                    path: 'collaborators-search',
+                    loader: async (...args) =>
+                      (
+                        await import('./routes/invite')
+                      ).collaboratorSearchLoader(...args),
+                  },
+                  {
+                    path: 'invites',
+                    children: [
+                      {
+                        path: ':invitationId',
+                        id: ':invitationId',
+                        action: async (...args) =>
+                          (
+                            await import('./routes/invite')
+                          ).updateInvitationRoleAction(...args),
+                        children: [
+                          {
+                            path: 'reinvite',
+                            action: async (...args) =>
+                              (
+                                await import('./routes/invite')
+                              ).reinviteCollaboratorAction(...args),
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  {
+                    path: 'members',
+                    children: [
+                      {
+                        path: ':userId',
+                        id: ':userId',
+                        children: [
+                          {
+                            path: 'roles',
+                            action: async (...args) =>
+                              (
+                                await import('./routes/invite')
+                              ).updateMemberRoleAction(...args),
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  {
                     path: 'project',
                     id: '/project',
                     children: [

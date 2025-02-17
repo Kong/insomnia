@@ -18,7 +18,7 @@ export const CopyButton: FC<Props> = ({
   title,
   ...buttonProps
 }) => {
-  const [showConfirmation, setshowConfirmation] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const onClick = useCallback(async (event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
@@ -26,11 +26,11 @@ export const CopyButton: FC<Props> = ({
     if (content) {
       window.clipboard.writeText(content);
     }
-    setshowConfirmation(true);
+    setShowConfirmation(true);
   }, [content]);
 
   useInterval(() => {
-    setshowConfirmation(false);
+    setShowConfirmation(false);
   }, 2000);
 
   const confirm = typeof confirmMessage === 'string' ? confirmMessage : 'Copied';
