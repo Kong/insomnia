@@ -17,12 +17,19 @@ interface AllowChangeRole {
   message: string;
 }
 
-const checkIfAllow = (
-  isUserOrganizationOwner: boolean,
-  role: Role,
-  isRBACEnabled: boolean,
-  hasPermissionToChangeRoles: boolean,
-): AllowChangeRole => {
+interface CheckIfAllowProps {
+  isUserOrganizationOwner?: boolean;
+  role?: Role;
+  isRBACEnabled?: boolean;
+  hasPermissionToChangeRoles?: boolean;
+}
+
+const checkIfAllow = ({
+  isUserOrganizationOwner = false,
+  role,
+  isRBACEnabled = false,
+  hasPermissionToChangeRoles = false,
+}: CheckIfAllowProps): AllowChangeRole => {
   const allow = { allow: true, title: '', message: '' };
 
   if (isUserOrganizationOwner) {
@@ -37,7 +44,7 @@ const checkIfAllow = (
     return allow;
   }
 
-  if (role.name === 'member') {
+  if (role?.name === 'member') {
     if (!isRBACEnabled) {
       return {
         allow: false,
@@ -66,51 +73,42 @@ export enum SELECTOR_TYPE {
   INVITE = 'invite',
 };
 
-interface PropsForUpdateRole {
-  type: SELECTOR_TYPE.UPDATE;
+interface Props {
+  type: SELECTOR_TYPE.UPDATE | SELECTOR_TYPE.INVITE;
   availableRoles: Role[];
   memberRoles: string[];
-  userRole: Role;
-  hasPermissionToChangeRoles: boolean;
-  isUserOrganizationOwner: boolean;
-  isRBACEnabled: boolean;
+  userRole?: Role;
+  hasPermissionToChangeRoles?: boolean;
+  isUserOrganizationOwner?: boolean;
+  isRBACEnabled?: boolean;
   isDisabled?: boolean;
+  className?: string;
   onRoleChange: (role: Role) => Promise<void>;
 }
 
-interface PropsForInvite {
-  type: SELECTOR_TYPE.INVITE;
-  availableRoles: Role[];
-  memberRoles: string[];
-  onRoleChange: (role: Role) => Promise<void>;
-  isDisabled?: boolean;
-}
-
-export const OrganizationMemberRolesSelector = (props: PropsForUpdateRole | PropsForInvite) => {
+export const OrganizationMemberRolesSelector = (props: Props) => {
   const {
     type,
     availableRoles,
     memberRoles,
-    onRoleChange,
     isDisabled,
+    className,
+    userRole,
+    hasPermissionToChangeRoles,
+    isUserOrganizationOwner,
+    isRBACEnabled,
+    onRoleChange,
   } = props;
   const [selectedRoles, setSelectedRoles] = useState<string[]>(memberRoles);
 
   const handleRoleChange = (selectedRole: Role) => {
     if (type === SELECTOR_TYPE.UPDATE) {
-      const {
-        userRole,
-        hasPermissionToChangeRoles,
+      const { allow, title, message } = checkIfAllow({
         isUserOrganizationOwner,
-        isRBACEnabled,
-      } = props;
-
-      const { allow, title, message } = checkIfAllow(
-        isUserOrganizationOwner,
-        userRole,
+        role: userRole,
         isRBACEnabled,
         hasPermissionToChangeRoles,
-      );
+      });
 
       if (!allow) {
         showAlert({
@@ -137,20 +135,20 @@ export const OrganizationMemberRolesSelector = (props: PropsForUpdateRole | Prop
         <Button
           isDisabled={isDisabled}
           aria-label="Menu"
-          className="px-[8px] w-full pressed:bg-opacity-40 flex items-center justify-center gap-[8px] rounded-full bg-opacity-20 bg-clip-padding outline-none transition-colors hover:bg-opacity-30 disabled:opacity-40"
+          className={`px-[8px] w-full pressed:bg-opacity-40 flex items-center gap-[8px] rounded-full bg-opacity-20 bg-clip-padding outline-none transition-colors hover:bg-opacity-30 disabled:opacity-40 ${className}`}
         >
-          <p className="m-0 text-[12px] font-normal capitalize tracking-[-0.25px]">
+          <p className="flex-1 m-0 text-[12px] font-normal capitalize tracking-[-0.25px] text-center">
             {selectedRoles?.length ? selectedRoles[0] : 'Member'}
           </p>
           <i className="fa fa-caret-down" />
         </Button>
         <Popover
           placement="bottom end"
-          className="entering:animate-in entering:fade-in entering:zoom-in-95 exiting:animate-out exiting:fade-out exiting:zoom-out-95 w-56 min-w-[400px] origin-top-left overflow-auto rounded-md p-1 border-solid border-white/20 border bg-[--color-bg]"
+          className="entering:animate-in entering:fade-in entering:zoom-in-95 exiting:animate-out exiting:fade-out exiting:zoom-out-95 w-56 min-w-[300px] origin-top-left overflow-auto rounded-md p-1 border-solid border-white/20 border bg-[--color-bg]"
         >
           <Menu
             className="outline-none"
-            items={availableRoles}
+            items={availableRoles.filter(r => r.name !== 'owner')}
             disabledKeys={['owner']}
             aria-label="Select a role for the user"
             onAction={(key: Key) => {
@@ -163,7 +161,7 @@ export const OrganizationMemberRolesSelector = (props: PropsForUpdateRole | Prop
                 key={item.name}
                 aria-label="Select role"
                 className={({ isDisabled }) =>
-                  `hover:bg-gray-950 group box-border flex w-full cursor-default flex-col rounded-md px-3 py-2 outline-none text-[--color-font] ${isDisabled ? 'opacity-40' : 'cursor-pointer'
+                  `hover:bg-[--hl-xs] group box-border flex w-full cursor-default flex-col rounded-md px-3 py-2 outline-none text-[--color-font] ${isDisabled ? 'opacity-40' : 'cursor-pointer'
                   }`
                 }
               >
