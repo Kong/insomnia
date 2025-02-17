@@ -2,7 +2,7 @@ import type { EditorFromTextArea, MarkerRange } from 'codemirror';
 import _ from 'lodash';
 
 import type { RenderPurpose } from '../common/render';
-import { type BaseModel, userSession } from '../models';
+import { userSession } from '../models';
 import { decryptSecretValue, vaultEnvironmentMaskValue, vaultEnvironmentPath } from '../models/environment';
 import { decryptVaultKeyFromSession } from '../utils/vault';
 import type { DisplayName, PluginArgumentEnumOption, PluginTemplateTagActionContext } from './extensions';
