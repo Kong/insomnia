@@ -37,7 +37,7 @@ export function init(): BaseSettings {
     editorIndentSize: 2,
     editorIndentWithTabs: true,
     editorKeyMap: 'default',
-    disableKeyMapForInlineTextEditors: false,
+    enableKeyMapForInlineTextEditors: false,
     editorLineWrapping: true,
     enableAnalytics: true,
     showVariableSourceAndValue: false,

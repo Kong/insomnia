@@ -63,12 +63,11 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   const { handleRender, handleGetRenderContext } = useNunjucks();
 
   const getKeyMap = useCallback(() => {
-    let keyMap = 'default';
-    if (!readOnly && !settings.disableKeyMapForInlineTextEditors && settings.editorKeyMap) {
-      keyMap = settings.editorKeyMap;
+    if (!readOnly && settings.enableKeyMapForInlineTextEditors && settings.editorKeyMap) {
+      return settings.editorKeyMap;
     }
-    return keyMap;
-  }, [settings.disableKeyMapForInlineTextEditors, settings.editorKeyMap, readOnly]);
+    return 'default';
+  }, [settings.enableKeyMapForInlineTextEditors, settings.editorKeyMap, readOnly]);
 
   const initEditor = useCallback(() => {
     if (!textAreaRef.current) {
@@ -89,7 +88,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       return [tagDef];
     };
     const canAutocomplete = !!(handleGetRenderContext || getAutocompleteConstants);
-
     const initialOptions: EditorConfiguration = {
       lineNumbers: false,
       placeholder: placeholder || '',

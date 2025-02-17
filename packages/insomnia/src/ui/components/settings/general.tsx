@@ -160,8 +160,8 @@ export const General: FC = () => {
       </div>
       <div className="form-row">
         <BooleanSetting
-          label="Disable Key Map for one-line editors (e.g. headers, query parameters, urls, etc.)"
-          setting="disableKeyMapForInlineTextEditors"
+          label="Enable Key Map settings for one-line editors (e.g. headers, query parameters, urls, etc.)"
+          setting="enableKeyMapForInlineTextEditors"
         />
       </div>
 
