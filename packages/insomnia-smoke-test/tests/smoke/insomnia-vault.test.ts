@@ -41,7 +41,7 @@ test.describe('Test Insomnia Vault', async () => {
     await page.getByRole('menuitemradio', { name: 'Secret' }).click();
 
     // go back
-    await page.locator('[data-icon="chevron-left"]').click();
+    await page.locator('[data-icon="chevron-left"]').filter({ has: page.locator(':visible') }).first().click();
     // import request
     const requestColText = await loadFixture('vault-collection.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), requestColText);
