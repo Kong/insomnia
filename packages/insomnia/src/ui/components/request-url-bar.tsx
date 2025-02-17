@@ -5,7 +5,7 @@ import { useInterval } from 'react-use';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
-import { vaultEnvironmentPath, vaultEnvironmentRuntimePath } from '../../models/environment';
+import { vaultEnvironmentRuntimePath } from '../../models/environment';
 import type { Request } from '../../models/request';
 import { isEventStreamRequest, isGraphqlSubscriptionRequest } from '../../models/request';
 import { isRequestGroup, type RequestGroup } from '../../models/request-group';
