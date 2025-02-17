@@ -66,7 +66,7 @@ import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { CertificatesModal } from '../components/modals/workspace-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
-import { OrganizationTabList } from '../components/tabs/tabList';
+import { OrganizationTabList } from '../components/tabs/tab-list';
 import { formatMethodName } from '../components/tags/method-tag';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useAIContext } from '../context/app/ai-context';

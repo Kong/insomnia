@@ -18,7 +18,7 @@ import { AlertModal } from '../components/modals/alert-modal';
 import { AskModal } from '../components/modals/ask-modal';
 import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { SvgIcon } from '../components/svg-icon';
-import { OrganizationTabList } from '../components/tabs/tabList';
+import { OrganizationTabList } from '../components/tabs/tab-list';
 import { formatMethodName } from '../components/tags/method-tag';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useInsomniaTab } from '../hooks/use-insomnia-tab';

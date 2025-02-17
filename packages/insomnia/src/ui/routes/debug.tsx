@@ -100,7 +100,7 @@ import { PlaceholderRequestPane } from '../components/panes/placeholder-request-
 import { RequestGroupPane } from '../components/panes/request-group-pane';
 import { RequestPane } from '../components/panes/request-pane';
 import { ResponsePane } from '../components/panes/response-pane';
-import { OrganizationTabList } from '../components/tabs/tabList';
+import { OrganizationTabList } from '../components/tabs/tab-list';
 import { getMethodShortHand } from '../components/tags/method-tag';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';

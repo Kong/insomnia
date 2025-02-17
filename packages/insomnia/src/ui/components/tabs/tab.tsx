@@ -5,7 +5,7 @@ import { scrollElementIntoView } from '../../../utils';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { Icon } from '../icon';
 import { Tooltip } from '../tooltip';
-import { TAB_CONTEXT_MENU_COMMAND } from './tabList';
+import { TAB_CONTEXT_MENU_COMMAND } from './tab-list';
 
 export type TabType = 'request' | 'folder' | 'environment' | 'mockServer' | 'mockRoute' | 'document' | 'collection' | 'runner' | 'test' | 'testSuite';
 export interface BaseTab {

@@ -86,7 +86,7 @@ import { GitRepositoryCloneModal } from '../components/modals/git-repository-set
 import { ImportModal } from '../components/modals/import-modal';
 import { MockServerSettingsModal } from '../components/modals/mock-server-settings-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
-import { OrganizationTabList } from '../components/tabs/tabList';
+import { OrganizationTabList } from '../components/tabs/tab-list';
 import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
 import { useLoaderDeferData } from '../hooks/use-loader-defer-data';

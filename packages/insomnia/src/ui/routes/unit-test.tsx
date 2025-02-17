@@ -48,7 +48,7 @@ import { showPrompt } from '../components/modals';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { CertificatesModal } from '../components/modals/workspace-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
-import { OrganizationTabList } from '../components/tabs/tabList';
+import { OrganizationTabList } from '../components/tabs/tab-list';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useInsomniaTab } from '../hooks/use-insomnia-tab';
 import { useRootLoaderData } from './root';

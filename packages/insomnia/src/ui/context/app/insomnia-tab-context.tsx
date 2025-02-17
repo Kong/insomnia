@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useLocalStorage } from 'react-use';
 
 import type { BaseTab } from '../../components/tabs/tab';
-import type { OrganizationTabs } from '../../components/tabs/tabList';
+import type { OrganizationTabs } from '../../components/tabs/tab-list';
 import uiEventBus from '../../eventBus';
 
 interface UpdateInsomniaTabParams {

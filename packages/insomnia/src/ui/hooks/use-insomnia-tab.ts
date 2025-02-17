@@ -10,7 +10,7 @@ import type { UnitTestSuite } from '../../models/unit-test-suite';
 import type { WebSocketRequest } from '../../models/websocket-request';
 import type { Workspace } from '../../models/workspace';
 import { type BaseTab, type TabType } from '../components/tabs/tab';
-import { TAB_ROUTER_PATH } from '../components/tabs/tabList';
+import { TAB_ROUTER_PATH } from '../components/tabs/tab-list';
 import { formatMethodName, getRequestMethodShortHand } from '../components/tags/method-tag';
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 
