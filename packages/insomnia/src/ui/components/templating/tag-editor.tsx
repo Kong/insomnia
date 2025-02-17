@@ -378,7 +378,7 @@ export const TagEditor: FC<Props> = props => {
             ) : (
               <select value={typeof strValue === 'string' ? strValue : 'unknown'} onChange={handleChange}>
                 <option value="n/a">-- Select Item --</option>
-                  {state.allDocs[typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown']?.map((doc: any) => {
+                {state.allDocs[typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown']?.map((doc: any) => {
                   let namePrefix: string | null = null;
                   // Show parent folder with name if it's a request
                   if (isRequest(doc)) {

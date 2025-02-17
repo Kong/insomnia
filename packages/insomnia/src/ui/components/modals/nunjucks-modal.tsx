@@ -88,7 +88,6 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
             event.preventDefault();
             modalRef.current?.hide();
           }}
-          className='px-2'
         >{editor}</form>
       </ModalBody>
       <ModalFooter>
