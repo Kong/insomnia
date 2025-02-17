@@ -120,6 +120,7 @@ const runScript = async (
     globals: mutatedContextObject.globals,
     requestTestResults: mutatedContextObject.requestTestResults,
     logs: scriptConsole.dumpLogsAsArray(),
+    parentFolders: mutatedContextObject.parentFolders,
   };
 };
 

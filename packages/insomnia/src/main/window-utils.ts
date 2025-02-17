@@ -800,9 +800,12 @@ export const setZoom = (transformer: (current: number) => number) => () => {
   electronStorage?.setItem('zoomFactor', actual);
 };
 
-function initElectronStorage() {
+export function initElectronStorage() {
   const electronStoragePath = path.join(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'localStorage');
-  electronStorage = new ElectronStorage(electronStoragePath);
+  if (!electronStorage) {
+    electronStorage = new ElectronStorage(electronStoragePath);
+  }
+  return electronStorage;
 }
 
 export function createWindowsAndReturnMain({ firstLaunch }: { firstLaunch?: boolean } = {}) {

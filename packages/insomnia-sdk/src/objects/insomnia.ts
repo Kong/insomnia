@@ -9,6 +9,7 @@ import { getExistingConsole } from './console';
 import { CookieObject } from './cookies';
 import { Environment, Variables } from './environments';
 import { Execution } from './execution';
+import { Folder, ParentFolders } from './folders';
 import type { RequestContext } from './interfaces';
 import { transformToSdkProxyOptions } from './proxy-configs';
 import { Request as ScriptRequest, type RequestOptions, toScriptRequestBody } from './request';
@@ -42,6 +43,8 @@ export class InsomniaObject {
 
     private requestTestResults: RequestTestResult[];
 
+    private parentFolders: ParentFolders;
+
     constructor(
         rawObj: {
             globals: Environment;
@@ -56,6 +59,7 @@ export class InsomniaObject {
             requestInfo: RequestInfo;
             execution: Execution;
             response?: ScriptResponse;
+            parentFolders: ParentFolders;
         },
     ) {
         this.globals = rawObj.globals;
@@ -74,6 +78,7 @@ export class InsomniaObject {
         this.clientCertificates = rawObj.clientCertificates;
 
         this.requestTestResults = new Array<RequestTestResult>();
+        this.parentFolders = rawObj.parentFolders;
     }
 
     sendRequest(
@@ -102,7 +107,6 @@ export class InsomniaObject {
         return this._expect(exp);
     }
 
-    // TODO: remove this after enabled iterationData
     get settings() {
         return undefined;
     }
@@ -122,6 +126,7 @@ export class InsomniaObject {
             response: this.response ? this.response.toObject() : undefined,
             requestTestResults: this.requestTestResults,
             execution: this.execution.toObject(),
+            parentFolders: this.parentFolders.toObject(),
         };
     };
 }
@@ -237,6 +242,14 @@ export async function initInsomniaObject(
     const responseBody = await readBodyFromPath(rawObj.response);
     const response = rawObj.response ? toScriptResponse(request, rawObj.response, responseBody) : undefined;
 
+    const parentFolders = new ParentFolders(rawObj.parentFolders.map(folderObj =>
+        new Folder(
+            folderObj.id,
+            folderObj.name,
+            folderObj.environment,
+        )
+    ));
+
     return new InsomniaObject({
         globals,
         environment,
@@ -250,5 +263,6 @@ export async function initInsomniaObject(
         requestInfo,
         response,
         execution,
+        parentFolders,
     });
 };

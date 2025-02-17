@@ -197,7 +197,6 @@ export const tryToExecutePreRequestScript = async (
   iterationCount?: number,
   runtime?: SendActionRuntime,
 ) => {
-
   const requestGroups = ancestors.filter(doc => isRequest(doc) || isRequestGroup(doc)) as RequestGroup[];
   const folderScripts = requestGroups.reverse()
     .filter(group => group?.preRequestScript)
@@ -206,6 +205,11 @@ export const tryToExecutePreRequestScript = async (
       }
       await fn${i}();
   `);
+  const originalRequestGroups = requestGroups
+    .filter(group => isRequestGroup(group));
+  const parentFolders = originalRequestGroups
+    .map(group => ({ id: group._id, name: group.name, environment: group.environment }));
+
   if (folderScripts.length === 0) {
     return {
       request,
@@ -219,6 +223,7 @@ export const tryToExecutePreRequestScript = async (
       requestTestResults: new Array<RequestTestResult>(),
       transientVariables,
       logs: '',
+      parentFolders,
     };
   }
   const joinedScript = [...folderScripts].join('\n');
@@ -241,6 +246,7 @@ export const tryToExecutePreRequestScript = async (
     settings,
     transientVariables,
     runtime,
+    parentFolders,
   });
   if (!mutatedContext || 'error' in mutatedContext) {
     return {
@@ -253,9 +259,10 @@ export const tryToExecutePreRequestScript = async (
       cookieJar,
       globals: activeGlobalEnvironment,
       requestTestResults: new Array<RequestTestResult>(),
+      parentFolders,
     };
   }
-  await savePatchesMadeByScript(mutatedContext, environment, baseEnvironment, activeGlobalEnvironment);
+  await savePatchesMadeByScript(mutatedContext, environment, baseEnvironment, activeGlobalEnvironment, originalRequestGroups);
 
   return {
     request: mutatedContext.request,
@@ -269,6 +276,7 @@ export const tryToExecutePreRequestScript = async (
     userUploadEnvironment: mutatedContext.userUploadEnvironment,
     execution: mutatedContext.execution,
     transientVariables: mutatedContext.transientVariables,
+    parentFolders: mutatedContext.parentFolders,
   };
 };
 
@@ -281,6 +289,7 @@ export async function savePatchesMadeByScript(
   environment: Environment,
   baseEnvironment: Environment,
   activeGlobalEnvironment: Environment | undefined,
+  originalRequestGroups: RequestGroup[],
   responseCookies?: Cookie[],
 ) {
   if (!mutatedContext) {
@@ -324,10 +333,24 @@ export async function savePatchesMadeByScript(
     invariant(mutatedContext.globals, 'globals must be defined when there is selected one');
     await updateEnvironment(activeGlobalEnvironment, mutatedContext.globals);
   }
+
+  mutatedContext.parentFolders.forEach(mutatedFolder => {
+    const originalFolder = originalRequestGroups.find(originalFolder => originalFolder._id === mutatedFolder.id);
+    if (originalFolder) {
+      models.requestGroup.update(originalFolder, {
+        environment: mutatedFolder.environment,
+        // also update kvPairData when folder environment type is table view(kv pair)
+        ...(originalFolder.environmentType === EnvironmentType.KVPAIR && {
+          kvPairData: getKVPairFromData(mutatedFolder.environment, originalFolder.environmentPropertyOrder),
+        }),
+      });
+    }
+  });
 }
 
 export const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse) => {
-  const { script,
+  const {
+    script,
     request,
     environment,
     timelinePath,
@@ -345,6 +368,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     execution,
     transientVariables,
     runtime,
+    parentFolders,
   } = context;
   invariant(script, 'script must be provided');
 
@@ -395,6 +419,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         },
         transientVariables,
         logs: [],
+        parentFolders,
       },
     });
     if ('error' in originalOutput) {
@@ -437,6 +462,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       userUploadEnvironment.data = output?.iterationData?.data || [];
       userUploadEnvironment.dataPropertyOrder = userUploadEnvPropertyOrder.map;
     }
+
     if (runtime) {
       await runtime.appendTimeline(timelinePath, output.logs);
     }
@@ -463,6 +489,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       requestTestResults: output.requestTestResults,
       execution: output.execution,
       transientVariables,
+      parentFolders: output.parentFolders,
     };
   } catch (err) {
     await fs.promises.appendFile(
@@ -500,6 +527,7 @@ interface RequestContextForScript {
   settings: Settings;
   execution?: ExecutionOption;
   transientVariables: Environment;
+  parentFolders: { id: string; name: string; environment: Record<string, any> }[];
 }
 
 type RequestAndContextAndResponse = RequestContextForScript & {
@@ -517,6 +545,7 @@ type RequestAndContextAndOptionalResponse = RequestContextForScript & {
   iterationCount?: number;
   eventName?: RequestContext['requestInfo']['eventName'];
   runtime?: SendActionRuntime;
+  parentFolders: { id: string; name: string; environment: Record<string, any> }[];
 };
 
 export async function tryToExecuteAfterResponseScript(context: RequestAndContextAndResponse) {
@@ -528,6 +557,9 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
       }
       await fn${i}();
   `);
+  const originalRequestGroups = requestGroups
+    .filter(group => isRequestGroup(group));
+
   if (folderScripts.length === 0) {
     return {
       ...context,
@@ -547,9 +579,9 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
   const respondedWithoutError = context.response && !('error' in context.response);
   if (respondedWithoutError) {
     const resp = context.response as sendCurlAndWriteTimelineResponse;
-    await savePatchesMadeByScript(postMutatedContext, context.environment, context.baseEnvironment, context.globals, resp.cookies);
+    await savePatchesMadeByScript(postMutatedContext, context.environment, context.baseEnvironment, context.globals, originalRequestGroups, resp.cookies);
   } else {
-    await savePatchesMadeByScript(postMutatedContext, context.environment, context.baseEnvironment, context.globals);
+    await savePatchesMadeByScript(postMutatedContext, context.environment, context.baseEnvironment, context.globals, originalRequestGroups);
   }
 
   return postMutatedContext;

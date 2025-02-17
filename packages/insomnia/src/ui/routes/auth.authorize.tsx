@@ -2,10 +2,14 @@ import React, { Fragment } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { type ActionFunction, redirect, useFetcher, useFetchers, useNavigate } from 'react-router-dom';
 
+import { userSession as sessionModel } from '../../models';
 import { invariant } from '../../utils/invariant';
+import { getVaultKeyFromStorage } from '../../utils/vault';
 import { SegmentEvent } from '../analytics';
 import { getLoginUrl, submitAuthCode } from '../auth-session-provider';
 import { Icon } from '../components/icon';
+import { insomniaFetch } from '../insomniaFetch';
+import { validateVaultKey } from './auth.vaultKey';
 
 export const action: ActionFunction = async ({
   request,
@@ -27,6 +31,36 @@ export const action: ActionFunction = async ({
     event: SegmentEvent.loginSuccess,
   });
   window.localStorage.setItem('hasUserLoggedInBefore', 'true');
+  const userSession = await sessionModel.getOrCreate();
+  const { accountId, id: sessionId } = userSession;
+  try {
+    // check vault salt exists in server
+    const { salt: vaultSalt } = await insomniaFetch<{
+      salt?: string;
+      error?: string;
+    }>({
+      method: 'GET',
+      path: '/v1/user/vault',
+      sessionId,
+    });
+    if (vaultSalt) {
+      // save vault salt to session
+      await sessionModel.update(userSession, { vaultSalt });
+      // get vault key saved in local
+      const localVaultKey = await getVaultKeyFromStorage(accountId);
+      if (localVaultKey) {
+        // validate vault key with server
+        const validateResult = await validateVaultKey(userSession, localVaultKey, vaultSalt);
+        if (validateResult) {
+          // Encrypt vault key and save encrypted vault key & raw vault salt to session
+          const encryptedVaultKey = await window.main.secretStorage.encryptString(localVaultKey);
+          await sessionModel.update(userSession, { vaultKey: encryptedVaultKey, vaultSalt });
+        };
+      }
+    };
+  } catch (err) {
+    console.error(err);
+  };
 
   return redirect('/organization');
 };

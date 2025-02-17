@@ -5,6 +5,7 @@ import { Button, type ButtonProps } from '../themed-button';
 
 interface Props extends ButtonProps {
   confirmMessage?: string;
+  showConfirmation?: boolean;
   content: string;
   title?: string;
 }
@@ -12,6 +13,7 @@ interface Props extends ButtonProps {
 export const CopyButton: FC<Props> = ({
   children,
   confirmMessage,
+  showConfirmation: showConfirmationProp = false,
   content,
   title,
   ...buttonProps
@@ -38,7 +40,7 @@ export const CopyButton: FC<Props> = ({
       title={title}
       onClick={onClick}
     >
-      {showConfirmation ? (
+      {(showConfirmation || showConfirmationProp) ? (
         <span>
           {confirm} <i className="fa fa-check-circle-o" />
         </span>

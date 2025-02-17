@@ -4,6 +4,7 @@ import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import { CDN_INVALIDATION_TTL } from '../../../common/constants';
 import { insomniaFetch } from '../../../ui/insomniaFetch';
 import { avatarImageCache } from '../../hooks/image-cache';
+import type { OrganizationLoaderData } from '../../routes/organization';
 import type { ProjectIdLoaderData } from '../../routes/project';
 import { useRootLoaderData } from '../../routes/root';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
@@ -52,6 +53,12 @@ interface FileChangedEvent {
   'branch': string;
 }
 
+interface VaultKeyChangeEvent {
+  type: 'VaultKeyChanged';
+  topic: string;
+  sessionId: string;
+};
+
 export interface UserPresence {
   acct: string;
   avatar: string;
@@ -81,6 +88,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
   const { userSession } = useRootLoaderData();
   const projectData = useRouteLoaderData('/project/:projectId') as ProjectIdLoaderData | null;
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
+  const { organizations } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const remoteId = projectData?.activeProject?.remoteId || workspaceData?.activeProject.remoteId;
 
   const [presence, setPresence] = useState<UserPresence[]>([]);
@@ -88,6 +96,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
   const syncStorageRuleFetcher = useFetcher();
   const syncProjectsFetcher = useFetcher();
   const syncDataFetcher = useFetcher();
+  const clearVaultKeyFetcher = useFetcher();
 
   // Update presence when the user switches org, projects, workspaces
   useEffect(() => {
@@ -128,8 +137,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
 
         source.addEventListener('message', e => {
           try {
-            const event = JSON.parse(e.data) as UserPresenceEvent | TeamProjectChangedEvent | FileDeletedEvent | BranchDeletedEvent | FileChangedEvent;
-
+            const event = JSON.parse(e.data) as UserPresenceEvent | TeamProjectChangedEvent | FileDeletedEvent | BranchDeletedEvent | FileChangedEvent | VaultKeyChangeEvent;
             if (event.type === 'PresentUserLeave') {
               setPresence(prev => prev.filter(p => {
                 const isSameUser = p.acct === event.acct;
@@ -175,6 +183,15 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
                 action: `/organization/${organizationId}/sync-projects`,
                 method: 'POST',
               });
+            } else if (event.type === 'VaultKeyChanged') {
+              clearVaultKeyFetcher.submit({
+                organizations: organizations?.map(org => org.id) || [],
+                sessionId: event.sessionId,
+              }, {
+                action: '/auth/clearVaultKey',
+                method: 'POST',
+                encType: 'application/json',
+              });
             } else if (['BranchDeleted', 'FileChanged'].includes(event.type) && event.team === organizationId && remoteId && event.project === remoteId) {
               syncDataFetcher.submit({}, {
                 method: 'POST',
@@ -194,7 +211,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
       }
     }
     return;
-  }, [organizationId, projectId, remoteId, syncDataFetcher, syncOrganizationsFetcher, syncProjectsFetcher, syncStorageRuleFetcher, userSession.id, workspaceId]);
+  }, [clearVaultKeyFetcher, organizationId, organizations, projectId, remoteId, syncDataFetcher, syncOrganizationsFetcher, syncProjectsFetcher, syncStorageRuleFetcher, userSession.id, workspaceId]);
 
   return (
     <InsomniaEventStreamContext.Provider

@@ -179,6 +179,28 @@ test.describe('pre-request features tests', async () => {
                 'onlySetByFolderPreScript': 888,
             },
         },
+        {
+            name: 'manipulate folder envs',
+            expectedBody: {
+                'folder1ValByReq': 1,
+                'folder1ValByReqByName': 1,
+                'folder2ValByReq': 2,
+                'folder2ValByReqByName': 2,
+                'valFound': 2,
+
+                'folder1ValByFolder1': 1,
+                'folder1ValByFolder1ByName': 1,
+                'folder2ValByFolder1': 2,
+                'folder2ValByFolder1ByName': 2,
+                'valFoundByFolder1': 2,
+
+                'folder1ValByFolder2': 1,
+                'folder1ValByFolder2ByName': 1,
+                'folder2ValByFolder2': 2,
+                'folder2ValByFolder2ByName': 2,
+                'valFoundByFolder2': 2,
+            },
+        },
     ];
 
     for (let i = 0; i < testCases.length; i++) {

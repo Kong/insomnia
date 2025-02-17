@@ -44,6 +44,21 @@ class ElectronStorage {
     }
   }
 
+  deleteItem(key: string) {
+    clearTimeout(this._timeouts[key]);
+    delete this._buffer[key];
+
+    const path = this._getKeyPath(key);
+
+    try {
+      fs.unlinkSync(path);
+    } catch (error) {
+      if (error.code !== 'ENOENT') {
+        console.error(`[localstorage] Failed to delete item from LocalStorage: ${error}`);
+      }
+    }
+  }
+
   _flush() {
     const keys = Object.keys(this._buffer);
 

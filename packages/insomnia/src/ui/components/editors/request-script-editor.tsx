@@ -1,5 +1,6 @@
 import type { Snippet } from 'codemirror';
 import { CookieObject, Environment, Execution, InsomniaObject, Request as ScriptRequest, RequestInfo, Url, Variables } from 'insomnia-sdk';
+import { ParentFolders } from 'insomnia-sdk/src/objects/folders';
 import React, { type FC, useRef } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuTrigger, Popover, Section, Toolbar } from 'react-aria-components';
 
@@ -28,14 +29,15 @@ const unsetEnvVar = 'insomnia.environment.unset("variable_name");';
 const unsetGlbVar = 'insomnia.globals.unset("variable_name");';
 const unsetCollectionVar = 'insomnia.collectionVariables.unset("variable_name");';
 const sendReq =
-  `const resp = await new Promise((resolve, reject) => {
-  insomnia.sendRequest(
-    'https://httpbin.org/anything',
-    (err, resp) => {
-      err != null ? reject(err) : resolve(resp);
-    }
-  );
-});`;
+  `const resp = await insomnia.sendRequest(
+	'https://insomnia.rest/',
+	(err, resp) => {
+		if (err != null) {
+			throw err;
+		}
+	}
+);`;
+
 const logValue = 'console.log("log", variableName);';
 const addHeader = "insomnia.request.addHeader({key: 'X-Header-Name', value: 'header_value' });";
 const removeHeader = "insomnia.request.removeHeader('X-Header-Name');";
@@ -95,6 +97,19 @@ const expectToNotHaveAnyKeys = "insomnia.expect({a: 1, b: 2}).to.not.have.any.ke
 const expectToHaveProperty = "insomnia.expect({a: 1}).to.have.property('a');";
 const expectToBeAnObjectThatHasAllKeys =
   "insomnia.expect({a: 1, b: 2}).to.be.an('object').that.has.all.keys('a', 'b');";
+
+const findFolderEnvValue = `const myEnv = insomnia.parentFolders.findValue('envKey');
+console.log(myEnv);`;
+const getFolderEnvValue = `const myFolder = insomnia.parentFolders.get('folderName');
+if (myFolder === undefined) {
+	throw Error('myFolder not found');
+}
+console.log(myFolder.environment.get('val'));`;
+const setFolderEnvValue = `const myFolder = insomnia.parentFolders.get('myFolder');
+if (myFolder === undefined) {
+	throw Error('myFolder not found');
+}
+myFolder.environment.set('newEnvKey', 'newEnvValue');`;
 
 const lintOptions = {
   globals: {
@@ -211,6 +226,16 @@ const variableSnippetsMenu: SnippetMenuItem = {
           'name': 'Get a collection variable',
           'snippet': getCollectionVar,
         },
+        {
+          'id': 'get-folder-var',
+          'name': 'Get a folder-level variable',
+          'snippet': getFolderEnvValue,
+        },
+        {
+          'id': 'find-folder-var',
+          'name': 'Find a folder-level variable',
+          'snippet': findFolderEnvValue,
+        },
       ],
     },
     {
@@ -236,6 +261,11 @@ const variableSnippetsMenu: SnippetMenuItem = {
           'id': 'set-collection-var',
           'name': 'Set a collection variable',
           'snippet': setCollectionVar,
+        },
+        {
+          'id': 'set-folder-var',
+          'name': 'Set a folder-level variable',
+          'snippet': setFolderEnvValue,
         },
       ],
     },
@@ -541,6 +571,7 @@ export const RequestScriptEditor: FC<Props> = ({
       execution: new Execution({
         location: ['path'],
       }),
+      parentFolders: new ParentFolders([]),
     }),
     'insomnia',
   );
