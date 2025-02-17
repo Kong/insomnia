@@ -668,7 +668,7 @@ const OrganizationRoute = () => {
               {user ? (
                 <Fragment>
                   <PresentUsers />
-                  <HeaderInviteButton className="font-semibold border border-solid border-[--hl-md] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))]" />
+                  <HeaderInviteButton className="text-[--color-font-surprise] font-semibold border border-solid border-[--hl-md] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))]" />
                   <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
                 </Fragment>
               ) : (
@@ -1028,7 +1028,7 @@ const OrganizationRoute = () => {
                     {user ? (
                       <Fragment>
                         <PresentUsers />
-                        <HeaderInviteButton />
+                        <HeaderInviteButton className='text-[--color-font]' />
                         <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
                       </Fragment>
                     ) : (

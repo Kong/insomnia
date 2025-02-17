@@ -11,7 +11,7 @@ export const HeaderInviteButton = ({ className = '' }) => {
     <>
       <Button
         aria-label="Invite collaborators"
-        className={`${className} px-4 text-[--color-font-surprise] py-2 h-full flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-md hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm`}
+        className={`${className} px-4 py-2 h-full flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-md hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm`}
         onPress={() => setIsInviteModalOpen(true)}
       >
         <Icon icon="user-plus" />
