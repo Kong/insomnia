@@ -71,7 +71,7 @@ export function getOrInheritHeaders({ request, requestGroups }: { request: Pick<
   const headerContexts = [...requestGroups.reverse(), request];
   const headers = headerContexts.map(({ headers }) => headers || []).flat();
   headers.forEach(({ name, value, disabled }) => {
-    if (disabled) {
+    if (disabled || !name) {
       return;
     }
     const normalizedCase = name.toLowerCase();
