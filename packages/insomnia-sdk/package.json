@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia-sdk",
-  "version": "10.3.1",
+  "version": "10.3.2-beta.0",
   "description": "",
   "main": "src/objects/index.ts",
   "types": "src/objects/index.ts",

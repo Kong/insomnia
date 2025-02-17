@@ -21,7 +21,7 @@
     "sourceMap": true,
     /* Runs in the DOM NOTE: this is inconsistent with reality */
     "lib": [
-      "ES2020",
+      "ES2021",
       "DOM",
       "DOM.Iterable"
     ],
@@ -32,7 +32,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "useUnknownInCatchVariables": false,
- 
   },
   "include": [
     ".eslintrc.js",

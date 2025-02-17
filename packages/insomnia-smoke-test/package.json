@@ -11,7 +11,7 @@
   "bugs": {
     "url": "https://github.com/kong/insomnia/issues"
   },
-  "version": "10.3.1",
+  "version": "10.3.2-beta.0",
   "scripts": {
     "test:dev": "xvfb-maybe cross-env BUNDLE=dev playwright test",
     "test:build": "xvfb-maybe cross-env BUNDLE=build playwright test",

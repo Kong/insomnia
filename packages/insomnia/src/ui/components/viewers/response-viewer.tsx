@@ -1,6 +1,7 @@
 import iconv from 'iconv-lite';
 import React, {
   Fragment,
+  useCallback,
   useRef,
   useState,
 } from 'react';
@@ -74,19 +75,21 @@ export const ResponseViewer = ({
   const [blockingBecauseTooLarge, setBlockingBecauseTooLarge] = useState(!alwaysShowLargeResponses && largeResponse);
   const [parseError, setParseError] = useState('');
 
-  let initialBody = null;
-  try {
-    if (!blockingBecauseTooLarge) {
-      initialBody = getBody();
+  const [bodyBuffer, setBodyBuffer] = useState<Buffer | null>(() => {
+    let initialBody = null;
+    try {
+      if (!blockingBecauseTooLarge) {
+        initialBody = getBody();
+      }
+    } catch (err) {
+      setParseError(`Failed reading response from filesystem: ${err.stack}`);
     }
-  } catch (err) {
-    setParseError(`Failed reading response from filesystem: ${err.stack}`);
-  }
-  const [bodyBuffer, setBodyBuffer] = useState<Buffer | null>(initialBody);
+    return initialBody;
+  });
 
   const editorRef = useRef<CodeEditorHandle>(null);
 
-  function _handleDismissBlocker() {
+  const _handleDismissBlocker = useCallback(() => {
     setBlockingBecauseTooLarge(false);
 
     try {
@@ -96,14 +99,15 @@ export const ResponseViewer = ({
     } catch (err) {
       setParseError(`Failed reading response from filesystem: ${err.stack}`);
     }
-  }
+  }, [getBody]);
 
-  function _handleDisableBlocker() {
+  const _handleDisableBlocker = useCallback(() => {
     alwaysShowLargeResponses = true;
 
     _handleDismissBlocker();
-  }
+  }, [_handleDismissBlocker]);
 
+  // focus the code editor by hotkey
   useDocBodyKeyboardShortcuts({
     response_focus: () => {
       if (editorRef.current) {
@@ -118,7 +122,7 @@ export const ResponseViewer = ({
     },
   });
 
-  function _getContentType() {
+  const _getContentType = useCallback(() => {
     const lowercasedOriginalContentType = originalContentType.toLowerCase();
     if (!bodyBuffer || bodyBuffer.length === 0) {
       return lowercasedOriginalContentType;
@@ -150,9 +154,9 @@ export const ResponseViewer = ({
     } catch (error) { }
 
     return lowercasedOriginalContentType;
-  }
+  }, [originalContentType, bodyBuffer]);
 
-  function getBodyAsString() {
+  const getBodyAsString = useCallback(() => {
     if (!bodyBuffer) {
       return '';
     }
@@ -166,7 +170,7 @@ export const ResponseViewer = ({
       console.warn('[response] Failed to decode body', err);
       return bodyBuffer.toString();
     }
-  }
+  }, [bodyBuffer, _getContentType]);
 
   if (responseError || parseError) {
     return (
@@ -235,6 +239,40 @@ export const ResponseViewer = ({
   }
 
   const contentType = _getContentType();
+
+  if (
+    previewMode === PREVIEW_MODE_FRIENDLY &&
+    contentType === 'application/json'
+  ) {
+    let bodyStr = getBodyAsString();
+    // Although there is a prettifier for json inside the CodeEditor, but it is to prettify json strings that is being edited which may have syntax errors.
+    // There are some cases that the prettifier inside the CodeEditor can not handle.
+    // See https://github.com/Kong/insomnia/issues/1556
+    // Here the CodeEditor is readonly and the bodyStr is supposed to be a valid json string.
+    // So we try to use the native JSON.stringify to prettify the json string better. The native way can handle the issue.
+    try {
+      bodyStr = JSON.stringify(JSON.parse(bodyStr));
+    } catch (err) { }
+    return (
+      <CodeEditor
+        id="json-response-viewer"
+        key={`${responseId}-json`}
+        ref={editorRef}
+        autoPrettify
+        defaultValue={bodyStr}
+        filter={filter}
+        filterHistory={filterHistory}
+        mode={contentType}
+        noMatchBrackets
+        onClickLink={url => !disablePreviewLinks && window.main.openInBrowser(getBodyAsString()?.match(/^\s*<\?xml [^?]*\?>/) ? xmlDecode(url) : url)}
+        placeholder="..."
+        readOnly
+        uniquenessKey={responseId}
+        updateFilter={updateFilter}
+      />
+    );
+  }
+
   if (
     previewMode === PREVIEW_MODE_FRIENDLY &&
     contentType.indexOf('image/') === 0

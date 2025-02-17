@@ -413,15 +413,17 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
       });
       // Stop the editor from handling global keyboard shortcuts except for the autocomplete binding
       const isShortcutButNotAutocomplete = isUserDefinedKeyboardShortcut && !isAutoCompleteBinding;
+
       // Should not capture escape in order to exit modals
       const isEscapeKey = event.code === 'Escape';
+
       if (isShortcutButNotAutocomplete) {
         // @ts-expect-error -- unsound property assignment
-        event.codemirrorIgnore = true;
+        event.codemirrorIgnore = settings.editorKeyMap !== 'vim';
         // Stop the editor from handling the escape key
       } else if (isEscapeKey) {
         // @ts-expect-error -- unsound property assignment
-        event.codemirrorIgnore = true;
+        event.codemirrorIgnore = settings.editorKeyMap !== 'vim';
       } else {
         event.stopPropagation();
 

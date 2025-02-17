@@ -35,11 +35,11 @@ describe('export', () => {
         },
         headers: [
           {
-            name: 'Content-Type',
+            name: 'Accept',
             value: 'application/json',
           },
           {
-            name: 'Accept',
+            name: 'Content-Type',
             value: 'application/json',
             disabled: false,
           },
@@ -89,11 +89,11 @@ describe('export', () => {
                 cookies: [],
                 headers: [
                   {
-                    name: 'Content-Type',
+                    name: 'Accept',
                     value: 'application/json',
                   },
                   {
-                    name: 'Accept',
+                    name: 'Content-Type',
                     value: 'application/json',
                   },
                 ],
@@ -335,12 +335,12 @@ describe('export', () => {
         statusMessage: 'OK',
         headers: [
           {
-            name: 'Content-Type',
-            value: 'application/json',
-          },
-          {
             name: 'Content-Length',
             value: '2',
+          },
+          {
+            name: 'Content-Type',
+            value: 'application/json',
           },
           {
             name: 'Set-Cookie',
@@ -365,12 +365,13 @@ describe('export', () => {
         ],
         headers: [
           {
-            name: 'Content-Type',
-            value: 'application/json',
-          },
-          {
             name: 'Content-Length',
             value: '2',
+          },
+
+          {
+            name: 'Content-Type',
+            value: 'application/json',
           },
           {
             name: 'Set-Cookie',

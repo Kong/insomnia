@@ -5,6 +5,7 @@ import type { Settings } from 'insomnia/src/models/settings';
 import { filterClientCertificates } from 'insomnia/src/network/certificate';
 
 import { toPreRequestAuth } from './auth';
+import { getExistingConsole } from './console';
 import { CookieObject } from './cookies';
 import { Environment, Variables } from './environments';
 import { Execution } from './execution';
@@ -29,7 +30,7 @@ export class InsomniaObject {
     public response?: ScriptResponse;
     public execution: Execution;
 
-    private clientCertificates: ClientCertificate[];
+    public clientCertificates: ClientCertificate[];
     private _expect = expect;
     private _test = test;
     private _skip = skip;
@@ -168,31 +169,36 @@ export async function initInsomniaObject(
         localVars: localVariables,
     });
 
-    // sanitize URL, see _updateElementText in nunjuncks-tags.ts
-    const sanitizedRawUrl = rawObj.request.url.replace(/\\/g, '')
-        .replace(/^{%/, '')
-        .replace(/%}$/, '')
-        .replace(/^{{/, '')
-        .replace(/}}$/, '')
-        .trim();
-    const renderedRawUrl = variables.replaceIn(sanitizedRawUrl);
-    const renderedUrl = toUrlObject(renderedRawUrl);
-
-    // filter client certificates by the rendered base URL
-    const renderedBaseUrl = toUrlObject(`${renderedUrl.protocol || 'http:'}//${renderedUrl.getHost()}`);
-    const filteredCerts = filterClientCertificates(rawObj.clientCertificates || [], renderedBaseUrl.toString());
-    const existingClientCert = filteredCerts != null && filteredCerts.length > 0 && filteredCerts[0];
-    const certificate = existingClientCert ?
+    // todo: find if theres a better way to get the best cert
+    // (╯°□°）╯︵ ┻━┻
+    const ifUrlIncludesTag =
+        /{%/.test(`${rawObj.request.url}`) ||
+        /%}/.test(`${rawObj.request.url}`) ||
+        /{{/.test(`${rawObj.request.url}`) ||
+        /}}/.test(`${rawObj.request.url}`);
+    const matchedCertificates = filterClientCertificates(rawObj.clientCertificates || [], rawObj.request.url);
+    const initEmptyCert = ifUrlIncludesTag || matchedCertificates?.length === 0;
+    if (initEmptyCert) {
+        getExistingConsole().warn('The URL contains tags or no matched certificate found, insomnia.request.certificate is initialized as an empty certificate.');
+    }
+    const defaultCertificate = initEmptyCert ?
         {
-            disabled: existingClientCert.disabled,
-            name: 'The first certificate from Settings',
-            matches: [existingClientCert.host],
-            key: { src: existingClientCert.key || '' },
-            cert: { src: existingClientCert.cert || '' },
-            passphrase: existingClientCert.passphrase || undefined,
-            pfx: { src: existingClientCert.pfx || '' }, // PFX or PKCS12 Certificate
-        } :
-        { disabled: true };
+            disabled: false,
+            name: 'Default Certificate',
+            matches: [],
+            key: undefined,
+            cert: undefined,
+            passphrase: undefined,
+            pfx: undefined,
+        } : {
+            disabled: matchedCertificates[0].disabled,
+            name: 'The first matched certificate from Settings',
+            matches: [matchedCertificates[0].host],
+            key: { src: matchedCertificates[0].key || '' },
+            cert: { src: matchedCertificates[0].cert || '' },
+            passphrase: matchedCertificates[0].passphrase || undefined,
+            pfx: { src: matchedCertificates[0].pfx || '' }, // PFX or PKCS12 Certificate
+        };
 
     const proxy = transformToSdkProxyOptions(
         rawObj.settings.httpProxy,
@@ -218,7 +224,7 @@ export async function initInsomniaObject(
         body: toScriptRequestBody(rawObj.request.body),
         auth: toPreRequestAuth(rawObj.request.authentication),
         proxy,
-        certificate,
+        certificate: defaultCertificate,
         pathParameters: rawObj.request.pathParameters,
     };
     const request = new ScriptRequest(reqOpt);
