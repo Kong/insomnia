@@ -57,7 +57,7 @@ import { LandingPage, SentryMetrics } from '../../common/sentry';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { userSession } from '../../models';
-import type { ApiSpec } from '../../models/api-spec';
+import { type ApiSpec } from '../../models/api-spec';
 import { sortProjects } from '../../models/helpers/project';
 import type { MockServer } from '../../models/mock-server';
 import type { Organization } from '../../models/organization';
@@ -86,6 +86,7 @@ import { GitRepositoryCloneModal } from '../components/modals/git-repository-set
 import { ImportModal } from '../components/modals/import-modal';
 import { MockServerSettingsModal } from '../components/modals/mock-server-settings-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
+import { OrganizationTabList } from '../components/tabs/tab-list';
 import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
 import { useLoaderDeferData } from '../hooks/use-loader-defer-data';
@@ -991,7 +992,7 @@ const ProjectRoute: FC = () => {
         <PanelGroup autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
           <Panel id="sidebar" className='sidebar theme--sidebar' defaultSize={DEFAULT_SIDEBAR_SIZE} maxSize={40} minSize={10} collapsible>
             <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
-              <div className="p-[--padding-sm]">
+              <div className="p-[--padding-sm] h-[40px]">
                 <Select
                   aria-label="Organizations"
                   onSelectionChange={id => {
@@ -1196,9 +1197,10 @@ const ProjectRoute: FC = () => {
             </div>
           </Panel>
           <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
-          <Panel id="pane-one" className='pane-one theme--pane'>
+          <Panel id="pane-one" className='pane-one theme--pane flex flex-col'>
+            <OrganizationTabList showActiveStatus={false} />
             {activeProject ? (
-              <div className="w-full h-full flex flex-col overflow-hidden">
+              <div className="w-full flex flex-col overflow-hidden">
                 {billing.isActive ? null : <div className='p-[--padding-md] pb-0'>
                   <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
                     <p className='text-base'>
@@ -1399,9 +1401,6 @@ const ProjectRoute: FC = () => {
                               </div>
                               <span>{item.label}</span>
                             </div>
-                            {/* {(item.hasUncommittedChanges || item.hasUnpushedChanges) && <div className='flex items-center justify-center'>
-                              <Icon icon="circle" className='group-focus:hidden group-hover:hidden w-2 h-2' color="var(--color-warning)" />
-                            </div>} */}
                             <span className="flex-1" />
                             {item.presence.length > 0 && (
                               <AvatarGroup
@@ -1484,7 +1483,7 @@ const ProjectRoute: FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="w-full h-full flex flex-col gap-2 items-center justify-center overflow-hidden">
+                <div className="w-full flex flex-col gap-2 items-center justify-center overflow-hidden">
                 <p className='text-lg'>
                   This is an empty Organization. To get started create your first project.
                 </p>

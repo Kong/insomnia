@@ -1068,4 +1068,10 @@ describe('getOrInheritHeaders', () => {
     const request = { headers: [{ name: 'Content-Type', value: 'text/plain' }, { name: 'connection', value: 'keep-alive' }] };
     expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([{ name: 'connection', value: 'keep-alive' }, { name: 'Content-Type', value: 'text/plain' }]);
   });
+  it('should not allow an empty header name', () => {
+    const requestGroups = [{ headers: [{ name: '', value: 'bar' }, { name: ' ', value: 'foo' }] }];
+    const request = { headers: [{ name: '', value: 'baz' }, { name: '     ', value: 'qux' }] };
+    expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([]);
+  });
+
 });

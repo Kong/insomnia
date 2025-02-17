@@ -6,7 +6,7 @@ test.describe('design document operations', async () => {
         await page.getByPlaceholder('my-spec.yaml').fill('jurassic park');
         await page.getByPlaceholder('my-spec.yaml').press('Enter');
         await page.getByTestId('project').click();
-        await page.getByLabel('jurassic park').click();
+        await page.getByLabel('Files').getByLabel('jurassic park').click();
     });
 
     test('can delete a test suite with confirmation modal', async ({ page }) => {

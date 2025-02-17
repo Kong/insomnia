@@ -11,6 +11,7 @@ import { isWebSocketRequest, type WebSocketRequest } from '../../../models/webso
 import { invariant } from '../../../utils/invariant';
 import { useRequestPatcher } from '../../hooks/use-request';
 import type { ListWorkspacesLoaderData } from '../../routes/project';
+import { revalidateWorkspaceActiveRequest } from '../../routes/workspace';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -52,6 +53,8 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
   async function handleMoveToWorkspace() {
     invariant(workspaceToCopyTo, 'Workspace ID is required');
     patchRequest(request._id, { parentId: workspaceToCopyTo });
+    // if active request is moved, clear the active request in the workspace
+    revalidateWorkspaceActiveRequest(request._id, workspaceId);
     modalRef.current?.hide();
     navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceToCopyTo}/debug`);
   }

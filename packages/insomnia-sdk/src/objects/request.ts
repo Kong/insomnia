@@ -388,7 +388,7 @@ export class Request extends Property {
     }
 
     size(): RequestSize {
-        return calculateRequestSize(this.body, this.headers);
+        return calculatePayloadSize((this.body || '').toString(), this.headers);
     }
 
     override toJSON() {
@@ -690,8 +690,18 @@ export function mergeRequests(
     };
 }
 
-export function calculateRequestSize(body: RequestBody | undefined, headers: HeaderList<Header>): RequestSize {
-    const bodySize = new Blob([(body || '').toString()]).size;
+export function calculatePayloadSize(body: string, headers: HeaderList<Header>): RequestSize {
+    const bodySize = new Blob([body]).size;
+    const headerSize = calculateHeadersSize(headers);
+    return {
+        body: bodySize,
+        header: headerSize,
+        total: bodySize + headerSize,
+        source: 'COMPUTED',
+    };
+}
+
+export function calculateHeadersSize(headers: HeaderList<Header>): number {
     const headerSize = new Blob([
         headers.reduce(
             (acc, header) => (acc + header.toString() + '\n'),
@@ -700,10 +710,5 @@ export function calculateRequestSize(body: RequestBody | undefined, headers: Hea
         ),
     ]).size;
 
-    return {
-        body: bodySize,
-        header: headerSize,
-        total: bodySize + headerSize,
-        source: 'COMPUTED',
-    };
+    return headerSize;
 }

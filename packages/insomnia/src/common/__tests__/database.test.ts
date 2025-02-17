@@ -37,8 +37,8 @@ describe('onChange()', () => {
       name: 'bar',
     });
     expect(changesSeen).toEqual([
-      [['insert', newDoc, false]],
-      [['update', updatedDoc, false]],
+      [['insert', newDoc, false, []]],
+      [['update', updatedDoc, false, [{ name: 'bar' }]]],
     ]);
     db.offChange(callback);
     await models.request.create(doc);
@@ -71,16 +71,16 @@ describe('bufferChanges()', () => {
     await db.flushChanges();
     expect(changesSeen).toEqual([
       [
-        ['insert', newDoc, false],
-        ['update', updatedDoc, false],
+        ['insert', newDoc, false, []],
+        ['update', updatedDoc, false, [true]],
       ],
     ]);
     // Assert no more changes seen after flush again
     await db.flushChanges();
     expect(changesSeen).toEqual([
       [
-        ['insert', newDoc, false],
-        ['update', updatedDoc, false],
+        ['insert', newDoc, false, []],
+        ['update', updatedDoc, false, [true]],
       ],
     ]);
   });
@@ -106,8 +106,8 @@ describe('bufferChanges()', () => {
     await new Promise(resolve => setTimeout(resolve, 1500));
     expect(changesSeen).toEqual([
       [
-        ['insert', newDoc, false],
-        ['update', updatedDoc, false],
+        ['insert', newDoc, false, []],
+        ['update', updatedDoc, false, [true]],
       ],
     ]);
   });
@@ -132,8 +132,8 @@ describe('bufferChanges()', () => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     expect(changesSeen).toEqual([
       [
-        ['insert', newDoc, false],
-        ['update', updatedDoc, false],
+        ['insert', newDoc, false, []],
+        ['update', updatedDoc, false, [true]],
       ],
     ]);
   });
@@ -166,8 +166,8 @@ describe('bufferChangesIndefinitely()', () => {
     await db.flushChanges();
     expect(changesSeen).toEqual([
       [
-        ['insert', newDoc, false],
-        ['update', updatedDoc, false],
+        ['insert', newDoc, false, []],
+        ['update', updatedDoc, false, [true]],
       ],
     ]);
   });

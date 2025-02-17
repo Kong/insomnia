@@ -6,8 +6,9 @@ import { NavLink, useFetcher, useParams, useRouteLoaderData } from 'react-router
 
 import { DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import { debounce } from '../../common/misc';
-import { type Environment, type EnvironmentKvPairData, EnvironmentType, getDataFromKVPair } from '../../models/environment';
+import { type Environment, type EnvironmentKvPairData, EnvironmentKvPairDataType, EnvironmentType, getDataFromKVPair } from '../../models/environment';
 import { isRemoteProject } from '../../models/project';
+import { decryptVaultKeyFromSession } from '../../utils/vault';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { EditableInput } from '../components/editable-input';
@@ -17,17 +18,24 @@ import { handleToggleEnvironmentType } from '../components/editors/environment-u
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showAlert } from '../components/modals';
+import { InputVaultKeyModal } from '../components/modals/input-valut-key-modal';
+import { OrganizationTabList } from '../components/tabs/tab-list';
+import { INSOMNIA_TAB_HEIGHT } from '../constant';
+import { useInsomniaTab } from '../hooks/use-insomnia-tab';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
+import { useRootLoaderData } from './root';
 import type { WorkspaceLoaderData } from './workspace';
 
 const Environments = () => {
-  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+  const { organizationId = '', projectId = '', workspaceId = '' } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
   const routeData = useRouteLoaderData(
     ':workspaceId'
   ) as WorkspaceLoaderData;
 
   const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);
   const { features } = useOrganizationPermissions();
+  const { userSession } = useRootLoaderData();
+  const { vaultKey: vaultKeyInSession, vaultSalt } = userSession;
 
   const createEnvironmentFetcher = useFetcher();
   const deleteEnvironmentFetcher = useFetcher();
@@ -40,12 +48,21 @@ const Environments = () => {
     activeEnvironment,
     subEnvironments,
     activeWorkspaceMeta,
+    activeWorkspace,
   } = routeData;
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
+  const [vaultKey, setVaultKey] = useState('');
   const isUsingInsomniaCloudSync = Boolean(isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
   const isUsingGitSync = Boolean(features.gitSync.enabled && (activeWorkspaceMeta?.gitRepositoryId));
 
-  const selectedEnvironment = [baseEnvironment, ...subEnvironments].find(env => env._id === selectedEnvironmentId);
+  const allEnvironment = [baseEnvironment, ...subEnvironments];
+  const selectedEnvironment = allEnvironment.find(env => env._id === selectedEnvironmentId);
+  // Do not allowed to switch to json environment if contains secret item
+  const allowSwitchEnvironment = !selectedEnvironment?.kvPairData?.some(d => d.type === EnvironmentKvPairDataType.SECRET);
+  // Check if there's any environment contains secret item
+  const containsSecret = allEnvironment.some(env => env.isPrivate &&
+    env.kvPairData?.some(pairData => pairData.type === EnvironmentKvPairDataType.SECRET));
+  const showInputVaultKeyModal = containsSecret && !vaultKeyInSession;
 
   const environmentActionsList: {
     id: string;
@@ -246,20 +263,44 @@ const Environments = () => {
     sidebarPanelRef.current?.setLayout(layout);
   }
 
+  const handleInputVaultKeyModalClose = (newVaultKey?: string) => {
+    if (newVaultKey) {
+      setVaultKey(newVaultKey);
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = window.main.on('toggle-sidebar', toggleSidebar);
 
     return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    if (vaultKeyInSession && vaultSalt) {
+      async function updateVaultKey(key: string) {
+        const decryptedVaultKey = await decryptVaultKeyFromSession(key, false);
+        setVaultKey(decryptedVaultKey);
+      }
+      updateVaultKey(vaultKeyInSession);
+    }
+  }, [vaultKeyInSession, vaultSalt]);
+
   useDocBodyKeyboardShortcuts({
     sidebar_toggle: toggleSidebar,
+  });
+
+  useInsomniaTab({
+    organizationId,
+    projectId,
+    workspaceId,
+    activeWorkspace,
+    activeProject,
   });
 
   return (
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
       <Panel id="sidebar" className='sidebar theme--sidebar flex flex-col justify-between overflow-hidden divide-solid divide-y divide-[--hl-md]' maxSize={40} minSize={10} collapsible>
-        <Breadcrumbs className='flex h-[--line-height-sm] list-none items-center m-0 gap-2 p-[--padding-sm] font-bold w-full'>
+        <Breadcrumbs className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] px-[--padding-sm] list-none items-center m-0 gap-2 font-bold w-full`}>
           <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
             <NavLink
               data-testid="project"
@@ -409,8 +450,9 @@ const Environments = () => {
         <WorkspaceSyncDropdown />
       </Panel>
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
-      <Panel id="pane-one" className='pane-one theme--pane'>
-        <div className='flex-1 flex flex-col h-full divide-solid divide-y divide-[--hl-md] overflow-hidden'>
+      <Panel id="pane-one" className='pane-one theme--pane flex flex-col'>
+        <OrganizationTabList />
+        <div className='flex-1 flex flex-col divide-solid divide-y divide-[--hl-md] overflow-hidden'>
           <div className='flex flex-shrink-0 basis-[--line-height-sm] items-center p-[--padding-sm] justify-between gap-2 w-full overflow-hidden'>
             <Heading className='flex flex-grow items-center gap-2 text-lg py-2 px-4 overflow-hidden'>
               <Icon className='w-4' icon={selectedEnvironment?.isPrivate ? 'lock' : isUsingGitSync ? ['fab', 'git-alt'] : isUsingInsomniaCloudSync ? 'globe-americas' : 'file-arrow-down'} />
@@ -455,7 +497,7 @@ const Environments = () => {
                 />
               </Label>
             )}
-            {selectedEnvironment && (
+            {selectedEnvironment && allowSwitchEnvironment && (
               <ToggleButton
                 onChange={isSelected => {
                   const toggleSwitchEnvironmentType = (newEnvironmentType: EnvironmentType, kvPairData: EnvironmentKvPairData[]) => {
@@ -503,8 +545,13 @@ const Environments = () => {
             <EnvironmentKVEditor
               key={selectedEnvironment._id}
               data={selectedEnvironment.kvPairData || []}
+              isPrivate={selectedEnvironment.isPrivate}
               onChange={handleKVPairChange}
+              vaultKey={vaultKey}
             />
+          }
+          {showInputVaultKeyModal &&
+            <InputVaultKeyModal onClose={handleInputVaultKeyModalClose} allowClose={false} />
           }
         </div>
       </Panel>

@@ -23,7 +23,7 @@ import * as models from '../models';
 import type { CaCertificate } from '../models/ca-certificate';
 import type { ClientCertificate } from '../models/client-certificate';
 import type { Cookie, CookieJar } from '../models/cookie-jar';
-import { type Environment, EnvironmentType, getKVPairFromData, type UserUploadEnvironment } from '../models/environment';
+import { type Environment, EnvironmentType, getKVPairFromData, type UserUploadEnvironment, vaultEnvironmentPath } from '../models/environment';
 import type { MockRoute } from '../models/mock-route';
 import type { MockServer } from '../models/mock-server';
 import { isProject, type Project } from '../models/project';
@@ -34,6 +34,7 @@ import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
+import { maskOrDecryptContextIfNecessary } from '../templating/utils';
 import { defaultSendActionRuntime, type SendActionRuntime } from '../ui/routes/request';
 import { invariant } from '../utils/invariant';
 import { serializeNDJSON } from '../utils/ndjson';
@@ -71,7 +72,7 @@ export function getOrInheritHeaders({ request, requestGroups }: { request: Pick<
   const headerContexts = [...requestGroups.reverse(), request];
   const headers = headerContexts.map(({ headers }) => headers || []).flat();
   headers.forEach(({ name, value, disabled }) => {
-    if (disabled) {
+    if (disabled || !name.trim()) {
       return;
     }
     const normalizedCase = name.toLowerCase();
@@ -378,6 +379,15 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     .filter(doc => isRequest(doc) || isRequestGroup(doc) || isWorkspace(doc) || isProject(doc))
     .reverse()
     .map(doc => doc.name);
+  let vault = undefined;
+  if (globals && vaultEnvironmentPath in globals.data && settings.enableVaultInScripts) {
+    // decrypt and set vault in insomnia sdk if necessary
+    await maskOrDecryptContextIfNecessary({
+      ...globals.data,
+      getPurpose: () => 'script',
+    });
+    vault = globals.data[vaultEnvironmentPath];
+  }
 
   try {
     const fn = process.type === 'renderer' ? runScriptConcurrently : cancellableRunScript;
@@ -408,6 +418,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
           iteration,
         },
         response,
+        vault,
         globals: globals?.data || undefined,
         iterationData: userUploadEnvironment ? {
           name: userUploadEnvironment.name,
@@ -654,6 +665,7 @@ export interface sendCurlAndWriteTimelineResponse extends ResponsePatch {
   statusMessage: string;
   cookies: Cookie[];
   timeline: string[];
+  bytesRead?: number;
 }
 
 export async function sendCurlAndWriteTimeline(

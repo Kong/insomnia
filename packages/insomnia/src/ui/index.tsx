@@ -9,11 +9,13 @@ import {
   RouterProvider,
 } from 'react-router-dom';
 
-import { migrateFromLocalStorage, type SessionData, setSessionData } from '../account/session';
+import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from '../account/session';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_SPEC,
   getInsomniaSession,
+  getInsomniaVaultKey,
+  getInsomniaVaultSalt,
   getProductName,
   getSkipOnboarding,
   isDevelopment,
@@ -71,6 +73,8 @@ async function renderApp() {
 
   // Check if there is a Session provided by an env variable and use this
   const insomniaSession = getInsomniaSession();
+  const insomniaVaultKey = getInsomniaVaultKey();
+  const insomniaVaultSalt = getInsomniaVaultSalt();
   if (insomniaSession) {
     try {
       const session = JSON.parse(insomniaSession) as SessionData;
@@ -84,6 +88,9 @@ async function renderApp() {
         session.publicKey,
         session.encPrivateKey
       );
+      if (insomniaVaultSalt && insomniaVaultKey) {
+        await setVaultSessionData(insomniaVaultSalt, insomniaVaultKey);
+      }
     } catch (e) {
       console.log('[init] Failed to parse session data', e);
     }

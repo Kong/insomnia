@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { Header, HeaderList } from '../headers';
-import { calculateRequestSize, mergeRequestBody, Request, RequestBody, RequestBodyOptions, toScriptRequestBody } from '../request';
+import { calculatePayloadSize, mergeRequestBody, Request, RequestBody, RequestBodyOptions, toScriptRequestBody } from '../request';
 
 describe('test request and response objects', () => {
     it('test RequestBody methods', () => {
@@ -145,8 +145,8 @@ describe('test request and response objects', () => {
     ];
 
     reqBodyTestCases.forEach(({ body, headers, expectedTotal }) => {
-        it(`test calculateRequestSize: ${body.raw}`, () => {
-            const reqSize = calculateRequestSize(new RequestBody(body), headers);
+        it(`test calculatePayloadSize: ${body.raw}`, () => {
+            const reqSize = calculatePayloadSize(new RequestBody(body).toString(), headers);
 
             expect(reqSize.total).toEqual(expectedTotal);
         });

@@ -1,6 +1,10 @@
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
 import _ from 'lodash';
 
+import type { RenderPurpose } from '../common/render';
+import { userSession } from '../models';
+import { decryptSecretValue, vaultEnvironmentMaskValue, vaultEnvironmentPath } from '../models/environment';
+import { decryptVaultKeyFromSession } from '../utils/vault';
 import type { DisplayName, PluginArgumentEnumOption, PluginTemplateTagActionContext } from './extensions';
 import objectPath from './third_party/objectPath';
 
@@ -21,6 +25,7 @@ export interface NunjucksParsedTagArg {
   itemTypes?: ('file' | 'directory')[];
   extensions?: string[];
   description?: string;
+  requireSubForm?: boolean;
 }
 
 export interface NunjucksActionTag {
@@ -299,6 +304,42 @@ export function extractUndefinedVariableKey(text: string = '', templatingContext
     }
   }
   return missingVariables;
+}
+
+export async function maskOrDecryptContextIfNecessary(context: Record<string, any> & { getPurpose: () => RenderPurpose | undefined }) {
+  // all secret variables are under vaultEnvironmentPath property in context
+  const vaultEnvironmentData = context[vaultEnvironmentPath];
+  const renderPurpose = typeof context.getPurpose === 'function' && context.getPurpose();
+  /**
+    * Decrypt secrets when renderPurpose is one of the following:
+    * - preview: render the template in variable editor to do the live preview
+    * - send: render the template when sending requests
+    * - script: render the template in pre-request or after-response script
+  */
+  const shouldDecrypt = renderPurpose === 'preview' || renderPurpose === 'send' || renderPurpose === 'script';
+  if (typeof vaultEnvironmentData === 'object') {
+    if (shouldDecrypt) {
+      const { vaultKey, vaultSalt } = await userSession.getOrCreate();
+      const isVaultEnabled = !!vaultSalt;
+      if (isVaultEnabled && vaultKey) {
+        const symmetricKey = await decryptVaultKeyFromSession(vaultKey, true) as JsonWebKey;
+        // decrypt all secert values under vaultEnvironmentPath property in context
+        Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
+          const encryptedValue = vaultEnvironmentData[vaultContextKey];
+          vaultEnvironmentData[vaultContextKey] = decryptSecretValue(encryptedValue, symmetricKey);
+        });
+      } else if (isVaultEnabled && !vaultKey) {
+        // remove all values under vaultEnvironmentPath if no vault key found
+        context[vaultEnvironmentPath] = {};
+      }
+    } else {
+      // mask all secert values under vaultEnvironmentPath property in context
+      Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
+        vaultEnvironmentData[vaultContextKey] = vaultEnvironmentMaskValue;
+      });
+    }
+  }
+  return context;
 }
 
 export function extractNunjucksTagFromCoords(

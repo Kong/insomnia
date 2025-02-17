@@ -8,7 +8,7 @@ import { Cookie, type CookieOptions } from './cookies';
 import { CookieList } from './cookies';
 import { Header, type HeaderDefinition, HeaderList } from './headers';
 import { Property, unsupportedError } from './properties';
-import { Request } from './request';
+import { calculateHeadersSize, Request } from './request';
 
 export interface ResponseOptions {
     code: number;
@@ -20,6 +20,7 @@ export interface ResponseOptions {
     stream?: Buffer | ArrayBuffer;
     responseTime: number;
     originalRequest: Request;
+    bytesRead?: number; // this is from Insomnia for returning response size() directly
 }
 
 export interface ResponseContentInfo {
@@ -44,6 +45,8 @@ export class Response extends Property {
     status: string;
     stream?: Buffer | ArrayBuffer;
 
+    private bytesRead: number; //
+
     constructor(options: ResponseOptions) {
         super();
 
@@ -67,6 +70,8 @@ export class Response extends Property {
         } else {
             this.status = detectedStatus;
         }
+
+        this.bytesRead = options.bytesRead || 0;
     }
 
     // TODO: the accurate type of the response should be given
@@ -180,14 +185,14 @@ export class Response extends Property {
         return this.status;
     }
 
-    size(): number {
-        try {
-            const contentLength = this.headers.get('Content-Length');
-            // TODO: improve this by manual counting
-            return contentLength == null ? -1 : parseInt(contentLength.valueOf());
-        } catch (e) {
-            throw Error('size: ${e}');
-        }
+    size() {
+        const headerSize = calculateHeadersSize(this.headers);
+        return {
+            body: this.bytesRead,
+            header: headerSize,
+            total: this.bytesRead + headerSize,
+            source: 'COMPUTED',
+        };
     }
 
     text() {
@@ -305,6 +310,7 @@ export function toScriptResponse(
         // stream is duplicated with body
         responseTime: partialResponse.elapsedTime,
         originalRequest,
+        bytesRead: partialResponse.bytesRead,
     };
 
     return new Response(responseOption);

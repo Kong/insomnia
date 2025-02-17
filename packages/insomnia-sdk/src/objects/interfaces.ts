@@ -18,6 +18,7 @@ export interface RequestContext {
     timelinePath: string;
     environment: IEnvironment;
     baseEnvironment: IEnvironment;
+    vault?: IEnvironment;
     collectionVariables?: object;
     globals?: object;
     iterationData?: Omit<IEnvironment, 'id'>;

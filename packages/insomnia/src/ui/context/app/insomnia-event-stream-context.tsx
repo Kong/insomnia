@@ -197,7 +197,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
                 method: 'POST',
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`,
               });
-            }
+            };
           } catch (e) {
             console.log('[sse] Error parsing response from SSE', e);
           }

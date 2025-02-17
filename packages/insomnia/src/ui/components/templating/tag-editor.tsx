@@ -77,7 +77,7 @@ export const TagEditor: FC<Props> = props => {
     error: '',
     variables: [],
   });
-  const { handleRender, handleGetRenderContext } = useNunjucks();
+  const { handleRender, handleGetRenderContext } = useNunjucks({ renderContext: { purpose: 'preview' } });
 
   const refreshModels = useCallback(async () => {
     setState(state => ({ ...state, loadingDocs: true }));

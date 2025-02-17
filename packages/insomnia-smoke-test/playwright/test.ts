@@ -40,6 +40,8 @@ interface EnvOptions {
   INSOMNIA_PUBLIC_KEY: string;
   INSOMNIA_SECRET_KEY: string;
   INSOMNIA_SESSION?: string;
+  INSOMNIA_VAULT_KEY: string;
+  INSOMNIA_VAULT_SALT: string;
 }
 
 export const test = baseTest.extend<{
@@ -51,6 +53,8 @@ export const test = baseTest.extend<{
     publicKey: string;
     secretKey: string;
     code: string;
+    vaultKey?: string;
+    vaultSalt?: string;
     session?: {
       accountId: string;
       id: string;
@@ -81,6 +85,8 @@ export const test = baseTest.extend<{
       INSOMNIA_SKIP_ONBOARDING: String(userConfig.skipOnboarding),
       INSOMNIA_PUBLIC_KEY: userConfig.publicKey,
       INSOMNIA_SECRET_KEY: userConfig.secretKey,
+      INSOMNIA_VAULT_KEY: userConfig.vaultKey || '',
+      INSOMNIA_VAULT_SALT: userConfig.vaultSalt || '',
       ...userConfig.session ? { INSOMNIA_SESSION: JSON.stringify(userConfig.session) } : {},
     };
 
@@ -135,6 +141,8 @@ export const test = baseTest.extend<{
       publicKey: 'txb/w8DASTpPQqeHE/hpI3ABKzit+pv5n2We5dbtYRo=',
       secretKey: 'Tb1QKsI3wVZxhS8TuQESHB2x7f68PzeTzTMmLpnnFVU=',
       code: 'BTxpIfgXY1VgUpoPpqA25RkCPGQ2MAkZsaY6IZ0bamd0WsYQlJM6iy8PV9hEHS1Gk96SBC6%2BM%2FGhv8IaVl1N6V5wdghHwU2sGKGkW%2Fevx1HiqAUsAqIry8aWRqAkc0n3KmW%2B%2F8lyeHCpy5jhsXqMMqXMbZh8dN1q%2ByRe2C6MJS1A706KbPUhI7PRi%2FsmK0TcNT7lgBKKHRVzPTvjpLcjgzSJFL4K%2BEzgY9Ue4gh0gPw89sM9dV%2F2sAlpw0LA7rF06NyoPhA%3D',
+      vaultKey: 'eyJhbGciOiJBMjU2R0NNIiwiZXh0Ijp0cnVlLCJrIjoiaEoxaW03cjcwV3ltZ3puT3hXcDNTb0ZQS3RBaGMwcmFfd2VQb2Z2b2xRNCIsImtleV9vcHMiOlsiZW5jcnlwdCIsImRlY3J5cHQiXSwia3R5Ijoib2N0In0=',
+      vaultSalt: 'e619272433fc739d52ff1ba1b45debedfe55cb42685af10a46e2b1285acb7120',
       session: {
         'id': 'sess_64a477e6b59d43a5a607f84b4f73e3ce',
         // Expire in 2077

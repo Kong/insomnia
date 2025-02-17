@@ -315,6 +315,24 @@ export const workspaceLoader: LoaderFunction = async ({
   };
 };
 
+export const revalidateWorkspaceActiveRequest = async (requestId: string, workspaceId: string) => {
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  if (workspaceMeta?.activeRequestId === requestId) {
+    await models.workspaceMeta.update(workspaceMeta, { activeRequestId: null });
+  }
+};
+
+export const revalidateWorkspaceActiveRequestByFolder = async (requestGroup: RequestGroup, workspaceId: string) => {
+  const docs = await database.withDescendants(requestGroup, models.request.type, [models.request.type, models.requestGroup.type]);
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  for (const doc of docs) {
+    if (workspaceMeta?.activeRequestId === doc._id) {
+      await models.workspaceMeta.update(workspaceMeta, { activeRequestId: null });
+      return;
+    }
+  }
+};
+
 const WorkspaceRoute = () => {
   const { activeWorkspace } = useLoaderData() as WorkspaceLoaderData;
 

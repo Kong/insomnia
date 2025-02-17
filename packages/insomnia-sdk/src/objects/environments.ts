@@ -132,3 +132,38 @@ export class Variables {
         return this.localVars.toObject();
     };
 }
+
+export class Vault extends Environment {
+
+    constructor(name: string, jsonObject: object | undefined, enableVaultInScripts: boolean) {
+        super(name, jsonObject);
+        return new Proxy(this, {
+            // throw error on get or set method call if enableVaultInScripts is false
+            get: (target, prop, receiver) => {
+                if (!enableVaultInScripts) {
+                    throw new Error('Vault is disabled in script');
+                }
+                return Reflect.get(target, prop, receiver);
+            },
+            set: (target, prop, value, receiver) => {
+                if (!enableVaultInScripts) {
+                    throw new Error('Vault is disabled in script');
+                }
+                return Reflect.set(target, prop, value, receiver);
+            },
+        });
+    }
+
+    unset = () => {
+        throw new Error('Vault can not be unset in script');
+    };
+
+    clear = () => {
+        throw new Error('Vault can not be cleared in script');
+    };
+
+    set = () => {
+        throw new Error('Vault can not be set in script');
+    };
+
+}

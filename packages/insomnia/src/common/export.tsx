@@ -7,7 +7,7 @@ import YAML from 'yaml';
 
 import { isApiSpec } from '../models/api-spec';
 import { isCookieJar } from '../models/cookie-jar';
-import { type Environment, isEnvironment } from '../models/environment';
+import { type Environment, isEnvironment, maskVaultEnvironmentData } from '../models/environment';
 import { isGrpcRequest } from '../models/grpc-request';
 import * as requestOperations from '../models/helpers/request-operations';
 import { type BaseModel, environment } from '../models/index';
@@ -493,7 +493,7 @@ export const exportMockServerToFile = async (workspace: Workspace) => {
   });
 };
 
-const exportGlobalEnvironment = async (workspace: Workspace, selectedFormat: 'json' | 'yaml') => {
+const exportGlobalEnvironment = async (workspace: Workspace, selectedFormat: 'json' | 'yaml', shouldExportPrivateEnvironments: boolean) => {
   const data: Insomnia4Data = {
     _type: 'export',
     __export_format: EXPORT_FORMAT,
@@ -503,11 +503,16 @@ const exportGlobalEnvironment = async (workspace: Workspace, selectedFormat: 'js
   };
 
   const baseEnvironment = await models.environment.getOrCreateForParentId(workspace._id);
-  const subEnvironments = await models.environment.findByParentId(baseEnvironment._id);
+  const subEnvironments = (await models.environment.findByParentId(baseEnvironment._id))
+    .filter(subEnv => shouldExportPrivateEnvironments || !subEnv.isPrivate);
 
   data.resources.push({ ...workspace, _type: 'workspace' });
   data.resources.push({ ...baseEnvironment, _type: 'environment' });
-  subEnvironments.map(environment => data.resources.push({ ...environment, _type: 'environment' }));
+  subEnvironments.map(environment => {
+    // mask vault environment varibale if necessary
+    const maskedEnvironment = maskVaultEnvironmentData(environment);
+    data.resources.push({ ...maskedEnvironment, _type: 'environment' });
+  });
 
   if (selectedFormat === 'yaml') {
     return YAML.stringify(data);
@@ -529,6 +534,15 @@ export const exportGlobalEnvironmentToFile = async (workspace: Workspace) => {
       invariant(selectedFormat, 'expected selected format to be defined');
       invariant(selectedFormat === 'json' || selectedFormat === 'yaml', 'unexpected selected format');
       window.localStorage.setItem('insomnia.lastExportFormat', selectedFormat);
+      // Modal to confirm whether to export private environment or not if necessary
+      const baseEnvironment = await models.environment.getOrCreateForParentId(workspace._id);
+      const subEnvironments = await models.environment.findByParentId(baseEnvironment._id);
+      const showPrivateEnvironmentPrompt = subEnvironments.some(subEnv => subEnv.isPrivate);
+      let shouldExportPrivateEnvironments = false;
+      if (showPrivateEnvironmentPrompt) {
+        shouldExportPrivateEnvironments = await showExportPrivateEnvironmentsModal();
+      }
+
       const fileName = await showSaveExportedFileDialog({
         exportedFileNamePrefix: workspace.name,
         selectedFormat,
@@ -536,8 +550,9 @@ export const exportGlobalEnvironmentToFile = async (workspace: Workspace) => {
       if (!fileName) {
         return;
       }
+
       try {
-        const stringifiedExport = await exportGlobalEnvironment(workspace, selectedFormat);
+        const stringifiedExport = await exportGlobalEnvironment(workspace, selectedFormat, shouldExportPrivateEnvironments);
         writeExportedFileToFileSystem(fileName, stringifiedExport, err => err && console.warn('Export failed', err));
         window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: selectedFormat, scope: 'environment' } });
       } catch (err) {

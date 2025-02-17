@@ -13,9 +13,11 @@ import { getTagDefinitions } from '../../../templating/index';
 import { extractNunjucksTagFromCoords, type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '../../hooks/use-editor-refresh';
+import { usePlanData } from '../../hooks/use-plan';
 import { useRootLoaderData } from '../../routes/root';
 import { showModal } from '../modals';
 import { NunjucksModal } from '../modals/nunjucks-modal';
+import { UpgradeModal } from '../modals/upgrade-modal';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';
 export interface OneLineEditorProps {
   defaultValue: string;
@@ -57,6 +59,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   const {
     settings,
   } = useRootLoaderData();
+  const { isOwner, isEnterprisePlan } = usePlanData();
   const { handleRender, handleGetRenderContext } = useNunjucks();
 
   const initEditor = useCallback(() => {
@@ -257,7 +260,16 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   }, [onChange]);
 
   useEffect(() => {
-    const unsubscribe = window.main.on('context-menu-command', (_, { key, tag, nunjucksTag }) => {
+    const unsubscribe = window.main.on('nunjucks-context-menu-command', (_, { key, tag, nunjucksTag, needsEnterprisePlan, displayName }) => {
+      if (needsEnterprisePlan && !isEnterprisePlan) {
+        // show modal if current user is not an enteprise user and the command is an enterprise feature
+        showModal(UpgradeModal, {
+          newPlan: 'enterprise',
+          featureName: displayName,
+          isOwner,
+        });
+        return;
+      }
       if (id === key) {
         if (nunjucksTag) {
           const { type, template, range } = nunjucksTag as nunjucksTagContextMenuOptions;
@@ -288,7 +300,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     return () => {
       unsubscribe();
     };
-  }, [id]);
+  }, [id, isEnterprisePlan, isOwner]);
 
   useImperativeHandle(ref, () => ({
     selectAll: () => codeMirror.current?.setSelection({ line: 0, ch: 0 }, { line: codeMirror.current.lineCount(), ch: 0 }),
@@ -320,10 +332,10 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           const nunjucksTag = extractNunjucksTagFromCoords({ left: clientX, top: clientY }, codeMirror);
           if (nunjucksTag) {
             // show context menu for nunjucks tag
-            window.main.showContextMenu({ key: id, nunjucksTag });
+            window.main.showNunjucksContextMenu({ key: id, nunjucksTag });
           }
         } else {
-          window.main.showContextMenu({ key: id });
+          window.main.showNunjucksContextMenu({ key: id });
         }
       }}
     >

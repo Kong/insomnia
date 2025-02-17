@@ -62,7 +62,8 @@ export type MainOnChannels =
   | 'restart'
   | 'set-hidden-window-busy-status'
   | 'setMenuBarVisibility'
-  | 'show-context-menu'
+  | 'show-nunjucks-context-menu'
+  | 'showContextMenu'
   | 'showItemInFolder'
   | 'showOpenDialog'
   | 'showSaveDialog'
@@ -78,7 +79,8 @@ export type MainOnChannels =
 export type RendererOnChannels =
   'clear-all-models'
   | 'clear-model'
-  | 'context-menu-command'
+  | 'nunjucks-context-menu-command'
+  | 'contextMenuCommand'
   | 'grpc.data'
   | 'grpc.end'
   | 'grpc.error'
@@ -119,10 +121,10 @@ const getTemplateValue = (arg: NunjucksParsedTagArg) => {
   return arg.defaultValue;
 };
 export function registerElectronHandlers() {
-  ipcMainOn('show-context-menu', (event, options: { key: string; nunjucksTag: ReturnType<typeof extractNunjucksTagFromCoords> }) => {
+  ipcMainOn('show-nunjucks-context-menu', (event, options: { key: string; nunjucksTag: ReturnType<typeof extractNunjucksTagFromCoords> }) => {
     const { key, nunjucksTag } = options;
     const sendNunjuckTagContextMsg = (type: NunjucksTagContextMenuAction) => {
-      event.sender.send('context-menu-command', { key, nunjucksTag: { ...nunjucksTag, type } });
+      event.sender.send('nunjucks-context-menu-command', { key, nunjucksTag: { ...nunjucksTag, type } });
     };
     try {
       const baseTemplate: MenuItemConstructorOptions[] = nunjucksTag ?
@@ -167,6 +169,7 @@ export function registerElectronHandlers() {
         .sort((a, b) => fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)))
         .map(l => {
           const actions = l.templateTag.args?.[0];
+          const needsEnterprisePlan = l.templateTag.needsEnterprisePlan || false;
           const additionalArgs = l.templateTag.args?.slice(1);
           const hasSubmenu = actions?.options?.length;
           return {
@@ -175,7 +178,8 @@ export function registerElectronHandlers() {
               {
                 click: () => {
                   const tag = `{% ${l.templateTag.name} ${l.templateTag.args?.map(getTemplateValue).join(', ')} %}`;
-                  event.sender.send('context-menu-command', { key, tag });
+                  const displayName = l.templateTag.displayName;
+                  event.sender.send('nunjucks-context-menu-command', { key, tag, needsEnterprisePlan, displayName });
                 },
               } :
               {
@@ -183,8 +187,9 @@ export function registerElectronHandlers() {
                   label: fnOrString(action.displayName),
                   click: () => {
                     const additionalTagFields = additionalArgs.length ? ', ' + additionalArgs.map(getTemplateValue).join(', ') : '';
+                    const displayName = action.displayName;
                     const tag = `{% ${l.templateTag.name} '${action.value}'${additionalTagFields} %}`;
-                    event.sender.send('context-menu-command', { key, tag });
+                    event.sender.send('nunjucks-context-menu-command', { key, tag, needsEnterprisePlan, displayName });
                   },
                 })),
               }),
@@ -240,5 +245,18 @@ export function registerElectronHandlers() {
 
   ipcMainOn('getAppPath', event => {
     event.returnValue = app.getAppPath();
+  });
+
+  ipcMainOn('showContextMenu', (event, options: { key: string; menuItems: MenuItemConstructorOptions[]; extra?: Record<string, any> }) => {
+    const menuItems = options.menuItems.map(item => {
+      return {
+        ...item,
+        click: () => {
+          event.sender.send('contextMenuCommand', { key: options.key, label: item.label, extra: options.extra });
+        },
+      };
+    });
+    const menu = Menu.buildFromTemplate(menuItems);
+    menu.popup();
   });
 }

@@ -1,7 +1,7 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type { ServiceError, StatusObject } from '@grpc/grpc-js';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import React, { type FC, Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { type FC, Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -68,10 +68,12 @@ import {
   isWebSocketRequestId,
   type WebSocketRequest,
 } from '../../models/websocket-request';
-import { isScratchpad } from '../../models/workspace';
+import { isDesign, isScratchpad } from '../../models/workspace';
+import { scrollElementIntoView } from '../../utils';
 import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '../../utils/grpc';
 import { invariant } from '../../utils/invariant';
 import { DropdownHint } from '../components/base/dropdown/dropdown-hint';
+import { DocumentTab } from '../components/document-tab';
 import { RequestActionsDropdown } from '../components/dropdowns/request-actions-dropdown';
 import { RequestGroupActionsDropdown } from '../components/dropdowns/request-group-actions-dropdown';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
@@ -98,10 +100,14 @@ import { PlaceholderRequestPane } from '../components/panes/placeholder-request-
 import { RequestGroupPane } from '../components/panes/request-group-pane';
 import { RequestPane } from '../components/panes/request-pane';
 import { ResponsePane } from '../components/panes/response-pane';
+import { OrganizationTabList } from '../components/tabs/tab-list';
 import { getMethodShortHand } from '../components/tags/method-tag';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
+import { INSOMNIA_TAB_HEIGHT } from '../constant';
+import { useCloseConnection } from '../hooks/use-close-connection';
 import { useExecutionState } from '../hooks/use-execution-state';
+import { useInsomniaTab } from '../hooks/use-insomnia-tab';
 import { useReadyState } from '../hooks/use-ready-state';
 import {
   type CreateRequestType,
@@ -115,6 +121,7 @@ import type {
   RequestLoaderData,
   WebSocketRequestLoaderData,
 } from './request';
+import type { RequestGroupLoaderData } from './request-group';
 import { useRootLoaderData } from './root';
 import Runner from './runner';
 import type { Child, WorkspaceLoaderData } from './workspace';
@@ -159,7 +166,8 @@ export const loader: LoaderFunction = async ({ params, request }) => {
     const startOfQuery = request.url.indexOf('?');
     const urlWithoutQuery = startOfQuery > 0 ? request.url.slice(0, startOfQuery) : request.url;
     const isDisplayingRunner = urlWithoutQuery.includes('/runner');
-    if (activeRequest && !isDisplayingRunner) {
+    const doNotSkipToActiveRequest = request.url.includes('doNotSkipToActiveRequest=true');
+    if (activeRequest && !isDisplayingRunner && !doNotSkipToActiveRequest) {
       return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequestId}`);
     }
   }
@@ -214,6 +222,9 @@ export const Debug: FC = () => {
     requestId?: string;
     requestGroupId?: string;
   };
+
+  const { activeRequestGroup } = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData || {};
+
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>(
     grpcRequests.map(r => ({
       requestId: r._id,
@@ -442,13 +453,10 @@ export const Debug: FC = () => {
       }
     },
   });
-  // Close all websocket connections when the active environment changes
-  useEffect(() => {
-    return () => {
-      window.main.webSocket.closeAll();
-      window.main.grpc.closeAll();
-    };
-  }, [activeEnvironment?._id]);
+
+  useCloseConnection({
+    organizationId,
+  });
 
   const isRealtimeRequest =
     activeRequest &&
@@ -744,13 +752,23 @@ export const Debug: FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useInsomniaTab({
+    organizationId,
+    projectId,
+    workspaceId,
+    activeWorkspace,
+    activeProject,
+    activeRequest,
+    activeRequestGroup,
+  });
+
   return (
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
       <Panel id="sidebar" className='sidebar theme--sidebar' maxSize={40} minSize={10} collapsible>
         <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
-          <div className="flex flex-col items-start">
-            <div className='flex w-full'>
-              <Breadcrumbs className='flex h-[--line-height-sm] list-none items-center m-0 gap-2 border-solid border-[--hl-md] border-b p-[--padding-sm] font-bold w-full'>
+          <div className="flex flex-col items-start divide-solid divide-y divide-[--hl-md]">
+            <div className={`flex w-full h-[${INSOMNIA_TAB_HEIGHT}px]`}>
+              <Breadcrumbs className='flex h-[--line-height-sm] list-none items-center m-0 gap-2 px-[--padding-sm] font-bold w-full'>
                 <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
                   <NavLink
                     data-testid="project"
@@ -776,6 +794,13 @@ export const Debug: FC = () => {
                 </Breadcrumb>
               </Breadcrumbs>
             </div>
+            {isDesign(activeWorkspace) && (
+              <DocumentTab
+                organizationId={organizationId}
+                projectId={projectId}
+                workspaceId={workspaceId}
+              />
+            )}
             <div className='flex flex-col items-start gap-2 p-[--padding-sm] w-full'>
               <div className="flex w-full items-center gap-2 justify-between">
                 <EnvironmentPicker
@@ -1125,7 +1150,8 @@ export const Debug: FC = () => {
         </div>
       </Panel>
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
-      <Panel>
+      <Panel className='flex flex-col'>
+        <OrganizationTabList currentPage='debug' />
         <PanelGroup autoSaveId="insomnia-panels" id="insomnia-panels" direction={direction}>
           <Routes>
             <Route
@@ -1245,6 +1271,12 @@ const CollectionGridListItem = ({
 
   const isSelected = item.doc._id === params.requestId || item.doc._id === params.requestGroupId;
 
+  const scrollIntoView = useCallback((node: HTMLDivElement) => {
+    if (isSelected && node) {
+      scrollElementIntoView(node, { behavior: 'instant' });
+    }
+  }, [isSelected]);
+
   return (
     <GridListItem
       id={item.doc._id}
@@ -1255,6 +1287,7 @@ const CollectionGridListItem = ({
       ref={triggerRef}
     >
       <div
+        ref={scrollIntoView}
         onContextMenu={e => {
           e.preventDefault();
           setIsContextMenuOpen(true);

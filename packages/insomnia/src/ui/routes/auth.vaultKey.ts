@@ -3,6 +3,7 @@ import { ipcRenderer } from 'electron';
 import { type ActionFunction } from 'react-router-dom';
 
 import { userSession as sessionModel } from '../../models';
+import { removeAllSecrets } from '../../models/environment';
 import type { UserSession } from '../../models/user-session';
 import { base64encode, saveVaultKeyIfNecessary } from '../../utils/vault';
 import type { ToastNotification } from '../components/toast';
@@ -171,7 +172,7 @@ export const updateVaultSaltAction: ActionFunction = async () => {
 };
 
 export const clearVaultKeyAction: ActionFunction = async ({ request }) => {
-  const { sessionId: resetVaultClientSessionId } = await request.json();
+  const { organizations = [], sessionId: resetVaultClientSessionId } = await request.json();
 
   const userSession = await sessionModel.getOrCreate();
   const { id: sessionId } = userSession;
@@ -187,6 +188,8 @@ export const clearVaultKeyAction: ActionFunction = async ({ request }) => {
   }) || {};
   // User on other device has reset the vault key.
   if (resetVaultClientSessionId !== sessionId) {
+    // remove all secret environment variables
+    await removeAllSecrets(organizations);
     // Update vault salt and delelte vault key from session
     sessionModel.update(userSession, { vaultSalt: newVaultSalt, vaultKey: '' });
     // show notification

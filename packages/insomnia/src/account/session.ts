@@ -156,6 +156,12 @@ export async function setSessionData(
   return sessionData;
 }
 
+/** Update the session data with vault salt and vault key */
+export async function setVaultSessionData(vaultSalt: string, vaultKey: string) {
+  const userData = await userSession.getOrCreate();
+  await userSession.update(userData, { vaultSalt, vaultKey });
+}
+
 // ~~~~~~~~~~~~~~~~ //
 // Helper Functions //
 // ~~~~~~~~~~~~~~~~ //

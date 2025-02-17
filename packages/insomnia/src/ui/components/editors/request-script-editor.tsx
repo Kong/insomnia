@@ -1,5 +1,5 @@
 import type { Snippet } from 'codemirror';
-import { CookieObject, Environment, Execution, InsomniaObject, Request as ScriptRequest, RequestInfo, Url, Variables } from 'insomnia-sdk';
+import { CookieObject, Environment, Execution, InsomniaObject, Request as ScriptRequest, RequestInfo, Url, Variables, Vault } from 'insomnia-sdk';
 import { ParentFolders } from 'insomnia-sdk/src/objects/folders';
 import React, { type FC, useRef } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuTrigger, Popover, Section, Toolbar } from 'react-aria-components';
@@ -545,6 +545,7 @@ export const RequestScriptEditor: FC<Props> = ({
         iterationDataVars: new Environment('data', {}),
         localVars: new Environment('data', {}),
       }),
+      vault: settings.enableVaultInScripts ? new Vault('vault', {}, settings.enableVaultInScripts) : undefined,
       request: new ScriptRequest({
         url: new Url('http://placeholder.com'),
       }),

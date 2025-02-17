@@ -21,7 +21,7 @@
     "sourceMap": true,
     /* Runs in the DOM NOTE: this is inconsistent with reality */
     "lib": [
-      "ES2021",
+      "ES2023",
       "DOM",
       "DOM.Iterable"
     ],

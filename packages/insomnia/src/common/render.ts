@@ -4,7 +4,7 @@ import orderedJSON from 'json-order';
 
 import * as models from '../models';
 import type { CookieJar } from '../models/cookie-jar';
-import type { Environment, UserUploadEnvironment } from '../models/environment';
+import { type Environment, type UserUploadEnvironment, vaultEnvironmentPath, vaultEnvironmentRuntimePath } from '../models/environment';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
 import { isProject, type Project } from '../models/project';
 import { PATH_PARAMETER_REGEX, type Request } from '../models/request';
@@ -20,7 +20,7 @@ import { database as db } from './database';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
-export type RenderPurpose = 'send' | 'general' | 'no-render';
+export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
 export const RENDER_PURPOSE_SEND: RenderPurpose = 'send';
 export const RENDER_PURPOSE_GENERAL: RenderPurpose = 'general';
 export const RENDER_PURPOSE_NO_RENDER: RenderPurpose = 'no-render';
@@ -214,7 +214,23 @@ export async function buildRenderContext(
   }
 
   // Render the context with itself to fill in the rest.
-  const finalRenderContext = renderContext;
+  const finalRenderContext = await templatingUtils.maskOrDecryptContextIfNecessary(renderContext as Record<string, any> & BaseRenderContext);
+  // Merge all vault environments under vaultEnvironmentPath to vaultEnvironmentRuntimePath which is more human readable.
+  // This will also keep all legacy environment variables defined under the vaultEnvironmentRuntimePath.
+  if (finalRenderContext[vaultEnvironmentPath]) {
+    if (finalRenderContext[vaultEnvironmentRuntimePath] && typeof finalRenderContext[vaultEnvironmentRuntimePath] !== 'object') {
+      const errorMsg = `${vaultEnvironmentRuntimePath} is a reserved key for insomnia vault, please rename your environment with vault as key.`;
+      const newError = new templating.RenderError(errorMsg);
+      newError.type = 'render';
+      newError.message = errorMsg;
+      throw newError;
+    }
+    finalRenderContext[vaultEnvironmentRuntimePath] = {
+      ...finalRenderContext[vaultEnvironmentPath],
+      ...finalRenderContext[vaultEnvironmentRuntimePath],
+    };
+    delete finalRenderContext[vaultEnvironmentPath];
+  };
 
   const keys = _getOrderedEnvironmentKeys(finalRenderContext);
 
@@ -381,7 +397,7 @@ interface BaseRenderContextOptions {
   ignoreUndefinedEnvVariable?: boolean;
 }
 
-interface RenderContextOptions extends BaseRenderContextOptions, Partial<RenderRequest<Request | GrpcRequest | WebSocketRequest>> {
+export interface RenderContextOptions extends BaseRenderContextOptions, Partial<RenderRequest<Request | GrpcRequest | WebSocketRequest>> {
   ancestors?: RenderContextAncestor[];
 }
 export async function getRenderContext(
@@ -542,7 +558,7 @@ export async function getRenderContext(
 interface BaseRenderContext {
   getMeta: () => {};
   getKeysContext: () => {};
-  getPurpose: () => string | undefined;
+  getPurpose: () => RenderPurpose | undefined;
   getExtraInfo: (key: string) => string | null;
   getEnvironmentId: () => string | undefined;
   getGlobalEnvironmentId: () => string | undefined;
