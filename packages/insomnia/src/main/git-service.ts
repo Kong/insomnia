@@ -1184,6 +1184,7 @@ export const deleteGitBranchAction = async ({
 
 export interface PushToGitRemoteResult {
   errors?: string[];
+  gitRepository?: GitRepository;
 }
 
 export const pushToGitRemoteAction = async ({
@@ -1206,16 +1207,18 @@ export const pushToGitRemoteAction = async ({
     if (err instanceof Errors.HttpError) {
       return {
         errors: [`${err.message}, ${err.data.response}`],
+        gitRepository,
       };
     }
     const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
 
-    return { errors: [errorMessage] };
+    return { errors: [errorMessage], gitRepository };
   }
   // If nothing to push, display that to the user
   if (!canPush) {
     return {
       errors: ['Nothing to push'],
+      gitRepository,
     };
   }
 
@@ -1249,11 +1252,13 @@ export const pushToGitRemoteAction = async ({
     if (err instanceof Errors.PushRejectedError) {
       return {
         errors: [`Push Rejected, ${errorMessage}`],
+        gitRepository,
       };
     }
 
     return {
       errors: [`Error Pushing Repository, ${errorMessage}`],
+      gitRepository,
     };
   }
 

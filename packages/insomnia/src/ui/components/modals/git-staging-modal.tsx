@@ -2,8 +2,10 @@ import React, { type FC, useEffect } from 'react';
 import { Button, Dialog, GridList, GridListItem, Heading, Label, Modal, ModalOverlay, TextArea, TextField, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
+import type { GitRepository } from '../../../models/git-repository';
 import type { GitChangesLoaderData, GitDiffResult } from '../../routes/git-actions';
 import { DiffEditor } from '../diff-view-editor';
+import { ConfigLink } from '../github-app-config-link';
 import { Icon } from '../icon';
 import { showAlert } from '.';
 
@@ -101,7 +103,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
     statusNames: {},
   };
 
-  const { Form, formAction, state, data } = useFetcher<{ errors?: string[] }>();
+  const { Form, formAction, state, data } = useFetcher<{ errors?: string[]; gitRepository: GitRepository }>();
 
   const isCreatingSnapshot = state === 'loading' && formAction === '/organization/:organizationId/project/:projectId/workspace/:workspaceId/git/commit';
   const isPushing = state === 'loading' && formAction === '/organization/:organizationId/project/:projectId/workspace/:workspaceId/git/commit-and-push';
@@ -185,6 +187,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                     {data && data.errors && data.errors.length > 0 && (
                       <p className="bg-opacity-20 text-sm text-[--color-font-danger] p-2 rounded-sm bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))]">
                         <Icon icon="exclamation-triangle" /> {data.errors.join('\n')}
+                        <ConfigLink small {...data} />
                       </p>
                     )}
                   </Form>

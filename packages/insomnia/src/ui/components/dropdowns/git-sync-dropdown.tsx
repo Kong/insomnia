@@ -16,6 +16,7 @@ import {
   pullFromGitRemote,
   type PushToGitRemoteResult,
 } from '../../routes/git-actions';
+import { ConfigLink } from '../github-app-config-link';
 import { Icon } from '../icon';
 import { showAlert, showModal } from '../modals';
 import { GitBranchesModal } from '../modals/git-branches-modal';
@@ -92,10 +93,13 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
     if (errors.length > 0) {
       showAlert({
         title: 'Push Failed',
-        message: errors.join('\n'),
+        message: <>
+          {errors.join('\n')}
+          <ConfigLink {...gitPushFetcher.data} />
+        </>,
       });
     }
-  }, [gitPushFetcher.data?.errors]);
+  }, [gitPushFetcher.data]);
 
   useEffect(() => {
     const gitRepoDataErrors =
@@ -104,12 +108,15 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
         : [];
     const errors = [...gitRepoDataErrors];
     if (errors.length > 0) {
+      if (isGitRepoSettingsModalOpen) { // user just clicked 'Reset'
+        return;
+      }
       showAlert({
         title: 'Loading of Git Repository Failed',
         message: errors.join('\n'),
       });
     }
-  }, [gitRepoDataFetcher.data]);
+  }, [isGitRepoSettingsModalOpen, gitRepoDataFetcher.data]);
 
   useEffect(() => {
     const errors = [...(gitCheckoutFetcher.data?.errors ?? [])];
@@ -211,7 +218,11 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
           } else {
             showAlert({
               title: 'Pull Failed',
-              message: err.message,
+              message: <>
+                {err.message}
+                <ConfigLink {...{ gitRepository, errors: [err.message] }} />
+              </>,
+
               bodyClassName: 'whitespace-break-spaces',
             });
           }

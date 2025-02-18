@@ -229,6 +229,7 @@ export const resetGitRepoAction: ActionFunction = async ({ params }) => {
 
 export interface CommitToGitRepoResult {
   errors?: string[];
+  gitRepository?: GitRepository;
 }
 
 export const commitToGitRepoAction: ActionFunction = async ({
@@ -353,6 +354,7 @@ export const deleteGitBranchAction: ActionFunction = async ({
 
 export interface PushToGitRemoteResult {
   errors?: string[];
+  gitRepository?: GitRepository;
 }
 
 export const pushToGitRemoteAction: ActionFunction = async ({

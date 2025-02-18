@@ -1,24 +1,25 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button as ComboButton, ComboBox, Input, ListBox, ListBoxItem, Popover } from 'react-aria-components';
 
 // import { useFetcher, useParams } from 'react-router-dom';
 import { getAppWebsiteBaseURL, getGitHubRestApiUrl } from '../../../../common/constants';
+import { isGitHubAppUserToken } from '../../github-app-config-link';
 import { Icon } from '../../icon';
 import { Button } from '../../themed-button';
+import { showError } from '..';
 
 // fragment of what we receive from the GitHub API
 interface GitHubRepository {
   id: string;
   full_name: string;
   clone_url: string;
+  permissions: {
+    push: boolean;
+    pull: boolean;
+  };
 }
 
 const GITHUB_USER_REPOS_URL = `${getGitHubRestApiUrl()}/user/repos`;
-
-function isGitHubAppUserToken(token: string) {
-  // old oauth tokens start with 'gho_' and app user tokens start with 'ghu_'
-  return token.startsWith('ghu_');
-}
 
 export const GitHubRepositorySelect = (
   { uri, token }: {
@@ -28,23 +29,30 @@ export const GitHubRepositorySelect = (
   const [loading, setLoading] = useState(false);
   const [repositories, setRepositories] = useState<GitHubRepository[]>([]);
   const [selectedRepository, setSelectedRepository] = useState<GitHubRepository | null>(null);
+  const [cannotFindRepository, setCannotFindRepository] = useState(false);
+  const fetchOpts = useMemo(() => ({
+    headers: {
+      Authorization: `token ${token}`,
+    },
+  }), [token]);
 
   // this method assumes that GitHub will not change how it paginates this endpoint
   const fetchRepositories = useCallback(async (url: string = `${GITHUB_USER_REPOS_URL}?per_page=100`) => {
     try {
-      const opts = {
-        headers: {
-          Authorization: `token ${token}`,
-        },
-      };
-      const response = await fetch(url, opts);
+      const response = await fetch(url, fetchOpts);
 
       if (!response.ok) {
-        throw new Error('Failed to fetch repositories');
+        const raw = await response.text();
+        if (response.status === 401) {
+          throw new Error(`User token not authorized to fetch repositories, please sign out and back in.\nResponse: ${raw}`);
+        }
+        throw new Error(`Failed to fetch repositories: ${response.statusText}\nResponse: ${raw}`);
       }
 
       const data = await response.json();
-      setRepositories(repos => ([...repos, ...data]));
+      // no point in showing repositories that we can't at least pull from
+      const pullableRepos = data.filter((repo: GitHubRepository) => repo.permissions.pull);
+      setRepositories(repos => ([...repos, ...pullableRepos]));
       const link = response.headers.get('link');
       if (link && link.includes('rel="last"')) {
         const last = link.match(/<([^>]+)>; rel="last"/)?.[1];
@@ -53,7 +61,7 @@ export const GitHubRepositorySelect = (
           const lastPage = lastUrl.searchParams.get('page');
           if (lastPage) {
             const pages = Number(lastPage);
-            const pageList = await Promise.all(Array.from({ length: pages - 1 }, (_, i) => fetch(`${GITHUB_USER_REPOS_URL}?per_page=100&page=${i + 2}`, opts)));
+            const pageList = await Promise.all(Array.from({ length: pages - 1 }, (_, i) => fetch(`${GITHUB_USER_REPOS_URL}?per_page=100&page=${i + 2}`, fetchOpts)));
             for (const page of pageList) {
               const pageData = await page.json();
               setRepositories(repos => ([...repos, ...pageData]));
@@ -69,12 +77,18 @@ export const GitHubRepositorySelect = (
         return;
       }
       setLoading(false);
-    } catch (err) {
+    } catch (error) {
       setLoading(false);
+      showError({
+        error,
+        title: 'Failure listing GitHub repositories',
+        message: error.message.split('\n')[0],
+      });
     }
-  }, [token]);
+  }, [fetchOpts]);
 
   useEffect(() => {
+
     if (!token || uri) {
       return;
     }
@@ -83,6 +97,26 @@ export const GitHubRepositorySelect = (
 
     fetchRepositories();
   }, [token, uri, fetchRepositories]);
+
+  useEffect(() => {
+    if (!uri) {
+      setCannotFindRepository(false);
+      return;
+    }
+    if ((!selectedRepository) && token && isGitHubAppUserToken(token)) {
+      const [owner, name] = uri.replace('.git', '').split('/').slice(-2); // extracts the owner + name
+      const apiUrl = `${getGitHubRestApiUrl()}/repos/${owner}/${name}`;
+      fetch(apiUrl, fetchOpts)
+        .then(response => {
+          setCannotFindRepository(response.status === 404);
+          if (response.ok) {
+            return response.json();
+          }
+          return null;
+        }).then(setSelectedRepository);
+      return;
+    }
+  }, [selectedRepository, token, uri, fetchOpts]);
 
   return (
     <>
@@ -133,10 +167,14 @@ export const GitHubRepositorySelect = (
           <Icon icon="refresh" />
         </Button>
       </div>
-        {isGitHubAppUserToken(token) && <div className="flex gap-1 text-sm">
-          Can't find a repository?
-          <a className="underline text-purple-500" href={`${getAppWebsiteBaseURL()}/oauth/github-app`}>Configure the App <i className="fa-solid fa-up-right-from-square" /></a>
-        </div>}</>}
+        {isGitHubAppUserToken(token) &&
+          <div className="flex gap-1 text-sm">
+            Can't find a repository?
+            <a className="underline text-purple-500" href={`${getAppWebsiteBaseURL()}/oauth/github-app`}>Configure the App <i className="fa-solid fa-up-right-from-square" /></a>
+          </div>}
+      </>}
+      {cannotFindRepository && <div className="text-sm text-red-500"><Icon icon="warning" /> Repository information could not be retrieved. Please <code>Reset</code> and select a different repository.</div>}
+      {selectedRepository !== null && !selectedRepository.permissions.push && <div className="text-sm text-orange-500 mt-2"><Icon icon="warning" /> You do not have write access to this repository</div>}
     </>
   );
 };

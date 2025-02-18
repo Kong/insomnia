@@ -206,7 +206,7 @@ const GitHubSignInForm = () => {
             </div>
             <div className="form-row">
               <input name="link" />
-              <Button type="submit" name="add-token">Authenticate</Button>
+              <Button className="bg-violet-400 bold p-2 rounded" type="submit" name="add-token">Authenticate</Button>
             </div>
           </label>
           {error && (

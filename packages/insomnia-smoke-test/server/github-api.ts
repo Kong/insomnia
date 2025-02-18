@@ -7,6 +7,10 @@ export default (app: Application) => {
         id: 123456,
         full_name: 'kong-test/sleepless',
         clone_url: 'https://github.com/kong-test/sleepless.git',
+        permissions: {
+          push: true,
+          pull: true,
+        },
       },
     ]);
   });
