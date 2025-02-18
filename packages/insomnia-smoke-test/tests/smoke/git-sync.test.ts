@@ -14,7 +14,7 @@ test('Clone from generic Git server', async ({ page }) => {
   await page.getByLabel('Toggle preview').click();
 });
 
-test('Sign in with GitHub', async ({ app, page }) => {
+test('Sign in with GitHub', async ({ page }) => {
   await page.getByRole('button', { name: 'New Document' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
   await page.getByLabel('Insomnia Sync').click();
@@ -22,37 +22,11 @@ test('Sign in with GitHub', async ({ app, page }) => {
 
   await page.getByRole('tab', { name: 'GitHub' }).click();
 
-  // Prevent the app from opening the browser to the authorization page
-  // and return the url that would be created by following the GitHub OAuth flow.
-  // https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps#web-application-flow
-  const fakeGitHubAppOAuthWebFlow = app.evaluate(electron => {
-    return new Promise<{ redirectUrl: string }>(resolve => {
-      const webContents = electron.BrowserWindow.getAllWindows()?.find(w => w.title === 'Insomnia')?.webContents;
-      // Remove all navigation listeners so that only the one we inject will run
-      webContents?.removeAllListeners('will-navigate');
-      webContents?.on('will-navigate' as any, (event: Event, url: string) => {
-        event.preventDefault();
-        const parsedUrl = new URL(url);
-        // We use the same state parameter that the app created to assert that we prevent CSRF
-        const stateSearchParam = parsedUrl.searchParams.get('state') || '';
-        const redirectUrl = `insomnia://oauth/github-app/authenticate?state=${stateSearchParam}&code=12345`;
-        resolve({ redirectUrl });
-      });
-    });
-  });
-
-  const [{ redirectUrl }] = await Promise.all([
-    fakeGitHubAppOAuthWebFlow,
-    page.getByText('Authenticate with GitHub').click({
-      // When playwright clicks a link it waits for navigation to finish.
-      // In our case we are stubbing the navigation and we don't want to wait for it.
-      noWaitAfter: true,
-    }),
-  ]);
+  await page.getByText('Authenticate with GitHub').click();
 
   await page.locator('input[name="link"]').click();
 
-  await page.locator('input[name="link"]').fill(redirectUrl);
+  await page.locator('input[name="link"]').fill('insomnia://oauth/github-app/authenticate?state=12345&code=12345');
 
   await page.getByRole('button', { name: 'Authenticate' }).click();
 

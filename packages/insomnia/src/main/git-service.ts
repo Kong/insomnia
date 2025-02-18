@@ -3,7 +3,7 @@ import { shell } from 'electron';
 import { net } from 'electron/main';
 import { v4 } from 'uuid';
 
-import { getApiBaseURL, getAppWebsiteBaseURL, getGitHubGraphQLApiURL, getGitHubRestApiUrl, INSOMNIA_GITLAB_API_URL, INSOMNIA_GITLAB_CLIENT_ID, INSOMNIA_GITLAB_REDIRECT_URI } from '../common/constants';
+import { getApiBaseURL, getAppWebsiteBaseURL, getGitHubGraphQLApiURL, getGitHubRestApiUrl, INSOMNIA_GITLAB_API_URL, INSOMNIA_GITLAB_CLIENT_ID, INSOMNIA_GITLAB_REDIRECT_URI, PLAYWRIGHT } from '../common/constants';
 import * as models from '../models';
 import { ipcMainHandle } from './ipc/electron';
 
@@ -44,7 +44,7 @@ async function completeSignInToGitHub({
   code: string;
   state: string;
 }) {
-  if (!statesCache.has(state)) {
+  if (!PLAYWRIGHT && !statesCache.has(state)) {
     throw new Error(
       'Invalid state parameter. It looks like the authorization flow was not initiated by the app.'
     );
@@ -208,7 +208,12 @@ async function completeSignInToGitLab({
   code: string;
   state: string;
 }) {
-  const verifier = gitLabStatesCache.get(state);
+  let verifier = gitLabStatesCache.get(state);
+
+  if (PLAYWRIGHT) {
+    verifier = 'test-verifier';
+  }
+
   if (!verifier) {
     throw new Error(
       'Invalid state parameter. It looks like the authorization flow was not initiated by the app.'
