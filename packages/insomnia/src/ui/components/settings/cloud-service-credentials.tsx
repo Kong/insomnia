@@ -61,7 +61,7 @@ export const CloudServiceCredentialList = () => {
     setModalState({ show: true, provider: key as CloudProviderName });
   };
 
-  if (isEnterprisePlan) {
+  if (!isEnterprisePlan) {
     return (
       <UpgradeNotice
         isOwner={isOwner}
