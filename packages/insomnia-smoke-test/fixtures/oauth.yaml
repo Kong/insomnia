@@ -1,371 +1,295 @@
-_type: export
-__export_format: 4
-__export_date: 2022-02-24T01:02:16.537Z
-__export_source: insomnia.desktop.app:v2022.1.0-beta.0
-resources:
-  - _id: req_8f029a22e56341748fa92ad14851a7be
-    parentId: fld_9fd59e794fe5455692a3c33af67f7668
-    modified: 1715935264320
-    created: 1715935207910
-    url: "http://127.0.0.1:4010/oidc/me"
-    name: Request with Inherited Auth
-    description: ""
-    method: GET
-    body: {}
-    preRequestScript: ""
-    parameters: []
-    headers:
-      - name: User-Agent
-        value: insomnia/9.2.0
-    authentication: {}
-    metaSortKey: -1715935264244
-    isPrivate: false
-    pathParameters: []
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: fld_9fd59e794fe5455692a3c33af67f7668
-    parentId: fld_e45987966c224b63b68b09b34687209c
-    modified: 1715935256495
-    created: 1715935256495
-    name: Inherit Auth Folder
-    description: ""
-    environment: {}
-    environmentPropertyOrder: null
-    metaSortKey: -1715935256495
-    preRequestScript: ""
-    afterResponseScript: ""
-    authentication: {}
-    _type: request_group
-  - _id: fld_e45987966c224b63b68b09b34687209c
-    parentId: wrk_392055e2aa29457b9d2904396cd7631f
-    modified: 1715935142556
-    created: 1715935030239
-    name: Folder Level Auth Code
-    description: ""
-    environment: {}
-    environmentPropertyOrder: null
-    metaSortKey: -1715935030239
-    preRequestScript: ""
-    afterResponseScript: ""
+type: collection.insomnia.rest/5.0
+name: OAuth Testing
+meta:
+  id: wrk_d28d3ba65f4e454b93bc03cd58c07eee
+  created: 1736851729088
+  modified: 1736851729088
+collection:
+  - name: Authorization Code
+    meta:
+      id: fld_9006c921b6f640d3ab14b762aa7df47e
+      created: 1645545086145
+      modified: 1645545086145
+      sortKey: -1645545086145
+    children:
+      - url: http://127.0.0.1:4010/oidc/me
+        name: PKCE SHA256
+        meta:
+          id: req_cd53dd0ce6df41358f8cbed284649a2a
+          created: 1645220819802
+          modified: 1645664217727
+          isPrivate: false
+          sortKey: -1000000187.5
+        method: GET
+        authentication:
+          type: oauth2
+          disabled: false
+          grantType: authorization_code
+          accessTokenUrl: http://127.0.0.1:4010/oidc/token
+          authorizationUrl: http://127.0.0.1:4010/oidc/auth
+          clientId: authorization_code_pkce
+          clientSecret: secret
+          scope: openid offline_access
+          redirectUrl: http://127.0.0.1:4010/callback
+          usePkce: true
+          responseType: id_token
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://127.0.0.1:4010/oidc/me
+        name: PKCE Plain
+        meta:
+          id: req_d20ba17ff9a64e6d81af42dc44d247d1
+          created: 1645543526615
+          modified: 1645664218264
+          isPrivate: false
+          sortKey: -1000000137.5
+        method: GET
+        authentication:
+          type: oauth2
+          disabled: false
+          grantType: authorization_code
+          accessTokenUrl: http://127.0.0.1:4010/oidc/token
+          authorizationUrl: http://127.0.0.1:4010/oidc/auth
+          clientId: authorization_code_pkce
+          clientSecret: secret
+          scope: openid offline_access
+          redirectUrl: http://127.0.0.1:4010/callback
+          credentialsInBody: false
+          usePkce: true
+          pkceMethod: plain
+          responseType: id_token
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://127.0.0.1:4010/oidc/me
+        name: No PKCE
+        meta:
+          id: req_31e01c718c594565850908cf51bbe6a1
+          created: 1645544268127
+          modified: 1645664215605
+          isPrivate: false
+          sortKey: -1000000237.5
+        method: GET
+        authentication:
+          type: oauth2
+          disabled: false
+          grantType: authorization_code
+          accessTokenUrl: http://127.0.0.1:4010/oidc/token
+          authorizationUrl: http://127.0.0.1:4010/oidc/auth
+          clientId: authorization_code
+          clientSecret: secret
+          scope: openid offline_access
+          redirectUrl: http://127.0.0.1:4010/callback
+          credentialsInBody: false
+          usePkce: false
+          responseType: id_token
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Implicit
+    meta:
+      id: fld_d3d7afda919d4fc999a87554fa6ceee9
+      created: 1645545802354
+      modified: 1645545802354
+      sortKey: -1644942229994
+    children:
+      - url: http://127.0.0.1:4010/oidc/id-token
+        name: ID Token
+        meta:
+          id: req_5bd104ef02ef4a01a515cb3b21eb0530
+          created: 1645545802379
+          modified: 1645664218947
+          isPrivate: false
+          sortKey: -1000000237.5
+        method: GET
+        authentication:
+          type: oauth2
+          disabled: false
+          grantType: implicit
+          accessTokenUrl: http://127.0.0.1:4010/oidc/token
+          authorizationUrl: http://127.0.0.1:4010/oidc/auth
+          clientId: implicit
+          clientSecret: secret
+          scope: openid
+          redirectUrl: http://127.0.0.1:4010/callback
+          credentialsInBody: false
+          usePkce: false
+          responseType: id_token
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://127.0.0.1:4010/oidc/me
+        name: ID and Access Token
+        meta:
+          id: req_deac6c34ec484b1a8d213fb5fd0f00e3
+          created: 1645567186775
+          modified: 1645664219446
+          isPrivate: false
+          sortKey: -1000000212.5
+        method: GET
+        authentication:
+          type: oauth2
+          disabled: false
+          grantType: implicit
+          accessTokenUrl: http://127.0.0.1:4010/oidc/token
+          authorizationUrl: http://127.0.0.1:4010/oidc/auth
+          clientId: implicit
+          clientSecret: secret
+          scope: openid
+          redirectUrl: http://127.0.0.1:4010/callback
+          credentialsInBody: false
+          usePkce: false
+          responseType: id_token token
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: Folder Level Auth Code
+    meta:
+      id: fld_04ad0c7342394923b60f38f5484747e2
+      created: 1715935030239
+      modified: 1715935142556
+      sortKey: -1715935030239
+    children:
+      - name: Inherit Auth Folder
+        meta:
+          id: fld_abb185f50c56478f9a5ad0858285b775
+          created: 1715935256495
+          modified: 1715935256495
+          sortKey: -1715935256495
+        children:
+          - url: http://127.0.0.1:4010/oidc/me
+            name: Request with Inherited Auth
+            meta:
+              id: req_e0d7fb96d22c4848aa620fe64d13b0dd
+              created: 1715935207910
+              modified: 1715935264320
+              isPrivate: false
+              sortKey: -1715935264244
+            method: GET
+            headers:
+              - name: User-Agent
+                value: insomnia/9.2.0
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
     authentication:
-      accessTokenUrl: "http://127.0.0.1:4010/oidc/token"
-      authorizationUrl: "http://127.0.0.1:4010/oidc/auth"
-      clientId: "authorization_code"
-      clientSecret: "secret"
+      type: oauth2
       disabled: false
       grantType: authorization_code
-      redirectUrl: "http://127.0.0.1:4010/callback"
-      responseType: id_token
+      accessTokenUrl: http://127.0.0.1:4010/oidc/token
+      authorizationUrl: http://127.0.0.1:4010/oidc/auth
+      clientId: authorization_code
+      clientSecret: secret
       scope: openid offline_access
-      state: ""
-      type: oauth2
+      redirectUrl: http://127.0.0.1:4010/callback
+      credentialsInBody: false
       usePkce: false
-      credentialsInBody: "false"
-      tokenPrefix: ""
-    _type: request_group
-  - _id: req_54f2824040c847ebaf3ed6d080111b4e
-    parentId: fld_0e50ba4426bb4540ade91e0525ea1f29
-    modified: 1645664215605
-    created: 1645544268127
-    url: "http://127.0.0.1:4010/oidc/me"
-    name: No PKCE
-    description: ""
-    method: GET
-    body: {}
-    parameters: []
-    headers: []
-    authentication:
-      accessTokenUrl: "http://127.0.0.1:4010/oidc/token"
-      authorizationUrl: "http://127.0.0.1:4010/oidc/auth"
-      clientId: "authorization_code"
-      clientSecret: "secret"
-      disabled: false
-      grantType: authorization_code
-      redirectUrl: "http://127.0.0.1:4010/callback"
       responseType: id_token
-      scope: openid offline_access
-      state: ""
-      type: oauth2
-      usePkce: false
-      credentialsInBody: "false"
-      tokenPrefix: ""
-    metaSortKey: -1000000237.5
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: fld_0e50ba4426bb4540ade91e0525ea1f29
-    parentId: wrk_392055e2aa29457b9d2904396cd7631f
-    modified: 1645545086145
-    created: 1645545086145
-    name: Authorization Code
-    description: ""
-    environment: {}
-    environmentPropertyOrder: null
-    metaSortKey: -1645545086145
-    _type: request_group
-  - _id: wrk_392055e2aa29457b9d2904396cd7631f
-    parentId: null
-    modified: 1645220798234
-    created: 1645220798234
-    name: OAuth Testing
-    description: ""
-    scope: collection
-    _type: workspace
-  - _id: req_b728f4cbb8694a0d96ecf4753f621964
-    parentId: fld_0e50ba4426bb4540ade91e0525ea1f29
-    modified: 1645664217727
-    created: 1645220819802
-    url: "http://127.0.0.1:4010/oidc/me"
-    name: PKCE SHA256
-    description: ""
-    method: GET
-    body: {}
-    parameters: []
-    headers: []
-    authentication:
-      accessTokenUrl: "http://127.0.0.1:4010/oidc/token"
-      authorizationUrl: "http://127.0.0.1:4010/oidc/auth"
-      clientId: "authorization_code_pkce"
-      clientSecret: "secret"
-      disabled: false
-      grantType: authorization_code
-      redirectUrl: "http://127.0.0.1:4010/callback"
-      responseType: id_token
-      scope: openid offline_access
-      state: ""
-      type: oauth2
-      usePkce: true
-    metaSortKey: -1000000187.5
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_fe74f7e6d028450ca347e3c07cf79c75
-    parentId: fld_0e50ba4426bb4540ade91e0525ea1f29
-    modified: 1645664218264
-    created: 1645543526615
-    url: "http://127.0.0.1:4010/oidc/me"
-    name: PKCE Plain
-    description: ""
-    method: GET
-    body: {}
-    parameters: []
-    headers: []
-    authentication:
-      accessTokenUrl: "http://127.0.0.1:4010/oidc/token"
-      authorizationUrl: "http://127.0.0.1:4010/oidc/auth"
-      clientId: "authorization_code_pkce"
-      clientSecret: "secret"
-      disabled: false
-      grantType: authorization_code
-      redirectUrl: "http://127.0.0.1:4010/callback"
-      responseType: id_token
-      scope: openid offline_access
-      state: ""
-      type: oauth2
-      usePkce: true
-      pkceMethod: plain
-      credentialsInBody: "false"
-    metaSortKey: -1000000137.5
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_a6563c5d82e644bda38083717cf0c2c5
-    parentId: fld_d34790add1584643b6688c3add5bbe85
-    modified: 1645664218947
-    created: 1645545802379
-    url: "http://127.0.0.1:4010/oidc/id-token"
-    name: ID Token
-    description: ""
-    method: GET
-    body: {}
-    parameters: []
-    headers: []
-    authentication:
-      accessTokenUrl: "http://127.0.0.1:4010/oidc/token"
-      authorizationUrl: "http://127.0.0.1:4010/oidc/auth"
-      clientId: "implicit"
-      clientSecret: "secret"
-      disabled: false
-      grantType: implicit
-      redirectUrl: "http://127.0.0.1:4010/callback"
-      responseType: id_token
-      scope: openid
-      state: ""
-      type: oauth2
-      usePkce: false
-      credentialsInBody: "false"
-      tokenPrefix: ""
-    metaSortKey: -1000000237.5
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: fld_d34790add1584643b6688c3add5bbe85
-    parentId: wrk_392055e2aa29457b9d2904396cd7631f
-    modified: 1645545802354
-    created: 1645545802354
-    name: Implicit
-    description: ""
-    environment: {}
-    environmentPropertyOrder: null
-    metaSortKey: -1644942229994
-    _type: request_group
-  - _id: req_1ba50492c71445e398f63a7f00aee9fd
-    parentId: fld_d34790add1584643b6688c3add5bbe85
-    modified: 1645664219446
-    created: 1645567186775
-    url: "http://127.0.0.1:4010/oidc/me"
-    name: ID and Access Token
-    description: ""
-    method: GET
-    body: {}
-    parameters: []
-    headers: []
-    authentication:
-      accessTokenUrl: "http://127.0.0.1:4010/oidc/token"
-      authorizationUrl: "http://127.0.0.1:4010/oidc/auth"
-      clientId: "implicit"
-      clientSecret: "secret"
-      disabled: false
-      grantType: implicit
-      redirectUrl: "http://127.0.0.1:4010/callback"
-      responseType: id_token token
-      scope: openid
-      state: ""
-      type: oauth2
-      usePkce: false
-      credentialsInBody: "false"
-      tokenPrefix: ""
-    metaSortKey: -1000000212.5
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_2b14ff638149403bb1f5ea77a4e9427f
-    parentId: wrk_392055e2aa29457b9d2904396cd7631f
-    modified: 1645664219861
-    created: 1645637343873
-    url: "http://127.0.0.1:4010/oidc/client-credential"
-    name: Client Credentials
-    description: ""
-    method: GET
-    body: {}
-    parameters: []
-    headers: []
-    authentication:
-      accessTokenUrl: "http://127.0.0.1:4010/oidc/token"
-      authorizationUrl: "http://127.0.0.1:4010/oidc/auth"
-      clientId: "client_credentials"
-      clientSecret: "secret"
-      disabled: false
-      grantType: client_credentials
-      redirectUrl: "http://127.0.0.1:4010/callback"
-      responseType: id_token
-      scope: openid
-      state: ""
-      type: oauth2
-      usePkce: false
-      credentialsInBody: "false"
-      tokenPrefix: ""
-      username: foo
-      password: bar
-    metaSortKey: -1644716158937.375
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_cf8a55d9b4144632a5528a5147a24540
-    parentId: wrk_392055e2aa29457b9d2904396cd7631f
-    modified: 1645664220407
-    created: 1645636233910
-    url: "http://127.0.0.1:4010/oidc/me"
+  - url: http://127.0.0.1:4010/oidc/me
     name: Resource Owner Password Credentials
-    description: ""
+    meta:
+      id: req_545075407a01471c9b5034648789dc9d
+      created: 1645636233910
+      modified: 1645664220407
+      isPrivate: false
+      sortKey: -1644603123409.0625
     method: GET
-    body: {}
-    parameters: []
-    headers: []
     authentication:
-      accessTokenUrl: "http://127.0.0.1:4010/oidc/token"
-      authorizationUrl: "http://127.0.0.1:4010/oidc/auth"
-      clientId: "resource_owner"
-      clientSecret: "secret"
+      type: oauth2
       disabled: false
       grantType: password
-      redirectUrl: "http://127.0.0.1:4010/callback"
-      responseType: id_token
+      accessTokenUrl: http://127.0.0.1:4010/oidc/token
+      authorizationUrl: http://127.0.0.1:4010/oidc/auth
+      clientId: resource_owner
+      clientSecret: secret
       scope: openid
-      state: ""
-      type: oauth2
-      usePkce: false
-      credentialsInBody: "false"
-      tokenPrefix: ""
       username: foo
       password: bar
-    metaSortKey: -1644603123409.0625
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: env_aaaa7f21b1f145528b6b5f4518afc3f7
-    parentId: wrk_392055e2aa29457b9d2904396cd7631f
-    modified: 1645661876119
-    created: 1645220798237
-    name: Base Environment
-    data: {}
-    dataPropertyOrder: null
-    color: null
-    isPrivate: false
-    metaSortKey: 1639556944617
-    _type: environment
-  - _id: jar_b77a8c522418461e85eed9e37c9a6232
-    parentId: wrk_392055e2aa29457b9d2904396cd7631f
-    modified: 1645220798245
+      redirectUrl: http://127.0.0.1:4010/callback
+      credentialsInBody: false
+      usePkce: false
+      responseType: id_token
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/oidc/client-credential
+    name: Client Credentials
+    meta:
+      id: req_54e5b78faa4248bbaaebf2fddf3c26f0
+      created: 1645637343873
+      modified: 1645664219861
+      isPrivate: false
+      sortKey: -1644716158937.375
+    method: GET
+    authentication:
+      type: oauth2
+      disabled: false
+      grantType: client_credentials
+      accessTokenUrl: http://127.0.0.1:4010/oidc/token
+      authorizationUrl: http://127.0.0.1:4010/oidc/auth
+      clientId: client_credentials
+      clientSecret: secret
+      scope: openid
+      username: foo
+      password: bar
+      redirectUrl: http://127.0.0.1:4010/callback
+      credentialsInBody: false
+      usePkce: false
+      responseType: id_token
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_0bd5d86afba64388a93a1eecb010ea1c
     created: 1645220798245
-    name: Default Jar
-    cookies: []
-    _type: cookie_jar
-  - _id: spc_e72f1a13dbe9464c993b2f9c0fa0782d
-    parentId: wrk_392055e2aa29457b9d2904396cd7631f
-    modified: 1645220798327
-    created: 1645220798253
-    fileName: OAuth Testing
-    contents: ""
-    contentType: yaml
-    _type: api_spec
+    modified: 1645220798245
+environments:
+  name: Base Environment
+  meta:
+    id: env_76affdbdf91249889ec9c703d706d61c
+    created: 1645220798237
+    modified: 1645661876119
+    isPrivate: false

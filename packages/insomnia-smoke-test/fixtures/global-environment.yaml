@@ -1,48 +1,26 @@
-_type: export
-__export_format: 4
-__export_date: 2024-10-10T08:37:38.994Z
-__export_source: insomnia.desktop.app:v10.1.0-beta.2
-resources:
-  - _id: wrk_3eacc557f63b415b87da4a4beca0b633
-    type: Workspace
-    parentId: proj_c00dc2578d6f4004b5e37067b3a905e6
-    modified: 1728549301584
-    created: 1728549301584
-    name: global-environment
-    description: ""
-    scope: environment
-    _type: workspace
-  - _id: env_79ebf2bae010a0a90446ab15afa0d8382a61afa1
-    type: Environment
-    parentId: wrk_3eacc557f63b415b87da4a4beca0b633
-    modified: 1728549418314
+type: environment.insomnia.rest/5.0
+name: global-environment
+meta:
+  id: wrk_7a6debc2484d48db88897609ab21f0eb
+  created: 1736618596041
+  modified: 1736618596041
+environments:
+  name: Base Environment
+  meta:
+    id: env_aace0582bc8c4445be6689f340a08c20
     created: 1728549301585
-    name: Base Environment
-    data:
-      global-base: 4444
-      exampleString: globalenv0
-    dataPropertyOrder:
-      "&":
-        - global-base
-        - exampleString
-    color: null
+    modified: 1728549418314
     isPrivate: false
-    metaSortKey: 1728549301585
-    _type: environment
-  - _id: env_1543ee03d0dd41adb18199742ce67749
-    type: Environment
-    parentId: env_79ebf2bae010a0a90446ab15afa0d8382a61afa1
-    modified: 1728549426890
-    created: 1728549316977
-    name: New Environment
-    data:
-      global-sub: 55555
-      exampleString: globalenv1
-    dataPropertyOrder:
-      "&":
-        - global-sub
-        - exampleString
-    color: null
-    isPrivate: true
-    metaSortKey: 1728549316977
-    _type: environment
+  data:
+    global-base: 4444
+    exampleString: globalenv0
+  subEnvironments:
+    - name: New Environment
+      meta:
+        id: env_a9aa1b50ed15403aacc30d50be6a11a7
+        created: 1728549316977
+        modified: 1728549426890
+        isPrivate: true
+      data:
+        global-sub: 55555
+        exampleString: globalenv1

@@ -136,6 +136,48 @@ async function renderApp() {
             loader: async (...args) => (await import('./routes/commands')).loader(...args),
           },
           {
+            path: 'git-credentials',
+            loader: async (...args) => (await import('./routes/git-actions')).loadGitCredentials(...args),
+            children: [
+              {
+                'path': 'github',
+                loader: async (...args) => (await import('./routes/git-actions')).loadGitHubCredentials(...args),
+                children: [
+                  {
+                    path: 'init-sign-in',
+                    action: async (...args) => (await import('./routes/git-actions')).initSignInToGitHub(...args),
+                  },
+                  {
+                    path: 'complete-sign-in',
+                    action: async (...args) => (await import('./routes/git-actions')).completeSignInToGitHub(...args),
+                  },
+                  {
+                    path: 'sign-out',
+                    action: async (...args) => (await import('./routes/git-actions')).signOutOfGitHub(...args),
+                  },
+                ],
+              },
+              {
+                'path': 'gitlab',
+                loader: async (...args) => (await import('./routes/git-actions')).loadGitLabCredentials(...args),
+                children: [
+                  {
+                    path: 'init-sign-in',
+                    action: async (...args) => (await import('./routes/git-actions')).initSignInToGitLab(...args),
+                  },
+                  {
+                    path: 'complete-sign-in',
+                    action: async (...args) => (await import('./routes/git-actions')).completeSignInToGitLab(...args),
+                  },
+                  {
+                    path: 'sign-out',
+                    action: async (...args) => (await import('./routes/git-actions')).signOutOfGitLab(...args),
+                  },
+                ],
+              },
+            ],
+          },
+          {
             path: 'remote-files',
             loader: async (...args) => (await import('./routes/commands')).remoteFilesLoader(...args),
           },

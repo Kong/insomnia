@@ -21,6 +21,7 @@ import { convert, type InsomniaImporter } from '../utils/importers/convert';
 import { id as postmanEnvImporterId } from '../utils/importers/importers/postman-env';
 import { invariant } from '../utils/invariant';
 import { database as db } from './database';
+import { importInsomniaV5Data } from './insomnia-v5';
 import { generateId } from './misc';
 
 export interface ExportedModel extends BaseModel {
@@ -125,7 +126,22 @@ export async function scanResources(contentList: string[] | ImportFileDetail[]):
     let result: ConvertResult | null = null;
 
     try {
-      result = (await convert(contentStr)) as unknown as ConvertResult;
+      const insomnia5Import = importInsomniaV5Data(contentStr);
+      if (insomnia5Import.length > 0) {
+        result = {
+          type: {
+            id: 'insomnia-5',
+            name: 'Insomnia v5',
+            description: 'Insomnia v5',
+          },
+          data: {
+            // @ts-expect-error -- TSCONVERSION
+            resources: insomnia5Import,
+          },
+        };
+      } else {
+        result = (await convert(contentStr)) as unknown as ConvertResult;
+      }
     } catch (err: unknown) {
       if (err instanceof Error) {
         return {

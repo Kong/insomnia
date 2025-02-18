@@ -6,6 +6,7 @@ import { app } from 'electron';
 import path from 'path';
 
 import { isDevelopment, isWindows } from '../common/constants';
+import * as models from '../models';
 
 const YARN_DEPRECATED_WARN = /(?<keyword>warning)(?<dependencies>[^>:].+[>:])(?<issue>.+)/;
 
@@ -92,7 +93,7 @@ export default async function(lookupName: string) {
 }
 
 async function _isInsomniaPlugin(lookupName: string) {
-  return new Promise<InsomniaPlugin>((resolve, reject) => {
+  return new Promise<InsomniaPlugin>(async (resolve, reject) => {
     console.log('[plugins] Fetching module info from npm');
     childProcess.execFile(
       escape(process.execPath),
@@ -102,15 +103,14 @@ async function _isInsomniaPlugin(lookupName: string) {
         'info',
         lookupName,
         '--json',
+        '--registry',
+        'https://registry.npmjs.org/',
       ],
       {
         timeout: 5 * 60 * 1000,
         maxBuffer: 1024 * 1024,
         shell: true,
-        env: {
-          NODE_ENV: 'production',
-          ELECTRON_RUN_AS_NODE: 'true',
-        },
+        env: await _getYarnEnvValues(),
       },
       (err, stdout, stderr) => {
         if (stderr) {
@@ -158,6 +158,29 @@ async function _isInsomniaPlugin(lookupName: string) {
   });
 }
 
+async function _getYarnEnvValues() {
+  const settings = await models.settings.get();
+  const yarnEnv: Record<string, string> = {
+    NODE_ENV: 'production',
+    ELECTRON_RUN_AS_NODE: 'true',
+  };
+  if (settings.pluginNodeExtraCerts) {
+    yarnEnv.NODE_EXTRA_CA_CERTS = settings.pluginNodeExtraCerts;
+  }
+  if (settings.proxyEnabled) {
+    if (settings.httpProxy) {
+      yarnEnv.HTTP_PROXY = settings.httpProxy;
+    }
+    if (settings.httpsProxy) {
+      yarnEnv.HTTPS_PROXY = settings.httpsProxy;
+    }
+    if (settings.noProxy) {
+      yarnEnv.NO_PROXY = settings.noProxy;
+    }
+  }
+  return yarnEnv;
+}
+
 async function _installPluginToTmpDir(lookupName: string) {
   return new Promise<{ tmpDir: string }>(async (resolve, reject) => {
     const tmpDir = path.join(electron.app.getPath('temp'), `${lookupName}-${Date.now()}`);
@@ -181,6 +204,8 @@ async function _installPluginToTmpDir(lookupName: string) {
         '--production',
         '--no-progress',
         '--ignore-workspace-root-check',
+        '--registry',
+        'https://registry.npmjs.org/',
       ],
       {
         timeout: 5 * 60 * 1000,
@@ -188,10 +213,7 @@ async function _installPluginToTmpDir(lookupName: string) {
         cwd: tmpDir,
         shell: true,
         // Some package installs require a shell
-        env: {
-          NODE_ENV: 'production',
-          ELECTRON_RUN_AS_NODE: 'true',
-        },
+        env: await _getYarnEnvValues(),
       },
       (err, stdout, stderr) => {
         console.log('[plugins] Install complete', { err, stdout, stderr });

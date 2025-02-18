@@ -11,8 +11,6 @@ import type { UserSession } from '../../models/user-session';
 import { reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
 import { setTheme } from '../../plugins/misc';
-import { exchangeCodeForToken } from '../../sync/git/github-oauth-provider';
-import { exchangeCodeForGitLabToken } from '../../sync/git/gitlab-oauth-provider';
 import { getLoginUrl } from '../auth-session-provider';
 import { ErrorBoundary } from '../components/error-boundary';
 import { showError, showModal } from '../components/modals';
@@ -171,43 +169,41 @@ const Root = () => {
 
           case 'insomnia://oauth/github/authenticate': {
             const { code, state } = params;
-            await exchangeCodeForToken({ code, state, path: '/v1/oauth/github' }).catch(
-              (error: Error) => {
-                showError({
-                  error,
-                  title: 'Error authorizing GitHub',
-                  message: error.message,
-                });
-              },
-            );
+            actionFetcher.submit({
+              code,
+              state,
+            }, {
+              action: '/git-credentials/github/complete-sign-in',
+              method: 'POST',
+              encType: 'application/json',
+            });
             break;
           }
 
           case 'insomnia://oauth/github-app/authenticate': {
             const { code, state } = params;
-            await exchangeCodeForToken({ code, state, path: '/v1/oauth/github-app' }).catch(
-              (error: Error) => {
-                showError({
-                  error,
-                  title: 'Error authorizing GitHub App',
-                  message: error.message,
-                });
-              },
-            );
+            actionFetcher.submit({
+              code,
+              state,
+            }, {
+              action: '/git-credentials/github/complete-sign-in',
+              method: 'POST',
+              encType: 'application/json',
+            });
+
             break;
           }
 
           case 'insomnia://oauth/gitlab/authenticate': {
             const { code, state } = params;
-            await exchangeCodeForGitLabToken({ code, state }).catch(
-              (error: Error) => {
-                showError({
-                  error,
-                  title: 'Error authorizing GitLab',
-                  message: error.message,
-                });
-              },
-            );
+            actionFetcher.submit({
+              code,
+              state,
+            }, {
+              action: '/git-credentials/gitlab/complete-sign-in',
+              method: 'POST',
+              encType: 'application/json',
+            });
             break;
           }
 

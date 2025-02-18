@@ -135,6 +135,7 @@ export interface Settings {
   noProxy: string;
   nunjucksPowerUserMode: boolean;
   pluginConfig: PluginConfigMap;
+  pluginNodeExtraCerts: string;
   pluginPath: string;
   preferredHttpVersion: HttpVersion;
   proxyEnabled: boolean;

@@ -1,107 +1,94 @@
-_type: export
-__export_format: 4
-__export_date: 2022-08-31T10:40:21.266Z
-__export_source: insomnia.desktop.app:v2022.5.0
-resources:
-  - _id: ws-req_0ba3ad1a7a81483a8f0c0caab4e8998c
-    parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
-    modified: 1661942223227
-    created: 1661942202873
+type: collection.insomnia.rest/5.0
+name: WebSockets
+meta:
+  id: wrk_de19497fcefa48c0a8d131f4d05bb19a
+  created: 1736280122525
+  modified: 1736280122525
+collection:
+  - url: ws://localhost:4010
     name: localhost:4010
-    url: ws://localhost:4010
-    metaSortKey: -1661942202873
-    headers: []
-    authentication: {}
-    _type: websocket_request
-  - _id: wrk_db59cf2b74764e6a80c0dcbcf3d67130
-    parentId: null
-    modified: 1661942194367
-    created: 1661942194367
-    name: WebSockets
-    description: ""
-    scope: collection
-    _type: workspace
-  - _id: ws-req_c522379d686b44179e9626fc6c8ed88a
-    parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
-    modified: 1662451274029
-    created: 1662451239058
+    meta:
+      id: ws-req_89505c5538ea4130b3075b5cfa379f0a
+      created: 1661942202873
+      modified: 1661942223227
+    settings:
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+  - url: ws://localhost:4010/basic-auth
     name: basic-auth
-    url: ws://localhost:4010/basic-auth
-    metaSortKey: -1661942202823
-    headers: []
+    meta:
+      id: ws-req_c61fce1d29574e289048354a01b37dea
+      created: 1662451239058
+      modified: 1662451274029
+    settings:
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
     authentication:
       type: basic
       useISO88591: false
       disabled: false
       username: user
       password: password
-    _type: websocket_request
-  - _id: ws-req_2157c597bcbb4614b64c7c99c6f7a982
-    parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
-    modified: 1662451369688
-    created: 1662451318293
+  - url: ws://localhost:4010/bearer
     name: bearer
-    url: ws://localhost:4010/bearer
-    metaSortKey: -1661942202723
-    headers: []
+    meta:
+      id: ws-req_c178f6aafc55429d932d4b12d9b6b42e
+      created: 1662451318293
+      modified: 1662451369688
+    settings:
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
     authentication:
       type: bearer
       token: insomnia-cool-token-!!!1112113243111
       disabled: false
-    _type: websocket_request
-  - _id: ws-req_6b9c944a7f034fcb8b0a92e5442538d7
-    parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
-    modified: 1662451456879
-    created: 1662451430343
+  - url: ws://localhost:4010/redirect
     name: redirect
-    url: ws://localhost:4010/redirect
-    metaSortKey: -1661942202623
-    headers: []
-    authentication: {}
-    _type: websocket_request
-  - _id: ws-req_49815a73d8bf4024baebf82037b5730d
-    parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
-    modified: 1666696265531
-    created: 1666695713692
+    meta:
+      id: ws-req_233dcecb9b7344dd86c7821dfb686c20
+      created: 1662451430343
+      modified: 1662451456879
+    settings:
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+  - url: ws://localhost:4010/delay
     name: delay
-    url: ws://localhost:4010/delay
-    metaSortKey: -1661942202573
+    meta:
+      id: ws-req_68ee79e9c4044c0481b928ee3ddeaf83
+      created: 1666695713692
+      modified: 1666696265531
+    settings:
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
     headers:
       - id: pair_d5c62785928d4cc3a09b297bfbb847f7
         name: duration
         value: "5"
-        description: ""
-    authentication: {}
-    parameters: []
-    settingEncodeUrl: true
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingFollowRedirects: global
-    description: ""
-    _type: websocket_request
-  - _id: env_78d7375877d288dfb527a256e6d7e92dce4ff968
-    parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
-    modified: 1661942194375
-    created: 1661942194375
-    name: Base Environment
-    data: {}
-    dataPropertyOrder: null
-    color: null
-    isPrivate: false
-    metaSortKey: 1661942194375
-    _type: environment
-  - _id: jar_78d7375877d288dfb527a256e6d7e92dce4ff968
-    parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
-    modified: 1661942194378
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_a907e0109d0847f792cd7c5fc3f52d5f
     created: 1661942194378
-    name: Default Jar
-    cookies: []
-    _type: cookie_jar
-  - _id: spc_2d11197686aa40ec8f5f072727af4a7a
-    parentId: wrk_db59cf2b74764e6a80c0dcbcf3d67130
-    modified: 1661942194369
-    created: 1661942194369
-    fileName: ws example
-    contents: ""
-    contentType: yaml
-    _type: api_spec
+    modified: 1661942194378
+environments:
+  name: Base Environment
+  meta:
+    id: env_f06c6d12aa17400bbb1d16b4e20f7449
+    created: 1661942194375
+    modified: 1661942194375
+    isPrivate: false

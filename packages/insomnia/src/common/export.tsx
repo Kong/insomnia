@@ -7,7 +7,7 @@ import YAML from 'yaml';
 
 import { isApiSpec } from '../models/api-spec';
 import { isCookieJar } from '../models/cookie-jar';
-import { type Environment, isEnvironment, maskVaultEnvironmentData } from '../models/environment';
+import { type Environment, isEnvironment } from '../models/environment';
 import { isGrpcRequest } from '../models/grpc-request';
 import * as requestOperations from '../models/helpers/request-operations';
 import { type BaseModel, environment } from '../models/index';
@@ -27,7 +27,6 @@ import { showAlert, showError, showModal } from '../ui/components/modals';
 import { AskModal } from '../ui/components/modals/ask-modal';
 import { SelectModal } from '../ui/components/modals/select-modal';
 import type { Insomnia4Data } from '../utils/importers/importers';
-import { invariant } from '../utils/invariant';
 import {
   EXPORT_TYPE_API_SPEC,
   EXPORT_TYPE_COOKIE_JAR,
@@ -46,6 +45,7 @@ import {
 } from './constants';
 import { database, database as db } from './database';
 import * as har from './har';
+import { getInsomniaV5DataExport } from './insomnia-v5';
 import { strings } from './strings';
 
 const EXPORT_FORMAT = 4;
@@ -293,11 +293,7 @@ const showSelectExportTypeModal = ({ onDone }: {
 }) => {
   const options = [
     {
-      name: 'Insomnia v4 (JSON)',
-      value: VALUE_JSON,
-    },
-    {
-      name: 'Insomnia v4 (YAML)',
+      name: 'Insomnia v5',
       value: VALUE_YAML,
     },
     {
@@ -434,137 +430,49 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
     },
   });
 };
-const exportMockServer = async (workspace: Workspace, selectedFormat: 'json' | 'yaml') => {
-  const data: Insomnia4Data = {
-    _type: 'export',
-    __export_format: EXPORT_FORMAT,
-    __export_date: new Date(),
-    __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
-    resources: [],
-  };
-  const mockServer = await models.mockServer.getByParentId(workspace._id);
-  invariant(mockServer, 'expected mock server to be defined');
-  const mockRoutes = await models.mockRoute.findByParentId(mockServer._id);
-
-  // unclear why we need a _type here, or if they should match prefix or not
-  data.resources.push({ ...workspace, _type: 'workspace' });
-  data.resources.push({ ...mockServer, _type: 'mock' });
-  mockRoutes.map(mockRoute => data.resources.push({ ...mockRoute, _type: 'mock_route' }));
-  if (selectedFormat === 'yaml') {
-    return YAML.stringify(data);
-  }
-  return JSON.stringify(data);
-};
 
 export const exportMockServerToFile = async (workspace: Workspace) => {
-  const options = [{ name: 'Insomnia v4 (JSON)', value: VALUE_JSON }, { name: 'Insomnia v4 (YAML)', value: VALUE_YAML }];
-  const lastFormat = window.localStorage.getItem('insomnia.lastExportFormat');
-  const defaultValue = options.find(({ value }) => value === lastFormat) ? lastFormat : VALUE_JSON;
-
-  showModal(SelectModal, {
-    title: 'Select Export Type',
-    value: defaultValue,
-    options,
-    message: 'Which format would you like to export as?',
-    onDone: async selectedFormat => {
-      invariant(selectedFormat, 'expected selected format to be defined');
-      invariant(selectedFormat === 'json' || selectedFormat === 'yaml', 'unexpected selected format');
-      window.localStorage.setItem('insomnia.lastExportFormat', selectedFormat);
-      const fileName = await showSaveExportedFileDialog({
-        exportedFileNamePrefix: workspace.name,
-        selectedFormat,
-      });
-      if (!fileName) {
-        return;
-      }
-      try {
-        const stringifiedExport = await exportMockServer(workspace, selectedFormat);
-        writeExportedFileToFileSystem(fileName, stringifiedExport, err => err && console.warn('Export failed', err));
-        window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: selectedFormat, scope: 'mock-server' } });
-      } catch (err) {
-        showError({
-          title: 'Export Failed',
-          error: err,
-          message: 'Export failed due to an unexpected error',
-        });
-        return;
-      }
-    },
+  const fileName = await showSaveExportedFileDialog({
+    exportedFileNamePrefix: workspace.name,
+    selectedFormat: 'yaml',
   });
-};
-
-const exportGlobalEnvironment = async (workspace: Workspace, selectedFormat: 'json' | 'yaml', shouldExportPrivateEnvironments: boolean) => {
-  const data: Insomnia4Data = {
-    _type: 'export',
-    __export_format: EXPORT_FORMAT,
-    __export_date: new Date(),
-    __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
-    resources: [],
-  };
-
-  const baseEnvironment = await models.environment.getOrCreateForParentId(workspace._id);
-  const subEnvironments = (await models.environment.findByParentId(baseEnvironment._id))
-    .filter(subEnv => shouldExportPrivateEnvironments || !subEnv.isPrivate);
-
-  data.resources.push({ ...workspace, _type: 'workspace' });
-  data.resources.push({ ...baseEnvironment, _type: 'environment' });
-  subEnvironments.map(environment => {
-    // mask vault environment varibale if necessary
-    const maskedEnvironment = maskVaultEnvironmentData(environment);
-    data.resources.push({ ...maskedEnvironment, _type: 'environment' });
-  });
-
-  if (selectedFormat === 'yaml') {
-    return YAML.stringify(data);
+  if (!fileName) {
+    return;
   }
-  return JSON.stringify(data);
+  try {
+    const stringifiedExport = await getInsomniaV5DataExport(workspace._id);
+    writeExportedFileToFileSystem(fileName, stringifiedExport, err => err && console.warn('Export failed', err));
+    window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: 'yaml', scope: 'mock-server' } });
+  } catch (err) {
+    showError({
+      title: 'Export Failed',
+      error: err,
+      message: 'Export failed due to an unexpected error',
+    });
+    return;
+  }
 };
 
 export const exportGlobalEnvironmentToFile = async (workspace: Workspace) => {
-  const options = [{ name: 'Insomnia v4 (JSON)', value: VALUE_JSON }, { name: 'Insomnia v4 (YAML)', value: VALUE_YAML }];
-  const lastFormat = window.localStorage.getItem('insomnia.lastExportFormat');
-  const defaultValue = options.find(({ value }) => value === lastFormat) ? lastFormat : VALUE_JSON;
-
-  showModal(SelectModal, {
-    title: 'Select Export Type',
-    value: defaultValue,
-    options,
-    message: 'Which format would you like to export as?',
-    onDone: async selectedFormat => {
-      invariant(selectedFormat, 'expected selected format to be defined');
-      invariant(selectedFormat === 'json' || selectedFormat === 'yaml', 'unexpected selected format');
-      window.localStorage.setItem('insomnia.lastExportFormat', selectedFormat);
-      // Modal to confirm whether to export private environment or not if necessary
-      const baseEnvironment = await models.environment.getOrCreateForParentId(workspace._id);
-      const subEnvironments = await models.environment.findByParentId(baseEnvironment._id);
-      const showPrivateEnvironmentPrompt = subEnvironments.some(subEnv => subEnv.isPrivate);
-      let shouldExportPrivateEnvironments = false;
-      if (showPrivateEnvironmentPrompt) {
-        shouldExportPrivateEnvironments = await showExportPrivateEnvironmentsModal();
-      }
-
-      const fileName = await showSaveExportedFileDialog({
-        exportedFileNamePrefix: workspace.name,
-        selectedFormat,
-      });
-      if (!fileName) {
-        return;
-      }
-
-      try {
-        const stringifiedExport = await exportGlobalEnvironment(workspace, selectedFormat, shouldExportPrivateEnvironments);
-        writeExportedFileToFileSystem(fileName, stringifiedExport, err => err && console.warn('Export failed', err));
-        window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: selectedFormat, scope: 'environment' } });
-      } catch (err) {
-        showError({
-          title: 'Export Failed',
-          error: err,
-          message: 'Export failed due to an unexpected error',
-        });
-        return;
-      }
-    },
+  const fileName = await showSaveExportedFileDialog({
+    exportedFileNamePrefix: workspace.name,
+    selectedFormat: 'yaml',
   });
+  if (!fileName) {
+    return;
+  }
+  try {
+    const stringifiedExport = await getInsomniaV5DataExport(workspace._id);
+    writeExportedFileToFileSystem(fileName, stringifiedExport, err => err && console.warn('Export failed', err));
+    window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: 'yaml', scope: 'environment' } });
+  } catch (err) {
+    showError({
+      title: 'Export Failed',
+      error: err,
+      message: 'Export failed due to an unexpected error',
+    });
+    return;
+  }
 };
 
 export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) => {
@@ -598,7 +506,7 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
         return;
       }
 
-      let stringifiedExport;
+      let stringifiedExport = '';
 
       try {
         switch (selectedFormat) {
@@ -607,11 +515,7 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
             break;
 
           case VALUE_YAML:
-            stringifiedExport = await exportRequestsData(requests, shouldExportPrivateEnvironments, 'yaml');
-            break;
-
-          case VALUE_JSON:
-            stringifiedExport = await exportRequestsData(requests, shouldExportPrivateEnvironments, 'json');
+            stringifiedExport = await getInsomniaV5DataExport(workspaceId);
             break;
 
           default:
