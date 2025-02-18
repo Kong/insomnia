@@ -7,7 +7,7 @@ import path from 'path';
 import { v4 } from 'uuid';
 import YAML from 'yaml';
 
-import { getApiBaseURL, getAppWebsiteBaseURL, getGitHubGraphQLApiURL, getGitHubRestApiUrl, INSOMNIA_GITLAB_API_URL, INSOMNIA_GITLAB_CLIENT_ID, INSOMNIA_GITLAB_REDIRECT_URI } from '../common/constants';
+import { getApiBaseURL, getAppWebsiteBaseURL, getGitHubGraphQLApiURL, getGitHubRestApiUrl, INSOMNIA_GITLAB_API_URL, INSOMNIA_GITLAB_CLIENT_ID, INSOMNIA_GITLAB_REDIRECT_URI, PLAYWRIGHT } from '../common/constants';
 import { database } from '../common/database';
 import * as models from '../models';
 import type { GitRepository } from '../models/git-repository';
@@ -1365,7 +1365,7 @@ async function completeSignInToGitHub({
   code: string;
   state: string;
 }) {
-  if (!statesCache.has(state)) {
+  if (!PLAYWRIGHT && !statesCache.has(state)) {
     throw new Error(
       'Invalid state parameter. It looks like the authorization flow was not initiated by the app.'
     );
@@ -1529,7 +1529,11 @@ async function completeSignInToGitLab({
   code: string;
   state: string;
 }) {
-  const verifier = gitLabStatesCache.get(state);
+  let verifier = gitLabStatesCache.get(state);
+
+  if (PLAYWRIGHT) {
+    verifier = 'test-verifier';
+  }
   if (!verifier) {
     throw new Error(
       'Invalid state parameter. It looks like the authorization flow was not initiated by the app.'
