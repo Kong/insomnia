@@ -22,6 +22,7 @@ import * as _caCertificate from './ca-certificate';
 import * as _clientCertificate from './client-certificate';
 import * as _cookieJar from './cookie-jar';
 import * as _environment from './environment';
+import * as _gitCredentials from './git-credentials';
 import * as _gitRepository from './git-repository';
 import * as _grpcRequest from './grpc-request';
 import * as _grpcRequestMeta from './grpc-request-meta';
@@ -70,6 +71,7 @@ export const clientCertificate = _clientCertificate;
 export const caCertificate = _caCertificate;
 export const cookieJar = _cookieJar;
 export const environment = _environment;
+export const gitCredentials = _gitCredentials;
 export const gitRepository = _gitRepository;
 export const mockServer = _mockServer;
 export const mockRoute = _mockRoute;
@@ -111,6 +113,7 @@ export function all() {
     workspace,
     workspaceMeta,
     environment,
+    gitCredentials,
     gitRepository,
     cookieJar,
     apiSpec,

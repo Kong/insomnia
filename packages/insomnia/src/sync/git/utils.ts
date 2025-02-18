@@ -1,9 +1,8 @@
 import type { AuthCallback, AuthFailureCallback, AuthSuccessCallback, GitAuth, MessageCallback } from 'isomorphic-git';
 
+import { gitCredentials } from '../../models';
 import type { OauthProviderName } from '../../models/git-repository';
 import type { GitCredentials } from './git-vcs';
-import { getAccessToken as getGitHubAccessToken } from './github-oauth-provider';
-import { getAccessToken as getGitlabAccessToken, refreshToken as refreshGitlabToken } from './gitlab-oauth-provider';
 
 export const addDotGit = (url: string): string => (url.endsWith('.git') ? url : `${url}.git`);
 
@@ -27,15 +26,15 @@ const onAuthFailure =
       ) {
         console.log('[git-event] Attempting to refresh token');
         try {
-          const refreshToken = await refreshGitlabToken();
-          if (refreshToken) {
+          const providerCredentials = await gitCredentials.getByProvider(credentials.oauth2format);
+          if (providerCredentials?.refreshToken) {
             console.log('[git-event] Token refreshed');
             return {
               ...auth,
-              password: refreshToken,
+              password: providerCredentials.refreshToken,
               headers: {
                 ...auth.headers,
-                Authorization: `Bearer ${refreshToken}`,
+                Authorization: `Bearer ${providerCredentials.refreshToken}`,
               },
             };
           }
@@ -52,7 +51,7 @@ const onAuthSuccess: AuthSuccessCallback = message => {
   console.log(`[git-event] Auth Success: ${message}`);
 };
 
-const onAuth = (credentials?: GitCredentials): AuthCallback => (): GitAuth => {
+const onAuth = (credentials?: GitCredentials): AuthCallback => async (): Promise<GitAuth> => {
   if (!credentials) {
     console.log('[git-event] No credentials');
     return {
@@ -61,20 +60,37 @@ const onAuth = (credentials?: GitCredentials): AuthCallback => (): GitAuth => {
     };
   }
 
-  if ('oauth2format' in credentials) {
+  if ('oauth2format' in credentials && credentials.oauth2format) {
     console.log('[git-event] Using OAuth2 credentials');
+    const providerCredentials = await gitCredentials.getByProvider(credentials.oauth2format);
 
-    if (credentials.oauth2format === 'github') {
+    if (!providerCredentials) {
+      console.warn('[git-event] No OAuth2 credentials found');
       return {
-        username: getGitHubAccessToken() || credentials.token,
+        username: '',
+        password: '',
+      };
+    }
+
+    // Transform the credentials to the format expected by isomorphic-git https://isomorphic-git.org/docs/en/onAuth#oauth2-tokens
+    if (providerCredentials.provider === 'gitlab') {
+      return {
+        username: 'oauth2',
+        password: providerCredentials.token,
+      };
+    }
+
+    if (providerCredentials.provider === 'github') {
+      return {
+        username: providerCredentials.token,
         password: 'x-oauth-basic',
       };
     }
 
-    if (credentials.oauth2format === 'gitlab') {
+    if (providerCredentials.provider === 'githubapp') {
       return {
-        username: 'oauth2',
-        password: getGitlabAccessToken() ||  credentials.token,
+        username: 'x-access-token',
+        password: providerCredentials.token,
       };
     }
   }

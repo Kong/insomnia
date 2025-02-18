@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils as _webUtils } from 'electron';
 
+import type { GitServiceAPI } from './main/git-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
 import type { CurlBridgeAPI } from './main/network/curl';
@@ -50,6 +51,15 @@ const secretStorage: secretStorageBridgeAPI = {
   decryptString: cipherText => ipcRenderer.invoke('secretStorage.decryptString', cipherText),
 };
 
+const git: GitServiceAPI = {
+  initSignInToGitHub: () => ipcRenderer.invoke('git.initSignInToGitHub'),
+  completeSignInToGitHub: options => ipcRenderer.invoke('git.completeSignInToGitHub', options),
+  signOutOfGitHub: () => ipcRenderer.invoke('git.signOutOfGitHub'),
+  initSignInToGitLab: () => ipcRenderer.invoke('git.initSignInToGitLab'),
+  signOutOfGitLab: () => ipcRenderer.invoke('git.signOutOfGitLab'),
+  completeSignInToGitLab: options => ipcRenderer.invoke('git.completeSignInToGitLab', options),
+};
+
 const main: Window['main'] = {
   startExecution: options => ipcRenderer.send('startExecution', options),
   addExecutionStep: options => ipcRenderer.send('addExecutionStep', options),
@@ -75,6 +85,7 @@ const main: Window['main'] = {
     return () => ipcRenderer.removeListener(channel, listener);
   },
   webSocket,
+  git,
   grpc,
   curl,
   secretStorage,

@@ -33,7 +33,13 @@ export type HandleChannels =
   | 'secretStorage.getSecret'
   | 'secretStorage.deleteSecret'
   | 'secretStorage.encryptString'
-  | 'secretStorage.decryptString';
+  | 'secretStorage.decryptString'
+  | 'git.initSignInToGitHub'
+  | 'git.completeSignInToGitHub'
+  | 'git.signOutOfGitHub'
+  | 'git.initSignInToGitLab'
+  | 'git.completeSignInToGitLab'
+  | 'git.signOutOfGitLab';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
@@ -76,6 +82,7 @@ export type MainOnChannels =
   | 'completeExecutionStep'
   | 'updateLatestStepName'
   | 'startExecution';
+
 export type RendererOnChannels =
   'clear-all-models'
   | 'clear-model'
@@ -95,6 +102,7 @@ export type RendererOnChannels =
   | 'toggle-sidebar'
   | 'updaterStatus'
   | 'mainWindowFocusChange';
+
 export const ipcMainOn = (
   channel: MainOnChannels,
   listener: (

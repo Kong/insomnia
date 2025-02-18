@@ -12,10 +12,10 @@ import log, { initializeLogging } from './common/log';
 import { SegmentEvent, trackSegmentEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
+import { registerGitServiceAPI } from './main/git-service';
 import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
-import { registerSecretStorageHandlers } from './main/ipc/secret-storage';
 import { registerCurlHandlers } from './main/network/curl';
 import { registerWebSocketHandlers } from './main/network/websocket';
 import { watchProxySettings } from './main/proxy';
@@ -61,11 +61,12 @@ app.on('web-contents-created', (_, contents) => {
 // When the app is first launched
 app.on('ready', async () => {
   registerElectronHandlers();
+  // @TODO - Maybe move the register stuff in the registerMainHandlers function
   registerMainHandlers();
   registergRPCHandlers();
+  registerGitServiceAPI();
   registerWebSocketHandlers();
   registerCurlHandlers();
-  registerSecretStorageHandlers();
 
   /**
  * There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.
