@@ -5,13 +5,10 @@ import { useFetcher, useParams, useRevalidator } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
 import type { GitRepository } from '../../../models/git-repository';
-import { deleteGitRepository } from '../../../models/helpers/git-repository-operations';
 import { MergeConflictError } from '../../../sync/git/git-vcs';
 import { getOauth2FormatName } from '../../../sync/git/utils';
 import type { MergeConflict } from '../../../sync/types';
 import {
-  checkGitCanPush,
-  checkGitChanges,
   continueMerge,
   type GitFetchLoaderData,
   type GitRepoLoaderData,
@@ -50,6 +47,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
   const gitRepoDataFetcher = useFetcher<GitRepoLoaderData>();
   const gitFetchFetcher = useFetcher<GitFetchLoaderData>();
   const gitStatusFetcher = useFetcher<GitStatusResult>();
+  const resetGitStatusFetcher = useFetcher();
 
   const loadingPush = gitPushFetcher.state === 'loading';
   const loadingFetch = gitFetchFetcher.state === 'loading';
@@ -88,21 +86,6 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       });
     }
   }, [gitStatusFetcher, organizationId, projectId, shouldFetchGitRepoStatus, workspaceId]);
-
-  useEffect(() => {
-    // update committed state on unmount
-    // this is a sync action which is responsible for cheaply updating a piece of state representing the existence of a diff
-    // ideally this would not be needed and a diff would be cheaper to find.
-    return () => {
-      checkGitChanges(workspaceId);
-    };
-  }, [workspaceId]);
-
-  useEffect(() => {
-    if (shouldFetchGitRepoStatus) {
-      checkGitCanPush(workspaceId);
-    }
-  }, [gitRepoDataFetcher.data, gitRepository?._id, gitRepository?.uri, workspaceId, shouldFetchGitRepoStatus]);
 
   useEffect(() => {
     const errors = [...(gitPushFetcher.data?.errors ?? [])];
@@ -197,7 +180,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       action: async () => {
         try {
           setIsPulling(true);
-          await pullFromGitRemote(workspaceId).finally(() => {
+          await pullFromGitRemote({ projectId, workspaceId }).finally(() => {
             setIsPulling(false);
             revalidate();
           });
@@ -211,6 +194,8 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                 if (Array.isArray(conflicts) && conflicts.length > 0) {
                   setIsPulling(true);
                   continueMerge({
+                    projectId,
+                    workspaceId,
                     handledMergeConflicts: conflicts,
                     commitMessage: data.commitMessage,
                     commitParent: data.commitParent,
@@ -319,8 +304,10 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       label: 'Switch to Insomnia Sync',
       icon: 'cloud',
       action: async () => {
-        gitRepository && await deleteGitRepository(gitRepository);
-        revalidate();
+        resetGitStatusFetcher.submit({}, {
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/reset`,
+          method: 'post',
+        });
         },
       },
     ] : [];
