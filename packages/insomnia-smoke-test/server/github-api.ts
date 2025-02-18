@@ -35,4 +35,10 @@ export default (app: Application) => {
       'access_token': '123456789',
     });
   });
+
+  app.post('/v1/oauth/github-app', (_req, res) => {
+    res.status(200).send({
+      'access_token': '123456789',
+    });
+  });
 };

@@ -1,16 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useInterval, useLocalStorage } from 'react-use';
+import { Button } from 'react-aria-components';
+import { useFetcher } from 'react-router-dom';
 
+import type { GitCredentials } from '../../../../models/git-credentials';
 import type { GitRepository } from '../../../../models/git-repository';
-import {
-  exchangeCodeForGitLabToken,
-  generateAuthorizationUrl,
-  getGitLabOauthApiURL,
-  refreshToken,
-  signOut,
-} from '../../../../sync/git/gitlab-oauth-provider';
-import { Button } from '../../themed-button';
-import { showAlert, showError } from '..';
+import { Icon } from '../../icon';
+import { showAlert } from '..';
 
 interface Props {
   uri?: string;
@@ -19,23 +14,17 @@ interface Props {
 
 export const GitLabRepositorySetupFormGroup = (props: Props) => {
   const { onSubmit, uri } = props;
+  const gitlabTokenLoader = useFetcher<GitCredentials>();
 
-  const [gitlabToken, setGitLabToken] = useState(
-    localStorage.getItem('gitlab-oauth-token') || ''
-  );
+  useEffect(() => {
+    if (!gitlabTokenLoader.data && gitlabTokenLoader.state === 'idle') {
+      gitlabTokenLoader.load('/git-credentials/gitlab');
+    }
+  }, [gitlabTokenLoader]);
 
-  useInterval(
-    () => {
-      const token = localStorage.getItem('gitlab-oauth-token');
+  const credentials = gitlabTokenLoader.data;
 
-      if (token) {
-        setGitLabToken(token);
-      }
-    },
-    gitlabToken ? null : 500
-  );
-
-  if (typeof gitlabToken !== 'string' || !gitlabToken) {
+  if (!credentials?.token) {
     return <GitLabSignInForm />;
   }
 
@@ -43,11 +32,7 @@ export const GitLabRepositorySetupFormGroup = (props: Props) => {
     <GitLabRepositoryForm
       uri={uri}
       onSubmit={onSubmit}
-      token={gitlabToken}
-      onSignOut={() => {
-        setGitLabToken('');
-        signOut();
-      }}
+      credentials={credentials}
     />
   );
 };
@@ -84,143 +69,73 @@ const Avatar = ({ src }: { src: string }) => {
   );
 };
 
-export interface GitLabUserResult {
-  id: number;
-  username: string;
-  name: string;
-  avatar_url: string;
-  public_email: string;
-  email: string;
-  projects_limit: number;
-  commit_email: string;
-}
-
 interface GitLabRepositoryFormProps {
   uri?: string;
   onSubmit: (args: Partial<GitRepository>) => void;
-  onSignOut: () => void;
-  token?: string;
+  credentials: GitCredentials;
 }
 
 const GitLabRepositoryForm = ({
   uri,
-  token,
+  credentials,
   onSubmit,
-  onSignOut,
 }: GitLabRepositoryFormProps) => {
   const [error, setError] = useState('');
 
-  const [user, setUser, removeUser] = useLocalStorage<GitLabUserResult>(
-    'gitlab-user-info',
-    undefined
-  );
-
-  useEffect(() => {
-    if (token && !user) {
-      fetch(`${getGitLabOauthApiURL()}/api/v4/user`, {
-        headers: new Headers({
-          Authorization: `Bearer ${token}`,
-        }),
-      }).then(async response => {
-        if (!response.ok) {
-          if (response.status === 401) {
-            refreshToken();
-          } else {
-            const errorMessage = await response.text() || 'Something went wrong when trying to fetch info from GitLab.';
-            setError(errorMessage);
-            console.log(`[gitlab oauth]: ${errorMessage}`);
-          }
-        }
-
-        return response.json();
-      })
-        .then(data => {
-          setUser(data);
-        });
-    }
-  }, [token, onSubmit, setUser, user]);
+  const signOutFetcher = useFetcher();
 
   return (
     <form
       id="gitlab"
-      className="form-group"
-      style={{ height: '100%' }}
+      className="flex flex-col gap-4"
       onSubmit={event => {
         event.preventDefault();
         onSubmit({
           uri: (new FormData(event.currentTarget).get('uri') as string) ?? '',
           author: {
-            name: (user?.username || user?.name) ?? '',
-            email: user?.commit_email ?? user?.public_email ?? user?.email ?? '',
+            name: credentials.author.name,
+            email: credentials.author.email,
           },
           credentials: {
-            username: token ?? '',
-            token: token ?? '',
+            token: '',
+            username: '',
             oauth2format: 'gitlab',
           },
         });
       }}
     >
-      {token && (
-        <div className="form-control form-control--outlined">
-          <label>
-            GitLab URI (https, including .git suffix)
-            <input
-              className="form-control"
-              defaultValue={uri}
-              type="url"
-              name="uri"
-              autoFocus
-              disabled={Boolean(uri)}
-              required
-              placeholder="https://gitlab.com/org/repo.git"
-            />
-          </label>
-        </div>
-      )}
       <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          border: '1px solid var(--hl-sm)',
-          borderRadius: 'var(--radius-md)',
-          padding: 'var(--padding-sm)',
-          boxSizing: 'border-box',
-        }}
+        className='flex justify-between items-center border border-solid border-[--hl-sm] rounded-md p-2'
       >
         <div className="flex gap-2 items-center">
-          <Avatar src={user?.avatar_url ?? ''} />
+          <Avatar src={credentials.author.avatarUrl ?? ''} />
           <div className='flex flex-col'>
             <span
               style={{
                 fontSize: 'var(--font-size-lg)',
               }}
             >
-              {user?.name}
+              {credentials.author.name}
             </span>
             <span
               style={{
                 fontSize: 'var(--font-size-md)',
               }}
             >
-              {user?.commit_email ?? user?.public_email ?? user?.email}
+              {credentials.author.email || 'Signed in'}
             </span>
           </div>
         </div>
         <Button
           type="button"
-          onClick={event => {
-            event.preventDefault();
-            event.stopPropagation();
+          onPress={() => {
             showAlert({
               title: 'Sign out of GitLab',
               message:
                 'Are you sure you want to sign out? You will need to re-authenticate with GitLab to use this feature.',
               okLabel: 'Sign out',
               onConfirm: () => {
-                removeUser();
-                onSignOut();
+                signOutFetcher.submit({}, { action: '/git-credentials/gitlab/sign-out', method: 'POST' });
               },
             });
           }}
@@ -228,7 +143,21 @@ const GitLabRepositoryForm = ({
           Sign out
         </Button>
       </div>
-
+      <div className="form-control form-control--outlined">
+        <label>
+          GitLab URI (https, including .git suffix)
+          <input
+            className="form-control"
+            defaultValue={uri}
+            type="url"
+            name="uri"
+            autoFocus
+            disabled={Boolean(uri)}
+            required
+            placeholder="https://gitlab.com/org/repo.git"
+          />
+        </label>
+      </div>
       {error && (
         <p className="notice error margin-bottom-sm">
           <button className="pull-right icon" onClick={() => setError('')}>
@@ -241,51 +170,25 @@ const GitLabRepositoryForm = ({
   );
 };
 
-interface GitLabSignInFormProps {
-  token?: string;
-}
-
-const GitLabSignInForm = ({ token }: GitLabSignInFormProps) => {
-  const [authUrl, setAuthUrl] = useState('');
+const GitLabSignInForm = () => {
+  const [error, setError] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const initSignInFetcher = useFetcher();
+  const completeSignInFetcher = useFetcher();
 
-  // When we get a new token we reset the authenticating flag and auth url. This happens because we can use the generated url for only one authorization flow.
-  useEffect(() => {
-    if (token) {
-      setIsAuthenticating(false);
-
-      generateAuthorizationUrl().then(setAuthUrl);
-    }
-  }, [token]);
-
-  useEffect(() => {
-    if (!authUrl) {
-      generateAuthorizationUrl().then(setAuthUrl);
-    }
-  }, [authUrl]);
-
-  return !authUrl ? (<div />) : (
+  return (
     <div
-      style={{
-        display: 'flex',
-        placeContent: 'center',
-        placeItems: 'center',
-        flexDirection: 'column',
-        border: '1px solid var(--hl-sm)',
-        borderRadius: 'var(--radius-md)',
-        padding: 'var(--padding-sm)',
-        boxSizing: 'border-box',
-      }}
+      className='flex items-center justify-center flex-col border border-solid border-[--hl-sm] p-4'
     >
-      <a
-        href={authUrl}
-        onClick={() => {
+      <Button
+        onPress={() => {
           setIsAuthenticating(true);
+          initSignInFetcher.submit({}, { action: '/git-credentials/gitlab/init-sign-in', method: 'POST' });
         }}
       >
-        <i className="fa fa-gitlab" />
+        <Icon icon={['fab', 'gitlab']} />
         {isAuthenticating ? 'Authenticating' : 'Authenticate'} with GitLab
-      </a>
+      </Button>
 
       {isAuthenticating && (
         <form
@@ -295,22 +198,23 @@ const GitLabSignInForm = ({ token }: GitLabSignInFormProps) => {
             const formData = new FormData(event.currentTarget);
             const link = formData.get('link');
             if (typeof link === 'string') {
-              const parsedURL = new URL(link);
+              let parsedURL: URL;
+              try {
+                parsedURL = new URL(link);
+              } catch (error) {
+                setError('Invalid URL');
+                return;
+              }
+
               const code = parsedURL.searchParams.get('code');
               const state = parsedURL.searchParams.get('state');
 
-              if (typeof code === 'string' && typeof state === 'string') {
-                exchangeCodeForGitLabToken({
-                  code,
-                  state,
-                }).catch((error: Error) => {
-                  showError({
-                    error,
-                    title: 'Error authorizing GitLab',
-                    message: error.message,
-                  });
-                });
+              if (!(typeof code === 'string') || !(typeof state === 'string')) {
+                setError('Incomplete URL');
+                return;
               }
+
+              completeSignInFetcher.submit({ code, state }, { action: '/git-credentials/gitlab/complete-sign-in', method: 'POST', encType: 'application/json' });
             }
           }}
         >
@@ -321,9 +225,17 @@ const GitLabSignInForm = ({ token }: GitLabSignInFormProps) => {
             </div>
             <div className="form-row">
               <input name="link" />
-              <Button bg="surprise" name="add-token">Authenticate</Button>
+              <Button type="submit" name="add-token">Authenticate</Button>
             </div>
           </label>
+          {error && (
+            <p className="notice error margin-bottom-sm">
+              <Button className="pull-right icon" onPress={() => setError('')}>
+                <i className="fa fa-times" />
+              </Button>
+              {error}
+            </p>
+          )}
         </form>
       )}
     </div>

@@ -1,143 +1,124 @@
-_type: export
-__export_format: 4
-__export_date: 2024-02-13T07:27:17.322Z
-__export_source: insomnia.desktop.app:v8.6.1
-resources:
-  - _id: wrk_6b9b8455fd784462ae19cd51d7156f86
-    parentId: null
-    modified: 1707808692801
-    created: 1707808692801
-    name: After-response Scripts
-    description: ""
-    scope: collection
-    _type: workspace
-  - _id: req_244fe815da6c4342a17f0cfd98cf648c
-    parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
-    modified: 1707809218855
-    created: 1707808697304
-    url: '{{_.base_url}}/echo'
+type: collection.insomnia.rest/5.0
+name: After-response Scripts
+meta:
+  id: wrk_5033693e76a244d9a19124895c871ed5
+  created: 1739888439647
+  modified: 1739888439647
+collection:
+  - url: "{{_.base_url}}/echo"
     name: tests with expect and test
-    description: ""
+    meta:
+      id: req_6d55848a007849e885c0d1d35fd3c8f7
+      created: 1707808697304
+      modified: 1707809218855
+      isPrivate: false
+      sortKey: -1707809028499
     method: POST
-    afterResponseScript: |-
-      insomnia.test('happy tests', () => {
-        insomnia.expect(200).to.eql(200);
-        insomnia.expect('uname').to.be.a('string');
-        insomnia.expect('a').to.have.lengthOf(1);
-        insomnia.expect('xxx_customer_id_yyy').to.include("customer_id");
-        insomnia.expect(201).to.be.oneOf([201,202]);
-        insomnia.expect(199).to.be.below(200);
-        // test objects
-        insomnia.expect({a: 1, b: 2}).to.have.all.keys('a', 'b');
-        insomnia.expect({a: 1, b: 2}).to.have.any.keys('a', 'b');
-        insomnia.expect({a: 1, b: 2}).to.not.have.any.keys('c', 'd');
-        insomnia.expect({a: 1}).to.have.property('a');
-        insomnia.expect({a: 1, b: 2}).to.be.a('object')
-          .that.has.all.keys('a', 'b');
-      });
-      insomnia.test('unhappy tests', () => {
-        insomnia.expect(199).to.eql(200);
-        insomnia.expect(199).to.be.oneOf([201,202]);
-      });
     body:
-      mimeType: "application/json"
-      text: |-
-        {}
-    parameters: []
+      mimeType: application/json
+      text: "{}"
     headers:
-      - name: 'Content-Type'
-        value: 'application/json'
-    authentication: {}
-    metaSortKey: -1707809028499
-    isPrivate: false
-    pathParameters: []
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_244fe815da6c4342a17f0cfd98cf6401
-    parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
-    modified: 1707809218855
-    created: 1707808697304
-    url: http://127.0.0.1:4010/echo
+      - name: Content-Type
+        value: application/json
+    scripts:
+      afterResponse: |-
+        insomnia.test('happy tests', () => {
+          insomnia.expect(200).to.eql(200);
+          insomnia.expect('uname').to.be.a('string');
+          insomnia.expect('a').to.have.lengthOf(1);
+          insomnia.expect('xxx_customer_id_yyy').to.include("customer_id");
+          insomnia.expect(201).to.be.oneOf([201,202]);
+          insomnia.expect(199).to.be.below(200);
+          // test objects
+          insomnia.expect({a: 1, b: 2}).to.have.all.keys('a', 'b');
+          insomnia.expect({a: 1, b: 2}).to.have.any.keys('a', 'b');
+          insomnia.expect({a: 1, b: 2}).to.not.have.any.keys('c', 'd');
+          insomnia.expect({a: 1}).to.have.property('a');
+          insomnia.expect({a: 1, b: 2}).to.be.a('object')
+            .that.has.all.keys('a', 'b');
+        });
+        insomnia.test('unhappy tests', () => {
+          insomnia.expect(199).to.eql(200);
+          insomnia.expect(199).to.be.oneOf([201,202]);
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
     name: persist environments
-    description: ""
+    meta:
+      id: req_76b32fc876f44f6984684bbc2a35c9e8
+      created: 1707808697304
+      modified: 1707809218855
+      isPrivate: false
+      sortKey: -1707809028499
     method: POST
-    afterResponseScript: |-
-      insomnia.environment.set('__fromAfterScript', 'environment');
-      insomnia.baseEnvironment.set('__fromAfterScript1', 'baseEnvironment');
-      insomnia.collectionVariables.set('__fromAfterScript2', 'collection');
-      insomnia.environment.replaceIn('{{ $timestamp }}');
     body:
-      mimeType: "application/json"
-      text: |-
-        {}
-    parameters: []
+      mimeType: application/json
+      text: "{}"
     headers:
-      - name: 'Content-Type'
-        value: 'application/json'
-    authentication: {}
-    metaSortKey: -1707809028499
-    isPrivate: false
-    pathParameters: []
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_244fe815da6c4342a17f0cfd98cf6402
-    parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
-    modified: 1707809218855
-    created: 1707808697304
-    url: http://127.0.0.1:4010/echo
+      - name: Content-Type
+        value: application/json
+    scripts:
+      afterResponse: |-
+        insomnia.environment.set('__fromAfterScript', 'environment');
+        insomnia.baseEnvironment.set('__fromAfterScript1', 'baseEnvironment');
+        insomnia.collectionVariables.set('__fromAfterScript2', 'collection');
+        insomnia.environment.replaceIn('{{ $timestamp }}');
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
     name: transient var
-    description: ""
+    meta:
+      id: req_f101063d3746440b8eae243db5b3e78f
+      created: 1707808697304
+      modified: 1707809218855
+      isPrivate: false
+      sortKey: -1707809028499
     method: POST
-    preRequestScript: |-
-      insomnia.variables.set('var', 666);
-    afterResponseScript: |-
-      insomnia.test('check var', () => {
-        insomnia.expect(insomnia.variables.get('var')).to.eql(666);
-      });
     body:
-      mimeType: "application/json"
-      text: |-
-        {}
-    parameters: []
+      mimeType: application/json
+      text: "{}"
     headers:
-      - name: 'Content-Type'
-        value: 'application/json'
-    authentication: {}
-    metaSortKey: -1707809028499
-    isPrivate: false
-    pathParameters: []
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request    
-  - _id: env_f9ef1d097c5e00986051fcb4f7a921eea1a86916
-    parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
-    modified: 1707808692805
-    created: 1707808692805
-    name: Base Environment
-    data: {"base_url": "http://localhost:4010"}
-    dataPropertyOrder: null
-    color: null
-    isPrivate: false
-    metaSortKey: 1707808692805
-    _type: environment
-  - _id: jar_f9ef1d097c5e00986051fcb4f7a921eea1a86916
-    parentId: wrk_6b9b8455fd784462ae19cd51d7156f86
-    modified: 1707808692807
+      - name: Content-Type
+        value: application/json
+    scripts:
+      preRequest: insomnia.variables.set('var', 666);
+      afterResponse: |-
+        insomnia.test('check var', () => {
+          insomnia.expect(insomnia.variables.get('var')).to.eql(666);
+        });
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_eb95028c43f847e985763a20ca93825d
     created: 1707808692807
-    name: Default Jar
-    cookies: []
-    _type: cookie_jar
+    modified: 1707808692807
+environments:
+  name: Base Environment
+  meta:
+    id: env_5c64074c252f4016b26e30daed930bd6
+    created: 1707808692805
+    modified: 1707808692805
+    isPrivate: false
+  data:
+    base_url: http://localhost:4010

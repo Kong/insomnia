@@ -1,23 +1,153 @@
-_type: export
-__export_format: 4
-__export_date: 2021-12-03T07:42:43.250Z
-__export_source: insomnia.desktop.app:v2021.6.0
-resources:
-  - _id: req_178f98ccc6b240f5a1f67c492b6bf9a6
-    parentId: wrk_5b5ab67830944ffcbec47528366ef403
-    modified: 1636142586648
-    created: 1636141100570
-    url: http://127.0.0.1:4010/auth/basic
-    name: sends request with basic authentication
-    description: ""
+type: collection.insomnia.rest/5.0
+name: Smoke tests
+meta:
+  id: wrk_92410798721649cc8cd6f7c312a8764d
+  created: 1736279960080
+  modified: 1736279960080
+collection:
+  - name: FolderWithEnv
+    meta:
+      id: fld_9e41f58426c24ba09429cd75932610c8
+      created: 1668533312225
+      modified: 1668533312225
+      sortKey: -1668533312225
+    children:
+      - url: http://127.0.0.1:4010/echo
+        name: sends request with pre-request script
+        meta:
+          id: req_7f08e3cca5ae4b87afe06dcb28c9c46e
+          created: 1643892270079
+          modified: 1643892278711
+          isPrivate: false
+        method: GET
+        scripts:
+          preRequest: insomnia.environment.set('my-pre-request-header', 'some-value');
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+    environment:
+      customValue: fromFolder
+  - url: http://127.0.0.1:4010/pets/1
+    name: send JSON request
+    meta:
+      id: req_22084aca139d42c6878afdc1a99db23b
+      created: 1636141014552
+      modified: 1636707449231
+      isPrivate: false
     method: GET
-    body: {}
-    parameters: []
+    headers:
+      - id: pair_4c3fe3092f1245eab6d960c633d8be9c
+        name: test
+        value: test
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/file/dummy.csv
+    name: sends dummy.csv request and shows rich response
+    meta:
+      id: req_ed583d913fec40c8b29f51b87b1843ef
+      created: 1636141038448
+      modified: 1636141047337
+      isPrivate: false
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/file/dummy.xml
+    name: sends dummy.xml request and shows raw response
+    meta:
+      id: req_6bf357524c4f4c37a4e5749644999f88
+      created: 1636141061433
+      modified: 1636141067089
+      isPrivate: false
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/delay/seconds/20
+    name: delayed request
+    meta:
+      id: req_9339c46f33ee4017b69bb6aa5f73cbc6
+      created: 1636141078600
+      modified: 1636141084436
+      isPrivate: false
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/file/dummy.pdf
+    name: sends dummy.pdf request and shows rich response
+    meta:
+      id: req_31d7638307724a319b7c3efebad43388
+      created: 1636141078601
+      modified: 1636141084436
+      isPrivate: false
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/events
+    name: connects to event stream and shows ping response
+    meta:
+      id: req_4bbfd277f80041db9f4d3b7aad3440be
+      created: 1636141078601
+      modified: 1636141084436
+      isPrivate: false
+    method: GET
+    headers:
+      - id: pair_4c3fe3092f1245eab6d960c633d8be8c
+        name: Accept
+        value: text/event-stream
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/auth/basic
+    name: sends request with basic authentication
+    meta:
+      id: req_d2bb2502fbba45f6bd0ac427209e56d8
+      created: 1636141100570
+      modified: 1636142586648
+      isPrivate: false
+    method: GET
     headers:
       - id: pair_cbcd8bc34d494a3c83b29989d06cf005
         name: Authorization
         value: Basic dXNlcjpwYXNz
-        description: ""
         disabled: true
     authentication:
       type: basic
@@ -25,255 +155,65 @@ resources:
       disabled: false
       username: user
       password: pass
-    metaSortKey: -1636141100570
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: wrk_5b5ab67830944ffcbec47528366ef403
-    parentId: null
-    modified: 1636140994423
-    created: 1636140994423
-    name: Smoke tests
-    description: ""
-    scope: collection
-    _type: workspace
-  - _id: req_e6fab3568ed54f9d83c92e2c8006e145
-    parentId: wrk_5b5ab67830944ffcbec47528366ef403
-    modified: 1636141084436
-    created: 1636141078600
-    url: http://127.0.0.1:4010/delay/seconds/20
-    name: delayed request
-    description: ""
-    method: GET
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    metaSortKey: -1636141078600
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_e6fab3568ed54f9d83c92e2c8006e140
-    parentId: wrk_5b5ab67830944ffcbec47528366ef403
-    modified: 1636141084436
-    created: 1636141078601
-    url: http://127.0.0.1:4010/file/dummy.pdf
-    name: sends dummy.pdf request and shows rich response
-    description: ""
-    method: GET
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    metaSortKey: -1636141078601
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_e6fab3568ed54f9d83c92e2c8006e150
-    parentId: wrk_5b5ab67830944ffcbec47528366ef403
-    modified: 1636141084436
-    created: 1636141078601
-    url: http://127.0.0.1:4010/events
-    name: connects to event stream and shows ping response
-    description: ""
-    method: GET
-    body: {}
-    parameters: []
-    headers:
-      - id: pair_4c3fe3092f1245eab6d960c633d8be8c
-        name: Accept
-        value: text/event-stream
-        description: ""
-    authentication: {}
-    metaSortKey: -1636141078601
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_06a660bffe724e3fac14d7d09b4a5c9b
-    parentId: wrk_5b5ab67830944ffcbec47528366ef403
-    modified: 1636141067089
-    created: 1636141061433
-    url: http://127.0.0.1:4010/file/dummy.xml
-    name: sends dummy.xml request and shows raw response
-    description: ""
-    method: GET
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    metaSortKey: -1636141061433
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_ee610ff89152476ea25950f39ca59819
-    parentId: wrk_5b5ab67830944ffcbec47528366ef403
-    modified: 1636141047337
-    created: 1636141038448
-    url: http://127.0.0.1:4010/file/dummy.csv
-    name: sends dummy.csv request and shows rich response
-    description: ""
-    method: GET
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    metaSortKey: -1636141038448
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_89dade2ee9ee42fbb22d588783a9df3b
-    parentId: wrk_5b5ab67830944ffcbec47528366ef403
-    modified: 1636707449231
-    created: 1636141014552
-    url: http://127.0.0.1:4010/pets/1
-    name: send JSON request
-    description: ""
-    method: GET
-    body: {}
-    parameters: []
-    headers:
-      - id: pair_4c3fe3092f1245eab6d960c633d8be9c
-        name: test
-        value: test
-        description: ""
-    authentication: {}
-    metaSortKey: -1636141014552
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: env_afc214be117853a024cce22f194c500e68dac13f
-    parentId: wrk_5b5ab67830944ffcbec47528366ef403
-    modified: 1636140994432
-    created: 1636140994432
-    name: Base Environment
-    data:
-      customValue: "fromEnvManager"
-    dataPropertyOrder: null
-    color: null
-    isPrivate: false
-    metaSortKey: 1636140994432
-    _type: environment
-  - _id: jar_afc214be117853a024cce22f194c500e68dac13f
-    parentId: wrk_5b5ab67830944ffcbec47528366ef403
-    modified: 1637279629638
-    created: 1636140994434
-    name: Default Jar
-    cookies:
-      - key: foo
-        value: bar
-        expires: null
-        domain: domain.com
-        path: /
-        creation: 2021-11-18T23:53:05.310Z
-        id: "429589439757017"
-    _type: cookie_jar
-  - _id: req_0769dca586df49358082b2183cfa073e
-    parentId: wrk_5b5ab67830944ffcbec47528366ef403
-    modified: 1643892278711
-    created: 1643892270079
-    url: http://127.0.0.1:4010/cookies
-    name: sends request with cookie and get cookie in response
-    description: ""
-    method: GET
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    metaSortKey: -1643892270079
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: req_0769dca686df49358082b2183cfa073d
-    parentId: wrk_5b5ab67830944ffcbec47528366ef403
-    modified: 1643892278711
-    created: 1643892270079
-    url: https://localhost:4011/pets/1
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: https://localhost:4011/pets/1
     name: sends request with certs
-    description: ""
+    meta:
+      id: req_7273c02615ca4cf39528bb36b801144c
+      created: 1643892270079
+      modified: 1643892278711
+      isPrivate: false
     method: GET
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    metaSortKey: -1643892270079
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: fld_01de564274824ecaad272330339ea6b2
-    parentId: wrk_5b5ab67830944ffcbec47528366ef403
-    modified: 1668533312225
-    created: 1668533312225
-    name: FolderWithEnv
-    description: ""
-    environment:
-      customValue: "fromFolder"
-    environmentPropertyOrder: null
-    metaSortKey: -1668533312225
-    _type: request_group
-  - _id: req_0769dca686df49358082b2183dfa073d
-    parentId: fld_01de564274824ecaad272330339ea6b2
-    modified: 1643892278711
-    created: 1643892270079
-    url: http://127.0.0.1:4010/echo
-    name: sends request with pre-request script
-    description: ""
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/cookies
+    name: sends request with cookie and get cookie in response
+    meta:
+      id: req_769d56c70c1e410a95b7ffcb307b5a0f
+      created: 1643892270079
+      modified: 1643892278711
+      isPrivate: false
     method: GET
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    preRequestScript: "insomnia.environment.set('my-pre-request-header', 'some-value');"
-    metaSortKey: -1643892270079
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_0a46909e87a24a05961f3b7c6b591d23
+    created: 1636140994434
+    modified: 1637279629638
+  cookies:
+    - key: foo
+      value: bar
+      domain: domain.com
+      path: /
+      creation: 2021-11-18T23:53:05.310Z
+      id: "429589439757017"
+environments:
+  name: Base Environment
+  meta:
+    id: env_6fda0ba942704e71a81a02e2bf5fe5ff
+    created: 1636140994432
+    modified: 1636140994432
     isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
+  data:
+    customValue: fromEnvManager

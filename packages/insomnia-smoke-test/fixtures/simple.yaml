@@ -1,236 +1,149 @@
-_type: export
-__export_format: 4
-__export_date: 2022-11-15T17:31:29.274Z
-__export_source: insomnia.desktop.app:v2022.7.0-beta.3
-resources:
-  - _id: req_8213684eaafc4e159a4488defcb2cd43
-    parentId: fld_01de564274824ecaad272330339ea6b2
-    modified: 1668533331435
-    created: 1668533323502
-    url: insomnia.rest
-    name: New Request
-    description: ""
+type: collection.insomnia.rest/5.0
+name: simple
+meta:
+  id: wrk_dc393cdd96524c44a632fdc3b09aa5c5
+  created: 1736279931529
+  modified: 1736279931529
+collection:
+  - name: test folder
+    meta:
+      id: fld_00712a7bea3148ffa6e29ef2f7b4254f
+      created: 1668533312225
+      modified: 1668533312225
+      sortKey: -1668533312225
+    children:
+      - url: insomnia.rest
+        name: New Request
+        meta:
+          id: req_56d6736c344145019e67086d86fd2925
+          created: 1668533323502
+          modified: 1668533331435
+          isPrivate: false
+        method: GET
+        scripts:
+          preRequest: console.log('executing pre-request script');
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - url: http://localhost:4010/pets/1
+    name: example http
+    meta:
+      id: req_49f06ac9024446728a9765162d56b95a
+      created: 1666867365377
+      modified: 1666867670885
+      isPrivate: false
     method: GET
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    metaSortKey: -1668533323502
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-    preRequestScript: |-
-      console.log('executing pre-request script');
-  - _id: fld_01de564274824ecaad272330339ea6b2
-    parentId: wrk_0702a57d75d44255a8cecd2c5fa87809
-    modified: 1668533312225
-    created: 1668533312225
-    name: test folder
-    description: ""
-    environment: {}
-    environmentPropertyOrder: null
-    metaSortKey: -1668533312225
-    _type: request_group
-  - _id: wrk_0702a57d75d44255a8cecd2c5fa87809
-    parentId: null
-    modified: 1666867685193
-    created: 1666867357067
-    name: simple
-    description: ""
-    scope: collection
-    _type: workspace
-  - _id: ws-req_6fa6caf4a54c45e39b8bb9d8283a3e33
-    parentId: wrk_0702a57d75d44255a8cecd2c5fa87809
-    modified: 1666867647526
-    created: 1666867628351
-    name: example websocket
-    url: ws://localhost:4010
-    metaSortKey: -1666867628351
-    headers: []
-    authentication: {}
-    parameters: []
-    settingEncodeUrl: true
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingFollowRedirects: global
-    description: ""
-    _type: websocket_request
-  - _id: greq_3604a6e6344949eaac23a8b13a762072
-    parentId: wrk_0702a57d75d44255a8cecd2c5fa87809
-    modified: 1666868125350
-    created: 1666867483974
-    url: localhost:50051
+    scripts:
+      preRequest: console.log('executing pre-request script');
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:4010/graphql
+    name: example graphql
+    meta:
+      id: req_3bc6a05338034951a716405631d3fc5f
+      created: 1666867366390
+      modified: 1666868124102
+      isPrivate: false
+    method: POST
+    body:
+      mimeType: application/graphql
+      text: '{"query":"query {\n\thello,\n\tbearer\n}"}'
+    headers:
+      - name: Content-Type
+        value: application/json
+    scripts:
+      preRequest: console.log('executing pre-request script');
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: localhost:50051
     name: example grpc
-    description: ""
-    protoFileId: pf_f5ad699127fc42c09832ac85f40e1c4e
-    protoMethodName: /hello.HelloService/SayHello
-    metadata: []
+    meta:
+      id: greq_1c9cd3f359fb4a91af4d3a330baf0b00
+      created: 1666867483974
+      modified: 1666868125350
+      isPrivate: false
+      sortKey: -1666867483974
     body:
       text: |-
         {
         	"greeting":"test"
         }
-    metaSortKey: -1666867483974
-    isPrivate: false
-    _type: grpc_request
-  - _id: req_bb79457efa9d4d18bd30adef0463b3b0
-    parentId: wrk_0702a57d75d44255a8cecd2c5fa87809
-    modified: 1666868124102
-    created: 1666867366390
-    url: http://localhost:4010/graphql
-    name: example graphql
-    description: ""
-    method: POST
-    body:
-      mimeType: application/graphql
-      text: '{"query":"query {\n\thello,\n\tbearer\n}"}'
-    parameters: []
-    headers:
-      - name: Content-Type
-        value: application/json
-    authentication: {}
-    metaSortKey: -1666867366390
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-    preRequestScript: |-
-      console.log('executing pre-request script');
-  - _id: req_579daeabc7534a52b242bdaaaf6ca4dc
-    parentId: wrk_0702a57d75d44255a8cecd2c5fa87809
-    modified: 1666867670885
-    created: 1666867365377
-    url: http://localhost:4010/pets/1
-    name: example http
-    description: ""
-    method: GET
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    metaSortKey: -1666867365377
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-    preRequestScript: |-
-      console.log('executing pre-request script');
-  - _id: env_42a94488fcd6106a75fb3ededd6bb4fbd267aa95
-    parentId: wrk_0702a57d75d44255a8cecd2c5fa87809
-    modified: 1666867924188
-    created: 1666867357072
-    name: Base Environment
-    data:
-      foo: bar
-      current-env: base
-    dataPropertyOrder:
-      "&":
-        - foo
-        - current-env
-    color: null
-    isPrivate: false
-    metaSortKey: 1666867357072
-    _type: environment
-  - _id: jar_42a94488fcd6106a75fb3ededd6bb4fbd267aa95
-    parentId: wrk_0702a57d75d44255a8cecd2c5fa87809
-    modified: 1666868115288
+    protoFileId: pf_b64ec56500b14f4cac3e7339451e4cd4
+    protoMethodName: /hello.HelloService/SayHello
+    reflectionApi:
+      enabled: false
+      url: https://buf.build
+      module: buf.build/connectrpc/eliza
+  - url: ws://localhost:4010
+    name: example websocket
+    meta:
+      id: ws-req_9030f28cd1a64b44971cee35bbc09987
+      created: 1666867628351
+      modified: 1666867647526
+    settings:
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_5ac9997401a64a9ea81374670872319a
     created: 1666867357074
-    name: Default Jar
-    cookies:
-      - id: bc6e6a71-1290-4334-8662-a49c1c58b037
-        key: foo
-        value: bar
-        domain: localhost
-        expires: 2038-01-19T03:14:07.000Z
-        path: /
-        secure: false
-        httpOnly: false
-    _type: cookie_jar
-  - _id: spc_415df832b325480d940760e04412c629
-    parentId: wrk_0702a57d75d44255a8cecd2c5fa87809
-    modified: 1666867357068
-    created: 1666867357068
-    fileName: My Collection
-    contents: ""
-    contentType: yaml
-    _type: api_spec
-  - _id: pf_f5ad699127fc42c09832ac85f40e1c4e
-    parentId: wrk_0702a57d75d44255a8cecd2c5fa87809
-    modified: 1666867482366
-    created: 1666867482366
-    name: hello.proto
-    protoText: |
-      // based on https://grpc.io/docs/guides/concepts.html
-
-      syntax = "proto2";
-
-      package hello;
-
-      service HelloService {
-        rpc SayHello(HelloRequest) returns (HelloResponse);
-        rpc LotsOfReplies(HelloRequest) returns (stream HelloResponse);
-        rpc LotsOfGreetings(stream HelloRequest) returns (HelloResponse);
-        rpc BidiHello(stream HelloRequest) returns (stream HelloResponse);
-      }
-
-      message HelloRequest {
-        optional string greeting = 1;
-      }
-
-      message HelloResponse {
-        required string reply = 1;
-      }
-    _type: proto_file
-  - _id: env_2eecf85b7fbb4edf8d296b16f4bc0aa6
-    parentId: env_42a94488fcd6106a75fb3ededd6bb4fbd267aa95
-    modified: 1666867928920
-    created: 1666867721814
-    name: production
-    data:
-      foo: bar
-      current-env: production
-    dataPropertyOrder:
-      "&":
-        - foo
-        - current-env
-    color: null
+    modified: 1666868115288
+  cookies:
+    - id: bc6e6a71-1290-4334-8662-a49c1c58b037
+      key: foo
+      value: bar
+      domain: localhost
+      expires: 2038-01-19T03:14:07.000Z
+      path: /
+      secure: false
+      httpOnly: false
+environments:
+  name: Base Environment
+  meta:
+    id: env_e86a031c9817439bb89991d31a46e50c
+    created: 1666867357072
+    modified: 1666867924188
     isPrivate: false
-    metaSortKey: 1666867721814
-    _type: environment
-  - _id: env_f9ddd2764c8f4fd688901d20360105d8
-    parentId: env_42a94488fcd6106a75fb3ededd6bb4fbd267aa95
-    modified: 1666867933395
-    created: 1666867735110
-    name: staging
-    data:
-      foo: bar
-      current-env: staging
-    dataPropertyOrder:
-      "&":
-        - foo
-        - current-env
-    color: null
-    isPrivate: false
-    metaSortKey: 1666867735110
-    _type: environment
-  - _id: ws-payload_03cf8eb441f449b9bc7f64f9e9ab74fb
-    parentId: ws-req_6fa6caf4a54c45e39b8bb9d8283a3e33
-    modified: 1666868133315
-    created: 1666867635967
-    name: New Payload
-    value: test
-    mode: text/plain
-    _type: websocket_payload
+  data:
+    foo: bar
+    current-env: base
+  subEnvironments:
+    - name: production
+      meta:
+        id: env_f5742e2375e24f25b65c2ae97fbbda30
+        created: 1666867721814
+        modified: 1666867928920
+        isPrivate: false
+      data:
+        foo: bar
+        current-env: production
+    - name: staging
+      meta:
+        id: env_fdc1a90ec92c42899f599a4e8ab40a5f
+        created: 1666867735110
+        modified: 1666867933395
+        isPrivate: false
+      data:
+        foo: bar
+        current-env: staging

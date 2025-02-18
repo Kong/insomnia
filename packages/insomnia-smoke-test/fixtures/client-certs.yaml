@@ -1,91 +1,64 @@
-_type: export
-__export_format: 4
-__export_date: 2024-12-11T21:49:50.826Z
-__export_source: insomnia.desktop.app:v10.2.1-beta.1
-resources:
-  - _id: req_23f466953bff448faaf482e59624b17d
-    parentId: wrk_78f64a950d1248599ddbfcb2dbe4a4e0
-    modified: 1733953779068
-    created: 1733930967254
-    url: https://localhost:4011/protected/pets/2
+type: collection.insomnia.rest/5.0
+name: client-certs
+meta:
+  id: wrk_a0d33d74a42e4a79b1acfd75f71da360
+  created: 1736278353659
+  modified: 1736278353659
+collection:
+  - url: https://localhost:4011/protected/pets/2
     name: pet 2
-    description: ""
+    meta:
+      id: req_04330028217d4607ae9d49caf9130a5f
+      created: 1733930967254
+      modified: 1733953779068
+      isPrivate: false
     method: GET
-    body: {}
-    parameters: []
     headers:
       - name: User-Agent
         value: insomnia/10.2.1-beta.1
-    authentication: {}
-    preRequestScript: console.log('yippee')
-    metaSortKey: -1733930967254
-    isPrivate: false
-    pathParameters: []
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: wrk_78f64a950d1248599ddbfcb2dbe4a4e0
-    parentId: null
-    modified: 1733930502550
-    created: 1733930502550
-    name: client-certs
-    description: ""
-    scope: collection
-    _type: workspace
-  - _id: req_01d6681fd6434cc7a75c8c4e3deee713
-    parentId: wrk_78f64a950d1248599ddbfcb2dbe4a4e0
-    modified: 1733953775398
-    created: 1733953597632
-    url: "{{_.srvr}}/protected/pets/2"
+    scripts:
+      preRequest: console.log('yippee')
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{_.srvr}}/protected/pets/2"
     name: pet 2 with url var
-    description: ""
+    meta:
+      id: req_6e9a52841ee94aa0b27566598f54a68b
+      created: 1733953597632
+      modified: 1733953775398
+      isPrivate: false
     method: GET
-    body: {}
-    parameters: []
     headers:
       - name: User-Agent
         value: insomnia/10.2.1-beta.1
-    authentication: {}
-    preRequestScript: console.log("yeehaw")
-    metaSortKey: -1732678181446
-    isPrivate: false
-    pathParameters: []
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: env_1140e4f10f8a7e3ae858474a594d0bc440e35c99
-    parentId: wrk_78f64a950d1248599ddbfcb2dbe4a4e0
-    modified: 1733953690814
-    created: 1733930502551
-    name: Base Environment
-    data:
-      srvr: https://localhost:4011
-    dataPropertyOrder:
-      "&":
-        - srvr
-    color: null
-    isPrivate: false
-    metaSortKey: 1733930502551
-    environmentType: kv
-    kvPairData:
-      - id: envPair_6117101ea3704c85bc3deab101603717
-        name: srvr
-        value: https://localhost:4011
-        type: str
-        enabled: true
-    _type: environment
-  - _id: jar_1140e4f10f8a7e3ae858474a594d0bc440e35c99
-    parentId: wrk_78f64a950d1248599ddbfcb2dbe4a4e0
-    modified: 1733953690813
+    scripts:
+      preRequest: console.log("yeehaw")
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_f85320af59ae43d98840e75d213e9ec9
     created: 1733930502552
-    name: Default Jar
-    cookies: []
-    _type: cookie_jar
+    modified: 1733953690813
+environments:
+  name: Base Environment
+  meta:
+    id: env_1730ef46a4e546cf962b99b8cdc05d08
+    created: 1733930502551
+    modified: 1733953690814
+    isPrivate: false
+  data:
+    srvr: https://localhost:4011

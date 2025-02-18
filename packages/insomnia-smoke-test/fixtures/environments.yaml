@@ -1,15 +1,17 @@
-_type: export
-__export_format: 4
-__export_date: 2022-12-09T12:12:30.413Z
-__export_source: insomnia.desktop.app:v2022.7.0-beta.6
-resources:
-  - _id: req_e775fcf3312d439f875645a9755d0a99
-    parentId: wrk_1b1f50a051d946bdaffc4a65dd7bd00b
-    modified: 1670587923683
-    created: 1670587797191
-    url: localhost:4010/
+type: collection.insomnia.rest/5.0
+name: environments
+meta:
+  id: wrk_ad6bef19552f4dfb897b042548c5fadf
+  created: 1736605608107
+  modified: 1736605608107
+collection:
+  - url: localhost:4010/
     name: New Request
-    description: ""
+    meta:
+      id: req_9ad12159ec754313b6046b8cd4cfe8f0
+      created: 1670587797191
+      modified: 1670587923683
+      isPrivate: false
     method: GET
     body:
       mimeType: text/plain
@@ -18,109 +20,58 @@ resources:
         {{ _.exampleString }}
         {{ _.exampleNumber }}
         {{ _.exampleObject.anotherNumber }}
-    parameters: []
     headers:
       - name: Content-Type
         value: text/plain
-    authentication: {}
-    metaSortKey: -1670587797191
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: wrk_1b1f50a051d946bdaffc4a65dd7bd00b
-    parentId: null
-    modified: 1670587793242
-    created: 1670587793242
-    name: environments
-    description: ""
-    scope: collection
-    _type: workspace
-  - _id: env_1b0240d933d52d9f638bcfca96b10a880fbc02df
-    parentId: wrk_1b1f50a051d946bdaffc4a65dd7bd00b
-    modified: 1670587811762
-    created: 1670587793246
-    name: Base Environment
-    data:
-      exampleString: baseenv0
-      exampleNumber: 1001
-      exampleObject:
-        anotherString: baseenv1
-        anotherNumber: 1001
-    dataPropertyOrder:
-      "&":
-        - exampleString
-        - exampleNumber
-        - exampleObject
-      "&~|exampleObject":
-        - anotherString
-        - anotherNumber
-    color: null
-    isPrivate: false
-    metaSortKey: 1670587793246
-    _type: environment
-  - _id: jar_1b0240d933d52d9f638bcfca96b10a880fbc02df
-    parentId: wrk_1b1f50a051d946bdaffc4a65dd7bd00b
-    modified: 1670587793248
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_7b1db9ac4e3d4e75887274519fa35a3e
     created: 1670587793248
-    name: Default Jar
-    cookies: []
-    _type: cookie_jar
-  - _id: spc_4b415fe3b6b74f8d86e8dadab8e5b8a0
-    parentId: wrk_1b1f50a051d946bdaffc4a65dd7bd00b
-    modified: 1670587793242
-    created: 1670587793242
-    fileName: environments
-    contents: ""
-    contentType: yaml
-    _type: api_spec
-  - _id: env_f748b157fe514fc29b46b6e20edf87e8
-    parentId: env_1b0240d933d52d9f638bcfca96b10a880fbc02df
-    modified: 1670587818649
-    created: 1670587812382
-    name: ExampleA
-    data:
-      exampleString: subenvA0
-      exampleNumber: 1111
-      exampleObject:
-        anotherString: subenvA1
-        anotherNumber: 1111
-    dataPropertyOrder:
-      "&":
-        - exampleString
-        - exampleNumber
-        - exampleObject
-      "&~|exampleObject":
-        - anotherString
-        - anotherNumber
-    color: null
+    modified: 1670587793248
+environments:
+  name: Base Environment
+  meta:
+    id: env_e8f80ce7346e48f58fa8e101e508f545
+    created: 1670587793246
+    modified: 1670587811762
     isPrivate: false
-    metaSortKey: 1670587812382
-    _type: environment
-  - _id: env_8f47a9932c844085b531784cd6a187fd
-    parentId: env_1b0240d933d52d9f638bcfca96b10a880fbc02df
-    modified: 1670587831933
-    created: 1670587826837
-    name: ExampleB
-    data:
-      exampleString: subenvB0
-      exampleNumber: 2222
-      exampleObject:
-        anotherString: subenvB1
-        anotherNumber: 2222
-    dataPropertyOrder:
-      "&":
-        - exampleString
-        - exampleNumber
-        - exampleObject
-      "&~|exampleObject":
-        - anotherString
-        - anotherNumber
-    color: null
-    isPrivate: false
-    metaSortKey: 1670587826837
-    _type: environment
+  data:
+    exampleString: baseenv0
+    exampleNumber: 1001
+    exampleObject:
+      anotherString: baseenv1
+      anotherNumber: 1001
+  subEnvironments:
+    - name: ExampleA
+      meta:
+        id: env_667a276741a94e06a2573461c13e27ef
+        created: 1670587812382
+        modified: 1670587818649
+        isPrivate: false
+      data:
+        exampleString: subenvA0
+        exampleNumber: 1111
+        exampleObject:
+          anotherString: subenvA1
+          anotherNumber: 1111
+    - name: ExampleB
+      meta:
+        id: env_df8891814c4547ce9c6ded6ec6312a72
+        created: 1670587826837
+        modified: 1736605621292
+        isPrivate: false
+      data:
+        exampleString: subenvB0
+        exampleNumber: 2222
+        exampleObject:
+          anotherString: subenvB1
+          anotherNumber: 2222

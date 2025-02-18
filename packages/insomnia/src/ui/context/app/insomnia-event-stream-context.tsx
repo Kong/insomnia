@@ -2,9 +2,9 @@ import React, { createContext, type FC, type PropsWithChildren, useContext, useE
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { CDN_INVALIDATION_TTL } from '../../../common/constants';
+import type { Organization } from '../../../models/organization';
 import { insomniaFetch } from '../../../ui/insomniaFetch';
 import { avatarImageCache } from '../../hooks/image-cache';
-import type { OrganizationLoaderData } from '../../routes/organization';
 import type { ProjectIdLoaderData } from '../../routes/project';
 import { useRootLoaderData } from '../../routes/root';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
@@ -88,7 +88,6 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
   const { userSession } = useRootLoaderData();
   const projectData = useRouteLoaderData('/project/:projectId') as ProjectIdLoaderData | null;
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
-  const { organizations } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const remoteId = projectData?.activeProject?.remoteId || workspaceData?.activeProject.remoteId;
 
   const [presence, setPresence] = useState<UserPresence[]>([]);
@@ -184,6 +183,8 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
                 method: 'POST',
               });
             } else if (event.type === 'VaultKeyChanged') {
+              const accountId = userSession.accountId;
+              const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
               clearVaultKeyFetcher.submit({
                 organizations: organizations?.map(org => org.id) || [],
                 sessionId: event.sessionId,
@@ -211,7 +212,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
       }
     }
     return;
-  }, [clearVaultKeyFetcher, organizationId, organizations, projectId, remoteId, syncDataFetcher, syncOrganizationsFetcher, syncProjectsFetcher, syncStorageRuleFetcher, userSession.id, workspaceId]);
+  }, [clearVaultKeyFetcher, organizationId, projectId, remoteId, syncDataFetcher, syncOrganizationsFetcher, syncProjectsFetcher, syncStorageRuleFetcher, userSession.accountId, userSession.id, workspaceId]);
 
   return (
     <InsomniaEventStreamContext.Provider
