@@ -4,7 +4,7 @@ import { useFetcher, useParams, useRevalidator } from 'react-router-dom';
 
 import { MergeConflictError } from '../../../sync/git/git-vcs';
 import type { MergeConflict } from '../../../sync/types';
-import { checkGitCanPush, continueMerge, type CreateNewGitBranchResult, type GitBranchesLoaderData, type GitChangesLoaderData, mergeGitBranch } from '../../routes/git-actions';
+import { continueMerge, type CreateNewGitBranchResult, type GitBranchesLoaderData, type GitChangesLoaderData, mergeGitBranch } from '../../routes/git-actions';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
 import { showAlert, showModal } from '.';
@@ -123,11 +123,11 @@ const LocalBranchItem = ({
                 }
                 try {
                   await mergeGitBranch({
-                    theirsBranch: branch,
+                    projectId,
                     workspaceId,
+                    theirsBranch: branch,
                     allowUncommittedChangesBeforeMerge: true,
                   });
-                  checkGitCanPush(workspaceId);
                   revalidate();
                 } catch (err) {
                   if (err instanceof MergeConflictError) {
@@ -139,6 +139,8 @@ const LocalBranchItem = ({
                         handleDone: (conflicts?: MergeConflict[]) => {
                           if (Array.isArray(conflicts) && conflicts.length > 0) {
                             continueMerge({
+                              projectId,
+                              workspaceId,
                               handledMergeConflicts: conflicts,
                               commitMessage: data.commitMessage,
                               commitParent: data.commitParent,
@@ -146,7 +148,6 @@ const LocalBranchItem = ({
                               resolve,
                               reject,
                             ).finally(() => {
-                              checkGitCanPush(workspaceId);
                               revalidate();
                             });
                           } else {
