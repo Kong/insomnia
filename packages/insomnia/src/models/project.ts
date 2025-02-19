@@ -1,6 +1,5 @@
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
-import { ORG_STORAGE_RULE } from '../ui/routes/organization';
 import { type BaseModel } from './index';
 
 export const name = 'Project';
@@ -92,6 +91,12 @@ export function isDefaultOrganizationProject(project: Project) {
   // new remoteId = proj_org_xxx
   return project.remoteId?.startsWith('proj_team') || project.remoteId?.startsWith('proj_org');
 }
+
+export enum ORG_STORAGE_RULE {
+  CLOUD_PLUS_LOCAL = 'cloud_plus_local',
+  CLOUD_ONLY = 'cloud_only',
+  LOCAL_ONLY = 'local_only',
+};
 
 export function getDefaultProjectType(storage: ORG_STORAGE_RULE, project: Project): 'local' | 'remote' | 'git' {
   if (storage === ORG_STORAGE_RULE.CLOUD_ONLY) {
