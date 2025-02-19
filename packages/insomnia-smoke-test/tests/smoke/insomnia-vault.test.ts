@@ -5,7 +5,7 @@ import { test } from '../../playwright/test';
 
 test.describe('Test Insomnia Vault', async () => {
 
-  test('check vault key display and can copy', async ({ page, app }) => {
+  test('check vault key display and can copy', async ({ page }) => {
     await page.locator('[data-testid="settings-button"]').click();
     await page.locator('text=Insomnia Preferences').first().click();
     // get text under div with data-testid="vault-key"
@@ -14,7 +14,7 @@ test.describe('Test Insomnia Vault', async () => {
     await expect(vaultKeyValue).toContain(expectedVaultKeyValue);
     await page.getByTitle('Copy Vault Key').click();
     // get clipboard content
-    const handle = await app.evaluateHandle(() => navigator.clipboard.readText());
+    const handle = await page.evaluateHandle(() => navigator.clipboard.readText());
     const clipboardContent = await handle.jsonValue();
     await expect(clipboardContent).toContain(expectedVaultKeyValue);
   });
