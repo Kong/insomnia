@@ -76,10 +76,10 @@ test.describe('Test Insomnia Vault', async () => {
     // activate request
     await page.getByTestId('normal').getByLabel('GET normal', { exact: true }).click();
     await page.getByRole('button', { name: 'Send' }).click();
+    await page.screenshot({ path: 'flaky-after-click-send-btn' });
     await page.getByRole('tab', { name: 'Console' }).click();
     await page.getByText('bar').click();
     await page.getByText('world').click();
-    await page.waitForTimeout(1500);
   });
 
   test('test vault environment to be applied', async ({ app, page }) => {
