@@ -42,6 +42,7 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
     <div className="flex items-center gap-3 bg-[--hl-xs] px-2 py-1 border border-solid border-[--hl-sm] w-full">
       <div
         className="w-[calc(100%-50px)] truncate"
+        data-testid="VaultKeyDisplayPanel"
         onDoubleClick={(event: React.MouseEvent) => {
           event.preventDefault();
           event.stopPropagation();

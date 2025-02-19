@@ -5,6 +5,20 @@ import { test } from '../../playwright/test';
 
 test.describe('Test Insomnia Vault', async () => {
 
+  test('check vault key display and can copy', async ({ page, app }) => {
+    await page.locator('[data-testid="settings-button"]').click();
+    await page.locator('text=Insomnia Preferences').first().click();
+    // get text under div with data-testid="vault-key"
+    const expectedVaultKeyValue = 'eyJhbGciOiJBMjU2R0NNIiwiZXh0Ijp0cnVlLCJrIjoia';
+    const vaultKeyValue = await page.getByTestId('VaultKeyDisplayPanel').innerText();
+    await expect(vaultKeyValue).toContain(expectedVaultKeyValue);
+    await page.getByTitle('Copy Vault Key').click();
+    // get clipboard content
+    const handle = await app.evaluateHandle(() => navigator.clipboard.readText());
+    const clipboardContent = await handle.jsonValue();
+    await expect(clipboardContent).toContain(expectedVaultKeyValue);
+  });
+
   test('create global private sub environment to store vaults', async ({ page, app }) => {
     await page.getByLabel('Create in project').click();
     await page.getByLabel('Create', { exact: true }).getByText('Environment').click();

@@ -33,6 +33,7 @@ const config: PlaywrightTestConfig = {
       screenshots: true,
       snapshots: true,
     },
+    permissions: ['clipboard-read'],
   },
   reporter: process.env.CI ? 'github' : 'list',
   timeout: process.env.CI ? 60 * 1000 : 20 * 1000,
