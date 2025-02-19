@@ -268,16 +268,16 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
 
   useEffect(() => {
     const unsubscribe = window.main.on('nunjucks-context-menu-command', (_, { key, tag, nunjucksTag, needsEnterprisePlan, displayName }) => {
-      if (needsEnterprisePlan && !isEnterprisePlan) {
-        // show modal if current user is not an enteprise user and the command is an enterprise feature
-        showModal(UpgradeModal, {
-          newPlan: 'enterprise',
-          featureName: displayName,
-          isOwner,
-        });
-        return;
-      }
       if (id === key) {
+        if (needsEnterprisePlan && !isEnterprisePlan) {
+          // show modal if current user is not an enteprise user and the command is an enterprise feature
+          showModal(UpgradeModal, {
+            newPlan: 'enterprise',
+            featureName: displayName,
+            isOwner,
+          });
+          return;
+        };
         if (nunjucksTag) {
           const { type, template, range } = nunjucksTag as nunjucksTagContextMenuOptions;
           switch (type) {
