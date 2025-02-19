@@ -17,7 +17,7 @@ import type { GrpcRequest } from '../../models/grpc-request';
 import type { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import { sortProjects } from '../../models/helpers/project';
 import type { MockServer } from '../../models/mock-server';
-import type { Project } from '../../models/project';
+import { isGitProject, type Project } from '../../models/project';
 import type { Request } from '../../models/request';
 import { isRequestGroup, type RequestGroup } from '../../models/request-group';
 import type { RequestGroupMeta } from '../../models/request-group-meta';
@@ -89,8 +89,9 @@ export const workspaceLoader: LoaderFunction = async ({
     workspaceId,
   );
   invariant(activeWorkspaceMeta, 'Workspace meta not found');
+  const gitRepositoryId = isGitProject(activeProject) ? activeProject.gitRepositoryId : activeWorkspaceMeta.gitRepositoryId;
   const gitRepository = await models.gitRepository.getById(
-    activeWorkspaceMeta.gitRepositoryId || '',
+    gitRepositoryId || '',
   );
 
   const baseEnvironment = await models.environment.getByParentId(workspaceId);

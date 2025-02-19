@@ -1,5 +1,6 @@
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
+import { ORG_STORAGE_RULE } from '../ui/routes/organization';
 import { type BaseModel } from './index';
 
 export const name = 'Project';
@@ -90,4 +91,28 @@ export function isDefaultOrganizationProject(project: Project) {
   // legacy remoteId = proj_team_xxx
   // new remoteId = proj_org_xxx
   return project.remoteId?.startsWith('proj_team') || project.remoteId?.startsWith('proj_org');
+}
+
+export function getDefaultProjectType(storage: ORG_STORAGE_RULE, project: Project): 'local' | 'remote' | 'git' {
+  if (storage === ORG_STORAGE_RULE.CLOUD_ONLY) {
+    return 'remote';
+  }
+
+  if (storage === ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL) {
+    if (isGitProject(project)) {
+      return 'git';
+    }
+
+    if (isRemoteProject(project)) {
+      return 'remote';
+    }
+
+    return 'local';
+  }
+
+  if (isGitProject(project)) {
+    return 'git';
+  }
+
+  return 'local';
 }

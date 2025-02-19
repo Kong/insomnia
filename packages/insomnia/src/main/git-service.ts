@@ -854,10 +854,6 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: {
   if (workspaceId) {
     const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
     invariant(workspaceMeta, 'Workspace meta not found');
-    // @TODO
-    // - In workspace we have Workspace ._id -> .parentId Meta gitRepositoryId -> GitRepository
-    // - In project we have Project gitRepositoryId -> GitRepository
-    // - GitRepository parentId -> workspaceId or projectId
     await models.workspaceMeta.update(workspaceMeta, {
       gitRepositoryId: null,
     });
@@ -865,7 +861,7 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: {
     const project = await models.project.getById(projectId);
     invariant(project, 'Project not found');
     await models.project.update(project, {
-      gitRepositoryId: null,
+      gitRepositoryId: undefined,
     });
   }
 

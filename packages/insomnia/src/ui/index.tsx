@@ -238,6 +238,18 @@ async function renderApp() {
                       (await import('./routes/project')).indexLoader(...args),
                   },
                   {
+                    path: 'git',
+                    children: [
+                      {
+                        path: 'clone',
+                        action: async (...args) =>
+                          (
+                            await import('./routes/git-project-actions')
+                          ).cloneGitRepoAction(...args),
+                      },
+                    ],
+                  },
+                  {
                     path: 'permissions',
                     loader: async (...args) =>
                       (

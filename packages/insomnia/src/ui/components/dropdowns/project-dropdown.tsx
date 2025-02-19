@@ -21,6 +21,7 @@ import {
 import { useFetcher } from 'react-router-dom';
 
 import {
+  getDefaultProjectType,
   isRemoteProject,
   type Project,
 } from '../../../models/project';
@@ -240,7 +241,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage, i
                         className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                       />
                     </TextField>
-                    <RadioGroup name="type" defaultValue={storage === ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL ? project.remoteId ? 'remote' : 'local' : storage !== ORG_STORAGE_RULE.CLOUD_ONLY ? 'local' : 'remote'} className="flex flex-col gap-2">
+                    <RadioGroup name="type" defaultValue={getDefaultProjectType(storage, project)} className="flex flex-col gap-2">
                       <Label className="text-sm text-[--hl]">
                         Project type
                       </Label>

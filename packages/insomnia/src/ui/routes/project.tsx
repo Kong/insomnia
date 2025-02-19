@@ -64,6 +64,7 @@ import type { MockServer } from '../../models/mock-server';
 import type { Organization } from '../../models/organization';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../../models/organization';
 import {
+  getDefaultProjectType,
   isGitProject,
   isRemoteProject,
   type Project,
@@ -85,6 +86,7 @@ import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
 import { showAlert, showPrompt } from '../components/modals';
 import { AlertModal } from '../components/modals/alert-modal';
+import { GitProjectRepositoryCloneModal } from '../components/modals/git-repository-settings-modal';
 import { GitRepositoryCloneModal } from '../components/modals/git-repository-settings-modal/git-repo-clone-modal';
 import { ImportModal } from '../components/modals/import-modal';
 import { MockServerSettingsModal } from '../components/modals/mock-server-settings-modal';
@@ -675,6 +677,7 @@ const ProjectRoute: FC = () => {
   const [workspaceListSortOrder, setWorkspaceListSortOrder] = useLocalStorage(`${projectId}:workspace-list-sort-order`, 'modified-desc');
   const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  const [isGitProjectRepositoryCloneModalOpen, setIsGitProjectRepositoryCloneModalOpen] = useState(false);
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
   const [projectType, setProjectType] = useState<'local' | 'remote' | ''>('');
   const organization = organizations.find(o => o.id === organizationId);
@@ -1532,6 +1535,11 @@ const ProjectRoute: FC = () => {
             onHide={() => setIsGitRepositoryCloneModalOpen(false)}
           />
         )}
+        {isGitProjectRepositoryCloneModalOpen && (
+          <GitProjectRepositoryCloneModal
+            onHide={() => setIsGitRepositoryCloneModalOpen(false)}
+          />
+        )}
         <ModalOverlay isOpen={isNewProjectModalOpen} onOpenChange={isOpen => setIsNewProjectModalOpen(isOpen)} isDismissable className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30">
           <Modal className="max-w-2xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
             <Dialog className="outline-none" aria-label='Create or update dialog'>
@@ -1552,6 +1560,12 @@ const ProjectRoute: FC = () => {
                       e.preventDefault();
                       const formData = new FormData(e.currentTarget);
                       const type = formData.get('type');
+
+                      if (type === 'git') {
+                        setIsGitProjectRepositoryCloneModalOpen(true);
+                        close();
+                        return;
+                      }
 
                       if (!type) {
                         showAlert({
@@ -1732,7 +1746,7 @@ const ProjectRoute: FC = () => {
                           className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                         />
                       </TextField>
-                      <RadioGroup name="type" defaultValue={storage === ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL ? activeProject?.remoteId ? 'remote' : 'local' : storage !== ORG_STORAGE_RULE.CLOUD_ONLY ? 'local' : 'remote'} className="flex flex-col gap-2">
+                      <RadioGroup name="type" defaultValue={activeProject && getDefaultProjectType(storage, activeProject)} className="flex flex-col gap-2">
                         <Label className="text-sm text-[--hl]">
                           Project type
                         </Label>

@@ -126,7 +126,7 @@ export const updateProjectAction: ActionFunction = async ({
   invariant(typeof name === 'string', 'Name is required');
 
   const type = formData.get('type');
-  invariant(type === 'local' || type === 'remote', 'Project type is required');
+  invariant(type === 'local' || type === 'remote' || type === 'git', 'Project type is required');
 
   const { organizationId, projectId } = params;
   invariant(projectId, 'Project ID is required');
