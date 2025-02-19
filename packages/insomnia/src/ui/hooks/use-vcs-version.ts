@@ -38,7 +38,7 @@ export function useActiveApiSpecSyncVCSVersion() {
 // For example, by pulling a new version from the remote, switching branches, etc.
 export function useGitVCSVersion() {
   const {
-    activeWorkspaceMeta,
+    gitRepository,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  return ((activeWorkspaceMeta?.cachedGitLastCommitTime + '') + activeWorkspaceMeta?.cachedGitRepositoryBranch) + '';
+  return ((gitRepository?.cachedGitLastCommitTime + '') + gitRepository?.cachedGitRepositoryBranch) + '';
 }

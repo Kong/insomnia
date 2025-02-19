@@ -58,11 +58,13 @@ import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { userSession } from '../../models';
 import { type ApiSpec } from '../../models/api-spec';
+import type { GitRepository } from '../../models/git-repository';
 import { sortProjects } from '../../models/helpers/project';
 import type { MockServer } from '../../models/mock-server';
 import type { Organization } from '../../models/organization';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../../models/organization';
 import {
+  isGitProject,
   isRemoteProject,
   type Project,
   SCRATCHPAD_PROJECT_ID,
@@ -76,6 +78,7 @@ import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { getInitialRouteForOrganization } from '../../utils/router';
 import { AvatarGroup } from '../components/avatar';
+import { GitProjectSyncDropdown } from '../components/dropdowns/git-project-sync-dropdown';
 import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { WorkspaceCardDropdown } from '../components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
@@ -282,6 +285,7 @@ export interface ProjectLoaderData {
   mockServersCount: number;
   projectsCount: number;
   activeProject?: Project;
+  activeProjectGitRepository?: GitRepository | null;
   projects: Project[];
   learningFeaturePromise?: Promise<LearningFeature>;
   remoteFilesPromise?: Promise<InsomniaFile[]>;
@@ -312,6 +316,12 @@ async function getAllLocalFiles({
     }),
   ]);
 
+  const gitRepositories = await database.find<GitRepository>(models.gitRepository.type, {
+    parentId: {
+      $in: workspaceMetas.map(wm => wm.gitRepositoryId).filter(isNotNullOrUndefined),
+    },
+  });
+
   const files: InsomniaFile[] = projectWorkspaces.map(workspace => {
     const apiSpec = apiSpecs.find(spec => spec.parentId === workspace._id);
     const mockServer = mockServers.find(mock => mock.parentId === workspace._id);
@@ -330,10 +340,11 @@ async function getAllLocalFiles({
       }
     }
     const workspaceMeta = workspaceMetas.find(wm => wm.parentId === workspace._id);
+    const gitRepository = gitRepositories.find(gr => gr._id === workspaceMeta?.gitRepositoryId);
 
-    const lastActiveBranch = workspaceMeta?.cachedGitRepositoryBranch;
+    const lastActiveBranch = gitRepository?.cachedGitRepositoryBranch;
 
-    const lastCommitAuthor = workspaceMeta?.cachedGitLastAuthor;
+    const lastCommitAuthor = gitRepository?.cachedGitLastAuthor;
 
     // WorkspaceMeta is a good proxy for last modified time
     const workspaceModified = workspaceMeta?.modified || workspace.modified;
@@ -347,7 +358,7 @@ async function getAllLocalFiles({
       workspace?.modified,
       workspaceMeta?.modified,
       modifiedLocally,
-      workspaceMeta?.cachedGitLastCommitTime,
+      gitRepository?.cachedGitLastCommitTime,
     ];
 
     const lastModifiedTimestamp = lastModifiedFrom
@@ -356,8 +367,8 @@ async function getAllLocalFiles({
 
     const hasUnsavedChanges = Boolean(
       isDesign(workspace) &&
-        workspaceMeta?.cachedGitLastCommitTime &&
-        modifiedLocally > workspaceMeta?.cachedGitLastCommitTime
+      gitRepository?.cachedGitLastCommitTime &&
+      modifiedLocally > gitRepository?.cachedGitLastCommitTime
     );
 
     const specVersion = spec?.info?.version ? String(spec?.info?.version) : '';
@@ -368,9 +379,9 @@ async function getAllLocalFiles({
       scope: workspace.scope,
       label: scopeToLabelMap[workspace.scope],
       created: workspace.created,
-      lastModifiedTimestamp: (hasUnsavedChanges && modifiedLocally) || workspaceMeta?.cachedGitLastCommitTime || lastModifiedTimestamp,
+      lastModifiedTimestamp: (hasUnsavedChanges && modifiedLocally) || gitRepository?.cachedGitLastCommitTime || lastModifiedTimestamp,
       branch: lastActiveBranch || '',
-      lastCommit: hasUnsavedChanges && workspaceMeta?.cachedGitLastCommitTime && lastCommitAuthor ? `by ${lastCommitAuthor}` : '',
+      lastCommit: hasUnsavedChanges && gitRepository?.cachedGitLastCommitTime && lastCommitAuthor ? `by ${lastCommitAuthor}` : '',
       version: specVersion ? `${specVersion?.startsWith('v') ? '' : 'v'}${specVersion}` : '',
       oasFormat: specFormat ? `${specFormat === 'openapi' ? 'OpenAPI' : 'Swagger'} ${specFormatVersion || ''}` : '',
       mockServer,
@@ -577,6 +588,8 @@ export const loader: LoaderFunction = async ({
 
   const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
 
+  const activeProjectGitRepository = isGitProject(project) ? await models.gitRepository.getById(project.gitRepositoryId || '') : null;
+
   return defer({
     localFiles,
     learningFeaturePromise,
@@ -584,6 +597,7 @@ export const loader: LoaderFunction = async ({
     projects,
     projectsCount: organizationProjects.length,
     activeProject: project,
+    activeProjectGitRepository,
     allFilesCount: localFiles.length,
     environmentsCount: localFiles.filter(
       file => file.scope === 'environment'
@@ -605,6 +619,7 @@ const ProjectRoute: FC = () => {
   const {
     localFiles,
     activeProject,
+    activeProjectGitRepository,
     projects,
     allFilesCount,
     environmentsCount,
@@ -834,6 +849,10 @@ const ProjectRoute: FC = () => {
       });
   };
 
+  const createNewProjectFetcher = useFetcher({
+    key: `${organizationId}-${projectId}-create-new-project`,
+  });
+
   const isGitSyncEnabled = features.gitSync.enabled;
 
   const showUpgradePlanModal = () => {
@@ -898,12 +917,17 @@ const ProjectRoute: FC = () => {
         icon: 'code',
         action: createNewGlobalEnvironment,
       },
-      {
-      id: 'git-clone',
-      name: 'Git Clone',
-      icon: 'code-fork',
-      action: importFromGit,
-    },
+      ...activeProject && isGitProject(activeProject) ? [] : [{
+        id: 'git-clone',
+        name: 'Git Clone',
+        icon: 'code-fork',
+        action: importFromGit,
+      }] satisfies {
+        id: string;
+        name: string;
+        icon: IconName;
+        action: () => void;
+      }[],
   ];
 
   const scopeActionList: {
@@ -1100,7 +1124,7 @@ const ProjectRoute: FC = () => {
                           <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
                           <Icon
                             icon={
-                              isRemoteProject(item) ? 'globe-americas' : 'laptop'
+                              isRemoteProject(item) ? 'globe-americas' : isGitProject(item) ? ['fab', 'git-alt'] : 'laptop'
                             }
                           />
                           <span className={'truncate'}>{item.name}</span>
@@ -1117,6 +1141,7 @@ const ProjectRoute: FC = () => {
                               organizationId={organizationId}
                               project={item}
                               storage={storage}
+                              isGitSyncEnabled={isGitSyncEnabled}
                             />
                           )}
                         </div>
@@ -1126,49 +1151,52 @@ const ProjectRoute: FC = () => {
                 </GridList>
               </div>
               {activeProject && (
-                <GridList
-                  aria-label="Scope filter"
-                  items={scopeActionList}
-                  className="overflow-y-auto flex-shrink-0 flex-1 data-[empty]:py-0 py-[--padding-sm]"
-                  disallowEmptySelection
-                  selectedKeys={[workspaceListScope || 'all']}
-                  selectionMode="single"
-                  onSelectionChange={keys => {
-                    if (keys !== 'all') {
-                      const [value] = keys.values();
+                <>
+                  <GridList
+                    aria-label="Scope filter"
+                    items={scopeActionList}
+                    className="overflow-y-auto flex-shrink-0 flex-1 data-[empty]:py-0 py-[--padding-sm]"
+                    disallowEmptySelection
+                    selectedKeys={[workspaceListScope || 'all']}
+                    selectionMode="single"
+                    onSelectionChange={keys => {
+                      if (keys !== 'all') {
+                        const [value] = keys.values();
 
-                      setWorkspaceListScope(value.toString());
-                    }
-                  }}
-                >
-                  {item => {
-                    return (
-                      <GridListItem textValue={item.label} className="group outline-none select-none">
-                        <div
-                          className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-aria-selected:bg-[--hl-sm] group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-12 w-full overflow-hidden text-[--hl]"
-                        >
-                          <span className='w-6 h-6 flex items-center justify-center'>
-                            <Icon icon={item.icon} className='w-6' />
-                          </span>
+                        setWorkspaceListScope(value.toString());
+                      }
+                    }}
+                  >
+                    {item => {
+                      return (
+                        <GridListItem textValue={item.label} className="group outline-none select-none">
+                          <div
+                            className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-aria-selected:bg-[--hl-sm] group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-12 w-full overflow-hidden text-[--hl]"
+                          >
+                            <span className='w-6 h-6 flex items-center justify-center'>
+                              <Icon icon={item.icon} className='w-6' />
+                            </span>
 
-                          <span className="truncate capitalize">
-                            {item.label}
-                          </span>
-                          <span className="flex-1" />
-                          {item.action && (
-                            <Button
-                              onPress={item.action.run}
-                              aria-label={item.action.label}
-                              className="opacity-80 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                            >
-                              <Icon icon={item.action.icon} />
-                            </Button>
-                          )}
-                        </div>
-                      </GridListItem>
-                    );
-                  }}
-                </GridList>
+                            <span className="truncate capitalize">
+                              {item.label}
+                            </span>
+                            <span className="flex-1" />
+                            {item.action && (
+                              <Button
+                                onPress={item.action.run}
+                                aria-label={item.action.label}
+                                className="opacity-80 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                              >
+                                <Icon icon={item.action.icon} />
+                              </Button>
+                            )}
+                          </div>
+                        </GridListItem>
+                      );
+                    }}
+                  </GridList>
+                  {isGitProject(activeProject) && <GitProjectSyncDropdown gitRepository={activeProjectGitRepository || null} />}
+                </>
               )}
               {!isLearningFeatureDismissed && learningFeature?.active && (
                 <div className='flex flex-shrink-0 flex-col gap-2 p-[--padding-sm]'>
@@ -1381,6 +1409,7 @@ const ProjectRoute: FC = () => {
                           importFrom={() => setImportModalType('file')}
                           cloneFromGit={importFromGit}
                           isGitSyncEnabled={isGitSyncEnabled}
+                          isGitProject={isGitProject(activeProject)}
                         />
                       );
                     }}
@@ -1532,43 +1561,10 @@ const ProjectRoute: FC = () => {
                         return;
                       }
 
-                      const name = formData.get('name');
-
-                      createNewProject({
-                        organizationId,
-                        name: (typeof name === 'string') ? name : 'My project',
-                        projectType: type as ProjectType,
-                      }).then(
-                        newProjectId => {
-                          navigate(`/organization/${organizationId}/project/${newProjectId}`);
-                        },
-                        err => {
-                          const errMsg = err.message;
-                          if (errMsg === 'NEEDS_TO_UPGRADE') {
-                            showModal(AskModal, {
-                              title: 'Upgrade your plan',
-                              message: 'You are currently on the Free plan where you can invite as many collaborators as you want as long as you don\'t have more than one project. Since you have more than one project, you need to upgrade to "Individual" or above to continue.',
-                              yesText: 'Upgrade',
-                              noText: 'Cancel',
-                              onDone: async (isYes: boolean) => {
-                                if (isYes) {
-                                  window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=individual`);
-                                }
-                              },
-                            });
-                          } else if (errMsg === 'FORBIDDEN') {
-                            showAlert({
-                              title: 'Could not create project.',
-                              message: 'You do not have permission to create a project in this organization.',
-                            });
-                          } else {
-                            showAlert({
-                              title: 'Could not create project.',
-                              message: errMsg,
-                            });
-                          }
-                        },
-                      );
+                      createNewProjectFetcher.submit(e.currentTarget, {
+                        action: `/organization/${organizationId}/project/new`,
+                        method: 'post',
+                      });
 
                       close();
                     }}
@@ -1592,6 +1588,19 @@ const ProjectRoute: FC = () => {
                         Project type
                       </Label>
                       <div className="flex gap-2">
+                        <Radio
+                          isDisabled={!isGitSyncEnabled}
+                          value="git"
+                          className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                        >
+                          <div className='flex items-center gap-2'>
+                            <Icon icon={['fab', 'git-alt']} />
+                            <Heading className="text-lg font-bold">Git Sync</Heading>
+                          </div>
+                          <p className='pt-2'>
+                            Stored locally and synced to a Git repository. Ideal for version control and collaboration.
+                          </p>
+                        </Radio>
                         <Radio
                           isDisabled={storage === ORG_STORAGE_RULE.LOCAL_ONLY}
                           value="remote"
@@ -1729,6 +1738,19 @@ const ProjectRoute: FC = () => {
                         </Label>
                         <div className="flex gap-2">
                           <Radio
+                            isDisabled={!isGitSyncEnabled}
+                            value="git"
+                            className="data-[selected]:border-[--color-surprise] flex-1 data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                          >
+                            <div className='flex items-center gap-2'>
+                              <Icon icon={['fab', 'git-alt']} />
+                              <Heading className="text-lg font-bold">Git Sync</Heading>
+                            </div>
+                            <p className='pt-2'>
+                              Stored locally and synced with Git for version control.
+                            </p>
+                          </Radio>
+                          <Radio
                             isDisabled={storage === ORG_STORAGE_RULE.LOCAL_ONLY}
                             value="remote"
                             className="data-[selected]:border-[--color-surprise] flex-1 data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
@@ -1852,76 +1874,3 @@ const ProjectRoute: FC = () => {
 ProjectRoute.displayName = 'ProjectRoute';
 
 export default ProjectRoute;
-
-type ProjectType = 'local' | 'remote';
-
-async function createNewProject({
-  organizationId,
-  name,
-  projectType,
-}: {
-  organizationId: string;
-  name: string;
-  projectType: ProjectType;
-}) {
-  invariant(organizationId, 'Organization ID is required');
-  invariant(typeof name === 'string', 'Name is required');
-  invariant(projectType === 'local' || projectType === 'remote', 'Project type is required');
-
-  const user = await models.userSession.getOrCreate();
-  const sessionId = user.id;
-  invariant(sessionId, 'User must be logged in to create a project');
-
-  if (projectType === 'local') {
-    const project = await models.project.create({
-      name,
-      parentId: organizationId,
-    });
-    return project._id;
-  }
-
-  try {
-    const newCloudProject = await insomniaFetch<{
-      id: string;
-      name: string;
-    } | {
-      error: string;
-      message?: string;
-    }>({
-      path: `/v1/organizations/${organizationId}/team-projects`,
-      method: 'POST',
-      data: {
-        name,
-      },
-      sessionId,
-    });
-
-    if (!newCloudProject || 'error' in newCloudProject) {
-      let error = 'An unexpected error occurred while creating the project. Please try again.';
-      if (newCloudProject.error === 'FORBIDDEN') {
-        error = newCloudProject.error;
-      }
-
-      if (newCloudProject.error === 'NEEDS_TO_UPGRADE') {
-        error = 'Upgrade your account in order to create new Cloud Projects.';
-      }
-
-      if (newCloudProject.error === 'PROJECT_STORAGE_RESTRICTION') {
-        error = newCloudProject.message ?? 'The owner of the organization allows only Local Vault project creation.';
-      }
-
-      throw new Error(error);
-    }
-
-    const project = await models.project.create({
-      _id: newCloudProject.id,
-      name: newCloudProject.name,
-      remoteId: newCloudProject.id,
-      parentId: organizationId,
-    });
-
-    return project._id;
-  } catch (err) {
-    throw new Error(err instanceof Error ? err.message : `An unexpected error occurred while creating the project. Please try again. ${err}`);
-  }
-}

@@ -342,6 +342,13 @@ async function renderApp() {
                         ),
                       },
                       {
+                        path: 'new',
+                        action: async (...args) =>
+                          (
+                            await import('./routes/actions')
+                          ).createNewProjectAction(...args),
+                      },
+                      {
                         path: ':projectId',
                         id: '/project/:projectId',
                         loader: async (...args) =>
@@ -401,6 +408,101 @@ async function renderApp() {
                                   (
                                     await import('./routes/git-actions')
                                   ).cloneGitRepoAction(...args),
+                              },
+                              {
+                                path: 'repo',
+                                loader: async (...args) =>
+                                  (await import('./routes/git-project-actions')).gitRepoLoader(...args),
+                              },
+                              {
+                                path: 'changes',
+                                loader: async (...args) =>
+                                  (await import('./routes/git-project-actions')).gitChangesLoader(...args),
+                              },
+                              {
+                                path: 'log',
+                                loader: async (...args) =>
+                                  (await import('./routes/git-project-actions')).gitLogLoader(...args),
+                              },
+                              {
+                                path: 'branches',
+                                loader: async (...args) =>
+                                  (await import('./routes/git-project-actions')).gitBranchesLoader(...args),
+                              },
+                              {
+                                path: 'status',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).gitStatusAction(...args),
+                              },
+                              {
+                                path: 'commit',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).commitToGitRepoAction(...args),
+                              },
+                              {
+                                path: 'commit-and-push',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).commitAndPushToGitRepoAction(...args),
+                              },
+                              {
+                                path: 'fetch',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).gitFetchAction(...args),
+                              },
+                              {
+                                path: 'update',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).updateGitRepoAction(...args),
+                              },
+                              {
+                                path: 'reset',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).resetGitRepoAction(...args),
+                              },
+                              {
+                                path: 'push',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).pushToGitRemoteAction(...args),
+                              },
+                              {
+                                path: 'stage',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).stageChangesAction(...args),
+                              },
+                              {
+                                path: 'unstage',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).unstageChangesAction(...args),
+                              },
+                              {
+                                path: 'discard',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).discardChangesAction(...args),
+                              },
+                              {
+                                path: 'diff',
+                                loader: async (...args) =>
+                                  (await import('./routes/git-project-actions')).diffFileLoader(...args),
+                              },
+                              {
+                                path: 'branch',
+                                children: [
+                                  {
+                                    path: 'new',
+                                    action: async (...args) =>
+                                      (await import('./routes/git-project-actions')).createNewGitBranchAction(...args),
+                                  },
+                                  {
+                                    path: 'delete',
+                                    action: async (...args) =>
+                                      (await import('./routes/git-project-actions')).deleteGitBranchAction(...args),
+                                  },
+                                  {
+                                    path: 'checkout',
+                                    action: async (...args) =>
+                                      (await import('./routes/git-project-actions')).checkoutGitBranchAction(...args),
+                                  },
+                                ],
                               },
                             ],
                           },

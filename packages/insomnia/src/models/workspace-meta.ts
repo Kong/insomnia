@@ -13,9 +13,6 @@ export interface BaseWorkspaceMeta {
   activeGlobalEnvironmentId: string | null;
   activeRequestId: string | null;
   activeUnitTestSuiteId: string | null;
-  cachedGitLastAuthor: string | null;
-  cachedGitLastCommitTime: number | null;
-  cachedGitRepositoryBranch: string | null;
   gitRepositoryId: string | null;
   parentId: string | null;
   pushSnapshotOnInitialize: boolean;
@@ -36,9 +33,6 @@ export function init(): BaseWorkspaceMeta {
     activeGlobalEnvironmentId: null,
     activeRequestId: null,
     activeUnitTestSuiteId: null,
-    cachedGitLastAuthor: null,
-    cachedGitLastCommitTime: null,
-    cachedGitRepositoryBranch: null,
     gitRepositoryId: null,
     parentId: null,
     pushSnapshotOnInitialize: false,

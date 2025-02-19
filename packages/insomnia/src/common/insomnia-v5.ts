@@ -608,10 +608,23 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
 
   function getSpecFromResources(resources: ApiSpec[]): Extract<InsomniaFile, { type: 'spec.insomnia.rest/5.0' }>['spec'] {
     const spec = resources[0];
-    const parser = spec.contentType === 'json' ? JSON.parse : parse;
+    // const parser = spec.contentType === 'json' ? JSON.parse : parse;
+    let contents = {};
+
+    try {
+      contents = JSON.parse(spec.contents);
+    } catch (err) {
+      // @TODO For some reason switching a spec from JSON to YAML doesn't update it's content type so we need to handle both here
+      // This must be fixed in the apiSpec model
+      try {
+        contents = parse(spec.contents);
+      } catch (err) {
+        console.error('Failed to parse spec contents', err);
+      }
+    }
     return {
       // @TODO In the future we want to support also reading from a file like this: file: resources[0].fileName,
-      contents: parser(resources[0].contents),
+      contents,
       meta: {
         id: spec._id,
         created: spec.created,

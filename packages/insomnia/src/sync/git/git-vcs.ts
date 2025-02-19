@@ -124,8 +124,6 @@ export class GitVCS {
   // @ts-expect-error -- TSCONVERSION not initialized with required properties
   _baseOpts: BaseOpts = gitCallbacks();
 
-  initializedRepoId = '';
-
   async init({ directory, fs, gitDirectory, gitCredentials, uri = '', repoId }: InitOptions) {
     this._baseOpts = {
       ...this._baseOpts,
@@ -420,7 +418,7 @@ export class GitVCS {
         git.STAGE(),
       ],
       map: async function map(filepath, [head, workdir, stage]) {
-        const isInsomniaFile = filepath.startsWith(GIT_INSOMNIA_DIR_NAME) || filepath === '.';
+        const isInsomniaFile = filepath.startsWith(GIT_INSOMNIA_DIR_NAME) || filepath.startsWith('insomnia.') || filepath === '.';
 
         if (await git.isIgnored({
           ...baseOpts,
@@ -799,7 +797,7 @@ export class GitVCS {
   }) {
     console.log('[git] continue to merge after resolving merge conflicts', await this.getCurrentBranch());
 
-    // Because wo don't need to do anything with the conflicts that user has chosen to keep 'ours'
+    // Because wo don't need to do anything with the conflicts that the user has chosen to keep 'ours'
     // Here we just filter in conflicts that user has chosen to keep 'theirs'
     handledMergeConflicts = handledMergeConflicts.filter(conflict => conflict.choose !== conflict.mineBlob);
 

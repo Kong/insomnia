@@ -64,9 +64,10 @@ interface Props {
   importFrom: () => void;
   cloneFromGit: () => void;
   isGitSyncEnabled: boolean;
+  isGitProject: boolean;
 }
 
-export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, createMockServer, createEnvironment, importFrom, cloneFromGit, isGitSyncEnabled }) => {
+export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, createMockServer, createEnvironment, importFrom, cloneFromGit, isGitSyncEnabled, isGitProject }) => {
   const { organizationId } = useParams<{ organizationId: string }>();
   const { organizations } = useOrganizationLoaderData();
   const { userSession } = useRootLoaderData();
@@ -207,7 +208,7 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
             }}
           /> Clipboard
         </AlmostSquareButton>
-        <AlmostSquareButton
+        {isGitProject ? null : <AlmostSquareButton
           aria-label='Clone git repository'
           data-test-git-enable={isGitSyncEnabled}
           onClick={
@@ -224,7 +225,7 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
               fontSize: 'var(--font-size-lg)',
             }}
           /> Git Clone
-        </AlmostSquareButton>
+        </AlmostSquareButton>}
         <AlmostSquareButton
           onClick={importFrom}
         >
