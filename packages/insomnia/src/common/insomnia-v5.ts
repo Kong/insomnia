@@ -3,7 +3,7 @@ import { parse, stringify } from 'yaml';
 import * as models from '../models';
 import type { ApiSpec } from '../models/api-spec';
 import type { CookieJar } from '../models/cookie-jar';
-import type { Environment } from '../models/environment';
+import { type Environment, maskVaultEnvironmentData } from '../models/environment';
 import type { GrpcRequest } from '../models/grpc-request';
 import type { MockRoute } from '../models/mock-route';
 import type { MockServer } from '../models/mock-server';
@@ -542,7 +542,7 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
       },
       data: baseEnvironment.data,
       color: baseEnvironment.color,
-      subEnvironments: subEnvironments.map(subEnvironment => ({
+      subEnvironments: subEnvironments.map(maskVaultEnvironmentData).map(subEnvironment => ({
         name: subEnvironment.name,
         meta: {
           id: subEnvironment._id,
