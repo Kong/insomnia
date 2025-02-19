@@ -61,6 +61,7 @@ test.describe('Test Insomnia Vault', async () => {
     // activate request
     await page.getByTestId('normal').getByLabel('GET normal', { exact: true }).click();
     await page.getByRole('button', { name: 'Send' }).click();
+    await page.waitForTimeout(1000);
     await page.getByRole('tab', { name: 'Console' }).click();
     await page.getByText('bar').click();
     await page.getByText('world').click();
@@ -101,6 +102,7 @@ test.describe('Test Insomnia Vault', async () => {
     // activate request
     await page.getByTestId('legacy-array-vault').getByLabel('GET legacy-array-vault', { exact: true }).click();
     await page.getByRole('button', { name: 'Send' }).click();
+    await page.waitForTimeout(1000);
     await page.getByRole('tab', { name: 'Console' }).click();
     await page.getByText('password').click();
     await page.getByText('bar').click();
