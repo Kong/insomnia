@@ -1,0 +1,22 @@
+name: Synk
+
+on:
+  pull_request: {}
+  push:
+    branches:
+    - develop
+    - release/*
+  workflow_dispatch: {}
+
+
+jobs:
+  security:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@master
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: monitor
