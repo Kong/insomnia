@@ -34,22 +34,22 @@ jobs:
       contents: write # Required to upload assets. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
       packages: write
     steps:
-      - name: Checkout branch # Check out the release branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.RELEASE_BRANCH }}
-          fetch-depth: 0
-          persist-credentials: false
+      # - name: Checkout branch # Check out the release branch
+      #   uses: actions/checkout@v4
+      #   with:
+      #     ref: ${{ env.RELEASE_BRANCH }}
+      #     fetch-depth: 0
+      #     persist-credentials: false
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
+      # - name: Setup Node
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version-file: ".nvmrc"
+      #     cache: 'npm'
+      #     cache-dependency-path: package-lock.json
 
-      - name: Install packages
-        run: npm ci
+      # - name: Install packages
+      #   run: npm ci
 
       - name: Download all artifacts from release-build.yml
         uses: dawidd6/action-download-artifact@v2
