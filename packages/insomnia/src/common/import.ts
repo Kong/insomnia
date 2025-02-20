@@ -418,6 +418,7 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
 export const isApiSpecImport = ({ id }: Pick<InsomniaImporter, 'id'>) =>
   id === 'openapi3' || id === 'swagger2';
 
+// Seems that the return value of this function is not used otherwhere
 const importResourcesToNewWorkspace = async (
   projectId: string,
   resourceCacheItem: ResourceCacheType,
