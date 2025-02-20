@@ -16,6 +16,7 @@ env:
   ARTIFACTS_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts
   INSO_DOCKER_IMAGE: kong/inso # By default, registry is docker.io
   NOTARY_REPOSITORY: 'kong/notary' # All signatures will be pushed to public notary repository
+  ARTIFACTS_REPOSITORY: ${{  vars.ARTIFACTS_REPOSITORY }}
 
 jobs:
   publish:
@@ -51,14 +52,27 @@ jobs:
       - name: Install packages
         run: npm ci
 
-      - name: Download all artifacts from release-build.yml
-        uses: dawidd6/action-download-artifact@v2
+      # - name: Download all artifacts from release-build.yml
+      #   uses: dawidd6/action-download-artifact@v2
+      #   with:
+      #     github_token: ${{secrets.GITHUB_TOKEN}}
+      #     workflow: release-build.yml
+      #     workflow_conclusion: success
+      #     branch: ${{ env.RELEASE_BRANCH }} # Branch workflow ran on != branch the workflow created
+      #     path: ${{ env.ARTIFACTS_DOWNLOAD_PATH }} # Base path to download all release workflow assets
+      #     repo: ${{ secrets.BUILD_REPOSITORY }}
+
+      - name: Download release artifacts from insomnia-ee
+        uses: robinraju/release-downloader@v1
         with:
-          github_token: ${{secrets.GITHUB_TOKEN}}
-          workflow: release-build.yml
-          workflow_conclusion: success
-          branch: ${{ env.RELEASE_BRANCH }} # Branch workflow ran on != branch the workflow created
-          path: ${{ env.ARTIFACTS_DOWNLOAD_PATH }} # Base path to download all release workflow assets
+          repository: ${{ env.ARTIFACTS_REPOSITORY }}
+          tag: core@${{ env.RELEASE_VERSION }}
+          fileName: '*'
+          token: ${{ secrets.EE_DOWNLOAD_TOKEN }}
+          out-file-path: ${{ env.ARTIFACTS_DOWNLOAD_PATH }}
+
+      # - name: Debug downloaded artifacts
+      #   run: ls -lah ${{ env.ARTIFACTS_DOWNLOAD_PATH }}
 
       - name: Set publish metadata # Checksum for provenance must be calculated before moving artifacts temporarily
         id: metadata
@@ -107,7 +121,7 @@ jobs:
         with:
           release_id: ${{ steps.core_tag_and_release.outputs.id }}
           tag_name: ${{ env.RELEASE_CORE_TAG }}
-          file: "./artifacts/*-artifacts/insomnia/dist/Insomnia.*;./artifacts/*-artifacts/insomnia/dist/squirrel-windows/*;./artifacts/*-artifacts/insomnia-inso/artifacts/inso-*;./artifacts/**/*sbom.{spdx,cyclonedx}.json"
+          file: "./artifacts/*"
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
 
@@ -148,7 +162,7 @@ jobs:
       # TODO: also take care of aarch64 image
       - name: Load the Inso CLI Docker Archive
         run: |
-          docker load -i ./artifacts/Linux-X64-artifacts/insomnia-inso/artifacts/inso-docker-image.tar
+          docker load -i ./artifacts/inso-docker-image.tar
           docker image ls
 
       - name: Login to Docker Hub
