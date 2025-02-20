@@ -88,8 +88,8 @@ test.describe('runner features tests', async () => {
 
         const expectedTestOrder = [
             'folder-pre-check',
-            'req1-pre-check',
             'req1-pre-check-skipped',
+            'req1-pre-check',
             'folder-post-check',
             'req1-post-check',
             'expected 200 to deeply equal 201',
@@ -133,10 +133,11 @@ test.describe('runner features tests', async () => {
             // req2 should be skipped from pre-request script
             expect(iterationTestResultElement).not.toContainText('req2');
         }
+
         await verifyResultRows(page, 4, 1, 6, [
             'folder-pre-check',
-            'req1-pre-check',
             'req1-pre-check-skipped',
+            'req1-pre-check',
             'folder-post-check',
             'req1-post-check',
             'expected 200 to deeply equal 201',
@@ -239,10 +240,10 @@ test.describe('runner features tests', async () => {
         await page.getByText('0 / 4').first().click();
 
         const expectedTestOrder = [
-            'async_pre_test',
             'sync_pre_test',
-            'async_post_test',
+            'async_pre_test',
             'sync_post_test',
+            'async_post_test',
         ];
 
         await verifyResultRows(page, 0, 0, 4, expectedTestOrder, 1);

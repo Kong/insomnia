@@ -47,7 +47,8 @@ collection:
             insomnia.test('req1-post-check', () => {
                 insomnia.expect(insomnia.response.code).to.eql(200);
             });
-            insomnia.test('req1-post-check-failed', () => {
+            insomnia.test('req1-post-check-failed', async () => {
+                await new Promise(resolve => setTimeout(resolve, 50));
                 insomnia.expect(insomnia.response.code).to.eql(201);
             });
         settings:
@@ -231,11 +232,11 @@ collection:
     scripts:
       preRequest: |-
         insomnia.test('req2-pre-check', () => {
-        insomnia.expect(200).to.eql(200);
+          insomnia.expect(200).to.eql(200);
         });
       afterResponse: |-
         insomnia.test('req2-post-check', () => {
-            insomnia.expect(insomnia.response.code).to.eql(200);
+          insomnia.expect(insomnia.response.code).to.eql(200);
         });
     settings:
       renderRequestBody: true

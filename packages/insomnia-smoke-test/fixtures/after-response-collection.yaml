@@ -41,6 +41,31 @@ collection:
           insomnia.expect(199).to.eql(200);
           insomnia.expect(199).to.be.oneOf([201,202]);
         });
+
+        function happyTestInFunc() {
+          insomnia.test('happyTestInFunc', () => {
+            insomnia.expect(200).to.eql(200);
+          });
+        }
+        function sadTestInFunc() {
+          insomnia.test('sadTestInFunc', () => {
+            insomnia.expect(199).to.eql(200);
+          });
+        }
+        function asyncHappyTestInFunc() {
+          insomnia.test('asyncHappyTestInFunc', async () => {
+            insomnia.expect(200).to.eql(200);
+          });
+        }
+        function asyncSadTestInFunc() {
+          insomnia.test('asyncSadTestInFunc', async () => {
+            insomnia.expect(199).to.eql(200);
+          });
+        }
+        happyTestInFunc();
+        sadTestInFunc();
+        asyncHappyTestInFunc();
+        asyncSadTestInFunc();
     settings:
       renderRequestBody: true
       encodeUrl: true
