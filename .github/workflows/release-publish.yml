@@ -16,6 +16,7 @@ env:
   ARTIFACTS_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts
   INSO_DOCKER_IMAGE: kong/inso # By default, registry is docker.io
   NOTARY_REPOSITORY: 'kong/notary' # All signatures will be pushed to public notary repository
+  ARTIFACTS_REPOSITORY: ${{  vars.ARTIFACTS_REPOSITORY }}
 
 jobs:
   publish:
@@ -64,11 +65,14 @@ jobs:
       - name: Download release artifacts from insomnia-ee
         uses: robinraju/release-downloader@v1
         with:
-          repository: 'kong/insomnia-ee'
-          # latest: true
-          tag: core@$RELEASE_VERSION
+          repository: ${{ env.ARTIFACTS_REPOSITORY }}
+          tag: core@${{ env.RELEASE_VERSION }}
           fileName: '*'
           token: ${{ secrets.EE_DOWNLOAD_TOKEN }}
+          out-file-path: ${{ env.ARTIFACTS_DOWNLOAD_PATH }}
+
+      - name: Debug downloaded artifacts
+        run: ls -lah ${{ env.ARTIFACTS_DOWNLOAD_PATH }}
 
       # - name: Set publish metadata # Checksum for provenance must be calculated before moving artifacts temporarily
       #   id: metadata
