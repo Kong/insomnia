@@ -373,19 +373,19 @@ export class GitVCS {
           }
         }
 
-        const blobsAsJSONStrings = [headBlob, workdirBlob, stageBlob].map(blob => {
+        const blobsAsStrings = [headBlob, workdirBlob, stageBlob].map(blob => {
           if (!blob) {
             return null;
           }
 
           try {
-            return JSON.stringify(parse(Buffer.from(blob).toString('utf-8')));
+            return Buffer.from(blob).toString('utf-8');
           } catch (e) {
             return null;
           }
         });
 
-        return [filepath, ...blobsAsJSONStrings];
+        return [filepath, ...blobsAsStrings];
       },
     });
 

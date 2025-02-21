@@ -5,7 +5,7 @@ import { fromUrl } from 'hosted-git-info';
 import { Errors } from 'isomorphic-git';
 import path from 'path';
 import { v4 } from 'uuid';
-import YAML from 'yaml';
+import YAML, { parse } from 'yaml';
 
 import { getApiBaseURL, getAppWebsiteBaseURL, getGitHubGraphQLApiURL, getGitHubRestApiUrl, INSOMNIA_GITLAB_API_URL, INSOMNIA_GITLAB_CLIENT_ID, INSOMNIA_GITLAB_REDIRECT_URI, PLAYWRIGHT } from '../common/constants';
 import { database } from '../common/database';
@@ -1473,7 +1473,37 @@ export const unstageChangesAction = async ({
 
 };
 
+function getPreviewItemName(previewDiffItem: {
+  before: string;
+  after: string;
+}) {
+  let prevName = '';
+  let nextName = '';
+
+  try {
+    const prev = parse(previewDiffItem.before);
+
+    if (prev && 'fileName' in prev || 'name' in prev) {
+      prevName = prev.fileName || prev.name;
+    }
+  } catch (e) {
+    // Nothing to do
+  }
+
+  try {
+    const next = parse(previewDiffItem.after);
+    if (next && 'fileName' in next || 'name' in next) {
+      nextName = next.fileName || next.name;
+    }
+  } catch (e) {
+    // Nothing to do
+  }
+
+  return nextName || prevName;
+}
+
 export type GitDiffResult = {
+  name: string;
   diff?: {
     before: string;
     after: string;
@@ -1497,14 +1527,17 @@ export const diffFileLoader = async ({
     await getGitRepository({ workspaceId, projectId });
     const fileStatus = await GitVCS.fileStatus(filepath);
 
+    const diff = staged ? {
+      before: fileStatus.head,
+      after: fileStatus.stage,
+    } : {
+      before: fileStatus.stage || fileStatus.head,
+      after: fileStatus.workdir,
+    };
+
     return {
-      diff: staged ? {
-        before: fileStatus.head,
-        after: fileStatus.stage,
-      } : {
-        before: fileStatus.stage || fileStatus.head,
-        after: fileStatus.workdir,
-      },
+      name: getPreviewItemName(diff),
+      diff,
     };
   } catch (e) {
     const errorMessage =

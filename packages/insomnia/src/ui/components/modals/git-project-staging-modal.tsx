@@ -1,69 +1,11 @@
-import { Differ, Viewer } from 'json-diff-kit';
 import React, { type FC, useEffect } from 'react';
 import { Button, Dialog, GridList, GridListItem, Heading, Label, Modal, ModalOverlay, TextArea, TextField, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import type { GitChangesLoaderData, GitDiffResult } from '../../routes/git-project-actions';
+import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 import { showAlert } from '.';
-
-const differ = new Differ({
-  detectCircular: true,
-  maxDepth: Infinity,
-  showModifications: true,
-  arrayDiffMethod: 'lcs',
-});
-
-function getDiff(previewDiffItem: {
-  before: string;
-  after: string;
-}) {
-  let prev = null;
-  let next = null;
-
-  try {
-    prev = JSON.parse(previewDiffItem.before);
-  } catch (e) {
-    // Nothing to do
-  }
-
-  try {
-    next = JSON.parse(previewDiffItem.after);
-  } catch (e) {
-    // Nothing to do
-  }
-
-  return differ.diff(prev, next);
-}
-
-function getPreviewItemName(previewDiffItem: {
-  before: string;
-  after: string;
-}) {
-  let prevName = '';
-  let nextName = '';
-
-  try {
-    const prev = JSON.parse(previewDiffItem.before);
-
-    if (prev && 'fileName' in prev || 'name' in prev) {
-      prevName = prev.fileName || prev.name;
-    }
-  } catch (e) {
-    // Nothing to do
-  }
-
-  try {
-    const next = JSON.parse(previewDiffItem.after);
-    if (next && 'fileName' in next || 'name' in next) {
-      nextName = next.fileName || next.name;
-    }
-  } catch (e) {
-    // Nothing to do
-  }
-
-  return nextName || prevName;
-}
 
 export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({
   onClose,
@@ -163,7 +105,7 @@ export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({
 
   const isCreatingSnapshot = state === 'loading' && formAction === '/organization/:organizationId/project/:projectId/workspace/:workspaceId/git/commit';
   const isPushing = state === 'loading' && formAction === '/organization/:organizationId/project/:projectId/workspace/:workspaceId/git/commit-and-push';
-  const previewDiffItem = diffChangesFetcher.data && 'diff' in diffChangesFetcher.data ? diffChangesFetcher.data.diff : null;
+  const previewDiffItem = diffChangesFetcher.data && 'diff' in diffChangesFetcher.data ? diffChangesFetcher.data : null;
 
   const allChanges = [...changes.staged, ...changes.unstaged];
   const allChangesLength = allChanges.length;
@@ -467,21 +409,16 @@ export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({
                     </div>
                   </div>
                 </div>
-                {previewDiffItem ? <div className='p-2 pb-0 flex flex-col gap-2 h-full overflow-y-auto'>
+                {previewDiffItem?.diff ? <div className='p-2 pb-0 flex flex-col gap-2 h-full overflow-y-auto'>
                   <Heading className='font-bold flex items-center gap-2'>
                     <Icon icon="code-compare" />
-                    {getPreviewItemName(previewDiffItem)}
+                    {previewDiffItem.name}
                   </Heading>
                   {previewDiffItem && (
                     <div
                       className='bg-[--hl-xs] rounded-sm p-2 flex-1 overflow-y-auto text-[--color-font]'
                     >
-                      <Viewer
-                        diff={getDiff(previewDiffItem)}
-                        hideUnchangedLines
-                        highlightInlineDiff
-                        className='diff-viewer'
-                      />
+                      <DiffEditor original={previewDiffItem.diff.before} modified={previewDiffItem.diff.after} />
                     </div>
                   )}
                 </div> : <div className='p-2 h-full flex flex-col gap-4 items-center justify-center'>

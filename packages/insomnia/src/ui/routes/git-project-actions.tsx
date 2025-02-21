@@ -408,6 +408,7 @@ export const unstageChangesAction: ActionFunction = async ({
 };
 
 export type GitDiffResult = {
+  name: string;
   diff?: {
     before: string;
     after: string;
