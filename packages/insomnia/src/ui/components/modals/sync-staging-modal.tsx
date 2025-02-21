@@ -20,11 +20,19 @@ function getDiff(previewDiffItem?: StageEntry) {
   let after = '{}';
 
   if (previewDiffItem && 'previousBlobContent' in previewDiffItem && previewDiffItem.previousBlobContent) {
-    before = previewDiffItem.previousBlobContent || '{}';
+    if (previewDiffItem.previousBlobContent === 'null') {
+      before = '';
+    } else {
+      before = previewDiffItem.previousBlobContent || '{}';
+    }
   }
 
   if (previewDiffItem && 'blobContent' in previewDiffItem && previewDiffItem.blobContent) {
-    after = previewDiffItem.blobContent || '{}';
+    if (previewDiffItem.blobContent === 'null') {
+      after = '';
+    } else {
+      after = previewDiffItem.blobContent || '{}';
+    }
   }
 
   try {
