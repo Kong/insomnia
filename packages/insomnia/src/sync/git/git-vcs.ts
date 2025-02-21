@@ -601,7 +601,7 @@ export class GitVCS {
       url: remote.url,
     });
     const logs = (await this.log({ depth: 1 })) || [];
-    const localHead = logs[0].oid;
+    const localHead = logs[0]?.oid;
     const remoteRefs = remoteInfo.refs || {};
     const remoteHeads = remoteRefs.heads || {};
     const remoteHead = remoteHeads[branch];

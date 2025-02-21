@@ -422,11 +422,13 @@ export const cloneGitRepoAction = async ({
         if (e instanceof Errors.HttpError) {
           return {
             errors: [`${e.message}, ${e.data.response}`],
+            gitRepository: repoSettingsPatch,
           };
         }
 
         return {
           errors: [e.message],
+          gitRepository: repoSettingsPatch,
         };
       }
 
@@ -1665,6 +1667,101 @@ async function signOutOfGitHub() {
   }
 }
 
+interface GitHubRepositoryApiResponse {
+  id: string;
+  full_name: string;
+  clone_url: string;
+  permissions: {
+    push: boolean;
+    pull: boolean;
+  };
+}
+
+type GitHubRepositoriesApiResponse = GitHubRepositoryApiResponse[];
+
+const GITHUB_USER_REPOS_URL = `${getGitHubRestApiUrl()}/user/repos`;
+
+async function getGitHubRepositories(
+  { url = `${GITHUB_USER_REPOS_URL}?per_page=100`, repos = [] }:
+    { url?: string; repos?: GitHubRepositoriesApiResponse }
+) {
+  const credentials = await models.gitCredentials.getByProvider('github');
+  const opts = {
+    headers: {
+      Authorization: `token ${credentials?.token}`,
+    },
+  };
+
+  const response = await fetch(url, opts);
+  if (!response.ok) {
+    const raw = await response.text();
+    if (response.status === 401) {
+
+      return {
+        errors: [`User token not authorized to fetch repositories, please sign out and back in.\nResponse: ${raw}`],
+        repos: [],
+      };
+    }
+    return {
+      errors: [`Failed to fetch repositories from GitHub: ${response.statusText}\nResponse: ${raw}`],
+      repos: [],
+    };
+  }
+
+  const data = await response.json();
+
+  let pullableRepos = data.filter((repo: GitHubRepositoryApiResponse) => repo.permissions.pull);
+  repos.push(...pullableRepos);
+
+  const link = response.headers.get('link');
+  if (link && link.includes('rel="last"')) {
+    const last = link.match(/<([^>]+)>; rel="last"/)?.[1];
+    if (last) {
+      const lastUrl = new URL(last);
+      const lastPage = lastUrl.searchParams.get('page');
+      if (lastPage) {
+        const pages = Number(lastPage);
+        const pageList = await Promise.all(Array.from({ length: pages - 1 }, (_, i) => fetch(`${GITHUB_USER_REPOS_URL}?per_page=100&page=${i + 2}`, opts)));
+        for (const page of pageList) {
+          const pageData = await page.json();
+          pullableRepos = pageData.filter((repo: GitHubRepositoryApiResponse) => repo.permissions.pull);
+          repos.push(...pullableRepos);
+        }
+        return { repos, errors: [] };
+      }
+    }
+  }
+  if (link && link.includes('rel="next"')) {
+    const next = link.match(/<([^>]+)>; rel="next"/)?.[1];
+    if (next) {
+      return getGitHubRepositories({ url: next, repos });
+    }
+  }
+  return { repos, errors: [] };
+}
+
+async function getGitHubRepository({ uri }: { uri: string }) {
+  const [owner, name] = uri.replace('.git', '').split('/').slice(-2); // extracts the owner + name
+
+  const credentials = await models.gitCredentials.getByProvider('github');
+  const opts = {
+    headers: {
+      Authorization: `token ${credentials?.token}`,
+    },
+  };
+
+  const response = await fetch(`${getGitHubRestApiUrl()}/repos/${owner}/${name}`, opts);
+  if (!response.ok) {
+    const raw = await response.text();
+    return {
+      errors: [`Failed to fetch repository from GitHub: ${response.statusText}\nResponse: ${raw}`],
+      notFound: response.status === 404,
+    };
+  }
+
+  return { repo: await response.json() as GitHubRepositoryApiResponse, errors: [], notFound: false };
+}
+
 /**
  * This cache stores the states that are generated for the OAuth flow.
  * This is used to check if a command to exchange a code for a token has been initiated by the app or not.
@@ -1861,9 +1958,13 @@ export interface GitServiceAPI {
   stageChanges: typeof stageChangesAction;
   unstageChanges: typeof unstageChangesAction;
   diffFileLoader: typeof diffFileLoader;
+
   initSignInToGitHub: typeof initSignInToGitHub;
   completeSignInToGitHub: typeof completeSignInToGitHub;
   signOutOfGitHub: typeof signOutOfGitHub;
+  getGitHubRepositories: typeof getGitHubRepositories;
+  getGitHubRepository: typeof getGitHubRepository;
+
   initSignInToGitLab: typeof initSignInToGitLab;
   completeSignInToGitLab: typeof completeSignInToGitLab;
   signOutOfGitLab: typeof signOutOfGitLab;
@@ -1893,10 +1994,14 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.stageChanges', (_, options: Parameters<typeof stageChangesAction>[0]) => stageChangesAction(options));
   ipcMainHandle('git.unstageChanges', (_, options: Parameters<typeof unstageChangesAction>[0]) => unstageChangesAction(options));
   ipcMainHandle('git.diffFileLoader', (_, options: Parameters<typeof diffFileLoader>[0]) => diffFileLoader(options));
-  ipcMainHandle('git.completeSignInToGitHub', (_, options: Parameters<typeof completeSignInToGitHub>[0]) => completeSignInToGitHub(options));
+
   ipcMainHandle('git.initSignInToGitHub', () => initSignInToGitHub());
+  ipcMainHandle('git.completeSignInToGitHub', (_, options: Parameters<typeof completeSignInToGitHub>[0]) => completeSignInToGitHub(options));
   ipcMainHandle('git.signOutOfGitHub', () => signOutOfGitHub());
-  ipcMainHandle('git.completeSignInToGitLab', (_, options: Parameters<typeof completeSignInToGitLab>[0]) => completeSignInToGitLab(options));
+  ipcMainHandle('git.getGitHubRepositories', (_, options: Parameters<typeof getGitHubRepositories>[0]) => getGitHubRepositories(options));
+  ipcMainHandle('git.getGitHubRepository', (_, options: Parameters<typeof getGitHubRepository>[0]) => getGitHubRepository(options));
+
   ipcMainHandle('git.initSignInToGitLab', () => initSignInToGitLab());
+  ipcMainHandle('git.completeSignInToGitLab', (_, options: Parameters<typeof completeSignInToGitLab>[0]) => completeSignInToGitLab(options));
   ipcMainHandle('git.signOutOfGitLab', () => signOutOfGitLab());
 };

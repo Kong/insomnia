@@ -84,7 +84,7 @@ export const GitProjectLogModal: FC<Props> = ({ onClose }) => {
                       </div>
                     )}
                     className="divide divide-[--hl-sm] divide-solid"
-                    items={log.map(logEntry => ({ id: logEntry.oid, ...logEntry }))}
+                    items={log.filter(l => !!l).map(logEntry => ({ id: logEntry.oid, ...logEntry }))}
                   >
                     {item => (
                       <Row className="group focus:outline-none focus-within:bg-[--hl-xxs] transition-colors">

@@ -60,6 +60,8 @@ export type HandleChannels =
   | 'git.initSignInToGitHub'
   | 'git.completeSignInToGitHub'
   | 'git.signOutOfGitHub'
+  | 'git.getGitHubRepositories'
+  | 'git.getGitHubRepository'
   | 'git.initSignInToGitLab'
   | 'git.completeSignInToGitLab'
   | 'git.signOutOfGitLab';

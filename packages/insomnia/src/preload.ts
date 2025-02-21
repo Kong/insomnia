@@ -75,12 +75,16 @@ const git: GitServiceAPI = {
   stageChanges: options => ipcRenderer.invoke('git.stageChanges', options),
   unstageChanges: options => ipcRenderer.invoke('git.unstageChanges', options),
   diffFileLoader: options => ipcRenderer.invoke('git.diffFileLoader', options),
+
   initSignInToGitHub: () => ipcRenderer.invoke('git.initSignInToGitHub'),
   completeSignInToGitHub: options => ipcRenderer.invoke('git.completeSignInToGitHub', options),
   signOutOfGitHub: () => ipcRenderer.invoke('git.signOutOfGitHub'),
+  getGitHubRepositories: options => ipcRenderer.invoke('git.getGitHubRepositories', options),
+  getGitHubRepository: options => ipcRenderer.invoke('git.getGitHubRepository', options),
+
   initSignInToGitLab: () => ipcRenderer.invoke('git.initSignInToGitLab'),
-  signOutOfGitLab: () => ipcRenderer.invoke('git.signOutOfGitLab'),
   completeSignInToGitLab: options => ipcRenderer.invoke('git.completeSignInToGitLab', options),
+  signOutOfGitLab: () => ipcRenderer.invoke('git.signOutOfGitLab'),
 };
 
 const main: Window['main'] = {
