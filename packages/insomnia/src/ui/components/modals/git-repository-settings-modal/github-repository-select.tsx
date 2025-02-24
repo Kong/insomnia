@@ -76,9 +76,9 @@ export const GitHubRepositorySelect = (
               <Icon icon="caret-down" className='w-5 flex-shrink-0' />
             </ComboButton>
           </div>
-          <Popover className="min-w-max border grid grid-flow-col overflow-hidden divide-x divide-solid divide-[--hl-md] select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] rounded-md focus:outline-none" placement='bottom start' offset={8}>
+          <Popover className="min-w-max border grid grid-flow-col overflow-y-auto divide-x divide-solid divide-[--hl-md] select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] rounded-md focus:outline-none" placement='bottom start' offset={8}>
             <ListBox<{ id: string; name: string }>
-              className="select-none text-sm min-w-max p-2 flex flex-col overflow-y-auto focus:outline-none"
+              className="select-none text-sm min-w-max p-2 flex flex-col focus:outline-none"
             >
               {item => (
                 <ListBoxItem
