@@ -162,7 +162,7 @@ jobs:
       # TODO: also take care of aarch64 image
       - name: Load the Inso CLI Docker Archive
         run: |
-          docker load -i ./artifacts/Linux-X64-artifacts/insomnia-inso/artifacts/inso-docker-image.tar
+          docker load -i ./artifacts/inso-docker-image.tar
           docker image ls
 
       - name: Login to Docker Hub
@@ -238,7 +238,7 @@ jobs:
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN_FILE_NEW }}
         with:
-          snap: artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}-amd64.snap
+          snap: artifacts/Insomnia.Core-${{ env.RELEASE_VERSION }}-amd64.snap
           release: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
       # TODO: also release for aarch64 Linux?
@@ -259,7 +259,7 @@ jobs:
           entrypoint: /entrypoint.sh
           args: >
             release
-            --file artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}-amd64.deb
+            --file artifacts/Insomnia.Core-${{ env.RELEASE_VERSION }}-amd64.deb
             --dist-name ubuntu
             --dist-version focal
             --package-type insomnia
