@@ -130,13 +130,10 @@ export const updateProjectAction: ActionFunction = async ({
   request,
   params,
 }) => {
-  const formData = await request.formData();
+  const { name, storageType } = await request.json();
 
-  const name = formData.get('name');
   invariant(typeof name === 'string', 'Name is required');
-
-  const type = formData.get('type');
-  invariant(type === 'local' || type === 'remote' || type === 'git', 'Project type is required');
+  invariant(storageType === 'local' || storageType === 'remote' || storageType === 'git', 'Project type is required');
 
   const { organizationId, projectId } = params;
   invariant(projectId, 'Project ID is required');
@@ -150,7 +147,7 @@ export const updateProjectAction: ActionFunction = async ({
 
   try {
     // If its a cloud project, and we are renaming, then patch
-    if (sessionId && project.remoteId && type === 'remote' && name !== project.name) {
+    if (sessionId && project.remoteId && storageType === 'remote' && name !== project.name) {
       const response = await insomniaFetch<void | {
         error: string;
         message?: string;
@@ -187,7 +184,7 @@ export const updateProjectAction: ActionFunction = async ({
     }
 
     // convert from cloud to local
-    if (type === 'local' && project.remoteId) {
+    if (storageType === 'local' && project.remoteId) {
       const response = await insomniaFetch<void | {
         error: string;
         message?: string;
@@ -217,7 +214,7 @@ export const updateProjectAction: ActionFunction = async ({
       return null;
     }
     // convert from local to cloud
-    if (type === 'remote' && !project.remoteId) {
+    if (storageType === 'remote' && !project.remoteId) {
       const newCloudProject = await insomniaFetch<{
         id: string;
         name: string;
