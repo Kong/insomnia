@@ -95,16 +95,16 @@ export const GRPCRequestSchema = z.object({
 });
 
 const MockRouteSchema = z.object({
-  body: z.string(),
+  body: z.string().optional(),
   statusCode: z.number(),
-  statusText: z.string(),
-  name: z.string(),
-  mimeType: z.string(),
-  method: z.string(),
+  statusText: z.string().optional(),
+  name: z.string().optional(),
+  mimeType: z.string().optional(),
+  method: z.string().optional(),
   headers: z.array(z.object({
     name: z.string(),
     value: z.string(),
-  })),
+  })).optional(),
   meta: MetaSchema.optional(),
 });
 
@@ -400,7 +400,7 @@ const SpecSchema = z.union([z.object({
   file: z.string(),
 }), z.object({
   meta: MetaSchema.optional(),
-  contents: jsonSchema,
+  contents: jsonSchema.optional(),
 })]);
 
 const collectionSchema = z.object({
@@ -432,8 +432,11 @@ const mockServerSchema = z.object({
   meta: MetaSchema.optional(),
   name: z.string().optional(),
   description: z.string().optional(),
-  url: z.string(),
-  useInsomniaCloud: z.boolean().default(true),
+  server: z.object({
+    meta: MetaSchema.optional(),
+    url: z.string(),
+    useInsomniaCloud: z.boolean().default(true),
+  }).optional(),
   routes: z.array(MockRouteSchema).optional(),
 });
 
