@@ -172,11 +172,20 @@ export async function initInsomniaObject(
         requestId: rawObj.request._id,
     });
 
+    const parentFolders = new ParentFolders(rawObj.parentFolders.map(folderObj =>
+        new Folder(
+            folderObj.id,
+            folderObj.name,
+            folderObj.environment,
+        )
+    ));
+
     const variables = new Variables({
         globalVars: globals,
         environmentVars: environment,
         collectionVars: baseEnvironment,
         iterationDataVars: iterationData,
+        folderLevelVars: parentFolders.getEnvironments(),
         localVars: localVariables,
     });
 
@@ -247,14 +256,6 @@ export async function initInsomniaObject(
 
     const responseBody = await readBodyFromPath(rawObj.response);
     const response = rawObj.response ? toScriptResponse(request, rawObj.response, responseBody) : undefined;
-
-    const parentFolders = new ParentFolders(rawObj.parentFolders.map(folderObj =>
-        new Folder(
-            folderObj.id,
-            folderObj.name,
-            folderObj.environment,
-        )
-    ));
 
     return new InsomniaObject({
         globals,
