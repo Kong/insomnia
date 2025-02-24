@@ -45,11 +45,10 @@ const resetVaultKeyRequest = async (sessionId: string, salt: string, verifier: s
     console.error(error);;
   });
 
-export const saveVaultKey = async (session: UserSession, vaultKey: string) => {
-  const { accountId } = session;
+export const saveVaultKey = async (accountId: string, vaultKey: string) => {
   // save encrypted vault key and vault salt to session
   const encryptedVaultKey = await window.main.secretStorage.encryptString(vaultKey);
-  await sessionModel.update(session, { vaultKey: encryptedVaultKey });
+  await sessionModel.patch({ vaultKey: encryptedVaultKey });
 
   await saveVaultKeyIfNecessary(accountId, vaultKey);
 };
@@ -58,7 +57,6 @@ const createVaultKey = async (type: 'create' | 'reset' = 'create') => {
   const userSession = await sessionModel.getOrCreate();
   const { accountId, id: sessionId } = userSession;
 
-  // const vaultKey = await getVaultKeyRequest(sessionId);
   const vaultSalt = await getRandomHex();
   const newVaultKey = await generateAES256Key();
   const base64encodedVaultKey = base64encode(JSON.stringify(newVaultKey));
@@ -87,8 +85,8 @@ const createVaultKey = async (type: 'create' | 'reset' = 'create') => {
     };
 
     // save encrypted vault key and vault salt to session
-    await sessionModel.update(userSession, { vaultSalt: vaultSalt });
-    await saveVaultKey(userSession, base64encodedVaultKey);
+    await sessionModel.patch({ vaultSalt: vaultSalt });
+    await saveVaultKey(accountId, base64encodedVaultKey);
     return base64encodedVaultKey;
   } catch (error) {
     return { error: error.toString() };
@@ -206,7 +204,7 @@ export const clearVaultKeyAction: ActionFunction = async ({ request }) => {
 export const validateVaultKeyAction: ActionFunction = async ({ request }) => {
   const { vaultKey, saveVaultKey: saveVaultKeyLocally = false } = await request.json();
   const userSession = await sessionModel.getOrCreate();
-  const { vaultSalt } = userSession;
+  const { vaultSalt, accountId } = userSession;
 
   if (!vaultSalt) {
     return { error: 'Please generate a vault key from preference first' };
@@ -218,7 +216,7 @@ export const validateVaultKeyAction: ActionFunction = async ({ request }) => {
       return { error: 'Invalid vault key, please check and input again' };
     }
     if (saveVaultKeyLocally) {
-      await saveVaultKey(userSession, vaultKey);
+      await saveVaultKey(accountId, vaultKey);
     };
     return { vaultKey, srpK: validateResult };
   } catch (error) {
