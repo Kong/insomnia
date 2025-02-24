@@ -159,6 +159,12 @@ jobs:
       #     RELEASE_VERSION: ${{ env.INSO_VERSION }}
       #     RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
+      - name: get current directory
+        run: pwd
+
+      - name: list all files under current directory
+        run: ls -R
+
       # TODO: also take care of aarch64 image
       - name: Load the Inso CLI Docker Archive
         run: |
