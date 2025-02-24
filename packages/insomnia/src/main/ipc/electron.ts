@@ -41,6 +41,7 @@ export type HandleChannels =
   | 'git.gitChangesLoader'
   | 'git.canPushLoader'
   | 'git.cloneGitRepo'
+  | 'git.initGitRepoClone'
   | 'git.updateGitRepo'
   | 'git.resetGitRepo'
   | 'git.commitToGitRepo'

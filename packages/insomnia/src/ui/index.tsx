@@ -241,6 +241,13 @@ async function renderApp() {
                     path: 'git',
                     children: [
                       {
+                        path: 'init-clone',
+                        action: async (...args) =>
+                          (
+                            await import('./routes/git-project-actions')
+                          ).initGitCloneAction(...args),
+                      },
+                      {
                         path: 'clone',
                         action: async (...args) =>
                           (

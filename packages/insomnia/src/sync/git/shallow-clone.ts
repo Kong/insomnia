@@ -7,7 +7,7 @@ import { gitCallbacks } from './utils';
 
 interface Options {
   fsClient: git.FsClient;
-  gitRepository: GitRepository;
+  gitRepository: Pick<GitRepository, 'credentials' | 'uri'>;
 }
 
 /**

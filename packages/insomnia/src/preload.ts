@@ -59,6 +59,7 @@ const git: GitServiceAPI = {
   gitChangesLoader: options => ipcRenderer.invoke('git.gitChangesLoader', options),
   canPushLoader: options => ipcRenderer.invoke('git.canPushLoader', options),
   cloneGitRepo: options => ipcRenderer.invoke('git.cloneGitRepo', options),
+  initGitRepoClone: options => ipcRenderer.invoke('git.initGitRepoClone', options),
   updateGitRepo: options => ipcRenderer.invoke('git.updateGitRepo', options),
   resetGitRepo: options => ipcRenderer.invoke('git.resetGitRepo', options),
   commitToGitRepo: options => ipcRenderer.invoke('git.commitToGitRepo', options),

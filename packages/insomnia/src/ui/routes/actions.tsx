@@ -12,6 +12,7 @@ import { importResourcesToWorkspace, scanResources, type ScanResult } from '../.
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import { EnvironmentType } from '../../models/environment';
+import type { OauthProviderName } from '../../models/git-credentials';
 import { getById, update } from '../../models/helpers/request-operations';
 import type { MockServer } from '../../models/mock-server';
 import { isRemoteProject, type Project } from '../../models/project';
@@ -34,35 +35,44 @@ import { SpectralRunner } from '../worker/spectral-run';
 export const createNewProjectAction: ActionFunction = async ({ request, params }) => {
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
-  const formData = await request.formData();
-  const name = formData.get('name') || 'My project';
-  invariant(typeof name === 'string', 'Name is required');
-  const projectType = formData.get('type');
-  invariant(projectType === 'local' || projectType === 'remote' || projectType === 'git', 'Project type is required');
+  const newProjectData = await request.json() as {
+    name: string;
+    storageType: 'local' | 'remote' | 'git';
+    authorName: string;
+    authorEmail: string;
+    uri: string;
+    username: string;
+    password: string;
+    token: string;
+    oauth2format: OauthProviderName;
+  };
 
   const user = await models.userSession.getOrCreate();
   const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to create a project');
 
-  if (projectType === 'local') {
+  if (newProjectData.storageType === 'local') {
     const project = await models.project.create({
-      name,
+      name: newProjectData.name,
       parentId: organizationId,
     });
 
     return redirect(`/organization/${organizationId}/project/${project._id}`);
   }
 
-  if (projectType === 'git') {
-    const gitRepository = await models.gitRepository.create();
-
-    const project = await models.project.create({
-      name,
-      parentId: organizationId,
-      gitRepositoryId: gitRepository._id,
+  if (newProjectData.storageType === 'git') {
+    const { projectId, errors } = await window.main.git.cloneGitRepo({
+      organizationId,
+      ...newProjectData,
     });
 
-    return redirect(`/organization/${organizationId}/project/${project._id}`);
+    if (errors) {
+      return {
+        error: errors.join(', '),
+      };
+    }
+
+    return redirect(`/organization/${organizationId}/project/${projectId}`);
   }
 
   try {
@@ -76,7 +86,7 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
       path: `/v1/organizations/${organizationId}/team-projects`,
       method: 'POST',
       data: {
-        name,
+        name: newProjectData.name,
       },
       sessionId,
     });
@@ -270,6 +280,7 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
   invariant(sessionId, 'User must be logged in to delete a project');
 
   try {
+    const bufferId = await database.bufferChanges();
     if (project.remoteId) {
       const response = await insomniaFetch<void | {
         error: string;
@@ -287,9 +298,15 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
       }
     }
 
+    if (project.gitRepositoryId) {
+      const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
+      gitRepository && await models.gitRepository.remove(gitRepository);
+    }
+
     await models.stats.incrementDeletedRequestsForDescendents(project);
     await models.project.remove(project);
 
+    await database.flushChanges(bufferId);
     return redirect(`/organization/${organizationId}`);
   } catch (err) {
     console.log(err);
