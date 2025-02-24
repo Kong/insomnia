@@ -5,8 +5,20 @@ import type { GitRepository } from '../../../../models/git-repository';
 import { Link } from '../../base/link';
 import { HelpTooltip } from '../../help-tooltip';
 
+interface GitRepositoryInfo {
+  uri?: string;
+  author: {
+    name?: string;
+    email?: string;
+  };
+  credentials: {
+    username?: string;
+    token?: string;
+  };
+}
+
 export interface Props {
-  gitRepository?: GitRepository | null;
+  gitRepository?: GitRepositoryInfo | null;
   onSubmit: (args: Partial<GitRepository>) => void;
 }
 
