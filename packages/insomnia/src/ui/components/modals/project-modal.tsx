@@ -5,6 +5,7 @@ import { useFetcher, useNavigation, useParams } from 'react-router-dom';
 import type { OauthProviderName } from '../../../models/git-credentials';
 import { type GitRepository } from '../../../models/git-repository';
 import { getDefaultProjectStorageType, isGitProject, isRemoteProject, type Project } from '../../../models/project';
+import type { UpdateProjectActionResult } from '../../routes/actions';
 import type { InitGitCloneResult } from '../../routes/git-project-actions';
 import { ORG_STORAGE_RULE } from '../../routes/organization';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../../routes/project';
@@ -27,6 +28,8 @@ function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote
   if (storageType === 'remote' && !isRemoteProject(project)) {
     return true;
   }
+
+  return false;
 }
 
 export const ProjectModal = ({
@@ -72,7 +75,7 @@ export const ProjectModal = ({
 
   const showStorageRestrictionMessage = storageRule !== ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL;
   const initCloneGitRepositoryFetcher = useFetcher<InitGitCloneResult>();
-  const upsertProjectFetcher = useFetcher();
+  const upsertProjectFetcher = useFetcher<UpdateProjectActionResult>();
 
   const insomniaFiles = initCloneGitRepositoryFetcher.data && 'files' in initCloneGitRepositoryFetcher.data ? initCloneGitRepositoryFetcher.data.files : [];
 
@@ -112,7 +115,7 @@ export const ProjectModal = ({
     setActiveView('git-results');
   };
 
-  const onCreateProject = () => {
+  const onUpsertProject = () => {
     if (project && activeView !== 'switch-storage-type' && isSwitchingStorageType(project, projectData.storageType)) {
       setActiveView('switch-storage-type');
       return;
@@ -129,6 +132,12 @@ export const ProjectModal = ({
       }
     );
   };
+
+  useEffect(() => {
+    if (upsertProjectFetcher.data && upsertProjectFetcher.data.success) {
+      onOpenChange(false);
+    }
+  }, [onOpenChange, upsertProjectFetcher.data]);
 
   // Close the modal when a navigation happens
   const activeNavigation = useNavigation();
@@ -268,7 +277,7 @@ export const ProjectModal = ({
                       )}
                       {(projectData.storageType !== 'git' || gitRepository) && (
                         <Button
-                          onPress={onCreateProject}
+                          onPress={onUpsertProject}
                           className="hover:no-underline w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                         >
                           {project ? 'Update' : 'Create'}
@@ -379,7 +388,7 @@ export const ProjectModal = ({
                   )}
                   {insomniaFiles.length > 0 && (
                     <div className='px-10 flex flex-col gap-2'>
-                      <Heading className='text-base'>Insomnia files that will be imported:</Heading>
+                      <Heading className='text-base'>We found {insomniaFiles.length} Insomnia files in your repository</Heading>
                       <div className='rounded w-full border border-solid border-[--hl-sm] select-none overflow-x-hidden overflow-y-auto max-h-96'>
                         <Table
                           selectionMode='none'
@@ -439,10 +448,10 @@ export const ProjectModal = ({
                       Back
                     </Button>
                     <Button
-                      onPress={onCreateProject}
+                      onPress={onUpsertProject}
                       className="hover:no-underline w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                     >
-                      Clone
+                      {insomniaFiles.length > 0 ? 'Import all' : 'Clone'}
                     </Button>
                   </div>
                 </>
@@ -478,16 +487,27 @@ export const ProjectModal = ({
                       <div className='text-[--color-font] flex flex-col gap-4'>
                         <div className='flex flex-col gap-4'>
                           <p>
-                            We will be converting your Cloud Sync project into a local project, and permanently remove all cloud data for this project from the cloud.
+                            {project && isGitProject(project) ? 'We will be converting your Git project into a local project.' : 'We will be converting your Cloud Sync project into a local project, and permanently remove all cloud data for this project from the cloud.'}
                           </p>
-                          <ul className='text-left flex flex-col gap-2'>
-                            <li><i className="fa fa-check text-emerald-600" /> The project will be 100% stored locally.</li>
-                            <li><i className="fa fa-check text-emerald-600" /> Your collaborators will not be able to push and pull files anymore.</li>
-                            <li><i className="fa fa-check text-emerald-600" /> The project will become local also for every existing collaborator.</li>
-                          </ul>
-                          <p>
-                            You can still use Git Sync for local projects without using the cloud, and you can synchronize a local project back to the cloud if you decide to do so.
-                          </p>
+                          {project && isGitProject(project) && (
+                            <ul className='text-left flex flex-col gap-2'>
+                              <li><i className="fa fa-check text-emerald-600" /> The project will be 100% stored locally.</li>
+                              <li><i className="fa fa-check text-emerald-600" /> You will not be able to synchronize this project using Git anymore.</li>
+                              <li><i className="fa fa-check text-emerald-600" /> This action will not delete your remote repository.</li>
+                            </ul>
+                          )}
+                          {project && isRemoteProject(project) && (
+                            <>
+                              <ul className='text-left flex flex-col gap-2'>
+                                <li><i className="fa fa-check text-emerald-600" /> The project will be 100% stored locally.</li>
+                                <li><i className="fa fa-check text-emerald-600" /> Your collaborators will not be able to push and pull files anymore.</li>
+                                <li><i className="fa fa-check text-emerald-600" /> The project will become local also for every existing collaborator.</li>
+                              </ul>
+                              <p>
+                                You can still use Git Sync for local projects without using the cloud, and you can synchronize a local project back to the cloud if you decide to do so.
+                              </p>
+                            </>
+                          )}
                           <p className='flex gap-2 items-center'>
                             <Icon icon="triangle-exclamation" className='text-[--color-warning]' />
                             Remember to pull your latest project updates before this operation
@@ -522,7 +542,7 @@ export const ProjectModal = ({
                         Cancel
                       </Button>
                       <Button
-                        onPress={onCreateProject}
+                        onPress={onUpsertProject}
                         className="hover:no-underline w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                       >
                         Update
