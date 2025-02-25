@@ -28,6 +28,7 @@ export type HandleChannels =
   | 'webSocket.open'
   | 'webSocket.readyState'
   | 'writeFile'
+  | 'readFile'
   | 'extractJsonFileFromPostmanDataDumpArchive'
   | 'secretStorage.setSecret'
   | 'secretStorage.getSecret'
