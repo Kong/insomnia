@@ -128,6 +128,9 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
     const targetItem = kvPairs.find(pair => pair.id === id);
     if (targetItem) {
       const { type: originType, value: originValue } = targetItem;
+      if (originType === newType) {
+        return;
+      }
       if (originType === EnvironmentKvPairDataType.SECRET) {
         const newTypeDisplayText = kvPairItemTypes.find(item => item.id === newType)?.name;
         // need confirm if user changes from secret type which will decrypt and reveal value;
