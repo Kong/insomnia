@@ -1206,7 +1206,12 @@ const ProjectRoute: FC = () => {
                       );
                     }}
                   </GridList>
-                  {isGitProject(activeProject) && <GitProjectSyncDropdown gitRepository={activeProjectGitRepository || null} />}
+                  {isGitProject(activeProject) && (
+                    <GitProjectSyncDropdown
+                      key={activeProjectGitRepository?._id}
+                      gitRepository={activeProjectGitRepository || null}
+                    />
+                  )}
                 </>
               )}
               {!isLearningFeatureDismissed && learningFeature?.active && (
