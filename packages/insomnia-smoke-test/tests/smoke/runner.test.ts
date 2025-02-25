@@ -165,6 +165,26 @@ test.describe('runner features tests', async () => {
         await verifyResultRows(page, 3, 0, 3, expectedTestOrder, 1);
     });
 
+    test('await test works', async ({ page }) => {
+        await page.getByTestId('run-collection-btn-quick').click();
+
+        await page.locator('.runner-request-list-await-test').click();
+
+        // send
+        await page.getByRole('button', { name: 'Run', exact: true }).click();
+
+        // check result
+        await page.getByText('0 / 3').first().click();
+
+        const expectedTestOrder = [
+            't1',
+            't2',
+            't3',
+        ];
+
+        await verifyResultRows(page, 0, 0, 3, expectedTestOrder, 1);
+    });
+
     test('run req5 3 times with setNextRequest in the after-response script', async ({ page }) => {
         await page.getByTestId('run-collection-btn-quick').click();
 

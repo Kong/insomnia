@@ -28,7 +28,9 @@ export async function test(
         }
     };
 
-    startTestObserver(wrapFn());
+    const testPromise = wrapFn();
+    startTestObserver(testPromise);
+    return testPromise;
 }
 
 let testPromises = new Array<Promise<void>>();

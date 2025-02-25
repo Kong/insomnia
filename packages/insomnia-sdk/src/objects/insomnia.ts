@@ -82,6 +82,22 @@ export class InsomniaObject {
 
         this.requestTestResults = new Array<RequestTestResult>();
         this.parentFolders = rawObj.parentFolders;
+
+        return new Proxy(this, {
+            get: (target, prop, receiver) => {
+                if (prop === 'test') {
+                    const testHandler: TestHandler = async (msg: string, fn: () => Promise<void>) => {
+                        await this._test(msg, fn, this.pushRequestTestResult);
+                    };
+                    testHandler.skip = async (msg: string, fn: () => Promise<void>) => {
+                        await this._skip(msg, fn, this.pushRequestTestResult);
+                    };
+
+                    return testHandler;
+                }
+                return Reflect.get(target, prop, receiver);
+            },
+        });
     }
 
     sendRequest(
@@ -91,24 +107,17 @@ export class InsomniaObject {
         return sendRequest(request, cb, this._settings);
     }
 
-    get test() {
-        const testHandler: TestHandler = async (msg: string, fn: () => Promise<void>) => {
-            await this._test(msg, fn, this.pushRequestTestResult);
-        };
-        testHandler.skip = async (msg: string, fn: () => Promise<void>) => {
-            await this._skip(msg, fn, this.pushRequestTestResult);
-        };
-
-        return testHandler;
-    }
+    test = () => {
+        // this method is intercepted by the proxy above
+    };
 
     private pushRequestTestResult = (testResult: RequestTestResult) => {
         this.requestTestResults = [...this.requestTestResults, testResult];
     };
 
-    expect(exp: boolean | number | string | object) {
+    expect = (exp: boolean | number | string | object) => {
         return this._expect(exp);
-    }
+    };
 
     get settings() {
         return undefined;
