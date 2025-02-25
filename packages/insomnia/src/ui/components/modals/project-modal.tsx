@@ -333,29 +333,16 @@ export const ProjectModal = ({
                       </TabList>
                       <TabPanel className='w-full h-full overflow-y-auto py-2' id='github'>
                         <GitHubRepositorySetupFormGroup
-                          // uri={projectData.uri}
                           onSubmit={onGitRepoFormSubmit}
                         />
                       </TabPanel>
                       <TabPanel className='w-full h-full overflow-y-auto py-2' id='gitlab'>
                         <GitLabRepositorySetupFormGroup
-                          // uri={projectData.uri}
                           onSubmit={onGitRepoFormSubmit}
                         />
                       </TabPanel>
                       <TabPanel className='w-full h-full overflow-y-auto py-2' id='custom'>
                         <CustomRepositorySettingsFormGroup
-                          // gitRepository={{
-                          //   author: {
-                          //     email: projectData.authorEmail,
-                          //     name: projectData.authorName,
-                          //   },
-                          //   credentials: {
-                          //     token: projectData.token,
-                          //     username: projectData.username,
-                          //   },
-                          //   uri: projectData.uri,
-                          // }}
                           onSubmit={onGitRepoFormSubmit}
                         />
                       </TabPanel>
