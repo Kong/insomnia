@@ -51,7 +51,7 @@ export const BooleanSetting: FC<{
                   },
                 });
               } else {
-                patchSettings({ [setting]: event.currentTarget.checked });
+                patchSettings({ [setting]: isChecked });
               }
             }}
             type="checkbox"
