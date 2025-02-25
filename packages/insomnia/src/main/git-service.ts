@@ -451,6 +451,7 @@ export const initGitRepoCloneAction = async ({
 export const cloneGitRepoAction = async ({
   organizationId,
   projectId,
+  cloneIntoProjectId,
   name,
   uri,
   authorName,
@@ -461,6 +462,7 @@ export const cloneGitRepoAction = async ({
 }: {
   organizationId: string;
     projectId?: string;
+    cloneIntoProjectId?: string;
     name?: string;
   uri: string;
   authorName: string;
@@ -549,11 +551,30 @@ export const cloneGitRepoAction = async ({
       const bufferId = await database.bufferChanges();
 
       const gitRepository = await models.gitRepository.create(repoSettingsPatch);
-      const project = await models.project.create({
-        name: name || gitRepository.uri.split('/').pop() || 'New Git Project',
-        parentId: organizationId,
-        gitRepositoryId: gitRepository._id,
-      });
+
+      async function getProject() {
+        if (cloneIntoProjectId) {
+          const project = await models.project.getById(cloneIntoProjectId);
+          invariant(project, 'Project not found');
+
+          await models.project.update(project, {
+            remoteId: null,
+            gitRepositoryId: gitRepository._id,
+          });
+
+          return project;
+        }
+
+        const project = await models.project.create({
+          name: name || gitRepository.uri.split('/').pop() || 'New Git Project',
+          parentId: organizationId,
+          gitRepositoryId: gitRepository._id,
+        });
+
+        return project;
+      }
+
+      const project = await getProject();
 
       const fsClient = await getGitFSClient({ projectId: project._id, gitRepositoryId: gitRepository._id });
 

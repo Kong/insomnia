@@ -130,7 +130,7 @@ export const updateProjectAction: ActionFunction = async ({
   request,
   params,
 }) => {
-  const { name, storageType } = await request.json();
+  const { name, storageType, ...projectData } = await request.json();
 
   invariant(typeof name === 'string', 'Name is required');
   invariant(storageType === 'local' || storageType === 'remote' || storageType === 'git', 'Project type is required');
@@ -213,7 +213,7 @@ export const updateProjectAction: ActionFunction = async ({
       await models.project.update(project, { name, remoteId: null });
       return null;
     }
-    // convert from local to cloud
+    // convert from local/git to cloud
     if (storageType === 'remote' && !project.remoteId) {
       const newCloudProject = await insomniaFetch<{
         id: string;
@@ -249,12 +249,73 @@ export const updateProjectAction: ActionFunction = async ({
         };
       }
 
-      await models.project.update(project, { name, remoteId: newCloudProject.id });
+      if (project.gitRepositoryId) {
+        const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
+
+        gitRepository && await models.gitRepository.remove(gitRepository);
+      }
+
+      await models.project.update(project, { name, remoteId: newCloudProject.id, gitRepositoryId: null });
+      return null;
+    }
+
+    // convert from local to git
+    if (storageType === 'git' && !project.gitRepositoryId) {
+      if (project.remoteId) {
+        const response = await insomniaFetch<void | {
+          error: string;
+          message?: string;
+        }>({
+          path: `/v1/organizations/${organizationId}/team-projects/${project.remoteId}`,
+          method: 'DELETE',
+          sessionId,
+        });
+
+        if (response && 'error' in response) {
+          let error = 'An unexpected error occurred while updating your project. Please try again.';
+
+          if (response.error === 'FORBIDDEN') {
+            error = 'You do not have permission to change this project.';
+          }
+
+          if (response.error === 'PROJECT_STORAGE_RESTRICTION') {
+            error = 'The owner of the organization allows only Cloud Sync project creation, please try again.';
+          }
+
+          return {
+            error,
+          };
+        }
+      }
+
+      const { errors } = await window.main.git.cloneGitRepo({
+        organizationId,
+        cloneIntoProjectId: project._id,
+        ...projectData,
+      });
+
+      if (errors) {
+        return {
+          error: errors.join(', '),
+        };
+      }
+
+      return null;
+    }
+
+    // convert from git to local
+    if (storageType === 'local' && project.gitRepositoryId) {
+      const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
+
+      gitRepository && await models.gitRepository.remove(gitRepository);
+      await models.project.update(project, { name, gitRepositoryId: null });
+
       return null;
     }
 
     // local project rename
     await models.project.update(project, { name });
+
     return null;
 
   } catch (err) {

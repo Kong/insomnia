@@ -3,7 +3,7 @@ import { Button, Cell, Column, Dialog, Heading, Input, Label, Modal, ModalOverla
 import { useFetcher, useNavigation, useParams } from 'react-router-dom';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
-import type { GitRepository } from '../../../models/git-repository';
+import { type GitRepository } from '../../../models/git-repository';
 import { getDefaultProjectStorageType, type Project } from '../../../models/project';
 import type { InitGitCloneResult } from '../../routes/git-project-actions';
 import { ORG_STORAGE_RULE } from '../../routes/organization';
@@ -239,7 +239,7 @@ export const ProjectModal = ({
                       >
                         Cancel
                       </Button>
-                      {projectData.storageType === 'git' && (
+                      {projectData.storageType === 'git' && !gitRepository && (
                         <Button
                           onPress={() => setActiveView('git-clone')}
                           className="hover:no-underline w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
@@ -247,12 +247,12 @@ export const ProjectModal = ({
                           Next
                         </Button>
                       )}
-                      {projectData.storageType !== 'git' && (
+                      {(projectData.storageType !== 'git' || gitRepository) && (
                         <Button
                           onPress={onCreateProject}
                           className="hover:no-underline w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                         >
-                          Create
+                          {project ? 'Update' : 'Create'}
                         </Button>
                       )}
                     </div>
