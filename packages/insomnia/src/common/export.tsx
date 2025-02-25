@@ -302,8 +302,13 @@ const showSelectExportTypeModal = ({ onDone }: {
     },
   ];
 
-  const lastFormat = window.localStorage.getItem('insomnia.lastExportFormat');
-  const defaultValue = options.find(({ value }) => value === lastFormat) ? lastFormat : VALUE_JSON;
+  let lastFormat = window.localStorage.getItem('insomnia.lastExportFormat');
+  if (lastFormat === VALUE_JSON) {
+    window.localStorage.setItem('insomnia.lastExportFormat', VALUE_YAML);
+    lastFormat = VALUE_YAML;
+  }
+
+  const defaultValue = options.find(({ value }) => value === lastFormat) ? lastFormat : VALUE_YAML;
 
   showModal(SelectModal, {
     title: 'Select Export Type',
