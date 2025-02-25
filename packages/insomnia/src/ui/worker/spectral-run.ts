@@ -8,6 +8,9 @@ export class SpectralRunner {
   private taskId = 0;
 
   constructor() {
+    // @INFO: This is only for inso cli since it ends up in the import map and gets type-checked against a node environment
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     this.worker = new Worker(new URL('./spectral.ts', import.meta.url), {
       type: 'module',
     });
