@@ -236,6 +236,13 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
       })
     )._id;
   }
+  if (requestType === 'SocketIO') {
+    activeRequestId = (await models.socketIORequest.create({
+      parentId: parentId || workspaceId,
+      name: 'New Socket.IO Request',
+      headers: defaultHeaders,
+    }))._id;
+  }
   if (requestType === 'From Curl') {
     if (!req) {
       return null;

@@ -7,6 +7,7 @@ import { requestGroup } from '../../../models';
 import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, type Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
+import { isSocketIORequest, type SocketIORequest } from '../../../models/socket-io-request';
 import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
 import { SegmentEvent } from '../../analytics';
 import type { Child, WorkspaceLoaderData } from '../../routes/workspace';
@@ -14,7 +15,7 @@ import { Icon } from '../icon';
 import { getMethodShortHand } from '../tags/method-tag';
 
 export interface Node {
-  doc: Request | WebSocketRequest | GrpcRequest | RequestGroup;
+  doc: Request | WebSocketRequest | GrpcRequest | RequestGroup | SocketIORequest;
   children: Node[];
   collapsed: boolean;
   totalRequests: number;
@@ -77,7 +78,7 @@ export const RequestGroupRow: FC<{
 export const RequestRow: FC<{
   handleSetItemSelected: (...args: any[]) => any;
   isSelected: boolean;
-  request: Request | WebSocketRequest | GrpcRequest;
+  request: Request | WebSocketRequest | GrpcRequest | SocketIORequest;
 }> = ({ handleSetItemSelected, request, isSelected }) => {
   return (
     <li className="flex items-center gap-2 p-2">
@@ -141,7 +142,7 @@ export const Tree: FC<{
       return null;
     }
 
-    if (isRequest(node.doc) || isWebSocketRequest(node.doc) || isGrpcRequest(node.doc)) {
+    if (isRequest(node.doc) || isWebSocketRequest(node.doc) || isGrpcRequest(node.doc) || isSocketIORequest(node.doc)) {
       return (
         <RequestRow
           key={node.doc._id}
