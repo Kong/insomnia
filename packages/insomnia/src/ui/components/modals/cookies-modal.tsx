@@ -12,6 +12,7 @@ import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { PromptButton } from '../base/prompt-button';
+import { Checkbox } from '../checkbox';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 import { Icon } from '../icon';
 import { RenderedText } from '../rendered-text';
@@ -470,26 +471,22 @@ const CookieModifyModal = (({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cooki
                           </label>
                         </div>
                         <div className="grid grid-cols-2 gap-2 w-full">
-                          <label className="flex items-center gap-1">
-                            <input
-                              className="space-left"
-                              type="checkbox"
-                              name="secure"
-                              defaultChecked={editCookie.secure || false}
-                              onChange={event => setEditCookie({ ...editCookie, secure: event.target.checked })}
-                            />
+                          <Checkbox
+                            name="secure"
+                            className="flex items-center gap-1"
+                            isSelected={editCookie.secure}
+                            onChange={isSelected => setEditCookie({ ...editCookie, secure: isSelected })}
+                          >
                             Secure
-                          </label>
-                          <label className="flex items-center gap-1">
-                            <input
-                              className="space-left"
-                              type="checkbox"
-                              name="httpOnly"
-                              defaultChecked={editCookie.httpOnly || false}
-                              onChange={event => setEditCookie({ ...editCookie, httpOnly: event.target.checked })}
-                            />
+                          </Checkbox>
+                          <Checkbox
+                            name="httpOnly"
+                            className="flex items-center gap-1"
+                            isSelected={editCookie.httpOnly}
+                            onChange={isSelected => setEditCookie({ ...editCookie, httpOnly: isSelected })}
+                          >
                             httpOnly
-                          </label>
+                          </Checkbox>
                         </div>
                       </TabPanel>
                       <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto pt-3' id='raw'>
