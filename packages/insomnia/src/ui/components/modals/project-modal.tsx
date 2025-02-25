@@ -21,7 +21,7 @@ function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote
     return true;
   }
 
-  if (storageType === 'local' && isRemoteProject(project) || isGitProject(project)) {
+  if (storageType === 'local' && (isRemoteProject(project) || isGitProject(project))) {
     return true;
   }
 
