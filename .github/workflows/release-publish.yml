@@ -156,7 +156,7 @@ jobs:
           INSOMNIA_API_URL: ${{ secrets.INSOMNIA_API_URL }}
           INSOMNIA_API_TOKEN: ${{ secrets.INSOMNIA_API_TOKEN }}
           RELEASE_APP: com.insomnia.inso
-          RELEASE_VERSION: ${{ env.INSO_VERSION }}
+          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
           RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
       # # TODO: also take care of aarch64 image
