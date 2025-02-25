@@ -171,6 +171,18 @@ export const ProjectModal = ({
                 </Button>
               </div>
 
+              {upsertProjectFetcher.data?.error && (
+                <div className='px-10'>
+                  <div className="flex items-center px-2 py-1 gap-2 text-sm rounded-sm text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]">
+                    <Icon icon="triangle-exclamation" />
+                    <span>
+                      Error:
+                      {upsertProjectFetcher.data?.error}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {activeView === 'project' && (
                 <>
                   <div className='flex flex-col justify-start gap-2 overflow-y-auto px-10'>
@@ -267,7 +279,7 @@ export const ProjectModal = ({
                       >
                         Cancel
                       </Button>
-                      {projectData.storageType === 'git' && !gitRepository && (
+                      {(projectData.storageType === 'git' && !gitRepository) && (
                         <Button
                           onPress={() => setActiveView('git-clone')}
                           className="hover:no-underline w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
@@ -375,7 +387,7 @@ export const ProjectModal = ({
                       Loading Insomnia files from repository
                     </div>
                   )}
-                  {insomniaFiles.length === 0 && initCloneGitRepositoryFetcher.state === 'idle' && (
+                  {(insomniaFiles.length === 0 && initCloneGitRepositoryFetcher.state === 'idle') && (
                     <div className='w-full flex flex-col gap-2 p-4 items-center justify-center px-10'>
                       <div className="flex flex-col w-full items-center p-4 gap-2 text-sm rounded-sm text-[--color-font-success] bg-[--hl-xs]">
                         <span className='flex items-center justify-center relative'>
