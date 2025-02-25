@@ -31,6 +31,7 @@ export interface OneLineEditorProps {
   onPaste?: (text: string) => void;
   onBlur?: (e: FocusEvent) => void;
   eventListeners?: EditorEventListener<keyof EditorEventMap>[];
+  dynamicHeight?: boolean;
 }
 
 export interface EditorEventListener<T extends keyof EditorEventMap> {
@@ -53,6 +54,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   onPaste,
   onBlur,
   eventListeners,
+  dynamicHeight = false,
 }, ref) => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
@@ -98,7 +100,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       lint: false,
       matchBrackets: false,
       autoCloseBrackets: false,
-      viewportMargin: 30,
+      viewportMargin: dynamicHeight ? Infinity : 30,
       readOnly: !!readOnly,
       tabindex: 0,
       selectionPointer: 'default',
@@ -127,11 +129,16 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     };
     codeMirror.current = CodeMirror.fromTextArea(textAreaRef.current, initialOptions);
     codeMirror.current.on('beforeChange', (_: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) => {
-      const isPaste = change.text && change.text.length > 1;
-      if (isPaste) {
+      if (dynamicHeight) {
+        return;
+      }
+      // change.txt is ['', ''] when the user presses enter
+      const isPastingMultilineOrEnteringNewLine = change.text && change.text.length > 1;
+      if (isPastingMultilineOrEnteringNewLine) {
         const startsWithCurl = change.text[0].startsWith('curl');
-        const isWhitespace = change.text.join('').trim();
-        if (startsWithCurl || !isWhitespace) {
+        const isWhitespace = !(change.text.join('').trim());
+        // why cancel when pasting curl here?
+        if (startsWithCurl || isWhitespace) {
           change.cancel();
           return;
         }
@@ -211,7 +218,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         id,
       );
     }
-  }, [defaultValue, getAutocompleteConstants, handleGetRenderContext, handleRender, onBlur, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, getKeyMap, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, eventListeners, id]);
+  }, [defaultValue, getAutocompleteConstants, handleGetRenderContext, handleRender, onBlur, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, getKeyMap, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, eventListeners, id, dynamicHeight]);
 
   const cleanUpEditor = useCallback(() => {
     codeMirror.current?.toTextArea();
@@ -324,6 +331,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       className={classnames('editor--single-line', {
         editor: true,
         'editor--readonly': readOnly,
+        'editor--dynamic-height': dynamicHeight,
       })}
       data-editor-type={type || 'text'}
       data-testid="OneLineEditor"

@@ -1444,6 +1444,13 @@ html {
 .editor.editor--dynamic-height .CodeMirror-lines {
   padding-bottom: 0.5em;
 }
+.editor.editor--single-line.editor--dynamic-height .CodeMirror-scroll {
+  align-items: flex-start;
+}
+.editor.editor--single-line.editor--dynamic-height .CodeMirror-lines {
+  padding-top: 0.7em;
+}
+
 /*
   We need to restyle CodeMirrow for raw editor
 */

@@ -20,7 +20,6 @@ interface EditorProps {
   vaultKey?: string;
   isPrivate?: boolean;
 }
-const cellCommonStyle = 'h-full px-2 flex items-center';
 
 const createNewPair = (enabled: boolean = true): EnvironmentKvPairData => ({
   id: generateId('envPair'),
@@ -183,10 +182,10 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
     const isValidJSONString = checkValidJSONString(value);
     return (
       <>
-        <div slot="drag" className={`${cellCommonStyle} w-6 flex flex-shrink-0 items-center justify-end border-l border-r-0`} style={{ padding: 0 }}>
+        <div slot="drag" className="h-[--line-height-sm] px-2 flex items-center w-6 flex-shrink-0 justify-end border-l border-r-0" style={{ padding: 0 }}>
           <Icon icon="grip-vertical" className="cursor-grab mr-1" />
         </div>
-        <div className={`${cellCommonStyle} relative h-full w-[30%] flex flex-grow pl-1`}>
+        <div className="px-2 flex items-center relative h-[--line-height-sm] w-[30%] flex-grow pl-1">
           <OneLineEditor
             id={`environment-kv-editor-name-${id}`}
             placeholder={'Input Name'}
@@ -220,7 +219,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
             </Tooltip>
           }
         </div>
-        <div className={`${cellCommonStyle} w-[50%] relative`}>
+        <div className="min-h-[--line-height-sm] px-2 flex items-center w-[50%] relative">
           {type === EnvironmentKvPairDataType.STRING &&
             <OneLineEditor
               id={`environment-kv-editor-value-${id}`}
@@ -228,6 +227,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
               defaultValue={value.toString()}
               readOnly={!enabled}
               onChange={newValue => handleItemChange(id, 'value', newValue)}
+              dynamicHeight
             />
           }
           {type === EnvironmentKvPairDataType.JSON &&
@@ -279,7 +279,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
             />
           }
         </div>
-        <div className={`${cellCommonStyle} w-32`} >
+        <div className="h-[--line-height-sm] px-2 flex items-center w-32" >
           <MenuTrigger>
             <ItemButton className="py-1 px-[--padding-sm] w-full font-bold flex flex-1 items-center justify-between aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] text-sm" tabIndex={-1} aria-label='Type Selection'>
               <span className="flex truncate items-center justify-center gap-2" >{kvPairItemTypes.find(t => t.id === type)?.name}</span>
@@ -320,7 +320,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
             </Popover>
           </MenuTrigger>
         </div>
-        <div className={`${cellCommonStyle} w-20`} >
+        <div className="h-[--line-height-sm] px-2 flex items-center w-20" >
           <ItemButton
             className="flex items-center justify-center h-7 aspect-square rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             tabIndex={-1}
@@ -385,7 +385,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
               id={id}
               textValue={`environment-item-${name || id}`}
               style={{ opacity: enabled ? '1' : '0.4' }}
-              className={'w-full flex focus:outline-none  h-[--line-height-sm]'}
+              className={'w-full flex focus:outline-none min-h-[--line-height-sm]'}
             >
               {renderPairItem(kvPair)}
             </ListBoxItem>
