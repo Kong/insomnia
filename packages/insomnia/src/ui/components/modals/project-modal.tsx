@@ -4,7 +4,7 @@ import { useFetcher, useNavigation, useParams } from 'react-router-dom';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
 import { type GitRepository } from '../../../models/git-repository';
-import { getDefaultProjectStorageType, type Project } from '../../../models/project';
+import { getDefaultProjectStorageType, isGitProject, isRemoteProject, type Project } from '../../../models/project';
 import type { InitGitCloneResult } from '../../routes/git-project-actions';
 import { ORG_STORAGE_RULE } from '../../routes/organization';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../../routes/project';
@@ -14,6 +14,20 @@ import { InsomniaLogo } from '../insomnia-icon';
 import { CustomRepositorySettingsFormGroup } from './git-repository-settings-modal/custom-repository-settings-form-group';
 import { GitHubRepositorySetupFormGroup } from './git-repository-settings-modal/github-repository-settings-form-group';
 import { GitLabRepositorySetupFormGroup } from './git-repository-settings-modal/gitlab-repository-settings-form-group';
+
+function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
+  if (storageType === 'git' && !isGitProject(project)) {
+    return true;
+  }
+
+  if (storageType === 'local' && isRemoteProject(project) || isGitProject(project)) {
+    return true;
+  }
+
+  if (storageType === 'remote' && !isRemoteProject(project)) {
+    return true;
+  }
+}
 
 export const ProjectModal = ({
   isOpen,
@@ -53,7 +67,7 @@ export const ProjectModal = ({
     oauth2format: gitRepository?.credentials && 'oauth2format' in gitRepository.credentials ? gitRepository?.credentials?.oauth2format ?? 'github' : 'github',
   });
 
-  const [activeView, setActiveView] = useState<'project' | 'git-clone' | 'git-results'>('project');
+  const [activeView, setActiveView] = useState<'project' | 'git-clone' | 'git-results' | 'switch-storage-type'>('project');
   const [selectedTab, setTab] = useState<OauthProviderName>('github');
 
   const showStorageRestrictionMessage = storageRule !== ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL;
@@ -99,6 +113,11 @@ export const ProjectModal = ({
   };
 
   const onCreateProject = () => {
+    if (project && activeView !== 'switch-storage-type' && isSwitchingStorageType(project, projectData.storageType)) {
+      setActiveView('switch-storage-type');
+      return;
+    }
+
     const action = project ? `/organization/${organizationId}/project/${project._id}/update` : `/organization/${organizationId}/project/new`;
 
     upsertProjectFetcher.submit(
@@ -349,11 +368,12 @@ export const ProjectModal = ({
                   )}
                   {insomniaFiles.length === 0 && initCloneGitRepositoryFetcher.state === 'idle' && (
                     <div className='w-full flex flex-col gap-2 p-4 items-center justify-center px-10'>
-                      <div className="flex w-full items-center px-4 py-1 gap-2 text-sm rounded-sm text-[--color-font-success] bg-[--hl-xs]">
+                      <div className="flex flex-col w-full items-center p-4 gap-2 text-sm rounded-sm text-[--color-font-success] bg-[--hl-xs]">
                         <span className='flex items-center justify-center relative'>
-                          <InsomniaLogo className='w-12 h-12 grayscale opacity-45' />
+                          <InsomniaLogo className='w-12 h-12' />
                         </span>
-                        <p className='max-w-lg p-2 rounded-sm'>Clone this repository to start a new project. Add your collections, documents, environments, and mock servers, and share them using Git.</p>
+                        <p className='p-2 text-center font-bold text-[--color-font]'>Clone this repository to start a new project.</p>
+                        <p className='p-2 text-center text-[--color-font]'>Add your collections, documents, environments and mock servers, and share them using Git.</p>
                       </div>
                     </div>
                   )}
@@ -427,6 +447,91 @@ export const ProjectModal = ({
                   </div>
                 </>
               )}
+
+              {activeView === 'switch-storage-type' && (
+                <>
+                  <div className='flex flex-col justify-start gap-2 overflow-y-auto px-10'>
+                    {projectData.storageType === 'git' && (
+                      <div className='text-[--color-font] flex flex-col gap-4'>
+                        <div className='flex flex-col gap-4'>
+                          <p>
+                            {project && isRemoteProject(project) ?
+                              'We will be converting your Cloud Sync project into a Git project, and permanently remove all cloud data for this project from the cloud.'
+                              : 'We will be converting your project into a Git project.'}
+                          </p>
+                          <ul className='text-left flex flex-col gap-2'>
+                            <li><i className="fa fa-check text-emerald-600" /> The project will be 100% stored locally.</li>
+                            <li><i className="fa fa-check text-emerald-600" /> Your collaborators can synchronize files using Git.</li>
+                            <li><i className="fa fa-check text-emerald-600" /> The project will be stored locally also for every existing collaborator.</li>
+                          </ul>
+                          <p>
+                            You can synchronize a local project back to the cloud if you decide to do so.
+                          </p>
+                          {project && isRemoteProject(project) && <p className='flex gap-2 items-center'>
+                            <Icon icon="triangle-exclamation" className='text-[--color-warning]' />
+                            Remember to pull your latest project updates before this operation
+                          </p>}
+                        </div>
+                      </div>
+                    )}
+                    {projectData.storageType === 'local' && (
+                      <div className='text-[--color-font] flex flex-col gap-4'>
+                        <div className='flex flex-col gap-4'>
+                          <p>
+                            We will be converting your Cloud Sync project into a local project, and permanently remove all cloud data for this project from the cloud.
+                          </p>
+                          <ul className='text-left flex flex-col gap-2'>
+                            <li><i className="fa fa-check text-emerald-600" /> The project will be 100% stored locally.</li>
+                            <li><i className="fa fa-check text-emerald-600" /> Your collaborators will not be able to push and pull files anymore.</li>
+                            <li><i className="fa fa-check text-emerald-600" /> The project will become local also for every existing collaborator.</li>
+                          </ul>
+                          <p>
+                            You can still use Git Sync for local projects without using the cloud, and you can synchronize a local project back to the cloud if you decide to do so.
+                          </p>
+                          <p className='flex gap-2 items-center'>
+                            <Icon icon="triangle-exclamation" className='text-[--color-warning]' />
+                            Remember to pull your latest project updates before this operation
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {projectData.storageType === 'remote' && (
+                      <div className='text-[--color-font] flex flex-col gap-4'>
+                        <div className='flex flex-col gap-4'>
+                          <p>
+                            We will be synchronizing your local project to Insomnia's Cloud in a secure encrypted format which will enable cloud collaboration.
+                          </p>
+                          <ul className='text-left flex flex-col gap-2'>
+                            <li><i className="fa fa-check text-emerald-600" /> Your data in the cloud is encrypted and secure.</li>
+                            <li><i className="fa fa-check text-emerald-600" /> You can now collaborate with any amount of users and use cloud features.</li>
+                            <li><i className="fa fa-check text-emerald-600" /> Your project will be always available on any client after logging in.</li>
+                          </ul>
+                          <p>
+                            You can still use Git Sync for cloud projects.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-end gap-2 items-center px-10 pb-10">
+                    <div className='flex items-center gap-2'>
+                      <Button
+                        onPress={close}
+                        className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onPress={onCreateProject}
+                        className="hover:no-underline w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                      >
+                        Update
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
+
             </>
           )}
         </Dialog>
