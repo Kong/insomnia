@@ -68,6 +68,7 @@ import {
 import { isRequestGroup, isRequestGroupId, type RequestGroup } from '../../models/request-group';
 import type { RequestGroupMeta } from '../../models/request-group-meta';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
+import { isSocketIORequest, isSocketIORequestId, type SocketIORequest } from '../../models/socket-io-request';
 import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '../../models/websocket-request';
 import { isDesign } from '../../models/workspace';
 import { scrollElementIntoView } from '../../utils';
@@ -192,7 +193,9 @@ const EventStreamSpinner = ({ requestId }: { requestId: string }) => {
   ) : null;
 };
 
-const getRequestNameOrFallback = (doc: Request | RequestGroup | GrpcRequest | WebSocketRequest): string => {
+const getRequestNameOrFallback = (
+  doc: Request | RequestGroup | GrpcRequest | WebSocketRequest | SocketIORequest,
+): string => {
   return !isRequestGroup(doc) ? doc.name || doc.url || 'Untitled request' : doc.name || 'Untitled folder';
 };
 
@@ -678,6 +681,16 @@ export const Debug: FC = () => {
               parentId: workspaceId,
             }),
         },
+        {
+          id: 'Socket.IO Request',
+          name: 'Socket.IO Request',
+          icon: 'plus-circle',
+          action: () =>
+            createRequest({
+              requestType: 'SocketIO',
+              parentId: workspaceId,
+            }),
+        },
       ],
     },
     {
@@ -1036,6 +1049,11 @@ export const Debug: FC = () => {
                           WS
                         </span>
                       )}
+                      {isSocketIORequest(item.doc) && (
+                        <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-[--color-font-notice]">
+                          IO
+                        </span>
+                      )}
                       {isGrpcRequest(item.doc) && (
                         <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-[--color-font-info]">
                           gRPC
@@ -1178,6 +1196,7 @@ export const Debug: FC = () => {
                           />
                         )}
                         {isWebSocketRequestId(requestId) && <WebSocketRequestPane environment={activeEnvironment} />}
+                        {isSocketIORequestId(requestId) && <>Socket.IO</>}
                         {isRequestId(requestId) && (
                           <RequestPane
                             environmentId={activeEnvironment ? activeEnvironment._id : ''}
@@ -1343,6 +1362,15 @@ const CollectionGridListItem = ({
             WS
           </span>
         )}
+        {isSocketIORequest(item.doc) && (
+          <span
+            aria-hidden
+            role="presentation"
+            className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-[--color-font-notice]"
+          >
+            IO
+          </span>
+        )}
         {isGrpcRequest(item.doc) && (
           <span
             aria-hidden
@@ -1373,6 +1401,7 @@ const CollectionGridListItem = ({
           }}
         />
         {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
+        {/* {isSocketIORequest(item.doc) && <SocketIOSpinner requestId={item.doc._id} />} */}
         {isGraphqlSubscriptionRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
         {isRequest(item.doc) && <RequestTiming requestId={item.doc._id} />}
         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}

@@ -9,6 +9,7 @@ import * as models from '../models';
 import type { GrpcRequest } from '../models/grpc-request';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
+import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace } from '../models/workspace';
 import type { PluginTemplateTag } from '../templating/types';
@@ -56,7 +57,7 @@ export type RequestAction = { plugin: Plugin } & {
     context: Record<string, any>,
     models: {
       requestGroup?: RequestGroup;
-      request: Request | GrpcRequest | WebSocketRequest;
+      request: Request | GrpcRequest | WebSocketRequest | SocketIORequest;
     },
   ) => void | Promise<void>;
   label: string;

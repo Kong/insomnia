@@ -11,6 +11,7 @@ import type { GrpcRequest } from '../../../models/grpc-request';
 import type { Project } from '../../../models/project';
 import { isRequest, type Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
+import type { SocketIORequest } from '../../../models/socket-io-request';
 import { incrementDeletedRequests } from '../../../models/stats';
 // Plugin action related imports
 // Plugin action related imports
@@ -32,7 +33,7 @@ interface Props {
   activeEnvironment: Environment;
   activeProject: Project;
   isPinned: boolean;
-  request: Request | GrpcRequest | WebSocketRequest;
+  request: Request | GrpcRequest | WebSocketRequest | SocketIORequest;
   requestGroup?: RequestGroup;
   isOpen: boolean;
   triggerRef: React.RefObject<HTMLDivElement>;
