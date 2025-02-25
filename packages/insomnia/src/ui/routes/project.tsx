@@ -3,27 +3,20 @@ import * as Sentry from '@sentry/electron/renderer';
 import React, { type FC, Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
-  Dialog,
   GridList,
   GridListItem,
   Heading,
   Input,
-  Label,
   Link,
   ListBox,
   ListBoxItem,
   Menu,
   MenuItem,
   MenuTrigger,
-  Modal,
-  ModalOverlay,
   Popover,
-  Radio,
-  RadioGroup,
   SearchField,
   Select,
   SelectValue,
-  TextField,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
@@ -64,7 +57,6 @@ import type { MockServer } from '../../models/mock-server';
 import type { Organization } from '../../models/organization';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../../models/organization';
 import {
-  getDefaultProjectType,
   isGitProject,
   isRemoteProject,
   type Project,
@@ -84,12 +76,12 @@ import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { WorkspaceCardDropdown } from '../components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
-import { showAlert, showPrompt } from '../components/modals';
+import { showPrompt } from '../components/modals';
 import { AlertModal } from '../components/modals/alert-modal';
-import { GitProjectRepositoryCloneModal } from '../components/modals/git-repository-settings-modal';
 import { GitRepositoryCloneModal } from '../components/modals/git-repository-settings-modal/git-repo-clone-modal';
 import { ImportModal } from '../components/modals/import-modal';
 import { MockServerSettingsModal } from '../components/modals/mock-server-settings-modal';
+import { ProjectModal } from '../components/modals/project-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { OrganizationTabList } from '../components/tabs/tab-list';
 import { TimeFromNow } from '../components/time-from-now';
@@ -288,7 +280,7 @@ export interface ProjectLoaderData {
   projectsCount: number;
   activeProject?: Project;
   activeProjectGitRepository?: GitRepository | null;
-  projects: Project[];
+  projects: (Project & { gitRepository?: GitRepository })[];
   learningFeaturePromise?: Promise<LearningFeature>;
   remoteFilesPromise?: Promise<InsomniaFile[]>;
   projectsSyncStatusPromise?: Promise<Record<string, boolean>>;
@@ -539,6 +531,32 @@ const CheckAllProjectSyncStatus = async (projects: Project[]) => {
   return obj;
 };
 
+async function getProjectsWithGitRepositories({
+  organizationId,
+}: {
+  organizationId: string;
+}): Promise<(Project & { gitRepository?: GitRepository })[]> {
+  const projects = await database.find<Project>(models.project.type, {
+    parentId: organizationId,
+  });
+
+  const gitRepositoryIds = projects.map(p => p.gitRepositoryId).filter(isNotNullOrUndefined);
+
+  const gitRepositories = await database.find<GitRepository>(models.gitRepository.type, {
+    _id: {
+      $in: gitRepositoryIds,
+    },
+  });
+
+  return projects.map(project => {
+    const gitRepository = gitRepositories.find(gr => gr._id === project.gitRepositoryId);
+    return {
+      ...project,
+      gitRepository,
+    };
+  });
+}
+
 export const loader: LoaderFunction = async ({
   params,
 }) => {
@@ -578,9 +596,7 @@ export const loader: LoaderFunction = async ({
 
   const [localFiles, organizationProjects = []] = await Promise.all([
     getAllLocalFiles({ projectId }),
-    database.find<Project>(models.project.type, {
-      parentId: organizationId,
-    }),
+    getProjectsWithGitRepositories({ organizationId }),
   ]);
 
   const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
@@ -648,7 +664,6 @@ const ProjectRoute: FC = () => {
 
   const { userSession } = useRootLoaderData();
   const pullFileFetcher = useFetcher();
-  const updateProjectFetcher = useFetcher();
   const loadingBackendProjects = useFetchers().filter(fetcher => fetcher.formAction === `/organization/${organizationId}/project/${projectId}/remote-collections/pull`).map(f => f.formData?.get('backendProjectId'));
 
   const { organizations } = useOrganizationLoaderData();
@@ -677,9 +692,7 @@ const ProjectRoute: FC = () => {
   const [workspaceListSortOrder, setWorkspaceListSortOrder] = useLocalStorage(`${projectId}:workspace-list-sort-order`, 'modified-desc');
   const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
-  const [isGitProjectRepositoryCloneModalOpen, setIsGitProjectRepositoryCloneModalOpen] = useState(false);
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
-  const [projectType, setProjectType] = useState<'local' | 'remote' | ''>('');
   const organization = organizations.find(o => o.id === organizationId);
   const isUserOwner = organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
   const isPersonalOrg = organization && isPersonalOrganization(organization);
@@ -852,10 +865,6 @@ const ProjectRoute: FC = () => {
       });
   };
 
-  const createNewProjectFetcher = useFetcher({
-    key: `${organizationId}-${projectId}-create-new-project`,
-  });
-
   const isGitSyncEnabled = features.gitSync.enabled;
 
   const showUpgradePlanModal = () => {
@@ -989,11 +998,10 @@ const ProjectRoute: FC = () => {
         },
       },
   ];
-  const defaultStorageSelection = storage === ORG_STORAGE_RULE.LOCAL_ONLY ? 'local' : 'remote';
+
   const isRemoteProjectInconsistent = activeProject && isRemoteProject(activeProject) && storage === ORG_STORAGE_RULE.LOCAL_ONLY;
   const isLocalProjectInconsistent = activeProject && !isRemoteProject(activeProject) && storage === ORG_STORAGE_RULE.CLOUD_ONLY;
   const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent;
-  const showStorageRestrictionMessage = storage !== ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL;
 
   useEffect(() => {
     window.main.landingPageRendered(LandingPage.ProjectDashboard);
@@ -1198,7 +1206,12 @@ const ProjectRoute: FC = () => {
                       );
                     }}
                   </GridList>
-                  {isGitProject(activeProject) && <GitProjectSyncDropdown gitRepository={activeProjectGitRepository || null} />}
+                  {isGitProject(activeProject) && (
+                    <GitProjectSyncDropdown
+                      key={activeProjectGitRepository?._id}
+                      gitRepository={activeProjectGitRepository || null}
+                    />
+                  )}
                 </>
               )}
               {!isLearningFeatureDismissed && learningFeature?.active && (
@@ -1535,337 +1548,24 @@ const ProjectRoute: FC = () => {
             onHide={() => setIsGitRepositoryCloneModalOpen(false)}
           />
         )}
-        {isGitProjectRepositoryCloneModalOpen && (
-          <GitProjectRepositoryCloneModal
-            onHide={() => setIsGitRepositoryCloneModalOpen(false)}
+        {isNewProjectModalOpen && (
+          <ProjectModal
+            isOpen={isNewProjectModalOpen}
+            onOpenChange={setIsNewProjectModalOpen}
+            storageRule={storage}
+            isGitSyncEnabled={isGitSyncEnabled}
           />
         )}
-        <ModalOverlay isOpen={isNewProjectModalOpen} onOpenChange={isOpen => setIsNewProjectModalOpen(isOpen)} isDismissable className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30">
-          <Modal className="max-w-2xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
-            <Dialog className="outline-none" aria-label='Create or update dialog'>
-              {({ close }) => (
-                <div className='flex flex-col gap-4'>
-                  <div className='flex gap-2 items-center justify-between'>
-                    <Heading slot="title" className='text-2xl'>Create a new project</Heading>
-                    <Button
-                      className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                      onPress={close}
-                    >
-                      <Icon icon="x" />
-                    </Button>
-                  </div>
-                  <form
-                    className='flex flex-col gap-4'
-                    onSubmit={e => {
-                      e.preventDefault();
-                      const formData = new FormData(e.currentTarget);
-                      const type = formData.get('type');
-
-                      if (type === 'git') {
-                        setIsGitProjectRepositoryCloneModalOpen(true);
-                        close();
-                        return;
-                      }
-
-                      if (!type) {
-                        showAlert({
-                          title: 'Project type not selected',
-                          message: 'Please select a project type before continuing',
-                        });
-                        return;
-                      }
-
-                      createNewProjectFetcher.submit(e.currentTarget, {
-                        action: `/organization/${organizationId}/project/new`,
-                        method: 'post',
-                      });
-
-                      close();
-                    }}
-                  >
-                    <TextField
-                      autoFocus
-                      name="name"
-                      defaultValue="My project"
-                      className="group relative flex-1 flex flex-col gap-2"
-                    >
-                      <Label className='text-sm text-[--hl]'>
-                        Project name
-                      </Label>
-                      <Input
-                        placeholder="My project"
-                        className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
-                      />
-                    </TextField>
-                    <RadioGroup name="type" defaultValue={defaultStorageSelection} className="flex flex-col gap-2">
-                      <Label className="text-sm text-[--hl]">
-                        Project type
-                      </Label>
-                      <div className="flex gap-2">
-                        <Radio
-                          isDisabled={!isGitSyncEnabled}
-                          value="git"
-                          className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
-                        >
-                          <div className='flex items-center gap-2'>
-                            <Icon icon={['fab', 'git-alt']} />
-                            <Heading className="text-lg font-bold">Git Sync</Heading>
-                          </div>
-                          <p className='pt-2'>
-                            Stored locally and synced to a Git repository. Ideal for version control and collaboration.
-                          </p>
-                        </Radio>
-                        <Radio
-                          isDisabled={storage === ORG_STORAGE_RULE.LOCAL_ONLY}
-                          value="remote"
-                          className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
-                        >
-                          <div className='flex items-center gap-2'>
-                            <Icon icon="globe" />
-                            <Heading className="text-lg font-bold">Cloud Sync</Heading>
-                          </div>
-                          <p className='pt-2'>
-                            Encrypted and synced securely to the cloud, ideal for out of the box collaboration.
-                          </p>
-                        </Radio>
-                        <Radio
-                          isDisabled={storage === ORG_STORAGE_RULE.CLOUD_ONLY}
-                          value="local"
-                          className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Icon icon="laptop" />
-                            <Heading className="text-lg font-bold">Local Vault</Heading>
-                          </div>
-                          <p className="pt-2">
-                            Stored locally only with no cloud. Ideal when collaboration is not needed.
-                          </p>
-                        </Radio>
-                      </div>
-                    </RadioGroup>
-                    <div className="flex justify-between gap-2 items-center">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Icon icon="info-circle" />
-                        <span>
-                          {showStorageRestrictionMessage && `The organization owner mandates that projects must be created and stored ${storage.split('_').join(' ')}.`} You can optionally enable Git Sync
-                        </span>
-                      </div>
-                      <div className='flex items-center gap-2'>
-                        <Button
-                          onPress={close}
-                          className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          type="submit"
-                          className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
-                        >
-                          Create
-                        </Button>
-                      </div>
-                    </div>
-                  </form>
-                </div>
-              )}
-            </Dialog>
-          </Modal>
-        </ModalOverlay>
-        <ModalOverlay
-          isOpen={isUpdateProjectModalOpen}
-          onOpenChange={isOpen => {
-            setProjectType('');
-            setIsUpdateProjectModalOpen(isOpen);
-          }}
-          isDismissable
-          className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
-        >
-          <Modal
-            onOpenChange={isOpen => {
-              setProjectType('');
-              setIsUpdateProjectModalOpen(isOpen);
-            }}
-            className="max-w-2xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]"
-          >
-            <Dialog
-              className="outline-none"
-            >
-              {({ close }) => (
-                <div className='flex flex-col gap-4'>
-                  <div className='flex gap-2 items-center justify-between'>
-                    <Heading className='text-2xl'>{projectType === 'local' ? 'Confirm conversion to local storage' : projectType === 'remote' ? 'Confirm cloud synchronization' : 'Project Settings'}</Heading>
-                    <Button
-                      className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                      onPress={close}
-                    >
-                      <Icon icon="x" />
-                    </Button>
-                  </div>
-                  <form
-                    className='flex flex-col gap-4'
-                    onSubmit={e => {
-                      e.preventDefault();
-                      const formData = new FormData(e.currentTarget);
-                      const type = formData.get('type');
-                      // If the project is local and the user is trying to change it to remote
-                      if (type === 'remote' && !activeProject?.remoteId && !projectType) {
-                        setProjectType('remote');
-                        // If the project is remote and the user is trying to change it to local
-                      } else if (type === 'local' && activeProject?.remoteId && !projectType) {
-                        setProjectType('local');
-                      } else {
-                        if (!type) {
-                          showAlert({
-                            title: 'Project type not selected',
-                            message: 'Please select a project type before continuing',
-                          });
-                          return;
-                        }
-
-                        updateProjectFetcher.submit(formData, {
-                          action: `/organization/${organizationId}/project/${projectId}/update`,
-                          method: 'post',
-                        });
-
-                        close();
-                      }
-                    }}
-                  >
-                    <div className={`flex flex-col gap-4 ${projectType ? 'hidden' : ''}`}>
-                      <TextField
-                        autoFocus
-                        name="name"
-                        defaultValue={activeProject?.name}
-                        className="group relative flex-1 flex flex-col gap-2"
-                      >
-                        <Label className='text-sm text-[--hl]'>
-                          Project name
-                        </Label>
-                        <Input
-                          placeholder="My project"
-                          className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
-                        />
-                      </TextField>
-                      <RadioGroup name="type" defaultValue={activeProject && getDefaultProjectType(storage, activeProject)} className="flex flex-col gap-2">
-                        <Label className="text-sm text-[--hl]">
-                          Project type
-                        </Label>
-                        <div className="flex gap-2">
-                          <Radio
-                            isDisabled={!isGitSyncEnabled}
-                            value="git"
-                            className="data-[selected]:border-[--color-surprise] flex-1 data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
-                          >
-                            <div className='flex items-center gap-2'>
-                              <Icon icon={['fab', 'git-alt']} />
-                              <Heading className="text-lg font-bold">Git Sync</Heading>
-                            </div>
-                            <p className='pt-2'>
-                              Stored locally and synced with Git for version control.
-                            </p>
-                          </Radio>
-                          <Radio
-                            isDisabled={storage === ORG_STORAGE_RULE.LOCAL_ONLY}
-                            value="remote"
-                            className="data-[selected]:border-[--color-surprise] flex-1 data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
-                          >
-                            <div className='flex items-center gap-2'>
-                              <Icon icon="globe" />
-                              <Heading className="text-lg font-bold">Cloud Sync</Heading>
-                            </div>
-                            <p className='pt-2'>
-                              Encrypted and synced securely to the cloud, ideal for out of the box collaboration.
-                            </p>
-                          </Radio>
-                          <Radio
-                            isDisabled={storage === ORG_STORAGE_RULE.CLOUD_ONLY}
-                            value="local"
-                            className="data-[selected]:border-[--color-surprise] flex-1 data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
-                          >
-                            <div className='flex items-center gap-2'>
-                              <Icon icon="laptop" />
-                              <Heading className="text-lg font-bold">Local Vault</Heading>
-                            </div>
-                            <p className="pt-2">
-                              Stored locally only with no cloud. Ideal when collaboration is not needed.
-                            </p>
-                          </Radio>
-                        </div>
-                      </RadioGroup>
-                    </div>
-
-                    {projectType === 'local' && (
-                      <div className='text-[--color-font] flex flex-col gap-4'>
-                        <div className='flex flex-col gap-4'>
-                          <p>
-                            We will be converting your Cloud Sync project into a local project, and permanently remove all cloud data for this project from the cloud.
-                          </p>
-                          <ul className='text-left flex flex-col gap-2'>
-                            <li><i className="fa fa-check text-emerald-600" /> The project will be 100% stored locally.</li>
-                            <li><i className="fa fa-check text-emerald-600" /> Your collaborators will not be able to push and pull files anymore.</li>
-                            <li><i className="fa fa-check text-emerald-600" /> The project will become local also for every existing collaborator.</li>
-                          </ul>
-                          <p>
-                            You can still use Git Sync for local projects without using the cloud, and you can synchronize a local project back to the cloud if you decide to do so.
-                          </p>
-                          <p className='flex gap-2 items-center'>
-                            <Icon icon="triangle-exclamation" className='text-[--color-warning]' />
-                            Remember to pull your latest project updates before this operation
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    {projectType === 'remote' && (
-                      <div className='text-[--color-font] flex flex-col gap-4'>
-                        <div className='flex flex-col gap-4'>
-                          <p>
-                            We will be synchronizing your local project to Insomnia's Cloud in a secure encrypted format which will enable cloud collaboration.
-                          </p>
-                          <ul className='text-left flex flex-col gap-2'>
-                            <li><i className="fa fa-check text-emerald-600" /> Your data in the cloud is encrypted and secure.</li>
-                            <li><i className="fa fa-check text-emerald-600" /> You can now collaborate with any amount of users and use cloud features.</li>
-                            <li><i className="fa fa-check text-emerald-600" /> Your project will be always available on any client after logging in.</li>
-                          </ul>
-                          <p>
-                            You can still use Git Sync for cloud projects.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    <div className="flex justify-between gap-2 items-center">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Icon icon="info-circle" />
-                        <span>
-                          {showStorageRestrictionMessage && `The organization owner mandates that projects must be created and stored ${storage.split('_').join(' ')}.`} You can optionally enable Git Sync
-                        </span>
-                      </div>
-                      <div className='flex items-center gap-2'>
-                        <Button
-                          onPress={() => {
-                            if (projectType) {
-                              setProjectType('');
-                            } else {
-                              close();
-                            }
-                          }}
-                          className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          type="submit"
-                          className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
-                        >
-                          {projectType ? 'Confirm' : 'Update'}
-                        </Button>
-                      </div>
-                    </div>
-                  </form>
-                </div>
-              )}
-            </Dialog>
-          </Modal>
-        </ModalOverlay>
+        {isUpdateProjectModalOpen && (
+          <ProjectModal
+            isOpen={isUpdateProjectModalOpen}
+            onOpenChange={setIsUpdateProjectModalOpen}
+            project={activeProject}
+            gitRepository={activeProjectGitRepository || undefined}
+            storageRule={storage}
+            isGitSyncEnabled={isGitSyncEnabled}
+          />
+        )}
         {activeProject && importModalType && (
           <ImportModal
             onHide={() => setImportModalType(null)}

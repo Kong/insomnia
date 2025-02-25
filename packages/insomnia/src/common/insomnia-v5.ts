@@ -58,12 +58,12 @@ function mapMetaToInsomniaMeta(meta: Meta): {
   };
 }
 
-function getScope(file: InsomniaFile): WorkspaceScope {
-  if (file.type === 'collection.insomnia.rest/5.0') {
+export function insomniaSchemaTypeToScope(type: InsomniaFile['type']): WorkspaceScope {
+  if (type === 'collection.insomnia.rest/5.0') {
     return 'collection';
-  } else if (file.type === 'environment.insomnia.rest/5.0') {
+  } else if (type === 'environment.insomnia.rest/5.0') {
     return 'environment';
-  } else if (file.type === 'spec.insomnia.rest/5.0') {
+  } else if (type === 'spec.insomnia.rest/5.0') {
     return 'design';
   } else {
     return 'mock-server';
@@ -79,7 +79,7 @@ function getWorkspace(file: InsomniaFile): WithExportType<Workspace> {
     _type: EXPORT_TYPE_WORKSPACE,
     name: file.name || 'Imported Collection',
     parentId: '',
-    scope: getScope(file),
+    scope: insomniaSchemaTypeToScope(file.type),
   };
 }
 
@@ -158,15 +158,15 @@ function getApiSpec(file: InsomniaFile): [WithExportType<ApiSpec>] | [] {
 function getMockServer(file: InsomniaFile): WithExportType<MockServer> {
   if (file.type === 'mock.insomnia.rest/5.0') {
     return {
-      ...mapMetaToInsomniaMeta(file.meta || {
+      ...mapMetaToInsomniaMeta(file.server?.meta || {
         id: '__MOCK_SERVER_ID__',
       }),
       type: 'MockServer',
       _type: EXPORT_TYPE_MOCK_SERVER,
       name: file.name || 'Imported Mock Server',
-      parentId: file.meta?.id || '',
-      url: file.url || '',
-      useInsomniaCloud: file.useInsomniaCloud || false,
+      parentId: file.meta?.id || '__WORKSPACE_ID__',
+      url: file.server?.url || '',
+      useInsomniaCloud: file.server?.useInsomniaCloud || false,
     };
   }
 
@@ -182,13 +182,13 @@ function getMockRoutes(file: InsomniaFile): WithExportType<MockRoute>[] {
       type: 'MockRoute',
       _type: EXPORT_TYPE_MOCK_ROUTE,
       name: mock.name || 'Imported Mock Route',
-      parentId: file.meta?.id || '',
-      body: mock.body,
+      parentId: file.server?.meta?.id || '__MOCK_SERVER_ID__',
+      body: mock.body || '',
       headers: mock.headers || [],
-      method: mock.method,
-      mimeType: mock.mimeType,
+      method: mock.method || '',
+      mimeType: mock.mimeType || '',
       statusCode: mock.statusCode,
-      statusText: mock.statusText,
+      statusText: mock.statusText || '',
     })) || [];
   }
 
@@ -394,333 +394,349 @@ export function importInsomniaV5Data(rawData: string) {
 };
 
 export async function getInsomniaV5DataExport(workspaceId: string) {
-  const workspace = await models.workspace.getById(workspaceId);
+  try {
 
-  if (!workspace) {
-    throw new Error('Workspace not found');
-  }
+    const workspace = await models.workspace.getById(workspaceId);
 
-  const workspaceDescendants = await database.withDescendants(workspace);
-
-  const exportableTypes = Object.values(models.MODELS_BY_EXPORT_TYPE).map(model => model.type);
-
-  const exportableResources = workspaceDescendants.filter(resource => {
-    if (exportableTypes.includes(resource.type)) {
-      return true;
+    if (!workspace) {
+      throw new Error('Workspace not found');
     }
 
-    return false;
-  });
+    const workspaceDescendants = await database.withDescendants(workspace);
 
-  function getCollectionFromResources(resources: (Request | RequestGroup | WebSocketRequest | GrpcRequest)[], parentId: string): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'] {
-    const collection: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'] = [];
+    const exportableTypes = Object.values(models.MODELS_BY_EXPORT_TYPE).map(model => model.type);
 
-    resources.filter(resource => resource.parentId === parentId).forEach(resource => {
-      if (models.request.isRequest(resource)) {
-        const request: Z_Request = {
-          url: resource.url,
-          name: resource.name,
-          meta: {
-            id: resource._id,
-            created: resource.created,
-            modified: resource.modified,
-            isPrivate: resource.isPrivate,
-            description: resource.description,
-            sortKey: resource.metaSortKey,
-          },
-          method: resource.method,
-          body: resource.body,
-          parameters: resource.parameters,
-          headers: resource.headers,
-          authentication: resource.authentication,
-          scripts: {
-            preRequest: resource.preRequestScript,
-            afterResponse: resource.afterResponseScript,
-          },
-          settings: {
-            renderRequestBody: !resource.settingDisableRenderRequestBody,
-            encodeUrl: resource.settingEncodeUrl,
-            followRedirects: resource.settingFollowRedirects,
-            cookies: {
-              send: resource.settingSendCookies,
-              store: resource.settingStoreCookies,
-            },
-            rebuildPath: resource.settingRebuildPath,
-          },
-          pathParameters: resource.pathParameters,
-        };
-        collection.push(request);
-      } else if (models.requestGroup.isRequestGroup(resource)) {
-        const requestGroup: Z_RequestGroup = {
-          name: resource.name,
-          meta: {
-            id: resource._id,
-            created: resource.created,
-            modified: resource.modified,
-            isPrivate: resource.isPrivate,
-            sortKey: resource.metaSortKey,
-            description: resource.description,
-          },
-          children: getCollectionFromResources(resources, resource._id),
-          scripts: {
-            afterResponse: resource.afterResponseScript,
-            preRequest: resource.preRequestScript,
-          },
-          authentication: resource.authentication,
-          environment: resource.environment,
-          environmentPropertyOrder: resource.environmentPropertyOrder,
-          headers: resource.headers,
-        };
-        collection.push(requestGroup);
-      } else if (models.webSocketRequest.isWebSocketRequest(resource)) {
-        const webSocketRequest: Z_WebsocketRequest = {
-          url: resource.url,
-          name: resource.name,
-          meta: {
-            id: resource._id,
-            created: resource.created,
-            modified: resource.modified,
-            isPrivate: resource.isPrivate,
-            description: resource.description,
-            sortKey: resource.metaSortKey,
-          },
-          settings: {
-            encodeUrl: resource.settingEncodeUrl,
-            followRedirects: resource.settingFollowRedirects,
-            cookies: {
-              send: resource.settingSendCookies,
-              store: resource.settingStoreCookies,
-            },
-          },
-          authentication: resource.authentication,
-          headers: resource.headers,
-          parameters: resource.parameters,
-          pathParameters: resource.pathParameters,
-        };
-        collection.push(webSocketRequest);
-      } else if (models.grpcRequest.isGrpcRequest(resource)) {
-        const grpcRequest: Z_GRPCRequest = {
-          url: resource.url,
-          name: resource.name,
-          meta: {
-            id: resource._id,
-            created: resource.created,
-            modified: resource.modified,
-            isPrivate: resource.isPrivate,
-            sortKey: resource.metaSortKey,
-            description: resource.description,
-          },
-          body: resource.body,
-          metadata: resource.metadata,
-          protoFileId: resource.protoFileId,
-          protoMethodName: resource.protoMethodName,
-          reflectionApi: resource.reflectionApi,
-        };
-
-        collection.push(grpcRequest);
+    const exportableResources = workspaceDescendants.filter(resource => {
+      if (exportableTypes.includes(resource.type)) {
+        return true;
       }
+
+      return false;
     });
 
-    return collection;
-  }
+    function getCollectionFromResources(resources: (Request | RequestGroup | WebSocketRequest | GrpcRequest)[], parentId: string): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'] {
+      const collection: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'] = [];
 
-  function getEnvironmentsFromResources(resources: Environment[]): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['environments'] {
-    const baseEnvironment = resources.find(environment => environment.parentId.startsWith('wrk_'));
-    if (!baseEnvironment) {
-      throw new Error('Base environment not found');
-    }
+      resources.filter(resource => resource.parentId === parentId).forEach(resource => {
+        if (models.request.isRequest(resource)) {
+          const request: Z_Request = {
+            url: resource.url,
+            name: resource.name,
+            meta: {
+              id: resource._id,
+              created: resource.created,
+              modified: resource.modified,
+              isPrivate: resource.isPrivate,
+              description: resource.description,
+              sortKey: resource.metaSortKey,
+            },
+            method: resource.method,
+            body: resource.body,
+            parameters: resource.parameters,
+            headers: resource.headers,
+            authentication: resource.authentication,
+            scripts: {
+              preRequest: resource.preRequestScript,
+              afterResponse: resource.afterResponseScript,
+            },
+            settings: {
+              renderRequestBody: !resource.settingDisableRenderRequestBody,
+              encodeUrl: resource.settingEncodeUrl,
+              followRedirects: resource.settingFollowRedirects,
+              cookies: {
+                send: resource.settingSendCookies,
+                store: resource.settingStoreCookies,
+              },
+              rebuildPath: resource.settingRebuildPath,
+            },
+            pathParameters: resource.pathParameters,
+          };
+          collection.push(request);
+        } else if (models.requestGroup.isRequestGroup(resource)) {
+          const requestGroup: Z_RequestGroup = {
+            name: resource.name,
+            meta: {
+              id: resource._id,
+              created: resource.created,
+              modified: resource.modified,
+              isPrivate: resource.isPrivate,
+              sortKey: resource.metaSortKey,
+              description: resource.description,
+            },
+            children: getCollectionFromResources(resources, resource._id),
+            scripts: {
+              afterResponse: resource.afterResponseScript,
+              preRequest: resource.preRequestScript,
+            },
+            authentication: resource.authentication,
+            environment: resource.environment,
+            environmentPropertyOrder: resource.environmentPropertyOrder,
+            headers: resource.headers,
+          };
+          collection.push(requestGroup);
+        } else if (models.webSocketRequest.isWebSocketRequest(resource)) {
+          const webSocketRequest: Z_WebsocketRequest = {
+            url: resource.url,
+            name: resource.name,
+            meta: {
+              id: resource._id,
+              created: resource.created,
+              modified: resource.modified,
+              isPrivate: resource.isPrivate,
+              description: resource.description,
+              sortKey: resource.metaSortKey,
+            },
+            settings: {
+              encodeUrl: resource.settingEncodeUrl,
+              followRedirects: resource.settingFollowRedirects,
+              cookies: {
+                send: resource.settingSendCookies,
+                store: resource.settingStoreCookies,
+              },
+            },
+            authentication: resource.authentication,
+            headers: resource.headers,
+            parameters: resource.parameters,
+            pathParameters: resource.pathParameters,
+          };
+          collection.push(webSocketRequest);
+        } else if (models.grpcRequest.isGrpcRequest(resource)) {
+          const grpcRequest: Z_GRPCRequest = {
+            url: resource.url,
+            name: resource.name,
+            meta: {
+              id: resource._id,
+              created: resource.created,
+              modified: resource.modified,
+              isPrivate: resource.isPrivate,
+              sortKey: resource.metaSortKey,
+              description: resource.description,
+            },
+            body: resource.body,
+            metadata: resource.metadata,
+            protoFileId: resource.protoFileId,
+            protoMethodName: resource.protoMethodName,
+            reflectionApi: resource.reflectionApi,
+          };
 
-    const subEnvironments = resources.filter(environment => environment.parentId === baseEnvironment?._id);
-
-    return {
-      name: baseEnvironment.name,
-      meta: {
-        id: baseEnvironment._id,
-        created: baseEnvironment.created,
-        modified: baseEnvironment.modified,
-        isPrivate: baseEnvironment.isPrivate,
-      },
-      data: baseEnvironment.data,
-      color: baseEnvironment.color,
-      subEnvironments: subEnvironments.map(maskVaultEnvironmentData).map(subEnvironment => ({
-        name: subEnvironment.name,
-        meta: {
-          id: subEnvironment._id,
-          created: subEnvironment.created,
-          modified: subEnvironment.modified,
-          isPrivate: subEnvironment.isPrivate,
-          sortKey: subEnvironment.metaSortKey,
-        },
-        data: subEnvironment.data,
-        color: subEnvironment.color,
-      })),
-    };
-  }
-
-  function getCookieJarFromResources(resources: CookieJar[]): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['cookieJar'] {
-    return resources.map(resource => ({
-      name: resource.name,
-      meta: {
-        id: resource._id,
-        created: resource.created,
-        modified: resource.modified,
-        isPrivate: resource.isPrivate,
-      },
-      cookies: resource.cookies.map(cookie => ({
-        ...cookie,
-        expires: cookie.expires ? new Date(cookie.expires) : null,
-      })),
-    }))[0];
-  }
-
-  function getTestSuitesFromResources(resources: (UnitTestSuite | UnitTest)[]): Extract<InsomniaFile, { type: 'spec.insomnia.rest/5.0' }>['testSuites'] {
-    const testSuites: Extract<InsomniaFile, { type: 'spec.insomnia.rest/5.0' }>['testSuites'] = [];
-
-    resources.filter(models.unitTestSuite.isUnitTestSuite).forEach(testSuite => {
-      const tests = resources.filter(models.unitTest.isUnitTest).filter(test => test.parentId === testSuite._id);
-
-      testSuites.push({
-        name: testSuite.name,
-        meta: {
-          id: testSuite._id,
-          created: testSuite.created,
-          modified: testSuite.modified,
-          isPrivate: testSuite.isPrivate,
-          sortKey: testSuite.metaSortKey,
-        },
-        tests: tests.map(test => ({
-          name: test.name,
-          meta: {
-            id: test._id,
-            created: test.created,
-            modified: test.modified,
-            isPrivate: test.isPrivate,
-            sortKey: test.metaSortKey,
-          },
-          requestId: test.requestId,
-          code: test.code,
-        })),
+          collection.push(grpcRequest);
+        }
       });
-    });
 
-    return testSuites;
-  }
-
-  function getSpecFromResources(resources: ApiSpec[]): Extract<InsomniaFile, { type: 'spec.insomnia.rest/5.0' }>['spec'] {
-    const spec = resources[0];
-    // const parser = spec.contentType === 'json' ? JSON.parse : parse;
-    let contents = {};
-
-    try {
-      contents = JSON.parse(spec.contents);
-    } catch (err) {
-      // @TODO For some reason switching a spec from JSON to YAML doesn't update it's content type so we need to handle both here
-      // This must be fixed in the apiSpec model
-      try {
-        contents = parse(spec.contents);
-      } catch (err) {
-        console.error('Failed to parse spec contents', err);
-      }
+      return collection;
     }
-    return {
-      // @TODO In the future we want to support also reading from a file like this: file: resources[0].fileName,
-      contents,
-      meta: {
-        id: spec._id,
-        created: spec.created,
-        modified: spec.modified,
-        isPrivate: spec.isPrivate,
-      },
-    };
-  }
 
-  function getRoutesFromResources(resources: MockRoute[]): Extract<InsomniaFile, { type: 'mock.insomnia.rest/5.0' }>['routes'] {
-    return resources.map(resource => ({
-      name: resource.name,
-      meta: {
-        id: resource._id,
-        created: resource.created,
-        modified: resource.modified,
-        isPrivate: resource.isPrivate,
-      },
-      body: resource.body,
-      headers: resource.headers,
-      method: resource.method,
-      mimeType: resource.mimeType,
-      statusCode: resource.statusCode,
-      statusText: resource.statusText,
-    }));
-  }
+    function getEnvironmentsFromResources(resources: Environment[]): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['environments'] {
+      const baseEnvironment = resources.find(environment => environment.parentId.startsWith('wrk_'));
+      if (!baseEnvironment) {
+        throw new Error('Base environment not found');
+      }
 
-  if (workspace.scope === 'collection') {
-    const collection: InsomniaFile = {
-      type: 'collection.insomnia.rest/5.0',
-      name: workspace.name,
-      meta: {
-        id: workspace._id,
-        created: workspace.created,
-        modified: workspace.modified,
-        isPrivate: workspace.isPrivate,
-        description: workspace.description,
-      },
-      collection: getCollectionFromResources(exportableResources.filter(resource => models.requestGroup.isRequestGroup(resource) || models.request.isRequest(resource) || models.webSocketRequest.isWebSocketRequest(resource) || models.grpcRequest.isGrpcRequest(resource)), workspace._id),
-      cookieJar: getCookieJarFromResources(exportableResources.filter(models.cookieJar.isCookieJar)),
-      environments: getEnvironmentsFromResources(exportableResources.filter(models.environment.isEnvironment)),
-    };
+      const subEnvironments = resources.filter(environment => environment.parentId === baseEnvironment?._id);
 
-    return stringify(removeEmptyFields(collection));
-  } else if (workspace.scope === 'design') {
-    const spec: InsomniaFile = {
-      type: 'spec.insomnia.rest/5.0',
-      name: workspace.name,
-      meta: {
-        id: workspace._id,
-        created: workspace.created,
-        modified: workspace.modified,
-        isPrivate: workspace.isPrivate,
-        description: workspace.description,
-      },
-      collection: getCollectionFromResources(exportableResources.filter(resource => models.requestGroup.isRequestGroup(resource) || models.request.isRequest(resource) || models.webSocketRequest.isWebSocketRequest(resource) || models.grpcRequest.isGrpcRequest(resource)), workspace._id),
-      cookieJar: getCookieJarFromResources(exportableResources.filter(models.cookieJar.isCookieJar)),
-      environments: getEnvironmentsFromResources(exportableResources.filter(models.environment.isEnvironment)),
-      spec: getSpecFromResources(exportableResources.filter(models.apiSpec.isApiSpec)),
-      testSuites: getTestSuitesFromResources(exportableResources.filter(resource => models.unitTestSuite.isUnitTestSuite(resource) || models.unitTest.isUnitTest(resource))),
-    };
+      return {
+        name: baseEnvironment.name,
+        meta: {
+          id: baseEnvironment._id,
+          created: baseEnvironment.created,
+          modified: baseEnvironment.modified,
+          isPrivate: baseEnvironment.isPrivate,
+        },
+        data: baseEnvironment.data,
+        color: baseEnvironment.color,
+        subEnvironments: subEnvironments.map(maskVaultEnvironmentData).map(subEnvironment => ({
+          name: subEnvironment.name,
+          meta: {
+            id: subEnvironment._id,
+            created: subEnvironment.created,
+            modified: subEnvironment.modified,
+            isPrivate: subEnvironment.isPrivate,
+            sortKey: subEnvironment.metaSortKey,
+          },
+          data: subEnvironment.data,
+          color: subEnvironment.color,
+        })),
+      };
+    }
 
-    return stringify(removeEmptyFields(spec));
-  } else if (workspace.scope === 'environment') {
-    const environment: InsomniaFile = {
-      type: 'environment.insomnia.rest/5.0',
-      name: workspace.name,
-      meta: {
-        id: workspace._id,
-        created: workspace.created,
-        modified: workspace.modified,
-        isPrivate: workspace.isPrivate,
-        description: workspace.description,
-      },
-      environments: getEnvironmentsFromResources(exportableResources.filter(models.environment.isEnvironment)),
-    };
+    function getCookieJarFromResources(resources: CookieJar[]): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['cookieJar'] {
+      return resources.map(resource => ({
+        name: resource.name,
+        meta: {
+          id: resource._id,
+          created: resource.created,
+          modified: resource.modified,
+          isPrivate: resource.isPrivate,
+        },
+        cookies: resource.cookies.map(cookie => ({
+          ...cookie,
+          expires: cookie.expires ? new Date(cookie.expires) : null,
+        })),
+      }))[0];
+    }
 
-    return stringify(removeEmptyFields(environment));
-  } else if (workspace.scope === 'mock-server') {
-    const mockServer: InsomniaFile = {
-      type: 'mock.insomnia.rest/5.0',
-      name: workspace.name,
-      meta: {
-        id: workspace._id,
-        created: workspace.created,
-        modified: workspace.modified,
-        isPrivate: workspace.isPrivate,
-        description: workspace.description,
-      },
-      url: exportableResources.filter(models.mockServer.isMockServer)[0].url,
-      useInsomniaCloud: exportableResources.filter(models.mockServer.isMockServer)[0].useInsomniaCloud,
-      routes: getRoutesFromResources(exportableResources.filter(models.mockRoute.isMockRoute)),
-    };
+    function getTestSuitesFromResources(resources: (UnitTestSuite | UnitTest)[]): Extract<InsomniaFile, { type: 'spec.insomnia.rest/5.0' }>['testSuites'] {
+      const testSuites: Extract<InsomniaFile, { type: 'spec.insomnia.rest/5.0' }>['testSuites'] = [];
 
-    return stringify(removeEmptyFields(mockServer), {});
-  } else {
-    throw new Error('Unknown workspace scope');
+      resources.filter(models.unitTestSuite.isUnitTestSuite).forEach(testSuite => {
+        const tests = resources.filter(models.unitTest.isUnitTest).filter(test => test.parentId === testSuite._id);
+
+        testSuites.push({
+          name: testSuite.name,
+          meta: {
+            id: testSuite._id,
+            created: testSuite.created,
+            modified: testSuite.modified,
+            isPrivate: testSuite.isPrivate,
+            sortKey: testSuite.metaSortKey,
+          },
+          tests: tests.map(test => ({
+            name: test.name,
+            meta: {
+              id: test._id,
+              created: test.created,
+              modified: test.modified,
+              isPrivate: test.isPrivate,
+              sortKey: test.metaSortKey,
+            },
+            requestId: test.requestId,
+            code: test.code,
+          })),
+        });
+      });
+
+      return testSuites;
+    }
+
+    function getSpecFromResources(resources: ApiSpec[]): Extract<InsomniaFile, { type: 'spec.insomnia.rest/5.0' }>['spec'] {
+      const spec = resources[0];
+      // const parser = spec.contentType === 'json' ? JSON.parse : parse;
+      let contents = {};
+
+      try {
+        contents = JSON.parse(spec.contents);
+      } catch (err) {
+        // @TODO For some reason switching a spec from JSON to YAML doesn't update it's content type so we need to handle both here
+        // This must be fixed in the apiSpec model
+        try {
+          contents = parse(spec.contents);
+        } catch (err) {
+          console.error('Failed to parse spec contents', err);
+        }
+      }
+      return {
+        // @TODO In the future we want to support also reading from a file like this: file: resources[0].fileName,
+        contents,
+        meta: {
+          id: spec._id,
+          created: spec.created,
+          modified: spec.modified,
+          isPrivate: spec.isPrivate,
+        },
+      };
+    }
+
+    function getRoutesFromResources(resources: MockRoute[]): Extract<InsomniaFile, { type: 'mock.insomnia.rest/5.0' }>['routes'] {
+      return resources.map(resource => ({
+        name: resource.name,
+        meta: {
+          id: resource._id,
+          created: resource.created,
+          modified: resource.modified,
+          isPrivate: resource.isPrivate,
+        },
+        body: resource.body,
+        headers: resource.headers,
+        method: resource.method,
+        mimeType: resource.mimeType,
+        statusCode: resource.statusCode,
+        statusText: resource.statusText,
+      }));
+    }
+
+    if (workspace.scope === 'collection') {
+      const collection: InsomniaFile = {
+        type: 'collection.insomnia.rest/5.0',
+        name: workspace.name,
+        meta: {
+          id: workspace._id,
+          created: workspace.created,
+          modified: workspace.modified,
+          isPrivate: workspace.isPrivate,
+          description: workspace.description,
+        },
+        collection: getCollectionFromResources(exportableResources.filter(resource => models.requestGroup.isRequestGroup(resource) || models.request.isRequest(resource) || models.webSocketRequest.isWebSocketRequest(resource) || models.grpcRequest.isGrpcRequest(resource)), workspace._id),
+        cookieJar: getCookieJarFromResources(exportableResources.filter(models.cookieJar.isCookieJar)),
+        environments: getEnvironmentsFromResources(exportableResources.filter(models.environment.isEnvironment)),
+      };
+
+      return stringify(removeEmptyFields(collection));
+    } else if (workspace.scope === 'design') {
+      const spec: InsomniaFile = {
+        type: 'spec.insomnia.rest/5.0',
+        name: workspace.name,
+        meta: {
+          id: workspace._id,
+          created: workspace.created,
+          modified: workspace.modified,
+          isPrivate: workspace.isPrivate,
+          description: workspace.description,
+        },
+        collection: getCollectionFromResources(exportableResources.filter(resource => models.requestGroup.isRequestGroup(resource) || models.request.isRequest(resource) || models.webSocketRequest.isWebSocketRequest(resource) || models.grpcRequest.isGrpcRequest(resource)), workspace._id),
+        cookieJar: getCookieJarFromResources(exportableResources.filter(models.cookieJar.isCookieJar)),
+        environments: getEnvironmentsFromResources(exportableResources.filter(models.environment.isEnvironment)),
+        spec: getSpecFromResources(exportableResources.filter(models.apiSpec.isApiSpec)),
+        testSuites: getTestSuitesFromResources(exportableResources.filter(resource => models.unitTestSuite.isUnitTestSuite(resource) || models.unitTest.isUnitTest(resource))),
+      };
+
+      return stringify(removeEmptyFields(spec));
+    } else if (workspace.scope === 'environment') {
+      const environment: InsomniaFile = {
+        type: 'environment.insomnia.rest/5.0',
+        name: workspace.name,
+        meta: {
+          id: workspace._id,
+          created: workspace.created,
+          modified: workspace.modified,
+          isPrivate: workspace.isPrivate,
+          description: workspace.description,
+        },
+        environments: getEnvironmentsFromResources(exportableResources.filter(models.environment.isEnvironment)),
+      };
+
+      return stringify(removeEmptyFields(environment));
+    } else if (workspace.scope === 'mock-server') {
+      const server = exportableResources.filter(models.mockServer.isMockServer)[0];
+
+      const mockServer: InsomniaFile = {
+        type: 'mock.insomnia.rest/5.0',
+        name: workspace.name,
+        meta: {
+          id: workspace._id,
+          created: workspace.created,
+          modified: workspace.modified,
+          isPrivate: workspace.isPrivate,
+          description: workspace.description,
+        },
+        server: {
+          meta: {
+            id: server._id,
+            created: server.created,
+            modified: server.modified,
+            isPrivate: server.isPrivate,
+          },
+          url: server.url,
+          useInsomniaCloud: server.useInsomniaCloud,
+        },
+        routes: getRoutesFromResources(exportableResources.filter(models.mockRoute.isMockRoute)),
+      };
+
+      return stringify(removeEmptyFields(mockServer), {});
+    } else {
+      throw new Error('Unknown workspace scope');
+    }
+  } catch (err) {
+    console.error('Failed to export Insomnia v5 data', err);
+    return '';
   }
 };

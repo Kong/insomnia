@@ -2,6 +2,7 @@ import { type ActionFunction, type LoaderFunction, redirect } from 'react-router
 
 import * as models from '../../models';
 import type { GitRepository } from '../../models/git-repository';
+import type { WorkspaceScope } from '../../models/workspace';
 import {
   type GitLogEntry,
 } from '../../sync/git/git-vcs';
@@ -111,6 +112,45 @@ export const canPushLoader: LoaderFunction = async ({ params }): Promise<GitCanP
 };
 
 // Actions
+export type InitGitCloneResult = {
+  files: {
+    scope: WorkspaceScope;
+    name: string;
+    path: string;
+  }[];
+} | {
+  errors: string[];
+};
+
+export const initGitCloneAction: ActionFunction = async ({ request, params }) => {
+  const { organizationId } = params;
+  invariant(organizationId, 'Organization ID is required');
+
+  const formData = await request.formData();
+
+  const data = Object.fromEntries(formData.entries()) as {
+    authorEmail: string;
+    authorName: string;
+    token: string;
+    uri: string;
+    username: string;
+    oauth2format: string;
+  };
+
+  const initCloneResult = await window.main.git.initGitRepoClone({
+    organizationId,
+    ...data,
+  });
+
+  if ('errors' in initCloneResult) {
+    return { errors: initCloneResult.errors };
+  }
+
+  return {
+    files: initCloneResult.files,
+  };
+};
+
 type CloneGitActionResult =
   | Response
   | {

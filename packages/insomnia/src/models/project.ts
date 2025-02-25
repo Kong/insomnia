@@ -98,24 +98,24 @@ export enum ORG_STORAGE_RULE {
   LOCAL_ONLY = 'local_only',
 };
 
-export function getDefaultProjectType(storage: ORG_STORAGE_RULE, project: Project): 'local' | 'remote' | 'git' {
+export function getDefaultProjectStorageType(storage: ORG_STORAGE_RULE, project?: Project): 'local' | 'remote' | 'git' {
   if (storage === ORG_STORAGE_RULE.CLOUD_ONLY) {
     return 'remote';
   }
 
   if (storage === ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL) {
-    if (isGitProject(project)) {
+    if (project && isGitProject(project)) {
       return 'git';
     }
 
-    if (isRemoteProject(project)) {
+    if (project && isRemoteProject(project)) {
       return 'remote';
     }
 
     return 'local';
   }
 
-  if (isGitProject(project)) {
+  if (project && isGitProject(project)) {
     return 'git';
   }
 

@@ -45,10 +45,10 @@ export const WorkspaceSyncDropdown: FC = () => {
   const shouldShowGitSyncDropdown = features.gitSync.enabled && (activeWorkspaceMeta?.gitRepositoryId || !isRemoteProject(activeProject));
   if (shouldShowGitSyncDropdown) {
     if (isGitProject(activeProject)) {
-      return <GitProjectSyncDropdown gitRepository={gitRepository} />;
+      return <GitProjectSyncDropdown key={gitRepository?._id} gitRepository={gitRepository} />;
     }
 
-    return <GitSyncDropdown isInsomniaSyncEnabled={isRemoteProject(activeProject)} gitRepository={gitRepository} />;
+    return <GitSyncDropdown key={gitRepository?._id} isInsomniaSyncEnabled={isRemoteProject(activeProject)} gitRepository={gitRepository} />;
   }
 
   return null;

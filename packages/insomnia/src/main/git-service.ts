@@ -9,9 +9,11 @@ import YAML, { parse } from 'yaml';
 
 import { getApiBaseURL, getAppWebsiteBaseURL, getGitHubGraphQLApiURL, getGitHubRestApiUrl, INSOMNIA_GITLAB_API_URL, INSOMNIA_GITLAB_CLIENT_ID, INSOMNIA_GITLAB_REDIRECT_URI, PLAYWRIGHT } from '../common/constants';
 import { database } from '../common/database';
+import { insomniaFileSchema } from '../common/import-v5-parser';
+import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
 import * as models from '../models';
 import type { GitRepository } from '../models/git-repository';
-import { WorkspaceScopeKeys } from '../models/workspace';
+import { type WorkspaceScope, WorkspaceScopeKeys } from '../models/workspace';
 import { fsClient } from '../sync/git/fs-client';
 import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME, GIT_INTERNAL_DIR } from '../sync/git/git-vcs';
 import { MemClient } from '../sync/git/mem-client';
@@ -351,9 +353,106 @@ export const canPushLoader = async ({ projectId, workspaceId }: {
 };
 
 // Actions
+export const initGitRepoCloneAction = async ({
+  uri,
+  authorName,
+  authorEmail,
+  token,
+  username,
+  oauth2format,
+}: {
+  organizationId: string;
+  uri: string;
+  authorName: string;
+  authorEmail: string;
+  token: string;
+  username: string;
+  oauth2format?: string;
+}): Promise<{
+  files: {
+    scope: WorkspaceScope;
+    name: string;
+    path: string;
+  }[];
+} | {
+  errors: string[];
+}> => {
+  const repoSettingsPatch: Partial<GitRepository> = {};
+  repoSettingsPatch.uri = parseGitToHttpsURL(uri);
+  repoSettingsPatch.author = {
+    name: authorName,
+    email: authorEmail,
+  };
+
+  // Git Credentials
+  if (oauth2format) {
+    invariant(
+      oauth2format === 'gitlab' || oauth2format === 'github',
+      'OAuth2 format is required'
+    );
+
+    repoSettingsPatch.credentials = {
+      username,
+      token,
+      oauth2format,
+    };
+  } else {
+    invariant(typeof token === 'string', 'Token is required');
+    invariant(typeof username === 'string', 'Username is required');
+
+    repoSettingsPatch.credentials = {
+      password: token,
+      username,
+    };
+  }
+
+  repoSettingsPatch.needsFullClone = true;
+
+  const inMemoryFsClient = MemClient.createClient();
+
+  try {
+    await shallowClone({
+      fsClient: inMemoryFsClient,
+      gitRepository: repoSettingsPatch as GitRepository,
+    });
+  } catch (e) {
+    console.error(e);
+
+    if (e instanceof Errors.HttpError) {
+      return {
+        errors: [`${e.message}, ${e.data.response}`],
+      };
+    }
+
+    return {
+      errors: [e.message],
+    };
+  }
+
+  const rootDirFiles: string[] = await inMemoryFsClient.promises.readdir(GIT_CLONE_DIR);
+  const insomniaFiles = rootDirFiles.filter(fileOrFolder => fileOrFolder.startsWith('insomnia.'));
+
+  const files = await Promise.all(
+    insomniaFiles.map(async file => {
+      const fileContents = await inMemoryFsClient.promises.readFile(path.join(GIT_CLONE_DIR, file), 'utf8');
+      const insomniaFile = insomniaFileSchema.parse(YAML.parse(fileContents));
+
+      return {
+        scope: insomniaSchemaTypeToScope(insomniaFile.type),
+        name: insomniaFile.name || 'Untitled',
+        path: file,
+      };
+    })
+  );
+
+  return { files };
+};
+
 export const cloneGitRepoAction = async ({
   organizationId,
   projectId,
+  cloneIntoProjectId,
+  name,
   uri,
   authorName,
   authorEmail,
@@ -363,6 +462,8 @@ export const cloneGitRepoAction = async ({
 }: {
   organizationId: string;
     projectId?: string;
+    cloneIntoProjectId?: string;
+    name?: string;
   uri: string;
   authorName: string;
   authorEmail: string;
@@ -450,11 +551,30 @@ export const cloneGitRepoAction = async ({
       const bufferId = await database.bufferChanges();
 
       const gitRepository = await models.gitRepository.create(repoSettingsPatch);
-      const project = await models.project.create({
-        name: gitRepository.uri.split('/').pop() || 'New Git Project',
-        parentId: organizationId,
-        gitRepositoryId: gitRepository._id,
-      });
+
+      async function getProject() {
+        if (cloneIntoProjectId) {
+          const project = await models.project.getById(cloneIntoProjectId);
+          invariant(project, 'Project not found');
+
+          await models.project.update(project, {
+            remoteId: null,
+            gitRepositoryId: gitRepository._id,
+          });
+
+          return project;
+        }
+
+        const project = await models.project.create({
+          name: name || gitRepository.uri.split('/').pop() || 'New Git Project',
+          parentId: organizationId,
+          gitRepositoryId: gitRepository._id,
+        });
+
+        return project;
+      }
+
+      const project = await getProject();
 
       const fsClient = await getGitFSClient({ projectId: project._id, gitRepositoryId: gitRepository._id });
 
@@ -1941,6 +2061,7 @@ export interface GitServiceAPI {
   gitLogLoader: typeof gitLogLoader;
   gitChangesLoader: typeof gitChangesLoader;
   canPushLoader: typeof canPushLoader;
+  initGitRepoClone: typeof initGitRepoCloneAction;
   cloneGitRepo: typeof cloneGitRepoAction;
   updateGitRepo: typeof updateGitRepoAction;
   resetGitRepo: typeof resetGitRepoAction;
@@ -1978,6 +2099,7 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.gitChangesLoader', (_, options: Parameters<typeof gitChangesLoader>[0]) => gitChangesLoader(options));
   ipcMainHandle('git.canPushLoader', (_, options: Parameters<typeof canPushLoader>[0]) => canPushLoader(options));
   ipcMainHandle('git.cloneGitRepo', (_, options: Parameters<typeof cloneGitRepoAction>[0]) => cloneGitRepoAction(options));
+  ipcMainHandle('git.initGitRepoClone', (_, options: Parameters<typeof initGitRepoCloneAction>[0]) => initGitRepoCloneAction(options));
   ipcMainHandle('git.updateGitRepo', (_, options: Parameters<typeof updateGitRepoAction>[0]) => updateGitRepoAction(options));
   ipcMainHandle('git.resetGitRepo', (_, options: Parameters<typeof resetGitRepoAction>[0]) => resetGitRepoAction(options));
   ipcMainHandle('git.commitToGitRepo', (_, options: Parameters<typeof commitToGitRepoAction>[0]) => commitToGitRepoAction(options));
