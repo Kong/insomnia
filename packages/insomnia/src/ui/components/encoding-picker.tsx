@@ -65,7 +65,7 @@ export const EncodingPicker = ({ encoding, onChange }: { encoding: string; onCha
           filter,
           encodingKey,
           { splitSpace: false, loose: true }
-        )?.indexes);
+        )?.indexes) || textValue.toLowerCase().includes(filter.toLowerCase());
       }}
     >
       <Group className='flex border-solid border border-[--hl-sm] w-full pr-2 min-w-64'>
