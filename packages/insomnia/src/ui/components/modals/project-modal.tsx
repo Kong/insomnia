@@ -59,7 +59,7 @@ export const ProjectModal = ({
     token?: string;
     oauth2format: OauthProviderName;
   }>({
-    name: project?.name || 'New Project',
+    name: project?.name || 'My Project',
     storageType: getDefaultProjectStorageType(storageRule, project),
     authorName: gitRepository?.author?.name || '',
     authorEmail: gitRepository?.author?.email || '',
