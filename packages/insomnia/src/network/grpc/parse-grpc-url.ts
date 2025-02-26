@@ -3,7 +3,7 @@ export const parseGrpcUrl = (grpcUrl: string): { url: string; enableTls: boolean
     return { url: '', enableTls: false, path: '' };
   }
 
-  if (grpcUrl.includes('unix:')) {
+  if (grpcUrl.startsWith('unix:')) {
     return {
       url: grpcUrl,
       enableTls: false,
