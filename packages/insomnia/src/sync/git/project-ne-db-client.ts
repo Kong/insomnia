@@ -6,9 +6,14 @@ import { database as db } from '../../common/database';
 import type { InsomniaFile } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, importInsomniaV5Data } from '../../common/insomnia-v5';
 import * as models from '../../models';
-import { isWorkspace } from '../../models/workspace';
+import { isWorkspace, type Workspace } from '../../models/workspace';
+import type { WorkspaceMeta } from '../../models/workspace-meta';
 import Stat from './stat';
 import { SystemError } from './system-error';
+
+function parseWorkspaceId(filePath: string) {
+  return filePath.split(path.sep).at(-1)?.split('.')[1];
+}
 
 /**
  * A fs client to access workspace data stored in NeDB as files.
@@ -44,13 +49,12 @@ export class GitProjectNeDBClient {
 
     try {
       // Supported file paths are in the form of insomnia.<workspace_id>.yaml
-      const workspaceId = filePath.split(path.sep)[0].split('.')[1];
+      const workspaceId = parseWorkspaceId(filePath);
 
       if (!workspaceId || !workspaceId.startsWith('wrk_')) {
         throw this._errMissing(filePath);
       }
 
-      //  wrk_b665a1370b5f492ca36cdbde319d9689 wrk_dae390513d684dfcafbf25e3afea1269 wrk_9be0301e57044d0a8c5d076864bb71d6
       const workspaceFile = await getInsomniaV5DataExport(workspaceId);
 
       const raw = Buffer.from(workspaceFile, 'utf8');
@@ -68,8 +72,8 @@ export class GitProjectNeDBClient {
   async writeFile(filePath: string, data: Buffer | string) {
     filePath = path.normalize(filePath);
 
-    // Supported file paths are in the form of insomnia.<workspace_id>.yaml
-    const workspaceId = filePath.split(path.sep)[0].split('.')[1];
+    // Supported file paths are in the form of other/path/insomnia.<workspace_id>.yaml
+    const workspaceId = parseWorkspaceId(filePath);
 
     if (!workspaceId || !workspaceId.startsWith('wrk_')) {
       throw this._errMissing(filePath);
@@ -93,6 +97,8 @@ export class GitProjectNeDBClient {
         // This is because the parentId (or a project) is not synced into git, so it will be cleared whenever git writes the workspace into the db, thereby removing it from the project on the client
         // In order to reproduce this bug, comment out the following line, then clone a repository into a local project, then open the workspace, you'll notice it will have moved into the default project
         doc.parentId = this._projectId;
+
+        await db.docCreate<WorkspaceMeta>(models.workspaceMeta.type, { parentId: doc._id, gitRepoPath: filePath });
       }
 
       await db.upsert(doc, true);
@@ -103,7 +109,7 @@ export class GitProjectNeDBClient {
 
   async unlink(filePath: string) {
     filePath = path.normalize(filePath);
-    const workspaceId = filePath.split(path.sep)[0].split('.')[1];
+    const workspaceId = parseWorkspaceId(filePath);
 
     if (!workspaceId || !workspaceId.startsWith('wrk_')) {
       throw this._errMissing(filePath);
@@ -120,11 +126,18 @@ export class GitProjectNeDBClient {
 
   async readdir(filePath: string) {
     filePath = path.normalize(filePath);
+    const workspaces = await db.find<Workspace>(models.workspace.type, { parentId: this._projectId });
+    const workspaceMetas = await db.find<WorkspaceMeta>(models.workspaceMeta.type, {
+      parentId: {
+        $in: workspaces.map(w => w._id),
+      },
+    });
 
-    if (filePath === '.') {
-      const workspaces = await db.find(models.workspace.type, { parentId: this._projectId });
+    const hasDirectoryInsomniaFiles = workspaceMetas.some(workspaceMeta => workspaceMeta.gitRepoPath && workspaceMeta.gitRepoPath === filePath);
 
-      return workspaces.map(w => `insomnia.${w._id}.yaml`);
+    if (hasDirectoryInsomniaFiles) {
+      const workspacePaths = workspaceMetas.filter(workspaceMeta => workspaceMeta.gitRepoPath).map(workspaceMeta => path.join(workspaceMeta.gitRepoPath!, `insomnia.${workspaceMeta.parentId}.yaml`));
+      return workspacePaths;
     }
 
     throw this._errMissing(filePath);

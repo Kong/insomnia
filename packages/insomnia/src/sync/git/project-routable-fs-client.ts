@@ -31,7 +31,7 @@ export function projectRoutableFSClient(
     // Fallback to default if no prefix matched
     // TODO: remove non-null assertion
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    if (method === 'readdir' && filePath === '.') {
+    if (method === 'readdir') {
       const insomniaFiles = await insomniaFS.promises.readdir(filePath, ...args);
       const defaultFiles = await defaultFS.promises.readdir(filePath, ...args);
 

@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'crypto';
 import { shell } from 'electron';
 import { app, net } from 'electron/main';
 import { fromUrl } from 'hosted-git-info';
-import { Errors } from 'isomorphic-git';
+import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import path from 'path';
 import { v4 } from 'uuid';
 import YAML, { parse } from 'yaml';
@@ -352,6 +352,22 @@ export const canPushLoader = async ({ projectId, workspaceId }: {
   }
 };
 
+const recursivelyFindInsomniaFiles = async (fsClient: PromiseFsClient, dir: string, files: string[] = []) => {
+  const dirFiles = await fsClient.promises.readdir(dir);
+  for (const file of dirFiles) {
+    const fullPath = path.join(dir, file);
+    const stats = await fsClient.promises.stat(fullPath);
+
+    if (stats.isDirectory()) {
+      await recursivelyFindInsomniaFiles(fsClient, fullPath, files);
+    } else if (file.startsWith('insomnia.')) {
+      files.push(fullPath);
+    }
+  }
+
+  return files;
+};
+
 // Actions
 export const initGitRepoCloneAction = async ({
   uri,
@@ -429,8 +445,9 @@ export const initGitRepoCloneAction = async ({
     };
   }
 
-  const rootDirFiles: string[] = await inMemoryFsClient.promises.readdir(GIT_CLONE_DIR);
-  const insomniaFiles = rootDirFiles.filter(fileOrFolder => fileOrFolder.startsWith('insomnia.'));
+  const insomniaFiles = await recursivelyFindInsomniaFiles(inMemoryFsClient, GIT_CLONE_DIR);
+  console.log({ insomniaFiles });
+  // Get all files that start with 'insomnia.' recursively in the root directory
 
   const files = await Promise.all(
     insomniaFiles.map(async file => {
