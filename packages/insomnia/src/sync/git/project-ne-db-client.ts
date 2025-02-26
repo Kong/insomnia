@@ -12,7 +12,13 @@ import Stat from './stat';
 import { SystemError } from './system-error';
 
 function parseWorkspaceId(filePath: string) {
-  return filePath.split(path.sep).at(-1)?.split('.')[1];
+  const workspaceId = path.basename(filePath)?.split('.')[1];
+
+  if (workspaceId.startsWith('wrk_')) {
+    return workspaceId;
+  }
+
+  return null;
 }
 
 /**
@@ -51,7 +57,7 @@ export class GitProjectNeDBClient {
       // Supported file paths are in the form of insomnia.<workspace_id>.yaml
       const workspaceId = parseWorkspaceId(filePath);
 
-      if (!workspaceId || !workspaceId.startsWith('wrk_')) {
+      if (!workspaceId) {
         throw this._errMissing(filePath);
       }
 
@@ -75,7 +81,7 @@ export class GitProjectNeDBClient {
     // Supported file paths are in the form of other/path/insomnia.<workspace_id>.yaml
     const workspaceId = parseWorkspaceId(filePath);
 
-    if (!workspaceId || !workspaceId.startsWith('wrk_')) {
+    if (!workspaceId) {
       throw this._errMissing(filePath);
     }
 
@@ -111,7 +117,7 @@ export class GitProjectNeDBClient {
     filePath = path.normalize(filePath);
     const workspaceId = parseWorkspaceId(filePath);
 
-    if (!workspaceId || !workspaceId.startsWith('wrk_')) {
+    if (!workspaceId) {
       throw this._errMissing(filePath);
     }
 
@@ -133,10 +139,12 @@ export class GitProjectNeDBClient {
       },
     });
 
-    const hasDirectoryInsomniaFiles = workspaceMetas.some(workspaceMeta => workspaceMeta.gitRepoPath && workspaceMeta.gitRepoPath === filePath);
+    const hasDirectoryInsomniaFiles = workspaceMetas.some(workspaceMeta => workspaceMeta.gitRepoPath && path.dirname(workspaceMeta.gitRepoPath) === filePath);
 
     if (hasDirectoryInsomniaFiles) {
-      const workspacePaths = workspaceMetas.filter(workspaceMeta => workspaceMeta.gitRepoPath).map(workspaceMeta => path.join(workspaceMeta.gitRepoPath!, `insomnia.${workspaceMeta.parentId}.yaml`));
+      const workspacePaths = workspaceMetas
+        .filter(workspaceMeta => workspaceMeta.gitRepoPath && path.dirname(workspaceMeta.gitRepoPath) === filePath)
+        .map(workspaceMeta => path.join(workspaceMeta.gitRepoPath!));
       return workspacePaths;
     }
 

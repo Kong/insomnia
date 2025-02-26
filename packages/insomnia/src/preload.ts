@@ -76,6 +76,7 @@ const git: GitServiceAPI = {
   stageChanges: options => ipcRenderer.invoke('git.stageChanges', options),
   unstageChanges: options => ipcRenderer.invoke('git.unstageChanges', options),
   diffFileLoader: options => ipcRenderer.invoke('git.diffFileLoader', options),
+  getRepositoryDirectoryTree: options => ipcRenderer.invoke('git.getRepositoryDirectoryTree', options),
 
   initSignInToGitHub: () => ipcRenderer.invoke('git.initSignInToGitHub'),
   completeSignInToGitHub: options => ipcRenderer.invoke('git.completeSignInToGitHub', options),

@@ -504,6 +504,11 @@ async function renderApp() {
                                   (await import('./routes/git-project-actions')).diffFileLoader(...args),
                               },
                               {
+                                path: 'repository-tree',
+                                loader: async (...args) =>
+                                  (await import('./routes/git-project-actions')).getRepositoryDirectoryTree(...args),
+                              },
+                              {
                                 path: 'branch',
                                 children: [
                                   {

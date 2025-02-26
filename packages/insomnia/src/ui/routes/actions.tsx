@@ -15,7 +15,7 @@ import { EnvironmentType } from '../../models/environment';
 import type { OauthProviderName } from '../../models/git-credentials';
 import { getById, update } from '../../models/helpers/request-operations';
 import type { MockServer } from '../../models/mock-server';
-import { isRemoteProject, type Project } from '../../models/project';
+import { isGitProject, isRemoteProject, type Project } from '../../models/project';
 import { isRequest, type Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { isRequestGroupMeta } from '../../models/request-group-meta';
@@ -443,6 +443,14 @@ export const createNewWorkspaceAction: ActionFunction = async ({
     parentId: projectId,
   });
 
+  if (isGitProject(project)) {
+    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+
+    await models.workspaceMeta.update(workspaceMeta, {
+      gitRepoPath: `insomnia.${workspace._id}.yaml`,
+    });
+  }
+
   if (scope === 'mock-server') {
     const mockServerType = formData.get('mockServerType');
     invariant(mockServerType === 'cloud' || mockServerType === 'self-hosted', 'Mock Server type is required');
@@ -612,6 +620,12 @@ async function duplicateWorkspace(
   await models.environment.getOrCreateForParentId(newWorkspace._id);
   await models.cookieJar.getOrCreateForParentId(newWorkspace._id);
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
+
+  if (isGitProject(duplicateToProject)) {
+    await models.workspaceMeta.update(workspaceMeta, {
+      gitRepoPath: `insomnia.${newWorkspace._id}.yaml`,
+    });
+  }
 
   const isGitSync = !!workspaceMeta.gitRepositoryId;
 

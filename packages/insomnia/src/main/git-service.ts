@@ -1692,6 +1692,70 @@ export const diffFileLoader = async ({
   }
 };
 
+interface GitRepoFile {
+  id: string;
+  name: string;
+  type: 'file';
+}
+
+interface GitRepoDirectory {
+  id: string;
+  name: string;
+  type: 'directory';
+  children: (GitRepoDirectory | GitRepoFile)[];
+};
+
+interface FileTree {
+  id: string;
+  name: string;
+  type: 'root';
+  children: (GitRepoDirectory | GitRepoFile)[];
+}
+
+const getRepositoryDirectoryTree = async ({ projectId }: { projectId: string }) => {
+  const gitRepository = await getGitRepository({ projectId });
+  const fs = await getGitFSClient({ projectId, gitRepositoryId: gitRepository._id });
+
+  const rootContents = await fs.promises.readdir(GIT_CLONE_DIR);
+
+  console.log({ rootContents });
+
+  const recursivelyGetDirectoryTree = async (directoryContents: string[], parentPath: string) => {
+    const tree: (GitRepoDirectory | GitRepoFile)[] = await Promise.all(
+      directoryContents.map(async (file: string) => {
+        const fileOrDirPath = path.join(parentPath, file);
+        const stats = await fs.promises.stat(fileOrDirPath);
+        if (await stats.isDirectory()) {
+          const subDirectoryContents = await fs.promises.readdir(fileOrDirPath);
+
+          return {
+            id: fileOrDirPath,
+            name: file,
+            type: 'directory',
+            children: await recursivelyGetDirectoryTree(subDirectoryContents, fileOrDirPath),
+          };
+        }
+        return {
+          id: fileOrDirPath,
+          name: file,
+          type: 'file',
+        };
+      }),
+    );
+
+    return tree;
+  };
+
+  const tree = await recursivelyGetDirectoryTree(rootContents, GIT_CLONE_DIR);
+
+  return {
+    id: gitRepository._id,
+    name: gitRepository.uri.split('/').pop()?.replace('.git', '').toUpperCase() || 'Repository',
+    type: 'root',
+    children: tree,
+  } satisfies FileTree;
+};
+
 export const GITHUB_GRAPHQL_API_URL = getGitHubGraphQLApiURL();
 
 /**
@@ -2096,6 +2160,7 @@ export interface GitServiceAPI {
   stageChanges: typeof stageChangesAction;
   unstageChanges: typeof unstageChangesAction;
   diffFileLoader: typeof diffFileLoader;
+  getRepositoryDirectoryTree: typeof getRepositoryDirectoryTree;
 
   initSignInToGitHub: typeof initSignInToGitHub;
   completeSignInToGitHub: typeof completeSignInToGitHub;
@@ -2133,6 +2198,7 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.stageChanges', (_, options: Parameters<typeof stageChangesAction>[0]) => stageChangesAction(options));
   ipcMainHandle('git.unstageChanges', (_, options: Parameters<typeof unstageChangesAction>[0]) => unstageChangesAction(options));
   ipcMainHandle('git.diffFileLoader', (_, options: Parameters<typeof diffFileLoader>[0]) => diffFileLoader(options));
+  ipcMainHandle('git.getRepositoryDirectoryTree', (_, options: Parameters<typeof getRepositoryDirectoryTree>[0]) => getRepositoryDirectoryTree(options));
 
   ipcMainHandle('git.initSignInToGitHub', () => initSignInToGitHub());
   ipcMainHandle('git.completeSignInToGitHub', (_, options: Parameters<typeof completeSignInToGitHub>[0]) => completeSignInToGitHub(options));

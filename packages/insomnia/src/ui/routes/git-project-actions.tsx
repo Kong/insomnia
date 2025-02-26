@@ -472,3 +472,12 @@ export const diffFileLoader: LoaderFunction = async ({
 
   return window.main.git.diffFileLoader({ projectId, filepath, staged });
 };
+
+export type GetRepositoryDirectoryTreeResult = Awaited<ReturnType<typeof window.main.git.getRepositoryDirectoryTree>>;
+
+export const getRepositoryDirectoryTree: ActionFunction = async ({ params }) => {
+  const { projectId } = params;
+  invariant(projectId, 'Project ID is required');
+
+  return window.main.git.getRepositoryDirectoryTree({ projectId });
+};

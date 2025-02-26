@@ -32,8 +32,19 @@ export function projectRoutableFSClient(
     // TODO: remove non-null assertion
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (method === 'readdir') {
-      const insomniaFiles = await insomniaFS.promises.readdir(filePath, ...args);
-      const defaultFiles = await defaultFS.promises.readdir(filePath, ...args);
+      let insomniaFiles = [];
+      try {
+        insomniaFiles = await insomniaFS.promises.readdir(filePath, ...args);
+      } catch (err) {
+        // console.log('[routablefs] Failed to execute', method, filePath, { args }, err);
+      }
+
+      let defaultFiles = [];
+      try {
+        defaultFiles = await defaultFS.promises.readdir(filePath, ...args);
+      } catch (err) {
+        // console.log('[routablefs] Failed to execute', method, filePath, { args }, err);
+      }
 
       return [...new Set([...insomniaFiles, ...defaultFiles])];
     }

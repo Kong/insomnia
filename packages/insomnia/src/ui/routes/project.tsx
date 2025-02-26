@@ -75,11 +75,11 @@ import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { WorkspaceCardDropdown } from '../components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
-import { showPrompt } from '../components/modals';
 import { AlertModal } from '../components/modals/alert-modal';
 import { GitRepositoryCloneModal } from '../components/modals/git-repository-settings-modal/git-repo-clone-modal';
 import { ImportModal } from '../components/modals/import-modal';
 import { MockServerSettingsModal } from '../components/modals/mock-server-settings-modal';
+import { NewWorkspaceModal } from '../components/modals/new-workspace-modal';
 import { ProjectModal } from '../components/modals/project-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { OrganizationTabList } from '../components/tabs/tab-list';
@@ -783,87 +783,46 @@ const ProjectRoute: FC = () => {
     useState(false);
   const [isMockServerSettingsModalOpen, setIsMockServerSettingsModalOpen] = useState(false);
 
-  const fetcher = useFetcher();
   const navigate = useNavigate();
 
+  const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
+    scope: WorkspaceScope;
+    isOpen: boolean;
+  } | null>({
+    scope: 'collection',
+    isOpen: true,
+  });
+
   const createNewCollection = () => {
-    activeProject?._id &&
-    showPrompt({
-      title: 'Create New Request Collection',
-      submitName: 'Create',
-      placeholder: 'My Collection',
-      defaultValue: 'My Collection',
-      selectText: true,
-      onComplete: async (name: string) => {
-        fetcher.submit(
-          {
-            name,
-            scope: 'collection',
-          },
-          {
-            action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
-            method: 'post',
-          }
-        );
-      },
+    setNewWorkspaceModalState({
+      scope: 'collection',
+      isOpen: true,
     });
   };
 
   const createNewDocument = () => {
-    activeProject?._id &&
-    showPrompt({
-      title: 'Create New Design Document',
-      submitName: 'Create',
-      placeholder: 'my-spec.yaml',
-      defaultValue: 'my-spec.yaml',
-      selectText: true,
-      onComplete: async (name: string) => {
-        fetcher.submit(
-          {
-            name,
-            scope: 'design',
-          },
-          {
-            action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
-            method: 'post',
-          }
-        );
-      },
+    setNewWorkspaceModalState({
+      scope: 'design',
+      isOpen: true,
     });
   };
+
   const isEnterprise = currentPlan?.type.includes('enterprise');
   const isCloudProjectOrEnterprisePlan = activeProject?.remoteId || isEnterprise;
   const canCreateMockServer = activeProject?._id && isCloudProjectOrEnterprisePlan;
   const createNewMockServer = () => {
-    canCreateMockServer
-      ? setIsMockServerSettingsModalOpen(true)
-      : showModal(AlertModal, {
-        title: 'Change Project',
-        message: 'Mock feature is only supported for Cloud projects and Enterprise local projects.',
+    canCreateMockServer &&
+      setNewWorkspaceModalState({
+        scope: 'mock-server',
+        isOpen: true,
     });
   };
 
   const createNewGlobalEnvironment = () => {
-    activeProject?._id &&
-      showPrompt({
-        title: 'Create New Environment',
-        submitName: 'Create',
-        placeholder: 'New environment',
-        defaultValue: 'New environment',
-        selectText: true,
-        onComplete: async (name: string) => {
-          fetcher.submit(
-            {
-              name,
-              scope: 'environment',
-            },
-            {
-              action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
-              method: 'post',
-            }
-          );
-        },
-      });
+    setNewWorkspaceModalState({
+      scope: 'environment',
+      isOpen: true,
+    });
   };
 
   const isGitSyncEnabled = features.gitSync.enabled;
@@ -1527,6 +1486,19 @@ const ProjectRoute: FC = () => {
             gitRepository={activeProjectGitRepository || undefined}
             storageRule={storage}
             isGitSyncEnabled={isGitSyncEnabled}
+          />
+        )}
+        {activeProject && newWorkspaceModalState?.isOpen && (
+          <NewWorkspaceModal
+            project={activeProject}
+            isOpen
+            onOpenChange={isOpen => {
+              setNewWorkspaceModalState({
+                scope: newWorkspaceModalState.scope,
+                isOpen,
+              });
+            }}
+            scope={newWorkspaceModalState.scope}
           />
         )}
         {activeProject && importModalType && (
