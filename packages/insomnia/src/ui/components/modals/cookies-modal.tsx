@@ -272,8 +272,8 @@ const CookieList = ({ cookies, onCookieDelete, onUpdateCookie }: CookieListProps
             textValue={cookie.domain}
             className='flex justify-between outline-none gap-2 leading-[36px] odd:bg-[--hl-xs] px-2 py-1 rounded-sm min-h-[40px]'
           >
-            <span className='flex items-center leading-relaxed min-w-[20%]'><RenderedText>{cookie.domain || ''}</RenderedText></span>
-            <span className='flex items-center leading-relaxed w-[70%]'><RenderedText>{cookieString || ''}</RenderedText></span>
+            <span className='flex items-center leading-relaxed min-w-[20%] break-all'><RenderedText>{cookie.domain || ''}</RenderedText></span>
+            <span className='flex items-center leading-relaxed w-[70%] break-all'><RenderedText>{cookieString || ''}</RenderedText></span>
             <div className='flex gap-1 min-w-[10%] items-center justify-end'>
               <Button
                 className="flex items-center gap-2 min-w-[35px] py-1 px-2 justify-center font-semibold aria-pressed:bg-[--hl-sm] text-[--color-font] transition-all text-sm"
