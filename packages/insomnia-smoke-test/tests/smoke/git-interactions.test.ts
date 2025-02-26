@@ -64,6 +64,8 @@ test('Git Interactions (clone, checkout branch, pull, push, stage changes, ...)'
     await page.getByText('Branches').click();
     await page.getByText('abc *').click();
     await page.getByRole('heading', { name: 'Branches', exact: true }).press('Escape');
+    await page.getByLabel('Toggle preview').click();
+    // TODO: the following action is flaky and seems pointless, added above operation to make it work
     await page.getByText('Endpoint Security test').click();
 
     // check git history
