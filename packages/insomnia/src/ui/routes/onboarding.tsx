@@ -5,9 +5,9 @@ import { Link, Route, Routes, useLocation } from 'react-router-dom';
 import { LandingPage } from '../../common/sentry';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
-import collection_runner from '../images/onboarding/collection_runner.png';
-import invite_control from '../images/onboarding/invite_control.png';
-import test_results from '../images/onboarding/test_results.png';
+import git_projects from '../images/onboarding/git_projects.png';
+import multiple_tabs from '../images/onboarding/multiple_tabs.png';
+import secret_vaults from '../images/onboarding/secret_vaults.png';
 
 const features = [
   {
@@ -16,15 +16,15 @@ const features = [
     title: 'Multiple Tabs',
     description:
       'Finally you can work on multiple collections and design documents with the multiple tabs capability that allows you to easily switch between one and another.',
-    image: collection_runner,
+    image: multiple_tabs,
   },
   {
-    id: 'git_zync',
+    id: 'git_sync',
     icon: 'git',
     title: 'New Git Sync',
     description:
       'An entirely rebuilt Git Sync experience, where your entire project can be connected to a Git repository and we will import multiple Insomnia resources at once.',
-    image: test_results,
+    image: git_projects,
   },
   {
     id: 'secret_vaults',
@@ -32,7 +32,7 @@ const features = [
     title: 'Secret Vaults',
     description:
       'With this enterprise capability we now support connecting your secrets with AWS secret Manager, Azure Key Vault, GCP Secret Manager and Hashicorp Vault.',
-    image: invite_control,
+    image: secret_vaults,
     rounded: true,
   },
 ] satisfies {
