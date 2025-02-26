@@ -50,16 +50,6 @@ jobs:
       - name: Install packages
         run: npm ci
 
-      # - name: Download all artifacts from release-build.yml
-      #   uses: dawidd6/action-download-artifact@v2
-      #   with:
-      #     github_token: ${{secrets.GITHUB_TOKEN}}
-      #     workflow: release-build.yml
-      #     workflow_conclusion: success
-      #     branch: ${{ env.RELEASE_BRANCH }} # Branch workflow ran on != branch the workflow created
-      #     path: ${{ env.ARTIFACTS_DOWNLOAD_PATH }} # Base path to download all release workflow assets
-      #     repo: ${{ secrets.BUILD_REPOSITORY }}
-
       - name: Download release artifacts from insomnia-ee
         uses: robinraju/release-downloader@v1
         with:
@@ -75,7 +65,7 @@ jobs:
         with:
           images: ${{ env.INSO_DOCKER_IMAGE }}
           tags: |
-            type=raw,value=${{ env.RELEASE_VERSION }},prirority=1000
+            type=raw,value=${{ env.RELEASE_VERSION }},priority=1000
             type=raw,value=latest,enable=${{ env.IS_PRERELEASE == 'false' }}
             type=raw,value=alpha,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'alpha') }}
             type=raw,value=beta,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'beta') }}
@@ -99,9 +89,9 @@ jobs:
       - name: Verify Inso Container Image Signature produced on insomnia-ee
         run: |
           cosign verify \
-          kong/inso:${{env.RELEASE_VERSION}}@sha256:${{steps.image_manifest_metadata.outputs.inso_image_sha}} \
+          kong/inso:${{env.RELEASE_VERSION}}@${{steps.image_manifest_metadata.outputs.inso_image_sha}} \
           --certificate-oidc-issuer='https://token.actions.githubusercontent.com' \
-          --certificate-identity-regexp='https://github.com/Kong/insomnia-ee/.github/workflows/release-publish.yml
+          --certificate-identity-regexp='https://github.com/Kong/insomnia-ee/.github/workflows/release-publish.yml'
         env:
           COSIGN_REPOSITORY: ${{env.NOTARY_REPOSITORY}}
 
@@ -111,7 +101,7 @@ jobs:
       - name: Verify Inso Container Image Provenance produced on insomnia-ee
         run: |
          slsa-verifier verify-image \
-         kong/inso:${{env.RELEASE_VERSION}}@sha256:${{steps.image_manifest_metadata.outputs.inso_image_sha}} \
+         kong/inso:${{env.RELEASE_VERSION}}@${{steps.image_manifest_metadata.outputs.inso_image_sha}} \
          --print-provenance \
          --provenance-repository ${{env.NOTARY_REPOSITORY}} \
          --source-uri 'github.com/Kong/insomnia-ee'
@@ -130,7 +120,7 @@ jobs:
           --print-provenance \
           --provenance-path '${{env.ARTIFACTS_DOWNLOAD_PATH}}/insomnia-provenance.intoto.jsonl' \
           --source-uri 'github.com/Kong/insomnia-ee' \
-          ${{env.ARTIFACTS_DOWNLOAD_PATH}}/Insomnia.Core-9.3.0.{snap,tar.gz,zip,rpm,dmg,deb,AppImage,exe}
+          ${{env.ARTIFACTS_DOWNLOAD_PATH}}/Insomnia.Core-${{env.RELEASE_VERSION}}.{snap,tar.gz,zip,rpm,dmg,deb,AppImage,exe}
 
       - name: Create Tag and Release
         uses: ncipollo/release-action@v1
@@ -189,30 +179,6 @@ jobs:
           RELEASE_APP: com.insomnia.inso
           RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
           RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
-
-      # # TODO: also take care of aarch64 image
-      # - name: Load the Inso CLI Docker Archive
-      #   run: |
-      #     docker load -i ./artifacts/inso-docker-image.tar
-      #     docker image ls
-
-      # - name: Login to Docker Hub
-      #   uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.1.0
-      #   with:
-      #     username: ${{ secrets.DOCKER_REGISTRY_USER }}
-      #     password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
-
-      # - name: Docker meta for Inso CLI Docker Image
-      #   id: inso_docker_meta
-      #   uses: docker/metadata-action@v5
-      #   with:
-      #     images: ${{ env.INSO_DOCKER_IMAGE }}
-      #     tags: |
-      #       type=raw,value=${{ env.INSO_VERSION }},prirority=1000
-      #       type=raw,value=latest,enable=${{ env.IS_PRERELEASE == 'false' }}
-      #       type=raw,value=alpha,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'alpha') }}
-      #       type=raw,value=beta,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'beta') }}
-      #     sep-tags: ","
 
       - name: Upload sourcemaps to Sentry
         env:
