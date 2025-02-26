@@ -187,6 +187,11 @@ export const VaultKeyPanel = () => {
             <BooleanSetting
               label="Save encrypted vault key locally"
               setting="saveVaultKeyLocally"
+              confirmMessage={isChecked => isChecked ?
+                'Are you sure to save the vault key locally? The vault key will be encrypted and saved locally.' :
+                'Are you sure to remove the local vault key? You will need to input it when you login again.'
+              }
+              confirmBeforeToggle
             />
           </div>
           <div className="form-row pad-top-sm">
