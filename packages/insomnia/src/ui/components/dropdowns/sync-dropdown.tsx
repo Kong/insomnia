@@ -175,7 +175,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
     isOwner ?
       showModal(AskModal, {
         title: 'Upgrade Plan',
-        message: 'Git Sync is only enabled for Team plan or above, please upgrade your plan.',
+        message: 'Git Sync is only enabled for Pro plan or above, please upgrade your plan.',
         yesText: 'Upgrade',
         noText: 'Cancel',
         onDone: async (isYes: boolean) => {
@@ -185,7 +185,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
         },
       }) : showModal(AlertModal, {
         title: 'Upgrade Plan',
-        message: 'Git Sync is only enabled for Team plan or above, please ask the organization owner to upgrade.',
+        message: 'Git Sync is only enabled for Pro plan or above, please ask the organization owner to upgrade.',
       });
   };
 

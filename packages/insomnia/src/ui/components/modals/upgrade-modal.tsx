@@ -31,7 +31,7 @@ export const UpgradeModal = forwardRef<UpgradeModalHandle, ModalProps>((_, ref) 
         color = 'surpirse',
         isOwner,
       } = options;
-      const planDetail = newPlan === 'team' ? 'Team plan or above' : 'Enterprise plan';
+      const planDetail = newPlan === 'team' ? 'Pro plan or above' : 'Enterprise plan';
       const upgradeDetail = isOwner ? 'please upgrade your plan.' : 'please contact the organization owner to upgrade the plan.';
       const message = `${featureName} is only enbaled for ${planDetail}, ${upgradeDetail}`;
       const onDone = async (isYes: boolean) => {

@@ -879,7 +879,7 @@ const ProjectRoute: FC = () => {
     isOwner ?
       showModal(AskModal, {
         title: 'Upgrade Plan',
-        message: 'Git Sync is only enabled for Team plan or above, please upgrade your plan.',
+        message: 'Git Sync is only enabled for Pro plan or above, please upgrade your plan.',
         yesText: 'Upgrade',
         noText: 'Cancel',
         onDone: async (isYes: boolean) => {
@@ -889,7 +889,7 @@ const ProjectRoute: FC = () => {
         },
       }) : showModal(AlertModal, {
         title: 'Upgrade Plan',
-        message: 'Git Sync is only enabled for Team plan or above, please ask the organization owner to upgrade.',
+        message: 'Git Sync is only enabled for Pro plan or above, please ask the organization owner to upgrade.',
       });
   };
 
