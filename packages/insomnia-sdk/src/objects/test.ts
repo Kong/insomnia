@@ -3,27 +3,43 @@ export async function test(
     fn: () => Promise<void>,
     log: (testResult: RequestTestResult) => void,
 ) {
-    const started = performance.now();
+    const wrapFn = async () => {
+        const started = performance.now();
 
-    try {
-        await fn();
-        const executionTime = performance.now() - started;
-        log({
-            testCase: msg,
-            status: 'passed',
-            executionTime,
-            category: 'unknown',
-        });
-    } catch (e) {
-        const executionTime = performance.now() - started;
-        log({
-            testCase: msg,
-            status: 'failed',
-            executionTime,
-            errorMessage: `error: ${e} | ACTUAL: ${e.actual} | EXPECTED: ${e.expected}`,
-            category: 'unknown',
-        });
-    }
+        try {
+            await fn();
+
+            const executionTime = performance.now() - started;
+            log({
+                testCase: msg,
+                status: 'passed',
+                executionTime,
+                category: 'unknown',
+            });
+        } catch (e) {
+            const executionTime = performance.now() - started;
+            log({
+                testCase: msg,
+                status: 'failed',
+                executionTime,
+                errorMessage: `error: ${e} | ACTUAL: ${e.actual} | EXPECTED: ${e.expected}`,
+                category: 'unknown',
+            });
+        }
+    };
+
+    const testPromise = wrapFn();
+    startTestObserver(testPromise);
+    return testPromise;
+}
+
+let testPromises = new Array<Promise<void>>();
+export async function waitForAllTestsDone() {
+    await Promise.allSettled(testPromises);
+    testPromises = [];
+}
+function startTestObserver(promise: Promise<void>) {
+    testPromises.push(promise);
 }
 
 export async function skip(

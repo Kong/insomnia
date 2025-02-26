@@ -47,7 +47,8 @@ collection:
             insomnia.test('req1-post-check', () => {
                 insomnia.expect(insomnia.response.code).to.eql(200);
             });
-            insomnia.test('req1-post-check-failed', () => {
+            insomnia.test('req1-post-check-failed', async () => {
+                await new Promise(resolve => setTimeout(resolve, 50));
                 insomnia.expect(insomnia.response.code).to.eql(201);
             });
         settings:
@@ -86,6 +87,40 @@ collection:
           insomnia.expect(200).to.eql(200);
         });
         insomnia.execution.setNextRequest('req02');
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: await-test
+    meta:
+      id: req_823443a369a74ac48cb9baa27ed8245c
+      created: 1636141014550
+      modified: 1636707449230
+      isPrivate: false
+      sortKey: -1636141014552
+    method: POST
+    scripts:
+      afterResponse: |-
+        await insomnia.test('t1', async () => {
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          insomnia.expect(201).to.eql(200);
+        });
+
+        async function myTest() {
+          await insomnia.test('t2', () => {
+            insomnia.expect(201).to.eql(200);
+          });
+        }
+        await myTest();
+
+        insomnia.test('t3', () => {
+          insomnia.expect(201).to.eql(200);
+        });
     settings:
       renderRequestBody: true
       encodeUrl: true
@@ -231,11 +266,11 @@ collection:
     scripts:
       preRequest: |-
         insomnia.test('req2-pre-check', () => {
-        insomnia.expect(200).to.eql(200);
+          insomnia.expect(200).to.eql(200);
         });
       afterResponse: |-
         insomnia.test('req2-post-check', () => {
-            insomnia.expect(insomnia.response.code).to.eql(200);
+          insomnia.expect(insomnia.response.code).to.eql(200);
         });
     settings:
       renderRequestBody: true

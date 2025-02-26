@@ -88,8 +88,8 @@ test.describe('runner features tests', async () => {
 
         const expectedTestOrder = [
             'folder-pre-check',
-            'req1-pre-check',
             'req1-pre-check-skipped',
+            'req1-pre-check',
             'folder-post-check',
             'req1-post-check',
             'expected 200 to deeply equal 201',
@@ -133,10 +133,11 @@ test.describe('runner features tests', async () => {
             // req2 should be skipped from pre-request script
             expect(iterationTestResultElement).not.toContainText('req2');
         }
+
         await verifyResultRows(page, 4, 1, 6, [
             'folder-pre-check',
-            'req1-pre-check',
             'req1-pre-check-skipped',
+            'req1-pre-check',
             'folder-post-check',
             'req1-post-check',
             'expected 200 to deeply equal 201',
@@ -162,6 +163,26 @@ test.describe('runner features tests', async () => {
         ];
 
         await verifyResultRows(page, 3, 0, 3, expectedTestOrder, 1);
+    });
+
+    test('await test works', async ({ page }) => {
+        await page.getByTestId('run-collection-btn-quick').click();
+
+        await page.locator('.runner-request-list-await-test').click();
+
+        // send
+        await page.getByRole('button', { name: 'Run', exact: true }).click();
+
+        // check result
+        await page.getByText('0 / 3').first().click();
+
+        const expectedTestOrder = [
+            't1',
+            't2',
+            't3',
+        ];
+
+        await verifyResultRows(page, 0, 0, 3, expectedTestOrder, 1);
     });
 
     test('run req5 3 times with setNextRequest in the after-response script', async ({ page }) => {
@@ -239,10 +260,10 @@ test.describe('runner features tests', async () => {
         await page.getByText('0 / 4').first().click();
 
         const expectedTestOrder = [
-            'async_pre_test',
             'sync_pre_test',
-            'async_post_test',
+            'async_pre_test',
             'sync_post_test',
+            'async_post_test',
         ];
 
         await verifyResultRows(page, 0, 0, 4, expectedTestOrder, 1);

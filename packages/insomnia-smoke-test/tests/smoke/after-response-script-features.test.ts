@@ -30,6 +30,10 @@ test.describe('after-response script features tests', async () => {
         const responsePane = page.getByTestId('response-pane');
         await expect(responsePane).toContainText('PASS');
         await expect(responsePane).toContainText('FAILunhappy tests | error: AssertionError: expected 199 to deeply equal 200 | ACTUAL: 199 | EXPECTED: 200');
+        await expect(responsePane).toContainText('PASShappyTestInFunc');
+        await expect(responsePane).toContainText('FAILsadTestInFunc | error: AssertionError: expected 199 to deeply equal 200 | ACTUAL: 199 | EXPECTED: 200');
+        await expect(responsePane).toContainText('PASSasyncHappyTestInFunc');
+        await expect(responsePane).toContainText('FAILasyncSadTestInFunc | error: AssertionError: expected 199 to deeply equal 200 | ACTUAL: 199 | EXPECTED: 200');
     });
 
     test('environment and baseEnvironment can be persisted', async ({ page }) => {
