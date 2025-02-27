@@ -200,7 +200,7 @@ jobs:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN_FILE_NEW }}
         with:
           # TODO-ARM64: Replace to *-amd64.snap when we have ARM64 build from insomnia-ee
-          snap: artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap
+          snap: artifacts/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap
           release: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
       # TODO: also release for aarch64 Linux?
@@ -222,7 +222,7 @@ jobs:
           # TODO-ARM64: Replace to *-amd64.deb when we have arm64 builds from insomnia-ee
           args: >
             release
-            --file artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.deb
+            --file artifacts/Insomnia.Core-${{ env.RELEASE_VERSION }}.deb
             --dist-name ubuntu
             --dist-version focal
             --package-type insomnia
