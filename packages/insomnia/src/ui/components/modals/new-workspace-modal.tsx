@@ -162,7 +162,7 @@ export const NewWorkspaceModal = ({
                       defaultExpandedKeys={[gitRepoTreeFetcher.data.id]}
                       onSelectionChange={selection => {
                         if (selection !== 'all') {
-                          setWorkspaceData({ ...workspaceData, folderPath: selection.values().next().value });
+                          setWorkspaceData({ ...workspaceData, folderPath: selection.values().next().value as string });
                         }
                       }}
                       aria-label="Files"
