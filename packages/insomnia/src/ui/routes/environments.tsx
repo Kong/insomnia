@@ -18,7 +18,7 @@ import { handleToggleEnvironmentType } from '../components/editors/environment-u
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showAlert } from '../components/modals';
-import { InputVaultKeyModal } from '../components/modals/input-valut-key-modal';
+import { InputVaultKeyModal } from '../components/modals/input-vault-key-modal';
 import { OrganizationTabList } from '../components/tabs/tab-list';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useInsomniaTab } from '../hooks/use-insomnia-tab';

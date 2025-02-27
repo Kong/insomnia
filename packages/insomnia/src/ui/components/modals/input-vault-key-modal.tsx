@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Input, Modal, ModalOverlay } from 'react-aria-components';
-import { useFetcher } from 'react-router-dom';
+import { useFetcher, useRouteLoaderData } from 'react-router-dom';
 
+import { removeAllSecrets } from '../../../models/environment';
+import type { OrganizationLoaderData } from '../../routes/organization';
 import { useRootLoaderData } from '../../routes/root';
 import { Icon } from '../icon';
 import { VaultKeyDisplayInput } from '../settings/vault-key-panel';
@@ -21,6 +23,7 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
   const [resetDone, setResetDone] = useState(false);
   const resetVaultKeyFetcher = useFetcher();
   const validateVaultKeyFetcher = useFetcher();
+  const { organizations } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const isLoading = resetVaultKeyFetcher.state !== 'idle' || validateVaultKeyFetcher.state !== 'idle';
 
   useEffect(() => {
@@ -74,7 +77,8 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
       noText: 'No',
       onDone: async (yes: boolean) => {
         if (yes) {
-          // todo clear all local secrets
+          // clear all local secrets first
+          await removeAllSecrets(organizations.map(org => org.id));
           resetVaultKeyFetcher.submit('', {
             action: '/auth/resetVaultKey',
             method: 'POST',

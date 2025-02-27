@@ -26,7 +26,7 @@ import { MethodDropdown } from './dropdowns/method-dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { GenerateCodeModal } from './modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from './modals/index';
-import { InputVaultKeyModal } from './modals/input-valut-key-modal';
+import { InputVaultKeyModal } from './modals/input-vault-key-modal';
 import { VariableMissingErrorModal } from './modals/variable-missing-error-modal';
 
 interface Props {
