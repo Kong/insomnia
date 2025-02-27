@@ -1,5 +1,5 @@
 import { fromUrl } from 'hosted-git-info';
-import { type ActionFunction, type LoaderFunction, type LoaderFunctionArgs, redirect } from 'react-router-dom';
+import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
 
 import { gitCredentials } from '../../models';
 import type { GitRepository } from '../../models/git-repository';
@@ -321,7 +321,7 @@ export const mergeGitBranch = async ({
     theirsBranch: string;
     allowUncommittedChangesBeforeMerge?: boolean;
 }) => {
-  await window.main.git.mergeGitBranch({
+  return await window.main.git.mergeGitBranch({
     projectId,
     workspaceId,
     theirsBranch,
@@ -445,19 +445,17 @@ export const gitStatusAction: ActionFunction = async ({
   return window.main.git.gitStatus({ projectId, workspaceId });
 };
 
-export async function checkGitChanges({ params }: LoaderFunctionArgs) {
-  const { projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
-
+export async function checkGitChanges({ projectId, workspaceId }: {
+  projectId: string;
+  workspaceId: string;
+}) {
   return window.main.git.gitChangesLoader({ projectId, workspaceId });
 };
 
-export async function checkGitCanPush({ params }: LoaderFunctionArgs) {
-  const { projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
-
+export async function checkGitCanPush({ projectId, workspaceId }: {
+  projectId: string;
+  workspaceId: string;
+}) {
   return window.main.git.canPushLoader({ projectId, workspaceId });
 };
 

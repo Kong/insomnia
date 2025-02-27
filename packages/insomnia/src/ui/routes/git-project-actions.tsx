@@ -306,7 +306,7 @@ export const mergeGitBranch = async ({
   projectId: string;
   allowUncommittedChangesBeforeMerge?: boolean;
 }) => {
-  await window.main.git.mergeGitBranch({
+  return await window.main.git.mergeGitBranch({
     projectId,
     theirsBranch,
     allowUncommittedChangesBeforeMerge,

@@ -1277,6 +1277,10 @@ export const mergeGitBranch = async ({
     await database.flushChanges(bufferId, true);
     return {};
   } catch (err) {
+    if (err instanceof MergeConflictError) {
+      return err.data;
+    }
+
     if (err instanceof Errors.HttpError) {
       err = new Error(`${err.message}, ${err.data.response}`);
     }
