@@ -78,7 +78,6 @@ import { Icon } from '../components/icon';
 import { AlertModal } from '../components/modals/alert-modal';
 import { GitRepositoryCloneModal } from '../components/modals/git-repository-settings-modal/git-repo-clone-modal';
 import { ImportModal } from '../components/modals/import-modal';
-import { MockServerSettingsModal } from '../components/modals/mock-server-settings-modal';
 import { NewWorkspaceModal } from '../components/modals/new-workspace-modal';
 import { ProjectModal } from '../components/modals/project-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
@@ -781,7 +780,6 @@ const ProjectRoute: FC = () => {
 
   const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =
     useState(false);
-  const [isMockServerSettingsModalOpen, setIsMockServerSettingsModalOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -1490,15 +1488,17 @@ const ProjectRoute: FC = () => {
         )}
         {activeProject && newWorkspaceModalState?.isOpen && (
           <NewWorkspaceModal
-            project={activeProject}
             isOpen
+            project={activeProject}
+            storageRule={storage}
+            currentPlan={currentPlan}
+            scope={newWorkspaceModalState.scope}
             onOpenChange={isOpen => {
               setNewWorkspaceModalState({
                 scope: newWorkspaceModalState.scope,
                 isOpen,
               });
             }}
-            scope={newWorkspaceModalState.scope}
           />
         )}
         {activeProject && importModalType && (
@@ -1508,11 +1508,6 @@ const ProjectRoute: FC = () => {
             from={{ type: importModalType }}
             organizationId={organizationId}
             defaultProjectId={activeProject._id}
-          />
-        )}
-        {isMockServerSettingsModalOpen && (
-          <MockServerSettingsModal
-            onClose={() => setIsMockServerSettingsModalOpen(false)}
           />
         )}
       </Fragment>

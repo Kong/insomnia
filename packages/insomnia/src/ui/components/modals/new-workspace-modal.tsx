@@ -6,8 +6,11 @@ import {
   Heading,
   Input,
   Label,
+  Link,
   Modal,
   ModalOverlay,
+  Radio,
+  RadioGroup,
   TextField,
   UNSTABLE_Tree as Tree,
   UNSTABLE_TreeItem as TreeItem,
@@ -15,7 +18,7 @@ import {
 } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
-import { isGitProject, type Project } from '../../../models/project';
+import { isGitProject, ORG_STORAGE_RULE, type Project } from '../../../models/project';
 import { type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import type { GetRepositoryDirectoryTreeResult } from '../../routes/git-project-actions';
 import { Icon } from '../icon';
@@ -39,21 +42,37 @@ export const NewWorkspaceModal = ({
   onOpenChange,
   project,
   scope,
+  storageRule,
+  currentPlan,
 }: {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   project: Project;
+    storageRule: ORG_STORAGE_RULE;
+    currentPlan?: { type: string };
   scope: WorkspaceScope;
 }) => {
   const { organizationId } = useParams() as { organizationId: string; projectId: string };
+
+  const isLocalProject = !project.remoteId;
+  const isEnterprise = currentPlan?.type.includes('enterprise');
+  const isSelfHostedDisabled = !isEnterprise || storageRule === ORG_STORAGE_RULE.CLOUD_ONLY;
+  const isCloudProjectDisabled = isLocalProject || storageRule === ORG_STORAGE_RULE.LOCAL_ONLY;
+
+  const canOnlyCreateSelfHosted = isLocalProject && isEnterprise;
+
   const [workspaceData, setWorkspaceData] = useState<{
     name: string;
     scope: WorkspaceScope;
     folderPath?: string;
+    mockServerType?: 'self-hosted' | 'cloud';
+    mockServerUrl?: string;
   }>({
-    name: '',
+    name: defaultNameByScope[scope],
     scope,
     folderPath: '',
+    mockServerType: canOnlyCreateSelfHosted ? 'self-hosted' : 'cloud',
+    mockServerUrl: '',
   });
 
   const createNewWorkspaceFetcher = useFetcher<{ error?: string }>();
@@ -68,11 +87,7 @@ export const NewWorkspaceModal = ({
 
   const createNewWorkspace = () => {
     createNewWorkspaceFetcher.submit(
-      {
-        name: workspaceData.name,
-        scope: workspaceData.scope,
-        folderPath: workspaceData.folderPath,
-      },
+      workspaceData,
       {
         action: `/organization/${organizationId}/project/${project._id}/workspace/new`,
         method: 'POST',
@@ -132,7 +147,6 @@ export const NewWorkspaceModal = ({
                   </Label>
                   <Input
                     placeholder={`Enter a name for your ${titleByScope[workspaceData.scope]}...`}
-                    defaultValue={defaultNameByScope[workspaceData.scope]}
                     className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                   />
                 </TextField>
@@ -186,6 +200,72 @@ export const NewWorkspaceModal = ({
                       }}
                     </Tree>
                   </>
+                )}
+                {workspaceData.scope === 'mock-server' && (<>
+                  <RadioGroup
+                    name="mockServerType"
+                    defaultValue={workspaceData.mockServerType}
+                    onChange={serverType => {
+                      setWorkspaceData({ ...workspaceData, mockServerType: serverType as 'self-hosted' | 'cloud' });
+                    }}
+                    className="flex flex-col gap-2"
+                  >
+                    <Label className="text-sm text-[--hl]">
+                      Mock server type
+                    </Label>
+                    <div className="flex gap-2">
+                      <Radio
+                        value="cloud"
+                        isDisabled={isCloudProjectDisabled}
+                        className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                      >
+                        <div className='flex items-center gap-2'>
+                          <Icon icon="globe" />
+                          <Heading className="text-lg font-bold">Cloud Mock</Heading>
+                        </div>
+                        <p className='pt-2'>
+                          {isCloudProjectDisabled ? 'Only available for cloud projects' : 'Runs on Insomnia cloud, ideal for collaboration.'}
+                        </p>
+                      </Radio>
+                      <Radio
+                        value="self-hosted"
+                        isDisabled={isSelfHostedDisabled}
+                        className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Icon icon="server" />
+                          <Heading className="text-lg font-bold">Self-hosted Mock</Heading>
+                        </div>
+                        <p className="pt-2">
+                          Runs locally or on your infrastructure, ideal for private usage and lower latency.
+                        </p>
+                      </Radio>
+                    </div>
+                  </RadioGroup>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Icon icon="info-circle" />
+                    <span>
+                      To learn more about self hosting <Link href="https://docs.insomnia.rest/insomnia/api-mocking" className='underline'>click here</Link>
+                    </span>
+                  </div>
+                  {!isSelfHostedDisabled && (
+                    <TextField
+                      name="mockServerUrl"
+                      value={workspaceData.mockServerUrl}
+                      onChange={url => setWorkspaceData({ ...workspaceData, mockServerUrl: url })}
+                      className={`group relative flex-1 flex flex-col gap-2 ${workspaceData.mockServerType === 'cloud' ? 'disabled' : ''}`}
+                    >
+                      <Label className='text-sm text-[--hl]'>
+                        Self-hosted mock server URL
+                      </Label>
+                      <Input
+                        disabled={workspaceData.mockServerType === 'cloud'}
+                        placeholder={workspaceData.mockServerType === 'cloud' ? '' : 'https://example.com'}
+                        className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+                      />
+                    </TextField>
+                  )}
+                </>
                 )}
               </div>
               <div className="flex justify-end gap-2 items-center px-10 pb-10">
