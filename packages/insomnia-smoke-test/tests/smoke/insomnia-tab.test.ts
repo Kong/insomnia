@@ -16,8 +16,8 @@ test.describe('multiple-tab feature test', () => {
   test('add tab & close tab', async ({ page }) => {
     await page.getByLabel('Create in collection').click();
     await page.getByLabel('HTTP Request').click();
-    const tab = await page.getByLabel('Insomnia Tabs').getByLabel(`tab-${DEFAULT_REQUEST_NAME}`, { exact: true });
-    expect(tab).toBeVisible();
+    const tab = page.getByLabel('Insomnia Tabs').getByLabel(`tab-${DEFAULT_REQUEST_NAME}`, { exact: true });
+    await expect(tab).toBeVisible();
     expect(await tab.getAttribute('data-selected')).toBe('true');
     await tab.getByRole('button').click();
     await expect(tab).toBeHidden();
