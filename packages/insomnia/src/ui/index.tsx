@@ -73,8 +73,8 @@ async function renderApp() {
 
   // Check if there is a Session provided by an env variable and use this
   const insomniaSession = getInsomniaSession();
-  const insomniaVaultKey = getInsomniaVaultKey();
-  const insomniaVaultSalt = getInsomniaVaultSalt();
+  const insomniaVaultKey = getInsomniaVaultKey() || '';
+  const insomniaVaultSalt = getInsomniaVaultSalt() || '';
   if (insomniaSession) {
     try {
       const session = JSON.parse(insomniaSession) as SessionData;
@@ -88,7 +88,7 @@ async function renderApp() {
         session.publicKey,
         session.encPrivateKey
       );
-      if (insomniaVaultSalt && insomniaVaultKey) {
+      if (insomniaVaultSalt || insomniaVaultKey) {
         await setVaultSessionData(insomniaVaultSalt, insomniaVaultKey);
       }
     } catch (e) {

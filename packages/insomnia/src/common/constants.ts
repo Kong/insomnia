@@ -19,6 +19,7 @@ export const getInsomniaSecretKey = () => env.INSOMNIA_SECRET_KEY;
 export const getInsomniaPublicKey = () => env.INSOMNIA_PUBLIC_KEY;
 export const getInsomniaVaultSalt = () => env.INSOMNIA_VAULT_SALT;
 export const getInsomniaVaultKey = () => env.INSOMNIA_VAULT_KEY;
+export const getInsomniaVaultSrpSecret = () => env.INSOMNIA_VAULT_SRP_SECRET;
 export const getAppVersion = () => version;
 export const getProductName = () => appConfig.productName;
 export const getAppDefaultTheme = () => appConfig.theme;

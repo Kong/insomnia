@@ -165,6 +165,7 @@ export const VaultKeyPanel = () => {
             className={`flex items-center btn btn--outlined btn--super-compact ${isGenerating ? 'w-56' : 'w-48'}`}
             onPress={generateVaultKey}
             isDisabled={isGenerating}
+            aria-label='Generate Vault Key'
           >
             {isGenerating && <Icon icon="spinner" className="text-[--color-font] animate-spin m-auto inline-block mr-2" />}
             Generate Vault Key
