@@ -104,7 +104,8 @@ export class GitProjectNeDBClient {
         // In order to reproduce this bug, comment out the following line, then clone a repository into a local project, then open the workspace, you'll notice it will have moved into the default project
         doc.parentId = this._projectId;
 
-        await db.docCreate<WorkspaceMeta>(models.workspaceMeta.type, { parentId: doc._id, gitRepoPath: filePath });
+        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(doc._id);
+        await models.workspaceMeta.update(workspaceMeta, { gitRepoPath: filePath });
       }
 
       await db.upsert(doc, true);
@@ -139,12 +140,12 @@ export class GitProjectNeDBClient {
       },
     });
 
-    const hasDirectoryInsomniaFiles = workspaceMetas.some(workspaceMeta => workspaceMeta.gitRepoPath && path.dirname(workspaceMeta.gitRepoPath) === filePath);
+    const hasDirectoryInsomniaFiles = workspaceMetas.some(({ gitRepoPath }) => gitRepoPath && path.dirname(gitRepoPath) === filePath);
 
     if (hasDirectoryInsomniaFiles) {
       const workspacePaths = workspaceMetas
         .filter(workspaceMeta => workspaceMeta.gitRepoPath && path.dirname(workspaceMeta.gitRepoPath) === filePath)
-        .map(workspaceMeta => path.join(workspaceMeta.gitRepoPath!));
+        .map(workspaceMeta => path.basename(workspaceMeta.gitRepoPath!));
       return workspacePaths;
     }
 
@@ -207,8 +208,7 @@ export class GitProjectNeDBClient {
   }
 
   async rmdir() {
-    // Dirs in NeDB can't be removed, so we'll just pretend like it succeeded
-    return Promise.resolve();
+    throw new Error('NeDBClient symlink not supported');
   }
 
   async symlink() {

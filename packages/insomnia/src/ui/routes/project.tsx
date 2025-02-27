@@ -790,7 +790,7 @@ const ProjectRoute: FC = () => {
     isOpen: boolean;
   } | null>({
     scope: 'collection',
-    isOpen: true,
+    isOpen: false,
   });
 
   const createNewCollection = () => {

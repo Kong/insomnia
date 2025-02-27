@@ -447,7 +447,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
     const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
     await models.workspaceMeta.update(workspaceMeta, {
-      gitRepoPath: `insomnia.${workspace._id}.yaml`,
+      gitRepoPath: path.join(formData.get('folderPath')?.toString() || '', `insomnia.${workspace._id}.yaml`),
     });
   }
 
