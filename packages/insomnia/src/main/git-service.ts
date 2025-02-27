@@ -15,7 +15,7 @@ import * as models from '../models';
 import type { GitRepository } from '../models/git-repository';
 import { type WorkspaceScope, WorkspaceScopeKeys } from '../models/workspace';
 import { fsClient } from '../sync/git/fs-client';
-import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME, GIT_INTERNAL_DIR } from '../sync/git/git-vcs';
+import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME, GIT_INTERNAL_DIR, MergeConflictError } from '../sync/git/git-vcs';
 import { MemClient } from '../sync/git/mem-client';
 import { NeDBClient } from '../sync/git/ne-db-client';
 import { GitProjectNeDBClient } from '../sync/git/project-ne-db-client';
@@ -1424,6 +1424,10 @@ export async function pullFromGitRemote({
 
     return {};
   } catch (err: unknown) {
+    if (err instanceof MergeConflictError) {
+      return err.data;
+    }
+
     if (err instanceof Errors.HttpError) {
       err = new Error(`${err.message}, ${err.data.response}`);
     }
@@ -1705,14 +1709,14 @@ interface GitRepoDirectory {
   children: (GitRepoDirectory | GitRepoFile)[];
 };
 
-interface FileTree {
+type FileTree = {
   id: string;
   name: string;
   type: 'root';
   children: (GitRepoDirectory | GitRepoFile)[];
-}
+} | GitRepoDirectory | GitRepoFile;
 
-const getRepositoryDirectoryTree = async ({ projectId }: { projectId: string }) => {
+const getRepositoryDirectoryTree = async ({ projectId }: { projectId: string }): Promise<FileTree> => {
   const gitRepository = await getGitRepository({ projectId });
   const fs = await getGitFSClient({ projectId, gitRepositoryId: gitRepository._id });
 

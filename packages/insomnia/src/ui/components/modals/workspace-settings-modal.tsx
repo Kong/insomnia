@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Input, Label, Modal, ModalOverlay, Radio, RadioGroup, TextField } from 'react-aria-components';
-import { useFetcher, useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
@@ -8,6 +8,8 @@ import * as models from '../../../models/index';
 import type { MockServer } from '../../../models/mock-server';
 import { isRequest } from '../../../models/request';
 import { isEnvironment, isMockServer, isScratchpad, type Workspace } from '../../../models/workspace';
+import { fetchAndCacheOrganizationStorageRule, ORG_STORAGE_RULE, type OrganizationLoaderData } from '../../routes/organization';
+import type { ProjectIdLoaderData } from '../../routes/project';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
@@ -15,7 +17,6 @@ import { Icon } from '../icon';
 import { MarkdownEditor } from '../markdown-editor';
 import { showModal } from '.';
 import { AlertModal } from './alert-modal';
-import { useAvailableMockServerType } from './mock-server-settings-modal';
 
 interface Props {
   onClose: () => void;
@@ -24,16 +25,23 @@ interface Props {
 }
 
 export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props) => {
+  const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+  const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  const [orgStorageRule, setOrgStorageRule] = useState<ORG_STORAGE_RULE>(ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL);
+  useEffect(() => {
+    fetchAndCacheOrganizationStorageRule(organizationId as string).then(setOrgStorageRule);
+  }, [organizationId]);
+
   // file://./../../routes/workspace.tsx#workspaceLoader
   const workspaceLoaderData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
-  const isLocalProject = !workspaceLoaderData?.activeProject?.remoteId;
-  const {
-    isSelfHostedDisabled,
-    isCloudProjectDisabled,
-    organizationId,
-    projectId,
-    isEnterprise,
-  } = useAvailableMockServerType(isLocalProject);
+  const projectData = useRouteLoaderData('/project/:projectId') as ProjectIdLoaderData | null;
+  const activeProject = projectData?.activeProject || workspaceLoaderData?.activeProject;
+
+  const isLocalProject = !activeProject?.remoteId;
+  const isEnterprise = currentPlan?.type.includes('enterprise');
+  const isSelfHostedDisabled = !isEnterprise || orgStorageRule === ORG_STORAGE_RULE.CLOUD_ONLY;
+  const isCloudProjectDisabled = isLocalProject || orgStorageRule === ORG_STORAGE_RULE.LOCAL_ONLY;
+
   const isScratchpadWorkspace = isScratchpad(workspace);
 
   const activeWorkspaceName = workspace.name;

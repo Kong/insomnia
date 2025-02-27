@@ -174,6 +174,7 @@ export const NewWorkspaceModal = ({
                           <TreeItem
                             className="group flex odd:bg-[--hl-xxs] flex-col pl-[--tree-item-level] aria-selected:bg-[--hl-lg] aria-disabled:text-[--hl] outline-none border border-solid border-transparent aria-selected:border-[--color-surprise] rounded-sm px-2 py-1 transition-colors duration-300"
                             style={{
+                              // @ts-expect-error --tree-item-level is a custom property
                               '--tree-item-level': `${(item.type === 'root' ? 0 : item.id.split('/').length * 1) + 0.5}rem`,
                               color: item.type === 'file' ? 'var(--hl)' : 'var(--color-font)',
                             }}
@@ -190,7 +191,7 @@ export const NewWorkspaceModal = ({
                                 </div>
                               )}
                             </TreeItemContent>
-                            {'children' in item && item.children && (
+                            {item.type !== 'file' && (
                               <Collection items={item.children}>
                                 {renderItem}
                               </Collection>
