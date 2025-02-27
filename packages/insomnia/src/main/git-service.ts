@@ -1726,8 +1726,6 @@ const getRepositoryDirectoryTree = async ({ projectId }: { projectId: string }):
 
   const rootContents = await fs.promises.readdir(GIT_CLONE_DIR);
 
-  console.log({ rootContents });
-
   const recursivelyGetDirectoryTree = async (directoryContents: string[], parentPath: string) => {
     const tree: (GitRepoDirectory | GitRepoFile)[] = await Promise.all(
       directoryContents.map(async (file: string) => {
