@@ -135,7 +135,7 @@ export const test = baseTest.extend<{
       if (traceMode === 'on' || (traceMode === 'retain-on-failure' && testFailed) || (traceMode === 'on-first-retry' && testInfo.retry === 1)) {
         // Set tracing file name with the test status
         await appContext.tracing.stop({
-          path: path.join(testInfo.outputDir, `trace-${testInfo.status}.zip`),
+          path: path.join(testInfo.outputDir, `trace-${testInfo.title}-${testInfo.status}.zip`),
         });
       } else {
         // Discard the trace if not needed
