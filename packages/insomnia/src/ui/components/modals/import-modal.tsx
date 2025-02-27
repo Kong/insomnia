@@ -133,7 +133,7 @@ const FileField: FC = () => {
       <label
         {...dropProps}
         className={classNames(
-          'p-[var(--padding-sm)] rounded-[var(--radius-md)] flex items-center gap-[var(--padding-sm)] bg-[color:var(--hl-xs)] flex-wrap border border-solid',
+          'p-[var(--padding-sm)] rounded-[var(--radius-md)] flex items-center gap-[var(--padding-sm)] bg-[color:var(--hl-xs)] flex-wrap border border-solid max-h-[50vh] overflow-auto',
           {
             'border-[color:var(--color-surprise)]': isDropTarget,
             'border-[color:var(--hl-md)]': !isDropTarget,
@@ -143,7 +143,7 @@ const FileField: FC = () => {
       >
         <input type="hidden" name="filePaths" value={filePaths} />
         {filePathList.length ? (<div
-          className="bg-[color:var(--color-bg)] rounded-[var(--radius-md)] text-ellipsis overflow-hidden whitespace-nowrap flex flex-col items-center justify-center p-[var(--padding-md)] gap-[var(--padding-sm)] w-full"
+          className="bg-[color:var(--color-bg)] rounded-[var(--radius-md)] text-ellipsis whitespace-nowrap flex flex-col items-center justify-start p-[var(--padding-md)] gap-[var(--padding-sm)] w-full"
         >
           {entryList.map(({ name, type }) => (
             <div
@@ -528,7 +528,7 @@ const ScanResourcesForm = ({
           )}
         </form>
         {scanResults && (
-          <div className='margin-top-sm overflow-y-auto'>
+          <div className='margin-top-sm overflow-y-auto max-h-[20vh]'>
             <ScanResultsTable scanResults={scanResults} />
           </div>
         )}
@@ -614,7 +614,7 @@ const ImportResourcesForm = ({
   return (
     <Fragment>
       <div
-        className='flex flex-col gap-[var(--padding-md)]'
+        className='flex flex-col gap-[var(--padding-md)] overflow-auto max-h-[50vh]'
       >
         <form
           onSubmit={onSubmit}
