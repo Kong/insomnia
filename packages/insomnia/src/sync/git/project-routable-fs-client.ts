@@ -53,9 +53,6 @@ export function projectRoutableFSClient(
       const result = await insomniaFS.promises[method]!(filePath, ...args);
       return result;
     } catch (err) {
-      if (path.basename(filePath).startsWith('insomnia.')) {
-        throw err;
-      }
       // console.log('[routablefs] Failed to execute', method, filePath, { args }, err);
       const result = await defaultFS.promises[method]!(filePath, ...args);
 

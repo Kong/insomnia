@@ -360,8 +360,14 @@ const recursivelyFindInsomniaFiles = async (fsClient: PromiseFsClient, dir: stri
 
     if (stats.isDirectory()) {
       await recursivelyFindInsomniaFiles(fsClient, fullPath, files);
-    } else if (file.startsWith('insomnia.')) {
-      files.push(fullPath);
+    } else {
+      if (fullPath.endsWith('.yaml')) {
+        const fileContents = await fsClient.promises.readFile(fullPath, 'utf8');
+        const isInsomniaFile = fileContents.split('\n')[0].trim().includes('insomnia.rest');
+        if (isInsomniaFile) {
+          files.push(fullPath);
+        }
+      }
     }
   }
 

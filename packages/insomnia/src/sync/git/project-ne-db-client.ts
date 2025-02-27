@@ -11,16 +11,6 @@ import type { WorkspaceMeta } from '../../models/workspace-meta';
 import Stat from './stat';
 import { SystemError } from './system-error';
 
-function parseWorkspaceId(filePath: string) {
-  const workspaceId = path.basename(filePath)?.split('.')[1];
-
-  if (workspaceId.startsWith('wrk_')) {
-    return workspaceId;
-  }
-
-  return null;
-}
-
 /**
  * A fs client to access workspace data stored in NeDB as files.
  * Used by isomorphic-git
@@ -31,7 +21,6 @@ export class GitProjectNeDBClient {
 
   constructor(projectId: string) {
     this._projectId = projectId;
-
   }
 
   static createClient(projectId: string): PromiseFsClient {
@@ -55,7 +44,7 @@ export class GitProjectNeDBClient {
 
     try {
       // Supported file paths are in the form of insomnia.<workspace_id>.yaml
-      const workspaceId = parseWorkspaceId(filePath);
+      const workspaceId = await this.getWorkspaceIdFromFilePath(filePath);
 
       if (!workspaceId) {
         throw this._errMissing(filePath);
@@ -78,20 +67,22 @@ export class GitProjectNeDBClient {
   async writeFile(filePath: string, data: Buffer | string) {
     filePath = path.normalize(filePath);
 
-    // Supported file paths are in the form of other/path/insomnia.<workspace_id>.yaml
-    const workspaceId = parseWorkspaceId(filePath);
-
-    if (!workspaceId) {
+    if (!filePath.endsWith('.yaml')) {
       throw this._errMissing(filePath);
     }
 
     const dataStr = data.toString();
 
+    const isInsomniaFile = dataStr.split('\n')[0].trim().includes('insomnia.rest');
+
+    if (!isInsomniaFile) {
+      throw this._errMissing(filePath);
+    }
+
     // Skip the file if there is a conflict marker
     if (dataStr.split('\n').includes('=======')) {
       return;
     }
-
     const dataToImport = importInsomniaV5Data(dataStr);
 
     const bufferId = await db.bufferChanges();
@@ -116,7 +107,7 @@ export class GitProjectNeDBClient {
 
   async unlink(filePath: string) {
     filePath = path.normalize(filePath);
-    const workspaceId = parseWorkspaceId(filePath);
+    const workspaceId = await this.getWorkspaceIdFromFilePath(filePath);
 
     if (!workspaceId) {
       throw this._errMissing(filePath);
@@ -223,5 +214,23 @@ export class GitProjectNeDBClient {
       syscall: 'scandir',
       path: filePath,
     });
+  }
+
+  async getWorkspaceIdFromFilePath(filePath: string) {
+    filePath = path.normalize(filePath);
+    const workspaces = await db.find<Workspace>(models.workspace.type, { parentId: this._projectId });
+    const workspaceMetas = await db.find<WorkspaceMeta>(models.workspaceMeta.type, {
+      parentId: {
+        $in: workspaces.map(w => w._id),
+      },
+    });
+
+    const workspaceMeta = workspaceMetas.find(({ gitRepoPath }) => gitRepoPath === filePath);
+
+    if (workspaceMeta) {
+      return workspaceMeta.parentId;
+    }
+
+    return null;
   }
 }
