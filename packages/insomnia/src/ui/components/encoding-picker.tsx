@@ -85,9 +85,19 @@ export const EncodingPicker = ({ encoding, onChange }: { encoding: string; onCha
             <ListBoxItem
               aria-label={item.label}
               textValue={item.label}
-              className="aria-disabled:opacity-30 aria-selected:bg-[--hl-sm] rounded aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] data-[focused]:bg-[--hl-xs] focus:outline-none transition-colors"
+              className="aria-disabled:opacity-30 rounded aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] data-[focused]:bg-[--hl-xs] focus:outline-none transition-colors"
             >
-              <span>{item.label}</span>
+              {({ isSelected }) => (
+                <>
+                  <span>{item.label}</span>
+                  {isSelected && (
+                    <Icon
+                      icon="check"
+                      className="ml-1 text-[--color-success] justify-self-end"
+                    />
+                  )}
+                </>
+              )}
             </ListBoxItem>
           )}
         </ListBox>
