@@ -35,6 +35,8 @@ import type { ToastNotification } from './ui/components/toast';
 const dataPath = process.env.INSOMNIA_DATA_PATH || path.join(app.getPath('userData'), '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
 app.setPath('userData', dataPath);
 
+initializeLogging();
+
 initializeSentry();
 
 registerInsomniaProtocols();
@@ -44,7 +46,6 @@ if (checkIfRestartNeeded()) {
   process.exit(0);
 }
 
-initializeLogging();
 log.info(`Running version ${getAppVersion()}`);
 
 // So if (window) checks don't throw
