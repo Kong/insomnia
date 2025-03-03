@@ -37,7 +37,6 @@ export const WorkspaceSyncDropdown: FC = () => {
         key={activeWorkspace?._id}
         workspace={activeWorkspace}
         project={activeProject}
-        gitSyncEnabled={features.gitSync.enabled}
       />
     );
   }
