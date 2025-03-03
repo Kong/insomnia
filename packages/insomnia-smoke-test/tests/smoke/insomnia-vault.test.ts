@@ -162,6 +162,8 @@ test.describe('Check vault used in environment', async () => {
     await page.getByRole('option', { name: 'New Environment' }).click();
     await page.getByText('Base Environment1').click();
     await page.getByTestId('underlay').click();
+    // ensure environment is activated
+    await page.waitForTimeout(1000);
     // activate request
     await page.getByTestId('normal').getByLabel('GET normal', { exact: true }).click();
     await page.getByRole('button', { name: 'Send' }).click();
