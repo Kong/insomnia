@@ -1322,7 +1322,7 @@ const ProjectRoute: FC = () => {
                       aria-label="Create in project"
                       className="flex items-center justify-center px-4 gap-2 h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                     >
-                      <Icon icon="plus-circle" /> Create
+                      <Icon icon="plus-circle" /> <span className='hidden md:block'>Create</span>
                     </Button>
                     <Popover className="min-w-max overflow-y-hidden flex flex-col">
                       <Menu
@@ -1361,7 +1361,7 @@ const ProjectRoute: FC = () => {
                     aria-label="Import"
                     className="flex items-center justify-center px-4 gap-2 h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                   >
-                    <Icon icon="file-import" /> Import
+                    <Icon icon="file-import" /> <span className='hidden md:block'>Import</span>
                   </Button>
 
                 </div>
