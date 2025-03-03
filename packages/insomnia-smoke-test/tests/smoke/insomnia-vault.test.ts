@@ -119,6 +119,7 @@ test.describe('Check vault used in environment', async () => {
   // create global private environment
     await page.getByLabel('Create in project').click();
     await page.getByLabel('Create', { exact: true }).getByText('Environment').click();
+    await page.getByPlaceholder('New environment').fill('New Global Vault Environment');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
     await page.getByTestId('CreateEnvironmentDropdown').click();
     await page.getByText('Private environment').click();
@@ -158,12 +159,10 @@ test.describe('Check vault used in environment', async () => {
     await page.getByText('Vault Collection').click();
     await page.getByLabel('Manage Environments').click();
     await page.getByPlaceholder('Choose a global environment').click();
-    await page.getByRole('option', { name: 'New Environment' }).click();
+    await page.getByRole('option', { name: 'New Global Vault Environment' }).click();
     await page.getByRole('option', { name: 'New Environment' }).click();
     await page.getByText('Base Environment1').click();
     await page.getByTestId('underlay').click();
-    // ensure environment is activated
-    await page.waitForTimeout(1000);
     // activate request
     await page.getByTestId('normal').getByLabel('GET normal', { exact: true }).click();
     await page.getByRole('button', { name: 'Send' }).click();
