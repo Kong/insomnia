@@ -446,7 +446,6 @@ export const initGitRepoCloneAction = async ({
   }
 
   const insomniaFiles = await recursivelyFindInsomniaFiles(inMemoryFsClient, GIT_CLONE_DIR);
-  console.log({ insomniaFiles });
   // Get all files that start with 'insomnia.' recursively in the root directory
 
   const files = await Promise.all(
