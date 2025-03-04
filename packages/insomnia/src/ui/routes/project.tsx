@@ -1248,7 +1248,7 @@ const ProjectRoute: FC = () => {
                   <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
                     <p className='text-base'>
                       <Icon icon="exclamation-triangle" className='mr-2' />
-                      You are using the legacy Git integration in this project, learn more about converting to the new Git Sync capability. <Button className="underline" onPress={() => window.main.openInBrowser('http://example.com')}>Migration Guide</Button>
+                      You are using the legacy Git integration in this project, learn more about converting to the new Git Sync capability. <Button className="underline" onPress={() => window.main.openInBrowser('https://docs.insomnia.rest/insomnia/git-sync')}>Migration Guide</Button>
                     </p>
                   </div>
                 </div>}
