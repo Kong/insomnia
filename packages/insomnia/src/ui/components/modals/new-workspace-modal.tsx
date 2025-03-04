@@ -20,6 +20,7 @@ import { useFetcher, useParams } from 'react-router-dom';
 
 import { isGitProject, ORG_STORAGE_RULE, type Project } from '../../../models/project';
 import { type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
+import { safeToUseInsomniaFileNameWithExt } from '../../routes/actions';
 import type { GetRepositoryDirectoryTreeResult } from '../../routes/git-project-actions';
 import { Icon } from '../icon';
 
@@ -67,10 +68,12 @@ export const NewWorkspaceModal = ({
     folderPath?: string;
     mockServerType?: 'self-hosted' | 'cloud';
     mockServerUrl?: string;
+    fileName?: string;
   }>({
     name: defaultNameByScope[scope],
     scope,
     folderPath: '',
+    fileName: '',
     mockServerType: canOnlyCreateSelfHosted ? 'self-hosted' : 'cloud',
     mockServerUrl: '',
   });
@@ -152,6 +155,21 @@ export const NewWorkspaceModal = ({
                 </TextField>
                 {isGitProject(project) && gitRepoTreeFetcher.data && (
                   <>
+                    <TextField
+                      name="fileName"
+                      value={workspaceData.fileName}
+                      onChange={fileName => setWorkspaceData({ ...workspaceData, fileName })}
+                      className="group relative flex flex-col gap-2"
+                    >
+                      <Label className='text-sm text-[--hl]'>
+                        File name
+                      </Label>
+                      <Input
+                        pattern="^[a-zA-Z0-9-_]+$"
+                        placeholder={workspaceData.name ? safeToUseInsomniaFileNameWithExt(workspaceData.name) : 'Enter the filename for your file in the repository...'}
+                        className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+                      />
+                    </TextField>
                     <Label className="text-sm text-[--hl]">
                       Folder where the file will be saved in the repository:
                     </Label>

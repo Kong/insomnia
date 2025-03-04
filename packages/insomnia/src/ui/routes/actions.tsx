@@ -412,6 +412,17 @@ export const moveProjectAction: ActionFunction = async ({ request, params }) => 
   return null;
 };
 
+export function safeToUseInsomniaFileNameWithExt(fileName: string) {
+  const fileNameWithoutExt = fileName.replace('.yaml', '').replace('.yml', '');
+  const fileNameWithSafeCharacters = fileNameWithoutExt
+    .toLowerCase()
+    .trim()
+    // Replace all non-alphanumeric characters with underscores
+    .replace(/[^a-z0-9_]/g, '_');
+
+  return `${fileNameWithSafeCharacters}.yaml`;
+}
+
 // Workspace
 export const createNewWorkspaceAction: ActionFunction = async ({
   params,
@@ -446,8 +457,12 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   if (isGitProject(project)) {
     const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
+    const fileName = formData.get('fileName')?.toString() || workspace.name;
+
+    const safeToUseFileNameWithExtension = safeToUseInsomniaFileNameWithExt(fileName);
+
     await models.workspaceMeta.update(workspaceMeta, {
-      gitRepoPath: path.join(formData.get('folderPath')?.toString() || '', `insomnia.${workspace._id}.yaml`),
+      gitRepoPath: path.join(formData.get('folderPath')?.toString() || '', safeToUseFileNameWithExtension),
     });
   }
 
@@ -698,6 +713,21 @@ export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
     await models.mockServer.update(mockServer, {
       name: patch.name || workspace.name,
     });
+  }
+
+  // When we change the workspace name, we update the file path
+  if (patch.name !== workspace.name) {
+    const project = await models.project.getById(workspace.parentId);
+    invariant(project, 'Project not found');
+    if (isGitProject(project)) {
+      const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+      if (workspaceMeta.gitRepoPath) {
+        const existingPathDir = path.dirname(workspaceMeta.gitRepoPath);
+        await models.workspaceMeta.update(workspaceMeta, {
+          gitRepoPath: path.join(existingPathDir, safeToUseInsomniaFileNameWithExt(patch.name)),
+        });
+      }
+    }
   }
 
   patch.name = patch.name || workspace.name || (workspace.scope === 'collection' ? 'My Collection' : 'my-spec.yaml');
