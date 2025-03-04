@@ -117,24 +117,21 @@ export function registerMainHandlers() {
           return { content, encoding };
         };
         throw new Error(`Unsupported encoding: ${encoding} to read file`);
-      } else {
-        // using chardet to detect encoding
-        const detecedEncoding = chardet.detect(contentBuffer);
-        if (detecedEncoding) {
-          if (iconv.encodingExists(detecedEncoding)) {
-            const content = iconv.decode(contentBuffer, detecedEncoding);
-            return { content, encoding: detecedEncoding };
-          } else {
-            throw new Error(`Unsupported encoding: ${detecedEncoding} to read file`);
-          }
-        } else {
-          // failed to detect encoding, use default utf-8 as fallback
-          return {
-            content: iconv.decode(contentBuffer, defaultEncoding),
-            encoding: defaultEncoding,
-          };
-        }
       }
+      // using chardet to detect encoding
+      const detecedEncoding = chardet.detect(contentBuffer);
+      if (detecedEncoding) {
+        if (iconv.encodingExists(detecedEncoding)) {
+          const content = iconv.decode(contentBuffer, detecedEncoding);
+          return { content, encoding: detecedEncoding };
+        };
+        throw new Error(`Unsupported encoding: ${detecedEncoding} to read file`);
+      }
+      // failed to detect encoding, use default utf-8 as fallback
+      return {
+        content: iconv.decode(contentBuffer, defaultEncoding),
+        encoding: defaultEncoding,
+      };
     } catch (err) {
       throw new Error(err);
     }
