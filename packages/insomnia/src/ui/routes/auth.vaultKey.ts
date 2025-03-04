@@ -2,7 +2,6 @@ import * as srp from '@getinsomnia/srp-js';
 import { ipcRenderer } from 'electron';
 import { type ActionFunction } from 'react-router-dom';
 
-import { getInsomniaVaultSrpSecret } from '../../common/constants';
 import { userSession as sessionModel } from '../../models';
 import { removeAllSecrets } from '../../models/environment';
 import type { UserSession } from '../../models/user-session';
@@ -97,7 +96,7 @@ const createVaultKey = async (type: 'create' | 'reset' = 'create') => {
 export const validateVaultKey = async (session: UserSession, vaultKey: string, vaultSalt: string) => {
   const { id: sessionId, accountId } = session;
   // use the secret from environment variable when running playwright tests
-  const secret1 = process.env.PLAYWRIGHT && getInsomniaVaultSrpSecret() || await srpGenKey();
+  const secret1 = await srpGenKey();
   const srpClient = new Client(
     vaultKeyParams,
     Buffer.from(vaultSalt, 'hex'),
