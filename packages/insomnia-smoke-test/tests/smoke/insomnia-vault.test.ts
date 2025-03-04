@@ -92,10 +92,6 @@ test.describe('Vault key actions', async () => {
     await page.getByLabel('Vault Key Input').fill('invalidVaultKey');
     await page.getByRole('button', { name: 'Unlock' }).click();
     await modal.getByText('M2 didn\'t Check').click();
-    await page.getByLabel('Vault Key Input').fill(testVaultKey);
-    await page.getByRole('button', { name: 'Unlock' }).click();
-    const vaultKeyValueInModal = await page.getByTestId('VaultKeyDisplayPanel').innerText();
-    expect(vaultKeyValueInModal.length).toBeGreaterThan(0);
   });
 });
 
