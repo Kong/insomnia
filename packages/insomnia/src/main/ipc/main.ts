@@ -108,33 +108,29 @@ export function registerMainHandlers() {
 
   ipcMainHandle('readFile', async (_, options: { path: string; encoding?: string }) => {
     const defaultEncoding = 'utf8';
-    try {
-      const contentBuffer = await fs.promises.readFile(options.path);
-      const { encoding } = options;
-      if (encoding) {
-        if (iconv.encodingExists(encoding)) {
-          const content = iconv.decode(contentBuffer, encoding);
-          return { content, encoding };
-        };
-        throw new Error(`Unsupported encoding: ${encoding} to read file`);
-      }
-      // using chardet to detect encoding
-      const detecedEncoding = chardet.detect(contentBuffer);
-      if (detecedEncoding) {
-        if (iconv.encodingExists(detecedEncoding)) {
-          const content = iconv.decode(contentBuffer, detecedEncoding);
-          return { content, encoding: detecedEncoding };
-        };
-        throw new Error(`Unsupported encoding: ${detecedEncoding} to read file`);
-      }
-      // failed to detect encoding, use default utf-8 as fallback
-      return {
-        content: iconv.decode(contentBuffer, defaultEncoding),
-        encoding: defaultEncoding,
+    const contentBuffer = await fs.promises.readFile(options.path);
+    const { encoding } = options;
+    if (encoding) {
+      if (iconv.encodingExists(encoding)) {
+        const content = iconv.decode(contentBuffer, encoding);
+        return { content, encoding };
       };
-    } catch (err) {
-      throw new Error(err);
+      throw new Error(`Unsupported encoding: ${encoding} to read file`);
     }
+    // using chardet to detect encoding
+    const detecedEncoding = chardet.detect(contentBuffer);
+    if (detecedEncoding) {
+      if (iconv.encodingExists(detecedEncoding)) {
+        const content = iconv.decode(contentBuffer, detecedEncoding);
+        return { content, encoding: detecedEncoding };
+      };
+      throw new Error(`Unsupported encoding: ${detecedEncoding} to read file`);
+    }
+    // failed to detect encoding, use default utf-8 as fallback
+    return {
+      content: iconv.decode(contentBuffer, defaultEncoding),
+      encoding: defaultEncoding,
+    };
   });
 
   ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => {
