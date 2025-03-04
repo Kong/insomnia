@@ -138,10 +138,6 @@ export const validateVaultKey = async (session: UserSession, vaultKey: string, v
   if (verifyAError || verifyM1Error) {
     return false;
   }
-  if (process.env.PLAYWRIGHT) {
-    // Do not verify M2 when running in smoke test and return secret1
-    return secret1;
-  }
   // ~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // Verify Server Identity M2 //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~ //
