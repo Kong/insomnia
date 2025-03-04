@@ -95,7 +95,6 @@ const createVaultKey = async (type: 'create' | 'reset' = 'create') => {
 
 export const validateVaultKey = async (session: UserSession, vaultKey: string, vaultSalt: string) => {
   const { id: sessionId, accountId } = session;
-  // use the secret from environment variable when running playwright tests
   const secret1 = await srpGenKey();
   const srpClient = new Client(
     vaultKeyParams,
