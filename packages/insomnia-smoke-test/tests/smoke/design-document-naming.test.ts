@@ -2,9 +2,9 @@ import { test } from '../../playwright/test';
 
 test.describe('design document operations', async () => {
     test('can name design documents', async ({ page }) => {
-        await page.getByRole('button', { name: 'New Collection' }).click();
-        await page.getByPlaceholder('My Collection').fill('jurassic park');
-        await page.getByPlaceholder('My Collection').press('Enter');
+        await page.getByRole('button', { name: 'New Document' }).click();
+        await page.getByPlaceholder('my-spec.yaml').fill('jurassic park');
+        await page.getByPlaceholder('my-spec.yaml').press('Enter');
         await page.getByTestId('project').click();
         await page.getByLabel('Files').getByLabel('jurassic park').click();
     });
