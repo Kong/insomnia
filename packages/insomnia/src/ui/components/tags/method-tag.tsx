@@ -3,6 +3,7 @@ import React, { type FC, memo } from 'react';
 import { CONTENT_TYPE_GRAPHQL, METHOD_DELETE, METHOD_OPTIONS } from '../../../common/constants';
 import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isEventStreamRequest, isRequest, type Request } from '../../../models/request';
+import { isSocketIORequest, type SocketIORequest } from '../../../models/socket-io-request';
 import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
 
 interface Props {
@@ -36,7 +37,7 @@ export function formatMethodName(method: string) {
   return methodName;
 }
 
-export const getRequestMethodShortHand = (doc?: Request | WebSocketRequest | GrpcRequest) => {
+export const getRequestMethodShortHand = (doc?: Request | WebSocketRequest | GrpcRequest | SocketIORequest) => {
   if (!doc) {
     return '';
   }
@@ -50,6 +51,10 @@ export const getRequestMethodShortHand = (doc?: Request | WebSocketRequest | Grp
 
   if (isGrpcRequest(doc)) {
     return 'gRPC';
+  }
+
+  if (isSocketIORequest(doc)) {
+    return 'IO';
   }
 
   return '';
