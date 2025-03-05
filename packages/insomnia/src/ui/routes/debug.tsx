@@ -119,7 +119,12 @@ import {
   useRequestMetaPatcher,
   useRequestPatcher,
 } from '../hooks/use-request';
-import type { GrpcRequestLoaderData, RequestLoaderData, WebSocketRequestLoaderData } from './request';
+import type {
+  GrpcRequestLoaderData,
+  RequestLoaderData,
+  WebSocketRequestLoaderData,
+  SocketIORequestLoaderData,
+} from './request';
 import type { RequestGroupLoaderData } from './request-group';
 import { useRootLoaderData } from './root';
 import Runner from './runner';
@@ -225,6 +230,7 @@ export const Debug: FC = () => {
     | RequestLoaderData
     | GrpcRequestLoaderData
     | WebSocketRequestLoaderData
+    | SocketIORequestLoaderData
     | undefined;
   const { activeRequest } = requestData || {};
   const requestFetcher = useFetcher();
@@ -459,7 +465,8 @@ export const Debug: FC = () => {
     activeRequest &&
     (isWebSocketRequest(activeRequest) ||
       isEventStreamRequest(activeRequest) ||
-      isGraphqlSubscriptionRequest(activeRequest));
+      isGraphqlSubscriptionRequest(activeRequest) ||
+      isSocketIORequest(activeRequest));
 
   const [searchParams, setSearchParams] = useSearchParams();
 
