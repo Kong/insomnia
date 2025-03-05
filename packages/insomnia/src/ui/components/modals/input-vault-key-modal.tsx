@@ -101,12 +101,15 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
+        data-testid="input-vault-key-modal"
       >
         <Dialog
           className="outline-none flex-1 h-full flex flex-col overflow-hidden"
         >
           {({ close }) => (
-            <div className='flex-1 flex flex-col gap-4 overflow-hidden'>
+            <div
+              className='flex-1 flex flex-col gap-4 overflow-hidden'
+            >
               <div className='flex gap-2 items-center justify-between'>
                 <Heading slot="title" className='text-2xl'>
                   {resetDone ? 'Reset Vault Key' : 'Enter Vault Key'}
@@ -132,6 +135,7 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
                         placeholder='Enter Vault Key'
                         value={vaultKey}
                         onChange={e => setVaultKey(e.target.value)}
+                        aria-label='Vault Key Input'
                       />
                     </div>
                     {error &&

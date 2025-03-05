@@ -62,7 +62,8 @@ const Environments = () => {
   // Check if there's any environment contains secret item
   const containsSecret = allEnvironment.some(env => env.isPrivate &&
     env.kvPairData?.some(pairData => pairData.type === EnvironmentKvPairDataType.SECRET));
-  const showInputVaultKeyModal = containsSecret && !vaultKeyInSession;
+  const shouldShowVaultKeyModal = containsSecret && !vaultKeyInSession;
+  const [showInputVaultKeyModal, setShowModal] = useState(shouldShowVaultKeyModal);
 
   const environmentActionsList: {
     id: string;
@@ -267,6 +268,7 @@ const Environments = () => {
     if (newVaultKey) {
       setVaultKey(newVaultKey);
     }
+    setShowModal(false);
   };
 
   useEffect(() => {

@@ -110,6 +110,15 @@ const whoami = {
   'lastName': 'Morty',
 };
 
+const userVerifyA = {
+  'sessionStarterId': 'strt_157355638c2c41d19f2ebc366b2a18e6',
+  'srpB': '4e6480c057c206e68ddf3d2e6dba06f1a27d528af2b15c01058da1d37f0d4bfe70cfb0147d8c2092fb9d276f46a114ea3ad9ef2564c2c4ca39e2b82387b0c9ca236717a719dd793feda4392bf7c928ff0728f8a8abe89d6be29d8dc7ab285e12ab4e04e7cb309ddf585c97eb15e7181a96f4ecb73bd0cf3c476a2f9869e3f907107a6419bbc76990a761f1e7b073dffe9c295e06324b41740bde2627221f135c3ef3cb49851d30370c5d9d96d47decc849740a9bc4e1c2c1169dcbd2bd1213a5f87310332c343c1340644d172e01f2e21c71184d69c48faf6eb7f4cac5f56a68747b202314f7f05dc24c728f2bef0d845d3b7bc1b381d5871c8fda153334e353',
+};
+
+const userVerifyM1 = {
+  'srpM2': 'f0f748c3bdc4dc3f1404b74cebd10d0c7ce20c6107a0ce7f5888c04219f1a594',
+};
+
 const allRoles = [
   {
     'id': 'role_d32b9d6c-1fb2-4ac1-b780-b4c15074d6cb',
@@ -410,6 +419,23 @@ export default (app: Application) => {
 
   app.get('/auth/whoami', (_req, res) => {
     res.status(200).send(whoami);
+  });
+
+  // Vault related
+  app.post('/v1/user/vault', (_req, res) => {
+    res.status(200).send();
+  });
+
+  app.post('/v1/user/vault/reset', (_req, res) => {
+    res.status(200).send();
+  });
+
+  app.post('/v1/user/vault-verify-a', (_req, res) => {
+    res.status(200).send(userVerifyA);
+  });
+
+  app.post('/v1/user/vault-verify-m1', (_req, res) => {
+    res.status(200).send(userVerifyM1);
   });
 
   // Billing
