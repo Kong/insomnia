@@ -123,6 +123,7 @@ import type {
   GrpcRequestLoaderData,
   RequestLoaderData,
   WebSocketRequestLoaderData,
+  SocketIORequestLoaderData,
 } from './$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import type { RequestGroupLoaderData } from './$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { useRootLoaderData } from './root';
@@ -229,6 +230,7 @@ export const Debug: FC = () => {
     | RequestLoaderData
     | GrpcRequestLoaderData
     | WebSocketRequestLoaderData
+    | SocketIORequestLoaderData
     | undefined;
   const { activeRequest } = requestData || {};
   const requestFetcher = useFetcher();
@@ -463,7 +465,8 @@ export const Debug: FC = () => {
     activeRequest &&
     (isWebSocketRequest(activeRequest) ||
       isEventStreamRequest(activeRequest) ||
-      isGraphqlSubscriptionRequest(activeRequest));
+      isGraphqlSubscriptionRequest(activeRequest) ||
+      isSocketIORequest(activeRequest));
 
   const [searchParams, setSearchParams] = useSearchParams();
 
