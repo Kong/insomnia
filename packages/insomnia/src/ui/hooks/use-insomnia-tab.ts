@@ -6,6 +6,7 @@ import type { MockRoute } from '../../models/mock-route';
 import type { Project } from '../../models/project';
 import type { Request } from '../../models/request';
 import type { RequestGroup } from '../../models/request-group';
+import type { SocketIORequest } from '../../models/socket-io-request';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import type { WebSocketRequest } from '../../models/websocket-request';
 import type { Workspace } from '../../models/workspace';
@@ -21,7 +22,7 @@ interface InsomniaTabProps {
   workspaceId: string;
   activeProject: Project;
   activeWorkspace: Workspace;
-  activeRequest?: Request | GrpcRequest | WebSocketRequest;
+  activeRequest?: Request | GrpcRequest | WebSocketRequest | SocketIORequest;
   activeRequestGroup?: RequestGroup;
   activeMockRoute?: MockRoute;
   unitTestSuite?: UnitTestSuite;
