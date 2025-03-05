@@ -18,7 +18,7 @@ import { Response as ScriptResponse } from './response';
 import { readBodyFromPath, toScriptResponse } from './response';
 import { sendRequest } from './send-request';
 import { type RequestTestResult, skip, test, type TestHandler } from './test';
-import { toUrlObject } from './urls';
+import { checkIfUrlIncludesTag, toUrlObject } from './urls';
 
 export class InsomniaObject {
     public environment: Environment;
@@ -200,11 +200,7 @@ export async function initInsomniaObject(
 
     // todo: find if theres a better way to get the best cert
     // (╯°□°）╯︵ ┻━┻
-    const ifUrlIncludesTag =
-        /{%/.test(`${rawObj.request.url}`) ||
-        /%}/.test(`${rawObj.request.url}`) ||
-        /{{/.test(`${rawObj.request.url}`) ||
-        /}}/.test(`${rawObj.request.url}`);
+    const ifUrlIncludesTag = checkIfUrlIncludesTag(rawObj.request.url);
     const matchedCertificates = filterClientCertificates(rawObj.clientCertificates || [], rawObj.request.url);
     const initEmptyCert = ifUrlIncludesTag || matchedCertificates?.length === 0;
     if (initEmptyCert) {

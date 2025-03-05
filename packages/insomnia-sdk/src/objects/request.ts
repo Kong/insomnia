@@ -393,7 +393,7 @@ export class Request extends Property {
 
     override toJSON() {
         return {
-            url: this.url,
+            url: this.url.toString(),
             method: this.method,
             header: this.headers.map(header => header.toJSON(), {}),
             body: {
