@@ -45,6 +45,7 @@ import { isRequestMeta, type RequestMeta } from '../../models/request-meta';
 import type { RequestVersion } from '../../models/request-version';
 import type { Response } from '../../models/response';
 import type { ResponseInfo, RunnerResultPerRequestPerIteration } from '../../models/runner-test-result';
+import { isSocketIORequest, type SocketIORequest } from '../../models/socket-io-request';
 import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '../../models/websocket-request';
 import { isWebSocketResponse, type WebSocketResponse } from '../../models/websocket-response';
 import { getAuthHeader } from '../../network/authentication';
@@ -69,6 +70,15 @@ export interface WebSocketRequestLoaderData {
   activeRequestMeta: RequestMeta;
   activeResponse: WebSocketResponse | null;
   responses: WebSocketResponse[];
+  requestVersions: RequestVersion[];
+}
+
+export interface SocketIORequestLoaderData {
+  activeRequest: SocketIORequest;
+  activeRequestMeta: RequestMeta;
+  activeResponse: null;
+  // TODO: implement socket.io response
+  responses: [];
   requestVersions: RequestVersion[];
 }
 export interface GrpcRequestLoaderData {
@@ -431,6 +441,9 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
       cookieJar: rendered.cookieJar,
       suppressUserAgent: rendered.suppressUserAgent,
     });
+  }
+  if (isSocketIORequest(req)) {
+    // TODO: implement socket.io connection
   }
   // HACK: even more elaborate hack to get the request to update
   return new Promise(resolve => {
