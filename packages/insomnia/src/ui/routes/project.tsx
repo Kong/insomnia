@@ -959,8 +959,6 @@ const ProjectRoute: FC = () => {
   const isLocalProjectInconsistent = activeProject && !isRemoteProject(activeProject) && storage === ORG_STORAGE_RULE.CLOUD_ONLY;
   const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent;
 
-  const showGitSyncWarning = features.gitSync.enabled && activeProject && (activeProject?.gitRepositoryId || !isRemoteProject(activeProject)) && !isGitProject(activeProject);
-
   useEffect(() => {
     window.main.landingPageRendered(LandingPage.ProjectDashboard);
   }, []);
@@ -1242,14 +1240,6 @@ const ProjectRoute: FC = () => {
                       The organization owner mandates that projects must be created and stored {storage.split('_').join(' ')}. However, you can optionally enable Git Sync.
                     </p>
                     <Button onPress={() => setIsUpdateProjectModalOpen(true)} className="flex items-center justify-center border border-solid border-white px-2 py-1 rounded-sm">Update</Button>
-                  </div>
-                </div>}
-                {showGitSyncWarning && <div className='p-[--padding-md] pb-0'>
-                  <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
-                    <p className='text-base'>
-                      <Icon icon="exclamation-triangle" className='mr-2' />
-                      You are using the legacy Git integration in this project, learn more about converting to the new Git Sync capability. <Button className="underline" onPress={() => window.main.openInBrowser('https://docs.insomnia.rest/insomnia/git-sync')}>Migration Guide</Button>
-                    </p>
                   </div>
                 </div>}
                 <div className="flex max-w-xl justify-between w-full gap-2 p-[--padding-md]">
