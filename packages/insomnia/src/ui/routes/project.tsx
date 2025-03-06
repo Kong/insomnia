@@ -66,7 +66,6 @@ import { isDesign, scopeToActivity, type Workspace, type WorkspaceScope } from '
 import type { WorkspaceMeta } from '../../models/workspace-meta';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { showModal } from '../../ui/components/modals';
-import { AskModal } from '../../ui/components/modals/ask-modal';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { getInitialRouteForOrganization } from '../../utils/router';
@@ -867,38 +866,6 @@ const ProjectRoute: FC = () => {
 
   const isGitSyncEnabled = features.gitSync.enabled;
 
-  const showUpgradePlanModal = () => {
-    if (!organization || !userSession.accountId) {
-      return;
-    }
-    const isOwner = isOwnerOfOrganization({
-      organization,
-      accountId: userSession.accountId,
-    });
-
-    isOwner ?
-      showModal(AskModal, {
-        title: 'Upgrade Plan',
-        message: 'Git Sync is only enabled for Pro plan or above, please upgrade your plan.',
-        yesText: 'Upgrade',
-        noText: 'Cancel',
-        onDone: async (isYes: boolean) => {
-          if (isYes) {
-            window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
-          }
-        },
-      }) : showModal(AlertModal, {
-        title: 'Upgrade Plan',
-        message: 'Git Sync is only enabled for Pro plan or above, please ask the organization owner to upgrade.',
-      });
-  };
-
-  const importFromGit = () => {
-    isGitSyncEnabled ?
-      setIsGitRepositoryCloneModalOpen(true)
-      : showUpgradePlanModal();
-  };
-
   const createInProjectActionList: {
     id: string;
     name: string;
@@ -929,17 +896,6 @@ const ProjectRoute: FC = () => {
         icon: 'code',
         action: createNewGlobalEnvironment,
       },
-      ...activeProject && isGitProject(activeProject) ? [] : [{
-        id: 'git-clone',
-        name: 'Git Clone',
-        icon: 'code-fork',
-        action: importFromGit,
-      }] satisfies {
-        id: string;
-        name: string;
-        icon: IconName;
-        action: () => void;
-      }[],
   ];
 
   const scopeActionList: {
@@ -1356,7 +1312,7 @@ const ProjectRoute: FC = () => {
                       aria-label="Create in project"
                       className="flex items-center justify-center px-4 gap-2 h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                     >
-                      <Icon icon="plus-circle" /> Create
+                      <Icon icon="plus-circle" /> <span className='hidden md:block'>Create</span>
                     </Button>
                     <Popover className="min-w-max overflow-y-hidden flex flex-col">
                       <Menu
@@ -1395,7 +1351,7 @@ const ProjectRoute: FC = () => {
                     aria-label="Import"
                     className="flex items-center justify-center px-4 gap-2 h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                   >
-                    <Icon icon="file-import" /> Import
+                    <Icon icon="file-import" /> <span className='hidden md:block'>Import</span>
                   </Button>
 
                 </div>
@@ -1423,9 +1379,6 @@ const ProjectRoute: FC = () => {
                           createMockServer={createNewMockServer}
                           createEnvironment={createNewGlobalEnvironment}
                           importFrom={() => setImportModalType('file')}
-                          cloneFromGit={importFromGit}
-                          isGitSyncEnabled={isGitSyncEnabled}
-                          isGitProject={isGitProject(activeProject)}
                         />
                       );
                     }}

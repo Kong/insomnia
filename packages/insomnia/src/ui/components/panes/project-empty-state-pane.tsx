@@ -1,60 +1,32 @@
-import React, { type FC, type PropsWithChildren } from 'react';
+import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import React, { type FC } from 'react';
 import { Button } from 'react-aria-components';
-import { useParams } from 'react-router-dom';
 
-import { getAccountId } from '../../../account/session';
-import { getAppWebsiteBaseURL } from '../../../common/constants';
-import { isOwnerOfOrganization } from '../../../models/organization';
-import { useOrganizationLoaderData } from '../../../ui/routes/organization';
-import { useRootLoaderData } from '../../routes/root';
-import { showModal } from '../modals';
-import { AlertModal } from '../modals/alert-modal';
-import { AskModal } from '../modals/ask-modal';
+import { Icon } from '../icon';
 
-const Title: FC<PropsWithChildren> = ({ children }) => (
-  <div className='font-bold'>
-    {children}
-  </div>
-);
+interface ButtonProps {
+  icon: IconName;
+  label: string;
+  className?: string;
+  onPress: () => void;
+}
 
-const SquareButton: FC<PropsWithChildren & { onClick: () => void }> = ({ children, onClick }) => (
+const EmptyStateButton: FC<ButtonProps> = ({ icon, label, className, onPress }) => (
   <Button
-    onPress={onClick}
+    onPress={onPress}
+    className={`flex items-center justify-center border border-transparent flex-col gap-[var(--padding-sm)] sm:gap-[var(--padding-md)] text-[var(--font-size-sm)] transition-all duration-300 rounded-sm ${className}`}
     style={{
-      fontSize: 'var(--font-size-sm)',
-      display: 'flex',
-      alignItems: 'center',
-      border: '1px solid transparent',
-      flexDirection: 'column',
-      padding: 'var(--padding-xl)',
-      gap: 'var(--padding-md)',
-      maxWidth: 180,
       background: 'linear-gradient(120.49deg, var(--color-bg) 9.66%, var(--hl-md) 107.02%)',
     }}
   >
-    {children}
+    <Icon icon={icon} className='text-[var(--font-size-xl)]' />
+    {label}
   </Button>
 );
 
-const AlmostSquareButton: FC<PropsWithChildren & { onClick: () => void }> = ({ children, onClick, ...props }) => (
-  <Button
-    onPress={onClick}
-    style={{
-      fontSize: 'var(--font-size-sm)',
-      display: 'flex',
-      alignItems: 'center',
-      border: '1px solid transparent',
-      flexDirection: 'column',
-      padding: '4em var(--padding-xl)',
-      gap: 'var(--padding-md)',
-      maxWidth: 130,
-      background: 'linear-gradient(120.49deg, var(--color-bg) 9.66%, var(--hl-md) 107.02%)',
-    }}
-    {...props}
-  >
-    {children}
-  </Button>
-);
+const SquareButton: FC<ButtonProps> = props => <EmptyStateButton {...props} className='size-[120px] md:size-[150px] lg:size-[180px]' />;
+
+const AlmostSquareButton: FC<ButtonProps> = props => <EmptyStateButton {...props} className='size-[100px] lg:size-[130px]' />;
 
 interface Props {
   createRequestCollection: () => void;
@@ -62,175 +34,56 @@ interface Props {
   createMockServer: () => void;
   createEnvironment: () => void;
   importFrom: () => void;
-  cloneFromGit: () => void;
-  isGitSyncEnabled: boolean;
-  isGitProject: boolean;
 }
 
-export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, createMockServer, createEnvironment, importFrom, cloneFromGit, isGitSyncEnabled, isGitProject }) => {
-  const { organizationId } = useParams<{ organizationId: string }>();
-  const { organizations } = useOrganizationLoaderData();
-  const { userSession } = useRootLoaderData();
-  const currentOrg = organizations.find(organization => (organization.id === organizationId));
-
-  const accountId = getAccountId();
-
-  const showUpgradePlanModal = () => {
-    if (!currentOrg || !accountId) {
-      return;
-    }
-    const isOwner = isOwnerOfOrganization({
-      organization: currentOrg,
-      accountId: userSession.accountId,
-    });
-
-    isOwner ?
-      showModal(AskModal, {
-        title: 'Upgrade Plan',
-        message: 'Git Sync is only enabled for Pro plan or above, please upgrade your plan.',
-        yesText: 'Upgrade',
-        noText: 'Cancel',
-        onDone: async (isYes: boolean) => {
-          if (isYes) {
-            window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
-          }
-        },
-      }) : showModal(AlertModal, {
-        title: 'Upgrade Plan',
-        message: 'Git Sync is only enabled for Pro plan or above, please ask the organization owner to upgrade.',
-      });
-  };
-
+export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, createMockServer, createEnvironment, importFrom }) => {
   return (
-    <div
-      style={{
-        height: '100%',
-        width: '100%',
-        boxSizing: 'border-box',
-        display: 'flex',
-        flexWrap: 'wrap',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        textAlign: 'center',
-        opacity: 'calc(var(--opacity-subtle) * 0.8)',
-      }}
-    >
-      <Title>This is an empty project, to get started create your first resource:</Title>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          width: '100%',
-          gap: 'var(--padding-md)',
-          marginTop: 'var(--padding-md)',
-        }}
-      >
+    <div className='flex flex-col flex-wrap items-center justify-center w-full h-full text-center opacity-[calc(var(--opacity-subtle)*0.8)]'>
+      <span className='font-bold'>This is an empty project, to get started create your first resource:</span>
+      <div className='flex flex-wrap justify-center w-full gap-[var(--padding-md)] mt-[var(--padding-md)]'>
         <SquareButton
-          onClick={createRequestCollection}
-        >
-          <i
-            className='fa fa-bars'
-            style={{
-              fontSize: 'var(--font-size-xl)',
-            }}
-          /> New Collection
-        </SquareButton>
+          icon="bars"
+          label="New Collection"
+          onPress={createRequestCollection}
+        />
         <SquareButton
-          onClick={createDesignDocument}
-        >
-          <i
-            className='fa fa-file-o'
-            style={{
-              fontSize: 'var(--font-size-xl)',
-            }}
-          /> New Document
-        </SquareButton>
+          icon="file"
+          label="New Document"
+          onPress={createDesignDocument}
+        />
         <SquareButton
-          onClick={createMockServer}
-        >
-          <i
-            className='fa fa-server'
-            style={{
-              fontSize: 'var(--font-size-xl)',
-            }}
-          /> New Mock Server
-        </SquareButton>
+          icon="server"
+          label="New Mock Server"
+          onPress={createMockServer}
+        />
         <SquareButton
-          onClick={createEnvironment}
-        >
-          <i
-            className='fa fa-code'
-            style={{
-              fontSize: 'var(--font-size-xl)',
-            }}
-          /> New Environment
-        </SquareButton>
+          icon="code"
+          label="New Environment"
+          onPress={createEnvironment}
+        />
       </div>
       <hr className='py-2' />
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          width: '100%',
-          gap: 'var(--padding-md)',
-          marginTop: 'var(--padding-md)',
-        }}
-      >
+      <div className='flex flex-wrap justify-center w-full gap-[var(--padding-md)] mt-[var(--padding-md)]'>
         <AlmostSquareButton
-          onClick={importFrom}
-        >
-          <i
-            className='fa fa-file-import'
-            style={{
-              fontSize: 'var(--font-size-lg)',
-            }}
-          /> Import
-        </AlmostSquareButton>
+          icon="file-import"
+          label="Import"
+          onPress={importFrom}
+        />
         <AlmostSquareButton
-          onClick={importFrom}
-        >
-          <i
-            className='fa fa-link'
-            style={{
-              fontSize: 'var(--font-size-lg)',
-            }}
-          /> Url
-        </AlmostSquareButton>
+          icon="link"
+          label="Url"
+          onPress={importFrom}
+        />
         <AlmostSquareButton
-          onClick={importFrom}
-        >
-          <i
-            className='fa fa-clipboard'
-            style={{
-              fontSize: 'var(--font-size-lg)',
-            }}
-          /> Clipboard
-        </AlmostSquareButton>
-        {isGitProject ? null : <AlmostSquareButton
-          aria-label='Clone git repository'
-          data-test-git-enable={isGitSyncEnabled}
-          onClick={
-            () => {
-              isGitSyncEnabled ?
-                cloneFromGit() :
-                showUpgradePlanModal();
-            }
-          }
-        >
-          <i
-            className='fa fa-code-fork'
-            style={{
-              fontSize: 'var(--font-size-lg)',
-            }}
-          /> Git Clone
-        </AlmostSquareButton>}
+          icon="clipboard"
+          label="Clipboard"
+          onPress={importFrom}
+        />
         <AlmostSquareButton
-          onClick={importFrom}
-        >
-          <span><i className="fa-regular fa-file fa-lg" /></span> Postman
-        </AlmostSquareButton>
+          icon="file"
+          label="Postman"
+          onPress={importFrom}
+        />
       </div>
     </div>
   );

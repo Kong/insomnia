@@ -4,18 +4,11 @@ import { Button, Collection, Menu, MenuItem, MenuTrigger, Popover, Section, Tool
 import { useFetcher, useParams } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
-import * as session from '../../../account/session';
-import { getAppWebsiteBaseURL } from '../../../common/constants';
-import { isOwnerOfOrganization } from '../../../models/organization';
 import type { Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
-import { useOrganizationLoaderData } from '../../routes/organization';
 import type { SyncDataLoaderData } from '../../routes/remote-collections';
-import { useRootLoaderData } from '../../routes/root';
 import { Icon } from '../icon';
-import { showError, showModal } from '../modals';
-import { AlertModal } from '../modals/alert-modal';
-import { AskModal } from '../modals/ask-modal';
+import { showError } from '../modals';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { SyncBranchesModal } from '../modals/sync-branches-modal';
 import { SyncHistoryModal } from '../modals/sync-history-modal';
@@ -24,16 +17,13 @@ import { SyncStagingModal } from '../modals/sync-staging-modal';
 interface Props {
   workspace: Workspace;
   project: Project;
-  gitSyncEnabled: boolean;
 }
 
 const ONE_MINUTE_IN_MS = 1000 * 60;
 
-export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
+export const SyncDropdown: FC<Props> = () => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
-  const { organizations } = useOrganizationLoaderData();
-  const { userSession } = useRootLoaderData();
-  const currentOrg = organizations.find(organization => (organization.id === organizationId));
+
   const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] = useState(false);
   const [isSyncHistoryModalOpen, setIsSyncHistoryModalOpen] = useState(false);
   const [isSyncStagingModalOpen, setIsSyncStagingModalOpen] = useState(false);
@@ -162,48 +152,6 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
     },
   }));
 
-  const showUpgradePlanModal = () => {
-    const accountId = session.getAccountId();
-    if (!currentOrg || !accountId) {
-      return;
-    }
-    const isOwner = isOwnerOfOrganization({
-      organization: currentOrg,
-      accountId: userSession.accountId,
-    });
-
-    isOwner ?
-      showModal(AskModal, {
-        title: 'Upgrade Plan',
-        message: 'Git Sync is only enabled for Pro plan or above, please upgrade your plan.',
-        yesText: 'Upgrade',
-        noText: 'Cancel',
-        onDone: async (isYes: boolean) => {
-          if (isYes) {
-            window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
-          }
-        },
-      }) : showModal(AlertModal, {
-        title: 'Upgrade Plan',
-        message: 'Git Sync is only enabled for Pro plan or above, please ask the organization owner to upgrade.',
-      });
-  };
-
-  const switchToGitRepoActionList: {
-    id: string;
-    name: string;
-    icon: IconProp;
-    isDisabled?: boolean;
-    action: () => void;
-  }[] = [
-      {
-        id: 'switch-to-git-repo',
-        name: 'Switch to Git Repository',
-        icon: ['fab', 'git-alt'],
-        action: () => gitSyncEnabled ? setIsGitRepoSettingsModalOpen(true) : showUpgradePlanModal(),
-      },
-    ];
-
   const syncMenuActionList: {
     id: string;
     name: string;
@@ -271,7 +219,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
 
   const isSyncing = checkoutFetcher.state !== 'idle' || pullFetcher.state !== 'idle' || pushFetcher.state !== 'idle' || rollbackFetcher.state !== 'idle';
 
-  const allSyncMenuActionList = [...switchToGitRepoActionList, ...localBranchesActionList, ...syncMenuActionList];
+  const allSyncMenuActionList = [...localBranchesActionList, ...syncMenuActionList];
   const syncError = syncDataLoaderFetcher.data && 'error' in syncDataLoaderFetcher.data ? syncDataLoaderFetcher.data.error : null;
   return (
     <Fragment>
@@ -338,22 +286,6 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
             }}
             className="border max-w-lg select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
           >
-            <Section className='border-b border-solid border-[--hl-sm] pb-2'>
-              <Collection items={switchToGitRepoActionList}>
-                {item => (
-                  <MenuItem
-                    textValue={item.name}
-                    className={'group aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent disabled:cursor-not-allowed focus:outline-none transition-colors'}
-                    aria-label={item.name}
-                  >
-                    <div className="px-4 text-[--color-font-surprise] w-full bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 group-pressed:opacity-80 group-hover:bg-opacity-80 group-focus:bg-opacity-80 group-focus:ring-inset group-hover:ring-inset focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                      <Icon icon={item.icon} />
-                      <div>{item.name}</div>
-                    </div>
-                  </MenuItem>
-                )}
-              </Collection>
-            </Section>
             {syncError && (
               <Section className='border-b border-solid border-[--hl-sm]'>
                 <MenuItem

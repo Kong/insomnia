@@ -28,9 +28,10 @@ import { SyncMergeModal } from '../modals/sync-merge-modal';
 interface Props {
   gitRepository: GitRepository | null;
   isInsomniaSyncEnabled: boolean;
+  showDeprecatedWarning: boolean;
 }
 
-export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnabled }) => {
+export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnabled, showDeprecatedWarning }) => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -353,6 +354,14 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
 
   return (
     <>
+      {showDeprecatedWarning && <div className='p-[--padding-sm]'>
+        <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-xs] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
+          <p className='text-sm'>
+            <Icon icon="exclamation-triangle" className='mr-2' />
+            You are using the legacy Git integration in this project, learn more about converting to the new Git Sync capability. <Button className="underline" onPress={() => window.main.openInBrowser('https://docs.insomnia.rest/insomnia/git-sync')}>Migration Guide</Button>
+          </p>
+        </div>
+      </div>}
       <MenuTrigger>
         <div className="flex items-center h-[--line-height-sm] w-full aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
           <Button
