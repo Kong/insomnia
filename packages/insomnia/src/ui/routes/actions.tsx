@@ -270,7 +270,7 @@ export const updateProjectAction: ActionFunction = async ({
       };
     }
 
-    // convert from local to git
+    // convert to git
     if (storageType === 'git' && !project.gitRepositoryId) {
       if (project.remoteId) {
         const response = await insomniaFetch<void | {
@@ -304,6 +304,22 @@ export const updateProjectAction: ActionFunction = async ({
         cloneIntoProjectId: project._id,
         ...projectData,
       });
+
+      const projectWorkspaces = await models.workspace.findByParentId(project._id);
+      const bufferId = await database.bufferChanges();
+      const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
+        parentId: { $in: projectWorkspaces.map(w => w._id) },
+      });
+
+      for (const workspaceMeta of workspaceMetas) {
+        if (!workspaceMeta.gitRepoPath) {
+          await models.workspaceMeta.update(workspaceMeta, {
+            gitRepoPath: `insomnia.${workspaceMeta.parentId}.yaml`,
+          });
+        }
+      }
+
+      await database.flushChanges(bufferId);
 
       if (errors) {
         return {
