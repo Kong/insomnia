@@ -14,6 +14,7 @@ import {
   TableHeader,
 } from 'react-aria-components';
 
+import { EncodingPicker } from '../encoding-picker';
 import { Icon } from '../icon';
 
 export type UploadDataType = Record<string, any>;
@@ -25,6 +26,10 @@ export interface UploadDataModalProps {
 
 const rowHeaderStyle = 'sticky normal-case top-[-8px] p-2 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none';
 const rowCellStyle = 'whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none';
+const supportedFileTypes = [
+  'application/json',
+  'text/csv',
+];
 
 export const genPreviewTableData = (uploadData: UploadDataType[]) => {
   // generate header and body data for preview table from upload data
@@ -45,21 +50,12 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
   const [file, setUploadFile] = useState<File | null>(null);
   const [uploadDataHeaders, setUploadDataHeaders] = useState<string[]>([]);
   const [uploadData, setUploadData] = useState<UploadDataType[]>([]);
+  const [fileEncoding, setFileEncoding] = useState('');
   const [invalidFileReason, setInvalidFileReason] = useState('');
 
-  const handleFileSelect = (fileList: FileList | null) => {
-    setInvalidFileReason('');
-    setUploadData([]);
-    if (!fileList) {
-      return;
-    };
-    const files = Array.from(fileList);
-    const file = files[0];
-    setUploadFile(file);
-    const reader = new FileReader();
-    reader.onload = (e: ProgressEvent<FileReader>) => {
-      const content = e.target?.result as string;
-      if (file.type === 'application/json') {
+  const parseFileContent = (content: string, fileType: string) => {
+    try {
+      if (fileType === 'application/json') {
         try {
           const jsonDataContent = JSON.parse(content);
           if (Array.isArray(jsonDataContent)) {
@@ -76,7 +72,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
         } catch (error) {
           setInvalidFileReason('Upload JSON file can not be parsed');
         }
-      } else if (file.type === 'text/csv') {
+      } else if (fileType === 'text/csv') {
         // Replace CRLF (Windows line break) and CR (Mac link break) with \n, then split into csv arrays
         const csvRows = content.replace(/\r\n|\r/g, '\n').split('\n').map(row => row.split(','));
         // at least 2 rows required for csv
@@ -93,13 +89,51 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
           setInvalidFileReason('CSV file must contain at least two rows with first row as variable names');
         }
       } else {
-        setInvalidFileReason(`Uploaded file is unsupported ${file.type}`);
+
       }
+    } catch (error) {
+      setInvalidFileReason(`Failed to read file ${error?.message}`);
+    }
+  };
+
+  const handleFileSelect = async (fileList: FileList | null) => {
+    setInvalidFileReason('');
+    setUploadData([]);
+    if (!fileList) {
+      return;
     };
-    reader.onerror = () => {
-      setInvalidFileReason(`Failed to read file ${reader.error?.message}`);
+    const files = Array.from(fileList);
+    const file = files[0];
+    const fileType = file.type;
+    if (!supportedFileTypes.includes(fileType)) {
+      setInvalidFileReason(`Uploaded file is unsupported ${file.type}`);
+      return;
     };
-    reader.readAsText(file);
+    const filePath = window.webUtils.getPathForFile(file);
+    try {
+      const { content, encoding } = await window.main.readFile({ path: filePath });
+      setFileEncoding(encoding);
+      parseFileContent(content, fileType);
+    } catch (error) {
+      setInvalidFileReason(`Failed to read file ${error?.message}`);
+      return;
+    }
+    setUploadFile(file);
+  };
+
+  const handleEncodingChange = async (newEncoding: string) => {
+    setFileEncoding(newEncoding);
+    setInvalidFileReason('');
+    if (file) {
+      const filePath = window.webUtils.getPathForFile(file);
+      const fileType = file.type;
+      try {
+        const { content } = await window.main.readFile({ path: filePath, encoding: newEncoding });
+        parseFileContent(content, fileType);
+      } catch (error) {
+        setInvalidFileReason(`Failed to read file ${error?.message}`);
+      }
+    }
   };
 
   const handleUploadData = () => {
@@ -157,12 +191,21 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
                   onSelect={handleFileSelect}
                   acceptedFileTypes={['.csv', '.json']}
                 >
-                  <Button className="flex flex-1 flex-shrink-0 border-solid border border-[--hl-`sm] py-1 gap-2 items-center justify-center px-2 aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent transition-all text-base">
+                  <Button className="flex flex-1 flex-shrink-0 border-solid border border-[--hl-sm] py-1 gap-2 items-center justify-center px-2 aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent transition-all text-base">
                     <Icon icon="upload" />
                     <span>{uploadData.length > 0 ? 'Change Data File' : 'Select Data File'}</span>
                   </Button>
                 </FileTrigger>
               </div>
+              {file && uploadData.length > 0 &&
+                <div>
+                  <span className='mr-4'>File Encoding</span>
+                  <EncodingPicker
+                    encoding={fileEncoding}
+                    onChange={handleEncodingChange}
+                  />
+                </div>
+              }
               {invalidFileReason !== '' &&
                 <div className="notice error margin-top-sm">
                   <p>{invalidFileReason}</p>

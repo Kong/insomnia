@@ -1,7 +1,9 @@
 import * as Sentry from '@sentry/electron/main';
+import chardet from 'chardet';
 import type { MarkerRange } from 'codemirror';
 import { app, BrowserWindow, type IpcRendererEvent, type MenuItemConstructorOptions, shell } from 'electron';
 import fs from 'fs';
+import iconv from 'iconv-lite';
 
 import { APP_START_TIME, LandingPage, SentryMetrics } from '../../common/sentry';
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
@@ -33,6 +35,7 @@ export interface RendererToMainBridgeAPI {
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
   writeFile: (options: { path: string; content: string }) => Promise<string>;
+  readFile: (options: { path: string; encoding?: string }) => Promise<{ content: string; encoding: string }>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
   on: (channel: RendererOnChannels, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
@@ -103,6 +106,33 @@ export function registerMainHandlers() {
     } catch (err) {
       throw new Error(err);
     }
+  });
+
+  ipcMainHandle('readFile', async (_, options: { path: string; encoding?: string }) => {
+    const defaultEncoding = 'utf8';
+    const contentBuffer = await fs.promises.readFile(options.path);
+    const { encoding } = options;
+    if (encoding) {
+      if (iconv.encodingExists(encoding)) {
+        const content = iconv.decode(contentBuffer, encoding);
+        return { content, encoding };
+      };
+      throw new Error(`Unsupported encoding: ${encoding} to read file`);
+    }
+    // using chardet to detect encoding
+    const detecedEncoding = chardet.detect(contentBuffer);
+    if (detecedEncoding) {
+      if (iconv.encodingExists(detecedEncoding)) {
+        const content = iconv.decode(contentBuffer, detecedEncoding);
+        return { content, encoding: detecedEncoding };
+      };
+      throw new Error(`Unsupported encoding: ${detecedEncoding} to read file`);
+    }
+    // failed to detect encoding, use default utf-8 as fallback
+    return {
+      content: iconv.decode(contentBuffer, defaultEncoding),
+      encoding: defaultEncoding,
+    };
   });
 
   ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => {
