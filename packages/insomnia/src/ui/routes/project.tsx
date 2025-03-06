@@ -65,7 +65,6 @@ import {
 import { isDesign, scopeToActivity, type Workspace, type WorkspaceScope } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
-import { showModal } from '../../ui/components/modals';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { getInitialRouteForOrganization } from '../../utils/router';
@@ -75,7 +74,6 @@ import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { WorkspaceCardDropdown } from '../components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
-import { AlertModal } from '../components/modals/alert-modal';
 import { GitRepositoryCloneModal } from '../components/modals/git-repository-settings-modal/git-repo-clone-modal';
 import { ImportModal } from '../components/modals/import-modal';
 import { NewWorkspaceModal } from '../components/modals/new-workspace-modal';
@@ -1371,6 +1369,8 @@ const ProjectRoute: FC = () => {
                             {activeProject && item.scope !== 'unsynced' && item.workspace && (
                               <WorkspaceCardDropdown
                                 workspace={item.workspace}
+                                mockServer={item.mockServer}
+                                gitRepoPath={item.gitRepoPath || undefined}
                                 apiSpec={item.apiSpec}
                                 project={activeProject}
                                 projects={projects}

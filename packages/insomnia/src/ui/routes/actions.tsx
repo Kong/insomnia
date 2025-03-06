@@ -711,35 +711,53 @@ export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
       fileName: patch.name || workspace.name,
     });
   }
+
   if (workspace.scope === 'mock-server') {
     const mockServer = await models.mockServer.getByParentId(workspaceId);
     invariant(mockServer, 'No MockServer found for this workspace');
 
+    let useInsomniaCloud = mockServer.useInsomniaCloud;
+    if (patch.mockServerType && typeof patch.mockServerType === 'string') {
+      useInsomniaCloud = patch.mockServerType === 'cloud';
+    }
+
+    let mockServerUrl = mockServer.url;
+
+    if (patch.mockServerUrl && typeof patch.mockServerUrl === 'string') {
+      mockServerUrl = patch.mockServerUrl;
+    }
+
     await models.mockServer.update(mockServer, {
       name: patch.name || workspace.name,
+      useInsomniaCloud,
+      url: mockServerUrl,
     });
-  }
-
-  // When we change the workspace name, we update the file path
-  if (patch.name !== workspace.name) {
-    const project = await models.project.getById(workspace.parentId);
-    invariant(project, 'Project not found');
-    if (isGitProject(project)) {
-      const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-      if (workspaceMeta.gitRepoPath) {
-        const existingPathDir = path.dirname(workspaceMeta.gitRepoPath);
-        await models.workspaceMeta.update(workspaceMeta, {
-          gitRepoPath: path.join(existingPathDir, safeToUseInsomniaFileNameWithExt(patch.name)),
-        });
-      }
-    }
   }
 
   patch.name = patch.name || workspace.name || (workspace.scope === 'collection' ? 'My Collection' : 'my-spec.yaml');
 
   await models.workspace.update(workspace, patch);
 
-  return null;
+  const project = await models.project.getById(workspace.parentId);
+  invariant(project, 'Project not found');
+  if (isGitProject(project)) {
+    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+
+    const existingPathDir = path.dirname(workspaceMeta.gitRepoPath || '');
+    let fileName = path.basename(workspaceMeta.gitRepoPath || '');
+
+    if (patch.fileName && typeof patch.fileName === 'string') {
+      fileName = patch.fileName;
+    }
+
+    await models.workspaceMeta.update(workspaceMeta, {
+      gitRepoPath: path.join(existingPathDir, safeToUseInsomniaFileNameWithExt(fileName)),
+    });
+  }
+
+  return {
+    success: true,
+  };
 };
 
 export const moveWorkspaceIntoProjectAction: ActionFunction = async ({ request, params }) => {
