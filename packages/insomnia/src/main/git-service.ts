@@ -1725,11 +1725,18 @@ type FileTree = {
   children: (GitRepoDirectory | GitRepoFile)[];
 } | GitRepoDirectory | GitRepoFile;
 
-const getRepositoryDirectoryTree = async ({ projectId }: { projectId: string }): Promise<FileTree> => {
+const getRepositoryDirectoryTree = async ({ projectId }: { projectId: string }): Promise<{
+  repositoryTree: FileTree;
+  folderList: Record<string, string[]>;
+}> => {
   const gitRepository = await getGitRepository({ projectId });
   const fs = await getGitFSClient({ projectId, gitRepositoryId: gitRepository._id });
 
   const rootContents = await fs.promises.readdir(GIT_CLONE_DIR);
+
+  const folderList: Record<string, string[]> = {
+    '': rootContents,
+  };
 
   const recursivelyGetDirectoryTree = async (directoryContents: string[], parentPath: string) => {
     const tree: (GitRepoDirectory | GitRepoFile)[] = await Promise.all(
@@ -1738,7 +1745,7 @@ const getRepositoryDirectoryTree = async ({ projectId }: { projectId: string }):
         const stats = await fs.promises.stat(fileOrDirPath);
         if (await stats.isDirectory()) {
           const subDirectoryContents = await fs.promises.readdir(fileOrDirPath);
-
+          folderList[fileOrDirPath] = subDirectoryContents;
           return {
             id: fileOrDirPath,
             name: file,
@@ -1760,11 +1767,14 @@ const getRepositoryDirectoryTree = async ({ projectId }: { projectId: string }):
   const tree = await recursivelyGetDirectoryTree(rootContents, GIT_CLONE_DIR);
 
   return {
-    id: gitRepository._id,
+    repositoryTree: {
+      id: '',
     name: gitRepository.uri.split('/').pop()?.replace('.git', '').toUpperCase() || 'Repository',
     type: 'root',
     children: tree,
-  } satisfies FileTree;
+    } satisfies FileTree,
+    folderList,
+  };
 };
 
 export const GITHUB_GRAPHQL_API_URL = getGitHubGraphQLApiURL();

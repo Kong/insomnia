@@ -3,6 +3,8 @@ import {
   Button,
   Collection,
   Dialog,
+  FieldError,
+  Form,
   Heading,
   Input,
   Label,
@@ -20,7 +22,7 @@ import { useFetcher, useParams } from 'react-router-dom';
 
 import { isGitProject, ORG_STORAGE_RULE, type Project } from '../../../models/project';
 import { type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
-import { safeToUseInsomniaFileNameWithExt } from '../../routes/actions';
+import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../routes/actions';
 import type { GetRepositoryDirectoryTreeResult } from '../../routes/git-project-actions';
 import { Icon } from '../icon';
 
@@ -73,7 +75,7 @@ export const NewWorkspaceModal = ({
     name: defaultNameByScope[scope],
     scope,
     folderPath: '',
-    fileName: '',
+    fileName: safeToUseInsomniaFileName(defaultNameByScope[scope]),
     mockServerType: canOnlyCreateSelfHosted ? 'self-hosted' : 'cloud',
     mockServerUrl: '',
   });
@@ -98,6 +100,10 @@ export const NewWorkspaceModal = ({
     );
   };
 
+  // From the folderPath we need to get the folder children and validate that there is no file with the same name
+  const selectedFolder = workspaceData.folderPath || gitRepoTreeFetcher.data?.repositoryTree.id || '';
+  const selectedFolderChildren = gitRepoTreeFetcher.data?.folderList[selectedFolder] || [];
+
   return (
     <ModalOverlay
       isOpen={isOpen}
@@ -110,10 +116,22 @@ export const NewWorkspaceModal = ({
       >
         <Dialog
           aria-label='Create or update dialog'
-          className="outline-none flex-1 gap-4 grid [grid-template-rows:min-content_1fr_min-content]"
+          className="outline-none flex-1 gap-4 grid [grid-template-rows:min-content_1fr_min-content] overflow-hidden"
         >
           {({ close }) => (
-            <>
+            <Form
+              validationBehavior='native'
+              className='contents'
+              onSubmit={e => {
+                e.preventDefault();
+
+                const isValid = e.currentTarget.checkValidity();
+
+                if (isValid) {
+                  createNewWorkspace();
+                }
+              }}
+            >
               <div className='pt-10 px-10 flex gap-2 items-center justify-between'>
                 <Heading slot="title" className='text-2xl'>Create a new {titleByScope[workspaceData.scope]}</Heading>
                 <Button
@@ -136,7 +154,7 @@ export const NewWorkspaceModal = ({
                 </div>
               )}
 
-              <div className='flex flex-col justify-start gap-2 overflow-y-auto px-10'>
+              <div className='flex flex-col justify-start gap-2 overflow-y-auto overflow-x-hidden px-10'>
                 <TextField
                   autoFocus
                   name="name"
@@ -152,32 +170,48 @@ export const NewWorkspaceModal = ({
                     placeholder={`Enter a name for your ${titleByScope[workspaceData.scope]}...`}
                     className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                   />
+                  <FieldError className='text-red-500 text-xs' />
                 </TextField>
                 {isGitProject(project) && gitRepoTreeFetcher.data && (
                   <>
                     <TextField
                       name="fileName"
-                      value={workspaceData.fileName}
+                      isRequired
+                      validate={fileName => {
+                        if (selectedFolderChildren.includes(safeToUseInsomniaFileNameWithExt(fileName))) {
+                          return 'A file with the same name already exists in the selected folder';
+                        }
+
+                        return null;
+                      }}
+                      value={safeToUseInsomniaFileName(workspaceData.fileName || '')}
                       onChange={fileName => setWorkspaceData({ ...workspaceData, fileName })}
-                      className="group relative flex flex-col gap-2"
+                      className="group relative flex flex-col gap-2 overflow-hidden max-w-full"
                     >
-                      <Label className='text-sm text-[--hl]'>
-                        File name
+                      <Label className="group relative flex flex-col gap-2 overflow-hidden">
+                        <span className='text-sm text-[--hl]'>
+                          File name
+                        </span>
+
+                        <div className="overflow-hidden grid [grid-template-columns:min-content_auto] [grid-template-areas:'input_extension'] focus:outline-none py-1 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:ring-1 focus:ring-[--hl-md] transition-colors">
+                          <Input
+                            placeholder={workspaceData.name ? safeToUseInsomniaFileName(workspaceData.name) : 'name'}
+                            className="[grid-area:input] placeholder:italic outline-none focus:outline-none w-full min-w-[3ch]"
+                          />
+                          <span className='[grid-area:input] -z-10 opacity-0 truncate w-min'>{safeToUseInsomniaFileName(workspaceData.fileName || workspaceData.name || 'name')}</span>
+                          <span className='[grid-area:extension] text-[--hl]'>.yaml</span>
+                      </div>
                       </Label>
-                      <Input
-                        pattern="^[a-zA-Z0-9-_]+$"
-                        placeholder={workspaceData.name ? safeToUseInsomniaFileNameWithExt(workspaceData.name) : 'Enter the filename for your file in the repository...'}
-                        className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
-                      />
+                      <FieldError className='text-red-500 text-xs' />
                     </TextField>
                     <Label className="text-sm text-[--hl]">
                       Folder where the file will be saved in the repository:
                     </Label>
                     <Tree
                       className="grid gap-0 max-h-52 overflow-auto rounded-sm border border-solid border-[--hl-sm]"
-                      defaultSelectedKeys={[gitRepoTreeFetcher.data.id]}
+                      defaultSelectedKeys={[gitRepoTreeFetcher.data.repositoryTree.id]}
                       disallowEmptySelection
-                      defaultExpandedKeys={[gitRepoTreeFetcher.data.id]}
+                      defaultExpandedKeys={[gitRepoTreeFetcher.data.repositoryTree.id]}
                       onSelectionChange={selection => {
                         if (selection !== 'all') {
                           setWorkspaceData({ ...workspaceData, folderPath: selection.values().next().value as string });
@@ -185,7 +219,7 @@ export const NewWorkspaceModal = ({
                       }}
                       aria-label="Files"
                       selectionMode="single"
-                      items={[gitRepoTreeFetcher.data]}
+                      items={[gitRepoTreeFetcher.data.repositoryTree]}
                     >
                       {function renderItem(item) {
                         return (
@@ -287,7 +321,7 @@ export const NewWorkspaceModal = ({
                 </>
                 )}
               </div>
-              <div className="flex justify-end gap-2 items-center px-10 pb-10">
+              <div className="flex justify-end gap-2 items-center p-10">
                 <div className='flex items-center gap-2'>
                   <Button
                     onPress={close}
@@ -296,14 +330,14 @@ export const NewWorkspaceModal = ({
                     Cancel
                   </Button>
                   <Button
-                    onPress={() => createNewWorkspace()}
+                    type='submit'
                     className="hover:no-underline w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                   >
                     Create
                   </Button>
                 </div>
               </div>
-            </>
+            </Form>
           )}
         </Dialog>
       </Modal>
