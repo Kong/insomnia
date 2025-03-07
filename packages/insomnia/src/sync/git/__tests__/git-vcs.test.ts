@@ -30,6 +30,7 @@ describe('Git-VCS', () => {
         repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
+        legacyDiff: true,
       });
       await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
 
@@ -109,6 +110,7 @@ describe('Git-VCS', () => {
         repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
+        legacyDiff: true,
       });
       await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
       expect(await GitVCS.log()).toEqual([]);
@@ -126,6 +128,7 @@ describe('Git-VCS', () => {
         repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
+        legacyDiff: true,
       });
 
       await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
@@ -212,6 +215,7 @@ First commit!
         repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
+        legacyDiff: true,
       });
       await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
       const status = await GitVCS.status();
@@ -260,6 +264,7 @@ First commit!
         repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
+        legacyDiff: true,
       });
       // Commit
       await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
@@ -318,6 +323,7 @@ First commit!
         repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
+        legacyDiff: true,
       });
       // Write to all files
       await Promise.all(files.map(f => fsClient.promises.writeFile(f, originalContent)));

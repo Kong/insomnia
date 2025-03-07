@@ -69,6 +69,7 @@ interface InitOptions {
   gitCredentials?: GitCredentials | null;
   uri?: string;
   repoId: string;
+  legacyDiff?: boolean;
 }
 
 interface InitFromCloneOptions {
@@ -118,13 +119,14 @@ interface BaseOpts {
   onAuth: git.AuthCallback;
   uri: string;
   repoId: string;
+  legacyDiff?: boolean;
 }
 
 export class GitVCS {
   // @ts-expect-error -- TSCONVERSION not initialized with required properties
   _baseOpts: BaseOpts = gitCallbacks();
 
-  async init({ directory, fs, gitDirectory, gitCredentials, uri = '', repoId }: InitOptions) {
+  async init({ directory, fs, gitDirectory, gitCredentials, uri = '', repoId, legacyDiff = false }: InitOptions) {
     this._baseOpts = {
       ...this._baseOpts,
       dir: directory,
@@ -134,6 +136,7 @@ export class GitVCS {
       http: httpClient,
       uri,
       repoId,
+      legacyDiff,
     };
 
     if (await this.repoExists()) {
@@ -418,6 +421,13 @@ export class GitVCS {
         git.STAGE(),
       ],
       map: async function map(filepath, [head, workdir, stage]) {
+        if (baseOpts.legacyDiff) {
+          const isInsomniaFile = filepath.startsWith(GIT_INSOMNIA_DIR_NAME) || filepath.startsWith('insomnia.') || filepath === '.';
+          if (!isInsomniaFile) {
+            return null;
+          }
+        }
+
         if (await git.isIgnored({
           ...baseOpts,
           filepath,

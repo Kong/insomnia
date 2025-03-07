@@ -187,6 +187,7 @@ export async function loadGitRepository({
         fs: fsClient,
         gitDirectory: GIT_INTERNAL_DIR,
         gitCredentials: credentials,
+        legacyDiff: Boolean(workspaceId),
       });
     }
 
@@ -849,6 +850,7 @@ export const cloneGitRepoAction = async ({
           fs: routableFS,
           gitDirectory: GIT_INTERNAL_DIR,
           gitCredentials: gitRepository.credentials,
+          legacyDiff: true,
         });
       }
 
