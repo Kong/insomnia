@@ -123,12 +123,25 @@ export const test = baseTest.extend<{
       await appContext.tracing.start(traceOptions);
     }
 
-    await use(electronApp);
-
-    if (captureTrace) {
-      await appContext.tracing.stop({
-        path: path.join(testInfo.outputDir, 'trace.zip'),
-      });
+    let testFailed = false;
+    try {
+      await use(electronApp);
+    } catch (error) {
+      testFailed = true;
+      throw error;
+    } finally {
+      // set testFailed to true if the test timed out or failed
+      testFailed = testFailed || testInfo.status === 'timedOut' || testInfo.status === 'failed';
+      if (traceMode === 'on' || (traceMode === 'retain-on-failure' && testFailed) || (traceMode === 'on-first-retry' && testInfo.retry === 1)) {
+        // Use a different name rather than the default trace.zip to avoid overwriting the trace.
+        // Refer: https://github.com/microsoft/playwright/issues/35005
+        await appContext.tracing.stop({
+          path: path.join(testInfo.outputDir, `trace-${testInfo.title}-${testInfo.status}.zip`),
+        });
+      } else {
+        // Discard the trace if not needed
+        await appContext.tracing.stop();
+      }
     }
 
     await electronApp.close();

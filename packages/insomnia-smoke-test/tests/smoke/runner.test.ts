@@ -291,9 +291,9 @@ test.describe('runner features tests', async () => {
 
             const consoleTabContent = page.locator('.pane-two');
             if (expectToHaveLog) {
-                expect(consoleTabContent).toContainText("it won't print");
+                await expect(consoleTabContent).toContainText("it won't print");
             } else {
-                expect(consoleTabContent).not.toContainText("it won't print");
+                await expect(consoleTabContent).not.toContainText("it won't print");
             }
         }
     });
