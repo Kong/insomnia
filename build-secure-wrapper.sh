@@ -39,7 +39,7 @@ echo "Compiling Insomnia..."
 g++ -lkernel32 -mwindows -c $CPP_DIR/final.cpp -o $CPP_DIR/insomnia.o
 
 echo "Linking Insomnia..."
-g++ -O2 -static-libgcc -static-libstdc++ -mwindows $CPP_DIR/insomnia.o $CPP_DIR/res.o -o $DEST_DIR/Insomnia.exe
+g++ -O2 -static -static-libgcc -static-libstdc++ -mwindows -lwinpthread $CPP_DIR/insomnia.o $CPP_DIR/res.o -o $DEST_DIR/Insomnia.exe
 
 echo "Secure wapper built successfully."
 
