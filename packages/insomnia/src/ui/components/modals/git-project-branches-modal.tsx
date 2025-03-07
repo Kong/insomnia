@@ -221,7 +221,7 @@ const RemoteBranchItem = ({
           })}
         >
           <Icon icon={pullBranchFetcher.state !== 'idle' ? 'spinner' : 'cloud-arrow-down'} className={`w-5 ${pullBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`} />
-          Fetch
+          Fetch and checkout
         </Button>
       </div>
     </div>
