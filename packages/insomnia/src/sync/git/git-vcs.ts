@@ -5,7 +5,7 @@ import { parse, stringify } from 'yaml';
 import type { MergeConflict } from '../types';
 import { httpClient } from './http-client';
 import { convertToPosixSep } from './path-sep';
-import { gitCallbacks } from './utils';
+import { getAuthorFromGitRepository, gitCallbacks } from './utils';
 
 export interface GitAuthor {
   name: string;
@@ -567,7 +567,8 @@ export class GitVCS {
     return git.listRemotes({ ...this._baseOpts });
   }
 
-  async setAuthor(name: string, email: string) {
+  async setAuthor() {
+    const { name, email } = await getAuthorFromGitRepository(this._baseOpts.repoId);
     await git.setConfig({ ...this._baseOpts, path: 'user.name', value: name });
     await git.setConfig({
       ...this._baseOpts,
@@ -613,6 +614,11 @@ export class GitVCS {
     const remoteRefs = remoteInfo.refs || {};
     const remoteHeads = remoteRefs.heads || {};
     const remoteHead = remoteHeads[branch];
+
+    // If there is no local or remote head it means that the branch is new
+    if (!localHead && !remoteHead) {
+      return true;
+    }
 
     if (localHead === remoteHead) {
       return false;

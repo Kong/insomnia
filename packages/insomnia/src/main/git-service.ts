@@ -165,7 +165,7 @@ export async function loadGitRepository({
     const fsClient = await getGitFSClient({ gitRepositoryId: gitRepository._id, projectId, workspaceId });
 
     // Init VCS
-    const { credentials, uri, author } = gitRepository;
+    const { credentials, uri } = gitRepository;
     if (gitRepository.needsFullClone) {
       await GitVCS.initFromClone({
         repoId: gitRepository._id,
@@ -192,7 +192,7 @@ export async function loadGitRepository({
     }
 
     // Configure basic info
-    await GitVCS.setAuthor(author.name, author.email);
+    await GitVCS.setAuthor();
     await GitVCS.addRemote(uri);
 
     return {
@@ -625,7 +625,7 @@ export const cloneGitRepoAction = async ({
         });
       }
 
-      await GitVCS.setAuthor(gitRepository.author.name, gitRepository.author.email);
+      await GitVCS.setAuthor();
       await GitVCS.addRemote(uri);
 
       await database.flushChanges(bufferId);
@@ -854,7 +854,7 @@ export const cloneGitRepoAction = async ({
         });
       }
 
-      await GitVCS.setAuthor(gitRepository.author.name, gitRepository.author.email);
+      await GitVCS.setAuthor();
       await GitVCS.addRemote(uri);
     }
 
@@ -978,6 +978,8 @@ export const updateGitRepoAction = async ({
       hasUncommittedChanges,
       hasUnpushedChanges,
     });
+
+    await GitVCS.setAuthor();
 
     return null;
   } catch (e) {
