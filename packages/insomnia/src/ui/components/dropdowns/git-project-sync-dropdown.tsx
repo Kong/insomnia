@@ -365,8 +365,8 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
             <span className='truncate'>{isSynced ? currentBranch : 'Not synced'}</span>
           </Button>
           <TooltipTrigger>
-            <Button className="px-[--padding-md] h-full">
-              <Icon icon={loadingStatus ? 'refresh' : 'cube'} className={`transition-colors ${isLoading ? 'animate-pulse' : loadingStatus ? 'animate-spin' : 'opacity-50'}`} />
+            <Button className={`px-[--padding-md] h-full ${status?.localChanges ? 'text-[--color-warning]' : ''}`}>
+              <Icon icon={loadingStatus ? 'refresh' : 'cube'} className={`transition-colors ${isLoading ? 'animate-pulse' : loadingStatus ? 'animate-spin' : ''}`} />
             </Button>
             <Tooltip
               placement="top end"
