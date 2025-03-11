@@ -567,8 +567,19 @@ export class GitVCS {
     return git.listRemotes({ ...this._baseOpts });
   }
 
-  async setAuthor() {
-    const { name, email } = await getAuthorFromGitRepository(this._baseOpts.repoId);
+  async setAuthor(author?: GitAuthor) {
+    let name = '';
+    let email = '';
+
+    if (author) {
+      name = author.name;
+      email = author.email;
+    } else {
+      const author = await getAuthorFromGitRepository(this._baseOpts.repoId);
+      name = author.name;
+      email = author.email;
+    }
+
     await git.setConfig({ ...this._baseOpts, path: 'user.name', value: name });
     await git.setConfig({
       ...this._baseOpts,
