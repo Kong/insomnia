@@ -1,5 +1,6 @@
 import { getExistingConsole } from './console';
 import { Property, PropertyBase, PropertyList } from './properties';
+import { checkIfUrlIncludesTag } from './utils';
 
 let UrlSearchParams = URLSearchParams;
 export function setUrlSearchParams(provider: any) {
@@ -8,13 +9,6 @@ export function setUrlSearchParams(provider: any) {
 
 function canNotBeModifiedWarning(originalUrl: string | undefined) {
     getExistingConsole().warn(`The url "${originalUrl || 'undefined'}" can not be parsed, only 'insomnia.request.url.update(..)' will take effect.`);
-}
-
-function checkIfUrlIncludesTag(url: string): boolean {
-    return /{%/.test(`${url}`) ||
-        /%}/.test(`${url}`) ||
-        /{{/.test(`${url}`) ||
-        /}}/.test(`${url}`);
 }
 
 export interface QueryParamOptions {

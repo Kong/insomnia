@@ -18,7 +18,8 @@ import { Response as ScriptResponse } from './response';
 import { readBodyFromPath, toScriptResponse } from './response';
 import { sendRequest } from './send-request';
 import { type RequestTestResult, skip, test, type TestHandler } from './test';
-import { checkIfUrlIncludesTag, toUrlObject } from './urls';
+import { toUrlObject } from './urls';
+import { checkIfUrlIncludesTag } from './utils';
 
 export class InsomniaObject {
     public environment: Environment;
