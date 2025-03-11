@@ -65,7 +65,6 @@ import {
 import { isDesign, scopeToActivity, type Workspace, type WorkspaceScope } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
-import { showModal } from '../../ui/components/modals';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { getInitialRouteForOrganization } from '../../utils/router';
@@ -75,11 +74,9 @@ import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { WorkspaceCardDropdown } from '../components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
-import { showPrompt } from '../components/modals';
-import { AlertModal } from '../components/modals/alert-modal';
 import { GitRepositoryCloneModal } from '../components/modals/git-repository-settings-modal/git-repo-clone-modal';
 import { ImportModal } from '../components/modals/import-modal';
-import { MockServerSettingsModal } from '../components/modals/mock-server-settings-modal';
+import { NewWorkspaceModal } from '../components/modals/new-workspace-modal';
 import { ProjectModal } from '../components/modals/project-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { OrganizationTabList } from '../components/tabs/tab-list';
@@ -263,6 +260,7 @@ export interface InsomniaFile {
   apiSpec?: ApiSpec;
   hasUncommittedChanges?: boolean;
   hasUnpushedChanges?: boolean;
+  gitFilePath?: string | null;
 }
 
 export interface ProjectIdLoaderData {
@@ -382,6 +380,7 @@ async function getAllLocalFiles({
       workspace,
       hasUncommittedChanges: workspaceMeta?.hasUncommittedChanges,
       hasUnpushedChanges: workspaceMeta?.hasUnpushedChanges,
+      gitFilePath: workspaceMeta?.gitFilePath,
     };
   });
   return files;
@@ -399,7 +398,9 @@ async function getAllRemoteFiles({
     invariant(project, 'Project not found');
 
     const remoteId = project.remoteId;
-    invariant(remoteId, 'Project is not a remote project');
+    if (!remoteId) {
+      return [];
+    }
     const vcs = VCSInstance();
 
     const [allPulledBackendProjectsForRemoteId, allFetchedRemoteBackendProjectsForRemoteId] = await Promise.all([
@@ -779,90 +780,25 @@ const ProjectRoute: FC = () => {
 
   const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =
     useState(false);
-  const [isMockServerSettingsModalOpen, setIsMockServerSettingsModalOpen] = useState(false);
 
-  const fetcher = useFetcher();
   const navigate = useNavigate();
 
-  const createNewCollection = () => {
-    activeProject?._id &&
-    showPrompt({
-      title: 'Create New Request Collection',
-      submitName: 'Create',
-      placeholder: 'My Collection',
-      defaultValue: 'My Collection',
-      selectText: true,
-      onComplete: async (name: string) => {
-        fetcher.submit(
-          {
-            name,
-            scope: 'collection',
-          },
-          {
-            action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
-            method: 'post',
-          }
-        );
-      },
-    });
-  };
+  const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
+    scope: WorkspaceScope;
+    isOpen: boolean;
+  } | null>({
+    scope: 'collection',
+    isOpen: false,
+  });
 
-  const createNewDocument = () => {
-    activeProject?._id &&
-    showPrompt({
-      title: 'Create New Design Document',
-      submitName: 'Create',
-      placeholder: 'my-spec.yaml',
-      defaultValue: 'my-spec.yaml',
-      selectText: true,
-      onComplete: async (name: string) => {
-        fetcher.submit(
-          {
-            name,
-            scope: 'design',
-          },
-          {
-            action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
-            method: 'post',
-          }
-        );
-      },
-    });
-  };
+  const createNewCollection = () => setNewWorkspaceModalState({ scope: 'collection', isOpen: true });
+  const createNewDocument = () => setNewWorkspaceModalState({ scope: 'design', isOpen: true });
+  const createNewMockServer = () => canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true });
+  const createNewGlobalEnvironment = () => setNewWorkspaceModalState({ scope: 'environment', isOpen: true });
+
   const isEnterprise = currentPlan?.type.includes('enterprise');
   const isCloudProjectOrEnterprisePlan = activeProject?.remoteId || isEnterprise;
   const canCreateMockServer = activeProject?._id && isCloudProjectOrEnterprisePlan;
-  const createNewMockServer = () => {
-    canCreateMockServer
-      ? setIsMockServerSettingsModalOpen(true)
-      : showModal(AlertModal, {
-        title: 'Change Project',
-        message: 'Mock feature is only supported for Cloud projects and Enterprise local projects.',
-    });
-  };
-
-  const createNewGlobalEnvironment = () => {
-    activeProject?._id &&
-      showPrompt({
-        title: 'Create New Environment',
-        submitName: 'Create',
-        placeholder: 'New environment',
-        defaultValue: 'New environment',
-        selectText: true,
-        onComplete: async (name: string) => {
-          fetcher.submit(
-            {
-              name,
-              scope: 'environment',
-            },
-            {
-              action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
-              method: 'post',
-            }
-          );
-        },
-      });
-  };
 
   const isGitSyncEnabled = features.gitSync.enabled;
 
@@ -1410,6 +1346,8 @@ const ProjectRoute: FC = () => {
                             {activeProject && item.scope !== 'unsynced' && item.workspace && (
                               <WorkspaceCardDropdown
                                 workspace={item.workspace}
+                                mockServer={item.mockServer}
+                                gitFilePath={item.gitFilePath || undefined}
                                 apiSpec={item.apiSpec}
                                 project={activeProject}
                                 projects={projects}
@@ -1431,6 +1369,14 @@ const ProjectRoute: FC = () => {
                             </Tooltip>
                           </TooltipTrigger>
                           <div className="flex-1 flex flex-col gap-2 justify-end text-sm text-[--hl]">
+                            {item.gitFilePath && (
+                              <div className="text-sm flex items-center gap-2">
+                                <Icon icon="file-alt" />
+                                <span className='truncate' title={item.gitFilePath}>
+                                  {item.gitFilePath}
+                                </span>
+                              </div>
+                            )}
                             {item.version && (
                               <div className="flex-1 pt-2">
                                 {item.version}
@@ -1519,6 +1465,21 @@ const ProjectRoute: FC = () => {
             isGitSyncEnabled={isGitSyncEnabled}
           />
         )}
+        {activeProject && newWorkspaceModalState?.isOpen && (
+          <NewWorkspaceModal
+            isOpen
+            project={activeProject}
+            storageRule={storage}
+            currentPlan={currentPlan}
+            scope={newWorkspaceModalState.scope}
+            onOpenChange={isOpen => {
+              setNewWorkspaceModalState({
+                scope: newWorkspaceModalState.scope,
+                isOpen,
+              });
+            }}
+          />
+        )}
         {activeProject && importModalType && (
           <ImportModal
             onHide={() => setImportModalType(null)}
@@ -1526,11 +1487,6 @@ const ProjectRoute: FC = () => {
             from={{ type: importModalType }}
             organizationId={organizationId}
             defaultProjectId={activeProject._id}
-          />
-        )}
-        {isMockServerSettingsModalOpen && (
-          <MockServerSettingsModal
-            onClose={() => setIsMockServerSettingsModalOpen(false)}
           />
         )}
       </Fragment>

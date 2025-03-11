@@ -61,6 +61,7 @@ export type HandleChannels =
   | 'git.stageChanges'
   | 'git.unstageChanges'
   | 'git.diffFileLoader'
+  | 'git.getRepositoryDirectoryTree'
   | 'git.initSignInToGitHub'
   | 'git.completeSignInToGitHub'
   | 'git.signOutOfGitHub'

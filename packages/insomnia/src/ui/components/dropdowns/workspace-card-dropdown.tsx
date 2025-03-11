@@ -27,6 +27,7 @@ import { SvgIcon } from '../svg-icon';
 
 interface Props {
   workspace: Workspace;
+  gitFilePath?: string;
   apiSpec?: ApiSpec;
   mockServer?: MockServer;
   project: Project;
@@ -82,7 +83,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
 };
 
 export const WorkspaceCardDropdown: FC<Props> = props => {
-  const { workspace, mockServer, project } = props;
+  const { workspace, mockServer, project, gitFilePath } = props;
   const fetcher = useFetcher();
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -214,6 +215,8 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
         <WorkspaceSettingsModal
           workspace={workspace}
           mockServer={mockServer}
+          gitFilePath={gitFilePath}
+          project={project}
           onClose={() => setIsSettingsModalOpen(false)}
         />
       )}

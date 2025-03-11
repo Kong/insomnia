@@ -16,7 +16,7 @@ import { EnvironmentType } from '../../models/environment';
 import type { OauthProviderName } from '../../models/git-credentials';
 import { getById, update } from '../../models/helpers/request-operations';
 import type { MockServer } from '../../models/mock-server';
-import { isRemoteProject, type Project } from '../../models/project';
+import { isGitProject, isRemoteProject, type Project } from '../../models/project';
 import { isRequest, type Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { isRequestGroupMeta } from '../../models/request-group-meta';
@@ -271,7 +271,7 @@ export const updateProjectAction: ActionFunction = async ({
       };
     }
 
-    // convert from local to git
+    // convert to git
     if (storageType === 'git' && !project.gitRepositoryId) {
       if (project.remoteId) {
         const response = await insomniaFetch<void | {
@@ -305,6 +305,22 @@ export const updateProjectAction: ActionFunction = async ({
         cloneIntoProjectId: project._id,
         ...projectData,
       });
+
+      const projectWorkspaces = await models.workspace.findByParentId(project._id);
+      const bufferId = await database.bufferChanges();
+      const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
+        parentId: { $in: projectWorkspaces.map(w => w._id) },
+      });
+
+      for (const workspaceMeta of workspaceMetas) {
+        if (!workspaceMeta.gitFilePath) {
+          await models.workspaceMeta.update(workspaceMeta, {
+            gitFilePath: `insomnia.${workspaceMeta.parentId}.yaml`,
+          });
+        }
+      }
+
+      await database.flushChanges(bufferId);
 
       if (errors) {
         return {
@@ -413,6 +429,21 @@ export const moveProjectAction: ActionFunction = async ({ request, params }) => 
   return null;
 };
 
+export function safeToUseInsomniaFileName(fileName: string) {
+  const fileNameWithoutExt = fileName.replace('.yaml', '').replace('.yml', '');
+  const fileNameWithSafeCharacters = fileNameWithoutExt
+    .toLowerCase()
+    .trim()
+    // Replace all non-alphanumeric characters with underscores, allow -
+    .replace(/[^a-z0-9_-]/g, '_');
+
+  return fileNameWithSafeCharacters;
+}
+
+export function safeToUseInsomniaFileNameWithExt(fileName: string) {
+  return `${safeToUseInsomniaFileName(fileName)}.yaml`;
+}
+
 // Workspace
 export const createNewWorkspaceAction: ActionFunction = async ({
   params,
@@ -429,6 +460,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   const formData = await request.formData();
 
   const name = formData.get('name');
+
   invariant(typeof name === 'string', 'Name is required');
 
   const scope = formData.get('scope');
@@ -443,6 +475,18 @@ export const createNewWorkspaceAction: ActionFunction = async ({
     scope,
     parentId: projectId,
   });
+
+  if (isGitProject(project)) {
+    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+
+    const fileName = formData.get('fileName')?.toString() || workspace.name;
+
+    const safeToUseFileNameWithExtension = safeToUseInsomniaFileNameWithExt(fileName);
+
+    await models.workspaceMeta.update(workspaceMeta, {
+      gitFilePath: path.join(formData.get('folderPath')?.toString() || '', safeToUseFileNameWithExtension),
+    });
+  }
 
   if (scope === 'mock-server') {
     const mockServerType = formData.get('mockServerType');
@@ -614,6 +658,12 @@ async function duplicateWorkspace(
   await models.cookieJar.getOrCreateForParentId(newWorkspace._id);
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
 
+  if (isGitProject(duplicateToProject)) {
+    await models.workspaceMeta.update(workspaceMeta, {
+      gitFilePath: `insomnia.${newWorkspace._id}.yaml`,
+    });
+  }
+
   const isGitSync = !!workspaceMeta.gitRepositoryId;
 
   // Automatically sync to cloud if needed
@@ -678,12 +728,26 @@ export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
       fileName: patch.name || workspace.name,
     });
   }
+
   if (workspace.scope === 'mock-server') {
     const mockServer = await models.mockServer.getByParentId(workspaceId);
     invariant(mockServer, 'No MockServer found for this workspace');
 
+    let useInsomniaCloud = mockServer.useInsomniaCloud;
+    if (patch.mockServerType && typeof patch.mockServerType === 'string') {
+      useInsomniaCloud = patch.mockServerType === 'cloud';
+    }
+
+    let mockServerUrl = mockServer.url;
+
+    if (patch.mockServerUrl && typeof patch.mockServerUrl === 'string') {
+      mockServerUrl = patch.mockServerUrl;
+    }
+
     await models.mockServer.update(mockServer, {
       name: patch.name || workspace.name,
+      useInsomniaCloud,
+      url: mockServerUrl,
     });
   }
 
@@ -691,7 +755,26 @@ export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
 
   await models.workspace.update(workspace, patch);
 
-  return null;
+  const project = await models.project.getById(workspace.parentId);
+  invariant(project, 'Project not found');
+  if (isGitProject(project)) {
+    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+
+    const existingPathDir = path.dirname(workspaceMeta.gitFilePath || '');
+    let fileName = path.basename(workspaceMeta.gitFilePath || '');
+
+    if (patch.fileName && typeof patch.fileName === 'string') {
+      fileName = patch.fileName;
+    }
+
+    await models.workspaceMeta.update(workspaceMeta, {
+      gitFilePath: path.join(existingPathDir, safeToUseInsomniaFileNameWithExt(fileName)),
+    });
+  }
+
+  return {
+    success: true,
+  };
 };
 
 export const moveWorkspaceIntoProjectAction: ActionFunction = async ({ request, params }) => {

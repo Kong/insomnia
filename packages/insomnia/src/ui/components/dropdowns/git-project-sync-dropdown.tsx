@@ -5,7 +5,6 @@ import { useFetcher, useParams, useRevalidator } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
 import type { GitRepository } from '../../../models/git-repository';
-import { MergeConflictError } from '../../../sync/git/git-vcs';
 import { getOauth2FormatName } from '../../../sync/git/utils';
 import type { MergeConflict } from '../../../sync/types';
 import {
@@ -18,6 +17,7 @@ import {
   pullFromGitRemote,
   type PushToGitRemoteResult,
 } from '../../routes/git-project-actions';
+import { ConfigLink } from '../github-app-config-link';
 import { Icon } from '../icon';
 import { showAlert, showModal } from '../modals';
 import { GitProjectBranchesModal } from '../modals/git-project-branches-modal';
@@ -193,40 +193,57 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
       action: async () => {
         try {
           setIsPulling(true);
-          await pullFromGitRemote({ projectId }).finally(() => {
+          await pullFromGitRemote({ projectId }).then(result => {
+            if ('errors' in result && result.errors) {
+              showAlert({
+                title: 'Pull Failed',
+                message: (
+                  <>
+                    {result.errors.join('\n')}
+                    <ConfigLink {...{ gitRepository, errors: [result.errors.join('\n')] }} />
+                  </>
+                ),
+                bodyClassName: 'whitespace-break-spaces',
+              });
+            }
+            if ('conflicts' in result) {
+              showModal(SyncMergeModal, {
+                conflicts: result.conflicts,
+                labels: result.labels,
+                handleDone: (conflicts?: MergeConflict[]) => {
+                  if (Array.isArray(conflicts) && conflicts.length > 0) {
+                    setIsPulling(true);
+                    continueMerge({
+                      projectId,
+                      handledMergeConflicts: conflicts,
+                      commitMessage: result.commitMessage,
+                      commitParent: result.commitParent,
+                    }).finally(() => {
+                      setIsPulling(false);
+                      revalidate();
+                    });
+                  } else {
+                    // user aborted merge, do nothing
+                  }
+                },
+              });
+            }
+          }).finally(() => {
             setIsPulling(false);
             revalidate();
           });
         } catch (err) {
-          if (err instanceof MergeConflictError) {
-            const data = err.data;
-            showModal(SyncMergeModal, {
-              conflicts: data.conflicts,
-              labels: data.labels,
-              handleDone: (conflicts?: MergeConflict[]) => {
-                if (Array.isArray(conflicts) && conflicts.length > 0) {
-                  setIsPulling(true);
-                  continueMerge({
-                    projectId,
-                    handledMergeConflicts: conflicts,
-                    commitMessage: data.commitMessage,
-                    commitParent: data.commitParent,
-                  }).finally(() => {
-                    setIsPulling(false);
-                    revalidate();
-                  });
-                } else {
-                  // user aborted merge, do nothing
-                }
-              },
-            });
-          } else {
-            showAlert({
-              title: 'Pull Failed',
-              message: err.message,
-              bodyClassName: 'whitespace-break-spaces',
-            });
-          }
+          const message = err instanceof Error ? err.message : 'An error occurred while pulling';
+          showAlert({
+            title: 'Pull Failed',
+            message: (
+              <>
+                {message}
+                <ConfigLink {...{ gitRepository, errors: [message] }} />
+              </>
+            ),
+            bodyClassName: 'whitespace-break-spaces',
+          });
         }
       },
     },
@@ -348,8 +365,8 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
             <span className='truncate'>{isSynced ? currentBranch : 'Not synced'}</span>
           </Button>
           <TooltipTrigger>
-            <Button className="px-[--padding-md] h-full">
-              <Icon icon={loadingStatus ? 'refresh' : 'cube'} className={`transition-colors ${isLoading ? 'animate-pulse' : loadingStatus ? 'animate-spin' : 'opacity-50'}`} />
+            <Button className={`px-[--padding-md] h-full ${status?.localChanges ? 'text-[--color-warning]' : ''}`}>
+              <Icon icon={loadingStatus ? 'refresh' : 'cube'} className={`transition-colors ${isLoading ? 'animate-pulse' : loadingStatus ? 'animate-spin' : ''}`} />
             </Button>
             <Tooltip
               placement="top end"
