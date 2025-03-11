@@ -1,12 +1,11 @@
 import * as templating from '../../templating';
 const originalRequire = self.require;
-const interceptor = (moduleName: string) => {
+const interceptor: any = (moduleName: string): NodeRequire => {
   const allowList = ['crypto', 'date-fns', 'fs', 'iconv-lite', 'jsonpath-plus', 'os', 'tough-cookie', 'uuid'];
   if (allowList.includes(moduleName)) {
     return originalRequire(moduleName);
   }
   throw new Error(`Cannot find module '${moduleName}', untrusted modules are not available in protected mode, this can be enabled in plugin settings`);
-
 };
 async function performJob(input: { input: string; context: Record<string, any>; path: string; ignoreUndefinedEnvVariable: boolean }) {
   self.require = interceptor;
