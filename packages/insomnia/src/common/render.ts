@@ -12,6 +12,7 @@ import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
 import * as templating from '../templating';
+import { RenderError } from '../templating/render-error';
 import * as templatingUtils from '../templating/utils';
 import { setDefaultProtocol } from '../utils/url/protocol';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
@@ -219,7 +220,7 @@ export async function buildRenderContext(
   if (finalRenderContext[vaultEnvironmentPath]) {
     if (finalRenderContext[vaultEnvironmentRuntimePath] && typeof finalRenderContext[vaultEnvironmentRuntimePath] !== 'object') {
       const errorMsg = `${vaultEnvironmentRuntimePath} is a reserved key for insomnia vault, please rename your environment with vault as key.`;
-      const newError = new templating.RenderError(errorMsg);
+      const newError = new RenderError(errorMsg);
       newError.type = 'render';
       newError.message = errorMsg;
       throw newError;
@@ -352,7 +353,7 @@ export async function render<T>(
       } catch (err) {
         console.log(`Failed to render element ${path}`, input);
         if (errorMode !== KEEP_ON_ERROR) {
-          if (err?.extraInfo?.subType === templating.RenderErrorSubType.EnvironmentVariable) {
+          if (err?.extraInfo?.subType === 'environmentVariable') {
             undefinedEnvironmentVariables.push(...err.extraInfo.undefinedEnvironmentVariables);
           } else {
             throw err;
@@ -390,10 +391,10 @@ export async function render<T>(
 
   const renderResult = await next<T>(newObj, name, true);
   if (undefinedEnvironmentVariables.length > 0) {
-    const error = new templating.RenderError(`Failed to render environment variables: ${undefinedEnvironmentVariables.join(', ')}`);
+    const error = new RenderError(`Failed to render environment variables: ${undefinedEnvironmentVariables.join(', ')}`);
     error.type = 'render';
     error.extraInfo = {
-      subType: templating.RenderErrorSubType.EnvironmentVariable,
+      subType: 'environmentVariable',
       undefinedEnvironmentVariables,
     };
     throw error;

@@ -1,33 +1,9 @@
-import { get as _get } from 'lodash';
 import type { Environment } from 'nunjucks';
 import nunjucks from 'nunjucks/browser/nunjucks';
 
 import { localTemplateTags } from '../ui/components/templating/local-template-tags';
 import BaseExtension from './base-extension';
-
-export enum RenderErrorSubType {
-  EnvironmentVariable = 'environmentVariable'
-}
-
-export class RenderError extends Error {
-  // TODO: unsound definite assignment assertions
-  // This is easy to fix, but be careful: extending from Error has especially tricky behavior.
-  message!: string;
-  path!: string | null;
-  location!: {
-    line: number;
-    column: number;
-  };
-
-  type!: string;
-  reason!: string;
-  extraInfo?: Record<string, any>;
-
-  constructor(message: string) {
-    super(message);
-    this.message = message;
-  }
-}
+import { extractUndefinedVariableKey, RenderError } from './render-error';
 
 // Some constants
 export const RENDER_ALL = 'all';
@@ -44,25 +20,6 @@ let nunjucksVariablesOnly: NunjucksEnvironment | null = null;
 let nunjucksTagsOnly: NunjucksEnvironment | null = null;
 let nunjucksAll: NunjucksEnvironment | null = null;
 
-// because nunjucks only report the first error, we need to extract all missing variables that are not present in the context
-// for example, if the text is `{{ a }} {{ b }}`, nunjucks only report `a` is missing, but we need to report both `a` and `b`
-export function extractUndefinedVariableKey(text: string = '', templatingContext: Record<string, any>): string[] {
-  const regexVariable = /{{\s*([^ }]+)\s*}}/g;
-  const missingVariables: string[] = [];
-  let match;
-
-  while ((match = regexVariable.exec(text)) !== null) {
-    let variable = match[1];
-    if (variable.includes('_.')) {
-      variable = variable.split('_.')[1];
-    }
-    // Check if the variable is not present in the context
-    if (_get(templatingContext, variable) === undefined) {
-      missingVariables.push(variable);
-    }
-  }
-  return missingVariables;
-}
 /**
  * Render text based on stuff
  * @param {String} text - Nunjucks template in text form
@@ -126,7 +83,7 @@ export function render(
       // regard as environment variable missing
       if (hasNunjucksInterpolationSymbols && reason === 'undefined') {
         newError.extraInfo = {
-          subType: RenderErrorSubType.EnvironmentVariable,
+          subType: 'environmentVariable',
           undefinedEnvironmentVariables: extractUndefinedVariableKey(text, templatingContext),
         };
       }

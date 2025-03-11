@@ -1,3 +1,6 @@
+
+import { extractUndefinedVariableKey, RenderError } from '../../templating/render-error';
+
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- see below
 // @ts-ignore -- inso transpiles to commonjs so doesn't play nice with this
 const worker = new Worker(new URL('./templating-worker.ts', import.meta.url), { type: 'module' });
@@ -31,7 +34,13 @@ export function renderInWorker({ input, context, path, ignoreUndefinedEnvVariabl
       if (event.data.id === id) {
         worker.removeEventListener('message', messageHandler);
         if (event.data.err) {
-          return reject(new Error(event.data.err));
+          const error = new RenderError(event.data.err);
+          error.type = 'render';
+          error.extraInfo = {
+            subType: 'environmentVariable',
+            undefinedEnvironmentVariables: extractUndefinedVariableKey(input, newContext),
+          };
+          return reject(error);
         }
         return resolve(event.data.result);
       }

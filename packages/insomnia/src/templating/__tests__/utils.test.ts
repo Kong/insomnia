@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { extractUndefinedVariableKey } from '..';
+import { extractUndefinedVariableKey } from '../render-error';
 import * as utils from '../utils';
 
 describe('forceBracketNotation()', () => {
