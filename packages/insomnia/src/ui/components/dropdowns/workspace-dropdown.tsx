@@ -338,7 +338,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
           workspace={activeWorkspace}
           mockServer={activeMockServer}
           project={activeProject}
-          gitRepoPath={activeWorkspaceMeta?.gitRepoPath}
+          gitFilePath={activeWorkspaceMeta?.gitFilePath}
           onClose={() => setIsSettingsModalOpen(false)}
         />
       )}

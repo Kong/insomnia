@@ -73,9 +73,9 @@ export class GitProjectNeDBClient {
 
     const dataStr = data.toString();
 
-    const isInsomniaFile = dataStr.split('\n')[0].trim().includes('insomnia.rest');
+    const doesFileContainInsomniaV5FormatTypeString = dataStr.split('\n')[0].trim().includes('insomnia.rest');
 
-    if (!isInsomniaFile) {
+    if (!doesFileContainInsomniaV5FormatTypeString) {
       throw this._errMissing(filePath);
     }
 
@@ -96,7 +96,7 @@ export class GitProjectNeDBClient {
         doc.parentId = this._projectId;
 
         const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(doc._id);
-        await models.workspaceMeta.update(workspaceMeta, { gitRepoPath: filePath });
+        await models.workspaceMeta.update(workspaceMeta, { gitFilePath: filePath });
       }
 
       await db.upsert(doc, true);
@@ -131,12 +131,14 @@ export class GitProjectNeDBClient {
       },
     });
 
-    const hasDirectoryInsomniaFiles = workspaceMetas.some(({ gitRepoPath }) => gitRepoPath && path.dirname(gitRepoPath) === filePath);
+    const hasDirectoryInsomniaFiles = workspaceMetas.some(({ gitFilePath }) => gitFilePath && path.dirname(gitFilePath) === filePath);
 
     if (hasDirectoryInsomniaFiles) {
       const workspacePaths = workspaceMetas
-        .filter(workspaceMeta => workspaceMeta.gitRepoPath && path.dirname(workspaceMeta.gitRepoPath) === filePath)
-        .map(workspaceMeta => path.basename(workspaceMeta.gitRepoPath!));
+        // Filter out workspaces that don't have a gitFilePath or are not in the directory
+        .filter(workspaceMeta => workspaceMeta.gitFilePath && path.dirname(workspaceMeta.gitFilePath) === filePath)
+        // Return the basename of the paths
+        .map(workspaceMeta => path.basename(workspaceMeta.gitFilePath!));
       return workspacePaths;
     }
 
@@ -225,7 +227,7 @@ export class GitProjectNeDBClient {
       },
     });
 
-    const workspaceMeta = workspaceMetas.find(({ gitRepoPath }) => gitRepoPath === filePath);
+    const workspaceMeta = workspaceMetas.find(({ gitFilePath }) => gitFilePath === filePath);
 
     if (workspaceMeta) {
       return workspaceMeta.parentId;

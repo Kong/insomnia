@@ -21,11 +21,11 @@ interface Props {
   onClose: () => void;
   workspace: Workspace;
   mockServer?: MockServer | null;
-  gitRepoPath?: string | null;
+  gitFilePath?: string | null;
   project?: Project;
 }
 
-export const WorkspaceSettingsModal = ({ workspace, gitRepoPath, project, mockServer, onClose }: Props) => {
+export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockServer, onClose }: Props) => {
   const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
   const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const [orgStorageRule, setOrgStorageRule] = useState<ORG_STORAGE_RULE>(ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL);
@@ -68,9 +68,9 @@ export const WorkspaceSettingsModal = ({ workspace, gitRepoPath, project, mockSe
   }, [onClose, workspaceFetcher]);
 
   // From the folderPath we need to get the folder children and validate that there is no file with the same name
-  // Get the folder from the gitRepoPath
-  const selectedFolder = gitRepoPath?.split('/').slice(1).join('/') || '';
-  const fileName = gitRepoPath?.split('/').pop() || '';
+  // Get the folder from the gitFilePath
+  const selectedFolder = gitFilePath?.split('/').slice(1).join('/') || '';
+  const fileName = gitFilePath?.split('/').pop() || '';
   const selectedFolderChildren = gitRepoTreeFetcher.data?.folderList[selectedFolder] || [];
 
   return (

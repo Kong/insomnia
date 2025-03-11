@@ -391,7 +391,7 @@ const importResourcesToNewWorkspace = async (
     if (isGitProject(project)) {
       const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
       await models.workspaceMeta.update(workspaceMeta, {
-        gitRepoPath: `${newWorkspace.name}-${newWorkspace._id}.yaml`,
+        gitFilePath: `${newWorkspace.name}-${newWorkspace._id}.yaml`,
       });
     }
 
@@ -414,7 +414,7 @@ const importResourcesToNewWorkspace = async (
   if (isGitProject(project)) {
     const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
     await models.workspaceMeta.update(workspaceMeta, {
-      gitRepoPath: `${newWorkspace.name}-${newWorkspace._id}.yaml`,
+      gitFilePath: `${newWorkspace.name}-${newWorkspace._id}.yaml`,
     });
   }
 

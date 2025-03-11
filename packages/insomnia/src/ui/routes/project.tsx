@@ -260,7 +260,7 @@ export interface InsomniaFile {
   apiSpec?: ApiSpec;
   hasUncommittedChanges?: boolean;
   hasUnpushedChanges?: boolean;
-  gitRepoPath?: string | null;
+  gitFilePath?: string | null;
 }
 
 export interface ProjectIdLoaderData {
@@ -380,7 +380,7 @@ async function getAllLocalFiles({
       workspace,
       hasUncommittedChanges: workspaceMeta?.hasUncommittedChanges,
       hasUnpushedChanges: workspaceMeta?.hasUnpushedChanges,
-      gitRepoPath: workspaceMeta?.gitRepoPath,
+      gitFilePath: workspaceMeta?.gitFilePath,
     };
   });
   return files;
@@ -1370,7 +1370,7 @@ const ProjectRoute: FC = () => {
                               <WorkspaceCardDropdown
                                 workspace={item.workspace}
                                 mockServer={item.mockServer}
-                                gitRepoPath={item.gitRepoPath || undefined}
+                                gitFilePath={item.gitFilePath || undefined}
                                 apiSpec={item.apiSpec}
                                 project={activeProject}
                                 projects={projects}
@@ -1392,11 +1392,11 @@ const ProjectRoute: FC = () => {
                             </Tooltip>
                           </TooltipTrigger>
                           <div className="flex-1 flex flex-col gap-2 justify-end text-sm text-[--hl]">
-                            {(item.gitRepoPath) && (
+                            {(item.gitFilePath) && (
                               <div className="text-sm flex items-center gap-2">
                                 <Icon icon="file-alt" />
-                                <span className='truncate' title={item.gitRepoPath}>
-                                  {item.gitRepoPath}
+                                <span className='truncate' title={item.gitFilePath}>
+                                  {item.gitFilePath}
                                 </span>
                               </div>
                             )}

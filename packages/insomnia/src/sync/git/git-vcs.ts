@@ -69,6 +69,7 @@ interface InitOptions {
   gitCredentials?: GitCredentials | null;
   uri?: string;
   repoId: string;
+  // If enabled git-vcs will only diff files inside a .insomnia directory
   legacyDiff?: boolean;
 }
 

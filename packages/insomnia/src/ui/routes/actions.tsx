@@ -312,9 +312,9 @@ export const updateProjectAction: ActionFunction = async ({
       });
 
       for (const workspaceMeta of workspaceMetas) {
-        if (!workspaceMeta.gitRepoPath) {
+        if (!workspaceMeta.gitFilePath) {
           await models.workspaceMeta.update(workspaceMeta, {
-            gitRepoPath: `insomnia.${workspaceMeta.parentId}.yaml`,
+            gitFilePath: `insomnia.${workspaceMeta.parentId}.yaml`,
           });
         }
       }
@@ -483,7 +483,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
     const safeToUseFileNameWithExtension = safeToUseInsomniaFileNameWithExt(fileName);
 
     await models.workspaceMeta.update(workspaceMeta, {
-      gitRepoPath: path.join(formData.get('folderPath')?.toString() || '', safeToUseFileNameWithExtension),
+      gitFilePath: path.join(formData.get('folderPath')?.toString() || '', safeToUseFileNameWithExtension),
     });
   }
 
@@ -659,7 +659,7 @@ async function duplicateWorkspace(
 
   if (isGitProject(duplicateToProject)) {
     await models.workspaceMeta.update(workspaceMeta, {
-      gitRepoPath: `insomnia.${newWorkspace._id}.yaml`,
+      gitFilePath: `insomnia.${newWorkspace._id}.yaml`,
     });
   }
 
@@ -759,15 +759,15 @@ export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
   if (isGitProject(project)) {
     const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
-    const existingPathDir = path.dirname(workspaceMeta.gitRepoPath || '');
-    let fileName = path.basename(workspaceMeta.gitRepoPath || '');
+    const existingPathDir = path.dirname(workspaceMeta.gitFilePath || '');
+    let fileName = path.basename(workspaceMeta.gitFilePath || '');
 
     if (patch.fileName && typeof patch.fileName === 'string') {
       fileName = patch.fileName;
     }
 
     await models.workspaceMeta.update(workspaceMeta, {
-      gitRepoPath: path.join(existingPathDir, safeToUseInsomniaFileNameWithExt(fileName)),
+      gitFilePath: path.join(existingPathDir, safeToUseInsomniaFileNameWithExt(fileName)),
     });
   }
 
