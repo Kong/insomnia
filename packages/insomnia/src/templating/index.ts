@@ -1,3 +1,4 @@
+import { get as _get } from 'lodash';
 import type { Environment } from 'nunjucks';
 import nunjucks from 'nunjucks/browser/nunjucks';
 
@@ -41,12 +42,7 @@ type NunjucksEnvironment = Environment & {
 let nunjucksVariablesOnly: NunjucksEnvironment | null = null;
 let nunjucksTagsOnly: NunjucksEnvironment | null = null;
 let nunjucksAll: NunjucksEnvironment | null = null;
-export function _get(object: any, path: string | string[], defval = null) {
-  if (typeof path === 'string') {
-    path = path.split('.');
-  }
-  return path.reduce((xs, x) => (xs && xs[x] ? xs[x] : defval), object);
-}
+
 // because nunjucks only report the first error, we need to extract all missing variables that are not present in the context
 // for example, if the text is `{{ a }} {{ b }}`, nunjucks only report `a` is missing, but we need to report both `a` and `b`
 export function extractUndefinedVariableKey(text: string = '', templatingContext: Record<string, any>): string[] {

@@ -332,8 +332,8 @@ export async function render<T>(
         // plugins will not function correctly when rendering in a separate process or thread. The user can
         // explicitly configure rendering to happen on the same thread/process as the rest of the app, in
         // which case it's okay to render locally.
-        //
-        const pluginsAllowElevatedAccess = (await models.settings.get()).pluginsAllowElevatedAccess;
+        const settings = await models.settings.get();
+        const pluginsAllowElevatedAccess = settings?.pluginsAllowElevatedAccess;
         const shouldUseWorker = process.type === 'renderer' && pluginsAllowElevatedAccess === false;
         const renderFork = shouldUseWorker
           ? (await import('../ui/worker/templating-handler')).renderInWorker
