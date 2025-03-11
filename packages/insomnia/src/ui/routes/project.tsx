@@ -1481,16 +1481,16 @@ const ProjectRoute: FC = () => {
                 </div>
               </div>
             ) : (
-                <div className="w-full flex flex-col gap-2 items-center justify-center overflow-hidden">
-                <p className='text-lg'>
-                  This is an empty Organization. To get started create your first project.
+              <div className="w-full h-full flex flex-col gap-2 items-center justify-center overflow-hidden">
+                <p className='text-lg px-8 mb-4 text-center'>
+                  This is an empty organization. Create a project to get started.
                 </p>
                 <Button
-                  aria-label="Create new Project"
+                  aria-label="Create Project"
                   onPress={() => setIsNewProjectModalOpen(true)}
                   className="flex items-center justify-center px-4 gap-2 py-2 bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
                 >
-                  <Icon icon="plus-circle" /> Create a new Project
+                  <Icon icon="plus-circle" /> Create Project
                 </Button>
               </div>
             )}
