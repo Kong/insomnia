@@ -229,7 +229,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       await waitForStreamToFinish(responseBodyWriteStream);
 
       // If libcurl can't decompress the response, retry without decompression
-      if (code === CurlCode.CURLE_BAD_CONTENT_ENCODING) {
+      if (code === CurlCode.CURLE_BAD_CONTENT_ENCODING && !noDecompress) {
         resolve(curlRequest({ ...options, noDecompress: true }));
         return;
       }
@@ -277,7 +277,7 @@ export const createConfiguredCurlInstance = ({
   certificates: ClientCertificate[];
   caCert: string | null;
   socketPath?: string;
-    noDecompress?: boolean;
+  noDecompress?: boolean;
 }) => {
   const debugTimeline: ResponseTimelineEntry[] = [];
   const curl = new Curl();
