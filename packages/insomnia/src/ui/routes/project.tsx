@@ -791,37 +791,14 @@ const ProjectRoute: FC = () => {
     isOpen: false,
   });
 
-  const createNewCollection = () => {
-    setNewWorkspaceModalState({
-      scope: 'collection',
-      isOpen: true,
-    });
-  };
-
-  const createNewDocument = () => {
-    setNewWorkspaceModalState({
-      scope: 'design',
-      isOpen: true,
-    });
-  };
+  const createNewCollection = () => setNewWorkspaceModalState({ scope: 'collection', isOpen: true });
+  const createNewDocument = () => setNewWorkspaceModalState({ scope: 'design', isOpen: true });
+  const createNewMockServer = () => canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true });
+  const createNewGlobalEnvironment = () => setNewWorkspaceModalState({ scope: 'environment', isOpen: true });
 
   const isEnterprise = currentPlan?.type.includes('enterprise');
   const isCloudProjectOrEnterprisePlan = activeProject?.remoteId || isEnterprise;
   const canCreateMockServer = activeProject?._id && isCloudProjectOrEnterprisePlan;
-  const createNewMockServer = () => {
-    canCreateMockServer &&
-      setNewWorkspaceModalState({
-        scope: 'mock-server',
-        isOpen: true,
-    });
-  };
-
-  const createNewGlobalEnvironment = () => {
-    setNewWorkspaceModalState({
-      scope: 'environment',
-      isOpen: true,
-    });
-  };
 
   const isGitSyncEnabled = features.gitSync.enabled;
 
@@ -1392,7 +1369,7 @@ const ProjectRoute: FC = () => {
                             </Tooltip>
                           </TooltipTrigger>
                           <div className="flex-1 flex flex-col gap-2 justify-end text-sm text-[--hl]">
-                            {(item.gitFilePath) && (
+                            {item.gitFilePath && (
                               <div className="text-sm flex items-center gap-2">
                                 <Icon icon="file-alt" />
                                 <span className='truncate' title={item.gitFilePath}>
