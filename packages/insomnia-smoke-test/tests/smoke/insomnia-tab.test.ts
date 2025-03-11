@@ -74,7 +74,7 @@ test.describe('multiple-tab feature test', () => {
     await page.getByTestId('project').click();
     await page.getByLabel('Create in project').click();
     await page.getByLabel('Request collection', { exact: true }).click();
-    await page.getByPlaceholder('My Collection').fill('Test add tab collection');
+    await page.getByPlaceholder('Enter a name for your Request Collection').fill('Test add tab collection');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
     await page.waitForTimeout(1000);
     await page.getByLabel('Tab Plus').click();
