@@ -1,6 +1,6 @@
 
 import type { PluginTemplateTag } from './extensions';
-import * as templating from './index';
+import * as templating from './worker';
 export function decodeEncoding<T>(value: T) {
   if (typeof value !== 'string') {
     return value;
