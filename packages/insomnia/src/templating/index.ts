@@ -78,7 +78,6 @@ export function render(
     path?: string;
     renderMode?: string;
     ignoreUndefinedEnvVariable?: boolean;
-    pluginsAllowElevatedAccess?: boolean;
   } = {},
 ) {
   const hasNunjucksInterpolationSymbols = text.includes('{{') && text.includes('}}');
@@ -97,7 +96,7 @@ export function render(
   return new Promise<string | null>(async (resolve, reject) => {
     // NOTE: this is added as a breadcrumb because renderString sometimes hangs
     const id = setTimeout(() => console.log('[templating] Warning: nunjucks failed to respond within 5 seconds'), 5000);
-    const nj = await getNunjucks(renderMode, config.ignoreUndefinedEnvVariable, config.pluginsAllowElevatedAccess);
+    const nj = await getNunjucks(renderMode, config.ignoreUndefinedEnvVariable);
     nj?.renderString(text, templatingContext, (err: Error | null, result: any) => {
       clearTimeout(id);
       if (!err) {
@@ -166,7 +165,7 @@ export async function getTagDefinitions() {
     }));
 }
 
-async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: boolean, pluginsAllowElevatedAccess?: boolean): Promise<NunjucksEnvironment> {
+async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: boolean): Promise<NunjucksEnvironment> {
   let throwOnUndefined = true;
   if (ignoreUndefinedEnvVariable) {
     throwOnUndefined = false;

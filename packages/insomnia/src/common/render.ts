@@ -271,7 +271,6 @@ const renderInThisProcess = async (input: { input: string; context: Record<strin
     context: input.context,
     path: input.path,
     ignoreUndefinedEnvVariable: input.ignoreUndefinedEnvVariable,
-    pluginsAllowElevatedAccess: true,
   });
 };
 /**
