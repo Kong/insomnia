@@ -1,7 +1,6 @@
 import type { Environment } from 'nunjucks';
 import nunjucks from 'nunjucks/browser/nunjucks';
 
-import type { TemplateTag } from '../plugins';
 import { localTemplateTags } from '../ui/components/templating/local-template-tags';
 
 export enum RenderErrorSubType {
@@ -236,6 +235,7 @@ async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: bool
   for (const extension of allExtensions) {
     const { templateTag, plugin } = extension;
     templateTag.priority = templateTag.priority || allExtensions.indexOf(extension);
+    // @ts-expect-error -- TODO
     const instance = new baseExtensionFork.default(templateTag, plugin);
     nunjucksEnvironment.addExtension(instance.getTag() || '', instance);
     // Hidden helper filter to debug complicated things

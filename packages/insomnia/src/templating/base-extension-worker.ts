@@ -55,9 +55,7 @@ export default class BaseExtension {
     return (
       // @ts-expect-error -- TSCONVERSION
       this._ext?.liveDisplayName ||
-      function () {
-        return '';
-      }
+      (() => '')
     );
   }
 
