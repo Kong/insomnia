@@ -353,22 +353,29 @@ export const canPushLoader = async ({ projectId, workspaceId }: {
   }
 };
 
-const recursivelyFindInsomniaFiles = async (fsClient: PromiseFsClient, dir: string, files: string[] = []) => {
+async function isInsomniaFile(fullPath: string, fsClient: PromiseFsClient) {
+  if (!fullPath.endsWith('.yaml')) {
+    return false;
+  }
+
+  const fileContents = await fsClient.promises.readFile(fullPath, 'utf8');
+  return fileContents.split('\n')[0].trim().includes('insomnia.rest');
+}
+
+// Recursively finds all .yaml files in a repository that are Insomnia files and returns their paths relative to the repo root.
+// Insomnia files are defined as files that contain the string 'insomnia.rest' in the first line.
+const recursivelyFindInsomniaFiles = async (fsClient: PromiseFsClient, dir: string, files: string[] = []): Promise<string[]> => {
   const dirFiles = await fsClient.promises.readdir(dir);
   for (const file of dirFiles) {
-    const fullPath = path.join(dir, file);
-    const stats = await fsClient.promises.stat(fullPath);
+    const repoRelativePath = path.join(dir, file);
+    const isDirectory = (await fsClient.promises.stat(repoRelativePath)).isDirectory();
 
-    if (stats.isDirectory()) {
-      await recursivelyFindInsomniaFiles(fsClient, fullPath, files);
-    } else {
-      if (fullPath.endsWith('.yaml')) {
-        const fileContents = await fsClient.promises.readFile(fullPath, 'utf8');
-        const isInsomniaFile = fileContents.split('\n')[0].trim().includes('insomnia.rest');
-        if (isInsomniaFile) {
-          files.push(fullPath);
-        }
-      }
+    if (isDirectory) {
+      await recursivelyFindInsomniaFiles(fsClient, repoRelativePath, files);
+    }
+
+    if (!isDirectory && await isInsomniaFile(repoRelativePath, fsClient)) {
+      files.push(repoRelativePath);
     }
   }
 
