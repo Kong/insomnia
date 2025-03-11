@@ -1,9 +1,14 @@
+import { getExistingConsole } from './console';
 import { Property, PropertyBase, PropertyList } from './properties';
-import { Variable, VariableList } from './variables';
+import { checkIfUrlIncludesTag } from './utils';
 
 let UrlSearchParams = URLSearchParams;
 export function setUrlSearchParams(provider: any) {
     UrlSearchParams = provider;
+}
+
+function canNotBeModifiedWarning(originalUrl: string | undefined) {
+    getExistingConsole().warn(`The url "${originalUrl || 'undefined'}" can not be parsed, only 'insomnia.request.url.update(..)' will take effect.`);
 }
 
 export interface QueryParamOptions {
@@ -142,57 +147,85 @@ export class Url extends PropertyBase {
     override _kind: string = 'Url';
 
     id?: string;
-    // TODO: should be related to RequestAuth
-    // but the implementation seems only supports username + password
-    auth?: { username: string; password: string };
-    hash?: string;
-    host: string[] = [];
-    path?: string[] = [];
-    port?: string;
-    protocol?: string;
-    query: PropertyList<QueryParam> = new PropertyList<QueryParam>(QueryParam, undefined, []);
-    variables: VariableList<Variable> = new VariableList<Variable>(undefined, []);
+
+    get auth(): { username: string; password: string } | undefined {
+        // TODO: probably it should be related to the RequestAuth class
+        // but the implementation seems only supporting username + password
+        return this.urlObject && this.urlObject.username !== ''
+            ? { username: this.urlObject.username, password: this.urlObject.password }
+            : undefined;
+    }
+    get hash(): string {
+        const fullHash = this.urlObject ? this.urlObject.hash : '';
+        return fullHash.startsWith('#') ? fullHash.slice(1) : fullHash;
+    }
+    get host(): string[] {
+        return this.urlObject ? this.urlObject.hostname.split('.') : [];
+    }
+    get path(): string[] {
+        return this.urlObject ? this.urlObject.pathname.split('/').filter(segment => segment.trim() !== '') : [];
+    }
+    get port(): string {
+        return this.urlObject ? this.urlObject.port : '';
+    }
+    get protocol(): string {
+        return this.urlObject ? this.urlObject.protocol : '';
+    }
+    get query(): PropertyList<QueryParam> {
+        const queryList = this.urlObject?.searchParams ?
+            Array.from(this.urlObject.searchParams.entries())
+                .map(queryEntry => new QueryParam({ key: queryEntry[0], value: queryEntry[1] }), {}) :
+            [];
+        return new PropertyList<QueryParam>(
+                QueryParam,
+                undefined,
+                queryList
+        );
+    }
+    get variables(): string[] {
+        // TODO: it's usage is unknown
+        return [];
+    }
+
+    private urlObject?: URL;
+    private origin?: string;
 
     constructor(
         def: UrlOptions | string
     ) {
         super();
-        this.setFields(def);
+        this.initFields(def);
     }
 
-    private setFields(def: UrlOptions | string) {
-        const urlObj = typeof def === 'string' ? Url.parse(def) : def;
+    private initFields(urlOptions: UrlOptions | string | undefined) {
+        if (typeof urlOptions === 'string') {
+            // avoid escaping tags by the parser: {% uuid 'v4' %} -> %7B%%20uuid%20'v4'%20%%7D
+            const ifUrlIncludesTag = checkIfUrlIncludesTag(urlOptions);
+            if (URL.canParse(urlOptions) && !ifUrlIncludesTag) {
+                this.urlObject = new URL(urlOptions);
+            } else {
+                this.urlObject = undefined;
+            }
+            this.origin = urlOptions;
+        } else if (typeof urlOptions === 'object') {
+            const protocolStr = (urlOptions.protocol || '').trim() ? urlOptions.protocol.trim() : 'https://';
+            const authStr = urlOptions.auth ? `${urlOptions.auth.username}:${urlOptions.auth.password}@` : '';
+            const hostStr = urlOptions.host.join('.');
+            const portStr = urlOptions.port ? `:${urlOptions.port}` : '';
+            const pathStr = urlOptions.path && urlOptions.path.length > 0 ? `/${urlOptions.path.filter(segment => segment.trim() !== '').join('/')}` : '';
+            const queryStr = urlOptions.query && urlOptions.query.length > 0 ? '?' + urlOptions.query.map(pair => `${pair.key}=${pair.value}`).join('&') : '';
+            const hashStr = urlOptions.hash ? `#${urlOptions.hash}` : '';
 
-        if (urlObj) {
-            this.auth = urlObj.auth;
-            this.hash = urlObj.hash;
-            this.host = urlObj.host;
-            this.path = urlObj.path;
-            this.port = urlObj.port;
-            this.protocol = urlObj.protocol;
+            const urlString = `${protocolStr}${authStr}${hostStr}${portStr}${pathStr}${queryStr}${hashStr}`;
 
-            const queryList = urlObj.query ?
-                urlObj.query.map(kvObj => new QueryParam(kvObj), {}) :
-                [];
-            this.query = new PropertyList<QueryParam>(
-                QueryParam,
-                undefined,
-                queryList
-            );
-
-            // TODO: variable is always empty in this way
-            const varList = urlObj.variables ?
-                urlObj.variables
-                    .map(
-                        (kvObj: { key: string; value: string }) => new Variable(kvObj),
-                        {},
-                    ) :
-                [];
-
-            this.variables = new VariableList(undefined, varList);
-
+            if (URL.canParse(urlString)) {
+                this.urlObject = new URL(urlString);
+            } else {
+                this.urlObject = undefined;
+            }
+            this.origin = urlString;
         } else {
-            throw Error(`url is invalid: ${def}`); // TODO:
+            throw Error(`url is invalid: ${urlOptions} `); // TODO:
         }
     }
 
@@ -203,233 +236,127 @@ export class Url extends PropertyBase {
     }
 
     static parse(urlStr: string): UrlOptions | undefined {
-        // the URL API (for web) is not leveraged here because the input string could contain tags for interpolation
-        // which will be encoded, then it would introduce confusion for users in manipulation
-        // TODO: but it still would be better to rely on the URL API
+        if (URL.canParse(urlStr)) {
+            const urlObject = new URL(urlStr);
+            const auth = urlObject.username === '' ? undefined : { username: urlObject.username, password: urlObject.password };
+            const query = Array.from(urlObject.searchParams.entries())
+                .map(entry => ({ key: entry[0], value: entry[1] }));
 
-        const endOfProto = urlStr.indexOf('://');
-        const protocol = endOfProto >= 0 ? urlStr.slice(0, endOfProto + 1) : '';
-
-        let auth: undefined | { username: string; password: string } = undefined;
-        const potentialStartOfAuth = protocol === '' ? 0 : endOfProto + 3;
-        let endOfAuth = urlStr.indexOf('@', potentialStartOfAuth);
-        const startOfPathname = urlStr.indexOf('/', endOfProto >= 0 ? endOfProto + 3 : 0);
-        const atCharIsBeforePath = endOfAuth < startOfPathname;
-        if (atCharIsBeforePath) { // this checks if unencoded '@' appears in path
-            if (endOfAuth >= 0 && potentialStartOfAuth < endOfAuth) { // e.g., '@insomnia.com' will be ignored
-                const authStr = endOfAuth >= 0 ? urlStr.slice(potentialStartOfAuth, endOfAuth) : '';
-                const authParts = authStr?.split(':');
-                if (authParts.length < 2) {
-                    throw Error(`new Url(): failed to parse auth in url ${urlStr}`);
-                }
-                // authParts[x] would not be undefined
-                // add empty string for type checking
-                const username = authParts[0] || '';
-                const password = authParts[1] || '';
-                auth = { username, password };
-            }
-        } else {
-            // don't do anything if @ appears in path
-            endOfAuth = -1;
+            return {
+                auth,
+                protocol: urlObject.protocol,
+                host: urlObject.hostname.split('.'),
+                port: urlObject.port,
+                path: urlObject.pathname.split('/'),
+                query,
+                hash: urlObject.hash,
+                variables: [],
+            };
         }
 
-        const startOfHash = urlStr.indexOf('#');
-        const hash = startOfHash >= 0 ? urlStr.slice(startOfHash + 1) : undefined;
-
-        const endOfQuery = startOfHash >= 0 ? startOfHash : urlStr.length;
-        const startOfQuery = urlStr.lastIndexOf('?', endOfQuery);
-        const query = new Array<{ key: string; value: string }>();
-        if (startOfQuery >= 0) {
-            const queryStr = urlStr.slice(startOfQuery + 1, endOfQuery);
-            query.push(
-                ...queryStr
-                    .split('&')
-                    .map(pairStr => {
-                        const queryParts = pairStr.split('=');
-                        const key = queryParts[0] || '';
-                        const value = queryParts.length > 1 ? queryParts[1] || '' : '';
-                        return { key, value };
-                    })
-                    .filter(kvPair => {
-                        return kvPair && kvPair.key !== ''; // the value could be ''
-                    })
-                    .map(kvPair => {
-                        return { key: kvPair.key, value: kvPair.value };
-                    }),
-            );
-        }
-
-        const path = new Array<string>();
-        if (startOfPathname >= 0) {
-            let endOfPathname = urlStr.length;
-            if (startOfQuery >= 0) {
-                endOfPathname = startOfQuery;
-            } else if (startOfHash >= 0) {
-                endOfPathname = startOfHash;
-            }
-            const pathname = urlStr.slice(startOfPathname, endOfPathname);
-            path.push(
-                ...pathname.split('/'),
-            );
-        }
-
-        let potentialStartOfHostname = 0;
-        if (endOfAuth >= 0) {
-            potentialStartOfHostname = endOfAuth + 1;
-        } else if (endOfProto >= 0) {
-            potentialStartOfHostname = endOfProto + 3;
-        }
-        let potentialEndOfHostname = urlStr.length;
-        if (startOfPathname >= 0) {
-            potentialEndOfHostname = startOfPathname;
-        } else if (startOfQuery >= 0) {
-            potentialEndOfHostname = startOfQuery;
-        } else if (startOfHash >= 0) {
-            potentialEndOfHostname = startOfHash;
-        }
-        const host = new Array<string>();
-        let port = undefined;
-        if (potentialStartOfHostname < potentialEndOfHostname) {
-            const hostname = urlStr.slice(potentialStartOfHostname, potentialEndOfHostname);
-            const hostnameParts = hostname.split(':');
-            const hostPart = hostnameParts[0];
-            if (hostnameParts.length === 2) {
-                port = hostnameParts[1];
-            } else if (hostnameParts.length > 2) {
-                throw Error('new Url(): failed to parse hostname in url ${urlStr}');
-            }
-            if (!hostPart) {
-                throw Error('new Url(): the hostname part is invalid');
-            }
-
-            host.push(
-                ...
-                hostPart.split('.'),
-            );
-        }
-
-        return {
-            auth,
-            protocol,
-            host,
-            port,
-            path,
-            query,
-            hash,
-            variables: [],
-        };
+        return undefined;
     }
 
     addQueryParams(params: { key: string; value: string }[] | string) {
-        let queryParams: { key: string; value: string }[];
-
-        if (typeof params === 'string') {
-            queryParams = QueryParam.parse(params);
+        if (this.urlObject !== undefined) {
+            if (typeof params === 'string') {
+                const searchParams = new UrlSearchParams(params);
+                Array.from(searchParams.entries())
+                    .forEach(pair => {
+                        if (this.urlObject) {
+                            this.urlObject.searchParams.append(pair[0], pair[1]);
+                        }
+                    });
+            } else if (Array.isArray(params)) {
+                params.forEach(pair => {
+                    if (this.urlObject) {
+                        this.urlObject.searchParams.append(pair.key, pair.value);
+                    }
+                });
+            } else {
+                throw Error(`addQueryParams: failed to add params: ${JSON.stringify(params)}`);
+            }
         } else {
-            queryParams = params;
+            canNotBeModifiedWarning(this.origin);
         }
-
-        queryParams.forEach((param: { key: string; value: string }) => {
-            this.query.append(new QueryParam({ key: param.key, value: param.value }));
-        });
     }
 
     getHost() {
-        return this.host.join('.');
+        if (this.urlObject) {
+            return this.urlObject.hostname;
+        }
+        return '';
     }
 
-    getPath(unresolved?: boolean) {
-        const pathStr = this.path ? this.path.join('/') : '/';
-        const finalPath = pathStr.startsWith('/') ? pathStr : '/' + pathStr;
-
-        if (unresolved) {
-            return finalPath;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    getPath(_unresolved?: boolean) {
+        if (this.urlObject) {
+            return this.urlObject.pathname;
         }
-
-        // TODO: should it support rendering variables here?
-        return finalPath;
+        return '';
     }
 
     getPathWithQuery() {
+        if (this.getPath(true).trim() === '') {
+            return this.getQueryString();
+        }
         return `${this.getPath(true)}?${this.getQueryString()}`;
     }
 
     getQueryString() {
-        const params = new UrlSearchParams();
-        this.query.each(param => params.append(param.key, param.value), {});
-
-        const queryParamStrs = this.query.map(pair => {
-            return pair.value ? `${pair.key}=${pair.value}` : pair.key;
-        }, {});
-
-        return queryParamStrs.join('&');
+        if (this.urlObject) {
+            return this.urlObject.search.replace('?', '');
+        }
+        return '';
     }
 
-    getRemote(forcePort?: boolean) {
-        const host = this.getHost();
-
-        if (forcePort) {
-            // TODO: it does not support GQL, gRPC and so on
-            const port = this.port ? this.port :
-                this.protocol && (this.protocol === 'https:') ? 443 : 80;
-            return `${host}:${port}`;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    getRemote(_forcePort?: boolean) {
+        if (this.urlObject) {
+            return this.urlObject.host;
         }
-
-        // TODO: it does not support GQL, gRPC and so on
-        const portWithColon = this.port ? `:${this.port}` : '';
-        return `${host}${portWithColon}`;
+        return '';
     }
 
     removeQueryParams(params: QueryParam[] | string[] | string) {
-        if (typeof params === 'string') {
-            // it is a string
-            this.query = new PropertyList(
-                QueryParam,
-                undefined,
-                this.query.filter(queryParam => queryParam.key !== params, {})
-            );
-        } else if (params.length > 0) {
-            let toBeRemoved: Set<string>;
-
-            if (typeof params[0] === 'string') {
-                // it is a string[]
-                toBeRemoved = new Set(params as string[]);
+        if (this.urlObject) {
+            if (typeof params === 'string') {
+                if (this.urlObject) {
+                    this.urlObject.searchParams.delete(params);
+                }
+            } else if (Array.isArray(params)) {
+                params.forEach((pair: QueryParam | string) => {
+                    if (this.urlObject) {
+                        if (typeof pair === 'string') {
+                            this.urlObject.searchParams.delete(pair);
+                        } else {
+                            this.urlObject.searchParams.delete(pair.key, pair.value);
+                        }
+                    }
+                });
             } else {
-                // it is a QueryParam[]
-                toBeRemoved = new Set(
-                    (params as QueryParam[])
-                        .map(param => param.key)
-                );
+                throw Error('removeQueryParams: failed to remove query params: unknown params type, only supports QueryParam[], string[] or string');
             }
-
-            this.query = new PropertyList(
-                QueryParam,
-                undefined,
-                this.query.filter(queryParam => !toBeRemoved.has(queryParam.key), {})
-            );
         } else {
-            throw Error('failed to remove query params: unknown params type, only supports QueryParam[], string[] or string');
+            canNotBeModifiedWarning(this.origin);
         }
     }
 
-    override toString(forceProtocol?: boolean) {
-        const protocolStr = forceProtocol ?
-            (this.protocol ? `${this.protocol}//` : 'http://') :
-            (this.protocol ? `${this.protocol}//` : '');
-
-        const authStr = this.auth ? `${this.auth.username}:${this.auth.password}@` : '';
-        const hostStr = this.getHost();
-        const portStr = this.port ? `:${this.port}` : '';
-        const pathStr = this.getPath();
-        const queryStr = this.getQueryString() ? `?${this.getQueryString()}` : '';
-        const hashStr = this.hash ? `#${this.hash}` : '';
-
-        return `${protocolStr}${authStr}${hostStr}${portStr}${pathStr}${queryStr}${hashStr}`;
-        // return parser.toString();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    override toString(_forceProtocol?: boolean) {
+        if (this.urlObject) {
+            const urlInString = this.urlObject.toString();
+            if (this.urlObject.pathname === '/' && urlInString === this.origin + '/') {
+                // try to avoid replacing empty path with '/'
+                return urlInString.slice(0, urlInString.length - 1);
+            }
+            return urlInString;
+        }
+        return this.origin || '';
     }
 
     update(url: UrlOptions | string) {
-        this.setFields(url);
+        this.initFields(url);
     }
 }
 

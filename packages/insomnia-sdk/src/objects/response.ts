@@ -178,7 +178,7 @@ export class Response extends Property {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     jsonp(_reviver?: (key: string, value: any) => any, _strict?: boolean) {
-        throw unsupportedError('jsonp');
+        throw unsupportedError('jsonp()');
     }
 
     reason() {
