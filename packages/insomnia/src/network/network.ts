@@ -618,23 +618,17 @@ export const tryToInterpolateRequest = async ({
   ignoreUndefinedEnvVariable?: boolean;
 }
 ) => {
-  try {
-    return await getRenderedRequestAndContext({
-      request: request,
-      environment,
-      baseEnvironment,
-      userUploadEnvironment,
-      transientVariables,
-      purpose,
-      extraInfo,
-      ignoreUndefinedEnvVariable,
-    });
-  } catch (err) {
-    if ('type' in err && err.type === 'render') {
-      throw err;
-    }
-    throw new Error(`Failed to render request: ${request._id}`);
-  }
+  return await getRenderedRequestAndContext({
+    request: request,
+    environment,
+    baseEnvironment,
+    userUploadEnvironment,
+    transientVariables,
+    purpose,
+    extraInfo,
+    ignoreUndefinedEnvVariable,
+  });
+
 };
 
 export const tryToTransformRequestWithPlugins = async (renderResult: RequestAndContext) => {
