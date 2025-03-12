@@ -221,7 +221,7 @@ export const ProjectModal = ({
                             <Heading className="text-lg font-bold">Local Vault</Heading>
                           </div>
                           <p className="pt-2">
-                            Stored locally only with no cloud. Ideal when collaboration is not needed.
+                            Stored locally only, with no cloud. Ideal when collaboration is not needed.
                           </p>
                         </Radio>
 
@@ -359,7 +359,7 @@ export const ProjectModal = ({
 
               {activeView === 'git-results' && (
                 <>
-                  {initCloneGitRepositoryFetcher.state === 'submitting' && (
+                  {initCloneGitRepositoryFetcher.state !== 'idle' && (
                     <div className='w-full flex flex-col gap-2 p-4 items-center justify-center'>
                       <InsomniaLogo loading className='w-12 h-12' />
                       Loading Insomnia files from repository
@@ -371,6 +371,7 @@ export const ProjectModal = ({
                         <span className='flex items-center justify-center relative'>
                           <InsomniaLogo className='w-12 h-12' />
                         </span>
+                        <p className='p-2 text-center font-bold text-[--color-font]'>We didn't find any Insomnia files in this repository.</p>
                         <p className='p-2 text-center font-bold text-[--color-font]'>Clone this repository to start a new project.</p>
                         <p className='p-2 text-center text-[--color-font]'>Add your collections, documents, environments and mock servers, and share them using Git.</p>
                       </div>
@@ -432,16 +433,27 @@ export const ProjectModal = ({
                   )}
                   <div className='flex items-center justify-end gap-2 px-10 pb-10'>
                     <Button
+                      isDisabled={upsertProjectFetcher.state !== 'idle'}
                       onPress={() => setActiveView('git-clone')}
                       className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
                     >
                       Back
                     </Button>
                     <Button
+                      isDisabled={upsertProjectFetcher.state !== 'idle'}
                       onPress={onUpsertProject}
                       className="hover:no-underline w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                     >
-                      {insomniaFiles.length > 0 ? 'Import all' : 'Clone'}
+                      {upsertProjectFetcher.state !== 'idle' ? (
+                        <>
+                          <Icon icon="spinner" className="animate-spin" /> Cloning
+                        </>
+                      ) : (
+                        <>
+                          <Icon icon="git-alt" className="" />
+                          {insomniaFiles.length > 0 ? 'Import all' : 'Clone'}
+                        </>
+                      )}
                     </Button>
                   </div>
                 </>
