@@ -5,61 +5,34 @@ import { Link, Route, Routes, useLocation } from 'react-router-dom';
 import { LandingPage } from '../../common/sentry';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
-import collection_runner from '../images/onboarding/collection_runner.png';
-import co_owner from '../images/onboarding/coowner.png';
-import invite_control from '../images/onboarding/invite_control.png';
-import offline_experience from '../images/onboarding/offline_experience.png';
-import test_results from '../images/onboarding/test_results.png';
-import uncommitted_changes from '../images/onboarding/uncommited_changes.png';
+import git_projects from '../images/onboarding/git_projects.png';
+import multiple_tabs from '../images/onboarding/multiple_tabs.png';
+import secret_vaults from '../images/onboarding/secret_vaults.png';
 
 const features = [
   {
-    id: 'collection_runner',
-    icon: 'circle-play',
-    title: 'New Collection Runner',
+    id: 'multiple_tabs',
+    icon: 'window-restore',
+    title: 'Multiple Tabs',
     description:
-      'You can run tests for an entire collection using the new Collection Runner! And it\'s unlimited for every Insomnia user.',
-    image: collection_runner,
+      'Finally you can work on multiple collections and design documents with the multiple tabs capability that allows you to easily switch between one and another.',
+    image: multiple_tabs,
   },
   {
-    id: 'test_results',
-    icon: 'square-poll-vertical',
-    title: 'Test Results',
+    id: 'git_sync',
+    icon: 'git',
+    title: 'New Git Sync',
     description:
-      'In the previous v9.x we introduced full scripting support, and now we are introducing the ability to visualize test results when executing a request.',
-    image: test_results,
+      'An entirely rebuilt Git Sync experience, where your entire project can be connected to a Git repository and we will import multiple Insomnia resources at once.',
+    image: git_projects,
   },
   {
-    id: 'invite_control',
-    icon: 'lock',
-    title: 'Invite Control',
+    id: 'secret_vaults',
+    icon: 'cloud',
+    title: 'Secret Vaults',
     description:
-      'With this enterprise capability you can create invite rules to determine what domains can be invited to join an organization.',
-    image: invite_control,
-    rounded: true,
-  },
-  {
-    id: 'unpushed_notifications',
-    icon: 'bell',
-    title: 'Unpushed notifications',
-    description: 'You can now see indicators for changes that have not been committed - or have not been pushed - inside your projects and files.',
-    image: uncommitted_changes,
-  },
-  {
-    id: 'offline_experience',
-    icon: 'wifi',
-    title: 'Offline experience',
-    description:
-      'In the previous Insomnia v9.x we significantly improved the performance of the application, and in this one are making the offline experience even better.',
-    image: offline_experience,
-  },
-  {
-    id: 'multiple_owners',
-    icon: 'user-group',
-    title: 'Multiple owners',
-    description:
-      'With this enterprise feature, we are finally introducing the ability to have multiple co-owners for an enterprise organization account.',
-    image: co_owner,
+      'With this enterprise capability we now support connecting your secrets with AWS secret Manager, Azure Key Vault, GCP Secret Manager and Hashicorp Vault.',
+    image: secret_vaults,
     rounded: true,
   },
 ] satisfies {
@@ -77,11 +50,11 @@ const FeatureWizardView = () => {
       <Route
         path="/"
         element={
-          <ul className="grid grid-cols-3 gap-2 justify-center p-4">
+          <ul className="grid grid-cols-1 gap-2 justify-center p-4">
             {features.map(feature => (
               <li key={feature.id}>
                 <Link
-                  className="w-full hover:bg-[--hl-sm] bg-[--hl-xs] transition-colors select-none h-32 border-solid flex flex-col items-center justify-center border border-[--hl-md] rounded-sm p-4 gap-2 hover:no-underline"
+                  className="w-full hover:bg-[--hl-sm] bg-[--hl-xs] transition-colors select-none border-solid flex items-center border border-[--hl-md] rounded-sm px-8 py-4 gap-2 hover:no-underline"
                   to={`/onboarding/${feature.id}`}
                 >
                   <i className={`fa fa-${feature.icon} text-xl`} />
@@ -169,7 +142,7 @@ const Onboarding = () => {
             <InsomniaLogo className="transform translate-x-[-50%] translate-y-[-50%] absolute top-0 left-1/2 w-16 h-16" />
             <div className="text-[--color-font] flex flex-col gap-6 h-full">
               <h1 className="text-xl text-center">
-                🚀 Welcome to Insomnia 10!
+                🚀 Welcome to Insomnia 11!
               </h1>
               <div>
                 <p>
@@ -194,7 +167,7 @@ const Onboarding = () => {
                 <Link
                   className="hover:no-underline bg-[--color-surprise] text-sm hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                   to={window.localStorage.getItem('prefers-project-type') ? '/organization' : '/onboarding/migrate'}
-                  onClick={() => window.localStorage.setItem('hasSeenOnboardingV10', 'true')}
+                  onClick={() => window.localStorage.setItem('hasSeenOnboardingV11', 'true')}
                 >
                   Continue
                 </Link>
