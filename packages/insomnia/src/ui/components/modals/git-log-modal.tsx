@@ -88,8 +88,8 @@ export const GitLogModal: FC<Props> = ({ onClose }) => {
                   >
                     {item => (
                       <Row className="group focus:outline-none focus-within:bg-[--hl-xxs] transition-colors">
-                        <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
-                          <span className='p-2'>
+                        <Cell className="whitespace-nowrap text-wrap p-2 text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                          <span>
                             {item.commit.message}
                           </span>
                         </Cell>
