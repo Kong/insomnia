@@ -1,7 +1,6 @@
 import { exec, ExecException } from 'child_process';
 import path from 'path';
-import { describe, expect, it } from 'vitest';
-
+import { beforeAll, describe, expect, it } from 'vitest';
 // Tests both bundle and packaged versions of the CLI with the same commands and expectations.
 // Intended to be coarse grained (only checks for success or failure) smoke test to ensure packaging worked as expected.
 
@@ -59,7 +58,10 @@ const shouldReturnErrorCode = [
   // after-response script and test
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/after-response-failed-test.yml wrk_616795 --verbose',
 ];
-
+beforeAll(async () => {
+  // ensure the test server is running
+  await fetch('http://localhost:4010');
+});
 describe('inso dev bundle', () => {
   describe('exit codes are consistent', () => {
     it.each(shouldReturnSuccessCode)('exit code should be 0: %p', async input => {

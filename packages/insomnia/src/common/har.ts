@@ -11,7 +11,7 @@ import { isWorkspace, type Workspace } from '../models/workspace';
 import { getAuthHeader } from '../network/authentication';
 import * as plugins from '../plugins';
 import * as pluginContexts from '../plugins/context/index';
-import { RenderError } from '../templating/index';
+import { RenderError } from '../templating/render-error';
 import { parseGraphQLReqeustBody } from '../utils/graph-ql';
 import { smartEncodeUrl } from '../utils/url/querystring';
 import { getAppVersion } from './constants';

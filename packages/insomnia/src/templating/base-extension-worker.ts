@@ -1,13 +1,19 @@
-import { database as db } from '../common/database';
-import * as models from '../models/index';
-import type { Request } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { Workspace } from '../models/workspace';
-import * as pluginContexts from '../plugins/context';
-import type { PluginTemplateTag } from './extensions';
-import * as templating from './index';
-import { decodeEncoding } from './utils';
 
+import type { PluginTemplateTag } from './extensions';
+import * as templating from './worker';
+export function decodeEncoding<T>(value: T) {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  const results = value.match(/^b64::(.+)::46b$/);
+
+  if (results) {
+    return Buffer.from(results[1], 'base64').toString('utf8');
+  }
+
+  return value;
+}
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
 export interface HelperContext {
   context: any;
@@ -104,10 +110,9 @@ export default class BaseExtension {
       .map(decodeEncoding);
     // Define a helper context with utils
     const helperContext: HelperContext = {
-      ...pluginContexts.app.init(renderPurpose),
-      // @ts-expect-error -- TSCONVERSION
-      ...pluginContexts.store.init(this._plugin),
-      ...pluginContexts.network.init(),
+      // ...pluginContexts.app.init(renderPurpose),
+      // ...pluginContexts.store.init(this._plugin),
+      // ...pluginContexts.network.init(),
       context: renderContext,
       meta: renderMeta,
       renderPurpose,
@@ -118,29 +123,78 @@ export default class BaseExtension {
           }),
         models: {
           request: {
-            getById: models.request.getById,
+            getById: async (id: string) => {
+              const resp = await fetch('insomnia-templating-worker-database://request.getById', {
+                method: 'post',
+                body: JSON.stringify({ id }),
+              });
+
+              const req = await resp.json();
+              return req;
+            },
             getAncestors: async (request: any) => {
-              const ancestors = await db.withAncestors<Request | RequestGroup | Workspace>(request, [
-                models.requestGroup.type,
-                models.workspace.type,
-              ]);
-              return ancestors.filter(doc => doc._id !== request._id);
+              const resp = await fetch('insomnia-templating-worker-database://request.getAncestors', {
+                method: 'post',
+                body: JSON.stringify({ request, types: ['RequestGroup', 'Workspace'] }),
+              });
+
+              const ancestors = await resp.json();
+              return ancestors;
             },
           },
           workspace: {
-            getById: models.workspace.getById,
+            getById: async (id: string) => {
+              const resp = await fetch('insomnia-templating-worker-database://workspace.getById', {
+                method: 'post',
+                body: JSON.stringify({ id }),
+              });
+
+              const workspace = await resp.json();
+              return workspace;
+            },
           },
           oAuth2Token: {
-            getByRequestId: models.oAuth2Token.getByParentId,
+            getByRequestId: async (parentId: string) => {
+              const resp = await fetch('insomnia-templating-worker-database://oAuth2Token.getByRequestId', {
+                method: 'post',
+                body: JSON.stringify({ parentId }),
+              });
+
+              const oAuth2Token = await resp.json();
+              return oAuth2Token;
+            },
           },
           cookieJar: {
-            getOrCreateForWorkspace: (workspace: any) => {
-              return models.cookieJar.getOrCreateForParentId(workspace._id);
+            getOrCreateForWorkspace: async (workspace: any) => {
+              const resp = await fetch('insomnia-templating-worker-database://cookieJar.getOrCreateForParentId', {
+                method: 'post',
+                body: JSON.stringify({ parentId: workspace._id }),
+              });
+
+              const cookieJar = await resp.json();
+              return cookieJar;
             },
           },
           response: {
-            getLatestForRequestId: models.response.getLatestForRequest,
-            getBodyBuffer: models.response.getBodyBuffer,
+            getLatestForRequestId: async (requestId: string, environmentId: string | null) => {
+              const resp = await fetch('insomnia-templating-worker-database://response.getLatestForRequestId', {
+                method: 'post',
+                body: JSON.stringify({ requestId, environmentId }),
+              });
+
+              const latest = await resp.json();
+              return latest;
+            },
+            getBodyBuffer: async (response?: { bodyPath?: string; bodyCompression?: 'zip' | null | '__NEEDS_MIGRATION__' | undefined },
+              readFailureValue?: string) => {
+              const resp = await fetch('insomnia-templating-worker-database://response.getBodyBuffer', {
+                method: 'post',
+                body: JSON.stringify({ response, readFailureValue }),
+              });
+
+              const buffer = await resp.json();
+              return buffer;
+            },
           },
         },
       },

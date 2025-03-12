@@ -10,6 +10,7 @@ import type { Environment } from '../../../models/environment';
 import { type AuthTypes, getCombinedPathParametersFromUrl, type RequestPathParameter } from '../../../models/request';
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import { getAuthObjectOrNull } from '../../../network/authentication';
+import { RenderError } from '../../../templating/render-error';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { buildQueryStringFromParams, deconstructQueryStringToParams, extractQueryStringFromUrl, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { useReadyState } from '../../hooks/use-ready-state';
@@ -107,7 +108,7 @@ const WebSocketRequestForm: FC<FormProps> = ({
       }
       window.main.webSocket.event.send({ requestId: request._id, payload: renderedMessage });
     } catch (err) {
-      if (err.type === 'render') {
+      if (err instanceof RenderError) {
         showModal(RequestRenderErrorModal, {
           request,
           error: err,
