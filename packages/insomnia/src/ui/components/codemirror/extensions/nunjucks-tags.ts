@@ -130,6 +130,7 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
       el.setAttribute('draggable', 'true');
       el.setAttribute('data-error', 'off');
       el.setAttribute('data-template', tok.string);
+      el.innerHTML = '<label></label>' + tok.string;
       const mark = this.markText(start, end, {
         // @ts-expect-error not a known property of TextMarkerOptions
         __nunjucks: true,
@@ -274,7 +275,7 @@ async function _updateElementText(
   showVariableSourceAndValue: boolean
 ) {
   const el = mark.replacedWith!;
-  let innerHTML = '';
+  let innerHTML = text;
   let title = '';
   let dataIgnore = '';
   let dataError = '';
@@ -294,7 +295,6 @@ async function _updateElementText(
 
       if (tagDefinition) {
         // Try rendering these so we can show errors if needed
-        // @ts-expect-error -- TSCONVERSION
         const liveDisplayName = tagDefinition.liveDisplayName(tagData.args);
         const firstArg = tagDefinition.args[0];
 
@@ -304,7 +304,6 @@ async function _updateElementText(
           const argData = tagData.args[0];
           // @ts-expect-error -- TSCONVERSION
           const foundOption = firstArg.options.find(d => d.value === argData.value);
-          // @ts-expect-error -- TSCONVERSION
           const option = foundOption || firstArg.options[0];
           innerHTML = `${tagDefinition.displayName} &rArr; ${option.displayName}`;
         } else {
@@ -312,7 +311,6 @@ async function _updateElementText(
         }
 
         const preview = await render(text);
-        // @ts-expect-error -- TSCONVERSION
         title = tagDefinition.disablePreview(tagData.args) ? preview.replace(/./g, '*') : preview;
       } else {
         innerHTML = cleanedStr;

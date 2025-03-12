@@ -211,7 +211,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         id,
       );
     }
-  }, [defaultValue, getAutocompleteConstants, handleGetRenderContext, handleRender, onBlur, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, getKeyMap, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, eventListeners, id]);
+    // settings.pluginsAllowElevatedAccess is not used here but we want to trigger this effect when it changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultValue, getAutocompleteConstants, handleGetRenderContext, handleRender, onBlur, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, getKeyMap, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.pluginsAllowElevatedAccess, settings.showVariableSourceAndValue, eventListeners, id]);
 
   const cleanUpEditor = useCallback(() => {
     codeMirror.current?.toTextArea();

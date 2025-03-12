@@ -482,7 +482,9 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
         codeMirror.current.foldCode(from, to);
       }
     }
-  }, [hideGutters, hideLineNumbers, placeholder, settings.editorLineWrapping, settings.editorKeyMap, settings.hotKeyRegistry, settings.autocompleteDelay, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, noLint, readOnly, noMatchBrackets, indentSize, hintOptions, infoOptions, dynamicHeight, jumpOptions, noStyleActiveLine, indentWithTabs, extraKeys, handleRender, mode, getAutocompleteConstants, getAutocompleteSnippets, persistState, maybePrettifyAndSetValue, defaultValue, filter, onClickLink, uniquenessKey, handleGetRenderContext, pinToBottom, onPaste, id]);
+    // settings.pluginsAllowElevatedAccess is not used here but we want to trigger this effect when it changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hideGutters, hideLineNumbers, placeholder, settings.editorLineWrapping, settings.editorKeyMap, settings.hotKeyRegistry, settings.autocompleteDelay, settings.nunjucksPowerUserMode, settings.pluginsAllowElevatedAccess, settings.showVariableSourceAndValue, noLint, readOnly, noMatchBrackets, indentSize, hintOptions, infoOptions, dynamicHeight, jumpOptions, noStyleActiveLine, indentWithTabs, extraKeys, handleRender, mode, getAutocompleteConstants, getAutocompleteSnippets, persistState, maybePrettifyAndSetValue, defaultValue, filter, onClickLink, uniquenessKey, handleGetRenderContext, pinToBottom, onPaste, id]);
 
   const cleanUpEditor = useCallback(() => {
     codeMirror.current?.toTextArea();
