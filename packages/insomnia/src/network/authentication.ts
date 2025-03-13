@@ -9,8 +9,8 @@ import {
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
 } from '../common/constants';
-import type { RenderedRequest } from '../common/render';
 import type { AuthTypeOAuth2, RequestAuthentication, RequestParameter } from '../models/request';
+import type { RenderedRequest } from '../templating/types';
 import { COOKIE, HEADER, QUERY_PARAMS } from './api-key/constants';
 import { getBasicAuthHeader } from './basic-auth/get-header';
 import { getBearerAuthHeader } from './bearer-auth/get-header';

@@ -13,7 +13,6 @@ import {
   getLocationHeader,
   getSetCookieHeaders,
 } from '../common/misc';
-import type { ExtraRenderInfo, RenderedRequest, RenderPurpose, RequestAndContext } from '../common/render';
 import {
   getRenderedRequestAndContext,
 } from '../common/render';
@@ -34,6 +33,7 @@ import { isWorkspace, type Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { RenderError } from '../templating/render-error';
+import type { ExtraRenderInfo, RenderedRequest, RenderPurpose, RequestAndContext } from '../templating/types';
 import { maskOrDecryptContextIfNecessary } from '../templating/utils';
 import { defaultSendActionRuntime, type SendActionRuntime } from '../ui/routes/request';
 import { invariant } from '../utils/invariant';

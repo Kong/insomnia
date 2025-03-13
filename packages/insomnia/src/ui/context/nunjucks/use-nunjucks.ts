@@ -1,8 +1,9 @@
 import { useCallback } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { getRenderContext, getRenderContextAncestors, type HandleGetRenderContext, type HandleRender, render, type RenderContextOptions } from '../../../common/render';
+import { getRenderContext, getRenderContextAncestors, render } from '../../../common/render';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
+import type { HandleGetRenderContext, HandleRender, RenderContextOptions } from '../../../templating/types';
 import { getKeys } from '../../../templating/utils';
 import type { RequestLoaderData } from '../../routes/request';
 import type { WorkspaceLoaderData } from '../../routes/workspace';

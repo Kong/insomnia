@@ -1,8 +1,8 @@
 import CodeMirror, { type Token } from 'codemirror';
 
 import * as misc from '../../../../common/misc';
-import type { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import { getTagDefinitions } from '../../../../templating/index';
+import type { HandleGetRenderContext, HandleRender } from '../../../../templating/types';
 import { tokenizeTag } from '../../../../templating/utils';
 import { showModal } from '../../modals/index';
 import { NunjucksModal } from '../../modals/nunjucks-modal';

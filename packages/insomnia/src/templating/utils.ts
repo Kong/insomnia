@@ -1,8 +1,8 @@
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
 
-import type { RenderPurpose } from '../common/render';
 import { userSession } from '../models';
 import { decryptSecretValue, vaultEnvironmentMaskValue, vaultEnvironmentPath } from '../models/environment';
+import type { RenderPurpose } from '../templating/types';
 import { decryptVaultKeyFromSession } from '../utils/vault';
 import type { DisplayName, PluginArgumentEnumOption, PluginTemplateTagActionContext } from './extensions';
 import objectPath from './third_party/objectPath';

@@ -1,11 +1,10 @@
-import type { ExtraRenderInfo } from '../../common/render';
 import type { Request } from '../../models/request';
 import type { Response } from '../../models/response';
 import type {
   PluginStore,
 } from '../../plugins/context';
 import type { AppContext } from '../../plugins/context/app';
-import type { HelperContext } from '../base-extension';
+import type { ExtraRenderInfo, HelperContext } from '../../templating/types';
 import type { NunjucksActionTag, NunjucksParsedTagArg } from '../utils';
 export type PluginArgumentValue = string | number | boolean;
 
@@ -68,7 +67,7 @@ export type PluginArgument =
 
 export type PluginTemplateTagContext = HelperContext & {
   app: AppContext;
-  store:  PluginStore;
+  store: PluginStore;
   network: {
     sendRequest(request: Request, extraInfo?: ExtraRenderInfo): Promise<Response>;
   };

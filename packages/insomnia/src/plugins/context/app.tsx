@@ -2,7 +2,7 @@ import React from 'react';
 import type ReactDOM from 'react-dom';
 
 import { getAppPlatform, getAppVersion } from '../../common/constants';
-import type { RenderPurpose } from '../../common/render';
+import type { RenderPurpose } from '../../templating/types';
 import { HtmlElementWrapper } from '../../ui/components/html-element-wrapper';
 import { showAlert, showModal, showPrompt } from '../../ui/components/modals';
 import type { PromptModalOptions } from '../../ui/components/modals/prompt-modal';

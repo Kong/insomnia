@@ -1,5 +1,4 @@
 import { database as db } from '../common/database';
-import type { RenderPurpose } from '../common/render';
 import * as models from '../models/index';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
@@ -7,41 +6,11 @@ import type { Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context';
 import type { PluginTemplateTag } from './extensions';
 import * as templating from './index';
+import type { HelperContext } from './types';
 import { decodeEncoding } from './utils';
 
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
-export interface BaseRenderContext {
-  getMeta: () => {};
-  getKeysContext: () => {};
-  getPurpose: () => RenderPurpose | undefined;
-  getExtraInfo: (key: string) => string[] | null;
-  getEnvironmentId: () => string | undefined;
-  getGlobalEnvironmentId: () => string | undefined;
-  getProjectId: () => string | undefined;
-}
-export interface HelperContext {
-  context: BaseRenderContext & {
-    value: string | number;
-  };
-  meta: { requestId?: string; workspaceId?: string };
-  renderPurpose?: RenderPurpose;
-  util: {
-    render: (str: string) => string | Promise<string | null>;
-    models: {
-      request: {
-        getById: (id: string) => Promise<Request | null>;
-        getAncestors: (request: Request) => Promise<(Request | RequestGroup | Workspace)[]>;
-      };
-      workspace: { getById: (id: string) => Promise<Workspace | null> };
-      oAuth2Token: { getByRequestId: (id: string) => Promise<any> };
-      cookieJar: { getOrCreateForWorkspace: (workspace: Workspace) => Promise<any> };
-      response: {
-        getLatestForRequestId: typeof models.response.getLatestForRequest;
-        getBodyBuffer: typeof models.response.getBodyBuffer;
-      };
-    };
-  };
-}
+
 export default class BaseExtension {
   _ext: PluginTemplateTag | null = null;
   _plugin: Plugin | null = null;

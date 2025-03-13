@@ -2,58 +2,31 @@ import clone from 'clone';
 import orderedJSON from 'json-order';
 
 import * as models from '../models';
-import type { CookieJar } from '../models/cookie-jar';
 import { type Environment, type UserUploadEnvironment, vaultEnvironmentPath, vaultEnvironmentRuntimePath } from '../models/environment';
-import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
-import { isProject, type Project } from '../models/project';
+import type { GrpcRequest } from '../models/grpc-request';
+import { isProject } from '../models/project';
 import { PATH_PARAMETER_REGEX, type Request } from '../models/request';
-import { isRequestGroup, type RequestGroup } from '../models/request-group';
+import { isRequestGroup } from '../models/request-group';
 import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
 import * as templating from '../templating';
-import type { BaseRenderContext } from '../templating/base-extension';
 import { RenderError } from '../templating/render-error';
+import type {
+  BaseRenderContext,
+  BaseRenderContextOptions,
+  RenderContextAncestor,
+  RenderContextOptions,
+  RenderedGrpcRequest,
+  RenderedGrpcRequestBody,
+  RenderRequest,
+  RenderRequestOptions,
+  RequestAndContext,
+} from '../templating/types';
 import * as templatingUtils from '../templating/utils';
 import { setDefaultProtocol } from '../utils/url/protocol';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
-
-export const KEEP_ON_ERROR = 'keep';
-export const THROW_ON_ERROR = 'throw';
-export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
-
-/** Key/value pairs to be provided to the render context */
-export type ExtraRenderInfo = {
-  name: string;
-  value: any;
-}[];
-
-export type RenderedRequest = Request & {
-  cookies: {
-    name: string;
-    value: string;
-    disabled?: boolean;
-  }[];
-  cookieJar: CookieJar;
-  suppressUserAgent: boolean;
-};
-
-export type RenderedGrpcRequest = GrpcRequest;
-
-export type RenderedGrpcRequestBody = GrpcRequestBody;
-
-export interface RenderContextAndKeys {
-  context: Record<string, any>;
-  keys: {
-    name: string;
-    value: any;
-  }[];
-}
-
-export type HandleGetRenderContext = (contextCacheKey?: string) => Promise<RenderContextAndKeys>;
-
-export type HandleRender = <T>(object: T, contextCacheKey?: string | null) => Promise<T>;
 
 export async function buildRenderContext(
   {
@@ -187,7 +160,7 @@ export async function buildRenderContext(
             subObject[key],
             subContext, // Only render with key being overwritten
             null,
-            KEEP_ON_ERROR,
+            'keep',
             'Environment',
           );
         } else {
@@ -249,7 +222,7 @@ export async function buildRenderContext(
         finalRenderContext[key],
         finalRenderContext,
         null,
-        KEEP_ON_ERROR,
+        'keep',
         'Environment',
       );
 
@@ -285,7 +258,7 @@ export async function render<T>(
   obj: T,
   context: Record<string, any> = {},
   blacklistPathRegex: RegExp | null = null,
-  errorMode: string = THROW_ON_ERROR,
+  errorMode: 'keep' | 'throw' = 'throw',
   name = '',
   ignoreUndefinedEnvVariable: boolean = false,
 ) {
@@ -354,7 +327,7 @@ export async function render<T>(
         }
       } catch (err) {
         console.log(`Failed to render element ${path}`, input);
-        if (errorMode !== KEEP_ON_ERROR) {
+        if (errorMode !== 'keep') {
           if (err?.extraInfo?.subType === 'environmentVariable') {
             undefinedEnvironmentVariables.push(...err.extraInfo.undefinedEnvironmentVariables);
           } else {
@@ -405,25 +378,6 @@ export async function render<T>(
   return renderResult;
 }
 
-interface RenderRequest<T extends Request | GrpcRequest | WebSocketRequest> {
-  request: T;
-}
-
-interface BaseRenderContextOptions {
-  environment?: string | Environment;
-  baseEnvironment?: Environment;
-  rootGlobalEnvironment?: Environment;
-  subGlobalEnvironment?: Environment;
-  userUploadEnvironment?: UserUploadEnvironment;
-  transientVariables?: Environment;
-  purpose?: RenderPurpose;
-  extraInfo?: ExtraRenderInfo;
-  ignoreUndefinedEnvVariable?: boolean;
-}
-
-export interface RenderContextOptions extends BaseRenderContextOptions, Partial<RenderRequest<Request | GrpcRequest | WebSocketRequest>> {
-  ancestors?: RenderContextAncestor[];
-}
 export async function getRenderContext(
   {
     request,
@@ -604,7 +558,7 @@ export async function getRenderedGrpcRequest(
     renderContext,
     ignorePathRegex,
   );
-  renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
+  renderedRequest.description = await render(description, renderContext, null, 'keep');
   return renderedRequest;
 }
 
@@ -623,11 +577,6 @@ export async function getRenderedGrpcRequestMessage(
   return renderedBody;
 }
 
-type RenderRequestOptions = BaseRenderContextOptions & RenderRequest<Request>;
-export interface RequestAndContext {
-  request: RenderedRequest;
-  context: Record<string, any>;
-}
 export async function getRenderedRequestAndContext(
   {
     request,
@@ -672,14 +621,14 @@ export async function getRenderedRequestAndContext(
     },
     renderContext,
     request.settingDisableRenderRequestBody ? /^body.*/ : null,
-    THROW_ON_ERROR,
+    'throw',
     '',
     ignoreUndefinedEnvVariable,
   );
 
   const renderedRequest = renderResult._request;
   const renderedCookieJar = renderResult._cookieJar;
-  renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
+  renderedRequest.description = await render(description, renderContext, null, 'keep');
   const userAgentHeaders = request.headers.filter(h => h.name.toLowerCase() === 'user-agent');
   const noUserAgents = userAgentHeaders.length === 0;
   const allUserAgentHeadersDisabled = userAgentHeaders.every(h => h.disabled === true);
@@ -775,7 +724,6 @@ function _getOrderedEnvironmentKeys(finalRenderContext: Record<string, any>): st
   });
 }
 
-type RenderContextAncestor = Request | GrpcRequest | WebSocketRequest | RequestGroup | Workspace | Project;
 export async function getRenderContextAncestors(base?: Request | GrpcRequest | WebSocketRequest | Workspace): Promise<RenderContextAncestor[]> {
   return await db.withAncestors<RenderContextAncestor>(base || null, [
     models.request.type,
