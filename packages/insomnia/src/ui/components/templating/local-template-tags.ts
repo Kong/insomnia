@@ -18,6 +18,35 @@ import { fakerFunctions } from './faker-functions';
 const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
   {
     templateTag: {
+      name: 'workerTest',
+      displayName: 'WorkerTest',
+      description: 'worker ipc main test',
+      args: [
+        {
+          type: 'string',
+          displayName: 'path',
+          description: 'input file path',
+        },
+      ],
+      async run(context, filepath) {
+        if (!filepath) {
+          return '';
+        }
+        try {
+          if (typeof window === 'undefined') {
+            // in web worker
+            return await context.util.workerIpcInvoke('readFile', { path: filepath });
+          } else {
+            return await window.main.readFile({ path: filepath });
+          }
+        } catch (error) {
+          throw new Error(`Error in worker ipc test: ${error.message}`);
+        };
+      },
+    },
+  },
+  {
+    templateTag: {
       name: 'faker',
       displayName: 'Faker',
       description: 'generate random outputs',

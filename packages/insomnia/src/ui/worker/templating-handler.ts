@@ -1,4 +1,6 @@
 
+import { ipcRenderer } from 'electron';
+
 import { extractUndefinedVariableKey, RenderError } from '../../templating/render-error';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- see below
@@ -30,7 +32,7 @@ export function renderInWorker({ input, context, path, ignoreUndefinedEnvVariabl
   const payloadWithHash = JSON.stringify({ id, input, context: newContext, path, ignoreUndefinedEnvVariable });
   worker.postMessage(payloadWithHash);
   return new Promise((resolve, reject) => {
-    const messageHandler = (event: MessageEvent) => {
+    const messageHandler = async (event: MessageEvent) => {
       if (event.data.id === id) {
         worker.removeEventListener('message', messageHandler);
         if (event.data.err) {
@@ -43,7 +45,32 @@ export function renderInWorker({ input, context, path, ignoreUndefinedEnvVariabl
           return reject(error);
         }
         return resolve(event.data.result);
-      }
+      } else {
+        try {
+          // Only process IPC request messages
+          if (event.data.type === 'worker-ipc-request') {
+            const { id, channel, args } = event.data;
+
+            try {
+              // Forward the request to the main process
+              const result = await ipcRenderer.invoke(channel, ...args);
+              worker.postMessage(JSON.stringify({
+                type: 'worker-ipc-response',
+                id,
+                result,
+              }));
+            } catch (error) {
+              worker.postMessage(JSON.stringify({
+                type: 'worker-ipc-response',
+                id,
+                error: error.message,
+              }));
+            }
+          }
+        } catch (err) {
+          console.error('Error handling worker message:', err);
+        }
+      };
     };
     worker.addEventListener('message', messageHandler);
   });
