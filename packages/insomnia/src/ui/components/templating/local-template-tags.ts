@@ -687,6 +687,9 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         }
         if (field === 'raw' && bodyBuffer !== null) {
           // Sometimes iconv conversion fails so fallback to regular buffer
+          if (typeof bodyBuffer === 'string') {
+            throw new Error(bodyBuffer);
+          }
           try {
             return iconv.decode(bodyBuffer, charset);
           } catch (err) {
@@ -705,9 +708,13 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           }
           return header.value;
         }
+
         if (field === 'body' && bodyBuffer !== null) {
           // Sometimes iconv conversion fails so fallback to regular buffer
           let body;
+          if (typeof bodyBuffer === 'string') {
+            throw new Error(bodyBuffer);
+          }
           try {
             body = iconv.decode(bodyBuffer, charset);
           } catch (err) {

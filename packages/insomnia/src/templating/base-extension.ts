@@ -22,7 +22,7 @@ export interface HelperContext {
     getProjectId: () => string | undefined;
   };
   meta: { requestId?: string; workspaceId?: string };
-  renderPurpose?: 'send' | 'render' | 'no-render' | 'script';
+  renderPurpose?: RenderPurpose;
   util: {
     render: (str: string) => string | Promise<string | null>;
     models: {
@@ -35,7 +35,7 @@ export interface HelperContext {
       cookieJar: { getOrCreateForWorkspace: (workspace: Workspace) => Promise<any> };
       response: {
         getLatestForRequestId: typeof models.response.getLatestForRequest;
-        getBodyBuffer: Promise<typeof models.response.getBodyBuffer>;
+        getBodyBuffer: typeof models.response.getBodyBuffer;
       };
     };
   };
