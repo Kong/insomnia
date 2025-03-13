@@ -20,6 +20,7 @@ import { MarkdownEditor } from '../markdown-editor';
 import { Pane } from '../panes/pane';
 import { RenderedQueryString } from '../rendered-query-string';
 import { SocketIOActionBar } from './action-bar';
+import { SocketIOBodyTabPane } from './body-tab-pane';
 
 // TODO: extract to a separate file as common component
 const PaneReadOnlyBanner = () => {
@@ -264,8 +265,8 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
             </Panel>
           </PanelGroup>
         </TabPanel>
-        <TabPanel className='w-full flex-1 flex flex-col' id='body'>
-          body tab
+        <TabPanel className='w-full h-full flex-1 flex flex-col' id='body'>
+          <SocketIOBodyTabPane />
         </TabPanel>
         <TabPanel className='w-full flex-1 overflow-y-auto' id='events'>
           events tab
