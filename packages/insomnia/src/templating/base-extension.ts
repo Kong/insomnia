@@ -10,16 +10,18 @@ import * as templating from './index';
 import { decodeEncoding } from './utils';
 
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
+export interface BaseRenderContext {
+  getMeta: () => {};
+  getKeysContext: () => {};
+  getPurpose: () => RenderPurpose | undefined;
+  getExtraInfo: (key: string) => string[] | null;
+  getEnvironmentId: () => string | undefined;
+  getGlobalEnvironmentId: () => string | undefined;
+  getProjectId: () => string | undefined;
+}
 export interface HelperContext {
-  context: {
+  context: BaseRenderContext & {
     value: string | number;
-    getMeta: () => {};
-    getKeysContext: () => {};
-    getPurpose: () => RenderPurpose | undefined;
-    getExtraInfo: (key: string) => string[] | null;
-    getEnvironmentId: () => string | undefined;
-    getGlobalEnvironmentId: () => string | undefined;
-    getProjectId: () => string | undefined;
   };
   meta: { requestId?: string; workspaceId?: string };
   renderPurpose?: RenderPurpose;

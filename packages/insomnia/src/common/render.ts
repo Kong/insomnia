@@ -12,6 +12,7 @@ import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
 import * as templating from '../templating';
+import type { BaseRenderContext } from '../templating/base-extension';
 import { RenderError } from '../templating/render-error';
 import * as templatingUtils from '../templating/utils';
 import { setDefaultProtocol } from '../utils/url/protocol';
@@ -21,9 +22,6 @@ import { database as db } from './database';
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
 export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
-export const RENDER_PURPOSE_SEND: RenderPurpose = 'send';
-export const RENDER_PURPOSE_GENERAL: RenderPurpose = 'general';
-export const RENDER_PURPOSE_NO_RENDER: RenderPurpose = 'no-render';
 
 /** Key/value pairs to be provided to the render context */
 export type ExtraRenderInfo = {
@@ -581,15 +579,7 @@ export async function getRenderContext(
     baseContext,
   });
 }
-interface BaseRenderContext {
-  getMeta: () => {};
-  getKeysContext: () => {};
-  getPurpose: () => RenderPurpose | undefined;
-  getExtraInfo: (key: string) => string[] | null;
-  getEnvironmentId: () => string | undefined;
-  getGlobalEnvironmentId: () => string | undefined;
-  getProjectId: () => string | undefined;
-}
+
 interface RenderGrpcRequestOptions extends BaseRenderContextOptions, RenderRequest<GrpcRequest> {
   skipBody?: boolean;
 }
