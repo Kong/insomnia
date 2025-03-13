@@ -5,7 +5,7 @@ import type {
   PluginStore,
 } from '../../plugins/context';
 import type { AppContext } from '../../plugins/context/app';
-import type { HelperContext } from '../base-extension';
+import type { HelperContext } from '../render-error';
 import type { NunjucksActionTag, NunjucksParsedTagArg } from '../utils';
 export type PluginArgumentValue = string | number | boolean;
 
@@ -68,7 +68,7 @@ export type PluginArgument =
 
 export type PluginTemplateTagContext = HelperContext & {
   app: AppContext;
-  store:  PluginStore;
+  store: PluginStore;
   network: {
     sendRequest(request: Request, extraInfo?: ExtraRenderInfo): Promise<Response>;
   };

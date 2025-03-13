@@ -16,6 +16,7 @@ import type { Workspace } from '../../../models/workspace';
 import * as plugins from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import * as templating from '../../../templating';
+import { decodeEncoding } from '../../../templating/render-error';
 import {
   type NunjucksParsedTag,
   type NunjucksParsedTagArg,
@@ -331,7 +332,7 @@ export const TagEditor: FC<Props> = props => {
           });
           return null;
         }
-        const strValue = templateUtils.decodeEncoding(argData.value?.toString() || '');
+        const strValue = decodeEncoding(argData.value?.toString() || '');
         const isVariable = argData.type === 'variable';
 
         let argInput;
@@ -449,8 +450,8 @@ export const TagEditor: FC<Props> = props => {
                     <option key="n/a" value="NO_VARIABLE">
                       -- Select Variable --
                     </option>
-                      {state.variables.map(v => (
-                        <option key={v.name} value={v.name}>
+                    {state.variables.map(v => (
+                      <option key={v.name} value={v.name}>
                         {v.name}
                       </option>
                     ))}

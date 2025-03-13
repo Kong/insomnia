@@ -271,20 +271,6 @@ export function encodeEncoding<T>(value: T, encoding?: 'base64') {
   return value;
 }
 
-export function decodeEncoding<T>(value: T) {
-  if (typeof value !== 'string') {
-    return value;
-  }
-
-  const results = value.match(/^b64::(.+)::46b$/);
-
-  if (results) {
-    return Buffer.from(results[1], 'base64').toString('utf8');
-  }
-
-  return value;
-}
-
 export async function maskOrDecryptContextIfNecessary(context: Record<string, any> & { getPurpose: () => RenderPurpose | undefined }) {
   // all secret variables are under vaultEnvironmentPath property in context
   const vaultEnvironmentData = context[vaultEnvironmentPath];

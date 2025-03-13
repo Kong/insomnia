@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { extractUndefinedVariableKey } from '../render-error';
+import { decodeEncoding, extractUndefinedVariableKey } from '../render-error';
 import * as utils from '../utils';
 
 describe('forceBracketNotation()', () => {
@@ -96,7 +96,7 @@ describe('getKeys()', () => {
   it('ignores functions', () => {
     const obj = {
       foo: 'bar',
-      toString: function() {
+      toString: function () {
         // Nothing
       },
     };
@@ -329,11 +329,11 @@ describe('encodeEncoding()', () => {
 describe('decodeEncoding()', () => {
 
   it('encodes things', () => {
-    expect(utils.decodeEncoding('b64::aGVsbG8=::46b')).toBe('hello');
-    expect(utils.decodeEncoding('aGVsbG8=')).toBe('aGVsbG8=');
-    expect(utils.decodeEncoding('hello')).toBe('hello');
-    expect(utils.decodeEncoding(null)).toBe(null);
-    expect(utils.decodeEncoding('')).toBe('');
+    expect(decodeEncoding('b64::aGVsbG8=::46b')).toBe('hello');
+    expect(decodeEncoding('aGVsbG8=')).toBe('aGVsbG8=');
+    expect(decodeEncoding('hello')).toBe('hello');
+    expect(decodeEncoding(null)).toBe(null);
+    expect(decodeEncoding('')).toBe('');
   });
 });
 

@@ -1,4 +1,9 @@
 import { get as _get } from 'lodash';
+
+import type { Request } from '../models/request';
+import type { RequestGroup } from '../models/request-group';
+import type { getBodyBuffer, getLatestForRequest } from '../models/response';
+import type { Workspace } from '../models/workspace';
 export class RenderError extends Error {
   // TODO: unsound definite assignment assertions
   // This is easy to fix, but be careful: extending from Error has especially tricky behavior.
@@ -37,4 +42,43 @@ export function extractUndefinedVariableKey(text: string = '', templatingContext
     }
   }
   return missingVariables;
+}
+
+export interface HelperContext {
+  context: {
+    value: string | number;
+
+  };
+  meta: { requestId?: string; workspaceId?: string };
+  renderPurpose?: 'send' | 'render' | 'no-render' | 'script';
+  util: {
+    render: (str: string) => string | Promise<string | null>;
+    models: {
+      request: {
+        getById: (id: string) => Promise<Request | null>;
+        getAncestors: (request: Request) => Promise<(Request | RequestGroup | Workspace)[]>;
+      };
+      workspace: { getById: (id: string) => Promise<Workspace | null> };
+      oAuth2Token: { getByRequestId: (id: string) => Promise<any> };
+      cookieJar: { getOrCreateForWorkspace: (workspace: Workspace) => Promise<any> };
+      response: {
+        getLatestForRequestId: typeof getLatestForRequest;
+        getBodyBuffer: typeof getBodyBuffer;
+      };
+    };
+  };
+}
+
+export function decodeEncoding<T>(value: T) {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  const results = value.match(/^b64::(.+)::46b$/);
+
+  if (results) {
+    return Buffer.from(results[1], 'base64').toString('utf8');
+  }
+
+  return value;
 }
