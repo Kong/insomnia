@@ -20,7 +20,6 @@ import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 import { showAlert, showPrompt } from '../modals';
 import { Tooltip } from '../tooltip';
-import { BooleanSetting } from './boolean-setting';
 interface State {
   plugins: Plugin[];
   npmPluginValue: string;
@@ -77,19 +76,6 @@ export const Plugins: FC = () => {
         Plugins is still an experimental feature. See{' '}
         <Link href={docsPlugins}>Documentation</Link> for more info.
       </p>
-
-      <div className="notice warning text-left margin-bottom">
-        <div className="selectable force-pre-wrap">
-          <p>
-            Plugins with elevated access can access anything Insomnia can. It's recommended that elevated access remain disabled.
-          </p>
-          <BooleanSetting
-            label="Allow elevated access for plugins"
-            setting="pluginsAllowElevatedAccess"
-          />
-        </div>
-      </div>
-
       {plugins.length === 0 ? (
         <div className="text-center faint italic pad">No Plugins Added</div>
       ) : (

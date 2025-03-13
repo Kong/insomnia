@@ -1,9 +1,34 @@
-import type { Environment } from 'nunjucks';
+import { Environment } from 'nunjucks';
 import nunjucks from 'nunjucks/browser/nunjucks';
 
+import * as plugins from '../plugins/index';
 import { localTemplateTags } from '../ui/components/templating/local-template-tags';
 import BaseExtension from './base-extension';
-import { extractUndefinedVariableKey, RenderError } from './render-error';
+import { extractUndefinedVariableKey, type NunjucksParsedTag } from './utils';
+
+export enum RenderErrorSubType {
+  EnvironmentVariable = 'environmentVariable'
+}
+
+export class RenderError extends Error {
+  // TODO: unsound definite assignment assertions
+  // This is easy to fix, but be careful: extending from Error has especially tricky behavior.
+  message!: string;
+  path!: string | null;
+  location!: {
+    line: number;
+    column: number;
+  };
+
+  type!: string;
+  reason!: string;
+  extraInfo?: Record<string, any>;
+
+  constructor(message: string) {
+    super(message);
+    this.message = message;
+  }
+}
 
 // Some constants
 export const RENDER_ALL = 'all';
@@ -12,7 +37,7 @@ export const RENDER_TAGS = 'tags';
 export const NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME = '_';
 
 type NunjucksEnvironment = Environment & {
-  extensions: Record<string, any>;
+  extensions: Record<string, BaseExtension>;
 };
 
 // Cached globals
@@ -56,38 +81,39 @@ export function render(
     const nj = await getNunjucks(renderMode, config.ignoreUndefinedEnvVariable);
     nj?.renderString(text, templatingContext, (err: Error | null, result: any) => {
       clearTimeout(id);
-      if (!err) {
-        return resolve(result);
-      }
-      console.warn('[templating] Error rendering template', err);
-      const sanitizedMsg = err.message
-        .replace(/\(unknown path\)\s/, '')
-        .replace(/\[Line \d+, Column \d*]/, '')
-        .replace(/^\s*Error:\s*/, '')
-        .trim();
-      const location = err.message.match(/\[Line (\d+), Column (\d+)*]/);
-      const line = location ? parseInt(location[1]) : 1;
-      const column = location ? parseInt(location[2]) : 1;
-      const reason = err.message.includes('attempted to output null or undefined value')
-        ? 'undefined'
-        : 'error';
-      const newError = new RenderError(sanitizedMsg);
-      newError.path = path || '';
-      newError.message = sanitizedMsg;
-      newError.location = {
-        line,
-        column,
-      };
-      newError.type = 'render';
-      newError.reason = reason;
-      // regard as environment variable missing
-      if (hasNunjucksInterpolationSymbols && reason === 'undefined') {
-        newError.extraInfo = {
-          subType: 'environmentVariable',
-          undefinedEnvironmentVariables: extractUndefinedVariableKey(text, templatingContext),
+      if (err) {
+        console.warn('[templating] Error rendering template', err);
+        const sanitizedMsg = err.message
+          .replace(/\(unknown path\)\s/, '')
+          .replace(/\[Line \d+, Column \d*]/, '')
+          .replace(/^\s*Error:\s*/, '')
+          .trim();
+        const location = err.message.match(/\[Line (\d+), Column (\d+)*]/);
+        const line = location ? parseInt(location[1]) : 1;
+        const column = location ? parseInt(location[2]) : 1;
+        const reason = err.message.includes('attempted to output null or undefined value')
+          ? 'undefined'
+          : 'error';
+        const newError = new RenderError(sanitizedMsg);
+        newError.path = path || '';
+        newError.message = sanitizedMsg;
+        newError.location = {
+          line,
+          column,
         };
+        newError.type = 'render';
+        newError.reason = reason;
+        // regard as environment variable missing
+        if (hasNunjucksInterpolationSymbols && reason === 'undefined') {
+          newError.extraInfo = {
+            subType: RenderErrorSubType.EnvironmentVariable,
+            undefinedEnvironmentVariables: extractUndefinedVariableKey(text, templatingContext),
+          };
+        }
+        reject(newError);
+      } else {
+        resolve(result);
       }
-      reject(newError);
     });
   });
 }
@@ -111,7 +137,7 @@ export async function getTagDefinitions() {
     .map(k => env.extensions[k])
     .filter(ext => !ext.isDeprecated())
     .sort((a, b) => (a.getPriority() > b.getPriority() ? 1 : -1))
-    .map(ext => ({
+    .map<NunjucksParsedTag>(ext => ({
       name: ext.getTag() || '',
       displayName: ext.getName() || '',
       liveDisplayName: ext.getLiveDisplayName(),
@@ -172,20 +198,15 @@ async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: bool
   // Create Env with Extensions //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   const nunjucksEnvironment = nunjucks.configure(config) as NunjucksEnvironment;
-  const pluginTemplateTags = await (await import('../plugins')).getTemplateTags();
 
-  const allExtensions = [
-    ...localTemplateTags,
+  const pluginTemplateTags = await plugins.getTemplateTags();
 
-    // Spread after local tags to allow plugins to override them.
-    // TODO: Determine if this is in fact the behavior we've explicitly decided to support.
-    ...pluginTemplateTags,
-  ];
+  const allExtensions = [...pluginTemplateTags, ...localTemplateTags];
 
   for (const extension of allExtensions) {
     const { templateTag, plugin } = extension;
     templateTag.priority = templateTag.priority || allExtensions.indexOf(extension);
-    // @ts-expect-error -- TODO
+    // @ts-expect-error -- TSCONVERSION
     const instance = new BaseExtension(templateTag, plugin);
     nunjucksEnvironment.addExtension(instance.getTag() || '', instance);
     // Hidden helper filter to debug complicated things

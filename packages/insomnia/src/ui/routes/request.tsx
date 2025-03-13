@@ -35,6 +35,7 @@ import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from 
 import { isWebSocketResponse, type WebSocketResponse } from '../../models/websocket-response';
 import { getAuthHeader } from '../../network/authentication';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToExecuteAfterResponseScript, tryToExecutePreRequestScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
+import { RenderErrorSubType } from '../../templating';
 import { parseGraphQLReqeustBody } from '../../utils/graph-ql';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
@@ -448,7 +449,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     } else {
       // if the error is not from response, we need to set it to url param and show it in modal
       url.searchParams.set('error', e);
-      if (e?.extraInfo && e?.extraInfo?.subType === 'environmentVariable') {
+      if (e?.extraInfo && e?.extraInfo?.subType === RenderErrorSubType.EnvironmentVariable) {
         url.searchParams.set('envVariableMissing', '1');
         url.searchParams.set('undefinedEnvironmentVariables', e?.extraInfo?.undefinedEnvironmentVariables);
       }

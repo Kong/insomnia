@@ -2,7 +2,6 @@ import { getRenderContext, render } from '../common/render';
 import type { GrpcRequest } from '../models/grpc-request';
 import type { Request } from '../models/request';
 import type { WebSocketRequest } from '../models/websocket-request';
-import { RenderError } from '../templating/render-error';
 import { showModal } from '../ui/components/modals';
 import { RequestRenderErrorModal } from '../ui/components/modals/request-render-error-modal';
 
@@ -12,7 +11,7 @@ export const tryToInterpolateRequestOrShowRenderErrorModal = async ({ request, e
     const renderContext = await getRenderContext({ request, environment: environmentId, purpose: 'send' });
     return await render(payload, renderContext);
   } catch (error) {
-    if (error instanceof RenderError) {
+    if (error.type === 'render') {
       showModal(RequestRenderErrorModal, { request, error });
       return;
     }

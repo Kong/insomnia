@@ -260,8 +260,7 @@ export const workspaceLoader: LoaderFunction = async ({
   }
 
   const userSession = await models.userSession.getOrCreate();
-  const isLoggedinIsCloudProjectAndIsNotGitRepo = userSession.id && activeProject.remoteId && !gitRepository;
-  if (isLoggedinIsCloudProjectAndIsNotGitRepo) {
+  if (userSession.id && !gitRepository) {
     try {
       const vcs = VCSInstance();
       await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);

@@ -1,0 +1,4368 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Postman data dump convert > should convert postman data dump 1`] = `
+{
+  "data": {
+    "__export_format": 4,
+    "__export_source": "insomnia.importers:v0.1.0",
+    "_type": "export",
+    "resources": [
+      {
+        "_id": "__WORKSPACE_ID__",
+        "_type": "workspace",
+        "name": "RESTful API Basics #blueprint",
+        "parentId": null,
+        "scope": "collection",
+      },
+      {
+        "_id": "__GRP_1__",
+        "_type": "request_group",
+        "afterResponseScript": "",
+        "authentication": {},
+        "description": "# 🚀 Get started here
+
+This collection guides you through CRUD operations (GET, POST, PUT, DELETE), variables, and tests.
+
+## 🔖 **How to use this collection**
+
+#### **Step 1: Send requests**
+
+RESTful APIs allow you to perform CRUD operations using the POST, GET, PUT, and DELETE HTTP methods.
+
+This collection contains each of these request types. Open each request and click "Send" to see what happens.
+
+#### **Step 2: View responses**
+
+Observe the response tab for status code (200 OK), response time, and size.
+
+#### **Step 3: Send new Body data**
+
+Update or add new data in "Body" in the POST request. Typically, Body data is also used in PUT and PATCH requests.
+
+\`\`\`
+{
+    "name": "Add your name in the body"
+}
+
+\`\`\`
+
+#### **Step 4: Update the variable**
+
+Variables enable you to store and reuse values in Postman. We have created a variable called \`base_url\` with the sample request [https://postman-api-learner.glitch.me](https://postman-api-learner.glitch.me). Replace it with your API endpoint to customize this collection.
+
+#### **Step 5: Add tests in the "Tests" tab**
+
+Tests help you confirm that your API is working as expected. You can write test scripts in JavaScript and view the output in the "Test Results" tab.
+
+<img src="https://content.pstmn.io/b5f280a7-4b09-48ec-857f-0a7ed99d7ef8/U2NyZWVuc2hvdCAyMDIzLTAzLTI3IGF0IDkuNDcuMjggUE0ucG5n">
+
+## 💪 Pro tips
+
+- Use folders to group related requests and organize the collection.
+- Add more scripts in "Tests" to verify if the API works as expected and execute flows.
+    
+
+## ℹ️ Resources
+
+[Building requests](https://learning.postman.com/docs/sending-requests/requests/)  
+[Authorizing requests](https://learning.postman.com/docs/sending-requests/authorization/)  
+[Using variables](https://learning.postman.com/docs/sending-requests/variables/)  
+[Managing environments](https://learning.postman.com/docs/sending-requests/managing-environments/)  
+[Writing scripts](https://learning.postman.com/docs/writing-scripts/intro-to-scripts/)",
+        "environment": {
+          "base_url": "https://postman-rest-api-learner.glitch.me/",
+          "id": "1",
+        },
+        "name": "RESTful API Basics #blueprint",
+        "parentId": "__WORKSPACE_ID__",
+        "preRequestScript": "",
+        "variable": {
+          "base_url": "https://postman-rest-api-learner.glitch.me/",
+          "id": "1",
+        },
+      },
+      {
+        "_id": "__REQ_1__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {
+    insomnia.response.to.have.status(200);
+});",
+        "authentication": {},
+        "body": {},
+        "description": "This is a GET request and it is used to "get" data from an endpoint. There is no request body for a GET request, but you can use query parameters to help specify the resource you want data on (e.g., in this request, we have \`id=1\`).
+
+A successful GET response will have a \`200 OK\` status, and should include some kind of response body - for example, HTML web content or JSON data.",
+        "headers": [],
+        "method": "GET",
+        "name": "Get data",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "id",
+            "value": "1",
+          },
+        ],
+        "parentId": "__GRP_1__",
+        "preRequestScript": "",
+        "url": "{{base_url}}/info",
+      },
+      {
+        "_id": "__REQ_2__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Successful POST request", function () {
+    insomnia.expect(insomnia.response.code).to.be.oneOf([200, 201]);
+});
+",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+	"name": "Add your name in the body"
+}",
+        },
+        "description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.
+
+A successful POST request typically returns a \`200 OK\` or \`201 Created\` response code.",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "POST",
+        "name": "Post data",
+        "parameters": [],
+        "parentId": "__GRP_1__",
+        "preRequestScript": "",
+        "url": "{{base_url}}/info",
+      },
+      {
+        "_id": "__REQ_3__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Successful PUT request", function () {
+    insomnia.expect(insomnia.response.code).to.be.oneOf([200, 201, 204]);
+});
+",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+	"name": "Add your name in the body"
+}",
+        },
+        "description": "This is a PUT request and it is used to overwrite an existing piece of data. For instance, after you create an entity with a POST request, you may want to modify that later. You can do that using a PUT request. You typically identify the entity being updated by including an identifier in the URL (eg. \`id=1\`).
+
+A successful PUT request typically returns a \`200 OK\`, \`201 Created\`, or \`204 No Content\` response code.",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "PUT",
+        "name": "Update data",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "id",
+            "value": "1",
+          },
+        ],
+        "parentId": "__GRP_1__",
+        "preRequestScript": "",
+        "url": "{{base_url}}/info",
+      },
+      {
+        "_id": "__REQ_4__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Successful DELETE request", function () {
+    insomnia.expect(insomnia.response.code).to.be.oneOf([200, 202, 204]);
+});
+",
+        "authentication": {},
+        "body": {},
+        "description": "This is a DELETE request, and it is used to delete data that was previously created via a POST request. You typically identify the entity being updated by including an identifier in the URL (eg. \`id=1\`).
+
+A successful DELETE request typically returns a \`200 OK\`, \`202 Accepted\`, or \`204 No Content\` response code.",
+        "headers": [],
+        "method": "DELETE",
+        "name": "Delete data",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "id",
+            "value": "1",
+          },
+        ],
+        "parentId": "__GRP_1__",
+        "preRequestScript": "",
+        "url": "{{base_url}}/info",
+      },
+      {
+        "_id": "__WORKSPACE_ID__",
+        "_type": "workspace",
+        "name": "Device Collection",
+        "parentId": null,
+        "scope": "collection",
+      },
+      {
+        "_id": "__GRP_1__",
+        "_type": "request_group",
+        "afterResponseScript": "",
+        "authentication": {},
+        "description": "",
+        "environment": {
+          "access_token": "",
+          "access_token_authO": "",
+          "appid": "",
+          "devid": "",
+          "globalReferenceId": "",
+          "provision_id": "",
+          "refresh_token_authO": "",
+          "usrrefid": "",
+        },
+        "name": "Device Collection",
+        "parentId": "__WORKSPACE_ID__",
+        "preRequestScript": "",
+        "variable": {
+          "access_token": "",
+          "access_token_authO": "",
+          "appid": "",
+          "devid": "",
+          "globalReferenceId": "",
+          "provision_id": "",
+          "refresh_token_authO": "",
+          "usrrefid": "",
+        },
+      },
+      {
+        "_id": "__GRP_2__",
+        "_type": "request_group",
+        "afterResponseScript": "",
+        "authentication": {},
+        "description": "",
+        "environment": {},
+        "name": "Ebiz Account & Device - M1A and WPS Devices",
+        "parentId": "__GRP_1__",
+        "preRequestScript": "",
+      },
+      {
+        "_id": "__REQ_1__",
+        "_type": "request",
+        "afterResponseScript": "tests["response code is 201"] = responseCode.code === 201;
+tests["Response Body contains ProvisionId"] = responseBody.has("provision_id");
+
+    var responseJson = insomnia.response.json()
+             console.log("Global_Reference_Id"+" - "+responseJson.Global_Reference_Id);
+
+            insomnia.environment.set("Global_Reference_Id_MTP_1_Device", responseJson.Global_Reference_Id);
+            insomnia.environment.set("Provision_Id_MTP_1_Device", responseJson.provision_list[0].provision_id);
+            insomnia.environment.set("Product_Key_MTP_1_Device", responseJson.provision_list[0].product_key);
+            insomnia.environment.set("Account_Id_MTP_1_Device", responseJson.provision_list[0].account_id);
+            insomnia.environment.set("Exp_Date_MTP_1_Device", responseJson.provision_list[0].exp_date);",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+"email_address": "{{_['UserEmail_MTP_1_Device']}}",
+"password": "{{_['UserPassword_MTP_1_Device']}}",
+"culture": "en-us",
+"client_id": "{{_['csp_client_id']}}",
+"is_fake_email": false,
+"sku_list": [{
+"app_id": "{{_['App_ID']}}",
+"sku": "0-7018-93492",
+"branding_id": ""
+}]
+}",
+        },
+        "description": "API: ActivateRequest
+
+Summary: This api is used for creating account, subscription for different products like WSS, SafeConnect etc.
+
+Incoming calls:
+    1. CONS_NEXS_PROD
+    2. CONS_PLATFORM_ Appapi_PROD
+    3. CONS_McAfeeMobileSecurity_PROD
+    4. CONS_CSP_SecurityMgmt_PROD
+    5. CONS_CSP_CSPToken_OTP_Service_PROD
+    6. CONS_PLATFORM_PARTNERSVC_PROD
+
+DB calls: Ebiz, EbizStats, Provision, MachineTracker
+
+External calls:
+    1.  CONS_PLATFORM_App_PROD
+    2.  CONS_PLATFORM_PARTNERSVC_PROD
+    3.	CONS_PLATFORM_PlatformSvc_Api_PROD
+    4.	CONS_PLATFORM_PlatformProv_Orch_PROD
+    5.	CONS_PLATFORM_BridgeService_PROD
+    6.	CONS_PLATFORM_BridgeService_PROD
+    7.	CONS_CSP_Basic_Config_Enroll_ServiceDiscovery_PROD
+    8.	CONS_CSP_Cloudlog_Cloudsecurity_PROD
+    9.	CONS_CSP_Contextenroll_PROD
+    10.	CONS_PLATFORM_Prodhome_PROD
+    11.	mcAsyncSvc
+    12.	www.transactonline.de
+    13.	apps.mcafeemobilesecurity.com",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+          {
+            "name": "st",
+            "value": "1",
+          },
+          {
+            "name": "sv",
+            "value": "V1",
+          },
+          {
+            "name": "ak",
+            "value": "{{C2C_AppKey}}",
+          },
+          {
+            "name": "ac",
+            "value": "{{ac}}",
+          },
+        ],
+        "method": "POST",
+        "name": "Subscription_Creation_MTP_1_Device",
+        "parameters": [],
+        "parentId": "__GRP_2__",
+        "preRequestScript": "var appKey = insomnia.environment.get("C2C_AppKey");
+var sharedKey = insomnia.environment.get("C2C_SharedKey");
+insomnia.environment.set("UserEmail_MTP_1_Device", insomnia.variables.replaceIn("Test_{{$timestamp}}@mcafee.com"));
+var password = "Password@123";
+insomnia.environment.set("UserPassword_MTP_1_Device", password);
+insomnia.environment.set("sw_id", insomnia.variables.replaceIn("{{$guid}}"));
+insomnia.environment.set("hw_id", insomnia.variables.replaceIn("{{$guid}}"));
+
+",
+        "url": "{{servicediscovery}}/v2/ProductProvision/",
+      },
+      {
+        "_id": "__REQ_2__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Verify the status code should be 200", function () {
+    insomnia.response.to.have.status(200);
+});
+
+insomnia.test("Verify the response body", function () {
+    var jsonData = insomnia.response.json();
+    insomnia.expect(jsonData.Success).to.eql(true);
+});
+
+insomnia.test("Body matches string", function () {
+    insomnia.expect(insomnia.response.text()).to.include("McAfee® Total Protection - 1 Device");
+});
+
+      var responseJson = insomnia.response.json() 
+      insomnia.globals.set("email_MTP_1_device",responseJson.email_address);
+      insomnia.globals.set("grid_MTP_1_device",responseJson.grid);     
+      insomnia.globals.set("acct_id_MTP_1_device",responseJson.acct_id);      
+      insomnia.environment.set("SubID_MTP_1_device",responseJson.provision_list[0].subscription_info.SubId)
+      insomnia.environment.set("Actcode_MTP_1_device",responseJson.provision_list[0].activation_code)",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+    "app_id": "{{App_ID}}",
+    "type": "Provision",
+    "provision_id": "{{Provision_Id_MTP_1_Device}}",
+    "Include_All_Subs": true
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "ac",
+            "value": "{{ac}}",
+          },
+          {
+            "name": "ak",
+            "value": "{{CSI_AppKey}}",
+          },
+          {
+            "name": "cd",
+            "value": "{{cd}}",
+          },
+          {
+            "name": "st",
+            "value": "1",
+          },
+          {
+            "name": "sv",
+            "value": "V1",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "POST",
+        "name": "Get_Subscriptions_MTP_1_Device",
+        "parameters": [],
+        "parentId": "__GRP_2__",
+        "preRequestScript": "var appKey = insomnia.environment.get("C2C_AppKey");
+var sharedKey = insomnia.environment.get("C2C_SharedKey");
+insomnia.environment.set("UserEmail_MTP_1_Device", insomnia.variables.replaceIn("Test_{{$timestamp}}@mcafee.com"));
+var password = "Password@123";
+insomnia.environment.set("UserPassword_MTP_1_Device", password);
+insomnia.environment.set("sw_id", insomnia.variables.replaceIn("{{$guid}}"));
+insomnia.environment.set("hw_id", insomnia.variables.replaceIn("{{$guid}}"));
+
+",
+        "url": "{{servicediscovery}}/v2/ProductProvision/GetSubscriptions",
+      },
+      {
+        "_id": "__REQ_3__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {
+    insomnia.response.to.have.status(200);
+});
+
+            var responseJson = insomnia.response.json() 
+			insomnia.environment.set("SerialNumber_MTP_1_device",responseJson.SerialNumber)
+			insomnia.environment.set("EncryptSerialNumber_MTP_1_device",responseJson.EncryptSerialNumber)
+            insomnia.environment.set("ProductKey_MTP_1_device",responseJson.ProductKey)
+            insomnia.environment.set("AcctId_MTP_1_device",responseJson.Account.AcctId)
+            ",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+   "EbizSubId": {{SubID_MTP_1_device}},
+   "DeviceType": "PC"
+} 
+ 
+",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+          {
+            "name": "st",
+            "value": "3",
+          },
+          {
+            "name": "sv",
+            "value": "V1",
+          },
+          {
+            "name": "ak",
+            "value": "{{pps_app_key}}",
+          },
+          {
+            "disabled": true,
+            "name": "ac",
+            "value": "{{ac}}",
+          },
+        ],
+        "method": "POST",
+        "name": "Get_Serial_Number_MTP_1_Device",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "subscriptionId",
+            "value": "{{SubID_MTP_1_device}}",
+          },
+        ],
+        "parentId": "__GRP_2__",
+        "preRequestScript": "var appKey = insomnia.environment.get("C2C_AppKey");
+var sharedKey = insomnia.environment.get("C2C_SharedKey");
+insomnia.environment.set("UserEmail_MTP_1_Device", insomnia.variables.replaceIn("Test_{{$timestamp}}@mcafee.com"));
+var password = "Password@123";
+insomnia.environment.set("UserPassword_MTP_1_Device", password);
+insomnia.environment.set("sw_id", insomnia.variables.replaceIn("{{$guid}}"));
+insomnia.environment.set("hw_id", insomnia.variables.replaceIn("{{$guid}}"));
+
+",
+        "url": "{{servicediscovery}}/v2/ProductProvisionV2/AddDeviceSerialNumberBySubId",
+      },
+      {
+        "_id": "__REQ_4__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+insomnia.test("response schema", function () {    
+    const responseData = insomnia.response.json();
+    insomnia.environment.set("ebiz_userRefId", responseData.data[0].userRefId);    
+    // insomnia.expect(responseData.data[0].subRefId).to.eq("required fields are missing");
+    
+    
+});
+",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+  "globalRefId": "{{globalReferenceId}}"
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "POST",
+        "name": "{{account-orch}}/v2/accounts/search - get userRefId",
+        "parameters": [
+          {
+            "disabled": true,
+            "name": "subRefId",
+            "value": "{{provision_id}}",
+          },
+        ],
+        "parentId": "__GRP_2__",
+        "preRequestScript": "",
+        "url": "{{_['account-orch']}}/v2/accounts/search",
+      },
+      {
+        "_id": "__REQ_5__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+
+
+",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+    "status": "ACTIVE"
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "",
+            "value": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImNNVGRoZHp4cV83UEhyaGNpRWprNyJ9.eyJpc3MiOiJodHRwczovL2lkcWEubWNhZmVlLmNvbS8iLCJzdWIiOiJOekxyenc1blE5NE0xT0hQejRlS3VKTm0yNHNyMVcxdkBjbGllbnRzIiwiYXVkIjoiaHR0cHM6Ly9zZXJ2aWNlYXBpLm1jYWZlZS5jb20iLCJpYXQiOjE2ODk1OTU2MjAsImV4cCI6MTY4OTY4MjAyMCwiYXpwIjoiTnpMcnp3NW5ROTRNMU9IUHo0ZUt1Sk5tMjRzcjFXMXYiLCJzY29wZSI6ImFjY291bnQ6ZnVsbCBzdWJzY3JpcHRpb246ZnVsbCBvcmRlcjpmdWxsIGNhdGFsb2c6ZnVsbCBlZndwdWJsaXNoZXI6d3JpdGUiLCJndHkiOiJjbGllbnQtY3JlZGVudGlhbHMifQ.rNEEzKN2mn1zf0l0yDQmydtQGKdGU80AbOhPXlBkxFWchjorFjrq8EfGfcibb7eemDVZ2x0u50lG4AvYA9KLYJc3h-kLHW2sjMgdzw5VedIu7rSe7nRMoIl8LeF1I63FIYc2eLd3jnJvHGVhyAIP6eOEgMQxLlhTNOfpWI1Q5HgR5a-ZVPCpwNP8V7gbtQrwttCGCyIPEiq9_T5Jhl54p6vIdlSnsNY6K8lqwc8EZsGocLjAKZuleZoFMRnM5bmjVfv5vGd1nASqy_DGNIJ5OQI7KeeeS3YHpXp3kesFSKTVa9CvkSEsufjYXob6QI3jN21Leh8zvVLg5lCmSBnmmg",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "PATCH",
+        "name": "Account status to Active",
+        "parameters": [
+          {
+            "disabled": true,
+            "name": "subRefId",
+            "value": "{{tn_subRefId}}",
+          },
+        ],
+        "parentId": "__GRP_2__",
+        "preRequestScript": "var appKey = insomnia.environment.get("C2C_AppKey");
+var sharedKey = insomnia.environment.get("C2C_SharedKey");
+insomnia.environment.set("UserEmail_MTP_1_Device", insomnia.variables.replaceIn("Test_{{$timestamp}}@mcafee.com"));
+var password = "Password@123";
+insomnia.environment.set("UserPassword_MTP_1_Device", password);
+insomnia.environment.set("sw_id", insomnia.variables.replaceIn("{{$guid}}"));
+insomnia.environment.set("hw_id", insomnia.variables.replaceIn("{{$guid}}"));
+
+",
+        "url": "{{servicediscovery}}/v1/users/{{ebiz_userRefId}}",
+      },
+      {
+        "_id": "__REQ_6__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+insomnia.test("response schema validation", function () {    
+    insomnia.expect(insomnia.response.json().data.userRefId).to.be.a("string", "userRefId");
+    insomnia.expect(insomnia.response.json().data.accountRefId).to.be.a("string", "accountRefId");
+    insomnia.expect(insomnia.response.json().data.activationDevices).to.be.a("array", "activationDevices");
+
+    insomnia.expect(insomnia.response.json().data.activationDevices.length).to.eq(0, "activationDevices array length should be 0");
+
+});
+
+",
+        "authentication": {},
+        "body": {},
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "",
+            "value": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImNNVGRoZHp4cV83UEhyaGNpRWprNyJ9.eyJpc3MiOiJodHRwczovL2lkcWEubWNhZmVlLmNvbS8iLCJzdWIiOiJOekxyenc1blE5NE0xT0hQejRlS3VKTm0yNHNyMVcxdkBjbGllbnRzIiwiYXVkIjoiaHR0cHM6Ly9zZXJ2aWNlYXBpLm1jYWZlZS5jb20iLCJpYXQiOjE2ODk1OTU2MjAsImV4cCI6MTY4OTY4MjAyMCwiYXpwIjoiTnpMcnp3NW5ROTRNMU9IUHo0ZUt1Sk5tMjRzcjFXMXYiLCJzY29wZSI6ImFjY291bnQ6ZnVsbCBzdWJzY3JpcHRpb246ZnVsbCBvcmRlcjpmdWxsIGNhdGFsb2c6ZnVsbCBlZndwdWJsaXNoZXI6d3JpdGUiLCJndHkiOiJjbGllbnQtY3JlZGVudGlhbHMifQ.rNEEzKN2mn1zf0l0yDQmydtQGKdGU80AbOhPXlBkxFWchjorFjrq8EfGfcibb7eemDVZ2x0u50lG4AvYA9KLYJc3h-kLHW2sjMgdzw5VedIu7rSe7nRMoIl8LeF1I63FIYc2eLd3jnJvHGVhyAIP6eOEgMQxLlhTNOfpWI1Q5HgR5a-ZVPCpwNP8V7gbtQrwttCGCyIPEiq9_T5Jhl54p6vIdlSnsNY6K8lqwc8EZsGocLjAKZuleZoFMRnM5bmjVfv5vGd1nASqy_DGNIJ5OQI7KeeeS3YHpXp3kesFSKTVa9CvkSEsufjYXob6QI3jN21Leh8zvVLg5lCmSBnmmg",
+          },
+        ],
+        "method": "GET",
+        "name": "without devices - v1/device-activations by userRefId",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "userRefId",
+            "value": "{{ebiz_userRefId}}",
+          },
+          {
+            "disabled": true,
+            "name": "subRefId",
+            "value": "{{tn_subRefId}}",
+          },
+        ],
+        "parentId": "__GRP_2__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v1/device-activations",
+      },
+      {
+        "_id": "__REQ_7__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+insomnia.test("response schema validation", function () {    
+    
+    insomnia.expect(insomnia.response.json().data.length).to.eq(0, "data array length should be 0");
+
+});
+
+",
+        "authentication": {},
+        "body": {},
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+        ],
+        "method": "GET",
+        "name": "without devices - v2/device-activations by userRefId",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "userRefId",
+            "value": "{{ebiz_userRefId}}",
+          },
+          {
+            "disabled": true,
+            "name": "subRefId",
+            "value": "{{tn_subRefId}}",
+          },
+        ],
+        "parentId": "__GRP_2__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v2/device-activations",
+      },
+      {
+        "_id": "__REQ_8__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+insomnia.test("response schema validation", function () {    
+    insomnia.expect(insomnia.response.json().data.userRefId).to.be.a("string", "userRefId");
+    insomnia.expect(insomnia.response.json().data.accountRefId).to.be.a("string", "accountRefId");
+    insomnia.expect(insomnia.response.json().data.activationDevices).to.be.a("array", "activationDevices");
+
+    insomnia.expect(insomnia.response.json().data.activationDevices.length).to.eq(0, "activationDevices array length should be 0");
+
+});
+
+",
+        "authentication": {},
+        "body": {},
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+        ],
+        "method": "GET",
+        "name": "without devices -  v1/device-activations by userRefId subrefId",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "userRefId",
+            "value": "{{ebiz_userRefId}}",
+          },
+          {
+            "disabled": false,
+            "name": "subRefId",
+            "value": "{{provision_id}}",
+          },
+        ],
+        "parentId": "__GRP_2__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v1/device-activations",
+      },
+      {
+        "_id": "__REQ_9__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 400", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(400);
+});
+
+insomnia.test("response schema validation", function () {    
+    insomnia.expect(insomnia.response.json().errors[0].reason).to.eq("userRefId is required");
+    
+    
+
+});
+
+",
+        "authentication": {},
+        "body": {},
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+        ],
+        "method": "GET",
+        "name": "without devices -  v1/device-activations by subrefId",
+        "parameters": [
+          {
+            "disabled": true,
+            "name": "userRefId",
+            "value": "{{ebiz_userRefId}}",
+          },
+          {
+            "disabled": false,
+            "name": "subRefId",
+            "value": "{{provision_id}}",
+          },
+        ],
+        "parentId": "__GRP_2__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v1/device-activations",
+      },
+      {
+        "_id": "__REQ_10__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+insomnia.test("response schema validation", function () {    
+    
+    insomnia.expect(insomnia.response.json().data.length).to.eq(0, "data array length should be 0");
+
+});
+
+",
+        "authentication": {},
+        "body": {},
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+        ],
+        "method": "GET",
+        "name": "without devices - v2/device-activations by userRefId subrefId",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "userRefId",
+            "value": "{{ebiz_userRefId}}",
+          },
+          {
+            "disabled": false,
+            "name": "subRefId",
+            "value": "{{provision_id}}",
+          },
+        ],
+        "parentId": "__GRP_2__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v2/device-activations",
+      },
+      {
+        "_id": "__REQ_11__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+insomnia.test("response schema validation", function () {    
+    
+    insomnia.expect(insomnia.response.json().data.length).to.eq(0, "data array length should be 0");
+
+});
+
+",
+        "authentication": {},
+        "body": {},
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+        ],
+        "method": "GET",
+        "name": "without devices - v2/device-activations by subrefId",
+        "parameters": [
+          {
+            "disabled": true,
+            "name": "userRefId",
+            "value": "{{ebiz_userRefId}}",
+          },
+          {
+            "disabled": false,
+            "name": "subRefId",
+            "value": "{{provision_id}}",
+          },
+        ],
+        "parentId": "__GRP_2__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v2/device-activations",
+      },
+      {
+        "_id": "__REQ_12__",
+        "_type": "request",
+        "afterResponseScript": "var responseJson = insomnia.response.json()
+insomnia.globals.set("ebiz_device_id_mobile",responseJson.device_id);",
+        "authentication": {
+          "disabled": false,
+          "prefix": "",
+          "token": "{{access_token}}",
+          "type": "bearer",
+        },
+        "body": {
+          "mimeType": "text/plain",
+          "text": "{
+    "device_name": "EinsteinPhone",
+    "device_type": "phone",
+    "device_os": "iOS",
+    "device_os_version": "5.0.1",
+    "app_install_status": "install",
+    "device_model": "Samsung GT-S5830L",
+    "device_brand_name": "Samsung",
+    "locale": "en-US",
+    "device_hardware_id": "2b22062f-ac5d-4855-8b67-87f271bebaee",
+    "device_number": "2b22062f-ac5d-4855-8b67-87f271bebaee",    
+    "app_version": "7.7.0.0",
+    "app_install_date": "2022-06-23T00:00:00",
+    "eula_accept_date": "2022-10-23T00:00:00",
+    "device_memory": "300 MB",
+    "oobe_data": {
+        "sub_status": "Trial-Active",
+        "culture": "EN-US",
+        "aff_id": "0",
+        "plan": "Trial",
+        "pkg_id": "443",
+        "lcid": "1033",
+        "sku": "0-7323-103590",
+        "pkg_name": "McAfee® LiveSafe™",
+        "exp_date": "2023-10-23T00:00:00",
+        "email": "{{_['email_MTP_1_device']}}",
+        "mobilenumber": "8888765498",
+        "provision_id": "{{_['provision_id']}}",
+        "account_id": "{{_['acct_id_MTP_1_device']}}",
+        "product_key": "AC5D6E9C-F6CD-4A84-A7E3-EB3F24A3DB24",
+        "Global_Reference_Id": "{{_['grid_MTP_1_device']}}",
+        "productprovisionstate": "provision_complete"
+    },
+    "preinstall_data": {
+        "Mylocation": "off",
+        "user_test": "ab test Einstein"
+    }
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "X-McAfee-Agent",
+            "value": "M1A",
+          },
+          {
+            "name": "X-McAfee-Agent-OS",
+            "value": "Android",
+          },
+          {
+            "name": "Authorization",
+            "value": "Bearer {{access_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+          {
+            "name": "Cookie",
+            "value": "HPrst=loc=&rm=iq5nNK-ISQc78yUmSkAv9A2; ADRUM_BT=R:0|i:2118875|g:1f966472-35cd-4c1b-9a09-4b9a565beb261495|e:1391|s:f|n:mcafee-test_2835d011-e415-4bd4-bf96-d6820720dcdf",
+          },
+        ],
+        "method": "POST",
+        "name": "Add Devcie-EBIZ-M1A-Mobile",
+        "parameters": [],
+        "parentId": "__GRP_2__",
+        "preRequestScript": "",
+        "url": "{{einstein_url}}/apps/v1/devices",
+      },
+      {
+        "_id": "__REQ_13__",
+        "_type": "request",
+        "afterResponseScript": "var responseJson = insomnia.response.json()
+insomnia.globals.set("ebiz_device_id_pc",responseJson.device_id);",
+        "authentication": {
+          "disabled": false,
+          "prefix": "",
+          "token": "{{access_token}}",
+          "type": "bearer",
+        },
+        "body": {
+          "mimeType": "text/plain",
+          "text": "{
+    "device_name": "DESKTOP-QP1NA0T",
+    "device_type": "pc",
+    "device_os": "WINDOWS",
+    "device_os_version": "10.0.22621",
+    "app_install_status": "install",
+    "device_model": "VMware7,1",
+    "device_brand_name": "VMware, Inc.",
+    "locale": "en-US",
+    "device_hardware_id": "2b22062f-ac5d-4855-8b67-87f271bebaee",
+    "device_number": "2b22062f-ac5d-4855-8b67-87f271bebaee",
+    "product_market_name": "16.0 R111",
+    "app_install_date": "2022-06-23T00:00:00",
+    "eula_accept_date": "2022-10-23T00:00:00",
+    "device_memory": "300 MB",
+    "oobe_data": {
+        "sub_status": "Trial-Active",
+        "culture": "EN-US",
+        "aff_id": "0",
+        "plan": "Trial",
+        "pkg_id": "443",
+        "lcid": "1033",
+        "sku": "0-7323-103590",
+        "pkg_name": "McAfee® LiveSafe™",
+        "exp_date": "2023-10-23T00:00:00",
+        "email": "{{_['email_MTP_1_device']}}",
+        "mobilenumber": "8888765498",
+        "provision_id": "{{_['provision_id']}}",
+        "account_id": "{{_['acct_id_MTP_1_device']}}",
+        "product_key": "AC5D6E9C-F6CD-4A84-A7E3-EB3F24A3DB24",
+        "Global_Reference_Id": "{{_['grid_MTP_1_device']}}",
+        "productprovisionstate": "provision_complete"
+    },
+    "preinstall_data": {
+        "Mylocation": "off",
+        "user_test": "ab test Einstein"
+    }
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "X-McAfee-Agent",
+            "value": "WPS",
+          },
+          {
+            "name": "X-McAfee-Agent-OS",
+            "value": "Windows",
+          },
+          {
+            "name": "Authorization",
+            "value": "Bearer {{access_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+          {
+            "name": "Cookie",
+            "value": "HPrst=loc=&rm=iq5nNK-ISQc78yUmSkAv9A2; ADRUM_BT=R:0|i:2118875|g:1f966472-35cd-4c1b-9a09-4b9a565beb261495|e:1391|s:f|n:mcafee-test_2835d011-e415-4bd4-bf96-d6820720dcdf",
+          },
+        ],
+        "method": "POST",
+        "name": "Add Devcie-EBIZ-WPS-windows",
+        "parameters": [],
+        "parentId": "__GRP_2__",
+        "preRequestScript": "",
+        "url": "{{einstein_url}}/apps/v1/devices",
+      },
+      {
+        "_id": "__REQ_14__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 201", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(201);
+    const Request = JSON.parse(insomnia.request.body.raw);
+    // insomnia.environment.set("userRefId_tn", Request.userRefId);
+});",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+    "deviceRefId": "{{ebiz_device_id_mobile}}",
+    "subRefId": "{{provision_id}}",
+    "userRefId": "{{globalReferenceId}}",
+    "activationTime": {{activationTime}},
+    "activationStatus": "ACTIVATED"
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "POST",
+        "name": "success-ebiz-M1A-device",
+        "parameters": [],
+        "parentId": "__GRP_2__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v1/device-activations",
+      },
+      {
+        "_id": "__REQ_15__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 201", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(201);
+    const Request = JSON.parse(insomnia.request.body.raw);
+    // insomnia.environment.set("userRefId_tn", Request.userRefId);
+});",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+    "deviceRefId": "{{ebiz_device_id_pc}}",
+    "subRefId": "{{provision_id}}",
+    "userRefId": "{{globalReferenceId}}",
+    "activationTime": {{activationTime}},
+    "activationStatus": "ACTIVATED"
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "POST",
+        "name": "success-ebiz-windows-device",
+        "parameters": [],
+        "parentId": "__GRP_2__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v1/device-activations",
+      },
+      {
+        "_id": "__GRP_3__",
+        "_type": "request_group",
+        "afterResponseScript": "",
+        "authentication": {},
+        "description": "",
+        "environment": {},
+        "name": "TN Account & Device - M1A and WPS Devices - V2",
+        "parentId": "__GRP_1__",
+        "preRequestScript": "",
+      },
+      {
+        "_id": "__GRP_4__",
+        "_type": "request_group",
+        "afterResponseScript": "",
+        "authentication": {},
+        "description": "",
+        "environment": {},
+        "name": "create-tn-subscripiton-device-activate",
+        "parentId": "__GRP_3__",
+        "preRequestScript": "",
+      },
+      {
+        "_id": "__REQ_16__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.environment.set("created_user_ref_id", insomnia.response.json().data.userRefID)
+insomnia.environment.set("globalRefID", insomnia.response.json().data.globalRefID)",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+    "firstName": "{% faker 'randomFirstName' %}",
+    "middleName": "Robert",
+    "lastName": "{% faker 'randomLastName' %}",
+    "accountName": "John",
+    "emailAddress": "{% faker 'randomEmail' %}",
+    "phoneNumber": "+7098764322",
+    "userOptins": [
+        1
+    ],
+    "countryCode": "{% faker 'randomCountryCode' %}",
+    "gender": "male",
+    "password": "mypas@!#1sword",
+    "passwordType": "AutoCreated",
+    "accountType": "PERSONAL"
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "POST",
+        "name": "Create Account",
+        "parameters": [],
+        "parentId": "__GRP_4__",
+        "preRequestScript": "",
+        "url": "{{_['account-func']}}/v1/register",
+      },
+      {
+        "_id": "__REQ_17__",
+        "_type": "request",
+        "afterResponseScript": "
+insomnia.test("Status code is 201", function () {
+    insomnia.response.to.have.status(201);
+    insomnia.globals.set("orderRefIdcreate", insomnia.response.json().data.orderRefId);
+    console.log("orderRefIdcreate generated is " + insomnia.globals.get("orderRefIdcreate"));
+});
+
+
+
+var bodydata = JSON.parse(insomnia.request.body.raw) 
+
+console.log(bodydata.channelRefId)
+
+insomnia.globals.set("channelRefIdcreate", bodydata.channelRefId);
+
+insomnia.test("Verify Response Json - Basic", function () {
+    var jsonResData = insomnia.response.json();    
+    var bodydata = JSON.parse(insomnia.request.body.raw) 
+   insomnia.globals.set("postBodyData", bodydata);
+    insomnia.expect(jsonResData.data.cultureCode).to.eq(bodydata.cultureCode);  
+    insomnia.expect(jsonResData.data.cultureCode).to.be.a("string"); 
+    insomnia.expect(jsonResData.data.orderStatus).to.eq("INITIATED"); 
+    insomnia.expect(jsonResData.data.orderStatus).to.be.a("string"); 
+    insomnia.expect(jsonResData.data.orderItems.count()).to.eq(bodydata.orderItems.count());
+    insomnia.expect(jsonResData.data.orderItems[0].planCode).to.eq(bodydata.orderItems[0].planCode);  
+    insomnia.expect(jsonResData.data.orderItems[0].planCode).to.be.a("string");
+    insomnia.expect(jsonResData.data.orderItems[0].planClientCode).to.eq("666_1YEAR_BASE_PAID_AR");  
+    insomnia.expect(jsonResData.data.orderItems[0].planClientCode).to.be.a("string");      
+});
+
+insomnia.test("Response Schema Validation", function () {
+    insomnia.expect(insomnia.response.json().data.orderRefId).to.be.a("string", "orderRefId");
+    insomnia.expect(insomnia.response.json().data.orderCode).to.be.a("string", "orderCode");
+    insomnia.expect(insomnia.response.json().data.transactionSource).to.be.a("string", "transactionSource");
+    insomnia.expect(insomnia.response.json().data.cultureCode).to.be.a("string", "cultureCode");
+    insomnia.expect(insomnia.response.json().data.orderStatus).to.be.a("string", "orderStatus");
+    insomnia.expect(insomnia.response.json().data.orderItems).to.be.a("array", "orderItems");
+    insomnia.expect(insomnia.response.json().data.orderItems[0].id).to.be.a("string", "id");
+    insomnia.expect(insomnia.response.json().data.orderItems[0].planCode).to.be.a("string", "planCode");
+    insomnia.expect(insomnia.response.json().data.orderItems[0].planClientCode).to.be.a("string", "planClientCode");
+    
+});",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+    "userRefId": "{{_['created_user_ref_id']}}",
+    "channelRefId": "{{_['channelRefId']}}",
+    "countryCode": "US",
+    "currencyCode": "{{_['currencyCode']}}",
+    "cultureCode": "{{_['cultureCode']}}",
+    "walletId": "{{_['walletId']}}",
+    "promoCode": "{{_['promoCode']}}",
+    "taxRefId": "{{_['taxRefId']}}",
+    "orderItems": [
+        {
+            "action": "CREATE",
+            "planCode": "{{_['planCode']}}",
+            "subRefId": "",
+            "offerId": "{{_['offerId']}}",
+            "qty": 1,
+            "msrp": 110,
+            "tax": 9.25,
+            "taxRefId": "{{_['orderItemstaxRefId']}}",
+            "discount": 20,
+            "netPayment": 100,
+            "currencyCode": "{{_['currencyCode']}}",
+            "autoRenew": true,
+            "cultureCode": "{{_['cultureCode']}}",
+            "daysToExtend": 100,
+            "instrumentCategory": "{{_['instrumentCategory']}}",
+            "instrumentKey": "{{_['instrumentKey']}}"
+        }
+    ],
+    "taxCountryCode": "US",
+    "vatRate": 0.0925,
+    "vatNumber": "P&G-851223_B24",
+    "msrp": 110,
+    "discount": 20,
+    "netPayment": 100,
+    "tax": 9.25
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "POST",
+        "name": "Create Order",
+        "parameters": [],
+        "parentId": "__GRP_4__",
+        "preRequestScript": "",
+        "url": "{{_['order-orch']}}/v2/orders",
+      },
+      {
+        "_id": "__REQ_18__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {
+    insomnia.response.to.have.status(200);
+});
+
+insomnia.environment.set("tn_subRefId", insomnia.response.json().data.subscriptions[0].id);
+insomnia.environment.set("tn_userRefId", insomnia.response.json().data.userRefId);
+
+
+",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+    "orderStatus": "FULFILLED",
+    "paymentRefId": "cfc51df9-f0b6-4aee-9fbd-5922f3ca548c",
+    "autoRenew": false
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "PUT",
+        "name": "Create Subscription",
+        "parameters": [],
+        "parentId": "__GRP_4__",
+        "preRequestScript": "",
+        "url": "{{_['order-orch']}}/v2/orders/{{_['orderRefIdcreate']}}",
+      },
+      {
+        "_id": "__REQ_19__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("response is 201", function()
+{
+    insomnia.response.to.have.status(201);
+});
+var jsonData = insomnia.response.json();
+// insomnia.test("response has id", function()
+// {
+//     insomnia.expect(jsonData.data).to.haveOwnProperty("id");
+//     insomnia.expect(jsonData.data.id).to.not.equal(null);
+// });
+insomnia.environment.set("tn_mobile_deviceRefId",jsonData.data.deviceRefId);
+
+var reqestData = JSON.parse(insomnia.request.body);
+insomnia.environment.set("device_name",reqestData.name);
+insomnia.environment.set("device_type",reqestData.type);
+insomnia.environment.set("device_platform",reqestData.platform);
+insomnia.environment.set("device_platformVersion",reqestData.platformVersion);
+insomnia.environment.set("device_osLocale",reqestData.osLocale);
+insomnia.environment.set("device_manufacturerModel",reqestData.manufacturerModel);
+insomnia.environment.set("device_manufacturerName",reqestData.manufacturerName);",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+    "name": "{% faker 'randomUserName' %}",
+    "type": "MOBILE",
+    "platform": "IOS",
+    "platformVersion": "IPadOS 15.3.1",
+    "osLocale": "{% faker 'randomCountryCode' %}",
+    "manufacturerModel": "Apple A10",
+    "manufacturerName": "Apple",
+    "platformUniqueId": "{% faker 'guid' %}",
+    "installedTime": {{installedTime}}
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "X-Corelation-Id",
+            "value": "{% faker 'guid' %}",
+          },
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "POST",
+        "name": "Device Installation - Mobile - IOS",
+        "parameters": [],
+        "parentId": "__GRP_4__",
+        "preRequestScript": "var d1= new Date(Date.now()); installedTime=Math.floor(d1.getTime());
+insomnia.environment.set("installedTime",installedTime);
+var platformUniqueId = insomnia.variables.replaceIn("{{$guid}}");
+insomnia.environment.set("platformUniqueId",platformUniqueId);
+var deviceName = insomnia.variables.replaceIn("{{$randomUserName}}");
+insomnia.environment.set("deviceName",deviceName);
+
+var Countrucode = insomnia.variables.replaceIn("{{$randomCountryCode}}");
+insomnia.environment.set("Countrucode", Countrucode);
+const Array_1 = ["Tablet","PC","Mobile"];
+var qty1 = _.random(0, 2);
+//insomnia.variables.set("qty", qty1);
+console.log("qty"+qty1);
+console.log("array_1"+Array_1[qty1]);
+if(Array_1[qty1]==="Tablet")
+{
+    insomnia.environment.set("type","Tablet")
+    const Array_2 = ["IOS","Android"];
+    var qty2 = _.random(0, 1);
+    console.log("qty"+qty2);
+    console.log("array_2"+Array_2[qty2]);
+    if(Array_2[qty2]==="IOS")
+    {
+        console.log("IOS");
+        insomnia.environment.set("platform", "IOS");
+        insomnia.environment.set("platformVersion", "IPadOS 15.3.1");
+        insomnia.environment.set("manufacturerModel", "Apple A10");
+        insomnia.environment.set("manufacturerName", "Apple");
+    }
+    else
+    {
+        console.log("Android");
+        insomnia.environment.set("platform", "Android");
+        insomnia.environment.set("platformVersion", "android- 3.1.225.0");
+        insomnia.environment.set("manufacturerModel", "Samsung GT-S5830L");
+        insomnia.environment.set("manufacturerName", "Samsung");
+    }
+
+}
+else if(Array_1[qty1]==="PC")
+{
+    console.log("++++++++++++++++")
+    insomnia.environment.set("type","PC")
+    insomnia.environment.set("platform", "Windows");
+    insomnia.environment.set("platformVersion", "Windows- 3.1.225.0");
+    insomnia.environment.set("manufacturerModel", "Windows GT-S5830L");
+    insomnia.environment.set("manufacturerName", "Windows");
+}
+else
+{
+    console.log("---------------------------")
+    insomnia.environment.set("type","Mobile")
+    const Array_3 = ["IOS","Android"];
+    var qty3 = _.random(0, 1);
+    console.log("qty"+qty3);
+    console.log("array_3"+Array_3[qty3]);
+    if(Array_3[qty3]==="IOS")
+    {
+        console.log("IOS");
+        insomnia.environment.set("platform", "IOS");
+        insomnia.environment.set("platformVersion", "IPadOS 15.3.1");
+        insomnia.environment.set("manufacturerModel", "Apple A10");
+        insomnia.environment.set("manufacturerName", "Apple");
+    }
+    else
+    {
+        console.log("Android");
+        insomnia.environment.set("platform", "Android");
+        insomnia.environment.set("platformVersion", "android- 3.1.225.0");
+        insomnia.environment.set("manufacturerModel", "Samsung GT-S5830L");
+        insomnia.environment.set("manufacturerName", "Samsung");
+    }
+}
+
+
+",
+        "url": "{{_['device-func']}}/devices",
+      },
+      {
+        "_id": "__REQ_20__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("response is 201", function()
+{
+    insomnia.response.to.have.status(201);
+});
+var jsonData = insomnia.response.json();
+// insomnia.test("response has id", function()
+// {
+//     insomnia.expect(jsonData.data).to.haveOwnProperty("id");
+//     insomnia.expect(jsonData.data.id).to.not.equal(null);
+// });
+insomnia.environment.set("tn_pc_deviceRefId",jsonData.data.deviceRefId);
+
+var reqestData = JSON.parse(insomnia.request.body);
+insomnia.environment.set("device_name",reqestData.name);
+insomnia.environment.set("device_type",reqestData.type);
+insomnia.environment.set("device_platform",reqestData.platform);
+insomnia.environment.set("device_platformVersion",reqestData.platformVersion);
+insomnia.environment.set("device_osLocale",reqestData.osLocale);
+insomnia.environment.set("device_manufacturerModel",reqestData.manufacturerModel);
+insomnia.environment.set("device_manufacturerName",reqestData.manufacturerName);",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+    "name": "{% faker 'randomUserName' %}",
+    "type": "PC",
+    "platform": "WINDOWS",
+    "platformVersion": "Windows- 3.1.225.0",
+    "osLocale": "{% faker 'randomCountryCode' %}",
+    "manufacturerModel": "Windows GT-S5830L",
+    "manufacturerName": "Windows",
+    "platformUniqueId": "{% faker 'guid' %}",
+    "installedTime": {{_['installedTime']}}
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "X-Corelation-Id",
+            "value": "{% faker 'guid' %}",
+          },
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "POST",
+        "name": "Device Installation - Windows",
+        "parameters": [],
+        "parentId": "__GRP_4__",
+        "preRequestScript": "var d1= new Date(Date.now()); installedTime=Math.floor(d1.getTime());
+insomnia.environment.set("installedTime",installedTime);
+var platformUniqueId = insomnia.variables.replaceIn("{{$guid}}");
+insomnia.environment.set("platformUniqueId",platformUniqueId);
+var deviceName = insomnia.variables.replaceIn("{{$randomUserName}}");
+insomnia.environment.set("deviceName",deviceName);
+
+var Countrucode = insomnia.variables.replaceIn("{{$randomCountryCode}}");
+insomnia.environment.set("Countrucode", Countrucode);
+const Array_1 = ["Tablet","PC","Mobile"];
+var qty1 = _.random(0, 2);
+//insomnia.variables.set("qty", qty1);
+console.log("qty"+qty1);
+console.log("array_1"+Array_1[qty1]);
+if(Array_1[qty1]==="Tablet")
+{
+    insomnia.environment.set("type","Tablet")
+    const Array_2 = ["IOS","Android"];
+    var qty2 = _.random(0, 1);
+    console.log("qty"+qty2);
+    console.log("array_2"+Array_2[qty2]);
+    if(Array_2[qty2]==="IOS")
+    {
+        console.log("IOS");
+        insomnia.environment.set("platform", "IOS");
+        insomnia.environment.set("platformVersion", "IPadOS 15.3.1");
+        insomnia.environment.set("manufacturerModel", "Apple A10");
+        insomnia.environment.set("manufacturerName", "Apple");
+    }
+    else
+    {
+        console.log("Android");
+        insomnia.environment.set("platform", "Android");
+        insomnia.environment.set("platformVersion", "android- 3.1.225.0");
+        insomnia.environment.set("manufacturerModel", "Samsung GT-S5830L");
+        insomnia.environment.set("manufacturerName", "Samsung");
+    }
+
+}
+else if(Array_1[qty1]==="PC")
+{
+    console.log("++++++++++++++++")
+    insomnia.environment.set("type","PC")
+    insomnia.environment.set("platform", "Windows");
+    insomnia.environment.set("platformVersion", "Windows- 3.1.225.0");
+    insomnia.environment.set("manufacturerModel", "Windows GT-S5830L");
+    insomnia.environment.set("manufacturerName", "Windows");
+}
+else
+{
+    console.log("---------------------------")
+    insomnia.environment.set("type","Mobile")
+    const Array_3 = ["IOS","Android"];
+    var qty3 = _.random(0, 1);
+    console.log("qty"+qty3);
+    console.log("array_3"+Array_3[qty3]);
+    if(Array_3[qty3]==="IOS")
+    {
+        console.log("IOS");
+        insomnia.environment.set("platform", "IOS");
+        insomnia.environment.set("platformVersion", "IPadOS 15.3.1");
+        insomnia.environment.set("manufacturerModel", "Apple A10");
+        insomnia.environment.set("manufacturerName", "Apple");
+    }
+    else
+    {
+        console.log("Android");
+        insomnia.environment.set("platform", "Android");
+        insomnia.environment.set("platformVersion", "android- 3.1.225.0");
+        insomnia.environment.set("manufacturerModel", "Samsung GT-S5830L");
+        insomnia.environment.set("manufacturerName", "Samsung");
+    }
+}
+
+
+",
+        "url": "{{_['device-func']}}/devices",
+      },
+      {
+        "_id": "__REQ_21__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 201", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(201);
+    const Request = JSON.parse(insomnia.request.body.raw);
+    // insomnia.environment.set("userRefId_tn", Request.userRefId);
+});
+
+insomnia.test("Response should include activationRefId", function () {    
+    const responseData = insomnia.response.json();    
+    insomnia.expect(responseData.data.activationRefId).to.be.a("string", "activationRefId");
+    insomnia.environment.set("tn_mobile_activationRefId", responseData.data.activationRefId);    
+    insomnia.expect(responseData.data.activationRefId).to.not.include("ez_", "activationRefId");
+});",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+    "deviceRefId": "{{tn_mobile_deviceRefId}}",
+    "subRefId": "{{tn_subRefId}}",
+    "userRefId": "{{tn_userRefId}}",
+    "activationTime": {{epoch}},
+    "activationStatus": "ACTIVATED"
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "POST",
+        "name": "success-tn-M1A-device",
+        "parameters": [],
+        "parentId": "__GRP_4__",
+        "preRequestScript": "var epoch = (new Date).getTime();
+postman.setEnvironmentVariable("epoch", epoch);",
+        "url": "{{_['device-orch']}}/v2/device-activations",
+      },
+      {
+        "_id": "__REQ_22__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+
+const schema = {
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "subRefid": {
+              "type": "string"
+            },
+            "accountRefId": {
+              "type": "string"
+            },
+            "users": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "deviceActivations": {
+                      "type": "array",
+                      "items": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "deviceRefId": {
+                              "type": "string"
+                            },
+                            "activationRefId": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string"
+                            },
+                            "platform": {
+                              "type": "string"
+                            },
+                            "platformVersion": {
+                              "type": "string"
+                            },
+                            "osLocale": {
+                              "type": "string"
+                            },
+                            "manufacturerModel": {
+                              "type": "string"
+                            },
+                            "manufacturerName": {
+                              "type": "string"
+                            },
+                            "platformUniqueId": {
+                              "type": "string"
+                            },
+                            "activationStatus": {
+                              "type": "string"
+                            },
+                            "deviceFirstSeenTime": {
+                              "type": "integer"
+                            },
+                            "deviceLastSeenTime": {
+                              "type": "integer"
+                            },
+                            "activationTime": {
+                              "type": "integer"
+                            },
+                            "deactivationTime": {
+                              "type": "integer"
+                            },
+                            "deviceActivationFirstSeenTime": {
+                              "type": "integer"
+                            },
+                            "deviceActivationLastSeenTime": {
+                              "type": "integer"
+                            },
+                            "uninstalledTime": {
+                              "type": "integer"
+                            },
+                            "installedTime": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "deviceRefId",
+                            "activationRefId",
+                            "name",
+                            "type",
+                            "platform",
+                            "platformVersion",
+                            "osLocale",
+                            "manufacturerModel",
+                            "manufacturerName",
+                            "platformUniqueId",
+                            "activationStatus",
+                            "deviceFirstSeenTime",
+                            "deviceLastSeenTime",
+                            "activationTime",
+                            "deactivationTime",
+                            "deviceActivationFirstSeenTime",
+                            "deviceActivationLastSeenTime",
+                            "uninstalledTime",
+                            "installedTime"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "role",
+                    "deviceActivations"
+                  ]
+                }
+              ]
+            }
+          },
+          "required": [
+            "subRefId",
+            "accountRefId",
+            "users"
+          ]
+        }
+      ]
+    }
+  },
+  "required": [
+    "data"
+  ]
+}
+
+insomnia.test("Validate schema", () => {
+    insomnia.response.to.have.jsonSchema(schema);
+});
+
+insomnia.test("mobile device - last seen time should be updated",function(){
+    var counter=0
+    var jsonResData = insomnia.response.json();
+    insomnia.environment.set("tn_mobile_subRefId", jsonResData.data[0].subRefId);
+    for (var i=0; i < jsonResData.data[0].users[0].deviceActivations.length; i++){ 
+            if (jsonResData.data[0].users[0].deviceActivations[i].activationRefId == insomnia.environment.get("tn_mobile_activationRefId")){                
+                    counter++
+                    insomnia.expect(jsonResData.data[0].users[0].deviceActivations[i].type).to.eq("MOBILE");                    
+                    insomnia.environment.set("tn_mobile_deviceActivationFirstSeenTime", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationFirstSeenTime);
+                    insomnia.environment.set("tn_mobile_deviceActivationLastSeenTime", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationLastSeenTime);
+                 }
+            }
+    insomnia.expect(jsonResData.data[0].users[0].deviceActivations.length).to.eq(counter, "only mobile device should be returned in response")       
+
+})
+
+",
+        "authentication": {},
+        "body": {},
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+        ],
+        "method": "GET",
+        "name": "success-tn-userrefId",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "userRefId",
+            "value": "{{tn_userRefId}}",
+          },
+        ],
+        "parentId": "__GRP_4__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v2/device-activations",
+      },
+      {
+        "_id": "__REQ_23__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+
+const schema = {
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "subRefid": {
+              "type": "string"
+            },
+            "accountRefId": {
+              "type": "string"
+            },
+            "users": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "deviceActivations": {
+                      "type": "array",
+                      "items": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "deviceRefId": {
+                              "type": "string"
+                            },
+                            "activationRefId": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string"
+                            },
+                            "platform": {
+                              "type": "string"
+                            },
+                            "platformVersion": {
+                              "type": "string"
+                            },
+                            "osLocale": {
+                              "type": "string"
+                            },
+                            "manufacturerModel": {
+                              "type": "string"
+                            },
+                            "manufacturerName": {
+                              "type": "string"
+                            },
+                            "platformUniqueId": {
+                              "type": "string"
+                            },
+                            "activationStatus": {
+                              "type": "string"
+                            },
+                            "deviceFirstSeenTime": {
+                              "type": "integer"
+                            },
+                            "deviceLastSeenTime": {
+                              "type": "integer"
+                            },
+                            "activationTime": {
+                              "type": "integer"
+                            },
+                            "deactivationTime": {
+                              "type": "integer"
+                            },
+                            "deviceActivationFirstSeenTime": {
+                              "type": "integer"
+                            },
+                            "deviceActivationLastSeenTime": {
+                              "type": "integer"
+                            },
+                            "uninstalledTime": {
+                              "type": "integer"
+                            },
+                            "installedTime": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "deviceRefId",
+                            "activationRefId",
+                            "name",
+                            "type",
+                            "platform",
+                            "platformVersion",
+                            "osLocale",
+                            "manufacturerModel",
+                            "manufacturerName",
+                            "platformUniqueId",
+                            "activationStatus",
+                            "deviceFirstSeenTime",
+                            "deviceLastSeenTime",
+                            "activationTime",
+                            "deactivationTime",
+                            "deviceActivationFirstSeenTime",
+                            "deviceActivationLastSeenTime",
+                            "uninstalledTime",
+                            "installedTime"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "role",
+                    "deviceActivations"
+                  ]
+                }
+              ]
+            }
+          },
+          "required": [
+            "subRefId",
+            "accountRefId",
+            "users"
+          ]
+        }
+      ]
+    }
+  },
+  "required": [
+    "data"
+  ]
+}
+
+insomnia.test("Validate schema", () => {
+    insomnia.response.to.have.jsonSchema(schema);
+});
+
+insomnia.test("json response should have all the details",function(){
+    const responseData = insomnia.response.json();
+
+    console.log(responseData)
+
+    insomnia.expect(insomnia.environment.get("tn_userRefId")).to.eq(responseData.data[0].users[0].id);        
+    insomnia.expect(responseData.data[0].subRefId).to.eq(insomnia.environment.get("tn_subRefId"));
+    
+
+})
+
+insomnia.test("mobile device - last seen time should be updated",function(){
+    var counter=0
+    var jsonResData = insomnia.response.json();
+    insomnia.environment.set("tn_mobile_subRefId", jsonResData.data[0].subRefId);
+    for (var i=0; i < jsonResData.data[0].users[0].deviceActivations.length; i++){ 
+            if (jsonResData.data[0].users[0].deviceActivations[i].activationRefId == insomnia.environment.get("tn_mobile_activationRefId")){                
+                    counter++
+                    insomnia.expect(jsonResData.data[0].users[0].deviceActivations[i].type).to.eq("MOBILE");                    
+                    insomnia.environment.set("tn_mobile_deviceActivationFirstSeenTime", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationFirstSeenTime);
+                    insomnia.environment.set("tn_mobile_deviceActivationLastSeenTime", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationLastSeenTime);
+                 }            
+            }
+    insomnia.expect(jsonResData.data[0].users[0].deviceActivations.length).to.eq(counter, "only mobile device should be returned in response")         
+
+})
+
+",
+        "authentication": {},
+        "body": {},
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+        ],
+        "method": "GET",
+        "name": "success with tn-userRefID-subRefID",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "userRefId",
+            "value": "{{tn_userRefId}}",
+          },
+          {
+            "disabled": false,
+            "name": "subRefId",
+            "value": "{{tn_subRefId}}",
+          },
+        ],
+        "parentId": "__GRP_4__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v2/device-activations",
+      },
+      {
+        "_id": "__REQ_24__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 201", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(201);
+    const Request = JSON.parse(insomnia.request.body.raw);
+    // insomnia.environment.set("userRefId_tn", Request.userRefId);
+});
+
+insomnia.test("Response should include activationRefId", function () {    
+    const responseData = insomnia.response.json();    
+    insomnia.expect(responseData.data.activationRefId).to.be.a("string", "activationRefId");
+    insomnia.environment.set("tn_pc_activationRefId", responseData.data.activationRefId);    
+    insomnia.expect(responseData.data.activationRefId).to.not.include("ez_", "activationRefId");
+});",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+    "deviceRefId": "{{tn_pc_deviceRefId}}",
+    "subRefId": "{{tn_subRefId}}",
+    "userRefId": "{{tn_userRefId}}",
+    "activationTime": {{epoch}},
+    "activationStatus": "ACTIVATED"
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "POST",
+        "name": "success-tn-windows-device",
+        "parameters": [],
+        "parentId": "__GRP_4__",
+        "preRequestScript": "var epoch = (new Date).getTime();
+postman.setEnvironmentVariable("epoch", epoch);",
+        "url": "{{_['device-orch']}}/v2/device-activations",
+      },
+      {
+        "_id": "__REQ_25__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+
+const schema = {
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "subRefid": {
+              "type": "string"
+            },
+            "accountRefId": {
+              "type": "string"
+            },
+            "users": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "deviceActivations": {
+                      "type": "array",
+                      "items": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "deviceRefId": {
+                              "type": "string"
+                            },
+                            "activationRefId": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string"
+                            },
+                            "platform": {
+                              "type": "string"
+                            },
+                            "platformVersion": {
+                              "type": "string"
+                            },
+                            "osLocale": {
+                              "type": "string"
+                            },
+                            "manufacturerModel": {
+                              "type": "string"
+                            },
+                            "manufacturerName": {
+                              "type": "string"
+                            },
+                            "platformUniqueId": {
+                              "type": "string"
+                            },
+                            "activationStatus": {
+                              "type": "string"
+                            },
+                            "deviceFirstSeenTime": {
+                              "type": "integer"
+                            },
+                            "deviceLastSeenTime": {
+                              "type": "integer"
+                            },
+                            "activationTime": {
+                              "type": "integer"
+                            },
+                            "deactivationTime": {
+                              "type": "integer"
+                            },
+                            "deviceActivationFirstSeenTime": {
+                              "type": "integer"
+                            },
+                            "deviceActivationLastSeenTime": {
+                              "type": "integer"
+                            },
+                            "uninstalledTime": {
+                              "type": "integer"
+                            },
+                            "installedTime": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "deviceRefId",
+                            "activationRefId",
+                            "name",
+                            "type",
+                            "platform",
+                            "platformVersion",
+                            "osLocale",
+                            "manufacturerModel",
+                            "manufacturerName",
+                            "platformUniqueId",
+                            "activationStatus",
+                            "deviceFirstSeenTime",
+                            "deviceLastSeenTime",
+                            "activationTime",
+                            "deactivationTime",
+                            "deviceActivationFirstSeenTime",
+                            "deviceActivationLastSeenTime",
+                            "uninstalledTime",
+                            "installedTime"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "role",
+                    "deviceActivations"
+                  ]
+                }
+              ]
+            }
+          },
+          "required": [
+            "subRefId",
+            "accountRefId",
+            "users"
+          ]
+        }
+      ]
+    }
+  },
+  "required": [
+    "data"
+  ]
+}
+
+insomnia.test("Validate schema", () => {
+    insomnia.response.to.have.jsonSchema(schema);
+});
+
+insomnia.test("pc device - last seen time should be updated",function(){
+    var counter=0
+    var jsonResData = insomnia.response.json();
+      insomnia.environment.set("tn_pc_subRefId", jsonResData.data[0].subRefId);
+    for (var i=0; i < jsonResData.data[0].users[0].deviceActivations.length; i++){ 
+            if (jsonResData.data[0].users[0].deviceActivations[i].activationRefId == insomnia.environment.get("tn_pc_activationRefId")){                
+                    counter++
+                    insomnia.expect(jsonResData.data[0].users[0].deviceActivations[i].type).to.eq("PC");                    
+                    insomnia.environment.set("tn_pc_deviceActivationFirstSeenTime", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationFirstSeenTime);
+                    insomnia.environment.set("tn_pc_deviceActivationLastSeenTime", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationLastSeenTime);
+                 }
+            if (jsonResData.data[0].users[0].deviceActivations[i].activationRefId == insomnia.environment.get("tn_mobile_activationRefId")){                
+                    counter++
+                    insomnia.expect(jsonResData.data[0].users[0].deviceActivations[i].type).to.eq("MOBILE");                    
+                    insomnia.environment.set("tn_mobile_deviceActivationFirstSeenTime", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationFirstSeenTime);
+                    insomnia.environment.set("tn_mobile_deviceActivationLastSeenTime", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationLastSeenTime);
+                 }
+            }
+    insomnia.expect(counter).eq(2, "pc and mobile both should be returned in response");       
+
+})
+
+",
+        "authentication": {},
+        "body": {},
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+        ],
+        "method": "GET",
+        "name": "success-tn-userrefId",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "userRefId",
+            "value": "{{tn_userRefId}}",
+          },
+        ],
+        "parentId": "__GRP_4__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v2/device-activations",
+      },
+      {
+        "_id": "__REQ_26__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+
+const schema = {
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "subRefid": {
+              "type": "string"
+            },
+            "accountRefId": {
+              "type": "string"
+            },
+            "users": {
+              "type": "array",
+              "items": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "deviceActivations": {
+                      "type": "array",
+                      "items": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "deviceRefId": {
+                              "type": "string"
+                            },
+                            "activationRefId": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string"
+                            },
+                            "platform": {
+                              "type": "string"
+                            },
+                            "platformVersion": {
+                              "type": "string"
+                            },
+                            "osLocale": {
+                              "type": "string"
+                            },
+                            "manufacturerModel": {
+                              "type": "string"
+                            },
+                            "manufacturerName": {
+                              "type": "string"
+                            },
+                            "platformUniqueId": {
+                              "type": "string"
+                            },
+                            "activationStatus": {
+                              "type": "string"
+                            },
+                            "deviceFirstSeenTime": {
+                              "type": "integer"
+                            },
+                            "deviceLastSeenTime": {
+                              "type": "integer"
+                            },
+                            "activationTime": {
+                              "type": "integer"
+                            },
+                            "deactivationTime": {
+                              "type": "integer"
+                            },
+                            "deviceActivationFirstSeenTime": {
+                              "type": "integer"
+                            },
+                            "deviceActivationLastSeenTime": {
+                              "type": "integer"
+                            },
+                            "uninstalledTime": {
+                              "type": "integer"
+                            },
+                            "installedTime": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "deviceRefId",
+                            "activationRefId",
+                            "name",
+                            "type",
+                            "platform",
+                            "platformVersion",
+                            "osLocale",
+                            "manufacturerModel",
+                            "manufacturerName",
+                            "platformUniqueId",
+                            "activationStatus",
+                            "deviceFirstSeenTime",
+                            "deviceLastSeenTime",
+                            "activationTime",
+                            "deactivationTime",
+                            "deviceActivationFirstSeenTime",
+                            "deviceActivationLastSeenTime",
+                            "uninstalledTime",
+                            "installedTime"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "role",
+                    "deviceActivations"
+                  ]
+                }
+              ]
+            }
+          },
+          "required": [
+            "subRefId",
+            "accountRefId",
+            "users"
+          ]
+        }
+      ]
+    }
+  },
+  "required": [
+    "data"
+  ]
+}
+
+insomnia.test("Validate schema", () => {
+    insomnia.response.to.have.jsonSchema(schema);
+});
+
+insomnia.test("json response should have all the details",function(){
+    const responseData = insomnia.response.json();
+
+    console.log(responseData)
+
+    insomnia.expect(insomnia.environment.get("tn_userRefId")).to.eq(responseData.data[0].users[0].id);        
+    insomnia.expect(responseData.data[0].subRefId).to.eq(insomnia.environment.get("tn_subRefId"));
+    
+
+})
+
+insomnia.test("pc device - last seen time should be updated",function(){   
+    var counter = 0;
+    var jsonResData = insomnia.response.json();
+      insomnia.environment.set("tn_pc_subRefId", jsonResData.data[0].subRefId);
+    for (var i=0; i < jsonResData.data[0].users[0].deviceActivations.length; i++){ 
+            if (jsonResData.data[0].users[0].deviceActivations[i].activationRefId == insomnia.environment.get("tn_pc_activationRefId")){                
+                    counter++
+                    insomnia.expect(jsonResData.data[0].users[0].deviceActivations[i].type).to.eq("PC");                    
+                    insomnia.environment.set("tn_pc_deviceActivationFirstSeenTime", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationFirstSeenTime);
+                    insomnia.environment.set("tn_pc_deviceActivationLastSeenTime", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationLastSeenTime);
+                 }
+            if (jsonResData.data[0].users[0].deviceActivations[i].activationRefId == insomnia.environment.get("tn_mobile_activationRefId")){                
+                    counter++
+                    insomnia.expect(jsonResData.data[0].users[0].deviceActivations[i].type).to.eq("MOBILE");                    
+                    insomnia.environment.set("tn_mobile_deviceActivationFirstSeenTime", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationFirstSeenTime);
+                    insomnia.environment.set("tn_mobile_deviceActivationLastSeenTime", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationLastSeenTime);
+                 }
+            }
+    insomnia.expect(counter).eq(2, "pc and mobile both should be returned in response");       
+                   
+
+})
+
+",
+        "authentication": {},
+        "body": {},
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+        ],
+        "method": "GET",
+        "name": "success with tn-userRefID-subRefID",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "userRefId",
+            "value": "{{tn_userRefId}}",
+          },
+          {
+            "disabled": false,
+            "name": "subRefId",
+            "value": "{{tn_subRefId}}",
+          },
+        ],
+        "parentId": "__GRP_4__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v2/device-activations",
+      },
+      {
+        "_id": "__GRP_5__",
+        "_type": "request_group",
+        "afterResponseScript": "",
+        "authentication": {},
+        "description": "",
+        "environment": {},
+        "name": "patch-device-activations",
+        "parentId": "__GRP_3__",
+        "preRequestScript": "",
+      },
+      {
+        "_id": "__REQ_27__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+insomnia.test("Response should include activationRefId", function () {    
+    const responseData = insomnia.response.json();    
+    insomnia.expect(responseData.data.activationRefId).to.eq(insomnia.environment.get("tn_mobile_activationRefId"), "activationRefId");    
+});",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+  "deviceRefId": "{{tn_mobile_deviceRefId}}",
+  "userRefId": "{{tn_userRefId}}",
+  "globalRefId": "{{globalRefID}}",
+  "subRefId": "{{tn_subRefId}}",
+  "deviceActivationLastSeenTime": {{epoch}}
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "PATCH",
+        "name": "M1A - success",
+        "parameters": [],
+        "parentId": "__GRP_5__",
+        "preRequestScript": "var epoch = (new Date).getTime();
+postman.setEnvironmentVariable("epoch", epoch);
+console.log(insomnia.environment.get("epoch"));",
+        "url": "{{_['device-orch']}}/v2/device-activations/{{_['tn_mobile_activationRefId']}}",
+      },
+      {
+        "_id": "__REQ_28__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+insomnia.test("mobile device - last seen time should be updated",function(){
+    var jsonResData = insomnia.response.json();
+      
+    for (var i=0; i < jsonResData.data[0].users[0].deviceActivations.length; i++){ 
+            if (jsonResData.data[0].users[0].deviceActivations[i].activationRefId == insomnia.environment.get("tn_mobile_activationRefId")){                
+                    insomnia.expect(jsonResData.data[0].users[0].deviceActivations[i].type).to.eq("MOBILE");                    
+                    insomnia.environment.set("tn_mobile_deviceActivationFirstSeenTime", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationFirstSeenTime);
+                    insomnia.environment.set("tn_mobile_deviceActivationLastSeenTime", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationLastSeenTime);
+                 }
+            }       
+
+})
+
+insomnia.test("deviceActivationLastSeenTime should not match", function () {    
+    insomnia.expect(insomnia.environment.get("tn_mobile_deviceActivationLastSeenTime")).to.eq(parseInt(insomnia.environment.get("epoch")))
+ });",
+        "authentication": {},
+        "body": {},
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+        ],
+        "method": "GET",
+        "name": "activation status",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "userRefId",
+            "value": "{{tn_userRefId}}",
+          },
+        ],
+        "parentId": "__GRP_5__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v2/device-activations",
+      },
+      {
+        "_id": "__REQ_29__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+insomnia.test("Response should include activationRefId", function () {    
+    const responseData = insomnia.response.json();    
+    insomnia.expect(responseData.data.activationRefId).to.eq(insomnia.environment.get("tn_pc_activationRefId"), "activationRefId");    
+});",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+  "deviceRefId": "{{tn_pc_deviceRefId}}",
+  "userRefId": "{{tn_userRefId}}",
+  "globalRefId": "{{globalRefID}}",
+  "subRefId": "{{tn_subRefId}}",
+  "deviceActivationLastSeenTime": {{epoch}}
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "PATCH",
+        "name": "WPS - success",
+        "parameters": [],
+        "parentId": "__GRP_5__",
+        "preRequestScript": "var epoch = (new Date).getTime();
+postman.setEnvironmentVariable("epoch", epoch);
+// console.log(insomnia.environment.get("epoch"));",
+        "url": "{{_['device-orch']}}/v2/device-activations/{{_['tn_pc_activationRefId']}}",
+      },
+      {
+        "_id": "__REQ_30__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+insomnia.test("pc device - last seen time should be updated",function(){
+    var jsonResData = insomnia.response.json();
+      
+    for (var i=0; i < jsonResData.data[0].users[0].deviceActivations.length; i++){ 
+            if (jsonResData.data[0].users[0].deviceActivations[i].activationRefId == insomnia.environment.get("tn_pc_activationRefId")){                
+                    insomnia.expect(jsonResData.data[0].users[0].deviceActivations[i].type).to.eq("PC");                    
+                    insomnia.environment.set("tn_pc_deviceActivationFirstSeenTime", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationFirstSeenTime);
+                    insomnia.environment.set("tn_pc_deviceActivationLastSeenTime", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationLastSeenTime);
+                 }
+            }       
+
+})
+
+insomnia.test("deviceActivationLastSeenTime should not match", function () {    
+    insomnia.expect(insomnia.environment.get("tn_pc_deviceActivationLastSeenTime")).to.eq(parseInt(insomnia.environment.get("epoch")))
+ });",
+        "authentication": {},
+        "body": {},
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+        ],
+        "method": "GET",
+        "name": "activation status",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "userRefId",
+            "value": "{{tn_userRefId}}",
+          },
+        ],
+        "parentId": "__GRP_5__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v2/device-activations",
+      },
+      {
+        "_id": "__REQ_31__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+insomnia.test("Response should include activationRefId", function () {    
+    const responseData = insomnia.response.json();    
+    insomnia.expect(responseData.data.activationRefId).to.eq(insomnia.environment.get("tn_pc_activationRefId"), "activationRefId");    
+});",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{  
+  "userRefId": "{{tn_userRefId}}",
+  "globalRefId": "{{globalRefID}}",
+  "subRefId": "{{tn_subRefId}}",
+  "deviceActivationLastSeenTime": {{epoch}}
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "PATCH",
+        "name": "deviceRefId is not mandatory",
+        "parameters": [],
+        "parentId": "__GRP_5__",
+        "preRequestScript": "var epoch = (new Date).getTime();
+postman.setEnvironmentVariable("epoch", epoch);
+// console.log(insomnia.environment.get("epoch"));",
+        "url": "{{_['device-orch']}}/v2/device-activations/{{_['tn_pc_activationRefId']}}",
+      },
+      {
+        "_id": "__GRP_6__",
+        "_type": "request_group",
+        "afterResponseScript": "",
+        "authentication": {},
+        "description": "",
+        "environment": {},
+        "name": "patch-uninstall - Update test case subRefId ad mandatory",
+        "parentId": "__GRP_3__",
+        "preRequestScript": "",
+      },
+      {
+        "_id": "__GRP_7__",
+        "_type": "request_group",
+        "afterResponseScript": "",
+        "authentication": {},
+        "description": "",
+        "environment": {},
+        "name": "M1A",
+        "parentId": "__GRP_6__",
+        "preRequestScript": "",
+      },
+      {
+        "_id": "__REQ_32__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+insomnia.test("Response should include activationRefId", function () {    
+    const responseData = insomnia.response.json();    
+    insomnia.expect(responseData.data.activationRefId).to.eq(insomnia.environment.get("tn_mobile_activationRefId"), "activationRefId");    
+});",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+    "uninstalled": true,
+    "deviceRefId": "{{tn_mobile_deviceRefId}}",
+    "lastSeenTime": {{epoch}},
+    "uninstallTime": {{epoch}},
+    "subRefId": "{{tn_subRefId}}"
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "PATCH",
+        "name": "unistall mobile device - with lastSeenTime & uninstallTime",
+        "parameters": [],
+        "parentId": "__GRP_7__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v2/device-activations/{{_['tn_mobile_activationRefId']}}",
+      },
+      {
+        "_id": "__REQ_33__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+var jsonResData = insomnia.response.json();
+
+insomnia.test("wps device should be returned in response since mobile is removed",function(){
+    var counter=0
+    
+    for (var i=0; i < jsonResData.data[0].users[0].deviceActivations.length; i++){ 
+            if (jsonResData.data[0].users[0].deviceActivations[i].activationRefId == insomnia.environment.get("tn_pc_activationRefId")){
+                    counter++
+
+                    insomnia.expect(jsonResData.data[0].users[0].deviceActivations[i].type).to.eq("PC");
+                    insomnia.expect(jsonResData.data[0].users[0].deviceActivations[i].activationStatus).to.eq("ACTIVATED");
+                    insomnia.environment.set("tn_pc_after_uninstall_firstSeen_25", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationFirstSeenTime);
+                    insomnia.environment.set("tn_pc_after_uninstall_lastSeen_25", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationLastSeenTime);
+                 }
+            }
+    insomnia.expect(jsonResData.data[0].users[0].deviceActivations.length).to.eq(counter, "Only PC device should be returned");
+
+})",
+        "authentication": {},
+        "body": {},
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+        ],
+        "method": "GET",
+        "name": "after mobile uninstallation",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "userRefId",
+            "value": "{{tn_userRefId}}",
+          },
+        ],
+        "parentId": "__GRP_7__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v2/device-activations",
+      },
+      {
+        "_id": "__REQ_34__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+var jsonResData = insomnia.response.json();
+
+insomnia.test("pc & mobile device should be returned in response",function(){
+    var counter = 0
+    
+    for (var i=0; i < jsonResData.data[0].users[0].deviceActivations.length; i++){ 
+            if (jsonResData.data[0].users[0].deviceActivations[i].activationRefId == insomnia.environment.get("tn_mobile_activationRefId")){
+                counter++
+
+                console.log(jsonResData.data[0].users[0].deviceActivations[i].activationRefId)       
+                    insomnia.expect(jsonResData.data[0].users[0].deviceActivations[i].activationStatus).to.eq("ACTIVATED");
+                    insomnia.environment.set("tn_mobile_after_uninstalled_firstSeen_25", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationFirstSeenTime);
+                    insomnia.environment.set("tn_mobile_after_uninstalled_lastSeen_25", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationLastSeenTime);
+                    console.log(jsonResData.data[0].users[0].deviceActivations[i].deviceActivationLastSeenTime) 
+                 }
+            if (jsonResData.data[0].users[0].deviceActivations[i].activationRefId == insomnia.environment.get("tn_pc_activationRefId")){   
+                    counter++             
+                    insomnia.expect(jsonResData.data[0].users[0].deviceActivations[i].type).to.eq("PC");
+                    insomnia.expect(jsonResData.data[0].users[0].deviceActivations[i].activationStatus).to.eq("ACTIVATED");
+                    insomnia.environment.set("tn_pc_after_uninstall_firstSeen_25", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationFirstSeenTime);
+                    insomnia.environment.set("tn_pc_after_uninstall_lastSeen_25", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationLastSeenTime);
+                 }                 
+            }
+
+    insomnia.expect(jsonResData.data[0].users[0].deviceActivations.length).to.eq(counter, "PC & Mobile device should be returned");       
+
+})
+
+insomnia.test("uninstalledTime should be returned in response", function () {    
+   for (var i=0; i < jsonResData.data[0].users[0].deviceActivations.length; i++){ 
+            if (jsonResData.data[0].users[0].deviceActivations[i].activationRefId == insomnia.environment.get("tn_mobile_activationRefId")){         
+                insomnia.expect(jsonResData.data[0].users[0].deviceActivations[i].uninstalledTime).to.be.a("number"); 
+                
+                insomnia.expect(jsonResData.data[0].users[0].deviceActivations[i].uninstalledTime).to.eq(parseInt(insomnia.environment.get("epoch"))); 
+                insomnia.expect(jsonResData.data[0].users[0].deviceActivations[i].deviceLastSeenTime).to.eq(parseInt(insomnia.environment.get("epoch"))); 
+
+
+                 }
+            }
+});
+
+insomnia.test("deviceActivationFirstSeenTime should match before and after patch", function () {    
+   insomnia.expect(insomnia.environment.get("tn_mobile_after_uninstalled_firstSeen_25")).to.eq(insomnia.environment.get("tn_mobile_deviceActivationFirstSeenTime"))
+});",
+        "authentication": {},
+        "body": {},
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+        ],
+        "method": "GET",
+        "name": "after mobile uninstallation include=uninstalled",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "userRefId",
+            "value": "{{tn_userRefId}}",
+          },
+          {
+            "disabled": false,
+            "name": "include",
+            "value": "uninstalled",
+          },
+        ],
+        "parentId": "__GRP_7__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v2/device-activations",
+      },
+      {
+        "_id": "__REQ_35__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+insomnia.test("Response should include activationRefId", function () {    
+    const responseData = insomnia.response.json();    
+    insomnia.expect(responseData.data.activationRefId).to.eq(insomnia.environment.get("tn_mobile_activationRefId"), "activationRefId");    
+});",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+    "uninstalled": true,
+    "deviceRefId": "{{tn_mobile_deviceRefId}}",
+    "subRefId": "{{tn_subRefId}}"
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "PATCH",
+        "name": "uninstall mobile device - without lastSeenTime & uninstallTime",
+        "parameters": [],
+        "parentId": "__GRP_7__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v2/device-activations/{{_['tn_mobile_activationRefId']}}",
+      },
+      {
+        "_id": "__REQ_36__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+var jsonResData = insomnia.response.json();
+
+insomnia.test("wps device should be returned in response since mobile is removed",function(){
+    var counter = 0
+    for (var i=0; i < jsonResData.data[0].users[0].deviceActivations.length; i++){ 
+            if (jsonResData.data[0].users[0].deviceActivations[i].activationRefId == insomnia.environment.get("tn_pc_activationRefId")){            
+                    counter++    
+                    insomnia.expect(jsonResData.data[0].users[0].deviceActivations[i].type).to.eq("PC");
+                    insomnia.expect(jsonResData.data[0].users[0].deviceActivations[i].activationStatus).to.eq("ACTIVATED");
+                    insomnia.environment.set("tn_pc_after_uninstall_firstSeen_25", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationFirstSeenTime);
+                    insomnia.environment.set("tn_pc_after_uninstall_lastSeen_25", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationLastSeenTime);
+                 }
+            }
+    insomnia.expect(jsonResData.data[0].users[0].deviceActivations.length).to.eq(counter, "Only PC device should be returned");
+
+})",
+        "authentication": {},
+        "body": {},
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+        ],
+        "method": "GET",
+        "name": "after mobile uninstallation",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "userRefId",
+            "value": "{{tn_userRefId}}",
+          },
+        ],
+        "parentId": "__GRP_7__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v2/device-activations",
+      },
+      {
+        "_id": "__REQ_37__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+insomnia.test("Response should include activationRefId", function () {    
+    const responseData = insomnia.response.json();    
+    insomnia.expect(responseData.data.activationRefId).to.eq(insomnia.environment.get("tn_mobile_activationRefId"), "activationRefId");    
+});",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+    "uninstalled": true,
+    "deviceRefId": "{{tn_mobile_deviceRefId}}",
+    "lastSeenTime": {{epochAfter72}},
+    "uninstallTime": {{epoch}},
+    "subRefId": "{{tn_subRefId}}"
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "PATCH",
+        "name": "unistall mobile device - future lastSeen",
+        "parameters": [],
+        "parentId": "__GRP_7__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v2/device-activations/{{_['tn_mobile_activationRefId']}}",
+      },
+      {
+        "_id": "__REQ_38__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+insomnia.test("Response should include activationRefId", function () {    
+    const responseData = insomnia.response.json();    
+    insomnia.expect(responseData.data.activationRefId).to.eq(insomnia.environment.get("tn_mobile_activationRefId"), "activationRefId");    
+});",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+    "uninstalled": true,
+    "deviceRefId": "{{tn_mobile_deviceRefId}}",
+    "lastSeenTime": {{epoch}},
+    "uninstallTime": {{epochAfter72}},
+    "subRefId": "{{tn_subRefId}}"
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "PATCH",
+        "name": "unistall mobile device - future uninstallTime",
+        "parameters": [],
+        "parentId": "__GRP_7__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v2/device-activations/{{_['tn_mobile_activationRefId']}}",
+      },
+      {
+        "_id": "__REQ_39__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+var jsonResData = insomnia.response.json();
+
+insomnia.test("wps device should be returned in response since mobile is removed",function(){
+    var counter = 0
+    for (var i=0; i < jsonResData.data[0].users[0].deviceActivations.length; i++){ 
+            if (jsonResData.data[0].users[0].deviceActivations[i].activationRefId == insomnia.environment.get("tn_pc_activationRefId")){      
+                    counter++
+                    insomnia.expect(jsonResData.data[0].users[0].deviceActivations[i].type).to.eq("PC");
+                    insomnia.expect(jsonResData.data[0].users[0].deviceActivations[i].activationStatus).to.eq("ACTIVATED");
+                    insomnia.environment.set("tn_pc_after_uninstall_firstSeen_25", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationFirstSeenTime);
+                    insomnia.environment.set("tn_pc_after_uninstall_lastSeen_25", jsonResData.data[0].users[0].deviceActivations[i].deviceActivationLastSeenTime);
+                 }
+            }
+    insomnia.expect(jsonResData.data[0].users[0].deviceActivations.length).to.eq(counter, "Only PC device should be returned");
+
+})",
+        "authentication": {},
+        "body": {},
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+        ],
+        "method": "GET",
+        "name": "after mobile uninstallation",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "userRefId",
+            "value": "{{tn_userRefId}}",
+          },
+        ],
+        "parentId": "__GRP_7__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v2/device-activations",
+      },
+      {
+        "_id": "__REQ_40__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(200);
+});
+
+insomnia.test("Response should include activationRefId", function () {    
+    const responseData = insomnia.response.json();    
+    insomnia.expect(responseData.data.activationRefId).to.eq(insomnia.environment.get("tn_mobile_activationRefId"), "activationRefId");    
+});",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+    "uninstalled": true,
+    "deviceRefId": "{{tn_mobile_deviceRefId}}",
+    "lastSeenTime": {{epochAfter72}},
+    "uninstallTime": {{epochAfter72}},
+    "subRefId": "{{tn_subRefId}}"
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "PATCH",
+        "name": "unistall mobile device - future uninstallTime and lastSeen",
+        "parameters": [],
+        "parentId": "__GRP_7__",
+        "preRequestScript": "",
+        "url": "{{_['device-orch']}}/v2/device-activations/{{_['tn_mobile_activationRefId']}}",
+      },
+      {
+        "_id": "__REQ_41__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 400", function () {    
+    insomnia.expect(insomnia.response.code).to.eq(400);
+});
+
+insomnia.test("BAD_REQUEST", function () {    
+    const responseData = insomnia.response.json();
+    insomnia.expect(responseData.errors[0].reason).to.eq("deviceRefId is mandatory when uninstalled is true");
+});",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+    "uninstalled": true,    
+    "lastSeenTime": {{epoch}},
+    "uninstallTime": {{epoch}},
+    "subRefId": "{{tn_subRefId}}"
+}",
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "{{pse_auth_token}}",
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "PATCH",
+        "name": "unistall mobile device - deviceRefId missing",
+        "parameters": [],
+        "parentId": "__GRP_7__",
+        "preRequestScript": "var epoch = (new Date).getTime();
+postman.setEnvironmentVariable("epoch", epoch);
+var epochAfter72 = epoch + (72*60*60*1000)
+postman.setEnvironmentVariable("epochAfter72", epochAfter72)
+
+var epochPrev72 = epoch - (72*60*60*1000)
+postman.setEnvironmentVariable("epochPrev72", epochPrev72)
+
+",
+        "url": "{{_['device-orch']}}/v2/device-activations/{{_['tn_mobile_activationRefId']}}",
+      },
+      {
+        "_id": "__WORKSPACE_ID__",
+        "_type": "workspace",
+        "name": "REST API basics: CRUD, test & variable",
+        "parentId": null,
+        "scope": "collection",
+      },
+      {
+        "_id": "__GRP_1__",
+        "_type": "request_group",
+        "afterResponseScript": "",
+        "authentication": {},
+        "description": "# 🚀 Get started here
+
+This template guides you through CRUD operations (GET, POST, PUT, DELETE), variables, and tests.
+
+## 🔖 **How to use this template**
+
+#### **Step 1: Send requests**
+
+RESTful APIs allow you to perform CRUD operations using the POST, GET, PUT, and DELETE HTTP methods.
+
+This collection contains each of these [request](https://learning.postman.com/docs/sending-requests/requests/) types. Open each request and click "Send" to see what happens.
+
+#### **Step 2: View responses**
+
+Observe the response tab for status code (200 OK), response time, and size.
+
+#### **Step 3: Send new Body data**
+
+Update or add new data in "Body" in the POST request. Typically, Body data is also used in PUT request.
+
+\`\`\`
+{
+    "name": "Add your name in the body"
+}
+
+ \`\`\`
+
+#### **Step 4: Update the variable**
+
+Variables enable you to store and reuse values in Postman. We have created a [variable](https://learning.postman.com/docs/sending-requests/variables/) called \`base_url\` with the sample request [https://postman-api-learner.glitch.me](https://postman-api-learner.glitch.me). Replace it with your API endpoint to customize this collection.
+
+#### **Step 5: Add tests in the "Scripts" tab**
+
+Adding tests to your requests can help you confirm that your API is working as expected. You can write test scripts in JavaScript and view the output in the "Test Results" tab.
+
+<img src="https://content.pstmn.io/fa30ea0a-373d-4545-a668-e7b283cca343/aW1hZ2UucG5n" alt="" height="1530" width="2162">
+
+## 💪 Pro tips
+
+- Use folders to group related requests and organize the collection.
+    
+- Add more [scripts](https://learning.postman.com/docs/writing-scripts/intro-to-scripts/) to verify if the API works as expected and execute workflows.
+    
+
+## 💡Related templates
+
+[API testing basics](https://go.postman.co/redirect/workspace?type=personal&collectionTemplateId=e9a37a28-055b-49cd-8c7e-97494a21eb54&sourceTemplateId=ddb19591-3097-41cf-82af-c84273e56719)  
+[API documentation](https://go.postman.co/redirect/workspace?type=personal&collectionTemplateId=e9c28f47-1253-44af-a2f3-20dce4da1f18&sourceTemplateId=ddb19591-3097-41cf-82af-c84273e56719)  
+[Authorization methods](https://go.postman.co/redirect/workspace?type=personal&collectionTemplateId=31a9a6ed-4cdf-4ced-984c-d12c9aec1c27&sourceTemplateId=ddb19591-3097-41cf-82af-c84273e56719)",
+        "environment": {
+          "base_url": "https://postman-rest-api-learner.glitch.me/",
+          "id": "1",
+        },
+        "name": "REST API basics: CRUD, test & variable",
+        "parentId": "__WORKSPACE_ID__",
+        "preRequestScript": "",
+        "variable": {
+          "base_url": "https://postman-rest-api-learner.glitch.me/",
+          "id": "1",
+        },
+      },
+      {
+        "_id": "__REQ_1__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {
+    insomnia.response.to.have.status(200);
+});",
+        "authentication": {},
+        "body": {},
+        "description": "This is a GET request and it is used to "get" data from an endpoint. There is no request body for a GET request, but you can use query parameters to help specify the resource you want data on (e.g., in this request, we have \`id=1\`).
+
+A successful GET response will have a \`200 OK\` status, and should include some kind of response body - for example, HTML web content or JSON data.",
+        "headers": [],
+        "method": "GET",
+        "name": "Get data",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "id",
+            "value": "1",
+          },
+        ],
+        "parentId": "__GRP_1__",
+        "preRequestScript": "",
+        "url": "{{base_url}}/info",
+      },
+      {
+        "_id": "__REQ_2__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Successful POST request", function () {
+    insomnia.expect(insomnia.response.code).to.be.oneOf([200, 201]);
+});
+",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+	"name": "Add your name in the body"
+}",
+        },
+        "description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.
+
+A successful POST request typically returns a \`200 OK\` or \`201 Created\` response code.",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "POST",
+        "name": "Post data",
+        "parameters": [],
+        "parentId": "__GRP_1__",
+        "preRequestScript": "",
+        "url": "{{base_url}}/info",
+      },
+      {
+        "_id": "__REQ_3__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Successful PUT request", function () {
+    insomnia.expect(insomnia.response.code).to.be.oneOf([200, 201, 204]);
+});
+",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+	"name": "Add your name in the body"
+}",
+        },
+        "description": "This is a PUT request and it is used to overwrite an existing piece of data. For instance, after you create an entity with a POST request, you may want to modify that later. You can do that using a PUT request. You typically identify the entity being updated by including an identifier in the URL (eg. \`id=1\`).
+
+A successful PUT request typically returns a \`200 OK\`, \`201 Created\`, or \`204 No Content\` response code.",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "PUT",
+        "name": "Update data",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "id",
+            "value": "1",
+          },
+        ],
+        "parentId": "__GRP_1__",
+        "preRequestScript": "",
+        "url": "{{base_url}}/info",
+      },
+      {
+        "_id": "__REQ_4__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Successful DELETE request", function () {
+    insomnia.expect(insomnia.response.code).to.be.oneOf([200, 202, 204]);
+});
+",
+        "authentication": {},
+        "body": {},
+        "description": "This is a DELETE request, and it is used to delete data that was previously created via a POST request. You typically identify the entity being updated by including an identifier in the URL (eg. \`id=1\`).
+
+A successful DELETE request typically returns a \`200 OK\`, \`202 Accepted\`, or \`204 No Content\` response code.",
+        "headers": [],
+        "method": "DELETE",
+        "name": "Delete data",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "id",
+            "value": "1",
+          },
+        ],
+        "parentId": "__GRP_1__",
+        "preRequestScript": "",
+        "url": "{{base_url}}/info",
+      },
+      {
+        "_id": "__WORKSPACE_ID__",
+        "_type": "workspace",
+        "name": "GetSubscriberIdAPI",
+        "parentId": null,
+        "scope": "collection",
+      },
+      {
+        "_id": "__GRP_1__",
+        "_type": "request_group",
+        "afterResponseScript": "",
+        "authentication": {
+          "disabled": false,
+          "password": "haha",
+          "type": "basic",
+          "username": "yaowei",
+        },
+        "description": "",
+        "environment": {
+          "asd": "qwer",
+          "asfd": "qtrsda",
+        },
+        "name": "GetSubscriberIdAPI",
+        "parentId": "__WORKSPACE_ID__",
+        "preRequestScript": "",
+        "variable": {
+          "asd": "qwer",
+          "asfd": "qtrsda",
+        },
+      },
+      {
+        "_id": "__GRP_2__",
+        "_type": "request_group",
+        "afterResponseScript": "",
+        "authentication": {
+          "disabled": false,
+          "password": "weqew",
+          "type": "basic",
+          "username": "adsfasdf",
+        },
+        "description": "",
+        "environment": {},
+        "name": "Setup",
+        "parentId": "__GRP_1__",
+        "preRequestScript": "",
+      },
+      {
+        "_id": "__REQ_1__",
+        "_type": "request",
+        "afterResponseScript": "try
+{
+    if (insomnia.response.code === 200)
+    {
+        let response = insomnia.response.json();
+
+        insomnia.test("Response code is 200", function(){
+                insomnia.response.to.have.status(200);
+            });
+
+        var token = response.access_token;
+        insomnia.globals.set("BearerToken", "Bearer " + token);
+        insomnia.environment.set("BearerToken", "Bearer " + token);
+    }
+    else
+    {
+        insomnia.test("Response code is not 200", function(){
+                insomnia.response.to.have.status(200);
+            });
+    }
+}
+catch (error)
+{
+    tests["Tests script failed due to exception; " + "Error Message - " + error] = (true === false);
+}",
+        "authentication": {
+          "disabled": false,
+          "password": "pass",
+          "type": "basic",
+          "username": "yaowei",
+        },
+        "body": {
+          "mimeType": "application/x-www-form-urlencoded",
+          "params": [
+            {
+              "disabled": false,
+              "name": "grant_type",
+              "value": "password",
+            },
+            {
+              "disabled": false,
+              "name": "username",
+              "value": "{{_['Auth-Name']}}",
+            },
+            {
+              "disabled": false,
+              "name": "password",
+              "value": "{{_['Auth-Value']}}",
+            },
+          ],
+        },
+        "description": "",
+        "headers": [
+          {
+            "name": "content-type",
+            "value": "application/x-www-form-urlencoded",
+          },
+          {
+            "name": "Authorization",
+            "value": "Basic {{_['Auth-Header']}}",
+          },
+        ],
+        "method": "POST",
+        "name": "BearerToken",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "param1",
+            "value": "paramVal1",
+          },
+        ],
+        "parentId": "__GRP_2__",
+        "preRequestScript": "",
+        "url": "{{AuthUri}}",
+      },
+      {
+        "_id": "__WORKSPACE_ID__",
+        "_type": "workspace",
+        "name": "RESTful API Basics #blueprint",
+        "parentId": null,
+        "scope": "collection",
+      },
+      {
+        "_id": "__GRP_1__",
+        "_type": "request_group",
+        "afterResponseScript": "",
+        "authentication": {},
+        "description": "# 🚀 Get started here
+
+This collection guides you through CRUD operations (GET, POST, PUT, DELETE), variables, and tests.
+
+## 🔖 **How to use this collection**
+
+#### **Step 1: Send requests**
+
+RESTful APIs allow you to perform CRUD operations using the POST, GET, PUT, and DELETE HTTP methods.
+
+This collection contains each of these request types. Open each request and click "Send" to see what happens.
+
+#### **Step 2: View responses**
+
+Observe the response tab for status code (200 OK), response time, and size.
+
+#### **Step 3: Send new Body data**
+
+Update or add new data in "Body" in the POST request. Typically, Body data is also used in PUT and PATCH requests.
+
+\`\`\`
+{
+    "name": "Add your name in the body"
+}
+
+\`\`\`
+
+#### **Step 4: Update the variable**
+
+Variables enable you to store and reuse values in Postman. We have created a variable called \`base_url\` with the sample request [https://postman-api-learner.glitch.me](https://postman-api-learner.glitch.me). Replace it with your API endpoint to customize this collection.
+
+#### **Step 5: Add tests in the "Tests" tab**
+
+Tests help you confirm that your API is working as expected. You can write test scripts in JavaScript and view the output in the "Test Results" tab.
+
+<img src="https://content.pstmn.io/b5f280a7-4b09-48ec-857f-0a7ed99d7ef8/U2NyZWVuc2hvdCAyMDIzLTAzLTI3IGF0IDkuNDcuMjggUE0ucG5n">
+
+## 💪 Pro tips
+
+- Use folders to group related requests and organize the collection.
+- Add more scripts in "Tests" to verify if the API works as expected and execute flows.
+    
+
+## ℹ️ Resources
+
+[Building requests](https://learning.postman.com/docs/sending-requests/requests/)  
+[Authorizing requests](https://learning.postman.com/docs/sending-requests/authorization/)  
+[Using variables](https://learning.postman.com/docs/sending-requests/variables/)  
+[Managing environments](https://learning.postman.com/docs/sending-requests/managing-environments/)  
+[Writing scripts](https://learning.postman.com/docs/writing-scripts/intro-to-scripts/)",
+        "environment": {
+          "base_url": "https://postman-rest-api-learner.glitch.me/",
+          "id": "1",
+        },
+        "name": "RESTful API Basics #blueprint",
+        "parentId": "__WORKSPACE_ID__",
+        "preRequestScript": "",
+        "variable": {
+          "base_url": "https://postman-rest-api-learner.glitch.me/",
+          "id": "1",
+        },
+      },
+      {
+        "_id": "__REQ_1__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Status code is 200", function () {
+    insomnia.response.to.have.status(200);
+});",
+        "authentication": {},
+        "body": {},
+        "description": "This is a GET request and it is used to "get" data from an endpoint. There is no request body for a GET request, but you can use query parameters to help specify the resource you want data on (e.g., in this request, we have \`id=1\`).
+
+A successful GET response will have a \`200 OK\` status, and should include some kind of response body - for example, HTML web content or JSON data.",
+        "headers": [],
+        "method": "GET",
+        "name": "Get data",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "id",
+            "value": "1",
+          },
+        ],
+        "parentId": "__GRP_1__",
+        "preRequestScript": "",
+        "url": "{{base_url}}/info",
+      },
+      {
+        "_id": "__REQ_2__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Successful POST request", function () {
+    insomnia.expect(insomnia.response.code).to.be.oneOf([200, 201]);
+});
+",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+	"name": "Add your name in the body"
+}",
+        },
+        "description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.
+
+A successful POST request typically returns a \`200 OK\` or \`201 Created\` response code.",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "POST",
+        "name": "Post data",
+        "parameters": [],
+        "parentId": "__GRP_1__",
+        "preRequestScript": "",
+        "url": "{{base_url}}/info",
+      },
+      {
+        "_id": "__REQ_3__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Successful PUT request", function () {
+    insomnia.expect(insomnia.response.code).to.be.oneOf([200, 201, 204]);
+});
+",
+        "authentication": {},
+        "body": {
+          "mimeType": "application/json",
+          "text": "{
+	"name": "Add your name in the body"
+}",
+        },
+        "description": "This is a PUT request and it is used to overwrite an existing piece of data. For instance, after you create an entity with a POST request, you may want to modify that later. You can do that using a PUT request. You typically identify the entity being updated by including an identifier in the URL (eg. \`id=1\`).
+
+A successful PUT request typically returns a \`200 OK\`, \`201 Created\`, or \`204 No Content\` response code.",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "PUT",
+        "name": "Update data",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "id",
+            "value": "1",
+          },
+        ],
+        "parentId": "__GRP_1__",
+        "preRequestScript": "",
+        "url": "{{base_url}}/info",
+      },
+      {
+        "_id": "__REQ_4__",
+        "_type": "request",
+        "afterResponseScript": "insomnia.test("Successful DELETE request", function () {
+    insomnia.expect(insomnia.response.code).to.be.oneOf([200, 202, 204]);
+});
+",
+        "authentication": {},
+        "body": {},
+        "description": "This is a DELETE request, and it is used to delete data that was previously created via a POST request. You typically identify the entity being updated by including an identifier in the URL (eg. \`id=1\`).
+
+A successful DELETE request typically returns a \`200 OK\`, \`202 Accepted\`, or \`204 No Content\` response code.",
+        "headers": [],
+        "method": "DELETE",
+        "name": "Delete data",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "id",
+            "value": "1",
+          },
+        ],
+        "parentId": "__GRP_1__",
+        "preRequestScript": "",
+        "url": "{{base_url}}/info",
+      },
+      {
+        "_id": "__WORKSPACE_ID__",
+        "_type": "workspace",
+        "name": "API Documentation #reference",
+        "parentId": null,
+        "scope": "collection",
+      },
+      {
+        "_id": "__GRP_1__",
+        "_type": "request_group",
+        "afterResponseScript": "",
+        "authentication": {
+          "addTo": "header",
+          "disabled": false,
+          "key": "X-API-Key",
+          "type": "apikey",
+          "value": "{{token}}",
+        },
+        "description": "This template contains a boilerplate for documentation that you can quickly customize and reuse.
+
+### How to use this template:
+
+- Replace the content given brackets (()) with your API's details.
+- Tips are formatted in \`codespan\` - feel free to read and remove them.
+    
+
+---
+
+\`Start with a brief overview of what your API offers.\`
+
+The ((product name)) provides many API products, tools, and resources that enable you to ((add product value here)).
+
+\`You can also list the APIs you offer, link to the relevant pages, or do both in this section.\`
+
+## **Getting started guide**
+
+\`List the steps or points required to start using your APIs. Make sure to cover everything required to reach success with your API as quickly as possible.\`
+
+To start using the ((add APIs here)), you need to -
+
+\`The points given below are from The Postman API's documentation. You can reference it to write your own getting started guide.\`
+
+- You must use a valid API Key to send requests to the API endpoints. You can get your API key from Postman's [integrations dashboard](https://go.postman.co/settings/me/api-keys).
+- The API has [rate and usage limits](https://learning.postman.com/docs/developer/postman-api/postman-api-rate-limits/).
+- The API only responds to HTTPS-secured communications. Any requests sent via HTTP return an HTTP 301 redirect to the corresponding HTTPS resources.
+- The API returns request responses in JSON format. When an API request returns an error, it is sent in the JSON response as an error key.
+    
+
+## Authentication
+
+\`Add details on the authorization keys/tokens required, steps that cover how to get them, and the relevant error codes.\`
+
+The ((product name)) API uses ((add your API's authorization type)) for authentication.
+
+\`The details given below are from the Postman API's documentation. You can reference it to write your own authentication section.\`
+
+Postman uses API keys for authentication. You can generate a Postman API key in the [API keys](https://postman.postman.co/settings/me/api-keys) section of your Postman account settings.
+
+You must include an API key in each request to the Postman API with the X-Api-Key request header.
+
+### Authentication error response
+
+If an API key is missing, malformed, or invalid, you will receive an HTTP 401 Unauthorized response code.
+
+## Rate and usage limits
+
+\`Use this section to cover your APIs' terms of use. Include API limits, constraints, and relevant error codes, so consumers understand the permitted API usage and practices.\`
+
+\`The example given below is from The Postman API's documentation. Use it as a reference to write your APIs' terms of use.\`
+
+API access rate limits apply at a per-API key basis in unit time. The limit is 300 requests per minute. Also, depending on your plan, you may have usage limits. If you exceed either limit, your request will return an HTTP 429 Too Many Requests status code.
+
+Each API response returns the following set of headers to help you identify your use status:
+
+| Header | Description |
+| --- | --- |
+| \`X-RateLimit-Limit\` | The maximum number of requests that the consumer is permitted to make per minute. |
+| \`X-RateLimit-Remaining\` | The number of requests remaining in the current rate limit window. |
+| \`X-RateLimit-Reset\` | The time at which the current rate limit window resets in UTC epoch seconds. |
+
+### 503 response
+
+An HTTP \`503\` response from our servers indicates there is an unexpected spike in API access traffic. The server is usually operational within the next five minutes. If the outage persists or you receive any other form of an HTTP \`5XX\` error, [contact support](https://support.postman.com/hc/en-us/requests/new/).
+
+### **Need some help?**
+
+\`Add links that customers can refer to whenever they need help.\`
+
+In case you have questions, go through our tutorials ((link to your video or help documentation here)). Or visit our FAQ page ((link to the relevant page)).
+
+Or you can check out our community forum, there’s a good chance our community has an answer for you. Visit our developer forum ((link to developer forum)) to review topics, ask questions, and learn from others.
+
+\`You can also document or add links to libraries, code examples, and other resources needed to make a request.\`",
+        "environment": {
+          "baseUrl": "https://farming-simulator.pstmn.io",
+        },
+        "name": "API Documentation #reference",
+        "parentId": "__WORKSPACE_ID__",
+        "preRequestScript": "",
+        "variable": {
+          "baseUrl": "https://farming-simulator.pstmn.io",
+        },
+      },
+      {
+        "_id": "__GRP_2__",
+        "_type": "request_group",
+        "afterResponseScript": "",
+        "authentication": {},
+        "description": "The \`/me\` endpoints let you manage information about the authenticated user.",
+        "environment": {},
+        "name": "User",
+        "parentId": "__GRP_1__",
+        "preRequestScript": "",
+      },
+      {
+        "_id": "__REQ_1__",
+        "_type": "request",
+        "afterResponseScript": "",
+        "authentication": {},
+        "body": {},
+        "description": "Gets information about the authenticated user.",
+        "headers": [],
+        "method": "GET",
+        "name": "Get authenticated user",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "foo",
+            "value": "bar",
+          },
+        ],
+        "parentId": "__GRP_2__",
+        "preRequestScript": "",
+        "url": "https://api.getpostman.com/me",
+      },
+      {
+        "_id": "__GRP_3__",
+        "_type": "request_group",
+        "afterResponseScript": "",
+        "authentication": {},
+        "description": "The \`/collections\` endpoints let you manage your [collections](https://learning.postman.com/docs/sending-requests/intro-to-collections/).",
+        "environment": {},
+        "name": "Collections",
+        "parentId": "__GRP_1__",
+        "preRequestScript": "",
+      },
+      {
+        "_id": "__REQ_2__",
+        "_type": "request",
+        "afterResponseScript": "",
+        "authentication": {},
+        "body": {
+          "mimeType": "text/plain",
+          "text": "{
+    "collection": {
+        "info": {
+            "name": "{{collectionName}}",
+            "schema": "{{collectionSchemaUrl}}"
+        },
+        "item": [
+            {
+                "request": {}
+            }
+        ]
+    }
+}",
+        },
+        "description": "Creates a collection using the [Postman Collection v2 schema format](https://schema.postman.com/json/collection/v2.1.0/docs/index.html). Include a \`collection\` object in the request body that contains the following required properties:
+
+*   \`info\` — An **object** that contains the following properties:
+    *   \`name\` — A **string** value that contains the collection's name.
+    *   \`schema\` — A **string** that contains a URL to the collection's schema. For example, the \`https://schema.getpostman.com/collection/v1\` URL.
+*   \`item\` — An **object** that contains the HTTP request and response information.
+    *   \`request\` — An **object** that contains the collection's request information. For a complete list of values, refer to the \`definitions.request\` entry in the [collection.json schema file](https://schema.postman.com/json/collection/v2.1.0/collection.json). If you pass an empty object for this value, the system defaults to an untitled GET request.
+
+**Note:**
+
+*   For a complete list of available property values for this endpoint, use the following references available in the [collection.json schema file](https://schema.postman.com/json/collection/v2.1.0/collection.json):
+    *   \`info\` object — Use the \`definitions.info\` entry.
+    *   \`item\` object — Use the \`definitions.items\` entry.
+*   For all other possible values, refer to the [collection.json schema file](https://schema.postman.com/json/collection/v2.1.0/collection.json).",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "POST",
+        "name": "Create a collection",
+        "parameters": [
+          {
+            "disabled": true,
+            "name": "workspace",
+            "value": "{{workspaceId}}",
+          },
+        ],
+        "parentId": "__GRP_3__",
+        "preRequestScript": "",
+        "url": "https://api.getpostman.com/collections",
+      },
+      {
+        "_id": "__REQ_3__",
+        "_type": "request",
+        "afterResponseScript": "",
+        "authentication": {},
+        "body": {},
+        "description": "Gets information about a collection. For a complete list of this endpoint's possible values, use the [collection.json schema file](https://schema.postman.com/json/collection/v2.1.0/collection.json).",
+        "headers": [],
+        "method": "GET",
+        "name": "Get a collection",
+        "parameters": [
+          {
+            "disabled": true,
+            "name": "access_key",
+            "value": "{{accessKey}}",
+          },
+        ],
+        "parentId": "__GRP_3__",
+        "preRequestScript": "",
+        "url": "https://api.getpostman.com/collections/{{collectionId}}",
+      },
+      {
+        "_id": "__REQ_4__",
+        "_type": "request",
+        "afterResponseScript": "",
+        "authentication": {},
+        "body": {},
+        "description": "Deletes a collection.",
+        "headers": [],
+        "method": "DELETE",
+        "name": "Delete a collection",
+        "parameters": [],
+        "parentId": "__GRP_3__",
+        "preRequestScript": "",
+        "url": "https://api.getpostman.com/collections/{{collectionId}}",
+      },
+      {
+        "_id": "__REQ_5__",
+        "_type": "request",
+        "afterResponseScript": "",
+        "authentication": {},
+        "body": {
+          "mimeType": "text/plain",
+          "text": "{
+    "collection": {
+        "info": {
+            "name": "{{collectionName}}",
+            "schema": "{{collectionSchemaUrl}}"
+        },
+        "item": [
+            {
+                "request": {}
+            }
+        ]
+    }
+}",
+        },
+        "description": "Updates a collection using the [Postman Collection v2 schema format](https://schema.postman.com/json/collection/v2.1.0/docs/index.html). Include a \`collection\` object in the request body that contains the following required properties:
+
+- \`info\` — An **object** that contains the following properties:
+    - \`name\` — A **string** value that contains the collection's name.
+    - \`schema\` — A **string** that contains a URL to the collection's schema. For example, the \`https://schema.getpostman.com/collection/v1\` URL.
+- \`item\` — An **object** that contains the HTTP request and response information.
+    - \`request\` — An **object** that contains the collection's request information. For a complete list of values, refer to the \`definitions.request\` entry in the [collection.json schema file](https://schema.postman.com/json/collection/v2.1.0/collection.json). If you pass an empty object for this value, the system defaults to an untitled GET request.
+
+**Note:**
+
+- For a complete list of available property values for this endpoint, use the following references available in the [collection.json schema file](https://schema.postman.com/json/collection/v2.1.0/collection.json):
+    - \`info\` object — Use the \`definitions.info\` entry.
+    - \`item\` object — Use the \`definitions.items\` entry.
+- For all other possible values, refer to the [collection.json schema file](https://schema.postman.com/json/collection/v2.1.0/collection.json).
+    
+
+### Important
+
+Use caution when using this endpoint. The system will replace the existing collection with the values passed in the request body.",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "PUT",
+        "name": "Update a collection",
+        "parameters": [],
+        "parentId": "__GRP_3__",
+        "preRequestScript": "",
+        "url": "https://api.getpostman.com/collections/{{collectionId}}",
+      },
+      {
+        "_id": "__REQ_6__",
+        "_type": "request",
+        "afterResponseScript": "",
+        "authentication": {},
+        "body": {},
+        "description": "Gets all of your [collections](https://www.getpostman.com/docs/collections). The response includes all of your subscribed collections.",
+        "headers": [],
+        "method": "GET",
+        "name": "Get all collections",
+        "parameters": [
+          {
+            "disabled": true,
+            "name": "workspace",
+            "value": "{{workspaceId}}",
+          },
+        ],
+        "parentId": "__GRP_3__",
+        "preRequestScript": "",
+        "url": "https://api.getpostman.com/collections",
+      },
+      {
+        "_id": "__WORKSPACE_ID__",
+        "_type": "workspace",
+        "name": "API Documentation #reference",
+        "parentId": null,
+        "scope": "collection",
+      },
+      {
+        "_id": "__GRP_1__",
+        "_type": "request_group",
+        "afterResponseScript": "",
+        "authentication": {
+          "addTo": "header",
+          "disabled": false,
+          "key": "X-API-Key",
+          "type": "apikey",
+          "value": "{{token}}",
+        },
+        "description": "This template contains a boilerplate for documentation that you can quickly customize and reuse.
+
+### How to use this template:
+
+- Replace the content given brackets (()) with your API's details.
+- Tips are formatted in \`codespan\` - feel free to read and remove them.
+    
+
+---
+
+\`Start with a brief overview of what your API offers.\`
+
+The ((product name)) provides many API products, tools, and resources that enable you to ((add product value here)).
+
+\`You can also list the APIs you offer, link to the relevant pages, or do both in this section.\`
+
+## **Getting started guide**
+
+\`List the steps or points required to start using your APIs. Make sure to cover everything required to reach success with your API as quickly as possible.\`
+
+To start using the ((add APIs here)), you need to -
+
+\`The points given below are from The Postman API's documentation. You can reference it to write your own getting started guide.\`
+
+- You must use a valid API Key to send requests to the API endpoints. You can get your API key from Postman's [integrations dashboard](https://go.postman.co/settings/me/api-keys).
+- The API has [rate and usage limits](https://learning.postman.com/docs/developer/postman-api/postman-api-rate-limits/).
+- The API only responds to HTTPS-secured communications. Any requests sent via HTTP return an HTTP 301 redirect to the corresponding HTTPS resources.
+- The API returns request responses in JSON format. When an API request returns an error, it is sent in the JSON response as an error key.
+    
+
+## Authentication
+
+\`Add details on the authorization keys/tokens required, steps that cover how to get them, and the relevant error codes.\`
+
+The ((product name)) API uses ((add your API's authorization type)) for authentication.
+
+\`The details given below are from the Postman API's documentation. You can reference it to write your own authentication section.\`
+
+Postman uses API keys for authentication. You can generate a Postman API key in the [API keys](https://postman.postman.co/settings/me/api-keys) section of your Postman account settings.
+
+You must include an API key in each request to the Postman API with the X-Api-Key request header.
+
+### Authentication error response
+
+If an API key is missing, malformed, or invalid, you will receive an HTTP 401 Unauthorized response code.
+
+## Rate and usage limits
+
+\`Use this section to cover your APIs' terms of use. Include API limits, constraints, and relevant error codes, so consumers understand the permitted API usage and practices.\`
+
+\`The example given below is from The Postman API's documentation. Use it as a reference to write your APIs' terms of use.\`
+
+API access rate limits apply at a per-API key basis in unit time. The limit is 300 requests per minute. Also, depending on your plan, you may have usage limits. If you exceed either limit, your request will return an HTTP 429 Too Many Requests status code.
+
+Each API response returns the following set of headers to help you identify your use status:
+
+| Header | Description |
+| --- | --- |
+| \`X-RateLimit-Limit\` | The maximum number of requests that the consumer is permitted to make per minute. |
+| \`X-RateLimit-Remaining\` | The number of requests remaining in the current rate limit window. |
+| \`X-RateLimit-Reset\` | The time at which the current rate limit window resets in UTC epoch seconds. |
+
+### 503 response
+
+An HTTP \`503\` response from our servers indicates there is an unexpected spike in API access traffic. The server is usually operational within the next five minutes. If the outage persists or you receive any other form of an HTTP \`5XX\` error, [contact support](https://support.postman.com/hc/en-us/requests/new/).
+
+### **Need some help?**
+
+\`Add links that customers can refer to whenever they need help.\`
+
+In case you have questions, go through our tutorials ((link to your video or help documentation here)). Or visit our FAQ page ((link to the relevant page)).
+
+Or you can check out our community forum, there’s a good chance our community has an answer for you. Visit our developer forum ((link to developer forum)) to review topics, ask questions, and learn from others.
+
+\`You can also document or add links to libraries, code examples, and other resources needed to make a request.\`",
+        "environment": {
+          "baseUrl": "https://farming-simulator.pstmn.io",
+          "haha": "",
+        },
+        "name": "API Documentation #reference",
+        "parentId": "__WORKSPACE_ID__",
+        "preRequestScript": "",
+        "variable": {
+          "baseUrl": "https://farming-simulator.pstmn.io",
+          "haha": "",
+        },
+      },
+      {
+        "_id": "__GRP_2__",
+        "_type": "request_group",
+        "afterResponseScript": "",
+        "authentication": {},
+        "description": "The \`/me\` endpoints let you manage information about the authenticated user.",
+        "environment": {},
+        "name": "User",
+        "parentId": "__GRP_1__",
+        "preRequestScript": "",
+      },
+      {
+        "_id": "__REQ_1__",
+        "_type": "request",
+        "afterResponseScript": "",
+        "authentication": {},
+        "body": {},
+        "description": "Gets information about the authenticated user.",
+        "headers": [],
+        "method": "GET",
+        "name": "Get authenticated user",
+        "parameters": [
+          {
+            "disabled": false,
+            "name": "foo",
+            "value": "bar",
+          },
+        ],
+        "parentId": "__GRP_2__",
+        "preRequestScript": "",
+        "url": "https://api.getpostman.com/me",
+      },
+      {
+        "_id": "__GRP_3__",
+        "_type": "request_group",
+        "afterResponseScript": "",
+        "authentication": {},
+        "description": "The \`/collections\` endpoints let you manage your [collections](https://learning.postman.com/docs/sending-requests/intro-to-collections/).",
+        "environment": {},
+        "name": "Collections",
+        "parentId": "__GRP_1__",
+        "preRequestScript": "",
+      },
+      {
+        "_id": "__REQ_2__",
+        "_type": "request",
+        "afterResponseScript": "",
+        "authentication": {},
+        "body": {
+          "mimeType": "text/plain",
+          "text": "{
+    "collection": {
+        "info": {
+            "name": "{{collectionName}}",
+            "schema": "{{collectionSchemaUrl}}"
+        },
+        "item": [
+            {
+                "request": {}
+            }
+        ]
+    }
+}",
+        },
+        "description": "Creates a collection using the [Postman Collection v2 schema format](https://schema.postman.com/json/collection/v2.1.0/docs/index.html). Include a \`collection\` object in the request body that contains the following required properties:
+
+*   \`info\` — An **object** that contains the following properties:
+    *   \`name\` — A **string** value that contains the collection's name.
+    *   \`schema\` — A **string** that contains a URL to the collection's schema. For example, the \`https://schema.getpostman.com/collection/v1\` URL.
+*   \`item\` — An **object** that contains the HTTP request and response information.
+    *   \`request\` — An **object** that contains the collection's request information. For a complete list of values, refer to the \`definitions.request\` entry in the [collection.json schema file](https://schema.postman.com/json/collection/v2.1.0/collection.json). If you pass an empty object for this value, the system defaults to an untitled GET request.
+
+**Note:**
+
+*   For a complete list of available property values for this endpoint, use the following references available in the [collection.json schema file](https://schema.postman.com/json/collection/v2.1.0/collection.json):
+    *   \`info\` object — Use the \`definitions.info\` entry.
+    *   \`item\` object — Use the \`definitions.items\` entry.
+*   For all other possible values, refer to the [collection.json schema file](https://schema.postman.com/json/collection/v2.1.0/collection.json).",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "POST",
+        "name": "Create a collection",
+        "parameters": [
+          {
+            "disabled": true,
+            "name": "workspace",
+            "value": "{{workspaceId}}",
+          },
+        ],
+        "parentId": "__GRP_3__",
+        "preRequestScript": "",
+        "url": "https://api.getpostman.com/collections",
+      },
+      {
+        "_id": "__REQ_3__",
+        "_type": "request",
+        "afterResponseScript": "",
+        "authentication": {},
+        "body": {},
+        "description": "Gets information about a collection. For a complete list of this endpoint's possible values, use the [collection.json schema file](https://schema.postman.com/json/collection/v2.1.0/collection.json).",
+        "headers": [],
+        "method": "GET",
+        "name": "Get a collection",
+        "parameters": [
+          {
+            "disabled": true,
+            "name": "access_key",
+            "value": "{{accessKey}}",
+          },
+        ],
+        "parentId": "__GRP_3__",
+        "preRequestScript": "",
+        "url": "https://api.getpostman.com/collections/{{collectionId}}",
+      },
+      {
+        "_id": "__REQ_4__",
+        "_type": "request",
+        "afterResponseScript": "",
+        "authentication": {},
+        "body": {},
+        "description": "Deletes a collection.",
+        "headers": [],
+        "method": "DELETE",
+        "name": "Delete a collection",
+        "parameters": [],
+        "parentId": "__GRP_3__",
+        "preRequestScript": "",
+        "url": "https://api.getpostman.com/collections/{{collectionId}}",
+      },
+      {
+        "_id": "__REQ_5__",
+        "_type": "request",
+        "afterResponseScript": "",
+        "authentication": {},
+        "body": {
+          "mimeType": "text/plain",
+          "text": "{
+    "collection": {
+        "info": {
+            "name": "{{collectionName}}",
+            "schema": "{{collectionSchemaUrl}}"
+        },
+        "item": [
+            {
+                "request": {}
+            }
+        ]
+    }
+}",
+        },
+        "description": "Updates a collection using the [Postman Collection v2 schema format](https://schema.postman.com/json/collection/v2.1.0/docs/index.html). Include a \`collection\` object in the request body that contains the following required properties:
+
+- \`info\` — An **object** that contains the following properties:
+    - \`name\` — A **string** value that contains the collection's name.
+    - \`schema\` — A **string** that contains a URL to the collection's schema. For example, the \`https://schema.getpostman.com/collection/v1\` URL.
+- \`item\` — An **object** that contains the HTTP request and response information.
+    - \`request\` — An **object** that contains the collection's request information. For a complete list of values, refer to the \`definitions.request\` entry in the [collection.json schema file](https://schema.postman.com/json/collection/v2.1.0/collection.json). If you pass an empty object for this value, the system defaults to an untitled GET request.
+
+**Note:**
+
+- For a complete list of available property values for this endpoint, use the following references available in the [collection.json schema file](https://schema.postman.com/json/collection/v2.1.0/collection.json):
+    - \`info\` object — Use the \`definitions.info\` entry.
+    - \`item\` object — Use the \`definitions.items\` entry.
+- For all other possible values, refer to the [collection.json schema file](https://schema.postman.com/json/collection/v2.1.0/collection.json).
+    
+
+### Important
+
+Use caution when using this endpoint. The system will replace the existing collection with the values passed in the request body.",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json",
+          },
+        ],
+        "method": "PUT",
+        "name": "Update a collection",
+        "parameters": [],
+        "parentId": "__GRP_3__",
+        "preRequestScript": "",
+        "url": "https://api.getpostman.com/collections/{{collectionId}}",
+      },
+      {
+        "_id": "__REQ_6__",
+        "_type": "request",
+        "afterResponseScript": "",
+        "authentication": {},
+        "body": {},
+        "description": "Gets all of your [collections](https://www.getpostman.com/docs/collections). The response includes all of your subscribed collections.",
+        "headers": [],
+        "method": "GET",
+        "name": "Get all collections",
+        "parameters": [
+          {
+            "disabled": true,
+            "name": "workspace",
+            "value": "{{workspaceId}}",
+          },
+        ],
+        "parentId": "__GRP_3__",
+        "preRequestScript": "",
+        "url": "https://api.getpostman.com/collections",
+      },
+      {
+        "_id": "__ENV_1__",
+        "_type": "environment",
+        "data": {
+          "accessKey": "agfd",
+          "collectionId": "",
+          "collectionName": "asdf",
+          "collectionSchemaUrl": "",
+          "token": "qwer",
+          "workspaceId": "we",
+        },
+        "name": "Project2Env1",
+        "parentId": "__BASE_ENVIRONMENT_ID__",
+      },
+      {
+        "_id": "__ENV_1__",
+        "_type": "environment",
+        "data": {
+          "haha": "",
+        },
+        "name": "GlobalSubEnv2",
+        "parentId": "__BASE_ENVIRONMENT_ID__",
+      },
+      {
+        "_id": "__ENV_1__",
+        "_type": "environment",
+        "data": {
+          "accessKey": "asdf",
+          "collectionId": "wer",
+          "collectionName": "wqeasd",
+          "collectionSchemaUrl": "",
+          "token": "",
+          "workspaceId": "",
+        },
+        "name": "Project2Env2",
+        "parentId": "__BASE_ENVIRONMENT_ID__",
+      },
+      {
+        "_id": "__ENV_1__",
+        "_type": "environment",
+        "data": {
+          "lala": "sadfasd",
+        },
+        "name": "GlobalSubEnv3",
+        "parentId": "__BASE_ENVIRONMENT_ID__",
+      },
+      {
+        "_id": "__ENV_1__",
+        "_type": "environment",
+        "data": {
+          "collectionId": "afd",
+          "collectionName": "asdf",
+          "collectionSchemaUrl": "",
+          "token": "sfgd",
+        },
+        "name": "GlobalSubEnv4",
+        "parentId": "__BASE_ENVIRONMENT_ID__",
+      },
+      {
+        "_id": "__ENV_1__",
+        "_type": "environment",
+        "data": {
+          "accessKey": "",
+          "collectionId": "",
+          "collectionName": "",
+          "collectionSchemaUrl": "",
+          "token": "",
+          "workspaceId": "",
+        },
+        "name": "GlobalSubEnv1",
+        "parentId": "__BASE_ENVIRONMENT_ID__",
+      },
+    ],
+  },
+  "type": {
+    "description": "Importer for Postman data dump",
+    "id": "postman-data-dump",
+    "name": "Postman Data Dump",
+  },
+}
+`;

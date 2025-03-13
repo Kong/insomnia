@@ -137,7 +137,6 @@ export interface Settings {
   pluginConfig: PluginConfigMap;
   pluginNodeExtraCerts: string;
   pluginPath: string;
-  pluginsAllowElevatedAccess: boolean;
   preferredHttpVersion: HttpVersion;
   proxyEnabled: boolean;
   showPasswords: boolean;

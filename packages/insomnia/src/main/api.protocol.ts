@@ -1,7 +1,6 @@
 import { app, net, protocol } from 'electron';
 
 import { getApiBaseURL } from '../common/constants';
-import { resolveDbByKey } from './templating-worker-database';
 
 export interface RegisterProtocolOptions {
   scheme: string;
@@ -10,7 +9,6 @@ export interface RegisterProtocolOptions {
 const insomniaStreamScheme = 'insomnia-event-source';
 const httpsScheme = 'https';
 const httpScheme = 'http';
-const templatingWorkerDatabaseInterface = 'insomnia-templating-worker-database';
 
 export async function registerInsomniaProtocols() {
   protocol.registerSchemesAsPrivileged([{
@@ -21,9 +19,6 @@ export async function registerInsomniaProtocols() {
       privileges: { secure: true, standard: true, supportFetchAPI: true },
     }, {
     scheme: httpScheme,
-      privileges: { secure: true, standard: true, supportFetchAPI: true },
-    }, {
-    scheme: templatingWorkerDatabaseInterface,
       privileges: { secure: true, standard: true, supportFetchAPI: true },
   }]);
 
@@ -47,8 +42,5 @@ export async function registerInsomniaProtocols() {
     protocol.handle(httpScheme, async request => {
       return net.fetch(request, { bypassCustomProtocolHandlers: true });
     });
-  }
-  if (!protocol.isProtocolHandled(templatingWorkerDatabaseInterface)) {
-    protocol.handle(templatingWorkerDatabaseInterface, resolveDbByKey);
   }
 }

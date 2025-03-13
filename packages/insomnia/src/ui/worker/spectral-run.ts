@@ -1,16 +1,19 @@
 
 import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
 
-import type { SpectralResponse } from './spectral-worker';
+import type { SpectralResponse } from './spectral';
 
 export class SpectralRunner {
   private worker: Worker;
   private taskId = 0;
 
   constructor() {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- see below
-    // @ts-ignore -- inso transpiles to commonjs so doesn't play nice with this
-    this.worker = new Worker(new URL('./spectral-worker.ts', import.meta.url), { type: 'module' });
+    // @INFO: This is only for inso cli since it ends up in the import map and gets type-checked against a node environment
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    this.worker = new Worker(new URL('./spectral.ts', import.meta.url), {
+      type: 'module',
+    });
   }
 
   terminate() {

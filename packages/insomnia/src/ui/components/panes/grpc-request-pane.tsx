@@ -15,7 +15,6 @@ import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspa
 import { isRequestGroup, type RequestGroup } from '../../../models/request-group';
 import { getOrInheritHeaders } from '../../../network/network';
 import { urlMatchesCertHost } from '../../../network/url-matches-cert-host';
-import { RenderError } from '../../../templating/render-error';
 import { getGrpcConnectionErrorDetails } from '../../../utils/grpc';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { setDefaultProtocol } from '../../../utils/url/protocol';
@@ -145,7 +144,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
           error: undefined,
         });
       } catch (err) {
-        if (err instanceof RenderError) {
+        if (err.type === 'render') {
           showModal(RequestRenderErrorModal, {
             request: activeRequest,
             error: err,

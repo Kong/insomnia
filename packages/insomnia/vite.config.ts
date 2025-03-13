@@ -60,7 +60,6 @@ export default defineConfig(({ mode }) => {
       react(),
     ],
     worker: {
-      format: 'es',
       plugins: () => [
         electronNodeRequire({
           modules: ['fs'],

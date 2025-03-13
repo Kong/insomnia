@@ -56,7 +56,6 @@ export function init(): BaseSettings {
     maxRedirects: 10,
     maxTimelineDataSizeKB: 10,
     pluginNodeExtraCerts: '',
-    pluginsAllowElevatedAccess: false,
     noProxy: '',
     nunjucksPowerUserMode: false,
     pluginConfig: {},
