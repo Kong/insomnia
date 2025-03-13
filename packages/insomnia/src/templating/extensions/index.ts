@@ -71,17 +71,6 @@ export type PluginTemplateTagContext = HelperContext & {
   network: {
     sendRequest(request: Request, extraInfo?: ExtraRenderInfo): Promise<Response>;
   };
-  util: {
-    models: {
-      request: {
-        getById: (id: string) => Promise<Request | null>;
-      };
-      response: {
-        getLatestForRequestId: (id: string) => Promise<Response | null>;
-        getBodyBuffer: (response: Response, fallback?: any) => Promise<Buffer | null>;
-      };
-    };
-  };
 };
 
 export interface PluginTemplateTagActionContext {
