@@ -81,7 +81,8 @@ const config = {
   win: {
     target: [
       {
-        target: 'squirrel',
+        target: 'nsis',
+        arch: ['x64'],
       },
     ],
     signtoolOptions: {
@@ -89,9 +90,20 @@ const config = {
       signingHashAlgorithms: ['sha256'], // avoid duplicate signing hook calls https://github.com/electron-userland/electron-builder/issues/3995#issuecomment-505725704
     },
   },
-  squirrelWindows: {
+  nsis: {
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
-    iconUrl: 'https://github.com/kong/insomnia/blob/develop/packages/insomnia/src/icons/icon.ico?raw=true',
+    include: './config/uninstall-squirrel.nsh',
+    oneClick: false,
+    selectPerMachineByDefault: true,
+    allowToChangeInstallationDirectory: true,
+    installerIcon: './build/icon.ico',
+    installerSidebar: './src/icons/nsis-sidebar.bmp',
+    uninstallerSidebar: './src/icons/nsis-sidebar.bmp',
+    uninstallerIcon: './build/icon.ico',
+    createDesktopShortcut: true,
+    createStartMenuShortcut: true,
+    shortcutName: 'Insomnia',
+    deleteAppDataOnUninstall: false,
   },
   portable: {
     artifactName: `${BINARY_PREFIX}-\${version}-portable.\${ext}`,
