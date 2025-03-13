@@ -33,6 +33,10 @@ export class GitProjectNeDBClient {
     filePath: string,
     options?: BufferEncoding | { encoding?: BufferEncoding },
   ) {
+    if (!filePath.endsWith('.yaml')) {
+      throw this._errMissing(filePath);
+    }
+
     filePath = path.normalize(filePath);
     options = options || {};
 
@@ -43,9 +47,8 @@ export class GitProjectNeDBClient {
     }
 
     try {
-      // Supported file paths are in the form of insomnia.<workspace_id>.yaml
       const workspaceId = await this.getWorkspaceIdFromFilePath(filePath);
-
+      console.log('[git-project-nedb] reading file', { filePath, found: Boolean(workspaceId) });
       if (!workspaceId) {
         throw this._errMissing(filePath);
       }
@@ -220,19 +223,15 @@ export class GitProjectNeDBClient {
 
   async getWorkspaceIdFromFilePath(filePath: string) {
     filePath = path.normalize(filePath);
-    const workspaces = await db.find<Workspace>(models.workspace.type, { parentId: this._projectId });
-    const workspaceMetas = await db.find<WorkspaceMeta>(models.workspaceMeta.type, {
-      parentId: {
-        $in: workspaces.map(w => w._id),
-      },
+
+    const workspaceMeta = await db.find<WorkspaceMeta>(models.workspaceMeta.type, {
+      gitFilePath: filePath,
     });
 
-    const workspaceMeta = workspaceMetas.find(({ gitFilePath }) => gitFilePath === filePath);
-
-    if (workspaceMeta) {
-      return workspaceMeta.parentId;
+    if (workspaceMeta.length === 0) {
+      return null;
     }
 
-    return null;
+    return workspaceMeta[0].parentId;
   }
 }

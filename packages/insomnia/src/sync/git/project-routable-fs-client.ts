@@ -47,23 +47,30 @@ export function projectRoutableFSClient(
       try {
         defaultFiles = await defaultFS.promises.readdir(filePath, ...args);
       } catch (err) {
-        // console.log('[routablefs] Failed to execute', method, filePath, { args }, err);
+        if (insomniaFiles.length === 0) {
+          throw err;
+        }
       }
 
       return [...new Set([...insomniaFiles, ...defaultFiles])];
     }
 
-    try {
-      const result = await insomniaFS.promises[method]!(filePath, ...args);
-      return result;
-    } catch (err) {
-      // console.log('[routablefs] Failed to execute', method, filePath, { args }, err);
-      const result = await defaultFS.promises[method]!(filePath, ...args);
+    if (filePath.endsWith('.yaml')) {
+      try {
+        const result = await insomniaFS.promises[method]!(filePath, ...args);
+        return result;
+      } catch (err) {
+        const result = await defaultFS.promises[method]!(filePath, ...args);
 
-      // Uncomment this to debug operations
-      // console.log('[routablefs] Executing', method, filePath, { args }, { result });
-      return result;
+        return result;
+      }
     }
+
+    const result = await defaultFS.promises[method]!(filePath, ...args);
+
+    // Uncomment this to debug operations
+    // console.log('[routablefs] Executing', method, filePath, { args }, { result });
+    return result;
   };
 
   // @ts-expect-error -- TSCONVERSION declare and initialize together to avoid an error

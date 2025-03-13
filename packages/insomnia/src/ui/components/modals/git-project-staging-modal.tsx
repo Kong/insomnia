@@ -139,7 +139,7 @@ export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({
           {({ close }) => (
             <div className='flex-1 flex flex-col gap-4 overflow-hidden'>
               <div className='flex-shrink-0 flex gap-2 items-center justify-between'>
-                <Heading slot="title" className='text-2xl'>Commit changes</Heading>
+                <Heading slot="title" className='text-2xl'>Commit changes {gitChangesFetcher.state === 'loading' && <Icon icon="spinner" className='animate-spin' />}</Heading>
                 <Button
                   className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                   onPress={close}
@@ -215,12 +215,12 @@ export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({
                       <div className='flex-1 flex overflow-y-auto w-full select-none'>
                         <GridList
                           className="w-full"
+                          aria-label='Unstaged changes'
                           items={changes.staged.map(entry => ({
                             entry,
                             id: entry.path,
                             textValue: entry.path,
                           }))}
-                          aria-label='Unstaged changes'
                           onAction={key => {
                             diffChanges({
                               path: key.toString(),
@@ -236,7 +236,7 @@ export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({
                           {item => {
                             return (
                               <GridListItem className="group outline-none select-none aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-sm] overflow-hidden text-[--hl] transition-colors w-full flex items-center px-2 py-1 justify-between">
-                                <span className='truncate'>{item.entry.name}</span>
+                                <span className='truncate'>{item.entry.path}</span>
                                 <div className='flex items-center gap-1'>
                                   <TooltipTrigger>
                                     <Button
@@ -326,6 +326,7 @@ export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({
                       </Heading>
                       <div className='flex-1 flex overflow-y-auto w-full select-none'>
                         <GridList
+                          aria-label='Unstaged changes'
                           className="w-full"
                           items={changes.unstaged.map(entry => ({
                             entry,
@@ -333,7 +334,6 @@ export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({
                             key: entry.path,
                             textValue: entry.path,
                           }))}
-                          aria-label='Unstaged changes'
                           onAction={key => {
                             diffChanges({
                               path: key.toString(),
@@ -344,7 +344,7 @@ export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({
                           {item => {
                             return (
                               <GridListItem className="group outline-none select-none aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-sm] overflow-hidden text-[--hl] transition-colors w-full flex items-center px-2 py-1 justify-between">
-                                <span className='truncate'>{item.entry.name}</span>
+                                <span className='truncate'>{item.entry.path}</span>
                                 <div className='flex items-center gap-1'>
                                   <TooltipTrigger>
                                     <Button
