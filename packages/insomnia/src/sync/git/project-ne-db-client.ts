@@ -6,7 +6,8 @@ import { database as db } from '../../common/database';
 import type { InsomniaFile } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, importInsomniaV5Data } from '../../common/insomnia-v5';
 import * as models from '../../models';
-import { isWorkspace } from '../../models/workspace';
+import { isWorkspace, type Workspace } from '../../models/workspace';
+import type { WorkspaceMeta } from '../../models/workspace-meta';
 import Stat from './stat';
 import { SystemError } from './system-error';
 
@@ -20,7 +21,6 @@ export class GitProjectNeDBClient {
 
   constructor(projectId: string) {
     this._projectId = projectId;
-
   }
 
   static createClient(projectId: string): PromiseFsClient {
@@ -44,13 +44,12 @@ export class GitProjectNeDBClient {
 
     try {
       // Supported file paths are in the form of insomnia.<workspace_id>.yaml
-      const workspaceId = filePath.split(path.sep)[0].split('.')[1];
+      const workspaceId = await this.getWorkspaceIdFromFilePath(filePath);
 
-      if (!workspaceId || !workspaceId.startsWith('wrk_')) {
+      if (!workspaceId) {
         throw this._errMissing(filePath);
       }
 
-      //  wrk_b665a1370b5f492ca36cdbde319d9689 wrk_dae390513d684dfcafbf25e3afea1269 wrk_9be0301e57044d0a8c5d076864bb71d6
       const workspaceFile = await getInsomniaV5DataExport(workspaceId);
 
       const raw = Buffer.from(workspaceFile, 'utf8');
@@ -68,20 +67,22 @@ export class GitProjectNeDBClient {
   async writeFile(filePath: string, data: Buffer | string) {
     filePath = path.normalize(filePath);
 
-    // Supported file paths are in the form of insomnia.<workspace_id>.yaml
-    const workspaceId = filePath.split(path.sep)[0].split('.')[1];
-
-    if (!workspaceId || !workspaceId.startsWith('wrk_')) {
+    if (!filePath.endsWith('.yaml')) {
       throw this._errMissing(filePath);
     }
 
     const dataStr = data.toString();
 
+    const doesFileContainInsomniaV5FormatTypeString = dataStr.split('\n')[0].trim().includes('insomnia.rest');
+
+    if (!doesFileContainInsomniaV5FormatTypeString) {
+      throw this._errMissing(filePath);
+    }
+
     // Skip the file if there is a conflict marker
     if (dataStr.split('\n').includes('=======')) {
       return;
     }
-
     const dataToImport = importInsomniaV5Data(dataStr);
 
     const bufferId = await db.bufferChanges();
@@ -93,6 +94,9 @@ export class GitProjectNeDBClient {
         // This is because the parentId (or a project) is not synced into git, so it will be cleared whenever git writes the workspace into the db, thereby removing it from the project on the client
         // In order to reproduce this bug, comment out the following line, then clone a repository into a local project, then open the workspace, you'll notice it will have moved into the default project
         doc.parentId = this._projectId;
+
+        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(doc._id);
+        await models.workspaceMeta.update(workspaceMeta, { gitFilePath: filePath });
       }
 
       await db.upsert(doc, true);
@@ -103,9 +107,9 @@ export class GitProjectNeDBClient {
 
   async unlink(filePath: string) {
     filePath = path.normalize(filePath);
-    const workspaceId = filePath.split(path.sep)[0].split('.')[1];
+    const workspaceId = await this.getWorkspaceIdFromFilePath(filePath);
 
-    if (!workspaceId || !workspaceId.startsWith('wrk_')) {
+    if (!workspaceId) {
       throw this._errMissing(filePath);
     }
 
@@ -120,11 +124,22 @@ export class GitProjectNeDBClient {
 
   async readdir(filePath: string) {
     filePath = path.normalize(filePath);
+    const workspaces = await db.find<Workspace>(models.workspace.type, { parentId: this._projectId });
+    const workspaceMetas = await db.find<WorkspaceMeta>(models.workspaceMeta.type, {
+      parentId: {
+        $in: workspaces.map(w => w._id),
+      },
+    });
 
-    if (filePath === '.') {
-      const workspaces = await db.find(models.workspace.type, { parentId: this._projectId });
+    const hasDirectoryInsomniaFiles = workspaceMetas.some(({ gitFilePath }) => gitFilePath && path.dirname(gitFilePath) === filePath);
 
-      return workspaces.map(w => `insomnia.${w._id}.yaml`);
+    if (hasDirectoryInsomniaFiles) {
+      const workspacePaths = workspaceMetas
+        // Filter out workspaces that don't have a gitFilePath or are not in the directory
+        .filter(workspaceMeta => workspaceMeta.gitFilePath && path.dirname(workspaceMeta.gitFilePath) === filePath)
+        // Return the basename of the paths
+        .map(workspaceMeta => path.basename(workspaceMeta.gitFilePath!));
+      return workspacePaths;
     }
 
     throw this._errMissing(filePath);
@@ -186,8 +201,7 @@ export class GitProjectNeDBClient {
   }
 
   async rmdir() {
-    // Dirs in NeDB can't be removed, so we'll just pretend like it succeeded
-    return Promise.resolve();
+    throw new Error('NeDBClient symlink not supported');
   }
 
   async symlink() {
@@ -202,5 +216,23 @@ export class GitProjectNeDBClient {
       syscall: 'scandir',
       path: filePath,
     });
+  }
+
+  async getWorkspaceIdFromFilePath(filePath: string) {
+    filePath = path.normalize(filePath);
+    const workspaces = await db.find<Workspace>(models.workspace.type, { parentId: this._projectId });
+    const workspaceMetas = await db.find<WorkspaceMeta>(models.workspaceMeta.type, {
+      parentId: {
+        $in: workspaces.map(w => w._id),
+      },
+    });
+
+    const workspaceMeta = workspaceMetas.find(({ gitFilePath }) => gitFilePath === filePath);
+
+    if (workspaceMeta) {
+      return workspaceMeta.parentId;
+    }
+
+    return null;
   }
 }

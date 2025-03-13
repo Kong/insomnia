@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/electron/renderer';
 import clone from 'clone';
 import orderedJSON from 'json-order';
 
@@ -13,6 +12,7 @@ import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
 import * as templating from '../templating';
+import { RenderError } from '../templating/render-error';
 import * as templatingUtils from '../templating/utils';
 import { setDefaultProtocol } from '../utils/url/protocol';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
@@ -220,7 +220,7 @@ export async function buildRenderContext(
   if (finalRenderContext[vaultEnvironmentPath]) {
     if (finalRenderContext[vaultEnvironmentRuntimePath] && typeof finalRenderContext[vaultEnvironmentRuntimePath] !== 'object') {
       const errorMsg = `${vaultEnvironmentRuntimePath} is a reserved key for insomnia vault, please rename your environment with vault as key.`;
-      const newError = new templating.RenderError(errorMsg);
+      const newError = new RenderError(errorMsg);
       newError.type = 'render';
       newError.message = errorMsg;
       throw newError;
@@ -267,7 +267,13 @@ export async function buildRenderContext(
 
   return finalRenderContext;
 }
-
+const renderInThisProcess = async (input: { input: string; context: Record<string, any>; path: string; ignoreUndefinedEnvVariable: boolean }) => {
+  return templating.render(input.input, {
+    context: input.context,
+    path: input.path,
+    ignoreUndefinedEnvVariable: input.ignoreUndefinedEnvVariable,
+  });
+};
 /**
  * Recursively render any JS object and return a new one
  * @param {*} obj - object to render
@@ -290,12 +296,12 @@ export async function render<T>(
 
   const undefinedEnvironmentVariables: string[] = [];
 
-  async function next<T>(x: T, path: string, first = false) {
+  async function next<T>(input: T, path: string, first = false) {
     if (blacklistPathRegex && path.match(blacklistPathRegex)) {
-      return x;
+      return input;
     }
 
-    const asStr = Object.prototype.toString.call(x);
+    const asStr = Object.prototype.toString.call(input);
 
     // Leave these types alone
     if (
@@ -308,71 +314,87 @@ export async function render<T>(
       asStr === '[object Undefined]'
     ) {
       // Do nothing to these types
-    } else if (typeof x === 'string') {
-      // Detect if the string contains a require statement
-      if (/require\s*\(/ig.test(x)) {
-        console.warn('Short-circuiting `render`; string contains possible "require" invocation:', x);
-        Sentry.captureException(new Error(`Short-circuiting 'render'; string contains possible "require" invocation: ${x}`));
-        return x;
+    } else if (typeof input === 'string') {
+      const hasNunjucksInterpolationSymbols = input.includes('{{') && input.includes('}}');
+      const hasNunjucksCustomTagSymbols = input.includes('{%') && input.includes('%}');
+      const hasNunjucksCommentSymbols = input.includes('{#') && input.includes('#}');
+
+      if (!hasNunjucksInterpolationSymbols && !hasNunjucksCustomTagSymbols && !hasNunjucksCommentSymbols) {
+        return input;
+      }
+
+      if (input === '') {
+        return input;
       }
 
       try {
+        // Some plugins may, at the moment, require unique and intrusive access. Templates exposed by these
+        // plugins will not function correctly when rendering in a separate process or thread. The user can
+        // explicitly configure rendering to happen on the same thread/process as the rest of the app, in
+        // which case it's okay to render locally.
+        const settings = await models.settings.get();
+        const pluginsAllowElevatedAccess = settings?.pluginsAllowElevatedAccess;
+        const shouldUseWorker = process.type === 'renderer' && pluginsAllowElevatedAccess === false;
+        const renderFork = shouldUseWorker
+          ? (await import('../ui/worker/templating-handler')).renderInWorker
+          : renderInThisProcess;
+
         // @ts-expect-error -- TSCONVERSION
-        x = await templating.render(x, { context, path, ignoreUndefinedEnvVariable });
+        input = await renderFork({ input, context, path, ignoreUndefinedEnvVariable });
 
         // If the variable outputs a tag, render it again. This is a common use
         // case for environment variables:
         //   {{ foo }} => {% uuid 'v4' %} => dd265685-16a3-4d76-a59c-e8264c16835a
         // @ts-expect-error -- TSCONVERSION
-        if (x.includes('{%')) {
+        if (input.includes('{%')) {
           // @ts-expect-error -- TSCONVERSION
-          x = await templating.render(x, { context, path });
+          input = await renderFork({ input, context, path, ignoreUndefinedEnvVariable });
         }
       } catch (err) {
-        console.log(`Failed to render element ${path}`, x);
+        console.log(`Failed to render element ${path}`, input);
         if (errorMode !== KEEP_ON_ERROR) {
-          if (err?.extraInfo?.subType === templating.RenderErrorSubType.EnvironmentVariable) {
+          if (err?.extraInfo?.subType === 'environmentVariable') {
             undefinedEnvironmentVariables.push(...err.extraInfo.undefinedEnvironmentVariables);
           } else {
             throw err;
           }
         }
       }
-    } else if (Array.isArray(x)) {
-      for (let i = 0; i < x.length; i++) {
-        x[i] = await next(x[i], `${path}[${i}]`);
+    } else if (Array.isArray(input)) {
+      for (let i = 0; i < input.length; i++) {
+        input[i] = await next(input[i], `${path}[${i}]`);
       }
-    } else if (typeof x === 'object' && x !== null) {
+    } else if (typeof input === 'object' && input !== null) {
       // Don't even try rendering disabled objects
       // Note, this logic probably shouldn't be here, but w/e for now
       // @ts-expect-error -- TSCONVERSION
-      if (x.disabled) {
-        return x;
+      if (input.disabled) {
+        return input;
       }
 
-      const keys = Object.keys(x);
+      const keys = Object.keys(input);
 
       for (const key of keys) {
         if (first && key.indexOf('_') === 0) {
           // @ts-expect-error -- mapping unsoundness
-          x[key] = await next(x[key], path);
+          input[key] = await next(input[key], path);
         } else {
           const pathPrefix = path ? path + '.' : '';
           // @ts-expect-error -- mapping unsoundness
-          x[key] = await next(x[key], `${pathPrefix}${key}`);
+          input[key] = await next(input[key], `${pathPrefix}${key}`);
         }
       }
     }
 
-    return x;
+    return input;
   }
 
   const renderResult = await next<T>(newObj, name, true);
   if (undefinedEnvironmentVariables.length > 0) {
-    const error = new templating.RenderError(`Failed to render environment variables: ${undefinedEnvironmentVariables.join(', ')}`);
+    const error = new RenderError(`Failed to render environment variables: ${undefinedEnvironmentVariables.join(', ')}`);
     error.type = 'render';
     error.extraInfo = {
-      subType: templating.RenderErrorSubType.EnvironmentVariable,
+      subType: 'environmentVariable',
       undefinedEnvironmentVariables,
     };
     throw error;

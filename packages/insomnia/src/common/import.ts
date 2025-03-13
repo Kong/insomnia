@@ -7,6 +7,7 @@ import { type GrpcRequest, isGrpcRequest } from '../models/grpc-request';
 import { type BaseModel, getModel, userSession } from '../models/index';
 import * as models from '../models/index';
 import { isMockRoute, type MockRoute } from '../models/mock-route';
+import { isGitProject } from '../models/project';
 import { isRequest, type Request } from '../models/request';
 import { isRequestGroup } from '../models/request-group';
 import { isUnitTest, type UnitTest } from '../models/unit-test';
@@ -373,6 +374,10 @@ const importResourcesToNewWorkspace = async (
   workspaceToImport?: Workspace
 ) => {
   invariant(resourceCacheItem, 'No resources to import');
+
+  const project = await models.project.getById(projectId);
+  invariant(project, 'Project not found');
+
   const resources = resourceCacheItem.resources;
   const ResourceIdMap = new Map();
   // in order to support import from api spec yaml
@@ -382,7 +387,15 @@ const importResourcesToNewWorkspace = async (
       scope: 'design',
       parentId: projectId,
     });
-    models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
+
+    if (isGitProject(project)) {
+      const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
+      await models.workspaceMeta.update(workspaceMeta, {
+        gitFilePath: `${newWorkspace.name}-${newWorkspace._id}.yaml`,
+      });
+    }
+
+    await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
       contents: resourceCacheItem.content as string | undefined,
       contentType: 'yaml',
       fileName: workspaceToImport?.name,
@@ -397,6 +410,14 @@ const importResourcesToNewWorkspace = async (
     scope: workspaceToImport?.scope || 'collection',
     parentId: projectId,
   });
+
+  if (isGitProject(project)) {
+    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
+    await models.workspaceMeta.update(workspaceMeta, {
+      gitFilePath: `${newWorkspace.name}-${newWorkspace._id}.yaml`,
+    });
+  }
+
   const apiSpec = resources.find(r => r.type === 'ApiSpec' && r.parentId === workspaceToImport?._id) as ApiSpec;
   const hasApiSpec = newWorkspace.scope === 'design' && isApiSpec(apiSpec);
   // if workspace is not in the resources, there will be no apiSpec, if resource type is set to api spec this could cause a bug

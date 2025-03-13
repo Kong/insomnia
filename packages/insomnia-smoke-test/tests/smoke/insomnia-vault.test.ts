@@ -118,7 +118,7 @@ test.describe('Check vault used in environment', async () => {
   // create global private environment
     await page.getByLabel('Create in project').click();
     await page.getByLabel('Create', { exact: true }).getByText('Environment').click();
-    await page.getByPlaceholder('New environment').fill('New Global Vault Environment');
+    await page.getByPlaceholder('Enter a name for your Environment').fill('New Global Vault Environment');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
     await page.getByTestId('CreateEnvironmentDropdown').click();
     await page.getByText('Private environment').click();

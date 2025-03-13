@@ -306,7 +306,7 @@ export const mergeGitBranch = async ({
   projectId: string;
   allowUncommittedChangesBeforeMerge?: boolean;
 }) => {
-  await window.main.git.mergeGitBranch({
+  return await window.main.git.mergeGitBranch({
     projectId,
     theirsBranch,
     allowUncommittedChangesBeforeMerge,
@@ -471,4 +471,13 @@ export const diffFileLoader: LoaderFunction = async ({
   const staged = urlParams.get('staged') === 'true';
 
   return window.main.git.diffFileLoader({ projectId, filepath, staged });
+};
+
+export type GetRepositoryDirectoryTreeResult = Awaited<ReturnType<typeof window.main.git.getRepositoryDirectoryTree>>;
+
+export const getRepositoryDirectoryTree: ActionFunction = async ({ params }) => {
+  const { projectId } = params;
+  invariant(projectId, 'Project ID is required');
+
+  return window.main.git.getRepositoryDirectoryTree({ projectId });
 };

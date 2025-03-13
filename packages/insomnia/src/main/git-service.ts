@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'crypto';
 import { shell } from 'electron';
 import { app, net } from 'electron/main';
 import { fromUrl } from 'hosted-git-info';
-import { Errors } from 'isomorphic-git';
+import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import path from 'path';
 import { v4 } from 'uuid';
 import YAML, { parse } from 'yaml';
@@ -15,7 +15,7 @@ import * as models from '../models';
 import type { GitRepository } from '../models/git-repository';
 import { type WorkspaceScope, WorkspaceScopeKeys } from '../models/workspace';
 import { fsClient } from '../sync/git/fs-client';
-import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME, GIT_INTERNAL_DIR } from '../sync/git/git-vcs';
+import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME, GIT_INTERNAL_DIR, MergeConflictError } from '../sync/git/git-vcs';
 import { MemClient } from '../sync/git/mem-client';
 import { NeDBClient } from '../sync/git/ne-db-client';
 import { GitProjectNeDBClient } from '../sync/git/project-ne-db-client';
@@ -165,7 +165,7 @@ export async function loadGitRepository({
     const fsClient = await getGitFSClient({ gitRepositoryId: gitRepository._id, projectId, workspaceId });
 
     // Init VCS
-    const { credentials, uri, author } = gitRepository;
+    const { credentials, uri } = gitRepository;
     if (gitRepository.needsFullClone) {
       await GitVCS.initFromClone({
         repoId: gitRepository._id,
@@ -187,11 +187,12 @@ export async function loadGitRepository({
         fs: fsClient,
         gitDirectory: GIT_INTERNAL_DIR,
         gitCredentials: credentials,
+        legacyDiff: Boolean(workspaceId),
       });
     }
 
     // Configure basic info
-    await GitVCS.setAuthor(author.name, author.email);
+    await GitVCS.setAuthor();
     await GitVCS.addRemote(uri);
 
     return {
@@ -352,6 +353,35 @@ export const canPushLoader = async ({ projectId, workspaceId }: {
   }
 };
 
+async function isInsomniaFile(fullPath: string, fsClient: PromiseFsClient) {
+  if (!fullPath.endsWith('.yaml')) {
+    return false;
+  }
+
+  const fileContents = await fsClient.promises.readFile(fullPath, 'utf8');
+  return fileContents.split('\n')[0].trim().includes('insomnia.rest');
+}
+
+// Recursively finds all .yaml files in a repository that are Insomnia files and returns their paths relative to the repo root.
+// Insomnia files are defined as files that contain the string 'insomnia.rest' in the first line.
+const recursivelyFindInsomniaFiles = async (fsClient: PromiseFsClient, dir: string, files: string[] = []): Promise<string[]> => {
+  const dirFiles = await fsClient.promises.readdir(dir);
+  for (const file of dirFiles) {
+    const repoRelativePath = path.join(dir, file);
+    const isDirectory = (await fsClient.promises.stat(repoRelativePath)).isDirectory();
+
+    if (isDirectory) {
+      await recursivelyFindInsomniaFiles(fsClient, repoRelativePath, files);
+    }
+
+    if (!isDirectory && await isInsomniaFile(repoRelativePath, fsClient)) {
+      files.push(repoRelativePath);
+    }
+  }
+
+  return files;
+};
+
 // Actions
 export const initGitRepoCloneAction = async ({
   uri,
@@ -429,8 +459,8 @@ export const initGitRepoCloneAction = async ({
     };
   }
 
-  const rootDirFiles: string[] = await inMemoryFsClient.promises.readdir(GIT_CLONE_DIR);
-  const insomniaFiles = rootDirFiles.filter(fileOrFolder => fileOrFolder.startsWith('insomnia.'));
+  const insomniaFiles = await recursivelyFindInsomniaFiles(inMemoryFsClient, GIT_CLONE_DIR);
+  // Get all files that start with 'insomnia.' recursively in the root directory
 
   const files = await Promise.all(
     insomniaFiles.map(async file => {
@@ -602,7 +632,7 @@ export const cloneGitRepoAction = async ({
         });
       }
 
-      await GitVCS.setAuthor(gitRepository.author.name, gitRepository.author.email);
+      await GitVCS.setAuthor();
       await GitVCS.addRemote(uri);
 
       await database.flushChanges(bufferId);
@@ -827,10 +857,11 @@ export const cloneGitRepoAction = async ({
           fs: routableFS,
           gitDirectory: GIT_INTERNAL_DIR,
           gitCredentials: gitRepository.credentials,
+          legacyDiff: true,
         });
       }
 
-      await GitVCS.setAuthor(gitRepository.author.name, gitRepository.author.email);
+      await GitVCS.setAuthor();
       await GitVCS.addRemote(uri);
     }
 
@@ -954,6 +985,8 @@ export const updateGitRepoAction = async ({
       hasUncommittedChanges,
       hasUnpushedChanges,
     });
+
+    await GitVCS.setAuthor();
 
     return null;
   } catch (e) {
@@ -1260,6 +1293,10 @@ export const mergeGitBranch = async ({
     await database.flushChanges(bufferId, true);
     return {};
   } catch (err) {
+    if (err instanceof MergeConflictError) {
+      return err.data;
+    }
+
     if (err instanceof Errors.HttpError) {
       err = new Error(`${err.message}, ${err.data.response}`);
     }
@@ -1407,6 +1444,10 @@ export async function pullFromGitRemote({
 
     return {};
   } catch (err: unknown) {
+    if (err instanceof MergeConflictError) {
+      return err.data;
+    }
+
     if (err instanceof Errors.HttpError) {
       err = new Error(`${err.message}, ${err.data.response}`);
     }
@@ -1673,6 +1714,78 @@ export const diffFileLoader = async ({
       errors: [errorMessage],
     };
   }
+};
+
+interface GitRepoFile {
+  id: string;
+  name: string;
+  type: 'file';
+}
+
+interface GitRepoDirectory {
+  id: string;
+  name: string;
+  type: 'directory';
+  children: (GitRepoDirectory | GitRepoFile)[];
+};
+
+type FileTree = {
+  id: string;
+  name: string;
+  type: 'root';
+  children: (GitRepoDirectory | GitRepoFile)[];
+} | GitRepoDirectory | GitRepoFile;
+
+const getRepositoryDirectoryTree = async ({ projectId }: { projectId: string }): Promise<{
+  repositoryTree: FileTree;
+  folderList: Record<string, string[]>;
+}> => {
+  const gitRepository = await getGitRepository({ projectId });
+  const fs = await getGitFSClient({ projectId, gitRepositoryId: gitRepository._id });
+
+  const rootContents = await fs.promises.readdir(GIT_CLONE_DIR);
+
+  const folderList: Record<string, string[]> = {
+    '': rootContents,
+  };
+
+  const recursivelyGetDirectoryTree = async (directoryContents: string[], parentPath: string) => {
+    const tree: (GitRepoDirectory | GitRepoFile)[] = await Promise.all(
+      directoryContents.map(async (file: string) => {
+        const fileOrDirPath = path.join(parentPath, file);
+        const stats = await fs.promises.stat(fileOrDirPath);
+        if (await stats.isDirectory()) {
+          const subDirectoryContents = await fs.promises.readdir(fileOrDirPath);
+          folderList[fileOrDirPath] = subDirectoryContents;
+          return {
+            id: fileOrDirPath,
+            name: file,
+            type: 'directory',
+            children: await recursivelyGetDirectoryTree(subDirectoryContents, fileOrDirPath),
+          };
+        }
+        return {
+          id: fileOrDirPath,
+          name: file,
+          type: 'file',
+        };
+      }),
+    );
+
+    return tree;
+  };
+
+  const tree = await recursivelyGetDirectoryTree(rootContents, GIT_CLONE_DIR);
+
+  return {
+    repositoryTree: {
+      id: '',
+    name: gitRepository.uri.split('/').pop()?.replace('.git', '').toUpperCase() || 'Repository',
+    type: 'root',
+    children: tree,
+    } satisfies FileTree,
+    folderList,
+  };
 };
 
 export const GITHUB_GRAPHQL_API_URL = getGitHubGraphQLApiURL();
@@ -2079,6 +2192,7 @@ export interface GitServiceAPI {
   stageChanges: typeof stageChangesAction;
   unstageChanges: typeof unstageChangesAction;
   diffFileLoader: typeof diffFileLoader;
+  getRepositoryDirectoryTree: typeof getRepositoryDirectoryTree;
 
   initSignInToGitHub: typeof initSignInToGitHub;
   completeSignInToGitHub: typeof completeSignInToGitHub;
@@ -2116,6 +2230,7 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.stageChanges', (_, options: Parameters<typeof stageChangesAction>[0]) => stageChangesAction(options));
   ipcMainHandle('git.unstageChanges', (_, options: Parameters<typeof unstageChangesAction>[0]) => unstageChangesAction(options));
   ipcMainHandle('git.diffFileLoader', (_, options: Parameters<typeof diffFileLoader>[0]) => diffFileLoader(options));
+  ipcMainHandle('git.getRepositoryDirectoryTree', (_, options: Parameters<typeof getRepositoryDirectoryTree>[0]) => getRepositoryDirectoryTree(options));
 
   ipcMainHandle('git.initSignInToGitHub', () => initSignInToGitHub());
   ipcMainHandle('git.completeSignInToGitHub', (_, options: Parameters<typeof completeSignInToGitHub>[0]) => completeSignInToGitHub(options));

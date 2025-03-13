@@ -212,18 +212,19 @@ export const ProjectModal = ({
                       </Label>
                       <div className="flex gap-2">
                         <Radio
-                          isDisabled={!isGitSyncEnabled}
-                          value="git"
+                          isDisabled={storageRule === ORG_STORAGE_RULE.CLOUD_ONLY}
+                          value="local"
                           className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                         >
-                          <div className='flex items-center gap-2'>
-                            <Icon icon={['fab', 'git-alt']} />
-                            <Heading className="text-lg font-bold">Git Sync</Heading>
+                          <div className="flex items-center gap-2">
+                            <Icon icon="laptop" />
+                            <Heading className="text-lg font-bold">Local Vault</Heading>
                           </div>
-                          <p className='pt-2'>
-                            Stored locally and synced to a Git repository. Ideal for version control and collaboration.
+                          <p className="pt-2">
+                            Stored locally only with no cloud. Ideal when collaboration is not needed.
                           </p>
                         </Radio>
+
                         <Radio
                           isDisabled={storageRule === ORG_STORAGE_RULE.LOCAL_ONLY}
                           value="remote"
@@ -238,16 +239,16 @@ export const ProjectModal = ({
                           </p>
                         </Radio>
                         <Radio
-                          isDisabled={storageRule === ORG_STORAGE_RULE.CLOUD_ONLY}
-                          value="local"
+                          isDisabled={!isGitSyncEnabled}
+                          value="git"
                           className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                         >
-                          <div className="flex items-center gap-2">
-                            <Icon icon="laptop" />
-                            <Heading className="text-lg font-bold">Local Vault</Heading>
+                          <div className='flex items-center gap-2'>
+                            <Icon icon={['fab', 'git-alt']} />
+                            <Heading className="text-lg font-bold">Git Sync</Heading>
                           </div>
-                          <p className="pt-2">
-                            Stored locally only with no cloud. Ideal when collaboration is not needed.
+                          <p className='pt-2'>
+                            Stored locally and synced to a Git repository. Ideal for version control and collaboration.
                           </p>
                         </Radio>
                       </div>
@@ -261,17 +262,7 @@ export const ProjectModal = ({
                       </div>
                     )}
                   </div>
-                  <div className="flex justify-between gap-2 items-center px-10 pb-10">
-                    <div className='flex flex-col gap-1'>
-                      {projectData.storageType !== 'git' && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Icon icon="info-circle" />
-                          <span>
-                            You can optionally enable Git Sync
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                  <div className="flex justify-end gap-2 items-center px-10 pb-10">
                     <div className='flex items-center gap-2'>
                       <Button
                         onPress={close}

@@ -1,8 +1,9 @@
+
 import type { Environment } from 'nunjucks';
 import nunjucks from 'nunjucks/browser/nunjucks';
 
 import { localTemplateTags } from '../ui/components/templating/local-template-tags';
-import BaseExtension from './base-extension';
+import BaseExtensionWorker from './base-extension-worker';
 import { extractUndefinedVariableKey, RenderError } from './render-error';
 
 // Some constants
@@ -172,21 +173,16 @@ async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: bool
   // Create Env with Extensions //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   const nunjucksEnvironment = nunjucks.configure(config) as NunjucksEnvironment;
-  const pluginTemplateTags = await (await import('../plugins')).getTemplateTags();
 
   const allExtensions = [
     ...localTemplateTags,
-
-    // Spread after local tags to allow plugins to override them.
-    // TODO: Determine if this is in fact the behavior we've explicitly decided to support.
-    ...pluginTemplateTags,
   ];
 
   for (const extension of allExtensions) {
     const { templateTag, plugin } = extension;
     templateTag.priority = templateTag.priority || allExtensions.indexOf(extension);
     // @ts-expect-error -- TODO
-    const instance = new BaseExtension(templateTag, plugin);
+    const instance = new BaseExtensionWorker(templateTag, plugin);
     nunjucksEnvironment.addExtension(instance.getTag() || '', instance);
     // Hidden helper filter to debug complicated things
     // eg. `{{ foo | urlencode | debug | upper }}`

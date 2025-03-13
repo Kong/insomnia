@@ -1,5 +1,4 @@
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
-import _ from 'lodash';
 
 import type { RenderPurpose } from '../common/render';
 import { userSession } from '../models';
@@ -284,26 +283,6 @@ export function decodeEncoding<T>(value: T) {
   }
 
   return value;
-}
-
-// because nunjucks only report the first error, we need to extract all missing variables that are not present in the context
-// for example, if the text is `{{ a }} {{ b }}`, nunjucks only report `a` is missing, but we need to report both `a` and `b`
-export function extractUndefinedVariableKey(text: string = '', templatingContext: Record<string, any>): string[] {
-  const regexVariable = /{{\s*([^ }]+)\s*}}/g;
-  const missingVariables: string[] = [];
-  let match;
-
-  while ((match = regexVariable.exec(text)) !== null) {
-    let variable = match[1];
-    if (variable.includes('_.')) {
-      variable = variable.split('_.')[1];
-    }
-    // Check if the variable is not present in the context
-    if (_.get(templatingContext, variable) === undefined) {
-      missingVariables.push(variable);
-    }
-  }
-  return missingVariables;
 }
 
 export async function maskOrDecryptContextIfNecessary(context: Record<string, any> & { getPurpose: () => RenderPurpose | undefined }) {

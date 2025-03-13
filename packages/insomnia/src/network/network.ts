@@ -34,6 +34,7 @@ import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
+import { RenderError } from '../templating/render-error';
 import { maskOrDecryptContextIfNecessary } from '../templating/utils';
 import { defaultSendActionRuntime, type SendActionRuntime } from '../ui/routes/request';
 import { invariant } from '../utils/invariant';
@@ -630,7 +631,7 @@ export const tryToInterpolateRequest = async ({
       ignoreUndefinedEnvVariable,
     });
   } catch (err) {
-    if ('type' in err && err.type === 'render') {
+    if (err instanceof RenderError) {
       throw err;
     }
     throw new Error(`Failed to render request: ${request._id}`);

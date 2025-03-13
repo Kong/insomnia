@@ -5,7 +5,7 @@ import { parse, stringify } from 'yaml';
 import type { MergeConflict } from '../types';
 import { httpClient } from './http-client';
 import { convertToPosixSep } from './path-sep';
-import { gitCallbacks } from './utils';
+import { getAuthorFromGitRepository, gitCallbacks } from './utils';
 
 export interface GitAuthor {
   name: string;
@@ -69,6 +69,8 @@ interface InitOptions {
   gitCredentials?: GitCredentials | null;
   uri?: string;
   repoId: string;
+  // If enabled git-vcs will only diff files inside a .insomnia directory
+  legacyDiff?: boolean;
 }
 
 interface InitFromCloneOptions {
@@ -118,13 +120,14 @@ interface BaseOpts {
   onAuth: git.AuthCallback;
   uri: string;
   repoId: string;
+  legacyDiff?: boolean;
 }
 
 export class GitVCS {
   // @ts-expect-error -- TSCONVERSION not initialized with required properties
   _baseOpts: BaseOpts = gitCallbacks();
 
-  async init({ directory, fs, gitDirectory, gitCredentials, uri = '', repoId }: InitOptions) {
+  async init({ directory, fs, gitDirectory, gitCredentials, uri = '', repoId, legacyDiff = false }: InitOptions) {
     this._baseOpts = {
       ...this._baseOpts,
       dir: directory,
@@ -134,6 +137,7 @@ export class GitVCS {
       http: httpClient,
       uri,
       repoId,
+      legacyDiff,
     };
 
     if (await this.repoExists()) {
@@ -418,12 +422,17 @@ export class GitVCS {
         git.STAGE(),
       ],
       map: async function map(filepath, [head, workdir, stage]) {
-        const isInsomniaFile = filepath.startsWith(GIT_INSOMNIA_DIR_NAME) || filepath.startsWith('insomnia.') || filepath === '.';
+        if (baseOpts.legacyDiff) {
+          const isInsomniaFile = filepath.startsWith(GIT_INSOMNIA_DIR_NAME) || filepath.startsWith('insomnia.') || filepath === '.';
+          if (!isInsomniaFile) {
+            return null;
+          }
+        }
 
         if (await git.isIgnored({
           ...baseOpts,
           filepath,
-        }) || !isInsomniaFile) {
+        })) {
           return null;
         }
         const [headType, workdirType, stageType] = await Promise.all([
@@ -559,7 +568,19 @@ export class GitVCS {
     return git.listRemotes({ ...this._baseOpts });
   }
 
-  async setAuthor(name: string, email: string) {
+  async setAuthor(author?: GitAuthor) {
+    let name = '';
+    let email = '';
+
+    if (author) {
+      name = author.name;
+      email = author.email;
+    } else {
+      const author = await getAuthorFromGitRepository(this._baseOpts.repoId);
+      name = author.name;
+      email = author.email;
+    }
+
     await git.setConfig({ ...this._baseOpts, path: 'user.name', value: name });
     await git.setConfig({
       ...this._baseOpts,
@@ -605,6 +626,11 @@ export class GitVCS {
     const remoteRefs = remoteInfo.refs || {};
     const remoteHeads = remoteRefs.heads || {};
     const remoteHead = remoteHeads[branch];
+
+    // If there is no local or remote head it means that the branch is new
+    if (!localHead && !remoteHead) {
+      return true;
+    }
 
     if (localHead === remoteHead) {
       return false;

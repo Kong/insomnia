@@ -2,7 +2,6 @@ import React, { type FC, useEffect, useState } from 'react';
 import { Button, Dialog, GridList, GridListItem, Heading, Input, Label, Modal, ModalOverlay, TextField } from 'react-aria-components';
 import { useFetcher, useParams, useRevalidator } from 'react-router-dom';
 
-import { MergeConflictError } from '../../../sync/git/git-vcs';
 import type { MergeConflict } from '../../../sync/types';
 import { checkGitCanPush, continueMerge, type CreateNewGitBranchResult, type GitBranchesLoaderData, type GitChangesLoaderData, mergeGitBranch } from '../../routes/git-project-actions';
 import { PromptButton } from '../base/prompt-button';
@@ -59,7 +58,7 @@ const LocalBranchItem = ({
     }
   }, [deleteBranchFetcher.data, deleteBranchFetcher.state]);
 
-  const [errMsg, setErrMsg] = useState('');
+  const [errMsg, setErrorMessage] = useState('');
 
   const { revalidate } = useRevalidator();
 
@@ -75,7 +74,7 @@ const LocalBranchItem = ({
               doneMessage="Deleted"
               disabled={isCurrent || branch === 'master'}
               onClick={() => {
-                setErrMsg('');
+                setErrorMessage('');
                 deleteBranchFetcher.submit(
                   {
                     branch,
@@ -95,7 +94,7 @@ const LocalBranchItem = ({
             className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             isDisabled={isCurrent}
             onPress={() => {
-              setErrMsg('');
+              setErrorMessage('');
               // file://./../../routes/git-actions.tsx#checkoutGitBranchAction
               checkoutBranchFetcher.submit({
                 branch,
@@ -116,54 +115,58 @@ const LocalBranchItem = ({
             disabled={isCurrent}
             referToOnClickReturnValue
             onClick={async () => {
-              setErrMsg('');
+              setErrorMessage('');
+
+              if (hasUncommittedChanges) {
+                setErrorMessage('You have uncommitted changes in your working tree. Please commit or discard them before merging.');
+                return;
+              }
+
               try {
-                if (hasUncommittedChanges) {
-                  throw new Error('There are uncommitted changes on current branch. Please commit them first.');
-                }
-                try {
-                  await mergeGitBranch({
-                    projectId,
-                    theirsBranch: branch,
-                    allowUncommittedChangesBeforeMerge: true,
-                  });
-                  checkGitCanPush(workspaceId);
-                  revalidate();
-                } catch (err) {
-                  if (err instanceof MergeConflictError) {
-                    const data = err.data;
-                    await new Promise((resolve, reject) => {
-                      showModal(SyncMergeModal, {
-                        conflicts: data.conflicts,
-                        labels: data.labels,
-                        handleDone: (conflicts?: MergeConflict[]) => {
-                          if (Array.isArray(conflicts) && conflicts.length > 0) {
-                            continueMerge({
-                              projectId,
-                              handledMergeConflicts: conflicts,
-                              commitMessage: data.commitMessage,
-                              commitParent: data.commitParent,
-                            }).then(
-                              resolve,
-                              reject,
-                            ).finally(() => {
-                              checkGitCanPush(workspaceId);
-                              revalidate();
-                            });
-                          } else {
-                            // user aborted merge
-                            reject(new Error('You aborted the merge, no changes were made to working tree.'));
-                          }
-                        },
-                      });
+                const result = await mergeGitBranch({
+                  projectId,
+                  theirsBranch: branch,
+                  allowUncommittedChangesBeforeMerge: true,
+                });
+
+                if ('conflicts' in result) {
+                  await new Promise((resolve, reject) => {
+                    showModal(SyncMergeModal, {
+                      conflicts: result.conflicts,
+                      labels: result.labels,
+                      handleDone: (conflicts?: MergeConflict[]) => {
+                        if (Array.isArray(conflicts) && conflicts.length > 0) {
+                          continueMerge({
+                            projectId,
+                            handledMergeConflicts: conflicts,
+                            commitMessage: result.commitMessage,
+                            commitParent: result.commitParent,
+                          }).then(
+                            resolve,
+                            reject,
+                          ).finally(() => {
+                            checkGitCanPush(workspaceId);
+                            revalidate();
+                          });
+                        } else {
+                          // user aborted merge
+                          reject(new Error('You aborted the merge, no changes were made to working tree.'));
+                        }
+                      },
                     });
-                  } else {
-                    throw new Error(`Merge failed: ${err.message}`);
-                  }
+                  });
                 }
+
+                if ('errors' in result && result.errors && result.errors?.length > 0) {
+                  setErrorMessage(result.errors.join('\n'));
+                }
+
+                checkGitCanPush(workspaceId);
+                revalidate();
               } catch (err) {
-                setErrMsg(err.message);
-                throw err;
+                const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred while merging the branches.';
+
+                setErrorMessage(errorMessage);
               }
             }}
           >
@@ -218,7 +221,7 @@ const RemoteBranchItem = ({
           })}
         >
           <Icon icon={pullBranchFetcher.state !== 'idle' ? 'spinner' : 'cloud-arrow-down'} className={`w-5 ${pullBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`} />
-          Fetch
+          Fetch and checkout
         </Button>
       </div>
     </div>

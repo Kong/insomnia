@@ -36,6 +36,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
   const { userSession } = useRootLoaderData();
   const {
     activeWorkspace,
+    activeWorkspaceMeta,
     activeProject,
     activeMockServer,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
@@ -336,6 +337,8 @@ export const WorkspaceDropdown: FC<{}> = () => {
         <WorkspaceSettingsModal
           workspace={activeWorkspace}
           mockServer={activeMockServer}
+          project={activeProject}
+          gitFilePath={activeWorkspaceMeta?.gitFilePath}
           onClose={() => setIsSettingsModalOpen(false)}
         />
       )}

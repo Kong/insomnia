@@ -197,7 +197,11 @@ export const remoteLoader: LoaderFunction = async ({
     invariant(project, 'Project not found');
 
     const remoteId = project.remoteId;
-    invariant(remoteId, 'Project is not a remote project');
+    if (!remoteId) {
+      return {
+        backendProjectsToPull: [],
+      };
+    }
     const vcs = VCSInstance();
 
     const allPulledBackendProjectsForRemoteId = (

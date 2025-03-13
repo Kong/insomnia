@@ -1,8 +1,8 @@
 import type { AuthCallback, AuthFailureCallback, AuthSuccessCallback, GitAuth, MessageCallback } from 'isomorphic-git';
 
-import { gitCredentials } from '../../models';
+import { gitCredentials, gitRepository } from '../../models';
 import type { OauthProviderName } from '../../models/git-repository';
-import type { GitCredentials } from './git-vcs';
+import type { GitAuthor, GitCredentials } from './git-vcs';
 
 export const addDotGit = (url: string): string => (url.endsWith('.git') ? url : `${url}.git`);
 
@@ -101,6 +101,38 @@ const onAuth = (credentials?: GitCredentials): AuthCallback => async (): Promise
     // @ts-expect-error -- TSCONVERSION this needs to be handled better if credentials is undefined or which union type
     password: credentials.password || credentials.token,
   };
+};
+
+export const getAuthorFromGitRepository = async (gitRepositoryId: string): Promise<GitAuthor> => {
+  const gitRepo = await gitRepository.getById(gitRepositoryId);
+
+  if (!gitRepo) {
+    return {
+      name: '',
+      email: '',
+    };
+  }
+
+  if (!gitRepo.credentials) {
+    return gitRepo.author;
+  }
+
+  if ('oauth2format' in gitRepo.credentials && gitRepo.credentials.oauth2format) {
+    console.log('[git-event] Using OAuth2 credentials');
+    const providerCredentials = await gitCredentials.getByProvider(gitRepo.credentials.oauth2format);
+
+    if (!providerCredentials) {
+      console.warn('[git-event] No OAuth2 credentials found');
+      return gitRepo.author;
+    }
+
+    return {
+      name: providerCredentials.author.name,
+      email: providerCredentials.author.email,
+    };
+  }
+
+  return gitRepo.author;
 };
 
 export const getOauth2FormatName = (credentials?: GitCredentials | null): OauthProviderName | undefined => {

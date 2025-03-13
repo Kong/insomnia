@@ -31,9 +31,24 @@ export function projectRoutableFSClient(
     // Fallback to default if no prefix matched
     // TODO: remove non-null assertion
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    if (method === 'readdir' && filePath === '.') {
-      const insomniaFiles = await insomniaFS.promises.readdir(filePath, ...args);
-      const defaultFiles = await defaultFS.promises.readdir(filePath, ...args);
+
+    // We store insomnia files in the database and all other files in a folder named 'other' on disk
+    // When we read a directory, we need to merge the two lists to provide the full list of files
+    if (method === 'readdir') {
+      let insomniaFiles = [];
+      try {
+        insomniaFiles = await insomniaFS.promises.readdir(filePath, ...args);
+      } catch (err) {
+        // console.log('[routablefs] Failed to execute', method, filePath, { args }, err);
+      }
+
+      // These are the default files on disk
+      let defaultFiles = [];
+      try {
+        defaultFiles = await defaultFS.promises.readdir(filePath, ...args);
+      } catch (err) {
+        // console.log('[routablefs] Failed to execute', method, filePath, { args }, err);
+      }
 
       return [...new Set([...insomniaFiles, ...defaultFiles])];
     }
@@ -42,9 +57,6 @@ export function projectRoutableFSClient(
       const result = await insomniaFS.promises[method]!(filePath, ...args);
       return result;
     } catch (err) {
-      if (filePath.startsWith('insomnia.')) {
-        throw err;
-      }
       // console.log('[routablefs] Failed to execute', method, filePath, { args }, err);
       const result = await defaultFS.promises[method]!(filePath, ...args);
 

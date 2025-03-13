@@ -47,7 +47,9 @@ export const WorkspaceSyncDropdown: FC = () => {
       return <GitProjectSyncDropdown key={gitRepository?._id} gitRepository={gitRepository} />;
     }
 
-    return <GitSyncDropdown key={gitRepository?._id} isInsomniaSyncEnabled={isRemoteProject(activeProject)} gitRepository={gitRepository} showDeprecatedWarning={!isGitProject(activeProject)} />;
+    if (gitRepository) {
+      return <GitSyncDropdown key={gitRepository?._id} isInsomniaSyncEnabled={isRemoteProject(activeProject)} gitRepository={gitRepository} showDeprecatedWarning={!isGitProject(activeProject)} />;
+    }
   }
 
   return null;
