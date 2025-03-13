@@ -2,53 +2,9 @@ import type { EditorFromTextArea, MarkerRange } from 'codemirror';
 
 import { userSession } from '../models';
 import { decryptSecretValue, vaultEnvironmentMaskValue, vaultEnvironmentPath } from '../models/environment';
-import type { RenderPurpose } from '../templating/types';
+import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';
 import { decryptVaultKeyFromSession } from '../utils/vault';
-import type { DisplayName, PluginArgumentEnumOption, PluginTemplateTagActionContext } from './extensions';
 import objectPath from './third_party/objectPath';
-
-export interface NunjucksParsedTagArg {
-  type: 'string' | 'number' | 'boolean' | 'variable' | 'expression' | 'enum' | 'file' | 'model';
-  encoding?: 'base64';
-  value?: string | number | boolean;
-  defaultValue?: string | number | boolean;
-  forceVariable?: boolean;
-  placeholder?: string;
-  help?: string;
-  displayName?: DisplayName;
-  quotedBy?: '"' | "'";
-  validate?: (value: any) => string;
-  hide?: (arg0: NunjucksParsedTagArg[]) => boolean;
-  model?: string;
-  options?: PluginArgumentEnumOption[];
-  itemTypes?: ('file' | 'directory')[];
-  extensions?: string[];
-  description?: string;
-  requireSubForm?: boolean;
-}
-
-export interface NunjucksActionTag {
-  name: string;
-  icon?: string;
-  run: (context: PluginTemplateTagActionContext) => Promise<void>;
-}
-
-export interface NunjucksParsedTag {
-  name: string;
-  args: NunjucksParsedTagArg[];
-  actions?: NunjucksActionTag[];
-  rawValue?: string;
-  displayName?: string;
-  description?: string;
-  disablePreview?: (arg0: NunjucksParsedTagArg[]) => boolean;
-}
-
-export type NunjucksTagContextMenuAction = 'edit' | 'delete';
-
-interface Key {
-  name: string;
-  value: any;
-}
 
 /**
  * Get list of paths to all primitive types in nested object
@@ -59,8 +15,8 @@ interface Key {
 export function getKeys(
   obj: any,
   prefix = '',
-): Key[] {
-  let allKeys: Key[] = [];
+): { name: string; value: any }[] {
+  let allKeys: { name: string; value: any }[] = [];
   const typeOfObj = Object.prototype.toString.call(obj);
 
   if (typeOfObj === '[object Array]') {
@@ -340,10 +296,6 @@ export function extractNunjucksTagFromCoords(
       };
     }
   }
-}
-
-export interface nunjucksTagContextMenuOptions extends Exclude<ReturnType<typeof extractNunjucksTagFromCoords>, void> {
-  type: NunjucksTagContextMenuAction;
 }
 
 export const responseTagRegex = new RegExp('{% *response *.* %}');

@@ -10,7 +10,7 @@ import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace } from '../models/workspace';
-import type { PluginTemplateTag } from '../templating/extensions/index';
+import type { PluginTemplateTag } from '../templating/types';
 import { showError } from '../ui/components/modals/index';
 import type { PluginTheme } from './misc';
 import themes from './themes';
@@ -341,7 +341,8 @@ export async function getRequestHooks(): Promise<RequestHook[]> {
           console.log(`[header] Set default header ${name}: ${value}`);
         }
       }
-    } }];
+    },
+  }];
 
   for (const plugin of await getActivePlugins()) {
     const moreFunctions = plugin.module.requestHooks || [];

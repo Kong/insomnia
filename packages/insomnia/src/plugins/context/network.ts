@@ -1,12 +1,11 @@
 import * as models from '../../models';
 import type { Request } from '../../models/request';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
-import { type ExtraRenderInfo } from '../../templating/types';
 
 export function init() {
   return {
     network: {
-      async sendRequest(req: Request, extraInfo?: ExtraRenderInfo) {
+      async sendRequest(req: Request, extraInfo?: { name: string; value: any }[]) {
         const { request,
           environment,
           settings,

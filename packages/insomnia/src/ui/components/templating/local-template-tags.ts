@@ -9,7 +9,7 @@ import * as uuid from 'uuid';
 
 import type { RequestParameter } from '../../../models/request';
 import type { TemplateTag } from '../../../plugins';
-import type { PluginTemplateTag } from '../../../templating/extensions';
+import type { PluginTemplateTag } from '../../../templating/types';
 import { invariant } from '../../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../../utils/url/querystring';
 import { fakerFunctions } from './faker-functions';
