@@ -7,8 +7,7 @@ import os from 'os';
 import { CookieJar } from 'tough-cookie';
 import * as uuid from 'uuid';
 
-import type { Request, RequestParameter } from '../../../models/request';
-import type { Response } from '../../../models/response';
+import type { RequestParameter } from '../../../models/request';
 import type { TemplateTag } from '../../../plugins';
 import type { PluginTemplateTag } from '../../../templating/extensions';
 import { invariant } from '../../../utils/invariant';
@@ -610,7 +609,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         let shouldResend = false;
         const environmentId = context.context.getEnvironmentId?.() || null;
         const globalEnvironmentId = context.context.getGlobalEnvironmentId?.() || null;
-        let response: Response = await context.util.models.response.getLatestForRequestId(id, environmentId);
+        let response = await context.util.models.response.getLatestForRequestId(id, environmentId);
 
         switch (resendBehavior) {
           case 'no-history':
@@ -686,7 +685,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         if (field === 'url') {
           return response.url;
         }
-        if (field === 'raw') {
+        if (field === 'raw' && bodyBuffer !== null) {
           // Sometimes iconv conversion fails so fallback to regular buffer
           try {
             return iconv.decode(bodyBuffer, charset);
@@ -706,7 +705,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           }
           return header.value;
         }
-        if (field === 'body') {
+        if (field === 'body' && bodyBuffer !== null) {
           // Sometimes iconv conversion fails so fallback to regular buffer
           let body;
           try {
@@ -794,6 +793,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             }
           }
         }
+        throw new Error('Oops');
       },
     },
   },
@@ -889,7 +889,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           return null;
         }
 
-        const request: Request = await context.util.models.request.getById(meta.requestId);
+        const request = await context.util.models.request.getById(meta.requestId);
         const workspace = await context.util.models.workspace.getById(meta.workspaceId);
 
         if (!request) {
@@ -903,11 +903,12 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         if (attribute === 'url') {
           for (const p of request.parameters) {
             params.push({
-              name: await context.util.render(p.name),
-              value: await context.util.render(p.value),
+              name: await context.util.render(p.name) || '',
+              value: await context.util.render(p.value) || '',
             });
           }
-          return smartEncodeUrl(joinUrlAndQueryString((await context.util.render(request.url)), buildQueryStringFromParams(params)), request.settingEncodeUrl);
+          const rendered = await context.util.render(request.url);
+          return rendered ? smartEncodeUrl(joinUrlAndQueryString(rendered, buildQueryStringFromParams(params)), request.settingEncodeUrl) : '';
         }
         if (attribute === 'cookie') {
           if (!name) {
@@ -917,11 +918,12 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           const cookieJar = await context.util.models.cookieJar.getOrCreateForWorkspace(workspace);
           for (const p of request.parameters) {
             params.push({
-              name: await context.util.render(p.name),
-              value: await context.util.render(p.value),
+              name: await context.util.render(p.name) || '',
+              value: await context.util.render(p.value) || '',
             });
           }
-          const url = smartEncodeUrl(joinUrlAndQueryString((await context.util.render(request.url)), buildQueryStringFromParams(params)), request.settingEncodeUrl);
+          const rendered = await context.util.render(request.url);
+          const url = rendered ? smartEncodeUrl(joinUrlAndQueryString(rendered, buildQueryStringFromParams(params)), request.settingEncodeUrl) : '';
           return new Promise((resolve, reject) => {
             let jar;
             try {
@@ -970,8 +972,8 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
           for (const queryParameter of request.parameters) {
             const queryParameterName = await context.util.render(queryParameter.name);
-            parameterNames.push(queryParameterName);
-            if (queryParameterName.toLowerCase() === name.toLowerCase()) {
+            queryParameterName && parameterNames.push(queryParameterName);
+            if (queryParameterName?.toLowerCase() === name.toLowerCase()) {
               return context.util.render(queryParameter.value);
             }
           }
@@ -994,8 +996,8 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
           for (const header of request.headers) {
             const headerName = await context.util.render(header.name);
-            headerNames.push(headerName);
-            if (headerName.toLowerCase() === name.toLowerCase()) {
+            headerName && headerNames.push(headerName);
+            if (headerName?.toLowerCase() === name.toLowerCase()) {
               return context.util.render(header.value);
             }
           }

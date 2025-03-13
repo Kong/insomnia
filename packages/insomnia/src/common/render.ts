@@ -585,7 +585,7 @@ interface BaseRenderContext {
   getMeta: () => {};
   getKeysContext: () => {};
   getPurpose: () => RenderPurpose | undefined;
-  getExtraInfo: (key: string) => string | null;
+  getExtraInfo: (key: string) => string[] | null;
   getEnvironmentId: () => string | undefined;
   getGlobalEnvironmentId: () => string | undefined;
   getProjectId: () => string | undefined;

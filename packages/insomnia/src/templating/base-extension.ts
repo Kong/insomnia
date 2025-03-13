@@ -1,4 +1,5 @@
 import { database as db } from '../common/database';
+import type { RenderPurpose } from '../common/render';
 import * as models from '../models/index';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
@@ -10,10 +11,34 @@ import { decodeEncoding } from './utils';
 
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
 export interface HelperContext {
-  context: any;
-  meta: any;
-  renderPurpose: any;
-  util: any;
+  context: {
+    value: string | number;
+    getMeta: () => {};
+    getKeysContext: () => {};
+    getPurpose: () => RenderPurpose | undefined;
+    getExtraInfo: (key: string) => string[] | null;
+    getEnvironmentId: () => string | undefined;
+    getGlobalEnvironmentId: () => string | undefined;
+    getProjectId: () => string | undefined;
+  };
+  meta: { requestId?: string; workspaceId?: string };
+  renderPurpose?: 'send' | 'render' | 'no-render' | 'script';
+  util: {
+    render: (str: string) => string | Promise<string | null>;
+    models: {
+      request: {
+        getById: (id: string) => Promise<Request | null>;
+        getAncestors: (request: Request) => Promise<(Request | RequestGroup | Workspace)[]>;
+      };
+      workspace: { getById: (id: string) => Promise<Workspace | null> };
+      oAuth2Token: { getByRequestId: (id: string) => Promise<any> };
+      cookieJar: { getOrCreateForWorkspace: (workspace: Workspace) => Promise<any> };
+      response: {
+        getLatestForRequestId: typeof models.response.getLatestForRequest;
+        getBodyBuffer: Promise<typeof models.response.getBodyBuffer>;
+      };
+    };
+  };
 }
 export default class BaseExtension {
   _ext: PluginTemplateTag | null = null;
@@ -47,9 +72,7 @@ export default class BaseExtension {
 
   getLiveDisplayName() {
     return (
-      // @ts-expect-error -- TSCONVERSION
-      this._ext?.liveDisplayName ||
-      (() => '')
+      this._ext?.liveDisplayName || (() => '')
     );
   }
 
