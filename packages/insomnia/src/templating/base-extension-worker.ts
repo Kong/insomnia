@@ -21,6 +21,36 @@ export interface HelperContext {
   renderPurpose: any;
   util: any;
 }
+
+export async function workerIpcRendererInvoke(channel: string, ...args: any[]) {
+  return new Promise((resolve, reject) => {
+    const id = `worker-ipcRenderer-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    // Set up a one-time message handler for the response
+    const messageHandler = (event: MessageEvent) => {
+      const data = JSON.parse(event.data || '{}');
+      if (data.type === 'worker-ipcRenderer-response' && data.id === id) {
+        self.removeEventListener('message', messageHandler);
+
+        if (data.error) {
+          reject(new Error(data.error));
+        } else {
+          resolve(data?.result);
+        }
+      }
+    };
+
+    self.addEventListener('message', messageHandler);
+
+    // Send the IPC request to the renderer process
+    self.postMessage({
+      type: 'worker-ipcRenderer-request',
+      id,
+      channel,
+      args,
+    });
+  });
+}
 export default class BaseExtension {
   _ext: PluginTemplateTag | null = null;
   _plugin: Plugin | null = null;
@@ -117,6 +147,7 @@ export default class BaseExtension {
       meta: renderMeta,
       renderPurpose,
       util: {
+        workerIpcRendererInvoke,
         render: (str: string) =>
           templating.render(str, {
             context: renderContext,
