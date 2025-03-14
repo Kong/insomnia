@@ -21,6 +21,7 @@ import { Pane } from '../panes/pane';
 import { RenderedQueryString } from '../rendered-query-string';
 import { SocketIOActionBar } from './action-bar';
 import { SocketIOBodyTabPane } from './body-tab-pane';
+import { SocketIOEventTabPane } from './event-tab-pane';
 
 // TODO: extract to a separate file as common component
 const PaneReadOnlyBanner = () => {
@@ -269,7 +270,7 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
           <SocketIOBodyTabPane />
         </TabPanel>
         <TabPanel className='w-full flex-1 overflow-y-auto' id='events'>
-          events tab
+          <SocketIOEventTabPane />
         </TabPanel>
         <TabPanel className='w-full flex-1 overflow-y-auto' id='headers'>
           {disabled && <PaneReadOnlyBanner />}
