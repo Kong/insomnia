@@ -44,6 +44,7 @@
     "@types/chai": "^4.3.14",
     "@types/eslint": "^8.56.7",
     "@types/har-format": "^1.2.15",
+    "@types/jsdom": "^21.1.7",
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.12.4",
     "@typescript-eslint/eslint-plugin": "^7.5.0",

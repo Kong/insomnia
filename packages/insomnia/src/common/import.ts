@@ -17,7 +17,7 @@ import {
   type WebSocketRequest,
 } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
-import type { CurrentPlan } from '../ui/routes/organization';
+import { type CurrentPlan } from '../ui/routes/organization';
 import { convert, type InsomniaImporter } from '../utils/importers/convert';
 import { id as postmanEnvImporterId } from '../utils/importers/importers/postman-env';
 import { invariant } from '../utils/invariant';
