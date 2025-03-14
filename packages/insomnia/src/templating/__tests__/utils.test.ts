@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { extractUndefinedVariableKey } from '../render-error';
 import * as utils from '../utils';
 
 describe('forceBracketNotation()', () => {
@@ -339,9 +340,9 @@ describe('decodeEncoding()', () => {
 describe('extractUndefinedVariableKey()', () => {
 
   it('extract nunjucks variable key', () => {
-    expect(utils.extractUndefinedVariableKey('{{name}}', {})).toEqual(['name']);
-    expect(utils.extractUndefinedVariableKey('{{name}}', { name: '' })).toEqual([]);
-    expect(utils.extractUndefinedVariableKey('aaaaaa{{a}}{{b}}{{c}}', { a: 1 })).toEqual(['b', 'c']);
-    expect(utils.extractUndefinedVariableKey('{{a.b}}\n\n{{c}} {{d}}', { a: { b: 1 } })).toEqual(['c', 'd']);
+    expect(extractUndefinedVariableKey('{{name}}', {})).toEqual(['name']);
+    expect(extractUndefinedVariableKey('{{name}}', { name: '' })).toEqual([]);
+    expect(extractUndefinedVariableKey('aaaaaa{{a}}{{b}}{{c}}', { a: 1 })).toEqual(['b', 'c']);
+    expect(extractUndefinedVariableKey('{{a.b}}\n\n{{c}} {{d}}', { a: { b: 1 } })).toEqual(['c', 'd']);
   });
 });

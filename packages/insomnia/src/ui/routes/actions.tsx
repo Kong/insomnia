@@ -30,7 +30,7 @@ import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
-import { SpectralRunner } from '../worker/spectral-run';
+import { SpectralRunner } from '../worker/spectral-handler';
 
 // Project
 export const createNewProjectAction: ActionFunction = async ({ request, params }) => {
