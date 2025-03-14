@@ -36,52 +36,55 @@ export function renderInWorker({ input, context, path, ignoreUndefinedEnvVariabl
   worker.postMessage(payloadWithHash);
   return new Promise((resolve, reject) => {
     const messageHandler = async (event: MessageEvent) => {
-      if (event.data.id === id) {
+      const isTheResponseWeAreWaitingFor = event.data.id === id;
+      if (isTheResponseWeAreWaitingFor) {
         worker.removeEventListener('message', messageHandler);
         if (event.data.err) {
           const error = new RenderError(event.data.err);
           error.type = 'render';
-          const missingVariables = extractUndefinedVariableKey(input, newContext);
-          if (missingVariables.length > 0) {
+          const undefinedEnvironmentVariables = extractUndefinedVariableKey(input, newContext);
+          if (undefinedEnvironmentVariables.length > 0) {
             error.extraInfo = {
               subType: 'environmentVariable',
-              undefinedEnvironmentVariables: extractUndefinedVariableKey(input, newContext),
+              undefinedEnvironmentVariables,
             };
           }
           return reject(error);
         }
         return resolve(event.data.result);
-      } else {
-        // Process ipcRenderer messages from worker
-        if (event.data?.type === 'worker-ipcRenderer-request') {
-          const { id, channel, args } = event.data;
-          const responseType = 'worker-ipcRenderer-response';
-          if (channel && ipcRendererChannelWhitelist.includes(channel)) {
-            // only allowed channel will be forwarded to main process
-            try {
-              // Forward the request to the main process
-              const result = await ipcRenderer.invoke(channel, ...args);
-              worker.postMessage(JSON.stringify({
-                type: responseType,
-                id,
-                result,
-              }));
-            } catch (error) {
-              worker.postMessage(JSON.stringify({
-                type: responseType,
-                id,
-                error: error.message,
-              }));
-            }
-          } else {
-            worker.postMessage(JSON.stringify({
-              type: responseType,
-              id,
-              error: `Channel ${channel} is not allowed`,
-            }));
-          }
+      }
+      // In the scope of a render, we are also interested in listening for requests to the main process
+      // Question: is it necessary to add another communication mechanism for this or can it be a new plugin function?
+      // Process ipcRenderer messages from worker
+      if (event.data?.type === 'worker-ipcRenderer-request') {
+        const { id, channel, args } = event.data;
+        const responseType = 'worker-ipcRenderer-response';
+        const isAllowedChannel = ipcRendererChannelWhitelist.includes(channel);
+        if (!isAllowedChannel) {
+          // (@kent) Can this be a reject error instead?
+          return worker.postMessage(JSON.stringify({
+            type: responseType,
+            id,
+            error: `Channel ${channel} is not allowed`,
+          }));
         }
-      };
+        // only allowed channel will be forwarded to main process
+        try {
+          // Forward the request to the main process
+          const result = await ipcRenderer.invoke(channel, ...args);
+          worker.postMessage(JSON.stringify({
+            type: responseType,
+            id,
+            result,
+          }));
+        } catch (error) {
+          worker.postMessage(JSON.stringify({
+            type: responseType,
+            id,
+            error: error.message,
+          }));
+        }
+      }
     };
     worker.addEventListener('message', messageHandler);
   });
