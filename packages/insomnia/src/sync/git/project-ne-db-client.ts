@@ -48,7 +48,6 @@ export class GitProjectNeDBClient {
 
     try {
       const workspaceId = await this.getWorkspaceIdFromFilePath(filePath);
-      console.log('[git-project-nedb] reading file', { filePath, found: Boolean(workspaceId) });
       if (!workspaceId) {
         throw this._errMissing(filePath);
       }
