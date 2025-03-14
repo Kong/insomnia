@@ -1,12 +1,12 @@
-import { exportWorkspacesData, exportWorkspacesHAR } from '../../common/export';
+import { exportWorkspacesHAR } from '../../common/export';
 import { fetchImportContentFromURI, importResourcesToProject, scanResources } from '../../common/import';
+import { getInsomniaV5DataExport } from '../../common/insomnia-v5';
 import * as models from '../../models';
 import type { Workspace } from '../../models/workspace';
 
 interface InsomniaExport {
   workspace?: Workspace;
   includePrivate?: boolean;
-  format?: 'json' | 'yaml';
 }
 
 type HarExport = Omit<InsomniaExport, 'format'>;
@@ -55,13 +55,24 @@ export const init = (activeProjectId?: string) => ({
     export: {
       insomnia: async ({
         workspace,
-        includePrivate,
-        format,
-      }: InsomniaExport = {}) => exportWorkspacesData(
-        workspace ? [workspace] : await getWorkspaces(activeProjectId),
-        Boolean(includePrivate),
-        format || 'json',
-      ),
+      }: { workspace: Workspace }) => {
+        if (workspace) {
+          const insomniaExport = await getInsomniaV5DataExport(workspace._id);
+
+          return [insomniaExport];
+        }
+
+        const workspaces = await getWorkspaces(activeProjectId);
+
+        const allInsomniaExports = [];
+
+        for (const workspace of workspaces) {
+          const insomniaExport = await getInsomniaV5DataExport(workspace._id);
+          allInsomniaExports.push(insomniaExport);
+        }
+
+        return allInsomniaExports;
+      },
 
       har: async ({
         workspace,
