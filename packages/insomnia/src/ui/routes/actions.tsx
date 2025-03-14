@@ -168,7 +168,7 @@ export const updateProjectAction: ActionFunction = async ({
       if (response && 'error' in response) {
         let error = 'An unexpected error occurred while updating your project. Please try again.';
         if (response.error === 'FORBIDDEN') {
-          error = response.error;
+          error = 'You do not have permission to create a cloud project in this organization.';
         }
 
         if (response.error === 'NEEDS_TO_UPGRADE') {
