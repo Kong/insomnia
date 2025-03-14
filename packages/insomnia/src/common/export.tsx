@@ -132,7 +132,7 @@ export async function exportRequestsHAR(
 export async function exportWorkspacesData(
   workspaces: Workspace[],
   includePrivateDocs: boolean,
-  format: 'json' | 'yaml',
+  format: 'yaml',
 ) {
   const promises = workspaces.map(getDocWithDescendants(includePrivateDocs));
   const docs = (await Promise.all(promises)).flat();
@@ -360,6 +360,21 @@ const showSaveExportedFileDialog = async ({
   return filePath || null;
 };
 
+const showSaveExportedFolderDialog = async () => {
+  const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
+  const dir = lastDir || window.app.getPath('desktop');
+  const options = {
+    title: 'Export Insomnia Data',
+    buttonLabel: 'Export',
+    properties: ['openDirectory'],
+    defaultPath: dir,
+  } satisfies Electron.OpenDialogOptions;
+  const { filePaths } = await window.dialog.showOpenDialog(options);
+  const filePath = filePaths[0];
+
+  return filePath || null;
+};
+
 const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDone: fs.NoParamCallback) => {
   // Remember last exported path
   window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
@@ -389,30 +404,47 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
       if (shouldPrompt) {
         shouldExportPrivateEnvironments = await showExportPrivateEnvironmentsModal();
       }
-      const fileName = await showSaveExportedFileDialog({
-        exportedFileNamePrefix: activeProjectName,
-        selectedFormat,
-      });
-
-      if (!fileName) {
-        return;
-      }
-
-      let stringifiedExport;
 
       try {
         switch (selectedFormat) {
-          case VALUE_HAR:
-            stringifiedExport = await exportWorkspacesHAR(workspacesForActiveProject, shouldExportPrivateEnvironments);
-            break;
+          case VALUE_HAR: {
+            const fileName = await showSaveExportedFileDialog({
+              exportedFileNamePrefix: activeProjectName,
+              selectedFormat,
+            });
 
-          case VALUE_YAML:
-            stringifiedExport = await exportWorkspacesData(workspacesForActiveProject, shouldExportPrivateEnvironments, 'yaml');
-            break;
+            if (!fileName) {
+              return;
+            }
+            const stringifiedExport = await exportWorkspacesHAR(workspacesForActiveProject, shouldExportPrivateEnvironments);
 
-          case VALUE_JSON:
-            stringifiedExport = await exportWorkspacesData(workspacesForActiveProject, shouldExportPrivateEnvironments, 'json');
+            writeExportedFileToFileSystem(fileName, stringifiedExport, err => {
+              if (err) {
+                console.warn('Export failed', err);
+              }
+            });
+
             break;
+          }
+
+          case VALUE_YAML: {
+            const filePath = await showSaveExportedFolderDialog();
+            if (!filePath) {
+              return;
+            }
+
+            for (const workspace of workspacesForActiveProject) {
+              const workspaceName = workspace.name.replace(/ /g, '-');
+              const fileName = path.join(filePath, `${workspaceName}-${workspace._id}.yaml`);
+              const stringifiedExport = await getInsomniaV5DataExport(workspace._id);
+              writeExportedFileToFileSystem(fileName, stringifiedExport, err => {
+                if (err) {
+                  console.warn('Export failed', err);
+                }
+              });
+            }
+            break;
+          }
 
           default:
             throw new Error(`selected export format "${selectedFormat}" is invalid`);
@@ -426,12 +458,6 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
         });
         return;
       }
-
-      writeExportedFileToFileSystem(fileName, stringifiedExport, err => {
-        if (err) {
-          console.warn('Export failed', err);
-        }
-      });
     },
   });
 };
