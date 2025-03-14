@@ -51,8 +51,8 @@ export const NewWorkspaceModal = ({
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   project: Project;
-    storageRule: ORG_STORAGE_RULE;
-    currentPlan?: { type: string };
+  storageRule: ORG_STORAGE_RULE;
+  currentPlan?: { type: string };
   scope: WorkspaceScope;
 }) => {
   const { organizationId } = useParams() as { organizationId: string; projectId: string };
@@ -200,7 +200,7 @@ export const NewWorkspaceModal = ({
                           />
                           <span className='[grid-area:input] -z-10 opacity-0 truncate w-min'>{safeToUseInsomniaFileName(workspaceData.fileName || workspaceData.name || 'name')}</span>
                           <span className='[grid-area:extension] text-[--hl]'>.yaml</span>
-                      </div>
+                        </div>
                       </Label>
                       <FieldError className='text-red-500 text-xs' />
                     </TextField>
@@ -325,15 +325,18 @@ export const NewWorkspaceModal = ({
                 <div className='flex items-center gap-2'>
                   <Button
                     onPress={close}
+                    isDisabled={createNewWorkspaceFetcher.state !== 'idle'}
                     className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
                   >
                     Cancel
                   </Button>
                   <Button
                     type='submit'
-                    className="hover:no-underline w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                    isDisabled={createNewWorkspaceFetcher.state !== 'idle'}
+                    className="hover:no-underline w-[10ch] flex items-center justify-center gap-2 text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                   >
-                    Create
+                    {createNewWorkspaceFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
+                    <span>Create</span>
                   </Button>
                 </div>
               </div>

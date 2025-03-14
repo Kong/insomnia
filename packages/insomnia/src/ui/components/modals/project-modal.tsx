@@ -176,8 +176,7 @@ export const ProjectModal = ({
                   <div className="flex items-center px-2 py-1 gap-2 text-sm rounded-sm text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]">
                     <Icon icon="triangle-exclamation" />
                     <span>
-                      Error:
-                      {upsertProjectFetcher.data?.error}
+                      Error: {upsertProjectFetcher.data?.error}
                     </span>
                   </div>
                 </div>
@@ -281,9 +280,11 @@ export const ProjectModal = ({
                       {(projectData.storageType !== 'git' || gitRepository) && (
                         <Button
                           onPress={onUpsertProject}
-                          className="hover:no-underline w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                          isDisabled={upsertProjectFetcher.state !== 'idle'}
+                          className="hover:no-underline w-[10ch] flex items-center justify-center gap-2 text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                         >
-                          {project ? 'Update' : 'Create'}
+                          {upsertProjectFetcher.state !== 'idle' && <Icon icon="spinner" className='animate-spin' />}
+                          <span>{project ? 'Update' : 'Create'}</span>
                         </Button>
                       )}
                     </div>
@@ -442,16 +443,17 @@ export const ProjectModal = ({
                     <Button
                       isDisabled={upsertProjectFetcher.state !== 'idle'}
                       onPress={onUpsertProject}
-                      className="hover:no-underline w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                      className="hover:no-underline flex justify-center gap-2 items-center w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                     >
                       {upsertProjectFetcher.state !== 'idle' ? (
                         <>
-                          <Icon icon="spinner" className="animate-spin" /> Cloning
+                          <Icon icon="spinner" className="animate-spin" />
+                          <span>Cloning</span>
                         </>
                       ) : (
                         <>
                           <Icon icon="git-alt" className="" />
-                          {insomniaFiles.length > 0 ? 'Import all' : 'Clone'}
+                          <span>{insomniaFiles.length > 0 ? 'Import all' : 'Clone'}</span>
                         </>
                       )}
                     </Button>
@@ -545,15 +547,16 @@ export const ProjectModal = ({
                       </Button>
                       <Button
                         onPress={onUpsertProject}
-                        className="hover:no-underline w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                        isDisabled={upsertProjectFetcher.state !== 'idle'}
+                        className="hover:no-underline flex justify-center items-center gap-2 w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                       >
-                        Update
+                        {upsertProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
+                        <span>Update</span>
                       </Button>
                     </div>
                   </div>
                 </>
               )}
-
             </>
           )}
         </Dialog>
