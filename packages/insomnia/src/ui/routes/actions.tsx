@@ -94,7 +94,7 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
     if (!newCloudProject || 'error' in newCloudProject) {
       let error = 'An unexpected error occurred while creating the project. Please try again.';
       if (newCloudProject.error === 'FORBIDDEN') {
-        error = newCloudProject.error;
+        error = 'You do not have permission to create a cloud project in this organization.';
       }
 
       if (newCloudProject.error === 'NEEDS_TO_UPGRADE') {
@@ -168,7 +168,7 @@ export const updateProjectAction: ActionFunction = async ({
       if (response && 'error' in response) {
         let error = 'An unexpected error occurred while updating your project. Please try again.';
         if (response.error === 'FORBIDDEN') {
-          error = response.error;
+          error = 'You do not have permission to create a cloud project in this organization.';
         }
 
         if (response.error === 'NEEDS_TO_UPGRADE') {
@@ -1612,7 +1612,7 @@ const getCollectionItem = async (id: string) => {
 };
 
 export const reorderCollectionAction: ActionFunction = async ({ request, params }) => {
-  const { workspaceId }  = params;
+  const { workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
   const { id, targetId, dropPosition, metaSortKey } = await request.json();
   invariant(typeof id === 'string', 'ID is required');

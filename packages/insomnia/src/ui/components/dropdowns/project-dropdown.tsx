@@ -13,6 +13,7 @@ import { useFetcher } from 'react-router-dom';
 
 import type { GitRepository } from '../../../models/git-repository';
 import {
+  isGitProject,
   isRemoteProject,
   type Project,
 } from '../../../models/project';
@@ -58,9 +59,15 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage, i
       name: 'Delete',
       icon: 'trash',
       action: (projectId: string, projectName: string) => {
+        let message = `You are deleting the project "${projectName}" that may have collaborators. As a result of this, the project will be permanently deleted for every collaborator of the organization. Do you really want to continue?`;
+
+        if (isGitProject(project)) {
+          message = `You are deleting the Git project "${projectName}". Deleting this project will not delete the remote repository but all your local changes will be lost. Do you really want to continue?`;
+        }
+
         showModal(AskModal, {
           title: 'Delete Project',
-          message: `You are deleting the project "${projectName}" that may have collaborators. As a result of this, the project will be permanently deleted for every collaborator of the organization. Do you really want to continue?`,
+          message,
           yesText: 'Delete',
           noText: 'Cancel',
           color: 'danger',

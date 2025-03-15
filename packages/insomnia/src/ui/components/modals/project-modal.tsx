@@ -176,8 +176,7 @@ export const ProjectModal = ({
                   <div className="flex items-center px-2 py-1 gap-2 text-sm rounded-sm text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]">
                     <Icon icon="triangle-exclamation" />
                     <span>
-                      Error:
-                      {upsertProjectFetcher.data?.error}
+                      Error: {upsertProjectFetcher.data?.error}
                     </span>
                   </div>
                 </div>
@@ -221,7 +220,7 @@ export const ProjectModal = ({
                             <Heading className="text-lg font-bold">Local Vault</Heading>
                           </div>
                           <p className="pt-2">
-                            Stored locally only with no cloud. Ideal when collaboration is not needed.
+                            Stored locally only, with no cloud. Ideal when collaboration is not needed.
                           </p>
                         </Radio>
 
@@ -281,9 +280,11 @@ export const ProjectModal = ({
                       {(projectData.storageType !== 'git' || gitRepository) && (
                         <Button
                           onPress={onUpsertProject}
-                          className="hover:no-underline w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                          isDisabled={upsertProjectFetcher.state !== 'idle'}
+                          className="hover:no-underline w-[10ch] flex items-center justify-center gap-2 text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                         >
-                          {project ? 'Update' : 'Create'}
+                          {upsertProjectFetcher.state !== 'idle' && <Icon icon="spinner" className='animate-spin' />}
+                          <span>{project ? 'Update' : 'Create'}</span>
                         </Button>
                       )}
                     </div>
@@ -359,7 +360,7 @@ export const ProjectModal = ({
 
               {activeView === 'git-results' && (
                 <>
-                  {initCloneGitRepositoryFetcher.state === 'submitting' && (
+                  {initCloneGitRepositoryFetcher.state !== 'idle' && (
                     <div className='w-full flex flex-col gap-2 p-4 items-center justify-center'>
                       <InsomniaLogo loading className='w-12 h-12' />
                       Loading Insomnia files from repository
@@ -371,6 +372,7 @@ export const ProjectModal = ({
                         <span className='flex items-center justify-center relative'>
                           <InsomniaLogo className='w-12 h-12' />
                         </span>
+                        <p className='p-2 text-center font-bold text-[--color-font]'>We didn't find any Insomnia files in this repository.</p>
                         <p className='p-2 text-center font-bold text-[--color-font]'>Clone this repository to start a new project.</p>
                         <p className='p-2 text-center text-[--color-font]'>Add your collections, documents, environments and mock servers, and share them using Git.</p>
                       </div>
@@ -432,16 +434,28 @@ export const ProjectModal = ({
                   )}
                   <div className='flex items-center justify-end gap-2 px-10 pb-10'>
                     <Button
+                      isDisabled={upsertProjectFetcher.state !== 'idle'}
                       onPress={() => setActiveView('git-clone')}
                       className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
                     >
                       Back
                     </Button>
                     <Button
+                      isDisabled={upsertProjectFetcher.state !== 'idle'}
                       onPress={onUpsertProject}
-                      className="hover:no-underline w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                      className="hover:no-underline flex justify-center gap-2 items-center w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                     >
-                      {insomniaFiles.length > 0 ? 'Import all' : 'Clone'}
+                      {upsertProjectFetcher.state !== 'idle' ? (
+                        <>
+                          <Icon icon="spinner" className="animate-spin" />
+                          <span>Cloning</span>
+                        </>
+                      ) : (
+                        <>
+                          <Icon icon="git-alt" className="" />
+                          <span>{insomniaFiles.length > 0 ? 'Import all' : 'Clone'}</span>
+                        </>
+                      )}
                     </Button>
                   </div>
                 </>
@@ -533,15 +547,16 @@ export const ProjectModal = ({
                       </Button>
                       <Button
                         onPress={onUpsertProject}
-                        className="hover:no-underline w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                        isDisabled={upsertProjectFetcher.state !== 'idle'}
+                        className="hover:no-underline flex justify-center items-center gap-2 w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                       >
-                        Update
+                        {upsertProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
+                        <span>Update</span>
                       </Button>
                     </div>
                   </div>
                 </>
               )}
-
             </>
           )}
         </Dialog>

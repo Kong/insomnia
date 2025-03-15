@@ -427,6 +427,11 @@ export class GitVCS {
           if (!isInsomniaFile) {
             return null;
           }
+        } else {
+          // If the path is a file with an extension different than yaml we don't want to check it
+          if (path.extname(filepath) && path.extname(filepath) !== '.yaml') {
+            return null;
+          }
         }
 
         if (await git.isIgnored({
@@ -478,24 +483,6 @@ export class GitVCS {
           workdirOid = await workdir?.oid();
         }
 
-        const headBlob = await head?.content();
-        const workdirBlob = await workdir?.content();
-        let stageBlob = await stage?.content();
-
-        if (!stageBlob && stageOid) {
-          try {
-            const { blob } = await git.readBlob({
-              ...baseOpts,
-
-              oid: stageOid,
-            });
-
-            stageBlob = blob;
-          } catch (e) {
-            console.log('[git] Failed to read blob', e);
-          }
-        }
-
         // Adopted from isomorphic-git statusMatrix.
         // This is needed to return the same status code numbers as isomorphic-git
         // In isomorphic-git it can be found in these types: git.HeadStatus, git.WorkdirStatus, and git.StageStatus
@@ -503,18 +490,46 @@ export class GitVCS {
         const result = entry.map(value => entry.indexOf(value));
         result.shift(); // remove leading undefined entry
 
+        let headName = filepath;
+        let workdirName = filepath;
+        let stageName = filepath;
+
+        if (baseOpts.legacyDiff) {
+          const headBlob = await head?.content();
+          const workdirBlob = await workdir?.content();
+          let stageBlob = await stage?.content();
+
+          if (!stageBlob && stageOid) {
+            try {
+              const { blob } = await git.readBlob({
+                ...baseOpts,
+
+                oid: stageOid,
+              });
+
+              stageBlob = blob;
+            } catch (e) {
+              console.log('[git] Failed to read blob', e);
+            }
+          }
+
+          headName = getInsomniaFileName(headBlob);
+          workdirName = getInsomniaFileName(workdirBlob);
+          stageName = getInsomniaFileName(stageBlob);
+        }
+
         return {
           filepath,
           head: {
-            name: getInsomniaFileName(headBlob),
+            name: headName,
             status: result[0],
           },
           workdir: {
-            name: getInsomniaFileName(workdirBlob),
+            name: workdirName,
             status: result[1],
           },
           stage: {
-            name: getInsomniaFileName(stageBlob),
+            name: stageName,
             status: result[2],
           },
         };
@@ -913,7 +928,7 @@ export class GitVCS {
     });
   }
 
-  async log(input: {depth?: number} = {}) {
+  async log(input: { depth?: number } = {}) {
     const { depth = 35 } = input;
     try {
       const remoteOriginURI = await this.getRemoteOriginURI();

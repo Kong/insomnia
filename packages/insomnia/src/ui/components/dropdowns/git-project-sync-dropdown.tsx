@@ -364,7 +364,15 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
             />
             <span className='truncate'>{isSynced ? currentBranch : 'Not synced'}</span>
           </Button>
-          <TooltipTrigger>
+          <TooltipTrigger
+            onOpenChange={isOpen => {
+              const shouldFetchGitRepoStatus = isOpen && gitStatusFetcher.state === 'idle';
+              shouldFetchGitRepoStatus && gitStatusFetcher.submit({}, {
+                action: `/organization/${organizationId}/project/${projectId}/git/status`,
+                method: 'post',
+              });
+            }}
+          >
             <Button className={`px-[--padding-md] h-full ${status?.localChanges ? 'text-[--color-warning]' : ''}`}>
               <Icon icon={loadingStatus ? 'refresh' : 'cube'} className={`transition-colors ${isLoading ? 'animate-pulse' : loadingStatus ? 'animate-spin' : ''}`} />
             </Button>

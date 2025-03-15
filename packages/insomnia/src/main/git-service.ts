@@ -98,7 +98,7 @@ async function getGitFSClient({
   gitRepositoryId,
 }: {
   projectId: string;
-    workspaceId?: string;
+  workspaceId?: string;
   gitRepositoryId: string;
 }) {
   const baseDir = path.join(
@@ -149,7 +149,7 @@ export async function loadGitRepository({
   workspaceId,
 }: {
   projectId: string;
-    workspaceId?: string;
+  workspaceId?: string;
 }) {
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
@@ -302,7 +302,7 @@ export const gitChangesLoader = async ({
   workspaceId,
 }: {
   projectId: string;
-    workspaceId?: string;
+  workspaceId?: string;
 }): Promise<GitChangesLoaderData> => {
   try {
     const gitRepository = await getGitRepository({ projectId, workspaceId });
@@ -491,9 +491,9 @@ export const cloneGitRepoAction = async ({
   oauth2format,
 }: {
   organizationId: string;
-    projectId?: string;
-    cloneIntoProjectId?: string;
-    name?: string;
+  projectId?: string;
+  cloneIntoProjectId?: string;
+  name?: string;
   uri: string;
   authorName: string;
   authorEmail: string;
@@ -896,7 +896,7 @@ export const updateGitRepoAction = async ({
   token,
 }: {
   projectId: string;
-    workspaceId?: string;
+  workspaceId?: string;
   authorName: string;
   authorEmail: string;
   uri: string;
@@ -1036,7 +1036,7 @@ export const commitToGitRepoAction = async ({
   message,
 }: {
   projectId: string;
-    workspaceId?: string;
+  workspaceId?: string;
   message: string;
 }): Promise<CommitToGitRepoResult> => {
   try {
@@ -1072,7 +1072,7 @@ export const commitAndPushToGitRepoAction = async ({
   message,
 }: {
   projectId: string;
-    workspaceId?: string;
+  workspaceId?: string;
   message: string;
 }): Promise<CommitToGitRepoResult> => {
   const repo = await getGitRepository({ workspaceId, projectId });
@@ -1168,7 +1168,7 @@ export const createNewGitBranchAction = async ({
   branch,
 }: {
   projectId: string;
-    workspaceId?: string;
+  workspaceId?: string;
   branch: string;
 }): Promise<CreateNewGitBranchResult> => {
   const gitRepository = await getGitRepository({ workspaceId, projectId });
@@ -1217,7 +1217,7 @@ export const checkoutGitBranchAction = async ({
   branch,
 }: {
   projectId: string;
-    workspaceId?: string;
+  workspaceId?: string;
   branch: string;
 }): Promise<CheckoutGitBranchResult> => {
   const gitRepository = await getGitRepository({ workspaceId, projectId });
@@ -1268,7 +1268,7 @@ export const mergeGitBranch = async ({
 }: {
   theirsBranch: string;
   projectId: string;
-    workspaceId?: string;
+  workspaceId?: string;
   allowUncommittedChangesBeforeMerge?: boolean;
 }) => {
   const gitRepository = await getGitRepository({ workspaceId, projectId });
@@ -1323,7 +1323,7 @@ export const deleteGitBranchAction = async ({
   branch,
 }: {
   projectId: string;
-    workspaceId?: string;
+  workspaceId?: string;
   branch: string;
 }): Promise<DeleteGitBranchResult> => {
   try {
@@ -1353,7 +1353,7 @@ export const pushToGitRemoteAction = async ({
   force,
 }: {
   projectId: string;
-    workspaceId?: string;
+  workspaceId?: string;
   force?: boolean;
 }): Promise<PushToGitRemoteResult> => {
   const gitRepository = await getGitRepository({ projectId, workspaceId });
@@ -1429,7 +1429,7 @@ export async function pullFromGitRemote({
   workspaceId,
 }: {
   projectId: string;
-    workspaceId?: string;
+  workspaceId?: string;
 }) {
   try {
     const gitRepository = await getGitRepository({ projectId, workspaceId });
@@ -1472,7 +1472,7 @@ export const continueMerge = async (
     commitParent,
   }: {
     projectId: string;
-      workspaceId?: string;
+    workspaceId?: string;
     handledMergeConflicts: MergeConflict[];
     commitMessage: string;
     commitParent: string[];
@@ -1522,7 +1522,7 @@ export const discardChangesAction = async ({
   paths,
 }: {
   projectId: string;
-    workspaceId?: string;
+  workspaceId?: string;
   paths: string[];
 }): Promise<{
   errors?: string[];
@@ -1556,7 +1556,7 @@ export const gitStatusAction = async ({
   workspaceId,
 }: {
   projectId: string;
-    workspaceId?: string;
+  workspaceId?: string;
 }): Promise<GitStatusResult> => {
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
@@ -1588,7 +1588,7 @@ export const stageChangesAction = async ({
   paths,
 }: {
   projectId: string;
-    workspaceId?: string;
+  workspaceId?: string;
   paths: string[];
 }): Promise<{
   errors?: string[];
@@ -1617,7 +1617,7 @@ export const unstageChangesAction = async ({
   paths,
 }: {
   projectId: string;
-    workspaceId?: string;
+  workspaceId?: string;
   paths: string[];
 }): Promise<{
   errors?: string[];
@@ -1687,7 +1687,7 @@ export const diffFileLoader = async ({
   staged,
 }: {
   projectId: string;
-    workspaceId?: string;
+  workspaceId?: string;
   filepath: string;
   staged: boolean;
 }): Promise<GitDiffResult> => {
@@ -1704,7 +1704,7 @@ export const diffFileLoader = async ({
     };
 
     return {
-      name: getPreviewItemName(diff),
+      name: getPreviewItemName(diff) || filepath,
       diff,
     };
   } catch (e) {
@@ -1753,7 +1753,7 @@ const getRepositoryDirectoryTree = async ({ projectId }: { projectId: string }):
     const tree: (GitRepoDirectory | GitRepoFile)[] = await Promise.all(
       directoryContents.map(async (file: string) => {
         const fileOrDirPath = path.join(parentPath, file);
-        const stats = await fs.promises.stat(fileOrDirPath);
+        const stats = await fs.promises.lstat(fileOrDirPath);
         if (await stats.isDirectory()) {
           const subDirectoryContents = await fs.promises.readdir(fileOrDirPath);
           folderList[fileOrDirPath] = subDirectoryContents;
@@ -1780,9 +1780,9 @@ const getRepositoryDirectoryTree = async ({ projectId }: { projectId: string }):
   return {
     repositoryTree: {
       id: '',
-    name: gitRepository.uri.split('/').pop()?.replace('.git', '').toUpperCase() || 'Repository',
-    type: 'root',
-    children: tree,
+      name: gitRepository.uri.split('/').pop()?.replace('.git', '').toUpperCase() || 'Repository',
+      type: 'root',
+      children: tree,
     } satisfies FileTree,
     folderList,
   };
