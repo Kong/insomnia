@@ -254,17 +254,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   ::CloseHandle(pi.hProcess);
   ::CloseHandle(pi.hThread);
 
-  // finally, delete the insomnia-$VERSION.exe file after waiting for the handle
-  // to fully release
-  Sleep(1000);
-  if (!::DeleteFile(tmpExe.c_str())) {
+  // finally, delete the insomnia-$VERSION.exe file after waiting up to 3s for
+  // the handle to fully release
+  for (int i = 0; i < 2; i++) {
+    Sleep(1000);
+    if (!::DeleteFile(tmpExe.c_str())) {
 #ifdef DEBUG
-    DWORD lastErr = ::GetLastError();
-    ::DebugLog("Delete file:");
-    ::DebugLog(tmpExe.c_str());
-    ::DebugLog("Return value:");
-    ::DebugLog(std::to_string(lastErr).c_str());
+      DWORD lastErr = ::GetLastError();
+      ::DebugLog("Attempted to delete file:");
+      ::DebugLog(tmpExe.c_str());
+      ::DebugLog("Return value:");
+      ::DebugLog(std::to_string(lastErr).c_str());
 #endif
+    } else {
+      break;
+    }
   }
 
 #ifdef DEBUG

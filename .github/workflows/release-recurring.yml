@@ -50,7 +50,7 @@ jobs:
 
       - name: Bump version
         shell: bash
-        run: npm --workspaces version prerelease --preid="$(git rev-parse --short HEAD)${{ github.event_name == 'pull_request' && '.pr$PR_NUMBER' || '' }}" --no-git-tag-version
+        run: npm --workspaces version prerelease --preid="$(git rev-parse --short HEAD)" --no-git-tag-version
 
       - name: Package
         shell: bash
