@@ -220,7 +220,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
           error={null}
           filter={filter}
           filterHistory={filterHistory}
-          getBody={() => new Promise(resolve => resolve(selectedPart?.value))}
+          bodyBuffer={Buffer.from(selectedPart?.value || '')}
           key={`${responseId}::${selectedPart?.id}`}
           previewMode={PREVIEW_MODE_FRIENDLY}
           responseId={`${responseId}[${selectedPart?.id}]`}

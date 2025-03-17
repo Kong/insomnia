@@ -2,7 +2,6 @@ import iconv from 'iconv-lite';
 import React, {
   Fragment,
   useCallback,
-  useEffect,
   useRef,
   useState,
 } from 'react';
@@ -47,7 +46,8 @@ export interface ResponseViewerProps {
   editorFontSize: number;
   filter: string;
   filterHistory: string[];
-  getBody: (...args: any[]) => Promise<Buffer | string | null>;
+  bodyBuffer?: Buffer;
+  getBody?: (...args: any[]) => Promise<Buffer | string | null>;
   previewMode: string;
   responseId: string;
   url: string;
@@ -57,6 +57,7 @@ export interface ResponseViewerProps {
 
 export const ResponseViewer = ({
   bytes,
+  bodyBuffer,
   getBody,
   contentType: originalContentType,
   disableHtmlPreviewJs,
@@ -76,39 +77,18 @@ export const ResponseViewer = ({
   const [blockingBecauseTooLarge, setBlockingBecauseTooLarge] = useState(!alwaysShowLargeResponses && largeResponse);
   const [parseError, setParseError] = useState('');
 
-  const [bodyBuffer, setBodyBuffer] = useState<Buffer | null>(Buffer.from('Loading...'));
-  useEffect(() => {
-    const fn = async () => {
-      try {
-        const bodyBuffer = await getBody();
-        if (typeof bodyBuffer === 'string') {
-          return setParseError(bodyBuffer);
-        }
-        if (bodyBuffer !== null) {
-          return setBodyBuffer(bodyBuffer);
-        }
-      } catch (err) {
-        setParseError(`Failed reading response from filesystem: ${err.stack}`);
-      }
-    };
-    fn();
-    // TODO: remove this when response has its own route loader
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [responseId]);
+  const [overSizedBody, setOversizedBody] = useState<Buffer | null>(bodyBuffer || null);
+
   const editorRef = useRef<CodeEditorHandle>(null);
 
   const _handleDismissBlocker = useCallback(async () => {
     setBlockingBecauseTooLarge(false);
 
     try {
-      const bodyBuffer = await getBody();
-      if (typeof bodyBuffer === 'string') {
-        return setParseError(bodyBuffer);
-      }
-      if (bodyBuffer !== null) {
-        return setBodyBuffer(bodyBuffer);
-      }
-      setBlockingBecauseTooLarge(false);
+      const buffer = await getBody?.();
+      const bufferOrError = typeof buffer === 'string' ? Buffer.from(buffer) : buffer;
+
+      return setOversizedBody(bufferOrError || null);
     } catch (err) {
       setParseError(`Failed reading response from filesystem: ${err.stack}`);
     }
@@ -137,14 +117,14 @@ export const ResponseViewer = ({
 
   const _getContentType = useCallback(() => {
     const lowercasedOriginalContentType = originalContentType.toLowerCase();
-    if (!bodyBuffer || bodyBuffer.length === 0) {
+    if (!overSizedBody || overSizedBody.length === 0) {
       return lowercasedOriginalContentType;
     }
     // Try to detect JSON in all cases (even if a different header is set).
     // Apparently users often send JSON with weird content-types like text/plain.
     try {
-      if (bodyBuffer && bodyBuffer.length > 0) {
-        JSON.parse(bodyBuffer.toString('utf8'));
+      if (overSizedBody && overSizedBody.length > 0) {
+        JSON.parse(overSizedBody.toString('utf8'));
         return 'application/json';
       }
     } catch (error) { }
@@ -152,7 +132,7 @@ export const ResponseViewer = ({
     // It is fairly common for webservers to send errors in HTML by default.
     // NOTE: This will probably never throw but I'm not 100% so wrap anyway
     try {
-      const isProbablyHTML = bodyBuffer
+      const isProbablyHTML = overSizedBody
         .slice(0, 100)
         .toString()
         .trim()
@@ -167,10 +147,10 @@ export const ResponseViewer = ({
     } catch (error) { }
 
     return lowercasedOriginalContentType;
-  }, [originalContentType, bodyBuffer]);
+  }, [originalContentType, overSizedBody]);
 
   const getBodyAsString = useCallback(() => {
-    if (!bodyBuffer) {
+    if (!overSizedBody) {
       return '';
     }
     // Show everything else as "source"
@@ -178,12 +158,12 @@ export const ResponseViewer = ({
     const charset = match && match.length >= 2 ? match[1] : 'utf-8';
     // Sometimes iconv conversion fails so fallback to regular buffer
     try {
-      return iconv.decode(bodyBuffer, charset);
+      return iconv.decode(overSizedBody, charset);
     } catch (err) {
       console.warn('[response] Failed to decode body', err);
-      return bodyBuffer.toString();
+      return overSizedBody.toString();
     }
-  }, [bodyBuffer, _getContentType]);
+  }, [overSizedBody, _getContentType]);
 
   if (responseError || parseError) {
     return (
@@ -239,7 +219,7 @@ export const ResponseViewer = ({
     );
   }
 
-  if (!bodyBuffer) {
+  if (!overSizedBody) {
     return (
       <div className="pad faint">
         Failed to read response body from filesystem
@@ -247,7 +227,7 @@ export const ResponseViewer = ({
     );
   }
 
-  if (bodyBuffer.length === 0) {
+  if (overSizedBody.length === 0) {
     return <div className="pad faint">No body returned for response</div>;
   }
 
@@ -291,7 +271,7 @@ export const ResponseViewer = ({
     contentType.indexOf('image/') === 0
   ) {
     const justContentType = contentType.split(';')[0];
-    const base64Body = bodyBuffer.toString('base64');
+    const base64Body = overSizedBody.toString('base64');
     return (
       <div className="scrollable-container tall wide">
         <div className="scrollable">
@@ -326,7 +306,7 @@ export const ResponseViewer = ({
   ) {
     return (
       <div className="tall wide scrollable">
-        <ResponsePDFViewer body={bodyBuffer} key={responseId} />
+        <ResponsePDFViewer body={overSizedBody} key={responseId} />
       </div>
     );
   }
@@ -337,7 +317,7 @@ export const ResponseViewer = ({
   ) {
     return (
       <div className="tall wide scrollable">
-        <ResponseCSVViewer body={bodyBuffer} key={responseId} />
+        <ResponseCSVViewer body={overSizedBody} key={responseId} />
       </div>
     );
   }
@@ -348,7 +328,7 @@ export const ResponseViewer = ({
   ) {
     return (
       <ResponseMultipartViewer
-        bodyBuffer={bodyBuffer}
+        bodyBuffer={overSizedBody}
         contentType={contentType}
         disableHtmlPreviewJs={disableHtmlPreviewJs}
         disablePreviewLinks={disablePreviewLinks}
@@ -368,7 +348,7 @@ export const ResponseViewer = ({
     contentType.indexOf('audio/') === 0
   ) {
     const justContentType = contentType.split(';')[0];
-    const base64Body = bodyBuffer.toString('base64');
+    const base64Body = overSizedBody.toString('base64');
     return (
       <div className="vertically-center" key={responseId}>
         <audio controls>

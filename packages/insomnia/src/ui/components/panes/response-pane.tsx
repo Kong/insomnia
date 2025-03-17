@@ -240,6 +240,7 @@ export const ResponsePane: FC<Props> = ({
             error={activeResponse.error}
             filter={filter}
             filterHistory={filterHistory}
+            bodyBuffer={activeResponse.bodyBuffer}
             getBody={() => models.response.getBodyBuffer(activeResponse)}
             previewMode={activeResponse.error ? PREVIEW_MODE_SOURCE : previewMode}
             responseId={activeResponse._id}

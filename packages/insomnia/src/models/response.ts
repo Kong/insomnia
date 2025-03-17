@@ -40,6 +40,8 @@ export interface BaseResponse {
   elapsedTime: number;
   headers: ResponseHeader[];
   bodyPath: string;
+  // if body is less than 5MB, it's stored in memory
+  bodyBuffer?: Buffer;
   // Actual bodies are stored on the filesystem
   timelinePath: string;
   // Actual timelines are stored on the filesystem
@@ -249,7 +251,7 @@ export const readCurlResponse = async (options: { bodyPath?: string; bodyCompres
 export const getBodyBuffer = async (
   response?: { bodyPath?: string; bodyCompression?: Compression },
   readFailureValue?: string,
-): Promise<Buffer | string | null> => {
+): Promise<Buffer | string> => {
   if (!response?.bodyPath) {
     // No body, so return empty Buffer
     return Buffer.alloc(0);
@@ -263,7 +265,7 @@ export const getBodyBuffer = async (
     return rawBuffer;
   } catch (err) {
     console.warn('Failed to read response body', err.message);
-    return readFailureValue === undefined ? null : readFailureValue;
+    return readFailureValue === undefined ? Buffer.alloc(0) : readFailureValue;
   }
 };
 
