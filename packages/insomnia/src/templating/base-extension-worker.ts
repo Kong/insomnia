@@ -1,6 +1,8 @@
 import electron from 'electron';
 
 import { getAppPlatform, getAppVersion } from '../common/constants';
+import type { Request } from '../models/request';
+import type { Response } from '../models/response';
 import type { Workspace } from '../models/workspace';
 import type { Plugin } from '../plugins/index';
 import { invariant } from '../utils/invariant';
@@ -141,8 +143,17 @@ export default class BaseExtension {
       },
       // @ts-expect-error -- TODO
       store: {},
-      // @ts-expect-error -- TODO
-      network: {},
+      network: {
+        sendRequest: async (request: Request, extraInfo?: { requestChain: string[] }): Promise<Response> => {
+          const resp = await fetch('insomnia-templating-worker-database://network.sendRequest', {
+            method: 'post',
+            body: JSON.stringify({ request, extraInfo }),
+          });
+
+          const body = await resp.json();
+          return body as Response;
+        },
+      },
       context: renderContext,
       meta: renderMeta,
       renderPurpose,

@@ -70,6 +70,7 @@ export default async function build(options: Options) {
     external: [
       'electron',
       '@getinsomnia/node-libcurl',
+      'fsevents',
       ...Object.keys(pkg.dependencies),
       ...Object.keys(builtinModules),
     ],

@@ -3,6 +3,7 @@ import * as models from '../models';
 import type { Request as DBRequest } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Workspace } from '../models/workspace';
+import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
 
 export const resolveDbByKey = async (request: Request) => {
     const url = new URL(request.url);
@@ -28,6 +29,27 @@ export const resolveDbByKey = async (request: Request) => {
     }
     if (url.host === 'response.getBodyBuffer'.toLowerCase()) {
         result = await models.response.getBodyBuffer(body.response, body.readFailureValue);
+    }
+    if (url.host === 'network.sendRequest'.toLowerCase()) {
+        const { request,
+            environment,
+            settings,
+            clientCertificates,
+            caCert,
+            timelinePath,
+            responseId,
+        } = await fetchRequestData(body.request._id);
+
+        const renderResult = await tryToInterpolateRequest({ request, environment: environment._id, purpose: 'send', extraInfo: body.extraInfo });
+        const response = await sendCurlAndWriteTimeline(
+            renderResult.request,
+            clientCertificates,
+            caCert,
+            settings,
+            timelinePath,
+            responseId
+        );
+        result = await models.response.create({ ...response, bodyCompression: null }, settings.maxHistoryResponses);
     }
 
     return new Response(JSON.stringify(result));
