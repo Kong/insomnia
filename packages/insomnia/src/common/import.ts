@@ -7,7 +7,7 @@ import { type GrpcRequest, isGrpcRequest } from '../models/grpc-request';
 import { type BaseModel, getModel, userSession } from '../models/index';
 import * as models from '../models/index';
 import { isMockRoute, type MockRoute } from '../models/mock-route';
-import { isGitProject, isRemoteProject, ORG_STORAGE_RULE } from '../models/project';
+import { isGitProject } from '../models/project';
 import { isRequest, type Request } from '../models/request';
 import { isRequestGroup } from '../models/request-group';
 import { isUnitTest, type UnitTest } from '../models/unit-test';
@@ -17,9 +17,7 @@ import {
   type WebSocketRequest,
 } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
-import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '../sync/vcs/initialize-backend-project';
-import { VCSInstance } from '../sync/vcs/insomnia-sync';
-import { type CurrentPlan, fetchAndCacheOrganizationStorageRule } from '../ui/routes/organization';
+import type { CurrentPlan } from '../ui/routes/organization';
 import { convert, type InsomniaImporter } from '../utils/importers/convert';
 import { id as postmanEnvImporterId } from '../utils/importers/importers/postman-env';
 import { invariant } from '../utils/invariant';
@@ -210,7 +208,13 @@ export async function scanResources(contentList: string[] | ImportFileDetail[]):
   );
 }
 
-export async function importResourcesToProject({ projectId }: { projectId: string }) {
+export async function importResourcesToProject({
+  projectId,
+  syncNewWorkspaceIfNeeded,
+}: {
+  projectId: string;
+  syncNewWorkspaceIfNeeded?: (workspace: Workspace) => Promise<void>;
+}) {
   invariant(resourceCacheList.length > 0, 'No resources to import');
   for (const resourceCacheItem of resourceCacheList) {
     const {
@@ -224,19 +228,29 @@ export async function importResourcesToProject({ projectId }: { projectId: strin
       resource => isRequestGroup(resource) && resource.parentId === '__WORKSPACE_ID__'
     ) as Workspace | undefined;
     if (importer.id === 'postman' && postmanTopLevelFolder) {
-      await importResourcesToNewWorkspace(projectId, resourceCacheItem, postmanTopLevelFolder);
+      await importResourcesToNewWorkspace({
+        projectId,
+        resourceCacheItem,
+        workspaceToImport: postmanTopLevelFolder,
+        syncNewWorkspaceIfNeeded,
+      });
       continue;
     }
 
     // if the resource is postman environment,
     if (importer.id === postmanEnvImporterId && resources.find(isEnvironment)) {
       await Promise.all(resources.filter(isEnvironment).map(resource =>
-        importResourcesToNewWorkspace(projectId, resourceCacheItem, {
-          name: resource.name,
-          scope: 'environment',
-          // __BASE_ENVIRONMENT_ID__ is the default parentId for environment imported by postman env importer, we use it to indicate the new workspace id
-          _id: '__BASE_ENVIRONMENT_ID__',
-        } as Workspace)
+        importResourcesToNewWorkspace({
+          projectId,
+          resourceCacheItem,
+          workspaceToImport: {
+            name: resource.name,
+            scope: 'environment',
+            // __BASE_ENVIRONMENT_ID__ is the default parentId for environment imported by postman env importer, we use it to indicate the new workspace id
+            _id: '__BASE_ENVIRONMENT_ID__',
+          } as Workspace,
+          syncNewWorkspaceIfNeeded,
+        })
       ));
       continue;
     }
@@ -245,7 +259,11 @@ export async function importResourcesToProject({ projectId }: { projectId: strin
 
     // No workspace, so create one
     if (workspaceResources.length === 0) {
-      await importResourcesToNewWorkspace(projectId, resourceCacheItem);
+      await importResourcesToNewWorkspace({
+        projectId,
+        resourceCacheItem,
+        syncNewWorkspaceIfNeeded,
+      });
       continue;
     }
 
@@ -261,14 +279,15 @@ export async function importResourcesToProject({ projectId }: { projectId: strin
         if (workspaceResources.length > 1) {
           resourcesInCurrentWorkspace = filterResourcesInWorkspace(resources, workspace);
         }
-        return importResourcesToNewWorkspace(
+        return importResourcesToNewWorkspace({
           projectId,
-          {
+          resourceCacheItem: {
             ...resourceCacheItem,
             resources: resourcesInCurrentWorkspace,
           },
-          workspace
-        );
+          workspaceToImport: workspace,
+          syncNewWorkspaceIfNeeded,
+        });
       }));
 
     await db.flushChanges(bufferId);
@@ -421,9 +440,17 @@ export const isApiSpecImport = ({ id }: Pick<InsomniaImporter, 'id'>) =>
   id === 'openapi3' || id === 'swagger2';
 
 const importResourcesToNewWorkspace = async (
-  projectId: string,
-  resourceCacheItem: ResourceCacheType,
-  workspaceToImport?: Workspace
+  {
+    projectId,
+    resourceCacheItem,
+    workspaceToImport,
+    syncNewWorkspaceIfNeeded,
+  }: {
+    projectId: string;
+    resourceCacheItem: ResourceCacheType;
+    workspaceToImport?: Workspace;
+    syncNewWorkspaceIfNeeded?: (workspace: Workspace) => Promise<void>;
+  }
 ) => {
   invariant(resourceCacheItem, 'No resources to import');
 
@@ -551,29 +578,7 @@ const importResourcesToNewWorkspace = async (
   // we sync the new workspace to the cloud in workspaceLoader when user enters the workspace
   // since we won't navigate to the workspace automatically after import
   // here we push to the cloud programmatically
-  await (async function syncNewWorkspaceIfNeeded(newWorkspace: Workspace) {
-    const project = await models.project.getById(newWorkspace.parentId);
-    invariant(project, 'Project not found');
-    const userSession = await models.userSession.getOrCreate();
-    if (userSession.id && isRemoteProject(project) && [ORG_STORAGE_RULE.CLOUD_ONLY, ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL].includes(await fetchAndCacheOrganizationStorageRule(project.parentId))) {
-      // Create default env, cookie jar, and meta
-      await models.environment.getOrCreateForParentId(newWorkspace._id);
-      await models.cookieJar.getOrCreateForParentId(newWorkspace._id);
-      await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
-      try {
-        const vcs = VCSInstance().newInstance();
-        await initializeLocalBackendProjectAndMarkForSync({
-          vcs,
-          workspace: newWorkspace,
-        });
-        await pushSnapshotOnInitialize({
-          vcs,
-          workspace: newWorkspace,
-          project,
-        });
-      } catch (e) {
-        console.warn(`Failed to initialize sync to insomnia cloud for workspace ${newWorkspace._id}. This will be retried when the workspace is opened on the app. ${e.message}`);
-      }
-    }
-  })(newWorkspace);
+  if (syncNewWorkspaceIfNeeded) {
+    await syncNewWorkspaceIfNeeded(newWorkspace);
+  }
 };
