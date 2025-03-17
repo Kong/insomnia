@@ -47,9 +47,9 @@ export interface BaseRenderContextOptions {
 }
 export type RenderContextAncestor = Request | GrpcRequest | WebSocketRequest | RequestGroup | Workspace | Project;
 
-export interface RenderContextOptions extends BaseRenderContextOptions, Partial<BaseRenderContextOptions & { request: Request | GrpcRequest | WebSocketRequest }> {
-  ancestors?: RenderContextAncestor[];
-}
+export type RenderContextOptions = BaseRenderContextOptions
+  & Partial<BaseRenderContextOptions & { request: Request | GrpcRequest | WebSocketRequest }>
+  & { ancestors?: RenderContextAncestor[] };
 
 export type NunjucksTagContextMenuAction = 'edit' | 'delete';
 
