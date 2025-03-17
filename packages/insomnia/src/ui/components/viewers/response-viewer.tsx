@@ -76,7 +76,7 @@ export const ResponseViewer = ({
   const [blockingBecauseTooLarge, setBlockingBecauseTooLarge] = useState(!alwaysShowLargeResponses && largeResponse);
   const [parseError, setParseError] = useState('');
 
-  const [bodyBuffer, setBodyBuffer] = useState<Buffer | null>(null);
+  const [bodyBuffer, setBodyBuffer] = useState<Buffer | null>(Buffer.from('Loading...'));
   useEffect(() => {
     const fn = async () => {
       try {
@@ -92,7 +92,9 @@ export const ResponseViewer = ({
       }
     };
     fn();
-  }, [getBody]);
+    // TODO: remove this when response has its own route loader
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [responseId]);
   const editorRef = useRef<CodeEditorHandle>(null);
 
   const _handleDismissBlocker = useCallback(async () => {
