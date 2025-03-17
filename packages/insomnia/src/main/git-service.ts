@@ -978,6 +978,20 @@ export const updateGitRepoAction = async ({
         gitRepositoryId: gitRepository._id,
       });
     }
+
+    await GitVCS.init({
+      repoId: gitRepository._id,
+      uri,
+      directory: GIT_CLONE_DIR,
+      fs: await getGitFSClient({ projectId, workspaceId, gitRepositoryId: gitRepository._id }),
+      gitDirectory: GIT_INTERNAL_DIR,
+      gitCredentials: gitRepository.credentials,
+      legacyDiff: Boolean(workspaceId),
+    });
+
+    await GitVCS.setAuthor();
+    await GitVCS.addRemote(uri);
+
     const { hasUncommittedChanges } = await getGitChanges(GitVCS);
     const hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
 
@@ -985,8 +999,6 @@ export const updateGitRepoAction = async ({
       hasUncommittedChanges,
       hasUnpushedChanges,
     });
-
-    await GitVCS.setAuthor();
 
     return null;
   } catch (e) {
