@@ -2,6 +2,7 @@ import type { Cookie as InsomniaCookie, CookieJar as InsomniaCookieJar } from 'i
 import { Cookie as ToughCookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
+import { getExistingConsole } from './console';
 import { Property, PropertyList } from './properties';
 
 export interface InsomniaCookieExtensions {
@@ -242,7 +243,7 @@ export class CookieObject extends CookieList {
 }
 
 export class CookieJar {
-    // CookieJar from tough-cookie can not be used, as it will failed in comparing context location and cookies' domain
+    // CookieJar from tough-cookie can not be used, as it will fail in comparing context location and cookies' domain
     // as it reads location from the browser window, it is "localhost"
     private jar: Map<string, Map<string, Cookie>>; // Map<domain, Map<cookieKey, cookieObject>>
     private jarName: string;
@@ -255,7 +256,8 @@ export class CookieJar {
             cookies.forEach(cookie => {
                 const properties = cookie.toJSON();
                 if (!properties.domain) {
-                    throw Error(`domain is not specified for the cookie ${cookie.key}`);
+                    getExistingConsole().warn(`domain is not specified for the cookie "${cookie.key}" so it is omitted`);
+                    return;
                 }
 
                 const domainCookies = this.jar.get(properties.domain) || new Map();
