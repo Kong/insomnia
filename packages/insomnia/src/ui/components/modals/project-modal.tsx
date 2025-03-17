@@ -57,7 +57,7 @@ export const ProjectModal = ({
     username?: string;
     password?: string;
     token?: string;
-    oauth2format: OauthProviderName;
+    oauth2format?: OauthProviderName;
   }>({
     name: project?.name || 'My Project',
     storageType: getDefaultProjectStorageType(storageRule, project),
@@ -67,7 +67,7 @@ export const ProjectModal = ({
     username: gitRepository?.credentials?.username || '',
     password: gitRepository?.credentials && 'password' in gitRepository.credentials ? gitRepository?.credentials?.password : '',
     token: gitRepository?.credentials && 'token' in gitRepository.credentials ? gitRepository?.credentials?.token : '',
-    oauth2format: gitRepository?.credentials && 'oauth2format' in gitRepository.credentials ? gitRepository?.credentials?.oauth2format ?? 'github' : 'github',
+    oauth2format: gitRepository?.credentials && 'oauth2format' in gitRepository.credentials ? gitRepository?.credentials?.oauth2format ?? 'github' : undefined,
   });
 
   const [activeView, setActiveView] = useState<'project' | 'git-clone' | 'git-results' | 'switch-storage-type'>('project');

@@ -5,6 +5,7 @@ import { useFetcher, useParams } from 'react-router-dom';
 
 import { docsGitSync } from '../../../../common/documentation';
 import type { GitRepository, OauthProviderName } from '../../../../models/git-repository';
+import type { GitCredentials } from '../../../../sync/git/git-vcs';
 import { Link } from '../../base/link';
 import { Modal, type ModalHandle, type ModalProps } from '../../base/modal';
 import { ModalBody } from '../../base/modal-body';
@@ -17,6 +18,18 @@ import { CustomRepositorySettingsFormGroup } from './custom-repository-settings-
 import { GitHubRepositorySetupFormGroup } from './github-repository-settings-form-group';
 import { GitLabRepositorySetupFormGroup } from './gitlab-repository-settings-form-group';
 
+function getDefaultOAuthProvider(credentials?: GitCredentials | null): OauthProviderName {
+  if (!credentials) {
+    return 'github';
+  }
+
+  if ('oauth2format' in credentials && credentials.oauth2format) {
+    return credentials.oauth2format;
+  }
+
+  return 'custom';
+}
+
 export const GitRepositorySettingsModal = (props: ModalProps & {
   gitRepository?: GitRepository;
 }) => {
@@ -26,7 +39,7 @@ export const GitRepositorySettingsModal = (props: ModalProps & {
   const updateGitRepositoryFetcher = useFetcher();
   const deleteGitRepositoryFetcher = useFetcher();
 
-  const [selectedTab, setTab] = useState<OauthProviderName>('github');
+  const [selectedTab, setTab] = useState<OauthProviderName>(getDefaultOAuthProvider(gitRepository?.credentials));
 
   useEffect(() => {
     modalRef.current?.show();
