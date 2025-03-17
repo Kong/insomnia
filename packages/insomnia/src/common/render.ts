@@ -71,10 +71,10 @@ export async function buildRenderContext(
     ancestors?: RenderContextAncestor[];
     rootEnvironment?: Environment;
     subEnvironment?: Environment;
-      rootGlobalEnvironment?: Environment | null;
-      subGlobalEnvironment?: Environment | null;
-      userUploadEnvironment?: UserUploadEnvironment;
-      transientVariables?: Environment;
+    rootGlobalEnvironment?: Environment | null;
+    subGlobalEnvironment?: Environment | null;
+    userUploadEnvironment?: UserUploadEnvironment;
+    transientVariables?: Environment;
     baseContext?: Record<string, any>;
   },
 ) {
@@ -332,12 +332,16 @@ export async function render<T>(
         // plugins will not function correctly when rendering in a separate process or thread. The user can
         // explicitly configure rendering to happen on the same thread/process as the rest of the app, in
         // which case it's okay to render locally.
-        const settings = await models.settings.get();
-        const pluginsAllowElevatedAccess = settings?.pluginsAllowElevatedAccess;
-        const shouldUseWorker = process.type === 'renderer' && pluginsAllowElevatedAccess === false;
-        const renderFork = shouldUseWorker
-          ? (await import('../ui/worker/templating-handler')).renderInWorker
-          : renderInThisProcess;
+
+        // TODO: remove this when we're ready to enable this feature
+        const renderFork = renderInThisProcess;
+
+        // const settings = await models.settings.get();
+        // const pluginsAreRestrictedToRunInWorker = settings?.pluginsAllowElevatedAccess === false;
+        // const currentProcessIsRendererAndPluginsAreRestricted = process.type === 'renderer' && pluginsAreRestrictedToRunInWorker;
+        // const renderFork = currentProcessIsRendererAndPluginsAreRestricted
+        //   ? (await import('../ui/worker/templating-handler')).renderInWorker
+        //   : renderInThisProcess;
 
         // @ts-expect-error -- TSCONVERSION
         input = await renderFork({ input, context, path, ignoreUndefinedEnvVariable });
