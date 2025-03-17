@@ -89,7 +89,7 @@ const fetchGraphQLSchemaForRequest = async ({
   requestId: string;
   environmentId: string;
   url: string;
-    inputValueDeprecation: boolean;
+  inputValueDeprecation: boolean;
 }) => {
   if (!url) {
     return;
@@ -158,7 +158,7 @@ const fetchGraphQLSchemaForRequest = async ({
         },
       };
     }
-    const bodyBuffer = models.response.getBodyBuffer(response);
+    const bodyBuffer = await models.response.getBodyBuffer(response);
     if (bodyBuffer) {
       const { data, errors } = JSON.parse(bodyBuffer.toString());
       if (errors?.length) {
