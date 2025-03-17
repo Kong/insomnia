@@ -17,8 +17,8 @@ import type {
   BaseRenderContextOptions,
   RenderContextAncestor,
   RenderContextOptions,
+  RenderedRequest,
   RenderRequest,
-  RequestAndContext,
 } from '../templating/types';
 import * as templatingUtils from '../templating/utils';
 import { setDefaultProtocol } from '../utils/url/protocol';
@@ -585,7 +585,10 @@ export async function getRenderedRequestAndContext(
     purpose,
     ignoreUndefinedEnvVariable,
   }: BaseRenderContextOptions & RenderRequest<Request>,
-): Promise<RequestAndContext> {
+): Promise<{
+  request: RenderedRequest;
+  context: Record<string, any>;
+}> {
   const ancestors = await getRenderContextAncestors(request);
   const workspace = ancestors.find(isWorkspace);
   const requestGroups = ancestors.filter(isRequestGroup);

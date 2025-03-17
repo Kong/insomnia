@@ -32,8 +32,6 @@ export interface RenderContextAndKeys {
   }[];
 }
 
-export type HandleGetRenderContext = (contextCacheKey?: string) => Promise<RenderContextAndKeys>;
-
 export type HandleRender = <T>(object: T, contextCacheKey?: string | null) => Promise<T>;
 
 export interface RenderRequest<T extends Request | GrpcRequest | WebSocketRequest> {
@@ -55,10 +53,6 @@ export type RenderContextAncestor = Request | GrpcRequest | WebSocketRequest | R
 
 export interface RenderContextOptions extends BaseRenderContextOptions, Partial<RenderRequest<Request | GrpcRequest | WebSocketRequest>> {
   ancestors?: RenderContextAncestor[];
-}
-export interface RequestAndContext {
-  request: RenderedRequest;
-  context: Record<string, any>;
 }
 
 export type NunjucksTagContextMenuAction = 'edit' | 'delete';

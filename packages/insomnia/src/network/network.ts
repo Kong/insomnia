@@ -33,7 +33,7 @@ import { isWorkspace, type Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { RenderError } from '../templating/render-error';
-import type { RenderedRequest, RenderPurpose, RequestAndContext } from '../templating/types';
+import type { RenderedRequest, RenderPurpose } from '../templating/types';
 import { maskOrDecryptContextIfNecessary } from '../templating/utils';
 import { defaultSendActionRuntime, type SendActionRuntime } from '../ui/routes/request';
 import { invariant } from '../utils/invariant';
@@ -637,7 +637,10 @@ export const tryToInterpolateRequest = async ({
   }
 };
 
-export const tryToTransformRequestWithPlugins = async (renderResult: RequestAndContext) => {
+export const tryToTransformRequestWithPlugins = async (renderResult: {
+  request: RenderedRequest;
+  context: Record<string, any>;
+}) => {
   const { request, context } = renderResult;
   try {
     return await _applyRequestPluginHooks(request, context);
