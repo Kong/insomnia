@@ -1,3 +1,5 @@
+import { expect } from '@playwright/test';
+
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
@@ -20,6 +22,12 @@ test.describe('Global Environments', async () => {
 
         await page.getByRole('link', { name: 'collection-for-global-' }).click();
         await page.getByTestId('New Request').getByLabel('GET New Request', { exact: true }).click();
+        // check if it appears red with error message in tag editor
+        await page.getByText('Body', { exact: true }).click();
+        await page.getByText('_[\'global-base\']').click();
+        await expect(page.getByLabel('Live Preview')).toContainText('Failed to render environment variables: _[\'global-base\']');
+        await page.getByRole('button', { name: 'Done' }).click();
+        // check if it appears as a custom message when sending the request
         await page.getByRole('button', { name: 'Send' }).click();
         await page.getByRole('heading', { name: '2 environment variables are' }).click();
         await page.getByRole('button', { name: 'Cancel' }).click();
