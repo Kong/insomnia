@@ -18,7 +18,6 @@ import type {
   RenderContextAncestor,
   RenderContextOptions,
   RenderedRequest,
-  RenderRequest,
 } from '../templating/types';
 import * as templatingUtils from '../templating/utils';
 import { setDefaultProtocol } from '../utils/url/protocol';
@@ -531,9 +530,6 @@ export async function getRenderContext(
   });
 }
 
-interface RenderGrpcRequestOptions extends BaseRenderContextOptions, RenderRequest<GrpcRequest> {
-  skipBody?: boolean;
-}
 export async function getRenderedGrpcRequest(
   {
     purpose,
@@ -541,7 +537,7 @@ export async function getRenderedGrpcRequest(
     request,
     environment,
     skipBody,
-  }: RenderGrpcRequestOptions,
+  }: BaseRenderContextOptions & { request: GrpcRequest; skipBody?: boolean },
 ) {
   const renderContext = await getRenderContext({ request, environment, purpose, extraInfo });
   const description = request.description;
@@ -559,14 +555,13 @@ export async function getRenderedGrpcRequest(
   return renderedRequest;
 }
 
-type RenderGrpcRequestMessageOptions = BaseRenderContextOptions & RenderRequest<GrpcRequest>;
 export async function getRenderedGrpcRequestMessage(
   {
     environment,
     request,
     extraInfo,
     purpose,
-  }: RenderGrpcRequestMessageOptions,
+  }: BaseRenderContextOptions & { request: GrpcRequest },
 ) {
   const renderContext = await getRenderContext({ request, environment, purpose, extraInfo });
   // Render request body
@@ -584,7 +579,7 @@ export async function getRenderedRequestAndContext(
     extraInfo,
     purpose,
     ignoreUndefinedEnvVariable,
-  }: BaseRenderContextOptions & RenderRequest<Request>,
+  }: BaseRenderContextOptions & { request: Request },
 ): Promise<{
   request: RenderedRequest;
   context: Record<string, any>;

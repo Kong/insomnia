@@ -34,10 +34,6 @@ export interface RenderContextAndKeys {
 
 export type HandleRender = <T>(object: T, contextCacheKey?: string | null) => Promise<T>;
 
-export interface RenderRequest<T extends Request | GrpcRequest | WebSocketRequest> {
-  request: T;
-}
-
 export interface BaseRenderContextOptions {
   environment?: string | Environment;
   baseEnvironment?: Environment;
@@ -51,7 +47,7 @@ export interface BaseRenderContextOptions {
 }
 export type RenderContextAncestor = Request | GrpcRequest | WebSocketRequest | RequestGroup | Workspace | Project;
 
-export interface RenderContextOptions extends BaseRenderContextOptions, Partial<RenderRequest<Request | GrpcRequest | WebSocketRequest>> {
+export interface RenderContextOptions extends BaseRenderContextOptions, Partial<BaseRenderContextOptions & { request: Request | GrpcRequest | WebSocketRequest }> {
   ancestors?: RenderContextAncestor[];
 }
 
