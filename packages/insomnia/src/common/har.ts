@@ -18,8 +18,7 @@ import { getAppVersion } from './constants';
 import { jarFromCookies } from './cookies';
 import { database } from './database';
 import { filterHeaders, getSetCookieHeaders, hasAuthHeader } from './misc';
-import type { RenderedRequest } from './render';
-import { getRenderedRequestAndContext } from './render';
+import { getRenderedRequestAndContext, type RenderedRequest } from './render';
 
 export interface ExportRequest {
   requestId: string;
@@ -144,7 +143,7 @@ export async function exportHarResponse(response: Response | null) {
     httpVersion: 'HTTP/1.1',
     cookies: getResponseCookies(response),
     headers: getResponseHeaders(response),
-    content: getResponseContent(response),
+    content: await getResponseContent(response),
     redirectURL: '',
     headersSize: -1,
     bodySize: -1,
@@ -343,8 +342,8 @@ function mapCookie(cookie: ToughCookie) {
   return harCookie;
 }
 
-function getResponseContent(response: Response) {
-  let body = models.response.getBodyBuffer(response);
+async function getResponseContent(response: Response) {
+  let body = await models.response.getBodyBuffer(response);
 
   if (body === null) {
     body = Buffer.alloc(0);
