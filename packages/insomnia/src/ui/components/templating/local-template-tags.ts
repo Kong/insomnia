@@ -9,9 +9,7 @@ import * as uuid from 'uuid';
 
 import type { RenderPurpose } from '../../../common/render';
 import type { ExternalVaultConfig } from '../../../main/ipc/cloud-service-integration/types';
-import * as models from '../../../models';
 import type { CloudProviderCredential, CloudProviderName } from '../../../models/cloud-credential';
-import { vaultEnvironmentMaskValue } from '../../../models/environment';
 import type { Request, RequestParameter } from '../../../models/request';
 import type { Response } from '../../../models/response';
 import type { TemplateTag } from '../../../plugins';
@@ -62,7 +60,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         if (!credentialId) {
           throw new Error('Get secret from external vault failed: Credential is required');
         };
-        const providerCredential = await models.cloudCredential.getById(credentialId);
+        const providerCredential = await context.util.models.cloudCredential.getById(credentialId);
         if (!providerCredential) {
           throw new Error('Get secret from external vault failed: No Cloud Credential found');
         }
@@ -75,9 +73,9 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           } catch (error) {
             throw new Error('Get secret from external vault failed: Invalid vault secret config');
           }
-          return getExternalVault(provider, providerCredential, secretConfig as ExternalVaultConfig);
+          return getExternalVault(context, provider, providerCredential, secretConfig as ExternalVaultConfig);
         }
-        return vaultEnvironmentMaskValue;
+        return '••••••';
       },
     },
   },

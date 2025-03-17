@@ -64,13 +64,13 @@ const setCacheMaxAge = (newAge: number, unit: MaxAgeUnit = 'min') => {
 };
 
 // authenticate with cloud service provider
-const cloudServiceProviderAuthentication = (options: CloudServiceAuthOption) => {
+export const cloudServiceProviderAuthentication = (options: CloudServiceAuthOption) => {
   const { provider, credentials } = options;
   const cloudService = ServiceFactory.createCloudService(provider, credentials);
   return cloudService.authenticate();
 };
 
-const getSecret = async (options: CloudServiceSecretOption) => {
+export const getSecret = async (options: CloudServiceSecretOption) => {
   const { provider, credentials, secretId, config } = options;
   const cloudService = ServiceFactory.createCloudService(provider, credentials);
   const uniqueSecretKey = cloudService.getUniqueCacheKey(secretId, config as any);

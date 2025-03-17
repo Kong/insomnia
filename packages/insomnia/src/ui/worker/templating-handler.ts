@@ -36,10 +36,13 @@ export function renderInWorker({ input, context, path, ignoreUndefinedEnvVariabl
         if (event.data.err) {
           const error = new RenderError(event.data.err);
           error.type = 'render';
-          error.extraInfo = {
-            subType: 'environmentVariable',
-            undefinedEnvironmentVariables: extractUndefinedVariableKey(input, newContext),
-          };
+          const undefinedEnvironmentVariables = extractUndefinedVariableKey(input, newContext);
+          if (undefinedEnvironmentVariables.length > 0) {
+            error.extraInfo = {
+              subType: 'environmentVariable',
+              undefinedEnvironmentVariables,
+            };
+          }
           return reject(error);
         }
         return resolve(event.data.result);

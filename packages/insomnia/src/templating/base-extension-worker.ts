@@ -121,6 +121,26 @@ export default class BaseExtension {
           templating.render(str, {
             context: renderContext,
           }),
+        externalVault: {
+          getSecret: async (options: any) => {
+            const resp = await fetch('insomnia-templating-worker-database://cloudService.getSecret', {
+              method: 'post',
+              body: JSON.stringify({ options }),
+            });
+
+            const req = await resp.json();
+            return req;
+          },
+          authenticate: async (options: any) => {
+            const resp = await fetch('insomnia-templating-worker-database://cloudService.authenticate', {
+              method: 'post',
+              body: JSON.stringify({ options }),
+            });
+
+            const req = await resp.json();
+            return req;
+          },
+        },
         models: {
           request: {
             getById: async (id: string) => {
@@ -151,6 +171,26 @@ export default class BaseExtension {
 
               const workspace = await resp.json();
               return workspace;
+            },
+          },
+          cloudCredential: {
+            getById: async (id: string) => {
+              const resp = await fetch('insomnia-templating-worker-database://cloudCredential.getById', {
+                method: 'post',
+                body: JSON.stringify({ id }),
+              });
+
+              const cloudCredential = await resp.json();
+              return cloudCredential;
+            },
+            update: async (originCredential: any, patch: any) => {
+              const resp = await fetch('insomnia-templating-worker-database://cloudCredential.update', {
+                method: 'post',
+                body: JSON.stringify({ originCredential, patch }),
+              });
+
+              const updated = await resp.json();
+              return updated;
             },
           },
           oAuth2Token: {

@@ -127,6 +127,10 @@ export default class BaseExtension {
               return ancestors.filter(doc => doc._id !== request._id);
             },
           },
+          cloudCredential: {
+            getById: models.cloudCredential.getById,
+            update: models.cloudCredential.update,
+          },
           workspace: {
             getById: models.workspace.getById,
           },
