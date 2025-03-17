@@ -17,9 +17,7 @@ import {
   type WebSocketRequest,
 } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
-import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '../sync/vcs/initialize-backend-project';
-import { VCSInstance } from '../sync/vcs/insomnia-sync';
-import { type CurrentPlan, fetchAndCacheOrganizationStorageRule } from '../ui/routes/organization';
+import type { CurrentPlan } from '../ui/routes/organization';
 import { convert, type InsomniaImporter } from '../utils/importers/convert';
 import { id as postmanEnvImporterId } from '../utils/importers/importers/postman-env';
 import { invariant } from '../utils/invariant';
@@ -497,6 +495,10 @@ const importResourcesToNewWorkspace = async (
   // since we won't navigate to the workspace automatically after import
   // here we push to the cloud programmatically
   await (async function syncNewWorkspaceIfNeeded(newWorkspace: Workspace) {
+    const { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } = await import('../sync/vcs/initialize-backend-project');
+    const { VCSInstance } = await import('../sync/vcs/insomnia-sync');
+    const { fetchAndCacheOrganizationStorageRule } = await import('../ui/routes/organization');
+
     const project = await models.project.getById(newWorkspace.parentId);
     invariant(project, 'Project not found');
     const userSession = await models.userSession.getOrCreate();
