@@ -3,7 +3,7 @@ import orderedJSON from 'json-order';
 
 import * as models from '../models';
 import { type Environment, type UserUploadEnvironment, vaultEnvironmentPath, vaultEnvironmentRuntimePath } from '../models/environment';
-import type { GrpcRequest } from '../models/grpc-request';
+import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
 import { isProject } from '../models/project';
 import { PATH_PARAMETER_REGEX, type Request } from '../models/request';
 import { isRequestGroup } from '../models/request-group';
@@ -17,10 +17,7 @@ import type {
   BaseRenderContextOptions,
   RenderContextAncestor,
   RenderContextOptions,
-  RenderedGrpcRequest,
-  RenderedGrpcRequestBody,
   RenderRequest,
-  RenderRequestOptions,
   RequestAndContext,
 } from '../templating/types';
 import * as templatingUtils from '../templating/utils';
@@ -553,7 +550,7 @@ export async function getRenderedGrpcRequest(
   // Ignore body by default and only include if specified to
   const ignorePathRegex = skipBody ? /^body.*/ : null;
   // Render all request properties
-  const renderedRequest: RenderedGrpcRequest = await render(
+  const renderedRequest: GrpcRequest = await render(
     request,
     renderContext,
     ignorePathRegex,
@@ -573,7 +570,7 @@ export async function getRenderedGrpcRequestMessage(
 ) {
   const renderContext = await getRenderContext({ request, environment, purpose, extraInfo });
   // Render request body
-  const renderedBody: RenderedGrpcRequestBody = await render(request.body, renderContext);
+  const renderedBody: GrpcRequestBody = await render(request.body, renderContext);
   return renderedBody;
 }
 
@@ -587,7 +584,7 @@ export async function getRenderedRequestAndContext(
     extraInfo,
     purpose,
     ignoreUndefinedEnvVariable,
-  }: RenderRequestOptions,
+  }: BaseRenderContextOptions & RenderRequest<Request>,
 ): Promise<RequestAndContext> {
   const ancestors = await getRenderContextAncestors(request);
   const workspace = ancestors.find(isWorkspace);

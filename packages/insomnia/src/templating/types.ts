@@ -1,6 +1,6 @@
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
-import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
+import type { GrpcRequest } from '../models/grpc-request';
 import type { Project } from '../models/project';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
@@ -12,8 +12,6 @@ import type { PluginStore } from '../plugins/context';
 import type { AppContext } from '../plugins/context/app';
 import type { extractNunjucksTagFromCoords } from './utils';
 
-export const KEEP_ON_ERROR = 'keep';
-export const THROW_ON_ERROR = 'throw';
 export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
 
 export type RenderedRequest = Request & {
@@ -25,10 +23,6 @@ export type RenderedRequest = Request & {
   cookieJar: CookieJar;
   suppressUserAgent: boolean;
 };
-
-export type RenderedGrpcRequest = GrpcRequest;
-
-export type RenderedGrpcRequestBody = GrpcRequestBody;
 
 export interface RenderContextAndKeys {
   context: Record<string, any>;
@@ -62,7 +56,6 @@ export type RenderContextAncestor = Request | GrpcRequest | WebSocketRequest | R
 export interface RenderContextOptions extends BaseRenderContextOptions, Partial<RenderRequest<Request | GrpcRequest | WebSocketRequest>> {
   ancestors?: RenderContextAncestor[];
 }
-export type RenderRequestOptions = BaseRenderContextOptions & RenderRequest<Request>;
 export interface RequestAndContext {
   request: RenderedRequest;
   context: Record<string, any>;
