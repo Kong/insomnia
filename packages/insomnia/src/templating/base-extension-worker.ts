@@ -1,5 +1,5 @@
-
-import type { PluginTemplateTag } from './extensions';
+import type { Plugin } from '../plugins/index';
+import type { PluginTemplateTag, PluginTemplateTagContext } from './types';
 import * as templating from './worker';
 export function decodeEncoding<T>(value: T) {
   if (typeof value !== 'string') {
@@ -53,7 +53,6 @@ export default class BaseExtension {
 
   getLiveDisplayName() {
     return (
-      // @ts-expect-error -- TSCONVERSION
       this._ext?.liveDisplayName ||
       (() => '')
     );
@@ -75,9 +74,8 @@ export default class BaseExtension {
     return this._ext?.deprecated || false;
   }
 
-  run(...args: any[]) {
-    // @ts-expect-error -- TSCONVERSION
-    return this._ext?.run(...args);
+  run(context: PluginTemplateTagContext, ...arg: any[]) {
+    return this._ext?.run(context, ...arg);
   }
 
   parse(parser: any, nodes: any, lexer: any) {
@@ -109,10 +107,13 @@ export default class BaseExtension {
       .filter(a => a !== EMPTY_ARG)
       .map(decodeEncoding);
     // Define a helper context with utils
-    const helperContext: HelperContext = {
-      // ...pluginContexts.app.init(renderPurpose),
-      // ...pluginContexts.store.init(this._plugin),
-      // ...pluginContexts.network.init(),
+    const helperContext: PluginTemplateTagContext = {
+      // @ts-expect-error -- TODO
+      app: {},
+      // @ts-expect-error -- TODO
+      store: {},
+      // @ts-expect-error -- TODO
+      network: {},
       context: renderContext,
       meta: renderMeta,
       renderPurpose,
