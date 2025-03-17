@@ -96,7 +96,7 @@ describe('getKeys()', () => {
   it('ignores functions', () => {
     const obj = {
       foo: 'bar',
-      toString: function() {
+      toString: function () {
         // Nothing
       },
     };

@@ -14,7 +14,7 @@ const regex = {
 };
 
 const ObjectPath = {
-    parse: function(str: string) {
+    parse: function (str: string) {
         if (typeof str !== 'string') {
             throw new TypeError('ObjectPath.parse must be passed a string');
         }
@@ -79,7 +79,7 @@ const ObjectPath = {
                         closing = str.length;
                     }
 
-                    parts.push(str.slice(i + 2, closing).replace(regex[quote], quote).replace(/\\+/g, function(backslash) {
+                    parts.push(str.slice(i + 2, closing).replace(regex[quote], quote).replace(/\\+/g, function (backslash) {
                         return new Array(Math.ceil(backslash.length / 2) + 1).join('\\');
                     }));
                     i = (str.slice(closing + 2, closing + 3) === '.') ? closing + 3 : closing + 2;
@@ -91,7 +91,7 @@ const ObjectPath = {
 
     // root === true : auto calculate root; must be dot-notation friendly
     // root String : the string to use as root
-    stringify: function(arr: (string | number)[], quote?: Quote, forceQuote?: boolean) {
+    stringify: function (arr: (string | number)[], quote?: Quote, forceQuote?: boolean) {
         if (!Array.isArray(arr)) {
             arr = [arr];
         }
@@ -99,7 +99,7 @@ const ObjectPath = {
         quote = (quote === '"') ? '"' : "'";
         const regexp = new RegExp('(\\\\|' + quote + ')', 'g'); // regex => /(\\|')/g
 
-        return arr.map(function(value: string | number, key: number) {
+        return arr.map(function (value: string | number, key: number) {
             let property = value.toString();
             if (!forceQuote && /^[A-z_]\w*$/.exec(property)) { // str with only A-z0-9_ chars will display `foo.bar`
                 return (key !== 0) ? '.' + property : property;
@@ -112,7 +112,7 @@ const ObjectPath = {
         }).join('');
     },
 
-    normalize: function(data: string, quote?: Quote, forceQuote?: boolean) {
+    normalize: function (data: string, quote?: Quote, forceQuote?: boolean) {
         return ObjectPath.stringify(Array.isArray(data) ? data : ObjectPath.parse(data), quote, forceQuote);
     },
 };

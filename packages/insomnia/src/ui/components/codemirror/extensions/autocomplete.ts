@@ -42,7 +42,7 @@ const ICONS = {
   },
 };
 
-CodeMirror.defineExtension('isHintDropdownActive', function(this: CodeMirror.Editor) {
+CodeMirror.defineExtension('isHintDropdownActive', function (this: CodeMirror.Editor) {
   return (
     this.state.completionActive &&
     this.state.completionActive.data &&
@@ -51,7 +51,7 @@ CodeMirror.defineExtension('isHintDropdownActive', function(this: CodeMirror.Edi
   );
 });
 
-CodeMirror.defineExtension('closeHintDropdown', function(this: CodeMirror.Editor) {
+CodeMirror.defineExtension('closeHintDropdown', function (this: CodeMirror.Editor) {
   this.state.completionActive?.close();
 });
 

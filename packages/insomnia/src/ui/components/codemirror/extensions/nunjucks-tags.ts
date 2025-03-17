@@ -7,7 +7,7 @@ import { tokenizeTag } from '../../../../templating/utils';
 import { showModal } from '../../modals/index';
 import { NunjucksModal } from '../../modals/nunjucks-modal';
 
-CodeMirror.defineExtension('enableNunjucksTags', function(
+CodeMirror.defineExtension('enableNunjucksTags', function (
   this: CodeMirror.Editor,
   handleRender: HandleRender,
   handleGetRenderContext: HandleGetRenderContext,
@@ -140,7 +140,7 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
         replacedWith: el,
       });
 
-      (async function() {
+      (async function () {
         await _updateElementText(
           renderString,
           mark,
