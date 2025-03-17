@@ -177,7 +177,13 @@ export interface BaseRenderContext {
   getGlobalEnvironmentId: () => string | undefined;
   getProjectId: () => string | undefined;
 }
-export interface HelperContext {
+
+export interface PluginTemplateTagContext {
+  app: AppContext;
+  store: PluginStore;
+  network: {
+    sendRequest(request: Request, extraInfo?: { name: string; value: any }[]): Promise<Response>;
+  };
   context: BaseRenderContext & {
     value: string | number;
   };
@@ -200,14 +206,6 @@ export interface HelperContext {
     };
   };
 }
-
-export type PluginTemplateTagContext = HelperContext & {
-  app: AppContext;
-  store: PluginStore;
-  network: {
-    sendRequest(request: Request, extraInfo?: { name: string; value: any }[]): Promise<Response>;
-  };
-};
 
 export interface PluginTemplateTagActionContext {
   store: PluginStore;
