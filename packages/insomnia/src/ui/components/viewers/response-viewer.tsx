@@ -2,6 +2,7 @@ import iconv from 'iconv-lite';
 import React, {
   Fragment,
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from 'react';
@@ -46,7 +47,7 @@ export interface ResponseViewerProps {
   editorFontSize: number;
   filter: string;
   filterHistory: string[];
-  getBody: (...args: any[]) => any;
+  getBody: (...args: any[]) => Promise<Buffer | string | null>;
   previewMode: string;
   responseId: string;
   url: string;
@@ -75,26 +76,36 @@ export const ResponseViewer = ({
   const [blockingBecauseTooLarge, setBlockingBecauseTooLarge] = useState(!alwaysShowLargeResponses && largeResponse);
   const [parseError, setParseError] = useState('');
 
-  const [bodyBuffer, setBodyBuffer] = useState<Buffer | null>(() => {
-    let initialBody = null;
-    try {
-      if (!blockingBecauseTooLarge) {
-        initialBody = getBody();
+  const [bodyBuffer, setBodyBuffer] = useState<Buffer | null>(null);
+  useEffect(() => {
+    const fn = async () => {
+      try {
+        const bodyBuffer = await getBody();
+        if (typeof bodyBuffer === 'string') {
+          return setParseError(bodyBuffer);
+        }
+        if (bodyBuffer !== null) {
+          return setBodyBuffer(bodyBuffer);
+        }
+      } catch (err) {
+        setParseError(`Failed reading response from filesystem: ${err.stack}`);
       }
-    } catch (err) {
-      setParseError(`Failed reading response from filesystem: ${err.stack}`);
-    }
-    return initialBody;
-  });
-
+    };
+    fn();
+  }, [getBody]);
   const editorRef = useRef<CodeEditorHandle>(null);
 
-  const _handleDismissBlocker = useCallback(() => {
+  const _handleDismissBlocker = useCallback(async () => {
     setBlockingBecauseTooLarge(false);
 
     try {
-      const bodyBuffer = getBody();
-      setBodyBuffer(bodyBuffer);
+      const bodyBuffer = await getBody();
+      if (typeof bodyBuffer === 'string') {
+        return setParseError(bodyBuffer);
+      }
+      if (bodyBuffer !== null) {
+        return setBodyBuffer(bodyBuffer);
+      }
       setBlockingBecauseTooLarge(false);
     } catch (err) {
       setParseError(`Failed reading response from filesystem: ${err.stack}`);
@@ -403,5 +414,3 @@ export const ResponseViewer = ({
     />
   );
 };
-
-ResponseViewer.displayName = 'ResponseViewer';
