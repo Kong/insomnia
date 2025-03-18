@@ -1879,7 +1879,7 @@ async function completeSignInToGitHub({
   ]);
 
   const userProfileEmail = user.email ?? '';
-  const email = emails.find(e => e.primary)?.email ?? userProfileEmail;
+  const email = emails.find(e => e.primary)?.email ?? userProfileEmail ?? '';
 
   if (existingGitHubCredentials) {
     await models.gitCredentials.update(existingGitHubCredentials, {
@@ -1887,7 +1887,7 @@ async function completeSignInToGitHub({
       provider: 'githubapp',
       author: {
         email,
-        name: user.name,
+        name: user.name ?? user.login ?? '',
         avatarUrl: user.avatar_url,
       },
     });
@@ -1897,7 +1897,7 @@ async function completeSignInToGitHub({
       provider: 'githubapp',
       author: {
         email,
-        name: user.name,
+        name: user.name ?? user.login ?? '',
         avatarUrl: user.avatar_url,
       },
     });
@@ -2152,8 +2152,8 @@ async function completeSignInToGitLab({
       refreshToken: refresh_token,
       provider: 'gitlab',
       author: {
-        email: user.commit_email ?? user.public_email ?? user.email,
-        name: user.username ?? user.name,
+        email: user.commit_email ?? user.public_email ?? user.email ?? '',
+        name: user.username ?? user.name ?? '',
         avatarUrl: user.avatar_url,
       },
     });
@@ -2164,8 +2164,8 @@ async function completeSignInToGitLab({
     refreshToken: refresh_token,
     provider: 'gitlab',
     author: {
-      email: user.commit_email ?? user.public_email ?? user.email,
-      name: user.username ?? user.name,
+      email: user.commit_email ?? user.public_email ?? user.email ?? '',
+      name: user.username ?? user.name ?? '',
       avatarUrl: user.avatar_url,
     },
   });
