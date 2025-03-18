@@ -611,7 +611,7 @@ export const tryToInterpolateRequest = async ({
   request: Request;
   environment: string | Environment;
   purpose?: RenderPurpose;
-  extraInfo?: { name: string; value: any }[];
+  extraInfo?: { name: 'requestChain'; value: string }[];
   baseEnvironment?: Environment;
   userUploadEnvironment?: UserUploadEnvironment;
   transientVariables?: Environment;

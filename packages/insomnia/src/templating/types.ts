@@ -26,14 +26,14 @@ export type RenderedRequest = Request & {
 };
 
 export interface RenderContextAndKeys {
-  context: Record<string, any>;
+  context: BaseRenderContext;
   keys: {
     name: string;
     value: any;
   }[];
 }
 
-export type HandleRender = <T>(object: T, contextCacheKey?: string | null) => Promise<T>;
+export type HandleRender = <T>(whatever: T, contextCacheKey?: string | null) => Promise<T>;
 
 export interface BaseRenderContextOptions {
   environment?: string | Environment;
@@ -43,7 +43,7 @@ export interface BaseRenderContextOptions {
   userUploadEnvironment?: UserUploadEnvironment;
   transientVariables?: Environment;
   purpose?: RenderPurpose;
-  extraInfo?: { name: string; value: any }[];
+  extraInfo?: { name: 'requestChain'; value: string }[];
   ignoreUndefinedEnvVariable?: boolean;
 }
 export type RenderContextAncestor = Request | GrpcRequest | WebSocketRequest | RequestGroup | Workspace | Project;
@@ -154,7 +154,7 @@ export type PluginArgument =
 
 export interface BaseRenderContext {
   getMeta: () => {};
-  getKeysContext: () => {};
+  getKeysContext: () => { keyContext: any };
   getPurpose: () => RenderPurpose | undefined;
   getExtraInfo: (key: string) => string[] | null;
   getEnvironmentId: () => string | undefined;

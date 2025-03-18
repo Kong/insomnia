@@ -5,7 +5,7 @@ import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInt
 export function init() {
   return {
     network: {
-      async sendRequest(req: Request, extraInfo?: { name: string; value: any }[]) {
+      async sendRequest(req: Request, extraInfo?: { name: 'requestChain'; value: string }[]) {
         const { request,
           environment,
           settings,

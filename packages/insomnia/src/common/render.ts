@@ -508,8 +508,7 @@ export async function getRenderContext(
         return null;
       }
 
-      const p = extraInfo.find(v => v.name === key);
-      return p ? p.value : null;
+      return extraInfo.filter(v => v.name === key).map(v => v.value);
     },
     getEnvironmentId: () => subEnvironmentId,
     getGlobalEnvironmentId: () => subGlobalEnvironment?._id || rootGlobalEnvironment?._id,
