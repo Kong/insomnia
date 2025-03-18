@@ -6,7 +6,6 @@ import { parseApiSpec } from '../../../common/api-specs';
 import { getProductName } from '../../../common/constants';
 import { exportGlobalEnvironmentToFile, exportMockServerToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { ApiSpec } from '../../../models/api-spec';
 import type { MockServer } from '../../../models/mock-server';
 import { isRemoteProject, type Project } from '../../../models/project';
@@ -50,7 +49,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
 
     try {
       const context = {
-        ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
+        ...pluginContexts.app.init('no-render'),
         ...pluginContexts.data.init(project._id),
         ...pluginContexts.store.init(p.plugin),
       };

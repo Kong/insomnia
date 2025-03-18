@@ -1,8 +1,8 @@
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import type { RenderPurpose } from '../../../common/render';
 import { vaultEnvironmentMaskValue, vaultEnvironmentRuntimePath } from '../../../models/environment';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
+import type { RenderPurpose } from '../../../templating/types';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 
 interface Props {

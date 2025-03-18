@@ -5,7 +5,6 @@ import { useFetcher, useParams } from 'react-router-dom';
 
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
-import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { PlatformKeyCombinations } from '../../../common/settings';
 import type { Environment } from '../../../models/environment';
 import type { GrpcRequest } from '../../../models/grpc-request';
@@ -90,7 +89,7 @@ export const RequestActionsDropdown = ({
   const handlePluginClick = async ({ plugin, action }: RequestAction) => {
     try {
       const context = {
-        ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER)),
+        ...(pluginContexts.app.init('no-render')),
         ...pluginContexts.data.init(activeProject._id),
         ...(pluginContexts.store.init(plugin)),
         ...(pluginContexts.network.init()),

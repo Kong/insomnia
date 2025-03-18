@@ -1,6 +1,6 @@
 import React, { type FC, PureComponent } from 'react';
 
-import type { HandleRender } from '../../common/render';
+import type { HandleRender } from '../../templating/types';
 import { useNunjucks } from '../context/nunjucks/use-nunjucks';
 
 interface Props {
@@ -68,5 +68,5 @@ class RenderedTextInternal extends PureComponent<Props, State> {
 export const RenderedText: FC<Omit<Props, 'render'>> = props => {
   const { handleRender } = useNunjucks();
 
-  return <RenderedTextInternal {...props} render={handleRender}/>;
+  return <RenderedTextInternal {...props} render={handleRender} />;
 };

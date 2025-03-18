@@ -2,7 +2,8 @@ import type { IpcMainEvent, IpcMainInvokeEvent, MenuItemConstructorOptions, Open
 import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, shell } from 'electron';
 
 import { fnOrString } from '../../common/misc';
-import { extractNunjucksTagFromCoords, type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '../../templating/utils';
+import { type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '../../templating/types';
+import { extractNunjucksTagFromCoords } from '../../templating/utils';
 import { localTemplateTags } from '../../ui/components/templating/local-template-tags';
 import { invariant } from '../../utils/invariant';
 

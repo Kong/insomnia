@@ -10,7 +10,8 @@ import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
 import * as misc from '../../../common/misc';
 import type { KeyCombination } from '../../../common/settings';
 import { getTagDefinitions } from '../../../templating/index';
-import { extractNunjucksTagFromCoords, type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '../../../templating/utils';
+import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '../../../templating/types';
+import { extractNunjucksTagFromCoords } from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '../../hooks/use-editor-refresh';
 import { usePlanData } from '../../hooks/use-plan';
@@ -245,17 +246,17 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   }, [readOnly, getKeyMap]);
 
   useEffect(() => {
-      // Prevent these things if we're type === "password"
-      const preventDefault = (_: CodeMirror.Editor, event: Event) => type?.toLowerCase() === 'password' && event.preventDefault();
-      codeMirror.current?.on('copy', preventDefault);
-      codeMirror.current?.on('cut', preventDefault);
-      codeMirror.current?.on('dragstart', preventDefault);
+    // Prevent these things if we're type === "password"
+    const preventDefault = (_: CodeMirror.Editor, event: Event) => type?.toLowerCase() === 'password' && event.preventDefault();
+    codeMirror.current?.on('copy', preventDefault);
+    codeMirror.current?.on('cut', preventDefault);
+    codeMirror.current?.on('dragstart', preventDefault);
 
-      return () => {
-        codeMirror.current?.off('copy', preventDefault);
-        codeMirror.current?.off('cut', preventDefault);
-        codeMirror.current?.off('dragstart', preventDefault);
-      };
+    return () => {
+      codeMirror.current?.off('copy', preventDefault);
+      codeMirror.current?.off('cut', preventDefault);
+      codeMirror.current?.off('dragstart', preventDefault);
+    };
   }, [type]);
 
   useEffect(() => {

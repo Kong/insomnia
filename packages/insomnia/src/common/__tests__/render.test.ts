@@ -477,15 +477,15 @@ describe('render tests', () => {
         hash_input_expected: '123456789012345ThisIsATopSecretValue',
         orderId: 123456789012345,
         password:
-        'ea84d15f33d3f9e9098fe01659b1ea0599d345770bba20ba98bf9056676a83ffe6b5528b2451ad04badbf690cf3009a94c510121cc6897045f8bb4ba0826134c',
+          'ea84d15f33d3f9e9098fe01659b1ea0599d345770bba20ba98bf9056676a83ffe6b5528b2451ad04badbf690cf3009a94c510121cc6897045f8bb4ba0826134c',
         password_expected:
-        'ea84d15f33d3f9e9098fe01659b1ea0599d345770bba20ba98bf9056676a83ffe6b5528b2451ad04badbf690cf3009a94c510121cc6897045f8bb4ba0826134c',
+          'ea84d15f33d3f9e9098fe01659b1ea0599d345770bba20ba98bf9056676a83ffe6b5528b2451ad04badbf690cf3009a94c510121cc6897045f8bb4ba0826134c',
         secret: 'ThisIsATopSecretValue',
       });
     });
 
     it('works with minimal parameters', async () => {
-      const context = await renderUtils.buildRenderContext({ });
+      const context = await renderUtils.buildRenderContext({});
       expect(context).toEqual({});
     });
   });
@@ -572,7 +572,7 @@ describe('render tests', () => {
         template,
         context,
         null,
-        renderUtils.KEEP_ON_ERROR,
+        'keep',
       );
       expect(resultOnlyVars).toBe('{{ foo }} {% invalid "hi" %}');
 

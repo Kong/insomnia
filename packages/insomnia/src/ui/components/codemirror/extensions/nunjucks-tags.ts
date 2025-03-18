@@ -1,8 +1,8 @@
 import CodeMirror, { type Token } from 'codemirror';
 
 import * as misc from '../../../../common/misc';
-import type { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import { getTagDefinitions } from '../../../../templating/index';
+import type { HandleRender, RenderContextAndKeys } from '../../../../templating/types';
 import { tokenizeTag } from '../../../../templating/utils';
 import { showModal } from '../../modals/index';
 import { NunjucksModal } from '../../modals/nunjucks-modal';
@@ -10,7 +10,7 @@ import { NunjucksModal } from '../../modals/nunjucks-modal';
 CodeMirror.defineExtension('enableNunjucksTags', function (
   this: CodeMirror.Editor,
   handleRender: HandleRender,
-  handleGetRenderContext: HandleGetRenderContext,
+  handleGetRenderContext: (contextCacheKey?: string) => Promise<RenderContextAndKeys>,
   showVariableSourceAndValue = false,
   editorId = '',
 ) {
@@ -47,7 +47,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function (
 },
 );
 
-async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRender, renderContext: HandleGetRenderContext, showVariableSourceAndValue: boolean, editorId: string) {
+async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRender, renderContext: (contextCacheKey?: string) => Promise<RenderContextAndKeys>, showVariableSourceAndValue: boolean, editorId: string) {
   const renderCacheKey = Math.random() + '';
 
   const renderString = (text: any) => render(text, renderCacheKey);
@@ -271,7 +271,7 @@ async function _updateElementText(
   render: HandleRender,
   mark: CodeMirror.TextMarker<CodeMirror.MarkerRange>,
   text: string,
-  renderContext: HandleGetRenderContext,
+  renderContext: (contextCacheKey?: string) => Promise<RenderContextAndKeys>,
   showVariableSourceAndValue: boolean
 ) {
   const el = mark.replacedWith!;

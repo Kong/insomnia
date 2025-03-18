@@ -89,7 +89,7 @@ export interface PluginConfig {
   disabled: boolean;
 }
 
-export type PluginConfigMap = Record<string, PluginConfig>;
+export type PluginConfigMap = Record<string, { disabled: boolean }>;
 
 export interface Settings {
   autoDetectColorScheme: boolean;

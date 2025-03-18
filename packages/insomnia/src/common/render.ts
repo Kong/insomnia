@@ -2,60 +2,28 @@ import clone from 'clone';
 import orderedJSON from 'json-order';
 
 import * as models from '../models';
-import type { CookieJar } from '../models/cookie-jar';
 import { type Environment, type UserUploadEnvironment, vaultEnvironmentPath, vaultEnvironmentRuntimePath } from '../models/environment';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
-import { isProject, type Project } from '../models/project';
+import { isProject } from '../models/project';
 import { PATH_PARAMETER_REGEX, type Request } from '../models/request';
-import { isRequestGroup, type RequestGroup } from '../models/request-group';
+import { isRequestGroup } from '../models/request-group';
 import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
 import * as templating from '../templating';
 import { RenderError } from '../templating/render-error';
+import type {
+  BaseRenderContext,
+  BaseRenderContextOptions,
+  RenderContextAncestor,
+  RenderContextOptions,
+  RenderedRequest,
+} from '../templating/types';
 import * as templatingUtils from '../templating/utils';
+import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
 import { setDefaultProtocol } from '../utils/url/protocol';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
-
-export const KEEP_ON_ERROR = 'keep';
-export const THROW_ON_ERROR = 'throw';
-export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
-export const RENDER_PURPOSE_SEND: RenderPurpose = 'send';
-export const RENDER_PURPOSE_GENERAL: RenderPurpose = 'general';
-export const RENDER_PURPOSE_NO_RENDER: RenderPurpose = 'no-render';
-
-/** Key/value pairs to be provided to the render context */
-export type ExtraRenderInfo = {
-  name: string;
-  value: any;
-}[];
-
-export type RenderedRequest = Request & {
-  cookies: {
-    name: string;
-    value: string;
-    disabled?: boolean;
-  }[];
-  cookieJar: CookieJar;
-  suppressUserAgent: boolean;
-};
-
-export type RenderedGrpcRequest = GrpcRequest;
-
-export type RenderedGrpcRequestBody = GrpcRequestBody;
-
-export interface RenderContextAndKeys {
-  context: Record<string, any>;
-  keys: {
-    name: string;
-    value: any;
-  }[];
-}
-
-export type HandleGetRenderContext = (contextCacheKey?: string) => Promise<RenderContextAndKeys>;
-
-export type HandleRender = <T>(object: T, contextCacheKey?: string | null) => Promise<T>;
 
 export async function buildRenderContext(
   {
@@ -66,7 +34,7 @@ export async function buildRenderContext(
     subGlobalEnvironment,
     userUploadEnvironment,
     transientVariables,
-    baseContext = {},
+    baseContext,
   }: {
     ancestors?: RenderContextAncestor[];
     rootEnvironment?: Environment;
@@ -75,9 +43,9 @@ export async function buildRenderContext(
     subGlobalEnvironment?: Environment | null;
     userUploadEnvironment?: UserUploadEnvironment;
     transientVariables?: Environment;
-    baseContext?: Record<string, any>;
+    baseContext: BaseRenderContext;
   },
-) {
+): Promise<BaseRenderContext> {
   const envObjects: Record<string, any>[] = [];
 
   if (rootGlobalEnvironment) {
@@ -158,12 +126,12 @@ export async function buildRenderContext(
   // ordered by its property map.
   // Do an Object.assign, but render each property as it overwrites. This
   // way we can keep same-name variables from the parent context.
-  let renderContext = baseContext;
+  const renderContext = baseContext;
 
   // Made the rendering into a recursive function to handle nested Objects
   async function renderSubContext(
     subObject: Record<string, any>,
-    subContext: Record<string, any>,
+    subContext: BaseRenderContext,
   ) {
     const keys = _getOrderedEnvironmentKeys(subObject);
 
@@ -189,7 +157,7 @@ export async function buildRenderContext(
             subObject[key],
             subContext, // Only render with key being overwritten
             null,
-            KEEP_ON_ERROR,
+            'keep',
             'Environment',
           );
         } else {
@@ -207,14 +175,14 @@ export async function buildRenderContext(
 
     return subContext;
   }
+  let finalRenderContext = { ...renderContext };
 
   for (const envObject of envObjects) {
     // For every environment render the Objects
-    renderContext = await renderSubContext(envObject, renderContext);
+    finalRenderContext = await renderSubContext(envObject, finalRenderContext);
   }
 
-  // Render the context with itself to fill in the rest.
-  const finalRenderContext = await templatingUtils.maskOrDecryptContextIfNecessary(renderContext as Record<string, any> & BaseRenderContext);
+  finalRenderContext[vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(finalRenderContext[vaultEnvironmentPath], renderContext?.getPurpose());;
   // Merge all vault environments under vaultEnvironmentPath to vaultEnvironmentRuntimePath which is more human readable.
   // This will also keep all legacy environment variables defined under the vaultEnvironmentRuntimePath.
   if (finalRenderContext[vaultEnvironmentPath]) {
@@ -251,7 +219,7 @@ export async function buildRenderContext(
         finalRenderContext[key],
         finalRenderContext,
         null,
-        KEEP_ON_ERROR,
+        'keep',
         'Environment',
       );
 
@@ -267,7 +235,7 @@ export async function buildRenderContext(
 
   return finalRenderContext;
 }
-const renderInThisProcess = async (input: { input: string; context: Record<string, any>; path: string; ignoreUndefinedEnvVariable: boolean }) => {
+const renderInThisProcess = async (input: { input: string; context: BaseRenderContext; path: string; ignoreUndefinedEnvVariable: boolean }) => {
   return templating.render(input.input, {
     context: input.context,
     path: input.path,
@@ -285,9 +253,9 @@ const renderInThisProcess = async (input: { input: string; context: Record<strin
  */
 export async function render<T>(
   obj: T,
-  context: Record<string, any> = {},
+  context: BaseRenderContext,
   blacklistPathRegex: RegExp | null = null,
-  errorMode: string = THROW_ON_ERROR,
+  errorMode: 'keep' | 'throw' = 'throw',
   name = '',
   ignoreUndefinedEnvVariable: boolean = false,
 ) {
@@ -356,7 +324,7 @@ export async function render<T>(
         }
       } catch (err) {
         console.log(`Failed to render element ${path}`, input);
-        if (errorMode !== KEEP_ON_ERROR) {
+        if (errorMode !== 'keep') {
           if (err?.extraInfo?.subType === 'environmentVariable') {
             undefinedEnvironmentVariables.push(...err.extraInfo.undefinedEnvironmentVariables);
           } else {
@@ -407,25 +375,6 @@ export async function render<T>(
   return renderResult;
 }
 
-interface RenderRequest<T extends Request | GrpcRequest | WebSocketRequest> {
-  request: T;
-}
-
-interface BaseRenderContextOptions {
-  environment?: string | Environment;
-  baseEnvironment?: Environment;
-  rootGlobalEnvironment?: Environment;
-  subGlobalEnvironment?: Environment;
-  userUploadEnvironment?: UserUploadEnvironment;
-  transientVariables?: Environment;
-  purpose?: RenderPurpose;
-  extraInfo?: ExtraRenderInfo;
-  ignoreUndefinedEnvVariable?: boolean;
-}
-
-export interface RenderContextOptions extends BaseRenderContextOptions, Partial<RenderRequest<Request | GrpcRequest | WebSocketRequest>> {
-  ancestors?: RenderContextAncestor[];
-}
 export async function getRenderContext(
   {
     request,
@@ -437,7 +386,7 @@ export async function getRenderContext(
     purpose,
     extraInfo,
   }: RenderContextOptions,
-): Promise<Record<string, any>> {
+): Promise<BaseRenderContext> {
   const ancestors = _ancestors || await getRenderContextAncestors(request);
 
   const project = ancestors.find(isProject);
@@ -548,21 +497,14 @@ export async function getRenderContext(
   // Add meta data helper function
   const baseContext: BaseRenderContext = {
     getMeta: () => ({
-      requestId: request ? request._id : null,
-      workspaceId: workspace ? workspace._id : 'n/a',
+      requestId: request?._id,
+      workspaceId: workspace?._id,
     }),
     getKeysContext: () => ({
       keyContext: keySource,
     }),
     getPurpose: () => purpose,
-    getExtraInfo: (key: string) => {
-      if (!Array.isArray(extraInfo)) {
-        return null;
-      }
-
-      const p = extraInfo.find(v => v.name === key);
-      return p ? p.value : null;
-    },
+    getExtraInfo: () => extraInfo,
     getEnvironmentId: () => subEnvironmentId,
     getGlobalEnvironmentId: () => subGlobalEnvironment?._id || rootGlobalEnvironment?._id,
     // It is possible for a project to not exist because this code path can be reached via Inso which has no concept of a project.
@@ -581,18 +523,7 @@ export async function getRenderContext(
     baseContext,
   });
 }
-interface BaseRenderContext {
-  getMeta: () => {};
-  getKeysContext: () => {};
-  getPurpose: () => RenderPurpose | undefined;
-  getExtraInfo: (key: string) => string | null;
-  getEnvironmentId: () => string | undefined;
-  getGlobalEnvironmentId: () => string | undefined;
-  getProjectId: () => string | undefined;
-}
-interface RenderGrpcRequestOptions extends BaseRenderContextOptions, RenderRequest<GrpcRequest> {
-  skipBody?: boolean;
-}
+
 export async function getRenderedGrpcRequest(
   {
     purpose,
@@ -600,7 +531,7 @@ export async function getRenderedGrpcRequest(
     request,
     environment,
     skipBody,
-  }: RenderGrpcRequestOptions,
+  }: BaseRenderContextOptions & { request: GrpcRequest; skipBody?: boolean },
 ) {
   const renderContext = await getRenderContext({ request, environment, purpose, extraInfo });
   const description = request.description;
@@ -609,35 +540,29 @@ export async function getRenderedGrpcRequest(
   // Ignore body by default and only include if specified to
   const ignorePathRegex = skipBody ? /^body.*/ : null;
   // Render all request properties
-  const renderedRequest: RenderedGrpcRequest = await render(
+  const renderedRequest: GrpcRequest = await render(
     request,
     renderContext,
     ignorePathRegex,
   );
-  renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
+  renderedRequest.description = await render(description, renderContext, null, 'keep');
   return renderedRequest;
 }
 
-type RenderGrpcRequestMessageOptions = BaseRenderContextOptions & RenderRequest<GrpcRequest>;
 export async function getRenderedGrpcRequestMessage(
   {
     environment,
     request,
     extraInfo,
     purpose,
-  }: RenderGrpcRequestMessageOptions,
+  }: BaseRenderContextOptions & { request: GrpcRequest },
 ) {
   const renderContext = await getRenderContext({ request, environment, purpose, extraInfo });
   // Render request body
-  const renderedBody: RenderedGrpcRequestBody = await render(request.body, renderContext);
+  const renderedBody: GrpcRequestBody = await render(request.body, renderContext);
   return renderedBody;
 }
 
-type RenderRequestOptions = BaseRenderContextOptions & RenderRequest<Request>;
-export interface RequestAndContext {
-  request: RenderedRequest;
-  context: Record<string, any>;
-}
 export async function getRenderedRequestAndContext(
   {
     request,
@@ -648,8 +573,11 @@ export async function getRenderedRequestAndContext(
     extraInfo,
     purpose,
     ignoreUndefinedEnvVariable,
-  }: RenderRequestOptions,
-): Promise<RequestAndContext> {
+  }: BaseRenderContextOptions & { request: Request },
+): Promise<{
+  request: RenderedRequest;
+  context: Record<string, any>;
+}> {
   const ancestors = await getRenderContextAncestors(request);
   const workspace = ancestors.find(isWorkspace);
   const requestGroups = ancestors.filter(isRequestGroup);
@@ -682,14 +610,14 @@ export async function getRenderedRequestAndContext(
     },
     renderContext,
     request.settingDisableRenderRequestBody ? /^body.*/ : null,
-    THROW_ON_ERROR,
+    'throw',
     '',
     ignoreUndefinedEnvVariable,
   );
 
   const renderedRequest = renderResult._request;
   const renderedCookieJar = renderResult._cookieJar;
-  renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
+  renderedRequest.description = await render(description, renderContext, null, 'keep');
   const userAgentHeaders = request.headers.filter(h => h.name.toLowerCase() === 'user-agent');
   const noUserAgents = userAgentHeaders.length === 0;
   const allUserAgentHeadersDisabled = userAgentHeaders.every(h => h.disabled === true);
@@ -785,7 +713,6 @@ function _getOrderedEnvironmentKeys(finalRenderContext: Record<string, any>): st
   });
 }
 
-type RenderContextAncestor = Request | GrpcRequest | WebSocketRequest | RequestGroup | Workspace | Project;
 export async function getRenderContextAncestors(base?: Request | GrpcRequest | WebSocketRequest | Workspace): Promise<RenderContextAncestor[]> {
   return await db.withAncestors<RenderContextAncestor>(base || null, [
     models.request.type,

@@ -4,7 +4,8 @@ import CodeMirror, { type EnvironmentAutocompleteOptions, type Hint, type ShowHi
 
 import { getPlatformKeyCombinations } from '../../../../common/hotkeys';
 import { escapeRegex, fnOrString, isNotNullOrUndefined } from '../../../../common/misc';
-import { getDefaultFill, type NunjucksParsedTag } from '../../../../templating/utils';
+import type { NunjucksParsedTag } from '../../../../templating/types';
+import { getDefaultFill } from '../../../../templating/utils';
 import { isNunjucksMode } from '../modes/nunjucks';
 
 const NAME_MATCH_FLEXIBLE = /[\w.\][\-/]+$/;

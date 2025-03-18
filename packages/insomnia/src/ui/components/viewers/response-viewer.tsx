@@ -47,7 +47,7 @@ export interface ResponseViewerProps {
   filter: string;
   filterHistory: string[];
   bodyBuffer?: Buffer;
-  getBody?: (...args: any[]) => Promise<Buffer | string | null>;
+  getBody?: (...args: any[]) => Promise<Buffer | string>;
   previewMode: string;
   responseId: string;
   url: string;

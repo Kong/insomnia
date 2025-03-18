@@ -2,7 +2,7 @@ import type { CloudServiceSecretOption } from '../../../main/ipc/cloud-service-i
 import type { HashiCorpVaultKVV1SecretValue, HashiCorpVaultKVV2SecretValue, HCPStaticSecretValue } from '../../../main/ipc/cloud-service-integration/hashicorp-service';
 import type { AWSSecretConfig, ExternalVaultConfig, GCPSecretConfig, HashiCorpSecretConfig, HashiCorpVaultKVV1SecretConfig, HashiCorpVaultKVV2SecretConfig, HCPSecretConfig } from '../../../main/ipc/cloud-service-integration/types';
 import type { CloudProviderCredential, CloudProviderName, HashiCorpCredentials } from '../../../models/cloud-credential';
-import type { PluginTemplateTagContext } from '../../../templating/extensions';
+import type { PluginTemplateTagContext } from '../../../templating/types';
 import { invariant } from '../../../utils/invariant';
 
 export const getExternalVault = async (_context: PluginTemplateTagContext, provider: CloudProviderName, providerCredential: CloudProviderCredential, secretConfig: ExternalVaultConfig) => {

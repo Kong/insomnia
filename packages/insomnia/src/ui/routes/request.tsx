@@ -13,7 +13,6 @@ import { version } from '../../../package.json';
 import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
 import { type ChangeBufferEvent, database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
-import { type RenderedRequest } from '../../common/render';
 import type { ResponsePatch } from '../../main/network/libcurl-promise';
 import type { TimingStep } from '../../main/network/request-timing';
 import type { BaseModel } from '../../models';
@@ -35,6 +34,7 @@ import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from 
 import { isWebSocketResponse, type WebSocketResponse } from '../../models/websocket-response';
 import { getAuthHeader } from '../../network/authentication';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToExecuteAfterResponseScript, tryToExecutePreRequestScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
+import { type RenderedRequest } from '../../templating/types';
 import { parseGraphQLReqeustBody } from '../../utils/graph-ql';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
