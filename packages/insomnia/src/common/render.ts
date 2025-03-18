@@ -126,7 +126,7 @@ export async function buildRenderContext(
   // ordered by its property map.
   // Do an Object.assign, but render each property as it overwrites. This
   // way we can keep same-name variables from the parent context.
-  let renderContext = baseContext;
+  const renderContext = baseContext;
 
   // Made the rendering into a recursive function to handle nested Objects
   async function renderSubContext(
@@ -175,14 +175,14 @@ export async function buildRenderContext(
 
     return subContext;
   }
+  let finalRenderContext = { ...renderContext };
 
   for (const envObject of envObjects) {
     // For every environment render the Objects
-    renderContext = await renderSubContext(envObject, renderContext);
+    finalRenderContext = await renderSubContext(envObject, finalRenderContext);
   }
 
-  renderContext[vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(renderContext[vaultEnvironmentPath], renderContext?.getPurpose());;
-  const finalRenderContext = renderContext;
+  finalRenderContext[vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(finalRenderContext[vaultEnvironmentPath], renderContext?.getPurpose());;
   // Merge all vault environments under vaultEnvironmentPath to vaultEnvironmentRuntimePath which is more human readable.
   // This will also keep all legacy environment variables defined under the vaultEnvironmentRuntimePath.
   if (finalRenderContext[vaultEnvironmentPath]) {
