@@ -1,7 +1,7 @@
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
 
 import { userSession } from '../models';
-import { decryptSecretValue, vaultEnvironmentMaskValue, vaultEnvironmentPath } from '../models/environment';
+import { decryptSecretValue, vaultEnvironmentMaskValue } from '../models/environment';
 import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';
 import { decryptVaultKeyFromSession } from '../utils/vault';
 import objectPath from './third_party/objectPath';
@@ -241,10 +241,7 @@ export function decodeEncoding<T>(value: T) {
   return value;
 }
 
-export async function maskOrDecryptContextIfNecessary(context: Record<string, any> & { getPurpose: () => RenderPurpose | undefined }) {
-  // all secret variables are under vaultEnvironmentPath property in context
-  const vaultEnvironmentData = context[vaultEnvironmentPath];
-  const renderPurpose = typeof context.getPurpose === 'function' && context.getPurpose();
+export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: any, renderPurpose?: RenderPurpose) {
   /**
     * Decrypt secrets when renderPurpose is one of the following:
     * - preview: render the template in variable editor to do the live preview
@@ -265,7 +262,7 @@ export async function maskOrDecryptContextIfNecessary(context: Record<string, an
         });
       } else if (isVaultEnabled && !vaultKey) {
         // remove all values under vaultEnvironmentPath if no vault key found
-        context[vaultEnvironmentPath] = {};
+        vaultEnvironmentData = {};
       }
     } else {
       // mask all secert values under vaultEnvironmentPath property in context
@@ -274,7 +271,7 @@ export async function maskOrDecryptContextIfNecessary(context: Record<string, an
       });
     }
   }
-  return context;
+  return vaultEnvironmentData;
 }
 
 export function extractNunjucksTagFromCoords(

@@ -20,6 +20,7 @@ import type {
   RenderedRequest,
 } from '../templating/types';
 import * as templatingUtils from '../templating/utils';
+import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
 import { setDefaultProtocol } from '../utils/url/protocol';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
@@ -33,7 +34,7 @@ export async function buildRenderContext(
     subGlobalEnvironment,
     userUploadEnvironment,
     transientVariables,
-    baseContext = {},
+    baseContext,
   }: {
     ancestors?: RenderContextAncestor[];
     rootEnvironment?: Environment;
@@ -42,9 +43,9 @@ export async function buildRenderContext(
     subGlobalEnvironment?: Environment | null;
     userUploadEnvironment?: UserUploadEnvironment;
     transientVariables?: Environment;
-    baseContext?: Record<string, any>;
+    baseContext: BaseRenderContext;
   },
-) {
+): Promise<BaseRenderContext> {
   const envObjects: Record<string, any>[] = [];
 
   if (rootGlobalEnvironment) {
@@ -130,7 +131,7 @@ export async function buildRenderContext(
   // Made the rendering into a recursive function to handle nested Objects
   async function renderSubContext(
     subObject: Record<string, any>,
-    subContext: Record<string, any>,
+    subContext: BaseRenderContext,
   ) {
     const keys = _getOrderedEnvironmentKeys(subObject);
 
@@ -180,8 +181,8 @@ export async function buildRenderContext(
     renderContext = await renderSubContext(envObject, renderContext);
   }
 
-  // Render the context with itself to fill in the rest.
-  const finalRenderContext = await templatingUtils.maskOrDecryptContextIfNecessary(renderContext as Record<string, any> & BaseRenderContext);
+  renderContext[vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(renderContext[vaultEnvironmentPath], renderContext?.getPurpose());;
+  const finalRenderContext = renderContext;
   // Merge all vault environments under vaultEnvironmentPath to vaultEnvironmentRuntimePath which is more human readable.
   // This will also keep all legacy environment variables defined under the vaultEnvironmentRuntimePath.
   if (finalRenderContext[vaultEnvironmentPath]) {

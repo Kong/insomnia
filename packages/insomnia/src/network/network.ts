@@ -34,7 +34,7 @@ import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '../templating/types';
-import { maskOrDecryptContextIfNecessary } from '../templating/utils';
+import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
 import { defaultSendActionRuntime, type SendActionRuntime } from '../ui/routes/request';
 import { invariant } from '../utils/invariant';
 import { serializeNDJSON } from '../utils/ndjson';
@@ -382,10 +382,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
   let vault = undefined;
   if (globals && vaultEnvironmentPath in globals.data && settings.enableVaultInScripts) {
     // decrypt and set vault in insomnia sdk if necessary
-    await maskOrDecryptContextIfNecessary({
-      ...globals.data,
-      getPurpose: () => 'script',
-    });
+    globals.data[vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(globals.data[vaultEnvironmentPath], 'script');
     vault = globals.data[vaultEnvironmentPath];
   }
 

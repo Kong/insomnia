@@ -160,6 +160,7 @@ export interface BaseRenderContext {
   getEnvironmentId: () => string | undefined;
   getGlobalEnvironmentId: () => string | undefined;
   getProjectId: () => string | undefined;
+  [key: string]: any;
 }
 
 export interface PluginTemplateTagContext {
