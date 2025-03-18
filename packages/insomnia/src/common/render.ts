@@ -253,7 +253,7 @@ const renderInThisProcess = async (input: { input: string; context: BaseRenderCo
  */
 export async function render<T>(
   obj: T,
-  context: Record<string, any> = {},
+  context: BaseRenderContext,
   blacklistPathRegex: RegExp | null = null,
   errorMode: 'keep' | 'throw' = 'throw',
   name = '',
@@ -386,7 +386,7 @@ export async function getRenderContext(
     purpose,
     extraInfo,
   }: RenderContextOptions,
-): Promise<Record<string, any>> {
+): Promise<BaseRenderContext> {
   const ancestors = _ancestors || await getRenderContextAncestors(request);
 
   const project = ancestors.find(isProject);
