@@ -1,3 +1,4 @@
+import type { Workspace } from '../models/workspace';
 import type { Plugin } from '../plugins/index';
 import type { PluginTemplateTag, PluginTemplateTagContext } from './types';
 import * as templating from './worker';
@@ -166,7 +167,7 @@ export default class BaseExtension {
             },
           },
           cookieJar: {
-            getOrCreateForWorkspace: async (workspace: any) => {
+            getOrCreateForWorkspace: async (workspace: Workspace) => {
               const resp = await fetch('insomnia-templating-worker-database://cookieJar.getOrCreateForParentId', {
                 method: 'post',
                 body: JSON.stringify({ parentId: workspace._id }),

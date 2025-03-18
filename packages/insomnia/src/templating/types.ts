@@ -1,6 +1,7 @@
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
 import type { GrpcRequest } from '../models/grpc-request';
+import type { OAuth2Token } from '../models/o-auth-2-token';
 import type { Project } from '../models/project';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
@@ -180,8 +181,8 @@ export interface PluginTemplateTagContext {
         getAncestors: (request: Request) => Promise<(Request | RequestGroup | Workspace)[]>;
       };
       workspace: { getById: (id: string) => Promise<Workspace | null> };
-      oAuth2Token: { getByRequestId: (id: string) => Promise<any> };
-      cookieJar: { getOrCreateForWorkspace: (workspace: Workspace) => Promise<any> };
+      oAuth2Token: { getByRequestId: (id: string) => Promise<OAuth2Token | null> };
+      cookieJar: { getOrCreateForWorkspace: (workspace: Workspace) => Promise<CookieJar> };
       response: {
         getLatestForRequestId: typeof getLatestForRequest;
         getBodyBuffer: typeof getBodyBuffer;
