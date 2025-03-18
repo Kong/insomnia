@@ -153,8 +153,8 @@ export type PluginArgument =
   | PluginArgumentNumber;
 
 export interface BaseRenderContext {
-  getMeta: () => {};
-  getKeysContext: () => { keyContext: Record<string, string> };
+  getMeta: () => { requestId?: string; workspaceId?: string };
+  getKeysContext: () => { keyContext: Record<string, string> }; // { keyContext: { 'env var name': 'Base Env' } };
   getPurpose: () => RenderPurpose | undefined;
   getExtraInfo: () => { requestChain: string[] } | undefined;
   getEnvironmentId: () => string | undefined;

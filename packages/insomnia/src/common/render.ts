@@ -235,7 +235,7 @@ export async function buildRenderContext(
 
   return finalRenderContext;
 }
-const renderInThisProcess = async (input: { input: string; context: Record<string, any>; path: string; ignoreUndefinedEnvVariable: boolean }) => {
+const renderInThisProcess = async (input: { input: string; context: BaseRenderContext; path: string; ignoreUndefinedEnvVariable: boolean }) => {
   return templating.render(input.input, {
     context: input.context,
     path: input.path,
@@ -497,8 +497,8 @@ export async function getRenderContext(
   // Add meta data helper function
   const baseContext: BaseRenderContext = {
     getMeta: () => ({
-      requestId: request ? request._id : null,
-      workspaceId: workspace ? workspace._id : 'n/a',
+      requestId: request?._id,
+      workspaceId: workspace?._id,
     }),
     getKeysContext: () => ({
       keyContext: keySource,
