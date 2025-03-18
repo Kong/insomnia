@@ -112,6 +112,7 @@ const FileField: FC = () => {
     <div>
       <input
         className="hidden"
+        data-test-id="import-file-input"
         onChange={e => {
           const files = e.target.files;
           if (files) {
