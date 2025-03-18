@@ -71,6 +71,9 @@
           "value": "run test"
         },
         {
+          "value": "run collection"
+        },
+        {
           "value": "lint spec"
         },
         {
