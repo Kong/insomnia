@@ -239,7 +239,7 @@ export async function importResourcesToProject({ projectId }: { projectId: strin
       continue;
     }
 
-    const workspaceResources = resources.filter(isWorkspace);;
+    const workspaceResources = resources.filter(isWorkspace);
 
     // No workspace, so create one
     if (workspaceResources.length === 0) {
@@ -287,17 +287,17 @@ function filterResourcesInWorkspace(
     }
   });
   // find the workspace id that the resource belongs to
-  function findRootId(id: string, track: Set<string>) {
+  function findRootId(id: string, existingResourceIds: Set<string>) {
     // avoid infinite loop
-    if (track.has(id)) {
+    if (existingResourceIds.has(id)) {
       return id;
     }
-    track.add(id);
+    existingResourceIds.add(id);
     const parentId = idToParentIdMap.get(id);
     if (!parentId) {
       return id;
     }
-    return findRootId(parentId, track);
+    return findRootId(parentId, existingResourceIds);
   }
   return resources.filter(resource => findRootId(resource._id, new Set()) === workspaceId);
 }
