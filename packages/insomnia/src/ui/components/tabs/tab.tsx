@@ -97,6 +97,13 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
     closeTabById(id);
   };
 
+  const handleAuxClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>, id: string) => {
+    // If mouse middle button clicked, close tab
+    if (e.button === 1) {
+      handleClose(id);
+    }
+  };
+
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     window.main.showContextMenu({
@@ -130,10 +137,17 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
     >
       {({ isSelected, isHovered }) => (
         <Tooltip delay={1000} message={`${tab.projectName} / ${tab.workspaceName}`} className='h-full'>
-          <div onContextMenu={handleContextMenu} className={`relative flex items-center h-full px-[10px] flex-nowrap border-solid border-r border-[--hl-sm] hover:text-[--color-font] outline-none max-w-[200px] cursor-pointer ${(!isSelected && !isHovered) && 'opacity-[0.7]'}`}>
+          <div
+            onAuxClick={e => handleAuxClick(e, tab.id)}
+            onContextMenu={handleContextMenu}
+            className={`relative flex items-center h-full px-[10px] flex-nowrap border-solid border-r border-[--hl-sm] hover:text-[--color-font] outline-none max-w-[200px] cursor-pointer ${(!isSelected && !isHovered) && 'opacity-[0.7]'}`}
+          >
             {renderTabIcon(tab.type)}
             <span className='mx-[8px] text-nowrap overflow-hidden text-ellipsis'>{tab.name}</span>
-            <Button className='hover:bg-[--hl-md] h-[15px] w-[15px] flex justify-center items-center' onPress={() => handleClose(tab.id)}>
+            <Button
+              className='hover:bg-[--hl-md] h-[15px] w-[15px] flex justify-center items-center'
+              onPress={() => handleClose(tab.id)}
+            >
               <Icon icon="close" />
             </Button>
             <span className={`block absolute bottom-[0px] left-0 right-0 h-[1px] bg-[--color-bg] ${isSelected ? 'opacity-100' : 'opacity-0'}`} />
