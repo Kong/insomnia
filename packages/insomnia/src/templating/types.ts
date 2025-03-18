@@ -43,7 +43,7 @@ export interface BaseRenderContextOptions {
   userUploadEnvironment?: UserUploadEnvironment;
   transientVariables?: Environment;
   purpose?: RenderPurpose;
-  extraInfo?: { name: 'requestChain'; value: string }[];
+  extraInfo?: { requestChain: string[] };
   ignoreUndefinedEnvVariable?: boolean;
 }
 export type RenderContextAncestor = Request | GrpcRequest | WebSocketRequest | RequestGroup | Workspace | Project;
@@ -68,7 +68,7 @@ export interface NunjucksParsedTagArg {
   help?: string;
   displayName?: DisplayName;
   quotedBy?: '"' | "'";
-  validate?: (value: any) => string;
+  validate?: (value: string) => string;
   hide?: (arg0: NunjucksParsedTagArg[]) => boolean;
   model?: string;
   options?: PluginArgumentEnumOption[];
@@ -154,9 +154,9 @@ export type PluginArgument =
 
 export interface BaseRenderContext {
   getMeta: () => {};
-  getKeysContext: () => { keyContext: any };
+  getKeysContext: () => { keyContext: Record<string, string> };
   getPurpose: () => RenderPurpose | undefined;
-  getExtraInfo: (key: string) => string[] | null;
+  getExtraInfo: () => { requestChain: string[] } | undefined;
   getEnvironmentId: () => string | undefined;
   getGlobalEnvironmentId: () => string | undefined;
   getProjectId: () => string | undefined;
@@ -166,7 +166,7 @@ export interface PluginTemplateTagContext {
   app: AppContext;
   store: PluginStore;
   network: {
-    sendRequest(request: Request, extraInfo?: { name: string; value: any }[]): Promise<Response>;
+    sendRequest(request: Request, extraInfo?: { requestChain: string[] }): Promise<Response>;
   };
   context: BaseRenderContext & {
     value: string | number;

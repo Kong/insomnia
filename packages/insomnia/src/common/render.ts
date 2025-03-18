@@ -503,13 +503,7 @@ export async function getRenderContext(
       keyContext: keySource,
     }),
     getPurpose: () => purpose,
-    getExtraInfo: (key: string) => {
-      if (!Array.isArray(extraInfo)) {
-        return null;
-      }
-
-      return extraInfo.filter(v => v.name === key).map(v => v.value);
-    },
+    getExtraInfo: () => extraInfo,
     getEnvironmentId: () => subEnvironmentId,
     getGlobalEnvironmentId: () => subGlobalEnvironment?._id || rootGlobalEnvironment?._id,
     // It is possible for a project to not exist because this code path can be reached via Inso which has no concept of a project.
