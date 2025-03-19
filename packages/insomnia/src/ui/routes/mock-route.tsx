@@ -1,7 +1,7 @@
 import type * as Har from 'har-format';
 import React from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
-import { type LoaderFunction, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { type LoaderFunction, useFetcher, useParams, useRouteLoaderData } from 'react-router';
 
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_OTHER, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML, CONTENT_TYPE_YAML, contentTypesMap, getMockServiceBinURL, getMockServiceURL, RESPONSE_CODE_REASONS } from '../../common/constants';
 import { database as db } from '../../common/database';

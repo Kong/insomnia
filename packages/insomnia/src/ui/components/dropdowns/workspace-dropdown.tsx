@@ -1,7 +1,7 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, type ReactNode, useCallback, useEffect, useState } from 'react';
 import { Button, Collection, Dialog, Header, Heading, Menu, MenuItem, MenuTrigger, Modal, ModalOverlay, Popover, Section } from 'react-aria-components';
-import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 
 import { getProductName } from '../../../common/constants';
 import { database as db } from '../../../common/database';

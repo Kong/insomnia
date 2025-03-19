@@ -1,7 +1,7 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, useEffect, useState } from 'react';
 import { Button, Collection, Menu, MenuItem, MenuTrigger, Popover, Section, Tooltip, TooltipTrigger } from 'react-aria-components';
-import { useFetcher, useParams, useRevalidator } from 'react-router-dom';
+import { useFetcher, useParams, useRevalidator } from 'react-router';
 import { useInterval } from 'react-use';
 
 import type { GitRepository } from '../../../models/git-repository';
@@ -271,7 +271,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
         );
       },
     },
-    ] : []);
+  ] : []);
 
   const gitSyncActions: {
     id: string;
@@ -332,9 +332,9 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
           action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/reset`,
           method: 'post',
         });
-        },
       },
-    ] : [];
+    },
+  ] : [];
 
   const branchesActionList: {
     id: string;

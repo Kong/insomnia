@@ -6,7 +6,7 @@ import fs from 'fs';
 import { GRAPHQL_TRANSPORT_WS_PROTOCOL, MessageType } from 'graphql-ws';
 import type { RequestTestResult } from 'insomnia-sdk';
 import { extension as mimeExtension } from 'mime-types';
-import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
+import { type ActionFunction, type LoaderFunction, redirect } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
 import { version } from '../../../package.json';

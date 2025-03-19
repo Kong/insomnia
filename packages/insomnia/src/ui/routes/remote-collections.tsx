@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/electron/renderer';
-import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
+import { type ActionFunction, type LoaderFunction, redirect } from 'react-router';
 
 import { database, type Operation } from '../../common/database';
 import { isNotNullOrUndefined } from '../../common/misc';
@@ -304,8 +304,8 @@ export const syncDataAction: ActionFunction = async ({ params }) => {
 export type SyncDataLoaderData =
   | SyncData
   | {
-      error: string;
-    };
+    error: string;
+  };
 
 export const syncDataLoader: LoaderFunction = async ({
   params,

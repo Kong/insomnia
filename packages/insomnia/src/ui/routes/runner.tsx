@@ -3,7 +3,7 @@ import porderedJSON from 'json-order';
 import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
 import { Panel, PanelResizeHandle } from 'react-resizable-panels';
-import { type ActionFunction, type LoaderFunction, useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router-dom';
+import { type ActionFunction, type LoaderFunction, useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router';
 import { useInterval } from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 

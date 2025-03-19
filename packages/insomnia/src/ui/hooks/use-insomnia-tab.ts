@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { matchPath, useLocation, useSearchParams } from 'react-router-dom';
+import { matchPath, useLocation, useSearchParams } from 'react-router';
 
 import type { GrpcRequest } from '../../models/grpc-request';
 import type { MockRoute } from '../../models/mock-route';

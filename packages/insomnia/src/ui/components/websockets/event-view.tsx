@@ -1,6 +1,6 @@
 import fs from 'fs';
 import React, { type FC, useCallback } from 'react';
-import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router';
 
 import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import type { CurlEvent, CurlMessageEvent } from '../../../main/network/curl';

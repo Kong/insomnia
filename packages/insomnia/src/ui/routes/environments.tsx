@@ -2,7 +2,7 @@ import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useEffect, useRef, useState } from 'react';
 import { Breadcrumb, Breadcrumbs, Button, DropIndicator, GridList, GridListItem, Heading, Label, Menu, MenuItem, MenuTrigger, Popover, Text, ToggleButton, useDragAndDrop } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { NavLink, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { NavLink, useFetcher, useParams, useRouteLoaderData } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import { debounce } from '../../common/misc';
@@ -82,33 +82,33 @@ const Environments = () => {
           method: 'post',
           action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/duplicate`,
         });
-      },
-    }, {
-        id: 'delete',
-        name: 'Delete',
-        icon: 'trash',
-        action: async (environment: Environment) => {
-          showAlert({
-            title: 'Delete Environment',
-            message: `Are you sure you want to delete "${environment.name}"?`,
-            addCancel: true,
-            okLabel: 'Delete',
-            onConfirm: async () => {
-              deleteEnvironmentFetcher.submit(
-                {
-                  environmentId: environment._id,
-                },
-                {
-                  method: 'post',
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/delete`,
-                }
-              );
-
-              setSelectedEnvironmentId(baseEnvironment._id);
+    },
+  }, {
+    id: 'delete',
+    name: 'Delete',
+    icon: 'trash',
+    action: async (environment: Environment) => {
+      showAlert({
+        title: 'Delete Environment',
+        message: `Are you sure you want to delete "${environment.name}"?`,
+        addCancel: true,
+        okLabel: 'Delete',
+        onConfirm: async () => {
+          deleteEnvironmentFetcher.submit(
+            {
+              environmentId: environment._id,
             },
-          });
+            {
+              method: 'post',
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/delete`,
+            }
+          );
+
+          setSelectedEnvironmentId(baseEnvironment._id);
         },
-      },
+      });
+    },
+  },
     ];
 
   const createEnvironmentActionsList: {

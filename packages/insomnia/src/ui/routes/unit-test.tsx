@@ -26,7 +26,7 @@ import {
   useNavigate,
   useParams,
   useRouteLoaderData,
-} from 'react-router-dom';
+} from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import { database } from '../../common/database';
@@ -162,21 +162,21 @@ const TestRoute: FC = () => {
     icon: IconName;
     action: (suiteId: string, suiteName: string) => void;
   }[] = [
-    {
-      id: 'run-tests',
-      name: 'Run tests',
-      icon: 'play',
-      action: suiteId => {
-        runAllTestsFetcher.submit(
-          {},
-          {
-            method: 'POST',
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/run-all-tests`,
-          }
-        );
+      {
+        id: 'run-tests',
+        name: 'Run tests',
+        icon: 'play',
+        action: suiteId => {
+          runAllTestsFetcher.submit(
+            {},
+            {
+              method: 'POST',
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/run-all-tests`,
+            }
+          );
+        },
       },
-    },
-    {
+      {
         id: 'rename',
         name: 'Rename',
         icon: 'edit',
@@ -199,9 +199,9 @@ const TestRoute: FC = () => {
         },
       },
       {
-      id: 'delete-suite',
-      name: 'Delete suite',
-      icon: 'trash',
+        id: 'delete-suite',
+        name: 'Delete suite',
+        icon: 'trash',
         action: (suiteId, suiteName) => {
           showModal(AskModal, {
             title: 'Delete suite',
@@ -221,9 +221,9 @@ const TestRoute: FC = () => {
               }
             },
           });
+        },
       },
-    },
-  ];
+    ];
 
   const testSuitesDragAndDrop = useDragAndDrop({
     getItems: keys => [...keys].map(key => ({ 'text/plain': key.toString() })),

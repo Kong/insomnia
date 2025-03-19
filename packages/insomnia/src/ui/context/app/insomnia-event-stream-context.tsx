@@ -1,5 +1,5 @@
 import React, { createContext, type FC, type PropsWithChildren, useContext, useEffect, useState } from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
 
 import { CDN_INVALIDATION_TTL } from '../../../common/constants';
 import type { Organization } from '../../../models/organization';
@@ -81,8 +81,8 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
     workspaceId,
   } = useParams() as {
     organizationId: string;
-      projectId: string;
-      workspaceId: string;
+    projectId: string;
+    workspaceId: string;
   };
 
   const { userSession } = useRootLoaderData();
@@ -105,15 +105,15 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
         try {
           const response = await insomniaFetch<{
             data?: UserPresence[];
-            }>({
-              path: `/v1/organizations/${sanitizeTeamId(organizationId)}/collaborators`,
-              method: 'POST',
-              sessionId,
-              data: {
-                project: remoteId,
-                file: workspaceId,
-              },
-            });
+          }>({
+            path: `/v1/organizations/${sanitizeTeamId(organizationId)}/collaborators`,
+            method: 'POST',
+            sessionId,
+            data: {
+              project: remoteId,
+              file: workspaceId,
+            },
+          });
 
           const rows = response?.data || [];
           if (rows.length > 0) {

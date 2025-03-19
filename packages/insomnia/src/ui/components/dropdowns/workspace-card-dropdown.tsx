@@ -1,6 +1,6 @@
 import React, { type FC, Fragment, useCallback, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router';
 
 import { parseApiSpec } from '../../../common/api-specs';
 import { getProductName } from '../../../common/constants';

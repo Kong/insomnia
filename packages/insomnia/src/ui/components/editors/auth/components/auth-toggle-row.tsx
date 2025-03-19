@@ -1,5 +1,5 @@
 import React, { type FC, type ReactNode, useCallback } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router';
 
 import { toKebabCase } from '../../../../../common/misc';
 import { useRequestGroupPatcher, useRequestPatcher } from '../../../../hooks/use-request';
@@ -17,7 +17,7 @@ interface Props {
   disabled?: boolean;
 }
 
-const ToggleIcon: FC<{isOn: boolean}> = ({ isOn }) => isOn ? <i data-testid="toggle-is-on" className="fa fa-check-square-o" /> : <i data-testid="toggle-is-off" className="fa fa-square-o" />;
+const ToggleIcon: FC<{ isOn: boolean }> = ({ isOn }) => isOn ? <i data-testid="toggle-is-on" className="fa fa-check-square-o" /> : <i data-testid="toggle-is-off" className="fa fa-square-o" />;
 
 export const AuthToggleRow: FC<Props> = ({
   label,

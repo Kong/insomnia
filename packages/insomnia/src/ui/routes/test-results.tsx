@@ -1,6 +1,6 @@
 import React, { type FC } from 'react';
 import { Heading } from 'react-aria-components';
-import { type LoaderFunction, redirect, useRouteLoaderData } from 'react-router-dom';
+import { type LoaderFunction, redirect, useRouteLoaderData } from 'react-router';
 
 import { database } from '../../common/database';
 import * as models from '../../models';
@@ -55,11 +55,10 @@ export const TestRunStatus: FC = () => {
       className="w-full flex-1 flex flex-col h-full divide-solid divide-y divide-[--hl-md]"
     >
       <Heading
-        className={`text-lg flex-shrink-0 flex items-center gap-2 w-full h-[--line-height-sm] p-[--padding-md] ${
-          stats.failures > 0
+        className={`text-lg flex-shrink-0 flex items-center gap-2 w-full h-[--line-height-sm] p-[--padding-md] ${stats.failures > 0
             ? 'text-[--color-danger]'
             : 'text-[--color-success]'
-        }`}
+          }`}
       >
         <Icon
           icon={stats.failures > 0 ? 'exclamation-triangle' : 'check-square'}
@@ -80,8 +79,7 @@ export const TestRunStatus: FC = () => {
               <div className="flex gap-2 p-[--padding-sm] items-center">
                 <div className="flex flex-shrink-0">
                   <span
-                    className={`w-20 flex-shrink-0 flex rounded-sm border border-solid border-current ${
-                      errorMessage
+                    className={`w-20 flex-shrink-0 flex rounded-sm border border-solid border-current ${errorMessage
                         ? 'text-[--color-danger]'
                         : 'text-[--color-success]'
                       } items-center justify-center`}

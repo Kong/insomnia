@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, type Key, ListBox, ListBoxItem, type ListBoxItemProps, Popover, Tooltip, TooltipTrigger } from 'react-aria-components';
-import { useFetcher, useParams, useSearchParams } from 'react-router-dom';
+import { useFetcher, useParams, useSearchParams } from 'react-router';
 
 import { getCurrentSessionId } from '../../../../account/session';
 import { debounce } from '../../../../common/misc';

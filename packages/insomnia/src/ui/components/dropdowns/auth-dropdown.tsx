@@ -1,7 +1,7 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, useCallback } from 'react';
 import { Button, Collection, Header, ListBox, ListBoxItem, Popover, Section, Select, SelectValue } from 'react-aria-components';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 
 import {
   HAWK_ALGORITHM_SHA256,
@@ -157,8 +157,8 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
     name: string;
   }[] = [
       {
-      id: 'apikey',
-      name: 'API Key',
+        id: 'apikey',
+        name: 'API Key',
       },
       {
         id: 'basic',

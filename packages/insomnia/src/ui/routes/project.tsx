@@ -23,7 +23,6 @@ import {
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
   type ActionFunction,
-  defer,
   type LoaderFunction,
   redirect,
   useFetcher,
@@ -32,7 +31,7 @@ import {
   useNavigate,
   useParams,
   useRouteLoaderData,
-} from 'react-router-dom';
+} from 'react-router';
 import { useLocalStorage } from 'react-use';
 
 import { logout } from '../../account/session';
@@ -609,7 +608,7 @@ export const loader: LoaderFunction = async ({
 
   const activeProjectGitRepository = isGitProject(project) ? await models.gitRepository.getById(project.gitRepositoryId || '') : null;
 
-  return defer({
+  return {
     localFiles,
     learningFeaturePromise,
     remoteFilesPromise,
@@ -631,7 +630,7 @@ export const loader: LoaderFunction = async ({
       file => file.scope === 'mock-server'
     ).length,
     projectsSyncStatusPromise,
-  });
+  };
 };
 
 const ProjectRoute: FC = () => {
@@ -753,7 +752,7 @@ const ProjectRoute: FC = () => {
       }
 
       const activity = scopeToActivity(file.scope);
-      navigate(
+      return navigate(
         `/organization/${organizationId}/project/${projectId}/workspace/${file.id}/${activity}`
       );
     },

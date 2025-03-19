@@ -2,7 +2,7 @@ import fs from 'fs';
 import React, { type FC, useEffect, useState } from 'react';
 import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router';
 
 import { getSetCookieHeaders } from '../../../common/misc';
 import type { CurlEvent } from '../../../main/network/curl';

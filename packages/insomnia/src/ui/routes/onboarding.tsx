@@ -1,6 +1,6 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { useEffect } from 'react';
-import { Link, Route, Routes, useLocation } from 'react-router-dom';
+import { Link, Route, Routes, useLocation } from 'react-router';
 
 import { LandingPage } from '../../common/sentry';
 import { InsomniaLogo } from '../components/insomnia-icon';
@@ -94,7 +94,7 @@ const FeatureWizardView = () => {
                     <div className="h-32">
                       {feature.rounded ? (
                         <img className="max-h-32 aspect-auto rounded-md" src={feature.image} />) : (
-                          <img className="max-h-32 aspect-auto" src={feature.image} />
+                        <img className="max-h-32 aspect-auto" src={feature.image} />
                       )}
                     </div>
                     <div className="flex w-full p-4 bottom-0 left-0 sticky justify-between text-sm font-normal bg-gradient-to-t from-[--color-bg] to-[rgba(var(--color-bg-rgb),80%)]">

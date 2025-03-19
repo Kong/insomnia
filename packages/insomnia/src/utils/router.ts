@@ -1,4 +1,4 @@
-import { matchPath, type PathMatch } from 'react-router-dom';
+import { matchPath, type PathMatch } from 'react-router';
 
 import { database } from '../common/database';
 import * as models from '../models';

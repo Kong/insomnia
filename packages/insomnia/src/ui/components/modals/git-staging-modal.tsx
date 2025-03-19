@@ -1,6 +1,6 @@
 import React, { type FC, useEffect } from 'react';
 import { Button, Dialog, GridList, GridListItem, Heading, Label, Modal, ModalOverlay, TextArea, TextField, Tooltip, TooltipTrigger } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router';
 
 import type { GitRepository } from '../../../models/git-repository';
 import type { GitChangesLoaderData, GitDiffResult } from '../../routes/git-actions';
@@ -95,10 +95,10 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
   const {
     changes,
   } = gitChangesFetcher.data || {
-      changes: {
-        staged: [],
-        unstaged: [],
-      },
+    changes: {
+      staged: [],
+      unstaged: [],
+    },
     branch: '',
     statusNames: {},
   };

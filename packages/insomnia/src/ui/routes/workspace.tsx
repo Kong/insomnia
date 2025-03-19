@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { type LoaderFunction, Outlet, useLoaderData } from 'react-router-dom';
+import { type LoaderFunction, Outlet, useLoaderData } from 'react-router';
 
 import type { SortOrder } from '../../common/constants';
 import { database } from '../../common/database';
@@ -184,52 +184,52 @@ export const workspaceLoader: LoaderFunction = async ({
     parentIsCollapsed,
     ancestors,
   }: {
-      parentId: string; level: number; parentIsCollapsed: boolean; ancestors: string[];
+    parentId: string; level: number; parentIsCollapsed: boolean; ancestors: string[];
   }): Promise<Child[]> => {
     const levelReqs = allRequests.filter(r => r.parentId === parentId);
 
     const childrenWithChildren: Child[] = await Promise.all(levelReqs
-        .sort(sortFunction)
-        .map(async (doc): Promise<Child> => {
-          const isMatched = (filter: string): boolean =>
-            Boolean(fuzzyMatchAll(
-              filter,
-              [
-                doc.name,
-                doc.description,
-                ...(isRequestGroup(doc) ? [] : [doc.url]),
-              ],
-              { splitSpace: false, loose: true }
-            )?.indexes);
-          const shouldHide = Boolean(filter && !isMatched(filter));
-          const hidden = parentIsCollapsed || shouldHide;
+      .sort(sortFunction)
+      .map(async (doc): Promise<Child> => {
+        const isMatched = (filter: string): boolean =>
+          Boolean(fuzzyMatchAll(
+            filter,
+            [
+              doc.name,
+              doc.description,
+              ...(isRequestGroup(doc) ? [] : [doc.url]),
+            ],
+            { splitSpace: false, loose: true }
+          )?.indexes);
+        const shouldHide = Boolean(filter && !isMatched(filter));
+        const hidden = parentIsCollapsed || shouldHide;
 
-          const pinned =
-            !isRequestGroup(doc) && grpcAndRequestMetas.find(m => m.parentId === doc._id)?.pinned || false;
-          const collapsed = filter
-            ? false
-            : parentIsCollapsed ||
-              (isRequestGroup(doc) &&
-              requestGroupMetas.find(m => m.parentId === doc._id)?.collapsed) ||
-              false;
+        const pinned =
+          !isRequestGroup(doc) && grpcAndRequestMetas.find(m => m.parentId === doc._id)?.pinned || false;
+        const collapsed = filter
+          ? false
+          : parentIsCollapsed ||
+          (isRequestGroup(doc) &&
+            requestGroupMetas.find(m => m.parentId === doc._id)?.collapsed) ||
+          false;
 
-          const docAncestors = [...ancestors, parentId];
+        const docAncestors = [...ancestors, parentId];
 
-          return {
-            doc,
-            pinned,
-            collapsed,
-            hidden,
-            level,
+        return {
+          doc,
+          pinned,
+          collapsed,
+          hidden,
+          level,
+          ancestors: docAncestors,
+          children: await getCollectionTree({
+            parentId: doc._id,
+            level: level + 1,
+            parentIsCollapsed: collapsed,
             ancestors: docAncestors,
-            children: await getCollectionTree({
-              parentId: doc._id,
-              level: level + 1,
-              parentIsCollapsed: collapsed,
-              ancestors: docAncestors,
-            }),
-          };
-        }),
+          }),
+        };
+      }),
     );
 
     return childrenWithChildren;

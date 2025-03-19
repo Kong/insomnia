@@ -1,7 +1,7 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC } from 'react';
 import { Button, Collection, Header, ListBox, ListBoxItem, Popover, Section, Select, SelectValue } from 'react-aria-components';
-import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router';
 
 import {
   CONTENT_TYPE_EDN,

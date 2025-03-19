@@ -1,5 +1,5 @@
 import { fromUrl } from 'hosted-git-info';
-import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
+import { type ActionFunction, type LoaderFunction, redirect } from 'react-router';
 
 import { gitCredentials } from '../../models';
 import type { GitRepository } from '../../models/git-repository';
@@ -15,13 +15,13 @@ import { invariant } from '../../utils/invariant';
 // Loaders
 export type GitRepoLoaderData =
   | {
-      branch: string;
-      branches: string[];
-      gitRepository: GitRepository | null;
-    }
+    branch: string;
+    branches: string[];
+    gitRepository: GitRepository | null;
+  }
   | {
-      errors: string[];
-    };
+    errors: string[];
+  };
 
 export const gitRepoLoader: ActionFunction = async ({
   params,
@@ -35,12 +35,12 @@ export const gitRepoLoader: ActionFunction = async ({
 
 export type GitBranchesLoaderData =
   | {
-      branches: string[];
-      remoteBranches: string[];
-    }
+    branches: string[];
+    remoteBranches: string[];
+  }
   | {
-      errors: string[];
-    };
+    errors: string[];
+  };
 
 export const gitBranchesLoader: LoaderFunction = async ({
   params,
@@ -68,11 +68,11 @@ export const gitFetchAction: ActionFunction = async ({
 
 export type GitLogLoaderData =
   | {
-      log: GitLogEntry[];
-    }
+    log: GitLogEntry[];
+  }
   | {
-      errors: string[];
-    };
+    errors: string[];
+  };
 
 export const gitLogLoader: LoaderFunction = async ({
   params,
@@ -123,8 +123,8 @@ export const canPushLoader: LoaderFunction = async ({ params }): Promise<GitCanP
 type CloneGitActionResult =
   | Response
   | {
-      errors?: string[];
-    };
+    errors?: string[];
+  };
 
 export function parseGitToHttpsURL(s: string) {
   // try to convert any git URL to https URL
@@ -316,10 +316,10 @@ export const mergeGitBranch = async ({
   workspaceId,
   allowUncommittedChangesBeforeMerge = false,
 }: {
-    projectId: string;
-    workspaceId: string;
-    theirsBranch: string;
-    allowUncommittedChangesBeforeMerge?: boolean;
+  projectId: string;
+  workspaceId: string;
+  theirsBranch: string;
+  allowUncommittedChangesBeforeMerge?: boolean;
 }) => {
   return await window.main.git.mergeGitBranch({
     projectId,
@@ -389,12 +389,12 @@ export async function continueMerge(
     commitMessage,
     commitParent,
   }: {
-      projectId: string;
-      workspaceId: string;
+    projectId: string;
+    workspaceId: string;
     handledMergeConflicts: MergeConflict[];
-      commitMessage: string;
-      commitParent: string[];
-    }
+    commitMessage: string;
+    commitParent: string[];
+  }
 ) {
   return window.main.git.continueMerge({
     projectId,

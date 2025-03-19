@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Heading, Radio, RadioGroup } from 'react-aria-components';
-import { type ActionFunction, type LoaderFunction, redirect, useFetcher } from 'react-router-dom';
+import { type ActionFunction, type LoaderFunction, redirect, useFetcher } from 'react-router';
 
 import { shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { invariant } from '../../utils/invariant';
@@ -77,7 +77,7 @@ export const Migrate = () => {
                       >
                         <div className='flex items-center gap-2'>
 
-                        <Icon icon="globe" />
+                          <Icon icon="globe" />
                           <Heading className="text-lg font-bold">Enable Cloud Sync</Heading>
                         </div>
                         <p className='pt-2'>

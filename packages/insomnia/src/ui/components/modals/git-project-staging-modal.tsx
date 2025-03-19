@@ -1,6 +1,6 @@
 import React, { type FC, useEffect } from 'react';
 import { Button, Dialog, GridList, GridListItem, Heading, Label, Modal, ModalOverlay, TextArea, TextField, Tooltip, TooltipTrigger } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router';
 
 import type { GitChangesLoaderData, GitDiffResult } from '../../routes/git-project-actions';
 import { DiffEditor } from '../diff-view-editor';

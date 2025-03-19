@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
-import { useFetcher } from 'react-router-dom';
+import { useFetcher } from 'react-router';
 import { useInterval } from 'react-use';
 
 import { getProductName } from '../../../common/constants';

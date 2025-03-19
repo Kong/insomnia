@@ -1,4 +1,4 @@
-import { type ActionFunction, redirect } from 'react-router-dom';
+import { type ActionFunction, redirect } from 'react-router';
 
 import { logout } from '../../account/session';
 

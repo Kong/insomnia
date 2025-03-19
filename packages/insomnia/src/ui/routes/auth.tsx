@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Link, Tooltip, TooltipTrigger } from 'react-aria-components';
-import { Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router';
 
 import { Hotkey } from '../components/hotkey';
 import { Icon } from '../components/icon';
@@ -26,25 +26,25 @@ const Auth = () => {
 
   return (
     <div className='grid [grid-template-rows:1fr_30px] w-full h-full'>
-    <div className='relative h-full w-full text-center flex bg-[--color-bg]'>
-      <TrailLinesContainer>
-        <div className='flex flex-col justify-center items-center h-full min-h-[450px]'>
-          <div className='flex flex-col items-center justify-center gap-[--padding-sm] p-[--padding-lg] pt-[32px] min-w-[400px] max-w-lg rounded-md relative bg-[--hl-sm] m-0'>
-            <InsomniaLogo
-              width={64}
-              height={64}
-              style={{
-                transform: 'translate(-50%, -50%)',
-                position: 'absolute',
-                top: 0,
-                left: '50%',
-              }}
-            />
-            <Outlet />
+      <div className='relative h-full w-full text-center flex bg-[--color-bg]'>
+        <TrailLinesContainer>
+          <div className='flex flex-col justify-center items-center h-full min-h-[450px]'>
+            <div className='flex flex-col items-center justify-center gap-[--padding-sm] p-[--padding-lg] pt-[32px] min-w-[400px] max-w-lg rounded-md relative bg-[--hl-sm] m-0'>
+              <InsomniaLogo
+                width={64}
+                height={64}
+                style={{
+                  transform: 'translate(-50%, -50%)',
+                  position: 'absolute',
+                  top: 0,
+                  left: '50%',
+                }}
+              />
+              <Outlet />
+            </div>
           </div>
-        </div>
-      </TrailLinesContainer>
-    </div>
+        </TrailLinesContainer>
+      </div>
       <div className="relative flex items-center overflow-hidden">
         <div className='flex w-full h-full items-center justify-between'>
           <div className="flex h-full">

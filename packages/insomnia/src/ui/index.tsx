@@ -7,7 +7,7 @@ import {
   matchPath,
   Outlet,
   RouterProvider,
-} from 'react-router-dom';
+} from 'react-router';
 
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from '../account/session';
 import {
@@ -121,7 +121,7 @@ async function renderApp() {
         errorElement: <ErrorRoute />,
         children: [
           {
-            path: 'onboarding/*',
+            path: 'onboarding',
             element: <Onboarding />,
             errorElement: <ErrorRoute />,
           },
@@ -549,7 +549,7 @@ async function renderApp() {
                             ),
                             children: [
                               {
-                                path: `${ACTIVITY_DEBUG}/*`,
+                                path: `${ACTIVITY_DEBUG}`,
                                 loader: async (...args) =>
                                   (await import('./routes/debug')).loader(
                                     ...args,
@@ -740,7 +740,7 @@ async function renderApp() {
                                 ],
                               },
                               {
-                                path: 'mock-server/*',
+                                path: 'mock-server',
                                 id: 'mock-server',
                                 loader: async (...args) =>
                                   (await import('./routes/mock-server')).loader(
@@ -917,7 +917,7 @@ async function renderApp() {
                                 ],
                               },
                               {
-                                path: 'test/*',
+                                path: 'test',
                                 loader: async (...args) =>
                                   (await import('./routes/unit-test')).loader(
                                     ...args,

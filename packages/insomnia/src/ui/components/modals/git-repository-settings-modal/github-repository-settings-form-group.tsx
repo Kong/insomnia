@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
-import { useFetcher } from 'react-router-dom';
+import { useFetcher } from 'react-router';
 
 import type { GitCredentials } from '../../../../models/git-credentials';
 import type { GitRepository } from '../../../../models/git-repository';
@@ -138,7 +138,7 @@ const GitHubRepositoryForm = ({
         >
           Sign out
         </Button>
-        </div>
+      </div>
       <GitHubRepositorySelect uri={uri} token={credentials.token} />
       {error && (
         <p className="notice error margin-bottom-sm">

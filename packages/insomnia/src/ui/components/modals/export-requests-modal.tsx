@@ -1,6 +1,6 @@
 import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import { Button, Checkbox, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router';
 
 import { exportRequestsToFile } from '../../../common/export';
 import { requestGroup } from '../../../models';
@@ -319,7 +319,7 @@ export const ExportRequestsModal = ({ workspaceIdToExport, onClose }: { workspac
                 >
                   <Icon icon="save" /> Export
                 </Button>
-          </div>
+              </div>
             </div>
           )}
         </Dialog>

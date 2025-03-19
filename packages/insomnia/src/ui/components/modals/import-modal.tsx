@@ -12,7 +12,7 @@ import React, {
 } from 'react';
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
 import { Heading } from 'react-aria-components';
-import { useFetcher } from 'react-router-dom';
+import { useFetcher } from 'react-router';
 
 import type { ScanResult } from '../../../common/import';
 import { isScratchpadProject } from '../../../models/project';
@@ -158,22 +158,22 @@ const FileField: FC = () => {
             </div>
           ))}
         </div>) : (
-            <div
-              className="flex flex-col items-center justify-center p-[var(--padding-md)] gap-[var(--padding-sm)] w-full"
-            >
-              <div>
-                <i className="fa fa-upload fa-xl" />
-              </div>
-              <div>
-                Drag and Drop or{' '}
-                <span
-                  className="text-[color:var(--color-surprise)]"
-                >
-                  Choose Files
-                </span>{' '}
-                to import
-              </div>
+          <div
+            className="flex flex-col items-center justify-center p-[var(--padding-md)] gap-[var(--padding-sm)] w-full"
+          >
+            <div>
+              <i className="fa fa-upload fa-xl" />
             </div>
+            <div>
+              Drag and Drop or{' '}
+              <span
+                className="text-[color:var(--color-surprise)]"
+              >
+                Choose Files
+              </span>{' '}
+              to import
+            </div>
+          </div>
         )}
       </label>
     </div>
@@ -433,19 +433,19 @@ export const ImportModal: FC<ImportModalProps> = ({
             }}
           />
         ) : (
-            <ScanResourcesForm
-              from={from}
-              scanResults={scanResourcesFetcherData}
-              onSubmit={e => {
-                e.preventDefault();
-                // file://./../../routes/import.tsx#scanForResourcesAction
-                scanResourcesFetcher.submit(e.currentTarget, {
-                  method: 'post',
-                  action: '/import/scan',
-                });
-              }}
-              loading={scanResourcesFetcher.state !== 'idle'}
-            />
+          <ScanResourcesForm
+            from={from}
+            scanResults={scanResourcesFetcherData}
+            onSubmit={e => {
+              e.preventDefault();
+              // file://./../../routes/import.tsx#scanForResourcesAction
+              scanResourcesFetcher.submit(e.currentTarget, {
+                method: 'post',
+                action: '/import/scan',
+              });
+            }}
+            loading={scanResourcesFetcher.state !== 'idle'}
+          />
         )}
       </Modal>
     </OverlayContainer>
@@ -460,8 +460,8 @@ const ScanResourcesForm = ({
 }: {
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
   from?: ImportModalProps['from'];
-    scanResults?: ScanResult[];
-    loading: boolean;
+  scanResults?: ScanResult[];
+  loading: boolean;
 }) => {
   const id = useId();
   const [importFrom, setImportFrom] = useState(from?.type || 'uri');
@@ -601,14 +601,14 @@ const ImportResourcesForm = ({
   disabled,
   loading,
 }: {
-    scanResults: ScanResult[];
+  scanResults: ScanResult[];
   organizationId: string;
   defaultProjectId?: string;
   defaultWorkspaceId?: string;
   errors?: string[];
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
   disabled: boolean;
-    loading: boolean;
+  loading: boolean;
 }
 ) => {
   const id = useId();
@@ -754,7 +754,7 @@ const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] }) => {
                       className="table--no-outline-row"
                     >
                       <td>
-                          <div className="flex items-center gap-[var(--padding-md)]">
+                        <div className="flex items-center gap-[var(--padding-md)]">
                           {scanResult.apiSpecs.length}{' '}
                           {scanResult.apiSpecs.length === 1 ? 'OpenAPI Spec' : 'OpenAPI Specs'}
                         </div>

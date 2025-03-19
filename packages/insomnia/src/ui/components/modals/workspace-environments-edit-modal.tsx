@@ -1,7 +1,7 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useMemo, useRef, useState } from 'react';
 import { Button, Dialog, DropIndicator, GridList, GridListItem, Heading, Label, Menu, MenuItem, MenuTrigger, Modal, ModalOverlay, Popover, Text, ToggleButton, useDragAndDrop } from 'react-aria-components';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
 
 import { docsAfterResponseScript, docsTemplateTags } from '../../../common/documentation';
 import { debounce } from '../../../common/misc';
@@ -71,33 +71,33 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
           method: 'post',
           action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/duplicate`,
         });
-      },
-    }, {
-        id: 'delete',
-        name: 'Delete',
-        icon: 'trash',
-        action: async (environment: Environment) => {
-          showAlert({
-            title: 'Delete Environment',
-            message: `Are you sure you want to delete "${environment.name}"?`,
-            addCancel: true,
-            okLabel: 'Delete',
-            onConfirm: async () => {
-              deleteEnvironmentFetcher.submit(
-                {
-                  environmentId: environment._id,
-                },
-                {
-                  method: 'post',
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/delete`,
-                }
-              );
-
-              setSelectedEnvironmentId(baseEnvironment._id);
+    },
+  }, {
+    id: 'delete',
+    name: 'Delete',
+    icon: 'trash',
+    action: async (environment: Environment) => {
+      showAlert({
+        title: 'Delete Environment',
+        message: `Are you sure you want to delete "${environment.name}"?`,
+        addCancel: true,
+        okLabel: 'Delete',
+        onConfirm: async () => {
+          deleteEnvironmentFetcher.submit(
+            {
+              environmentId: environment._id,
             },
-          });
+            {
+              method: 'post',
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/delete`,
+            }
+          );
+
+          setSelectedEnvironmentId(baseEnvironment._id);
         },
-      },
+      });
+    },
+  },
     ];
 
   const createEnvironmentActionsList: {
@@ -125,8 +125,8 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
       }, {
         id: 'private',
         name: 'Private environment',
-      description: 'Local and not exportable',
-      icon: 'lock',
+        description: 'Local and not exportable',
+        icon: 'lock',
         action: async () => {
           createEnvironmentFetcher.submit({
             isPrivate: true,

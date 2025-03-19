@@ -2,7 +2,7 @@ import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
 import React, { type FC, useCallback, useMemo } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';

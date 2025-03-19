@@ -1,7 +1,7 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, Fragment, useCallback, useEffect, useState } from 'react';
 import { Button, Collection, Menu, MenuItem, MenuTrigger, Popover, Section, Tooltip, TooltipTrigger } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router';
 import { useInterval } from 'react-use';
 
 import type { Project } from '../../../models/project';

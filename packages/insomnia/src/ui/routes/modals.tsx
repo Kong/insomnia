@@ -1,5 +1,5 @@
 import React, { type FC } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router';
 
 import { ErrorBoundary } from '../components/error-boundary';
 import { registerModal } from '../components/modals';

@@ -1,5 +1,5 @@
 import React, { type ComponentProps, type FC, type ReactNode, useCallback } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router';
 import { useToggle } from 'react-use';
 
 import { toKebabCase } from '../../../../../common/misc';
