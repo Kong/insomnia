@@ -18,7 +18,7 @@ interface ContextProps {
   appTabsRef?: React.MutableRefObject<InsomniaTabs | undefined>;
   closeTabById: (id: string) => void;
   addTab: (tab: BaseTab) => void;
-  changeActiveTab: (id: string) => void;
+  changeActiveTab: (id: string, options?: { navigate: boolean }) => void;
   closeAllTabsUnderWorkspace?: (workspaceId: string) => void;
   closeAllTabsUnderProject?: (projectId: string) => void;
   batchCloseTabs?: (ids: string[]) => void;
@@ -79,6 +79,20 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
   const addTab = useCallback((tab: BaseTab) => {
     const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
 
+    if (tab.temporary) {
+      // If the tab is temporary, replace the existing temporary tab
+      const temporaryIndex = currentTabs.tabList.findIndex(t => t.temporary);
+      if (temporaryIndex !== -1) {
+        const newTabList = [...currentTabs.tabList];
+        newTabList.splice(temporaryIndex, 1, tab);
+        updateInsomniaTabs({
+          organizationId,
+          tabList: newTabList,
+          activeTabId: tab.id,
+        });
+        return;
+      }
+    }
     updateInsomniaTabs({
       organizationId,
       tabList: [...currentTabs.tabList, tab],
@@ -244,14 +258,16 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     });
   }, [organizationId, updateInsomniaTabs]);
 
-  const changeActiveTab = useCallback((id: string) => {
+  const changeActiveTab = useCallback((id: string, options = { navigate: true }) => {
     const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
     if (!currentTabs) {
       return;
     }
     const tab = currentTabs?.tabList.find(tab => tab.id === id);
-    // keep the search params when navigate to another tab
-    tab?.url && navigate(tab.url);
+    if (options?.navigate && tab?.url) {
+      navigate(tab.url);
+    }
+
     updateInsomniaTabs({
       organizationId,
       tabList: currentTabs.tabList,

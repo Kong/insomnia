@@ -5,6 +5,7 @@ import * as models from '../../../models';
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
+import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import type { ConnectActionParams } from '../../routes/request';
 import { OneLineEditor, type OneLineEditorHandle } from '../codemirror/one-line-editor';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -28,6 +29,8 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId,
   const fetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
 
+  const { updateTabById } = useInsomniaTabContext();
+
   const connect = useCallback((connectParams: ConnectActionParams) => {
     fetcher.submit(JSON.stringify(connectParams), {
       action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/connect`,
@@ -37,6 +40,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId,
   }, [fetcher, organizationId, projectId, requestId, workspaceId]);
 
   const handleSubmit = useCallback(async () => {
+    updateTabById?.(request._id, { temporary: false });
     if (isOpen) {
       window.main.webSocket.close({ requestId: request._id });
       return;
@@ -63,7 +67,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId,
       cookieJar: rendered.workspaceCookieJar,
       suppressUserAgent: rendered.suppressUserAgent,
     });
-  }, [connect, environmentId, isOpen, request, workspaceId]);
+  }, [connect, environmentId, isOpen, request, updateTabById, workspaceId]);
 
   useEffect(() => {
     const sendOnMetaEnter = (event: KeyboardEvent) => {
