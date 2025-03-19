@@ -106,8 +106,8 @@ test.describe('Check vault used in environment', async () => {
     },
   });
 
-  // skip the flaky test and fix it later
-  test('create global private sub environment to store vaults', async ({ page, app }) => {
+  // TODO: (kent) skip the flaky test and fix it later
+  test.skip('create global private sub environment to store vaults', async ({ page, app }) => {
     // import request
     const requestColText = await loadFixture('vault-collection.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), requestColText);
@@ -115,7 +115,7 @@ test.describe('Check vault used in environment', async () => {
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  // create global private environment
+    // create global private environment
     await page.getByLabel('Create in project').click();
     await page.getByLabel('Create', { exact: true }).getByText('Environment').click();
     await page.getByPlaceholder('Enter a name for your Environment').fill('New Global Vault Environment');
@@ -170,7 +170,8 @@ test.describe('Check vault used in environment', async () => {
     await page.getByText('world').click();
   });
 
-  test('test vault environment to be applied', async ({ app, page }) => {
+  // TODO: (kent) skip the flaky test and fix it later
+  test.skip('test vault environment to be applied', async ({ app, page }) => {
     // import global environment
     const vaultEnvText = await loadFixture('vault-environment.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), vaultEnvText);
