@@ -142,9 +142,9 @@ export const importResourcesAction: ActionFunction = async ({ request }): Promis
   return { done: true };
 };
 
-// we sync the new workspace to the cloud in workspaceLoader when user enters the workspace
-// since we won't navigate to the workspace automatically after import
-// here we push to the cloud programmatically
+// The reason why we put this function here is because this function indirectly depends on some modules that can only run in a browser environment.
+// If we put this function in import.ts which is depended by Inso CLI, Inso CLI will fail to build because it doesn't have access to the browser environment.
+// So we put this function here and pass it to importResourcesToProject func to avoid the dependency issue.
 async function syncNewWorkspaceIfNeeded(newWorkspace: Workspace) {
   const project = await models.project.getById(newWorkspace.parentId);
   invariant(project, 'Project not found');
