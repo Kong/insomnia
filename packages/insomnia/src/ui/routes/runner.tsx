@@ -139,7 +139,7 @@ export const Runner: FC<{}> = () => {
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
 
   const { runnerStateMap, updateRunnerState } = useRunnerContext();
-  const { iterationCount = 1, delay = 0, selectedKeys = new Set<Key>(), advancedConfig = defaultAdvancedConfig, uploadData = [], file } = runnerStateMap?.[organizationId]?.[runnerId] || {};
+  const { iterationCount = 1, delay = 0, selectedKeys = new Set<Key>(), advancedConfig = defaultAdvancedConfig, uploadData = [], file, filePath } = runnerStateMap?.[organizationId]?.[runnerId] || {};
   invariant(iterationCount, 'iterationCount should not be null');
 
   const { reqList, requestRows, entityMap } = useRunnerRequestList(organizationId, targetFolderId, runnerId);
@@ -334,7 +334,7 @@ export const Runner: FC<{}> = () => {
     const latestTimingSteps = await window.main.getExecution({ requestId: runnerId });
     let isRunning = false;
     if (latestTimingSteps) {
-    // there is a timingStep item and it is not ended (duration is not assigned)
+      // there is a timingStep item and it is not ended (duration is not assigned)
       isRunning = latestTimingSteps.length > 0 && latestTimingSteps[latestTimingSteps.length - 1].stepName !== 'Done';
     }
     setIsRunning(isRunning);
@@ -686,16 +686,18 @@ export const Runner: FC<{}> = () => {
                 keepManualOrder={!isConsistencyChanged}
                 iterationCount={iterationCount}
                 delay={delay}
-                filePath={file?.path || ''}
+                filePath={filePath || ''}
                 bail={advancedConfig?.bail}
               />
             )}
             {showUploadModal && (
               <UploadDataModal
                 onUploadFile={(file, uploadData) => {
+                  const filePath = file ? window.webUtils.getPathForFile(file) : '';
                   updateRunnerState(organizationId, runnerId, {
                     uploadData,
                     file,
+                    filePath,
                     iterationCount: uploadData.length >= 1 ? uploadData.length : iterationCount,
                   });
                 }}
