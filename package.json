@@ -11,7 +11,7 @@
   },
   "homepage": "https://github.com/kong/insomnia#readme",
   "engines": {
-    "node": ">=20.18.0 <22",
+    "node": ">=22.14.0",
     "npm": ">=10"
   },
   "workspaces": [
@@ -65,7 +65,7 @@
     "vitest": "^2.0.4"
   },
   "dependencies": {
-    "@getinsomnia/node-libcurl": "^2.33.4",
+    "@getinsomnia/node-libcurl": "^2.35.0",
     "@types/decompress": "^4.2.7",
     "decompress": "^4.2.1"
   }
