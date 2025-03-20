@@ -68,6 +68,7 @@ jobs:
 
       - name: Upload smoke test traces
         uses: actions/upload-artifact@v4
+        if: failure()
         with:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-package-critical-test-traces-${{ github.run_number }}
