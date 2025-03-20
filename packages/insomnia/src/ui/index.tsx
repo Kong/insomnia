@@ -549,7 +549,7 @@ async function renderApp() {
                             ),
                             children: [
                               {
-                                path: `${ACTIVITY_DEBUG}`,
+                                path: `${ACTIVITY_DEBUG}/*`,
                                 loader: async (...args) =>
                                   (await import('./routes/debug')).loader(
                                     ...args,
