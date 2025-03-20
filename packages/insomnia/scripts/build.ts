@@ -27,10 +27,10 @@ export const start = async () => {
     `[build] node: ${childProcess.spawnSync('node', ['--version']).stdout}`.trim()
   );
 
-  // if (process.version.indexOf('v22.') !== 0) {
-  //   console.log('[build] Node 22.x.x is required to build');
-  //   process.exit(1);
-  // }
+  if (process.version.indexOf('v22.') !== 0) {
+    console.log('[build] Node 22.x.x is required to build');
+    process.exit(1);
+  }
 
   const buildFolder = path.join('../build');
 

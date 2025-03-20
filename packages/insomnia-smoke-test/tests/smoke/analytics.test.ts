@@ -41,8 +41,7 @@ interface SegmentLog {
     data: SegmentRequestData[];
 }
 
-// TODO: (filipe) skip the flaky test and fix it later
-test.skip('analytics events are sent', async ({ page, app }) => {
+test('analytics events are sent', async ({ page, app }) => {
     await app.evaluate(async ({ session }) => {
         // Capture segment requests to a global variable in main process
         globalThis.segmentLogs = [];

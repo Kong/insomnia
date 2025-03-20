@@ -106,8 +106,7 @@ test.describe('Check vault used in environment', async () => {
     },
   });
 
-  // TODO: (kent) skip the flaky test and fix it later
-  test.skip('create global private sub environment to store vaults', async ({ page, app }) => {
+  test('create global private sub environment to store vaults', async ({ page, app }) => {
     // import request
     const requestColText = await loadFixture('vault-collection.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), requestColText);
@@ -170,8 +169,7 @@ test.describe('Check vault used in environment', async () => {
     await page.getByText('world').click();
   });
 
-  // TODO: (kent) skip the flaky test and fix it later
-  test.skip('test vault environment to be applied', async ({ app, page }) => {
+  test('test vault environment to be applied', async ({ app, page }) => {
     // import global environment
     const vaultEnvText = await loadFixture('vault-environment.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), vaultEnvText);
