@@ -9,6 +9,7 @@ import type { RequestGroup } from '../../models/request-group';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import type { WebSocketRequest } from '../../models/websocket-request';
 import type { Workspace } from '../../models/workspace';
+import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { type BaseTab, type TabType } from '../components/tabs/tab';
 import { TAB_ROUTER_PATH } from '../components/tabs/tab-list';
 import { formatMethodName, getRequestMethodShortHand } from '../components/tags/method-tag';
@@ -38,7 +39,7 @@ export const useInsomniaTab = ({
   unitTestSuite,
 }: InsomniaTabProps) => {
 
-  const { appTabsRef, addTab, changeActiveTab } = useInsomniaTabContext();
+  const { appTabsRef, addTab, changeActiveTab, closeTabById } = useInsomniaTabContext();
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
@@ -288,4 +289,14 @@ export const useInsomniaTab = ({
       }
     }
   }, [addTab, appTabsRef, changeActiveTab, getCurrentTab, location.pathname, organizationId, packTabInfo]);
+
+  useDocBodyKeyboardShortcuts({
+    close_tab: event => {
+      event.preventDefault();
+      const currentActiveTabId = appTabsRef?.current?.[organizationId]?.activeTabId;
+      if (currentActiveTabId) {
+        closeTabById(currentActiveTabId);
+      }
+    },
+  });
 };
