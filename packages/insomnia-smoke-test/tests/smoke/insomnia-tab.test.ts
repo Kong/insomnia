@@ -89,11 +89,10 @@ test.describe('multiple-tab feature test', () => {
   test('allow closing tab by mouse scroll press', async ({ page }) => {
     await page.getByLabel('Create in collection').click();
     await page.getByLabel('HTTP Request').click();
-    await page.waitForTimeout(1000);
-    const tab = await page.getByLabel('Insomnia Tabs').getByLabel(`tab-${DEFAULT_REQUEST_NAME}`, { exact: true });
-    expect(tab).toBeVisible();
-    tab.click({ button: 'middle' });
-    await expect(tab).toBeHidden();
+    const tabLocator = page.getByLabel('Insomnia Tabs').getByLabel(`tab-${DEFAULT_REQUEST_NAME}`, { exact: true });
+    await expect(tabLocator).toBeVisible();
+    await tabLocator.click({ button: 'middle' });
+    await expect(tabLocator).toBeHidden();
   });
 
 });
