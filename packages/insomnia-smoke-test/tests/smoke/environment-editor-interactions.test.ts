@@ -126,7 +126,8 @@ test.describe('Environment Editor', async () => {
     // check row has been disabled
     await expect(firstRow).toHaveCSS('opacity', '0.4');
     // delete all items
-    await page.getByRole('button', { name: 'Delete All' }).dblclick();
+    await page.getByRole('button', { name: 'Delete All' }).click();
+    await page.getByTitle('Click again to confirm').click();
 
     firstRow = await kvTable.getByRole('option').first();
     await firstRow.getByTestId('OneLineEditor').first().click();

@@ -27,18 +27,18 @@ test.describe('multiple-tab feature test', () => {
     await page.getByLabel('Create in collection').click();
     await page.getByLabel('HTTP Request').click();
     await page.getByTestId('New Request').dblclick();
-    await page.getByRole('textbox', { name: 'GET New Request' }).fill('New Request A');
+    await page.getByRole('textbox', { name: 'GET New Request' }).fill('first');
     await page.getByLabel('Create in collection').click();
     await page.getByLabel('HTTP Request').click();
     await page.getByTestId('New Request').dblclick();
-    await page.getByRole('textbox', { name: 'GET New Request' }).fill('New Request B');
-    await page.getByTestId('New Request A').click();
+    await page.getByRole('textbox', { name: 'GET New Request' }).fill('second');
+    await page.getByTestId('first').click();
     await page.waitForTimeout(1000);
-    const tabA = await page.getByLabel('Insomnia Tabs').getByLabel('tab-New Request A', { exact: true });
+    const tabA = await page.getByLabel('Insomnia Tabs').getByLabel('tab-first', { exact: true });
     expect(await tabA.getAttribute('data-selected')).toBe('true');
-    await page.getByTestId('New Request B').click();
+    await page.getByTestId('second').click();
     await page.waitForTimeout(1000);
-    const tabB = await page.getByLabel('Insomnia Tabs').getByLabel('tab-New Request B', { exact: true });
+    const tabB = await page.getByLabel('Insomnia Tabs').getByLabel('tab-second', { exact: true });
     expect(await tabB.getAttribute('data-selected')).toBe('true');
   });
 
