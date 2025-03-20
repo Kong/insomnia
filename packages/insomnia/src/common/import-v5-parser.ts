@@ -28,12 +28,12 @@ const CACertificateSchema = z.object({
 });
 
 const CookieSchema = z.object({
-  id: z.string(),
-  key: z.string(),
-  value: z.string(),
+  id: z.string().optional().default(() => crypto.randomUUID()),
+  key: z.string().optional().default(''),
+  value: z.string().optional().default(''),
   expires: z.coerce.date().nullable().default(null),
-  domain: z.string(),
-  path: z.string(),
+  domain: z.string().optional().default(''),
+  path: z.string().optional().default('/'),
   secure: z.boolean().optional().default(false),
   httpOnly: z.boolean().optional().default(false),
   extensions: z.array(jsonSchema).optional(),
