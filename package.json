@@ -11,7 +11,7 @@
   },
   "homepage": "https://github.com/kong/insomnia-ee#readme",
   "engines": {
-    "node": ">=20.18.0 <22",
+    "node": ">=22.14.0",
     "npm": ">=10"
   },
   "workspaces": [
@@ -37,6 +37,7 @@
     "test:smoke:dev": "npm run test:dev -w insomnia-smoke-test -- --project=Smoke",
     "test:smoke:build": "npm run test:build -w insomnia-smoke-test -- --project=Smoke",
     "test:smoke:package": "npm run test:package -w insomnia-smoke-test -- --project=Smoke",
+    "test:crit:package": "npm run test:package -w insomnia-smoke-test -- --project=Critical",
     "changelog-image": "esr ./scripts/changelog-image/changelog-image.ts",
     "download-all-npm-plugins": "esr ./scripts/download-all-npm-plugins.ts"
   },
@@ -45,7 +46,7 @@
     "@types/eslint": "^8.56.7",
     "@types/har-format": "^1.2.15",
     "@types/mocha": "^10.0.6",
-    "@types/node": "^20.12.4",
+    "@types/node": "^22.13.10",
     "@typescript-eslint/eslint-plugin": "^7.5.0",
     "@typescript-eslint/parser": "^7.5.0",
     "esbuild": "^0.24.0",
@@ -65,7 +66,7 @@
     "vitest": "^2.0.4"
   },
   "dependencies": {
-    "@getinsomnia/node-libcurl": "^2.33.4",
+    "@getinsomnia/node-libcurl": "^2.35.0",
     "@types/decompress": "^4.2.7",
     "decompress": "^4.2.1"
   }
