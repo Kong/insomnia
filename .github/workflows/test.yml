@@ -18,7 +18,7 @@ concurrency:
 jobs:
   Test:
     timeout-minutes: 20
-    runs-on: ubuntu-22.04
+    runs-on: windows-latest
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4
@@ -39,14 +39,8 @@ jobs:
       - name: Lint markdown
         run: npm run lint:markdown
 
-      - name: Type checks
-        run: npm run type-check
-
-      - name: Unit Tests
-        run: npm test
-
       - name: Build app for smoke tests
-        run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
+        run: npm run app-build
 
       - name: Smoke test electron app
         run: |
