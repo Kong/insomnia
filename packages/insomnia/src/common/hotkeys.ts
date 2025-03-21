@@ -35,6 +35,7 @@ export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
   'environment_showVariableSourceAndValue': 'Show variable source and value',
   'beautifyRequestBody': 'Beautify Active Code Editors',
   'graphql_explorer_focus_filter': 'Focus GraphQL Explorer Filter',
+  'close_tab': 'Close Tab',
 };
 
 /**
@@ -162,6 +163,10 @@ const defaultRegistry: HotKeyRegistry = {
   graphql_explorer_focus_filter: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.i.keyCode }],
     winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.i.keyCode }],
+  },
+  close_tab: {
+    macKeys: [{ meta: true, keyCode: keyboardKeys.w.keyCode }],
+    winLinuxKeys: [{ ctrl: true, keyCode: keyboardKeys.w.keyCode }],
   },
 };
 
