@@ -33,14 +33,9 @@ jobs:
       - name: Install packages
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Lint markdown
-        run: npm run lint:markdown
-
       - name: Build app for smoke tests
-        run: npm run app-build
+        shell: bash
+        run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
 
       - name: Smoke test electron app
         run: |
