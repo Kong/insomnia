@@ -147,7 +147,8 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
     >
       {({ isSelected, isHovered }) => (
         <Tooltip delay={1000} message={`${tab.projectName} / ${tab.workspaceName}`} className='h-full'>
-          <div onDoubleClick={handleDoubleClick}
+          <div
+            onDoubleClick={handleDoubleClick}
             onAuxClick={e => handleAuxClick(e, tab.id)}
             onContextMenu={handleContextMenu}
             className={`relative flex items-center h-full px-[10px] flex-nowrap border-solid border-r border-[--hl-sm] hover:text-[--color-font] outline-none max-w-[200px] cursor-pointer ${(!isSelected && !isHovered) && 'opacity-[0.7]'}`}
