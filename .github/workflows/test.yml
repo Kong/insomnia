@@ -39,10 +39,7 @@ jobs:
 
       - name: Smoke test electron app
         run: |
-          GIT_SYNC_SMOKE_TEST_TOKEN=${{env.GIT_SYNC_SMOKE_TEST_TOKEN}} \
           npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
-        env:
-          GIT_SYNC_SMOKE_TEST_TOKEN: ${{ secrets.GIT_SYNC_SMOKE_TEST_TOKEN }}
 
       # This step should always run even when previous steps fail
       - name: Upload smoke test traces
