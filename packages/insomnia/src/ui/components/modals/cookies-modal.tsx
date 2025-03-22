@@ -135,7 +135,6 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
     updateCookieJar(cookieJar._id, cookieJar);
   };
 
-  console.log(filteredCookies);
   return (
     <ModalOverlay
       isDismissable={true}
