@@ -51,7 +51,7 @@ jobs:
         run: npm ci
 
       - name: Download release artifacts from insomnia-ee
-        uses: robinraju/release-downloader@v1
+        uses: robinraju/release-downloader@daf26c55d821e836577a15f77d86ddc078948b05 # v1
         with:
           repository: ${{ env.ARTIFACTS_REPOSITORY }}
           tag: core@${{ env.RELEASE_VERSION }}
@@ -61,7 +61,7 @@ jobs:
 
       - name: Docker meta for Inso CLI Docker Image
         id: inso_docker_meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5
         with:
           images: ${{ env.INSO_DOCKER_IMAGE }}
           tags: |
@@ -73,7 +73,7 @@ jobs:
 
       # Setup regctl to parse platform specific image digest from image manifest
       - name: Install regctl
-        uses: regclient/actions/regctl-installer@main
+        uses: regclient/actions/regctl-installer@ce5fd131e371ffcdd7508b478cb223b3511a9183 # main
 
       # The image manifest digest/sha is generated only after the image is published to registry
       - name: Parse architecture specific digest from image manifest
@@ -123,7 +123,7 @@ jobs:
           ${{env.ARTIFACTS_DOWNLOAD_PATH}}/Insomnia.Core-${{env.RELEASE_VERSION}}.{snap,tar.gz,zip,rpm,dmg,deb,AppImage,exe}
 
       - name: Create Tag and Release
-        uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@440c8c1cb0ed28b9f43e4d1d670870f059653174 # v1
         id: core_tag_and_release
         with:
           tag: ${{ env.RELEASE_CORE_TAG }}
@@ -136,7 +136,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifacts to release
-        uses: xresloader/upload-to-github-release@v1
+        uses: xresloader/upload-to-github-release@d29300fdff9f0fcd7c3eb960c490b2a6640fbf50 # v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -195,7 +195,7 @@ jobs:
 
       - name: Upload x64 Linux snap to snapcraft (beta and stable only)
         if: ${{ !contains(github.event.inputs.version, 'alpha') }}
-        uses: canonical/action-publish@v1
+        uses: canonical/action-publish@214b86e5ca036ead1668c79afb81e550e6c54d40 # v1
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN_FILE_NEW }}
         with:
@@ -229,7 +229,7 @@ jobs:
             ${{ env.IS_PRERELEASE == 'true' && '--internal' || '--publish' }}
 
       - name: Configure Git user
-        uses: Homebrew/actions/git-user-config@master
+        uses: Homebrew/actions/git-user-config@266845213695c3047d210b2e8fbc42ecdaf45802 # master
         with:
           username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
 

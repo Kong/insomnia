@@ -116,7 +116,7 @@ jobs:
       # signs unpacked electron-builder contents, in this case only the .exe
       - name: Code-sign unpacked .exe (Windows only)
         if: runner.os == 'Windows'
-        uses: sslcom/esigner-codesign@develop
+        uses: sslcom/esigner-codesign@3b2dc3b6075c05ef889d88b761a1fd0183b28c6a # develop
         with:
           command: batch_sign
           username: ${{secrets.ES_USERNAME}}
@@ -174,7 +174,7 @@ jobs:
 
       - name: Notarize Inso CLI installer (macOS only)
         if:  runner.os == 'macOS'
-        uses: lando/notarize-action@v2
+        uses: lando/notarize-action@b5c3ef16cf2fbcf2af26dc58c90255ec242abeed # v2
         with:
           product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
           primary-bundle-id: com.insomnia.inso
@@ -185,13 +185,13 @@ jobs:
 
       - name: Staple Inso CLI installer (macOS only)
         if: runner.os == 'macOS'
-        uses: BoundfoxStudios/action-xcode-staple@v1
+        uses: BoundfoxStudios/action-xcode-staple@1e2200b448c6ed4dd44b963ff17d3e340fc6b064 # v1
         with:
           product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
 
       - name: Notarize Inso CLI binary (macOS only)
         if: runner.os == 'macOS'
-        uses: lando/notarize-action@v2
+        uses: lando/notarize-action@b5c3ef16cf2fbcf2af26dc58c90255ec242abeed # v2
         with:
           product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/binaries/inso
           primary-bundle-id: com.insomnia.inso-binary
@@ -262,7 +262,7 @@ jobs:
           BRANCH: ${{ github.ref_name }}
 
       - name: update-pull-request
-        uses: kt3k/update-pr-description@v2.0.0
+        uses: kt3k/update-pr-description@fef8b17c6648e0daa550d2ed6b5cf140d282574e # v2.0.0
         with:
           pr_body: |
             # WARNING: <ins>Do not merge</ins> this PR. Use the "Publish" workflow.
