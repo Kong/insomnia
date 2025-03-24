@@ -396,7 +396,8 @@ export function importInsomniaV5Data(rawData: string) {
 export async function getInsomniaV5DataExport({
   workspaceId,
   includePrivateEnvironments,
-}: { workspaceId: string; includePrivateEnvironments: boolean }) {
+  requestIds,
+}: { workspaceId: string; includePrivateEnvironments: boolean; requestIds?: string[] }) {
   try {
 
     const workspace = await models.workspace.getById(workspaceId);
@@ -420,7 +421,13 @@ export async function getInsomniaV5DataExport({
     function getCollectionFromResources(resources: (Request | RequestGroup | WebSocketRequest | GrpcRequest)[], parentId: string): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'] {
       const collection: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'] = [];
 
-      resources.filter(resource => resource.parentId === parentId).forEach(resource => {
+      resources.filter(resource => {
+        if (!requestIds || requestIds.length === 0 || models.requestGroup.isRequestGroup(resource)) {
+          return true;
+        }
+
+        return requestIds.includes(resource._id);
+      }).filter(resource => resource.parentId === parentId).forEach(resource => {
         if (models.request.isRequest(resource)) {
           const request: Z_Request = {
             url: resource.url,
