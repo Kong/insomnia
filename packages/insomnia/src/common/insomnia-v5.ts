@@ -241,7 +241,7 @@ function getCollection(file: InsomniaFile): (Request | WebSocketRequest | GrpcRe
 
     function walkCollection(collection: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'], parentId: string) {
       collection?.forEach(item => {
-        if ('children' in item) {
+        if ('children' in item && item.children) {
           const requestGroup: WithExportType<RequestGroup> = {
             ...mapMetaToInsomniaMeta(item.meta || {
               id: '__REQUEST_GROUP_ID__',
@@ -261,7 +261,7 @@ function getCollection(file: InsomniaFile): (Request | WebSocketRequest | GrpcRe
           resources.push(requestGroup);
 
           walkCollection(item.children, requestGroup._id);
-        } else if ('method' in item) {
+        } else if ('method' in item && item.method) {
           const request: WithExportType<Request> = {
             ...mapMetaToInsomniaMeta(item.meta || {
               id: '__REQUEST_ID__',
