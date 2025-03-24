@@ -375,9 +375,30 @@ type RequestGroup = z.input<typeof RequestGroupSchema> & {
 
 const RequestGroupWithChildrenSchema: z.ZodType<RequestGroup> = RequestGroupSchema.extend({
   children: z.lazy(() => RequestCollectionSchema).optional(),
+  // These undefined properties are added to differentiate between the different types of children in the union
+  method: z.undefined(),
+  url: z.undefined(),
+  parameters: z.undefined(),
+  pathParameters: z.undefined(),
 });
 
-const RequestCollectionSchema = z.union([RequestGroupWithChildrenSchema, GRPCRequestSchema, RequestSchema, WebsocketRequestSchema]).array();
+const RequestCollectionSchema = z.union([
+  GRPCRequestSchema.extend({
+    // These undefined properties are added to differentiate between the different types of children in the union
+    children: z.undefined(),
+    method: z.undefined(),
+  }),
+  RequestSchema.extend({
+    // These undefined properties are added to differentiate between the different types of children in the union
+    children: z.undefined(),
+  }),
+  WebsocketRequestSchema.extend({
+    // These undefined properties are added to differentiate between the different types of children in the union
+    children: z.undefined(),
+    method: z.undefined(),
+  }),
+  RequestGroupWithChildrenSchema,
+]).array();
 
 const TestSchema = z.object({
   name: z.string().optional().default(''),
