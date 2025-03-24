@@ -699,7 +699,7 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
     template.push(developerMenu);
   }
 
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+  mainBrowserWindow.setMenu(Menu.buildFromTemplate(template));
   return mainBrowserWindow;
 }
 
