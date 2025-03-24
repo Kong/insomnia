@@ -1,5 +1,4 @@
 import { format } from 'date-fns';
-import fs from 'fs';
 import { mkdir, writeFile } from 'fs/promises';
 import path from 'path';
 import React from 'react';
@@ -194,10 +193,10 @@ const showSaveExportedFolderDialog = async () => {
   return filePath || null;
 };
 
-const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDone: fs.NoParamCallback) => {
+async function writeExportedFileToFileSystem(filename: string, data: string) {
   // Remember last exported path
   window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
-  fs.writeFile(filename, jsonData, {}, onDone);
+  await writeFile(filename, data);
 };
 
 export const exportProjectToFile = (activeProjectName: string, workspacesForActiveProject: Workspace[]) => {
@@ -237,11 +236,7 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
             }
             const stringifiedExport = await exportWorkspacesHAR(workspacesForActiveProject, shouldExportPrivateEnvironments);
 
-            writeExportedFileToFileSystem(fileName, stringifiedExport, err => {
-              if (err) {
-                console.warn('Export failed', err);
-              }
-            });
+            await writeExportedFileToFileSystem(fileName, stringifiedExport);
 
             break;
           }
@@ -264,11 +259,7 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
               const workspaceName = workspace.name.replace(/ /g, '-');
               const fileName = path.join(insomniaProjectExportFolder, `${workspaceName}-${workspace._id}.yaml`);
               const stringifiedExport = await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments: shouldExportPrivateEnvironments });
-              writeExportedFileToFileSystem(fileName, stringifiedExport, err => {
-                if (err) {
-                  console.warn('Export failed', err);
-                }
-              });
+              await writeExportedFileToFileSystem(fileName, stringifiedExport);
             }
             break;
           }
@@ -300,7 +291,7 @@ export const exportMockServerToFile = async (workspace: Workspace) => {
 
   try {
     const stringifiedExport = await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments: false });
-    writeExportedFileToFileSystem(fileName, stringifiedExport, err => err && console.warn('Export failed', err));
+    await writeExportedFileToFileSystem(fileName, stringifiedExport);
     window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: 'yaml', scope: 'mock-server' } });
   } catch (err) {
     showError({
@@ -336,7 +327,7 @@ export const exportGlobalEnvironmentToFile = async (workspace: Workspace) => {
 
   try {
     const stringifiedExport = await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments: shouldExportPrivateEnvironments });
-    writeExportedFileToFileSystem(fileName, stringifiedExport, err => err && console.warn('Export failed', err));
+    await writeExportedFileToFileSystem(fileName, stringifiedExport);
     window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: 'yaml', scope: 'environment' } });
   } catch (err) {
     showError({
@@ -395,6 +386,7 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
           default:
             throw new Error(`selected export format "${selectedFormat}" is invalid`);
         }
+        await writeExportedFileToFileSystem(fileName, stringifiedExport);
         window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: selectedFormat } });
       } catch (err) {
         showError({
@@ -405,11 +397,6 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
         return;
       }
 
-      writeExportedFileToFileSystem(fileName, stringifiedExport, err => {
-        if (err) {
-          console.warn('Export failed', err);
-        }
-      });
     },
   });
 };
@@ -428,7 +415,7 @@ export async function exportWorkspaceData({
   try {
     const workspaceName = workspace.name.replace(/ /g, '-');
     const filePath = path.join(dirPath, `${workspaceName}-${workspace._id}.yaml`);
-    await writeFile(filePath, JSON.stringify(insomniaExport));
+    await writeExportedFileToFileSystem(filePath, insomniaExport);
   } catch (error) {
     console.error(error);
   }
@@ -439,9 +426,6 @@ export async function exportAllData({
 }: {
   dirPath: string;
 }): Promise<void> {
-  const insomniaExportFolder = path.join(dirPath, `insomnia-export.${Date.now()}`);
-  await mkdir(insomniaExportFolder);
-
   const workspaces = await database.find<Workspace>(models.workspace.type);
 
   const baseEnvironments = await database.find<Environment>(environment.type, {
@@ -456,6 +440,9 @@ export async function exportAllData({
   if (shouldPrompt) {
     includePrivateEnvironments = await showExportPrivateEnvironmentsModal();
   }
+
+  const insomniaExportFolder = path.join(dirPath, `insomnia-export.${Date.now()}`);
+  await mkdir(insomniaExportFolder);
 
   for (const workspace of workspaces) {
     await exportWorkspaceData({
