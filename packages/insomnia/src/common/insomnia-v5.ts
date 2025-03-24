@@ -393,7 +393,10 @@ export function importInsomniaV5Data(rawData: string) {
   }
 };
 
-export async function getInsomniaV5DataExport(workspaceId: string) {
+export async function getInsomniaV5DataExport({
+  workspaceId,
+  includePrivateEnvironments,
+}: { workspaceId: string; includePrivateEnvironments: boolean }) {
   try {
 
     const workspace = await models.workspace.getById(workspaceId);
@@ -526,13 +529,13 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
       return collection;
     }
 
-    function getEnvironmentsFromResources(resources: Environment[]): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['environments'] {
+    function getEnvironmentsFromResources(resources: Environment[], includePrivateEnvironments: boolean): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['environments'] {
       const baseEnvironment = resources.find(environment => environment.parentId.startsWith('wrk_'));
       if (!baseEnvironment) {
         throw new Error('Base environment not found');
       }
 
-      const subEnvironments = resources.filter(environment => environment.parentId === baseEnvironment?._id);
+      const subEnvironments = resources.filter(environment => environment.parentId === baseEnvironment?._id).filter(environment => includePrivateEnvironments || !environment.isPrivate);
 
       return {
         name: baseEnvironment.name,
@@ -667,7 +670,7 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
         },
         collection: getCollectionFromResources(exportableResources.filter(resource => models.requestGroup.isRequestGroup(resource) || models.request.isRequest(resource) || models.webSocketRequest.isWebSocketRequest(resource) || models.grpcRequest.isGrpcRequest(resource)), workspace._id),
         cookieJar: getCookieJarFromResources(exportableResources.filter(models.cookieJar.isCookieJar)),
-        environments: getEnvironmentsFromResources(exportableResources.filter(models.environment.isEnvironment)),
+        environments: getEnvironmentsFromResources(exportableResources.filter(models.environment.isEnvironment), includePrivateEnvironments),
       };
 
       return stringify(removeEmptyFields(collection));
@@ -684,7 +687,7 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
         },
         collection: getCollectionFromResources(exportableResources.filter(resource => models.requestGroup.isRequestGroup(resource) || models.request.isRequest(resource) || models.webSocketRequest.isWebSocketRequest(resource) || models.grpcRequest.isGrpcRequest(resource)), workspace._id),
         cookieJar: getCookieJarFromResources(exportableResources.filter(models.cookieJar.isCookieJar)),
-        environments: getEnvironmentsFromResources(exportableResources.filter(models.environment.isEnvironment)),
+        environments: getEnvironmentsFromResources(exportableResources.filter(models.environment.isEnvironment), includePrivateEnvironments),
         spec: getSpecFromResources(exportableResources.filter(models.apiSpec.isApiSpec)),
         testSuites: getTestSuitesFromResources(exportableResources.filter(resource => models.unitTestSuite.isUnitTestSuite(resource) || models.unitTest.isUnitTest(resource))),
       };
@@ -701,7 +704,7 @@ export async function getInsomniaV5DataExport(workspaceId: string) {
           isPrivate: workspace.isPrivate,
           description: workspace.description,
         },
-        environments: getEnvironmentsFromResources(exportableResources.filter(models.environment.isEnvironment)),
+        environments: getEnvironmentsFromResources(exportableResources.filter(models.environment.isEnvironment), includePrivateEnvironments),
       };
 
       return stringify(removeEmptyFields(environment));
