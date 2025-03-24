@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import fs from 'fs';
-import { mkdir } from 'fs/promises';
+import { mkdir, writeFile } from 'fs/promises';
 import path from 'path';
 import React from 'react';
 
@@ -263,7 +263,7 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
             for (const workspace of workspacesForActiveProject) {
               const workspaceName = workspace.name.replace(/ /g, '-');
               const fileName = path.join(insomniaProjectExportFolder, `${workspaceName}-${workspace._id}.yaml`);
-              const stringifiedExport = await getInsomniaV5DataExport(workspace._id);
+              const stringifiedExport = await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments: shouldExportPrivateEnvironments });
               writeExportedFileToFileSystem(fileName, stringifiedExport, err => {
                 if (err) {
                   console.warn('Export failed', err);
@@ -297,8 +297,9 @@ export const exportMockServerToFile = async (workspace: Workspace) => {
   if (!fileName) {
     return;
   }
+
   try {
-    const stringifiedExport = await getInsomniaV5DataExport(workspace._id);
+    const stringifiedExport = await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments: false });
     writeExportedFileToFileSystem(fileName, stringifiedExport, err => err && console.warn('Export failed', err));
     window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: 'yaml', scope: 'mock-server' } });
   } catch (err) {
@@ -319,8 +320,22 @@ export const exportGlobalEnvironmentToFile = async (workspace: Workspace) => {
   if (!fileName) {
     return;
   }
+
+  const baseEnvironments = await database.find<Environment>(environment.type, {
+    parentId: workspace._id,
+  });
+
+  const subEnvironments = await database.find<Environment>(environment.type, {
+    parentId: { $in: baseEnvironments.map(w => w._id) },
+  });
+  const shouldPrompt = subEnvironments.some(e => e.isPrivate);
+  let shouldExportPrivateEnvironments = false;
+  if (shouldPrompt) {
+    shouldExportPrivateEnvironments = await showExportPrivateEnvironmentsModal();
+  }
+
   try {
-    const stringifiedExport = await getInsomniaV5DataExport(workspace._id);
+    const stringifiedExport = await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments: shouldExportPrivateEnvironments });
     writeExportedFileToFileSystem(fileName, stringifiedExport, err => err && console.warn('Export failed', err));
     window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: 'yaml', scope: 'environment' } });
   } catch (err) {
@@ -373,7 +388,8 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
             break;
 
           case VALUE_YAML:
-            stringifiedExport = await getInsomniaV5DataExport(workspaceId);
+            // @TODO - Export only selected requests
+            stringifiedExport = await getInsomniaV5DataExport({ workspaceId, includePrivateEnvironments: shouldExportPrivateEnvironments });
             break;
 
           default:
@@ -397,3 +413,55 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
     },
   });
 };
+
+export async function exportWorkspaceData({
+  workspace,
+  dirPath,
+  includePrivateEnvironments,
+}: {
+  workspace: Workspace;
+  dirPath: string;
+  includePrivateEnvironments: boolean;
+}) {
+  const insomniaExport = await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments });
+
+  try {
+    const workspaceName = workspace.name.replace(/ /g, '-');
+    const filePath = path.join(dirPath, `${workspaceName}-${workspace._id}.yaml`);
+    await writeFile(filePath, JSON.stringify(insomniaExport));
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function exportAllData({
+  dirPath,
+}: {
+  dirPath: string;
+}): Promise<void> {
+  const insomniaExportFolder = path.join(dirPath, `insomnia-export.${Date.now()}`);
+  await mkdir(insomniaExportFolder);
+
+  const workspaces = await database.find<Workspace>(models.workspace.type);
+
+  const baseEnvironments = await database.find<Environment>(environment.type, {
+    parentId: { $in: workspaces.map(w => w._id) },
+  });
+
+  const subEnvironments = await database.find<Environment>(environment.type, {
+    parentId: { $in: baseEnvironments.map(w => w._id) },
+  });
+  const shouldPrompt = subEnvironments.some(e => e.isPrivate);
+  let includePrivateEnvironments = false;
+  if (shouldPrompt) {
+    includePrivateEnvironments = await showExportPrivateEnvironmentsModal();
+  }
+
+  for (const workspace of workspaces) {
+    await exportWorkspaceData({
+      workspace,
+      dirPath: insomniaExportFolder,
+      includePrivateEnvironments,
+    });
+  }
+}
