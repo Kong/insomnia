@@ -379,8 +379,7 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
             break;
 
           case VALUE_YAML:
-            // @TODO - Export only selected requests
-            stringifiedExport = await getInsomniaV5DataExport({ workspaceId, includePrivateEnvironments: shouldExportPrivateEnvironments });
+            stringifiedExport = await getInsomniaV5DataExport({ workspaceId, includePrivateEnvironments: shouldExportPrivateEnvironments, requestIds });
             break;
 
           default:
