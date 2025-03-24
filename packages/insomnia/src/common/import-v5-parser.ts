@@ -22,7 +22,7 @@ const MetaSchema = z.object({
 export type Meta = z.infer<typeof MetaSchema>;
 
 const CACertificateSchema = z.object({
-  path: z.string(),
+  path: z.string().optional().default(''),
   disabled: z.boolean().default(false),
   meta: MetaSchema.optional(),
 });
@@ -45,7 +45,7 @@ const CookieSchema = z.object({
 });
 
 const CookieJarSchema = z.object({
-  name: z.string(),
+  name: z.string().optional().default(''),
   cookies: z.array(CookieSchema).optional(),
   meta: MetaSchema.optional(),
 });
@@ -70,16 +70,16 @@ const EnvironmentSchema = z.object({
 });
 
 export const GRPCRequestSchema = z.object({
-  name: z.string(),
-  url: z.string(),
+  name: z.string().optional().default(''),
+  url: z.string().optional().default(''),
   protoFileId: z.string().optional().nullable(),
   protoMethodName: z.string().optional(),
   body: z.object({
     text: z.string().optional(),
   }).optional(),
   metadata: z.array(z.object({
-    name: z.string(),
-    value: z.string(),
+    name: z.string().optional().default(''),
+    value: z.string().optional().default(''),
     description: z.string().optional(),
     disabled: z.boolean().optional(),
   })).optional(),
@@ -96,7 +96,7 @@ export const GRPCRequestSchema = z.object({
 
 const MockRouteSchema = z.object({
   body: z.string().optional(),
-  statusCode: z.number(),
+  statusCode: z.number().optional().default(200),
   statusText: z.string().optional(),
   name: z.string().optional(),
   mimeType: z.string().optional(),
@@ -115,7 +115,7 @@ const AuthenticationSchema = z.union([
       useISO88591: z.boolean().default(false),
       username: z.string(),
       password: z.string(),
-      disabled: z.boolean().default(false),
+      disabled: z.boolean().optional(),
     }, {
       description: 'Basic Authentication',
     }),
@@ -123,14 +123,14 @@ const AuthenticationSchema = z.union([
       type: z.literal('apikey'),
       key: z.string().optional(),
       value: z.string().optional(),
-      disabled: z.boolean().default(false),
+      disabled: z.boolean().optional(),
       addTo: z.string().optional(),
     }, {
       description: 'API Key Authentication',
     }),
     z.object({
       type: z.literal('oauth2'),
-      disabled: z.boolean().default(false),
+      disabled: z.boolean().optional(),
       grantType: z.enum(['authorization_code', 'client_credentials', 'implicit', 'password', 'refresh_token']),
       accessTokenUrl: z.string().optional(),
       authorizationUrl: z.string().optional(),
@@ -157,18 +157,18 @@ const AuthenticationSchema = z.union([
     }),
     z.object({
       type: z.literal('hawk'),
-      id: z.string(),
-      key: z.string(),
+      id: z.string().optional().default(''),
+      key: z.string().optional().default(''),
       ext: z.string().optional(),
       validatePayload: z.boolean().optional(),
       algorithm: z.enum(['sha1', 'sha256']),
-      disabled: z.boolean().default(false),
+      disabled: z.boolean().optional(),
     }, {
       description: 'Hawk Authentication',
     }),
     z.object({
       type: z.literal('oauth1'),
-      disabled: z.boolean().default(false),
+      disabled: z.boolean().optional(),
       signatureMethod: z.enum(['HMAC-SHA1', 'RSA-SHA1', 'HMAC-SHA256', 'PLAINTEXT']),
       consumerKey: z.string().optional(),
       tokenKey: z.string().optional(),
@@ -186,23 +186,23 @@ const AuthenticationSchema = z.union([
     }),
     z.object({
       type: z.literal('digest'),
-      disabled: z.boolean().default(false),
-      username: z.string(),
-      password: z.string(),
+      disabled: z.boolean().optional(),
+      username: z.string().optional(),
+      password: z.string().optional(),
     }, {
       description: 'Digest Authentication',
     }),
     z.object({
       type: z.literal('ntlm'),
-      disabled: z.boolean().default(false),
-      username: z.string(),
-      password: z.string(),
+      disabled: z.boolean().optional(),
+      username: z.string().optional().default(''),
+      password: z.string().optional().default(''),
     }, {
       description: 'NTLM Authentication',
     }),
     z.object({
       type: z.literal('bearer'),
-      disabled: z.boolean().default(false),
+      disabled: z.boolean().optional(),
       token: z.string().optional(),
       prefix: z.string().optional(),
     }, {
@@ -210,7 +210,7 @@ const AuthenticationSchema = z.union([
     }),
     z.object({
       type: z.literal('iam'),
-      disabled: z.boolean().default(false),
+      disabled: z.boolean().optional(),
       accessKeyId: z.string().optional(),
       secretAccessKey: z.string().optional(),
       sessionToken: z.string().optional(),
@@ -221,25 +221,25 @@ const AuthenticationSchema = z.union([
     }),
     z.object({
       type: z.literal('netrc'),
-      disabled: z.boolean().default(false),
+      disabled: z.boolean().optional(),
     }, {
       description: 'Netrc Authentication',
     }),
     z.object({
       type: z.literal('asap'),
-      disabled: z.boolean().default(false),
-      issuer: z.string(),
+      disabled: z.boolean().optional(),
+      issuer: z.string().optional(),
       subject: z.string().optional(),
-      audience: z.string(),
+      audience: z.string().optional(),
       addintionalClaims: z.string().optional(),
-      privateKey: z.string(),
-      keyId: z.string(),
+      privateKey: z.string().optional(),
+      keyId: z.string().optional(),
     }, {
       description: 'ASAP Authentication',
     }),
     z.object({
       type: z.literal('none'),
-      disabled: z.boolean().default(false),
+      disabled: z.boolean().optional(),
     }, {
       description: 'No Authentication',
     }),
@@ -264,26 +264,26 @@ export const RequestSettingsSchema = z.object({
 });
 
 export const WebSocketRequestSettingsSchema = z.object({
-  encodeUrl: z.boolean().default(true),
+  encodeUrl: z.boolean().optional().default(true),
   cookies: z.object({
-    store: z.boolean().default(true),
-    send: z.boolean().default(true),
+    store: z.boolean().optional().default(true),
+    send: z.boolean().optional().default(true),
   }),
-  followRedirects: z.enum(['global', 'on', 'off']).default('global'),
+  followRedirects: z.enum(['global', 'on', 'off']).optional().default('global'),
 });
 
 export const RequestParametersSchema = z.array(z.object({
-  name: z.string(),
-  value: z.string(),
+  name: z.string().optional().default(''),
+  value: z.string().optional().default(''),
 }));
 
 export const RequestHeadersSchema = z.array(z.object({
-  name: z.string(),
-  value: z.string(),
+  name: z.string().optional().default(''),
+  value: z.string().optional().default(''),
 }));
 
 export const RequestGroupSchema = z.object({
-  name: z.string(),
+  name: z.string().optional().default(''),
   description: z.string().optional(),
   environment: jsonSchema.optional(),
   environmentPropertyOrder: jsonSchema.optional(),
@@ -296,9 +296,8 @@ export const RequestGroupSchema = z.object({
 });
 
 export const RequestSchema = z.object({
-  name: z.string(),
-  description: z.string().optional(),
-  url: z.string(),
+  url: z.string().optional().default(''),
+  name: z.string().optional().default(''),
   method: z.string(),
   body: z.object({
     mimeType: z.string().optional().nullable(),
@@ -316,19 +315,19 @@ export const RequestSchema = z.object({
     })).optional(),
   }).optional(),
   headers: z.array(z.object({
-    name: z.string(),
-    value: z.string(),
+    name: z.string().optional().default(''),
+    value: z.string().optional().default(''),
   })).optional(),
   parameters: z.array(z.object({
-    name: z.string(),
-    value: z.string(),
+    name: z.string().optional().default(''),
+    value: z.string().optional().default(''),
     disabled: z.boolean().optional(),
     id: z.string().optional(),
     fileName: z.string().optional(),
   })).optional(),
   pathParameters: z.array(z.object({
-    name: z.string(),
-    value: z.string(),
+    name: z.string().optional().default(''),
+    value: z.string().optional().default(''),
   })).optional(),
   authentication: AuthenticationSchema.optional(),
   scripts: ScriptsSchema.optional(),
@@ -348,8 +347,8 @@ export const RequestSchema = z.object({
 });
 
 export const WebsocketRequestSchema = z.object({
-  name: z.string(),
-  url: z.string(),
+  name: z.string().optional().default(''),
+  url: z.string().optional().default(''),
   headers: RequestHeadersSchema.optional(),
   authentication: AuthenticationSchema.optional(),
   parameters: RequestParametersSchema.optional(),
@@ -370,25 +369,48 @@ export const WebsocketRequestSchema = z.object({
 type Request = z.infer<typeof RequestSchema>;
 type GRPCRequest = z.infer<typeof GRPCRequestSchema>;
 type WebsocketRequest = z.infer<typeof WebsocketRequestSchema>;
-type RequestGroup = z.infer<typeof RequestGroupSchema> & {
+type RequestGroup = z.input<typeof RequestGroupSchema> & {
   children?: (Request | GRPCRequest | WebsocketRequest | RequestGroup)[];
 };
 
 const RequestGroupWithChildrenSchema: z.ZodType<RequestGroup> = RequestGroupSchema.extend({
-  children: z.lazy(() => z.union([GRPCRequestSchema, RequestSchema, WebsocketRequestSchema, RequestGroupWithChildrenSchema]).array()).optional(),
+  children: z.lazy(() => RequestCollectionSchema).optional(),
+  // These undefined properties are added to differentiate between the different types of children in the union
+  method: z.undefined(),
+  url: z.undefined(),
+  parameters: z.undefined(),
+  pathParameters: z.undefined(),
 });
 
+const RequestCollectionSchema = z.union([
+  GRPCRequestSchema.extend({
+    // These undefined properties are added to differentiate between the different types of children in the union
+    children: z.undefined(),
+    method: z.undefined(),
+  }),
+  RequestSchema.extend({
+    // These undefined properties are added to differentiate between the different types of children in the union
+    children: z.undefined(),
+  }),
+  WebsocketRequestSchema.extend({
+    // These undefined properties are added to differentiate between the different types of children in the union
+    children: z.undefined(),
+    method: z.undefined(),
+  }),
+  RequestGroupWithChildrenSchema,
+]).array();
+
 const TestSchema = z.object({
-  name: z.string(),
-  code: z.string(),
-  requestId: z.string().nullable(),
+  name: z.string().optional().default(''),
+  code: z.string().optional().default(''),
+  requestId: z.string().nullable().optional().default(null),
   meta: MetaSchema.extend({
     sortKey: z.number().optional(),
   }).optional(),
 });
 
 const TestSuiteSchema = z.object({
-  name: z.string(),
+  name: z.string().optional().default(''),
   meta: MetaSchema.extend({
     sortKey: z.number().optional(),
   }).optional(),
@@ -408,7 +430,7 @@ const collectionSchema = z.object({
   meta: MetaSchema.optional(),
   name: z.string().optional(),
   description: z.string().optional(),
-  collection: z.union([GRPCRequestSchema, RequestSchema, WebsocketRequestSchema, RequestGroupWithChildrenSchema]).array().optional(),
+  collection: RequestCollectionSchema.optional(),
   certificates: z.array(CACertificateSchema).optional(),
   environments: EnvironmentSchema.optional(),
   cookieJar: CookieJarSchema.optional(),
@@ -420,7 +442,7 @@ const apiSpecSchema = z.object({
   name: z.string().optional(),
   description: z.string().optional(),
   spec: SpecSchema.optional().default({ contents: {} }),
-  collection: z.union([GRPCRequestSchema, RequestSchema, WebsocketRequestSchema, RequestGroupWithChildrenSchema]).array().optional(),
+  collection: RequestCollectionSchema.optional(),
   certificates: z.array(CACertificateSchema).optional(),
   environments: EnvironmentSchema.optional(),
   cookieJar: CookieJarSchema.optional(),
