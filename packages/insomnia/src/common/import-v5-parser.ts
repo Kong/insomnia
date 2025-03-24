@@ -374,8 +374,10 @@ type RequestGroup = z.input<typeof RequestGroupSchema> & {
 };
 
 const RequestGroupWithChildrenSchema: z.ZodType<RequestGroup> = RequestGroupSchema.extend({
-  children: z.lazy(() => z.union([GRPCRequestSchema, RequestSchema, WebsocketRequestSchema, RequestGroupWithChildrenSchema]).array()).optional(),
+  children: z.lazy(() => RequestCollectionSchema).optional(),
 });
+
+const RequestCollectionSchema = z.union([RequestGroupWithChildrenSchema, GRPCRequestSchema, RequestSchema, WebsocketRequestSchema]).array();
 
 const TestSchema = z.object({
   name: z.string().optional().default(''),
@@ -407,7 +409,7 @@ const collectionSchema = z.object({
   meta: MetaSchema.optional(),
   name: z.string().optional(),
   description: z.string().optional(),
-  collection: z.union([GRPCRequestSchema, RequestSchema, WebsocketRequestSchema, RequestGroupWithChildrenSchema]).array().optional(),
+  collection: RequestCollectionSchema.optional(),
   certificates: z.array(CACertificateSchema).optional(),
   environments: EnvironmentSchema.optional(),
   cookieJar: CookieJarSchema.optional(),
@@ -419,7 +421,7 @@ const apiSpecSchema = z.object({
   name: z.string().optional(),
   description: z.string().optional(),
   spec: SpecSchema.optional().default({ contents: {} }),
-  collection: z.union([GRPCRequestSchema, RequestSchema, WebsocketRequestSchema, RequestGroupWithChildrenSchema]).array().optional(),
+  collection: RequestCollectionSchema.optional(),
   certificates: z.array(CACertificateSchema).optional(),
   environments: EnvironmentSchema.optional(),
   cookieJar: CookieJarSchema.optional(),
