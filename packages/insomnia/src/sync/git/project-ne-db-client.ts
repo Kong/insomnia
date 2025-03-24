@@ -52,7 +52,7 @@ export class GitProjectNeDBClient {
         throw this._errMissing(filePath);
       }
 
-      const workspaceFile = await getInsomniaV5DataExport(workspaceId);
+      const workspaceFile = await getInsomniaV5DataExport({ workspaceId, includePrivateEnvironments: false });
 
       const raw = Buffer.from(workspaceFile, 'utf8');
 

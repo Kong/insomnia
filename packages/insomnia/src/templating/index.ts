@@ -185,7 +185,6 @@ async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: bool
   for (const extension of allExtensions) {
     const { templateTag, plugin } = extension;
     templateTag.priority = templateTag.priority || allExtensions.indexOf(extension);
-    // @ts-expect-error -- TODO
     const instance = new BaseExtension(templateTag, plugin);
     nunjucksEnvironment.addExtension(instance.getTag() || '', instance);
     // Hidden helper filter to debug complicated things

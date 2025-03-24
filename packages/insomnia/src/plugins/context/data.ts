@@ -57,7 +57,7 @@ export const init = (activeProjectId?: string) => ({
         workspace,
       }: { workspace: Workspace }) => {
         if (workspace) {
-          const insomniaExport = await getInsomniaV5DataExport(workspace._id);
+          const insomniaExport = await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments: false });
 
           return [insomniaExport];
         }
@@ -67,7 +67,7 @@ export const init = (activeProjectId?: string) => ({
         const allInsomniaExports = [];
 
         for (const workspace of workspaces) {
-          const insomniaExport = await getInsomniaV5DataExport(workspace._id);
+          const insomniaExport = await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments: false });
           allInsomniaExports.push(insomniaExport);
         }
 

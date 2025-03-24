@@ -7,7 +7,6 @@ import { getProductName } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { exportGlobalEnvironmentToFile, exportMockServerToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { PlatformKeyCombinations } from '../../../common/settings';
 import { isRemoteProject } from '../../../models/project';
 import { isRequest } from '../../../models/request';
@@ -70,7 +69,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
     setLoadingActions({ ...loadingActions, [label]: true });
     try {
       const context = {
-        ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
+        ...(pluginContexts.app.init('no-render') as Record<string, any>),
         ...pluginContexts.data.init(activeProject._id),
         ...(pluginContexts.store.init(plugin) as Record<string, any>),
         ...(pluginContexts.network.init() as Record<string, any>),

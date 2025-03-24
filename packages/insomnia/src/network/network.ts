@@ -13,10 +13,8 @@ import {
   getLocationHeader,
   getSetCookieHeaders,
 } from '../common/misc';
-import type { ExtraRenderInfo, RenderedRequest, RenderPurpose, RequestAndContext } from '../common/render';
 import {
   getRenderedRequestAndContext,
-  RENDER_PURPOSE_NO_RENDER,
 } from '../common/render';
 import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
@@ -35,7 +33,8 @@ import { isWorkspace, type Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { RenderError } from '../templating/render-error';
-import { maskOrDecryptContextIfNecessary } from '../templating/utils';
+import type { RenderedRequest, RenderPurpose } from '../templating/types';
+import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
 import { defaultSendActionRuntime, type SendActionRuntime } from '../ui/routes/request';
 import { invariant } from '../utils/invariant';
 import { serializeNDJSON } from '../utils/ndjson';
@@ -383,10 +382,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
   let vault = undefined;
   if (globals && vaultEnvironmentPath in globals.data && settings.enableVaultInScripts) {
     // decrypt and set vault in insomnia sdk if necessary
-    await maskOrDecryptContextIfNecessary({
-      ...globals.data,
-      getPurpose: () => 'script',
-    });
+    globals.data[vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(globals.data[vaultEnvironmentPath], 'script');
     vault = globals.data[vaultEnvironmentPath];
   }
 
@@ -612,7 +608,7 @@ export const tryToInterpolateRequest = async ({
   request: Request;
   environment: string | Environment;
   purpose?: RenderPurpose;
-  extraInfo?: ExtraRenderInfo;
+  extraInfo?: { requestChain: string[] };
   baseEnvironment?: Environment;
   userUploadEnvironment?: UserUploadEnvironment;
   transientVariables?: Environment;
@@ -638,7 +634,10 @@ export const tryToInterpolateRequest = async ({
   }
 };
 
-export const tryToTransformRequestWithPlugins = async (renderResult: RequestAndContext) => {
+export const tryToTransformRequestWithPlugins = async (renderResult: {
+  request: RenderedRequest;
+  context: Record<string, any>;
+}) => {
   const { request, context } = renderResult;
   try {
     return await _applyRequestPluginHooks(request, context);
@@ -839,7 +838,7 @@ async function _applyRequestPluginHooks(
 
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
     const context = {
-      ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
+      ...(pluginContexts.app.init('no-render') as Record<string, any>),
       ...pluginContexts.data.init(renderedContext.getProjectId()),
       ...(pluginContexts.store.init(plugin) as Record<string, any>),
       ...(pluginContexts.request.init(newRenderedRequest, renderedContext) as Record<string, any>),
@@ -867,7 +866,7 @@ async function _applyResponsePluginHooks(
     const newRequest = clone(renderedRequest);
     for (const { plugin, hook } of await plugins.getResponseHooks()) {
       const context = {
-        ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
+        ...(pluginContexts.app.init('no-render') as Record<string, any>),
         ...pluginContexts.data.init(renderedContext.getProjectId()),
         ...(pluginContexts.store.init(plugin) as Record<string, any>),
         ...(pluginContexts.response.init(newResponse) as Record<string, any>),

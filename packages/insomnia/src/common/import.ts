@@ -239,19 +239,69 @@ export async function importResourcesToProject({ projectId }: { projectId: strin
       continue;
     }
 
+    const workspaceResources = resources.filter(isWorkspace);
+
     // No workspace, so create one
-    if (!resources.find(isWorkspace)) {
+    if (workspaceResources.length === 0) {
       await importResourcesToNewWorkspace(projectId, resourceCacheItem);
       continue;
     }
 
-    // One or more workspaces, add all resources to all workspaces, this could import repeatedly
-    await Promise.all(resources.filter(isWorkspace)
-      .map(resource => importResourcesToNewWorkspace(projectId, resourceCacheItem, resource)));
+    // One or more workspaces in one resourceCacheItem(A resourceCacheItem corresponds to an import file), filter in the resources that belong to each workspace and then import to new workspaces respectively
+    await Promise.all(workspaceResources
+      .map(workspace => {
+        if (workspaceResources.filter(({ _id }) => _id === '__WORKSPACE_ID__').length > 1) {
+          console.warn(`There are more than one workspace with id __WORKSPACE_ID__ in the resources, the importer is ${resourceCacheItem.importer.name}`);
+        }
+        // Here if there is only one workspace in the resources, we import all resources to it
+        let resourcesInCurrentWorkspace = resources;
+        // If there are more than one workspace in the resources, we filter in the resources that belong to the current workspace
+        if (workspaceResources.length > 1) {
+          resourcesInCurrentWorkspace = filterResourcesInWorkspace(resources, workspace);
+        }
+        return importResourcesToNewWorkspace(
+          projectId,
+          {
+            ...resourceCacheItem,
+            resources: resourcesInCurrentWorkspace,
+          },
+          workspace
+        );
+      }));
 
     await db.flushChanges(bufferId);
   }
 }
+
+// Filter resources that belong to the workspace, including the workspace itself
+function filterResourcesInWorkspace(
+  resources: BaseModel[],
+  workspace: Workspace,
+) {
+  const workspaceId = workspace._id;
+  const idToParentIdMap = new Map<string, string>();
+  resources.forEach(resource => {
+    // _id is not supposed to be the same as parentId, but who knows, just check it in case
+    if (resource.parentId && resource._id !== resource.parentId) {
+      idToParentIdMap.set(resource._id, resource.parentId);
+    }
+  });
+  // find the workspace id that the resource belongs to
+  function findRootId(id: string, existingResourceIds: Set<string>) {
+    // avoid infinite loop
+    if (existingResourceIds.has(id)) {
+      return id;
+    }
+    existingResourceIds.add(id);
+    const parentId = idToParentIdMap.get(id);
+    if (!parentId) {
+      return id;
+    }
+    return findRootId(parentId, existingResourceIds);
+  }
+  return resources.filter(resource => findRootId(resource._id, new Set()) === workspaceId);
+}
+
 const isTeamOrAbove = async () => {
   const { accountId } = await userSession.getOrCreate();
   const currentPlan = JSON.parse(localStorage.getItem(`${accountId}:currentPlan`) || '{}') as CurrentPlan || {};
@@ -428,7 +478,6 @@ const importResourcesToNewWorkspace = async (
       contentType: apiSpec.contentType,
       fileName: workspaceToImport?.name,
     });
-
   }
 
   // If we're importing into a new workspace
@@ -450,19 +499,24 @@ const importResourcesToNewWorkspace = async (
     const model = getModel(resource.type);
 
     if (model) {
+      const newParentId = ResourceIdMap.get(resource.parentId);
+      if (!newParentId) {
+        console.warn(`Could not find new parent id for ${resource.name} ${resource._id}`);
+        continue;
+      }
       if (isGrpcRequest(resource)) {
         await models.grpcRequest.create({
           ...resource,
           _id: ResourceIdMap.get(resource._id),
           protoFileId: ResourceIdMap.get(resource.protoFileId),
-          parentId: ResourceIdMap.get(resource.parentId),
+          parentId: newParentId,
         });
       } else if (isUnitTest(resource)) {
         await models.unitTest.create({
           ...resource,
           _id: ResourceIdMap.get(resource._id),
           requestId: ResourceIdMap.get(resource.requestId),
-          parentId: ResourceIdMap.get(resource.parentId),
+          parentId: newParentId,
         });
       } else if (isRequest(resource)) {
         await models.request.create(importRequestWithNewIds(resource, ResourceIdMap, canTransform));

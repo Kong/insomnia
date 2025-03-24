@@ -1,54 +1,10 @@
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
 
-import type { RenderPurpose } from '../common/render';
 import { userSession } from '../models';
-import { decryptSecretValue, vaultEnvironmentMaskValue, vaultEnvironmentPath } from '../models/environment';
+import { decryptSecretValue, vaultEnvironmentMaskValue } from '../models/environment';
+import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';
 import { decryptVaultKeyFromSession } from '../utils/vault';
-import type { DisplayName, PluginArgumentEnumOption, PluginTemplateTagActionContext } from './extensions';
 import objectPath from './third_party/objectPath';
-
-export interface NunjucksParsedTagArg {
-  type: 'string' | 'number' | 'boolean' | 'variable' | 'expression' | 'enum' | 'file' | 'model';
-  encoding?: 'base64';
-  value?: string | number | boolean;
-  defaultValue?: string | number | boolean;
-  forceVariable?: boolean;
-  placeholder?: string;
-  help?: string;
-  displayName?: DisplayName;
-  quotedBy?: '"' | "'";
-  validate?: (value: any) => string;
-  hide?: (arg0: NunjucksParsedTagArg[]) => boolean;
-  model?: string;
-  options?: PluginArgumentEnumOption[];
-  itemTypes?: ('file' | 'directory')[];
-  extensions?: string[];
-  description?: string;
-  requireSubForm?: boolean;
-}
-
-export interface NunjucksActionTag {
-  name: string;
-  icon?: string;
-  run: (context: PluginTemplateTagActionContext) => Promise<void>;
-}
-
-export interface NunjucksParsedTag {
-  name: string;
-  args: NunjucksParsedTagArg[];
-  actions?: NunjucksActionTag[];
-  rawValue?: string;
-  displayName?: string;
-  description?: string;
-  disablePreview?: (arg0: NunjucksParsedTagArg[]) => boolean;
-}
-
-export type NunjucksTagContextMenuAction = 'edit' | 'delete';
-
-interface Key {
-  name: string;
-  value: any;
-}
 
 /**
  * Get list of paths to all primitive types in nested object
@@ -59,8 +15,8 @@ interface Key {
 export function getKeys(
   obj: any,
   prefix = '',
-): Key[] {
-  let allKeys: Key[] = [];
+): { name: string; value: any }[] {
+  let allKeys: { name: string; value: any }[] = [];
   const typeOfObj = Object.prototype.toString.call(obj);
 
   if (typeOfObj === '[object Array]') {
@@ -285,10 +241,7 @@ export function decodeEncoding<T>(value: T) {
   return value;
 }
 
-export async function maskOrDecryptContextIfNecessary(context: Record<string, any> & { getPurpose: () => RenderPurpose | undefined }) {
-  // all secret variables are under vaultEnvironmentPath property in context
-  const vaultEnvironmentData = context[vaultEnvironmentPath];
-  const renderPurpose = typeof context.getPurpose === 'function' && context.getPurpose();
+export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: any, renderPurpose?: RenderPurpose) {
   /**
     * Decrypt secrets when renderPurpose is one of the following:
     * - preview: render the template in variable editor to do the live preview
@@ -309,7 +262,7 @@ export async function maskOrDecryptContextIfNecessary(context: Record<string, an
         });
       } else if (isVaultEnabled && !vaultKey) {
         // remove all values under vaultEnvironmentPath if no vault key found
-        context[vaultEnvironmentPath] = {};
+        vaultEnvironmentData = {};
       }
     } else {
       // mask all secert values under vaultEnvironmentPath property in context
@@ -318,7 +271,7 @@ export async function maskOrDecryptContextIfNecessary(context: Record<string, an
       });
     }
   }
-  return context;
+  return vaultEnvironmentData;
 }
 
 export function extractNunjucksTagFromCoords(
@@ -340,10 +293,6 @@ export function extractNunjucksTagFromCoords(
       };
     }
   }
-}
-
-export interface nunjucksTagContextMenuOptions extends Exclude<ReturnType<typeof extractNunjucksTagFromCoords>, void> {
-  type: NunjucksTagContextMenuAction;
 }
 
 export const responseTagRegex = new RegExp('{% *response *.* %}');

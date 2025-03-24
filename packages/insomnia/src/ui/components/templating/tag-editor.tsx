@@ -16,11 +16,8 @@ import type { Workspace } from '../../../models/workspace';
 import * as plugins from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import * as templating from '../../../templating';
-import {
-  type NunjucksParsedTag,
-  type NunjucksParsedTagArg,
-  sanitizeStrForWin32,
-} from '../../../templating/utils';
+import type { NunjucksParsedTag, NunjucksParsedTagArg } from '../../../templating/types';
+import { sanitizeStrForWin32 } from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -185,7 +182,7 @@ export const TagEditor: FC<Props> = props => {
     if (event.currentTarget.type === 'number') {
       return updateArg(parseFloat(event.currentTarget.value), argIndex);
     } else if (event.currentTarget.type === 'checkbox') {
-      return updateArg(event.currentTarget.checked, argIndex);
+      return updateArg((event.currentTarget as HTMLInputElement).checked, argIndex);
     } else {
       return updateArg(event.currentTarget.value, argIndex);
     }
@@ -353,8 +350,7 @@ export const TagEditor: FC<Props> = props => {
               <select value={strValue} onChange={handleChange}>
                 {!argDefinition.options?.find(o => o.value === strValue) ? <option value="">-- Select Option --</option> : null}
                 {argDefinition.options?.map(option => (
-                  // @ts-expect-error -- TSCONVERSION boolean not accepted by option
-                  <option key={option.value.toString()} value={option.value}>
+                  <option key={option.value.toString()} value={option.value + ''}>
                     {option.description ? `${fnOrString(option.displayName, state.activeTagData?.args || [])} – ${option.description}` : fnOrString(option.displayName, state.activeTagData?.args || [])}
                   </option>
                 ))}
@@ -449,8 +445,8 @@ export const TagEditor: FC<Props> = props => {
                     <option key="n/a" value="NO_VARIABLE">
                       -- Select Variable --
                     </option>
-                      {state.variables.map(v => (
-                        <option key={v.name} value={v.name}>
+                    {state.variables.map(v => (
+                      <option key={v.name} value={v.name}>
                         {v.name}
                       </option>
                     ))}

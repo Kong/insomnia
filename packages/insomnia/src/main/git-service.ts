@@ -978,6 +978,20 @@ export const updateGitRepoAction = async ({
         gitRepositoryId: gitRepository._id,
       });
     }
+
+    await GitVCS.init({
+      repoId: gitRepository._id,
+      uri,
+      directory: GIT_CLONE_DIR,
+      fs: await getGitFSClient({ projectId, workspaceId, gitRepositoryId: gitRepository._id }),
+      gitDirectory: GIT_INTERNAL_DIR,
+      gitCredentials: gitRepository.credentials,
+      legacyDiff: Boolean(workspaceId),
+    });
+
+    await GitVCS.setAuthor();
+    await GitVCS.addRemote(uri);
+
     const { hasUncommittedChanges } = await getGitChanges(GitVCS);
     const hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
 
@@ -985,8 +999,6 @@ export const updateGitRepoAction = async ({
       hasUncommittedChanges,
       hasUnpushedChanges,
     });
-
-    await GitVCS.setAuthor();
 
     return null;
   } catch (e) {
@@ -1867,7 +1879,7 @@ async function completeSignInToGitHub({
   ]);
 
   const userProfileEmail = user.email ?? '';
-  const email = emails.find(e => e.primary)?.email ?? userProfileEmail;
+  const email = emails.find(e => e.primary)?.email ?? userProfileEmail ?? '';
 
   if (existingGitHubCredentials) {
     await models.gitCredentials.update(existingGitHubCredentials, {
@@ -1875,7 +1887,7 @@ async function completeSignInToGitHub({
       provider: 'githubapp',
       author: {
         email,
-        name: user.name,
+        name: user.name ?? user.login ?? '',
         avatarUrl: user.avatar_url,
       },
     });
@@ -1885,7 +1897,7 @@ async function completeSignInToGitHub({
       provider: 'githubapp',
       author: {
         email,
-        name: user.name,
+        name: user.name ?? user.login ?? '',
         avatarUrl: user.avatar_url,
       },
     });
@@ -2140,8 +2152,8 @@ async function completeSignInToGitLab({
       refreshToken: refresh_token,
       provider: 'gitlab',
       author: {
-        email: user.commit_email ?? user.public_email ?? user.email,
-        name: user.username ?? user.name,
+        email: user.commit_email ?? user.public_email ?? user.email ?? '',
+        name: user.username ?? user.name ?? '',
         avatarUrl: user.avatar_url,
       },
     });
@@ -2152,8 +2164,8 @@ async function completeSignInToGitLab({
     refreshToken: refresh_token,
     provider: 'gitlab',
     author: {
-      email: user.commit_email ?? user.public_email ?? user.email,
-      name: user.username ?? user.name,
+      email: user.commit_email ?? user.public_email ?? user.email ?? '',
+      name: user.username ?? user.name ?? '',
       avatarUrl: user.avatar_url,
     },
   });

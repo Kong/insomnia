@@ -1,3 +1,4 @@
+import { getExistingConsole } from './console';
 import { Property, PropertyList } from './properties';
 import { Url, UrlMatchPattern, UrlMatchPatternList } from './urls';
 
@@ -202,7 +203,7 @@ export function transformToSdkProxyOptions(
     if (bestProxy !== '') {
         let sanitizedProxy = bestProxy;
         if (bestProxy.indexOf('://') === -1) {
-            console.warn(`The protocol is missing and adding 'https:' protocol: ${bestProxy}`);
+            getExistingConsole().warn(`The protocol is missing for proxy, 'https:' is enabled for: ${bestProxy}`);
             sanitizedProxy = 'https://' + bestProxy;
         }
 

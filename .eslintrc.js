@@ -89,8 +89,7 @@ module.exports = {
     'object-curly-spacing': [ERROR, 'always'],
     'quotes': OFF(UNKNOWN),
     'semi': SUCCESSOR(TYPESCRIPT_EXTENSION),
-    'space-before-blocks': ERROR, // TODO: use the @typescript-eslint/space-before-blocks once we typescript-eslint past 5.13
-    'space-before-function-paren': [ERROR, { anonymous: 'never', named: 'never', asyncArrow: 'always' }],
+    'space-before-function-paren': [ERROR, { anonymous: 'always', named: 'never', asyncArrow: 'always' }],
     'space-infix-ops': SUCCESSOR(TYPESCRIPT_EXTENSION),
     'space-unary-ops': ERROR,
     'space-in-parens': ERROR,
@@ -137,6 +136,7 @@ module.exports = {
     '@typescript-eslint/no-namespace': [ERROR, { allowDeclarations: true }],
     '@typescript-eslint/no-redeclare': ERROR,
     '@typescript-eslint/no-unused-vars': [ERROR, { ignoreRestSiblings: true }],
+    '@typescript-eslint/space-before-blocks': ERROR,
     '@typescript-eslint/space-infix-ops': ERROR,
     '@typescript-eslint/semi': [ERROR, 'always'],
     '@typescript-eslint/quotes': [ERROR, 'single', { avoidEscape: true }],

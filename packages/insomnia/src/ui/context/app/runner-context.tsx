@@ -13,6 +13,7 @@ interface RunnerState {
   uploadData: UploadDataType[];
   advancedConfig: Record<string, boolean>;
   file: File | null;
+  filePath: string;
   reqList: RequestRow[];
 }
 

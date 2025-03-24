@@ -4,8 +4,7 @@ import { useFetcher, useParams } from 'react-router-dom';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { getProductName } from '../../../common/constants';
-import { exportProjectToFile } from '../../../common/export';
-import { exportAllData } from '../../../common/export-all-data';
+import { exportAllData, exportProjectToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { isNotNullOrUndefined } from '../../../common/misc';
 import { strings } from '../../../common/strings';

@@ -4,7 +4,6 @@ import { Button, Collection, Header, Menu, MenuItem, MenuTrigger, Popover, Secti
 import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { toKebabCase } from '../../../common/misc';
-import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { PlatformKeyCombinations } from '../../../common/settings';
 import * as models from '../../../models';
 import type { Request } from '../../../models/request';
@@ -108,7 +107,7 @@ export const RequestGroupActionsDropdown = ({
 
     try {
       const context = {
-        ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
+        ...(pluginContexts.app.init('no-render') as Record<string, any>),
         ...pluginContexts.data.init(activeProject._id),
         ...(pluginContexts.store.init(plugin) as Record<string, any>),
         ...(pluginContexts.network.init() as Record<string, any>),

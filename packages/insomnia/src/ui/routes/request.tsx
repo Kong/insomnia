@@ -13,7 +13,6 @@ import { version } from '../../../package.json';
 import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
 import { type ChangeBufferEvent, database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
-import { type RenderedRequest } from '../../common/render';
 import type { ResponsePatch } from '../../main/network/libcurl-promise';
 import type { TimingStep } from '../../main/network/request-timing';
 import type { BaseModel } from '../../models';
@@ -35,6 +34,7 @@ import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from 
 import { isWebSocketResponse, type WebSocketResponse } from '../../models/websocket-response';
 import { getAuthHeader } from '../../network/authentication';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToExecuteAfterResponseScript, tryToExecutePreRequestScript, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
+import { type RenderedRequest } from '../../templating/types';
 import { parseGraphQLReqeustBody } from '../../utils/graph-ql';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
@@ -106,6 +106,17 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
     .filter((r: Response | WebSocketResponse) => r.environmentId === activeWorkspaceMeta.activeEnvironmentId);
   const responses = (filterResponsesByEnv ? filteredResponses : allResponses)
     .sort((a: BaseModel, b: BaseModel) => (a.created > b.created ? -1 : 1));
+
+  if (activeResponse && 'bodyPath' in activeResponse) {
+    // read the body if its smaller than the limit add it to the activeResponse
+    const length = Math.max(activeResponse.bytesContent, activeResponse.bytesRead);
+    const isOversizedResponse = length > 5 * 1024 * 1024; // 5MB
+    // Oversized repsonses are handled in the response-viewer.tsx for now
+    if (!isOversizedResponse) {
+      const buffer = await models.response.getBodyBuffer(activeResponse);
+      activeResponse.bodyBuffer = typeof buffer === 'string' ? Buffer.from(buffer) : buffer;
+    }
+  }
 
   // Q(gatzjames): load mock servers here or somewhere else?
   const mockServers = await models.mockServer.findByProjectId(projectId);
@@ -486,15 +497,15 @@ export interface RunnerContextForRequest {
 }
 
 export const sendActionImplementation = async (options: {
-    requestId: string;
-    shouldPromptForPathAfterResponse: boolean | undefined;
-    ignoreUndefinedEnvVariable: boolean | undefined;
-    testResultCollector?: RunnerContextForRequest;
-    iteration?: number;
-    iterationCount?: number;
-    userUploadEnvironment?: UserUploadEnvironment;
-    transientVariables?: Environment;
-    runtime?: SendActionRuntime;
+  requestId: string;
+  shouldPromptForPathAfterResponse: boolean | undefined;
+  ignoreUndefinedEnvVariable: boolean | undefined;
+  testResultCollector?: RunnerContextForRequest;
+  iteration?: number;
+  iterationCount?: number;
+  userUploadEnvironment?: UserUploadEnvironment;
+  transientVariables?: Environment;
+  runtime?: SendActionRuntime;
 }) => {
   const {
     requestId,

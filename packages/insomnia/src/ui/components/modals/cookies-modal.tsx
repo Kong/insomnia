@@ -20,16 +20,6 @@ import { RenderedText } from '../rendered-text';
 // https://github.com/salesforce/tough-cookie/blob/5ae97c6a28122f3fb309adcd8428274d9b2bd795/lib/cookie.js#L77
 const MAX_TIME = 2147483647000;
 const ItemsPerPage = 5;
-const DefaultCookie: Cookie = {
-  id: uuidv4(),
-  key: 'foo',
-  value: 'bar',
-  domain: 'domain.com',
-  expires: MAX_TIME as unknown as Date,
-  path: '/',
-  secure: false,
-  httpOnly: false,
-};
 
 export function chunkArray<T>(array: T[], chunkSize: number = ItemsPerPage): T[][] {
   const chunks: T[][] = [];
@@ -107,7 +97,16 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
 
   const handleAddCookie = () => {
     const updatedActiveCookieJar = activeCookieJar;
-    updatedActiveCookieJar.cookies = [DefaultCookie, ...activeCookieJar.cookies];
+    updatedActiveCookieJar.cookies = [{
+      id: uuidv4(),
+      key: 'foo',
+      value: 'bar',
+      domain: 'domain.com',
+      expires: MAX_TIME as unknown as Date,
+      path: '/',
+      secure: false,
+      httpOnly: false,
+    }, ...activeCookieJar.cookies];
 
     updateCookieJar(activeCookieJar._id, updatedActiveCookieJar);
   };
@@ -252,49 +251,49 @@ const CookieList = ({ cookies, onCookieDelete, onUpdateCookie }: CookieListProps
 
   return (
     <>
-    <ListBox
-      aria-label="Cookies list"
-      className="flex flex-col w-full min-h-[200px]"
-    >
-      {cookies.map((cookie, index) => {
-        const cookieJSON = ToughCookie.fromJSON(cookie);
-        const cookieString = cookieJSON ? cookieToString(cookieJSON) : '';
+      <ListBox
+        aria-label="Cookies list"
+        className="flex flex-col w-full min-h-[200px]"
+      >
+        {cookies.map((cookie, index) => {
+          const cookieJSON = ToughCookie.fromJSON(cookie);
+          const cookieString = cookieJSON ? cookieToString(cookieJSON) : '';
 
-        if (cookie.expires && !isValid(new Date(cookie.expires))) {
-          cookie.expires = null;
-        }
+          if (cookie.expires && !isValid(new Date(cookie.expires))) {
+            cookie.expires = null;
+          }
 
-        return (
-          <ListBoxItem
-            key={cookie.id}
-            id={cookie.id}
-            data-testid={`cookie-test-iteration-${index}`}
-            textValue={cookie.domain}
-            className='flex justify-between outline-none gap-2 leading-[36px] odd:bg-[--hl-xs] px-2 py-1 rounded-sm min-h-[40px]'
-          >
-            <span className='flex items-center leading-relaxed min-w-[20%] break-all'><RenderedText>{cookie.domain || ''}</RenderedText></span>
-            <span className='flex items-center leading-relaxed w-[70%] break-all'><RenderedText>{cookieString || ''}</RenderedText></span>
-            <div className='flex gap-1 min-w-[10%] items-center justify-end'>
-              <Button
-                className="flex items-center gap-2 min-w-[35px] py-1 px-2 justify-center font-semibold aria-pressed:bg-[--hl-sm] text-[--color-font] transition-all text-sm"
-                onPress={() => setCookieToEdit(cookie)}
-              >
-                Edit
-              </Button>
-              <PromptButton
-                className="flex items-center gap-2 min-w-[15px] py-1 px-2 font-semibold aria-pressed:bg-[--hl-sm] text-[--color-font] transition-all text-sm"
-                confirmMessage=""
-                doneMessage=''
-                onClick={() => onCookieDelete(cookie.id)}
-                title="Delete cookie"
-              >
-                <i className="fa fa-trash-o" />
-              </PromptButton>
-            </div>
-          </ListBoxItem>
-        );
-      })}
-    </ListBox>
+          return (
+            <ListBoxItem
+              key={cookie.id}
+              id={cookie.id}
+              data-testid={`cookie-test-iteration-${index}`}
+              textValue={cookie.domain}
+              className='flex justify-between outline-none gap-2 leading-[36px] odd:bg-[--hl-xs] px-2 py-1 rounded-sm min-h-[40px]'
+            >
+              <span className='flex items-center leading-relaxed min-w-[20%] break-all'><RenderedText>{cookie.domain || ''}</RenderedText></span>
+              <span className='flex items-center leading-relaxed w-[70%] break-all'><RenderedText>{cookieString || ''}</RenderedText></span>
+              <div className='flex gap-1 min-w-[10%] items-center justify-end'>
+                <Button
+                  className="flex items-center gap-2 min-w-[35px] py-1 px-2 justify-center font-semibold aria-pressed:bg-[--hl-sm] text-[--color-font] transition-all text-sm"
+                  onPress={() => setCookieToEdit(cookie)}
+                >
+                  Edit
+                </Button>
+                <PromptButton
+                  className="flex items-center gap-2 min-w-[15px] py-1 px-2 font-semibold aria-pressed:bg-[--hl-sm] text-[--color-font] transition-all text-sm"
+                  confirmMessage=""
+                  doneMessage=''
+                  onClick={() => onCookieDelete(cookie.id)}
+                  title="Delete cookie"
+                >
+                  <i className="fa fa-trash-o" />
+                </PromptButton>
+              </div>
+            </ListBoxItem>
+          );
+        })}
+      </ListBox>
       {cookieToEdit && <CookieModifyModal
         isOpen={cookieToEdit !== null}
         cookie={cookieToEdit as Cookie}

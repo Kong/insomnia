@@ -55,7 +55,8 @@ export type KeyboardShortcut =
   | 'request_togglePin'
   | 'environment_showVariableSourceAndValue'
   | 'beautifyRequestBody'
-  | 'graphql_explorer_focus_filter';
+  | 'graphql_explorer_focus_filter'
+  | 'close_tab';
 
 /**
  * The collection of defined hotkeys.
@@ -89,7 +90,7 @@ export interface PluginConfig {
   disabled: boolean;
 }
 
-export type PluginConfigMap = Record<string, PluginConfig>;
+export type PluginConfigMap = Record<string, { disabled: boolean }>;
 
 export interface Settings {
   autoDetectColorScheme: boolean;

@@ -63,18 +63,6 @@ export const ResponsePane: FC<Props> = ({
     responseFilterHistory.unshift(responseFilter);
     patchRequestMeta(requestId, { responseFilterHistory });
   };
-  const handleGetResponseBody = useCallback(() => {
-    if (!activeResponse) {
-      return null;
-    }
-    return models.response.getBodyBuffer(activeResponse);
-  }, [activeResponse]);
-  const handleCopyResponseToClipboard = useCallback(async () => {
-    const bodyBuffer = handleGetResponseBody();
-    if (bodyBuffer) {
-      window.clipboard.writeText(bodyBuffer.toString('utf8'));
-    }
-  }, [handleGetResponseBody]);
 
   const { isExecuting, steps } = useExecutionState({ requestId: activeRequest._id });
 
@@ -233,7 +221,12 @@ export const ResponsePane: FC<Props> = ({
           <Toolbar className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
             <PreviewModeDropdown
               download={handleDownloadResponseBody}
-              copyToClipboard={handleCopyResponseToClipboard}
+              copyToClipboard={async () => {
+                const bodyBuffer = activeResponse ? await models.response.getBodyBuffer(activeResponse) : null;
+                if (bodyBuffer) {
+                  window.clipboard.writeText(bodyBuffer.toString('utf8'));
+                }
+              }}
             />
           </Toolbar>
           <ResponseViewer
@@ -247,7 +240,8 @@ export const ResponsePane: FC<Props> = ({
             error={activeResponse.error}
             filter={filter}
             filterHistory={filterHistory}
-            getBody={handleGetResponseBody}
+            bodyBuffer={activeResponse.bodyBuffer}
+            getBody={() => models.response.getBodyBuffer(activeResponse)}
             previewMode={activeResponse.error ? PREVIEW_MODE_SOURCE : previewMode}
             responseId={activeResponse._id}
             updateFilter={activeResponse.error ? undefined : handleSetFilter}

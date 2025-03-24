@@ -167,7 +167,7 @@ export const getOAuth2Token = async (
   const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
   const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
   return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(
-    oauthResponseToAccessToken(authentication.accessTokenUrl, response)
+    await oauthResponseToAccessToken(authentication.accessTokenUrl, response)
   ));
 };
 // 1. get token from db and return if valid
@@ -210,7 +210,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   const response = await sendAccessTokenRequest(requestId, authentication, params, []);
 
   const statusCode = response.statusCode || 0;
-  const bodyBuffer = models.response.getBodyBuffer(response);
+  const bodyBuffer = await models.response.getBodyBuffer(response);
 
   if (statusCode === 401) {
     // If the refresh token was rejected due an unauthorized request, we will
@@ -250,8 +250,8 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   }));
 }
 
-export const oauthResponseToAccessToken = (accessTokenUrl: string, response: Response) => {
-  const bodyBuffer = models.response.getBodyBuffer(response);
+export const oauthResponseToAccessToken = async (accessTokenUrl: string, response: Response) => {
+  const bodyBuffer = await models.response.getBodyBuffer(response);
   if (!bodyBuffer) {
     return {
       xResponseId: response._id,
