@@ -18,15 +18,15 @@ import {
 type SortableModel = Request | RequestGroup | GrpcRequest;
 type SortFunction<SortableType> = (a: SortableType, b: SortableType) => number;
 
-export const ascendingNameSort: SortFunction<{name: string}> = (a, b) => {
+export const ascendingNameSort: SortFunction<{ name: string }> = (a, b) => {
   return a.name.localeCompare(b.name);
 };
 
-export const descendingNameSort: SortFunction<{name: string}> = (a, b) => {
+export const descendingNameSort: SortFunction<{ name: string }> = (a, b) => {
   return b.name.localeCompare(a.name);
 };
 
-export const createdFirstSort: SortFunction<{created: number}> = (a, b) => {
+export const createdFirstSort: SortFunction<{ created: number }> = (a, b) => {
   if (a.created === b.created) {
     return 0;
   }
@@ -34,7 +34,7 @@ export const createdFirstSort: SortFunction<{created: number}> = (a, b) => {
   return a.created < b.created ? -1 : 1;
 };
 
-export const createdLastSort: SortFunction<{created: number}> = (a, b) => {
+export const createdLastSort: SortFunction<{ created: number }> = (a, b) => {
   if (a.created === b.created) {
     return 0;
   }
@@ -42,7 +42,7 @@ export const createdLastSort: SortFunction<{created: number}> = (a, b) => {
   return a.created > b.created ? -1 : 1;
 };
 
-export const ascendingModifiedSort: SortFunction<{lastModifiedTimestamp: number}> = (a, b) => {
+export const ascendingModifiedSort: SortFunction<{ lastModifiedTimestamp: number }> = (a, b) => {
   if (a.lastModifiedTimestamp === b.lastModifiedTimestamp) {
     return 0;
   }
@@ -50,7 +50,7 @@ export const ascendingModifiedSort: SortFunction<{lastModifiedTimestamp: number}
   return a.lastModifiedTimestamp < b.lastModifiedTimestamp ? -1 : 1;
 };
 
-export const descendingModifiedSort: SortFunction<{lastModifiedTimestamp: number}> = (a, b) => {
+export const descendingModifiedSort: SortFunction<{ lastModifiedTimestamp: number }> = (a, b) => {
   if (a.lastModifiedTimestamp === b.lastModifiedTimestamp) {
     return 0;
   }
@@ -124,6 +124,8 @@ export const ascendingNumberSort: SortFunction<number> = (a, b) => {
 export const descendingNumberSort: SortFunction<number> = (a, b) => {
   return ascendingNumberSort(b, a);
 };
+
+export const ascendingFirstIndexStringSort: SortFunction<string[]> = (a, b) => a[0].localeCompare(b[0]);
 
 export const sortMethodMap = {
   [SORT_NAME_ASC]: ascendingNameSort,

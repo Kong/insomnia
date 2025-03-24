@@ -16,6 +16,7 @@ import {
 import {
   getRenderedRequestAndContext,
 } from '../common/render';
+import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
 import type { CaCertificate } from '../models/ca-certificate';
@@ -66,7 +67,7 @@ export const getOrInheritAuthentication = ({ request, requestGroups }: { request
   return { type: 'none' };
 };
 export function getOrInheritHeaders({ request, requestGroups }: { request: Pick<BaseRequest, 'headers'>; requestGroups: Pick<RequestGroup, 'headers'>[] }): RequestHeader[] {
-  const httpHeaders = new Headers();
+  const httpHeaders = new Map<string, string>();
   const originalCaseMap = new Map<string, string>();
   // parent folders, then child folders, then request
   const headerContexts = [...requestGroups.reverse(), request];
@@ -84,9 +85,13 @@ export function getOrInheritHeaders({ request, requestGroups }: { request: Pick<
       return;
     }
     // appending will join matching header values with a comma
-    httpHeaders.append(normalizedCase, value);
+    if (httpHeaders.has(normalizedCase)) {
+      httpHeaders.set(normalizedCase, `${httpHeaders.get(normalizedCase)}, ${value}`);
+      return;
+    }
+    httpHeaders.set(normalizedCase, value);
   });
-  return Array.from(httpHeaders.entries()).map(([name, value]) => ({ name: originalCaseMap.get(name)!, value }));
+  return Array.from(httpHeaders.entries()).sort(ascendingFirstIndexStringSort).map(([name, value]) => ({ name: originalCaseMap.get(name)!, value }));
 }
 // (only used for getOAuth2 token) Intended to gather all required database objects and initialize ids
 export const fetchRequestGroupData = async (requestGroupId: string) => {
