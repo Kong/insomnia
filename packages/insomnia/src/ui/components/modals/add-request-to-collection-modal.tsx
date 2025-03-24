@@ -134,7 +134,6 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
         <ModalFooter>
           <div>
             <button
-              disabled={isBtnDisabled}
               type="button"
               onClick={onHide as MouseEventHandler<HTMLButtonElement>}
               className="btn btn--no-background"
