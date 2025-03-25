@@ -30,11 +30,10 @@ function getDefaultOAuthProvider(credentials?: GitCredentials | null): OauthProv
   return 'custom';
 }
 
-export const GitRepositorySettingsModal = (props: ModalProps & {
+export const GitRepositorySettingsModal = ({ gitRepository, ...modalProps }: ModalProps & {
   gitRepository?: GitRepository;
 }) => {
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
-  const { gitRepository } = props;
   const modalRef = useRef<ModalHandle>(null);
   const updateGitRepositoryFetcher = useFetcher();
   const deleteGitRepositoryFetcher = useFetcher();
@@ -88,7 +87,7 @@ export const GitRepositorySettingsModal = (props: ModalProps & {
 
   return (
     <OverlayContainer>
-      <Modal ref={modalRef} {...props}>
+      <Modal ref={modalRef} {...modalProps}>
         <ModalHeader>
           Repository Settings{' '}
           <HelpTooltip>
@@ -158,7 +157,7 @@ export const GitRepositorySettingsModal = (props: ModalProps & {
           >
             <button
               className="btn"
-              disabled={!gitRepository}
+              disabled={!hasGitRepository}
               onClick={() => {
                 deleteGitRepositoryFetcher.submit({}, {
                   action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/reset`,
