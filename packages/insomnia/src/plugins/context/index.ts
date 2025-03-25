@@ -1,4 +1,4 @@
-import * as _app from './app-renderer';
+import * as _app from './app';
 import * as _data from './data';
 import * as _network from './network';
 import * as _request from './request';

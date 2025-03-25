@@ -1,6 +1,9 @@
+import electron from 'electron';
+
+import { getAppPlatform, getAppVersion } from '../common/constants';
 import type { Workspace } from '../models/workspace';
-import { init as appInit } from '../plugins/context/app-main';
 import type { Plugin } from '../plugins/index';
+import { invariant } from '../utils/invariant';
 import type { PluginTemplateTag, PluginTemplateTagContext } from './types';
 import * as templating from './worker';
 export function decodeEncoding<T>(value: T) {
@@ -109,9 +112,41 @@ export default class BaseExtension {
       .filter(a => a !== EMPTY_ARG)
       .map(decodeEncoding);
     // Define a helper context with utils
-    const app = appInit().app;
+
     const helperContext: PluginTemplateTagContext = {
-      app,
+      app: {
+        alert: () => {
+          throw new Error('Not implemented');
+        },
+        dialog: () => {
+          throw new Error('Not implemented');
+        },
+        prompt: () => {
+          throw new Error('Not implemented');
+        },
+        getPath: (name: string) => {
+          invariant(name.toLowerCase() === 'desktop', `Unknown path name ${name}`);
+          return electron.app.getPath('desktop');
+        },
+        getInfo: () => ({ version: getAppVersion(), platform: getAppPlatform() }),
+        async showSaveDialog(options = {}): Promise<string | null> {
+          const sendOrNoRender = renderPurpose === 'send' || renderPurpose === 'no-render';
+          if (!sendOrNoRender) {
+            return Promise.resolve(null);
+          }
+          const { filePath } = await electron.dialog.showSaveDialog({
+            title: 'Save File',
+            buttonLabel: 'Save',
+            defaultPath: options.defaultPath,
+          });
+          return filePath || null;
+        },
+        clipboard: {
+          readText: () => electron.clipboard.readText(),
+          writeText: text => electron.clipboard.writeText(text),
+          clear: () => electron.clipboard.clear(),
+        },
+      },
       // @ts-expect-error -- TODO
       store: {},
       // @ts-expect-error -- TODO
