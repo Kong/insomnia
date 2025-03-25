@@ -27,118 +27,85 @@ export interface PrivateProperties {
   } | {}>;
 }
 
-export function init(renderPurpose: RenderPurpose = 'general'): {
-  app: AppContext;
-  __private: PrivateProperties;
-} {
-  const canShowDialogs =
-    renderPurpose === 'send' ||
-    renderPurpose === 'no-render';
-  return {
-    app: {
-      alert(title: string, message?: string) {
-        if (!canShowDialogs) {
-          return Promise.resolve();
-        }
+export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContext; __private: PrivateProperties } => ({
+  app: {
+    alert: (title: string, message?: string) => {
+      const sendOrNoRender = renderPurpose === 'send' || renderPurpose === 'no-render';
+      if (sendOrNoRender) {
         return showModal(AlertModal, { title, message });
-      },
-      dialog(title, body, options = {},) {
-        if (renderPurpose !== 'send' && renderPurpose !== 'no-render') {
-          return;
-        }
-
+      }
+    },
+    dialog: (title, body, options = {}) => {
+      const sendOrNoRender = renderPurpose === 'send' || renderPurpose === 'no-render';
+      if (sendOrNoRender) {
         showModal(WrapperModal, {
+          ...options,
           title,
           body: <HtmlElementWrapper el={body} onUnmount={options.onHide} />,
-          tall: options.tall,
-          skinny: options.skinny,
-          wide: options.wide,
         });
-      },
-
-      prompt(
-        title,
-        options = {},
-      ) {
-        if (!canShowDialogs) {
-          return Promise.resolve(options.defaultValue || '');
-        }
-
-        // This custom promise converts the prompt modal from being callback-based to reject when the modal is cancelled and resolve when the modal is submitted and hidden
-        return new Promise<string>((resolve, reject) => {
-          let shouldResolve = false;
-          let resolveWith: string | null = null;
-          showModal(PromptModal, {
-            title,
-            ...(options || ({} as Record<string, any>)),
-
-            onComplete(value: string) {
-              shouldResolve = true;
-              resolveWith = value;
-            },
-
-            // don't resolve the overall promise until the modal has hidden after clicking submit
-            onHide() {
-              if (shouldResolve && resolveWith !== null) {
-                resolve(resolveWith);
-              }
-              reject(new Error(`Prompt ${title} cancelled`));
-            },
-          });
-        });
-      },
-
-      getPath(name: string) {
-        invariant(name.toLowerCase() === 'desktop', `Unknown path name ${name}`);
-        return window.app.getPath('desktop');
-      },
-
-      getInfo() {
-        return { version: getAppVersion(), platform: getAppPlatform() };
-      },
-
-      async showSaveDialog(options = {}): Promise<string | null> {
-        if (!canShowDialogs) {
-          return Promise.resolve(null);
-        }
-
-        const { filePath } = await window.dialog.showSaveDialog({
-          title: 'Save File',
-          buttonLabel: 'Save',
-          defaultPath: options.defaultPath,
-        });
-        return filePath || null;
-      },
-
-      clipboard: {
-        readText() {
-          return window.clipboard.readText();
-        },
-
-        writeText(text) {
-          window.clipboard.writeText(text);
-        },
-
-        clear() {
-          window.clipboard.clear();
-        },
-      },
+      }
     },
-    __private: {
-      // Provide modules that can be used in the renderer process
-      async loadRendererModules() {
-        if (typeof globalThis.document === 'undefined') {
-          return {};
-        }
-
-        const ReactDOM = await import('react-dom');
-        const React = await import('react');
-
-        return {
-          ReactDOM,
-          React,
-        };
-      },
+    prompt: (title, options = {}) => {
+      const sendOrNoRender = renderPurpose === 'send' || renderPurpose === 'no-render';
+      if (!sendOrNoRender) {
+        return Promise.resolve(options.defaultValue || '');
+      }
+      // This custom promise converts the prompt modal from being callback-based to reject when the modal is cancelled and resolve when the modal is submitted and hidden
+      return new Promise<string>((resolve, reject) => {
+        let selected: string | null = null;
+        showModal(PromptModal, {
+          ...options,
+          title,
+          onComplete: (value: string) => {
+            selected = value;
+          },
+          // don't resolve the overall promise until the modal has hidden after clicking submit
+          onHide: () => selected !== null ? resolve(selected) : reject(new Error(`Prompt ${title} cancelled`)),
+        });
+      });
     },
-  };
-}
+
+    getPath: (name: string) => {
+      invariant(name.toLowerCase() === 'desktop', `Unknown path name ${name}`);
+      return window.app.getPath('desktop');
+    },
+
+    getInfo: () => ({ version: getAppVersion(), platform: getAppPlatform() }),
+
+    async showSaveDialog(options = {}): Promise<string | null> {
+      const sendOrNoRender = renderPurpose === 'send' || renderPurpose === 'no-render';
+      if (!sendOrNoRender) {
+        return Promise.resolve(null);
+      }
+
+      const { filePath } = await window.dialog.showSaveDialog({
+        title: 'Save File',
+        buttonLabel: 'Save',
+        defaultPath: options.defaultPath,
+      });
+      return filePath || null;
+    },
+
+    clipboard: {
+      readText: () => window.clipboard.readText(),
+      writeText: text => window.clipboard.writeText(text),
+      clear: () => window.clipboard.clear(),
+    },
+  },
+  __private: {
+    // Provide modules that can be used in the renderer process
+    async loadRendererModules() {
+      if (typeof globalThis.document === 'undefined') {
+        return {};
+      }
+
+      const ReactDOM = await import('react-dom');
+      const React = await import('react');
+
+      return {
+        ReactDOM,
+        React,
+      };
+    },
+  },
+});
