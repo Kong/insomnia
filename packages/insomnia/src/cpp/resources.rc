@@ -1,0 +1,31 @@
+#include "resource.h"
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+1 ICON "insomnia.ico"
+1 VERSIONINFO
+
+FILEVERSION __MAJOR__,__MINOR__,__PATCH__,0
+PRODUCTVERSION __MAJOR__,__MINOR__,__PATCH__,0
+FILEOS 0x40004
+FILETYPE 0x1
+{
+BLOCK "StringFileInfo"
+{
+	BLOCK "040904b0"
+	{
+		VALUE "CompanyName", "Kong"
+		VALUE "FileDescription", "Insomnia"
+		VALUE "FileVersion", "__MAJOR__.__MINOR__.__PATCH____TAG__"
+		VALUE "InternalName", "Insomnia"
+		VALUE "LegalCopyright", "Copyright \xA9 __YEAR__ Kong"
+		VALUE "OriginalFilename", ""
+		VALUE "ProductName", "Insomnia"
+		VALUE "ProductVersion", "__MAJOR__.__MINOR__.__PATCH__.0"
+		VALUE "SquirrelAwareVersion", "1"
+	}
+}
+BLOCK "VarFileInfo"
+{
+	VALUE "Translation", 0x0409, 0x04B0
+}
+}
+1 MANIFEST "manifest.txt"
