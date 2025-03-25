@@ -15,7 +15,6 @@ describe('init()', () => {
       'getPath',
       'getInfo',
       'prompt',
-      'showGenericModalDialog',
       'showSaveDialog',
     ].sort());
     expect(Object.keys(result.app.clipboard).sort()).toEqual([

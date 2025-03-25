@@ -10,47 +10,14 @@ import { PromptModal, type PromptModalOptions } from '../../ui/components/modals
 import { WrapperModal } from '../../ui/components/modals/wrapper-modal';
 import { invariant } from '../../utils/invariant';
 
-interface DialogOptions {
-  onHide?: () => void;
-  tall?: boolean;
-  skinny?: boolean;
-  wide?: boolean;
-}
-
-interface AppInfo {
-  version: string;
-  platform: NodeJS.Platform;
-}
-
-interface ShowDialogOptions {
-  defaultPath?: string;
-}
-
-interface AppClipboard {
-  readText(): string;
-  writeText(text: string): void;
-  clear(): void;
-}
-
-interface ShowGenericModalDialogOptions {
-  html?: string;
-}
-
 export interface AppContext {
   alert: (title: string, message?: string) => void;
-  dialog: (title: string, body: HTMLElement, options?: DialogOptions) => void;
+  dialog: (title: string, body: HTMLElement, options?: { onHide?: () => void; tall?: boolean; skinny?: boolean; wide?: boolean }) => void;
   prompt: (title: string, options?: Pick<PromptModalOptions, 'label' | 'defaultValue' | 'submitName' | 'inputType'>) => Promise<string>;
   getPath: (name: string) => string;
-  getInfo: () => AppInfo;
-  showSaveDialog: (options?: ShowDialogOptions) => Promise<string | null>;
-  clipboard: AppClipboard;
-  /**
-   * @deprecated as it was never officially supported
-   */
-  showGenericModalDialog: (
-    title: string,
-    options?: ShowGenericModalDialogOptions
-  ) => void;
+  getInfo: () => { version: string; platform: NodeJS.Platform };
+  showSaveDialog: (options?: { defaultPath?: string }) => Promise<string | null>;
+  clipboard: { readText(): string; writeText(text: string): void; clear(): void };
 }
 
 export interface PrivateProperties {
@@ -155,26 +122,6 @@ export function init(renderPurpose: RenderPurpose = 'general'): {
         clear() {
           window.clipboard.clear();
         },
-      },
-
-      // ~~~~~~~~~~~~~~~~~~ //
-      // Deprecated Methods //
-      // ~~~~~~~~~~~~~~~~~~ //
-      showGenericModalDialog(
-        title,
-        options = {},
-      ) {
-        console.warn(
-          'app.showGenericModalDialog() is deprecated. Use app.dialog() instead.'
-        );
-        // Create DOM node so we can adapt to the new dialog() method
-        const body = document.createElement('div');
-
-        if (options.html) {
-          body.innerHTML = options.html;
-        }
-
-        return this.dialog(title, body);
       },
     },
     __private: {
