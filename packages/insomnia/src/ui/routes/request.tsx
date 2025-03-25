@@ -227,7 +227,8 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
   models.stats.incrementCreatedRequests();
   window.main.trackSegmentEvent({ event: SegmentEvent.requestCreate, properties: { requestType } });
 
-  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequestId}`);
+  // add a created query param to the URL to indicate that the request was just created, this is for distinguishing if we will create a temporary or permanent tab
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequestId}?created=true`);
 };
 export const updateRequestAction: ActionFunction = async ({ request, params }) => {
   const { requestId } = params;

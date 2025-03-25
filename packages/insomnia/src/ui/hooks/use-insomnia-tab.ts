@@ -41,7 +41,7 @@ export const useInsomniaTab = ({
 
   const { appTabsRef, addTab, changeActiveTab, closeTabById } = useInsomniaTabContext();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const generateTabUrl = useCallback((type: TabType) => {
     if (type === 'request') {
@@ -276,7 +276,22 @@ export const useInsomniaTab = ({
     if (!currentTab && type) {
       const tabInfo = packTabInfo(type);
       if (tabInfo) {
-        addTab(tabInfo);
+        let temporary = false;
+        // current temporary tabs scope only for request collection
+        if ((type === 'request' || type === 'folder' || type === 'collection') && !searchParams.get('created')) {
+          temporary = true;
+        }
+
+        if (searchParams.get('created')) {
+          const newSearchParams = new URLSearchParams(searchParams);
+          newSearchParams.delete('created');
+          setSearchParams(newSearchParams);
+        }
+
+        addTab({
+          ...tabInfo,
+          temporary,
+        });
         return;
       }
     }
@@ -285,10 +300,10 @@ export const useInsomniaTab = ({
     if (currentTab) {
       const currentActiveTabId = appTabsRef?.current?.[organizationId]?.activeTabId;
       if (currentActiveTabId !== currentTab.id) {
-        changeActiveTab(currentTab.id);
+        changeActiveTab(currentTab.id, { navigate: false });
       }
     }
-  }, [addTab, appTabsRef, changeActiveTab, getCurrentTab, location.pathname, organizationId, packTabInfo]);
+  }, [addTab, appTabsRef, changeActiveTab, getCurrentTab, location.pathname, organizationId, packTabInfo, searchParams, setSearchParams]);
 
   useDocBodyKeyboardShortcuts({
     close_tab: event => {
