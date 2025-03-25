@@ -127,6 +127,8 @@ test.describe('Environment Editor', async () => {
     await expect(firstRow).toHaveCSS('opacity', '0.4');
     // delete all items
     await page.getByRole('button', { name: 'Delete All' }).dblclick();
+    // check items have been deleted
+    await expect(kvTable.getByRole('option').nth(2)).not.toBeVisible();
 
     firstRow = await kvTable.getByRole('option').first();
     await firstRow.getByTestId('OneLineEditor').first().click();
