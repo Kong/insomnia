@@ -27,7 +27,7 @@ jobs:
       # (TODO): Produce workspace/package specific SBOM. Current limitation: https://github.com/anchore/syft/issues/2574
       # (TODO): needs check (block) further steps if SCA fails
       - id: sca-project
-        uses: Kong/public-shared-actions/security-actions/sca@28d20a1f492927f35b00b317acd78f669c45f88b # v2.7.3
+        uses: Kong/public-shared-actions/security-actions/sca@a18abf762d6e2444bcbfd20de70451ea1e3bc1b1 # v4.1.1
         with:
           dir: .
           upload-sbom-release-assets: false
@@ -221,7 +221,7 @@ jobs:
       - name: Scan inso docker artifacts
         id: sbom_action
         if: runner.os == 'Linux' && runner.arch == 'X64'
-        uses: Kong/public-shared-actions/security-actions/scan-docker-image@28d20a1f492927f35b00b317acd78f669c45f88b # v2.7.3
+        uses: Kong/public-shared-actions/security-actions/scan-docker-image@a18abf762d6e2444bcbfd20de70451ea1e3bc1b1 # v4.1.1
         with:
           asset_prefix: image-inso-${{ runner.os }}-${{ runner.arch }}
           image: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/${{ env.INSO_DOCKER_TAR }}
