@@ -15,7 +15,7 @@ env:
   IS_PRERELEASE: ${{ contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta') }}
   ARTIFACTS_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts
   INSO_DOCKER_IMAGE: kong/inso # By default, registry is docker.io
-  NOTARY_REPOSITORY: 'kong/notary' # All signatures will be pushed to public notary repository
+  NOTARY_REPOSITORY: "kong/notary" # All signatures will be pushed to public notary repository
 
 jobs:
   publish:
@@ -45,7 +45,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: package-lock.json
 
       - name: Install packages
@@ -202,7 +202,7 @@ jobs:
           - product: inso
             binary_artifacts_subject_as_file: ${{ needs.publish.outputs.INSO_BINARY_ARTIFACTS_SUBJECTS_AS_FILE }}
     # need to use non hash version because of: https://github.com/slsa-framework/slsa-github-generator/issues/3498
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@5a775b367a56d5bd118a224a811bba288150a563 # v2.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
       base64-subjects-as-file: "${{ matrix.binary_artifacts_subject_as_file }}"
       upload-assets: true
@@ -219,7 +219,7 @@ jobs:
       packages: write # Required for publishing provenance. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
       # need to use non hash version because of: https://github.com/slsa-framework/slsa-github-generator/issues/3498
       contents: write
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@5a775b367a56d5bd118a224a811bba288150a563 # v2.0.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
     with:
       image: ${{ needs.publish.outputs.INSO_DOCKER_IMAGE }}
       digest: ${{ needs.publish.outputs.INSO_DOCKER_IMAGE_DIGEST }}
@@ -227,6 +227,6 @@ jobs:
       private-repository: true
     secrets:
       registry-username: ${{ secrets.DOCKER_REGISTRY_USER }}
-      registry-password:  ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+      registry-password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
       provenance-registry-username: ${{ secrets.DOCKER_REGISTRY_USER }}
       provenance-registry-password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
