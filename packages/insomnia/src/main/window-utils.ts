@@ -699,7 +699,13 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
     template.push(developerMenu);
   }
 
-  mainBrowserWindow.setMenu(Menu.buildFromTemplate(template));
+  if (isMac()) {
+    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+  } else {
+    // setMenu only works for Windows and Linux
+    mainBrowserWindow.setMenu(Menu.buildFromTemplate(template));
+  }
+
   return mainBrowserWindow;
 }
 

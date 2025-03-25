@@ -13,6 +13,7 @@ import { getOrInheritAuthentication, getOrInheritHeaders } from '../../network/n
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
+import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 import { useReadyState } from '../hooks/use-ready-state';
 import { useRequestPatcher } from '../hooks/use-request';
 import { useRequestMetaPatcher } from '../hooks/use-request';
@@ -101,6 +102,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
   const fetcher = useFetcher();
 
+  const { updateTabById } = useInsomniaTabContext();
+
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const connect = useCallback((connectParams: ConnectActionParams) => {
     fetcher.submit(JSON.stringify(connectParams),
@@ -121,6 +124,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   }, [fetcher, organizationId, projectId, requestId, workspaceId]);
 
   const sendOrConnect = useCallback(async (shouldPromptForPathAfterResponse?: boolean, ignoreUndefinedEnvVariable?: boolean) => {
+    updateTabById?.(requestId, { temporary: false });
     models.stats.incrementExecutedRequests();
     window.main.trackSegmentEvent({
       event: SegmentEvent.requestExecute,
@@ -186,7 +190,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         ),
       });
     }
-  }, [activeEnvironment._id, activeRequest, activeWorkspace._id, connect, requestId, send, settings.preferredHttpVersion]);
+  }, [activeEnvironment._id, activeRequest, activeWorkspace._id, connect, requestId, send, settings.preferredHttpVersion, updateTabById]);
 
   useEffect(() => {
     const sendOnMetaEnter = (event: KeyboardEvent) => {
