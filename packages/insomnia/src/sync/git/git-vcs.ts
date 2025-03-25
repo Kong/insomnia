@@ -676,6 +676,14 @@ export class GitVCS {
       );
     }
 
+    if ('errors' in response && response.errors && Array.isArray(response.errors)) {
+      console.log('[git] Push failed with errors', response.errors);
+      const errorsString = JSON.stringify(response.errors);
+      throw new Error(
+        `Push rejected with errors: ${errorsString}.\n\nGo to View > Toggle DevTools > Console for more information.`
+      );
+    }
+
     throw new Error('Push failed with unknown error. Please try again.');
   }
 
