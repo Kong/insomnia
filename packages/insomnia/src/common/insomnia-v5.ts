@@ -147,7 +147,7 @@ function getApiSpec(file: InsomniaFile): [WithExportType<ApiSpec>] | [] {
       _type: EXPORT_TYPE_API_SPEC,
       fileName: 'file' in file.spec ? file.spec.file : '',
       contentType: 'json',
-      contents: 'contents' in file.spec && file.spec.contents ? JSON.stringify(file.spec.contents) : '',
+      contents: 'contents' in file.spec && file.spec.contents ? stringify(file.spec.contents) : '',
       parentId: file.meta?.id || '__WORKSPACE_ID__',
     }];
   }
