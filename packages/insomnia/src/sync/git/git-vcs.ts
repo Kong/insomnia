@@ -656,23 +656,27 @@ export class GitVCS {
 
   async push(gitCredentials?: GitCredentials | null, force = false) {
     console.log(`[git] Push remote=origin force=${force ? 'true' : 'false'}`);
-    // eslint-disable-next-line no-unreachable
-    const response: git.PushResult = await git.push({
+
+    const response = await git.push({
       ...this._baseOpts,
       ...gitCallbacks(gitCredentials),
       remote: 'origin',
       force,
     });
 
-    // @ts-expect-error -- TSCONVERSION git errors are not handled correctly
-    if (response.errors?.length) {
+    if (response.ok) {
+      console.log('[git] Push successful');
+      return;
+    }
+
+    if (response.error) {
       console.log('[git] Push rejected', response);
-      // @ts-expect-error -- TSCONVERSION git errors are not handled correctly
-      const errorsString = JSON.stringify(response.errors);
       throw new Error(
-        `Push rejected with errors: ${errorsString}.\n\nGo to View > Toggle DevTools > Console for more information.`
+        `Push rejected with errors: ${response.error}.\n\nGo to View > Toggle DevTools > Console for more information.`
       );
     }
+
+    throw new Error('Push failed with unknown error. Please try again.');
   }
 
   async _hasUncommittedChanges() {
@@ -896,9 +900,15 @@ export class GitVCS {
             oursBranch,
             theirsBranch,
           );
-        } else {
-          throw err;
         }
+
+        if (err instanceof git.Errors.MergeNotSupportedError) {
+          const errorMessage = 'Merges with additions are not supported yet.';
+
+          throw new Error(errorMessage);
+        }
+
+        throw err;
       },
     );
   }

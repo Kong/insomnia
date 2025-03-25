@@ -1408,9 +1408,17 @@ export const pushToGitRemoteAction = async ({
     });
     await database.flushChanges(bufferId);
   } catch (err: unknown) {
+    if (err instanceof Errors.PushRejectedError && err.data.reason === 'not-fast-forward') {
+      return {
+        errors: ['Push Rejected. It seems that the remote repository has changes that you do not have locally. Please pull the changes and try again.'],
+        gitRepository,
+      };
+    }
+
     if (err instanceof Errors.HttpError) {
       return {
         errors: [`${err.message}, ${err.data.response}`],
+        gitRepository,
       };
     }
     const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
