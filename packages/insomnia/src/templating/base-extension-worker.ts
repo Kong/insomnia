@@ -1,6 +1,10 @@
+import electron from 'electron';
+
+import { getAppPlatform, getAppVersion } from '../common/constants';
 import type { Workspace } from '../models/workspace';
 import type { Plugin } from '../plugins/index';
-import type { PluginTemplateTag, PluginTemplateTagContext } from './types';
+import { invariant } from '../utils/invariant';
+import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
 import * as templating from './worker';
 export function decodeEncoding<T>(value: T) {
   if (typeof value !== 'string') {
@@ -16,12 +20,7 @@ export function decodeEncoding<T>(value: T) {
   return value;
 }
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
-export interface HelperContext {
-  context: any;
-  meta: any;
-  renderPurpose: any;
-  util: any;
-}
+
 export default class BaseExtension {
   _ext: PluginTemplateTag | null = null;
   _plugin: Plugin | null = null;
@@ -95,13 +94,11 @@ export default class BaseExtension {
     return new nodes.CallExtensionAsync(this, 'asyncRun', args);
   }
 
-  asyncRun({ ctx: renderContext }: any, ...runArgs: any[]) {
-    // Pull the callback off the end
+  asyncRun({ ctx }: any, ...runArgs: any[]) {
+    const renderContext = ctx as BaseRenderContext & { value: string | number };
     const callback = runArgs[runArgs.length - 1];
-    // Pull out the meta helper
-    const renderMeta = renderContext.getMeta ? renderContext.getMeta() : {};
-    // Pull out the purpose
-    const renderPurpose = renderContext.getPurpose ? renderContext.getPurpose() : null;
+    const renderMeta = renderContext.getMeta?.();
+    const renderPurpose = renderContext.getPurpose?.();
     // Extract the rest of the args
     const args = runArgs
       .slice(0, runArgs.length - 1)
@@ -109,8 +106,39 @@ export default class BaseExtension {
       .map(decodeEncoding);
     // Define a helper context with utils
     const helperContext: PluginTemplateTagContext = {
-      // @ts-expect-error -- TODO
-      app: {},
+      app: {
+        alert: () => {
+          throw new Error('Not implemented');
+        },
+        dialog: () => {
+          throw new Error('Not implemented');
+        },
+        prompt: () => {
+          throw new Error('Not implemented');
+        },
+        getPath: (name: string) => {
+          invariant(name.toLowerCase() === 'desktop', `Unknown path name ${name}`);
+          return electron.app.getPath('desktop');
+        },
+        getInfo: () => ({ version: getAppVersion(), platform: getAppPlatform() }),
+        showSaveDialog: async (options = {}) => {
+          const sendOrNoRender = renderPurpose === 'send' || renderPurpose === 'no-render';
+          if (!sendOrNoRender) {
+            return null;
+          }
+          const { filePath } = await electron.dialog.showSaveDialog({
+            title: 'Save File',
+            buttonLabel: 'Save',
+            defaultPath: options.defaultPath,
+          });
+          return filePath || null;
+        },
+        clipboard: {
+          readText: () => electron.clipboard.readText(),
+          writeText: text => electron.clipboard.writeText(text),
+          clear: () => electron.clipboard.clear(),
+        },
+      },
       // @ts-expect-error -- TODO
       store: {},
       // @ts-expect-error -- TODO
