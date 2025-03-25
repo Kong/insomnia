@@ -1,4 +1,5 @@
 import type { Workspace } from '../models/workspace';
+import { init as appInit } from '../plugins/context/app-main';
 import type { Plugin } from '../plugins/index';
 import type { PluginTemplateTag, PluginTemplateTagContext } from './types';
 import * as templating from './worker';
@@ -108,9 +109,9 @@ export default class BaseExtension {
       .filter(a => a !== EMPTY_ARG)
       .map(decodeEncoding);
     // Define a helper context with utils
+    const app = appInit().app;
     const helperContext: PluginTemplateTagContext = {
-      // @ts-expect-error -- TODO
-      app: {},
+      app,
       // @ts-expect-error -- TODO
       store: {},
       // @ts-expect-error -- TODO

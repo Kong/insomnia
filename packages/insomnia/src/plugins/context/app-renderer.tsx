@@ -2,23 +2,13 @@ import React from 'react';
 import type ReactDOM from 'react-dom';
 
 import { getAppPlatform, getAppVersion } from '../../common/constants';
-import type { RenderPurpose } from '../../templating/types';
+import type { AppContext, RenderPurpose } from '../../templating/types';
 import { HtmlElementWrapper } from '../../ui/components/html-element-wrapper';
 import { showModal } from '../../ui/components/modals';
 import { AlertModal } from '../../ui/components/modals/alert-modal';
-import { PromptModal, type PromptModalOptions } from '../../ui/components/modals/prompt-modal';
+import { PromptModal } from '../../ui/components/modals/prompt-modal';
 import { WrapperModal } from '../../ui/components/modals/wrapper-modal';
 import { invariant } from '../../utils/invariant';
-
-export interface AppContext {
-  alert: (title: string, message?: string) => void;
-  dialog: (title: string, body: HTMLElement, options?: { onHide?: () => void; tall?: boolean; skinny?: boolean; wide?: boolean }) => void;
-  prompt: (title: string, options?: Pick<PromptModalOptions, 'label' | 'defaultValue' | 'submitName' | 'inputType'>) => Promise<string>;
-  getPath: (name: string) => string;
-  getInfo: () => { version: string; platform: NodeJS.Platform };
-  showSaveDialog: (options?: { defaultPath?: string }) => Promise<string | null>;
-  clipboard: { readText(): string; writeText(text: string): void; clear(): void };
-}
 
 export interface PrivateProperties {
   loadRendererModules: () => Promise<{

@@ -10,7 +10,7 @@ import type { getBodyBuffer, getLatestForRequest } from '../models/response';
 import type { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace } from '../models/workspace';
 import type { PluginStore } from '../plugins/context';
-import type { AppContext } from '../plugins/context/app';
+import type { PromptModalOptions } from '../ui/components/modals/prompt-modal';
 import type { extractNunjucksTagFromCoords } from './utils';
 
 export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
@@ -162,7 +162,15 @@ export interface BaseRenderContext {
   getProjectId: () => string | undefined;
   [key: string]: any;
 }
-
+export interface AppContext {
+  alert: (title: string, message?: string) => void;
+  dialog: (title: string, body: HTMLElement, options?: { onHide?: () => void; tall?: boolean; skinny?: boolean; wide?: boolean }) => void;
+  prompt: (title: string, options?: Pick<PromptModalOptions, 'label' | 'defaultValue' | 'submitName' | 'inputType'>) => Promise<string>;
+  getPath: (name: string) => string;
+  getInfo: () => { version: string; platform: NodeJS.Platform };
+  showSaveDialog: (options?: { defaultPath?: string }) => Promise<string | null>;
+  clipboard: { readText(): string; writeText(text: string): void; clear(): void };
+}
 export interface PluginTemplateTagContext {
   app: AppContext;
   store: PluginStore;

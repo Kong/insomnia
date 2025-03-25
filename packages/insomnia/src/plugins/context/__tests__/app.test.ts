@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import appPackageJson from '../../../../package.json';
-import * as plugin from '../app';
+import * as plugin from '../app-renderer';
 
 describe('init()', () => {
 
