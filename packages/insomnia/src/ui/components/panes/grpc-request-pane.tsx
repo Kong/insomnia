@@ -133,7 +133,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
         const caCertificate = (await models.caCertificate.findByParentId(workspaceId));
         const caCertificatePath = caCertificate && !caCertificate.disabled ? caCertificate.path : undefined;
 
-        updateTabById?.(requestId, { temporary: true });
+        updateTabById?.(requestId, { temporary: false });
 
         window.main.grpc.start({
           request,
