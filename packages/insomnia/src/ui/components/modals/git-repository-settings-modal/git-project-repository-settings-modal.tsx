@@ -30,12 +30,10 @@ function getDefaultOAuthProvider(credentials?: GitCredentials | null): OauthProv
   return 'custom';
 }
 
-export const GitProjectRepositorySettingsModal = (props: ModalProps & {
+export const GitProjectRepositorySettingsModal = ({ gitRepository, ...modalProps }: ModalProps & {
   gitRepository?: GitRepository;
 }) => {
   const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
-  const { gitRepository } = props;
-
   const modalRef = useRef<ModalHandle>(null);
   const updateGitRepositoryFetcher = useFetcher();
   const deleteGitRepositoryFetcher = useFetcher();
@@ -89,7 +87,7 @@ export const GitProjectRepositorySettingsModal = (props: ModalProps & {
 
   return (
     <OverlayContainer>
-      <Modal ref={modalRef} {...props}>
+      <Modal ref={modalRef} {...modalProps}>
         <ModalHeader>
           Repository Settings{' '}
           <HelpTooltip>
@@ -159,7 +157,7 @@ export const GitProjectRepositorySettingsModal = (props: ModalProps & {
           >
             <button
               className="btn"
-              disabled={!gitRepository}
+              disabled={!hasGitRepository}
               onClick={() => {
                 deleteGitRepositoryFetcher.submit({}, {
                   action: `/organization/${organizationId}/project/${projectId}/git/reset`,
@@ -169,15 +167,26 @@ export const GitProjectRepositorySettingsModal = (props: ModalProps & {
             >
               Reset
             </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              form={selectedTab}
-              className="btn"
-              data-testid="git-repository-settings-modal__sync-btn"
-            >
-              Sync
-            </button>
+            {hasGitRepository ? (
+              <button
+                type="button"
+                onClick={() => modalRef.current?.hide()}
+                className="btn"
+                data-testid="git-repository-settings-modal__sync-btn-close"
+              >
+                Close
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={isLoading}
+                form={selectedTab}
+                className="btn"
+                data-testid="git-repository-settings-modal__sync-btn"
+              >
+                Sync
+              </button>
+            )}
           </div>
         </ModalFooter>
       </Modal>
