@@ -1,7 +1,7 @@
 import React from 'react';
 
 import type { GCPSecretConfig } from '../../../../main/ipc/cloud-service-integration/types';
-import type { NunjucksParsedTag } from '../../../../templating/utils';
+import type { NunjucksParsedTag } from '../../../../templating/types';
 import { HelpTooltip } from '../../help-tooltip';
 
 export interface GCPSecretManagerFormProps {

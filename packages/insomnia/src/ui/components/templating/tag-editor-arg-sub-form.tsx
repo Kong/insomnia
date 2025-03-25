@@ -1,7 +1,7 @@
 import React from 'react';
 
 import type { BaseModel } from '../../../models';
-import type { NunjucksParsedTag } from '../../../templating/utils';
+import type { NunjucksParsedTag } from '../../../templating/types';
 import { isValidJSONString } from '../../../utils/json';
 import { ExternalVaultForm } from './external-vault/external-vault-form';
 

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { type HashiCorpSecretConfig, type HashiCorpVaultKVV1SecretConfig, type HashiCorpVaultKVV2SecretConfig, type HCPSecretConfig } from '../../../../main/ipc/cloud-service-integration/types';
 import * as models from '../../../../models';
 import { type HashiCorpCredentials, HashiCorpCredentialType } from '../../../../models/cloud-credential';
-import type { NunjucksParsedTag } from '../../../../templating/utils';
+import type { NunjucksParsedTag } from '../../../../templating/types';
 import { HelpTooltip } from '../../help-tooltip';
 
 export interface HashiCorpVaultFormProps {
