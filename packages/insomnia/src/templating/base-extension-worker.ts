@@ -4,7 +4,7 @@ import { getAppPlatform, getAppVersion } from '../common/constants';
 import type { Workspace } from '../models/workspace';
 import type { Plugin } from '../plugins/index';
 import { invariant } from '../utils/invariant';
-import type { PluginTemplateTag, PluginTemplateTagContext } from './types';
+import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
 import * as templating from './worker';
 export function decodeEncoding<T>(value: T) {
   if (typeof value !== 'string') {
@@ -20,12 +20,7 @@ export function decodeEncoding<T>(value: T) {
   return value;
 }
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
-export interface HelperContext {
-  context: any;
-  meta: any;
-  renderPurpose: any;
-  util: any;
-}
+
 export default class BaseExtension {
   _ext: PluginTemplateTag | null = null;
   _plugin: Plugin | null = null;
@@ -99,20 +94,17 @@ export default class BaseExtension {
     return new nodes.CallExtensionAsync(this, 'asyncRun', args);
   }
 
-  asyncRun({ ctx: renderContext }: any, ...runArgs: any[]) {
-    // Pull the callback off the end
+  asyncRun({ ctx }: any, ...runArgs: any[]) {
+    const renderContext = ctx as BaseRenderContext & { value: string | number };
     const callback = runArgs[runArgs.length - 1];
-    // Pull out the meta helper
-    const renderMeta = renderContext.getMeta ? renderContext.getMeta() : {};
-    // Pull out the purpose
-    const renderPurpose = renderContext.getPurpose ? renderContext.getPurpose() : null;
+    const renderMeta = renderContext.getMeta?.();
+    const renderPurpose = renderContext.getPurpose?.();
     // Extract the rest of the args
     const args = runArgs
       .slice(0, runArgs.length - 1)
       .filter(a => a !== EMPTY_ARG)
       .map(decodeEncoding);
     // Define a helper context with utils
-
     const helperContext: PluginTemplateTagContext = {
       app: {
         alert: () => {
@@ -129,10 +121,10 @@ export default class BaseExtension {
           return electron.app.getPath('desktop');
         },
         getInfo: () => ({ version: getAppVersion(), platform: getAppPlatform() }),
-        async showSaveDialog(options = {}): Promise<string | null> {
+        showSaveDialog: async (options = {}) => {
           const sendOrNoRender = renderPurpose === 'send' || renderPurpose === 'no-render';
           if (!sendOrNoRender) {
-            return Promise.resolve(null);
+            return null;
           }
           const { filePath } = await electron.dialog.showSaveDialog({
             title: 'Save File',

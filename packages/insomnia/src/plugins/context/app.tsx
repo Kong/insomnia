@@ -62,10 +62,10 @@ export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContex
 
     getInfo: () => ({ version: getAppVersion(), platform: getAppPlatform() }),
 
-    async showSaveDialog(options = {}): Promise<string | null> {
+    showSaveDialog: async (options = {}) => {
       const sendOrNoRender = renderPurpose === 'send' || renderPurpose === 'no-render';
       if (!sendOrNoRender) {
-        return Promise.resolve(null);
+        return null;
       }
 
       const { filePath } = await window.dialog.showSaveDialog({
