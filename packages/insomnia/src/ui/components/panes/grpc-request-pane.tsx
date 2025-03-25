@@ -19,6 +19,7 @@ import { RenderError } from '../../../templating/render-error';
 import { getGrpcConnectionErrorDetails } from '../../../utils/grpc';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { setDefaultProtocol } from '../../../utils/url/protocol';
+import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import type { GrpcRequestState } from '../../routes/debug';
@@ -109,6 +110,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
   const patchRequest = useRequestPatcher();
+
+  const { updateTabById } = useInsomniaTabContext();
+
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniquenessKey = `${activeEnvironment.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}`;
   const method = methods.find(c => c.fullPath === activeRequest.protoMethodName);
@@ -128,6 +132,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
         const clientCertificate = workspaceClientCertificates.find(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), request.url, false));
         const caCertificate = (await models.caCertificate.findByParentId(workspaceId));
         const caCertificatePath = caCertificate && !caCertificate.disabled ? caCertificate.path : undefined;
+
+        updateTabById?.(requestId, { temporary: false });
+
         window.main.grpc.start({
           request,
           rejectUnauthorized: settings.validateSSL,
@@ -136,7 +143,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
             clientKey: clientCertificate?.key ? await readFile(clientCertificate?.key || '', 'utf8') : undefined,
             caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
           } : {}),
-       });
+        });
         setGrpcState({
           ...grpcState,
           requestMessages: [],
@@ -248,9 +255,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                       ...rendered,
                       rejectUnauthorized: settings.validateSSL,
                       ...(activeRequest.url.toLowerCase().startsWith('grpcs:') ? {
-                      clientCert,
-                      clientKey,
-                      caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
+                        clientCert,
+                        clientKey,
+                        caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
                       } : {}),
                     };
                     const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
@@ -286,8 +293,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
           </div>
         </PaneHeader>
         <PaneBody>
-            <Tabs aria-label='Grpc request pane tabs' className="flex-1 w-full h-full flex flex-col">
-              <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+          <Tabs aria-label='Grpc request pane tabs' className="flex-1 w-full h-full flex flex-col">
+            <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
               {methodType && (
                 <Tab
                   className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
@@ -296,10 +303,10 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                   {GrpcMethodTypeName[methodType]}
                 </Tab>
               )}
-                <Tab className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300' id='headers'>
-                  Headers
-                </Tab>
-              </TabList>
+              <Tab className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300' id='headers'>
+                Headers
+              </Tab>
+            </TabList>
             {methodType && (
               <TabPanel className={'w-full h-full overflow-y-auto'} id='method-type'>
                 <>
@@ -375,20 +382,20 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 </>
               </TabPanel>
             )}
-              <TabPanel className={'w-full h-full overflow-y-auto'} id='headers'>
-                <ErrorBoundary key={uniquenessKey} errorClassName="font-error pad text-center">
-                  <KeyValueEditor
-                    namePlaceholder="header"
-                    valuePlaceholder="value"
-                    descriptionPlaceholder="description"
-                    pairs={activeRequest.metadata}
-                    isDisabled={running}
-                    handleGetAutocompleteNameConstants={getCommonHeaderNames}
-                    handleGetAutocompleteValueConstants={getCommonHeaderValues}
-                    onChange={(metadata: GrpcRequestHeader[]) => patchRequest(requestId, { metadata })}
-                  />
-                </ErrorBoundary>
-              </TabPanel>
+            <TabPanel className={'w-full h-full overflow-y-auto'} id='headers'>
+              <ErrorBoundary key={uniquenessKey} errorClassName="font-error pad text-center">
+                <KeyValueEditor
+                  namePlaceholder="header"
+                  valuePlaceholder="value"
+                  descriptionPlaceholder="description"
+                  pairs={activeRequest.metadata}
+                  isDisabled={running}
+                  handleGetAutocompleteNameConstants={getCommonHeaderNames}
+                  handleGetAutocompleteValueConstants={getCommonHeaderValues}
+                  onChange={(metadata: GrpcRequestHeader[]) => patchRequest(requestId, { metadata })}
+                />
+              </ErrorBoundary>
+            </TabPanel>
           </Tabs>
         </PaneBody>
       </Pane>
