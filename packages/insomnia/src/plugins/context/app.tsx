@@ -4,9 +4,11 @@ import type ReactDOM from 'react-dom';
 import { getAppPlatform, getAppVersion } from '../../common/constants';
 import type { RenderPurpose } from '../../templating/types';
 import { HtmlElementWrapper } from '../../ui/components/html-element-wrapper';
-import { showAlert, showModal, showPrompt } from '../../ui/components/modals';
-import type { PromptModalOptions } from '../../ui/components/modals/prompt-modal';
+import { showModal } from '../../ui/components/modals';
+import { AlertModal } from '../../ui/components/modals/alert-modal';
+import { PromptModal, type PromptModalOptions } from '../../ui/components/modals/prompt-modal';
 import { WrapperModal } from '../../ui/components/modals/wrapper-modal';
+import { invariant } from '../../utils/invariant';
 
 interface DialogOptions {
   onHide?: () => void;
@@ -35,10 +37,7 @@ interface ShowGenericModalDialogOptions {
 }
 
 export interface AppContext {
-  alert: (
-    title: string,
-    message?: string
-  ) => ReturnType<typeof showAlert>;
+  alert: (title: string, message?: string) => void;
   dialog: (title: string, body: HTMLElement, options?: DialogOptions) => void;
   prompt: (title: string, options?: Pick<PromptModalOptions, 'label' | 'defaultValue' | 'submitName' | 'inputType'>) => Promise<string>;
   getPath: (name: string) => string;
@@ -74,22 +73,10 @@ export function init(renderPurpose: RenderPurpose = 'general'): {
         if (!canShowDialogs) {
           return Promise.resolve();
         }
-
-        return showAlert({
-          title,
-          message,
-        });
+        return showModal(AlertModal, { title, message });
       },
-
-      dialog(
-        title,
-        body,
-        options = {},
-      ) {
-        if (
-          renderPurpose !== 'send' &&
-          renderPurpose !== 'no-render'
-        ) {
+      dialog(title, body, options = {},) {
+        if (renderPurpose !== 'send' && renderPurpose !== 'no-render') {
           return;
         }
 
@@ -114,8 +101,7 @@ export function init(renderPurpose: RenderPurpose = 'general'): {
         return new Promise<string>((resolve, reject) => {
           let shouldResolve = false;
           let resolveWith: string | null = null;
-
-          showPrompt({
+          showModal(PromptModal, {
             title,
             ...(options || ({} as Record<string, any>)),
 
@@ -136,37 +122,24 @@ export function init(renderPurpose: RenderPurpose = 'general'): {
       },
 
       getPath(name: string) {
-        switch (name.toLowerCase()) {
-          case 'desktop':
-            return window.app.getPath('desktop');
-
-          default:
-            throw new Error(`Unknown path name ${name}`);
-        }
+        invariant(name.toLowerCase() === 'desktop', `Unknown path name ${name}`);
+        return window.app.getPath('desktop');
       },
 
       getInfo() {
-        return {
-          version: getAppVersion(),
-          platform: getAppPlatform(),
-        };
+        return { version: getAppVersion(), platform: getAppPlatform() };
       },
 
-      async showSaveDialog(
-        options = {},
-      ): Promise<string | null> {
+      async showSaveDialog(options = {}): Promise<string | null> {
         if (!canShowDialogs) {
           return Promise.resolve(null);
         }
 
-        const saveOptions = {
+        const { filePath } = await window.dialog.showSaveDialog({
           title: 'Save File',
           buttonLabel: 'Save',
           defaultPath: options.defaultPath,
-        };
-        const { filePath } = await window.dialog.showSaveDialog(
-          saveOptions
-        );
+        });
         return filePath || null;
       },
 
