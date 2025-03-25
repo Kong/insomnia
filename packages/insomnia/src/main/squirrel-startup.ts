@@ -2,6 +2,8 @@ import { spawn } from 'child_process';
 import { app } from 'electron';
 import path from 'path';
 
+import log from '../common/log';
+
 function run(args: readonly string[] | undefined, done: (...args: any[]) => void) {
   const updateExe = path.resolve(path.dirname(process.execPath), '..', 'Update.exe');
   spawn(updateExe, args, {
@@ -15,7 +17,12 @@ export function checkIfRestartNeeded() {
   }
 
   const cmd = process.argv[1];
-  console.log('[main] processing squirrel command `%s`', cmd);
+  if (!cmd) {
+    return false;
+  }
+
+  log.info('[main] processing squirrel command `%s`', cmd);
+
   const target = path.basename(process.execPath);
 
   switch (cmd) {

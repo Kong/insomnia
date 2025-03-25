@@ -6,7 +6,7 @@ import type { Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context';
 import type { Plugin } from '../plugins/index';
 import * as templating from './index';
-import type { PluginTemplateTag, PluginTemplateTagContext } from './types';
+import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
 import { decodeEncoding } from './utils';
 
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
@@ -83,13 +83,11 @@ export default class BaseExtension {
     return new nodes.CallExtensionAsync(this, 'asyncRun', args);
   }
 
-  asyncRun({ ctx: renderContext }: any, ...runArgs: any[]) {
-    // Pull the callback off the end
+  asyncRun({ ctx }: any, ...runArgs: any[]) {
+    const renderContext = ctx as BaseRenderContext & { value: string | number };
     const callback = runArgs[runArgs.length - 1];
-    // Pull out the meta helper
-    const renderMeta = renderContext.getMeta ? renderContext.getMeta() : {};
-    // Pull out the purpose
-    const renderPurpose = renderContext.getPurpose ? renderContext.getPurpose() : null;
+    const renderMeta = renderContext.getMeta?.();
+    const renderPurpose = renderContext.getPurpose?.();
     // Extract the rest of the args
     const args = runArgs
       .slice(0, runArgs.length - 1)
