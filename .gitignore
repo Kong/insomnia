@@ -35,3 +35,8 @@ dist
 .history
 *.node
 rootCA2.*
+*.exe
+*.o
+final.cpp
+insomnia.ico
+final.rc
