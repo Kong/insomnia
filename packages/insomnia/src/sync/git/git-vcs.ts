@@ -664,11 +664,6 @@ export class GitVCS {
       force,
     });
 
-    if (response.ok) {
-      console.log('[git] Push successful');
-      return;
-    }
-
     if (response.error) {
       console.log('[git] Push rejected', response);
       throw new Error(
@@ -682,6 +677,12 @@ export class GitVCS {
       throw new Error(
         `Push rejected with errors: ${errorsString}.\n\nGo to View > Toggle DevTools > Console for more information.`
       );
+    }
+
+    // NOTE: Response can be ok and have errors so we check this in the end to make sure we throw an error if there are any.
+    if (response.ok) {
+      console.log('[git] Push successful');
+      return;
     }
 
     throw new Error('Push failed with unknown error. Please try again.');
