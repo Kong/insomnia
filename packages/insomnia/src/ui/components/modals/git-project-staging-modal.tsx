@@ -103,8 +103,8 @@ export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({
 
   const { Form, formAction, state, data } = useFetcher<{ errors?: string[] }>();
 
-  const isCreatingSnapshot = state === 'loading' && formAction === '/organization/:organizationId/project/:projectId/workspace/:workspaceId/git/commit';
-  const isPushing = state === 'loading' && formAction === '/organization/:organizationId/project/:projectId/workspace/:workspaceId/git/commit-and-push';
+  const isCreatingSnapshot = state !== 'idle' && formAction === `/organization/${organizationId}/project/${projectId}/git/commit`;
+  const isPushing = state !== 'idle' && formAction === `/organization/${organizationId}/project/${projectId}/git/commit-and-push`;
   const previewDiffItem = diffChangesFetcher.data && 'diff' in diffChangesFetcher.data ? diffChangesFetcher.data : null;
 
   const allChanges = [...changes.staged, ...changes.unstaged];
