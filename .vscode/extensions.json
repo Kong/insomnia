@@ -6,6 +6,7 @@
     "yzhang.markdown-all-in-one",
     "DavidAnson.vscode-markdownlint",
     "oxc.oxc-vscode",
+    "esbenp.prettier-vscode",
     "adrieankhisbe.vscode-ndjson",
     "ms-playwright.playwright",
     "bradlc.vscode-tailwindcss"
