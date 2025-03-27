@@ -36,105 +36,106 @@ const recursiveRender = (
   handleDeleteDirectory: DeleteProtoDirectoryHandler,
   selectedId?: string
 ): React.ReactNode => [
-  dir && (
-    <li
-      className='row-spaced'
-      style={{
-        paddingLeft: `${indent * 1}rem`,
-      }}
-    >
-      <span className="wide">
-        <i className="fa fa-folder-open-o pad-right-sm" />
-        {dir.name}
-      </span>
-      {indent === 0 && (
-        <div className="row">
-          <Button
-            variant="text"
-            title="Delete Directory"
-            onClick={event => {
-              event.stopPropagation();
-              handleDeleteDirectory(dir);
-            }}
-            bg="danger"
-          >
-            <i className="fa fa-trash-o" />
-          </Button>
-        </div>
-      )}
-    </li>
-  ),
-  ...files.map(f => (
-    <li
-      className='row-spaced cursor-pointer'
-      key={f._id}
-      onClick={() => handleSelect(f._id)}
-    >
-      <>
-        <Checkbox
-          className="py-0"
-          isSelected={f._id === selectedId}
-          onChange={isSelected => {
-            if (isSelected) {
-              handleSelect(f._id);
-            } else {
-              handleUnselect(f._id);
-            }
-          }}
-        >
-          {({ isSelected }) => {
-            return <>
-              {isSelected ?
-                <i className="fa fa-square-check fa-1x h-4 mr-2" style={{ color: 'rgb(74 222 128)' }} /> :
-                <i className="fa fa-square fa-1x h-4 mr-2" />
-              }
-            </>;
-          }}
-        </Checkbox>
+    dir && (
+      <li
+        key={dir._id}
+        className='row-spaced'
+        style={{
+          paddingLeft: `${indent * 1}rem`,
+        }}
+      >
         <span className="wide">
-          <i className="fa fa-file-o pad-right-sm" />
-          {f.name}
+          <i className="fa fa-folder-open-o pad-right-sm" />
+          {dir.name}
         </span>
-        <div className="row">
-          <Button
-            variant="text"
-            title="Re-upload Proto File"
-            onClick={event => {
-              event.stopPropagation();
-              handleUpdate(f);
+        {indent === 0 && (
+          <div className="row">
+            <Button
+              variant="text"
+              title="Delete Directory"
+              onClick={event => {
+                event.stopPropagation();
+                handleDeleteDirectory(dir);
+              }}
+              bg="danger"
+            >
+              <i className="fa fa-trash-o" />
+            </Button>
+          </div>
+        )}
+      </li>
+    ),
+    ...files.map(f => (
+      <li
+        className='row-spaced cursor-pointer'
+        key={f._id}
+        onClick={() => handleSelect(f._id)}
+      >
+        <>
+          <Checkbox
+            className="py-0"
+            isSelected={f._id === selectedId}
+            onChange={isSelected => {
+              if (isSelected) {
+                handleSelect(f._id);
+              } else {
+                handleUnselect(f._id);
+              }
             }}
-            className="space-right"
           >
-            <i className="fa fa-upload" />
-          </Button>
-          <Button
-            variant="text"
-            title="Delete Proto File"
-            bg="danger"
-            onClick={event => {
-              event.stopPropagation();
-              handleDelete(f);
+            {({ isSelected }) => {
+              return <>
+                {isSelected ?
+                  <i className="fa fa-square-check fa-1x h-4 mr-2" style={{ color: 'rgb(74 222 128)' }} /> :
+                  <i className="fa fa-square fa-1x h-4 mr-2" />
+                }
+              </>;
             }}
-          >
-            <i className="fa fa-trash-o" />
-          </Button>
-        </div>
-      </>
-    </li>
-  )),
-  ...subDirs.map(sd =>
-    recursiveRender(
-      indent + 1,
-      sd,
-      handleSelect,
-      handleUnselect,
-      handleUpdate,
-      handleDelete,
-      handleDeleteDirectory,
-      selectedId
-    )
-  ),
-];
+          </Checkbox>
+          <span className="wide">
+            <i className="fa fa-file-o pad-right-sm" />
+            {f.name}
+          </span>
+          <div className="row">
+            <Button
+              variant="text"
+              title="Re-upload Proto File"
+              onClick={event => {
+                event.stopPropagation();
+                handleUpdate(f);
+              }}
+              className="space-right"
+            >
+              <i className="fa fa-upload" />
+            </Button>
+            <Button
+              variant="text"
+              title="Delete Proto File"
+              bg="danger"
+              onClick={event => {
+                event.stopPropagation();
+                handleDelete(f);
+              }}
+            >
+              <i className="fa fa-trash-o" />
+            </Button>
+          </div>
+        </>
+      </li>
+    )),
+    ...subDirs.map(sd =>
+      recursiveRender(
+        indent + 1,
+        sd,
+        handleSelect,
+        handleUnselect,
+        handleUpdate,
+        handleDelete,
+        handleDeleteDirectory,
+        selectedId
+      )
+    ),
+  ];
 
 export const ProtoFileList: FunctionComponent<Props> = props => (
   <ul className="divide-y divide-solid divide-[--hl]">
