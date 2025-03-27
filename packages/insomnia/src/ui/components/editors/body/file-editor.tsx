@@ -27,7 +27,7 @@ export const FileEditor: FC<Props> = ({ onChange, path }) => {
   try {
     const bytes = fs.statSync(path).size;
     sizeDescription = misc.describeByteSize(bytes);
-  } catch (error) {
+  } catch {
     sizeDescription = '';
   }
 
@@ -46,7 +46,7 @@ export const FileEditor: FC<Props> = ({ onChange, path }) => {
         <PromptButton className="btn btn--super-compact" disabled={!path} onClick={_handleResetFile}>
           Reset File
         </PromptButton>
-          &nbsp;&nbsp;
+        &nbsp;&nbsp;
         <FileInputButton path={path} className="btn btn--clicky" onChange={_handleChooseFile} />
       </div>
     </div>

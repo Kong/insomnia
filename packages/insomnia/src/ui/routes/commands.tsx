@@ -340,7 +340,7 @@ export const remoteFilesLoader: LoaderFunction = async (): Promise<RemoteFilesLo
     return {
       files,
     };
-  } catch (err) {
+  } catch {
     return {
       files: [],
     };

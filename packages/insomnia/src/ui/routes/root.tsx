@@ -67,7 +67,7 @@ const Root = () => {
         let parsedUrl;
         try {
           parsedUrl = new URL(url);
-        } catch (err) {
+        } catch {
           console.log('[deep-link] Invalid args, expected insomnia://x/y/z', url);
           return;
         }

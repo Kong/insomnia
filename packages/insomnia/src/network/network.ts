@@ -646,7 +646,7 @@ export const tryToTransformRequestWithPlugins = async (renderResult: {
   const { request, context } = renderResult;
   try {
     return await _applyRequestPluginHooks(request, context);
-  } catch (err) {
+  } catch {
     throw new Error(`Failed to transform request with plugins: ${request._id}`);
   }
 };
@@ -830,7 +830,7 @@ export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any;
   }
   try {
     return new URL(location.value, finalUrl).toString();
-  } catch (error) {
+  } catch {
     return finalUrl;
   }
 };

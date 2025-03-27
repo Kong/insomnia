@@ -103,7 +103,7 @@ function getInsomniaFileName(blob: void | Uint8Array | undefined): string {
   try {
     const parsed = parse(Buffer.from(blob).toString('utf-8'));
     return parsed?.fileName || parsed?.name || '';
-  } catch (e) {
+  } catch {
     // If the document couldn't be parsed as yaml return an empty string
     return '';
   }
@@ -159,7 +159,7 @@ export class GitVCS {
         });
 
         defaultBranch = mainRef?.target?.replace('refs/heads/', '') || 'main';
-      } catch (err) {
+      } catch {
         // Ignore error
       }
 
@@ -175,7 +175,7 @@ export class GitVCS {
       });
 
       return remoteOriginURI;
-    } catch (err) {
+    } catch {
       // Ignore error
       return this._baseOpts.uri || '';
     }
@@ -384,7 +384,7 @@ export class GitVCS {
 
           try {
             return Buffer.from(blob).toString('utf-8');
-          } catch (e) {
+          } catch {
             return null;
           }
         });
@@ -1033,7 +1033,7 @@ export class GitVCS {
   async repoExists() {
     try {
       await git.getConfig({ ...this._baseOpts, path: '' });
-    } catch (err) {
+    } catch {
       return false;
     }
 

@@ -17,7 +17,7 @@ const pathToSwagger = (swagger: any, path: string[]) => {
   return path.reduce((acc, v: string) => {
     try {
       acc = acc[v];
-    } catch (e) {
+    } catch {
       return undefined;
     }
     return acc;

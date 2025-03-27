@@ -40,7 +40,7 @@ export const Toast: FC = () => {
       if (storedKeys) {
         seenNotifications = JSON.parse(storedKeys) as SeenNotifications || {};
       }
-    } catch (e) { }
+    } catch { }
     console.log(`[toast] Received notification ${notification.key}`);
     if (seenNotifications[notification.key]) {
       console.log(`[toast] Not showing notification ${notification.key} because has already been seen`);

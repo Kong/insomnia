@@ -11,7 +11,7 @@ export function urlMatchesCertHost(certificateHost: string, requestUrl: string, 
   let certificateHostWithProtocol = new URL('https://example.com');
   try {
     certificateHostWithProtocol = new URL(cHostWithProtocol);
-  } catch (err) {
+  } catch {
     // return false early if the certificate host is invalid
     return false;
   }

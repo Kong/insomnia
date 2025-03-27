@@ -84,7 +84,7 @@ export async function getFilesFromPostmanExportedDataDump(filePath: string): Pro
   let res;
   try {
     res = await window.main.extractJsonFileFromPostmanDataDumpArchive(filePath);
-  } catch (err) {
+  } catch {
     throw new Error('Extract failed');
   }
   if (res && res.data) {

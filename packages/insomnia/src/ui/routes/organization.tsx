@@ -453,7 +453,7 @@ export const organizationPermissionsLoader: LoaderFunction = async ({ params }):
       featuresPromise: featuresResponse.then(res => res?.features || fallbackFeatures),
       billingPromise: featuresResponse.then(res => res?.billing || fallbackBilling),
     };
-  } catch (err) {
+  } catch {
     return {
       featuresPromise: Promise.resolve(fallbackFeatures),
       billingPromise: Promise.resolve(fallbackBilling),
@@ -647,107 +647,107 @@ const OrganizationRoute = () => {
   return (
     <InsomniaEventStreamProvider>
       <InsomniaTabProvider>
-      <div className="w-full h-full">
-        <div className={`w-full h-full divide-x divide-solid divide-[--hl-md] ${isOrganizationSidebarOpen ? 'with-navbar' : ''} ${isScratchPadBannerVisible ? 'with-banner' : ''} grid-template-app-layout grid relative bg-[--color-bg]`}>
+        <div className="w-full h-full">
+          <div className={`w-full h-full divide-x divide-solid divide-[--hl-md] ${isOrganizationSidebarOpen ? 'with-navbar' : ''} ${isScratchPadBannerVisible ? 'with-banner' : ''} grid-template-app-layout grid relative bg-[--color-bg]`}>
             {!isMinimal && <header className="[grid-area:Header] grid grid-cols-3 items-center border-b border-solid border-[--hl-md]">
-            <div className="flex items-center gap-2">
-              <div className="flex shrink-0 w-[50px] justify-center py-2">
-                <InsomniaLogo loading={loadingAI} />
+              <div className="flex items-center gap-2">
+                <div className="flex shrink-0 w-[50px] justify-center py-2">
+                  <InsomniaLogo loading={loadingAI} />
                 </div>
-              {!user ? <GitHubStarsButton /> : null}
+                {!user ? <GitHubStarsButton /> : null}
               </div>
               <CommandPalette />
-            <div className="flex gap-[--padding-sm] items-center justify-end p-2">
-              {user ? (
-                <Fragment>
-                  <PresentUsers />
-                  <HeaderInviteButton className="text-[--color-font-surprise] font-semibold border border-solid border-[--hl-md] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))]" />
-                  <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
-                </Fragment>
-              ) : (
-                <Fragment>
-                  <NavLink
-                    to="/auth/login"
-                    className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                  >
-                    Login
-                  </NavLink>
-                  <NavLink
-                    className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)] focus:bg-[rgba(var(--color-surprise-rgb),0.9)] bg-[--color-surprise] font-semibold rounded-sm text-[--color-font-surprise] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                    to="/auth/login"
-                  >
+              <div className="flex gap-[--padding-sm] items-center justify-end p-2">
+                {user ? (
+                  <Fragment>
+                    <PresentUsers />
+                    <HeaderInviteButton className="text-[--color-font-surprise] font-semibold border border-solid border-[--hl-md] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))]" />
+                    <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
+                  </Fragment>
+                ) : (
+                  <Fragment>
+                    <NavLink
+                      to="/auth/login"
+                      className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                    >
+                      Login
+                    </NavLink>
+                    <NavLink
+                      className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)] focus:bg-[rgba(var(--color-surprise-rgb),0.9)] bg-[--color-surprise] font-semibold rounded-sm text-[--color-font-surprise] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                      to="/auth/login"
+                    >
                       Sign up for free
-                  </NavLink>
-                </Fragment>
-              )}
-            </div>
-          </header>}
-          {isScratchPadBannerVisible ? (
-            <div className="flex h-[30px] items-center [grid-area:Banner] text-white bg-gradient-to-r from-[#7400e1] to-[#4000bf]">
-              <div className="flex flex-shrink-0 basis-[50px] h-full">
-                <div className="border-solid border-r-[--hl-xl] border-r border-l border-l-[--hl-xl] box-border flex items-center justify-center w-full h-full">
-                  <Icon icon="edit" />
+                    </NavLink>
+                  </Fragment>
+                )}
+              </div>
+            </header>}
+            {isScratchPadBannerVisible ? (
+              <div className="flex h-[30px] items-center [grid-area:Banner] text-white bg-gradient-to-r from-[#7400e1] to-[#4000bf]">
+                <div className="flex flex-shrink-0 basis-[50px] h-full">
+                  <div className="border-solid border-r-[--hl-xl] border-r border-l border-l-[--hl-xl] box-border flex items-center justify-center w-full h-full">
+                    <Icon icon="edit" />
+                  </div>
                 </div>
+                <div className="py-[--padding-xs] overflow-hidden px-[--padding-md] w-full h-full flex items-center text-xs">
+                  <p className='w-full truncate leading-normal'>
+                    Welcome to the Scratch Pad where you can work locally with up to 1 collection.
+                    To create more and see your projects
+                    {' '}
+                    <NavLink
+                      to="/auth/login"
+                      className="font-bold text-white inline-flex"
+                    >
+                      login or create an account →
+                    </NavLink>
+                  </p>
+                </div>
+                <Button
+                  className="flex flex-shrink-0 mr-2 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  onPress={() => {
+                    setIsScratchPadBannerDismissed('true');
+                  }}
+                >
+                  <Icon icon="x" />
+                </Button>
               </div>
-              <div className="py-[--padding-xs] overflow-hidden px-[--padding-md] w-full h-full flex items-center text-xs">
-                <p className='w-full truncate leading-normal'>
-                  Welcome to the Scratch Pad where you can work locally with up to 1 collection.
-                  To create more and see your projects
-                  {' '}
-                  <NavLink
-                    to="/auth/login"
-                    className="font-bold text-white inline-flex"
-                  >
-                    login or create an account →
-                  </NavLink>
-                </p>
-              </div>
-              <Button
-                className="flex flex-shrink-0 mr-2 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                onPress={() => {
-                  setIsScratchPadBannerDismissed('true');
-                }}
-              >
-                <Icon icon="x" />
-              </Button>
-            </div>
-          ) : null}
-          {isOrganizationSidebarOpen && <div className={`[grid-area:Navbar] overflow-hidden ${isOrganizationSidebarOpen ? '' : 'hidden'}`}>
-            <nav className="flex flex-col items-center place-content-stretch gap-[--padding-md] w-full h-full overflow-y-auto py-[--padding-md]">
-              {organizations.map(organization => {
-                const isActive = organization.id === organizationId;
+            ) : null}
+            {isOrganizationSidebarOpen && <div className={`[grid-area:Navbar] overflow-hidden ${isOrganizationSidebarOpen ? '' : 'hidden'}`}>
+              <nav className="flex flex-col items-center place-content-stretch gap-[--padding-md] w-full h-full overflow-y-auto py-[--padding-md]">
+                {organizations.map(organization => {
+                  const isActive = organization.id === organizationId;
 
-                return (
-                  <TooltipTrigger key={organization.id}>
-                    <Link className="outline-none relative">
-                      <div
-                        className={`select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 bg-gradient-to-br box-border from-[#4000BF] to-[#154B62] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center active:outline overflow-hidden outline-offset-[3px] outline ${isActive
-                          ? 'outline-[--color-font]'
-                          : 'outline-transparent focus:outline-[--hl-md] hover:outline-[--hl-md]'
-                          }`}
-                        onClick={async () => {
-                          nextOrganizationId.current = organization.id;
-                          startSwitchOrganizationTime.current = performance.now();
-                          const routeForOrganization = await getInitialRouteForOrganization({ organizationId: organization.id });
-                          navigate(routeForOrganization, {
-                            state: {
-                              asyncTaskList: [
-                                // we only need sync projects when user switch to another organization
-                                AsyncTask.SyncProjects,
-                              ],
-                            },
-                          });
-                        }}
-                      >
-                        {isPersonalOrganization(organization) && isOwnerOfOrganization({
-                          organization,
-                          accountId: userSession.accountId || '',
-                        }) ? (
+                  return (
+                    <TooltipTrigger key={organization.id}>
+                      <Link className="outline-none relative">
+                        <div
+                          className={`select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 bg-gradient-to-br box-border from-[#4000BF] to-[#154B62] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center active:outline overflow-hidden outline-offset-[3px] outline ${isActive
+                            ? 'outline-[--color-font]'
+                            : 'outline-transparent focus:outline-[--hl-md] hover:outline-[--hl-md]'
+                            }`}
+                          onClick={async () => {
+                            nextOrganizationId.current = organization.id;
+                            startSwitchOrganizationTime.current = performance.now();
+                            const routeForOrganization = await getInitialRouteForOrganization({ organizationId: organization.id });
+                            navigate(routeForOrganization, {
+                              state: {
+                                asyncTaskList: [
+                                  // we only need sync projects when user switch to another organization
+                                  AsyncTask.SyncProjects,
+                                ],
+                              },
+                            });
+                          }}
+                        >
+                          {isPersonalOrganization(organization) && isOwnerOfOrganization({
+                            organization,
+                            accountId: userSession.accountId || '',
+                          }) ? (
                             <div className='flex items-center justify-center'>
                               <Icon icon="home" />
                               {<Icon className={`z-20 absolute -top-1 -right-1 w-4 h-4 transition-opacity ease-in-out ${billing?.expirationErrorMessage ? 'text-[var(--color-danger)]' : 'text-[var(--color-warning)]'} ${isActive && (billing.expirationErrorMessage || billing.expirationWarningMessage) ? 'opacity-100' : 'opacity-0'} `} icon="exclamation-circle" />}
                             </div>
-                        ) : (
+                          ) : (
                             <div className='flex items-center justify-center'>
                               <OrganizationAvatar
                                 alt={organization.display_name}
@@ -755,301 +755,301 @@ const OrganizationRoute = () => {
                               />
                               {<Icon className={`z-20 absolute -top-1 -right-1 w-4 h-4 transition-opacity ease-in-out ${billing?.expirationErrorMessage ? 'text-[var(--color-danger)]' : 'text-[var(--color-warning)]'} ${isActive && (billing.expirationErrorMessage || billing.expirationWarningMessage) ? 'opacity-100' : 'opacity-0'} `} icon="exclamation-circle" />}
                             </div>
-                        )}
-                      </div>
-                    </Link>
-                    <Tooltip
-                      placement="right"
-                      offset={8}
-                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                    >
-                      <span>{organization.display_name}</span>
-                    </Tooltip>
-                  </TooltipTrigger>
-                );
-              })}
-              <MenuTrigger>
-                <Button className="select-none text-[--color-font] hover:no-underline transition-all duration-150 box-border p-[--padding-sm] font-bold outline-none rounded-md w-[28px] h-[28px] flex items-center justify-center overflow-hidden">
-                  <Icon icon="plus" />
-                </Button>
-                <Popover placement="left" className="min-w-max">
-                  <Menu
-                    onAction={action => {
-                      if (action === 'join-organization') {
-                        window.main.openInBrowser(
-                          getLoginUrl(),
-                        );
-                      }
-
-                      if (action === 'new-organization') {
-                        // If user is in the scratchpad workspace redirect them to the login page
-                        if (isScratchpadWorkspace) {
+                          )}
+                        </div>
+                      </Link>
+                      <Tooltip
+                        placement="right"
+                        offset={8}
+                        className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                      >
+                        <span>{organization.display_name}</span>
+                      </Tooltip>
+                    </TooltipTrigger>
+                  );
+                })}
+                <MenuTrigger>
+                  <Button className="select-none text-[--color-font] hover:no-underline transition-all duration-150 box-border p-[--padding-sm] font-bold outline-none rounded-md w-[28px] h-[28px] flex items-center justify-center overflow-hidden">
+                    <Icon icon="plus" />
+                  </Button>
+                  <Popover placement="left" className="min-w-max">
+                    <Menu
+                      onAction={action => {
+                        if (action === 'join-organization') {
                           window.main.openInBrowser(
                             getLoginUrl(),
                           );
                         }
 
-                        if (!currentPlan) {
-                          return;
-                        }
+                        if (action === 'new-organization') {
+                          // If user is in the scratchpad workspace redirect them to the login page
+                          if (isScratchpadWorkspace) {
+                            window.main.openInBrowser(
+                              getLoginUrl(),
+                            );
+                          }
 
-                        if (currentPlan.type === 'enterprise-member') {
-                          // If user has a team or enterprise member plan show them an alert
-                          showAlert({
-                            title: 'Cannot create new organization.',
-                            message: 'Your Insomnia account is tied to the enterprise corporate account. Please ask the owner of the enterprise billing to create one for you.',
-                          });
-                        } else if (['free', 'individual'].includes(currentPlan.type)) {
-                          // If user has a free or individual plan redirect them to the landing page
-                          window.main.openInBrowser(
-                            `${getAppWebsiteBaseURL()}/app/landing-page`,
-                          );
-                        } else {
-                          // If user has a team or enterprise plan redirect them to the create organization page
-                          window.main.openInBrowser(
-                            `${getAppWebsiteBaseURL()}/app/dashboard/organizations?create_org=true`,
-                          );
+                          if (!currentPlan) {
+                            return;
+                          }
+
+                          if (currentPlan.type === 'enterprise-member') {
+                            // If user has a team or enterprise member plan show them an alert
+                            showAlert({
+                              title: 'Cannot create new organization.',
+                              message: 'Your Insomnia account is tied to the enterprise corporate account. Please ask the owner of the enterprise billing to create one for you.',
+                            });
+                          } else if (['free', 'individual'].includes(currentPlan.type)) {
+                            // If user has a free or individual plan redirect them to the landing page
+                            window.main.openInBrowser(
+                              `${getAppWebsiteBaseURL()}/app/landing-page`,
+                            );
+                          } else {
+                            // If user has a team or enterprise plan redirect them to the create organization page
+                            window.main.openInBrowser(
+                              `${getAppWebsiteBaseURL()}/app/dashboard/organizations?create_org=true`,
+                            );
+                          }
                         }
-                      }
-                    }}
-                    className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                  >
-                    <MenuItem
-                      id="join-organization"
-                      className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                      aria-label="Join an organization"
+                      }}
+                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                     >
-                      <Icon icon="city" />
-                      <span>Join an organization</span>
-                    </MenuItem>
-                    <MenuItem
-                      id="new-organization"
-                      className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                      aria-label="Create new organization"
-                    >
-                      <Icon icon="sign-out" />
-                      <span>Create a new organization</span>
-                    </MenuItem>
-                  </Menu>
-                </Popover>
-              </MenuTrigger>
-            </nav>
-          </div>}
-          <div className='[grid-area:Content] overflow-hidden border-b border-[--hl-md]'>
+                      <MenuItem
+                        id="join-organization"
+                        className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                        aria-label="Join an organization"
+                      >
+                        <Icon icon="city" />
+                        <span>Join an organization</span>
+                      </MenuItem>
+                      <MenuItem
+                        id="new-organization"
+                        className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                        aria-label="Create new organization"
+                      >
+                        <Icon icon="sign-out" />
+                        <span>Create a new organization</span>
+                      </MenuItem>
+                    </Menu>
+                  </Popover>
+                </MenuTrigger>
+              </nav>
+            </div>}
+            <div className='[grid-area:Content] overflow-hidden border-b border-[--hl-md]'>
               <RunnerProvider>
                 <Outlet />
               </RunnerProvider>
-          </div>
-          <div className="relative [grid-area:Statusbar] flex items-center overflow-hidden">
-            <div className='flex justify-center items-center gap-2 flex-shrink-0 h-full w-[50px] border-solid border-r border-r-[--hl-md]'>
-              <TooltipTrigger>
-                <ToggleButton
-                  className="flex-grow-0 w-[10px] h-[10px] gap-2 text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                  onChange={setIsOganizationSidebarOpen}
-                  isSelected={isOrganizationSidebarOpen}
-                >
-                  {({ isSelected }) => {
-                    return (
-                      <svg
-                        width={10}
-                        height={10}
-                        viewBox="0 0 16 16"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="currentColor"
-                      >
-                        {isSelected ? (
-                          <path
-                            fillRule="evenodd"
-                            clipRule="evenodd"
-                            d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm12 13H7V2h7v12z"
-                          />
-                        ) : (
-                          <path d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm0 13V2h4v12H2zm5 0V2h7v12H7z" />
-                        )}
-                      </svg>
-                    );
-                  }}
-                </ToggleButton>
-                <Tooltip
-                  placement="top"
-                  offset={8}
-                  className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                >
-                  Toggle organizations sidebar
-                </Tooltip>
-              </TooltipTrigger>
-              <TooltipTrigger>
-                <ToggleButton
-                  className="flex-grow-0 w-[10px] h-[10px] gap-2 text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all rotate-90"
-                  onChange={flag => {
-                    setIsMinimal(!flag);
-                  }}
-                  isSelected={!isMinimal}
-                >
-                  {({ isSelected }) => {
-                    return (
-                      <svg
-                        width={10}
-                        height={10}
-                        viewBox="0 0 16 16"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="currentColor"
-                      >
-                        {isSelected ? (
-                          <path
-                            fillRule="evenodd"
-                            clipRule="evenodd"
-                            d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm12 13H7V2h7v12z"
-                          />
-                        ) : (
-                          <path d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm0 13V2h4v12H2zm5 0V2h7v12H7z" />
-                        )}
-                      </svg>
-                    );
-                  }}
-                </ToggleButton>
-                <Tooltip
-                  placement="top"
-                  offset={8}
-                  className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                >
-                  Toggle header
-                </Tooltip>
-              </TooltipTrigger>
             </div>
-            <div className="flex gap-2 w-full items-center">
-              <div className="flex-grow flex-shrink basis-1/3 flex items-center h-full">
+            <div className="relative [grid-area:Statusbar] flex items-center overflow-hidden">
+              <div className='flex justify-center items-center gap-2 flex-shrink-0 h-full w-[50px] border-solid border-r border-r-[--hl-md]'>
                 <TooltipTrigger>
-                  <Button
-                    data-testid="settings-button"
-                    className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                    onPress={() => showSettingsModal()}
+                  <ToggleButton
+                    className="flex-grow-0 w-[10px] h-[10px] gap-2 text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                    onChange={setIsOganizationSidebarOpen}
+                    isSelected={isOrganizationSidebarOpen}
                   >
-                    <Icon icon="gear" /> Preferences
-                  </Button>
+                    {({ isSelected }) => {
+                      return (
+                        <svg
+                          width={10}
+                          height={10}
+                          viewBox="0 0 16 16"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="currentColor"
+                        >
+                          {isSelected ? (
+                            <path
+                              fillRule="evenodd"
+                              clipRule="evenodd"
+                              d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm12 13H7V2h7v12z"
+                            />
+                          ) : (
+                            <path d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm0 13V2h4v12H2zm5 0V2h7v12H7z" />
+                          )}
+                        </svg>
+                      );
+                    }}
+                  </ToggleButton>
                   <Tooltip
                     placement="top"
                     offset={8}
                     className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                   >
-                    Preferences
-                    <Hotkey
-                      keyBindings={
-                        settings.hotKeyRegistry.preferences_showGeneral
-                      }
-                    />
+                    Toggle organizations sidebar
                   </Tooltip>
                 </TooltipTrigger>
-                {(hasUntrackedData && !isMinimal) ? <div>
-                  <Button
-                    className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-warning] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                    onPress={() => showModal(SettingsModal, { tab: 'data' })}
+                <TooltipTrigger>
+                  <ToggleButton
+                    className="flex-grow-0 w-[10px] h-[10px] gap-2 text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all rotate-90"
+                    onChange={flag => {
+                      setIsMinimal(!flag);
+                    }}
+                    isSelected={!isMinimal}
                   >
-                    <Icon icon="exclamation-circle" /> We have detected orphaned projects on your computer, click here to view them.
-                  </Button>
-                </div> : null}
-                {(hasUntrackedData && isMinimal) ? (
-                  <TooltipTrigger delay={500}>
+                    {({ isSelected }) => {
+                      return (
+                        <svg
+                          width={10}
+                          height={10}
+                          viewBox="0 0 16 16"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="currentColor"
+                        >
+                          {isSelected ? (
+                            <path
+                              fillRule="evenodd"
+                              clipRule="evenodd"
+                              d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm12 13H7V2h7v12z"
+                            />
+                          ) : (
+                            <path d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm0 13V2h4v12H2zm5 0V2h7v12H7z" />
+                          )}
+                        </svg>
+                      );
+                    }}
+                  </ToggleButton>
+                  <Tooltip
+                    placement="top"
+                    offset={8}
+                    className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                  >
+                    Toggle header
+                  </Tooltip>
+                </TooltipTrigger>
+              </div>
+              <div className="flex gap-2 w-full items-center">
+                <div className="flex-grow flex-shrink basis-1/3 flex items-center h-full">
+                  <TooltipTrigger>
                     <Button
-                      className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-warning] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                      onPress={() => showModal(SettingsModal, { tab: 'data' })}
+                      data-testid="settings-button"
+                      className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                      onPress={() => showSettingsModal()}
                     >
-                      <Icon icon="exclamation-circle" />
+                      <Icon icon="gear" /> Preferences
                     </Button>
                     <Tooltip
                       placement="top"
                       offset={8}
                       className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                     >
-                      We have detected orphaned projects on your computer, click here to view them.
+                      Preferences
+                      <Hotkey
+                        keyBindings={
+                          settings.hotKeyRegistry.preferences_showGeneral
+                        }
+                      />
                     </Tooltip>
                   </TooltipTrigger>
-                ) : null}
-                {isMinimal && <NetworkAndSyncIndicator user={user} asyncTaskStatus={asyncTaskStatus} settings={settings} sync={syncOrgsAndProjects} />}
-              </div>
-              <div className='flex-grow flex-shrink basis-1/3 min-w-[120px]'>
-                {isMinimal && (
-                  <CommandPalette style={{ width: '100%' }} />
-                )}
-              </div>
-              <div className='flex-grow flex-shrink basis-1/3 flex justify-end'>
-                <div className='flex items-center gap-2 divide'>
-                  {loadingAI && (
-                    <ProgressBar
-                      className="flex items-center gap-2 h-full"
-                      value={loadingAIProgress.progress}
-                      maxValue={loadingAIProgress.total}
-                      minValue={0}
-                      aria-label='AI generation'
+                  {(hasUntrackedData && !isMinimal) ? <div>
+                    <Button
+                      className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-warning] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                      onPress={() => showModal(SettingsModal, { tab: 'data' })}
                     >
-                      {({ percentage }) => (
-                        <TooltipTrigger>
-                          <Button className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all">
-                            <InsomniaAI className='w-4 text-[--color-font] animate-pulse' />
-                            <div className="h-1 w-32 rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-40">
-                              <div
-                                className="h-1 rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100"
-                                style={{ width: percentage + '%' }}
-                              />
-                            </div>
-                          </Button>
-                          <Tooltip
-                            placement="top"
-                            offset={8}
-                            className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                          >
-                            Generating tests with Insomnia AI
-                          </Tooltip>
-                        </TooltipTrigger>
-                      )}
-                    </ProgressBar>
-                  )}
-                  {!isMinimal && <NetworkAndSyncIndicator user={user} asyncTaskStatus={asyncTaskStatus} settings={settings} sync={syncOrgsAndProjects} />}
-                  {!isMinimal && (
-                    <Link>
-                      <a
-                        className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
-                        href="https://konghq.com/"
+                      <Icon icon="exclamation-circle" /> We have detected orphaned projects on your computer, click here to view them.
+                    </Button>
+                  </div> : null}
+                  {(hasUntrackedData && isMinimal) ? (
+                    <TooltipTrigger delay={500}>
+                      <Button
+                        className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-warning] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                        onPress={() => showModal(SettingsModal, { tab: 'data' })}
                       >
-                        Made with
-                        <Icon className="text-[--color-surprise-font]" icon="heart" /> by
-                        Kong
-                      </a>
-                    </Link>
+                        <Icon icon="exclamation-circle" />
+                      </Button>
+                      <Tooltip
+                        placement="top"
+                        offset={8}
+                        className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                      >
+                        We have detected orphaned projects on your computer, click here to view them.
+                      </Tooltip>
+                    </TooltipTrigger>
+                  ) : null}
+                  {isMinimal && <NetworkAndSyncIndicator user={user} asyncTaskStatus={asyncTaskStatus} settings={settings} sync={syncOrgsAndProjects} />}
+                </div>
+                <div className='flex-grow flex-shrink basis-1/3 min-w-[120px]'>
+                  {isMinimal && (
+                    <CommandPalette style={{ width: '100%' }} />
                   )}
                 </div>
-                {isMinimal && (
-                  <div className="flex gap-[--padding-sm] items-center justify-end p-2">
-                    {user ? (
-                      <Fragment>
-                        <PresentUsers />
-                        <HeaderInviteButton className='text-[--color-font]' />
-                        <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
-                      </Fragment>
-                    ) : (
-                      <Fragment>
-                        <NavLink
-                          to="/auth/login"
-                          className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                <div className='flex-grow flex-shrink basis-1/3 flex justify-end'>
+                  <div className='flex items-center gap-2 divide'>
+                    {loadingAI && (
+                      <ProgressBar
+                        className="flex items-center gap-2 h-full"
+                        value={loadingAIProgress.progress}
+                        maxValue={loadingAIProgress.total}
+                        minValue={0}
+                        aria-label='AI generation'
+                      >
+                        {({ percentage }) => (
+                          <TooltipTrigger>
+                            <Button className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all">
+                              <InsomniaAI className='w-4 text-[--color-font] animate-pulse' />
+                              <div className="h-1 w-32 rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-40">
+                                <div
+                                  className="h-1 rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100"
+                                  style={{ width: percentage + '%' }}
+                                />
+                              </div>
+                            </Button>
+                            <Tooltip
+                              placement="top"
+                              offset={8}
+                              className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                            >
+                              Generating tests with Insomnia AI
+                            </Tooltip>
+                          </TooltipTrigger>
+                        )}
+                      </ProgressBar>
+                    )}
+                    {!isMinimal && <NetworkAndSyncIndicator user={user} asyncTaskStatus={asyncTaskStatus} settings={settings} sync={syncOrgsAndProjects} />}
+                    {!isMinimal && (
+                      <Link>
+                        <a
+                          className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
+                          href="https://konghq.com/"
                         >
-                          Login
-                        </NavLink>
-                        <NavLink
-                          className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)] focus:bg-[rgba(var(--color-surprise-rgb),0.9)] bg-[--color-surprise] font-semibold rounded-sm text-[--color-font-surprise] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                          to="/auth/login"
-                        >
-                          Sign up for free
-                        </NavLink>
-                      </Fragment>
+                          Made with
+                          <Icon className="text-[--color-surprise-font]" icon="heart" /> by
+                          Kong
+                        </a>
+                      </Link>
                     )}
                   </div>
-                )}
+                  {isMinimal && (
+                    <div className="flex gap-[--padding-sm] items-center justify-end p-2">
+                      {user ? (
+                        <Fragment>
+                          <PresentUsers />
+                          <HeaderInviteButton className='text-[--color-font]' />
+                          <HeaderUserButton user={user} currentPlan={currentPlan} isMinimal={isMinimal} />
+                        </Fragment>
+                      ) : (
+                        <Fragment>
+                          <NavLink
+                            to="/auth/login"
+                            className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                          >
+                            Login
+                          </NavLink>
+                          <NavLink
+                            className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)] focus:bg-[rgba(var(--color-surprise-rgb),0.9)] bg-[--color-surprise] font-semibold rounded-sm text-[--color-font-surprise] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                            to="/auth/login"
+                          >
+                            Sign up for free
+                          </NavLink>
+                        </Fragment>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
+          <Toast />
         </div>
-        <Toast />
-      </div>
       </InsomniaTabProvider>
     </InsomniaEventStreamProvider>
   );

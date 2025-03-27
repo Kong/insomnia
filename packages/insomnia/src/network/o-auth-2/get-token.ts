@@ -359,13 +359,13 @@ export const encodePKCE = (buffer: Buffer) => {
 const tryToParse = (body: string): Record<string, any> | null => {
   try {
     return JSON.parse(body);
-  } catch (err) { }
+  } catch { }
 
   try {
     // NOTE: parse does not return a JS Object, so
     //   we cannot use hasOwnProperty on it
     return querystring.parse(body);
-  } catch (err) { }
+  } catch { }
   return null;
 };
 

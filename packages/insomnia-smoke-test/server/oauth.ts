@@ -1,5 +1,6 @@
 import express, { urlencoded } from 'express';
 import type Provider from 'oidc-provider';
+import { Configuration } from 'oidc-provider';
 
 export const oauthRoutes = async (port: number) => {
   const clientIDAuthorizationCode = 'authorization_code';
@@ -12,7 +13,6 @@ export const oauthRoutes = async (port: number) => {
 
   const clientRedirectUri = `http://127.0.0.1:${port}/callback`;
 
-  /* eslint-disable camelcase */
   const oidcConfig = {
     interactions: {
       url: (_, interaction) => {
@@ -124,8 +124,8 @@ export const oauthRoutes = async (port: number) => {
 
       return grant;
     },
-  };
-  /* eslint-enable camelcase */
+  } satisfies Configuration;
+
   const provider = (await import('oidc-provider')).default;
   const oidc = new provider(`http://127.0.0.1:${port}`, oidcConfig);
 
@@ -159,7 +159,7 @@ export const oauthRoutes = async (port: number) => {
       res
         .status(200)
         .json(validated);
-    } catch (err) {
+    } catch {
       res
         .status(500)
         .header('Content-Type', 'text/plain')

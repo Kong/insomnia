@@ -44,7 +44,7 @@ export const scanForResourcesAction: ActionFunction = async ({ request }): Promi
         if (filePaths.length === 0) {
           throw new Error();
         }
-      } catch (err) {
+      } catch {
         return [{
           errors: ['File is required'],
         }];

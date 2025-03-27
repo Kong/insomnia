@@ -1389,7 +1389,7 @@ export const accessAIApiAction: ActionFunction = async ({ params }) => {
     return {
       enabled: response.enabled,
     };
-  } catch (err) {
+  } catch {
     return { enabled: false };
   }
 };

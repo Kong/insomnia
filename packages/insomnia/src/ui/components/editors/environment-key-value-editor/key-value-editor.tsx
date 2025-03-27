@@ -50,7 +50,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
     // Ensure same array data will not generate different kvPairs to avoid flash issue
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [JSON.stringify(data)]
-  );  const codeModalRef = useRef<CodePromptModalHandle>(null);
+  ); const codeModalRef = useRef<CodePromptModalHandle>(null);
   const [kvPairError, setKvPairError] = useState<{ id: string; error: string }[]>([]);
   const symmetricKey = vaultKey === '' ? {} : base64decode(vaultKey, true);
 
@@ -173,7 +173,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
     try {
       JSON.parse(input);
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   };

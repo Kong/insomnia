@@ -20,7 +20,7 @@ export function parseApiSpec(
   // NOTE: JSON is valid YAML so we only need to parse YAML
   try {
     result.contents = YAML.parse(rawDocument);
-  } catch (err) {
+  } catch {
     throw new Error('Failed to parse API spec');
   }
 

@@ -146,7 +146,7 @@ app.on('activate', (_error, hasVisibleWindows) => {
     try {
       console.log('[main] creating new window for MacOS activate event');
       windowUtils.createWindow();
-    } catch (error) {
+    } catch {
       // This might happen if 'ready' hasn't fired yet. So we're just going
       // to silence these errors.
       console.log('[main] App not ready to "activate" yet');

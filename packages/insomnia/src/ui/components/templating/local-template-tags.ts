@@ -198,7 +198,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           try {
             const results = JSONPath({ json: value, path: filter });
             value = Array.isArray(results) ? results[0] : results;
-          } catch (err) { }
+          } catch { }
         }
 
         if (typeof value !== 'string') {
@@ -306,7 +306,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           if (!Array.isArray(results)) {
             results = [results];
           }
-        } catch (err) {
+        } catch {
           throw new Error(`Invalid JSONPath query: ${filter}`);
         }
 
@@ -735,7 +735,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
               if (!Array.isArray(results)) {
                 results = [results];
               }
-            } catch (err) {
+            } catch {
               throw new Error(`Invalid JSONPath query: ${sanitizedFilter}`);
             }
 
@@ -793,7 +793,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
               }
 
               return results[0].inner;
-            } catch (err) {
+            } catch {
               throw new Error(`Invalid XPath query: ${sanitizedFilter}`);
             }
           }
