@@ -9,7 +9,7 @@
   "editor.formatOnSave": true,
   "editor.formatOnSaveMode": "file",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "always",
+    "source.fixAll.oxc": "always",
     "source.fixAll.ts": "always"
   },
   "editor.defaultFormatter": "vscode.typescript-language-features",
