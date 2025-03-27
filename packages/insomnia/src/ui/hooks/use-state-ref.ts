@@ -8,11 +8,10 @@ interface ReadOnlyRefObject<T> {
   readonly current: T;
 }
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-type UseStateRef = {
+interface UseStateRef {
   <S>(initialState: S | (() => S)): [S, Dispatch<SetStateAction<S>>, ReadOnlyRefObject<S>];
-  <S = undefined>(): [S | undefined, Dispatch<SetStateAction<S | undefined>>, ReadOnlyRefObject<S | undefined>];
-};
+  <T = undefined>(): [T | undefined, Dispatch<SetStateAction<T | undefined>>, ReadOnlyRefObject<T | undefined>];
+}
 
 const useStateRef: UseStateRef = <S>(initialState?: S | (() => S)) => {
   const [state, setState] = useState(initialState);
