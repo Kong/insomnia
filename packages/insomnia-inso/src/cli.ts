@@ -269,7 +269,7 @@ const getListFromFileOrUrl = (content: string, fileType?: string): Record<string
         return jsonDataContent.filter(data => data && typeof data === 'object' && !Array.isArray(data) && data !== null);
       }
       throw new Error('Invalid JSON file uploaded, JSON file must be array of key-value pairs.');
-    } catch (error) {
+    } catch {
       throw new Error('Upload JSON file can not be parsed');
     }
   } else if (fileType === 'csv') {
@@ -726,7 +726,7 @@ Test results:`);
       let isIdentiferAFile = false;
       try {
         isIdentiferAFile = identifier && (await fs.promises.stat(identifierAsAbsPath)).isFile();
-      } catch (err) { }
+      } catch { }
       const pathToSearch = '';
       let specContent;
       let rulesetFileName;

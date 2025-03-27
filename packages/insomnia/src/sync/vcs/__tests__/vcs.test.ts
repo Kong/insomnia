@@ -539,7 +539,7 @@ describe('VCS', () => {
       try {
         // @ts-expect-error intentionally invalid
         await v.removeBranch();
-      } catch (err) {
+      } catch {
         didError = true;
       }
 
@@ -552,7 +552,7 @@ describe('VCS', () => {
 
       try {
         await v.removeBranch('master');
-      } catch (err) {
+      } catch {
         didError = true;
       }
 

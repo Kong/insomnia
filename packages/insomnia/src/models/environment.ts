@@ -148,7 +148,7 @@ export const decryptSecretValue = (encryptedValue: string, symmetricKey: JsonWeb
   try {
     const jsonWebKey = base64decode(encryptedValue, true);
     return crypt.decryptAES(symmetricKey, jsonWebKey);
-  } catch (error) {
+  } catch {
     // return origin value if failed to decrypt
     return encryptedValue;
   }

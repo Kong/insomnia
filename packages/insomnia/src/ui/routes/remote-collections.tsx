@@ -304,8 +304,8 @@ export const syncDataAction: ActionFunction = async ({ params }) => {
 export type SyncDataLoaderData =
   | SyncData
   | {
-      error: string;
-    };
+    error: string;
+  };
 
 export const syncDataLoader: LoaderFunction = async ({
   params,
@@ -357,7 +357,7 @@ export const syncDataLoader: LoaderFunction = async ({
         hasUncommittedChanges,
         hasUnpushedChanges: compare?.ahead > 0,
       });
-    } catch (e) { }
+    } catch { }
 
     return {
       syncItems,
@@ -492,7 +492,7 @@ export const deleteBranchAction: ActionFunction = async ({
     await vcs.removeRemoteBranch(branch);
     try {
       await vcs.removeBranch(branch);
-    } catch (err) {
+    } catch {
       // Branch doesn't exist locally, ignore
     }
 

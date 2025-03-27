@@ -54,7 +54,7 @@ export const RequestPane: FC<Props> = ({
 
     try {
       query = extractQueryStringFromUrl(activeRequest.url);
-    } catch (error) {
+    } catch {
       console.warn('Failed to parse url to import querystring');
       return;
     }

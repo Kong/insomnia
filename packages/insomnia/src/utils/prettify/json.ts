@@ -35,7 +35,7 @@ function ensureStringify(val?: string | Object): string {
   if (typeof val === 'object') {
     try {
       defaultVal = JSON.stringify(val);
-    } catch (error) {
+    } catch {
       // If we can't stringify, just return the default
     }
 

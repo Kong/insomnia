@@ -168,7 +168,7 @@ export const deconstructQueryStringToParams = <T extends IQueryStringOptions>(
     let name = '';
     try {
       name = decodeURIComponent(encodedName || '');
-    } catch (error) {
+    } catch {
       // Just leave it
       name = encodedName;
     }
@@ -176,7 +176,7 @@ export const deconstructQueryStringToParams = <T extends IQueryStringOptions>(
     let value: ValueType = '';
     try {
       value = (strictNullHandling && encodedValue === null) ? null : decodeURIComponent(encodedValue || '');
-    } catch (error) {
+    } catch {
       // Just leave it
       value = encodedValue;
     }

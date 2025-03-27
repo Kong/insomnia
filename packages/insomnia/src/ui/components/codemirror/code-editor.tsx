@@ -68,7 +68,7 @@ const widget = (cm: CodeMirror.EditorFromTextArea | null, from: CodeMirror.Posit
     const endToken = squareBraceIsOutsideCurlyBrace ? ']' : '}';
     const keys = Object.keys(JSON.parse(startToken + cm?.getRange(from, to) + endToken));
     return keys.length ? `\u21A4 ${keys.length} \u21A6` : '\u2194';
-  } catch (error) {
+  } catch {
     return '\u2194';
   }
 };
@@ -225,7 +225,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
       }
       try {
         return vkBeautify.xml(code, indentChars);
-      } catch (error) {
+      } catch {
         // Failed to parse so just return original
         return code;
       }
@@ -244,7 +244,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
           }
         }
         return jsonPrettify(jsonString, indentChars, autoPrettify);
-      } catch (error) {
+      } catch {
         // That's Ok, just leave it
         return code;
       }
@@ -252,7 +252,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
     const prettifyEDN = (code: string) => {
       try {
         return ednPrettify(code);
-      } catch (error) {
+      } catch {
         return code;
       }
     };

@@ -970,7 +970,7 @@ export const convert: Converter = rawData => {
       }));
       return ordered;
     }
-  } catch (error) {
+  } catch {
     // Nothing
   }
 

@@ -625,7 +625,7 @@ export async function getInsomniaV5DataExport({
 
       try {
         contents = JSON.parse(spec.contents);
-      } catch (err) {
+      } catch {
         // @TODO For some reason switching a spec from JSON to YAML doesn't update it's content type so we need to handle both here
         // This must be fixed in the apiSpec model
         try {

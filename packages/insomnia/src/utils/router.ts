@@ -102,7 +102,7 @@ export const getInitialEntry = async () => {
         if (lastVisitedOrganizationId && organizations.find(o => o.id === lastVisitedOrganizationId)) {
           organizationId = lastVisitedOrganizationId;
         }
-      } catch (e) { }
+      } catch { }
 
       return {
         pathname: await getInitialRouteForOrganization({ organizationId, navigateToWorkspace: true }),
@@ -118,7 +118,7 @@ export const getInitialEntry = async () => {
     }
 
     return '/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug';
-  } catch (e) {
+  } catch {
     return '/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug';
   }
 };

@@ -27,12 +27,12 @@ interface Item {
   };
   headers?: Header[];
   body:
-    | string
-    | {
-        mimeType: string;
-        text?: string;
-        params?: Parameter[];
-      };
+  | string
+  | {
+    mimeType: string;
+    text?: string;
+    params?: Parameter[];
+  };
   params: Parameter[];
   url?: string;
   method?: string;
@@ -147,7 +147,7 @@ export const convert: Converter = rawData => {
 
   try {
     data = JSON.parse(rawData) as Insomnia1Data;
-  } catch (error) {
+  } catch {
     return null;
   }
 

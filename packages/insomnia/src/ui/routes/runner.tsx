@@ -449,7 +449,7 @@ export const Runner: FC<{}> = () => {
                             if (parseInt(e.target.value, 10) > 0) {
                               updateRunnerState(organizationId, runnerId, { iterationCount: parseInt(e.target.value, 10) });
                             }
-                          } catch (ex) { }
+                          } catch { }
                         }}
                         type='number'
                         className={iterationInputStyle}
@@ -467,7 +467,7 @@ export const Runner: FC<{}> = () => {
                             if (delay >= 0) {
                               updateRunnerState(organizationId, runnerId, { delay }); // also update the temp settings
                             }
-                          } catch (ex) { }
+                          } catch { }
                         }}
                         type='number'
                         className={inputStyle}

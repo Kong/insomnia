@@ -318,7 +318,7 @@ export const gitChangesLoader = async ({
       branch,
       changes,
     };
-  } catch (e) {
+  } catch {
     return {
       branch: '',
       changes: {
@@ -348,7 +348,7 @@ export const canPushLoader = async ({ projectId, workspaceId }: {
     });
 
     return { canPush: hasUnpushedChanges };
-  } catch (err) {
+  } catch {
     return { canPush: false };
   }
 };
@@ -1679,7 +1679,7 @@ function getPreviewItemName(previewDiffItem: {
     if (prev && 'fileName' in prev || 'name' in prev) {
       prevName = prev.fileName || prev.name;
     }
-  } catch (e) {
+  } catch {
     // Nothing to do
   }
 
@@ -1688,7 +1688,7 @@ function getPreviewItemName(previewDiffItem: {
     if (next && 'fileName' in next || 'name' in next) {
       nextName = next.fileName || next.name;
     }
-  } catch (e) {
+  } catch {
     // Nothing to do
   }
 

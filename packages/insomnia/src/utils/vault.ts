@@ -14,7 +14,7 @@ export const base64decode = (base64Str: string, toObject: boolean) => {
       return JSON.parse(decodedStr);
     }
     return decodedStr;
-  } catch (error) {
+  } catch {
     console.error(`failed to base64 decode string ${base64Str}`);
   }
   return base64Str;

@@ -213,14 +213,14 @@ export class NeDBClient {
 
     try {
       fileBuff = await this.readFile(filePath);
-    } catch (err) {
+    } catch {
       // console.log('[nedb] Failed to read file', err);
     }
 
     if (fileBuff === null) {
       try {
         dir = await this.readdir(filePath);
-      } catch (err) {
+      } catch {
         // console.log('[nedb] Failed to read dir', err);
       }
     }

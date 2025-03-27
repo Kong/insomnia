@@ -138,7 +138,7 @@ const GitHubRepositoryForm = ({
         >
           Sign out
         </Button>
-        </div>
+      </div>
       <GitHubRepositorySelect uri={uri} token={credentials.token} />
       {error && (
         <p className="notice error margin-bottom-sm">
@@ -183,7 +183,7 @@ const GitHubSignInForm = () => {
               let parsedURL: URL;
               try {
                 parsedURL = new URL(link);
-              } catch (error) {
+              } catch {
                 setError('Invalid URL');
                 return;
               }

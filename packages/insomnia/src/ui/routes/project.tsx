@@ -236,7 +236,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
 
   try {
     await syncProjects(organizationId);
-  } catch (err) {
+  } catch {
     console.log('[project] Could not fetch remote projects.');
   }
   const initialOrganizationRoute = await getInitialRouteForOrganization({ organizationId });
@@ -325,7 +325,7 @@ async function getAllLocalFiles({
         spec = result.contents;
         specFormat = result.format;
         specFormatVersion = result.formatVersion;
-      } catch (err) {
+      } catch {
         // Assume there is no spec
         // TODO: Check for parse errors if it's an invalid spec
       }
@@ -505,7 +505,7 @@ const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
         sessionId: '',
       });
       window.localStorage.setItem('learning-feature-last-fetch', Date.now().toString());
-    } catch (err) {
+    } catch {
       console.log('[project] Could not fetch learning feature data.');
     }
   }

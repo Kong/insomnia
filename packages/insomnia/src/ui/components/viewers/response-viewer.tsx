@@ -127,7 +127,7 @@ export const ResponseViewer = ({
         JSON.parse(overSizedBody.toString('utf8'));
         return 'application/json';
       }
-    } catch (error) { }
+    } catch { }
     // Try to detect HTML in all cases (even if header is set).
     // It is fairly common for webservers to send errors in HTML by default.
     // NOTE: This will probably never throw but I'm not 100% so wrap anyway
@@ -144,7 +144,7 @@ export const ResponseViewer = ({
       ) {
         return 'text/html';
       }
-    } catch (error) { }
+    } catch { }
 
     return lowercasedOriginalContentType;
   }, [originalContentType, overSizedBody]);
@@ -245,7 +245,7 @@ export const ResponseViewer = ({
     // So we try to use the native JSON.stringify to prettify the json string better. The native way can handle the issue.
     try {
       bodyStr = JSON.stringify(JSON.parse(bodyStr));
-    } catch (err) { }
+    } catch { }
     return (
       <CodeEditor
         id="json-response-viewer"

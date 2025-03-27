@@ -283,7 +283,7 @@ export function getResponseCookiesFromHeaders(headers: Har.Cookie[]) {
 
       try {
         cookie = ToughCookie.parse(harCookie.value || '', { loose: true });
-      } catch (error) { }
+      } catch { }
 
       if (cookie === null || cookie === undefined) {
         return accumulator;

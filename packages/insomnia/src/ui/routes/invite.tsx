@@ -96,7 +96,7 @@ export const collaboratorSearchLoader: LoaderFunction = async ({ params, request
     });
 
     return collaboratorsSearchList;
-  } catch (err) {
+  } catch {
     return [];
   }
 };
@@ -118,7 +118,7 @@ export const reinviteCollaboratorAction: ActionFunction = async ({ params }) => 
     });
 
     return response;
-  } catch (err) {
+  } catch {
     throw new Error('Failed to reinvite member. Please try again.');
   }
 };
@@ -146,7 +146,7 @@ export const updateInvitationRoleAction: ActionFunction = async ({ request, para
     });
 
     return response;
-  } catch (err) {
+  } catch {
     throw new Error('Failed to reinvite member. Please try again.');
   }
 };
@@ -174,7 +174,7 @@ export const updateMemberRoleAction: ActionFunction = async ({ request, params }
     });
 
     return response;
-  } catch (err) {
+  } catch {
     throw new Error('Failed to update organization member roles');
   }
 };

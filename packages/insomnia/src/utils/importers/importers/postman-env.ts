@@ -56,7 +56,7 @@ export const convert: Converter<Data> = rawData => {
         },
       },
     ];
-  } catch (error) {
+  } catch {
     // Nothing
   }
 
