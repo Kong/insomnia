@@ -1140,6 +1140,18 @@ export const commitAndPushToGitRepoAction = async ({
       hasUnpushedChanges,
     });
   } catch (err: unknown) {
+    if (err instanceof Errors.PushRejectedError && err.data.reason === 'not-fast-forward') {
+      return {
+        errors: ['Push Rejected. It seems that the remote repository has changes that you do not have locally. Please pull the changes and try again.'],
+      };
+    }
+
+    if (err instanceof Errors.PushRejectedError && err.data.reason === 'tag-exists') {
+      return {
+        errors: ['Push Rejected. It seems that the tag you are trying to push already exists in the remote repository.'],
+      };
+    }
+
     if (err instanceof Errors.HttpError) {
       return {
         errors: [`${err.message}, ${err.data.response}`],
@@ -1151,12 +1163,6 @@ export const commitAndPushToGitRepoAction = async ({
       ...vcsSegmentEventProperties('git', 'push', errorMessage),
       providerName,
     });
-
-    if (err instanceof Errors.PushRejectedError) {
-      return {
-        errors: [`Push Rejected, ${errorMessage}`],
-      };
-    }
 
     return {
       errors: [`Error Pushing Repository, ${errorMessage}`],
@@ -1415,6 +1421,12 @@ export const pushToGitRemoteAction = async ({
       };
     }
 
+    if (err instanceof Errors.PushRejectedError && err.data.reason === 'tag-exists') {
+      return {
+        errors: ['Push Rejected. It seems that the tag you are trying to push already exists in the remote repository.'],
+      };
+    }
+
     if (err instanceof Errors.HttpError) {
       return {
         errors: [`${err.message}, ${err.data.response}`],
@@ -1427,13 +1439,6 @@ export const pushToGitRemoteAction = async ({
       ...vcsSegmentEventProperties('git', 'push', errorMessage),
       providerName,
     });
-
-    if (err instanceof Errors.PushRejectedError) {
-      return {
-        errors: [`Push Rejected, ${errorMessage}`],
-        gitRepository,
-      };
-    }
 
     return {
       errors: [`Error Pushing Repository, ${errorMessage}`],
