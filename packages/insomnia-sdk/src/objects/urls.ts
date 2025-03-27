@@ -1,4 +1,3 @@
-import { getExistingConsole } from './console';
 import { Property, PropertyBase, PropertyList } from './properties';
 import { checkIfUrlIncludesTag } from './utils';
 
