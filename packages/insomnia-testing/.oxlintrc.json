@@ -1,8 +1,9 @@
 {
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "$schema": "../../node_modules/oxlint/configuration_schema.json",
   "plugins": [
-    "react",
-    "typescript"
+    "typescript",
+    "oxc",
+    "import"
   ],
   "categories": {
     "correctness": "off"
@@ -30,16 +31,6 @@
       }
     ],
     "no-var": "error",
-    "react/no-unescaped-entities": "off",
-    "react/jsx-key": [
-      "error",
-      {
-        "checkFragmentShorthand": true
-      }
-    ],
-    "react/no-array-index-key": "error",
-    "react/self-closing-comp": "error",
-    "react-hooks/rules-of-hooks": "error",
     "@typescript-eslint/array-type": [
       "error",
       {
@@ -65,7 +56,6 @@
       }
     ],
     "@typescript-eslint/no-explicit-any": "off",
-    "react/no-find-dom-node": "off",
     "no-empty-function": "off"
   }
 }
