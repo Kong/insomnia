@@ -1,0 +1,10 @@
+{
+  "overrides": [
+    {
+      "files": "packages/insomnia/**/*",
+      "options": {
+        "plugins": ["prettier-plugin-tailwindcss"]
+      }
+    }
+  ]
+}

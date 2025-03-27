@@ -52,6 +52,7 @@
     "esbuild-runner": "^2.2.2",
     "oxlint": "^0.16.3",
     "prettier": "^3.5.3",
+    "prettier-plugin-tailwindcss": "^0.6.11",
     "tslib": "2.0.1",
     "type-fest": "^4.15.0",
     "typescript": "^5.6.2",
