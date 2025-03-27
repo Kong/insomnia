@@ -34,7 +34,6 @@
     "useUnknownInCatchVariables": false,
   },
   "include": [
-    ".eslintrc.js",
     "esbuild.ts",
     "jest.config.js",
     "package.json",

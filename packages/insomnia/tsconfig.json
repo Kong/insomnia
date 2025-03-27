@@ -28,7 +28,6 @@
     "verbatimModuleSyntax": true
   },
   "include": [
-    ".eslintrc.js",
     "config",
     "esbuild.main.ts",
     "esbuild.sr.ts",

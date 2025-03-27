@@ -44,7 +44,6 @@
   },
   "description": "[![Playwright](https://img.shields.io/badge/playwright-blue.svg?style=for-the-badge&logo=playwright)](https://github.com/microsoft/playwright)",
   "homepage": "https://github.com/Kong/insomnia#readme",
-  "main": ".eslintrc.js",
   "directories": {
     "doc": "docs",
     "test": "tests"

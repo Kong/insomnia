@@ -16,7 +16,6 @@ build/Release
 node_modules/
 **/node_modules/
 .npm
-.eslintcache
 .node_repl_history
 *.tgz
 .yarn-integrity
