@@ -236,8 +236,7 @@ export async function initInsomniaObject(
     const reqUrl = toUrlObject(rawObj.request.url);
     reqUrl.addQueryParams(
         rawObj.request.parameters
-            .filter(param => !param.disabled)
-            .map(param => ({ key: param.name, value: param.value }))
+            .map(param => ({ key: param.name, value: param.value, disabled: param.disabled }))
     );
 
     const reqOpt: RequestOptions = {

@@ -1453,6 +1453,37 @@ collection:
         send: true
         store: true
       rebuildPath: true
+  - url: http://127.0.0.1:4010/echo?key=fromUrl&key={{fromUrlValue}}
+    name: testQueryParams
+    meta:
+      id: req_9b1d19ca915b4460a2eaaffea15e9e23
+      created: 1738856350541
+      modified: 1738856398102
+      isPrivate: false
+      sortKey: -1738810244689.5
+    method: GET
+    parameters:
+      - id: pair_9f61f0a4a75649468ea41af496ba3ea4
+        name: key
+        value: "{{fromEditorValue}}"
+        disabled: false
+      - id: pair_96fce40da1a3472394e373c220ebb9ad
+        name: key
+        value: "/"
+        disabled: false
+    headers:
+      - name: User-Agent
+        value: insomnia/10.3.1-beta.3
+    scripts:
+      preRequest: console.log('test')
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
 cookieJar:
   name: Default Jar
   meta:
@@ -1467,6 +1498,8 @@ environments:
     modified: 1707808692805
     isPrivate: false
   data:
+    fromUrlValue: 'fromUrlValue'
+    fromEditorValue: 'fromEditorValue'
     examplehost: https://mock.insomnia.rest
     a:
       b:
