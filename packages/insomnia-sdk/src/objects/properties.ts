@@ -270,9 +270,10 @@ export class PropertyList<T extends Property> {
   }
 
   // TODO: unsupported yet as properties are not organized as hierarchy
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   eachParent(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _iterator: (parent: Property, prev: Property) => void,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _context?: object,
   ) {
     throw unsupportedError("eachParent");
@@ -423,11 +424,14 @@ export class PropertyList<T extends Property> {
   }
 
   // TODO: unsupported yet
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   toObject(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _excludeDisabled?: boolean,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _caseSensitive?: boolean,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _multiValue?: boolean,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _sanitizeKeys?: boolean,
   ) {
     // it just dump all properties of each element without arguments
