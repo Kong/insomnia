@@ -1,0 +1,8 @@
+node_modules
+
+build
+
+# Ignore malformed files for tests
+packages/insomnia/src/utils/prettify/fixtures
+packages/insomnia/src/common/__fixtures__/prettify
+packages/insomnia-inso/src/db/fixtures/insomnia-v4/malformed.yaml
