@@ -24,6 +24,8 @@
   "scripts": {
     "dev": "npm start -w insomnia",
     "lint": "oxlint",
+    "format": "prettier . --write --cache --cache-location=node_modules/.cache/.prettiercache --log-level=warn",
+    "format:check": "prettier . --check --cache --cache-location=node_modules/.cache/.prettiercache",
     "type-check": "npm run type-check --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "lint:markdown": "npx markdownlint-cli2 \"**/*.md\" \"#**/node_modules\" \"#**/CHANGELOG.md\"",
@@ -49,6 +51,7 @@
     "esbuild": "^0.24.0",
     "esbuild-runner": "^2.2.2",
     "oxlint": "^0.16.3",
+    "prettier": "^3.5.3",
     "tslib": "2.0.1",
     "type-fest": "^4.15.0",
     "typescript": "^5.6.2",
