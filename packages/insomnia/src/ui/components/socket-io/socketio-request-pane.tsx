@@ -44,7 +44,7 @@ interface Props {
 }
 
 export const SocketIORequestPane: FC<Props> = ({ environment }) => {
-  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as SocketIORequestLoaderData;
+  const { activeRequest, activeRequestMeta, requestPayload } = useRouteLoaderData('request/:requestId') as SocketIORequestLoaderData;
 
   const { requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
 
@@ -225,7 +225,7 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
               <div className='h-full flex flex-col'>
                 <Heading className='text-xs font-bold uppercase text-[--hl] p-4'>Path parameters</Heading>
                 {pathParameters.length > 0 && (
-                    <div className="pr-[72.73px] w-full overflow-y-auto pl-4">
+                  <div className="pr-[72.73px] w-full overflow-y-auto pl-4">
                     <div className='grid gap-x-[20.8px] grid-cols-2 flex-shrink-0 w-full rounded-sm overflow-hidden'>
                       {pathParameters.map(pathParameter => (
                         <Fragment key={pathParameter.name}>
@@ -267,7 +267,10 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
           </PanelGroup>
         </TabPanel>
         <TabPanel className='w-full h-full flex-1 flex flex-col' id='body'>
-          <SocketIOBodyTabPane />
+          <SocketIOBodyTabPane
+            request={activeRequest}
+            requestPayload={requestPayload}
+          />
         </TabPanel>
         <TabPanel className='w-full flex-1 overflow-y-auto' id='events'>
           <SocketIOEventTabPane />

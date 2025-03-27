@@ -556,6 +556,13 @@ async function renderApp() {
                                         action: async (...args) =>
                                           (await import('./routes/request')).deleteResponseAction(...args),
                                       },
+                                      {
+                                        path: 'update-payload',
+                                        action: async (...args) =>
+                                          (
+                                            await import('./routes/request')
+                                          ).updatePayloadAction(...args),
+                                      },
                                     ],
                                   },
                                   {

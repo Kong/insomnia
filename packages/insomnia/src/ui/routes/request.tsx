@@ -45,6 +45,7 @@ import { isRequestMeta, type RequestMeta } from '../../models/request-meta';
 import type { RequestVersion } from '../../models/request-version';
 import type { Response } from '../../models/response';
 import type { ResponseInfo, RunnerResultPerRequestPerIteration } from '../../models/runner-test-result';
+import type { SocketIOPayload } from '../../models/socket-io-payload';
 import { isSocketIORequest, type SocketIORequest } from '../../models/socket-io-request';
 import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '../../models/websocket-request';
 import { isWebSocketResponse, type WebSocketResponse } from '../../models/websocket-response';
@@ -80,6 +81,7 @@ export interface SocketIORequestLoaderData {
   // TODO: implement socket.io response
   responses: [];
   requestVersions: RequestVersion[];
+  requestPayload: SocketIOPayload;
 }
 export interface GrpcRequestLoaderData {
   activeRequest: GrpcRequest;
@@ -105,7 +107,7 @@ export const defaultSendActionRuntime = {
 
 export const loader: LoaderFunction = async ({
   params,
-}): Promise<RequestLoaderData | WebSocketRequestLoaderData | GrpcRequestLoaderData> => {
+}): Promise<RequestLoaderData | WebSocketRequestLoaderData | GrpcRequestLoaderData | SocketIORequestLoaderData> => {
   const { organizationId, projectId, requestId, workspaceId } = params;
   invariant(requestId, 'Request ID is required');
   invariant(workspaceId, 'Workspace ID is required');
@@ -174,6 +176,19 @@ export const loader: LoaderFunction = async ({
       requestVersions: [],
       mockServerAndRoutes,
     } as RequestLoaderData | WebSocketRequestLoaderData;
+  }
+
+  if (isSocketIORequest(activeRequest)) {
+    const socketIOPayload = await models.socketIOPayload.getByParentId(requestId);
+    return {
+      activeRequest,
+      activeRequestMeta,
+      activeResponse: null,
+      responses: [],
+      requestVersions: [],
+      mockServerAndRoutes,
+      requestPayload: socketIOPayload,
+    } as SocketIORequestLoaderData;
   }
   return {
     activeRequest,
@@ -253,11 +268,14 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
     )._id;
   }
   if (requestType === 'SocketIO') {
-    activeRequestId = (await models.socketIORequest.create({
-      parentId: parentId || workspaceId,
-      name: 'New Socket.IO Request',
-      headers: defaultHeaders,
-    }))._id;
+    activeRequestId = (
+      await models.socketIORequest.create({
+        parentId: parentId || workspaceId,
+        name: 'New Socket.IO Request',
+        headers: defaultHeaders,
+      })
+    )._id;
+    await models.socketIOPayload.create({ parentId: activeRequestId });
   }
   if (requestType === 'From Curl') {
     if (!req) {
@@ -883,5 +901,13 @@ export const deleteResponseAction: ActionFunction = async ({ request, params }) 
     await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: response?._id || null });
   }
 
+  return null;
+};
+
+export const updatePayloadAction: ActionFunction = async ({ request, params }) => {
+  const { requestId } = params;
+  invariant(typeof requestId === 'string', 'Request ID is required');
+  const patch = (await request.json()) as Partial<SocketIOPayload>;
+  await models.socketIOPayload.updateOrCreateByParentId(requestId, patch);
   return null;
 };
