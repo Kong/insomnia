@@ -1,8 +1,8 @@
-import { status } from '@grpc/grpc-js';
-import classnames from 'classnames';
-import React, { type FC, memo } from 'react';
+import { status } from "@grpc/grpc-js";
+import classnames from "classnames";
+import React, { type FC, memo } from "react";
 
-import { Tooltip } from '../tooltip';
+import { Tooltip } from "../tooltip";
 
 interface Props {
   statusCode?: number;
@@ -11,22 +11,24 @@ interface Props {
   tooltipDelay?: number;
 }
 
-export const GrpcStatusTag: FC<Props> = memo(({ statusMessage, statusCode, small, tooltipDelay }) => {
-  const colorClass = statusCode === status.OK ? 'bg-success' : 'bg-danger';
-  const message = statusCode === status.OK ? 'OK' : statusMessage;
-  return (
-    <div
-      className={classnames('tag', colorClass, {
-        'tag--small': small,
-      })}
-      data-testid="response-status-tag"
-    >
-      <Tooltip message={message} position="bottom" delay={tooltipDelay}>
-        <strong>{statusCode} </strong>
-        {message}
-      </Tooltip>
-    </div>
-  );
-});
+export const GrpcStatusTag: FC<Props> = memo(
+  ({ statusMessage, statusCode, small, tooltipDelay }) => {
+    const colorClass = statusCode === status.OK ? "bg-success" : "bg-danger";
+    const message = statusCode === status.OK ? "OK" : statusMessage;
+    return (
+      <div
+        className={classnames("tag", colorClass, {
+          "tag--small": small,
+        })}
+        data-testid="response-status-tag"
+      >
+        <Tooltip message={message} position="bottom" delay={tooltipDelay}>
+          <strong>{statusCode} </strong>
+          {message}
+        </Tooltip>
+      </div>
+    );
+  },
+);
 
-GrpcStatusTag.displayName = 'GrpcStatusTag';
+GrpcStatusTag.displayName = "GrpcStatusTag";

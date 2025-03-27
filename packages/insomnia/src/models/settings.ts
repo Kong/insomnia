@@ -2,24 +2,31 @@ import {
   getAppDefaultDarkTheme,
   getAppDefaultLightTheme,
   getAppDefaultTheme,
-} from '../common/constants';
-import { database as db } from '../common/database';
-import * as hotkeys from '../common/hotkeys';
-import { HttpVersions, type KeyboardShortcut, type Settings as BaseSettings, UpdateChannel } from '../common/settings';
-import type { BaseModel } from './index';
+} from "../common/constants";
+import { database as db } from "../common/database";
+import * as hotkeys from "../common/hotkeys";
+import {
+  HttpVersions,
+  type KeyboardShortcut,
+  type Settings as BaseSettings,
+  UpdateChannel,
+} from "../common/settings";
+import type { BaseModel } from "./index";
 
 export type Settings = BaseModel & BaseSettings;
-export const name = 'Settings';
-export const type = 'Settings';
-export const prefix = 'set';
+export const name = "Settings";
+export const type = "Settings";
+export const prefix = "set";
 export const canDuplicate = false;
 export const canSync = false;
 
-export type ThemeSettings = Pick<Settings, 'autoDetectColorScheme' | 'lightTheme' | 'darkTheme' | 'theme'>;
+export type ThemeSettings = Pick<
+  Settings,
+  "autoDetectColorScheme" | "lightTheme" | "darkTheme" | "theme"
+>;
 
-export const isSettings = (model: Pick<BaseModel, 'type'>): model is Settings => (
-  model.type === type
-);
+export const isSettings = (model: Pick<BaseModel, "type">): model is Settings =>
+  model.type === type;
 
 export function init(): BaseSettings {
   return {
@@ -36,7 +43,7 @@ export function init(): BaseSettings {
     editorFontSize: 11,
     editorIndentSize: 2,
     editorIndentWithTabs: true,
-    editorKeyMap: 'default',
+    editorKeyMap: "default",
     enableKeyMapForInlineTextEditors: false,
     editorLineWrapping: true,
     enableAnalytics: true,
@@ -49,18 +56,18 @@ export function init(): BaseSettings {
     fontVariantLigatures: false,
     forceVerticalLayout: false,
     hotKeyRegistry: hotkeys.newDefaultRegistry(),
-    httpProxy: '',
-    httpsProxy: '',
+    httpProxy: "",
+    httpsProxy: "",
     lightTheme: getAppDefaultLightTheme(),
     maxHistoryResponses: 20,
     maxRedirects: 10,
     maxTimelineDataSizeKB: 10,
-    pluginNodeExtraCerts: '',
+    pluginNodeExtraCerts: "",
     pluginsAllowElevatedAccess: false,
-    noProxy: '',
+    noProxy: "",
     nunjucksPowerUserMode: false,
     pluginConfig: {},
-    pluginPath: '',
+    pluginPath: "",
     preferredHttpVersion: HttpVersions.default,
     proxyEnabled: false,
     showPasswords: false,
@@ -84,7 +91,7 @@ export function migrate(doc: Settings) {
     doc = migrateEnsureHotKeys(doc);
     return doc;
   } catch (e) {
-    console.log('[db] Error during settings migration', e);
+    console.log("[db] Error during settings migration", e);
     throw e;
   }
 }
@@ -116,7 +123,7 @@ export async function patch(patch: Partial<Settings>) {
 }
 
 export async function getOrCreate() {
-  const results = await db.all<Settings>(type) || [];
+  const results = (await db.all<Settings>(type)) || [];
 
   if (results.length === 0) {
     return await create();
@@ -125,7 +132,7 @@ export async function getOrCreate() {
 }
 
 export async function get() {
-  const results = await db.all<Settings>(type) || [];
+  const results = (await db.all<Settings>(type)) || [];
 
   return results[0];
 }
@@ -137,13 +144,18 @@ function migrateEnsureHotKeys(settings: Settings): Settings {
   const defaultHotKeyRegistry = hotkeys.newDefaultRegistry();
 
   // Remove any hotkeys that are no longer in the default registry
-  const hotKeyRegistry = (Object.keys(settings.hotKeyRegistry) as KeyboardShortcut[]).reduce((newHotKeyRegistry, key) => {
-    if (key in defaultHotKeyRegistry) {
-      newHotKeyRegistry[key] = settings.hotKeyRegistry[key];
-    }
+  const hotKeyRegistry = (
+    Object.keys(settings.hotKeyRegistry) as KeyboardShortcut[]
+  ).reduce(
+    (newHotKeyRegistry, key) => {
+      if (key in defaultHotKeyRegistry) {
+        newHotKeyRegistry[key] = settings.hotKeyRegistry[key];
+      }
 
-    return newHotKeyRegistry;
-  }, {} as Settings['hotKeyRegistry']);
+      return newHotKeyRegistry;
+    },
+    {} as Settings["hotKeyRegistry"],
+  );
 
   settings.hotKeyRegistry = { ...defaultHotKeyRegistry, ...hotKeyRegistry };
   return settings;

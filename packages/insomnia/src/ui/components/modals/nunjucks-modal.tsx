@@ -1,12 +1,17 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 
-import type { Workspace } from '../../../models/workspace';
-import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
-import { ModalBody } from '../base/modal-body';
-import { ModalFooter } from '../base/modal-footer';
-import { ModalHeader } from '../base/modal-header';
-import { TagEditor } from '../templating/tag-editor';
-import { VariableEditor } from '../templating/variable-editor';
+import type { Workspace } from "../../../models/workspace";
+import { Modal, type ModalHandle, type ModalProps } from "../base/modal";
+import { ModalBody } from "../base/modal-body";
+import { ModalFooter } from "../base/modal-footer";
+import { ModalHeader } from "../base/modal-header";
+import { TagEditor } from "../templating/tag-editor";
+import { VariableEditor } from "../templating/variable-editor";
 
 interface Props {
   workspace: Workspace;
@@ -29,32 +34,39 @@ export interface NunjucksModalHandle {
   show: (options: NunjucksModalOptions) => void;
   hide: () => void;
 }
-export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>((props, ref) => {
+export const NunjucksModal = forwardRef<
+  NunjucksModalHandle,
+  ModalProps & Props
+>((props, ref) => {
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<State>({
     isTag: false,
-    template: '',
-    onDone: () => { },
-    editorId: '',
+    template: "",
+    onDone: () => {},
+    editorId: "",
   });
 
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: ({ onDone, template, editorId }) => {
-      setState({
-        isTag: template.indexOf('{%') === 0,
-        template,
-        onDone,
-        editorId,
-      });
-      modalRef.current?.show();
-    },
-  }), []);
+  useImperativeHandle(
+    ref,
+    () => ({
+      hide: () => {
+        modalRef.current?.hide();
+      },
+      show: ({ onDone, template, editorId }) => {
+        setState({
+          isTag: template.indexOf("{%") === 0,
+          template,
+          onDone,
+          editorId,
+        });
+        modalRef.current?.show();
+      },
+    }),
+    [],
+  );
 
   const handleTemplateChange = (template: string) => {
-    setState(state => ({
+    setState((state) => ({
       ...state,
       template,
     }));
@@ -62,12 +74,21 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
 
   const { workspace } = props;
   const { template, isTag } = state;
-  const title = isTag ? 'Tag' : 'Variable';
+  const title = isTag ? "Tag" : "Variable";
   let editor: JSX.Element | null = null;
   if (isTag) {
-    editor = <TagEditor onChange={handleTemplateChange} defaultValue={template} workspace={workspace} editorId={state.editorId} />;
+    editor = (
+      <TagEditor
+        onChange={handleTemplateChange}
+        defaultValue={template}
+        workspace={workspace}
+        editorId={state.editorId}
+      />
+    );
   } else {
-    editor = <VariableEditor onChange={handleTemplateChange} defaultValue={template} />;
+    editor = (
+      <VariableEditor onChange={handleTemplateChange} defaultValue={template} />
+    );
   }
 
   return (
@@ -75,20 +96,22 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
       ref={modalRef}
       onHide={() => {
         state.onDone(state.template);
-        setState(state => ({
+        setState((state) => ({
           ...state,
-          template: '',
+          template: "",
         }));
       }}
     >
       <ModalHeader>Edit {title}</ModalHeader>
       <ModalBody className="pad">
         <form
-          onSubmit={event => {
+          onSubmit={(event) => {
             event.preventDefault();
             modalRef.current?.hide();
           }}
-        >{editor}</form>
+        >
+          {editor}
+        </form>
       </ModalBody>
       <ModalFooter>
         <button className="btn" onClick={() => modalRef.current?.hide()}>
@@ -98,4 +121,4 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
     </Modal>
   );
 });
-NunjucksModal.displayName = 'NunjucksModal';
+NunjucksModal.displayName = "NunjucksModal";

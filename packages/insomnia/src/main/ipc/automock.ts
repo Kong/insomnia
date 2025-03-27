@@ -1,10 +1,18 @@
 // From https://github.com/bloomrpc/bloomrpc-mock/blob/master/src/automock.ts
 // TODO simplify this and rename to generate example payload
-import { Enum, Field, MapField, Message, OneOf, Service, Type } from 'protobufjs';
-import { v4 } from 'uuid';
+import {
+  Enum,
+  Field,
+  MapField,
+  Message,
+  OneOf,
+  Service,
+  Type,
+} from "protobufjs";
+import { v4 } from "uuid";
 
 export interface MethodPayload {
-  plain: {[key: string]: any};
+  plain: { [key: string]: any };
   message: Message;
 }
 
@@ -14,35 +22,21 @@ export interface ServiceMethodsPayload {
 
 const enum MethodType {
   request,
-  response
+  response,
 }
 
 /**
  * Mock method response
  */
-export function mockResponseMethods(
-  service: Service,
-  mocks?: void | {},
-) {
-  return mockMethodReturnType(
-    service,
-    MethodType.response,
-    mocks
-  );
+export function mockResponseMethods(service: Service, mocks?: void | {}) {
+  return mockMethodReturnType(service, MethodType.response, mocks);
 }
 
 /**
  * Mock methods request
  */
-export function mockRequestMethods(
-  service: Service,
-  mocks?: void | {},
-) {
-  return mockMethodReturnType(
-    service,
-    MethodType.request,
-    mocks
-  );
+export function mockRequestMethods(service: Service, mocks?: void | {}) {
+  return mockMethodReturnType(service, MethodType.request, mocks);
 }
 
 function mockMethodReturnType(
@@ -53,25 +47,29 @@ function mockMethodReturnType(
   const root = service.root;
   const serviceMethods = service.methods;
 
-  return Object.keys(serviceMethods).reduce((methods: ServiceMethodsPayload, method: string) => {
-    const serviceMethod = serviceMethods[method];
+  return Object.keys(serviceMethods).reduce(
+    (methods: ServiceMethodsPayload, method: string) => {
+      const serviceMethod = serviceMethods[method];
 
-    const methodMessageType = type === MethodType.request
-      ? serviceMethod.requestType
-      : serviceMethod.responseType;
+      const methodMessageType =
+        type === MethodType.request
+          ? serviceMethod.requestType
+          : serviceMethod.responseType;
 
-    const messageType = root.lookupType(methodMessageType);
+      const messageType = root.lookupType(methodMessageType);
 
-    methods[method] = () => {
-      let data = {};
-      if (!mocks) {
-        data = mockTypeFields(messageType, new StackDepth());
-      }
-      return { plain: data, message: messageType.fromObject(data) };
-    };
+      methods[method] = () => {
+        let data = {};
+        if (!mocks) {
+          data = mockTypeFields(messageType, new StackDepth());
+        }
+        return { plain: data, message: messageType.fromObject(data) };
+      };
 
-    return methods;
-  }, {});
+      return methods;
+    },
+    {},
+  );
 }
 
 /**
@@ -161,7 +159,6 @@ function mockMapField(field: MapField, stackDepth: StackDepth): any {
     } else if (resolvedType === null) {
       mockPropertyValue = {};
     }
-
   }
 
   return {
@@ -173,14 +170,15 @@ function isProtoType(resolvedType: Enum | Type | null): resolvedType is Type {
   if (!resolvedType) {
     return false;
   }
-  const fieldsArray: keyof Type = 'fieldsArray';
-  return resolvedType instanceof Type || (
-    fieldsArray in resolvedType && Array.isArray(resolvedType[fieldsArray])
+  const fieldsArray: keyof Type = "fieldsArray";
+  return (
+    resolvedType instanceof Type ||
+    (fieldsArray in resolvedType && Array.isArray(resolvedType[fieldsArray]))
   );
 }
 
 function pickOneOf(oneofs: OneOf[], stackDepth: StackDepth) {
-  return oneofs.reduce((fields: {[key: string]: any}, oneOf) => {
+  return oneofs.reduce((fields: { [key: string]: any }, oneOf) => {
     fields[oneOf.name] = mockField(oneOf.fieldsArray[0], stackDepth);
     return fields;
   }, {});
@@ -188,37 +186,37 @@ function pickOneOf(oneofs: OneOf[], stackDepth: StackDepth) {
 
 function mockScalar(type: string, fieldName: string): any {
   switch (type) {
-    case 'string':
+    case "string":
       return interpretMockViaFieldName(fieldName);
-    case 'number':
+    case "number":
       return 10;
-    case 'bool':
+    case "bool":
       return true;
-    case 'int32':
+    case "int32":
       return 10;
-    case 'int64':
+    case "int64":
       return 20;
-    case 'uint32':
+    case "uint32":
       return 100;
-    case 'uint64':
+    case "uint64":
       return 100;
-    case 'sint32':
+    case "sint32":
       return 100;
-    case 'sint64':
+    case "sint64":
       return 1200;
-    case 'fixed32':
+    case "fixed32":
       return 1400;
-    case 'fixed64':
+    case "fixed64":
       return 1500;
-    case 'sfixed32':
+    case "sfixed32":
       return 1600;
-    case 'sfixed64':
+    case "sfixed64":
       return 1700;
-    case 'double':
+    case "double":
       return 1.4;
-    case 'float':
+    case "float":
       return 1.1;
-    case 'bytes':
+    case "bytes":
       return Buffer.from([0xa1, 0xb2, 0xc3]);
     default:
       return null;
@@ -232,11 +230,11 @@ function mockScalar(type: string, fieldName: string): any {
 function interpretMockViaFieldName(fieldName: string): string {
   const fieldNameLower = fieldName.toLowerCase();
 
-  if (fieldNameLower.startsWith('id') || fieldNameLower.endsWith('id')) {
+  if (fieldNameLower.startsWith("id") || fieldNameLower.endsWith("id")) {
     return v4();
   }
 
-  return 'Hello';
+  return "Hello";
 }
 
 class StackDepth {

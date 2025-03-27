@@ -1,30 +1,30 @@
 // @ts-expect-error the enquirer types are incomplete https://github.com/enquirer/enquirer/pull/307
-import { AutoComplete } from 'enquirer';
+import { AutoComplete } from "enquirer";
 
-import { logger } from '../../cli';
-import type { Database } from '../index';
-import type { ApiSpec } from './types';
+import { logger } from "../../cli";
+import type { Database } from "../index";
+import type { ApiSpec } from "./types";
 import {
   ensureSingleOrNone,
   generateIdIsh,
   getDbChoice,
   matchIdIsh,
-} from './util';
-const entity = 'api specification';
+} from "./util";
+const entity = "api specification";
 
 export const loadApiSpec = (
   db: Database,
   identifier: string,
 ): ApiSpec | null | undefined => {
   logger.trace(
-    'Load %s with identifier `%s` from data store',
+    "Load %s with identifier `%s` from data store",
     entity,
     identifier,
   );
   const items = db.ApiSpec.filter(
-    spec => matchIdIsh(spec, identifier) || spec.fileName === identifier,
+    (spec) => matchIdIsh(spec, identifier) || spec.fileName === identifier,
   );
-  logger.trace('Found %d.', items.length);
+  logger.trace("Found %d.", items.length);
   return ensureSingleOrNone(items, entity);
 };
 
@@ -37,11 +37,11 @@ export const promptApiSpec = async (
   }
 
   const prompt = new AutoComplete({
-    name: 'apiSpec',
-    message: 'Select an API Specification',
-    choices: db.ApiSpec.map(s => getDbChoice(generateIdIsh(s), s.fileName)),
+    name: "apiSpec",
+    message: "Select an API Specification",
+    choices: db.ApiSpec.map((s) => getDbChoice(generateIdIsh(s), s.fileName)),
   });
-  logger.trace('Prompt for %s', entity);
-  const [idIsh] = (await prompt.run()).split(' - ').reverse();
+  logger.trace("Prompt for %s", entity);
+  const [idIsh] = (await prompt.run()).split(" - ").reverse();
   return loadApiSpec(db, idIsh);
 };

@@ -1,25 +1,36 @@
-import SwaggerParser from '@apidevtools/swagger-parser';
-import crypto from 'crypto';
-import { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
-import { parse as urlParse } from 'url';
-import YAML from 'yaml';
+import SwaggerParser from "@apidevtools/swagger-parser";
+import crypto from "crypto";
+import { OpenAPIV2, OpenAPIV3 } from "openapi-types";
+import { parse as urlParse } from "url";
+import YAML from "yaml";
 
-import type { Authentication, Converter, ImportRequest } from '../entities';
-import { unthrowableParseJson } from '../utils';
+import type { Authentication, Converter, ImportRequest } from "../entities";
+import { unthrowableParseJson } from "../utils";
 
-export const id = 'openapi3';
-export const name = 'OpenAPI 3.0';
-export const description = 'Importer for OpenAPI 3.0 specification (json/yaml)';
-const toCamelCase = (a: string) => a.replace(/`|'/g, '')
-  .replace(/[a-z](?=[A-Z][a-z])/g, '$& ')
-  .replace(/[\W_]*([a-z0-9]+)[\W_]*/gi, (_, b, i) => (i ? b[0].toUpperCase() : '') + b.slice(i > 0).toLowerCase());
+export const id = "openapi3";
+export const name = "OpenAPI 3.0";
+export const description = "Importer for OpenAPI 3.0 specification (json/yaml)";
+const toCamelCase = (a: string) =>
+  a
+    .replace(/`|'/g, "")
+    .replace(/[a-z](?=[A-Z][a-z])/g, "$& ")
+    .replace(
+      /[\W_]*([a-z0-9]+)[\W_]*/gi,
+      (_, b, i) => (i ? b[0].toUpperCase() : "") + b.slice(i > 0).toLowerCase(),
+    );
 function isPlainObject(value: any) {
-  if (typeof value !== 'object' || value === null) {
+  if (typeof value !== "object" || value === null) {
     return false;
   }
 
   const prototype = Object.getPrototypeOf(value);
-  return (prototype === null || prototype === Object.prototype || Object.getPrototypeOf(prototype) === null) && !(Symbol.toStringTag in value) && !(Symbol.iterator in value);
+  return (
+    (prototype === null ||
+      prototype === Object.prototype ||
+      Object.getPrototypeOf(prototype) === null) &&
+    !(Symbol.toStringTag in value) &&
+    !(Symbol.iterator in value)
+  );
 }
 
 /* eslint-disable camelcase -- some camecase is required by the parsing of the spec itself */
@@ -27,25 +38,25 @@ function isPlainObject(value: any) {
 const SUPPORTED_OPENAPI_VERSION = /^3\.\d+\.\d+$/;
 
 // 3.x.x
-const MIMETYPE_JSON = 'application/json';
-const MIMETYPE_LITERALLY_ANYTHING = '*/*';
+const MIMETYPE_JSON = "application/json";
+const MIMETYPE_LITERALLY_ANYTHING = "*/*";
 const SUPPORTED_MIME_TYPES = [MIMETYPE_JSON, MIMETYPE_LITERALLY_ANYTHING];
-const WORKSPACE_ID = '__WORKSPACE_ID__';
+const WORKSPACE_ID = "__WORKSPACE_ID__";
 const SECURITY_TYPE = {
-  HTTP: 'http',
-  API_KEY: 'apiKey',
-  OAUTH: 'oauth2',
-  OPEN_ID: 'openIdConnect',
+  HTTP: "http",
+  API_KEY: "apiKey",
+  OAUTH: "oauth2",
+  OPEN_ID: "openIdConnect",
 };
 const HTTP_AUTH_SCHEME = {
-  BASIC: 'basic',
-  BEARER: 'bearer',
+  BASIC: "basic",
+  BEARER: "bearer",
 };
 const OAUTH_FLOWS = {
-  AUTHORIZATION_CODE: 'authorizationCode',
-  CLIENT_CREDENTIALS: 'clientCredentials',
-  IMPLICIT: 'implicit',
-  PASSWORD: 'password',
+  AUTHORIZATION_CODE: "authorizationCode",
+  CLIENT_CREDENTIALS: "clientCredentials",
+  IMPLICIT: "implicit",
+  PASSWORD: "password",
 } as const;
 const SUPPORTED_SECURITY_TYPES = [
   SECURITY_TYPE.HTTP,
@@ -66,7 +77,7 @@ let requestCounts: Record<string, number> = {};
  * @returns the resolved server URL
  */
 const getServerUrl = (server: OpenAPIV3.ServerObject) => {
-  const exampleServer = 'http://example.com/';
+  const exampleServer = "http://example.com/";
 
   if (!(server && server.url)) {
     return urlParse(exampleServer);
@@ -123,13 +134,16 @@ export type SpecExtension = `x-${string}`;
  * @param property The property name
  */
 const isSpecExtension = (property: string): property is SpecExtension => {
-  return property.indexOf('x-') === 0;
+  return property.indexOf("x-") === 0;
 };
 
 /**
  * Create env definitions based on openapi document.
  */
-const parseEnvs = (baseEnv: ImportRequest, document?: OpenAPIV3.Document | null) => {
+const parseEnvs = (
+  baseEnv: ImportRequest,
+  document?: OpenAPIV3.Document | null,
+) => {
   if (!document) {
     return [];
   }
@@ -137,44 +151,46 @@ const parseEnvs = (baseEnv: ImportRequest, document?: OpenAPIV3.Document | null)
   let servers: OpenAPIV3.ServerObject[] | undefined;
 
   if (!document.servers) {
-    servers = [{ url: 'http://example.com/' }];
+    servers = [{ url: "http://example.com/" }];
   } else {
     servers = document.servers;
   }
 
   const securityVariables = getSecurityEnvVariables(
-    document.components?.securitySchemes as unknown as OpenAPIV3.SecuritySchemeObject,
+    document.components
+      ?.securitySchemes as unknown as OpenAPIV3.SecuritySchemeObject,
   );
 
-  return servers
-    .map(server => {
+  return (
+    servers.map((server) => {
       const currentServerUrl = getServerUrl(server);
-      const protocol = currentServerUrl.protocol || '';
+      const protocol = currentServerUrl.protocol || "";
 
       // Base path is pulled out of the URL, and the trailing slash is removed
-      const basePath = (currentServerUrl.pathname || '').replace(/\/$/, '');
+      const basePath = (currentServerUrl.pathname || "").replace(/\/$/, "");
 
       const hash = crypto
-        .createHash('sha1')
+        .createHash("sha1")
         .update(server.url)
-        .digest('hex')
+        .digest("hex")
         .slice(0, 8);
       const openapiEnv: ImportRequest = {
-        _type: 'environment',
+        _type: "environment",
         _id: `env___BASE_ENVIRONMENT_ID___sub__${hash}`,
         parentId: baseEnv._id,
         name: `OpenAPI env ${currentServerUrl.host}`,
         data: {
           // note: `URL.protocol` returns with trailing `:` (i.e. "https:")
-          scheme: protocol.replace(/:$/, '') || ['http'],
+          scheme: protocol.replace(/:$/, "") || ["http"],
           base_path: basePath,
-          host: currentServerUrl.host || '',
+          host: currentServerUrl.host || "",
           ...securityVariables,
         },
       };
 
       return openapiEnv;
-    }) || [];
+    }) || []
+  );
 };
 
 /**
@@ -186,7 +202,9 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
   }
 
   const rootSecurity = document.security;
-  const securitySchemes = document.components?.securitySchemes as OpenAPIV3.SecuritySchemeObject | undefined;
+  const securitySchemes = document.components?.securitySchemes as
+    | OpenAPIV3.SecuritySchemeObject
+    | undefined;
   const defaultParent = WORKSPACE_ID;
 
   const endpointsSchemas: ({
@@ -194,7 +212,7 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
     method: string;
     tags?: string[];
   } & OpenAPIV3.SchemaObject)[] = Object.keys(document.paths)
-    .map(path => {
+    .map((path) => {
       const schemasPerMethod = document.paths[path];
 
       if (!schemasPerMethod) {
@@ -203,10 +221,12 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
 
       const methods = Object.entries(schemasPerMethod)
         // Only keep entries that are plain objects and not spec extensions
-        .filter(([key, value]) => isPlainObject(value) && !isSpecExtension(key));
+        .filter(
+          ([key, value]) => isPlainObject(value) && !isSpecExtension(key),
+        );
 
       return methods.map(([method]) => ({
-        ...((schemasPerMethod as Record<string, OpenAPIV3.SchemaObject>)[method]),
+        ...(schemasPerMethod as Record<string, OpenAPIV3.SchemaObject>)[method],
         path,
         method,
       }));
@@ -214,22 +234,27 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
     .flat();
 
   const folders = document.tags?.map(importFolderItem(defaultParent)) || [];
-  const folderLookup = folders.reduce((accumulator, folder) => ({
-    ...accumulator,
-    ...(folder.name ? { [folder.name]: folder._id } : {}),
-  }), {} as Record<OpenAPIV3.TagObject['name'], string | undefined>);
+  const folderLookup = folders.reduce(
+    (accumulator, folder) => ({
+      ...accumulator,
+      ...(folder.name ? { [folder.name]: folder._id } : {}),
+    }),
+    {} as Record<OpenAPIV3.TagObject["name"], string | undefined>,
+  );
 
   const requests: ImportRequest[] = [];
-  endpointsSchemas.forEach(endpointSchema => {
+  endpointsSchemas.forEach((endpointSchema) => {
     let { tags } = endpointSchema;
 
     if (!tags || tags.length === 0) {
-      tags = [''];
+      tags = [""];
     }
 
-    tags.forEach(tag => {
+    tags.forEach((tag) => {
       const parentId = folderLookup[tag] || defaultParent;
-      const resolvedSecurity = (endpointSchema as unknown as OpenAPIV3.Document).security || rootSecurity;
+      const resolvedSecurity =
+        (endpointSchema as unknown as OpenAPIV3.Document).security ||
+        rootSecurity;
       requests.push(
         importRequest(
           endpointSchema,
@@ -241,33 +266,30 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
     });
   });
 
-  return [
-    ...folders,
-    ...requests,
-  ];
+  return [...folders, ...requests];
 };
 
 /**
  * Return Insomnia folder / request group
  */
-const importFolderItem = (parentId: string) => (
-  item: OpenAPIV3.SchemaObject,
-): ImportRequest => {
-  const hash = crypto
-    .createHash('sha1')
-    // @ts-expect-error -- this is not present on the official types, yet was here in the source code
-    .update(item.name)
-    .digest('hex')
-    .slice(0, 8);
-  return {
-    parentId,
-    _id: `fld___WORKSPACE_ID__${hash}`,
-    _type: 'request_group',
-    // @ts-expect-error -- this is not present on the official types, yet was here in the source code
-    name: item.name || 'Folder {requestGroupCount}',
-    description: item.description || '',
+const importFolderItem =
+  (parentId: string) =>
+  (item: OpenAPIV3.SchemaObject): ImportRequest => {
+    const hash = crypto
+      .createHash("sha1")
+      // @ts-expect-error -- this is not present on the official types, yet was here in the source code
+      .update(item.name)
+      .digest("hex")
+      .slice(0, 8);
+    return {
+      parentId,
+      _id: `fld___WORKSPACE_ID__${hash}`,
+      _type: "request_group",
+      // @ts-expect-error -- this is not present on the official types, yet was here in the source code
+      name: item.name || "Folder {requestGroupCount}",
+      description: item.description || "",
+    };
   };
-};
 
 /**
  * Return path with parameters replaced by insomnia variables
@@ -275,19 +297,25 @@ const importFolderItem = (parentId: string) => (
  * I.e. "/foo/:bar" => "/foo/{{ bar }}"
  */
 const pathWithParamsAsVariables = (path?: string) =>
-  path?.replace(VARIABLE_SEARCH_VALUE, '{{ _.$1 }}') ?? '';
+  path?.replace(VARIABLE_SEARCH_VALUE, "{{ _.$1 }}") ?? "";
 
 /**
  * Return Insomnia request
  */
 const importRequest = (
-  endpointSchema: OpenAPIV3.SchemaObject & { summary?: string; path?: string; method?: string },
+  endpointSchema: OpenAPIV3.SchemaObject & {
+    summary?: string;
+    path?: string;
+    method?: string;
+  },
   parentId: string,
   security?: OpenAPIV3.SecurityRequirementObject[],
   securitySchemes?: OpenAPIV3.SecuritySchemeObject,
 ): ImportRequest => {
   const name = endpointSchema.summary || endpointSchema.path;
-  const id = generateUniqueRequestId(endpointSchema as OpenAPIV3.OperationObject);
+  const id = generateUniqueRequestId(
+    endpointSchema as OpenAPIV3.OperationObject,
+  );
   const body = prepareBody(endpointSchema as OpenAPIV3.OperationObject);
   const paramHeaders = prepareHeaders(endpointSchema, body);
   const {
@@ -296,14 +324,14 @@ const importRequest = (
     parameters: securityParams,
   } = parseSecurity(security, securitySchemes);
   return {
-    _type: 'request',
+    _type: "request",
     _id: id,
     parentId: parentId,
     name,
     method: endpointSchema.method?.toUpperCase(),
     url: `{{ _.base_url }}${pathWithParamsAsVariables(endpointSchema.path)}`,
     body: body,
-    description: endpointSchema.description || '',
+    description: endpointSchema.description || "",
     headers: [...paramHeaders, ...securityHeaders],
     authentication: authentication as Authentication,
     parameters: [...prepareQueryParams(endpointSchema), ...securityParams],
@@ -315,28 +343,33 @@ const importRequest = (
  */
 const prepareQueryParams = (endpointSchema: OpenAPIV3.PathItemObject) => {
   return convertParameters(
-    endpointSchema.parameters?.filter(parameter => (
-      (parameter as OpenAPIV3.ParameterObject).in === 'query'
-    )) as OpenAPIV3.ParameterObject[]);
+    endpointSchema.parameters?.filter(
+      (parameter) => (parameter as OpenAPIV3.ParameterObject).in === "query",
+    ) as OpenAPIV3.ParameterObject[],
+  );
 };
 
 /**
  * Imports insomnia definitions of header parameters.
  */
-const prepareHeaders = (endpointSchema: OpenAPIV3.PathItemObject, body: any) => {
+const prepareHeaders = (
+  endpointSchema: OpenAPIV3.PathItemObject,
+  body: any,
+) => {
   let paramHeaders = convertParameters(
-    endpointSchema.parameters?.filter(parameter => (
-      (parameter as OpenAPIV3.ParameterObject).in === 'header'
-    )) as OpenAPIV3.ParameterObject[]);
+    endpointSchema.parameters?.filter(
+      (parameter) => (parameter as OpenAPIV3.ParameterObject).in === "header",
+    ) as OpenAPIV3.ParameterObject[],
+  );
 
   const noContentTypeHeader = !paramHeaders?.find(
-    header => header.name === 'Content-Type',
+    (header) => header.name === "Content-Type",
   );
 
   if (body && body.mimeType && noContentTypeHeader) {
     paramHeaders = [
       {
-        name: 'Content-Type',
+        name: "Content-Type",
         disabled: false,
         value: body.mimeType,
       },
@@ -363,24 +396,27 @@ const parseSecurity = (
   }
 
   const supportedSchemes = security
-    .flatMap(securityPolicy => {
-      return Object.keys(securityPolicy).map((securityRequirement: string | number) => {
-        return {
-          // @ts-expect-error the base types do not include an index but from what I can tell, they should
-          schemeDetails: securitySchemes[securityRequirement],
-          securityScopes: securityPolicy[securityRequirement],
-        };
-      });
+    .flatMap((securityPolicy) => {
+      return Object.keys(securityPolicy).map(
+        (securityRequirement: string | number) => {
+          return {
+            // @ts-expect-error the base types do not include an index but from what I can tell, they should
+            schemeDetails: securitySchemes[securityRequirement],
+            securityScopes: securityPolicy[securityRequirement],
+          };
+        },
+      );
     })
-    .filter(({ schemeDetails }) => (
-      schemeDetails && SUPPORTED_SECURITY_TYPES.includes(schemeDetails.type)
-    ));
-  const apiKeySchemes = supportedSchemes.filter(scheme => (
-    scheme.schemeDetails.type === SECURITY_TYPE.API_KEY
-  ));
+    .filter(
+      ({ schemeDetails }) =>
+        schemeDetails && SUPPORTED_SECURITY_TYPES.includes(schemeDetails.type),
+    );
+  const apiKeySchemes = supportedSchemes.filter(
+    (scheme) => scheme.schemeDetails.type === SECURITY_TYPE.API_KEY,
+  );
   const apiKeyHeaders = apiKeySchemes
-    .filter(scheme => scheme.schemeDetails.in === 'header')
-    .map(scheme => {
+    .filter((scheme) => scheme.schemeDetails.in === "header")
+    .map((scheme) => {
       const variableName = toCamelCase(scheme.schemeDetails.name);
       return {
         name: scheme.schemeDetails.name,
@@ -389,19 +425,19 @@ const parseSecurity = (
       };
     });
   const apiKeyCookies = apiKeySchemes
-    .filter(scheme => scheme.schemeDetails.in === 'cookie')
-    .map(scheme => {
+    .filter((scheme) => scheme.schemeDetails.in === "cookie")
+    .map((scheme) => {
       const variableName = toCamelCase(scheme.schemeDetails.name);
       return `${scheme.schemeDetails.name}={{ _.${variableName} }}`;
     });
   const apiKeyCookieHeader = {
-    name: 'Cookie',
+    name: "Cookie",
     disabled: false,
-    value: apiKeyCookies.join('; '),
+    value: apiKeyCookies.join("; "),
   };
   const apiKeyParams = apiKeySchemes
-    .filter(scheme => scheme.schemeDetails.in === 'query')
-    .map(scheme => {
+    .filter((scheme) => scheme.schemeDetails.in === "query")
+    .map((scheme) => {
       const variableName = toCamelCase(scheme.schemeDetails.name);
       return {
         name: scheme.schemeDetails.name,
@@ -410,7 +446,8 @@ const parseSecurity = (
       };
     });
 
-  const apiKeySecuritySchemas = apiKeyHeaders.length + apiKeyCookies.length + apiKeyParams.length;
+  const apiKeySecuritySchemas =
+    apiKeyHeaders.length + apiKeyCookies.length + apiKeyParams.length;
 
   if (apiKeyCookies.length > 0) {
     apiKeyHeaders.push(apiKeyCookieHeader);
@@ -418,11 +455,12 @@ const parseSecurity = (
 
   const authentication = (() => {
     const authScheme = supportedSchemes.find(
-      scheme =>
+      (scheme) =>
         SUPPORTED_SECURITY_TYPES.includes(scheme.schemeDetails.type) &&
-        (scheme.schemeDetails.type === SECURITY_TYPE.OAUTH
-          || (apiKeySecuritySchemas === 1 && scheme.schemeDetails.type === SECURITY_TYPE.API_KEY)
-          || SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.schemeDetails.scheme)),
+        (scheme.schemeDetails.type === SECURITY_TYPE.OAUTH ||
+          (apiKeySecuritySchemas === 1 &&
+            scheme.schemeDetails.type === SECURITY_TYPE.API_KEY) ||
+          SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.schemeDetails.scheme)),
     );
 
     if (!authScheme) {
@@ -436,17 +474,23 @@ const parseSecurity = (
         );
 
       case SECURITY_TYPE.OAUTH:
-        return parseOAuth2(authScheme.schemeDetails as OpenAPIV3.OAuth2SecurityScheme, authScheme.securityScopes);
+        return parseOAuth2(
+          authScheme.schemeDetails as OpenAPIV3.OAuth2SecurityScheme,
+          authScheme.securityScopes,
+        );
 
       case SECURITY_TYPE.API_KEY:
-        return parseApiKeyAuth(authScheme.schemeDetails as OpenAPIV3.ApiKeySecurityScheme);
+        return parseApiKeyAuth(
+          authScheme.schemeDetails as OpenAPIV3.ApiKeySecurityScheme,
+        );
 
       default:
         return {};
     }
   })();
 
-  const isApiKeyAuth = authentication?.type?.toLowerCase() === SECURITY_TYPE.API_KEY.toLowerCase();
+  const isApiKeyAuth =
+    authentication?.type?.toLowerCase() === SECURITY_TYPE.API_KEY.toLowerCase();
   return {
     authentication: authentication,
     headers: isApiKeyAuth ? [] : apiKeyHeaders,
@@ -459,7 +503,9 @@ const parseSecurity = (
  *
  * @returns Insomnia environment variables containing security information
  */
-const getSecurityEnvVariables = (securitySchemeObject?: OpenAPIV3.SecuritySchemeObject) => {
+const getSecurityEnvVariables = (
+  securitySchemeObject?: OpenAPIV3.SecuritySchemeObject,
+) => {
   if (!securitySchemeObject) {
     return {};
   }
@@ -467,37 +513,35 @@ const getSecurityEnvVariables = (securitySchemeObject?: OpenAPIV3.SecurityScheme
   const securitySchemes = Object.values(securitySchemeObject);
 
   const apiKeyVariableNames = securitySchemes
-    .filter(scheme => scheme.type === SECURITY_TYPE.API_KEY)
-    .map(scheme => toCamelCase(scheme.name));
+    .filter((scheme) => scheme.type === SECURITY_TYPE.API_KEY)
+    .map((scheme) => toCamelCase(scheme.name));
   const variables: Record<string, string> = {};
-  Array.from(new Set(apiKeyVariableNames)).forEach(name => {
+  Array.from(new Set(apiKeyVariableNames)).forEach((name) => {
     variables[name] = name;
   });
 
-  const hasHttpBasicScheme = securitySchemes.some(scheme => (
-    scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'basic'
-  ));
+  const hasHttpBasicScheme = securitySchemes.some(
+    (scheme) => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === "basic",
+  );
   if (hasHttpBasicScheme) {
-    variables.httpUsername = 'username';
-    variables.httpPassword = 'password';
+    variables.httpUsername = "username";
+    variables.httpPassword = "password";
   }
-  const hasHttpBearerScheme = securitySchemes.some(scheme => (
-    scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'bearer'
-  ));
+  const hasHttpBearerScheme = securitySchemes.some(
+    (scheme) =>
+      scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === "bearer",
+  );
   if (hasHttpBearerScheme) {
-    variables.bearerToken = 'bearerToken';
+    variables.bearerToken = "bearerToken";
   }
 
   const oauth2Variables = securitySchemes.reduce((accumulator, scheme) => {
     if (scheme.type === SECURITY_TYPE.OAUTH) {
-      accumulator.oauth2ClientId = 'clientId';
+      accumulator.oauth2ClientId = "clientId";
       const flows = scheme.flows || {};
 
-      if (
-        flows.authorizationCode ||
-        flows.implicit
-      ) {
-        accumulator.oauth2RedirectUrl = 'http://localhost/';
+      if (flows.authorizationCode || flows.implicit) {
+        accumulator.oauth2RedirectUrl = "http://localhost/";
       }
 
       if (
@@ -505,12 +549,12 @@ const getSecurityEnvVariables = (securitySchemeObject?: OpenAPIV3.SecurityScheme
         flows.clientCredentials ||
         flows.password
       ) {
-        accumulator.oauth2ClientSecret = 'clientSecret';
+        accumulator.oauth2ClientSecret = "clientSecret";
       }
 
       if (flows.password) {
-        accumulator.oauth2Username = 'username';
-        accumulator.oauth2Password = 'password';
+        accumulator.oauth2Username = "username";
+        accumulator.oauth2Password = "password";
       }
     }
 
@@ -528,12 +572,16 @@ const getSecurityEnvVariables = (securitySchemeObject?: OpenAPIV3.SecurityScheme
  *
  * If multiple types are available, the one for which an example can be generated will be selected first (i.e. application/json)
  */
-const prepareBody = (endpointSchema: OpenAPIV3.OperationObject): ImportRequest['body'] => {
-  const { content } = (endpointSchema.requestBody || { content: {} }) as OpenAPIV3.RequestBodyObject;
+const prepareBody = (
+  endpointSchema: OpenAPIV3.OperationObject,
+): ImportRequest["body"] => {
+  const { content } = (endpointSchema.requestBody || {
+    content: {},
+  }) as OpenAPIV3.RequestBodyObject;
 
   const mimeTypes = Object.keys(content);
-  const supportedMimeType = mimeTypes.find(reqMimeType => {
-    return SUPPORTED_MIME_TYPES.some(supportedMimeType => {
+  const supportedMimeType = mimeTypes.find((reqMimeType) => {
+    return SUPPORTED_MIME_TYPES.some((supportedMimeType) => {
       return reqMimeType.includes(supportedMimeType);
     });
   });
@@ -547,7 +595,9 @@ const prepareBody = (endpointSchema: OpenAPIV3.OperationObject): ImportRequest['
       };
     }
 
-    const example = generateParameterExample(bodyParameter.schema as OpenAPIV3.SchemaObject);
+    const example = generateParameterExample(
+      bodyParameter.schema as OpenAPIV3.SchemaObject,
+    );
     const text = JSON.stringify(example, null, 2);
     return {
       mimeType: MIMETYPE_JSON,
@@ -572,7 +622,7 @@ const prepareBody = (endpointSchema: OpenAPIV3.OperationObject): ImportRequest['
  * Converts openapi schema of parameters into insomnia one.
  */
 const convertParameters = (parameters: OpenAPIV3.ParameterObject[] = []) => {
-  return parameters.map(parameter => {
+  return parameters.map((parameter) => {
     const { required, name, schema } = parameter;
     return {
       name,
@@ -589,17 +639,17 @@ const convertParameters = (parameters: OpenAPIV3.ParameterObject[] = []) => {
 // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
 const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
   const typeExamples = {
-    string: () => 'string',
-    string_email: () => 'user@example.com',
-    'string_date-time': () => new Date().toISOString(),
-    string_byte: () => 'ZXhhbXBsZQ==',
+    string: () => "string",
+    string_email: () => "user@example.com",
+    "string_date-time": () => new Date().toISOString(),
+    string_byte: () => "ZXhhbXBsZQ==",
     number: () => 0,
     number_float: () => 0.0,
     number_double: () => 0.0,
     integer: () => 0,
     boolean: () => true,
     object: (schema: OpenAPIV3.SchemaObject) => {
-      const example: OpenAPIV3.SchemaObject['properties'] = {};
+      const example: OpenAPIV3.SchemaObject["properties"] = {};
       const { properties } = schema;
 
       if (properties) {
@@ -617,7 +667,7 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
       // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
       const value = generateParameterExample(schema.items);
 
-      if (schema.collectionFormat === 'csv') {
+      if (schema.collectionFormat === "csv") {
         return value;
       } else {
         return [value];
@@ -625,7 +675,7 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
     },
   };
 
-  if (typeof schema === 'string') {
+  if (typeof schema === "string") {
     // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
     return typeExamples[schema];
   }
@@ -663,12 +713,14 @@ const generateUniqueRequestId = (
   endpointSchema: OpenAPIV3.OperationObject<{ method?: string; path?: string }>,
 ) => {
   // `operationId` is already unique to the workspace, so we can just use that, combined with the workspace id to get something globally unique
-  const uniqueKey = endpointSchema.operationId || `[${endpointSchema.method}]${endpointSchema.path}`;
+  const uniqueKey =
+    endpointSchema.operationId ||
+    `[${endpointSchema.method}]${endpointSchema.path}`;
 
   const hash = crypto
-    .createHash('sha1')
+    .createHash("sha1")
     .update(uniqueKey)
-    .digest('hex')
+    .digest("hex")
     .slice(0, 8);
 
   // Suffix the ID with a counter in case we try creating two with the same hash
@@ -678,23 +730,23 @@ const generateUniqueRequestId = (
     requestCounts[hash] = 0;
   }
 
-  return `req_${WORKSPACE_ID}${hash}${requestCounts[hash] || ''}`;
+  return `req_${WORKSPACE_ID}${hash}${requestCounts[hash] || ""}`;
 };
 
 const parseHttpAuth = (scheme: string) => {
   switch (scheme) {
     case HTTP_AUTH_SCHEME.BASIC:
       return {
-        type: 'basic',
-        username: '{{ _.httpUsername }}',
-        password: '{{ _.httpPassword }}',
+        type: "basic",
+        username: "{{ _.httpUsername }}",
+        password: "{{ _.httpPassword }}",
       };
 
     case HTTP_AUTH_SCHEME.BEARER:
       return {
-        type: 'bearer',
-        token: '{{ _.bearerToken }}',
-        prefix: '',
+        type: "bearer",
+        token: "{{ _.bearerToken }}",
+        prefix: "",
       };
 
     default:
@@ -713,33 +765,36 @@ const parseApiKeyAuth = (schemeDetails: OpenAPIV3.ApiKeySecurityScheme) => {
 };
 
 const parseOAuth2Scopes = (
-  flow: OpenAPIV3.OAuth2SecurityScheme['flows'][keyof OpenAPIV3.OAuth2SecurityScheme['flows']],
-  selectedScopes: string[]
+  flow: OpenAPIV3.OAuth2SecurityScheme["flows"][keyof OpenAPIV3.OAuth2SecurityScheme["flows"]],
+  selectedScopes: string[],
 ) => {
   if (!flow?.scopes) {
-    return '';
+    return "";
   }
 
   const scopes = Object.keys(flow.scopes || {});
-  return scopes.filter(scope => selectedScopes.includes(scope)).join(' ');
+  return scopes.filter((scope) => selectedScopes.includes(scope)).join(" ");
 };
 
 const mapOAuth2GrantType = (
-  grantType: keyof OpenAPIV3.OAuth2SecurityScheme['flows'],
+  grantType: keyof OpenAPIV3.OAuth2SecurityScheme["flows"],
 ) => {
   const types = {
-    [OAUTH_FLOWS.AUTHORIZATION_CODE]: 'authorization_code',
-    [OAUTH_FLOWS.CLIENT_CREDENTIALS]: 'client_credentials',
-    [OAUTH_FLOWS.IMPLICIT]: 'implicit',
-    [OAUTH_FLOWS.PASSWORD]: 'password',
+    [OAUTH_FLOWS.AUTHORIZATION_CODE]: "authorization_code",
+    [OAUTH_FLOWS.CLIENT_CREDENTIALS]: "client_credentials",
+    [OAUTH_FLOWS.IMPLICIT]: "implicit",
+    [OAUTH_FLOWS.PASSWORD]: "password",
   };
   return types[grantType];
 };
 
-const parseOAuth2 = (scheme: OpenAPIV3.OAuth2SecurityScheme, selectedScopes: string[]) => {
+const parseOAuth2 = (
+  scheme: OpenAPIV3.OAuth2SecurityScheme,
+  selectedScopes: string[],
+) => {
   const flows = Object.keys(
     scheme.flows,
-  ) as (keyof OpenAPIV3.OAuth2SecurityScheme['flows'])[];
+  ) as (keyof OpenAPIV3.OAuth2SecurityScheme["flows"])[];
 
   if (!flows.length) {
     return {};
@@ -753,43 +808,53 @@ const parseOAuth2 = (scheme: OpenAPIV3.OAuth2SecurityScheme, selectedScopes: str
   }
 
   const base = {
-    clientId: '{{ _.oauth2ClientId }}',
+    clientId: "{{ _.oauth2ClientId }}",
     grantType: mapOAuth2GrantType(grantType),
     scope: parseOAuth2Scopes(flow, selectedScopes),
-    type: 'oauth2',
+    type: "oauth2",
   };
 
   switch (grantType) {
     case OAUTH_FLOWS.AUTHORIZATION_CODE:
       return {
         ...base,
-        clientSecret: '{{ _.oauth2ClientSecret }}',
-        redirectUrl: '{{ _.oauth2RedirectUrl }}',
-        accessTokenUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.AUTHORIZATION_CODE])?.tokenUrl,
-        authorizationUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.AUTHORIZATION_CODE])?.authorizationUrl,
+        clientSecret: "{{ _.oauth2ClientSecret }}",
+        redirectUrl: "{{ _.oauth2RedirectUrl }}",
+        accessTokenUrl: (
+          flow as OpenAPIV3.OAuth2SecurityScheme["flows"][typeof OAUTH_FLOWS.AUTHORIZATION_CODE]
+        )?.tokenUrl,
+        authorizationUrl: (
+          flow as OpenAPIV3.OAuth2SecurityScheme["flows"][typeof OAUTH_FLOWS.AUTHORIZATION_CODE]
+        )?.authorizationUrl,
       };
 
     case OAUTH_FLOWS.CLIENT_CREDENTIALS:
       return {
         ...base,
-        clientSecret: '{{ _.oauth2ClientSecret }}',
-        accessTokenUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.CLIENT_CREDENTIALS])?.tokenUrl,
+        clientSecret: "{{ _.oauth2ClientSecret }}",
+        accessTokenUrl: (
+          flow as OpenAPIV3.OAuth2SecurityScheme["flows"][typeof OAUTH_FLOWS.CLIENT_CREDENTIALS]
+        )?.tokenUrl,
       };
 
     case OAUTH_FLOWS.IMPLICIT:
       return {
         ...base,
-        redirectUrl: '{{ _.oauth2RedirectUrl }}',
-        authorizationUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.IMPLICIT])?.authorizationUrl,
+        redirectUrl: "{{ _.oauth2RedirectUrl }}",
+        authorizationUrl: (
+          flow as OpenAPIV3.OAuth2SecurityScheme["flows"][typeof OAUTH_FLOWS.IMPLICIT]
+        )?.authorizationUrl,
       };
 
     case OAUTH_FLOWS.PASSWORD:
       return {
         ...base,
-        clientSecret: '{{ _.oauth2ClientSecret }}',
-        username: '{{ _.oauth2Username }}',
-        password: '{{ _.oauth2Password }}',
-        accessTokenUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.PASSWORD])?.tokenUrl,
+        clientSecret: "{{ _.oauth2ClientSecret }}",
+        username: "{{ _.oauth2Username }}",
+        password: "{{ _.oauth2Password }}",
+        accessTokenUrl: (
+          flow as OpenAPIV3.OAuth2SecurityScheme["flows"][typeof OAUTH_FLOWS.PASSWORD]
+        )?.tokenUrl,
       };
 
     default:
@@ -797,7 +862,7 @@ const parseOAuth2 = (scheme: OpenAPIV3.OAuth2SecurityScheme, selectedScopes: str
   }
 };
 
-export const convert: Converter = async rawData => {
+export const convert: Converter = async (rawData) => {
   // Reset
   requestCounts = {};
 
@@ -809,41 +874,36 @@ export const convert: Converter = async rawData => {
   }
 
   try {
-    apiDocument = await SwaggerParser.validate(apiDocument, {
+    apiDocument = (await SwaggerParser.validate(apiDocument, {
       dereference: {
-        circular: 'ignore',
+        circular: "ignore",
       },
-    }) as OpenAPIV3.Document;
+    })) as OpenAPIV3.Document;
   } catch (err) {
-    console.log('[openapi-3] Import file validation failed', err);
+    console.log("[openapi-3] Import file validation failed", err);
   }
 
   // Import
   const workspace: ImportRequest = {
-    _type: 'workspace',
+    _type: "workspace",
     _id: WORKSPACE_ID,
     parentId: null,
     name: `${apiDocument.info.title} ${apiDocument.info.version}`,
-    description: apiDocument.info.description || '', // scope is not set because it could be imported for design OR to generate requests
+    description: apiDocument.info.description || "", // scope is not set because it could be imported for design OR to generate requests
   };
 
   const baseEnv: ImportRequest = {
-    _type: 'environment',
-    _id: '__BASE_ENVIRONMENT_ID__',
+    _type: "environment",
+    _id: "__BASE_ENVIRONMENT_ID__",
     parentId: WORKSPACE_ID,
-    name: 'Base environment',
+    name: "Base environment",
     data: {
-      base_url: '{{ _.scheme }}://{{ _.host }}{{ _.base_path }}',
+      base_url: "{{ _.scheme }}://{{ _.host }}{{ _.base_path }}",
     },
   };
 
   const openapiEnvs = parseEnvs(baseEnv, apiDocument);
   const endpoints = parseEndpoints(apiDocument);
 
-  return [
-    workspace,
-    baseEnv,
-    ...openapiEnvs,
-    ...endpoints,
-  ];
+  return [workspace, baseEnv, ...openapiEnvs, ...endpoints];
 };

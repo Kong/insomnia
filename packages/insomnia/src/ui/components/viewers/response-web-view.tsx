@@ -1,4 +1,4 @@
-import React, { type FC, useEffect, useRef } from 'react';
+import React, { type FC, useEffect, useRef } from "react";
 
 interface Props {
   body: string;
@@ -12,17 +12,22 @@ export const ResponseWebView: FC<Props> = ({ webpreferences, body, url }) => {
     const webview = webviewRef.current;
     const handleDOMReady = () => {
       if (webview) {
-        webview.removeEventListener('dom-ready', handleDOMReady);
-        const bodyWithBase = body.replace('<head>', `<head><base href="${url}">`);
-        webview.loadURL(`data:text/html; charset=utf-8,${encodeURIComponent(bodyWithBase)}`);
+        webview.removeEventListener("dom-ready", handleDOMReady);
+        const bodyWithBase = body.replace(
+          "<head>",
+          `<head><base href="${url}">`,
+        );
+        webview.loadURL(
+          `data:text/html; charset=utf-8,${encodeURIComponent(bodyWithBase)}`,
+        );
       }
     };
     if (webview) {
-      webview.addEventListener('dom-ready', handleDOMReady);
+      webview.addEventListener("dom-ready", handleDOMReady);
     }
     return () => {
       if (webview) {
-        webview.removeEventListener('dom-ready', handleDOMReady);
+        webview.removeEventListener("dom-ready", handleDOMReady);
       }
     };
   }, [body, url]);

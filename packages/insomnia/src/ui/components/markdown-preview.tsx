@@ -1,8 +1,14 @@
-import highlight from 'highlight.js/lib/common';
-import React, { type FC, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import highlight from "highlight.js/lib/common";
+import React, {
+  type FC,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
-import { markdownToHTML } from '../../common/markdown-to-html';
-import type { HandleRender } from '../../templating/types';
+import { markdownToHTML } from "../../common/markdown-to-html";
+import type { HandleRender } from "../../templating/types";
 
 interface Props {
   markdown: string;
@@ -13,8 +19,8 @@ interface Props {
 
 export const MarkdownPreview: FC<Props> = ({ markdown, heading }) => {
   const divRef = useRef<HTMLDivElement>(null);
-  const [compiled, setCompiled] = useState('');
-  const [error, setError] = useState('');
+  const [compiled, setCompiled] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let shouldUpdate = true;
@@ -22,9 +28,9 @@ export const MarkdownPreview: FC<Props> = ({ markdown, heading }) => {
       try {
         const compiled = markdownToHTML(markdown);
         shouldUpdate && setCompiled(compiled);
-        shouldUpdate && setError('');
+        shouldUpdate && setError("");
       } catch (err) {
-        shouldUpdate && setCompiled('');
+        shouldUpdate && setCompiled("");
         shouldUpdate && setError(err.message);
       }
     };
@@ -37,28 +43,35 @@ export const MarkdownPreview: FC<Props> = ({ markdown, heading }) => {
     if (!divRef.current) {
       return;
     }
-    for (const block of divRef.current.querySelectorAll('pre > code')) {
+    for (const block of divRef.current.querySelectorAll("pre > code")) {
       if (block instanceof HTMLElement) {
         highlight.highlightElement(block);
       }
     }
-    for (const a of divRef.current.querySelectorAll('a')) {
-      a.title = `Open ${a.getAttribute('href')} in browser`;
-      a.removeEventListener('click', _handleClickLink);
-      a.addEventListener('click', _handleClickLink);
+    for (const a of divRef.current.querySelectorAll("a")) {
+      a.title = `Open ${a.getAttribute("href")} in browser`;
+      a.removeEventListener("click", _handleClickLink);
+      a.addEventListener("click", _handleClickLink);
     }
   }, [compiled]);
   const _handleClickLink = (event: any) => {
     event.preventDefault();
-    window.main.openInBrowser(event.target.getAttribute('href'));
+    window.main.openInBrowser(event.target.getAttribute("href"));
   };
 
   return (
     <div ref={divRef}>
-      {error ? <p className="notice error no-margin">Failed to render: {error}</p> : null}
+      {error ? (
+        <p className="notice error no-margin">Failed to render: {error}</p>
+      ) : null}
       <div className="selectable">
-        {heading ? <h1 className="markdown-preview__content-title">{heading}</h1> : null}
-        <div className="markdown-preview__content" dangerouslySetInnerHTML={{ __html: compiled }} />
+        {heading ? (
+          <h1 className="markdown-preview__content-title">{heading}</h1>
+        ) : null}
+        <div
+          className="markdown-preview__content"
+          dangerouslySetInnerHTML={{ __html: compiled }}
+        />
       </div>
     </div>
   );

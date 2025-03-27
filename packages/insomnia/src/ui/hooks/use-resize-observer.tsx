@@ -1,11 +1,14 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 export interface Size {
   width: number | undefined;
   height: number | undefined;
 }
 
-export const useResizeObserver = (ref: React.RefObject<HTMLElement>, onResize: (size: Size) => void) => {
+export const useResizeObserver = (
+  ref: React.RefObject<HTMLElement>,
+  onResize: (size: Size) => void,
+) => {
   const onResizeRef = useRef<((size: Size) => void) | undefined>(undefined);
   onResizeRef.current = onResize;
 

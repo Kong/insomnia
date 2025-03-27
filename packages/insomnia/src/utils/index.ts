@@ -1,9 +1,14 @@
-import type { Key } from 'react-stately';
+import type { Key } from "react-stately";
 
-export const scrollElementIntoView = (element: HTMLElement, options?: ScrollIntoViewOptions) => {
+export const scrollElementIntoView = (
+  element: HTMLElement,
+  options?: ScrollIntoViewOptions,
+) => {
   if (element) {
     // @ts-expect-error -- scrollIntoViewIfNeeded is not a standard method
-    element.scrollIntoViewIfNeeded ? element.scrollIntoViewIfNeeded() : element.scrollIntoView(options);
+    element.scrollIntoViewIfNeeded
+      ? element.scrollIntoViewIfNeeded()
+      : element.scrollIntoView(options);
   }
 };
 
@@ -11,9 +16,9 @@ export const scrollElementIntoView = (element: HTMLElement, options?: ScrollInto
 // https://github.com/adobe/react-spectrum/blob/main/packages/%40react-stately/data/src/useListData.ts#L279
 function move<T>(list: T[], indices: number[], toIndex: number): T[] {
   // Shift the target down by the number of items being moved from before the target
-  toIndex -= indices.filter(index => index < toIndex).length;
+  toIndex -= indices.filter((index) => index < toIndex).length;
 
-  const moves = indices.map(from => ({
+  const moves = indices.map((from) => ({
     from,
     to: toIndex++,
   }));
@@ -53,24 +58,28 @@ function move<T>(list: T[], indices: number[], toIndex: number): T[] {
   return copy;
 }
 export const moveBefore = (list: any[], key: Key, keys: Iterable<Key>) => {
-  const toIndex = list.findIndex(item => item.id === key);
+  const toIndex = list.findIndex((item) => item.id === key);
   if (toIndex === -1) {
     return list;
   }
 
   // Find indices of keys to move. Sort them so that the order in the list is retained.
   const keyArray = Array.isArray(keys) ? keys : [...keys];
-  const indices = keyArray.map(key => list.findIndex(item => item.id === key)).sort((a, b) => a - b);
+  const indices = keyArray
+    .map((key) => list.findIndex((item) => item.id === key))
+    .sort((a, b) => a - b);
   return move(list, indices, toIndex);
 };
 
 export const moveAfter = (list: any[], key: Key, keys: Iterable<Key>) => {
-  const toIndex = list.findIndex(item => item.id === key);
+  const toIndex = list.findIndex((item) => item.id === key);
   if (toIndex === -1) {
     return list;
   }
 
   const keyArray = Array.isArray(keys) ? keys : [...keys];
-  const indices = keyArray.map(key => list.findIndex(item => item.id === key)).sort((a, b) => a - b);
+  const indices = keyArray
+    .map((key) => list.findIndex((item) => item.id === key))
+    .sort((a, b) => a - b);
   return move(list, indices, toIndex + 1);
 };

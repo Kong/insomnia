@@ -1,29 +1,29 @@
 const background = {
-  success: '#3d9c62',
-  notice: '#bb9700',
-  warning: '#d6803e',
-  danger: '#da5b56',
-  info: '#003052',
-  surprise: '#6030BF',
+  success: "#3d9c62",
+  notice: "#bb9700",
+  warning: "#d6803e",
+  danger: "#da5b56",
+  info: "#003052",
+  surprise: "#6030BF",
 };
 
 export default {
-  name: 'studio-light',
-  displayName: 'Designer Light',
+  name: "studio-light",
+  displayName: "Designer Light",
   theme: {
     foreground: {
-      default: '#555',
+      default: "#555",
     },
     background,
     styles: {
       appHeader: {
         background: {
-          default: '#f7fafc',
+          default: "#f7fafc",
         },
       },
       link: {
         foreground: {
-          default: '#68a9a2',
+          default: "#68a9a2",
         },
       },
       editor: {
@@ -34,30 +34,30 @@ export default {
       },
       dialog: {
         background: {
-          info: '#005B9E',
+          info: "#005B9E",
         },
       },
       sidebar: {
         background: {
-          default: '#f7fafc',
-          success: '#50a14f',
-          notice: '#c18401',
-          warning: '#c18401',
-          danger: '#e45649',
-          surprise: '#6030BF',
-          info: '#0184bc',
+          default: "#f7fafc",
+          success: "#50a14f",
+          notice: "#c18401",
+          warning: "#c18401",
+          danger: "#e45649",
+          surprise: "#6030BF",
+          info: "#0184bc",
         },
         foreground: {
-          default: '#444',
+          default: "#444",
         },
         highlight: {},
       },
       transparentOverlay: {
         background: {
-          default: 'rgba(230,240,250,0.8)',
+          default: "rgba(230,240,250,0.8)",
         },
         foreground: {
-          default: '#555',
+          default: "#555",
         },
       },
     },

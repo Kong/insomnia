@@ -1,16 +1,13 @@
-import React, { type FC } from 'react';
+import React, { type FC } from "react";
 
-import { AuthInputRow } from './components/auth-input-row';
-import { AuthTableBody } from './components/auth-table-body';
-import { AuthToggleRow } from './components/auth-toggle-row';
+import { AuthInputRow } from "./components/auth-input-row";
+import { AuthTableBody } from "./components/auth-table-body";
+import { AuthToggleRow } from "./components/auth-toggle-row";
 
 export const AWSAuth: FC = () => (
   <AuthTableBody>
     <AuthToggleRow label="Enabled" property="disabled" invert />
-    <AuthInputRow
-      label="Access Key ID"
-      property="accessKeyId"
-    />
+    <AuthInputRow label="Access Key ID" property="accessKeyId" />
     <AuthInputRow
       label="Secret Access Key"
       property="secretAccessKey"

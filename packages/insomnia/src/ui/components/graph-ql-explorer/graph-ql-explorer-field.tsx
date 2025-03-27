@@ -1,10 +1,10 @@
-import type { GraphQLType } from 'graphql';
-import React, { Fragment, PureComponent } from 'react';
+import type { GraphQLType } from "graphql";
+import React, { Fragment, PureComponent } from "react";
 
-import { MarkdownPreview } from '../markdown-preview';
-import { GraphQLDefaultValue } from './graph-ql-default-value';
-import { GraphQLExplorerTypeLink } from './graph-ql-explorer-type-link';
-import type { GraphQLFieldWithParentName } from './graph-ql-types';
+import { MarkdownPreview } from "../markdown-preview";
+import { GraphQLDefaultValue } from "./graph-ql-default-value";
+import { GraphQLExplorerTypeLink } from "./graph-ql-explorer-type-link";
+import type { GraphQLFieldWithParentName } from "./graph-ql-types";
 
 interface Props {
   onNavigateType: (type: GraphQLType) => void;
@@ -14,7 +14,9 @@ interface Props {
 export class GraphQLExplorerField extends PureComponent<Props> {
   renderDescription() {
     const { field } = this.props;
-    return <MarkdownPreview markdown={field.description || '*no description*'} />;
+    return (
+      <MarkdownPreview markdown={field.description || "*no description*"} />
+    );
   }
 
   renderType() {
@@ -22,7 +24,10 @@ export class GraphQLExplorerField extends PureComponent<Props> {
     return (
       <Fragment>
         <h2 className="graphql-explorer__subheading">Type</h2>
-        <GraphQLExplorerTypeLink type={field.type} onNavigate={onNavigateType} />
+        <GraphQLExplorerTypeLink
+          type={field.type}
+          onNavigate={onNavigateType}
+        />
       </Fragment>
     );
   }
@@ -38,11 +43,14 @@ export class GraphQLExplorerField extends PureComponent<Props> {
       <Fragment>
         <h2 className="graphql-explorer__subheading">Arguments</h2>
         <ul className="graphql-explorer__defs">
-          {field.args.map(a => {
+          {field.args.map((a) => {
             return (
               <li key={a.name}>
-                <span className="info">{a.name}</span>:{' '}
-                <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={a.type} />
+                <span className="info">{a.name}</span>:{" "}
+                <GraphQLExplorerTypeLink
+                  onNavigate={onNavigateType}
+                  type={a.type}
+                />
                 <GraphQLDefaultValue
                   // @ts-expect-error -- TSCONVERSION
                   field={a}

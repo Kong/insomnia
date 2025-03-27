@@ -1,42 +1,39 @@
-import { fail } from 'assert';
-import { describe, expect, it } from 'vitest';
+import { fail } from "assert";
+import { describe, expect, it } from "vitest";
 
-import { convert, dotInKeyNameInvariant } from '../convert';
+import { convert, dotInKeyNameInvariant } from "../convert";
 
-describe('Import errors', () => {
-  it('fail to find importer', async () => {
+describe("Import errors", () => {
+  it("fail to find importer", async () => {
     try {
-      await convert('foo');
-      fail('Should have thrown error');
+      await convert("foo");
+      fail("Should have thrown error");
     } catch (err) {
-      expect(err.message).toBe('No importers found for file');
+      expect(err.message).toBe("No importers found for file");
     }
   });
 });
 
-describe('test dotInKeyNameInvariant', () => {
+describe("test dotInKeyNameInvariant", () => {
   [
     {
       input: {
-        '.hehe': 'haha',
+        ".hehe": "haha",
       },
       noError: false,
     },
     {
       input: {
-        '.': '',
-        'arr': [''],
+        ".": "",
+        arr: [""],
       },
       noError: false,
     },
     {
-      input: [
-        '',
-        1,
-      ],
+      input: ["", 1],
       noError: true,
     },
-  ].forEach(testCase => {
+  ].forEach((testCase) => {
     it(`check: ${testCase.input}`, () => {
       let e: Error | undefined = undefined;
 

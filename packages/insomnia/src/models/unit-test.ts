@@ -1,11 +1,11 @@
-import { database as db } from '../common/database';
-import type { BaseModel } from './index';
+import { database as db } from "../common/database";
+import type { BaseModel } from "./index";
 
-export const name = 'Unit Test';
+export const name = "Unit Test";
 
-export const type = 'UnitTest';
+export const type = "UnitTest";
 
-export const prefix = 'ut';
+export const prefix = "ut";
 
 export const canDuplicate = true;
 
@@ -19,15 +19,14 @@ interface BaseUnitTest {
 
 export type UnitTest = BaseModel & BaseUnitTest;
 
-export const isUnitTest = (model: Pick<BaseModel, 'type'>): model is UnitTest => (
-  model.type === type
-);
+export const isUnitTest = (model: Pick<BaseModel, "type">): model is UnitTest =>
+  model.type === type;
 
 export function init() {
   return {
     requestId: null,
-    name: 'My Test',
-    code: '',
+    name: "My Test",
+    code: "",
     metaSortKey: -1 * Date.now(),
   };
 }
@@ -38,7 +37,7 @@ export function migrate(doc: UnitTest) {
 
 export function create(patch: Partial<UnitTest> = {}) {
   if (!patch.parentId) {
-    throw new Error('New UnitTest missing `parentId` ' + JSON.stringify(patch));
+    throw new Error("New UnitTest missing `parentId` " + JSON.stringify(patch));
   }
 
   return db.docCreate<UnitTest>(type, patch);

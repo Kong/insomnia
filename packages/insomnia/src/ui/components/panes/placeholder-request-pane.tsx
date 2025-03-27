@@ -1,24 +1,31 @@
-import React, { type FC, useCallback } from 'react';
-import { useFetcher, useParams } from 'react-router-dom';
+import React, { type FC, useCallback } from "react";
+import { useFetcher, useParams } from "react-router-dom";
 
-import { useRootLoaderData } from '../../routes/root';
-import { Hotkey } from '../hotkey';
-import { Pane, PaneBody, PaneHeader } from './pane';
+import { useRootLoaderData } from "../../routes/root";
+import { Hotkey } from "../hotkey";
+import { Pane, PaneBody, PaneHeader } from "./pane";
 
 export const PlaceholderRequestPane: FC = () => {
-  const {
-    settings,
-  } = useRootLoaderData();
+  const { settings } = useRootLoaderData();
   const { hotKeyRegistry } = settings;
   const requestFetcher = useFetcher();
-  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
-  const createHttpRequest = useCallback(() =>
-    requestFetcher.submit({ requestType: 'HTTP', parentId: workspaceId },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
-        method: 'post',
-        encType: 'application/json',
-      }), [requestFetcher, organizationId, projectId, workspaceId]);
+  const { organizationId, projectId, workspaceId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  };
+  const createHttpRequest = useCallback(
+    () =>
+      requestFetcher.submit(
+        { requestType: "HTTP", parentId: workspaceId },
+        {
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
+          method: "post",
+          encType: "application/json",
+        },
+      ),
+    [requestFetcher, organizationId, projectId, workspaceId],
+  );
 
   return (
     <Pane type="request">
@@ -63,8 +70,11 @@ export const PlaceholderRequestPane: FC = () => {
             </tbody>
           </table>
 
-          <div className="text-center pane__body--placeholder__cta">
-            <button className="btn inline-block btn--clicky" onClick={createHttpRequest}>
+          <div className="pane__body--placeholder__cta text-center">
+            <button
+              className="btn btn--clicky inline-block"
+              onClick={createHttpRequest}
+            >
               New HTTP Request
             </button>
           </div>

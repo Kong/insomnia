@@ -1,4 +1,4 @@
-declare module 'yaml-source-map' {
+declare module "yaml-source-map" {
   interface Location {
     filename?: string;
     start: {

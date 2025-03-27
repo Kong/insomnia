@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { Button } from 'react-aria-components';
-import { useFetcher } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { Button } from "react-aria-components";
+import { useFetcher } from "react-router-dom";
 
-import type { GitCredentials } from '../../../../models/git-credentials';
-import type { GitRepository } from '../../../../models/git-repository';
-import { Icon } from '../../icon';
-import { showAlert } from '..';
+import type { GitCredentials } from "../../../../models/git-credentials";
+import type { GitRepository } from "../../../../models/git-repository";
+import { Icon } from "../../icon";
+import { showAlert } from "..";
 
 interface Props {
   uri?: string;
@@ -17,8 +17,8 @@ export const GitLabRepositorySetupFormGroup = (props: Props) => {
   const gitlabTokenLoader = useFetcher<GitCredentials>();
 
   useEffect(() => {
-    if (!gitlabTokenLoader.data && gitlabTokenLoader.state === 'idle') {
-      gitlabTokenLoader.load('/git-credentials/gitlab');
+    if (!gitlabTokenLoader.data && gitlabTokenLoader.state === "idle") {
+      gitlabTokenLoader.load("/git-credentials/gitlab");
     }
   }, [gitlabTokenLoader]);
 
@@ -38,7 +38,7 @@ export const GitLabRepositorySetupFormGroup = (props: Props) => {
 };
 
 const Avatar = ({ src }: { src: string }) => {
-  const [imageSrc, setImageSrc] = useState('');
+  const [imageSrc, setImageSrc] = useState("");
 
   useEffect(() => {
     const img = new Image();
@@ -50,20 +50,20 @@ const Avatar = ({ src }: { src: string }) => {
     }
 
     function onError() {
-      setImageSrc('');
+      setImageSrc("");
     }
 
-    img.addEventListener('load', onLoad);
-    img.addEventListener('error', onError);
+    img.addEventListener("load", onLoad);
+    img.addEventListener("error", onError);
 
     return () => {
-      img.removeEventListener('load', onLoad);
-      img.removeEventListener('error', onError);
+      img.removeEventListener("load", onLoad);
+      img.removeEventListener("error", onError);
     };
   }, [src]);
 
   return imageSrc ? (
-    <img src={imageSrc} className="rounded-md w-8 h-8" />
+    <img src={imageSrc} className="h-8 w-8 rounded-md" />
   ) : (
     <i className="fas fa-user-circle" />
   );
@@ -80,7 +80,7 @@ const GitLabRepositoryForm = ({
   credentials,
   onSubmit,
 }: GitLabRepositoryFormProps) => {
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const signOutFetcher = useFetcher();
 
@@ -88,41 +88,39 @@ const GitLabRepositoryForm = ({
     <form
       id="gitlab"
       className="flex flex-col gap-4"
-      onSubmit={event => {
+      onSubmit={(event) => {
         event.preventDefault();
         onSubmit({
-          uri: (new FormData(event.currentTarget).get('uri') as string) ?? '',
+          uri: (new FormData(event.currentTarget).get("uri") as string) ?? "",
           author: {
             name: credentials.author.name,
             email: credentials.author.email,
           },
           credentials: {
-            token: '',
-            username: '',
-            oauth2format: 'gitlab',
+            token: "",
+            username: "",
+            oauth2format: "gitlab",
           },
         });
       }}
     >
-      <div
-        className='flex justify-between items-center border border-solid border-[--hl-sm] rounded-md p-2'
-      >
-        <div className="flex gap-2 items-center">
-          <Avatar src={credentials.author.avatarUrl ?? ''} />
-          <div className='flex flex-col'>
+      <div className="flex items-center justify-between rounded-md border border-solid border-[--hl-sm] p-2">
+        <div className="flex items-center gap-2">
+          <Avatar src={credentials.author.avatarUrl ?? ""} />
+          <div className="flex flex-col">
             <span
               style={{
-                fontSize: 'var(--font-size-lg)',
+                fontSize: "var(--font-size-lg)",
               }}
             >
               {credentials.author.name}
             </span>
             <span
               style={{
-                fontSize: 'var(--font-size-md)',
+                fontSize: "var(--font-size-md)",
               }}
             >
-              {credentials.author.email || 'Signed in'}
+              {credentials.author.email || "Signed in"}
             </span>
           </div>
         </div>
@@ -130,12 +128,18 @@ const GitLabRepositoryForm = ({
           type="button"
           onPress={() => {
             showAlert({
-              title: 'Sign out of GitLab',
+              title: "Sign out of GitLab",
               message:
-                'Are you sure you want to sign out? You will need to re-authenticate with GitLab to use this feature.',
-              okLabel: 'Sign out',
+                "Are you sure you want to sign out? You will need to re-authenticate with GitLab to use this feature.",
+              okLabel: "Sign out",
               onConfirm: () => {
-                signOutFetcher.submit({}, { action: '/git-credentials/gitlab/sign-out', method: 'POST' });
+                signOutFetcher.submit(
+                  {},
+                  {
+                    action: "/git-credentials/gitlab/sign-out",
+                    method: "POST",
+                  },
+                );
               },
             });
           }}
@@ -160,7 +164,7 @@ const GitLabRepositoryForm = ({
       </div>
       {error && (
         <p className="notice error margin-bottom-sm">
-          <button className="pull-right icon" onClick={() => setError('')}>
+          <button className="pull-right icon" onClick={() => setError("")}>
             <i className="fa fa-times" />
           </button>
           {error}
@@ -171,50 +175,58 @@ const GitLabRepositoryForm = ({
 };
 
 const GitLabSignInForm = () => {
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const initSignInFetcher = useFetcher();
   const completeSignInFetcher = useFetcher();
 
   return (
-    <div
-      className='flex items-center justify-center flex-col border border-solid border-[--hl-sm] p-4'
-    >
+    <div className="flex flex-col items-center justify-center border border-solid border-[--hl-sm] p-4">
       <Button
         onPress={() => {
           setIsAuthenticating(true);
-          initSignInFetcher.submit({}, { action: '/git-credentials/gitlab/init-sign-in', method: 'POST' });
+          initSignInFetcher.submit(
+            {},
+            { action: "/git-credentials/gitlab/init-sign-in", method: "POST" },
+          );
         }}
       >
-        <Icon icon={['fab', 'gitlab']} />
-        {isAuthenticating ? 'Authenticating' : 'Authenticate'} with GitLab
+        <Icon icon={["fab", "gitlab"]} />
+        {isAuthenticating ? "Authenticating" : "Authenticate"} with GitLab
       </Button>
 
       {isAuthenticating && (
         <form
-          onSubmit={event => {
+          onSubmit={(event) => {
             event.preventDefault();
             event.stopPropagation();
             const formData = new FormData(event.currentTarget);
-            const link = formData.get('link');
-            if (typeof link === 'string') {
+            const link = formData.get("link");
+            if (typeof link === "string") {
               let parsedURL: URL;
               try {
                 parsedURL = new URL(link);
               } catch {
-                setError('Invalid URL');
+                setError("Invalid URL");
                 return;
               }
 
-              const code = parsedURL.searchParams.get('code');
-              const state = parsedURL.searchParams.get('state');
+              const code = parsedURL.searchParams.get("code");
+              const state = parsedURL.searchParams.get("state");
 
-              if (!(typeof code === 'string') || !(typeof state === 'string')) {
-                setError('Incomplete URL');
+              if (!(typeof code === "string") || !(typeof state === "string")) {
+                setError("Incomplete URL");
                 return;
               }
 
-              completeSignInFetcher.submit({ code, state }, { action: '/git-credentials/gitlab/complete-sign-in', method: 'POST', encType: 'application/json' });
+              completeSignInFetcher.submit(
+                { code, state },
+                {
+                  action: "/git-credentials/gitlab/complete-sign-in",
+                  method: "POST",
+                  encType: "application/json",
+                },
+              );
             }
           }}
         >
@@ -225,12 +237,14 @@ const GitLabSignInForm = () => {
             </div>
             <div className="form-row">
               <input name="link" />
-              <Button type="submit" name="add-token">Authenticate</Button>
+              <Button type="submit" name="add-token">
+                Authenticate
+              </Button>
             </div>
           </label>
           {error && (
             <p className="notice error margin-bottom-sm">
-              <Button className="pull-right icon" onPress={() => setError('')}>
+              <Button className="pull-right icon" onPress={() => setError("")}>
                 <i className="fa fa-times" />
               </Button>
               {error}

@@ -1,21 +1,25 @@
-import { EventEmitter } from 'events';
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
-import { vi } from 'vitest';
+import { EventEmitter } from "events";
+import fs from "fs";
+import os from "os";
+import path from "path";
+import { vi } from "vitest";
 
-const RANDOM_STRING = Math.random().toString().replace('.', '');
+const RANDOM_STRING = Math.random().toString().replace(".", "");
 
 const remote = {
   app: {
     getPath(name: string) {
-      const dir = path.join(os.tmpdir(), `insomnia-tests-${RANDOM_STRING}`, name);
+      const dir = path.join(
+        os.tmpdir(),
+        `insomnia-tests-${RANDOM_STRING}`,
+        name,
+      );
       fs.mkdirSync(dir, { recursive: true });
       return dir;
     },
 
     getLocale() {
-      return 'en-US';
+      return "en-US";
     },
 
     exit: vi.fn(),

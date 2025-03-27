@@ -1,30 +1,34 @@
-import React, { type FC, memo } from 'react';
+import React, { type FC, memo } from "react";
 
-import { docsBase } from '../../../common/documentation';
-import { useRootLoaderData } from '../../routes/root';
-import { Link } from '../base/link';
-import { showModal } from '../modals/index';
-import { SettingsModal } from '../modals/settings-modal';
+import { docsBase } from "../../../common/documentation";
+import { useRootLoaderData } from "../../routes/root";
+import { Link } from "../base/link";
+import { showModal } from "../modals/index";
+import { SettingsModal } from "../modals/settings-modal";
 interface Props {
   error: string;
   url: string;
 }
 export const ResponseErrorViewer: FC<Props> = memo(({ error }) => {
   let msg: React.ReactNode = null;
-  const {
-    settings,
-  } = useRootLoaderData();
+  const { settings } = useRootLoaderData();
   const { editorFontSize } = settings;
 
-  if (error?.toLowerCase().indexOf('certificate') !== -1) {
+  if (error?.toLowerCase().indexOf("certificate") !== -1) {
     msg = (
-      <button className="btn btn--clicky" onClick={() => showModal(SettingsModal)}>
+      <button
+        className="btn btn--clicky"
+        onClick={() => showModal(SettingsModal)}
+      >
         Disable SSL Validation
       </button>
     );
-  } else if (error?.toLowerCase().indexOf('getaddrinfo') !== -1) {
+  } else if (error?.toLowerCase().indexOf("getaddrinfo") !== -1) {
     msg = (
-      <button className="btn btn--clicky" onClick={() => showModal(SettingsModal)}>
+      <button
+        className="btn btn--clicky"
+        onClick={() => showModal(SettingsModal)}
+      >
         Setup Network Proxy
       </button>
     );
@@ -47,10 +51,12 @@ export const ResponseErrorViewer: FC<Props> = memo(({ error }) => {
         {error}
       </pre>
       <hr />
-      <div className="text-center pad">
-        <p className="faint pad-left pad-right">Here are some additional things that may help.</p>
+      <div className="pad text-center">
+        <p className="faint pad-left pad-right">
+          Here are some additional things that may help.
+        </p>
         {msg}
-          &nbsp;&nbsp;
+        &nbsp;&nbsp;
         <Link
           button
           className="btn btn--clicky margin-top-sm"
@@ -63,4 +69,4 @@ export const ResponseErrorViewer: FC<Props> = memo(({ error }) => {
   );
 });
 
-ResponseErrorViewer.displayName = 'ResponseError';
+ResponseErrorViewer.displayName = "ResponseError";

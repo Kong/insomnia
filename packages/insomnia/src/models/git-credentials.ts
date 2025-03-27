@@ -1,15 +1,15 @@
-import { database as db } from '../common/database';
-import type { BaseModel } from './index';
+import { database as db } from "../common/database";
+import type { BaseModel } from "./index";
 
-export type OauthProviderName = 'gitlab' | 'github';
+export type OauthProviderName = "gitlab" | "github";
 
 export type GitCredentials = BaseModel & BaseGitCredentials;
 
-export const name = 'Git Credentials';
+export const name = "Git Credentials";
 
-export const type = 'GitCredentials';
+export const type = "GitCredentials";
 
-export const prefix = 'git_creds';
+export const prefix = "git_creds";
 
 export const canDuplicate = false;
 
@@ -17,13 +17,13 @@ export const canSync = false;
 
 export function init(): BaseGitCredentials {
   return {
-    token: '',
-    refreshToken: '',
-    provider: 'github',
+    token: "",
+    refreshToken: "",
+    provider: "github",
     author: {
-      email: '',
-      name: '',
-      avatarUrl: '',
+      email: "",
+      name: "",
+      avatarUrl: "",
     },
   };
 }
@@ -31,7 +31,7 @@ export function init(): BaseGitCredentials {
 interface BaseGitCredentials {
   token: string;
   refreshToken?: string;
-  provider: 'githubapp' | 'github' | 'gitlab' | 'custom';
+  provider: "githubapp" | "github" | "gitlab" | "custom";
   author: {
     avatarUrl?: string;
     name: string;
@@ -52,10 +52,16 @@ export async function getById(id: string) {
 }
 
 export async function getByProvider(provider: OauthProviderName) {
-  return db.getWhere<GitCredentials>(type, provider === 'github' ? { provider: 'githubapp' } : { provider: 'gitlab' });
+  return db.getWhere<GitCredentials>(
+    type,
+    provider === "github" ? { provider: "githubapp" } : { provider: "gitlab" },
+  );
 }
 
-export function update(credentials: GitCredentials, patch: Partial<GitCredentials>) {
+export function update(
+  credentials: GitCredentials,
+  patch: Partial<GitCredentials>,
+) {
   return db.docUpdate<GitCredentials>(credentials, patch);
 }
 

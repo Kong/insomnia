@@ -1,7 +1,13 @@
-import { decryptRSAWithJWK, encryptRSAWithJWK } from '../../../../account/crypt';
-import { getCurrentSessionId, getPrivateKey } from '../../../../account/session';
-import { invariant } from '../../../../utils/invariant';
-import { insomniaFetch } from '../../../insomniaFetch';
+import {
+  decryptRSAWithJWK,
+  encryptRSAWithJWK,
+} from "../../../../account/crypt";
+import {
+  getCurrentSessionId,
+  getPrivateKey,
+} from "../../../../account/session";
+import { invariant } from "../../../../utils/invariant";
+import { insomniaFetch } from "../../../insomniaFetch";
 
 interface InviteInstruction {
   inviteKeys: InviteKey[];
@@ -36,8 +42,11 @@ export function buildInviteByInstruction(
   let inviteKeys: InviteKey[] = [];
   if (rawProjectKeys?.length) {
     const inviteePublicKey = JSON.parse(instruction.inviteePublicKey);
-    inviteKeys = rawProjectKeys.map(key => {
-      const reEncryptedSymmetricKey = encryptRSAWithJWK(inviteePublicKey, key.symmetricKey);
+    inviteKeys = rawProjectKeys.map((key) => {
+      const reEncryptedSymmetricKey = encryptRSAWithJWK(
+        inviteePublicKey,
+        key.symmetricKey,
+      );
       return {
         projectId: key.projectId,
         encSymmetricKey: reEncryptedSymmetricKey,
@@ -79,7 +88,7 @@ async function decryptProjectKeys(
   projectKeys: EncryptedProjectKey[],
 ): Promise<DecryptedProjectKey[]> {
   try {
-    const promises = projectKeys.map(key => {
+    const promises = projectKeys.map((key) => {
       const symmetricKey = decryptRSAWithJWK(decryptionKey, key.encKey);
       return {
         projectId: key.projectId,
@@ -136,14 +145,19 @@ interface CollaboratorInstructionItem {
 
 type CollaboratorInstruction = Record<string, CollaboratorInstructionItem>;
 
-export async function startInvite({ emails, teamIds, organizationId, roleId }: StartInviteParams) {
+export async function startInvite({
+  emails,
+  teamIds,
+  organizationId,
+  roleId,
+}: StartInviteParams) {
   const sessionId = await getCurrentSessionId();
-  invariant(sessionId, 'Session ID is required');
+  invariant(sessionId, "Session ID is required");
 
   // we are merging these endpoints into one as it has grown onto several types over time.
   // this way, we can also offload the complex logic to the API
   const instruction = await insomniaFetch<CollaboratorInstruction>({
-    method: 'POST',
+    method: "POST",
     path: `/v1/desktop/organizations/${organizationId}/collaborators/start-adding`,
     data: { teamIds, emails },
     sessionId,
@@ -151,7 +165,7 @@ export async function startInvite({ emails, teamIds, organizationId, roleId }: S
   });
 
   const myKeysInfo = await insomniaFetch<ResponseGetMyProjectKeys>({
-    method: 'GET',
+    method: "GET",
     path: `/v1/organizations/${organizationId}/my-project-keys`,
     sessionId,
     onlyResolveOnSuccess: true,
@@ -159,25 +173,36 @@ export async function startInvite({ emails, teamIds, organizationId, roleId }: S
 
   let memberKeys: MemberProjectKey[] = [];
   const keyMap: Record<string, string> = {};
-  const projectKeys = await decryptProjectKeys(await getPrivateKey(), myKeysInfo.projectKeys || []);
+  const projectKeys = await decryptProjectKeys(
+    await getPrivateKey(),
+    myKeysInfo.projectKeys || [],
+  );
 
   if (myKeysInfo.members?.length) {
-    projectKeys.reduce((keyMap: Record<string, string>, key: DecryptedProjectKey) => {
-      keyMap[key.projectId] = key.symmetricKey;
-      return keyMap;
-    }, keyMap);
+    projectKeys.reduce(
+      (keyMap: Record<string, string>, key: DecryptedProjectKey) => {
+        keyMap[key.projectId] = key.symmetricKey;
+        return keyMap;
+      },
+      keyMap,
+    );
 
     // This is to reconcile any users in bad standing
     memberKeys = myKeysInfo.members
       .map((member: ProjectMember) =>
-        buildMemberProjectKey(member.accountId, member.projectId, member.publicKey, keyMap[member.projectId]),
+        buildMemberProjectKey(
+          member.accountId,
+          member.projectId,
+          member.publicKey,
+          keyMap[member.projectId],
+        ),
       )
       .filter(Boolean) as MemberProjectKey[];
   }
 
   if (memberKeys.length) {
     await insomniaFetch({
-      method: 'POST',
+      method: "POST",
       path: `/v1/organizations/${organizationId}/reconcile-keys`,
       sessionId,
       data: { keys: memberKeys },
@@ -196,9 +221,14 @@ export async function startInvite({ emails, teamIds, organizationId, roleId }: S
         keys[acctId] = {};
       }
 
-      projectKeys.forEach(key => {
+      projectKeys.forEach((key) => {
         const pubKey = instruction[acctId].publicKey;
-        const newKey = buildMemberProjectKey(acctId, key.projectId, pubKey, key.symmetricKey);
+        const newKey = buildMemberProjectKey(
+          acctId,
+          key.projectId,
+          pubKey,
+          key.symmetricKey,
+        );
 
         if (newKey) {
           keys[acctId][key.projectId] = {
@@ -212,7 +242,7 @@ export async function startInvite({ emails, teamIds, organizationId, roleId }: S
   }
 
   await insomniaFetch({
-    method: 'POST',
+    method: "POST",
     path: `/v1/desktop/organizations/${organizationId}/collaborators/finish-adding`,
     data: { teamIds, keys, accountIds, roleId },
     sessionId,

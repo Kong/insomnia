@@ -1,13 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
-export function useReadyState({ requestId, protocol }: { requestId: string; protocol: 'curl' | 'webSocket' }): boolean {
+export function useReadyState({
+  requestId,
+  protocol,
+}: {
+  requestId: string;
+  protocol: "curl" | "webSocket";
+}): boolean {
   const [readyState, setReadyState] = useState<boolean>(false);
 
   // get readyState when requestId or protocol changes
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
-      window.main[protocol].readyState.getCurrent({ requestId })
+      window.main[protocol].readyState
+        .getCurrent({ requestId })
         .then((currentReadyState: boolean) => {
           isMounted && setReadyState(currentReadyState);
         });
@@ -21,10 +28,12 @@ export function useReadyState({ requestId, protocol }: { requestId: string; prot
   useEffect(() => {
     let isMounted = true;
     // @ts-expect-error -- we use a dynamic channel here
-    const unsubscribe = window.main.on(`${protocol}.${requestId}.readyState`,
+    const unsubscribe = window.main.on(
+      `${protocol}.${requestId}.readyState`,
       (_, incomingReadyState: boolean) => {
         isMounted && setReadyState(incomingReadyState);
-      });
+      },
+    );
     return () => {
       isMounted = false;
       unsubscribe();

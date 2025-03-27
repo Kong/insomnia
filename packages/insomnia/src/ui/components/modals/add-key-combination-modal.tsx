@@ -1,25 +1,40 @@
-import classnames from 'classnames';
-import React, { forwardRef, type KeyboardEvent, useImperativeHandle, useRef, useState } from 'react';
+import classnames from "classnames";
+import React, {
+  forwardRef,
+  type KeyboardEvent,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 
-import { constructKeyCombinationDisplay, isModifierKeyCode } from '../../../common/hotkeys';
-import { keyboardKeys } from '../../../common/keyboard-keys';
-import type { KeyCombination } from '../../../common/settings';
-import type { KeyboardShortcut } from '../../../common/settings';
-import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
-import { ModalBody } from '../base/modal-body';
-import { ModalHeader } from '../base/modal-header';
+import {
+  constructKeyCombinationDisplay,
+  isModifierKeyCode,
+} from "../../../common/hotkeys";
+import { keyboardKeys } from "../../../common/keyboard-keys";
+import type { KeyCombination } from "../../../common/settings";
+import type { KeyboardShortcut } from "../../../common/settings";
+import { Modal, type ModalHandle, type ModalProps } from "../base/modal";
+import { ModalBody } from "../base/modal-body";
+import { ModalHeader } from "../base/modal-header";
 
 export interface AddKeyCombinationModalOptions {
   keyboardShortcut: KeyboardShortcut | null;
   checkKeyCombinationDuplicate: (pressedKeyComb: KeyCombination) => boolean;
-  addKeyCombination: (keyboardShortcut: KeyboardShortcut, keyComb: KeyCombination) => void;
+  addKeyCombination: (
+    keyboardShortcut: KeyboardShortcut,
+    keyComb: KeyCombination,
+  ) => void;
   pressedKeyCombination?: KeyCombination | null;
 }
 export interface AddKeyCombinationModalHandle {
   show: (options: AddKeyCombinationModalOptions) => void;
   hide: () => void;
 }
-export const AddKeyCombinationModal = forwardRef<AddKeyCombinationModalHandle, ModalProps>((_, ref) => {
+export const AddKeyCombinationModal = forwardRef<
+  AddKeyCombinationModalHandle,
+  ModalProps
+>((_, ref) => {
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<AddKeyCombinationModalOptions>({
     keyboardShortcut: null,
@@ -28,15 +43,19 @@ export const AddKeyCombinationModal = forwardRef<AddKeyCombinationModalHandle, M
     pressedKeyCombination: null,
   });
 
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: options => {
-      setState(options);
-      modalRef.current?.show();
-    },
-  }), []);
+  useImperativeHandle(
+    ref,
+    () => ({
+      hide: () => {
+        modalRef.current?.hide();
+      },
+      show: (options) => {
+        setState(options);
+        modalRef.current?.show();
+      },
+    }),
+    [],
+  );
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     event.preventDefault();
@@ -89,29 +108,39 @@ export const AddKeyCombinationModal = forwardRef<AddKeyCombinationModalHandle, M
   };
 
   const { pressedKeyCombination } = state;
-  let keyCombDisplay = '';
+  let keyCombDisplay = "";
   let isDuplicate = false;
 
   if (pressedKeyCombination != null) {
-    keyCombDisplay = constructKeyCombinationDisplay(pressedKeyCombination, true);
+    keyCombDisplay = constructKeyCombinationDisplay(
+      pressedKeyCombination,
+      true,
+    );
     isDuplicate = state.checkKeyCombinationDuplicate(pressedKeyCombination);
   }
 
-  const duplicateMessageClasses = classnames('margin-bottom margin-left faint italic txt-md', {
-    hidden: !isDuplicate,
-  });
+  const duplicateMessageClasses = classnames(
+    "margin-bottom margin-left faint italic txt-md",
+    {
+      hidden: !isDuplicate,
+    },
+  );
   return (
-    <Modal
-      ref={modalRef}
-      className="shortcuts add-key-comb-modal"
-    >
+    <Modal ref={modalRef} className="shortcuts add-key-comb-modal">
       <ModalHeader>Add Keyboard Shortcut</ModalHeader>
       <ModalBody noScroll>
         <div className="pad-left pad-right pad-top pad-bottom-sm">
           <div className="form-control form-control--outlined">
             <label>
               Press desired key combination and then press ENTER.
-              <input onKeyDown={handleKeyDown} autoFocus type="text" className="key-comb" value={keyCombDisplay} readOnly />
+              <input
+                onKeyDown={handleKeyDown}
+                autoFocus
+                type="text"
+                className="key-comb"
+                value={keyCombDisplay}
+                readOnly
+              />
             </label>
           </div>
         </div>
@@ -120,4 +149,4 @@ export const AddKeyCombinationModal = forwardRef<AddKeyCombinationModalHandle, M
     </Modal>
   );
 });
-AddKeyCombinationModal.displayName = 'AddKeyCombinationModal';
+AddKeyCombinationModal.displayName = "AddKeyCombinationModal";

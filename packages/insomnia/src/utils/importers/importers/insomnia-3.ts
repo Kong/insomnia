@@ -1,15 +1,15 @@
-import type { Converter } from '../entities';
-import type { Insomnia2Data } from './insomnia-2';
+import type { Converter } from "../entities";
+import type { Insomnia2Data } from "./insomnia-2";
 
-export const id = 'insomnia-3';
-export const name = 'Insomnia v3';
-export const description = 'Insomnia export format 3';
+export const id = "insomnia-3";
+export const name = "Insomnia v3";
+export const description = "Insomnia export format 3";
 
-export interface Insomnia3Data extends Omit<Insomnia2Data, '__export_format'> {
+export interface Insomnia3Data extends Omit<Insomnia2Data, "__export_format"> {
   __export_format: 3;
 }
 
-export const convert: Converter = rawData => {
+export const convert: Converter = (rawData) => {
   let data: Insomnia3Data | null = null;
 
   try {

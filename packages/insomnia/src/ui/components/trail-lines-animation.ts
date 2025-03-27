@@ -1,18 +1,18 @@
-import { gsap } from 'gsap';
-import MotionPathPlugin from 'gsap/MotionPathPlugin';
-import type { RefObject } from 'react';
+import { gsap } from "gsap";
+import MotionPathPlugin from "gsap/MotionPathPlugin";
+import type { RefObject } from "react";
 export const internals = {
   LINE_WIDTH: 1.5,
   DURATION: 2,
-  TRIAL_SIZE_PERCENTAGE: '100%',
-  GRADIENT_SUFFIXES: ['01', '02', '03', '04'],
+  TRIAL_SIZE_PERCENTAGE: "100%",
+  GRADIENT_SUFFIXES: ["01", "02", "03", "04"],
   COMPACT_VERTICAL_SPACE: 20,
 };
 
 gsap.registerPlugin(MotionPathPlugin);
 
 gsap.registerEffect({
-  name: 'trail',
+  name: "trail",
   /**
    * Left from @marckong here.
    * targets is TweenTarget.
@@ -23,13 +23,13 @@ gsap.registerEffect({
    * */
   effect(targets: any[], config: gsap.TimelineVars | undefined) {
     const group = targets[0];
-    const dot = group?.querySelector('.dot');
-    const rect = group?.querySelector('rect');
+    const dot = group?.querySelector(".dot");
+    const rect = group?.querySelector("rect");
 
     return gsap
       .timeline({
         defaults: {
-          ease: 'none',
+          ease: "none",
           duration: internals.DURATION,
         },
         ...config,
@@ -42,21 +42,24 @@ gsap.registerEffect({
             path: group.dataset.motionPath,
           },
           onUpdate() {
-            const x = +gsap.getProperty(this.targets()[0], 'x');
+            const x = +gsap.getProperty(this.targets()[0], "x");
             rect.x.baseVal.value = x - rect?.width?.baseVal?.value;
           },
         },
-        '<'
+        "<",
       )
-      .to(rect, { attr: { x: '100%' } }, '>');
+      .to(rect, { attr: { x: "100%" } }, ">");
   },
 });
 
-export function animateTrailPaths(totalActiveLines: number, scope: RefObject<Element>[]) {
+export function animateTrailPaths(
+  totalActiveLines: number,
+  scope: RefObject<Element>[],
+) {
   const animations = new Set<GSAPAnimation>();
 
   const ctx = gsap.context(() => {
-    const groups: Node[] = gsap.utils.toArray<Node>('.group-elements');
+    const groups: Node[] = gsap.utils.toArray<Node>(".group-elements");
     const availableGroups = new Set<Node>([...groups]);
 
     function animate(delay = 0) {

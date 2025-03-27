@@ -1,14 +1,14 @@
-import type { GraphQLType } from 'graphql';
-import React, { type FC } from 'react';
+import type { GraphQLType } from "graphql";
+import React, { type FC } from "react";
 
-import { Tooltip } from '../../components/tooltip';
-import { MarkdownPreview } from '../markdown-preview';
-import { SvgIcon } from '../svg-icon';
-import { GraphQLDefaultValue } from './graph-ql-default-value';
-import { GraphQLExplorerArgLinks } from './graph-ql-explorer-arg-links';
-import { GraphQLExplorerFieldLink } from './graph-ql-explorer-field-link';
-import { GraphQLExplorerTypeLink } from './graph-ql-explorer-type-link';
-import type { GraphQLFieldWithParentName } from './graph-ql-types';
+import { Tooltip } from "../../components/tooltip";
+import { MarkdownPreview } from "../markdown-preview";
+import { SvgIcon } from "../svg-icon";
+import { GraphQLDefaultValue } from "./graph-ql-default-value";
+import { GraphQLExplorerArgLinks } from "./graph-ql-explorer-arg-links";
+import { GraphQLExplorerFieldLink } from "./graph-ql-explorer-field-link";
+import { GraphQLExplorerTypeLink } from "./graph-ql-explorer-type-link";
+import type { GraphQLFieldWithParentName } from "./graph-ql-types";
 
 interface Props {
   fields: GraphQLFieldWithParentName[];
@@ -16,11 +16,21 @@ interface Props {
   onNavigateField: (field: GraphQLFieldWithParentName) => void;
 }
 
-export const GraphQLExplorerFieldsList: FC<Props> = ({ fields, onNavigateType, onNavigateField }) => {
-  const fieldsList = fields.map(field => {
-    const argLinks = <GraphQLExplorerArgLinks onNavigate={onNavigateType} args={field.args} />;
-    const fieldLink = <GraphQLExplorerFieldLink onNavigate={onNavigateField} field={field} />;
-    const typeLink = <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={field.type} />;
+export const GraphQLExplorerFieldsList: FC<Props> = ({
+  fields,
+  onNavigateType,
+  onNavigateField,
+}) => {
+  const fieldsList = fields.map((field) => {
+    const argLinks = (
+      <GraphQLExplorerArgLinks onNavigate={onNavigateType} args={field.args} />
+    );
+    const fieldLink = (
+      <GraphQLExplorerFieldLink onNavigate={onNavigateField} field={field} />
+    );
+    const typeLink = (
+      <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={field.type} />
+    );
 
     const isDeprecated = Boolean(field.deprecationReason);
     const description = field.description;
@@ -47,9 +57,5 @@ export const GraphQLExplorerFieldsList: FC<Props> = ({ fields, onNavigateType, o
     );
   });
 
-  return (
-    <ul className="graphql-explorer__defs">
-      {fieldsList}
-    </ul>
-  );
+  return <ul className="graphql-explorer__defs">{fieldsList}</ul>;
 };

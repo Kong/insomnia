@@ -1,9 +1,9 @@
-import { copyFixtureDatabase } from '../../playwright/paths';
-import { test } from '../../playwright/test';
+import { copyFixtureDatabase } from "../../playwright/paths";
+import { test } from "../../playwright/test";
 
 const testWithLegacyDatabase = test.extend({
   dataPath: async ({ dataPath }, use) => {
-    await copyFixtureDatabase('insomnia-legacy-db', dataPath);
+    await copyFixtureDatabase("insomnia-legacy-db", dataPath);
 
     await use(dataPath);
   },
@@ -16,65 +16,70 @@ const testWithLegacyDatabase = test.extend({
 });
 
 // tests new cloud project create but not the vcs part as its too complex to stub the gql endpoint
-testWithLegacyDatabase('Run data migration to version 8', async ({ page, userConfig }) => {
-  // Migration takes a while, adding this to avoid test timeout before it ends
-  test.slow();
+testWithLegacyDatabase(
+  "Run data migration to version 8",
+  async ({ page, userConfig }) => {
+    // Migration takes a while, adding this to avoid test timeout before it ends
+    test.slow();
 
-  await page.getByLabel('Continue with Google').click(),
+    await page.getByLabel("Continue with Google").click(),
+      await page.locator('input[name="code"]').click();
+    await page.locator('input[name="code"]').fill(userConfig.code);
 
-  await page.locator('input[name="code"]').click();
-  await page.locator('input[name="code"]').fill(userConfig.code);
+    await page.getByRole("button", { name: "Log in" }).click();
 
-  await page.getByRole('button', { name: 'Log in' }).click();
+    // Open migrated Project (Local before migration)
+    await page.getByLabel("Insomnia").click();
 
-  // Open migrated Project (Local before migration)
-  await page.getByLabel('Insomnia').click();
+    // Open migrated local migrated collection that should have Git Sync
+    await page.getByLabel("Local Collection").click();
+    await page.getByRole("button", { name: "Manage Environments" }).click();
+    await page
+      .getByLabel("Select a Collection")
+      .getByRole("option", { name: "Mars" })
+      .press("Enter");
+    await page.getByTestId("underlay").click();
+    // The collection is moved to a local project
+    await page.getByLabel("Git Sync").isVisible();
+    await page.getByText("Get list of rockets").click();
+    await page.getByTestId("project").click();
 
-  // Open migrated local migrated collection that should have Git Sync
-  await page.getByLabel('Local Collection').click();
-  await page.getByRole('button', { name: 'Manage Environments' }).click();
-  await page.getByLabel('Select a Collection').getByRole('option', { name: 'Mars' }).press('Enter');
-  await page.getByTestId('underlay').click();
-  // The collection is moved to a local project
-  await page.getByLabel('Git Sync').isVisible();
-  await page.getByText('Get list of rockets').click();
-  await page.getByTestId('project').click();
+    // @TODO Re-enable this test
+    // // Open migrated local migrated collection that should have Git Sync - TODO - Fix this
+    // await page.getByLabel('Local Project (GIT)').click();
+    // await page.getByLabel('OpenAPI').click();
+    // await page.getByTestId('workspace-debug').click();
 
-  // @TODO Re-enable this test
-  // // Open migrated local migrated collection that should have Git Sync - TODO - Fix this
-  // await page.getByLabel('Local Project (GIT)').click();
-  // await page.getByLabel('OpenAPI').click();
-  // await page.getByTestId('workspace-debug').click();
+    // await page.getByText('Delete user').click({ force: true });
+    // await page.getByLabel('Git Sync').isVisible();
+    // await page.getByTestId('project').click();
 
-  // await page.getByText('Delete user').click({ force: true });
-  // await page.getByLabel('Git Sync').isVisible();
-  // await page.getByTestId('project').click();
+    // await page.getByLabel('Personal Workspace', { exact: true }).click();
 
-  // await page.getByLabel('Personal Workspace', { exact: true }).click();
+    // // Open Team that is migrated to Organization
+    // await page.getByRole('link', { name: '🦄' }).click();
 
-  // // Open Team that is migrated to Organization
-  // await page.getByRole('link', { name: '🦄' }).click();
+    // // Open remote migrated collection that should have Insomnia Sync
+    // await page.getByLabel('Personal Workspace', { exact: true }).click();
+    // await page.getByLabel('Remote Design Document', { exact: true }).click();
+    // await page.getByText('Updated user').click();
+    // await page.getByLabel('Insomnia Sync').isVisible();
+    // await page.getByTestId('project').click();
 
-  // // Open remote migrated collection that should have Insomnia Sync
-  // await page.getByLabel('Personal Workspace', { exact: true }).click();
-  // await page.getByLabel('Remote Design Document', { exact: true }).click();
-  // await page.getByText('Updated user').click();
-  // await page.getByLabel('Insomnia Sync').isVisible();
-  // await page.getByTestId('project').click();
+    // // Open remote migrated collection that should have GIT Sync
+    // await page.getByLabel('(GIT) Remote Design Document').click();
+    // await page.getByText('Updated user').click();
+    // await page.getByLabel('Git Sync').isVisible();
+    // await page.getByTestId('project').click();
 
-  // // Open remote migrated collection that should have GIT Sync
-  // await page.getByLabel('(GIT) Remote Design Document').click();
-  // await page.getByText('Updated user').click();
-  // await page.getByLabel('Git Sync').isVisible();
-  // await page.getByTestId('project').click();
+    // // Open remote migrated collection that should have Insomnia Sync
+    // await page.getByLabel('Remote Collection', { exact: true }).click();
+    // await page.getByText('New Request').click();
+    // await page.getByLabel('Insomnia Sync').isVisible();
+    // await page.getByTestId('project').click();
 
-  // // Open remote migrated collection that should have Insomnia Sync
-  // await page.getByLabel('Remote Collection', { exact: true }).click();
-  // await page.getByText('New Request').click();
-  // await page.getByLabel('Insomnia Sync').isVisible();
-  // await page.getByTestId('project').click();
-
-  // // Open remote migrated collection that should have Insomnia Sync
-  // await page.getByLabel('Remote Collection', { exact: true }).click();
-  // await page.getByLabel('Insomnia Sync').isVisible();
-});
+    // // Open remote migrated collection that should have Insomnia Sync
+    // await page.getByLabel('Remote Collection', { exact: true }).click();
+    // await page.getByLabel('Insomnia Sync').isVisible();
+  },
+);

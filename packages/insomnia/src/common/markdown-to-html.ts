@@ -1,5 +1,5 @@
-import dompurify from 'dompurify';
-import { marked } from 'marked';
+import dompurify from "dompurify";
+import { marked } from "marked";
 
 marked.setOptions({
   renderer: new marked.Renderer(),
@@ -11,4 +11,5 @@ marked.setOptions({
   mangle: false,
 });
 
-export const markdownToHTML = (input: string) => dompurify.sanitize(marked.parse(input));
+export const markdownToHTML = (input: string) =>
+  dompurify.sanitize(marked.parse(input));

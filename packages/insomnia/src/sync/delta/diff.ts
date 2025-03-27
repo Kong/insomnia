@@ -1,12 +1,12 @@
-import crypto from 'crypto';
+import crypto from "crypto";
 
 interface InsertOperation {
-  type: 'INSERT';
+  type: "INSERT";
   content: string;
 }
 
 interface CopyOperation {
-  type: 'COPY';
+  type: "COPY";
   start: number;
   len: number;
 }
@@ -19,13 +19,17 @@ interface Block {
   hash: string;
 }
 
-export function diff(source: string, target: string, blockSize: number): Operation[] {
+export function diff(
+  source: string,
+  target: string,
+  blockSize: number,
+): Operation[] {
   const operations: Operation[] = [];
   const sourceBlockMap = getBlockMap(source, blockSize);
   // Iterate over source blocks in order and match them to target
   let lastTargetMatch = 0;
 
-  for (let targetPosition = 0; targetPosition < target.length;) {
+  for (let targetPosition = 0; targetPosition < target.length; ) {
     const targetBlock = getBlock(target, targetPosition, blockSize);
     const sourceBlocks = sourceBlockMap[targetBlock.hash] || [];
 
@@ -62,14 +66,14 @@ export function diff(source: string, target: string, blockSize: number): Operati
     // Found unknown bytes, INSERT them
     if (targetBlock.start > lastTargetMatch) {
       operations.push({
-        type: 'INSERT',
+        type: "INSERT",
         content: target.slice(lastTargetMatch, targetBlock.start),
       });
     }
 
     // Source block found in target
     operations.push({
-      type: 'COPY',
+      type: "COPY",
       start: sourceBlock.start,
       len: sourceIndex - sourceBlock.start,
     });
@@ -79,7 +83,7 @@ export function diff(source: string, target: string, blockSize: number): Operati
   // Add the target suffix if there's still some left
   if (lastTargetMatch < target.length) {
     operations.push({
-      type: 'INSERT',
+      type: "INSERT",
       content: target.slice(lastTargetMatch),
     });
   }
@@ -89,21 +93,24 @@ export function diff(source: string, target: string, blockSize: number): Operati
 
 function getBlock(value: string, start: number, blockSize: number): Block {
   if (start >= value.length) {
-    throw new Error('Invalid block index');
+    throw new Error("Invalid block index");
   }
 
   const blockSlice = value.slice(start, start + blockSize);
   return {
     start,
     len: blockSlice.length,
-    hash: crypto.createHash('sha1').update(blockSlice).digest('hex'),
+    hash: crypto.createHash("sha1").update(blockSlice).digest("hex"),
   };
 }
 
-function getBlockMap(value: string, blockSize: number): Record<string, Block[]> {
+function getBlockMap(
+  value: string,
+  blockSize: number,
+): Record<string, Block[]> {
   const map: Record<string, Block[]> = {};
 
-  for (let i = 0; i < value.length;) {
+  for (let i = 0; i < value.length; ) {
     const block = getBlock(value, i, blockSize);
 
     if (map[block.hash]) {

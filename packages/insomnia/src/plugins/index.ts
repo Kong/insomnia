@@ -1,19 +1,19 @@
-import electron from 'electron';
-import fs from 'fs';
-import path from 'path';
+import electron from "electron";
+import fs from "fs";
+import path from "path";
 
-import type { ParsedApiSpec } from '../common/api-specs';
-import type { PluginConfigMap } from '../common/settings';
-import * as models from '../models';
-import type { GrpcRequest } from '../models/grpc-request';
-import type { Request } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { WebSocketRequest } from '../models/websocket-request';
-import type { Workspace } from '../models/workspace';
-import type { PluginTemplateTag } from '../templating/types';
-import { showError } from '../ui/components/modals/index';
-import type { PluginTheme } from './misc';
-import themes from './themes';
+import type { ParsedApiSpec } from "../common/api-specs";
+import type { PluginConfigMap } from "../common/settings";
+import * as models from "../models";
+import type { GrpcRequest } from "../models/grpc-request";
+import type { Request } from "../models/request";
+import type { RequestGroup } from "../models/request-group";
+import type { WebSocketRequest } from "../models/websocket-request";
+import type { Workspace } from "../models/workspace";
+import type { PluginTemplateTag } from "../templating/types";
+import { showError } from "../ui/components/modals/index";
+import type { PluginTheme } from "./misc";
+import themes from "./themes";
 
 export interface Plugin {
   name: string;
@@ -76,7 +76,10 @@ export type WorkspaceAction = { plugin: Plugin } & {
 };
 
 export type DocumentAction = { plugin: Plugin } & {
-  action: (context: Record<string, any>, documents: ParsedApiSpec) => void | Promise<void>;
+  action: (
+    context: Record<string, any>,
+    documents: ParsedApiSpec,
+  ) => void | Promise<void>;
   label: string;
   hideAfterClick?: boolean;
 };
@@ -96,7 +99,7 @@ export type Theme = { plugin: Plugin } & {
   theme: PluginTheme;
 };
 
-export type ColorScheme = 'default' | 'light' | 'dark';
+export type ColorScheme = "default" | "light" | "dark";
 
 let plugins: Plugin[] | null | undefined = null;
 
@@ -113,12 +116,18 @@ async function _traversePluginPath(
     if (!fs.existsSync(p)) {
       continue;
     }
-    const folders = (await fs.promises.readdir(p)).filter(f => f.startsWith('insomnia-plugin-'));
-    folders.length && console.log('[plugin] Loading', folders.map(f => f.replace('insomnia-plugin-', '')).join(', '));
+    const folders = (await fs.promises.readdir(p)).filter((f) =>
+      f.startsWith("insomnia-plugin-"),
+    );
+    folders.length &&
+      console.log(
+        "[plugin] Loading",
+        folders.map((f) => f.replace("insomnia-plugin-", "")).join(", "),
+      );
     for (const filename of fs.readdirSync(p)) {
       try {
         const modulePath = path.join(p, filename);
-        const packageJSONPath = path.join(modulePath, 'package.json');
+        const packageJSONPath = path.join(modulePath, "package.json");
 
         // Only read directories
         if (!fs.statSync(modulePath).isDirectory()) {
@@ -126,12 +135,12 @@ async function _traversePluginPath(
         }
 
         // Is it a scoped directory?
-        if (filename.startsWith('@')) {
+        if (filename.startsWith("@")) {
           await _traversePluginPath(pluginMap, [modulePath], allConfigs);
         }
 
         // Is it a Node module?
-        if (!fs.readdirSync(modulePath).includes('package.json')) {
+        if (!fs.readdirSync(modulePath).includes("package.json")) {
           continue;
         }
 
@@ -145,7 +154,7 @@ async function _traversePluginPath(
         const pluginJson = global.require(packageJSONPath);
 
         // Not an Insomnia plugin because it doesn't have the package.json['insomnia']
-        if (!pluginJson.hasOwnProperty('insomnia')) {
+        if (!pluginJson.hasOwnProperty("insomnia")) {
           continue;
         }
 
@@ -154,9 +163,10 @@ async function _traversePluginPath(
 
         pluginMap[pluginJson.name] = {
           name: pluginJson.name,
-          description: pluginJson.description || pluginJson.insomnia.description || '',
-          version: pluginJson.version || 'unknown',
-          directory: modulePath || '',
+          description:
+            pluginJson.description || pluginJson.insomnia.description || "",
+          version: pluginJson.version || "unknown",
+          directory: modulePath || "",
           config: allConfigs.hasOwnProperty(pluginJson.name)
             ? allConfigs[pluginJson.name]
             : { disabled: false },
@@ -164,8 +174,11 @@ async function _traversePluginPath(
         };
       } catch (err) {
         showError({
-          title: 'Plugin Error',
-          message: 'Failed to load plugin ' + filename + '. Please contact the plugin author sharing the below stack trace to help them to ensure compatibility with the latest Insomnia.',
+          title: "Plugin Error",
+          message:
+            "Failed to load plugin " +
+            filename +
+            ". Please contact the plugin author sharing the below stack trace to help them to ensure compatibility with the latest Insomnia.",
           error: err,
         });
       }
@@ -182,21 +195,27 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
     const settings = await models.settings.get();
     const allConfigs: PluginConfigMap = settings.pluginConfig;
     const extraPaths = settings.pluginPath
-      .split(':')
-      .filter(p => p)
-      .map(p => {
-        if (p.indexOf('~/') === 0) {
-          return path.join(process.env['HOME'] || '/', p.slice(1));
+      .split(":")
+      .filter((p) => p)
+      .map((p) => {
+        if (p.indexOf("~/") === 0) {
+          return path.join(process.env["HOME"] || "/", p.slice(1));
         } else {
           return p;
         }
       });
     // Make sure the default directories exist
-    const pluginPath = path.join(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'), 'plugins');
+    const pluginPath = path.join(
+      process.env["INSOMNIA_DATA_PATH"] ||
+        (process.type === "renderer" ? window : electron).app.getPath(
+          "userData",
+        ),
+      "plugins",
+    );
     fs.mkdirSync(pluginPath, { recursive: true });
     // Also look in node_modules folder in each directory
     const basePaths = [pluginPath, ...extraPaths];
-    const extendedPaths = basePaths.map(p => path.join(p, 'node_modules'));
+    const extendedPaths = basePaths.map((p) => path.join(p, "node_modules"));
     const allPaths = [...basePaths, ...extendedPaths];
     // Store plugins in a map so that plugins with the same
     // name only get added once
@@ -206,7 +225,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
     };
 
     await _traversePluginPath(pluginMap, allPaths, allConfigs);
-    plugins = Object.keys(pluginMap).map(name => pluginMap[name]);
+    plugins = Object.keys(pluginMap).map((name) => pluginMap[name]);
   }
 
   return plugins;
@@ -217,7 +236,7 @@ export async function reloadPlugins() {
 }
 
 async function getActivePlugins(): Promise<Plugin[]> {
-  return (await getPlugins()).filter(p => !p.config.disabled);
+  return (await getPlugins()).filter((p) => !p.config.disabled);
 }
 
 export async function getRequestGroupActions(): Promise<RequestGroupAction[]> {
@@ -227,7 +246,7 @@ export async function getRequestGroupActions(): Promise<RequestGroupAction[]> {
     const actions = plugin.module.requestGroupActions || [];
     extensions = [
       ...extensions,
-      ...actions.map(p => ({
+      ...actions.map((p) => ({
         plugin,
         ...p,
       })),
@@ -244,7 +263,7 @@ export async function getRequestActions(): Promise<RequestAction[]> {
     const actions = plugin.module.requestActions || [];
     extensions = [
       ...extensions,
-      ...actions.map(p => ({
+      ...actions.map((p) => ({
         plugin,
         ...p,
       })),
@@ -261,7 +280,7 @@ export async function getWorkspaceActions(): Promise<WorkspaceAction[]> {
     const actions = plugin.module.workspaceActions || [];
     extensions = [
       ...extensions,
-      ...actions.map(p => ({
+      ...actions.map((p) => ({
         plugin,
         ...p,
       })),
@@ -278,7 +297,7 @@ export async function getDocumentActions(): Promise<DocumentAction[]> {
     const actions = plugin.module.documentActions || [];
     extensions = [
       ...extensions,
-      ...actions.map(p => ({
+      ...actions.map((p) => ({
         plugin,
         ...p,
       })),
@@ -295,7 +314,7 @@ export async function getTemplateTags(): Promise<TemplateTag[]> {
     const templateTags = plugin.module.templateTags || [];
     extensions = [
       ...extensions,
-      ...templateTags.map(tt => ({
+      ...templateTags.map((tt) => ({
         plugin,
         templateTag: tt,
       })),
@@ -306,44 +325,49 @@ export async function getTemplateTags(): Promise<TemplateTag[]> {
 }
 
 export async function getRequestHooks(): Promise<RequestHook[]> {
-  let functions: RequestHook[] = [{
-    plugin: {
-      name: 'default-headers',
-      description: 'Set default headers for all requests',
-      version: '0.0.0',
-      directory: '',
-      config: {
-        disabled: false,
+  let functions: RequestHook[] = [
+    {
+      plugin: {
+        name: "default-headers",
+        description: "Set default headers for all requests",
+        version: "0.0.0",
+        directory: "",
+        config: {
+          disabled: false,
+        },
+        module: {},
       },
-      module: {},
-    },
-    hook: context => {
-      const headers = context.request.getEnvironmentVariable('DEFAULT_HEADERS');
-      if (!headers) {
-        return;
-      }
-      for (const name of Object.keys(headers)) {
-        const value = headers[name];
-        if (context.request.hasHeader(name)) {
-          console.log(`[header] Skip setting default header ${name}. Already set to ${value}`);
-          continue;
+      hook: (context) => {
+        const headers =
+          context.request.getEnvironmentVariable("DEFAULT_HEADERS");
+        if (!headers) {
+          return;
         }
-        if (value === 'null') {
-          context.request.removeHeader(name);
-          console.log(`[header] Remove default header ${name}`);
-        } else {
-          context.request.setHeader(name, value);
-          console.log(`[header] Set default header ${name}: ${value}`);
+        for (const name of Object.keys(headers)) {
+          const value = headers[name];
+          if (context.request.hasHeader(name)) {
+            console.log(
+              `[header] Skip setting default header ${name}. Already set to ${value}`,
+            );
+            continue;
+          }
+          if (value === "null") {
+            context.request.removeHeader(name);
+            console.log(`[header] Remove default header ${name}`);
+          } else {
+            context.request.setHeader(name, value);
+            console.log(`[header] Set default header ${name}: ${value}`);
+          }
         }
-      }
+      },
     },
-  }];
+  ];
 
   for (const plugin of await getActivePlugins()) {
     const moreFunctions = plugin.module.requestHooks || [];
     functions = [
       ...functions,
-      ...moreFunctions.map(hook => ({
+      ...moreFunctions.map((hook) => ({
         plugin,
         hook,
       })),
@@ -360,7 +384,7 @@ export async function getResponseHooks(): Promise<ResponseHook[]> {
     const moreFunctions = plugin.module.responseHooks || [];
     functions = [
       ...functions,
-      ...moreFunctions.map(hook => ({
+      ...moreFunctions.map((hook) => ({
         plugin,
         hook,
       })),
@@ -371,12 +395,12 @@ export async function getResponseHooks(): Promise<ResponseHook[]> {
 }
 
 export async function getThemes(): Promise<Theme[]> {
-  let extensions = themes.map(theme => ({
+  let extensions = themes.map((theme) => ({
     plugin: {
       name: theme.name,
-      description: 'Built-in themes',
-      version: '0.0.0',
-      directory: '',
+      description: "Built-in themes",
+      version: "0.0.0",
+      directory: "",
       config: {
         disabled: false,
       },
@@ -388,7 +412,7 @@ export async function getThemes(): Promise<Theme[]> {
     const themes = plugin.module.themes || [];
     extensions = [
       ...extensions,
-      ...themes.map(theme => ({
+      ...themes.map((theme) => ({
         plugin,
         theme,
       })),

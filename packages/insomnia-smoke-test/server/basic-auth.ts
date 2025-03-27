@@ -1,7 +1,7 @@
-import express from 'express';
-import basicAuth from 'express-basic-auth';
+import express from "express";
+import basicAuth from "express-basic-auth";
 
-import { basicAuthCreds } from '../fixtures/constants';
+import { basicAuthCreds } from "../fixtures/constants";
 
 const { utf8, latin1 } = basicAuthCreds;
 
@@ -14,9 +14,9 @@ export const basicAuthRouter = express.Router();
 
 basicAuthRouter.use(basicAuth({ users }));
 
-basicAuthRouter.get('/', (_, res) => {
+basicAuthRouter.get("/", (_, res) => {
   res
     .status(200)
-    .header('content-type', 'text/plain')
-    .send('basic auth received');
+    .header("content-type", "text/plain")
+    .send("basic auth received");
 });

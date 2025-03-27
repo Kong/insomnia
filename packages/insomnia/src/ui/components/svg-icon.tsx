@@ -1,141 +1,144 @@
-import React, { type NamedExoticComponent, type SVGProps } from 'react';
-import type { ValueOf } from 'type-fest';
+import React, { type NamedExoticComponent, type SVGProps } from "react";
+import type { ValueOf } from "type-fest";
 
-import { SvgIcnArrowRight } from './assets/svgr/IcnArrowRight';
-import { SvgIcnBitbucketLogo } from './assets/svgr/IcnBitbucketLogo';
-import { SvgIcnBrackets } from './assets/svgr/IcnBrackets';
-import { SvgIcnBug } from './assets/svgr/IcnBug';
-import { SvgIcnBurgerMenu } from './assets/svgr/IcnBurgerMenu';
-import { SvgIcnCheckmark } from './assets/svgr/IcnCheckmark';
-import { SvgIcnCheckmarkCircle } from './assets/svgr/IcnCheckmarkCircle';
-import { SvgIcnChevronDown } from './assets/svgr/IcnChevronDown';
-import { SvgIcnChevronUp } from './assets/svgr/IcnChevronUp';
-import { SvgIcnClock } from './assets/svgr/IcnClock';
-import { SvgIcnCookie } from './assets/svgr/IcnCookie';
-import { SvgIcnDisconnected } from './assets/svgr/IcnDisconnected';
-import { SvgIcnDraftingCompass } from './assets/svgr/IcnDraftingCompass';
-import { SvgIcnDragGrip } from './assets/svgr/IcnDragGrip';
-import { SvgIcnElevator } from './assets/svgr/IcnElevator';
-import { SvgIcnEllipsis } from './assets/svgr/IcnEllipsis';
-import { SvgIcnEllipsisCircle } from './assets/svgr/IcnEllipsisCircle';
-import { SvgIcnEmpty } from './assets/svgr/IcnEmpty';
-import { SvgIcnErrors } from './assets/svgr/IcnErrors';
-import { SvgIcnFile } from './assets/svgr/IcnFile';
-import { SvgIcnFolder } from './assets/svgr/IcnFolder';
-import { SvgIcnFolderOpen } from './assets/svgr/IcnFolderOpen';
-import { SvgIcnGear } from './assets/svgr/IcnGear';
-import { SvgIcnGitBranch } from './assets/svgr/IcnGitBranch';
-import { SvgIcnGithubLogo } from './assets/svgr/IcnGithubLogo';
-import { SvgIcnGitlabLogo } from './assets/svgr/IcnGitlabLogo';
-import { SvgIcnGlobe } from './assets/svgr/IcnGlobe';
-import { SvgIcnGui } from './assets/svgr/IcnGui';
-import { SvgIcnHeart } from './assets/svgr/IcnHeart';
-import { SvgIcnHome } from './assets/svgr/IcnHome';
-import { SvgIcnIndentation } from './assets/svgr/IcnIndentation';
-import { SvgIcnInfo } from './assets/svgr/IcnInfo';
-import { SvgIcnJump } from './assets/svgr/IcnJump';
-import { SvgIcnKey } from './assets/svgr/IcnKey';
-import { SvgIcnLaptop } from './assets/svgr/IcnLaptop';
-import { SvgIcnMinusCircle } from './assets/svgr/IcnMinusCircle';
-import { SvgIcnMinusCircleFill } from './assets/svgr/IcnMinusCircleFill';
-import { SvgIcnPlaceholder } from './assets/svgr/IcnPlaceholder';
-import { SvgIcnPlay } from './assets/svgr/IcnPlay';
-import { SvgIcnPlus } from './assets/svgr/IcnPlus';
-import { SvgIcnProhibited } from './assets/svgr/IcnProhibited';
-import { SvgIcnQuestion } from './assets/svgr/IcnQuestion';
-import { SvgIcnQuestionFill } from './assets/svgr/IcnQuestionFill';
-import { SvgIcnReceive } from './assets/svgr/IcnReceive';
-import { SvgIcnSearch } from './assets/svgr/IcnSearch';
-import { SvgIcnSecCert } from './assets/svgr/IcnSecCert';
-import { SvgIcnSent } from './assets/svgr/IcnSent';
-import { SvgIcnSuccess } from './assets/svgr/IcnSuccess';
-import { SvgIcnSync } from './assets/svgr/IcnSync';
-import { SvgIcnSystemEvent } from './assets/svgr/IcnSystemEvent';
-import { SvgIcnTrashcan } from './assets/svgr/IcnTrashcan';
-import { SvgIcnTriangle } from './assets/svgr/IcnTriangle';
-import { SvgIcnUser } from './assets/svgr/IcnUser';
-import { SvgIcnVial } from './assets/svgr/IcnVial';
-import { SvgIcnWarning } from './assets/svgr/IcnWarning';
-import { SvgIcnWarningCircle } from './assets/svgr/IcnWarningCircle';
-import { SvgIcnX } from './assets/svgr/IcnX';
+import { SvgIcnArrowRight } from "./assets/svgr/IcnArrowRight";
+import { SvgIcnBitbucketLogo } from "./assets/svgr/IcnBitbucketLogo";
+import { SvgIcnBrackets } from "./assets/svgr/IcnBrackets";
+import { SvgIcnBug } from "./assets/svgr/IcnBug";
+import { SvgIcnBurgerMenu } from "./assets/svgr/IcnBurgerMenu";
+import { SvgIcnCheckmark } from "./assets/svgr/IcnCheckmark";
+import { SvgIcnCheckmarkCircle } from "./assets/svgr/IcnCheckmarkCircle";
+import { SvgIcnChevronDown } from "./assets/svgr/IcnChevronDown";
+import { SvgIcnChevronUp } from "./assets/svgr/IcnChevronUp";
+import { SvgIcnClock } from "./assets/svgr/IcnClock";
+import { SvgIcnCookie } from "./assets/svgr/IcnCookie";
+import { SvgIcnDisconnected } from "./assets/svgr/IcnDisconnected";
+import { SvgIcnDraftingCompass } from "./assets/svgr/IcnDraftingCompass";
+import { SvgIcnDragGrip } from "./assets/svgr/IcnDragGrip";
+import { SvgIcnElevator } from "./assets/svgr/IcnElevator";
+import { SvgIcnEllipsis } from "./assets/svgr/IcnEllipsis";
+import { SvgIcnEllipsisCircle } from "./assets/svgr/IcnEllipsisCircle";
+import { SvgIcnEmpty } from "./assets/svgr/IcnEmpty";
+import { SvgIcnErrors } from "./assets/svgr/IcnErrors";
+import { SvgIcnFile } from "./assets/svgr/IcnFile";
+import { SvgIcnFolder } from "./assets/svgr/IcnFolder";
+import { SvgIcnFolderOpen } from "./assets/svgr/IcnFolderOpen";
+import { SvgIcnGear } from "./assets/svgr/IcnGear";
+import { SvgIcnGitBranch } from "./assets/svgr/IcnGitBranch";
+import { SvgIcnGithubLogo } from "./assets/svgr/IcnGithubLogo";
+import { SvgIcnGitlabLogo } from "./assets/svgr/IcnGitlabLogo";
+import { SvgIcnGlobe } from "./assets/svgr/IcnGlobe";
+import { SvgIcnGui } from "./assets/svgr/IcnGui";
+import { SvgIcnHeart } from "./assets/svgr/IcnHeart";
+import { SvgIcnHome } from "./assets/svgr/IcnHome";
+import { SvgIcnIndentation } from "./assets/svgr/IcnIndentation";
+import { SvgIcnInfo } from "./assets/svgr/IcnInfo";
+import { SvgIcnJump } from "./assets/svgr/IcnJump";
+import { SvgIcnKey } from "./assets/svgr/IcnKey";
+import { SvgIcnLaptop } from "./assets/svgr/IcnLaptop";
+import { SvgIcnMinusCircle } from "./assets/svgr/IcnMinusCircle";
+import { SvgIcnMinusCircleFill } from "./assets/svgr/IcnMinusCircleFill";
+import { SvgIcnPlaceholder } from "./assets/svgr/IcnPlaceholder";
+import { SvgIcnPlay } from "./assets/svgr/IcnPlay";
+import { SvgIcnPlus } from "./assets/svgr/IcnPlus";
+import { SvgIcnProhibited } from "./assets/svgr/IcnProhibited";
+import { SvgIcnQuestion } from "./assets/svgr/IcnQuestion";
+import { SvgIcnQuestionFill } from "./assets/svgr/IcnQuestionFill";
+import { SvgIcnReceive } from "./assets/svgr/IcnReceive";
+import { SvgIcnSearch } from "./assets/svgr/IcnSearch";
+import { SvgIcnSecCert } from "./assets/svgr/IcnSecCert";
+import { SvgIcnSent } from "./assets/svgr/IcnSent";
+import { SvgIcnSuccess } from "./assets/svgr/IcnSuccess";
+import { SvgIcnSync } from "./assets/svgr/IcnSync";
+import { SvgIcnSystemEvent } from "./assets/svgr/IcnSystemEvent";
+import { SvgIcnTrashcan } from "./assets/svgr/IcnTrashcan";
+import { SvgIcnTriangle } from "./assets/svgr/IcnTriangle";
+import { SvgIcnUser } from "./assets/svgr/IcnUser";
+import { SvgIcnVial } from "./assets/svgr/IcnVial";
+import { SvgIcnWarning } from "./assets/svgr/IcnWarning";
+import { SvgIcnWarningCircle } from "./assets/svgr/IcnWarningCircle";
+import { SvgIcnX } from "./assets/svgr/IcnX";
 
 export const ThemeEnum = {
-  default: 'default',
-  highlight: 'highlight',
+  default: "default",
+  highlight: "highlight",
 
   // Colors
-  danger: 'danger',
-  info: 'info',
-  notice: 'notice',
-  success: 'success',
-  surprise: 'surprise',
-  warning: 'warning',
+  danger: "danger",
+  info: "info",
+  notice: "notice",
+  success: "success",
+  surprise: "surprise",
+  warning: "warning",
 } as const;
 
 type ThemeKeys = ValueOf<typeof ThemeEnum>;
 
 export const IconEnum = {
-  arrowRight: 'arrow-right',
-  bitbucket: 'bitbucket',
-  brackets: 'brackets',
-  bug: 'bug',
-  burgerMenu: 'burger-menu',
-  checkmark: 'checkmark',
-  chevronDown: 'chevron-down',
-  chevronUp: 'chevron-up',
-  clock: 'clock',
-  cookie: 'cookie',
-  draftingCompass: 'drafting-compass',
-  dragGrip: 'drag-grip',
-  elevator: 'elevator',
-  ellipsesCircle: 'ellipses-circle',
-  ellipsis: 'ellipsis',
-  error: 'error',
-  file: 'file',
-  folder: 'folder',
-  folderOpen: 'folder-open',
-  gear: 'gear',
-  gitBranch: 'git-branch',
-  github: 'github',
-  gitlabLogo: 'gitlab-logo',
-  globe: 'globe',
-  gui: 'gui',
-  indentation: 'indentation',
-  info: 'info',
-  jump: 'jump',
-  heart: 'heart',
-  home: 'home',
-  key: 'key',
-  laptop: 'laptop',
-  minusCircle: 'minus-circle',
-  minusCircleFill: 'minus-circle-fill',
-  placeholder: 'placeholder',
-  play: 'play',
-  plus: 'plus',
-  prohibited: 'prohibited',
-  question: 'question',
-  questionFill: 'question-fill',
-  search: 'search',
-  secCert: 'sec-cert',
-  success: 'success',
-  sync: 'sync',
-  trashcan: 'trashcan',
-  triangle: 'triangle',
-  user: 'user',
-  vial: 'vial',
-  warning: 'warning',
-  warningCircle: 'warning-circle',
-  x: 'x',
-  disconnected: 'disconnected',
-  checkmarkCircle: 'checkmark-circle',
-  receive: 'receive',
-  sent: 'sent',
-  systemEvent: 'system-event',
+  arrowRight: "arrow-right",
+  bitbucket: "bitbucket",
+  brackets: "brackets",
+  bug: "bug",
+  burgerMenu: "burger-menu",
+  checkmark: "checkmark",
+  chevronDown: "chevron-down",
+  chevronUp: "chevron-up",
+  clock: "clock",
+  cookie: "cookie",
+  draftingCompass: "drafting-compass",
+  dragGrip: "drag-grip",
+  elevator: "elevator",
+  ellipsesCircle: "ellipses-circle",
+  ellipsis: "ellipsis",
+  error: "error",
+  file: "file",
+  folder: "folder",
+  folderOpen: "folder-open",
+  gear: "gear",
+  gitBranch: "git-branch",
+  github: "github",
+  gitlabLogo: "gitlab-logo",
+  globe: "globe",
+  gui: "gui",
+  indentation: "indentation",
+  info: "info",
+  jump: "jump",
+  heart: "heart",
+  home: "home",
+  key: "key",
+  laptop: "laptop",
+  minusCircle: "minus-circle",
+  minusCircleFill: "minus-circle-fill",
+  placeholder: "placeholder",
+  play: "play",
+  plus: "plus",
+  prohibited: "prohibited",
+  question: "question",
+  questionFill: "question-fill",
+  search: "search",
+  secCert: "sec-cert",
+  success: "success",
+  sync: "sync",
+  trashcan: "trashcan",
+  triangle: "triangle",
+  user: "user",
+  vial: "vial",
+  warning: "warning",
+  warningCircle: "warning-circle",
+  x: "x",
+  disconnected: "disconnected",
+  checkmarkCircle: "checkmark-circle",
+  receive: "receive",
+  sent: "sent",
+  systemEvent: "system-event",
   /** Blank icon */
-  empty: 'empty',
+  empty: "empty",
 } as const;
 
-const icons: Record<IconId, [ThemeKeys, NamedExoticComponent<SVGProps<SVGSVGElement>>]> = {
+const icons: Record<
+  IconId,
+  [ThemeKeys, NamedExoticComponent<SVGProps<SVGSVGElement>>]
+> = {
   [IconEnum.arrowRight]: [ThemeEnum.highlight, SvgIcnArrowRight],
   [IconEnum.bitbucket]: [ThemeEnum.default, SvgIcnBitbucketLogo],
   [IconEnum.brackets]: [ThemeEnum.default, SvgIcnBrackets],
@@ -207,10 +210,10 @@ function getThemeClassName(theme: ThemeKeys) {
     case ThemeEnum.warning:
       return `fill-${theme} text-${theme}`;
     case ThemeEnum.highlight:
-      return 'fill-hl text-danger';
+      return "fill-hl text-danger";
     case ThemeEnum.default:
     default:
-      return 'fill-current text-current';
+      return "fill-current text-current";
   }
 }
 
@@ -232,8 +235,13 @@ export const SvgIcon = ({
   }
 
   return (
-    <div className={`inline-flex items-center whitespace-nowrap ${label ? 'mr-[var(--padding-xs)]' : ''}`}>
-      <IconComponent className={`${getThemeClassName(iconTheme)} ${className}`} style={style} />
+    <div
+      className={`inline-flex items-center whitespace-nowrap ${label ? "mr-[var(--padding-xs)]" : ""}`}
+    >
+      <IconComponent
+        className={`${getThemeClassName(iconTheme)} ${className}`}
+        style={style}
+      />
       {label && <span>{label}</span>}
     </div>
   );

@@ -3,14 +3,23 @@
  *
  * https://github.com/mochajs/mocha/blob/9d4a8ec2d22ee154aecb1f8eeb25af8e6309faa8/lib/reporters/json.js
  */
-import Mocha, { type MochaOptions, reporters, Runnable, Runner, Test } from 'mocha';
+import Mocha, {
+  type MochaOptions,
+  reporters,
+  Runnable,
+  Runner,
+  Test,
+} from "mocha";
 
-import type { TestResult, TestResults } from './entities';
+import type { TestResult, TestResults } from "./entities";
 
 export class JavaScriptReporter extends reporters.Base {
-  description = 'single JS object';
+  description = "single JS object";
 
-  constructor(runner: Runner & { testResults?: TestResults }, options: MochaOptions) {
+  constructor(
+    runner: Runner & { testResults?: TestResults },
+    options: MochaOptions,
+  ) {
     super(runner, options);
 
     Mocha.reporters.Base.call(this, runner, options);
@@ -21,19 +30,19 @@ export class JavaScriptReporter extends reporters.Base {
     const failures: Test[] = [];
     const passes: Test[] = [];
 
-    runner.on(Mocha.Runner.constants.EVENT_TEST_END, test => {
+    runner.on(Mocha.Runner.constants.EVENT_TEST_END, (test) => {
       tests.push(test);
     });
 
-    runner.on(Mocha.Runner.constants.EVENT_TEST_PASS, test => {
+    runner.on(Mocha.Runner.constants.EVENT_TEST_PASS, (test) => {
       passes.push(test);
     });
 
-    runner.on(Mocha.Runner.constants.EVENT_TEST_FAIL, test => {
+    runner.on(Mocha.Runner.constants.EVENT_TEST_FAIL, (test) => {
       failures.push(test);
     });
 
-    runner.on(Mocha.Runner.constants.EVENT_TEST_PENDING, test => {
+    runner.on(Mocha.Runner.constants.EVENT_TEST_PENDING, (test) => {
       pending.push(test);
     });
 
@@ -80,10 +89,10 @@ const cleanCycles = (obj: Error) => {
   const cache: JSON[] = [];
   return JSON.parse(
     JSON.stringify(obj, (_, value) => {
-      if (typeof value === 'object' && value !== null) {
+      if (typeof value === "object" && value !== null) {
         if (cache.indexOf(value) !== -1) {
           // Instead of going in a circle, we'll print [object Object]
-          return '' + value;
+          return "" + value;
         }
 
         cache.push(value);
@@ -98,10 +107,13 @@ const cleanCycles = (obj: Error) => {
  * Transform an Error object into a JSON object.
  */
 const errorJSON = (error: Error) => {
-  return (Object.getOwnPropertyNames(error) as (keyof Error)[]).reduce((accumulator, key) => {
-    return {
-      ...accumulator,
-      [key]: error[key],
-    };
-  }, {});
+  return (Object.getOwnPropertyNames(error) as (keyof Error)[]).reduce(
+    (accumulator, key) => {
+      return {
+        ...accumulator,
+        [key]: error[key],
+      };
+    },
+    {},
+  );
 };

@@ -1,21 +1,18 @@
-import classnames from 'classnames';
-import React, {
-  type CSSProperties,
-  type ReactNode,
-} from 'react';
+import classnames from "classnames";
+import React, { type CSSProperties, type ReactNode } from "react";
 import {
   mergeProps,
   OverlayContainer,
   useOverlayPosition,
   useTooltip,
   useTooltipTrigger,
-} from 'react-aria';
-import { useTooltipTriggerState } from 'react-stately';
+} from "react-aria";
+import { useTooltipTriggerState } from "react-stately";
 
 interface Props {
   children: ReactNode;
   message: ReactNode;
-  position?: 'bottom' | 'top' | 'right' | 'left';
+  position?: "bottom" | "top" | "right" | "left";
   className?: string;
   selectable?: boolean;
   delay?: number;
@@ -25,7 +22,16 @@ interface Props {
 }
 
 export const Tooltip = (props: Props) => {
-  const { children, message, className, wide, selectable, delay = 400, position, style } = props;
+  const {
+    children,
+    message,
+    className,
+    wide,
+    selectable,
+    delay = 400,
+    position,
+    style,
+  } = props;
   const triggerRef = React.useRef(null);
   const overlayRef = React.useRef(null);
 
@@ -41,10 +47,10 @@ export const Tooltip = (props: Props) => {
     isOpen: state.isOpen,
   });
 
-  const tooltipClasses = classnames(className, 'tooltip');
-  const bubbleClasses = classnames('tooltip__bubble theme--tooltip', {
-    'tooltip__bubble--visible': state.isOpen,
-    'tooltip__bubble--wide': wide,
+  const tooltipClasses = classnames(className, "tooltip");
+  const bubbleClasses = classnames("tooltip__bubble theme--tooltip", {
+    "tooltip__bubble--visible": state.isOpen,
+    "tooltip__bubble--wide": wide,
     selectable,
   });
 
@@ -53,7 +59,7 @@ export const Tooltip = (props: Props) => {
       <div
         ref={triggerRef}
         className={tooltipClasses}
-        style={{ position: 'relative', ...style }}
+        style={{ position: "relative", ...style }}
         {...trigger.triggerProps}
         onClick={props.onClick}
       >
@@ -63,7 +69,7 @@ export const Tooltip = (props: Props) => {
         <OverlayContainer>
           <div
             ref={overlayRef}
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
             {...mergeProps(tooltip.tooltipProps, positionProps)}
             className={bubbleClasses}
           >

@@ -1,13 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { Button } from 'react-aria-components';
-import { type ActionFunction, redirect, useFetcher, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { Button } from "react-aria-components";
+import {
+  type ActionFunction,
+  redirect,
+  useFetcher,
+  useNavigate,
+} from "react-router-dom";
 
-import { LandingPage } from '../../common/sentry';
-import { SegmentEvent } from '../analytics';
-import { getLoginUrl } from '../auth-session-provider';
-import { Icon } from '../components/icon';
+import { LandingPage } from "../../common/sentry";
+import { SegmentEvent } from "../analytics";
+import { getLoginUrl } from "../auth-session-provider";
+import { Icon } from "../components/icon";
 
-const GoogleIcon = (props: React.ReactSVGElement['props']) => {
+const GoogleIcon = (props: React.ReactSVGElement["props"]) => {
   return (
     <svg {...props} viewBox="0 0 22 22">
       <path
@@ -30,20 +35,18 @@ const GoogleIcon = (props: React.ReactSVGElement['props']) => {
   );
 };
 
-export const action: ActionFunction = async ({
-  request,
-}) => {
+export const action: ActionFunction = async ({ request }) => {
   const data = await request.formData();
-  const provider = data.get('provider');
+  const provider = data.get("provider");
   const url = new URL(getLoginUrl());
 
-  if (typeof provider === 'string' && provider) {
-    url.searchParams.set('provider', provider);
+  if (typeof provider === "string" && provider) {
+    url.searchParams.set("provider", provider);
   }
 
   window.main.openInBrowser(url.toString());
 
-  return redirect('/auth/authorize');
+  return redirect("/auth/authorize");
 };
 
 const Login = () => {
@@ -52,37 +55,38 @@ const Login = () => {
   const [message, setMessage] = useState<string | null>(null);
 
   const login = (provider: string) => {
-    loginFetcher.submit({
-      provider,
-    }, {
-      action: '/auth/login',
-      method: 'POST',
-    });
+    loginFetcher.submit(
+      {
+        provider,
+      },
+      {
+        action: "/auth/login",
+        method: "POST",
+      },
+    );
   };
 
   useEffect(() => {
     window.main.landingPageRendered(LandingPage.Login);
   }, []);
 
-  const logoutMessage = window.localStorage.getItem('logoutMessage');
+  const logoutMessage = window.localStorage.getItem("logoutMessage");
   useEffect(() => {
     if (logoutMessage) {
-      window.localStorage.removeItem('logoutMessage');
+      window.localStorage.removeItem("logoutMessage");
       setMessage(logoutMessage);
     }
   }, [logoutMessage]);
 
   return (
-    <div
-      className='flex flex-col gap-[--padding-lg]'
-    >
-      <div className='flex flex-col gap-[--padding-md]'>
-        <p className='text-center text-[--color-font] text-2xl py-[--padding-md]'>
+    <div className="flex flex-col gap-[--padding-lg]">
+      <div className="flex flex-col gap-[--padding-md]">
+        <p className="py-[--padding-md] text-center text-2xl text-[--color-font]">
           Get started for free
         </p>
-        <div className="font-extrabold text-sm [text-wrap:balance]">
-          <span className="text-indigo-300 inline-flex flex-col h-[calc(theme(fontSize.sm)*theme(lineHeight.tight))] overflow-hidden">
-            <ul className="block animate-text-slide-4 text-right leading-tight [&_li]:block">
+        <div className="text-sm font-extrabold [text-wrap:balance]">
+          <span className="inline-flex h-[calc(theme(fontSize.sm)*theme(lineHeight.tight))] flex-col overflow-hidden text-indigo-300">
+            <ul className="animate-text-slide-4 block text-right leading-tight [&_li]:block">
               <li>Debug</li>
               <li>Design</li>
               <li>Test</li>
@@ -90,79 +94,74 @@ const Login = () => {
               <li aria-hidden="true">Debug</li>
             </ul>
           </span>
-          <span className='ml-1 text-[--color-font]'>APIs locally, on Git or in the Cloud.</span>
+          <span className="ml-1 text-[--color-font]">
+            APIs locally, on Git or in the Cloud.
+          </span>
         </div>
-        {message && <div className="font-bold text-sm text-red-300">{message}</div>}
+        {message && (
+          <div className="text-sm font-bold text-red-300">{message}</div>
+        )}
         <Button
-          aria-label='Continue with Google'
+          aria-label="Continue with Google"
           onPress={() => {
-            login('google');
+            login("google");
           }}
-          className="w-full items-center border border-solid border-[--hl-md] flex justify-center gap-[--padding-md] aria-pressed:bg-[--hl-sm] rounded-md text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
+          className="flex w-full items-center justify-center gap-[--padding-md] rounded-md border border-solid border-[--hl-md] text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
         >
-          <div className='w-[40px] h-[35px] border-r border-solid border-[--hl-sm] flex items-center justify-center bg-[--hl-xs]'>
+          <div className="flex h-[35px] w-[40px] items-center justify-center border-r border-solid border-[--hl-sm] bg-[--hl-xs]">
             <GoogleIcon width="1em" />
           </div>
-          <span className='flex-1 items'>
-            Continue with Google
-
-          </span>
+          <span className="items flex-1">Continue with Google</span>
         </Button>
         <Button
-          aria-label='Continue with GitHub'
+          aria-label="Continue with GitHub"
           onPress={() => {
-            login('github');
+            login("github");
           }}
-          className="w-full items-center border border-solid border-[--hl-md] flex justify-center gap-[--padding-md] aria-pressed:bg-[--hl-sm] rounded-md text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
+          className="flex w-full items-center justify-center gap-[--padding-md] rounded-md border border-solid border-[--hl-md] text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
         >
-          <div className='w-[40px] h-[35px] border-r border-solid border-[--hl-sm] flex items-center justify-center bg-[--hl-xs]'>
-            <Icon icon={['fab', 'github']} />
+          <div className="flex h-[35px] w-[40px] items-center justify-center border-r border-solid border-[--hl-sm] bg-[--hl-xs]">
+            <Icon icon={["fab", "github"]} />
           </div>
-          <span className='flex-1 items'>
-            Continue with GitHub
-          </span>
+          <span className="items flex-1">Continue with GitHub</span>
         </Button>
         <Button
-          aria-label='Continue with Email'
+          aria-label="Continue with Email"
           onPress={() => {
-            login('email');
+            login("email");
           }}
-          className="w-full items-center border border-solid border-[--hl-md] flex justify-center gap-[--padding-md] aria-pressed:bg-[--hl-sm] rounded-md text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
+          className="flex w-full items-center justify-center gap-[--padding-md] rounded-md border border-solid border-[--hl-md] text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
         >
-          <div className='w-[40px] h-[35px] border-r border-solid border-[--hl-sm] flex items-center justify-center bg-[--hl-xs]'>
+          <div className="flex h-[35px] w-[40px] items-center justify-center border-r border-solid border-[--hl-sm] bg-[--hl-xs]">
             <Icon icon="envelope" />
           </div>
-          <span className='flex-1 items'>
-            Continue with Email
-          </span>
+          <span className="items flex-1">Continue with Email</span>
         </Button>
         <Button
-          aria-label='Continue with SSO'
+          aria-label="Continue with SSO"
           onPress={() => {
-            login('sso');
+            login("sso");
           }}
-          className="w-full items-center border border-solid border-[--hl-md] flex justify-center gap-[--padding-md] aria-pressed:bg-[--hl-sm] rounded-md text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
+          className="flex w-full items-center justify-center gap-[--padding-md] rounded-md border border-solid border-[--hl-md] text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
         >
-          <div className='w-[40px] h-[35px] border-r border-solid border-[--hl-sm] flex items-center justify-center bg-[--hl-xs]'>
+          <div className="flex h-[35px] w-[40px] items-center justify-center border-r border-solid border-[--hl-sm] bg-[--hl-xs]">
             <Icon icon="key" />
           </div>
-          <span className='flex-1 items'>
-            Continue with SSO
-          </span>
+          <span className="items flex-1">Continue with SSO</span>
         </Button>
 
-        <p className='text-[rgba(var(--color-font-rgb),0.8)] text-xs text-center'>
-          By signing up or using Insomnia, you agree to the{' '}
+        <p className="text-center text-xs text-[rgba(var(--color-font-rgb),0.8)]">
+          By signing up or using Insomnia, you agree to the{" "}
           <a
-            className='font-bold outline-none transition-colors hover:text-[--color-font] focus:text-[--color-font]'
+            className="font-bold outline-none transition-colors hover:text-[--color-font] focus:text-[--color-font]"
             href="https://insomnia.rest/terms"
             rel="noreferrer"
           >
             terms of service
-          </a>{' '}
-          and{' '}
+          </a>{" "}
+          and{" "}
           <a
-            className='font-bold outline-none transition-colors hover:text-[--color-font] focus:text-[--color-font]'
+            className="font-bold outline-none transition-colors hover:text-[--color-font] focus:text-[--color-font]"
             href="https://insomnia.rest/privacy"
             rel="noreferrer"
           >
@@ -172,23 +171,23 @@ const Login = () => {
         </p>
       </div>
 
-      <div className='flex justify-center'>
+      <div className="flex justify-center">
         <Button
           onPress={() => {
             window.main.trackSegmentEvent({
               event: SegmentEvent.selectScratchpad,
             });
-            navigate('/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug');
+            navigate(
+              "/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug",
+            );
           }}
-          aria-label='Use the Scratch Pad'
-          className='flex outline-none transition-colors justify-center text-[rgba(var(--color-font-rgb),0.8)] text-sm gap-[--padding-xs] hover:text-[--color-font] focus:text-[--color-font]'
+          aria-label="Use the Scratch Pad"
+          className="flex justify-center gap-[--padding-xs] text-sm text-[rgba(var(--color-font-rgb),0.8)] outline-none transition-colors hover:text-[--color-font] focus:text-[--color-font]"
         >
           <div>
-            <i className='fa fa-edit' />
+            <i className="fa fa-edit" />
           </div>
-          <span>
-            Use the local Scratch Pad
-          </span>
+          <span>Use the local Scratch Pad</span>
         </Button>
       </div>
     </div>

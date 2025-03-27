@@ -1,17 +1,17 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
-import { diff } from '../diff';
-import { patch } from '../patch';
+import { diff } from "../diff";
+import { patch } from "../patch";
 
-describe('patch()', () => {
-  it('works on many examples', () => {
+describe("patch()", () => {
+  it("works on many examples", () => {
     const things = [
       [
-        'Hello, this is a pretty long sentence about not much at all.',
-        'Hello, this is a pretty short sentence.',
+        "Hello, this is a pretty long sentence about not much at all.",
+        "Hello, this is a pretty short sentence.",
       ],
-      ['xxxxxxxxxxyyyyyyyyyyyyyyyyzzzzzzzzzzzzzzzz', 'abc'],
-      ['xyz', 'xyz'],
+      ["xxxxxxxxxxyyyyyyyyyyyyyyyyzzzzzzzzzzzzzzzz", "abc"],
+      ["xyz", "xyz"],
     ];
 
     for (const thing of things) {

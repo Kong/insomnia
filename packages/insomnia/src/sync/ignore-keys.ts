@@ -1,8 +1,8 @@
-import type { BaseModel } from '../models';
-import { isWorkspace, type Workspace } from '../models/workspace';
+import type { BaseModel } from "../models";
+import { isWorkspace, type Workspace } from "../models/workspace";
 
 // Key for VCS to delete before computing changes
-const DELETE_KEY: keyof BaseModel = 'modified';
+const DELETE_KEY: keyof BaseModel = "modified";
 
 type ResetModelKeys<T extends BaseModel> = {
   [K in keyof T]?: T[K] | null;
@@ -35,10 +35,11 @@ export const deleteKeys = <T extends BaseModel>(doc: T) => {
 
 export const resetKeys = <T extends BaseModel>(doc: T) => {
   if (isWorkspace(doc)) {
-    (Object.keys(RESET_WORKSPACE_KEYS) as (keyof typeof RESET_WORKSPACE_KEYS)[])
-      .forEach(key => {
-        // @ts-expect-error -- mapping unsoundness
-        doc[key] = RESET_WORKSPACE_KEYS[key];
-      });
+    (
+      Object.keys(RESET_WORKSPACE_KEYS) as (keyof typeof RESET_WORKSPACE_KEYS)[]
+    ).forEach((key) => {
+      // @ts-expect-error -- mapping unsoundness
+      doc[key] = RESET_WORKSPACE_KEYS[key];
+    });
   }
 };

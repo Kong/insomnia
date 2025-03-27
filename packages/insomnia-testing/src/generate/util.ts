@@ -1,5 +1,5 @@
 export const escapeJsStr = (s: string) => {
-  return s.replace(/'/g, '\\\'');
+  return s.replace(/'/g, "\\'");
 };
 
 export const indent = (level: number, code: string) => {
@@ -7,9 +7,9 @@ export const indent = (level: number, code: string) => {
     return code;
   }
 
-  const prefix = new Array(level + 1).join('  ');
+  const prefix = new Array(level + 1).join("  ");
   return code
-    .split('\n')
-    .map(line => prefix + line)
-    .join('\n');
+    .split("\n")
+    .map((line) => prefix + line)
+    .join("\n");
 };

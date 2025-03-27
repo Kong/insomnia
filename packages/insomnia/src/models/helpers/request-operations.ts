@@ -1,9 +1,19 @@
-import { type GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../grpc-request';
-import * as models from '../index';
-import type { Request } from '../request';
-import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '../websocket-request';
+import {
+  type GrpcRequest,
+  isGrpcRequest,
+  isGrpcRequestId,
+} from "../grpc-request";
+import * as models from "../index";
+import type { Request } from "../request";
+import {
+  isWebSocketRequest,
+  isWebSocketRequestId,
+  type WebSocketRequest,
+} from "../websocket-request";
 
-export function getById(requestId: string): Promise<Request | GrpcRequest | WebSocketRequest | null> {
+export function getById(
+  requestId: string,
+): Promise<Request | GrpcRequest | WebSocketRequest | null> {
   if (isGrpcRequestId(requestId)) {
     return models.grpcRequest.getById(requestId);
   }
@@ -23,7 +33,10 @@ export function remove(request: Request | GrpcRequest | WebSocketRequest) {
   return models.request.remove(request);
 }
 
-export function update<T extends object>(request: T, patch: Partial<T> = {}): Promise<T> {
+export function update<T extends object>(
+  request: T,
+  patch: Partial<T> = {},
+): Promise<T> {
   // @ts-expect-error -- TSCONVERSION
   if (isGrpcRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
@@ -38,7 +51,10 @@ export function update<T extends object>(request: T, patch: Partial<T> = {}): Pr
   return models.request.update(request, patch);
 }
 
-export function duplicate<T extends object>(request: T, patch: Partial<T> = {}): Promise<T> {
+export function duplicate<T extends object>(
+  request: T,
+  patch: Partial<T> = {},
+): Promise<T> {
   // @ts-expect-error -- TSCONVERSION
   if (isGrpcRequest(request)) {
     // @ts-expect-error -- TSCONVERSION

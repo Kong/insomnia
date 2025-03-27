@@ -1,29 +1,21 @@
-import React, { type FC } from 'react';
-import { useToggle } from 'react-use';
+import React, { type FC } from "react";
+import { useToggle } from "react-use";
 
-import type { SettingsOfType } from '../../../common/settings';
-import { useSettingsPatcher } from '../../hooks/use-request';
-import { useRootLoaderData } from '../../routes/root';
-import { HelpTooltip } from '../help-tooltip';
+import type { SettingsOfType } from "../../../common/settings";
+import { useSettingsPatcher } from "../../hooks/use-request";
+import { useRootLoaderData } from "../../routes/root";
+import { HelpTooltip } from "../help-tooltip";
 
 export const MaskedSetting: FC<{
-  disabled?: React.HTMLProps<HTMLInputElement>['disabled'];
+  disabled?: React.HTMLProps<HTMLInputElement>["disabled"];
   help?: string;
   label: string;
-  placeholder?: React.HTMLProps<HTMLInputElement>['placeholder'];
+  placeholder?: React.HTMLProps<HTMLInputElement>["placeholder"];
   setting: SettingsOfType<string>;
-}> = ({
-  disabled,
-  help,
-  label,
-  placeholder,
-  setting,
-}) => {
+}> = ({ disabled, help, label, placeholder, setting }) => {
   const [isHidden, setHidden] = useToggle(true);
 
-  const {
-    settings,
-  } = useRootLoaderData();
+  const { settings } = useRootLoaderData();
 
   if (!settings.hasOwnProperty(setting)) {
     throw new Error(`Invalid setting name ${setting}`);
@@ -41,13 +33,19 @@ export const MaskedSetting: FC<{
           defaultValue={String(settings[setting])}
           disabled={disabled}
           name={setting}
-          onChange={event => patchSettings({ [setting]: event.currentTarget.value })}
+          onChange={(event) =>
+            patchSettings({ [setting]: event.currentTarget.value })
+          }
           placeholder={placeholder}
-          type={!settings.showPasswords && isHidden ? 'password' : 'text'}
+          type={!settings.showPasswords && isHidden ? "password" : "text"}
         />
         {!settings.showPasswords && (
-          <button className={'form-control__right'} onClick={setHidden}>
-            {isHidden ? <i className="fa fa-eye-slash" /> : <i className="fa fa-eye" />}
+          <button className={"form-control__right"} onClick={setHidden}>
+            {isHidden ? (
+              <i className="fa fa-eye-slash" />
+            ) : (
+              <i className="fa fa-eye" />
+            )}
           </button>
         )}
       </div>

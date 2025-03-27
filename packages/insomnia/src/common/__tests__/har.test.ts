@@ -1,51 +1,51 @@
-import path from 'path';
-import { beforeEach, describe, expect, it } from 'vitest';
+import path from "path";
+import { beforeEach, describe, expect, it } from "vitest";
 
-import { database as db } from '../../common/database';
-import * as models from '../../models';
-import { Cookie } from '../../models/cookie-jar';
-import { Request } from '../../models/request';
-import { Response } from '../../models/response';
-import { AUTH_BASIC } from '../constants';
-import { exportHar, exportHarResponse, exportHarWithRequest } from '../har';
-import { getRenderedRequestAndContext } from '../render';
+import { database as db } from "../../common/database";
+import * as models from "../../models";
+import { Cookie } from "../../models/cookie-jar";
+import { Request } from "../../models/request";
+import { Response } from "../../models/response";
+import { AUTH_BASIC } from "../constants";
+import { exportHar, exportHarResponse, exportHarWithRequest } from "../har";
+import { getRenderedRequestAndContext } from "../render";
 
-describe('export', () => {
+describe("export", () => {
   beforeEach(async () => {
-    await db.init(models.types(), { inMemoryOnly: true }, true, () => { },);
+    await db.init(models.types(), { inMemoryOnly: true }, true, () => {});
     await models.project.all();
     await models.settings.getOrCreate();
   });
 
-  describe('exportHar()', () => {
-    it('exports single requests', async () => {
+  describe("exportHar()", () => {
+    it("exports single requests", async () => {
       const wrk = await models.workspace.create({
-        _id: 'wrk_1',
-        name: 'Workspace',
+        _id: "wrk_1",
+        name: "Workspace",
       });
       const req1 = await models.request.create({
-        _id: 'req_1',
-        name: 'Request 1',
+        _id: "req_1",
+        name: "Request 1",
         parentId: wrk._id,
-        url: 'https://httpstat.us/200',
-        method: 'POST',
+        url: "https://httpstat.us/200",
+        method: "POST",
         body: {
-          mimeType: 'application/json',
-          text: '{}',
+          mimeType: "application/json",
+          text: "{}",
         },
         headers: [
           {
-            name: 'Accept',
-            value: 'application/json',
+            name: "Accept",
+            value: "application/json",
           },
           {
-            name: 'Content-Type',
-            value: 'application/json',
+            name: "Content-Type",
+            value: "application/json",
             disabled: false,
           },
           {
-            name: 'X-Disabled',
-            value: 'X-Disabled',
+            name: "X-Disabled",
+            value: "X-Disabled",
             disabled: true,
           },
         ],
@@ -53,75 +53,78 @@ describe('export', () => {
       await models.response.create({
         parentId: req1._id,
         statusCode: 200,
-        statusMessage: 'OK',
+        statusMessage: "OK",
         elapsedTime: 999,
         headers: [
           {
-            name: 'Content-Type',
-            value: 'application/json',
+            name: "Content-Type",
+            value: "application/json",
           },
         ],
-        contentType: 'application/json',
-        bodyPath: path.join(__dirname, '../__fixtures__/har/test-response.json'),
+        contentType: "application/json",
+        bodyPath: path.join(
+          __dirname,
+          "../__fixtures__/har/test-response.json",
+        ),
         bodyCompression: null,
       });
       const exportRequests = [
         {
           requestId: req1._id,
-          environmentId: 'n/a',
+          environmentId: "n/a",
         },
       ];
       const harExport = await exportHar(exportRequests);
       expect(harExport).toMatchObject({
         log: {
-          version: '1.2',
+          version: "1.2",
           creator: {
-            name: 'Insomnia REST Client',
+            name: "Insomnia REST Client",
           },
           entries: [
             {
               startedDateTime: expect.any(String),
               time: 999,
               request: {
-                method: 'POST',
-                url: 'https://httpstat.us/200',
-                httpVersion: 'HTTP/1.1',
+                method: "POST",
+                url: "https://httpstat.us/200",
+                httpVersion: "HTTP/1.1",
                 cookies: [],
                 headers: [
                   {
-                    name: 'Accept',
-                    value: 'application/json',
+                    name: "Accept",
+                    value: "application/json",
                   },
                   {
-                    name: 'Content-Type',
-                    value: 'application/json',
+                    name: "Content-Type",
+                    value: "application/json",
                   },
                 ],
                 queryString: [],
                 postData: {
-                  mimeType: 'application/json',
-                  text: '{}',
+                  mimeType: "application/json",
+                  text: "{}",
                 },
                 headersSize: -1,
                 bodySize: -1,
               },
               response: {
                 status: 200,
-                statusText: 'OK',
-                httpVersion: 'HTTP/1.1',
+                statusText: "OK",
+                httpVersion: "HTTP/1.1",
                 cookies: [],
                 headers: [
                   {
-                    name: 'Content-Type',
-                    value: 'application/json',
+                    name: "Content-Type",
+                    value: "application/json",
                   },
                 ],
                 content: {
                   size: 15,
-                  mimeType: 'application/json',
+                  mimeType: "application/json",
                   text: '{"key":"value"}',
                 },
-                redirectURL: '',
+                redirectURL: "",
                 headersSize: -1,
                 bodySize: -1,
               },
@@ -142,85 +145,87 @@ describe('export', () => {
       });
     });
 
-    it('exports multiple requests', async () => {
+    it("exports multiple requests", async () => {
       const workspace = await models.workspace.create({
-        _id: 'wrk_1',
-        name: 'Workspace',
+        _id: "wrk_1",
+        name: "Workspace",
       });
       const baseReq = await models.request.create({
-        _id: 'req_0',
+        _id: "req_0",
         type: models.request.type,
-        name: 'Request',
+        name: "Request",
         parentId: workspace._id,
-        url: 'http://localhost',
-        method: 'GET',
+        url: "http://localhost",
+        method: "GET",
         body: {},
         headers: [
           {
-            name: 'X-Environment',
-            value: '{{ envvalue }}',
+            name: "X-Environment",
+            value: "{{ envvalue }}",
           },
         ],
       });
       const req1 = await models.request.duplicate(baseReq);
-      req1._id = 'req_1';
-      req1.name = 'Request 1';
+      req1._id = "req_1";
+      req1.name = "Request 1";
       req1.headers.push({
-        name: 'X-Request',
-        value: '1',
+        name: "X-Request",
+        value: "1",
       });
       await models.request.create(req1);
       const req2 = await models.request.duplicate(baseReq);
-      req2._id = 'req_2';
-      req2.name = 'Request 2';
+      req2._id = "req_2";
+      req2.name = "Request 2";
       req2.headers.push({
-        name: 'X-Request',
-        value: '2',
+        name: "X-Request",
+        value: "2",
       });
       await models.request.create(req2);
       const req3 = await models.request.duplicate(baseReq);
-      req3._id = 'req_3';
-      req3.name = 'Request 3';
+      req3._id = "req_3";
+      req3.name = "Request 3";
       req3.headers.push({
-        name: 'X-Request',
-        value: '3',
+        name: "X-Request",
+        value: "3",
       });
       await models.request.create(req3);
-      const envBase = await models.environment.getOrCreateForParentId(workspace._id);
+      const envBase = await models.environment.getOrCreateForParentId(
+        workspace._id,
+      );
       await models.environment.update(envBase, {
         data: {
-          envvalue: '',
+          envvalue: "",
         },
       });
       const envPublic = await models.environment.create({
-        _id: 'env_1',
-        name: 'Public',
+        _id: "env_1",
+        name: "Public",
         parentId: envBase._id,
         data: {
-          envvalue: 'public',
+          envvalue: "public",
         },
       });
       const envPrivate = await models.environment.create({
-        _id: 'env_2',
-        name: 'Private',
+        _id: "env_2",
+        name: "Private",
         isPrivate: true,
         parentId: envBase._id,
         data: {
-          envvalue: 'private',
+          envvalue: "private",
         },
       });
       await models.response.create({
-        _id: 'res_1',
+        _id: "res_1",
         parentId: req1._id,
         statusCode: 204,
       });
       await models.response.create({
-        _id: 'res_2',
+        _id: "res_2",
         parentId: req2._id,
         statusCode: 404,
       });
       await models.response.create({
-        _id: 'res_3',
+        _id: "res_3",
         parentId: req3._id,
         statusCode: 500,
       });
@@ -241,21 +246,21 @@ describe('export', () => {
       const harExport = await exportHar(exportRequests);
       expect(harExport).toMatchObject({
         log: {
-          version: '1.2',
+          version: "1.2",
           creator: {
-            name: 'Insomnia REST Client',
+            name: "Insomnia REST Client",
           },
           entries: [
             {
               request: {
                 headers: [
                   {
-                    name: 'X-Environment',
-                    value: '',
+                    name: "X-Environment",
+                    value: "",
                   },
                   {
-                    name: 'X-Request',
-                    value: '1',
+                    name: "X-Request",
+                    value: "1",
                   },
                 ],
               },
@@ -268,12 +273,12 @@ describe('export', () => {
               request: {
                 headers: [
                   {
-                    name: 'X-Environment',
-                    value: 'public',
+                    name: "X-Environment",
+                    value: "public",
                   },
                   {
-                    name: 'X-Request',
-                    value: '2',
+                    name: "X-Request",
+                    value: "2",
                   },
                 ],
               },
@@ -286,12 +291,12 @@ describe('export', () => {
               request: {
                 headers: [
                   {
-                    name: 'X-Environment',
-                    value: 'private',
+                    name: "X-Environment",
+                    value: "private",
                   },
                   {
-                    name: 'X-Request',
-                    value: '3',
+                    name: "X-Request",
+                    value: "3",
                   },
                 ],
               },
@@ -306,258 +311,267 @@ describe('export', () => {
     });
   });
 
-  describe('exportHarResponse()', () => {
-    it('exports a default har response for an empty response', async () => {
+  describe("exportHarResponse()", () => {
+    it("exports a default har response for an empty response", async () => {
       const notFoundResponse = null;
       const harResponse = await exportHarResponse(notFoundResponse);
       expect(harResponse).toMatchObject({
         status: 0,
-        statusText: '',
-        httpVersion: 'HTTP/1.1',
+        statusText: "",
+        httpVersion: "HTTP/1.1",
         content: {
           size: 0,
-          mimeType: '',
+          mimeType: "",
         },
       });
     });
 
-    it('exports a valid har response for a non empty response', async () => {
+    it("exports a valid har response for a non empty response", async () => {
       const response: Response = {
         ...models.response.init(),
-        _id: 'res_123',
+        _id: "res_123",
         isPrivate: false,
-        name: '',
+        name: "",
         type: models.response.type,
-        parentId: 'req_123',
+        parentId: "req_123",
         modified: 0,
         created: 0,
         statusCode: 200,
-        statusMessage: 'OK',
+        statusMessage: "OK",
         headers: [
           {
-            name: 'Content-Length',
-            value: '2',
+            name: "Content-Length",
+            value: "2",
           },
           {
-            name: 'Content-Type',
-            value: 'application/json',
+            name: "Content-Type",
+            value: "application/json",
           },
           {
-            name: 'Set-Cookie',
-            value: 'sessionid=12345; HttpOnly; Path=/',
+            name: "Set-Cookie",
+            value: "sessionid=12345; HttpOnly; Path=/",
           },
         ],
-        contentType: 'application/json',
-        bodyPath: path.join(__dirname, '../__fixtures__/har/test-response.json'),
+        contentType: "application/json",
+        bodyPath: path.join(
+          __dirname,
+          "../__fixtures__/har/test-response.json",
+        ),
       };
       const harResponse = await exportHarResponse(response);
       expect(harResponse).toMatchObject({
         status: 200,
-        statusText: 'OK',
-        httpVersion: 'HTTP/1.1',
+        statusText: "OK",
+        httpVersion: "HTTP/1.1",
         cookies: [
           {
-            name: 'sessionid',
-            value: '12345',
-            path: '/',
+            name: "sessionid",
+            value: "12345",
+            path: "/",
             httpOnly: true,
           },
         ],
         headers: [
           {
-            name: 'Content-Length',
-            value: '2',
+            name: "Content-Length",
+            value: "2",
           },
 
           {
-            name: 'Content-Type',
-            value: 'application/json',
+            name: "Content-Type",
+            value: "application/json",
           },
           {
-            name: 'Set-Cookie',
-            value: 'sessionid=12345; HttpOnly; Path=/',
+            name: "Set-Cookie",
+            value: "sessionid=12345; HttpOnly; Path=/",
           },
         ],
         content: {
           size: 15,
-          mimeType: 'application/json',
+          mimeType: "application/json",
           text: '{"key":"value"}',
         },
-        redirectURL: '',
+        redirectURL: "",
         headersSize: -1,
         bodySize: -1,
       });
     });
   });
 
-  describe('exportHarWithRequest()', () => {
-    it('renders does it correctly', async () => {
+  describe("exportHarWithRequest()", () => {
+    it("renders does it correctly", async () => {
       const workspace = await models.workspace.create();
       const cookies: Cookie[] = [
         {
-          id: '',
+          id: "",
           secure: false,
           httpOnly: false,
-          creation: new Date('2016-10-05T04:40:49.505Z'),
-          key: 'foo',
-          value: 'barrrrr',
-          expires: new Date('2096-10-12T04:40:49.000Z'),
-          domain: 'google.com',
-          path: '/',
+          creation: new Date("2016-10-05T04:40:49.505Z"),
+          key: "foo",
+          value: "barrrrr",
+          expires: new Date("2096-10-12T04:40:49.000Z"),
+          domain: "google.com",
+          path: "/",
           hostOnly: true,
-          lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
+          lastAccessed: new Date("2096-10-05T04:40:49.505Z"),
         },
       ];
-      const cookieJar = await models.cookieJar.getOrCreateForParentId(workspace._id);
+      const cookieJar = await models.cookieJar.getOrCreateForParentId(
+        workspace._id,
+      );
       await models.cookieJar.update(cookieJar, {
         parentId: workspace._id,
         cookies,
       });
       const request: Request = {
         ...models.request.init(),
-        _id: 'req_123',
+        _id: "req_123",
         modified: 123,
         created: 123,
         parentId: workspace._id,
         type: models.response.type,
         headers: [
           {
-            name: 'Content-Type',
-            value: 'application/json',
+            name: "Content-Type",
+            value: "application/json",
           },
         ],
         parameters: [
           {
-            name: 'foo bar',
-            value: 'hello&world',
+            name: "foo bar",
+            value: "hello&world",
           },
         ],
-        method: 'POST',
+        method: "POST",
         body: {
-          text: 'foo bar',
+          text: "foo bar",
         },
-        url: 'http://google.com',
+        url: "http://google.com",
         authentication: {
           type: AUTH_BASIC,
-          username: 'user',
-          password: 'pass',
+          username: "user",
+          password: "pass",
         },
       };
-      const { request: renderedRequest } = await getRenderedRequestAndContext({ request });
+      const { request: renderedRequest } = await getRenderedRequestAndContext({
+        request,
+      });
       const har = await exportHarWithRequest(renderedRequest);
       expect(har.cookies.length).toBe(1);
       expect(har).toEqual({
         bodySize: -1,
         cookies: [
           {
-            domain: 'google.com',
-            expires: '2096-10-12T04:40:49.000Z',
-            name: 'foo',
-            path: '/',
-            value: 'barrrrr',
+            domain: "google.com",
+            expires: "2096-10-12T04:40:49.000Z",
+            name: "foo",
+            path: "/",
+            value: "barrrrr",
           },
         ],
         headers: [
           {
-            name: 'Content-Type',
-            value: 'application/json',
+            name: "Content-Type",
+            value: "application/json",
           },
           {
-            name: 'Authorization',
-            value: 'Basic dXNlcjpwYXNz',
+            name: "Authorization",
+            value: "Basic dXNlcjpwYXNz",
           },
         ],
         headersSize: -1,
-        httpVersion: 'HTTP/1.1',
-        method: 'POST',
+        httpVersion: "HTTP/1.1",
+        method: "POST",
         postData: {
-          mimeType: '',
-          text: 'foo bar',
+          mimeType: "",
+          text: "foo bar",
         },
         queryString: [
           {
-            name: 'foo bar',
-            value: 'hello&world',
+            name: "foo bar",
+            value: "hello&world",
           },
         ],
-        url: 'http://google.com/',
+        url: "http://google.com/",
       });
     });
 
-    it('export multipart request with file', async () => {
+    it("export multipart request with file", async () => {
       const workspace = await models.workspace.create();
       const request: Request = {
         ...models.request.init(),
-        _id: 'req_123',
+        _id: "req_123",
         type: models.response.type,
         modified: 123,
         created: 123,
         parentId: workspace._id,
         headers: [
           {
-            name: 'Content-Type',
-            value: 'multipart/form-data',
+            name: "Content-Type",
+            value: "multipart/form-data",
           },
         ],
         parameters: [],
-        method: 'POST',
+        method: "POST",
         body: {
-          mimeType: 'multipart/form-data',
+          mimeType: "multipart/form-data",
           params: [
             {
-              name: 'a_file',
-              value: '',
-              fileName: '/tmp/my_file',
-              type: 'file',
+              name: "a_file",
+              value: "",
+              fileName: "/tmp/my_file",
+              type: "file",
             },
             {
-              name: 'a_simple_field',
-              value: 'a_simple_value',
+              name: "a_simple_field",
+              value: "a_simple_value",
             },
             {
-              name: 'a_second_file',
-              value: '',
-              fileName: '/tmp/my_file_2',
-              type: 'file',
+              name: "a_second_file",
+              value: "",
+              fileName: "/tmp/my_file_2",
+              type: "file",
             },
           ],
         },
-        url: 'http://example.com/post',
+        url: "http://example.com/post",
         authentication: {},
       };
-      const { request: renderedRequest } = await getRenderedRequestAndContext({ request });
+      const { request: renderedRequest } = await getRenderedRequestAndContext({
+        request,
+      });
       const har = await exportHarWithRequest(renderedRequest);
       expect(har).toEqual({
         bodySize: -1,
         cookies: [],
         headers: [
           {
-            name: 'Content-Type',
-            value: 'multipart/form-data',
+            name: "Content-Type",
+            value: "multipart/form-data",
           },
         ],
         headersSize: -1,
-        httpVersion: 'HTTP/1.1',
-        method: 'POST',
+        httpVersion: "HTTP/1.1",
+        method: "POST",
         postData: {
-          mimeType: 'multipart/form-data',
+          mimeType: "multipart/form-data",
           params: [
             {
-              name: 'a_file',
-              fileName: '/tmp/my_file',
+              name: "a_file",
+              fileName: "/tmp/my_file",
             },
             {
-              name: 'a_simple_field',
-              value: 'a_simple_value',
+              name: "a_simple_field",
+              value: "a_simple_value",
             },
             {
-              name: 'a_second_file',
-              fileName: '/tmp/my_file_2',
+              name: "a_second_file",
+              fileName: "/tmp/my_file_2",
             },
           ],
         },
         queryString: [],
-        url: 'http://example.com/post',
+        url: "http://example.com/post",
       });
     });
   });

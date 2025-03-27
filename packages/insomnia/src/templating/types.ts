@@ -1,19 +1,24 @@
-import type { CookieJar } from '../models/cookie-jar';
-import type { Environment, UserUploadEnvironment } from '../models/environment';
-import type { GrpcRequest } from '../models/grpc-request';
-import type { OAuth2Token } from '../models/o-auth-2-token';
-import type { Project } from '../models/project';
-import type { Request } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { Response } from '../models/response';
-import type { getBodyBuffer, getLatestForRequest } from '../models/response';
-import type { WebSocketRequest } from '../models/websocket-request';
-import type { Workspace } from '../models/workspace';
-import type { PluginStore } from '../plugins/context';
-import type { PromptModalOptions } from '../ui/components/modals/prompt-modal';
-import type { extractNunjucksTagFromCoords } from './utils';
+import type { CookieJar } from "../models/cookie-jar";
+import type { Environment, UserUploadEnvironment } from "../models/environment";
+import type { GrpcRequest } from "../models/grpc-request";
+import type { OAuth2Token } from "../models/o-auth-2-token";
+import type { Project } from "../models/project";
+import type { Request } from "../models/request";
+import type { RequestGroup } from "../models/request-group";
+import type { Response } from "../models/response";
+import type { getBodyBuffer, getLatestForRequest } from "../models/response";
+import type { WebSocketRequest } from "../models/websocket-request";
+import type { Workspace } from "../models/workspace";
+import type { PluginStore } from "../plugins/context";
+import type { PromptModalOptions } from "../ui/components/modals/prompt-modal";
+import type { extractNunjucksTagFromCoords } from "./utils";
 
-export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
+export type RenderPurpose =
+  | "send"
+  | "general"
+  | "preview"
+  | "script"
+  | "no-render";
 
 export type RenderedRequest = Request & {
   cookies: {
@@ -33,7 +38,10 @@ export interface RenderContextAndKeys {
   }[];
 }
 
-export type HandleRender = <T>(whatever: T, contextCacheKey?: string | null) => Promise<T>;
+export type HandleRender = <T>(
+  whatever: T,
+  contextCacheKey?: string | null,
+) => Promise<T>;
 
 export interface BaseRenderContextOptions {
   environment?: string | Environment;
@@ -46,21 +54,39 @@ export interface BaseRenderContextOptions {
   extraInfo?: { requestChain: string[] };
   ignoreUndefinedEnvVariable?: boolean;
 }
-export type RenderContextAncestor = Request | GrpcRequest | WebSocketRequest | RequestGroup | Workspace | Project;
+export type RenderContextAncestor =
+  | Request
+  | GrpcRequest
+  | WebSocketRequest
+  | RequestGroup
+  | Workspace
+  | Project;
 
-export type RenderContextOptions = BaseRenderContextOptions
-  & Partial<BaseRenderContextOptions & { request: Request | GrpcRequest | WebSocketRequest }>
-  & { ancestors?: RenderContextAncestor[] };
+export type RenderContextOptions = BaseRenderContextOptions &
+  Partial<
+    BaseRenderContextOptions & {
+      request: Request | GrpcRequest | WebSocketRequest;
+    }
+  > & { ancestors?: RenderContextAncestor[] };
 
-export type NunjucksTagContextMenuAction = 'edit' | 'delete';
+export type NunjucksTagContextMenuAction = "edit" | "delete";
 
-export interface nunjucksTagContextMenuOptions extends Exclude<ReturnType<typeof extractNunjucksTagFromCoords>, void> {
+export interface nunjucksTagContextMenuOptions
+  extends Exclude<ReturnType<typeof extractNunjucksTagFromCoords>, void> {
   type: NunjucksTagContextMenuAction;
 }
 
 export interface NunjucksParsedTagArg {
-  type: 'string' | 'number' | 'boolean' | 'variable' | 'expression' | 'enum' | 'file' | 'model';
-  encoding?: 'base64';
+  type:
+    | "string"
+    | "number"
+    | "boolean"
+    | "variable"
+    | "expression"
+    | "enum"
+    | "file"
+    | "model";
+  encoding?: "base64";
   value?: string | number | boolean;
   defaultValue?: string | number | boolean;
   forceVariable?: boolean;
@@ -72,7 +98,7 @@ export interface NunjucksParsedTagArg {
   hide?: (arg0: NunjucksParsedTagArg[]) => boolean;
   model?: string;
   options?: PluginArgumentEnumOption[];
-  itemTypes?: ('file' | 'directory')[];
+  itemTypes?: ("file" | "directory")[];
   extensions?: string[];
   description?: string;
   requireSubForm?: boolean;
@@ -112,34 +138,34 @@ export interface PluginArgumentEnumOption {
 }
 
 export type PluginArgumentEnum = PluginArgumentBase & {
-  type: 'enum';
+  type: "enum";
   options: PluginArgumentEnumOption[];
   defaultValue?: PluginArgumentValue;
 };
 
 export type PluginArgumentModel = PluginArgumentBase & {
-  type: 'model';
+  type: "model";
   model: string;
   defaultValue?: string;
 };
 
 export type PluginArgumentString = PluginArgumentBase & {
-  type: 'string';
+  type: "string";
   placeholder?: string;
   defaultValue?: string;
 };
 
 export type PluginArgumentBoolean = PluginArgumentBase & {
-  type: 'boolean';
+  type: "boolean";
   defaultValue?: boolean;
 };
 
 export type PluginArgumentFile = PluginArgumentBase & {
-  type: 'file';
+  type: "file";
 };
 
 export type PluginArgumentNumber = PluginArgumentBase & {
-  type: 'number';
+  type: "number";
   placeholder?: string;
   defaultValue?: number;
 };
@@ -164,18 +190,42 @@ export interface BaseRenderContext {
 }
 export interface AppContext {
   alert: (title: string, message?: string) => void;
-  dialog: (title: string, body: HTMLElement, options?: { onHide?: () => void; tall?: boolean; skinny?: boolean; wide?: boolean }) => void;
-  prompt: (title: string, options?: Pick<PromptModalOptions, 'label' | 'defaultValue' | 'submitName' | 'inputType'>) => Promise<string>;
+  dialog: (
+    title: string,
+    body: HTMLElement,
+    options?: {
+      onHide?: () => void;
+      tall?: boolean;
+      skinny?: boolean;
+      wide?: boolean;
+    },
+  ) => void;
+  prompt: (
+    title: string,
+    options?: Pick<
+      PromptModalOptions,
+      "label" | "defaultValue" | "submitName" | "inputType"
+    >,
+  ) => Promise<string>;
   getPath: (name: string) => string;
   getInfo: () => { version: string; platform: NodeJS.Platform };
-  showSaveDialog: (options?: { defaultPath?: string }) => Promise<string | null>;
-  clipboard: { readText(): string; writeText(text: string): void; clear(): void };
+  showSaveDialog: (options?: {
+    defaultPath?: string;
+  }) => Promise<string | null>;
+  clipboard: {
+    readText(): string;
+    writeText(text: string): void;
+    clear(): void;
+  };
 }
 export interface PluginTemplateTagContext {
   app: AppContext;
   store: PluginStore;
   network: {
-    sendRequest(request: Request, extraInfo?: { requestChain: string[] }): Promise<Response>;
+    sendRequest(
+      request: Request,
+      extraInfo?: { requestChain: string[] },
+    ): Promise<Response>;
   };
   context: BaseRenderContext & {
     value: string | number;
@@ -187,11 +237,17 @@ export interface PluginTemplateTagContext {
     models: {
       request: {
         getById: (id: string) => Promise<Request | null>;
-        getAncestors: (request: Request) => Promise<(Request | RequestGroup | Workspace)[]>;
+        getAncestors: (
+          request: Request,
+        ) => Promise<(Request | RequestGroup | Workspace)[]>;
       };
       workspace: { getById: (id: string) => Promise<Workspace | null> };
-      oAuth2Token: { getByRequestId: (id: string) => Promise<OAuth2Token | null> };
-      cookieJar: { getOrCreateForWorkspace: (workspace: Workspace) => Promise<CookieJar> };
+      oAuth2Token: {
+        getByRequestId: (id: string) => Promise<OAuth2Token | null>;
+      };
+      cookieJar: {
+        getOrCreateForWorkspace: (workspace: Workspace) => Promise<CookieJar>;
+      };
       response: {
         getLatestForRequestId: typeof getLatestForRequest;
         getBodyBuffer: typeof getBodyBuffer;

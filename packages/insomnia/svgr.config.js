@@ -8,15 +8,15 @@ module.exports = {
   `,
   icon: true,
   replaceAttrValues: {
-    '#000': '',
-    '#FFF': 'currentColor',
+    "#000": "",
+    "#FFF": "currentColor",
   },
-  ext: 'tsx',
+  ext: "tsx",
   prettier: true,
   prettierConfig: {
-    arrowParens: 'avoid',
+    arrowParens: "avoid",
     singleQuote: true,
-    parser: 'typescript',
+    parser: "typescript",
   },
   typescript: true,
 };

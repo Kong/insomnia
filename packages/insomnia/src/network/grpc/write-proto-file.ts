@@ -1,13 +1,16 @@
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
+import fs from "fs";
+import os from "os";
+import path from "path";
 
-import { database as db } from '../../common/database';
-import type { BaseModel } from '../../models';
-import * as models from '../../models';
-import { isProtoDirectory, type ProtoDirectory } from '../../models/proto-directory';
-import { isProtoFile, type ProtoFile } from '../../models/proto-file';
-import { isWorkspace, type Workspace } from '../../models/workspace';
+import { database as db } from "../../common/database";
+import type { BaseModel } from "../../models";
+import * as models from "../../models";
+import {
+  isProtoDirectory,
+  type ProtoDirectory,
+} from "../../models/proto-directory";
+import { isProtoFile, type ProtoFile } from "../../models/proto-file";
+import { isWorkspace, type Workspace } from "../../models/workspace";
 
 interface WriteResult {
   filePath: string;
@@ -23,27 +26,34 @@ const recursiveWriteProtoDirectory = async (
   const dirPath = path.join(currentDirPath, dir.name);
   fs.mkdirSync(dirPath, { recursive: true });
   // Get and write proto files
-  const files = descendants.filter(isProtoFile).filter(f => f.parentId === dir._id);
-  await Promise.all(files.map(protoFile => {
-    const fullPath = path.join(dirPath, protoFile.name);
-    if (fs.existsSync(fullPath)) {
-      return;
-    }
-    fs.promises.writeFile(fullPath, protoFile.protoText);
-  }));
+  const files = descendants
+    .filter(isProtoFile)
+    .filter((f) => f.parentId === dir._id);
+  await Promise.all(
+    files.map((protoFile) => {
+      const fullPath = path.join(dirPath, protoFile.name);
+      if (fs.existsSync(fullPath)) {
+        return;
+      }
+      fs.promises.writeFile(fullPath, protoFile.protoText);
+    }),
+  );
   // Get and write subdirectories
   const createdDirs = await Promise.all(
-    descendants.filter(f => isProtoDirectory(f) && f.parentId === dir._id).map(f => recursiveWriteProtoDirectory(f, descendants, dirPath)),
+    descendants
+      .filter((f) => isProtoDirectory(f) && f.parentId === dir._id)
+      .map((f) => recursiveWriteProtoDirectory(f, descendants, dirPath)),
   );
   return [dirPath, ...createdDirs.flat()];
 };
 
-export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult> => {
+export const writeProtoFile = async (
+  protoFile: ProtoFile,
+): Promise<WriteResult> => {
   // Find all ancestors
-  const ancestors = await db.withAncestors<ProtoFile | ProtoDirectory | Workspace>(protoFile, [
-    models.protoDirectory.type,
-    models.workspace.type,
-  ]);
+  const ancestors = await db.withAncestors<
+    ProtoFile | ProtoDirectory | Workspace
+  >(protoFile, [models.protoDirectory.type, models.workspace.type]);
   const ancestorDirectories = ancestors.filter(isProtoDirectory);
 
   // Is this file part of a directory?
@@ -52,15 +62,19 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
     // Find the root ancestor directory
     const rootAncestorProtoDirectory = ancestors.find(
       // @ts-expect-error -- TSCONVERSION ancestor workspace can be undefined
-      c => isProtoDirectory(c) && c.parentId === ancestors.find(isWorkspace)._id,
+      (c) =>
+        isProtoDirectory(c) && c.parentId === ancestors.find(isWorkspace)._id,
     );
     if (!ancestors.find(isWorkspace) || !rootAncestorProtoDirectory) {
       // should never happen
       return {
-        filePath: path.join(...ancestorDirectories
-          .map(f => f.name)
-          .reverse()
-          .slice(1), protoFile.name),
+        filePath: path.join(
+          ...ancestorDirectories
+            .map((f) => f.name)
+            .reverse()
+            .slice(1),
+          protoFile.name,
+        ),
         dirs: [],
       };
     }
@@ -71,21 +85,24 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
       descendants,
       path.join(
         os.tmpdir(),
-        'insomnia-grpc',
+        "insomnia-grpc",
         `${rootAncestorProtoDirectory._id}.${rootAncestorProtoDirectory.modified}`,
       ),
     );
     return {
-      filePath: path.join(...ancestorDirectories
-        .map(f => f.name)
-        .reverse()
-        .slice(1), protoFile.name),
+      filePath: path.join(
+        ...ancestorDirectories
+          .map((f) => f.name)
+          .reverse()
+          .slice(1),
+        protoFile.name,
+      ),
       dirs: treeRootDirs,
     };
   } else {
     // Write single file
     // Create temp folder
-    const rootDir = path.join(os.tmpdir(), 'insomnia-grpc');
+    const rootDir = path.join(os.tmpdir(), "insomnia-grpc");
     fs.mkdirSync(rootDir, { recursive: true });
 
     const filePath = `${protoFile._id}.${protoFile.modified}.proto`;

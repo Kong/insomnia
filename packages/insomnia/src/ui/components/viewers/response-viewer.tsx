@@ -1,24 +1,19 @@
-import iconv from 'iconv-lite';
-import React, {
-  Fragment,
-  useCallback,
-  useRef,
-  useState,
-} from 'react';
+import iconv from "iconv-lite";
+import React, { Fragment, useCallback, useRef, useState } from "react";
 
 import {
   HUGE_RESPONSE_MB,
   LARGE_RESPONSE_MB,
   PREVIEW_MODE_FRIENDLY,
   PREVIEW_MODE_RAW,
-} from '../../../common/constants';
-import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';
-import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
-import { ResponseCSVViewer } from './response-csv-viewer';
-import { ResponseErrorViewer } from './response-error-viewer';
-import { ResponseMultipartViewer } from './response-multipart-viewer';
-import { ResponsePDFViewer } from './response-pdf-viewer';
-import { ResponseWebView } from './response-web-view';
+} from "../../../common/constants";
+import { CodeEditor, type CodeEditorHandle } from "../codemirror/code-editor";
+import { useDocBodyKeyboardShortcuts } from "../keydown-binder";
+import { ResponseCSVViewer } from "./response-csv-viewer";
+import { ResponseErrorViewer } from "./response-error-viewer";
+import { ResponseMultipartViewer } from "./response-multipart-viewer";
+import { ResponsePDFViewer } from "./response-pdf-viewer";
+import { ResponseWebView } from "./response-web-view";
 
 let alwaysShowLargeResponses = false;
 
@@ -27,14 +22,16 @@ export interface ResponseViewerHandle {
 }
 export function xmlDecode(input: string) {
   const ESCAPED_CHARACTERS_MAP = {
-    '&amp;': '&',
-    '&quot;': '"',
-    '&lt;': '<',
-    '&gt;': '>',
+    "&amp;": "&",
+    "&quot;": '"',
+    "&lt;": "<",
+    "&gt;": ">",
   };
 
-  return input.replace(/(&quot;|&lt;|&gt;|&amp;)/g, (_: string, item: keyof typeof ESCAPED_CHARACTERS_MAP) => (
-    ESCAPED_CHARACTERS_MAP[item])
+  return input.replace(
+    /(&quot;|&lt;|&gt;|&amp;)/g,
+    (_: string, item: keyof typeof ESCAPED_CHARACTERS_MAP) =>
+      ESCAPED_CHARACTERS_MAP[item],
   );
 }
 export interface ResponseViewerProps {
@@ -74,10 +71,14 @@ export const ResponseViewer = ({
 }: ResponseViewerProps) => {
   const largeResponse = bytes > LARGE_RESPONSE_MB * 1024 * 1024;
   const hugeResponse = bytes > HUGE_RESPONSE_MB * 1024 * 1024;
-  const [blockingBecauseTooLarge, setBlockingBecauseTooLarge] = useState(!alwaysShowLargeResponses && largeResponse);
-  const [parseError, setParseError] = useState('');
+  const [blockingBecauseTooLarge, setBlockingBecauseTooLarge] = useState(
+    !alwaysShowLargeResponses && largeResponse,
+  );
+  const [parseError, setParseError] = useState("");
 
-  const [overSizedBody, setOversizedBody] = useState<Buffer | null>(bodyBuffer || null);
+  const [overSizedBody, setOversizedBody] = useState<Buffer | null>(
+    bodyBuffer || null,
+  );
 
   const editorRef = useRef<CodeEditorHandle>(null);
 
@@ -86,7 +87,8 @@ export const ResponseViewer = ({
 
     try {
       const buffer = await getBody?.();
-      const bufferOrError = typeof buffer === 'string' ? Buffer.from(buffer) : buffer;
+      const bufferOrError =
+        typeof buffer === "string" ? Buffer.from(buffer) : buffer;
 
       return setOversizedBody(bufferOrError || null);
     } catch (err) {
@@ -104,11 +106,11 @@ export const ResponseViewer = ({
   useDocBodyKeyboardShortcuts({
     response_focus: () => {
       if (editorRef.current) {
-        if ('focus' in editorRef.current) {
+        if ("focus" in editorRef.current) {
           editorRef.current.focus();
         }
 
-        if (!largeResponse && 'selectAll' in editorRef.current) {
+        if (!largeResponse && "selectAll" in editorRef.current) {
           editorRef.current.selectAll();
         }
       }
@@ -124,10 +126,10 @@ export const ResponseViewer = ({
     // Apparently users often send JSON with weird content-types like text/plain.
     try {
       if (overSizedBody && overSizedBody.length > 0) {
-        JSON.parse(overSizedBody.toString('utf8'));
-        return 'application/json';
+        JSON.parse(overSizedBody.toString("utf8"));
+        return "application/json";
       }
-    } catch { }
+    } catch {}
     // Try to detect HTML in all cases (even if header is set).
     // It is fairly common for webservers to send errors in HTML by default.
     // NOTE: This will probably never throw but I'm not 100% so wrap anyway
@@ -139,28 +141,28 @@ export const ResponseViewer = ({
         .match(/^<!doctype html.*>/i);
 
       if (
-        lowercasedOriginalContentType.indexOf('text/html') !== 0 &&
+        lowercasedOriginalContentType.indexOf("text/html") !== 0 &&
         isProbablyHTML
       ) {
-        return 'text/html';
+        return "text/html";
       }
-    } catch { }
+    } catch {}
 
     return lowercasedOriginalContentType;
   }, [originalContentType, overSizedBody]);
 
   const getBodyAsString = useCallback(() => {
     if (!overSizedBody) {
-      return '';
+      return "";
     }
     // Show everything else as "source"
     const match = _getContentType().match(/charset=([\w-]+)/);
-    const charset = match && match.length >= 2 ? match[1] : 'utf-8';
+    const charset = match && match.length >= 2 ? match[1] : "utf-8";
     // Sometimes iconv conversion fails so fallback to regular buffer
     try {
       return iconv.decode(overSizedBody, charset);
     } catch (err) {
-      console.warn('[response] Failed to decode body', err);
+      console.warn("[response] Failed to decode body", err);
       return overSizedBody.toString();
     }
   }, [overSizedBody, _getContentType]);
@@ -181,7 +183,7 @@ export const ResponseViewer = ({
             <p className="pad faint">
               Responses over {HUGE_RESPONSE_MB}MB cannot be shown
             </p>
-            <button onClick={download} className="inline-block btn btn--clicky">
+            <button onClick={download} className="btn btn--clicky inline-block">
               Save Response To File
             </button>
           </Fragment>
@@ -193,21 +195,21 @@ export const ResponseViewer = ({
             <div>
               <button
                 onClick={download}
-                className="inline-block btn btn--clicky margin-xs"
+                className="btn btn--clicky margin-xs inline-block"
               >
                 Save To File
               </button>
               <button
                 onClick={_handleDismissBlocker}
                 disabled={hugeResponse}
-                className=" inline-block btn btn--clicky margin-xs"
+                className="btn btn--clicky margin-xs inline-block"
               >
                 Show Anyway
               </button>
             </div>
             <div className="pad-top-sm">
               <button
-                className="faint inline-block btn btn--super-compact"
+                className="faint btn btn--super-compact inline-block"
                 onClick={_handleDisableBlocker}
               >
                 Always Show
@@ -235,7 +237,7 @@ export const ResponseViewer = ({
 
   if (
     previewMode === PREVIEW_MODE_FRIENDLY &&
-    contentType === 'application/json'
+    contentType === "application/json"
   ) {
     let bodyStr = getBodyAsString();
     // Although there is a prettifier for json inside the CodeEditor, but it is to prettify json strings that is being edited which may have syntax errors.
@@ -245,7 +247,7 @@ export const ResponseViewer = ({
     // So we try to use the native JSON.stringify to prettify the json string better. The native way can handle the issue.
     try {
       bodyStr = JSON.stringify(JSON.parse(bodyStr));
-    } catch { }
+    } catch {}
     return (
       <CodeEditor
         id="json-response-viewer"
@@ -257,7 +259,14 @@ export const ResponseViewer = ({
         filterHistory={filterHistory}
         mode={contentType}
         noMatchBrackets
-        onClickLink={url => !disablePreviewLinks && window.main.openInBrowser(getBodyAsString()?.match(/^\s*<\?xml [^?]*\?>/) ? xmlDecode(url) : url)}
+        onClickLink={(url) =>
+          !disablePreviewLinks &&
+          window.main.openInBrowser(
+            getBodyAsString()?.match(/^\s*<\?xml [^?]*\?>/)
+              ? xmlDecode(url)
+              : url,
+          )
+        }
         placeholder="..."
         readOnly
         uniquenessKey={responseId}
@@ -268,10 +277,10 @@ export const ResponseViewer = ({
 
   if (
     previewMode === PREVIEW_MODE_FRIENDLY &&
-    contentType.indexOf('image/') === 0
+    contentType.indexOf("image/") === 0
   ) {
-    const justContentType = contentType.split(';')[0];
-    const base64Body = overSizedBody.toString('base64');
+    const justContentType = contentType.split(";")[0];
+    const base64Body = overSizedBody.toString("base64");
     return (
       <div className="scrollable-container tall wide">
         <div className="scrollable">
@@ -279,9 +288,9 @@ export const ResponseViewer = ({
             src={`data:${justContentType};base64,${base64Body}`}
             className="pad block"
             style={{
-              maxWidth: '100%',
-              maxHeight: '100%',
-              margin: 'auto',
+              maxWidth: "100%",
+              maxHeight: "100%",
+              margin: "auto",
             }}
           />
         </div>
@@ -289,20 +298,20 @@ export const ResponseViewer = ({
     );
   }
 
-  if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.includes('html')) {
+  if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.includes("html")) {
     return (
       <ResponseWebView
         body={getBodyAsString()}
-        key={disableHtmlPreviewJs ? 'no-js' : 'yes-js'}
+        key={disableHtmlPreviewJs ? "no-js" : "yes-js"}
         url={url}
-        webpreferences={`disableDialogs=true, javascript=${disableHtmlPreviewJs ? 'no' : 'yes'}`}
+        webpreferences={`disableDialogs=true, javascript=${disableHtmlPreviewJs ? "no" : "yes"}`}
       />
     );
   }
 
   if (
     previewMode === PREVIEW_MODE_FRIENDLY &&
-    contentType.indexOf('application/pdf') === 0
+    contentType.indexOf("application/pdf") === 0
   ) {
     return (
       <div className="tall wide scrollable">
@@ -313,7 +322,7 @@ export const ResponseViewer = ({
 
   if (
     previewMode === PREVIEW_MODE_FRIENDLY &&
-    contentType.indexOf('text/csv') === 0
+    contentType.indexOf("text/csv") === 0
   ) {
     return (
       <div className="tall wide scrollable">
@@ -324,7 +333,7 @@ export const ResponseViewer = ({
 
   if (
     previewMode === PREVIEW_MODE_FRIENDLY &&
-    contentType.indexOf('multipart/') === 0
+    contentType.indexOf("multipart/") === 0
   ) {
     return (
       <ResponseMultipartViewer
@@ -345,10 +354,10 @@ export const ResponseViewer = ({
 
   if (
     previewMode === PREVIEW_MODE_FRIENDLY &&
-    contentType.indexOf('audio/') === 0
+    contentType.indexOf("audio/") === 0
   ) {
-    const justContentType = contentType.split(';')[0];
-    const base64Body = overSizedBody.toString('base64');
+    const justContentType = contentType.split(";")[0];
+    const base64Body = overSizedBody.toString("base64");
     return (
       <div className="vertically-center" key={responseId}>
         <audio controls>
@@ -380,15 +389,26 @@ export const ResponseViewer = ({
   return (
     <CodeEditor
       id="response-viewer"
-      key={disablePreviewLinks ? 'links-disabled' : 'links-enabled'}
+      key={disablePreviewLinks ? "links-disabled" : "links-enabled"}
       ref={editorRef}
       autoPrettify
       defaultValue={getBodyAsString()}
       filter={filter}
       filterHistory={filterHistory}
-      mode={getBodyAsString()?.match(/^\s*<\?xml [^?]*\?>/) ? 'application/xml' : _getContentType()}
+      mode={
+        getBodyAsString()?.match(/^\s*<\?xml [^?]*\?>/)
+          ? "application/xml"
+          : _getContentType()
+      }
       noMatchBrackets
-      onClickLink={url => !disablePreviewLinks && window.main.openInBrowser(getBodyAsString()?.match(/^\s*<\?xml [^?]*\?>/) ? xmlDecode(url) : url)}
+      onClickLink={(url) =>
+        !disablePreviewLinks &&
+        window.main.openInBrowser(
+          getBodyAsString()?.match(/^\s*<\?xml [^?]*\?>/)
+            ? xmlDecode(url)
+            : url,
+        )
+      }
       placeholder="..."
       readOnly
       uniquenessKey={responseId}

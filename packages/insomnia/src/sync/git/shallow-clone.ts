@@ -1,13 +1,13 @@
-import * as git from 'isomorphic-git';
+import * as git from "isomorphic-git";
 
-import type { GitRepository } from '../../models/git-repository';
-import { GIT_CLONE_DIR, GIT_INTERNAL_DIR } from './git-vcs';
-import { httpClient } from './http-client';
-import { gitCallbacks } from './utils';
+import type { GitRepository } from "../../models/git-repository";
+import { GIT_CLONE_DIR, GIT_INTERNAL_DIR } from "./git-vcs";
+import { httpClient } from "./http-client";
+import { gitCallbacks } from "./utils";
 
 interface Options {
   fsClient: git.FsClient;
-  gitRepository: Pick<GitRepository, 'credentials' | 'uri'>;
+  gitRepository: Pick<GitRepository, "credentials" | "uri">;
 }
 
 /**

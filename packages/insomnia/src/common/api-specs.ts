@@ -1,15 +1,13 @@
-import YAML from 'yaml';
+import YAML from "yaml";
 
 export interface ParsedApiSpec {
   contents: Record<string, any> | null;
   rawContents: string;
-  format: 'openapi' | 'swagger' | null;
+  format: "openapi" | "swagger" | null;
   formatVersion: string | null;
 }
 
-export function parseApiSpec(
-  rawDocument: string,
-) {
+export function parseApiSpec(rawDocument: string) {
   const result: ParsedApiSpec = {
     contents: null,
     rawContents: rawDocument,
@@ -21,17 +19,17 @@ export function parseApiSpec(
   try {
     result.contents = YAML.parse(rawDocument);
   } catch {
-    throw new Error('Failed to parse API spec');
+    throw new Error("Failed to parse API spec");
   }
 
   if (result.contents) {
     if (result.contents.openapi) {
       // Check if it's OpenAPI
-      result.format = 'openapi';
+      result.format = "openapi";
       result.formatVersion = result.contents.openapi;
     } else if (result.contents.swagger) {
       // Check if it's Swagger
-      result.format = 'swagger';
+      result.format = "swagger";
       result.formatVersion = result.contents.swagger;
     } else {
       // Not sure what format it is
@@ -51,7 +49,7 @@ export function resolveComponentSchemaRefs(
   }
 
   const resolveRefs = (obj: Record<string, any>): Record<string, any> => {
-    if (typeof obj !== 'object') {
+    if (typeof obj !== "object") {
       return obj;
     }
 
@@ -60,7 +58,7 @@ export function resolveComponentSchemaRefs(
     }
 
     if (obj.$ref) {
-      const ref = obj.$ref.replace('#/components/schemas/', '');
+      const ref = obj.$ref.replace("#/components/schemas/", "");
       return resolveRefs(schemas[ref]);
     }
 

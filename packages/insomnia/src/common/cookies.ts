@@ -1,19 +1,19 @@
-import { Cookie, CookieJar, type CookieJSON } from 'tough-cookie';
+import { Cookie, CookieJar, type CookieJSON } from "tough-cookie";
 
-import type { Cookie as CookieModel } from '../models/cookie-jar';
+import type { Cookie as CookieModel } from "../models/cookie-jar";
 
 /**
  * Get a list of cookie objects from a request.jar()
  */
 export const cookiesFromJar = (cookieJar: CookieJar): Promise<CookieJSON[]> => {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     cookieJar.store.getAllCookies((err, cookies) => {
       if (err) {
-        console.warn('Failed to get cookies form jar', err);
+        console.warn("Failed to get cookies form jar", err);
         resolve([]);
       } else {
         // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
-        resolve(cookies.map(cookie => cookie.toJSON()));
+        resolve(cookies.map((cookie) => cookie.toJSON()));
       }
     });
   });
@@ -31,7 +31,7 @@ export const jarFromCookies = (cookies: Cookie[] | CookieModel[]) => {
     const copy = JSON.stringify({ cookies });
     jar = CookieJar.fromJSON(copy);
   } catch (error) {
-    console.log('[cookies] Failed to initialize cookie jar', error);
+    console.log("[cookies] Failed to initialize cookie jar", error);
     jar = new CookieJar() as CookieJar;
   }
 
@@ -41,7 +41,9 @@ export const jarFromCookies = (cookies: Cookie[] | CookieModel[]) => {
   return jar;
 };
 
-export const cookieToString = (cookie: Parameters<typeof Cookie.fromJSON>[0] | Cookie) => {
+export const cookieToString = (
+  cookie: Parameters<typeof Cookie.fromJSON>[0] | Cookie,
+) => {
   // Cookie can either be a plain JS object or Cookie instance
   if (!(cookie instanceof Cookie)) {
     cookie = Cookie.fromJSON(cookie) as Cookie;

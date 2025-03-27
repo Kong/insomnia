@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
-import type { TimingStep } from '../../main/network/request-timing';
+import type { TimingStep } from "../../main/network/request-timing";
 
 export function useExecutionState({ requestId }: { requestId?: string }) {
   const [steps, setSteps] = useState<TimingStep[]>([]);
@@ -27,10 +27,12 @@ export function useExecutionState({ requestId }: { requestId?: string }) {
   useEffect(() => {
     let isMounted = true;
     // @ts-expect-error -- we use a dynamic channel here
-    const unsubscribe = window.main.on(`syncTimers.${requestId}`,
+    const unsubscribe = window.main.on(
+      `syncTimers.${requestId}`,
       (_, { executions }: { executions: TimingStep[] }) => {
         isMounted && setSteps(executions);
-      });
+      },
+    );
     return () => {
       isMounted = false;
       unsubscribe();

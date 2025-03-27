@@ -1,10 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import * as models from '../../models';
-import { _repairDatabase, database as db } from '../database';
+import * as models from "../../models";
+import { _repairDatabase, database as db } from "../database";
 
-describe('init()', () => {
-  it('handles being initialized twice', async () => {
+describe("init()", () => {
+  it("handles being initialized twice", async () => {
     await db.init(models.types(), {
       inMemoryOnly: true,
     });
@@ -15,30 +15,30 @@ describe('init()', () => {
   });
 });
 
-describe('onChange()', () => {
+describe("onChange()", () => {
   beforeEach(async () => {
-    await db.init(models.types(), { inMemoryOnly: true }, true, () => { },);
+    await db.init(models.types(), { inMemoryOnly: true }, true, () => {});
   });
-  it('handles change listeners', async () => {
+  it("handles change listeners", async () => {
     const doc = {
       type: models.request.type,
-      parentId: 'nothing',
-      name: 'foo',
+      parentId: "nothing",
+      name: "foo",
     };
     const changesSeen: Function[] = [];
 
-    const callback = change => {
+    const callback = (change) => {
       changesSeen.push(change);
     };
 
     db.onChange(callback);
     const newDoc = await models.request.create(doc);
     const updatedDoc = await models.request.update(newDoc, {
-      name: 'bar',
+      name: "bar",
     });
     expect(changesSeen).toEqual([
-      [['insert', newDoc, false, []]],
-      [['update', updatedDoc, false, [{ name: 'bar' }]]],
+      [["insert", newDoc, false, []]],
+      [["update", updatedDoc, false, [{ name: "bar" }]]],
     ]);
     db.offChange(callback);
     await models.request.create(doc);
@@ -46,17 +46,16 @@ describe('onChange()', () => {
   });
 });
 
-describe('bufferChanges()', () => {
-
-  it('properly buffers changes', async () => {
+describe("bufferChanges()", () => {
+  it("properly buffers changes", async () => {
     const doc = {
       type: models.request.type,
-      parentId: 'n/a',
-      name: 'foo',
+      parentId: "n/a",
+      name: "foo",
     };
     const changesSeen: Function[] = [];
 
-    const callback = change => {
+    const callback = (change) => {
       changesSeen.push(change);
     };
 
@@ -71,29 +70,29 @@ describe('bufferChanges()', () => {
     await db.flushChanges();
     expect(changesSeen).toEqual([
       [
-        ['insert', newDoc, false, []],
-        ['update', updatedDoc, false, [true]],
+        ["insert", newDoc, false, []],
+        ["update", updatedDoc, false, [true]],
       ],
     ]);
     // Assert no more changes seen after flush again
     await db.flushChanges();
     expect(changesSeen).toEqual([
       [
-        ['insert', newDoc, false, []],
-        ['update', updatedDoc, false, [true]],
+        ["insert", newDoc, false, []],
+        ["update", updatedDoc, false, [true]],
       ],
     ]);
   });
 
-  it('should auto flush after a default wait', async () => {
+  it("should auto flush after a default wait", async () => {
     const doc = {
       type: models.request.type,
-      parentId: 'n/a',
-      name: 'foo',
+      parentId: "n/a",
+      name: "foo",
     };
     const changesSeen: Function[] = [];
 
-    const callback = change => {
+    const callback = (change) => {
       changesSeen.push(change);
     };
 
@@ -103,24 +102,24 @@ describe('bufferChanges()', () => {
     // @ts-expect-error -- TSCONVERSION appears to be genuine
     const updatedDoc = await models.request.update(newDoc, true);
     // Default flush timeout is 1000ms after starting buffering
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise((resolve) => setTimeout(resolve, 1500));
     expect(changesSeen).toEqual([
       [
-        ['insert', newDoc, false, []],
-        ['update', updatedDoc, false, [true]],
+        ["insert", newDoc, false, []],
+        ["update", updatedDoc, false, [true]],
       ],
     ]);
   });
 
-  it('should auto flush after a specified wait', async () => {
+  it("should auto flush after a specified wait", async () => {
     const doc = {
       type: models.request.type,
-      parentId: 'n/a',
-      name: 'foo',
+      parentId: "n/a",
+      name: "foo",
     };
     const changesSeen: Function[] = [];
 
-    const callback = change => {
+    const callback = (change) => {
       changesSeen.push(change);
     };
 
@@ -129,27 +128,26 @@ describe('bufferChanges()', () => {
     const newDoc = await models.request.create(doc);
     // @ts-expect-error -- TSCONVERSION appears to be genuine
     const updatedDoc = await models.request.update(newDoc, true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     expect(changesSeen).toEqual([
       [
-        ['insert', newDoc, false, []],
-        ['update', updatedDoc, false, [true]],
+        ["insert", newDoc, false, []],
+        ["update", updatedDoc, false, [true]],
       ],
     ]);
   });
 });
 
-describe('bufferChangesIndefinitely()', () => {
-
-  it('should not auto flush', async () => {
+describe("bufferChangesIndefinitely()", () => {
+  it("should not auto flush", async () => {
     const doc = {
       type: models.request.type,
-      parentId: 'n/a',
-      name: 'foo',
+      parentId: "n/a",
+      name: "foo",
     };
     const changesSeen: Function[] = [];
 
-    const callback = change => {
+    const callback = (change) => {
       changesSeen.push(change);
     };
 
@@ -159,116 +157,115 @@ describe('bufferChangesIndefinitely()', () => {
     // @ts-expect-error -- TSCONVERSION appears to be genuine
     const updatedDoc = await models.request.update(newDoc, true);
     // Default flush timeout is 1000ms after starting buffering
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise((resolve) => setTimeout(resolve, 1500));
     // Assert no change seen before flush
     expect(changesSeen.length).toBe(0);
     // Assert changes seen after flush
     await db.flushChanges();
     expect(changesSeen).toEqual([
       [
-        ['insert', newDoc, false, []],
-        ['update', updatedDoc, false, [true]],
+        ["insert", newDoc, false, []],
+        ["update", updatedDoc, false, [true]],
       ],
     ]);
   });
 });
 
-describe('requestCreate()', () => {
-
-  it('creates a valid request', async () => {
+describe("requestCreate()", () => {
+  it("creates a valid request", async () => {
     const now = Date.now();
     const patch = {
-      name: 'My Request',
-      parentId: 'wrk_123',
+      name: "My Request",
+      parentId: "wrk_123",
     };
     const r = await models.request.create(patch);
     expect(Object.keys(r).length).toBe(24);
     expect(r._id).toMatch(/^req_[a-zA-Z0-9]{32}$/);
     expect(r.created).toBeGreaterThanOrEqual(now);
     expect(r.modified).toBeGreaterThanOrEqual(now);
-    expect(r.type).toBe('Request');
-    expect(r.name).toBe('My Request');
-    expect(r.url).toBe('');
-    expect(r.method).toBe('GET');
+    expect(r.type).toBe("Request");
+    expect(r.name).toBe("My Request");
+    expect(r.url).toBe("");
+    expect(r.method).toBe("GET");
     expect(r.body).toEqual({});
     expect(r.parameters).toEqual([]);
     expect(r.headers).toEqual([]);
     expect(r.authentication).toEqual({});
     expect(r.metaSortKey).toBeLessThanOrEqual(-1 * now);
-    expect(r.parentId).toBe('wrk_123');
+    expect(r.parentId).toBe("wrk_123");
   });
 
-  it('throws when missing parentID', () => {
+  it("throws when missing parentID", () => {
     const fn = () =>
       models.request.create({
-        name: 'My Request',
+        name: "My Request",
       });
 
-    expect(fn).toThrowError('New Requests missing `parentId`');
+    expect(fn).toThrowError("New Requests missing `parentId`");
   });
 });
 
-describe('_repairDatabase()', async () => {
+describe("_repairDatabase()", async () => {
   beforeEach(async () => {
-    await db.init(models.types(), { inMemoryOnly: true }, true, () => { },);
+    await db.init(models.types(), { inMemoryOnly: true }, true, () => {});
   });
 
-  it('fixes duplicate environments', async () => {
+  it("fixes duplicate environments", async () => {
     // Create Workspace with no children
     const project = await models.project.create();
     const workspace = await models.workspace.create({
-      _id: 'w1',
+      _id: "w1",
       parentId: project._id,
     });
     // Create one set of sub environments
     await models.environment.create({
-      _id: 'b1',
-      parentId: 'w1',
+      _id: "b1",
+      parentId: "w1",
       data: {
-        foo: 'b1',
+        foo: "b1",
         b1: true,
       },
     });
     await models.environment.create({
-      _id: 'b1_sub1',
-      parentId: 'b1',
+      _id: "b1_sub1",
+      parentId: "b1",
       data: {
-        foo: '1',
+        foo: "1",
       },
     });
     await models.environment.create({
-      _id: 'b1_sub2',
-      parentId: 'b1',
+      _id: "b1_sub2",
+      parentId: "b1",
       data: {
-        foo: '2',
+        foo: "2",
       },
     });
     // Create second set of sub environments
     await models.environment.create({
-      _id: 'b2',
-      parentId: 'w1',
+      _id: "b2",
+      parentId: "w1",
       data: {
-        foo: 'b2',
+        foo: "b2",
         b2: true,
       },
     });
     await models.environment.create({
-      _id: 'b2_sub1',
-      parentId: 'b2',
+      _id: "b2_sub1",
+      parentId: "b2",
       data: {
-        foo: '3',
+        foo: "3",
       },
     });
     await models.environment.create({
-      _id: 'b2_sub2',
-      parentId: 'b2',
+      _id: "b2_sub2",
+      parentId: "b2",
       data: {
-        foo: '4',
+        foo: "4",
       },
     });
     // Make sure we have 6 environments and one workspace
     expect((await db.withDescendants(workspace)).length).toBe(7);
-    const descendants = (await db.withDescendants(workspace)).map(d => ({
+    const descendants = (await db.withDescendants(workspace)).map((d) => ({
       _id: d._id,
       parentId: d.parentId,
       // @ts-expect-error -- TSCONVERSION appears to be genuine
@@ -276,53 +273,53 @@ describe('_repairDatabase()', async () => {
     }));
     expect(descendants).toEqual([
       {
-        _id: 'w1',
+        _id: "w1",
         data: null,
         parentId: workspace.parentId,
       },
       {
-        _id: 'b1',
+        _id: "b1",
         data: {
-          foo: 'b1',
+          foo: "b1",
           b1: true,
         },
-        parentId: 'w1',
+        parentId: "w1",
       },
       {
-        _id: 'b2',
+        _id: "b2",
         data: {
-          foo: 'b2',
+          foo: "b2",
           b2: true,
         },
-        parentId: 'w1',
+        parentId: "w1",
       },
       {
-        _id: 'b1_sub1',
+        _id: "b1_sub1",
         data: {
-          foo: '1',
+          foo: "1",
         },
-        parentId: 'b1',
+        parentId: "b1",
       },
       {
-        _id: 'b1_sub2',
+        _id: "b1_sub2",
         data: {
-          foo: '2',
+          foo: "2",
         },
-        parentId: 'b1',
+        parentId: "b1",
       },
       {
-        _id: 'b2_sub1',
+        _id: "b2_sub1",
         data: {
-          foo: '3',
+          foo: "3",
         },
-        parentId: 'b2',
+        parentId: "b2",
       },
       {
-        _id: 'b2_sub2',
+        _id: "b2_sub2",
         data: {
-          foo: '4',
+          foo: "4",
         },
-        parentId: 'b2',
+        parentId: "b2",
       },
     ]);
 
@@ -330,7 +327,7 @@ describe('_repairDatabase()', async () => {
     await _repairDatabase();
 
     // Make sure things get adjusted
-    const descendants2 = (await db.withDescendants(workspace)).map(d => ({
+    const descendants2 = (await db.withDescendants(workspace)).map((d) => ({
       _id: d._id,
       parentId: d.parentId,
       // @ts-expect-error -- TSCONVERSION appears to be genuine
@@ -338,101 +335,101 @@ describe('_repairDatabase()', async () => {
     }));
     expect(descendants2).toEqual([
       {
-        _id: 'w1',
+        _id: "w1",
         data: null,
         parentId: workspace.parentId,
       },
       {
-        _id: 'b1',
+        _id: "b1",
         data: {
-          foo: 'b1',
+          foo: "b1",
           b1: true,
           b2: true,
         },
-        parentId: 'w1',
+        parentId: "w1",
       },
       // Extra base environments should have been deleted
       // {_id: 'b2', data: {foo: 'bar'}, parentId: 'w1'},
       // Sub environments should have been moved to new "master" base environment
       {
-        _id: 'b1_sub1',
+        _id: "b1_sub1",
         data: {
-          foo: '1',
+          foo: "1",
         },
-        parentId: 'b1',
+        parentId: "b1",
       },
       {
-        _id: 'b1_sub2',
+        _id: "b1_sub2",
         data: {
-          foo: '2',
+          foo: "2",
         },
-        parentId: 'b1',
+        parentId: "b1",
       },
       {
-        _id: 'b2_sub1',
+        _id: "b2_sub1",
         data: {
-          foo: '3',
+          foo: "3",
         },
-        parentId: 'b1',
+        parentId: "b1",
       },
       {
-        _id: 'b2_sub2',
+        _id: "b2_sub2",
         data: {
-          foo: '4',
+          foo: "4",
         },
-        parentId: 'b1',
+        parentId: "b1",
       },
     ]);
   });
 
-  it('fixes duplicate cookie jars', async () => {
+  it("fixes duplicate cookie jars", async () => {
     // Create Workspace with no children
     const project = await models.project.create();
     const workspace = await models.workspace.create({
-      _id: 'w1',
+      _id: "w1",
       parentId: project._id,
     });
     expect((await db.withDescendants(workspace)).length).toBe(1);
     // Create one set of sub environments
     await models.cookieJar.create({
-      _id: 'j1',
-      parentId: 'w1',
+      _id: "j1",
+      parentId: "w1",
       cookies: [
         // @ts-expect-error -- TSCONVERSION
         {
-          id: '1',
-          key: 'foo',
-          value: '1',
+          id: "1",
+          key: "foo",
+          value: "1",
         },
         // @ts-expect-error -- TSCONVERSION
         {
-          id: 'j1_1',
-          key: 'j1',
-          value: '1',
+          id: "j1_1",
+          key: "j1",
+          value: "1",
         },
       ],
     });
     await models.cookieJar.create({
-      _id: 'j2',
-      parentId: 'w1',
+      _id: "j2",
+      parentId: "w1",
       cookies: [
         // @ts-expect-error -- TSCONVERSION
         {
-          id: '1',
-          key: 'foo',
-          value: '2',
+          id: "1",
+          key: "foo",
+          value: "2",
         },
         // @ts-expect-error -- TSCONVERSION
         {
-          id: 'j2_1',
-          key: 'j2',
-          value: '2',
+          id: "j2_1",
+          key: "j2",
+          value: "2",
         },
       ],
     });
     // Make sure we have 2 cookie jars and one workspace
     expect((await db.withDescendants(workspace)).length).toBe(3);
-    const descendants = (await db.withDescendants(workspace)).map(d => ({
+    const descendants = (await db.withDescendants(workspace)).map((d) => ({
       _id: d._id,
       // @ts-expect-error -- TSCONVERSION
       cookies: d.cookies || null,
@@ -440,39 +437,39 @@ describe('_repairDatabase()', async () => {
     }));
     expect(descendants).toEqual([
       {
-        _id: 'w1',
+        _id: "w1",
         cookies: null,
         parentId: workspace.parentId,
       },
       {
-        _id: 'j1',
-        parentId: 'w1',
+        _id: "j1",
+        parentId: "w1",
         cookies: [
           {
-            id: '1',
-            key: 'foo',
-            value: '1',
+            id: "1",
+            key: "foo",
+            value: "1",
           },
           {
-            id: 'j1_1',
-            key: 'j1',
-            value: '1',
+            id: "j1_1",
+            key: "j1",
+            value: "1",
           },
         ],
       },
       {
-        _id: 'j2',
-        parentId: 'w1',
+        _id: "j2",
+        parentId: "w1",
         cookies: [
           {
-            id: '1',
-            key: 'foo',
-            value: '2',
+            id: "1",
+            key: "foo",
+            value: "2",
           },
           {
-            id: 'j2_1',
-            key: 'j2',
-            value: '2',
+            id: "j2_1",
+            key: "j2",
+            value: "2",
           },
         ],
       },
@@ -480,7 +477,7 @@ describe('_repairDatabase()', async () => {
     // Run the fix algorithm
     await _repairDatabase();
     // Make sure things get adjusted
-    const descendants2 = (await db.withDescendants(workspace)).map(d => ({
+    const descendants2 = (await db.withDescendants(workspace)).map((d) => ({
       _id: d._id,
       // @ts-expect-error -- TSCONVERSION
       cookies: d.cookies || null,
@@ -488,123 +485,140 @@ describe('_repairDatabase()', async () => {
     }));
     expect(descendants2).toEqual([
       {
-        _id: 'w1',
+        _id: "w1",
         cookies: null,
         parentId: workspace.parentId,
       },
       {
-        _id: 'j1',
-        parentId: 'w1',
+        _id: "j1",
+        parentId: "w1",
         cookies: [
           {
-            id: '1',
-            key: 'foo',
-            value: '1',
+            id: "1",
+            key: "foo",
+            value: "1",
           },
           {
-            id: 'j1_1',
-            key: 'j1',
-            value: '1',
+            id: "j1_1",
+            key: "j1",
+            value: "1",
           },
           {
-            id: 'j2_1',
-            key: 'j2',
-            value: '2',
+            id: "j2_1",
+            key: "j2",
+            value: "2",
           },
         ],
       },
     ]);
   });
 
-  it('fixes the filename on an apiSpec', async () => {
+  it("fixes the filename on an apiSpec", async () => {
     // Create Workspace with apiSpec child (migration in workspace will automatically create this as it is not mocked)
     const w1 = await models.workspace.create({
-      _id: 'w1',
-      name: 'Workspace 1',
+      _id: "w1",
+      name: "Workspace 1",
     });
     const w2 = await models.workspace.create({
-      _id: 'w2',
-      name: 'Workspace 2',
+      _id: "w2",
+      name: "Workspace 2",
     });
     const w3 = await models.workspace.create({
-      _id: 'w3',
-      name: 'Workspace 3',
+      _id: "w3",
+      name: "Workspace 3",
     });
     await models.apiSpec.updateOrCreateForParentId(w1._id, {
-      fileName: '',
+      fileName: "",
     });
     await models.apiSpec.updateOrCreateForParentId(w2._id, {
       fileName: models.apiSpec.init().fileName,
     });
     await models.apiSpec.updateOrCreateForParentId(w3._id, {
-      fileName: 'Unique name',
+      fileName: "Unique name",
     });
     // Make sure we have everything
-    expect((await models.apiSpec.getByParentId(w1._id))?.fileName).toBe('');
-    expect((await models.apiSpec.getByParentId(w2._id))?.fileName).toBe('New Document');
-    expect((await models.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name');
+    expect((await models.apiSpec.getByParentId(w1._id))?.fileName).toBe("");
+    expect((await models.apiSpec.getByParentId(w2._id))?.fileName).toBe(
+      "New Document",
+    );
+    expect((await models.apiSpec.getByParentId(w3._id))?.fileName).toBe(
+      "Unique name",
+    );
     // Run the fix algorithm
     await _repairDatabase();
     // Make sure things get adjusted
-    expect((await models.apiSpec.getByParentId(w1._id))?.fileName).toBe('Workspace 1'); // Should fix
-    expect((await models.apiSpec.getByParentId(w2._id))?.fileName).toBe('Workspace 2'); // Should fix
-    expect((await models.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name'); // should not fix
+    expect((await models.apiSpec.getByParentId(w1._id))?.fileName).toBe(
+      "Workspace 1",
+    ); // Should fix
+    expect((await models.apiSpec.getByParentId(w2._id))?.fileName).toBe(
+      "Workspace 2",
+    ); // Should fix
+    expect((await models.apiSpec.getByParentId(w3._id))?.fileName).toBe(
+      "Unique name",
+    ); // should not fix
   });
 
-  it('fixes old git uris', async () => {
+  it("fixes old git uris", async () => {
     const oldRepoWithSuffix = await models.gitRepository.create({
-      uri: 'https://github.com/foo/bar.git',
+      uri: "https://github.com/foo/bar.git",
       uriNeedsMigration: true,
     });
     const oldRepoWithoutSuffix = await models.gitRepository.create({
-      uri: 'https://github.com/foo/bar',
+      uri: "https://github.com/foo/bar",
       uriNeedsMigration: true,
     });
     const newRepoWithSuffix = await models.gitRepository.create({
-      uri: 'https://github.com/foo/bar.git',
+      uri: "https://github.com/foo/bar.git",
     });
     const newRepoWithoutSuffix = await models.gitRepository.create({
-      uri: 'https://github.com/foo/bar',
+      uri: "https://github.com/foo/bar",
     });
     await _repairDatabase();
-    expect(await db.get(models.gitRepository.type, oldRepoWithSuffix._id)).toEqual(
+    expect(
+      await db.get(models.gitRepository.type, oldRepoWithSuffix._id),
+    ).toEqual(
       expect.objectContaining({
-        uri: 'https://github.com/foo/bar.git',
+        uri: "https://github.com/foo/bar.git",
         uriNeedsMigration: false,
       }),
     );
-    expect(await db.get(models.gitRepository.type, oldRepoWithoutSuffix._id)).toEqual(
+    expect(
+      await db.get(models.gitRepository.type, oldRepoWithoutSuffix._id),
+    ).toEqual(
       expect.objectContaining({
-        uri: 'https://github.com/foo/bar.git',
+        uri: "https://github.com/foo/bar.git",
         uriNeedsMigration: false,
       }),
     );
-    expect(await db.get(models.gitRepository.type, newRepoWithSuffix._id)).toEqual(
+    expect(
+      await db.get(models.gitRepository.type, newRepoWithSuffix._id),
+    ).toEqual(
       expect.objectContaining({
-        uri: 'https://github.com/foo/bar.git',
+        uri: "https://github.com/foo/bar.git",
         uriNeedsMigration: false,
       }),
     );
-    expect(await db.get(models.gitRepository.type, newRepoWithoutSuffix._id)).toEqual(
+    expect(
+      await db.get(models.gitRepository.type, newRepoWithoutSuffix._id),
+    ).toEqual(
       expect.objectContaining({
-        uri: 'https://github.com/foo/bar',
+        uri: "https://github.com/foo/bar",
         uriNeedsMigration: false,
       }),
     );
   });
 });
 
-describe('duplicate()', () => {
-
+describe("duplicate()", () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it('should overwrite appropriate fields on the parent when duplicating', async () => {
+  it("should overwrite appropriate fields on the parent when duplicating", async () => {
     const date = 1478795580200;
     Date.now = vi.fn().mockReturnValue(date);
     const workspace = await models.workspace.create({
-      name: 'Test Workspace',
+      name: "Test Workspace",
     });
-    const newDescription = 'test';
+    const newDescription = "test";
     const duplicated = await db.duplicate(workspace, {
       description: newDescription,
     });
@@ -623,32 +637,31 @@ describe('duplicate()', () => {
     });
   });
 
-  it('should should not call migrate when duplicating', async () => {
+  it("should should not call migrate when duplicating", async () => {
     const workspace = await models.workspace.create({
-      name: 'Test Workspace',
+      name: "Test Workspace",
     });
-    const spy = vi.spyOn(models.workspace, 'migrate');
+    const spy = vi.spyOn(models.workspace, "migrate");
     await db.duplicate(workspace);
     expect(spy).not.toHaveBeenCalled();
   });
 });
 
-describe('docCreate()', () => {
+describe("docCreate()", () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it('should call migrate when creating', async () => {
-    const spy = vi.spyOn(models.workspace, 'migrate');
+  it("should call migrate when creating", async () => {
+    const spy = vi.spyOn(models.workspace, "migrate");
     await db.docCreate(models.workspace.type, {
-      name: 'Test Workspace',
+      name: "Test Workspace",
     });
     // TODO: This is actually called twice, not once - we should avoid the double model.init() call.
     expect(spy).toHaveBeenCalled();
   });
 });
 
-describe('withAncestors()', () => {
-
-  it('should return itself and all parents but exclude siblings', async () => {
+describe("withAncestors()", () => {
+  it("should return itself and all parents but exclude siblings", async () => {
     const spc = await models.project.create();
     const wrk = await models.workspace.create({
       parentId: spc._id,
@@ -670,24 +683,44 @@ describe('withAncestors()', () => {
     });
     // Workspace child searching for ancestors
     await expect(db.withAncestors(wrk)).resolves.toStrictEqual([wrk, spc]);
-    await expect(db.withAncestors(wrkReq)).resolves.toStrictEqual([wrkReq, wrk, spc]);
-    await expect(db.withAncestors(wrkGrpcReq)).resolves.toStrictEqual([wrkGrpcReq, wrk, spc]);
+    await expect(db.withAncestors(wrkReq)).resolves.toStrictEqual([
+      wrkReq,
+      wrk,
+      spc,
+    ]);
+    await expect(db.withAncestors(wrkGrpcReq)).resolves.toStrictEqual([
+      wrkGrpcReq,
+      wrk,
+      spc,
+    ]);
     // Group searching for ancestors
     await expect(db.withAncestors(grp)).resolves.toStrictEqual([grp, wrk, spc]);
     // Group child searching for ancestors
-    await expect(db.withAncestors(grpReq)).resolves.toStrictEqual([grpReq, grp, wrk, spc]);
-    await expect(db.withAncestors(grpGrpcReq)).resolves.toStrictEqual([grpGrpcReq, grp, wrk, spc]);
-    // Group child searching for ancestors with filters
-    await expect(db.withAncestors(grpGrpcReq, [models.requestGroup.type])).resolves.toStrictEqual([
+    await expect(db.withAncestors(grpReq)).resolves.toStrictEqual([
+      grpReq,
+      grp,
+      wrk,
+      spc,
+    ]);
+    await expect(db.withAncestors(grpGrpcReq)).resolves.toStrictEqual([
       grpGrpcReq,
       grp,
+      wrk,
+      spc,
     ]);
+    // Group child searching for ancestors with filters
     await expect(
-      db.withAncestors(grpGrpcReq, [models.requestGroup.type, models.workspace.type]),
+      db.withAncestors(grpGrpcReq, [models.requestGroup.type]),
+    ).resolves.toStrictEqual([grpGrpcReq, grp]);
+    await expect(
+      db.withAncestors(grpGrpcReq, [
+        models.requestGroup.type,
+        models.workspace.type,
+      ]),
     ).resolves.toStrictEqual([grpGrpcReq, grp, wrk]);
     // Group child searching for ancestors but excluding groups will not find the workspace
-    await expect(db.withAncestors(grpGrpcReq, [models.workspace.type])).resolves.toStrictEqual([
-      grpGrpcReq,
-    ]);
+    await expect(
+      db.withAncestors(grpGrpcReq, [models.workspace.type]),
+    ).resolves.toStrictEqual([grpGrpcReq]);
   });
 });

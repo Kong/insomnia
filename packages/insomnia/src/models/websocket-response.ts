@@ -1,16 +1,16 @@
-import fs from 'fs';
+import fs from "fs";
 
-import { database as db, type Query } from '../common/database';
-import * as requestOperations from './helpers/request-operations';
-import type { BaseModel } from './index';
-import * as models from './index';
-import type { ResponseHeader } from './response';
+import { database as db, type Query } from "../common/database";
+import * as requestOperations from "./helpers/request-operations";
+import type { BaseModel } from "./index";
+import * as models from "./index";
+import type { ResponseHeader } from "./response";
 
-export const name = 'WebSocket Response';
+export const name = "WebSocket Response";
 
-export const type = 'WebSocketResponse';
+export const type = "WebSocketResponse";
 
-export const prefix = 'ws-res';
+export const prefix = "ws-res";
 
 export const canDuplicate = false;
 
@@ -37,22 +37,22 @@ export interface BaseWebSocketResponse {
 
 export type WebSocketResponse = BaseModel & BaseWebSocketResponse;
 
-export const isWebSocketResponse = (model: Pick<BaseModel, 'type'>): model is WebSocketResponse => (
-  model.type === type
-);
+export const isWebSocketResponse = (
+  model: Pick<BaseModel, "type">,
+): model is WebSocketResponse => model.type === type;
 
 export function init(): BaseWebSocketResponse {
   return {
     statusCode: 0,
-    statusMessage: '',
-    httpVersion: '',
-    contentType: '',
-    url: '',
+    statusMessage: "",
+    httpVersion: "",
+    contentType: "",
+    url: "",
     elapsedTime: 0,
     headers: [],
-    timelinePath: '',
-    eventLogPath: '',
-    error: '',
+    timelinePath: "",
+    eventLogPath: "",
+    error: "",
     requestVersionId: null,
     settingStoreCookies: null,
     settingSendCookies: null,
@@ -65,10 +65,13 @@ export function migrate(doc: WebSocketResponse) {
 }
 
 export function hookDatabaseInit(consoleLog: typeof console.log = console.log) {
-  consoleLog('[db] Init websocket-responses DB');
+  consoleLog("[db] Init websocket-responses DB");
 }
 
-export function hookRemove(doc: WebSocketResponse, consoleLog: typeof console.log = console.log) {
+export function hookRemove(
+  doc: WebSocketResponse,
+  consoleLog: typeof console.log = console.log,
+) {
   fs.unlink(doc.eventLogPath, () => {
     consoleLog(`[response] Delete body ${doc.eventLogPath}`);
   });
@@ -90,7 +93,10 @@ export async function all() {
   return db.all<WebSocketResponse>(type);
 }
 
-export async function removeForRequest(parentId: string, environmentId?: string | null) {
+export async function removeForRequest(
+  parentId: string,
+  environmentId?: string | null,
+) {
   const settings = await models.settings.get();
   const query: Record<string, any> = {
     parentId,
@@ -112,15 +118,20 @@ export function remove(response: WebSocketResponse) {
   return db.remove(response);
 }
 
-export async function create(patch: Partial<WebSocketResponse> = {}, maxResponses = 20) {
+export async function create(
+  patch: Partial<WebSocketResponse> = {},
+  maxResponses = 20,
+) {
   if (!patch.parentId) {
-    throw new Error('New Response missing `parentId`');
+    throw new Error("New Response missing `parentId`");
   }
 
   const { parentId } = patch;
   // Create request version snapshot
   const request = await requestOperations.getById(parentId);
-  const requestVersion = request ? await models.requestVersion.create(request) : null;
+  const requestVersion = request
+    ? await models.requestVersion.create(request)
+    : null;
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
   // Filter responses by environment if setting is enabled
   const query: Record<string, any> = {
@@ -129,14 +140,18 @@ export async function create(patch: Partial<WebSocketResponse> = {}, maxResponse
 
   if (
     (await models.settings.get()).filterResponsesByEnv &&
-    patch.hasOwnProperty('environmentId')
+    patch.hasOwnProperty("environmentId")
   ) {
     query.environmentId = patch.environmentId;
   }
 
   // Delete all other responses before creating the new one
-  const allResponses = await db.findMostRecentlyModified<WebSocketResponse>(type, query, Math.max(1, maxResponses));
-  const recentIds = allResponses.map(r => r._id);
+  const allResponses = await db.findMostRecentlyModified<WebSocketResponse>(
+    type,
+    query,
+    Math.max(1, maxResponses),
+  );
+  const recentIds = allResponses.map((r) => r._id);
   // Remove all that were in the last query, except the first `maxResponses` IDs
   await db.removeWhere(type, {
     ...query,

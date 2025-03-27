@@ -1,8 +1,8 @@
-import grpcJSOriginal from '@grpc/grpc-js';
-import { EventEmitter } from 'events';
-import { vi } from 'vitest';
+import grpcJSOriginal from "@grpc/grpc-js";
+import { EventEmitter } from "events";
+import { vi } from "vitest";
 
-const grpcJs = vi.requireActual('@grpc/grpc-js') as typeof grpcJSOriginal;
+const grpcJs = vi.requireActual("@grpc/grpc-js") as typeof grpcJSOriginal;
 
 const mockCallWrite = vi.fn();
 const mockCallEnd = vi.fn();
@@ -82,7 +82,6 @@ class MockGrpcClient {
     makeMockCall();
     return getMockCall();
   }
-
 }
 
 export function makeGenericClientConstructor() {

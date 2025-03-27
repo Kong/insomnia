@@ -1,6 +1,6 @@
-import { userSession } from '../models';
-import { insomniaFetch } from '../ui/insomniaFetch';
-import * as crypt from './crypt';
+import { userSession } from "../models";
+import { insomniaFetch } from "../ui/insomniaFetch";
+import * as crypt from "./crypt";
 
 type LoginCallback = (isLoggedIn: boolean) => void;
 
@@ -38,7 +38,7 @@ export interface SessionData {
   encPrivateKey: crypt.AESMessage;
 }
 export function onLoginLogout(loginCallback: LoginCallback) {
-  window.main.on('loggedIn', async () => {
+  window.main.on("loggedIn", async () => {
     loginCallback(await isLoggedIn());
   });
 }
@@ -113,14 +113,14 @@ export async function logout() {
   if (sessionId) {
     try {
       insomniaFetch({
-        method: 'POST',
-        path: '/auth/logout',
+        method: "POST",
+        path: "/auth/logout",
         sessionId,
       });
     } catch (error) {
       // Not a huge deal if this fails, but we don't want it to prevent the
       // user from signing out.
-      console.warn('Failed to logout', error);
+      console.warn("Failed to logout", error);
     }
   }
 
@@ -166,17 +166,19 @@ export async function setVaultSessionData(vaultSalt: string, vaultKey: string) {
 // Helper Functions //
 // ~~~~~~~~~~~~~~~~ //
 
-async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse> {
+async function _whoami(
+  sessionId: string | null = null,
+): Promise<WhoamiResponse> {
   const response = await insomniaFetch<WhoamiResponse | string>({
-    method: 'GET',
-    path: '/auth/whoami',
-    sessionId: sessionId || await getCurrentSessionId(),
+    method: "GET",
+    path: "/auth/whoami",
+    sessionId: sessionId || (await getCurrentSessionId()),
   });
-  if (typeof response === 'string') {
-    throw new Error('Unexpected plaintext response: ' + response);
+  if (typeof response === "string") {
+    throw new Error("Unexpected plaintext response: " + response);
   }
   if (response && !response?.encSymmetricKey) {
-    throw new Error('Unexpected response: ' + JSON.stringify(response));
+    throw new Error("Unexpected response: " + JSON.stringify(response));
   }
   return response;
 }
@@ -185,32 +187,32 @@ export async function getUserSession(): Promise<SessionData> {
   const userData = await userSession.getOrCreate();
 
   return userData;
-};
+}
 
 async function _unsetSessionData() {
   await userSession.getOrCreate();
   await userSession.update(await userSession.getOrCreate(), {
-    id: '',
-    accountId: '',
-    email: '',
-    firstName: '',
-    lastName: '',
+    id: "",
+    accountId: "",
+    email: "",
+    firstName: "",
+    lastName: "",
     symmetricKey: {} as JsonWebKey,
     publicKey: {} as JsonWebKey,
     encPrivateKey: {} as crypt.AESMessage,
-    vaultSalt: '',
-    vaultKey: '',
+    vaultSalt: "",
+    vaultKey: "",
   });
 }
 
 export async function migrateFromLocalStorage() {
-  const sessionId = window.localStorage.getItem('currentSessionId');
+  const sessionId = window.localStorage.getItem("currentSessionId");
 
   if (!sessionId) {
     return;
   }
 
-  const sessionKey = `session__${(sessionId || '').slice(0, 10)}`;
+  const sessionKey = `session__${(sessionId || "").slice(0, 10)}`;
   const session = window.localStorage.getItem(sessionKey);
 
   if (!session) {
@@ -223,16 +225,16 @@ export async function migrateFromLocalStorage() {
     const currentUserSession = await userSession.getOrCreate();
 
     if (currentUserSession.id) {
-      console.warn('Session already exists, skipping migration');
+      console.warn("Session already exists, skipping migration");
     } else {
       await userSession.update(currentUserSession, sessionData);
     }
   } catch (e) {
-    console.error('Failed to parse session data', e);
+    console.error("Failed to parse session data", e);
   } finally {
     // Clean up local storage session data
     window.localStorage.removeItem(sessionKey);
-    window.localStorage.removeItem('currentSessionId');
+    window.localStorage.removeItem("currentSessionId");
   }
 
   return;

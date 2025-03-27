@@ -1,6 +1,6 @@
 type EventHandler = (...args: any[]) => void;
 
-type UIEventType = 'CLOSE_TAB' | 'CHANGE_ACTIVE_ENV';
+type UIEventType = "CLOSE_TAB" | "CHANGE_ACTIVE_ENV";
 class EventBus {
   private events: Record<UIEventType, EventHandler[]> = {
     CLOSE_TAB: [],
@@ -20,7 +20,7 @@ class EventBus {
     if (!this.events[event]) {
       return;
     }
-    this.events[event] = this.events[event].filter(h => h !== handler);
+    this.events[event] = this.events[event].filter((h) => h !== handler);
   }
 
   // emit event
@@ -28,7 +28,7 @@ class EventBus {
     if (!this.events[event]) {
       return;
     }
-    this.events[event].forEach(handler => handler(...args));
+    this.events[event].forEach((handler) => handler(...args));
   }
 }
 

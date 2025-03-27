@@ -1,9 +1,9 @@
-import type { Node } from '@react-types/shared';
-import React from 'react';
-import { useMenuSection, useSeparator } from 'react-aria';
-import type { TreeState } from 'react-stately';
+import type { Node } from "@react-types/shared";
+import React from "react";
+import { useMenuSection, useSeparator } from "react-aria";
+import type { TreeState } from "react-stately";
 
-import { MenuItem } from './menu-item';
+import { MenuItem } from "./menu-item";
 
 interface Props<T> {
   section: Node<T>;
@@ -18,19 +18,20 @@ export const MenuSection = <T extends object>({
 }: Props<T>) => {
   const { itemProps, headingProps, groupProps } = useMenuSection({
     heading: section.rendered,
-    'aria-label': section['aria-label'],
+    "aria-label": section["aria-label"],
   });
 
-  const { separatorProps } = useSeparator({ elementType: 'li' });
+  const { separatorProps } = useSeparator({ elementType: "li" });
 
-  const shouldDisplayDivider = section.rendered || section.key !== state.collection.getFirstKey();
+  const shouldDisplayDivider =
+    section.rendered || section.key !== state.collection.getFirstKey();
 
   return (
     <li {...itemProps}>
-      <div className="flex items-center mx-10">
+      <div className="mx-10 flex items-center">
         {section.rendered && (
           <span
-            className="whitespace-nowrap pr-4 text-[--hl] bg-[--color-bg] text-xs uppercase my-2"
+            className="my-2 whitespace-nowrap bg-[--color-bg] pr-4 text-xs uppercase text-[--hl]"
             {...headingProps}
           >
             {section.rendered}
@@ -38,17 +39,18 @@ export const MenuSection = <T extends object>({
         )}
         {shouldDisplayDivider && <hr className="my-1" {...separatorProps} />}
       </div>
-      <ul {...groupProps} className="p-0 list-none">
-        {[...section.childNodes].map((node: Node<T>) => (
-          node.rendered && (
-            <MenuItem
-              key={node.key}
-              item={node}
-              state={state}
-              closeOnSelect={closeOnSelect}
-            />
-          )
-        ))}
+      <ul {...groupProps} className="list-none p-0">
+        {[...section.childNodes].map(
+          (node: Node<T>) =>
+            node.rendered && (
+              <MenuItem
+                key={node.key}
+                item={node}
+                state={state}
+                closeOnSelect={closeOnSelect}
+              />
+            ),
+        )}
       </ul>
     </li>
   );

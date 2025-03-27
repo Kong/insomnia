@@ -1,32 +1,41 @@
-import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { Fragment, useCallback, useState } from 'react';
-import { Button, Collection, Header, Menu, MenuItem, MenuTrigger, Popover, Section } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router-dom';
+import type { IconName } from "@fortawesome/fontawesome-svg-core";
+import React, { Fragment, useCallback, useState } from "react";
+import {
+  Button,
+  Collection,
+  Header,
+  Menu,
+  MenuItem,
+  MenuTrigger,
+  Popover,
+  Section,
+} from "react-aria-components";
+import { useFetcher, useParams } from "react-router-dom";
 
-import { exportHarRequest } from '../../../common/har';
-import { toKebabCase } from '../../../common/misc';
-import type { PlatformKeyCombinations } from '../../../common/settings';
-import type { Environment } from '../../../models/environment';
-import type { GrpcRequest } from '../../../models/grpc-request';
-import type { Project } from '../../../models/project';
-import { isRequest, type Request } from '../../../models/request';
-import type { RequestGroup } from '../../../models/request-group';
-import { incrementDeletedRequests } from '../../../models/stats';
+import { exportHarRequest } from "../../../common/har";
+import { toKebabCase } from "../../../common/misc";
+import type { PlatformKeyCombinations } from "../../../common/settings";
+import type { Environment } from "../../../models/environment";
+import type { GrpcRequest } from "../../../models/grpc-request";
+import type { Project } from "../../../models/project";
+import { isRequest, type Request } from "../../../models/request";
+import type { RequestGroup } from "../../../models/request-group";
+import { incrementDeletedRequests } from "../../../models/stats";
 // Plugin action related imports
 // Plugin action related imports
-import type { WebSocketRequest } from '../../../models/websocket-request';
-import type { RequestAction } from '../../../plugins';
-import { getRequestActions } from '../../../plugins';
-import * as pluginContexts from '../../../plugins/context/index';
-import { useRequestMetaPatcher } from '../../hooks/use-request';
-import { useRootLoaderData } from '../../routes/root';
-import { DropdownHint } from '../base/dropdown/dropdown-hint';
-import { Icon } from '../icon';
-import { showError, showModal, showPrompt } from '../modals';
-import { AlertModal } from '../modals/alert-modal';
-import { AskModal } from '../modals/ask-modal';
-import { GenerateCodeModal } from '../modals/generate-code-modal';
-import { RequestSettingsModal } from '../modals/request-settings-modal';
+import type { WebSocketRequest } from "../../../models/websocket-request";
+import type { RequestAction } from "../../../plugins";
+import { getRequestActions } from "../../../plugins";
+import * as pluginContexts from "../../../plugins/context/index";
+import { useRequestMetaPatcher } from "../../hooks/use-request";
+import { useRootLoaderData } from "../../routes/root";
+import { DropdownHint } from "../base/dropdown/dropdown-hint";
+import { Icon } from "../icon";
+import { showError, showModal, showPrompt } from "../modals";
+import { AlertModal } from "../modals/alert-modal";
+import { AskModal } from "../modals/ask-modal";
+import { GenerateCodeModal } from "../modals/generate-code-modal";
+import { RequestSettingsModal } from "../modals/request-settings-modal";
 
 interface Props {
   activeEnvironment: Environment;
@@ -50,14 +59,16 @@ export const RequestActionsDropdown = ({
   onOpenChange,
   onRename,
 }: Props) => {
-  const {
-    settings,
-  } = useRootLoaderData();
+  const { settings } = useRootLoaderData();
   const patchRequestMeta = useRequestMetaPatcher();
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
   const requestFetcher = useFetcher();
-  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+  const { organizationId, projectId, workspaceId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  };
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
@@ -72,34 +83,37 @@ export const RequestActionsDropdown = ({
     }
 
     showPrompt({
-      title: 'Duplicate Request',
+      title: "Duplicate Request",
       defaultValue: request.name,
-      submitName: 'Create',
-      label: 'New Name',
+      submitName: "Create",
+      label: "New Name",
       selectText: true,
-      onComplete: (name: string) => requestFetcher.submit({ name },
-        {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request?._id}/duplicate`,
-          method: 'post',
-          encType: 'application/json',
-        }),
+      onComplete: (name: string) =>
+        requestFetcher.submit(
+          { name },
+          {
+            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request?._id}/duplicate`,
+            method: "post",
+            encType: "application/json",
+          },
+        ),
     });
   };
 
   const handlePluginClick = async ({ plugin, action }: RequestAction) => {
     try {
       const context = {
-        ...(pluginContexts.app.init('no-render')),
+        ...pluginContexts.app.init("no-render"),
         ...pluginContexts.data.init(activeProject._id),
-        ...(pluginContexts.store.init(plugin)),
-        ...(pluginContexts.network.init()),
+        ...pluginContexts.store.init(plugin),
+        ...pluginContexts.network.init(),
       };
       await action(context, {
         request,
       });
     } catch (error) {
       showError({
-        title: 'Plugin Action Failed',
+        title: "Plugin Action Failed",
         error,
       });
     }
@@ -114,17 +128,17 @@ export const RequestActionsDropdown = ({
   const copyAsCurl = async () => {
     try {
       const har = await exportHarRequest(request._id, activeEnvironment._id);
-      const HTTPSnippet = (await import('httpsnippet')).default;
+      const HTTPSnippet = (await import("httpsnippet")).default;
       const snippet = new HTTPSnippet(har);
-      const cmd = snippet.convert('shell', 'curl');
+      const cmd = snippet.convert("shell", "curl");
 
       if (cmd) {
         window.clipboard.writeText(cmd);
       }
     } catch (err) {
       showModal(AlertModal, {
-        title: 'Could not generate cURL',
-        message: err instanceof Error ? err.message : 'Unknown error',
+        title: "Could not generate cURL",
+        message: err instanceof Error ? err.message : "Unknown error",
       });
     }
   };
@@ -135,19 +149,21 @@ export const RequestActionsDropdown = ({
 
   const deleteRequest = () => {
     showModal(AskModal, {
-      title: 'Delete Request',
+      title: "Delete Request",
       message: `Do you really want to delete "${request.name}"?`,
-      yesText: 'Delete',
-      noText: 'Cancel',
-      color: 'danger',
+      yesText: "Delete",
+      noText: "Cancel",
+      color: "danger",
       onDone: async (isYes: boolean) => {
         if (isYes) {
           incrementDeletedRequests();
-          requestFetcher.submit({ id: request._id },
+          requestFetcher.submit(
+            { id: request._id },
             {
               action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete`,
-              method: 'post',
-            });
+              method: "post",
+            },
+          );
         }
       },
     });
@@ -167,27 +183,30 @@ export const RequestActionsDropdown = ({
       hint?: PlatformKeyCombinations;
       action: () => void;
     }[];
-  }[] = !canGenerateCode ? [] :
-      [{
-        name: 'Export',
-        id: 'export',
-        icon: 'file-export',
-        items: [
-          {
-            id: 'GenerateCode',
-            name: 'Generate Code',
-            action: generateCode,
-            icon: 'code',
-            hint: hotKeyRegistry.request_showGenerateCodeEditor,
-          },
-          {
-            id: 'CopyAsCurl',
-            name: 'Copy as cURL',
-            action: copyAsCurl,
-            icon: 'copy',
-          },
-        ],
-      }];
+  }[] = !canGenerateCode
+    ? []
+    : [
+        {
+          name: "Export",
+          id: "export",
+          icon: "file-export",
+          items: [
+            {
+              id: "GenerateCode",
+              name: "Generate Code",
+              action: generateCode,
+              icon: "code",
+              hint: hotKeyRegistry.request_showGenerateCodeEditor,
+            },
+            {
+              id: "CopyAsCurl",
+              name: "Copy as cURL",
+              action: copyAsCurl,
+              icon: "copy",
+            },
+          ],
+        },
+      ];
 
   const requestActionList: {
     name: string;
@@ -201,71 +220,72 @@ export const RequestActionsDropdown = ({
       action: () => void;
     }[];
   }[] = [
-      ...codeGenerationActions,
-      {
-        name: 'Actions',
-        id: 'actions',
-        icon: 'cog',
-        items: [
-          {
-            id: 'Pin',
-            name: isPinned ? 'Unpin' : 'Pin',
-            action: togglePin,
-            icon: 'thumbtack',
-            hint: hotKeyRegistry.request_togglePin,
-          },
-          {
-            id: 'Duplicate',
-            name: 'Duplicate',
-            action: handleDuplicateRequest,
-            icon: 'copy',
-            hint: hotKeyRegistry.request_showDuplicate,
-          },
-          {
-            id: 'Rename',
-            name: 'Rename',
-            action: onRename,
-            icon: 'edit',
-          },
-          {
-            id: 'Delete',
-            name: 'Delete',
-            action: deleteRequest,
-            icon: 'trash',
-            hint: hotKeyRegistry.request_showDelete,
-          },
-          {
-            id: 'Settings',
-            name: 'Settings',
-            icon: 'gear',
-            hint: hotKeyRegistry.request_showSettings,
-            action: () => {
-              setIsSettingsModalOpen(true);
-            },
-          },
-        ],
-      },
-      ...(actionPlugins.length > 0 ? [
+    ...codeGenerationActions,
+    {
+      name: "Actions",
+      id: "actions",
+      icon: "cog",
+      items: [
         {
-          name: 'Plugins',
-          id: 'plugins',
-          icon: 'plug' as IconName,
-          items: actionPlugins.map(plugin => ({
-            id: plugin.label,
-            name: plugin.label,
-            icon: plugin.icon as IconName || 'plug',
-            action: () =>
-              handlePluginClick(plugin),
-          })),
+          id: "Pin",
+          name: isPinned ? "Unpin" : "Pin",
+          action: togglePin,
+          icon: "thumbtack",
+          hint: hotKeyRegistry.request_togglePin,
         },
-      ] : []),
-    ];
+        {
+          id: "Duplicate",
+          name: "Duplicate",
+          action: handleDuplicateRequest,
+          icon: "copy",
+          hint: hotKeyRegistry.request_showDuplicate,
+        },
+        {
+          id: "Rename",
+          name: "Rename",
+          action: onRename,
+          icon: "edit",
+        },
+        {
+          id: "Delete",
+          name: "Delete",
+          action: deleteRequest,
+          icon: "trash",
+          hint: hotKeyRegistry.request_showDelete,
+        },
+        {
+          id: "Settings",
+          name: "Settings",
+          icon: "gear",
+          hint: hotKeyRegistry.request_showSettings,
+          action: () => {
+            setIsSettingsModalOpen(true);
+          },
+        },
+      ],
+    },
+    ...(actionPlugins.length > 0
+      ? [
+          {
+            name: "Plugins",
+            id: "plugins",
+            icon: "plug" as IconName,
+            items: actionPlugins.map((plugin) => ({
+              id: plugin.label,
+              name: plugin.label,
+              icon: (plugin.icon as IconName) || "plug",
+              action: () => handlePluginClick(plugin),
+            })),
+          },
+        ]
+      : []),
+  ];
 
   return (
     <Fragment>
       <MenuTrigger
         isOpen={isOpen}
-        onOpenChange={isOpen => {
+        onOpenChange={(isOpen) => {
           isOpen && onOpen();
           onOpenChange(isOpen);
         }}
@@ -273,34 +293,44 @@ export const RequestActionsDropdown = ({
         <Button
           data-testid={`Dropdown-${toKebabCase(request.name)}`}
           aria-label="Request Actions"
-          className="hidden items-center group-focus:flex group-hover:flex justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className="hidden aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] group-hover:flex group-focus:flex aria-pressed:bg-[--hl-sm]"
         >
           <Icon icon="caret-down" />
         </Button>
-        <Popover className="min-w-max overflow-y-hidden flex flex-col" triggerRef={triggerRef} placement="bottom end" offset={5}>
+        <Popover
+          className="flex min-w-max flex-col overflow-y-hidden"
+          triggerRef={triggerRef}
+          placement="bottom end"
+          offset={5}
+        >
           <Menu
             aria-label="Request Actions Menu"
             selectionMode="single"
-            onAction={key => requestActionList.find(i => i.items.find(a => a.id === key))?.items.find(a => a.id === key)?.action()}
+            onAction={(key) =>
+              requestActionList
+                .find((i) => i.items.find((a) => a.id === key))
+                ?.items.find((a) => a.id === key)
+                ?.action()
+            }
             items={requestActionList}
-            className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
+            className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
           >
-            {section => (
-              <Section className='flex-1 flex flex-col'>
-                <Header className='pl-2 py-1 flex items-center gap-2 text-[--hl] text-xs uppercase'>
+            {(section) => (
+              <Section className="flex flex-1 flex-col">
+                <Header className="flex items-center gap-2 py-1 pl-2 text-xs uppercase text-[--hl]">
                   <Icon icon={section.icon} /> <span>{section.name}</span>
                 </Header>
                 <Collection items={section.items}>
-                  {item => (
+                  {(item) => (
                     <MenuItem
                       key={item.id}
                       id={item.id}
-                      className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                      className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                       aria-label={item.name}
                     >
                       <Icon icon={item.icon} />
                       <span>{item.name}</span>
-                      {item.hint && (<DropdownHint keyBindings={item.hint} />)}
+                      {item.hint && <DropdownHint keyBindings={item.hint} />}
                     </MenuItem>
                   )}
                 </Collection>
@@ -309,14 +339,12 @@ export const RequestActionsDropdown = ({
           </Menu>
         </Popover>
       </MenuTrigger>
-      {
-        isSettingsModalOpen && (
-          <RequestSettingsModal
-            request={request}
-            onHide={() => setIsSettingsModalOpen(false)}
-          />
-        )
-      }
-    </Fragment >
+      {isSettingsModalOpen && (
+        <RequestSettingsModal
+          request={request}
+          onHide={() => setIsSettingsModalOpen(false)}
+        />
+      )}
+    </Fragment>
   );
 };

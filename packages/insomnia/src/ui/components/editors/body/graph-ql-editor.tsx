@@ -1,50 +1,101 @@
-import type { LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
-import type { GraphQLHintOptions } from 'codemirror-graphql/hint';
-import type { GraphQLInfoOptions } from 'codemirror-graphql/info';
-import type { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
-import type { OpenDialogOptions } from 'electron';
-import { readFileSync } from 'fs';
-import { buildClientSchema, type DefinitionNode, type DocumentNode, getIntrospectionQuery, GraphQLNonNull, GraphQLSchema, Kind, type NonNullTypeNode, type OperationDefinitionNode, OperationTypeNode, parse, typeFromAST } from 'graphql';
-import type { Maybe } from 'graphql-language-service';
-import React, { type FC, useCallback, useEffect, useRef, useState } from 'react';
-import { Button, Group, Heading, Toolbar, Tooltip, TooltipTrigger } from 'react-aria-components';
-import ReactDOM from 'react-dom';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { useLocalStorage } from 'react-use';
+import type { LintOptions, ShowHintOptions, TextMarker } from "codemirror";
+import type { GraphQLHintOptions } from "codemirror-graphql/hint";
+import type { GraphQLInfoOptions } from "codemirror-graphql/info";
+import type { ModifiedGraphQLJumpOptions } from "codemirror-graphql/jump";
+import type { OpenDialogOptions } from "electron";
+import { readFileSync } from "fs";
+import {
+  buildClientSchema,
+  type DefinitionNode,
+  type DocumentNode,
+  getIntrospectionQuery,
+  GraphQLNonNull,
+  GraphQLSchema,
+  Kind,
+  type NonNullTypeNode,
+  type OperationDefinitionNode,
+  OperationTypeNode,
+  parse,
+  typeFromAST,
+} from "graphql";
+import type { Maybe } from "graphql-language-service";
+import React, {
+  type FC,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import {
+  Button,
+  Group,
+  Heading,
+  Toolbar,
+  Tooltip,
+  TooltipTrigger,
+} from "react-aria-components";
+import ReactDOM from "react-dom";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { useLocalStorage } from "react-use";
 
-import { CONTENT_TYPE_JSON } from '../../../../common/constants';
-import { database as db } from '../../../../common/database';
-import { markdownToHTML } from '../../../../common/markdown-to-html';
-import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
-import * as models from '../../../../models';
-import type { Request } from '../../../../models/request';
-import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../../../network/network';
-import { invariant } from '../../../../utils/invariant';
-import { jsonPrettify } from '../../../../utils/prettify/json';
-import { useRootLoaderData } from '../../../routes/root';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
-import { CodeEditor, type CodeEditorHandle } from '../../codemirror/code-editor';
-import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
-import type { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
-import { HelpTooltip } from '../../help-tooltip';
-import { Icon } from '../../icon';
-import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
-import { TimeFromNow } from '../../time-from-now';
+import { CONTENT_TYPE_JSON } from "../../../../common/constants";
+import { database as db } from "../../../../common/database";
+import { markdownToHTML } from "../../../../common/markdown-to-html";
+import type { ResponsePatch } from "../../../../main/network/libcurl-promise";
+import * as models from "../../../../models";
+import type { Request } from "../../../../models/request";
+import {
+  fetchRequestData,
+  responseTransform,
+  sendCurlAndWriteTimeline,
+  tryToInterpolateRequest,
+  tryToTransformRequestWithPlugins,
+} from "../../../../network/network";
+import { invariant } from "../../../../utils/invariant";
+import { jsonPrettify } from "../../../../utils/prettify/json";
+import { useRootLoaderData } from "../../../routes/root";
+import {
+  Dropdown,
+  DropdownItem,
+  DropdownSection,
+  ItemContent,
+} from "../../base/dropdown";
+import {
+  CodeEditor,
+  type CodeEditorHandle,
+} from "../../codemirror/code-editor";
+import { GraphQLExplorer } from "../../graph-ql-explorer/graph-ql-explorer";
+import type { ActiveReference } from "../../graph-ql-explorer/graph-ql-types";
+import { HelpTooltip } from "../../help-tooltip";
+import { Icon } from "../../icon";
+import { useDocBodyKeyboardShortcuts } from "../../keydown-binder";
+import { TimeFromNow } from "../../time-from-now";
 
 // Type guard to ensure loc is non-nullable
-const hasLocation = (def: OperationDefinitionNode): def is OperationDefinitionNode & { loc: NonNullable<OperationDefinitionNode['loc']> } => {
+const hasLocation = (
+  def: OperationDefinitionNode,
+): def is OperationDefinitionNode & {
+  loc: NonNullable<OperationDefinitionNode["loc"]>;
+} => {
   return def.loc !== null && def.loc !== undefined;
 };
 /** note that `null` is a valid operation name.  For example, `null` is the operation name of an anonymous `query` operation. */
-const matchesOperation = (operationName: string | null | undefined) => ({ name }: OperationDefinitionNode) => {
-  // For matching an anonymous function, `operationName` will be `null` and `operation.name` will be `undefined`
-  if (!operationName && !name) {
-    return true;
-  }
-  return name?.value === operationName;
-};
+const matchesOperation =
+  (operationName: string | null | undefined) =>
+  ({ name }: OperationDefinitionNode) => {
+    // For matching an anonymous function, `operationName` will be `null` and `operation.name` will be `undefined`
+    if (!operationName && !name) {
+      return true;
+    }
+    return name?.value === operationName;
+  };
 
-function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: string, variables?: string): string {
+function getGraphQLContent(
+  body: GraphQLBody,
+  query?: string,
+  operationName?: string,
+  variables?: string,
+): string {
   // the body object is one dimensional, so we don't need to worry about shallow copying.
   const { query: originalQuery, ...optionalProps } = body;
   const content: GraphQLBody = { query: originalQuery };
@@ -72,14 +123,17 @@ function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: st
 
   // Set empty content after user has deleted the query and variables - INS-132
   if (!content.query && !content.variables) {
-    return '';
+    return "";
   }
 
   return JSON.stringify(content);
 }
 
-const isString = (value?: string): value is string => typeof value === 'string' || (value as unknown) instanceof String;
-const isOperationDefinition = (def: DefinitionNode): def is OperationDefinitionNode => def.kind === Kind.OPERATION_DEFINITION;
+const isString = (value?: string): value is string =>
+  typeof value === "string" || (value as unknown) instanceof String;
+const isOperationDefinition = (
+  def: DefinitionNode,
+): def is OperationDefinitionNode => def.kind === Kind.OPERATION_DEFINITION;
 
 const fetchGraphQLSchemaForRequest = async ({
   requestId,
@@ -104,12 +158,12 @@ const fetchGraphQLSchemaForRequest = async ({
   try {
     const bodyJson = JSON.stringify({
       query: getIntrospectionQuery({ inputValueDeprecation }),
-      operationName: 'IntrospectionQuery',
+      operationName: "IntrospectionQuery",
     });
 
     const introspectionRequest = await db.upsert(
       Object.assign({}, req, {
-        _id: req._id + '.graphql',
+        _id: req._id + ".graphql",
         settingMaxTimelineDataSize: 5000,
         parentId: req._id,
         isPrivate: true,
@@ -121,7 +175,8 @@ const fetchGraphQLSchemaForRequest = async ({
       }),
     );
 
-    const { request,
+    const {
+      request,
       environment,
       settings,
       clientCertificates,
@@ -131,8 +186,13 @@ const fetchGraphQLSchemaForRequest = async ({
       responseId,
     } = await fetchRequestData(introspectionRequest._id);
 
-    const renderResult = await tryToInterpolateRequest({ request, environment: environment._id, purpose: 'send' });
-    const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+    const renderResult = await tryToInterpolateRequest({
+      request,
+      environment: environment._id,
+      purpose: "send",
+    });
+    const renderedRequest =
+      await tryToTransformRequestWithPlugins(renderResult);
     const res = await sendCurlAndWriteTimeline(
       renderedRequest,
       clientCertificates,
@@ -141,12 +201,17 @@ const fetchGraphQLSchemaForRequest = async ({
       timelinePath,
       responseId,
     );
-    const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
+    const response = await responseTransform(
+      res,
+      activeEnvironmentId,
+      renderedRequest,
+      renderResult.context,
+    );
     const statusCode = response.statusCode || 0;
     if (!response) {
       return {
         schemaFetchError: {
-          message: 'No response body received when fetching schema',
+          message: "No response body received when fetching schema",
         },
       };
     }
@@ -168,11 +233,12 @@ const fetchGraphQLSchemaForRequest = async ({
     }
     return {
       schemaFetchError: {
-        message: 'Something went wrong, no data was received from introspection query',
+        message:
+          "Something went wrong, no data was received from introspection query",
       },
     };
   } catch (err) {
-    console.error('[graphql] Failed to fetch schema', err);
+    console.error("[graphql] Failed to fetch schema", err);
     return { schemaFetchError: { message: err.message } };
   }
 };
@@ -212,46 +278,56 @@ export const GraphQLEditor: FC<Props> = ({
 }) => {
   let requestBody: GraphQLBody;
   try {
-    requestBody = JSON.parse(request.body.text || '');
+    requestBody = JSON.parse(request.body.text || "");
   } catch {
-    requestBody = { query: '' };
+    requestBody = { query: "" };
   }
 
-  requestBody.variables = requestBody.variables || '';
+  requestBody.variables = requestBody.variables || "";
 
   let documentAST;
   try {
-    documentAST = parse(requestBody.query || '');
+    documentAST = parse(requestBody.query || "");
   } catch {
     documentAST = null;
   }
-  const operations = documentAST?.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '').filter(Boolean) || [];
-  const operationName = requestBody.operationName || operations[0] || '';
+  const operations =
+    documentAST?.definitions
+      .filter(isOperationDefinition)
+      ?.map((def) => def.name?.value || "")
+      .filter(Boolean) || [];
+  const operationName = requestBody.operationName || operations[0] || "";
   const disabledOperationMarkers = useRef<TextMarker[]>([]);
   const [state, setState] = useState<State>({
     body: {
-      query: requestBody.query || '',
+      query: requestBody.query || "",
       variables: requestBody.variables,
       operationName,
     },
     operations,
-    variablesSyntaxError: '',
+    variablesSyntaxError: "",
     activeReference: null,
     explorerVisible: false,
     documentAST,
   });
 
   const [automaticFetch, setAutoFetch] = useLocalStorage<boolean>(
-    'graphql.automaticFetch',
-    true
+    "graphql.automaticFetch",
+    true,
   );
-  const [includeInputValueDeprecation, setIncludeInputValueDeprecation] = useState(false);
+  const [includeInputValueDeprecation, setIncludeInputValueDeprecation] =
+    useState(false);
   const [schema, setSchema] = useState<GraphQLSchema | null>(null);
-  const [schemaFetchError, setSchemaFetchError] = useState<{
-    message: string;
-    response?: ResponsePatch | null;
-  } | undefined>();
-  const [schemaIsFetching, setSchemaIsFetching] = useState<boolean | null>(null);
+  const [schemaFetchError, setSchemaFetchError] = useState<
+    | {
+        message: string;
+        response?: ResponsePatch | null;
+      }
+    | undefined
+  >();
+  const [schemaIsFetching, setSchemaIsFetching] = useState<boolean | null>(
+    null,
+  );
   const [schemaLastFetchTime, setSchemaLastFetchTime] = useState<number>(0);
   const editorRef = useRef<CodeEditorHandle>(null);
 
@@ -277,15 +353,22 @@ export const GraphQLEditor: FC<Props> = ({
     return () => {
       isMounted = false;
     };
-  }, [automaticFetch, environmentId, includeInputValueDeprecation, request._id, request.url, workspaceId]);
-  const {
-    settings,
-  } = useRootLoaderData();
+  }, [
+    automaticFetch,
+    environmentId,
+    includeInputValueDeprecation,
+    request._id,
+    request.url,
+    workspaceId,
+  ]);
+  const { settings } = useRootLoaderData();
   const { editorIndentWithTabs, editorIndentSize } = settings;
   const beautifyRequestBody = async () => {
     const { body } = state;
-    const prettyQuery = await (await import('prettier')).format(body.query, {
-      parser: 'graphql',
+    const prettyQuery = await (
+      await import("prettier")
+    ).format(body.query, {
+      parser: "graphql",
       useTabs: editorIndentWithTabs,
       tabWidth: editorIndentSize,
     });
@@ -299,41 +382,63 @@ export const GraphQLEditor: FC<Props> = ({
   useDocBodyKeyboardShortcuts({
     beautifyRequestBody,
   });
-  const changeOperationName = useCallback((operationName: string) => {
-    const content = getGraphQLContent(state.body, undefined, operationName);
-    onChange(content);
-    setState(prevState => ({ ...prevState, body: { ...prevState.body, operationName } }));
-  }, [onChange, state.body]);
+  const changeOperationName = useCallback(
+    (operationName: string) => {
+      const content = getGraphQLContent(state.body, undefined, operationName);
+      onChange(content);
+      setState((prevState) => ({
+        ...prevState,
+        body: { ...prevState.body, operationName },
+      }));
+    },
+    [onChange, state.body],
+  );
 
   const changeVariables = (variablesInput: string) => {
     try {
-      const content = getGraphQLContent(state.body, undefined, operationName, variablesInput);
+      const content = getGraphQLContent(
+        state.body,
+        undefined,
+        operationName,
+        variablesInput,
+      );
       onChange(content);
 
-      setState(state => ({
+      setState((state) => ({
         ...state,
         // If variables are empty, remove them from the body
-        body: { ...state.body, variables: variablesInput.length ? variablesInput : undefined },
-        variablesSyntaxError: '',
+        body: {
+          ...state.body,
+          variables: variablesInput.length ? variablesInput : undefined,
+        },
+        variablesSyntaxError: "",
       }));
     } catch (err) {
-      setState(state => ({ ...state, variablesSyntaxError: err.message }));
+      setState((state) => ({ ...state, variablesSyntaxError: err.message }));
     }
   };
   const changeQuery = (query: string) => {
     try {
       const documentAST = parse(query);
-      const operations = documentAST.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '').filter(Boolean) || [];
+      const operations =
+        documentAST.definitions
+          .filter(isOperationDefinition)
+          ?.map((def) => def.name?.value || "")
+          .filter(Boolean) || [];
 
       // default to first operation when none selected
-      let operationName = operations[0] || '';
+      let operationName = operations[0] || "";
       if (operations.length && state.body.operationName) {
         const operationsChanged = state.operations.join() !== operations.join();
-        const operationNameWasChanged = !operations.includes(state.body.operationName);
+        const operationNameWasChanged = !operations.includes(
+          state.body.operationName,
+        );
         if (operationsChanged && operationNameWasChanged) {
           // preserve selection during name change or fallback to first operation
-          const oldPosition = state.operations.indexOf(state.body.operationName);
-          operationName = operations[oldPosition] || operations[0] || '';
+          const oldPosition = state.operations.indexOf(
+            state.body.operationName,
+          );
+          operationName = operations[oldPosition] || operations[0] || "";
         }
       }
 
@@ -344,22 +449,26 @@ export const GraphQLEditor: FC<Props> = ({
       const content = getGraphQLContent(state.body, query, operationName);
       onChange(content);
 
-      setState(state => ({
+      setState((state) => ({
         ...state,
         documentAST,
         body: { ...state.body, query, operationName },
         operations,
       }));
     } catch (error) {
-      console.warn('failed to parse', error);
-      if (isString(query) && query.trim() === '') {
+      console.warn("failed to parse", error);
+      if (isString(query) && query.trim() === "") {
         // update request body when query is empty
-        onChange(getGraphQLContent(state.body, query, ''));
-      };
-      setState(state => ({
+        onChange(getGraphQLContent(state.body, query, ""));
+      }
+      setState((state) => ({
         ...state,
         documentAST: null,
-        body: { ...state.body, query, operationName: query ? state.body.operationName : 'Operations' },
+        body: {
+          ...state.body,
+          query,
+          operationName: query ? state.body.operationName : "Operations",
+        },
         operations: query ? state.operations : [],
       }));
     }
@@ -367,10 +476,10 @@ export const GraphQLEditor: FC<Props> = ({
 
   const renderSchemaFetchMessage = () => {
     if (!request.url) {
-      return '';
+      return "";
     }
     if (schemaIsFetching) {
-      return 'Fetching schema...';
+      return "Fetching schema...";
     }
     if (schemaLastFetchTime > 0) {
       return (
@@ -384,13 +493,13 @@ export const GraphQLEditor: FC<Props> = ({
 
   const loadAndSetLocalSchema = async () => {
     const options: OpenDialogOptions = {
-      title: 'Import GraphQL introspection schema',
-      buttonLabel: 'Import',
-      properties: ['openFile'],
+      title: "Import GraphQL introspection schema",
+      buttonLabel: "Import",
+      properties: ["openFile"],
       filters: [
         // @ts-expect-error https://github.com/electron/electron/pull/29322
         {
-          extensions: ['', 'json'],
+          extensions: ["", "json"],
         },
       ],
     };
@@ -403,14 +512,16 @@ export const GraphQLEditor: FC<Props> = ({
       const file = readFileSync(filePath);
       const content = JSON.parse(file.toString());
       if (!content.data) {
-        throw new Error('JSON file should have a data field with the introspection results');
+        throw new Error(
+          "JSON file should have a data field with the introspection results",
+        );
       }
       setSchema(buildClientSchema(content.data));
       setSchemaLastFetchTime(Date.now());
       setSchemaFetchError(undefined);
       setSchemaIsFetching(false);
     } catch (err) {
-      console.log('[graphql] ERROR: Failed to fetch schema', err);
+      console.log("[graphql] ERROR: Failed to fetch schema", err);
       setSchemaFetchError({
         message: `Failed to fetch schema: ${err.message}`,
         response: null,
@@ -419,30 +530,29 @@ export const GraphQLEditor: FC<Props> = ({
     }
   };
 
-  const {
-    variablesSyntaxError,
-    activeReference,
-    explorerVisible,
-  } = state;
+  const { variablesSyntaxError, activeReference, explorerVisible } = state;
 
   const variableTypes: Record<string, GraphQLNonNull<any>> = {};
   if (schema) {
-    const operationDefinitions = state.documentAST?.definitions.filter(isOperationDefinition);
+    const operationDefinitions = state.documentAST?.definitions.filter(
+      isOperationDefinition,
+    );
     operationDefinitions?.forEach(({ variableDefinitions }) => {
       variableDefinitions?.forEach(({ variable, type }) => {
         const inputType = typeFromAST(schema, type as NonNullTypeNode);
         if (inputType) {
           variableTypes[variable.name.value] = inputType;
         }
-      }
-      );
+      });
     });
   }
 
   // Create portal for GraphQL Explorer
   let graphQLExplorerPortal: React.ReactPortal | null = null;
-  const explorerContainer = document.querySelector('#graphql-explorer-container');
-  invariant(explorerContainer, 'Failed to find #graphql-explorer-container');
+  const explorerContainer = document.querySelector(
+    "#graphql-explorer-container",
+  );
+  invariant(explorerContainer, "Failed to find #graphql-explorer-container");
   if (explorerContainer) {
     graphQLExplorerPortal = ReactDOM.createPortal(
       <GraphQLExplorer
@@ -450,22 +560,29 @@ export const GraphQLEditor: FC<Props> = ({
         key={schemaLastFetchTime}
         visible={explorerVisible}
         reference={activeReference}
-        handleClose={() => setState(state => ({ ...state, explorerVisible: false }))}
+        handleClose={() =>
+          setState((state) => ({ ...state, explorerVisible: false }))
+        }
       />,
-      explorerContainer
+      explorerContainer,
     );
   }
 
-  let graphqlOptions: {
-    hintOptions: GraphQLHintOptions & ShowHintOptions;
-    infoOptions: GraphQLInfoOptions;
-    jumpOptions: ModifiedGraphQLJumpOptions;
-    lintOptions: LintOptions;
-  } | undefined;
-  const handleClickReference = (reference: Maybe<ActiveReference>, event: MouseEvent) => {
+  let graphqlOptions:
+    | {
+        hintOptions: GraphQLHintOptions & ShowHintOptions;
+        infoOptions: GraphQLInfoOptions;
+        jumpOptions: ModifiedGraphQLJumpOptions;
+        lintOptions: LintOptions;
+      }
+    | undefined;
+  const handleClickReference = (
+    reference: Maybe<ActiveReference>,
+    event: MouseEvent,
+  ) => {
     event.preventDefault();
     if (reference) {
-      setState(state => ({
+      setState((state) => ({
         ...state,
         explorerVisible: true,
         activeReference: reference,
@@ -480,7 +597,8 @@ export const GraphQLEditor: FC<Props> = ({
       },
       infoOptions: {
         schema,
-        renderDescription: text => `<div class="markdown-preview__content">${markdownToHTML(text)}</div>`,
+        renderDescription: (text) =>
+          `<div class="markdown-preview__content">${markdownToHTML(text)}</div>`,
         onClick: handleClickReference,
       },
       jumpOptions: {
@@ -492,49 +610,52 @@ export const GraphQLEditor: FC<Props> = ({
       },
     };
   }
-  const canShowSchema = schema && !schemaIsFetching && !schemaFetchError && schemaLastFetchTime > 0;
+  const canShowSchema =
+    schema && !schemaIsFetching && !schemaFetchError && schemaLastFetchTime > 0;
 
-  const highlightOperation = useCallback((operationName?: string | null) => {
+  const highlightOperation = useCallback(
+    (operationName?: string | null) => {
+      if (!state.documentAST || !editorRef.current) {
+        return;
+      }
 
-    if (!state.documentAST || !editorRef.current) {
-      return;
-    }
+      // Remove current query highlighting
+      for (const textMarker of disabledOperationMarkers?.current) {
+        textMarker.clear();
+      }
 
-    // Remove current query highlighting
-    for (const textMarker of disabledOperationMarkers?.current) {
-      textMarker.clear();
-    }
+      disabledOperationMarkers.current = state.documentAST?.definitions
+        .filter(isOperationDefinition)
+        .filter((name) => {
+          const fn = matchesOperation(operationName);
+          return !fn(name);
+        })
+        .filter(hasLocation)
+        .map(({ loc: { startToken, endToken } }) => {
+          const from = {
+            line: startToken.line - 1,
+            ch: startToken.column - 1,
+          };
+          const to = {
+            line: endToken.line,
+            ch: endToken.column - 1,
+          };
 
-    disabledOperationMarkers.current = state.documentAST?.definitions
-      .filter(isOperationDefinition)
-      .filter(name => {
-        const fn = matchesOperation(operationName);
-        return !fn(name);
-      })
-      .filter(hasLocation)
-      .map(({ loc: { startToken, endToken } }) => {
-        const from = {
-          line: startToken.line - 1,
-          ch: startToken.column - 1,
-        };
-        const to = {
-          line: endToken.line,
-          ch: endToken.column - 1,
-        };
-
-        return editorRef.current?.getDoc()?.markText(from, to, {
-          className: 'opacity-70',
-        }) as TextMarker;
-      });
-  }, [state.documentAST]);
+          return editorRef.current?.getDoc()?.markText(from, to, {
+            className: "opacity-70",
+          }) as TextMarker;
+        });
+    },
+    [state.documentAST],
+  );
 
   const getCurrentOperation = useCallback(() => {
-
     if (!editorRef.current || !editorRef.current.hasFocus()) {
       return state.body.operationName || null;
     }
 
-    const operationDefinitions = state.documentAST?.definitions.filter(isOperationDefinition) || [];
+    const operationDefinitions =
+      state.documentAST?.definitions.filter(isOperationDefinition) || [];
 
     const cursor = editorRef.current.getCursor();
 
@@ -568,13 +689,17 @@ export const GraphQLEditor: FC<Props> = ({
     }
 
     return operationName;
-  }, [operations.length, state.body.operationName, state.documentAST?.definitions]);
+  }, [
+    operations.length,
+    state.body.operationName,
+    state.documentAST?.definitions,
+  ]);
 
   const handleQueryUserActivity = useCallback(() => {
     const newOperationName = getCurrentOperation();
 
     if (newOperationName !== state.body.operationName) {
-      changeOperationName(newOperationName || '');
+      changeOperationName(newOperationName || "");
     }
   }, [changeOperationName, getCurrentOperation, state.body.operationName]);
 
@@ -584,17 +709,20 @@ export const GraphQLEditor: FC<Props> = ({
 
   return (
     <>
-      <Toolbar aria-label='GraphQL toolbar' className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
+      <Toolbar
+        aria-label="GraphQL toolbar"
+        className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2"
+      >
         <Dropdown
-          aria-label='Operations Dropdown'
+          aria-label="Operations Dropdown"
           isDisabled={!state.operations.length}
           triggerButton={
-            <Button className="btn btn--compact text-[--hl] p-[--padding-xs] bg-transparent h-full">
-              {state.body.operationName || 'Operations'}
+            <Button className="btn btn--compact h-full bg-transparent p-[--padding-xs] text-[--hl]">
+              {state.body.operationName || "Operations"}
             </Button>
           }
         >
-          {state.operations.map(operationName => (
+          {state.operations.map((operationName) => (
             <DropdownItem
               key={operationName}
               aria-label={`Operation ${operationName}`}
@@ -607,33 +735,33 @@ export const GraphQLEditor: FC<Props> = ({
           ))}
         </Dropdown>
         <Dropdown
-          aria-label='Schema Dropdown'
+          aria-label="Schema Dropdown"
           triggerButton={
-            <Button
-              className="btn btn--compact text-[--hl] p-[--padding-xs] bg-transparent h-full"
-            >
-              <span>schema <i className="fa fa-wrench" /></span>
+            <Button className="btn btn--compact h-full bg-transparent p-[--padding-xs] text-[--hl]">
+              <span>
+                schema <i className="fa fa-wrench" />
+              </span>
             </Button>
           }
         >
-          <DropdownItem aria-label='Show Documentation'>
+          <DropdownItem aria-label="Show Documentation">
             <ItemContent
               isDisabled={!canShowSchema}
               icon="file-code-o"
               label="Show Documentation"
               onClick={() => {
-                setState(state => ({ ...state, explorerVisible: true }));
+                setState((state) => ({ ...state, explorerVisible: true }));
               }}
             />
           </DropdownItem>
           <DropdownSection
-            aria-label='Remote GraphQL Schema Section'
+            aria-label="Remote GraphQL Schema Section"
             title="Remote GraphQL Schema"
           >
-            <DropdownItem aria-label='Refresh Schema'>
+            <DropdownItem aria-label="Refresh Schema">
               <ItemContent
                 stayOpenAfterClick
-                icon={`refresh ${schemaIsFetching ? 'fa-spin' : ''}`}
+                icon={`refresh ${schemaIsFetching ? "fa-spin" : ""}`}
                 label="Refresh Schema"
                 onClick={async () => {
                   setSchemaIsFetching(true);
@@ -650,14 +778,16 @@ export const GraphQLEditor: FC<Props> = ({
                 }}
               />
             </DropdownItem>
-            <DropdownItem aria-label='Automatic Fetch'>
+            <DropdownItem aria-label="Automatic Fetch">
               <ItemContent
                 stayOpenAfterClick
-                icon={`toggle-${automaticFetch ? 'on' : 'off'}`}
+                icon={`toggle-${automaticFetch ? "on" : "off"}`}
                 label={
                   <>
-                    <span style={{ marginRight: '10px' }}>Automatic Fetch</span>
-                    <HelpTooltip>Automatically fetch schema when request URL is modified</HelpTooltip>
+                    <span style={{ marginRight: "10px" }}>Automatic Fetch</span>
+                    <HelpTooltip>
+                      Automatically fetch schema when request URL is modified
+                    </HelpTooltip>
                   </>
                 }
                 onClick={() => {
@@ -665,18 +795,25 @@ export const GraphQLEditor: FC<Props> = ({
                 }}
               />
             </DropdownItem>
-            <DropdownItem aria-label='Fetch deprecation values'>
+            <DropdownItem aria-label="Fetch deprecation values">
               <ItemContent
                 stayOpenAfterClick
-                icon={`toggle-${includeInputValueDeprecation ? 'on' : 'off'}`}
+                icon={`toggle-${includeInputValueDeprecation ? "on" : "off"}`}
                 label={
                   <>
-                    <span style={{ marginRight: '10px' }}>Include input value deprecation</span>
-                    <HelpTooltip>When fetching the schema include input value deprecation reasons</HelpTooltip>
+                    <span style={{ marginRight: "10px" }}>
+                      Include input value deprecation
+                    </span>
+                    <HelpTooltip>
+                      When fetching the schema include input value deprecation
+                      reasons
+                    </HelpTooltip>
                   </>
                 }
                 onClick={() => {
-                  setIncludeInputValueDeprecation(!includeInputValueDeprecation);
+                  setIncludeInputValueDeprecation(
+                    !includeInputValueDeprecation,
+                  );
                 }}
               />
             </DropdownItem>
@@ -686,15 +823,21 @@ export const GraphQLEditor: FC<Props> = ({
             aria-label="Local GraphQL Schema Section"
             title="Local GraphQL Schema"
           >
-            <DropdownItem aria-label='Load schema from JSON'>
+            <DropdownItem aria-label="Load schema from JSON">
               <ItemContent
                 icon="file-code-o"
                 label={
                   <>
-                    <span style={{ marginRight: '10px' }}>Load schema from JSON</span>
+                    <span style={{ marginRight: "10px" }}>
+                      Load schema from JSON
+                    </span>
                     <HelpTooltip>
-                      Run <i>apollo-codegen introspect-schema schema.graphql --output schema.json</i> to
-                      convert GraphQL DSL to JSON.
+                      Run{" "}
+                      <i>
+                        apollo-codegen introspect-schema schema.graphql --output
+                        schema.json
+                      </i>{" "}
+                      to convert GraphQL DSL to JSON.
                     </HelpTooltip>
                   </>
                 }
@@ -706,15 +849,17 @@ export const GraphQLEditor: FC<Props> = ({
           </DropdownSection>
         </Dropdown>
       </Toolbar>
-      <PanelGroup direction={'vertical'} autoSaveId='graphql-variables'>
+      <PanelGroup direction={"vertical"} autoSaveId="graphql-variables">
         <Panel id="GraphQL Editor" minSize={20} defaultSize={60}>
           <CodeEditor
             id="graphql-editor"
             ref={editorRef}
             dynamicHeight
             showPrettifyButton
-            uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
-            defaultValue={requestBody.query || ''}
+            uniquenessKey={
+              uniquenessKey ? uniquenessKey + "::query" : undefined
+            }
+            defaultValue={requestBody.query || ""}
             className={className}
             onChange={changeQuery}
             onCursorActivity={handleQueryUserActivity}
@@ -727,24 +872,32 @@ export const GraphQLEditor: FC<Props> = ({
             lintOptions={graphqlOptions?.lintOptions}
           />
         </Panel>
-        <PanelResizeHandle className={'w-full h-[1px] bg-[--hl-md]'} />
-        <Panel id="GraphQL Variables editor" className='flex flex-col' minSize={20}>
-          <Heading className="w-full px-2 text-[--hl] select-none flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center">
+        <PanelResizeHandle className={"h-[1px] w-full bg-[--hl-md]"} />
+        <Panel
+          id="GraphQL Variables editor"
+          className="flex flex-col"
+          minSize={20}
+        >
+          <Heading className="flex h-[--line-height-sm] w-full flex-shrink-0 select-none items-center border-b border-solid border-[--hl-md] px-2 text-[--hl]">
             Query Variables
             <HelpTooltip className="space-left">
               Variables to use in GraphQL query <br />
               (JSON format)
             </HelpTooltip>
             {variablesSyntaxError && (
-              <span className="text-danger italic pull-right">{variablesSyntaxError}</span>
+              <span className="text-danger pull-right italic">
+                {variablesSyntaxError}
+              </span>
             )}
           </Heading>
-          <div className='flex-1 overflow-hidden'>
+          <div className="flex-1 overflow-hidden">
             <CodeEditor
               id="graphql-editor-variables"
               dynamicHeight
               enableNunjucks
-              uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
+              uniquenessKey={
+                uniquenessKey ? uniquenessKey + "::variables" : undefined
+              }
               showPrettifyButton={false}
               defaultValue={jsonPrettify(requestBody.variables)}
               className={className}
@@ -760,25 +913,33 @@ export const GraphQLEditor: FC<Props> = ({
           </div>
         </Panel>
       </PanelGroup>
-      <Toolbar className="w-full overflow-y-auto  select-none flex-shrink-0 h-[--line-height-sm] border-t border-solid border-[--hl-md] flex items-center">
-        <Button className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-sm hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all" onPress={beautifyRequestBody}>
+      <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 select-none items-center overflow-y-auto border-t border-solid border-[--hl-md]">
+        <Button
+          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          onPress={beautifyRequestBody}
+        >
           Prettify GraphQL
         </Button>
-        <span className='flex-1' />
-        {!schemaFetchError && <div className="flex flex-shrink-0 items-center gap-2 text-sm px-2">
-          <Icon icon="info-circle" />
-          {renderSchemaFetchMessage()}
-        </div>}
+        <span className="flex-1" />
+        {!schemaFetchError && (
+          <div className="flex flex-shrink-0 items-center gap-2 px-2 text-sm">
+            <Icon icon="info-circle" />
+            {renderSchemaFetchMessage()}
+          </div>
+        )}
         {schemaFetchError && (
-          <Group className="flex items-center h-full">
+          <Group className="flex h-full items-center">
             <TooltipTrigger>
-              <Button className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-sm hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all">
-                <Icon icon="exclamation-triangle" className='text-[--color-warning]' />
+              <Button className="flex h-full items-center justify-center gap-2 px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
+                <Icon
+                  icon="exclamation-triangle"
+                  className="text-[--color-warning]"
+                />
                 <span>Error fetching Schema</span>
               </Button>
               <Tooltip
                 offset={8}
-                className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
               >
                 {schemaFetchError.message}
               </Tooltip>

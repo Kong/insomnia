@@ -1,7 +1,17 @@
-import * as git from 'isomorphic-git';
-import path from 'path';
+import * as git from "isomorphic-git";
+import path from "path";
 
-type Methods = 'readFile' | 'writeFile' | 'unlink' | 'readdir' | 'mkdir' | 'rmdir' | 'stat' | 'lstat' | 'readlink' | 'symlink';
+type Methods =
+  | "readFile"
+  | "writeFile"
+  | "unlink"
+  | "readdir"
+  | "mkdir"
+  | "rmdir"
+  | "stat"
+  | "lstat"
+  | "readlink"
+  | "symlink";
 
 /**
  * An isometric-git FS client that can route to various client depending on what the filePath is.
@@ -15,7 +25,11 @@ export function projectRoutableFSClient(
   insomniaFS: git.PromiseFsClient,
   otherFS: Record<string, git.PromiseFsClient>,
 ) {
-  const execMethod = async (method: Methods, filePath: string, ...args: any[]) => {
+  const execMethod = async (
+    method: Methods,
+    filePath: string,
+    ...args: any[]
+  ) => {
     filePath = path.normalize(filePath);
 
     for (const prefix of Object.keys(otherFS)) {
@@ -34,7 +48,7 @@ export function projectRoutableFSClient(
 
     // We store insomnia files in the database and all other files in a folder named 'other' on disk
     // When we read a directory, we need to merge the two lists to provide the full list of files
-    if (method === 'readdir') {
+    if (method === "readdir") {
       let insomniaFiles = [];
       try {
         insomniaFiles = await insomniaFS.promises.readdir(filePath, ...args);
@@ -55,7 +69,7 @@ export function projectRoutableFSClient(
       return [...new Set([...insomniaFiles, ...defaultFiles])];
     }
 
-    if (filePath.endsWith('.yaml')) {
+    if (filePath.endsWith(".yaml")) {
       try {
         const result = await insomniaFS.promises[method]!(filePath, ...args);
         return result;
@@ -75,16 +89,16 @@ export function projectRoutableFSClient(
 
   // @ts-expect-error -- TSCONVERSION declare and initialize together to avoid an error
   const methods: git.CallbackFsClient = {};
-  methods.readFile = execMethod.bind(methods, 'readFile');
-  methods.writeFile = execMethod.bind(methods, 'writeFile');
-  methods.unlink = execMethod.bind(methods, 'unlink');
-  methods.readdir = execMethod.bind(methods, 'readdir');
-  methods.mkdir = execMethod.bind(methods, 'mkdir');
-  methods.rmdir = execMethod.bind(methods, 'rmdir');
-  methods.stat = execMethod.bind(methods, 'stat');
-  methods.lstat = execMethod.bind(methods, 'lstat');
-  methods.readlink = execMethod.bind(methods, 'readlink');
-  methods.symlink = execMethod.bind(methods, 'symlink');
+  methods.readFile = execMethod.bind(methods, "readFile");
+  methods.writeFile = execMethod.bind(methods, "writeFile");
+  methods.unlink = execMethod.bind(methods, "unlink");
+  methods.readdir = execMethod.bind(methods, "readdir");
+  methods.mkdir = execMethod.bind(methods, "mkdir");
+  methods.rmdir = execMethod.bind(methods, "rmdir");
+  methods.stat = execMethod.bind(methods, "stat");
+  methods.lstat = execMethod.bind(methods, "lstat");
+  methods.readlink = execMethod.bind(methods, "readlink");
+  methods.symlink = execMethod.bind(methods, "symlink");
   return {
     promises: methods,
   };

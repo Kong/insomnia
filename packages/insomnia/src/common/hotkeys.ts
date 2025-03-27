@@ -1,41 +1,46 @@
-import { displayModifierKey, isMac } from './constants';
-import { keyboardKeys } from './keyboard-keys';
-import type { HotKeyRegistry, KeyboardShortcut, KeyCombination, PlatformKeyCombinations } from './settings';
-import { strings } from './strings';
+import { displayModifierKey, isMac } from "./constants";
+import { keyboardKeys } from "./keyboard-keys";
+import type {
+  HotKeyRegistry,
+  KeyboardShortcut,
+  KeyCombination,
+  PlatformKeyCombinations,
+} from "./settings";
+import { strings } from "./strings";
 
 /**
  * The collection of available hotkeys' and their descriptions.
  * @IMPORTANT Not using dot, because NeDB prohibits field names to contain dots.
  */
 export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
-  'workspace_showSettings': `Show ${strings.document.singular} / ${strings.collection.singular} Settings`,
-  'request_showSettings': 'Show Request Settings',
-  'preferences_showKeyboardShortcuts': 'Show Keyboard Shortcuts',
-  'preferences_showGeneral': 'Show App Preferences',
-  'request_quickSwitch': 'Quick search',
-  'plugin_reload': 'Reload Plugins',
-  'showAutocomplete': 'Show Autocomplete',
-  'request_send': 'Send Request',
-  'request_showOptions': 'Send Request (Options)',
-  'environment_showEditor': 'Show Environment Editor',
-  'environment_showSwitchMenu': 'Switch Environments',
-  'request_toggleHttpMethodMenu': 'Change HTTP Method',
-  'request_toggleHistory': 'Show Request History',
-  'request_focusUrl': 'Focus URL',
-  'request_showGenerateCodeEditor': 'Generate Code',
-  'sidebar_focusFilter': 'Filter Sidebar',
-  'sidebar_toggle': 'Toggle Sidebar',
-  'response_focus': 'Focus Response',
-  'showCookiesEditor': 'Edit Cookies',
-  'request_createHTTP': 'Create HTTP Request',
-  'request_showDelete': 'Delete Request',
-  'request_showCreateFolder': 'Create Folder',
-  'request_showDuplicate': 'Duplicate Request',
-  'request_togglePin': 'Pin/Unpin Request',
-  'environment_showVariableSourceAndValue': 'Show variable source and value',
-  'beautifyRequestBody': 'Beautify Active Code Editors',
-  'graphql_explorer_focus_filter': 'Focus GraphQL Explorer Filter',
-  'close_tab': 'Close Tab',
+  workspace_showSettings: `Show ${strings.document.singular} / ${strings.collection.singular} Settings`,
+  request_showSettings: "Show Request Settings",
+  preferences_showKeyboardShortcuts: "Show Keyboard Shortcuts",
+  preferences_showGeneral: "Show App Preferences",
+  request_quickSwitch: "Quick search",
+  plugin_reload: "Reload Plugins",
+  showAutocomplete: "Show Autocomplete",
+  request_send: "Send Request",
+  request_showOptions: "Send Request (Options)",
+  environment_showEditor: "Show Environment Editor",
+  environment_showSwitchMenu: "Switch Environments",
+  request_toggleHttpMethodMenu: "Change HTTP Method",
+  request_toggleHistory: "Show Request History",
+  request_focusUrl: "Focus URL",
+  request_showGenerateCodeEditor: "Generate Code",
+  sidebar_focusFilter: "Filter Sidebar",
+  sidebar_toggle: "Toggle Sidebar",
+  response_focus: "Focus Response",
+  showCookiesEditor: "Edit Cookies",
+  request_createHTTP: "Create HTTP Request",
+  request_showDelete: "Delete Request",
+  request_showCreateFolder: "Create Folder",
+  request_showDuplicate: "Duplicate Request",
+  request_togglePin: "Pin/Unpin Request",
+  environment_showVariableSourceAndValue: "Show variable source and value",
+  beautifyRequestBody: "Beautify Active Code Editors",
+  graphql_explorer_focus_filter: "Focus GraphQL Explorer Filter",
+  close_tab: "Close Tab",
 };
 
 /**
@@ -44,15 +49,40 @@ export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
 const defaultRegistry: HotKeyRegistry = {
   workspace_showSettings: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.comma.keyCode }],
-    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.comma.keyCode }],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.comma.keyCode },
+    ],
   },
   request_showSettings: {
-    macKeys: [{ alt: true, shift: true, meta: true, keyCode: keyboardKeys.comma.keyCode }],
-    winLinuxKeys: [{ ctrl: true, alt: true, shift: true, keyCode: keyboardKeys.comma.keyCode }],
+    macKeys: [
+      {
+        alt: true,
+        shift: true,
+        meta: true,
+        keyCode: keyboardKeys.comma.keyCode,
+      },
+    ],
+    winLinuxKeys: [
+      {
+        ctrl: true,
+        alt: true,
+        shift: true,
+        keyCode: keyboardKeys.comma.keyCode,
+      },
+    ],
   },
   preferences_showKeyboardShortcuts: {
-    macKeys: [{ ctrl: true, shift: true, meta: true, keyCode: keyboardKeys.forwardslash.keyCode }],
-    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.forwardslash.keyCode }],
+    macKeys: [
+      {
+        ctrl: true,
+        shift: true,
+        meta: true,
+        keyCode: keyboardKeys.forwardslash.keyCode,
+      },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.forwardslash.keyCode },
+    ],
   },
   preferences_showGeneral: {
     macKeys: [{ meta: true, keyCode: keyboardKeys.comma.keyCode }],
@@ -64,7 +94,9 @@ const defaultRegistry: HotKeyRegistry = {
   },
   plugin_reload: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.r.keyCode }],
-    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.r.keyCode }],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.r.keyCode },
+    ],
   },
   showAutocomplete: {
     macKeys: [{ ctrl: true, keyCode: keyboardKeys.space.keyCode }],
@@ -84,7 +116,9 @@ const defaultRegistry: HotKeyRegistry = {
   },
   request_showOptions: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.enter.keyCode }],
-    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.enter.keyCode }],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.enter.keyCode },
+    ],
   },
   environment_showEditor: {
     macKeys: [{ meta: true, keyCode: keyboardKeys.e.keyCode }],
@@ -92,15 +126,21 @@ const defaultRegistry: HotKeyRegistry = {
   },
   environment_showSwitchMenu: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.e.keyCode }],
-    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.e.keyCode }],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.e.keyCode },
+    ],
   },
   request_toggleHttpMethodMenu: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.l.keyCode }],
-    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.l.keyCode }],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.l.keyCode },
+    ],
   },
   request_toggleHistory: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.h.keyCode }],
-    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.h.keyCode }],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.h.keyCode },
+    ],
   },
   request_focusUrl: {
     macKeys: [{ meta: true, keyCode: keyboardKeys.l.keyCode }],
@@ -108,11 +148,15 @@ const defaultRegistry: HotKeyRegistry = {
   },
   request_showGenerateCodeEditor: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.g.keyCode }],
-    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.g.keyCode }],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.g.keyCode },
+    ],
   },
   sidebar_focusFilter: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.f.keyCode }],
-    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.f.keyCode }],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.f.keyCode },
+    ],
   },
   sidebar_toggle: {
     macKeys: [{ meta: true, keyCode: keyboardKeys.backslash.keyCode }],
@@ -137,12 +181,18 @@ const defaultRegistry: HotKeyRegistry = {
     ],
   },
   request_showDelete: {
-    macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.backspace.keyCode }],
-    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.backspace.keyCode }],
+    macKeys: [
+      { shift: true, meta: true, keyCode: keyboardKeys.backspace.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.backspace.keyCode },
+    ],
   },
   request_showCreateFolder: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.n.keyCode }],
-    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.n.keyCode }],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.n.keyCode },
+    ],
   },
   request_showDuplicate: {
     macKeys: [{ meta: true, keyCode: keyboardKeys.d.keyCode }],
@@ -150,7 +200,9 @@ const defaultRegistry: HotKeyRegistry = {
   },
   request_togglePin: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.p.keyCode }],
-    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.p.keyCode }],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.p.keyCode },
+    ],
   },
   environment_showVariableSourceAndValue: {
     macKeys: [{ alt: true, shift: true, keyCode: keyboardKeys.u.keyCode }],
@@ -158,11 +210,15 @@ const defaultRegistry: HotKeyRegistry = {
   },
   beautifyRequestBody: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.f.keyCode }],
-    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.f.keyCode }],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.f.keyCode },
+    ],
   },
   graphql_explorer_focus_filter: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.i.keyCode }],
-    winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.i.keyCode }],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.i.keyCode },
+    ],
   },
   close_tab: {
     macKeys: [{ meta: true, keyCode: keyboardKeys.w.keyCode }],
@@ -180,7 +236,9 @@ export function newDefaultRegistry(): HotKeyRegistry {
 /**
  * Get the key combinations based on the current platform.
  */
-export function getPlatformKeyCombinations(bindings: PlatformKeyCombinations): KeyCombination[] {
+export function getPlatformKeyCombinations(
+  bindings: PlatformKeyCombinations,
+): KeyCombination[] {
   if (isMac()) {
     return bindings.macKeys;
   }
@@ -209,23 +267,25 @@ export function areSameKeyCombinations(
  */
 export function getChar(keyCode: number) {
   let char;
-  const key = Object.keys(keyboardKeys).find(k => keyboardKeys[k].keyCode === keyCode);
+  const key = Object.keys(keyboardKeys).find(
+    (k) => keyboardKeys[k].keyCode === keyCode,
+  );
 
   if (!key) {
-    console.error('Invalid key code', keyCode);
+    console.error("Invalid key code", keyCode);
   } else {
     char = keyboardKeys[key].label;
   }
 
-  return char || 'unknown';
+  return char || "unknown";
 }
 
 function joinHotKeys(mustUsePlus: boolean, keys: string[]) {
   if (!mustUsePlus && isMac()) {
-    return keys.join(' ');
+    return keys.join(" ");
   }
 
-  return keys.join(' + ');
+  return keys.join(" + ");
 }
 
 /**
@@ -236,7 +296,6 @@ export function isModifierKeyCode(keyCode: number): boolean {
     keyCode === keyboardKeys.alt.keyCode ||
     keyCode === keyboardKeys.shift.keyCode ||
     keyCode === keyboardKeys.ctrl.keyCode ||
-
     // Meta keys.
     keyCode === keyboardKeys.leftwindowkey.keyCode ||
     keyCode === keyboardKeys.rightwindowkey.keyCode ||
@@ -260,8 +319,8 @@ export function constructKeyCombinationDisplay(
   const { keyCode } = keyComb;
   const chars: string[] = [];
 
-  const addModifierKeys = (keys: (keyof Omit<KeyCombination, 'keyCode'>)[]) => {
-    keys.forEach(key => {
+  const addModifierKeys = (keys: (keyof Omit<KeyCombination, "keyCode">)[]) => {
+    keys.forEach((key) => {
       if (keyComb[key]) {
         chars.push(displayModifierKey(key));
       }
@@ -271,11 +330,11 @@ export function constructKeyCombinationDisplay(
   if (isMac()) {
     // Note: on Mac the canonical order is Control, Option (i.e. Alt), Shift, Command (i.e. Meta)
     // see: https://developer.apple.com/design/human-interface-guidelines/macos/user-interaction/keyboard
-    addModifierKeys(['ctrl', 'alt', 'shift', 'meta']);
+    addModifierKeys(["ctrl", "alt", "shift", "meta"]);
   } else {
     // Note: on Windows the observed oreder (as in, if you just try to make a shortcut with all modifiers) is Windows (i.e. Super/Meta), Ctrl, Alt, Shift.
     // No such standard really exists, but at least on Ubuntu it follows the Windows ordering.
-    addModifierKeys(['meta', 'ctrl', 'alt', 'shift']);
+    addModifierKeys(["meta", "ctrl", "alt", "shift"]);
   }
 
   if (keyCode != null && !isModifierKeyCode(keyCode)) {
@@ -285,7 +344,7 @@ export function constructKeyCombinationDisplay(
   let joint = joinHotKeys(mustUsePlus, chars);
 
   if (mustUsePlus && isModifierKeyCode(keyCode)) {
-    joint += ' +';
+    joint += " +";
   }
 
   return joint;

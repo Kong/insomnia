@@ -1,38 +1,40 @@
-import electron from 'electron';
+import electron from "electron";
 
-import { getAppPlatform, getAppVersion } from '../common/constants';
-import type { Workspace } from '../models/workspace';
-import type { Plugin } from '../plugins/index';
-import { invariant } from '../utils/invariant';
-import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
-import * as templating from './worker';
+import { getAppPlatform, getAppVersion } from "../common/constants";
+import type { Workspace } from "../models/workspace";
+import type { Plugin } from "../plugins/index";
+import { invariant } from "../utils/invariant";
+import type {
+  BaseRenderContext,
+  PluginTemplateTag,
+  PluginTemplateTagContext,
+} from "./types";
+import * as templating from "./worker";
 export function decodeEncoding<T>(value: T) {
-  if (typeof value !== 'string') {
+  if (typeof value !== "string") {
     return value;
   }
 
   const results = value.match(/^b64::(.+)::46b$/);
 
   if (results) {
-    return Buffer.from(results[1], 'base64').toString('utf8');
+    return Buffer.from(results[1], "base64").toString("utf8");
   }
 
   return value;
 }
-const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
+const EMPTY_ARG = "__EMPTY_NUNJUCKS_ARG__";
 
 export default class BaseExtension {
   _ext: PluginTemplateTag | null = null;
   _plugin: Plugin | null = null;
-  tags: PluginTemplateTag['name'][] = [];
+  tags: PluginTemplateTag["name"][] = [];
 
   constructor(ext: PluginTemplateTag, plugin: Plugin) {
     this._ext = ext;
     this._plugin = plugin;
     const tag = this.getTag();
-    this.tags = [
-      ...(tag === null ? [] : [tag]),
-    ];
+    this.tags = [...(tag === null ? [] : [tag])];
   }
 
   getTag() {
@@ -44,18 +46,17 @@ export default class BaseExtension {
   }
 
   getName() {
-    return typeof this._ext?.displayName === 'string' ? this._ext?.displayName : this.getTag();
+    return typeof this._ext?.displayName === "string"
+      ? this._ext?.displayName
+      : this.getTag();
   }
 
   getDescription() {
-    return this._ext?.description || 'no description';
+    return this._ext?.description || "no description";
   }
 
   getLiveDisplayName() {
-    return (
-      this._ext?.liveDisplayName ||
-      (() => '')
-    );
+    return this._ext?.liveDisplayName || (() => "");
   }
 
   getDisablePreview() {
@@ -91,7 +92,7 @@ export default class BaseExtension {
     }
 
     parser.advanceAfterBlockEnd(tok.value);
-    return new nodes.CallExtensionAsync(this, 'asyncRun', args);
+    return new nodes.CallExtensionAsync(this, "asyncRun", args);
   }
 
   asyncRun({ ctx }: any, ...runArgs: any[]) {
@@ -102,40 +103,47 @@ export default class BaseExtension {
     // Extract the rest of the args
     const args = runArgs
       .slice(0, runArgs.length - 1)
-      .filter(a => a !== EMPTY_ARG)
+      .filter((a) => a !== EMPTY_ARG)
       .map(decodeEncoding);
     // Define a helper context with utils
     const helperContext: PluginTemplateTagContext = {
       app: {
         alert: () => {
-          throw new Error('Not implemented');
+          throw new Error("Not implemented");
         },
         dialog: () => {
-          throw new Error('Not implemented');
+          throw new Error("Not implemented");
         },
         prompt: () => {
-          throw new Error('Not implemented');
+          throw new Error("Not implemented");
         },
         getPath: (name: string) => {
-          invariant(name.toLowerCase() === 'desktop', `Unknown path name ${name}`);
-          return electron.app.getPath('desktop');
+          invariant(
+            name.toLowerCase() === "desktop",
+            `Unknown path name ${name}`,
+          );
+          return electron.app.getPath("desktop");
         },
-        getInfo: () => ({ version: getAppVersion(), platform: getAppPlatform() }),
+        getInfo: () => ({
+          version: getAppVersion(),
+          platform: getAppPlatform(),
+        }),
         showSaveDialog: async (options = {}) => {
-          const sendOrNoRender = renderPurpose === 'send' || renderPurpose === 'no-render';
+          const sendOrNoRender =
+            renderPurpose === "send" || renderPurpose === "no-render";
           if (!sendOrNoRender) {
             return null;
           }
           const { filePath } = await electron.dialog.showSaveDialog({
-            title: 'Save File',
-            buttonLabel: 'Save',
+            title: "Save File",
+            buttonLabel: "Save",
             defaultPath: options.defaultPath,
           });
           return filePath || null;
         },
         clipboard: {
           readText: () => electron.clipboard.readText(),
-          writeText: text => electron.clipboard.writeText(text),
+          writeText: (text) => electron.clipboard.writeText(text),
           clear: () => electron.clipboard.clear(),
         },
       },
@@ -154,19 +162,28 @@ export default class BaseExtension {
         models: {
           request: {
             getById: async (id: string) => {
-              const resp = await fetch('insomnia-templating-worker-database://request.getById', {
-                method: 'post',
-                body: JSON.stringify({ id }),
-              });
+              const resp = await fetch(
+                "insomnia-templating-worker-database://request.getById",
+                {
+                  method: "post",
+                  body: JSON.stringify({ id }),
+                },
+              );
 
               const req = await resp.json();
               return req;
             },
             getAncestors: async (request: any) => {
-              const resp = await fetch('insomnia-templating-worker-database://request.getAncestors', {
-                method: 'post',
-                body: JSON.stringify({ request, types: ['RequestGroup', 'Workspace'] }),
-              });
+              const resp = await fetch(
+                "insomnia-templating-worker-database://request.getAncestors",
+                {
+                  method: "post",
+                  body: JSON.stringify({
+                    request,
+                    types: ["RequestGroup", "Workspace"],
+                  }),
+                },
+              );
 
               const ancestors = await resp.json();
               return ancestors;
@@ -174,10 +191,13 @@ export default class BaseExtension {
           },
           workspace: {
             getById: async (id: string) => {
-              const resp = await fetch('insomnia-templating-worker-database://workspace.getById', {
-                method: 'post',
-                body: JSON.stringify({ id }),
-              });
+              const resp = await fetch(
+                "insomnia-templating-worker-database://workspace.getById",
+                {
+                  method: "post",
+                  body: JSON.stringify({ id }),
+                },
+              );
 
               const workspace = await resp.json();
               return workspace;
@@ -185,10 +205,13 @@ export default class BaseExtension {
           },
           oAuth2Token: {
             getByRequestId: async (parentId: string) => {
-              const resp = await fetch('insomnia-templating-worker-database://oAuth2Token.getByRequestId', {
-                method: 'post',
-                body: JSON.stringify({ parentId }),
-              });
+              const resp = await fetch(
+                "insomnia-templating-worker-database://oAuth2Token.getByRequestId",
+                {
+                  method: "post",
+                  body: JSON.stringify({ parentId }),
+                },
+              );
 
               const oAuth2Token = await resp.json();
               return oAuth2Token;
@@ -196,31 +219,52 @@ export default class BaseExtension {
           },
           cookieJar: {
             getOrCreateForWorkspace: async (workspace: Workspace) => {
-              const resp = await fetch('insomnia-templating-worker-database://cookieJar.getOrCreateForParentId', {
-                method: 'post',
-                body: JSON.stringify({ parentId: workspace._id }),
-              });
+              const resp = await fetch(
+                "insomnia-templating-worker-database://cookieJar.getOrCreateForParentId",
+                {
+                  method: "post",
+                  body: JSON.stringify({ parentId: workspace._id }),
+                },
+              );
 
               const cookieJar = await resp.json();
               return cookieJar;
             },
           },
           response: {
-            getLatestForRequestId: async (requestId: string, environmentId: string | null) => {
-              const resp = await fetch('insomnia-templating-worker-database://response.getLatestForRequestId', {
-                method: 'post',
-                body: JSON.stringify({ requestId, environmentId }),
-              });
+            getLatestForRequestId: async (
+              requestId: string,
+              environmentId: string | null,
+            ) => {
+              const resp = await fetch(
+                "insomnia-templating-worker-database://response.getLatestForRequestId",
+                {
+                  method: "post",
+                  body: JSON.stringify({ requestId, environmentId }),
+                },
+              );
 
               const latest = await resp.json();
               return latest;
             },
-            getBodyBuffer: async (response?: { bodyPath?: string; bodyCompression?: 'zip' | null | '__NEEDS_MIGRATION__' | undefined },
-              readFailureValue?: string) => {
-              const resp = await fetch('insomnia-templating-worker-database://response.getBodyBuffer', {
-                method: 'post',
-                body: JSON.stringify({ response, readFailureValue }),
-              });
+            getBodyBuffer: async (
+              response?: {
+                bodyPath?: string;
+                bodyCompression?:
+                  | "zip"
+                  | null
+                  | "__NEEDS_MIGRATION__"
+                  | undefined;
+              },
+              readFailureValue?: string,
+            ) => {
+              const resp = await fetch(
+                "insomnia-templating-worker-database://response.getBodyBuffer",
+                {
+                  method: "post",
+                  body: JSON.stringify({ response, readFailureValue }),
+                },
+              );
 
               const buffer = await resp.json();
               return buffer;
@@ -243,10 +287,10 @@ export default class BaseExtension {
     // If the result is a promise, resolve it async
     if (result instanceof Promise) {
       result
-        .then(r => {
+        .then((r) => {
           callback(null, r);
         })
-        .catch(err => {
+        .catch((err) => {
           callback(err);
         });
       return;

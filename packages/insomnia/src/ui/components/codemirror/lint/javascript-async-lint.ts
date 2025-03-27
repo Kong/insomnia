@@ -3,9 +3,9 @@
 // lint errors to account for the wrapper.
 //
 // The major modifications are marked in comments starting with "CHANGED ---"
-import CodeMirror from 'codemirror';
-import { JSHINT, type LintError, type LintOptions } from 'jshint';
-CodeMirror.registerHelper('lint', 'javascript', validator);
+import CodeMirror from "codemirror";
+import { JSHINT, type LintError, type LintOptions } from "jshint";
+CodeMirror.registerHelper("lint", "javascript", validator);
 
 interface ValidationError {
   message: string;
@@ -43,7 +43,7 @@ function parseErrors(errors: LintError[], output: ValidationError[]) {
       if (error.line <= 0) {
         if (window.console) {
           window.console.warn(
-            'Cannot display JSHint error (invalid line ' + error.line + ')',
+            "Cannot display JSHint error (invalid line " + error.line + ")",
             error,
           );
         }
@@ -65,7 +65,11 @@ function parseErrors(errors: LintError[], output: ValidationError[]) {
       // Convert to format expected by validation service
       const hint = {
         message: error.reason,
-        severity: error.code ? (error.code.startsWith('W') ? 'warning' : 'error') : 'error',
+        severity: error.code
+          ? error.code.startsWith("W")
+            ? "warning"
+            : "error"
+          : "error",
         from: CodeMirror.Pos(error.line - 1, start),
         to: CodeMirror.Pos(error.line - 1, end),
       };

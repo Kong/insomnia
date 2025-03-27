@@ -1,11 +1,11 @@
-import type { ButtonHTMLAttributes } from 'react';
-import React from 'react';
-import type { ValueOf } from 'type-fest';
+import type { ButtonHTMLAttributes } from "react";
+import React from "react";
+import type { ValueOf } from "type-fest";
 export const ButtonSizeEnum = {
-  Default: 'default',
-  Small: 'small',
-  Medium: 'medium',
-  xs: 'xs',
+  Default: "default",
+  Small: "small",
+  Medium: "medium",
+  xs: "xs",
 } as const;
 
 // These variants determine how the `bg` color variable is handled
@@ -13,20 +13,20 @@ export const ButtonSizeEnum = {
 // Contained sets the `bg` color as the background color
 // Text sets the `bg` color as the text color
 export const ButtonVariantEnum = {
-  Outlined: 'outlined',
-  Contained: 'contained',
-  Text: 'text',
+  Outlined: "outlined",
+  Contained: "contained",
+  Text: "text",
 } as const;
 
 // Sets the `bg` color to a themed color
 export const ButtonThemeEnum = {
-  Default: 'default',
-  Surprise: 'surprise',
-  Info: 'info',
-  Success: 'success',
-  Notice: 'notice',
-  Warning: 'warning',
-  Danger: 'danger',
+  Default: "default",
+  Surprise: "surprise",
+  Info: "info",
+  Success: "success",
+  Notice: "notice",
+  Warning: "warning",
+  Danger: "danger",
 } as const;
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -43,10 +43,10 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export const Button: React.FC<ButtonProps> = ({
-  bg = 'default',
-  radius = '3px',
-  size = 'default',
-  variant = 'outlined',
+  bg = "default",
+  radius = "3px",
+  size = "default",
+  variant = "outlined",
   margin,
   children,
   removeBorderRadius,
@@ -58,15 +58,15 @@ export const Button: React.FC<ButtonProps> = ({
 }) => {
   const getButtonStyles = () => {
     let buttonStyles: any = {
-      color: bg ? `var(--color-font-${bg})` : 'var(--color-font)',
+      color: bg ? `var(--color-font-${bg})` : "var(--color-font)",
       margin: margin || 0,
-      textAlign: 'center',
-      fontSize: 'var(--font-size-sm)',
-      display: 'inline-flex',
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      border: '1px solid transparent',
+      textAlign: "center",
+      fontSize: "var(--font-size-sm)",
+      display: "inline-flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      border: "1px solid transparent",
     };
     if (removeBorderRadius) {
       buttonStyles = {
@@ -82,23 +82,23 @@ export const Button: React.FC<ButtonProps> = ({
 
     const sizeStyles = {
       xs: {
-        padding: '0 calc(var(--padding-md) * 0.5)',
-        height: 'calc(var(--line-height-xs) * 0.5)',
-        fontSize: 'var(--font-size-xs)',
+        padding: "0 calc(var(--padding-md) * 0.5)",
+        height: "calc(var(--line-height-xs) * 0.5)",
+        fontSize: "var(--font-size-xs)",
       },
       small: {
-        padding: '0 calc(var(--padding-md) * 0.8)',
-        height: 'calc(var(--line-height-xs) * 0.8)',
-        fontSize: 'var(--font-size-sm)',
+        padding: "0 calc(var(--padding-md) * 0.8)",
+        height: "calc(var(--line-height-xs) * 0.8)",
+        fontSize: "var(--font-size-sm)",
       },
       medium: {
-        padding: '0 var(--padding-md)',
-        height: 'calc(var(--line-height-md) * 0.8)',
-        fontSize: 'var(--font-size-md)',
+        padding: "0 var(--padding-md)",
+        height: "calc(var(--line-height-md) * 0.8)",
+        fontSize: "var(--font-size-md)",
       },
       default: {
-        padding: '0 var(--padding-md)',
-        height: 'var(--line-height-xs)',
+        padding: "0 var(--padding-md)",
+        height: "var(--line-height-xs)",
       },
     };
 
@@ -109,25 +109,25 @@ export const Button: React.FC<ButtonProps> = ({
       };
     }
 
-    if (variant === 'outlined') {
-      if (bg === 'default') {
+    if (variant === "outlined") {
+      if (bg === "default") {
         buttonStyles = {
           ...buttonStyles,
-          borderColor: 'var(--hl-lg)',
+          borderColor: "var(--hl-lg)",
         };
       } else {
         buttonStyles = {
           ...buttonStyles,
-          borderColor: 'inherit',
+          borderColor: "inherit",
         };
       }
     }
 
-    if (variant === 'contained') {
-      if (bg === 'default') {
+    if (variant === "contained") {
+      if (bg === "default") {
         buttonStyles = {
           ...buttonStyles,
-          backgroundColor: 'var(--hl-xs)',
+          backgroundColor: "var(--hl-xs)",
           color: `var(--color-font-${bg})`,
         };
       } else {

@@ -1,6 +1,6 @@
-import * as misc from '../../common/misc';
-import type { RequestBody } from '../../models/request';
-import type { RenderedRequest } from '../../templating/types';
+import * as misc from "../../common/misc";
+import type { RequestBody } from "../../models/request";
+import type { RenderedRequest } from "../../templating/types";
 export function filterParameters<T extends { name: string; value: string }>(
   parameters: T[],
   name: string,
@@ -9,7 +9,7 @@ export function filterParameters<T extends { name: string; value: string }>(
     return [];
   }
 
-  return parameters.filter(h => (!h || !h.name ? false : h.name === name));
+  return parameters.filter((h) => (!h || !h.name ? false : h.name === name));
 }
 export function init(
   renderedRequest: RenderedRequest | null,
@@ -17,7 +17,7 @@ export function init(
   readOnly = false,
 ) {
   if (!renderedRequest) {
-    throw new Error('contexts.request initialized without request');
+    throw new Error("contexts.request initialized without request");
   }
 
   const request = {
@@ -46,7 +46,7 @@ export function init(
     },
 
     setCookie(name: string, value: string) {
-      const cookie = renderedRequest.cookies.find(c => c.name === name);
+      const cookie = renderedRequest.cookies.find((c) => c.name === name);
 
       if (cookie) {
         cookie.value = value;
@@ -84,7 +84,7 @@ export function init(
       renderedRequest.settingDisableRenderRequestBody = enabled;
     },
 
-    settingFollowRedirects(enabled: 'global' | 'on' | 'off') {
+    settingFollowRedirects(enabled: "global" | "on" | "off") {
       renderedRequest.settingFollowRedirects = enabled;
     },
 
@@ -94,14 +94,14 @@ export function init(
       if (headers.length) {
         // Use the last header if there are multiple of the same
         const header = headers[headers.length - 1];
-        return header.value || '';
+        return header.value || "";
       } else {
         return null;
       }
     },
 
     getHeaders() {
-      return renderedRequest.headers.map(h => ({
+      return renderedRequest.headers.map((h) => ({
         name: h.name,
         value: h.value,
       }));
@@ -113,7 +113,9 @@ export function init(
 
     removeHeader(name: string) {
       const headers = misc.filterHeaders(renderedRequest.headers, name);
-      renderedRequest.headers = renderedRequest.headers.filter(h => !headers.includes(h));
+      renderedRequest.headers = renderedRequest.headers.filter(
+        (h) => !headers.includes(h),
+      );
     },
 
     setHeader(name: string, value: string) {
@@ -143,14 +145,14 @@ export function init(
       if (parameters.length) {
         // Use the last parameter if there are multiple of the same
         const parameter = parameters[parameters.length - 1];
-        return parameter.value || '';
+        return parameter.value || "";
       } else {
         return null;
       }
     },
 
     getParameters() {
-      return renderedRequest.parameters.map(p => ({
+      return renderedRequest.parameters.map((p) => ({
         name: p.name,
         value: p.value,
       }));
@@ -162,7 +164,9 @@ export function init(
 
     removeParameter(name: string) {
       const parameters = filterParameters(renderedRequest.parameters, name);
-      renderedRequest.parameters = renderedRequest.parameters.filter(p => !parameters.includes(p));
+      renderedRequest.parameters = renderedRequest.parameters.filter(
+        (p) => !parameters.includes(p),
+      );
     },
 
     setParameter(name: string, value: string) {
@@ -210,13 +214,17 @@ export function init(
 
     /** @deprecated in favor of getting the whole body by getBody */
     getBodyText() {
-      console.warn('request.getBodyText() is deprecated. Use request.getBody() instead.');
-      return renderedRequest.body.text || '';
+      console.warn(
+        "request.getBodyText() is deprecated. Use request.getBody() instead.",
+      );
+      return renderedRequest.body.text || "";
     },
 
     /** @deprecated in favor of setting the whole body by setBody */
     setBodyText(text: string) {
-      console.warn('request.setBodyText() is deprecated. Use request.setBody() instead.');
+      console.warn(
+        "request.setBodyText() is deprecated. Use request.setBody() instead.",
+      );
       renderedRequest.body.text = text;
     },
 

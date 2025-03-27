@@ -1,12 +1,12 @@
-import { database as db } from '../common/database';
-import type { BaseModel } from './index';
-import type { RequestHeader } from './request';
+import { database as db } from "../common/database";
+import type { BaseModel } from "./index";
+import type { RequestHeader } from "./request";
 
-export const name = 'Mock Route';
+export const name = "Mock Route";
 
-export const type = 'MockRoute';
+export const type = "MockRoute";
 
-export const prefix = 'mock-route';
+export const prefix = "mock-route";
 
 export const canDuplicate = true;
 
@@ -19,7 +19,7 @@ interface BaseMockRoute {
   statusCode: number;
   statusText: string;
   name: string;
-  mimeType: string;// response body type
+  mimeType: string; // response body type
   method: string; // used only for sending the testing request
 }
 
@@ -27,20 +27,20 @@ export type MockRoute = BaseModel & BaseMockRoute;
 
 export function init(): BaseMockRoute {
   return {
-    body: '',
+    body: "",
     headers: [],
-    parentId: '',
+    parentId: "",
     statusCode: 200,
-    statusText: '',
-    name: '/',
-    mimeType: 'application/json',
-    method: 'GET',
+    statusText: "",
+    name: "/",
+    mimeType: "application/json",
+    method: "GET",
   };
 }
 
-export const isMockRoute = (model: Pick<BaseModel, 'type'>): model is MockRoute => (
-  model.type === type
-);
+export const isMockRoute = (
+  model: Pick<BaseModel, "type">,
+): model is MockRoute => model.type === type;
 
 export function migrate(doc: MockRoute) {
   return doc;
@@ -48,16 +48,15 @@ export function migrate(doc: MockRoute) {
 
 export function create(patch: Partial<MockRoute> = {}) {
   if (!patch.parentId) {
-    throw new Error('New MockRoute missing `parentId`: ' + JSON.stringify(patch));
+    throw new Error(
+      "New MockRoute missing `parentId`: " + JSON.stringify(patch),
+    );
   }
 
   return db.docCreate<MockRoute>(type, patch);
 }
 
-export function update(
-  mockRoute: MockRoute,
-  patch: Partial<MockRoute> = {},
-) {
+export function update(mockRoute: MockRoute, patch: Partial<MockRoute> = {}) {
   return db.docUpdate<MockRoute>(mockRoute, patch);
 }
 

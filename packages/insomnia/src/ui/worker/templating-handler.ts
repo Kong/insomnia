@@ -1,17 +1,31 @@
-
-import { extractUndefinedVariableKey, RenderError } from '../../templating/render-error';
-import type { BaseRenderContext } from '../../templating/types';
+import {
+  extractUndefinedVariableKey,
+  RenderError,
+} from "../../templating/render-error";
+import type { BaseRenderContext } from "../../templating/types";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- see below
 // @ts-ignore -- inso transpiles to commonjs so doesn't play nice with this
-const worker = new Worker(new URL('./templating-worker.ts', import.meta.url), { type: 'module' });
-
-// Triggered by a mistake in the work initialization code above
-worker.addEventListener('error', event => {
-  console.error('Error from worker:', event.message);
+const worker = new Worker(new URL("./templating-worker.ts", import.meta.url), {
+  type: "module",
 });
 
-export function renderInWorker({ input, context, path, ignoreUndefinedEnvVariable }: { input: string; context: BaseRenderContext; path: string; ignoreUndefinedEnvVariable: boolean }): Promise<string> {
+// Triggered by a mistake in the work initialization code above
+worker.addEventListener("error", (event) => {
+  console.error("Error from worker:", event.message);
+});
+
+export function renderInWorker({
+  input,
+  context,
+  path,
+  ignoreUndefinedEnvVariable,
+}: {
+  input: string;
+  context: BaseRenderContext;
+  path: string;
+  ignoreUndefinedEnvVariable: boolean;
+}): Promise<string> {
   const newContext = {
     ...context,
     serializedFunctions: {
@@ -28,19 +42,28 @@ export function renderInWorker({ input, context, path, ignoreUndefinedEnvVariabl
 
   // Id to avoid race conditions
   const id = window.crypto.randomUUID();
-  const payloadWithHash = JSON.stringify({ id, input, context: newContext, path, ignoreUndefinedEnvVariable });
+  const payloadWithHash = JSON.stringify({
+    id,
+    input,
+    context: newContext,
+    path,
+    ignoreUndefinedEnvVariable,
+  });
   worker.postMessage(payloadWithHash);
   return new Promise((resolve, reject) => {
     const messageHandler = (event: MessageEvent) => {
       if (event.data.id === id) {
-        worker.removeEventListener('message', messageHandler);
+        worker.removeEventListener("message", messageHandler);
         if (event.data.err) {
           const error = new RenderError(event.data.err);
-          error.type = 'render';
-          const undefinedEnvironmentVariables = extractUndefinedVariableKey(input, newContext);
+          error.type = "render";
+          const undefinedEnvironmentVariables = extractUndefinedVariableKey(
+            input,
+            newContext,
+          );
           if (undefinedEnvironmentVariables.length > 0) {
             error.extraInfo = {
-              subType: 'environmentVariable',
+              subType: "environmentVariable",
               undefinedEnvironmentVariables,
             };
           }
@@ -49,6 +72,6 @@ export function renderInWorker({ input, context, path, ignoreUndefinedEnvVariabl
         return resolve(event.data.result);
       }
     };
-    worker.addEventListener('message', messageHandler);
+    worker.addEventListener("message", messageHandler);
   });
 }

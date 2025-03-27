@@ -1,15 +1,14 @@
-
-import { getInsomniaVaultKey } from '../common/constants';
-import { settings } from '../models';
+import { getInsomniaVaultKey } from "../common/constants";
+import { settings } from "../models";
 
 export const base64encode = (input: string | JsonWebKey) => {
-  const inputStr = typeof input === 'string' ? input : JSON.stringify(input);
-  return Buffer.from(inputStr, 'utf-8').toString('base64');
+  const inputStr = typeof input === "string" ? input : JSON.stringify(input);
+  return Buffer.from(inputStr, "utf-8").toString("base64");
 };
 
 export const base64decode = (base64Str: string, toObject: boolean) => {
   try {
-    const decodedStr = Buffer.from(base64Str, 'base64').toString('utf-8');
+    const decodedStr = Buffer.from(base64Str, "base64").toString("utf-8");
     if (toObject) {
       return JSON.parse(decodedStr);
     }
@@ -20,36 +19,48 @@ export const base64decode = (base64Str: string, toObject: boolean) => {
   return base64Str;
 };
 
-export const decryptVaultKeyFromSession = async (vaultKey: string, toJsonWebKey: boolean) => {
+export const decryptVaultKeyFromSession = async (
+  vaultKey: string,
+  toJsonWebKey: boolean,
+) => {
   if (process.env.PLAYWRIGHT) {
-    const testVaultKey = getInsomniaVaultKey() || '';
+    const testVaultKey = getInsomniaVaultKey() || "";
     if (testVaultKey) {
       // return vault key from environmet variable directly when running playwright tests
       return toJsonWebKey ? base64decode(testVaultKey, true) : testVaultKey;
     }
   }
   if (vaultKey) {
-    const decryptedVaultKey = await window.main.secretStorage.decryptString(vaultKey);
+    const decryptedVaultKey =
+      await window.main.secretStorage.decryptString(vaultKey);
     if (toJsonWebKey) {
       return base64decode(decryptedVaultKey, true);
-    };
+    }
     return decryptedVaultKey;
   }
-  return '';
+  return "";
 };
 
 const getVaultSecretKey = (accountId: string) => `vault_${accountId}`;
 
-export const saveVaultKeyIfNecessary = async (accountId: string, vaultKey: string) => {
+export const saveVaultKeyIfNecessary = async (
+  accountId: string,
+  vaultKey: string,
+) => {
   const userSetting = await settings.getOrCreate();
   const { saveVaultKeyLocally } = userSetting;
   if (saveVaultKeyLocally) {
-    await window.main.secretStorage.setSecret(getVaultSecretKey(accountId), vaultKey);
+    await window.main.secretStorage.setSecret(
+      getVaultSecretKey(accountId),
+      vaultKey,
+    );
   }
 };
 
 export const getVaultKeyFromStorage = async (accountId: string) => {
-  const savedVaultKey = await window.main.secretStorage.getSecret(getVaultSecretKey(accountId));
+  const savedVaultKey = await window.main.secretStorage.getSecret(
+    getVaultSecretKey(accountId),
+  );
   return savedVaultKey;
 };
 

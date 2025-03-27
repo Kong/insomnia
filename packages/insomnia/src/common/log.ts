@@ -1,7 +1,7 @@
-import log from 'electron-log';
-import { dirname } from 'path';
+import log from "electron-log";
+import { dirname } from "path";
 
-import { isDevelopment } from './constants';
+import { isDevelopment } from "./constants";
 
 export const initializeLogging = () => {
   if (isDevelopment()) {

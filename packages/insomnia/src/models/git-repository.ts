@@ -1,16 +1,16 @@
-import { database as db } from '../common/database';
-import type { GitCredentials } from '../sync/git/git-vcs';
-import type { BaseModel } from './index';
+import { database as db } from "../common/database";
+import type { GitCredentials } from "../sync/git/git-vcs";
+import type { BaseModel } from "./index";
 
-export type OauthProviderName = 'gitlab' | 'github' | 'custom';
+export type OauthProviderName = "gitlab" | "github" | "custom";
 
 export type GitRepository = BaseModel & BaseGitRepository;
 
-export const name = 'Git Repository';
+export const name = "Git Repository";
 
-export const type = 'GitRepository';
+export const type = "GitRepository";
 
-export const prefix = 'git';
+export const prefix = "git";
 
 export const canDuplicate = false;
 
@@ -19,11 +19,11 @@ export const canSync = false;
 export function init(): BaseGitRepository {
   return {
     needsFullClone: false,
-    uri: '',
+    uri: "",
     credentials: null,
     author: {
-      name: '',
-      email: '',
+      name: "",
+      email: "",
     },
     cachedGitLastCommitTime: null,
     cachedGitRepositoryBranch: null,
@@ -50,9 +50,9 @@ export interface BaseGitRepository {
   uriNeedsMigration: boolean;
 }
 
-export const isGitRepository = (model: Pick<BaseModel, 'type'>): model is GitRepository => (
-  model.type === type
-);
+export const isGitRepository = (
+  model: Pick<BaseModel, "type">,
+): model is GitRepository => model.type === type;
 
 export function migrate(doc: GitRepository) {
   return doc;

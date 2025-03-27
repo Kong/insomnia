@@ -1,4 +1,4 @@
-declare module 'hkdf' {
+declare module "hkdf" {
   export default class HKDF {
     constructor(hashAlg: string, salt: string, ikm: string);
 

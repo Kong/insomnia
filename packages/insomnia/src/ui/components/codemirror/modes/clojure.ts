@@ -1,3 +1,5 @@
-import CodeMirror from 'codemirror';
+import CodeMirror from "codemirror";
 
-CodeMirror.extendMode('clojure', { fold: 'brace' } as Partial<CodeMirror.Mode<any>>);
+CodeMirror.extendMode("clojure", { fold: "brace" } as Partial<
+  CodeMirror.Mode<any>
+>);

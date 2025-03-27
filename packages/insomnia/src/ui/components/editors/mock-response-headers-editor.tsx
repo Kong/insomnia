@@ -1,11 +1,17 @@
-import React, { type FC, useCallback } from 'react';
-import { useParams, useRouteLoaderData } from 'react-router-dom';
+import React, { type FC, useCallback } from "react";
+import { useParams, useRouteLoaderData } from "react-router-dom";
 
-import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
-import type { RequestHeader } from '../../../models/request';
-import { type MockRouteLoaderData, useMockRoutePatcher } from '../../routes/mock-route';
-import { CodeEditor } from '../codemirror/code-editor';
-import { KeyValueEditor } from '../key-value-editor/key-value-editor';
+import {
+  getCommonHeaderNames,
+  getCommonHeaderValues,
+} from "../../../common/common-headers";
+import type { RequestHeader } from "../../../models/request";
+import {
+  type MockRouteLoaderData,
+  useMockRoutePatcher,
+} from "../../routes/mock-route";
+import { CodeEditor } from "../codemirror/code-editor";
+import { KeyValueEditor } from "../key-value-editor/key-value-editor";
 
 interface Props {
   bulk: boolean;
@@ -18,36 +24,41 @@ export const MockResponseHeadersEditor: FC<Props> = ({
   isDisabled,
   onBlur,
 }) => {
-  const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
+  const { mockRoute } = useRouteLoaderData(
+    ":mockRouteId",
+  ) as MockRouteLoaderData;
   const patchMockRoute = useMockRoutePatcher();
 
   const { mockRouteId } = useParams() as { mockRouteId: string };
 
-  const handleBulkUpdate = useCallback((headersString: string) => {
-    const headers: {
-      name: string;
-      value: string;
-    }[] = [];
+  const handleBulkUpdate = useCallback(
+    (headersString: string) => {
+      const headers: {
+        name: string;
+        value: string;
+      }[] = [];
 
-    const rows = headersString.split(/\n+/);
-    for (const row of rows) {
-      const [rawName, rawValue] = row.split(/:(.*)$/);
-      const name = (rawName || '').trim();
-      const value = (rawValue || '').trim();
+      const rows = headersString.split(/\n+/);
+      for (const row of rows) {
+        const [rawName, rawValue] = row.split(/:(.*)$/);
+        const name = (rawName || "").trim();
+        const value = (rawValue || "").trim();
 
-      if (!name && !value) {
-        continue;
+        if (!name && !value) {
+          continue;
+        }
+
+        headers.push({
+          name,
+          value,
+        });
       }
+      patchMockRoute(mockRouteId, { headers });
+    },
+    [patchMockRoute, mockRouteId],
+  );
 
-      headers.push({
-        name,
-        value,
-      });
-    }
-    patchMockRoute(mockRouteId, { headers });
-  }, [patchMockRoute, mockRouteId]);
-
-  let headersString = '';
+  let headersString = "";
   for (const header of mockRoute.headers) {
     // Make sure it's not disabled
     if (header.disabled) {
@@ -61,9 +72,12 @@ export const MockResponseHeadersEditor: FC<Props> = ({
     headersString += `${header.name}: ${header.value}\n`;
   }
 
-  const onChangeHeaders = useCallback((headers: RequestHeader[]) => {
-    patchMockRoute(mockRouteId, { headers });
-  }, [patchMockRoute, mockRouteId]);
+  const onChangeHeaders = useCallback(
+    (headers: RequestHeader[]) => {
+      patchMockRoute(mockRouteId, { headers });
+    },
+    [patchMockRoute, mockRouteId],
+  );
 
   if (bulk) {
     return (

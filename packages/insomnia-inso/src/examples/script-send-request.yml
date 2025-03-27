@@ -18,7 +18,7 @@ resources:
         value: insomnia/9.3.3
     authentication: {}
     preRequestScript: |-
-      
+
       const resp = await new Promise((resolve, reject) => {
         insomnia.sendRequest(
           'http://localhost:4010/echo',

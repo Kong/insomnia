@@ -1,7 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from "vitest";
 
-import type { SendRequestCallback } from './insomnia';
-import { runTests } from './run';
+import type { SendRequestCallback } from "./insomnia";
+import { runTests } from "./run";
 
 const exampleTest = `
 const { expect } = chai;
@@ -27,47 +27,55 @@ describe('Example', () => {
 });
 `;
 
-describe('run', () => {
-  const getMockedSendRequest = () => vi.fn<SendRequestCallback<{ status: number }>>().mockResolvedValue({ status: 200 });
+describe("run", () => {
+  const getMockedSendRequest = () =>
+    vi
+      .fn<SendRequestCallback<{ status: number }>>()
+      .mockResolvedValue({ status: 200 });
 
-  it('runs a mocha suite', async () => {
-    const { stats } = await runTests(exampleTest, { sendRequest: getMockedSendRequest() });
+  it("runs a mocha suite", async () => {
+    const { stats } = await runTests(exampleTest, {
+      sendRequest: getMockedSendRequest(),
+    });
     expect(stats.passes).toBe(1);
     expect(stats.tests).toBe(2);
     expect(stats.failures).toBe(1);
   });
 
-  it('runs empty mocha suite', async () => {
-    const { stats } = await runTests(exampleEmptySuite, { sendRequest: getMockedSendRequest() });
+  it("runs empty mocha suite", async () => {
+    const { stats } = await runTests(exampleEmptySuite, {
+      sendRequest: getMockedSendRequest(),
+    });
     expect(stats.passes).toBe(0);
     expect(stats.tests).toBe(0);
     expect(stats.failures).toBe(0);
   });
 
-  it('works on multiple files', async () => {
-    const { stats } = await runTests([exampleTest, exampleTest], { sendRequest: getMockedSendRequest() });
+  it("works on multiple files", async () => {
+    const { stats } = await runTests([exampleTest, exampleTest], {
+      sendRequest: getMockedSendRequest(),
+    });
     expect(stats.passes).toBe(2);
     expect(stats.tests).toBe(4);
     expect(stats.failures).toBe(2);
   });
 
-  it('calls sendRequest() callback', async () => {
+  it("calls sendRequest() callback", async () => {
     const sendRequest = getMockedSendRequest();
 
-    const { stats } = await runTests(
-      exampleTestWithRequest,
-      { sendRequest },
-    );
+    const { stats } = await runTests(exampleTestWithRequest, { sendRequest });
 
-    expect(sendRequest).toHaveBeenCalledWith('req_123');
+    expect(sendRequest).toHaveBeenCalledWith("req_123");
     expect(stats.passes).toBe(1);
   });
 
-  it('throws on invalid JavaScript', async () => {
+  it("throws on invalid JavaScript", async () => {
     let err;
 
     try {
-      await runTests('this is invalid', { sendRequest: getMockedSendRequest() });
+      await runTests("this is invalid", {
+        sendRequest: getMockedSendRequest(),
+      });
     } catch (e) {
       err = e;
     }

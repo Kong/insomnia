@@ -1,5 +1,10 @@
-import classnames from 'classnames';
-import React, { type FC, type HTMLAttributes, memo, type ReactNode } from 'react';
+import classnames from "classnames";
+import React, {
+  type FC,
+  type HTMLAttributes,
+  memo,
+  type ReactNode,
+} from "react";
 
 interface Props extends HTMLAttributes<HTMLDivElement> {
   noScroll?: boolean;
@@ -7,15 +12,17 @@ interface Props extends HTMLAttributes<HTMLDivElement> {
   children?: ReactNode;
 }
 
-export const ModalBody: FC<Props> = memo(({ className, children, noScroll, ...props }) => {
-  const classes = classnames(className, 'modal__body theme--dialog__body', {
-    'modal__body--no-scroll': noScroll,
-  });
-  return (
-    <div className={classes} {...props}>
-      {children}
-    </div>
-  );
-});
+export const ModalBody: FC<Props> = memo(
+  ({ className, children, noScroll, ...props }) => {
+    const classes = classnames(className, "modal__body theme--dialog__body", {
+      "modal__body--no-scroll": noScroll,
+    });
+    return (
+      <div className={classes} {...props}>
+        {children}
+      </div>
+    );
+  },
+);
 
-ModalBody.displayName = 'ModalBody';
+ModalBody.displayName = "ModalBody";

@@ -1,28 +1,30 @@
-import { database as db } from '../common/database';
-import * as models from '../models/index';
-import type { Request } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { Workspace } from '../models/workspace';
-import * as pluginContexts from '../plugins/context';
-import type { Plugin } from '../plugins/index';
-import * as templating from './index';
-import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
-import { decodeEncoding } from './utils';
+import { database as db } from "../common/database";
+import * as models from "../models/index";
+import type { Request } from "../models/request";
+import type { RequestGroup } from "../models/request-group";
+import type { Workspace } from "../models/workspace";
+import * as pluginContexts from "../plugins/context";
+import type { Plugin } from "../plugins/index";
+import * as templating from "./index";
+import type {
+  BaseRenderContext,
+  PluginTemplateTag,
+  PluginTemplateTagContext,
+} from "./types";
+import { decodeEncoding } from "./utils";
 
-const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
+const EMPTY_ARG = "__EMPTY_NUNJUCKS_ARG__";
 
 export default class BaseExtension {
   _ext: PluginTemplateTag | null = null;
   _plugin: Plugin | null = null;
-  tags: PluginTemplateTag['name'][] = [];
+  tags: PluginTemplateTag["name"][] = [];
 
   constructor(ext: PluginTemplateTag, plugin: Plugin) {
     this._ext = ext;
     this._plugin = plugin;
     const tag = this.getTag();
-    this.tags = [
-      ...(tag === null ? [] : [tag]),
-    ];
+    this.tags = [...(tag === null ? [] : [tag])];
   }
 
   getTag() {
@@ -34,17 +36,17 @@ export default class BaseExtension {
   }
 
   getName() {
-    return typeof this._ext?.displayName === 'string' ? this._ext?.displayName : this.getTag();
+    return typeof this._ext?.displayName === "string"
+      ? this._ext?.displayName
+      : this.getTag();
   }
 
   getDescription() {
-    return this._ext?.description || 'no description';
+    return this._ext?.description || "no description";
   }
 
   getLiveDisplayName() {
-    return (
-      this._ext?.liveDisplayName || (() => '')
-    );
+    return this._ext?.liveDisplayName || (() => "");
   }
 
   getDisablePreview() {
@@ -80,7 +82,7 @@ export default class BaseExtension {
     }
 
     parser.advanceAfterBlockEnd(tok.value);
-    return new nodes.CallExtensionAsync(this, 'asyncRun', args);
+    return new nodes.CallExtensionAsync(this, "asyncRun", args);
   }
 
   asyncRun({ ctx }: any, ...runArgs: any[]) {
@@ -91,7 +93,7 @@ export default class BaseExtension {
     // Extract the rest of the args
     const args = runArgs
       .slice(0, runArgs.length - 1)
-      .filter(a => a !== EMPTY_ARG)
+      .filter((a) => a !== EMPTY_ARG)
       .map(decodeEncoding);
     // Define a helper context with utils
     const helperContext: PluginTemplateTagContext = {
@@ -111,11 +113,10 @@ export default class BaseExtension {
           request: {
             getById: models.request.getById,
             getAncestors: async (request: any) => {
-              const ancestors = await db.withAncestors<Request | RequestGroup | Workspace>(request, [
-                models.requestGroup.type,
-                models.workspace.type,
-              ]);
-              return ancestors.filter(doc => doc._id !== request._id);
+              const ancestors = await db.withAncestors<
+                Request | RequestGroup | Workspace
+              >(request, [models.requestGroup.type, models.workspace.type]);
+              return ancestors.filter((doc) => doc._id !== request._id);
             },
           },
           workspace: {
@@ -150,10 +151,10 @@ export default class BaseExtension {
     // If the result is a promise, resolve it async
     if (result instanceof Promise) {
       result
-        .then(r => {
+        .then((r) => {
           callback(null, r);
         })
-        .catch(err => {
+        .catch((err) => {
           callback(err);
         });
       return;

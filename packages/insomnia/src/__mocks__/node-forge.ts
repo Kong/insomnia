@@ -1,4 +1,4 @@
-import forge from 'node-forge';
+import forge from "node-forge";
 
 // WARNING: changing this to `export default` will break the mock and be incredibly hard to debug. Ask me how I know.
 module.exports = {
@@ -29,10 +29,10 @@ module.exports = {
   },
   random: {
     getBytesSync(num: number) {
-      let s = '';
+      let s = "";
 
       for (let i = 0; i < num; i++) {
-        s += 'a';
+        s += "a";
       }
 
       return s;
@@ -43,18 +43,18 @@ module.exports = {
       generateKeyPair() {
         return {
           privateKey: {
-            d: 'a',
-            dP: 'a',
-            dQ: 'a',
-            e: 'a',
-            n: 'a',
-            p: 'a',
-            q: 'a',
-            qInv: 'a',
+            d: "a",
+            dP: "a",
+            dQ: "a",
+            e: "a",
+            n: "a",
+            p: "a",
+            q: "a",
+            qInv: "a",
           },
           publicKey: {
-            e: 'a',
-            n: 'a',
+            e: "a",
+            n: "a",
           },
         };
       },
@@ -73,7 +73,7 @@ module.exports = {
 
         finish() {
           this.mode = {
-            tag: 'tag',
+            tag: "tag",
           };
           this.output = this._data;
         },

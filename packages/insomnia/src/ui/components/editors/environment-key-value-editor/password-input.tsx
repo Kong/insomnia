@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
-import { OneLineEditor } from '../../codemirror/one-line-editor';
+import { OneLineEditor } from "../../codemirror/one-line-editor";
 
 export interface PasswordInputProps {
   value: string;
@@ -12,10 +12,19 @@ export interface PasswordInputProps {
   onChange: (value: string) => void;
   onShowPassword?: (value: string) => void;
   onHidePassword?: (value: string) => void;
-};
+}
 
 export const PasswordInput = (props: PasswordInputProps) => {
-  const { value, className, placeholder, enabled, itemId, onShowPassword, onHidePassword, onChange } = props;
+  const {
+    value,
+    className,
+    placeholder,
+    enabled,
+    itemId,
+    onShowPassword,
+    onHidePassword,
+    onChange,
+  } = props;
   const [isHidden, setHidden] = useState(true);
 
   const handleShowHidePassword = () => {
@@ -24,35 +33,42 @@ export const PasswordInput = (props: PasswordInputProps) => {
     } else if (!isHidden && onHidePassword) {
       onHidePassword(value);
     }
-    setHidden(prevState => !prevState);
+    setHidden((prevState) => !prevState);
   };
 
   return (
-    <div className={`h-full w-full flex items-center justify-between ${className}`}>
-      <div className='flex-1 w-full h-full'>
-        {isHidden ?
+    <div
+      className={`flex h-full w-full items-center justify-between ${className}`}
+    >
+      <div className="h-full w-full flex-1">
+        {isHidden ? (
           <input
             value={value}
-            className='placeholder-[--hl-lg] w-full h-full'
-            onChange={event => onChange(event.target.value)}
+            className="h-full w-full placeholder-[--hl-lg]"
+            onChange={(event) => onChange(event.target.value)}
             placeholder={placeholder}
             readOnly={!enabled}
-            type={'password'}
-          /> :
+            type={"password"}
+          />
+        ) : (
           <OneLineEditor
             id={`environment-kv-editor-value-${itemId}`}
             placeholder={placeholder}
             defaultValue={value}
             readOnly={!enabled}
-            onChange={newValue => onChange(newValue)}
+            onChange={(newValue) => onChange(newValue)}
           />
-        }
+        )}
       </div>
       <button
-        className='m-0 px-1 h-full items-center'
+        className="m-0 h-full items-center px-1"
         onClick={handleShowHidePassword}
       >
-        {isHidden ? <i className="fa fa-eye-slash" /> : <i className="fa fa-eye" />}
+        {isHidden ? (
+          <i className="fa fa-eye-slash" />
+        ) : (
+          <i className="fa fa-eye" />
+        )}
       </button>
     </div>
   );

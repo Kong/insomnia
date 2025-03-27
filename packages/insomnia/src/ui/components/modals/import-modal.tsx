@@ -1,4 +1,4 @@
-import classNames from 'classnames';
+import classNames from "classnames";
 import React, {
   type FC,
   Fragment,
@@ -9,25 +9,28 @@ import React, {
   useMemo,
   useRef,
   useState,
-} from 'react';
-import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
-import { Heading } from 'react-aria-components';
-import { useFetcher } from 'react-router-dom';
+} from "react";
+import {
+  type DirectoryDropItem,
+  type FileDropItem,
+  OverlayContainer,
+  useDrop,
+} from "react-aria";
+import { Heading } from "react-aria-components";
+import { useFetcher } from "react-router-dom";
 
-import type { ScanResult } from '../../../common/import';
-import { isScratchpadProject } from '../../../models/project';
-import { invariant } from '../../../utils/invariant';
-import { SegmentEvent } from '../../analytics';
-import type { ImportResourcesActionResult } from '../../routes/import';
-import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
-import { ModalHeader } from '../base/modal-header';
-import { Icon } from '../icon';
-import { Button } from '../themed-button';
+import type { ScanResult } from "../../../common/import";
+import { isScratchpadProject } from "../../../models/project";
+import { invariant } from "../../../utils/invariant";
+import { SegmentEvent } from "../../analytics";
+import type { ImportResourcesActionResult } from "../../routes/import";
+import { Modal, type ModalHandle, type ModalProps } from "../base/modal";
+import { ModalHeader } from "../base/modal-header";
+import { Icon } from "../icon";
+import { Button } from "../themed-button";
 
 const Pill: FC<PropsWithChildren> = ({ children }) => (
-  <div
-    className="flex items-center gap-[var(--padding-xs)] p-[var(--padding-sm)] rounded-[var(--radius-md)] text-[length:var(--font-size-xs)]"
-  >
+  <div className="flex items-center gap-[var(--padding-xs)] rounded-[var(--radius-md)] p-[var(--padding-sm)] text-[length:var(--font-size-xs)]">
     {children}
   </div>
 );
@@ -52,15 +55,17 @@ const Radio: FC<{
         defaultChecked={defaultChecked}
         onChange={onChange}
         style={{
-          clip: 'rect(0,0,0,0)',
+          clip: "rect(0,0,0,0)",
         }}
-        className="absolute w-px h-px overflow-hidden whitespace-nowrap -m-px p-0 border-0"
+        className="absolute -m-px h-px w-px overflow-hidden whitespace-nowrap border-0 p-0"
       />
       <label
-        className="p-[var(--padding-sm)] rounded-[var(--radius-md)] flex items-center gap-[var(--padding-sm)]"
+        className="flex items-center gap-[var(--padding-sm)] rounded-[var(--radius-md)] p-[var(--padding-sm)]"
         data-test-id={`import-from-${value}`}
         htmlFor={id}
-      >{children}</label>
+      >
+        {children}
+      </label>
     </div>
   );
 };
@@ -76,11 +81,16 @@ interface Entry {
 }
 
 // get all files' paths from drop items
-async function recurse(list: (FileDropItem | DirectoryDropItem)[] | AsyncIterable<FileDropItem | DirectoryDropItem>, filePathList: string[]) {
+async function recurse(
+  list:
+    | (FileDropItem | DirectoryDropItem)[]
+    | AsyncIterable<FileDropItem | DirectoryDropItem>,
+  filePathList: string[],
+) {
   for await (const item of list) {
-    if (item.kind === 'file') {
+    if (item.kind === "file") {
       const path = (await item.getFile()).path;
-      if (validImportExtensions.some(ext => path.endsWith(`.${ext}`))) {
+      if (validImportExtensions.some((ext) => path.endsWith(`.${ext}`))) {
         filePathList.push(path);
       }
     } else {
@@ -99,28 +109,45 @@ const FileField: FC = () => {
   const filePaths = useMemo(() => JSON.stringify(filePathList), [filePathList]);
   const { isDropTarget, dropProps } = useDrop({
     ref: dropRef,
-    onDrop: async event => {
-      const list = event.items.filter(item => item.kind === 'file' || item.kind === 'directory');
-      setEntryList(list.map(item => ({ type: item.kind === 'file' ? ENTRY_TYPE.FILE : ENTRY_TYPE.DIR, name: item.name })));
+    onDrop: async (event) => {
+      const list = event.items.filter(
+        (item) => item.kind === "file" || item.kind === "directory",
+      );
+      setEntryList(
+        list.map((item) => ({
+          type: item.kind === "file" ? ENTRY_TYPE.FILE : ENTRY_TYPE.DIR,
+          name: item.name,
+        })),
+      );
       const filePathList: string[] = [];
       await recurse(list, filePathList);
       setFilePathList(filePathList);
     },
   });
-  const accept = useMemo(() => validImportExtensions.map(ext => `.${ext}`).join(','), []);
+  const accept = useMemo(
+    () => validImportExtensions.map((ext) => `.${ext}`).join(","),
+    [],
+  );
   return (
     <div>
       <input
         className="hidden"
         data-test-id="import-file-input"
-        onChange={e => {
+        onChange={(e) => {
           const files = e.target.files;
           if (files) {
             const fileList = Array.from(files);
-            setEntryList(fileList.map(file => ({ type: ENTRY_TYPE.FILE, name: file.name })));
+            setEntryList(
+              fileList.map((file) => ({
+                type: ENTRY_TYPE.FILE,
+                name: file.name,
+              })),
+            );
             // Electron has added a path attribute to the File interface which exposes the file's real path on filesystem.
             // https://www.electronjs.org/docs/latest/api/file-object
-            setFilePathList(fileList.map(file => window.webUtils.getPathForFile(file)));
+            setFilePathList(
+              fileList.map((file) => window.webUtils.getPathForFile(file)),
+            );
           } else {
             setEntryList([]);
             setFilePathList([]);
@@ -134,46 +161,40 @@ const FileField: FC = () => {
       <label
         {...dropProps}
         className={classNames(
-          'p-[var(--padding-sm)] rounded-[var(--radius-md)] flex items-center gap-[var(--padding-sm)] bg-[color:var(--hl-xs)] flex-wrap border border-solid max-h-[50vh] overflow-auto',
+          "flex max-h-[50vh] flex-wrap items-center gap-[var(--padding-sm)] overflow-auto rounded-[var(--radius-md)] border border-solid bg-[color:var(--hl-xs)] p-[var(--padding-sm)]",
           {
-            'border-[color:var(--color-surprise)]': isDropTarget,
-            'border-[color:var(--hl-md)]': !isDropTarget,
-          }
+            "border-[color:var(--color-surprise)]": isDropTarget,
+            "border-[color:var(--hl-md)]": !isDropTarget,
+          },
         )}
         htmlFor={id}
       >
         <input type="hidden" name="filePaths" value={filePaths} />
-        {filePathList.length ? (<div
-          className="bg-[color:var(--color-bg)] rounded-[var(--radius-md)] text-ellipsis whitespace-nowrap flex flex-col items-center justify-start p-[var(--padding-md)] gap-[var(--padding-sm)] w-full"
-        >
-          {entryList.map(({ name, type }) => (
-            <div
-              key={name}
-            >
-              <Icon
-                icon={type === ENTRY_TYPE.DIR ? 'folder' : 'file'}
-                className="mr-1"
-              />
-              {name}
-            </div>
-          ))}
-        </div>) : (
-            <div
-              className="flex flex-col items-center justify-center p-[var(--padding-md)] gap-[var(--padding-sm)] w-full"
-            >
-              <div>
-                <i className="fa fa-upload fa-xl" />
+        {filePathList.length ? (
+          <div className="flex w-full flex-col items-center justify-start gap-[var(--padding-sm)] text-ellipsis whitespace-nowrap rounded-[var(--radius-md)] bg-[color:var(--color-bg)] p-[var(--padding-md)]">
+            {entryList.map(({ name, type }) => (
+              <div key={name}>
+                <Icon
+                  icon={type === ENTRY_TYPE.DIR ? "folder" : "file"}
+                  className="mr-1"
+                />
+                {name}
               </div>
-              <div>
-                Drag and Drop or{' '}
-                <span
-                  className="text-[color:var(--color-surprise)]"
-                >
-                  Choose Files
-                </span>{' '}
-                to import
-              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex w-full flex-col items-center justify-center gap-[var(--padding-sm)] p-[var(--padding-md)]">
+            <div>
+              <i className="fa fa-upload fa-xl" />
             </div>
+            <div>
+              Drag and Drop or{" "}
+              <span className="text-[color:var(--color-surprise)]">
+                Choose Files
+              </span>{" "}
+              to import
+            </div>
+          </div>
         )}
       </label>
     </div>
@@ -332,30 +353,30 @@ interface ImportModalProps extends ModalProps {
   // undefined when in workspace selection page
   defaultWorkspaceId?: string;
   from:
-  | {
-    type: 'file';
-  }
-  | {
-    type: 'uri';
-    defaultValue?: string;
-  }
-  | {
-    type: 'clipboard';
-  };
+    | {
+        type: "file";
+      }
+    | {
+        type: "uri";
+        defaultValue?: string;
+      }
+    | {
+        type: "clipboard";
+      };
 }
 
 const validImportExtensions = [
-  'sh',
-  'txt',
-  'json',
-  'har',
-  'curl',
-  'bash',
-  'shell',
-  'yaml',
-  'yml',
-  'wsdl',
-  'zip',
+  "sh",
+  "txt",
+  "json",
+  "har",
+  "curl",
+  "bash",
+  "shell",
+  "yaml",
+  "yml",
+  "wsdl",
+  "zip",
 ];
 
 export const ImportModal: FC<ImportModalProps> = ({
@@ -382,70 +403,92 @@ export const ImportModal: FC<ImportModalProps> = ({
   }, [importFetcher.data]);
   // allow workspace import if there is only one workspace
   const totalWorkspacesCount = useMemo(() => {
-    return scanResourcesFetcherData?.reduce((accumulator, scanResult) => accumulator + (scanResult.workspaces?.length || 0), 0) || 0;
+    return (
+      scanResourcesFetcherData?.reduce(
+        (accumulator, scanResult) =>
+          accumulator + (scanResult.workspaces?.length || 0),
+        0,
+      ) || 0
+    );
   }, [scanResourcesFetcherData]);
-  const shouldImportToWorkspace = !!defaultWorkspaceId && totalWorkspacesCount <= 1;
+  const shouldImportToWorkspace =
+    !!defaultWorkspaceId && totalWorkspacesCount <= 1;
   // TODO: need to add a more strong way to inform users that resources will be imported into project rather than current workspace
-  const header = shouldImportToWorkspace ? `Import to "${workspaceName}" Workspace` : `Import to "${projectName}" Project`;
-  const isScratchPad = defaultProjectId && isScratchpadProject({
-    _id: defaultProjectId,
-  });
+  const header = shouldImportToWorkspace
+    ? `Import to "${workspaceName}" Workspace`
+    : `Import to "${projectName}" Project`;
+  const isScratchPad =
+    defaultProjectId &&
+    isScratchpadProject({
+      _id: defaultProjectId,
+    });
 
   const cannotImportToWorkspace = totalWorkspacesCount > 1 && isScratchPad;
 
   const importErrors = [
     ...(importFetcher.data?.errors || []),
-    ...cannotImportToWorkspace ? ['Cannot import multiple files to ScratchPad. Please try to import your files one by one.'] : [],
+    ...(cannotImportToWorkspace
+      ? [
+          "Cannot import multiple files to ScratchPad. Please try to import your files one by one.",
+        ]
+      : []),
   ];
 
   const hasAnyDataToImport = useMemo(() => {
-    return scanResourcesFetcherData && scanResourcesFetcherData.some(({ errors }) => errors.length === 0);
+    return (
+      scanResourcesFetcherData &&
+      scanResourcesFetcherData.some(({ errors }) => errors.length === 0)
+    );
   }, [scanResourcesFetcherData]);
 
   return (
-    <OverlayContainer onClick={e => e.stopPropagation()}>
+    <OverlayContainer onClick={(e) => e.stopPropagation()}>
       <Modal ref={modalRef} onHide={onHide}>
         <ModalHeader>{header}</ModalHeader>
         {hasAnyDataToImport ? (
           <ImportResourcesForm
             organizationId={organizationId}
             defaultProjectId={defaultProjectId}
-            defaultWorkspaceId={shouldImportToWorkspace ? defaultWorkspaceId : ''}
+            defaultWorkspaceId={
+              shouldImportToWorkspace ? defaultWorkspaceId : ""
+            }
             scanResults={scanResourcesFetcherData as ScanResult[]}
             errors={importErrors}
-            loading={importFetcher.state !== 'idle'}
+            loading={importFetcher.state !== "idle"}
             disabled={importErrors.length > 0}
-            onSubmit={e => {
+            onSubmit={(e) => {
               invariant(Array.isArray(scanResourcesFetcherData));
               e.preventDefault();
               // file://./../../routes/import.tsx#importResourcesAction
               importFetcher.submit(e.currentTarget, {
-                method: 'post',
-                action: '/import/resources',
+                method: "post",
+                action: "/import/resources",
               });
-              scanResourcesFetcherData.filter(({ errors }) => errors.length === 0).forEach(scanResult => {
-                const type = scanResult.type?.id ?? 'unknown';
-                window.main.trackSegmentEvent({
-                  event: SegmentEvent.dataImport,
-                  properties: { 'data-import-type': type },
+              scanResourcesFetcherData
+                .filter(({ errors }) => errors.length === 0)
+                .forEach((scanResult) => {
+                  const type = scanResult.type?.id ?? "unknown";
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.dataImport,
+                    properties: { "data-import-type": type },
+                  });
                 });
-              });
             }}
           />
         ) : (
-            <ScanResourcesForm
-              from={from}
-              scanResults={scanResourcesFetcherData}
-              onSubmit={e => {
-                e.preventDefault();
-                // file://./../../routes/import.tsx#scanForResourcesAction
-                scanResourcesFetcher.submit(e.currentTarget, {
-                  method: 'post',
-                  action: '/import/scan',
-                });
-              }}
-              loading={scanResourcesFetcher.state !== 'idle'}
-            />
+          <ScanResourcesForm
+            from={from}
+            scanResults={scanResourcesFetcherData}
+            onSubmit={(e) => {
+              e.preventDefault();
+              // file://./../../routes/import.tsx#scanForResourcesAction
+              scanResourcesFetcher.submit(e.currentTarget, {
+                method: "post",
+                action: "/import/scan",
+              });
+            }}
+            loading={scanResourcesFetcher.state !== "idle"}
+          />
         )}
       </Modal>
     </OverlayContainer>
@@ -459,69 +502,65 @@ const ScanResourcesForm = ({
   loading,
 }: {
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
-  from?: ImportModalProps['from'];
-    scanResults?: ScanResult[];
-    loading: boolean;
+  from?: ImportModalProps["from"];
+  scanResults?: ScanResult[];
+  loading: boolean;
 }) => {
   const id = useId();
-  const [importFrom, setImportFrom] = useState(from?.type || 'uri');
+  const [importFrom, setImportFrom] = useState(from?.type || "uri");
 
   return (
     <Fragment>
-      <div
-        className='flex flex-col'
-      >
+      <div className="flex flex-col">
         <form
           aria-label="Import from"
           id={id}
           onSubmit={onSubmit}
           method="post"
-          className='flex flex-col gap-[var(--padding-sm)]'
+          className="flex flex-col gap-[var(--padding-sm)]"
         >
-          <fieldset
-            className='flex flex-col gap-[var(--padding-md)]'
-          >
-            <div
-              className='flex p-[var(--padding-xs)] border border-[color:var(--hl-md)] rounded-[var(--radius-md)] bg-[color:var(--hl-xs)] border-solid'
-            >
+          <fieldset className="flex flex-col gap-[var(--padding-md)]">
+            <div className="flex rounded-[var(--radius-md)] border border-solid border-[color:var(--hl-md)] bg-[color:var(--hl-xs)] p-[var(--padding-xs)]">
               <Radio
-                onChange={() => setImportFrom('file')}
+                onChange={() => setImportFrom("file")}
                 name="importFrom"
                 value="file"
-                checked={importFrom === 'file'}
+                checked={importFrom === "file"}
               >
                 <i className="fa fa-plus" />
                 File
               </Radio>
               <Radio
-                onChange={() => setImportFrom('uri')}
+                onChange={() => setImportFrom("uri")}
                 name="importFrom"
                 value="uri"
-                checked={importFrom === 'uri'}
+                checked={importFrom === "uri"}
               >
                 <i className="fa fa-link" />
                 Url
               </Radio>
               <Radio
-                onChange={() => setImportFrom('clipboard')}
+                onChange={() => setImportFrom("clipboard")}
                 name="importFrom"
                 value="clipboard"
-                checked={importFrom === 'clipboard'}
+                checked={importFrom === "clipboard"}
               >
                 <i className="fa fa-clipboard" />
                 Clipboard
               </Radio>
             </div>
           </fieldset>
-          {importFrom === 'file' && <FileField />}
-          {importFrom === 'uri' && (
+          {importFrom === "file" && <FileField />}
+          {importFrom === "uri" && (
             <div className="form-control form-control--outlined">
               <label>
                 Url:
                 <input
                   type="text"
                   name="uri"
-                  defaultValue={from?.type === 'uri' ? from.defaultValue : undefined}
+                  defaultValue={
+                    from?.type === "uri" ? from.defaultValue : undefined
+                  }
                   placeholder="https://website.com/insomnia-import.json"
                 />
               </label>
@@ -529,23 +568,15 @@ const ScanResourcesForm = ({
           )}
         </form>
         {scanResults && (
-          <div className='margin-top-sm overflow-y-auto max-h-[20vh]'>
+          <div className="margin-top-sm max-h-[20vh] overflow-y-auto">
             <ScanResultsTable scanResults={scanResults} />
           </div>
         )}
       </div>
-      <div
-        className='flex gap-[var(--padding-sm)] justify-between items-end'
-      >
+      <div className="flex items-end justify-between gap-[var(--padding-sm)]">
         <div>
-          <div
-            className='pb-[var(--padding-sm)]'
-          >
-            Supported Formats
-          </div>
-          <div
-            className='flex flex-wrap gap-[var(--padding-sm)]'
-          >
+          <div className="pb-[var(--padding-sm)]">Supported Formats</div>
+          <div className="flex flex-wrap gap-[var(--padding-sm)]">
             <Pill>
               <InsomniaIcon />
               Insomnia
@@ -584,7 +615,7 @@ const ScanResourcesForm = ({
           className="btn h-10 gap-[var(--padding-sm)]"
         >
           <i className="fa fa-file-import" /> Scan
-          {loading && (<Icon icon="spinner" className="animate-spin ml-[4px]" />)}
+          {loading && <Icon icon="spinner" className="ml-[4px] animate-spin" />}
         </Button>
       </div>
     </Fragment>
@@ -601,56 +632,55 @@ const ImportResourcesForm = ({
   disabled,
   loading,
 }: {
-    scanResults: ScanResult[];
+  scanResults: ScanResult[];
   organizationId: string;
   defaultProjectId?: string;
   defaultWorkspaceId?: string;
   errors?: string[];
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
   disabled: boolean;
-    loading: boolean;
-}
-) => {
+  loading: boolean;
+}) => {
   const id = useId();
   return (
     <Fragment>
-      <div
-        className='flex flex-col gap-[var(--padding-md)] overflow-auto max-h-[50vh]'
-      >
+      <div className="flex max-h-[50vh] flex-col gap-[var(--padding-md)] overflow-auto">
         <form
           onSubmit={onSubmit}
           method="post"
           action="/import/resources"
           id={id}
-          className='hidden'
+          className="hidden"
         >
           <input hidden name="organizationId" readOnly value={organizationId} />
           <input hidden name="projectId" readOnly value={defaultProjectId} />
-          <input hidden name="workspaceId" readOnly value={defaultWorkspaceId} />
+          <input
+            hidden
+            name="workspaceId"
+            readOnly
+            value={defaultWorkspaceId}
+          />
         </form>
-        <div
-          className='overflow-y-auto'
-        >
+        <div className="overflow-y-auto">
           <ScanResultsTable scanResults={scanResults} />
         </div>
         <div>
           {errors && errors.length > 0 && (
             <div className="notice error margin-top-sm">
-              <Heading className='font-bold'>Error while importing to Insomnia:</Heading>
+              <Heading className="font-bold">
+                Error while importing to Insomnia:
+              </Heading>
               <p>{errors[0]}</p>
             </div>
           )}
         </div>
       </div>
 
-      <div
-        className='flex gap-[var(--padding-sm)] w-full justify-between items-end'
-      >
+      <div className="flex w-full items-end justify-between gap-[var(--padding-sm)]">
         <div>
-          <div
-            className='pb-[var(--padding-sm)]'
-          >
-            Insomnia provides features that may automatically execute code. Only import files from trusted sources.
+          <div className="pb-[var(--padding-sm)]">
+            Insomnia provides features that may automatically execute code. Only
+            import files from trusted sources.
           </div>
         </div>
         <Button
@@ -690,18 +720,23 @@ const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] }) => {
               <tr className="table--no-outline-row">
                 <td className="bg-[color:var(--hl-xxs)]">
                   <div
-                    className={classNames({
-                      'text-danger': hasErrors,
-                    }, 'flex items-center gap-[var(--padding-sm)]')}
+                    className={classNames(
+                      {
+                        "text-danger": hasErrors,
+                      },
+                      "flex items-center gap-[var(--padding-sm)]",
+                    )}
                   >
                     {hasErrors ? (
                       <Fragment>
                         <i className="fa-regular fa-file fa-lg" />
-                        Parse file {scanResult.oriFileName} failed, this file will not be imported:
+                        Parse file {scanResult.oriFileName} failed, this file
+                        will not be imported:
                       </Fragment>
                     ) : (
                       <Fragment>
-                        {getImporterSign(scanResult)}{' '}resources to be imported from {scanResult.oriFileName}:
+                        {getImporterSign(scanResult)} resources to be imported
+                        from {scanResult.oriFileName}:
                       </Fragment>
                     )}
                   </div>
@@ -712,39 +747,42 @@ const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] }) => {
                   <td>
                     <ul
                       className={classNames({
-                        'text-danger': hasErrors,
+                        "text-danger": hasErrors,
                       })}
                     >
                       {scanResult.errors.map((error, idx) => {
                         const key = `${uniqueKey}${scanResult.oriFileName}${idx}`;
-                        return (
-                          <li key={key}>{error}</li>
-                        );
+                        return <li key={key}>{error}</li>;
                       })}
                     </ul>
                   </td>
                 </tr>
               ) : (
                 <Fragment>
-                  {scanResult.workspaces && scanResult.workspaces?.length > 0 && (
-                    <tr
-                      key={scanResult.workspaces[0]._id}
-                      className="table--no-outline-row"
-                    >
-                      <td>
-                        {scanResult.workspaces.length}{' '}
-                        {scanResult.workspaces.length === 1 ? 'Workspace' : 'Workspaces'}
-                      </td>
-                    </tr>
-                  )}
+                  {scanResult.workspaces &&
+                    scanResult.workspaces?.length > 0 && (
+                      <tr
+                        key={scanResult.workspaces[0]._id}
+                        className="table--no-outline-row"
+                      >
+                        <td>
+                          {scanResult.workspaces.length}{" "}
+                          {scanResult.workspaces.length === 1
+                            ? "Workspace"
+                            : "Workspaces"}
+                        </td>
+                      </tr>
+                    )}
                   {scanResult.requests && scanResult.requests?.length > 0 && (
                     <tr
                       key={scanResult.requests[0]._id}
                       className="table--no-outline-row"
                     >
                       <td>
-                        {scanResult.requests.length}{' '}
-                        {scanResult.requests.length === 1 ? 'Request' : 'Requests'}
+                        {scanResult.requests.length}{" "}
+                        {scanResult.requests.length === 1
+                          ? "Request"
+                          : "Requests"}
                       </td>
                     </tr>
                   )}
@@ -754,9 +792,11 @@ const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] }) => {
                       className="table--no-outline-row"
                     >
                       <td>
-                          <div className="flex items-center gap-[var(--padding-md)]">
-                          {scanResult.apiSpecs.length}{' '}
-                          {scanResult.apiSpecs.length === 1 ? 'OpenAPI Spec' : 'OpenAPI Specs'}
+                        <div className="flex items-center gap-[var(--padding-md)]">
+                          {scanResult.apiSpecs.length}{" "}
+                          {scanResult.apiSpecs.length === 1
+                            ? "OpenAPI Spec"
+                            : "OpenAPI Specs"}
                         </div>
                       </td>
                     </tr>
@@ -765,13 +805,15 @@ const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] }) => {
                     scanResult.environments.length > 0 && (
                       <tr className="table--no-outline-row">
                         <td>
-                          {scanResult.environments.length}{' '}
+                          {scanResult.environments.length}{" "}
                           {scanResult.environments.length === 1
-                            ? 'Environment'
-                            : 'Environments'}
-                          {' with '}
-                          {scanResult.cookieJars?.length}{' '}
-                          {scanResult.cookieJars?.length === 1 ? 'Cookie Jar' : 'Cookie Jars'}
+                            ? "Environment"
+                            : "Environments"}
+                          {" with "}
+                          {scanResult.cookieJars?.length}{" "}
+                          {scanResult.cookieJars?.length === 1
+                            ? "Cookie Jar"
+                            : "Cookie Jars"}
                         </td>
                       </tr>
                     )}
@@ -779,13 +821,15 @@ const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] }) => {
                     scanResult.unitTestSuites?.length > 0 && (
                       <tr className="table--no-outline-row">
                         <td>
-                          {scanResult.unitTestSuites.length}{' '}
+                          {scanResult.unitTestSuites.length}{" "}
                           {scanResult.unitTestSuites.length === 1
-                            ? 'Test Suite'
-                            : 'Test Suites'}
-                          {' with '}
+                            ? "Test Suite"
+                            : "Test Suites"}
+                          {" with "}
                           {scanResult.unitTests?.length}
-                          {scanResult.unitTests?.length === 1 ? ' Test' : ' Tests'}
+                          {scanResult.unitTests?.length === 1
+                            ? " Test"
+                            : " Tests"}
                         </td>
                       </tr>
                     )}
@@ -793,10 +837,10 @@ const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] }) => {
                     scanResult.mockRoutes?.length > 0 && (
                       <tr className="table--no-outline-row">
                         <td>
-                          {scanResult.mockRoutes?.length}{' '}
+                          {scanResult.mockRoutes?.length}{" "}
                           {scanResult.mockRoutes?.length === 1
-                            ? 'Mock Route'
-                            : 'Mock Routes'}
+                            ? "Mock Route"
+                            : "Mock Routes"}
                         </td>
                       </tr>
                     )}
@@ -811,32 +855,37 @@ const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] }) => {
 };
 
 function getImporterSign(scanResult: ScanResult) {
-  let name = '';
+  let name = "";
   let icon = null;
   if (scanResult.type?.id) {
     const id = scanResult.type.id;
-    if (id.includes('insomnia')) {
-      icon = (<InsomniaIcon width={24} height={24} />);
-      name = 'Insomnia';
-    } else if (id.includes('postman')) {
-      icon = (<i className="fa-regular fa-file fa-lg" />);
-      name = 'Postman';
-    } else if (id.includes('swagger')) {
-      icon = (<SwaggerIcon width={24} height={24} />);
-      name = 'Swagger';
-    } else if (id.includes('openapi')) {
-      icon = (<OpenAPIIcon width={24} height={24} />);
-      name = 'OpenAPI';
-    } else if (id.includes('wsdl')) {
-      icon = (<i className="fa-regular fa-file fa-lg" />);
-      name = 'WSDL';
-    } else if (id.includes('har')) {
-      icon = (<i className="fa-regular fa-file fa-lg" />);
-      name = 'HAR';
-    } else if (id.includes('curl')) {
-      icon = (<CurlIcon width={24} height={24} />);
-      name = 'cURL';
+    if (id.includes("insomnia")) {
+      icon = <InsomniaIcon width={24} height={24} />;
+      name = "Insomnia";
+    } else if (id.includes("postman")) {
+      icon = <i className="fa-regular fa-file fa-lg" />;
+      name = "Postman";
+    } else if (id.includes("swagger")) {
+      icon = <SwaggerIcon width={24} height={24} />;
+      name = "Swagger";
+    } else if (id.includes("openapi")) {
+      icon = <OpenAPIIcon width={24} height={24} />;
+      name = "OpenAPI";
+    } else if (id.includes("wsdl")) {
+      icon = <i className="fa-regular fa-file fa-lg" />;
+      name = "WSDL";
+    } else if (id.includes("har")) {
+      icon = <i className="fa-regular fa-file fa-lg" />;
+      name = "HAR";
+    } else if (id.includes("curl")) {
+      icon = <CurlIcon width={24} height={24} />;
+      name = "cURL";
     }
   }
-  return (<Fragment>{icon}{name}</Fragment>);
+  return (
+    <Fragment>
+      {icon}
+      {name}
+    </Fragment>
+  );
 }

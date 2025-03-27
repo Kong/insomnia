@@ -1,47 +1,47 @@
-import SwaggerParser from '@apidevtools/swagger-parser';
-import crypto from 'crypto';
-import { OpenAPIV2 } from 'openapi-types';
-import YAML from 'yaml';
+import SwaggerParser from "@apidevtools/swagger-parser";
+import crypto from "crypto";
+import { OpenAPIV2 } from "openapi-types";
+import YAML from "yaml";
 
-import type { Converter, Header, ImportRequest } from '../entities';
-import { unthrowableParseJson } from '../utils';
+import type { Converter, Header, ImportRequest } from "../entities";
+import { unthrowableParseJson } from "../utils";
 
-const SUPPORTED_SWAGGER_VERSION = '2.0';
-const MIMETYPE_JSON = 'application/json';
-const MIMETYPE_URLENCODED = 'application/x-www-form-urlencoded';
-const MIMETYPE_MULTIPART = 'multipart/form-data';
+const SUPPORTED_SWAGGER_VERSION = "2.0";
+const MIMETYPE_JSON = "application/json";
+const MIMETYPE_URLENCODED = "application/x-www-form-urlencoded";
+const MIMETYPE_MULTIPART = "multipart/form-data";
 const SUPPORTED_MIME_TYPES = [
   MIMETYPE_JSON,
   MIMETYPE_URLENCODED,
   MIMETYPE_MULTIPART,
 ];
-const WORKSPACE_ID = '__WORKSPACE_ID__';
+const WORKSPACE_ID = "__WORKSPACE_ID__";
 let requestCount = 1;
-export const id = 'swagger2';
-export const name = 'Swagger 2.0';
-export const description = 'Importer for Swagger 2.0 specification (json/yaml)';
+export const id = "swagger2";
+export const name = "Swagger 2.0";
+export const description = "Importer for Swagger 2.0 specification (json/yaml)";
 
 /* eslint-disable camelcase -- this file uses camel case too often */
 
 /**
  * Return Insomnia folder / request group
  */
-const importFolderItem = (parentId: string) => (
-  item: OpenAPIV2.TagObject,
-): ImportRequest => {
-  const hash = crypto
-    .createHash('sha1')
-    .update(item.name)
-    .digest('hex')
-    .slice(0, 8);
-  return {
-    parentId,
-    _id: `fld___WORKSPACE_ID__${hash}`,
-    _type: 'request_group',
-    name: item.name || 'Folder {requestGroupCount}',
-    description: item.description || '',
+const importFolderItem =
+  (parentId: string) =>
+  (item: OpenAPIV2.TagObject): ImportRequest => {
+    const hash = crypto
+      .createHash("sha1")
+      .update(item.name)
+      .digest("hex")
+      .slice(0, 8);
+    return {
+      parentId,
+      _id: `fld___WORKSPACE_ID__${hash}`,
+      _type: "request_group",
+      name: item.name || "Folder {requestGroupCount}",
+      description: item.description || "",
+    };
   };
-};
 
 /**
  * Parse string data into swagger 2.0 object (https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#swagger-object)
@@ -69,8 +69,8 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
         schemasPerMethod,
       ) as (keyof OpenAPIV2.PathItemObject)[];
       return methods
-        .filter(method => method !== 'parameters' && method !== '$ref')
-        .map(method => ({
+        .filter((method) => method !== "parameters" && method !== "$ref")
+        .map((method) => ({
           ...(schemasPerMethod[method] as OpenAPIV2.OperationObject),
           path,
           method,
@@ -81,7 +81,7 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
   const tags = document.tags || [];
 
   const implicitTags = endpointsSchemas
-    .map(endpointSchema => endpointSchema.tags)
+    .map((endpointSchema) => endpointSchema.tags)
     .flat()
     .reduce((distinct, value) => {
       // remove duplicates
@@ -90,8 +90,8 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
       }
       return distinct;
     }, [] as string[])
-    .filter(tag => !tags.map(tag => tag.name).includes(tag))
-    .map(name => ({ name, description: '' }));
+    .filter((tag) => !tags.map((tag) => tag.name).includes(tag))
+    .map((name) => ({ name, description: "" }));
 
   const folders = [...tags, ...implicitTags].map(
     importFolderItem(defaultParent),
@@ -106,14 +106,14 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
   );
 
   const requests: ImportRequest[] = [];
-  endpointsSchemas.map(endpointSchema => {
+  endpointsSchemas.map((endpointSchema) => {
     let { tags } = endpointSchema;
     if (!tags || tags.length === 0) {
-      tags = [''];
+      tags = [""];
     }
     tags.forEach((tag, index) => {
       const requestId = endpointSchema.operationId
-        ? `${endpointSchema.operationId}${index > 0 ? index : ''}`
+        ? `${endpointSchema.operationId}${index > 0 ? index : ""}`
         : `__REQUEST_${requestCount++}__`;
 
       const parentId = folderLookup[tag] || defaultParent;
@@ -146,13 +146,13 @@ const importRequest = (
 
   let headers = prepareHeaders(endpointSchema);
   const noContentTypeHeader = !headers?.find(
-    header => header.name === 'Content-Type',
+    (header) => header.name === "Content-Type",
   );
 
   if (body.mimeType && noContentTypeHeader) {
     headers = [
       {
-        name: 'Content-Type',
+        name: "Content-Type",
         disabled: false,
         value: body.mimeType,
       },
@@ -161,14 +161,14 @@ const importRequest = (
   }
 
   const request: ImportRequest = {
-    _type: 'request',
+    _type: "request",
     _id: requestId,
     parentId: parentId,
     name,
     method: endpointSchema.method?.toUpperCase(),
     url: `{{ _.base_url }}${pathWithParamsAsVariables(endpointSchema.path)}`,
     body,
-    description: endpointSchema.description || '',
+    description: endpointSchema.description || "",
     headers,
     parameters: prepareQueryParams(endpointSchema),
   };
@@ -218,81 +218,81 @@ const setupAuthentication = (
   for (const usedDefinition of usedDefinitions) {
     const securityScheme = securityDefinitions[usedDefinition];
 
-    if (securityScheme.type === 'basic') {
+    if (securityScheme.type === "basic") {
       request.authentication = {
-        type: 'basic',
+        type: "basic",
         disabled: false,
-        password: '{{ _.password }}',
-        username: '{{ _.username }}',
+        password: "{{ _.password }}",
+        username: "{{ _.username }}",
       };
     }
 
-    if (securityScheme.type === 'apiKey') {
-      if (securityScheme.in === 'header') {
+    if (securityScheme.type === "apiKey") {
+      if (securityScheme.in === "header") {
         request.headers?.push({
           name: securityScheme.name,
           disabled: false,
-          value: '{{ _.api_key }}',
+          value: "{{ _.api_key }}",
         });
       }
 
-      if (securityScheme.in === 'query') {
+      if (securityScheme.in === "query") {
         request.parameters?.push({
           name: securityScheme.name,
           disabled: false,
-          value: '{{ _.api_key }}',
+          value: "{{ _.api_key }}",
         });
       }
     }
 
-    if (securityScheme.type === 'oauth2') {
-      if (securityScheme.flow === 'implicit') {
+    if (securityScheme.type === "oauth2") {
+      if (securityScheme.flow === "implicit") {
         request.authentication = {
-          type: 'oauth2',
-          grantType: 'authorization_code',
+          type: "oauth2",
+          grantType: "authorization_code",
           disabled: false,
           authorizationUrl: securityScheme.authorizationUrl,
-          clientId: '{{ _.client_id }}',
-          scope: scopes.join(' '),
+          clientId: "{{ _.client_id }}",
+          scope: scopes.join(" "),
         };
       }
 
-      if (securityScheme.flow === 'password') {
+      if (securityScheme.flow === "password") {
         request.authentication = {
-          type: 'oauth2',
-          grantType: 'password',
+          type: "oauth2",
+          grantType: "password",
           disabled: false,
           accessTokenUrl: securityScheme.tokenUrl,
-          username: '{{ _.username }}',
-          password: '{{ _.password }}',
-          clientId: '{{ _.client_id }}',
-          clientSecret: '{{ _.client_secret }}',
-          scope: scopes.join(' '),
+          username: "{{ _.username }}",
+          password: "{{ _.password }}",
+          clientId: "{{ _.client_id }}",
+          clientSecret: "{{ _.client_secret }}",
+          scope: scopes.join(" "),
         };
       }
 
-      if (securityScheme.flow === 'application') {
+      if (securityScheme.flow === "application") {
         request.authentication = {
-          type: 'oauth2',
-          grantType: 'client_credentials',
+          type: "oauth2",
+          grantType: "client_credentials",
           disabled: false,
           accessTokenUrl: securityScheme.tokenUrl,
-          clientId: '{{ _.client_id }}',
-          clientSecret: '{{ _.client_secret }}',
-          scope: scopes.join(' '),
+          clientId: "{{ _.client_id }}",
+          clientSecret: "{{ _.client_secret }}",
+          scope: scopes.join(" "),
         };
       }
 
-      if (securityScheme.flow === 'accessCode') {
+      if (securityScheme.flow === "accessCode") {
         request.authentication = {
-          type: 'oauth2',
-          grantType: 'authorization_code',
+          type: "oauth2",
+          grantType: "authorization_code",
           disabled: false,
           accessTokenUrl: securityScheme.tokenUrl,
           authorizationUrl: securityScheme.authorizationUrl,
-          clientId: '{{ _.client_id }}',
-          clientSecret: '{{ _.client_secret }}',
-          scope: scopes.join(' '),
+          clientId: "{{ _.client_id }}",
+          clientSecret: "{{ _.client_secret }}",
+          scope: scopes.join(" "),
         };
       }
     }
@@ -307,7 +307,7 @@ const setupAuthentication = (
  * I.e. "/foo/:bar" => "/foo/{{ bar }}"
  */
 const pathWithParamsAsVariables = (path?: string) => {
-  return path?.replace(/{([^}]+)}/g, '{{ _.$1 }}');
+  return path?.replace(/{([^}]+)}/g, "{{ _.$1 }}");
 };
 
 /**
@@ -316,8 +316,8 @@ const pathWithParamsAsVariables = (path?: string) => {
 const prepareQueryParams = (endpointSchema: OpenAPIV2.OperationObject) => {
   return (
     convertParameters(
-      ((endpointSchema.parameters as unknown) as OpenAPIV2.Parameter[])?.filter(
-        parameter => parameter.in === 'query',
+      (endpointSchema.parameters as unknown as OpenAPIV2.Parameter[])?.filter(
+        (parameter) => parameter.in === "query",
       ),
     ) || []
   );
@@ -331,15 +331,15 @@ const prepareHeaders = (
 ): Header[] => {
   return (
     (convertParameters(
-      ((endpointSchema.parameters as unknown) as OpenAPIV2.Parameter[])?.filter(
-        parameter => parameter.in === 'header',
+      (endpointSchema.parameters as unknown as OpenAPIV2.Parameter[])?.filter(
+        (parameter) => parameter.in === "header",
       ),
     ) as Header[]) || []
   );
 };
 
 const resolve$ref = (document: OpenAPIV2.Document, $ref: string) => {
-  const [, ...parts] = $ref.split('/') as (keyof OpenAPIV2.Document)[];
+  const [, ...parts] = $ref.split("/") as (keyof OpenAPIV2.Document)[];
   return parts.reduce(
     (accumulator, path) => accumulator[path] as unknown as OpenAPIV2.Document,
     document,
@@ -358,8 +358,8 @@ const prepareBody = (
 ) => {
   const mimeTypes = endpointSchema.consumes || globalMimeTypes || [];
 
-  const supportedMimeType = mimeTypes.find(reqMimeType => {
-    return SUPPORTED_MIME_TYPES.some(supportedMimeType => {
+  const supportedMimeType = mimeTypes.find((reqMimeType) => {
+    return SUPPORTED_MIME_TYPES.some((supportedMimeType) => {
       return reqMimeType.includes(supportedMimeType);
     });
   });
@@ -367,18 +367,18 @@ const prepareBody = (
   if (supportedMimeType && supportedMimeType.includes(MIMETYPE_JSON)) {
     const parameters = endpointSchema.parameters || [];
     const bodyParameter = parameters.find(
-      parameter => (parameter as OpenAPIV2.Parameter).in === 'body',
+      (parameter) => (parameter as OpenAPIV2.Parameter).in === "body",
     );
 
     if (!bodyParameter) {
       return {};
     }
 
-    const type = (bodyParameter as OpenAPIV2.ParameterObject).type || 'object';
+    const type = (bodyParameter as OpenAPIV2.ParameterObject).type || "object";
     const example = generateParameterExample(type);
     let text;
 
-    if (type === 'object') {
+    if (type === "object") {
       const { schema } = bodyParameter as OpenAPIV2.ParameterObject;
       if (schema.$ref) {
         const definition = resolve$ref(document, schema.$ref);
@@ -396,11 +396,15 @@ const prepareBody = (
     };
   }
 
-  if (supportedMimeType && (supportedMimeType.includes(MIMETYPE_URLENCODED) || supportedMimeType.includes(MIMETYPE_MULTIPART))) {
+  if (
+    supportedMimeType &&
+    (supportedMimeType.includes(MIMETYPE_URLENCODED) ||
+      supportedMimeType.includes(MIMETYPE_MULTIPART))
+  ) {
     const parameters = endpointSchema.parameters || [];
-    const formDataParameters = ((parameters as unknown) as OpenAPIV2.Parameter[]).filter(
-      parameter => parameter.in === 'formData',
-    );
+    const formDataParameters = (
+      parameters as unknown as OpenAPIV2.Parameter[]
+    ).filter((parameter) => parameter.in === "formData");
 
     if (formDataParameters.length === 0) {
       return {};
@@ -422,17 +426,17 @@ const prepareBody = (
 };
 
 type TypeExample =
-  | 'string'
-  | 'string_email'
-  | 'string_date-time'
-  | 'string_byte'
-  | 'number'
-  | 'number_float'
-  | 'number_double'
-  | 'integer'
-  | 'boolean'
-  | 'object'
-  | 'array';
+  | "string"
+  | "string_email"
+  | "string_date-time"
+  | "string_byte"
+  | "number"
+  | "number_float"
+  | "number_double"
+  | "integer"
+  | "boolean"
+  | "object"
+  | "array";
 
 /**
  * Generate example value of parameter based on it's schema.
@@ -444,13 +448,13 @@ const generateParameterExample = (
 ) => {
   const typeExamples: {
     [kind in TypeExample]: (
-      parameter: OpenAPIV2.Parameter
+      parameter: OpenAPIV2.Parameter,
     ) => null | string | boolean | number | Record<string, unknown>;
   } = {
-    string: () => 'string',
-    string_email: () => 'user@example.com',
-    'string_date-time': () => new Date().toISOString(),
-    string_byte: () => 'ZXhhbXBsZQ==',
+    string: () => "string",
+    string_email: () => "user@example.com",
+    "string_date-time": () => new Date().toISOString(),
+    string_byte: () => "ZXhhbXBsZQ==",
     number: () => 0,
     number_float: () => 0.0,
     number_double: () => 0.0,
@@ -466,7 +470,7 @@ const generateParameterExample = (
       const { properties } = parameter;
       if (properties) {
         ancestors.push(parameter);
-        Object.keys(properties).forEach(propertyName => {
+        Object.keys(properties).forEach((propertyName) => {
           // @ts-expect-error there's no way, so far as I'm aware, for TypeScript to know what's actually going on here.
           example[propertyName] = generateParameterExample(
             properties[propertyName],
@@ -481,7 +485,7 @@ const generateParameterExample = (
     array: ({ items, collectionFormat }: OpenAPIV2.Parameter) => {
       const value = generateParameterExample(items, ancestors);
 
-      if (collectionFormat === 'csv') {
+      if (collectionFormat === "csv") {
         return value;
       } else {
         return [value];
@@ -489,11 +493,11 @@ const generateParameterExample = (
     },
   };
 
-  if (typeof parameter === 'string') {
+  if (typeof parameter === "string") {
     return typeExamples[parameter];
   }
 
-  if (typeof parameter === 'object') {
+  if (typeof parameter === "object") {
     const { type, format, example, default: defaultValue } = parameter;
 
     if (example) {
@@ -520,14 +524,14 @@ const generateParameterExample = (
  * Converts swagger schema of parameters into insomnia one.
  */
 const convertParameters = (parameters?: OpenAPIV2.Parameter[]) => {
-  return parameters?.map(parameter => {
+  return parameters?.map((parameter) => {
     const { required, name, type } = parameter;
 
-    if (type === 'file') {
+    if (type === "file") {
       return {
         name,
         disabled: required !== true,
-        type: 'file',
+        type: "file",
       };
     }
 
@@ -539,7 +543,7 @@ const convertParameters = (parameters?: OpenAPIV2.Parameter[]) => {
   });
 };
 
-export const convert: Converter = async rawData => {
+export const convert: Converter = async (rawData) => {
   requestCount = 1; // Validate
 
   let api = await parseDocument(rawData);
@@ -553,36 +557,36 @@ export const convert: Converter = async rawData => {
   } catch (err) {
     // We already know it's a Swagger doc so we will try to import it anyway instead
     // of bailing out here.
-    console.log('[swagger] Import file validation failed', err);
+    console.log("[swagger] Import file validation failed", err);
   } // Import
 
   const workspace: ImportRequest = {
-    _type: 'workspace',
+    _type: "workspace",
     _id: WORKSPACE_ID,
     parentId: null,
     name: `${api.info.title} ${api.info.version}`,
-    description: api.info.description || '', // scope is not set because it could be imported for design OR to generate requests
+    description: api.info.description || "", // scope is not set because it could be imported for design OR to generate requests
   };
 
   const baseEnv: ImportRequest = {
-    _type: 'environment',
-    _id: '__BASE_ENVIRONMENT_ID__',
+    _type: "environment",
+    _id: "__BASE_ENVIRONMENT_ID__",
     parentId: WORKSPACE_ID,
-    name: 'Base environment',
+    name: "Base environment",
     data: {
-      base_url: '{{ _.scheme }}://{{ _.host }}{{ _.base_path }}',
+      base_url: "{{ _.scheme }}://{{ _.host }}{{ _.base_path }}",
     },
   };
 
   const swaggerEnv: ImportRequest = {
-    _type: 'environment',
-    _id: 'env___BASE_ENVIRONMENT_ID___sub',
+    _type: "environment",
+    _id: "env___BASE_ENVIRONMENT_ID___sub",
     parentId: baseEnv._id,
-    name: 'Swagger env',
+    name: "Swagger env",
     data: {
-      base_path: api.basePath || '',
-      scheme: (api.schemes || ['http'])[0],
-      host: api.host || '',
+      base_path: api.basePath || "",
+      scheme: (api.schemes || ["http"])[0],
+      host: api.host || "",
     },
   };
   const endpoints = parseEndpoints(api);

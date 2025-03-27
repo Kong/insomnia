@@ -13,8 +13,8 @@ resources:
     method: POST
     parameters: []
     headers:
-      - name: 'Content-Type'
-        value: 'application/json'
+      - name: "Content-Type"
+        value: "application/json"
     authentication: {}
     metaSortKey: -1636141014553
     isPrivate: false

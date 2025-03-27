@@ -1,13 +1,13 @@
-import crypto from 'crypto';
-import { v4 as uuidv4 } from 'uuid';
+import crypto from "crypto";
+import { v4 as uuidv4 } from "uuid";
 
-import { database as db } from '../common/database';
-import type { BaseModel } from './index';
-export const name = 'Cookie Jar';
+import { database as db } from "../common/database";
+import type { BaseModel } from "./index";
+export const name = "Cookie Jar";
 
-export const type = 'CookieJar';
+export const type = "CookieJar";
 
-export const prefix = 'jar';
+export const prefix = "jar";
 
 export const canDuplicate = true;
 
@@ -37,13 +37,13 @@ export interface BaseCookieJar {
 
 export type CookieJar = BaseModel & BaseCookieJar;
 
-export const isCookieJar = (model: Pick<BaseModel, 'type'>): model is CookieJar => (
-  model.type === type
-);
+export const isCookieJar = (
+  model: Pick<BaseModel, "type">,
+): model is CookieJar => model.type === type;
 
 export function init() {
   return {
-    name: 'Default Jar',
+    name: "Default Jar",
     cookies: [],
   };
 }
@@ -53,14 +53,16 @@ export function migrate(doc: CookieJar) {
     doc = migrateCookieId(doc);
     return doc;
   } catch (e) {
-    console.log('[db] Error during cookie jar migration', e);
+    console.log("[db] Error during cookie jar migration", e);
     throw e;
   }
 }
 
 export async function create(patch: Partial<CookieJar>) {
   if (!patch.parentId) {
-    throw new Error(`New CookieJar missing \`parentId\`: ${JSON.stringify(patch)}`);
+    throw new Error(
+      `New CookieJar missing \`parentId\`: ${JSON.stringify(patch)}`,
+    );
   }
 
   return db.docCreate<CookieJar>(type, patch);
@@ -74,7 +76,7 @@ export async function getOrCreateForParentId(parentId: string) {
       parentId,
       // Deterministic ID. It helps reduce sync complexity since we won't have to
       // de-duplicate cookie jar.
-      _id: `${prefix}_${crypto.createHash('sha1').update(parentId).digest('hex')}`,
+      _id: `${prefix}_${crypto.createHash("sha1").update(parentId).digest("hex")}`,
     });
   } else {
     return cookieJars[0];
@@ -89,7 +91,10 @@ export async function getById(id: string): Promise<CookieJar | null> {
   return db.get(type, id);
 }
 
-export async function update(cookieJar: CookieJar, patch: Partial<CookieJar> = {}) {
+export async function update(
+  cookieJar: CookieJar,
+  patch: Partial<CookieJar> = {},
+) {
   return db.docUpdate(cookieJar, patch);
 }
 

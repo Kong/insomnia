@@ -58,16 +58,16 @@
 //     await page.getByText('main *').press('Escape');
 //     await page.getByTestId('CodeEditor').getByText('Endpoint Security').click();
 
-    // switch to the branch with the changes and check if they are there
-    // await page.getByTestId('git-dropdown').click();
-    // await page.getByText('abc').click();
-    // await page.getByTestId('git-dropdown').click();
-    // await page.getByText('Branches').click();
-    // await page.getByText('abc *').click();
-    // await page.getByRole('heading', { name: 'Branches', exact: true }).press('Escape');
-    // await page.getByLabel('Toggle preview').click();
-    // // TODO: the following action is flaky and seems pointless, added above operation to make it work
-    // await page.getByText('Endpoint Security test').click();
+// switch to the branch with the changes and check if they are there
+// await page.getByTestId('git-dropdown').click();
+// await page.getByText('abc').click();
+// await page.getByTestId('git-dropdown').click();
+// await page.getByText('Branches').click();
+// await page.getByText('abc *').click();
+// await page.getByRole('heading', { name: 'Branches', exact: true }).press('Escape');
+// await page.getByLabel('Toggle preview').click();
+// // TODO: the following action is flaky and seems pointless, added above operation to make it work
+// await page.getByText('Endpoint Security test').click();
 
 //     // check git history
 //     await page.getByTestId('git-dropdown').click();

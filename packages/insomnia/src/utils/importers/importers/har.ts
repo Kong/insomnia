@@ -1,10 +1,10 @@
-import type * as Har from 'har-format';
+import type * as Har from "har-format";
 
-import type { Body, Converter, ImportRequest } from '../entities';
+import type { Body, Converter, ImportRequest } from "../entities";
 
-export const id = 'har';
-export const name = 'HAR 1.2';
-export const description = 'Importer for HTTP Archive 1.2';
+export const id = "har";
+export const name = "HAR 1.2";
+export const description = "Importer for HTTP Archive 1.2";
 
 let requestCount = 1;
 
@@ -44,12 +44,12 @@ const importPostData = (postData?: Har.PostData): Body => {
     return {};
   }
 
-  const { params, mimeType = '', text = '' } = postData;
+  const { params, mimeType = "", text = "" } = postData;
 
   if (params && params.length) {
     return {
-      mimeType: mimeType || 'application/x-www-form-urlencoded',
-      params: params.map(({ name, fileName, value = '' }) => ({
+      mimeType: mimeType || "application/x-www-form-urlencoded",
+      params: params.map(({ name, fileName, value = "" }) => ({
         name,
         ...(fileName ? { fileName } : { value }),
       })),
@@ -65,13 +65,13 @@ const importPostData = (postData?: Har.PostData): Body => {
 const importRequest = (request: ImportRequest): ImportRequest => {
   const cookieHeaderValue = (request.cookies ?? [])
     .map(({ name, value }) => `${name}=${value}`)
-    .join('; ');
+    .join("; ");
 
   const headers = request.headers ? request.headers.map(removeComment) : [];
 
   // Convert cookie value to header
   const existingCookieHeader = headers.find(
-    header => header.name.toLowerCase() === 'cookie',
+    (header) => header.name.toLowerCase() === "cookie",
   );
 
   if (cookieHeaderValue && existingCookieHeader) {
@@ -80,17 +80,17 @@ const importRequest = (request: ImportRequest): ImportRequest => {
   } else if (cookieHeaderValue) {
     // No existing cookie header, so let's make a new one
     headers.push({
-      name: 'Cookie',
+      name: "Cookie",
       value: cookieHeaderValue,
     });
   }
 
   const count = requestCount++;
   return {
-    _type: 'request',
+    _type: "request",
     _id: `__REQ_${count}__`,
     name: request.comment || request.url || `HAR Import ${count}`,
-    parentId: '__WORKSPACE_ID__',
+    parentId: "__WORKSPACE_ID__",
     url: request.url,
     method: request.method?.toUpperCase(),
     body: importPostData(request.postData),
@@ -103,7 +103,7 @@ const importRequest = (request: ImportRequest): ImportRequest => {
   };
 };
 
-export const convert: Converter = rawData => {
+export const convert: Converter = (rawData) => {
   requestCount = 1;
 
   try {

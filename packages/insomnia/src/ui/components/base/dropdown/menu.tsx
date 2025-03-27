@@ -1,12 +1,12 @@
-import { getItemCount } from '@react-stately/collections';
-import type { AriaMenuProps } from '@react-types/menu';
-import type { Node } from '@react-types/shared';
-import React, { useRef } from 'react';
-import { useMenu } from 'react-aria';
-import { type TreeState, useTreeState } from 'react-stately';
+import { getItemCount } from "@react-stately/collections";
+import type { AriaMenuProps } from "@react-types/menu";
+import type { Node } from "@react-types/shared";
+import React, { useRef } from "react";
+import { useMenu } from "react-aria";
+import { type TreeState, useTreeState } from "react-stately";
 
-import { MenuItem } from './menu-item';
-import { MenuSection } from './menu-section';
+import { MenuItem } from "./menu-item";
+import { MenuSection } from "./menu-section";
 
 interface Props<T extends object> extends AriaMenuProps<T> {
   closeOnSelect?: boolean;
@@ -23,16 +23,16 @@ export const Menu = <T extends object>(props: Props<T>) => {
   return (
     <ul
       style={{
-        border: '1px solid var(--hl-sm)',
-        boxShadow: '0 0 1rem 0 rgba(0, 0, 0, 0.1)',
-        boxSizing: 'border-box',
-        background: 'var(--color-bg)',
-        margin: 'var(--padding-xxs) 3px',
-        paddingTop: 'var(--radius-md)',
-        paddingBottom: 'var(--radius-md)',
-        borderRadius: 'var(--radius-md)',
-        overflowY: 'auto',
-        maxHeight: '85vh',
+        border: "1px solid var(--hl-sm)",
+        boxShadow: "0 0 1rem 0 rgba(0, 0, 0, 0.1)",
+        boxSizing: "border-box",
+        background: "var(--color-bg)",
+        margin: "var(--padding-xxs) 3px",
+        paddingTop: "var(--radius-md)",
+        paddingBottom: "var(--radius-md)",
+        borderRadius: "var(--radius-md)",
+        overflowY: "auto",
+        maxHeight: "85vh",
       }}
       {...menuProps}
       ref={ref}
@@ -41,7 +41,7 @@ export const Menu = <T extends object>(props: Props<T>) => {
       {[...state.collection].map((item: Node<T>) => {
         // If the item is a section and the section has items, render a MenuSection
         // @ts-expect-error -- early deprecation
-        if (item.type === 'section' && getItemCount(item.childNodes) !== 0) {
+        if (item.type === "section" && getItemCount(item.childNodes) !== 0) {
           return (
             <MenuSection
               key={item.key}
@@ -53,7 +53,7 @@ export const Menu = <T extends object>(props: Props<T>) => {
         }
 
         // If the item is a dropdown item and has content, render a MenuItem
-        if (item.type === 'item' && item.rendered) {
+        if (item.type === "item" && item.rendered) {
           return (
             <MenuItem
               key={item.key}

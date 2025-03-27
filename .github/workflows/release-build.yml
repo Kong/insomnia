@@ -3,7 +3,7 @@ name: Release Build
 on:
   push:
     branches:
-      - 'release/**'
+      - "release/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -45,14 +45,14 @@ jobs:
             csc_link_secret: DESIGNER_MAC_CSC_LINK
             csc_key_password_secret: DESIGNER_MAC_CSC_KEY_PASSWORD
           - os: windows-latest
-            csc_link_secret: ''
-            csc_key_password_secret: ''
+            csc_link_secret: ""
+            csc_key_password_secret: ""
           - os: ubuntu-22.04
-            csc_link_secret: ''
-            csc_key_password_secret: ''
+            csc_link_secret: ""
+            csc_key_password_secret: ""
           - os: ubuntu-22.04-arm
-            csc_link_secret: ''
-            csc_key_password_secret: ''
+            csc_link_secret: ""
+            csc_key_password_secret: ""
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4
@@ -60,8 +60,8 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+          node-version-file: ".nvmrc"
+          cache: "npm"
           cache-dependency-path: package-lock.json
 
       - name: Install packages
@@ -74,9 +74,9 @@ jobs:
       - name: Package app (Linux ARM64 only)
         if: runner.os == 'Linux' && runner.arch == 'ARM64'
         shell: bash
-        run:  npm run app-package
+        run: npm run app-package
         env:
-          NODE_OPTIONS: '--max_old_space_size=6144'
+          NODE_OPTIONS: "--max_old_space_size=6144"
           BUILD_TARGETS: AppImage,tar.gz
 
       - name: Package app (Linux X64 only)
@@ -84,7 +84,7 @@ jobs:
         shell: bash
         run: npm run app-package
         env:
-          NODE_OPTIONS: '--max_old_space_size=6144'
+          NODE_OPTIONS: "--max_old_space_size=6144"
 
       # If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
       - name: Package app (MacOS only)
@@ -92,7 +92,7 @@ jobs:
         shell: bash
         run: npm run app-package
         env:
-          NODE_OPTIONS: '--max_old_space_size=6144'
+          NODE_OPTIONS: "--max_old_space_size=6144"
           APPLE_ID: ${{ runner.os == 'macOS' && secrets.DESIGNER_APPLE_ID || '' }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ runner.os == 'macOS' && secrets.DESIGNER_APPLE_ID_PASSWORD || '' }}
           CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
@@ -110,7 +110,6 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: ./build-secure-wrapper.sh CI
-
 
       - name: Move .dll and .exe files to /tosign (PowerShell)
         if: runner.os == 'Windows'
@@ -157,7 +156,6 @@ jobs:
           CREDENTIAL_ID: ${{secrets.ES_CREDENTIAL_ID}}
           TOTP_SECRET: ${{secrets.ES_TOTP_SECRET}}
 
-
       - name: Package inso
         run: |
           echo "Replacing electron binary with node binary"
@@ -181,7 +179,7 @@ jobs:
           VERSION: ${{ env.INSO_VERSION }}
 
       - name: Notarize Inso CLI installer (macOS only)
-        if:  runner.os == 'macOS'
+        if: runner.os == 'macOS'
         uses: lando/notarize-action@b5c3ef16cf2fbcf2af26dc58c90255ec242abeed # v2
         with:
           product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
@@ -265,7 +263,7 @@ jobs:
         id: release_version
         shell: bash
         run: |
-           echo "version=${BRANCH/release\//}" >> $GITHUB_OUTPUT
+          echo "version=${BRANCH/release\//}" >> $GITHUB_OUTPUT
         env:
           BRANCH: ${{ github.ref_name }}
 

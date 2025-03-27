@@ -1,11 +1,11 @@
-import { database as db } from '../common/database';
-import type { BaseModel } from './index';
+import { database as db } from "../common/database";
+import type { BaseModel } from "./index";
 
-export const name = 'PluginData';
+export const name = "PluginData";
 
-export const type = 'PluginData';
+export const type = "PluginData";
 
-export const prefix = 'plg';
+export const prefix = "plg";
 
 export const canDuplicate = false;
 
@@ -19,15 +19,15 @@ interface BasePluginData {
 
 export type PluginData = BaseModel & BasePluginData;
 
-export const isPluginData = (model: Pick<BaseModel, 'type'>): model is PluginData => (
-  model.type === type
-);
+export const isPluginData = (
+  model: Pick<BaseModel, "type">,
+): model is PluginData => model.type === type;
 
 export function init(): BasePluginData {
   return {
-    plugin: '',
-    key: '',
-    value: '',
+    plugin: "",
+    key: "",
+    value: "",
   };
 }
 
@@ -47,13 +47,13 @@ export async function upsertByKey(plugin: string, key: string, value: string) {
   const doc = await getByKey(plugin, key);
   return doc
     ? update(doc, {
-      value,
-    })
+        value,
+      })
     : create({
-      plugin,
-      key,
-      value,
-    });
+        plugin,
+        key,
+        value,
+      });
 }
 
 export async function removeByKey(plugin: string, key: string) {

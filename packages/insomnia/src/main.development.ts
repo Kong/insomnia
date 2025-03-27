@@ -1,39 +1,56 @@
-import electron, { app, session } from 'electron';
-import { BrowserWindow } from 'electron';
-import contextMenu from 'electron-context-menu';
-import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
-import fs from 'fs/promises';
-import path from 'path';
+import electron, { app, session } from "electron";
+import { BrowserWindow } from "electron";
+import contextMenu from "electron-context-menu";
+import installExtension, {
+  REACT_DEVELOPER_TOOLS,
+} from "electron-devtools-installer";
+import fs from "fs/promises";
+import path from "path";
 
-import { userDataFolder } from '../config/config.json';
-import { getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
-import { database } from './common/database';
-import log, { initializeLogging } from './common/log';
-import { SegmentEvent, trackSegmentEvent } from './main/analytics';
-import { registerInsomniaProtocols } from './main/api.protocol';
-import { backupIfNewerVersionAvailable } from './main/backup';
-import { registerGitServiceAPI } from './main/git-service';
-import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
-import { registergRPCHandlers } from './main/ipc/grpc';
-import { registerMainHandlers } from './main/ipc/main';
-import { registerSecretStorageHandlers } from './main/ipc/secret-storage';
-import { registerCurlHandlers } from './main/network/curl';
-import { registerWebSocketHandlers } from './main/network/websocket';
-import { watchProxySettings } from './main/proxy';
-import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
-import { checkIfRestartNeeded } from './main/squirrel-startup';
-import * as updates from './main/updates';
-import * as windowUtils from './main/window-utils';
-import * as models from './models/index';
-import type { Project, RemoteProject } from './models/project';
-import type { Stats } from './models/stats';
-import type { ToastNotification } from './ui/components/toast';
+import { userDataFolder } from "../config/config.json";
+import {
+  getAppVersion,
+  getProductName,
+  isDevelopment,
+  isMac,
+} from "./common/constants";
+import { database } from "./common/database";
+import log, { initializeLogging } from "./common/log";
+import { SegmentEvent, trackSegmentEvent } from "./main/analytics";
+import { registerInsomniaProtocols } from "./main/api.protocol";
+import { backupIfNewerVersionAvailable } from "./main/backup";
+import { registerGitServiceAPI } from "./main/git-service";
+import {
+  ipcMainOn,
+  ipcMainOnce,
+  registerElectronHandlers,
+} from "./main/ipc/electron";
+import { registergRPCHandlers } from "./main/ipc/grpc";
+import { registerMainHandlers } from "./main/ipc/main";
+import { registerSecretStorageHandlers } from "./main/ipc/secret-storage";
+import { registerCurlHandlers } from "./main/network/curl";
+import { registerWebSocketHandlers } from "./main/network/websocket";
+import { watchProxySettings } from "./main/proxy";
+import { initializeSentry, sentryWatchAnalyticsEnabled } from "./main/sentry";
+import { checkIfRestartNeeded } from "./main/squirrel-startup";
+import * as updates from "./main/updates";
+import * as windowUtils from "./main/window-utils";
+import * as models from "./models/index";
+import type { Project, RemoteProject } from "./models/project";
+import type { Stats } from "./models/stats";
+import type { ToastNotification } from "./ui/components/toast";
 
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage
 // ensure userData dir change is made before configure sentry SDK (https://docs.sentry.io/platforms/javascript/guides/electron/#app-userdata-directory)
-const dataPath = process.env.INSOMNIA_DATA_PATH || path.join(app.getPath('userData'), '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
-app.setPath('userData', dataPath);
+const dataPath =
+  process.env.INSOMNIA_DATA_PATH ||
+  path.join(
+    app.getPath("userData"),
+    "../",
+    isDevelopment() ? "insomnia-app" : userDataFolder,
+  );
+app.setPath("userData", dataPath);
 
 initializeLogging();
 
@@ -52,8 +69,8 @@ log.info(`Running version ${getAppVersion()}`);
 global.window = global.window || undefined;
 
 // setup right click menu
-app.on('web-contents-created', (_, contents) => {
-  if (contents.getType() === 'webview') {
+app.on("web-contents-created", (_, contents) => {
+  if (contents.getType() === "webview") {
     contextMenu({ window: contents });
   } else {
     contextMenu();
@@ -61,7 +78,7 @@ app.on('web-contents-created', (_, contents) => {
 });
 
 // When the app is first launched
-app.on('ready', async () => {
+app.on("ready", async () => {
   registerElectronHandlers();
   // @TODO - Maybe move the register stuff in the registerMainHandlers function
   registerMainHandlers();
@@ -72,14 +89,14 @@ app.on('ready', async () => {
   registerSecretStorageHandlers();
 
   /**
- * There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.
- * see: https://github.com/electron/electron/issues/22995
- * On macOS the OS spellchecker is used and therefore we do not download any dictionary files.
- * This API is a no-op on macOS.
- */
+   * There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.
+   * see: https://github.com/electron/electron/issues/22995
+   * On macOS the OS spellchecker is used and therefore we do not download any dictionary files.
+   * This API is a no-op on macOS.
+   */
   const disableSpellcheckerDownload = () => {
     electron.session.defaultSession.setSpellCheckerDictionaryDownloadURL(
-      'https://00.00/'
+      "https://00.00/",
     );
   };
   disableSpellcheckerDownload();
@@ -87,11 +104,15 @@ app.on('ready', async () => {
   if (isDevelopment()) {
     try {
       const extensions = [REACT_DEVELOPER_TOOLS];
-      const extensionsPlural = extensions.length > 0 ? 's' : '';
-      const names = await Promise.all(extensions.map(extension => installExtension(extension)));
-      console.log(`[electron-extensions] Added DevTools Extension${extensionsPlural}: ${names.join(', ')}`);
+      const extensionsPlural = extensions.length > 0 ? "s" : "";
+      const names = await Promise.all(
+        extensions.map((extension) => installExtension(extension)),
+      );
+      console.log(
+        `[electron-extensions] Added DevTools Extension${extensionsPlural}: ${names.join(", ")}`,
+      );
     } catch (err) {
-      console.log('[electron-extensions] An error occurred: ', err);
+      console.log("[electron-extensions] An error occurred: ", err);
     }
   }
 
@@ -106,45 +127,59 @@ app.on('ready', async () => {
   // Init the rest
   await updates.init();
   // recursive = ignore already exists error
-  await fs.mkdir(path.join(dataPath, 'responses'), { recursive: true });
+  await fs.mkdir(path.join(dataPath, "responses"), { recursive: true });
 });
 
 // Set as default protocol
-const defaultProtocol = `insomnia${isDevelopment() ? 'dev' : ''}`;
+const defaultProtocol = `insomnia${isDevelopment() ? "dev" : ""}`;
 const fullDefaultProtocol = `${defaultProtocol}://`;
-const defaultProtocolSuccessful = app.setAsDefaultProtocolClient(defaultProtocol);
+const defaultProtocolSuccessful =
+  app.setAsDefaultProtocolClient(defaultProtocol);
 if (defaultProtocolSuccessful) {
-  console.log(`[electron client protocol] successfully set default protocol '${fullDefaultProtocol}'`);
+  console.log(
+    `[electron client protocol] successfully set default protocol '${fullDefaultProtocol}'`,
+  );
 } else {
-  console.error(`[electron client protocol] FAILED to set default protocol '${fullDefaultProtocol}'`);
+  console.error(
+    `[electron client protocol] FAILED to set default protocol '${fullDefaultProtocol}'`,
+  );
   const isDefaultAlready = app.isDefaultProtocolClient(defaultProtocol);
   if (isDefaultAlready) {
-    console.log(`[electron client protocol] the current executable is the default protocol for '${fullDefaultProtocol}'`);
+    console.log(
+      `[electron client protocol] the current executable is the default protocol for '${fullDefaultProtocol}'`,
+    );
   } else {
-    console.log(`[electron client protocol] the current executable is not the default protocol for '${fullDefaultProtocol}'`);
+    console.log(
+      `[electron client protocol] the current executable is not the default protocol for '${fullDefaultProtocol}'`,
+    );
   }
 
   // Note: `getApplicationInfoForProtocol` is not available on Linux, so we use `getApplicationNameForProtocol` instead
-  const applicationName = app.getApplicationNameForProtocol(fullDefaultProtocol);
+  const applicationName =
+    app.getApplicationNameForProtocol(fullDefaultProtocol);
   if (applicationName) {
-    console.log(`[electron client protocol] the default application set for '${fullDefaultProtocol}' is '${applicationName}'`);
+    console.log(
+      `[electron client protocol] the default application set for '${fullDefaultProtocol}' is '${applicationName}'`,
+    );
   } else {
-    console.error(`[electron client protocol] the default application set for '${fullDefaultProtocol}' was not found`);
+    console.error(
+      `[electron client protocol] the default application set for '${fullDefaultProtocol}' was not found`,
+    );
   }
 }
 
 // Quit when all windows are closed (except on Mac).
-app.on('window-all-closed', () => {
+app.on("window-all-closed", () => {
   if (!isMac()) {
     app.quit();
   }
 });
 // Mac-only, when the user clicks the doc icon
-app.on('activate', (_error, hasVisibleWindows) => {
+app.on("activate", (_error, hasVisibleWindows) => {
   // Create a new window when clicking the doc icon if there isn't one open
   if (!hasVisibleWindows) {
     try {
-      console.log('[main] creating new window for MacOS activate event');
+      console.log("[main] creating new window for MacOS activate event");
       windowUtils.createWindow();
     } catch {
       // This might happen if 'ready' hasn't fired yet. So we're just going
@@ -158,13 +193,16 @@ const _launchApp = async () => {
   await _trackStats();
   let window: BrowserWindow;
   // Handle URLs sent via command line args
-  ipcMainOnce('halfSecondAfterAppStart', () => {
-    console.log('[main] Window ready, handling command line arguments', process.argv);
-    const args = process.argv.slice(1).filter(a => a !== '.');
-    console.log('[main] Check args and create windows', args);
+  ipcMainOnce("halfSecondAfterAppStart", () => {
+    console.log(
+      "[main] Window ready, handling command line arguments",
+      process.argv,
+    );
+    const args = process.argv.slice(1).filter((a) => a !== ".");
+    console.log("[main] Check args and create windows", args);
     if (args.length) {
       window = windowUtils.createWindowsAndReturnMain();
-      window.webContents.send('shell:open', args.join());
+      window.webContents.send("shell:open", args.join());
     }
   });
   // Disable deep linking in playwright e2e tests in order to run multiple tests in parallel
@@ -172,12 +210,15 @@ const _launchApp = async () => {
     // Deep linking logic - https://www.electronjs.org/docs/latest/tutorial/launch-app-from-url-in-another-app
     const gotTheLock = app.requestSingleInstanceLock();
     if (!gotTheLock) {
-      console.error('[app] Failed to get instance lock');
+      console.error("[app] Failed to get instance lock");
       app.quit();
     } else {
       // Called when second instance launched with args (Windows/Linux)
-      app.on('second-instance', (_1, args) => {
-        console.log('[main] Second instance listener received:', args.join('||'));
+      app.on("second-instance", (_1, args) => {
+        console.log(
+          "[main] Second instance listener received:",
+          args.join("||"),
+        );
         window = windowUtils.createWindowsAndReturnMain();
         if (window) {
           if (window.isMinimized()) {
@@ -186,12 +227,15 @@ const _launchApp = async () => {
           window.focus();
         }
         const lastArg = args.slice(-1).join();
-        console.log('[main] Open Deep Link URL sent from second instance', lastArg);
-        window.webContents.send('shell:open', lastArg);
+        console.log(
+          "[main] Open Deep Link URL sent from second instance",
+          lastArg,
+        );
+        window.webContents.send("shell:open", lastArg);
       });
       window = windowUtils.createWindowsAndReturnMain({ firstLaunch: true });
       const openDeepLinkUrl = (url: string) => {
-        console.log('[main] Open Deep Link URL', url);
+        console.log("[main] Open Deep Link URL", url);
         window = windowUtils.createWindowsAndReturnMain();
         if (window) {
           if (window.isMinimized()) {
@@ -201,12 +245,12 @@ const _launchApp = async () => {
         } else {
           window = windowUtils.createWindowsAndReturnMain();
         }
-        window.webContents.send('shell:open', url);
+        window.webContents.send("shell:open", url);
       };
-      app.on('open-url', (_event, url) => {
+      app.on("open-url", (_event, url) => {
         openDeepLinkUrl(url);
       });
-      ipcMainOn('openDeepLink', (_event, url) => {
+      ipcMainOn("openDeepLink", (_event, url) => {
         openDeepLinkUrl(url);
       });
     }
@@ -233,19 +277,36 @@ async function _createModelInstances() {
   await models.stats.get();
   await models.settings.getOrCreate();
   try {
-    const scratchpadProject = await models.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
-    const scratchPad = await models.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
+    const scratchpadProject = await models.project.getById(
+      models.project.SCRATCHPAD_PROJECT_ID,
+    );
+    const scratchPad = await models.workspace.getById(
+      models.workspace.SCRATCHPAD_WORKSPACE_ID,
+    );
     if (!scratchpadProject) {
-      console.log('[main] Initializing Scratch Pad Project');
-      await models.project.create({ _id: models.project.SCRATCHPAD_PROJECT_ID, name: getProductName(), remoteId: null, parentId: models.organization.SCRATCHPAD_ORGANIZATION_ID });
+      console.log("[main] Initializing Scratch Pad Project");
+      await models.project.create({
+        _id: models.project.SCRATCHPAD_PROJECT_ID,
+        name: getProductName(),
+        remoteId: null,
+        parentId: models.organization.SCRATCHPAD_ORGANIZATION_ID,
+      });
     }
 
     if (!scratchPad) {
-      console.log('[main] Initializing Scratch Pad');
-      await models.workspace.create({ _id: models.workspace.SCRATCHPAD_WORKSPACE_ID, name: 'Scratch Pad', parentId: models.project.SCRATCHPAD_PROJECT_ID, scope: 'collection' });
+      console.log("[main] Initializing Scratch Pad");
+      await models.workspace.create({
+        _id: models.workspace.SCRATCHPAD_WORKSPACE_ID,
+        name: "Scratch Pad",
+        parentId: models.project.SCRATCHPAD_PROJECT_ID,
+        scope: "collection",
+      });
     }
   } catch (err) {
-    console.warn('[main] Failed to create default project. It probably already exists', err);
+    console.warn(
+      "[main] Failed to create default project. It probably already exists",
+      err,
+    );
   }
 }
 
@@ -266,10 +327,13 @@ async function _trackStats() {
     _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
   });
 
-  const remoteProjects = await database.count<RemoteProject>(models.project.type, {
-    remoteId: { $ne: null },
-    parentId: { $ne: null },
-  });
+  const remoteProjects = await database.count<RemoteProject>(
+    models.project.type,
+    {
+      remoteId: { $ne: null },
+      parentId: { $ne: null },
+    },
+  );
 
   trackSegmentEvent(SegmentEvent.appStarted, {
     localProjects,
@@ -279,7 +343,7 @@ async function _trackStats() {
     executedRequests: stats.executedRequests,
   });
 
-  ipcMainOnce('halfSecondAfterAppStart', async () => {
+  ipcMainOnce("halfSecondAfterAppStart", async () => {
     backupIfNewerVersionAvailable();
     const { currentVersion, launches, lastVersion } = stats;
 
@@ -288,10 +352,10 @@ async function _trackStats() {
     if (!justUpdated || !currentVersion) {
       return;
     }
-    console.log('[main] App update detected', currentVersion, lastVersion);
+    console.log("[main] App update detected", currentVersion, lastVersion);
     const notification: ToastNotification = {
       key: `updated-${currentVersion}`,
-      url: 'https://github.com/Kong/insomnia/releases',
+      url: "https://github.com/Kong/insomnia/releases",
       cta: "See What's New",
       message: `Updated to ${currentVersion}`,
     };
@@ -299,7 +363,7 @@ async function _trackStats() {
     setTimeout(async () => {
       for (const window of BrowserWindow.getAllWindows()) {
         // @ts-expect-error -- TSCONVERSION likely needs to be window.webContents.send instead
-        window.send('show-notification', notification);
+        window.send("show-notification", notification);
       }
     }, 5000);
   });

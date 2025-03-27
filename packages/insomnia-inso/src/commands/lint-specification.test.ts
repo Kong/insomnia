@@ -1,10 +1,9 @@
-import path from 'path';
-import { describe, expect, it } from 'vitest';
+import path from "path";
+import { describe, expect, it } from "vitest";
 
-import { lintSpecification } from './lint-specification';
+import { lintSpecification } from "./lint-specification";
 
-describe('lint specification', () => {
-
+describe("lint specification", () => {
   const specContent = `openapi: '3.0.2'
 info:
   title: Sample Spec
@@ -36,14 +35,17 @@ paths:
         '200':
           description: OK`;
 
-  it('should return true for linting passed', async () => {
+  it("should return true for linting passed", async () => {
     const result = await lintSpecification({ specContent });
     expect(result.isValid).toBe(true);
   });
 
   // TODO: fix;
-  it.skip('should lint specification with custom ruleset', async () => {
-    const rulesetFileName = path.join(process.cwd(), 'src/commands/fixtures/with-ruleset/.spectral.yaml');
+  it.skip("should lint specification with custom ruleset", async () => {
+    const rulesetFileName = path.join(
+      process.cwd(),
+      "src/commands/fixtures/with-ruleset/.spectral.yaml",
+    );
     const result = await lintSpecification({
       specContent: `openapi: 3.0.1
 info:
@@ -66,12 +68,13 @@ paths:
       responses:
         '200':
           description: OK
-`, rulesetFileName,
+`,
+      rulesetFileName,
     });
     expect(result.isValid).toBe(true);
   });
 
-  it('should return false for linting failed', async () => {
+  it("should return false for linting failed", async () => {
     const badSpec = `openapi: '3.0.2'                                                                            
 info:
   title: Global Security

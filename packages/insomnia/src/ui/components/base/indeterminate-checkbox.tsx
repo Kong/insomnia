@@ -1,11 +1,15 @@
-import React, { type FC, type HTMLAttributes, useEffect, useRef } from 'react';
+import React, { type FC, type HTMLAttributes, useEffect, useRef } from "react";
 
 interface Props extends HTMLAttributes<HTMLInputElement> {
   indeterminate: boolean;
   checked: boolean;
 }
 
-export const IndeterminateCheckbox: FC<Props> = ({ checked, indeterminate, ...otherProps }) => {
+export const IndeterminateCheckbox: FC<Props> = ({
+  checked,
+  indeterminate,
+  ...otherProps
+}) => {
   const checkRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -15,11 +19,5 @@ export const IndeterminateCheckbox: FC<Props> = ({ checked, indeterminate, ...ot
     }
   }, [checked, indeterminate]);
 
-  return (
-    <input
-      type="checkbox"
-      ref={checkRef}
-      {...otherProps}
-    />
-  );
+  return <input type="checkbox" ref={checkRef} {...otherProps} />;
 };

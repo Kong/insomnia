@@ -1,45 +1,59 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
-import { queryXPath } from './query';
+import { queryXPath } from "./query";
 /**
-* @vitest-environment jsdom
-*/
-describe('queryXPath()', () => {
-  it('handles missing query', () => {
+ * @vitest-environment jsdom
+ */
+describe("queryXPath()", () => {
+  it("handles missing query", () => {
     expect(() => {
-      queryXPath('<foo><bar></bar></foo>');
-    }).toThrowError('Must pass an XPath query.');
+      queryXPath("<foo><bar></bar></foo>");
+    }).toThrowError("Must pass an XPath query.");
   });
 
-  it('handles basic query', () => {
-    expect(queryXPath('<x><y>foo</y><y>bar</y></x>', '//y')).toEqual([
-      { inner: 'foo', outer: '<y>foo</y>' },
-      { inner: 'bar', outer: '<y>bar</y>' },
+  it("handles basic query", () => {
+    expect(queryXPath("<x><y>foo</y><y>bar</y></x>", "//y")).toEqual([
+      { inner: "foo", outer: "<y>foo</y>" },
+      { inner: "bar", outer: "<y>bar</y>" },
     ]);
   });
 
-  it('handles attribute query', () => {
-    expect(queryXPath('<x><y foo="bar">foo</y><y hi="there">bar</y></x>', '//*[@foo="bar"]')).toEqual([
-      { inner: 'foo', outer: '<y foo="bar">foo</y>' },
+  it("handles attribute query", () => {
+    expect(
+      queryXPath(
+        '<x><y foo="bar">foo</y><y hi="there">bar</y></x>',
+        '//*[@foo="bar"]',
+      ),
+    ).toEqual([{ inner: "foo", outer: '<y foo="bar">foo</y>' }]);
+  });
+
+  it("handles string query", () => {
+    expect(
+      queryXPath("<x><y>foo</y><y>bar</y></x>", "substring(//y[1], 2)"),
+    ).toEqual([{ inner: "oo", outer: "oo" }]);
+  });
+
+  it("handles text() query", () => {
+    expect(
+      queryXPath(
+        "<book><title>Harry</title><title>Potter</title></book>",
+        "local-name(/book)",
+      ),
+    ).toEqual([{ inner: "book", outer: "book" }]);
+    expect(
+      queryXPath(
+        "<book><title>Harry</title><title>Potter</title></book>",
+        "//title/text()",
+      ),
+    ).toEqual([
+      { inner: "Harry", outer: "Harry" },
+      { inner: "Potter", outer: "Potter" },
     ]);
   });
 
-  it('handles string query', () => {
-    expect(queryXPath('<x><y>foo</y><y>bar</y></x>', 'substring(//y[1], 2)')).toEqual([
-      { inner: 'oo', outer: 'oo' },
-    ]);
-  });
-
-  it('handles text() query', () => {
-    expect(queryXPath('<book><title>Harry</title><title>Potter</title></book>', 'local-name(/book)'))
-      .toEqual([{ 'inner': 'book', 'outer': 'book' }]);
-    expect(queryXPath('<book><title>Harry</title><title>Potter</title></book>', '//title/text()'))
-      .toEqual([{ 'inner': 'Harry', 'outer': 'Harry' }, { 'inner': 'Potter', 'outer': 'Potter' }]);
-  });
-
-  it('handles invalid query', () => {
+  it("handles invalid query", () => {
     expect(() => {
-      queryXPath('<hi>there</hi>', '//[]');
-    }).toThrowError('XPath parse error');
+      queryXPath("<hi>there</hi>", "//[]");
+    }).toThrowError("XPath parse error");
   });
 });

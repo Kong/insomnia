@@ -1,10 +1,10 @@
-import React, { Suspense } from 'react';
+import React, { Suspense } from "react";
 
-import { useAvatarImageCache } from '../hooks/image-cache';
+import { useAvatarImageCache } from "../hooks/image-cache";
 
 const getNameInitials = (name: string) => {
   // Split on whitespace and take first letter of each word
-  const words = name.toUpperCase().split(' ');
+  const words = name.toUpperCase().split(" ");
   const firstWord = words[0];
   const lastWord = words[words.length - 1];
 
@@ -19,7 +19,7 @@ const getNameInitials = (name: string) => {
     return iconMatch[0];
   }
 
-  return `${firstWord.charAt(0)}${lastWord ? lastWord.charAt(0) : ''}`;
+  return `${firstWord.charAt(0)}${lastWord ? lastWord.charAt(0) : ""}`;
 };
 
 const Avatar = ({ src, alt }: { src: string; alt: string }) => {
@@ -28,7 +28,7 @@ const Avatar = ({ src, alt }: { src: string; alt: string }) => {
     <img
       alt={alt}
       src={imageUrl}
-      className="h-full w-full aspect-square object-cover"
+      className="aspect-square h-full w-full object-cover"
       aria-label={alt}
     />
   );
@@ -43,14 +43,20 @@ export const OrganizationAvatar = ({
 }) => {
   if (!src) {
     return (
-      <div className="flex items-center justify-center w-full h-full p-[--padding-md]">
+      <div className="flex h-full w-full items-center justify-center p-[--padding-md]">
         {getNameInitials(alt)}
       </div>
     );
   }
 
   return (
-    <Suspense fallback={<div className='flex items-center justify-center w-full h-full p-[--padding-md]'>{getNameInitials(alt)}</div>}>
+    <Suspense
+      fallback={
+        <div className="flex h-full w-full items-center justify-center p-[--padding-md]">
+          {getNameInitials(alt)}
+        </div>
+      }
+    >
       <Avatar src={src} alt={alt} />
     </Suspense>
   );

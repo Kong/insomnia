@@ -1,7 +1,7 @@
-import React, { type FC, PureComponent } from 'react';
+import React, { type FC, PureComponent } from "react";
 
-import type { HandleRender } from '../../templating/types';
-import { useNunjucks } from '../context/nunjucks/use-nunjucks';
+import type { HandleRender } from "../../templating/types";
+import { useNunjucks } from "../context/nunjucks/use-nunjucks";
 
 interface Props {
   children: string;
@@ -14,8 +14,8 @@ interface State {
 
 class RenderedTextInternal extends PureComponent<Props, State> {
   state: State = {
-    renderedText: '',
-    error: '',
+    renderedText: "",
+    error: "",
   };
 
   async _render() {
@@ -29,7 +29,7 @@ class RenderedTextInternal extends PureComponent<Props, State> {
       const renderedText = await render(children);
       this.setState({
         renderedText,
-        error: '',
+        error: "",
       });
     } catch (err) {
       this.setState({
@@ -52,20 +52,20 @@ class RenderedTextInternal extends PureComponent<Props, State> {
         <span
           className="font-error"
           style={{
-            fontSize: '0.9em',
-            fontStyle: 'italic',
+            fontSize: "0.9em",
+            fontStyle: "italic",
           }}
         >
-          {this.state.error || 'Unknown Error'}
+          {this.state.error || "Unknown Error"}
         </span>
       );
     } else {
-      return this.state.renderedText || '';
+      return this.state.renderedText || "";
     }
   }
 }
 
-export const RenderedText: FC<Omit<Props, 'render'>> = props => {
+export const RenderedText: FC<Omit<Props, "render">> = (props) => {
   const { handleRender } = useNunjucks();
 
   return <RenderedTextInternal {...props} render={handleRender} />;

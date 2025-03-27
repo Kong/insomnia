@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 export const generate = vi.fn();
 export const generateToFile = vi.fn();

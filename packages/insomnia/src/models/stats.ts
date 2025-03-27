@@ -1,17 +1,17 @@
-import { database as db } from '../common/database';
-import { isGrpcRequest } from './grpc-request';
-import type { BaseModel } from './index';
-import type { Project } from './project';
-import { isRequest } from './request';
-import type { RequestGroup } from './request-group';
-import { isWebSocketRequest } from './websocket-request';
-import type { Workspace } from './workspace';
+import { database as db } from "../common/database";
+import { isGrpcRequest } from "./grpc-request";
+import type { BaseModel } from "./index";
+import type { Project } from "./project";
+import { isRequest } from "./request";
+import type { RequestGroup } from "./request-group";
+import { isWebSocketRequest } from "./websocket-request";
+import type { Workspace } from "./workspace";
 
-export const name = 'Stats';
+export const name = "Stats";
 
-export const type = 'Stats';
+export const type = "Stats";
 
-export const prefix = 'sta';
+export const prefix = "sta";
 
 export const canDuplicate = false;
 
@@ -30,9 +30,8 @@ export interface BaseStats {
 
 export type Stats = BaseModel & BaseStats;
 
-export const isStats = (model: Pick<BaseModel, 'type'>): model is Stats => (
-  model.type === type
-);
+export const isStats = (model: Pick<BaseModel, "type">): model is Stats =>
+  model.type === type;
 
 export function init(): BaseStats {
   return {
@@ -61,7 +60,7 @@ export async function update(patch: Partial<Stats>) {
 }
 
 export async function get() {
-  const results = await db.all<Stats>(type) || [];
+  const results = (await db.all<Stats>(type)) || [];
 
   if (results.length === 0) {
     return create();
@@ -111,17 +110,25 @@ export async function incrementExecutedRequests() {
   });
 }
 
-export async function incrementCreatedRequestsForDescendents(doc: Workspace | RequestGroup) {
+export async function incrementCreatedRequestsForDescendents(
+  doc: Workspace | RequestGroup,
+) {
   const docs = await db.withDescendants(doc);
-  const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc) || isWebSocketRequest(doc));
+  const requests = docs.filter(
+    (doc) => isRequest(doc) || isGrpcRequest(doc) || isWebSocketRequest(doc),
+  );
   await incrementRequestStats({
     createdRequests: requests.length,
   });
 }
 
-export async function incrementDeletedRequestsForDescendents(doc: Workspace | RequestGroup | Project) {
+export async function incrementDeletedRequestsForDescendents(
+  doc: Workspace | RequestGroup | Project,
+) {
   const docs = await db.withDescendants(doc);
-  const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc) || isWebSocketRequest(doc));
+  const requests = docs.filter(
+    (doc) => isRequest(doc) || isGrpcRequest(doc) || isWebSocketRequest(doc),
+  );
   await incrementRequestStats({
     deletedRequests: requests.length,
   });

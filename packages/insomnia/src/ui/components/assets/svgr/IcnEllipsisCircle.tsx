@@ -1,5 +1,5 @@
-import React, { memo, type SVGProps } from 'react';
-export const SvgIcnEllipsisCircle = memo<SVGProps<SVGSVGElement>>(props => (
+import React, { memo, type SVGProps } from "react";
+export const SvgIcnEllipsisCircle = memo<SVGProps<SVGSVGElement>>((props) => (
   <svg
     width="1em"
     height="1em"

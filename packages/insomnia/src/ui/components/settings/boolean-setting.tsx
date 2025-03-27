@@ -1,11 +1,11 @@
-import React, { type FC, type ReactNode } from 'react';
+import React, { type FC, type ReactNode } from "react";
 
-import type { SettingsOfType } from '../../../common/settings';
-import { useSettingsPatcher } from '../../hooks/use-request';
-import { useRootLoaderData } from '../../routes/root';
-import { HelpTooltip } from '../help-tooltip';
-import { showModal } from '../modals';
-import { AskModal } from '../modals/ask-modal';
+import type { SettingsOfType } from "../../../common/settings";
+import { useSettingsPatcher } from "../../hooks/use-request";
+import { useRootLoaderData } from "../../routes/root";
+import { HelpTooltip } from "../help-tooltip";
+import { showModal } from "../modals";
+import { AskModal } from "../modals/ask-modal";
 
 export const BooleanSetting: FC<{
   help?: string;
@@ -22,9 +22,7 @@ export const BooleanSetting: FC<{
   confirmMessage,
   disabled = false,
 }) => {
-  const {
-    settings,
-  } = useRootLoaderData();
+  const { settings } = useRootLoaderData();
   if (!settings.hasOwnProperty(setting)) {
     throw new Error(`Invalid boolean setting name ${setting}`);
   }
@@ -37,17 +35,22 @@ export const BooleanSetting: FC<{
           <input
             checked={Boolean(settings[setting])}
             name={setting}
-            onChange={event => {
+            onChange={(event) => {
               const isChecked = event.currentTarget.checked;
               if (confirmBeforeToggle) {
-                const confirmMsg = typeof confirmMessage === 'function' ? confirmMessage(isChecked) : null;
+                const confirmMsg =
+                  typeof confirmMessage === "function"
+                    ? confirmMessage(isChecked)
+                    : null;
                 showModal(AskModal, {
-                  title: `${isChecked ? 'Enable' : 'Disable'} Preference`,
-                  message: confirmMsg || `Are you sure to ${isChecked ? 'enable' : 'disable'} the preference: ${label}?`,
+                  title: `${isChecked ? "Enable" : "Disable"} Preference`,
+                  message:
+                    confirmMsg ||
+                    `Are you sure to ${isChecked ? "enable" : "disable"} the preference: ${label}?`,
                   onDone: async (isYes: boolean) => {
                     if (isYes) {
                       patchSettings({ [setting]: isChecked });
-                    };
+                    }
                   },
                 });
               } else {
@@ -57,10 +60,10 @@ export const BooleanSetting: FC<{
             type="checkbox"
             disabled={disabled}
           />
-            {label}
-            {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
-          </label>
-        </div>
-      </>
-    );
-  };
+          {label}
+          {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
+        </label>
+      </div>
+    </>
+  );
+};

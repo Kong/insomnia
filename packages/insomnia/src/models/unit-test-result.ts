@@ -1,13 +1,13 @@
-import type { TestResults } from 'insomnia-testing';
+import type { TestResults } from "insomnia-testing";
 
-import { database as db } from '../common/database';
-import type { BaseModel } from './index';
+import { database as db } from "../common/database";
+import type { BaseModel } from "./index";
 
-export const name = 'Unit Test Result';
+export const name = "Unit Test Result";
 
-export const type = 'UnitTestResult';
+export const type = "UnitTestResult";
 
-export const prefix = 'utr';
+export const prefix = "utr";
 
 export const canDuplicate = false;
 
@@ -19,9 +19,9 @@ export interface BaseUnitTestResult {
 
 export type UnitTestResult = BaseModel & BaseUnitTestResult;
 
-export const isUnitTestResult = (model: Pick<BaseModel, 'type'>): model is UnitTestResult => (
-  model.type === type
-);
+export const isUnitTestResult = (
+  model: Pick<BaseModel, "type">,
+): model is UnitTestResult => model.type === type;
 
 export function init() {
   return {
@@ -35,13 +35,18 @@ export function migrate(doc: UnitTestResult) {
 
 export function create(patch: Partial<UnitTestResult> = {}) {
   if (!patch.parentId) {
-    throw new Error('New UnitTestResult missing `parentId` ' + JSON.stringify(patch));
+    throw new Error(
+      "New UnitTestResult missing `parentId` " + JSON.stringify(patch),
+    );
   }
 
   return db.docCreate(type, patch);
 }
 
-export function update(unitTest: UnitTestResult, patch: Partial<UnitTestResult>) {
+export function update(
+  unitTest: UnitTestResult,
+  patch: Partial<UnitTestResult>,
+) {
   return db.docUpdate(unitTest, patch);
 }
 

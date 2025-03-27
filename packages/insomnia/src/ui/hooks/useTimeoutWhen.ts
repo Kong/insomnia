@@ -1,5 +1,4 @@
-
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 // https://github.com/imbhargav5/rooks/blob/main/src/hooks/useTimeoutWhen.ts
 /**
  * A setTimeout hook that calls a callback after a timeout duration
@@ -12,7 +11,7 @@ import { useEffect, useRef } from 'react';
 function useTimeoutWhen(
   callback_: () => void,
   timeoutDelayMs = 0,
-  when = true
+  when = true,
 ): void {
   const savedRefCallback = useRef<() => any>();
 
@@ -26,14 +25,14 @@ function useTimeoutWhen(
 
   useEffect(() => {
     if (when) {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         const timeout = window.setTimeout(callback, timeoutDelayMs);
 
         return () => {
           window.clearTimeout(timeout);
         };
       } else {
-        console.warn('useTimeoutWhen: window is undefined.');
+        console.warn("useTimeoutWhen: window is undefined.");
       }
     }
     return;

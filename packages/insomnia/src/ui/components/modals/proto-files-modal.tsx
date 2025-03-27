@@ -1,29 +1,40 @@
-import * as protoLoader from '@grpc/proto-loader';
-import fs from 'fs';
-import path from 'path';
-import React, { type FC, useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import * as protoLoader from "@grpc/proto-loader";
+import fs from "fs";
+import path from "path";
+import React, { type FC, useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
 
-import { type ChangeBufferEvent, database as db } from '../../../common/database';
-import { selectFileOrFolder } from '../../../common/select-file-or-folder';
-import * as models from '../../../models';
-import { isProtoDirectory, type ProtoDirectory } from '../../../models/proto-directory';
-import { isProtoFile, type ProtoFile } from '../../../models/proto-file';
-import { ProtoDirectoryLoader } from '../../../network/grpc/proto-directory-loader';
-import { writeProtoFile } from '../../../network/grpc/write-proto-file';
-import { Modal, type ModalHandle } from '../base/modal';
-import { ModalBody } from '../base/modal-body';
-import { ModalFooter } from '../base/modal-footer';
-import { ModalHeader } from '../base/modal-header';
-import { type ExpandedProtoDirectory, ProtoFileList } from '../proto-file/proto-file-list';
-import { AsyncButton } from '../themed-button';
-import { showAlert, showError } from '.';
+import {
+  type ChangeBufferEvent,
+  database as db,
+} from "../../../common/database";
+import { selectFileOrFolder } from "../../../common/select-file-or-folder";
+import * as models from "../../../models";
+import {
+  isProtoDirectory,
+  type ProtoDirectory,
+} from "../../../models/proto-directory";
+import { isProtoFile, type ProtoFile } from "../../../models/proto-file";
+import { ProtoDirectoryLoader } from "../../../network/grpc/proto-directory-loader";
+import { writeProtoFile } from "../../../network/grpc/write-proto-file";
+import { Modal, type ModalHandle } from "../base/modal";
+import { ModalBody } from "../base/modal-body";
+import { ModalFooter } from "../base/modal-footer";
+import { ModalHeader } from "../base/modal-header";
+import {
+  type ExpandedProtoDirectory,
+  ProtoFileList,
+} from "../proto-file/proto-file-list";
+import { AsyncButton } from "../themed-button";
+import { showAlert, showError } from ".";
 const tryToSelectFilePath = async () => {
   try {
-    const { filePath, canceled } = await selectFileOrFolder({ itemTypes: ['file'], extensions: ['proto'] });
+    const { filePath, canceled } = await selectFileOrFolder({
+      itemTypes: ["file"],
+      extensions: ["proto"],
+    });
     if (!canceled && filePath) {
       return filePath;
-
     }
   } catch (error) {
     showError({ error });
@@ -32,10 +43,12 @@ const tryToSelectFilePath = async () => {
 };
 const tryToSelectFolderPath = async () => {
   try {
-    const { filePath, canceled } = await selectFileOrFolder({ itemTypes: ['directory'], extensions: ['proto'] });
+    const { filePath, canceled } = await selectFileOrFolder({
+      itemTypes: ["directory"],
+      extensions: ["proto"],
+    });
     if (!canceled && filePath) {
       return filePath;
-
     }
   } catch (error) {
     showError({ error });
@@ -54,7 +67,7 @@ const isProtofileValid = async (filePath: string) => {
     return true;
   } catch (error) {
     showError({
-      title: 'Invalid Proto File',
+      title: "Invalid Proto File",
       message: `The file ${filePath} could not be parsed`,
       error,
     });
@@ -62,10 +75,16 @@ const isProtofileValid = async (filePath: string) => {
   }
 };
 
-const traverseDirectory = (dir: ProtoDirectory, files: ProtoFile[], directories: ProtoDirectory[]): ExpandedProtoDirectory => ({
+const traverseDirectory = (
+  dir: ProtoDirectory,
+  files: ProtoFile[],
+  directories: ProtoDirectory[],
+): ExpandedProtoDirectory => ({
   dir,
-  files: files.filter(pf => pf.parentId === dir._id),
-  subDirs: directories.filter(pd => pd.parentId === dir._id).map(subDir => traverseDirectory(subDir, files, directories)),
+  files: files.filter((pf) => pf.parentId === dir._id),
+  subDirs: directories
+    .filter((pd) => pd.parentId === dir._id)
+    .map((subDir) => traverseDirectory(subDir, files, directories)),
 });
 
 const getProtoDirectories = async (workspaceId: string) => {
@@ -75,7 +94,9 @@ const getProtoDirectories = async (workspaceId: string) => {
   // Get directories where the parent is the workspace
   const rootDirs = await models.protoDirectory.findByParentId(workspaceId);
   // Expand each directory
-  const expandedDirs = rootDirs.map(dir => traverseDirectory(dir, allFiles, allDirs));
+  const expandedDirs = rootDirs.map((dir) =>
+    traverseDirectory(dir, allFiles, allDirs),
+  );
   // Get files where the parent is the workspace
   const individualFiles = await models.protoFile.findByParentId(workspaceId);
   if (individualFiles.length) {
@@ -101,10 +122,15 @@ export interface Props {
 
 export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
   const modalRef = useRef<ModalHandle>(null);
-  const { workspaceId } = useParams() as { workspaceId: string; requestId: string };
+  const { workspaceId } = useParams() as {
+    workspaceId: string;
+    requestId: string;
+  };
 
   const [selectedId, setSelectedId] = useState(defaultId);
-  const [protoDirectories, setProtoDirectories] = useState<ExpandedProtoDirectory[]>([]);
+  const [protoDirectories, setProtoDirectories] = useState<
+    ExpandedProtoDirectory[]
+  >([]);
 
   useEffect(() => modalRef.current?.show(), []);
 
@@ -135,13 +161,16 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
       return;
     }
     try {
-      const result = await new ProtoDirectoryLoader(filePath, workspaceId).load();
+      const result = await new ProtoDirectoryLoader(
+        filePath,
+        workspaceId,
+      ).load();
       createdIds = result.createdIds;
       const { error, createdDir } = result;
 
       if (error) {
         showError({
-          title: 'Failed to import',
+          title: "Failed to import",
           message: `An unexpected error occurred when reading ${filePath}`,
           error,
         });
@@ -152,7 +181,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
       // Show warning if no files found
       if (!createdDir) {
         showAlert({
-          title: 'No files found',
+          title: "No files found",
           message: `No .proto files were found under ${filePath}.`,
         });
         return;
@@ -175,7 +204,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
           });
         } catch (error) {
           showError({
-            title: 'Invalid Proto File',
+            title: "Invalid Proto File",
             message: `The file ${protoFile.name} could not be parsed`,
             error,
           });
@@ -208,44 +237,53 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
     if (!(await isProtofileValid(filePath))) {
       return;
     }
-    const contents = await fs.promises.readFile(filePath, 'utf-8');
+    const contents = await fs.promises.readFile(filePath, "utf-8");
     const updatedFile = await models.protoFile.update(protoFile, {
       name: path.basename(filePath),
       protoText: contents,
     });
-    const impacted = await models.grpcRequest.findByProtoFileId(updatedFile._id);
-    const requestIds = impacted.map(g => g._id);
+    const impacted = await models.grpcRequest.findByProtoFileId(
+      updatedFile._id,
+    );
+    const requestIds = impacted.map((g) => g._id);
     if (requestIds?.length) {
-      requestIds.forEach(async requestId => window.main.grpc.cancel(requestId));
+      requestIds.forEach(async (requestId) =>
+        window.main.grpc.cancel(requestId),
+      );
     }
   };
 
   const handleDeleteDirectory = (protoDirectory: ProtoDirectory) => {
     showAlert({
       title: `Delete ${protoDirectory.name}`,
-      message: (<span>
-        Really delete <strong>{protoDirectory.name}</strong> and all proto files contained within?
-        All requests that use these proto files will stop working.
-      </span>),
+      message: (
+        <span>
+          Really delete <strong>{protoDirectory.name}</strong> and all proto
+          files contained within? All requests that use these proto files will
+          stop working.
+        </span>
+      ),
       addCancel: true,
       onConfirm: async () => {
         models.protoDirectory.remove(protoDirectory);
-        setSelectedId('');
+        setSelectedId("");
       },
     });
   };
   const handleDeleteFile = (protoFile: ProtoFile) => {
     showAlert({
       title: `Delete ${protoFile.name}`,
-      message: (<span>
-        Really delete <strong>{protoFile.name}</strong>? All requests that use this proto file will
-        stop working.
-      </span>),
+      message: (
+        <span>
+          Really delete <strong>{protoFile.name}</strong>? All requests that use
+          this proto file will stop working.
+        </span>
+      ),
       addCancel: true,
       onConfirm: () => {
         models.protoFile.remove(protoFile);
         if (selectedId === protoFile._id) {
-          setSelectedId('');
+          setSelectedId("");
         }
       },
     });
@@ -255,10 +293,10 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
     if (!filePath) {
       return;
     }
-    if (!await isProtofileValid(filePath)) {
+    if (!(await isProtofileValid(filePath))) {
       return;
     }
-    const contents = await fs.promises.readFile(filePath, 'utf-8');
+    const contents = await fs.promises.readFile(filePath, "utf-8");
     const newFile = await models.protoFile.create({
       name: path.basename(filePath),
       parentId: workspaceId,
@@ -292,8 +330,8 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
         <ProtoFileList
           protoDirectories={protoDirectories}
           selectedId={selectedId}
-          handleSelect={id => setSelectedId(id)}
-          handleUnselect={() => setSelectedId('')}
+          handleSelect={(id) => setSelectedId(id)}
+          handleUnselect={() => setSelectedId("")}
           handleUpdate={handleUpdate}
           handleDelete={handleDeleteFile}
           handleDeleteDirectory={handleDeleteDirectory}
@@ -303,10 +341,10 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
         <div>
           <button
             className="btn"
-            onClick={event => {
+            onClick={(event) => {
               event.preventDefault();
-              if (typeof onSave === 'function') {
-                onSave(selectedId || '');
+              if (typeof onSave === "function") {
+                onSave(selectedId || "");
               }
             }}
           >
@@ -314,6 +352,6 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
           </button>
         </div>
       </ModalFooter>
-    </Modal >
+    </Modal>
   );
 };

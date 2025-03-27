@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { FocusScope } from 'react-aria';
-import { Input } from 'react-aria-components';
+import React, { useEffect, useRef, useState } from "react";
+import { FocusScope } from "react-aria";
+import { Input } from "react-aria-components";
 
 export const EditableInput = ({
-  value = 'Untitled',
+  value = "Untitled",
   ariaLabel,
   editable = false,
   name,
@@ -13,29 +13,25 @@ export const EditableInput = ({
 }: {
   value: string;
   ariaLabel?: string;
-    editable?: boolean;
-    onEditableChange?: (editable: boolean) => void;
+  editable?: boolean;
+  onEditableChange?: (editable: boolean) => void;
   name?: string;
-    className?: string;
-    onSubmit: (value: string) => void;
+  className?: string;
+  onSubmit: (value: string) => void;
 }) => {
   const [isEditable, setIsEditable] = useState(editable);
   const editableRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsEditable(editable);
-  }
-    , [editable]);
+  }, [editable]);
 
   useEffect(() => {
     if (!isEditable) {
       return;
     }
 
-    const keysToIgnore = [
-      'Enter',
-      'Escape',
-    ];
+    const keysToIgnore = ["Enter", "Escape"];
 
     function lockKeyDownToInput(e: KeyboardEvent) {
       if (keysToIgnore.includes(e.key)) {
@@ -44,10 +40,10 @@ export const EditableInput = ({
       e.stopPropagation();
     }
 
-    window.addEventListener('keydown', lockKeyDownToInput, { capture: true });
+    window.addEventListener("keydown", lockKeyDownToInput, { capture: true });
 
     return () => {
-      window.removeEventListener('keydown', lockKeyDownToInput, {
+      window.removeEventListener("keydown", lockKeyDownToInput, {
         capture: true,
       });
     };
@@ -65,12 +61,7 @@ export const EditableInput = ({
     <>
       <div
         ref={editableRef}
-        className={
-          `items-center truncate justify-center data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all
-            ${isEditable ? 'hidden' : ''}
-            ${className || 'px-2'}
-          `
-        }
+        className={`items-center justify-center truncate rounded-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] data-[pressed]:bg-[--hl-sm] ${isEditable ? "hidden" : ""} ${className || "px-2"} `}
         onDoubleClick={onDoubleClick}
         data-editable
         aria-label={ariaLabel}
@@ -80,26 +71,26 @@ export const EditableInput = ({
       {isEditable && (
         <FocusScope contain restoreFocus autoFocus>
           <Input
-            className={`truncate ${className || 'px-2'}`}
+            className={`truncate ${className || "px-2"}`}
             name={name}
             aria-label={ariaLabel}
             defaultValue={value}
-            onKeyDown={e => {
+            onKeyDown={(e) => {
               const value = e.currentTarget.value;
-              if (e.key === 'Enter') {
+              if (e.key === "Enter") {
                 e.stopPropagation();
                 onSubmit(value);
                 setIsEditable(false);
                 onEditableChange?.(false);
               }
 
-              if (e.key === 'Escape') {
+              if (e.key === "Escape") {
                 e.stopPropagation();
                 setIsEditable(false);
                 onEditableChange?.(false);
               }
             }}
-            onBlur={e => {
+            onBlur={(e) => {
               const value = e.currentTarget.value;
               onSubmit(value);
               setIsEditable(false);

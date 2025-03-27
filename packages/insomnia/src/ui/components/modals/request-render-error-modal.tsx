@@ -1,15 +1,20 @@
-import { JSONPath } from 'jsonpath-plus';
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import { JSONPath } from "jsonpath-plus";
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 
-import { docsTemplateTags } from '../../../common/documentation';
-import type { GrpcRequest } from '../../../models/grpc-request';
-import type { Request } from '../../../models/request';
-import type { WebSocketRequest } from '../../../models/websocket-request';
-import { RenderError } from '../../../templating/render-error';
-import { Link } from '../base/link';
-import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
-import { ModalBody } from '../base/modal-body';
-import { ModalHeader } from '../base/modal-header';
+import { docsTemplateTags } from "../../../common/documentation";
+import type { GrpcRequest } from "../../../models/grpc-request";
+import type { Request } from "../../../models/request";
+import type { WebSocketRequest } from "../../../models/websocket-request";
+import { RenderError } from "../../../templating/render-error";
+import { Link } from "../base/link";
+import { Modal, type ModalHandle, type ModalProps } from "../base/modal";
+import { ModalBody } from "../base/modal-body";
+import { ModalHeader } from "../base/modal-header";
 export interface RequestRenderErrorModalOptions {
   error: RenderError | null;
   request: Request | WebSocketRequest | GrpcRequest | null;
@@ -19,7 +24,10 @@ export interface RequestRenderErrorModalHandle {
   hide: () => void;
 }
 
-export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle, ModalProps>((_, ref) => {
+export const RequestRenderErrorModal = forwardRef<
+  RequestRenderErrorModalHandle,
+  ModalProps
+>((_, ref) => {
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<RequestRenderErrorModalOptions>({
     error: null,
@@ -27,52 +35,65 @@ export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle,
   });
   const { request, error } = state;
 
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: options => {
-      setState(options);
-      modalRef.current?.show();
-    },
-  }), []);
+  useImperativeHandle(
+    ref,
+    () => ({
+      hide: () => {
+        modalRef.current?.hide();
+      },
+      show: (options) => {
+        setState(options);
+        modalRef.current?.show();
+      },
+    }),
+    [],
+  );
 
   const fullPath = `Request.${error?.path}`;
   const result = JSONPath({ json: request, path: `$.${error?.path}` });
-  const template = result && Array.isArray(result) && result.length ? result[0] : null;
-  const locationLabel = template?.includes('\n') ? `line ${error?.location.line} of` : null;
+  const template =
+    result && Array.isArray(result) && result.length ? result[0] : null;
+  const locationLabel = template?.includes("\n")
+    ? `line ${error?.location.line} of`
+    : null;
 
   return (
     <Modal ref={modalRef}>
       <ModalHeader>Failed to Render Request</ModalHeader>
-      <ModalBody>{request && error ? (
-        <div className="pad">
-          <div className="notice warning">
-            <p>
-              Failed to render <strong>{fullPath}</strong> prior to sending
-            </p>
-            <div className="pad-top-sm">
-              <Link button href={docsTemplateTags} className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]">
-                Templating Documentation <i className="fa fa-external-link" />
-              </Link>
+      <ModalBody>
+        {request && error ? (
+          <div className="pad">
+            <div className="notice warning">
+              <p>
+                Failed to render <strong>{fullPath}</strong> prior to sending
+              </p>
+              <div className="pad-top-sm">
+                <Link
+                  button
+                  href={docsTemplateTags}
+                  className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+                >
+                  Templating Documentation <i className="fa fa-external-link" />
+                </Link>
+              </div>
             </div>
+
+            <p>
+              <strong>Render error</strong>
+              <code className="selectable block">{error.message}</code>
+            </p>
+
+            <p>
+              <strong>Caused by the following field</strong>
+              <code className="block">
+                {locationLabel} {fullPath}
+              </code>
+            </p>
           </div>
-
-          <p>
-            <strong>Render error</strong>
-            <code className="block selectable">{error.message}</code>
-          </p>
-
-          <p>
-            <strong>Caused by the following field</strong>
-            <code className="block">
-              {locationLabel} {fullPath}
-            </code>
-          </p>
-        </div>
-      ) : null}</ModalBody>
+        ) : null}
+      </ModalBody>
     </Modal>
   );
 });
 
-RequestRenderErrorModal.displayName = 'RequestRenderErrorModal';
+RequestRenderErrorModal.displayName = "RequestRenderErrorModal";

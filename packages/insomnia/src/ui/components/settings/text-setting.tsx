@@ -1,39 +1,39 @@
-import React, { type ChangeEventHandler, type FC, type InputHTMLAttributes, useCallback } from 'react';
+import React, {
+  type ChangeEventHandler,
+  type FC,
+  type InputHTMLAttributes,
+  useCallback,
+} from "react";
 
-import type { SettingsOfType } from '../../../common/settings';
-import { useSettingsPatcher } from '../../hooks/use-request';
-import { useRootLoaderData } from '../../routes/root';
-import { HelpTooltip } from '../help-tooltip';
+import type { SettingsOfType } from "../../../common/settings";
+import { useSettingsPatcher } from "../../hooks/use-request";
+import { useRootLoaderData } from "../../routes/root";
+import { HelpTooltip } from "../help-tooltip";
 
 export const TextSetting: FC<{
-  disabled?: InputHTMLAttributes<HTMLInputElement>['disabled'];
+  disabled?: InputHTMLAttributes<HTMLInputElement>["disabled"];
   help?: string;
   label: string;
-  placeholder?: InputHTMLAttributes<HTMLInputElement>['placeholder'];
+  placeholder?: InputHTMLAttributes<HTMLInputElement>["placeholder"];
   setting: SettingsOfType<string | null>;
-}> = ({
-  disabled,
-  help,
-  label,
-  placeholder,
-  setting,
-}) => {
-  const {
-    settings,
-  } = useRootLoaderData();
+}> = ({ disabled, help, label, placeholder, setting }) => {
+  const { settings } = useRootLoaderData();
   if (!Object.prototype.hasOwnProperty.call(settings, setting)) {
     throw new Error(`Invalid setting name ${setting}`);
   }
   const patchSettings = useSettingsPatcher();
 
-  const handleOnChange = useCallback<ChangeEventHandler<HTMLInputElement>>(async ({ currentTarget: { value } }) => {
-    const updatedValue = value === null ? '__NULL__' : value;
-    patchSettings({ [setting]: updatedValue });
-  }, [patchSettings, setting]);
+  const handleOnChange = useCallback<ChangeEventHandler<HTMLInputElement>>(
+    async ({ currentTarget: { value } }) => {
+      const updatedValue = value === null ? "__NULL__" : value;
+      patchSettings({ [setting]: updatedValue });
+    },
+    [patchSettings, setting],
+  );
 
   let defaultValue = settings[setting];
-  if (typeof defaultValue !== 'string') {
-    defaultValue = '';
+  if (typeof defaultValue !== "string") {
+    defaultValue = "";
   }
 
   return (
@@ -47,7 +47,7 @@ export const TextSetting: FC<{
           name={setting}
           onChange={handleOnChange}
           placeholder={placeholder}
-          type={'text'}
+          type={"text"}
         />
       </label>
     </div>

@@ -1,14 +1,21 @@
-import { useVirtualizer } from '@tanstack/react-virtual';
-import { format } from 'date-fns';
-import React, { type FC, useRef } from 'react';
-import { Cell, Column, Row, Table, TableBody, TableHeader } from 'react-aria-components';
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { format } from "date-fns";
+import React, { type FC, useRef } from "react";
+import {
+  Cell,
+  Column,
+  Row,
+  Table,
+  TableBody,
+  TableHeader,
+} from "react-aria-components";
 
-import type { CurlEvent } from '../../../main/network/curl';
-import type { WebSocketEvent } from '../../../main/network/websocket';
-import { type IconId, SvgIcon } from '../svg-icon';
+import type { CurlEvent } from "../../../main/network/curl";
+import type { WebSocketEvent } from "../../../main/network/websocket";
+import { type IconId, SvgIcon } from "../svg-icon";
 
 const Timestamp: FC<{ time: Date | number }> = ({ time }) => {
-  const date = format(time, 'HH:mm:ss');
+  const date = format(time, "HH:mm:ss");
   return <>{date}</>;
 };
 
@@ -20,47 +27,47 @@ interface Props {
 
 function getIcon(event: WebSocketEvent | CurlEvent): IconId {
   switch (event.type) {
-    case 'message': {
-      if (event.direction === 'OUTGOING') {
-        return 'sent';
+    case "message": {
+      if (event.direction === "OUTGOING") {
+        return "sent";
       } else {
-        return 'receive';
+        return "receive";
       }
     }
-    case 'open': {
-      return 'checkmark-circle';
+    case "open": {
+      return "checkmark-circle";
     }
-    case 'close': {
-      return 'disconnected';
+    case "close": {
+      return "disconnected";
     }
-    case 'error': {
-      return 'error';
+    case "error": {
+      return "error";
     }
     default: {
-      return 'bug';
+      return "bug";
     }
   }
 }
 
 const getMessage = (event: WebSocketEvent | CurlEvent): string => {
   switch (event.type) {
-    case 'message': {
-      if ('data' in event && typeof event.data === 'object') {
-        return 'Binary data';
+    case "message": {
+      if ("data" in event && typeof event.data === "object") {
+        return "Binary data";
       }
       return event.data.toString();
     }
-    case 'open': {
-      return 'Connected successfully';
+    case "open": {
+      return "Connected successfully";
     }
-    case 'close': {
-      return 'Disconnected';
+    case "close": {
+      return "Disconnected";
     }
-    case 'error': {
+    case "error": {
       return event.message;
     }
     default: {
-      return 'Unknown event';
+      return "Unknown event";
     }
   }
 };
@@ -72,32 +79,35 @@ export const EventLogView: FC<Props> = ({ events, onSelect, selectionId }) => {
     count: events.length,
     estimateSize: React.useCallback(() => 30, []),
     overscan: 30,
-    getItemKey: index => events[index]._id,
+    getItemKey: (index) => events[index]._id,
   });
 
   return (
     <>
-      <div className='w-full flex-1 overflow-hidden border border-solid border-[--hl-sm] select-none overflow-y-auto max-h-96'>
+      <div className="max-h-96 w-full flex-1 select-none overflow-hidden overflow-y-auto border border-solid border-[--hl-sm]">
         <Table
-          selectionMode='single'
+          selectionMode="single"
           selectedKeys={selectionId ? [selectionId] : []}
-          selectionBehavior='replace'
-          onSelectionChange={keys => {
-            if (keys !== 'all') {
+          selectionBehavior="replace"
+          onSelectionChange={(keys) => {
+            if (keys !== "all") {
               const key = keys.values().next().value;
 
-              const event = events.find(e => e._id === key);
+              const event = events.find((e) => e._id === key);
 
               if (event) {
                 onSelect(event);
               }
             }
           }}
-          aria-label='Modified objects'
-          className="border-separate border-spacing-0 w-full"
+          aria-label="Modified objects"
+          className="w-full border-separate border-spacing-0"
         >
-          <TableHeader className='sticky top-0 z-10 backdrop-blur backdrop-filter bg-[--hl-xs]'>
-            <Column isRowHeader className="p-3 text-left text-xs font-semibold  focus:outline-none">
+          <TableHeader className="sticky top-0 z-10 bg-[--hl-xs] backdrop-blur backdrop-filter">
+            <Column
+              isRowHeader
+              className="p-3 text-left text-xs font-semibold focus:outline-none"
+            >
               <span />
             </Column>
             <Column className="p-3 text-left text-xs font-semibold focus:outline-none">
@@ -110,20 +120,20 @@ export const EventLogView: FC<Props> = ({ events, onSelect, selectionId }) => {
           <TableBody
             style={{ height: virtualizer.getTotalSize() }}
             ref={parentRef}
-            className="divide divide-[--hl-sm] divide-solid"
+            className="divide divide-solid divide-[--hl-sm]"
             items={virtualizer.getVirtualItems()}
           >
-            {item => {
+            {(item) => {
               const event = events[item.index];
               return (
-                <Row className="group focus:outline-none focus-within:bg-[--hl-sm] transition-colors">
-                  <Cell className="p-2 whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                <Row className="group transition-colors focus-within:bg-[--hl-sm] focus:outline-none">
+                  <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] p-2 text-sm font-medium focus:outline-none group-last-of-type:border-none">
                     <SvgIcon icon={getIcon(event)} />
                   </Cell>
-                  <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                  <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
                     {getMessage(event)}
                   </Cell>
-                  <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                  <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
                     <Timestamp time={event.timestamp} />
                   </Cell>
                 </Row>

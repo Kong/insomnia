@@ -1,8 +1,8 @@
-import fs from 'fs/promises';
-import path from 'path';
+import fs from "fs/promises";
+import path from "path";
 
-import type { BaseDriver } from './base';
-import { gracefulRename } from './graceful-rename';
+import type { BaseDriver } from "./base";
+import { gracefulRename } from "./graceful-rename";
 
 export default class FileSystemDriver implements BaseDriver {
   _directory: string;
@@ -13,18 +13,19 @@ export default class FileSystemDriver implements BaseDriver {
   }
 
   static create(dataDirectory: string) {
-    const directory = path.join(dataDirectory, 'version-control');
+    const directory = path.join(dataDirectory, "version-control");
     return new FileSystemDriver({ directory });
   }
 
   async hasItem(key: string) {
     try {
       const stats = await fs.stat(await this._getKeyPath(key));
-      const result = stats.isFile() || stats.isDirectory() || stats.isSymbolicLink();
+      const result =
+        stats.isFile() || stats.isDirectory() || stats.isSymbolicLink();
 
       return result;
     } catch (err) {
-      if (err && 'code' in err && err.code === 'ENOENT') {
+      if (err && "code" in err && err.code === "ENOENT") {
         return false;
       }
 
@@ -35,18 +36,23 @@ export default class FileSystemDriver implements BaseDriver {
   async setItem(key: string, value: Buffer) {
     console.log(`[FileSystemDriver] Writing to ${key}`);
     const finalPath = await this._getKeyPath(key);
-      // Temp path contains randomness to avoid race-condition collisions. This
-      // doesn't actually avoid race conditions but at least it won't fail.
+    // Temp path contains randomness to avoid race-condition collisions. This
+    // doesn't actually avoid race conditions but at least it won't fail.
 
     const tmpPath = `${finalPath}.${crypto.randomUUID()}.tmp`;
-    console.log(`[FileSystemDriver] Writing to ${tmpPath} then renaming to ${finalPath}`);
-      // This method implements atomic writes by first writing to a temporary
-      // file (non-atomic) then renaming the file to the final value (atomic)
+    console.log(
+      `[FileSystemDriver] Writing to ${tmpPath} then renaming to ${finalPath}`,
+    );
+    // This method implements atomic writes by first writing to a temporary
+    // file (non-atomic) then renaming the file to the final value (atomic)
     try {
-      await fs.writeFile(tmpPath, value, 'utf8');
+      await fs.writeFile(tmpPath, value, "utf8");
       await gracefulRename(tmpPath, finalPath);
     } catch (err) {
-      console.error(`[FileSystemDriver] Failed to write to ${tmpPath} then rename to ${finalPath}`, err);
+      console.error(
+        `[FileSystemDriver] Failed to write to ${tmpPath} then rename to ${finalPath}`,
+        err,
+      );
       throw err;
     }
   }
@@ -56,7 +62,7 @@ export default class FileSystemDriver implements BaseDriver {
       const file = await fs.readFile(await this._getKeyPath(key));
       return file;
     } catch (err) {
-      if (err && 'code' in err && err.code === 'ENOENT') {
+      if (err && "code" in err && err.code === "ENOENT") {
         return null;
       }
 
@@ -85,13 +91,13 @@ export default class FileSystemDriver implements BaseDriver {
         try {
           names = await fs.readdir(dir);
         } catch (err) {
-          if (err.code !== 'ENOENT') {
+          if (err.code !== "ENOENT") {
             reject(err);
           }
         }
 
         for (const name of names) {
-          if (name.indexOf('.') === 0) {
+          if (name.indexOf(".") === 0) {
             // Skip any non-vcs files
             continue;
           }

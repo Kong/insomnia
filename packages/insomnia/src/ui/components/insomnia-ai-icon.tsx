@@ -1,10 +1,8 @@
-import React from 'react';
+import React from "react";
 
-import { useAIContext } from '../context/app/ai-context';
+import { useAIContext } from "../context/app/ai-context";
 
-export const InsomniaAI = ({
-  ...props
-}: React.SVGProps<SVGSVGElement>) => {
+export const InsomniaAI = ({ ...props }: React.SVGProps<SVGSVGElement>) => {
   const { generating: loading } = useAIContext();
 
   return (

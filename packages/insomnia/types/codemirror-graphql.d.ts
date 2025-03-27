@@ -1,7 +1,7 @@
-import { GraphQLInfoOptions } from 'codemirror-graphql/info';
+import { GraphQLInfoOptions } from "codemirror-graphql/info";
 
-declare module 'codemirror-graphql/jump' {
-  type ModifiedGraphQLJumpOptions = Omit<GraphQLJumpOptions, 'onClick'> & {
-    onClick: GraphQLInfoOptions['onClick'];
+declare module "codemirror-graphql/jump" {
+  type ModifiedGraphQLJumpOptions = Omit<GraphQLJumpOptions, "onClick"> & {
+    onClick: GraphQLInfoOptions["onClick"];
   };
 }

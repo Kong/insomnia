@@ -1,12 +1,12 @@
-import 'codemirror';
+import "codemirror";
 
-import { GraphQLInfoOptions } from 'codemirror-graphql/info';
-import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
-import { GraphQLSchema } from 'graphql';
+import { GraphQLInfoOptions } from "codemirror-graphql/info";
+import { ModifiedGraphQLJumpOptions } from "codemirror-graphql/jump";
+import { GraphQLSchema } from "graphql";
 
-import { HandleRender } from '../src/common/render';
-import { Settings } from '../src/models/settings';
-import { NunjucksParsedTag } from '../src/templating/utils';
+import { HandleRender } from "../src/common/render";
+import { Settings } from "../src/models/settings";
+import { NunjucksParsedTag } from "../src/templating/utils";
 
 type LinkClickCallback = (url: string) => void;
 
@@ -14,7 +14,9 @@ interface InsomniaExtensions {
   closeHintDropdown: () => void;
   enableNunjucksTags: (
     handleRender: HandleRender,
-    handleGetRenderContext?: (contextCacheKey?: string) => Promise<RenderContextAndKeys>,
+    handleGetRenderContext?: (
+      contextCacheKey?: string,
+    ) => Promise<RenderContextAndKeys>,
     showVariableSourceAndValue?: boolean,
     editorId?: string,
   ) => void;
@@ -22,11 +24,11 @@ interface InsomniaExtensions {
   makeLinksClickable: (handleClick: LinkClickCallback) => void;
 }
 
-declare module 'codemirror' {
+declare module "codemirror" {
   type CodeMirrorLinkClickCallback = LinkClickCallback;
 
-  interface Editor extends InsomniaExtensions { }
-  interface EditorFromTextEditor extends InsomniaExtensions { }
+  interface Editor extends InsomniaExtensions {}
+  interface EditorFromTextEditor extends InsomniaExtensions {}
   interface TextMarker {
     // This flag is being used internally by codemirror and the fold extension
     __isFold: boolean;
@@ -43,7 +45,8 @@ declare module 'codemirror' {
     value: string | (() => Promise<unknown>);
   }
 
-  interface EnvironmentAutocompleteOptions extends Pick<Settings, 'hotKeyRegistry' | 'autocompleteDelay'> {
+  interface EnvironmentAutocompleteOptions
+    extends Pick<Settings, "hotKeyRegistry" | "autocompleteDelay"> {
     getConstants?: () => string[] | PromiseLike<string[]>;
     getVariables?: () => Variable[] | PromiseLike<Variable[]>;
     getSnippets?: () => Snippet[] | PromiseLike<Snippet[]>;
@@ -60,7 +63,7 @@ declare module 'codemirror' {
     /**
      * Custom Insomnia Key. Used for checking the type of the hint
      */
-    type: 'constant' | 'variable' | 'snippet' | 'tag';
+    type: "constant" | "variable" | "snippet" | "tag";
     /**
      * Custom Insomnia Key. The segment that matched and produced this hint
      */
@@ -101,7 +104,6 @@ declare module 'codemirror' {
     cut: (instance: Editor, e: ClipboardEvent) => void;
     copy: (instance: Editor, e: ClipboardEvent) => void;
     paste: (instance: Editor, e: ClipboardEvent) => void;
-
   }
 
   const keyNames: Record<number, string>;

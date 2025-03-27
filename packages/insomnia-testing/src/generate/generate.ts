@@ -1,6 +1,6 @@
-import { writeFile } from 'fs';
+import { writeFile } from "fs";
 
-import { escapeJsStr, indent } from './util';
+import { escapeJsStr, indent } from "./util";
 
 export interface Test {
   name: string;
@@ -16,27 +16,24 @@ export interface TestSuite {
 
 export const generate = (suites: TestSuite[]) => {
   const lines = [
-    'const { expect } = chai;',
-    '',
-    '// Clear active request before test starts (will be set inside test)',
-    'beforeEach(() => insomnia.clearActiveRequest());',
-    '',
+    "const { expect } = chai;",
+    "",
+    "// Clear active request before test starts (will be set inside test)",
+    "beforeEach(() => insomnia.clearActiveRequest());",
+    "",
   ];
 
   for (const s of suites || []) {
     lines.push(...generateSuiteLines(0, s));
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 };
 
-export const generateToFile = async (
-  filepath: string,
-  suites: TestSuite[],
-) => {
+export const generateToFile = async (filepath: string, suites: TestSuite[]) => {
   return new Promise<void>((resolve, reject) => {
     const js = generate(suites);
-    return writeFile(filepath, js, err => {
+    return writeFile(filepath, js, (err) => {
       if (err) {
         reject(err);
       } else {
@@ -46,10 +43,7 @@ export const generateToFile = async (
   });
 };
 
-const generateSuiteLines = (
-  n: number,
-  suite?: TestSuite | null,
-) => {
+const generateSuiteLines = (n: number, suite?: TestSuite | null) => {
   if (!suite) {
     return [];
   }
@@ -60,7 +54,7 @@ const generateSuiteLines = (
 
   for (let i = 0; i < suites.length; i++) {
     if (i !== 0) {
-      lines.push('');
+      lines.push("");
     }
 
     lines.push(...generateSuiteLines(n + 1, suites[i]));
@@ -73,13 +67,13 @@ const generateSuiteLines = (
     // - it's the first test
     // - we've outputted suites above
     if (suites.length > 0 || i !== 0) {
-      lines.push('');
+      lines.push("");
     }
 
     lines.push(...generateTestLines(n + 1, tests[i]));
   }
 
-  lines.push(indent(n, '});'));
+  lines.push(indent(n, "});"));
   return lines;
 };
 
@@ -96,8 +90,8 @@ const generateTestLines = (num: number, test?: Test | null) => {
   // Add helper variables that are necessary
   const { defaultRequestId } = test;
 
-  if (typeof defaultRequestId === 'string') {
-    lines.push(indent(num, '// Set active request on global insomnia object'));
+  if (typeof defaultRequestId === "string") {
+    lines.push(indent(num, "// Set active request on global insomnia object"));
     lines.push(
       indent(num, `insomnia.setActiveRequestId('${defaultRequestId}');`),
     );
@@ -107,6 +101,6 @@ const generateTestLines = (num: number, test?: Test | null) => {
   test.code && lines.push(indent(num + 1, test.code));
 
   // Close the it() block
-  lines.push(indent(num, '});'));
+  lines.push(indent(num, "});"));
   return lines;
 };

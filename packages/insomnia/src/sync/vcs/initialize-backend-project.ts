@@ -1,31 +1,46 @@
-import { database } from '../../common/database';
-import * as models from '../../models';
-import { type BaseModel, canSync } from '../../models';
-import type { Project } from '../../models/project';
-import type { Workspace } from '../../models/workspace';
-import type { StatusCandidate } from '../types';
-import { VCS } from './vcs';
+import { database } from "../../common/database";
+import * as models from "../../models";
+import { type BaseModel, canSync } from "../../models";
+import type { Project } from "../../models/project";
+import type { Workspace } from "../../models/workspace";
+import type { StatusCandidate } from "../types";
+import { VCS } from "./vcs";
 
-export const initializeLocalBackendProjectAndMarkForSync = async ({ vcs, workspace }: { vcs: VCS; workspace: Workspace }) => {
+export const initializeLocalBackendProjectAndMarkForSync = async ({
+  vcs,
+  workspace,
+}: {
+  vcs: VCS;
+  workspace: Workspace;
+}) => {
   // Create local project
-  await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
+  await vcs.switchAndCreateBackendProjectIfNotExist(
+    workspace._id,
+    workspace.name,
+  );
 
   // Everything unstaged
-  const candidates = (await database.withDescendants(workspace)).filter(canSync).map((doc: BaseModel): StatusCandidate => ({
-    key: doc._id,
-    name: doc.name || '',
-    document: doc,
-  }));
+  const candidates = (await database.withDescendants(workspace))
+    .filter(canSync)
+    .map(
+      (doc: BaseModel): StatusCandidate => ({
+        key: doc._id,
+        name: doc.name || "",
+        document: doc,
+      }),
+    );
   const status = await vcs.status(candidates);
 
   // Stage everything
   await vcs.stage(Object.values(status.unstaged));
 
   // Snapshot
-  await vcs.takeSnapshot('Initial Snapshot');
+  await vcs.takeSnapshot("Initial Snapshot");
 
   // Mark for pushing to the active project
-  await models.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: true });
+  await models.workspaceMeta.updateByParentId(workspace._id, {
+    pushSnapshotOnInitialize: true,
+  });
 };
 
 export const pushSnapshotOnInitialize = async ({
@@ -46,7 +61,9 @@ export const pushSnapshotOnInitialize = async ({
   const hasProject = vcs.hasBackendProject();
 
   if (projectIsForWorkspace && projectRemoteId && hasProject) {
-    await models.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: false });
+    await models.workspaceMeta.updateByParentId(workspace._id, {
+      pushSnapshotOnInitialize: false,
+    });
     await vcs.push({ teamId: parentId, teamProjectId: projectRemoteId });
   }
 };

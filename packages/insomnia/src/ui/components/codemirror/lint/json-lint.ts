@@ -3,13 +3,13 @@
 // It still uses under the hood the jsonlint-mod-fixed library found at
 // https://github.com/circlecell/jsonlint-mod/blob/master/lib/jsonlint.js
 
-import 'codemirror/addon/lint/json-lint';
+import "codemirror/addon/lint/json-lint";
 
-import CodeMirror from 'codemirror';
-import * as jsonlint from 'jsonlint-mod-fixed';
+import CodeMirror from "codemirror";
+import * as jsonlint from "jsonlint-mod-fixed";
 
-import { render } from '../../../../../../insomnia/src/templating/index';
-CodeMirror.registerHelper('lint', 'json', validator);
+import { render } from "../../../../../../insomnia/src/templating/index";
+CodeMirror.registerHelper("lint", "json", validator);
 
 interface ValidationError {
   message: string;
@@ -22,7 +22,7 @@ async function validator(text: string): Promise<ValidationError[]> {
 
   // Override jsonlint's parseError function so we pull the errors into our collection of ValidationErrors
   jsonlint.parser.parseError = (str: string, hash: jsonlint.ParseErrorHash) => {
-    if (hash.line && !(hash.loc)) {
+    if (hash.line && !hash.loc) {
       found.push({
         from: CodeMirror.Pos(hash.line),
         to: CodeMirror.Pos(hash.line),
@@ -43,7 +43,7 @@ async function validator(text: string): Promise<ValidationError[]> {
   if (renderedText) {
     try {
       jsonlint.parse(renderedText);
-    } catch { }
+    } catch {}
   }
 
   return found;

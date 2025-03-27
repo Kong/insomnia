@@ -1,5 +1,5 @@
-import React, { memo, type SVGProps } from 'react';
-export const SvgIcnSuccess = memo<SVGProps<SVGSVGElement>>(props => (
+import React, { memo, type SVGProps } from "react";
+export const SvgIcnSuccess = memo<SVGProps<SVGSVGElement>>((props) => (
   <svg
     viewBox="0 0 12 12"
     xmlns="http://www.w3.org/2000/svg"

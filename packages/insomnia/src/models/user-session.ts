@@ -1,6 +1,6 @@
-import type { AESMessage } from '../account/crypt';
-import { database as db } from '../common/database';
-import type { BaseModel } from './index';
+import type { AESMessage } from "../account/crypt";
+import { database as db } from "../common/database";
+import type { BaseModel } from "./index";
 
 export interface BaseUserSession {
   accountId: string;
@@ -13,31 +13,31 @@ export interface BaseUserSession {
   encPrivateKey: AESMessage;
   vaultSalt?: string;
   vaultKey?: string;
-};
+}
 
 export interface HashedUserSession {
   hashedAccountId: string;
 }
 
 export type UserSession = BaseModel & BaseUserSession & HashedUserSession;
-export const name = 'UserSession';
-export const type = 'UserSession';
-export const prefix = 'usr';
+export const name = "UserSession";
+export const type = "UserSession";
+export const prefix = "usr";
 export const canDuplicate = false;
 export const canSync = false;
 
 export function init(): BaseUserSession {
   return {
-    accountId: '',
-    id: '',
-    email: '',
-    firstName: '',
-    lastName: '',
+    accountId: "",
+    id: "",
+    email: "",
+    firstName: "",
+    lastName: "",
     symmetricKey: {} as JsonWebKey,
     publicKey: {} as JsonWebKey,
     encPrivateKey: {} as AESMessage,
-    vaultKey: '',
-    vaultSalt: '',
+    vaultKey: "",
+    vaultSalt: "",
   };
 }
 
@@ -72,7 +72,7 @@ export async function patch(patch: Partial<UserSession>) {
 }
 
 export async function getOrCreate() {
-  const results = await db.all<UserSession>(type) || [];
+  const results = (await db.all<UserSession>(type)) || [];
 
   if (results.length === 0) {
     return await create();
@@ -81,7 +81,7 @@ export async function getOrCreate() {
 }
 
 export async function get() {
-  const results = await db.all<UserSession>(type) || [];
+  const results = (await db.all<UserSession>(type)) || [];
 
   return results[0];
 }

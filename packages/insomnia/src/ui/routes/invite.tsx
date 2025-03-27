@@ -1,9 +1,9 @@
-import type { ActionFunction, LoaderFunction } from 'react-router-dom';
+import type { ActionFunction, LoaderFunction } from "react-router-dom";
 
-import { userSession } from '../../models';
-import * as models from '../../models';
-import { invariant } from '../../utils/invariant';
-import { insomniaFetch } from '../insomniaFetch';
+import { userSession } from "../../models";
+import * as models from "../../models";
+import { invariant } from "../../utils/invariant";
+import { insomniaFetch } from "../insomniaFetch";
 
 interface PaginatedList {
   start: number;
@@ -11,9 +11,9 @@ interface PaginatedList {
   length: number;
   total: number;
   next: string;
-};
+}
 
-export type CollaboratorType = 'invite' | 'member' | 'group';
+export type CollaboratorType = "invite" | "member" | "group";
 
 interface CollaboratorMetadata {
   groupId?: string;
@@ -23,7 +23,7 @@ interface CollaboratorMetadata {
   userId?: string;
   expiresAt?: string;
   groupTotal?: number;
-};
+}
 
 export interface Collaborator {
   id: string;
@@ -32,13 +32,18 @@ export interface Collaborator {
   name: string;
   createdAt?: string;
   metadata: CollaboratorMetadata;
-};
+}
 
-export type CollaboratorsListLoaderResult = PaginatedList & {
-  collaborators: Collaborator[];
-} | Error;
+export type CollaboratorsListLoaderResult =
+  | (PaginatedList & {
+      collaborators: Collaborator[];
+    })
+  | Error;
 
-export const collaboratorsListLoader: LoaderFunction = async ({ params, request }): Promise<CollaboratorsListLoaderResult> => {
+export const collaboratorsListLoader: LoaderFunction = async ({
+  params,
+  request,
+}): Promise<CollaboratorsListLoaderResult> => {
   const { id: sessionId } = await userSession.get();
 
   const { organizationId } = params;
@@ -59,11 +64,12 @@ export const collaboratorsListLoader: LoaderFunction = async ({ params, request 
       path += `&filter=${searchParams.filter}`;
     }
 
-    const collaboratorsList = await insomniaFetch<CollaboratorsListLoaderResult>({
-      method: 'GET',
-      path,
-      sessionId,
-    });
+    const collaboratorsList =
+      await insomniaFetch<CollaboratorsListLoaderResult>({
+        method: "GET",
+        path,
+        sessionId,
+      });
 
     return collaboratorsList;
   } catch (err) {
@@ -76,11 +82,14 @@ export interface CollaboratorSearchResultItem {
   picture: string;
   type: CollaboratorType;
   name: string;
-};
+}
 
 export type CollaboratorSearchLoaderResult = CollaboratorSearchResultItem[];
 
-export const collaboratorSearchLoader: LoaderFunction = async ({ params, request }): Promise<CollaboratorSearchLoaderResult> => {
+export const collaboratorSearchLoader: LoaderFunction = async ({
+  params,
+  request,
+}): Promise<CollaboratorSearchLoaderResult> => {
   const { id: sessionId } = await userSession.get();
 
   const { organizationId } = params;
@@ -89,11 +98,12 @@ export const collaboratorSearchLoader: LoaderFunction = async ({ params, request
     const requestUrl = new URL(request.url);
     const searchParams = Object.fromEntries(requestUrl.searchParams.entries());
 
-    const collaboratorsSearchList = await insomniaFetch<CollaboratorSearchLoaderResult>({
-      method: 'GET',
-      path: `/v1/desktop/organizations/${organizationId}/collaborators/search/${searchParams.query}`,
-      sessionId,
-    });
+    const collaboratorsSearchList =
+      await insomniaFetch<CollaboratorSearchLoaderResult>({
+        method: "GET",
+        path: `/v1/desktop/organizations/${organizationId}/collaborators/search/${searchParams.query}`,
+        sessionId,
+      });
 
     return collaboratorsSearchList;
   } catch {
@@ -101,45 +111,50 @@ export const collaboratorSearchLoader: LoaderFunction = async ({ params, request
   }
 };
 
-export const reinviteCollaboratorAction: ActionFunction = async ({ params }) => {
+export const reinviteCollaboratorAction: ActionFunction = async ({
+  params,
+}) => {
   const { organizationId, invitationId } = params;
 
-  invariant(typeof organizationId === 'string', 'Organization ID is required');
-  invariant(typeof invitationId === 'string', 'Invitation ID is required');
+  invariant(typeof organizationId === "string", "Organization ID is required");
+  invariant(typeof invitationId === "string", "Invitation ID is required");
 
   try {
     const user = await models.userSession.getOrCreate();
     const sessionId = user.id;
 
     const response = await insomniaFetch<{ enabled: boolean }>({
-      method: 'POST',
+      method: "POST",
       path: `/v1/organizations/${organizationId}/invites/${invitationId}/reinvite`,
       sessionId,
     });
 
     return response;
   } catch {
-    throw new Error('Failed to reinvite member. Please try again.');
+    throw new Error("Failed to reinvite member. Please try again.");
   }
 };
 
-export const updateInvitationRoleAction: ActionFunction = async ({ request, params }) => {
+export const updateInvitationRoleAction: ActionFunction = async ({
+  request,
+  params,
+}) => {
   const { organizationId, invitationId } = params;
 
-  invariant(typeof organizationId === 'string', 'Organization ID is required');
-  invariant(typeof invitationId === 'string', 'Invitation ID is required');
+  invariant(typeof organizationId === "string", "Organization ID is required");
+  invariant(typeof invitationId === "string", "Invitation ID is required");
 
   const formData = await request.formData();
 
-  const roleId = formData.get('roleId');
-  invariant(typeof roleId === 'string', 'Role ID is required');
+  const roleId = formData.get("roleId");
+  invariant(typeof roleId === "string", "Role ID is required");
 
   try {
     const user = await models.userSession.getOrCreate();
     const sessionId = user.id;
 
     const response = await insomniaFetch<{ enabled: boolean }>({
-      method: 'PATCH',
+      method: "PATCH",
       path: `/v1/organizations/${organizationId}/invites/${invitationId}`,
       data: { roles: [roleId] },
       sessionId,
@@ -147,27 +162,30 @@ export const updateInvitationRoleAction: ActionFunction = async ({ request, para
 
     return response;
   } catch {
-    throw new Error('Failed to reinvite member. Please try again.');
+    throw new Error("Failed to reinvite member. Please try again.");
   }
 };
 
-export const updateMemberRoleAction: ActionFunction = async ({ request, params }) => {
+export const updateMemberRoleAction: ActionFunction = async ({
+  request,
+  params,
+}) => {
   const { organizationId, userId } = params;
 
-  invariant(typeof organizationId === 'string', 'Organization ID is required');
-  invariant(typeof userId === 'string', 'User ID is required');
+  invariant(typeof organizationId === "string", "Organization ID is required");
+  invariant(typeof userId === "string", "User ID is required");
 
   const formData = await request.formData();
 
-  const roleId = formData.get('roleId');
-  invariant(typeof roleId === 'string', 'Role ID is required');
+  const roleId = formData.get("roleId");
+  invariant(typeof roleId === "string", "Role ID is required");
 
   try {
     const user = await models.userSession.getOrCreate();
     const sessionId = user.id;
 
     const response = await insomniaFetch<{ enabled: boolean }>({
-      method: 'PATCH',
+      method: "PATCH",
       path: `/v1/organizations/${organizationId}/members/${userId}/roles`,
       data: { roles: [roleId] },
       sessionId,
@@ -175,6 +193,6 @@ export const updateMemberRoleAction: ActionFunction = async ({ request, params }
 
     return response;
   } catch {
-    throw new Error('Failed to update organization member roles');
+    throw new Error("Failed to update organization member roles");
   }
 };

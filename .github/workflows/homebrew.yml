@@ -3,7 +3,7 @@ name: Update Homebrew
 on:
   schedule:
     # weekdays at 00:00
-    - cron: '0 0 * * 1-5'
+    - cron: "0 0 * * 1-5"
 
   workflow_dispatch:
 
@@ -38,7 +38,7 @@ jobs:
       - name: Configure Git user
         uses: Homebrew/actions/git-user-config@266845213695c3047d210b2e8fbc42ecdaf45802 # master
         with:
-          username: 'insomnia-infra'
+          username: "insomnia-infra"
 
       - name: Update brew
         run: brew update

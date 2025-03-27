@@ -1,7 +1,6 @@
+import type { ISpectralDiagnostic } from "@stoplight/spectral-core";
 
-import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
-
-import type { SpectralResponse } from './spectral-worker';
+import type { SpectralResponse } from "./spectral-worker";
 
 export class SpectralRunner {
   private worker: Worker;
@@ -10,16 +9,24 @@ export class SpectralRunner {
   constructor() {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- see below
     // @ts-ignore -- inso transpiles to commonjs so doesn't play nice with this
-    this.worker = new Worker(new URL('./spectral-worker.ts', import.meta.url), { type: 'module' });
+    this.worker = new Worker(new URL("./spectral-worker.ts", import.meta.url), {
+      type: "module",
+    });
   }
 
   terminate() {
     this.worker.terminate();
   }
 
-  public async runDiagnostics({ contents, rulesetPath }: { contents: string; rulesetPath: string }) {
+  public async runDiagnostics({
+    contents,
+    rulesetPath,
+  }: {
+    contents: string;
+    rulesetPath: string;
+  }) {
     this.taskId = ++this.taskId;
-    return new Promise<ISpectralDiagnostic[]>(resolve => {
+    return new Promise<ISpectralDiagnostic[]>((resolve) => {
       this.worker.onmessage = (e: MessageEvent<SpectralResponse>) => {
         const { id, diagnostics } = e.data;
 
@@ -32,9 +39,9 @@ export class SpectralRunner {
           return;
         }
         if (diagnostics) {
-          console.log('[spectral] Received diagnostics for old task, ignoring');
+          console.log("[spectral] Received diagnostics for old task, ignoring");
         } else {
-          console.error('Error while running diagnostics:', e.data);
+          console.error("Error while running diagnostics:", e.data);
         }
       };
 
@@ -45,4 +52,4 @@ export class SpectralRunner {
       });
     });
   }
-};
+}

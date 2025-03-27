@@ -1,9 +1,9 @@
-import React, { type PropsWithChildren, type ReactNode } from 'react';
+import React, { type PropsWithChildren, type ReactNode } from "react";
 
-import type { SettingsOfType } from '../../../common/settings';
-import { useSettingsPatcher } from '../../hooks/use-request';
-import { useRootLoaderData } from '../../routes/root';
-import { HelpTooltip } from '../help-tooltip';
+import type { SettingsOfType } from "../../../common/settings";
+import { useSettingsPatcher } from "../../hooks/use-request";
+import { useRootLoaderData } from "../../routes/root";
+import { HelpTooltip } from "../help-tooltip";
 interface Props<T> {
   help?: ReactNode;
   label: string;
@@ -20,9 +20,7 @@ export const EnumSetting = <T extends string | number>({
   setting,
   values,
 }: PropsWithChildren<Props<T>>) => {
-  const {
-    settings,
-  } = useRootLoaderData();
+  const { settings } = useRootLoaderData();
 
   const patchSettings = useSettingsPatcher();
 
@@ -32,10 +30,11 @@ export const EnumSetting = <T extends string | number>({
         {label}
         {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
         <select
-          value={String(settings[setting]) || '__NULL__'}
+          value={String(settings[setting]) || "__NULL__"}
           name={setting}
-          onChange={event => patchSettings({ [setting]: event.currentTarget.value })}
-
+          onChange={(event) =>
+            patchSettings({ [setting]: event.currentTarget.value })
+          }
         >
           {values.map(({ name, value }) => (
             <option key={value} value={value}>

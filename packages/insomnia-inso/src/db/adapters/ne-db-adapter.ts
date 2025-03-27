@@ -1,38 +1,41 @@
-import { stat } from 'node:fs/promises';
+import { stat } from "node:fs/promises";
 
-import NeDB from '@seald-io/nedb';
-import path from 'path';
+import NeDB from "@seald-io/nedb";
+import path from "path";
 
-import { Database, DbAdapter, emptyDb } from '../index';
-import type { BaseModel } from '../models/types';
+import { Database, DbAdapter, emptyDb } from "../index";
+import type { BaseModel } from "../models/types";
 
 const neDbAdapter: DbAdapter = async (dir, filterTypes) => {
   // Confirm if db files exist
   try {
-    await stat(path.join(dir, 'insomnia.Workspace.db'));
+    await stat(path.join(dir, "insomnia.Workspace.db"));
   } catch {
     return null;
   }
 
   const db = emptyDb();
-  const types = filterTypes?.length ? filterTypes : Object.keys(db) as (keyof Database)[];
-  const promises = types.map(t =>
-    new Promise((resolve, reject) => {
-      const filePath = path.join(dir, `insomnia.${t}.db`);
-      const collection = new NeDB({
-        autoload: true,
-        filename: filePath,
-        corruptAlertThreshold: 0.9,
-      });
-      collection.find({}, (err: Error, docs: BaseModel[]) => {
-        if (err) {
-          return reject(err);
-        }
+  const types = filterTypes?.length
+    ? filterTypes
+    : (Object.keys(db) as (keyof Database)[]);
+  const promises = types.map(
+    (t) =>
+      new Promise((resolve, reject) => {
+        const filePath = path.join(dir, `insomnia.${t}.db`);
+        const collection = new NeDB({
+          autoload: true,
+          filename: filePath,
+          corruptAlertThreshold: 0.9,
+        });
+        collection.find({}, (err: Error, docs: BaseModel[]) => {
+          if (err) {
+            return reject(err);
+          }
 
-        (db[t] as {}[]).push(...docs);
-        resolve(null);
-      });
-    }),
+          (db[t] as {}[]).push(...docs);
+          resolve(null);
+        });
+      }),
   );
   await Promise.all(promises);
   return db;

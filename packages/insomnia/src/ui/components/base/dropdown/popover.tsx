@@ -1,8 +1,14 @@
-import React, { type FC, type ReactNode, useRef } from 'react';
-import { type AriaPopoverProps, DismissButton, Overlay, useOverlayTrigger, usePopover } from 'react-aria';
-import type { OverlayTriggerState } from 'react-stately';
+import React, { type FC, type ReactNode, useRef } from "react";
+import {
+  type AriaPopoverProps,
+  DismissButton,
+  Overlay,
+  useOverlayTrigger,
+  usePopover,
+} from "react-aria";
+import type { OverlayTriggerState } from "react-stately";
 
-interface Props extends Omit<AriaPopoverProps, 'popoverRef' | 'maxHeight'> {
+interface Props extends Omit<AriaPopoverProps, "popoverRef" | "maxHeight"> {
   children: ReactNode;
   state: OverlayTriggerState;
 }
@@ -12,18 +18,21 @@ export const Popover: FC<Props> = (props: Props) => {
   const { state, children, isNonModal } = props;
 
   const { overlayProps } = useOverlayTrigger(
-    { type: 'dialog' },
+    { type: "dialog" },
     state,
-    props.triggerRef
+    props.triggerRef,
   );
 
   // Handle events that should cause the popup to close,
   // e.g. blur, clicking outside, or pressing the escape key.
-  const { popoverProps } = usePopover({ ...{ ...props, ...overlayProps, offset: 4 }, popoverRef }, state);
+  const { popoverProps } = usePopover(
+    { ...{ ...props, ...overlayProps, offset: 4 }, popoverRef },
+    state,
+  );
 
   return (
     <Overlay>
-      <div style={{ position: 'fixed', inset: 0 }} />
+      <div style={{ position: "fixed", inset: 0 }} />
       <div {...popoverProps} ref={popoverRef}>
         {!isNonModal && <DismissButton onDismiss={state.close} />}
         {children}

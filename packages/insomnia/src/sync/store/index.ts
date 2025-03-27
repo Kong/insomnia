@@ -1,6 +1,6 @@
-import path from 'path';
+import path from "path";
 
-import type { BaseDriver } from './drivers/base';
+import type { BaseDriver } from "./drivers/base";
 
 // Can't really make this any more specific unfortunately
 type JSONValue = any;
@@ -56,7 +56,7 @@ export default class Store {
       // Without the `await` here, the catch won't get called
       value = await this._deserialize(ext, rawValue);
     } catch (err) {
-      console.log('[sync] Failed to deserialize', rawValue.toString('base64'));
+      console.log("[sync] Failed to deserialize", rawValue.toString("base64"));
       throw new Error(`Failed to deserialize key=${key} err=${err}`);
     }
 
@@ -80,7 +80,10 @@ export default class Store {
   }
 
   async _serialize(ext: string, raw: JSONValue | Buffer) {
-    let buff = raw instanceof Buffer ? raw : Buffer.from(JSON.stringify(raw, null, 2), 'utf8');
+    let buff =
+      raw instanceof Buffer
+        ? raw
+        : Buffer.from(JSON.stringify(raw, null, 2), "utf8");
 
     for (const hook of this._hooks) {
       if (!hook.write) {
@@ -102,6 +105,6 @@ export default class Store {
       value = await hook.read(ext, value);
     }
 
-    return JSON.parse(value.toString('utf8'));
+    return JSON.parse(value.toString("utf8"));
   }
 }

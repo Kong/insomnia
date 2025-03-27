@@ -1,19 +1,19 @@
-import React from 'react';
+import React from "react";
 
 export const AppLoadingIndicator = () => (
   <div
     id="app-loading-indicator"
     style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100%',
-      width: '100%',
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      height: "100%",
+      width: "100%",
     }}
   >
     <div
       style={{
-        position: 'relative',
+        position: "relative",
       }}
     >
       <svg
@@ -45,7 +45,7 @@ export const AppLoadingIndicator = () => (
           transform="translate(-323 -111) translate(359.016 147.016) scale(4.24956)"
         >
           <animateTransform
-            additive='sum'
+            additive="sum"
             attributeName="transform"
             type="rotate"
             from="0 36 36"

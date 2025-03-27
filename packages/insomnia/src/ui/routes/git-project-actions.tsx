@@ -1,48 +1,50 @@
-import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
-
-import * as models from '../../models';
-import type { GitRepository } from '../../models/git-repository';
-import type { WorkspaceScope } from '../../models/workspace';
 import {
-  type GitLogEntry,
-} from '../../sync/git/git-vcs';
-import type { MergeConflict } from '../../sync/types';
-import { invariant } from '../../utils/invariant';
+  type ActionFunction,
+  type LoaderFunction,
+  redirect,
+} from "react-router-dom";
+
+import * as models from "../../models";
+import type { GitRepository } from "../../models/git-repository";
+import type { WorkspaceScope } from "../../models/workspace";
+import { type GitLogEntry } from "../../sync/git/git-vcs";
+import type { MergeConflict } from "../../sync/types";
+import { invariant } from "../../utils/invariant";
 
 // Loaders
 export type GitRepoLoaderData =
   | {
-    branch: string;
-    branches: string[];
-    gitRepository: GitRepository | null;
-  }
+      branch: string;
+      branches: string[];
+      gitRepository: GitRepository | null;
+    }
   | {
-    errors: string[];
-  };
+      errors: string[];
+    };
 
 export const gitRepoLoader: ActionFunction = async ({
   params,
 }): Promise<GitRepoLoaderData> => {
   const { projectId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
 
   return window.main.git.loadGitRepository({ projectId });
 };
 
 export type GitBranchesLoaderData =
   | {
-    branches: string[];
-    remoteBranches: string[];
-  }
+      branches: string[];
+      remoteBranches: string[];
+    }
   | {
-    errors: string[];
-  };
+      errors: string[];
+    };
 
 export const gitBranchesLoader: LoaderFunction = async ({
   params,
 }): Promise<GitBranchesLoaderData> => {
   const { projectId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
 
   return window.main.git.getGitBranches({ projectId });
 };
@@ -55,24 +57,24 @@ export const gitFetchAction: ActionFunction = async ({
   params,
 }): Promise<GitFetchLoaderData> => {
   const { projectId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
 
   return window.main.git.gitFetchAction({ projectId });
 };
 
 export type GitLogLoaderData =
   | {
-    log: GitLogEntry[];
-  }
+      log: GitLogEntry[];
+    }
   | {
-    errors: string[];
-  };
+      errors: string[];
+    };
 
 export const gitLogLoader: LoaderFunction = async ({
   params,
 }): Promise<GitLogLoaderData> => {
   const { projectId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
 
   return window.main.git.gitLogLoader({ projectId });
 };
@@ -95,7 +97,7 @@ export const gitChangesLoader: LoaderFunction = async ({
   params,
 }): Promise<GitChangesLoaderData> => {
   const { projectId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
 
   return window.main.git.gitChangesLoader({ projectId });
 };
@@ -104,27 +106,34 @@ export interface GitCanPushLoaderData {
   canPush: boolean;
 }
 
-export const canPushLoader: LoaderFunction = async ({ params }): Promise<GitCanPushLoaderData> => {
+export const canPushLoader: LoaderFunction = async ({
+  params,
+}): Promise<GitCanPushLoaderData> => {
   const { projectId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
 
   return window.main.git.canPushLoader({ projectId });
 };
 
 // Actions
-export type InitGitCloneResult = {
-  files: {
-    scope: WorkspaceScope;
-    name: string;
-    path: string;
-  }[];
-} | {
-  errors: string[];
-};
+export type InitGitCloneResult =
+  | {
+      files: {
+        scope: WorkspaceScope;
+        name: string;
+        path: string;
+      }[];
+    }
+  | {
+      errors: string[];
+    };
 
-export const initGitCloneAction: ActionFunction = async ({ request, params }) => {
+export const initGitCloneAction: ActionFunction = async ({
+  request,
+  params,
+}) => {
   const { organizationId } = params;
-  invariant(organizationId, 'Organization ID is required');
+  invariant(organizationId, "Organization ID is required");
 
   const formData = await request.formData();
 
@@ -142,7 +151,7 @@ export const initGitCloneAction: ActionFunction = async ({ request, params }) =>
     ...data,
   });
 
-  if ('errors' in initCloneResult) {
+  if ("errors" in initCloneResult) {
     return { errors: initCloneResult.errors };
   }
 
@@ -154,14 +163,14 @@ export const initGitCloneAction: ActionFunction = async ({ request, params }) =>
 type CloneGitActionResult =
   | Response
   | {
-    errors?: string[];
-  };
+      errors?: string[];
+    };
 export const cloneGitRepoAction: ActionFunction = async ({
   request,
   params,
 }): Promise<CloneGitActionResult> => {
   const { organizationId } = params;
-  invariant(organizationId, 'Organization ID is required');
+  invariant(organizationId, "Organization ID is required");
 
   const formData = await request.formData();
 
@@ -183,8 +192,8 @@ export const cloneGitRepoAction: ActionFunction = async ({
     return { errors };
   }
 
-  invariant(organizationId, 'Organization ID is required');
-  invariant(projectId, 'Project ID is required');
+  invariant(organizationId, "Organization ID is required");
+  invariant(projectId, "Project ID is required");
 
   return redirect(`/organization/${organizationId}/project/${projectId}`);
 };
@@ -194,7 +203,7 @@ export const updateGitRepoAction: ActionFunction = async ({
   params,
 }) => {
   const { projectId } = params;
-  invariant(projectId, 'Project ID is required');
+  invariant(projectId, "Project ID is required");
 
   const formData = await request.formData();
   const data = Object.fromEntries(formData.entries()) as {
@@ -214,10 +223,10 @@ export const updateGitRepoAction: ActionFunction = async ({
 
 export const resetGitRepoAction: ActionFunction = async ({ params }) => {
   const { projectId } = params;
-  invariant(projectId, 'Project ID is required');
+  invariant(projectId, "Project ID is required");
 
   const project = await models.project.getById(projectId);
-  invariant(project, 'Project not found');
+  invariant(project, "Project not found");
 
   return window.main.git.resetGitRepo({ projectId });
 };
@@ -231,11 +240,11 @@ export const commitToGitRepoAction: ActionFunction = async ({
   params,
 }): Promise<CommitToGitRepoResult> => {
   const { projectId } = params;
-  invariant(projectId, 'Project ID is required');
+  invariant(projectId, "Project ID is required");
 
   const formData = await request.formData();
-  const message = formData.get('message');
-  invariant(typeof message === 'string', 'Message is required');
+  const message = formData.get("message");
+  invariant(typeof message === "string", "Message is required");
 
   return window.main.git.commitToGitRepo({ projectId, message });
 };
@@ -245,11 +254,11 @@ export const commitAndPushToGitRepoAction: ActionFunction = async ({
   params,
 }): Promise<CommitToGitRepoResult> => {
   const { projectId } = params;
-  invariant(projectId, 'Project ID is required');
+  invariant(projectId, "Project ID is required");
 
   const formData = await request.formData();
-  const message = formData.get('message');
-  invariant(typeof message === 'string', 'Message is required');
+  const message = formData.get("message");
+  invariant(typeof message === "string", "Message is required");
 
   return window.main.git.commitAndPushToGitRepo({
     projectId,
@@ -266,10 +275,10 @@ export const createNewGitBranchAction: ActionFunction = async ({
   params,
 }): Promise<CreateNewGitBranchResult> => {
   const { projectId } = params;
-  invariant(projectId, 'Project ID is required');
+  invariant(projectId, "Project ID is required");
   const formData = await request.formData();
-  const branch = formData.get('branch');
-  invariant(typeof branch === 'string', 'Branch is required');
+  const branch = formData.get("branch");
+  invariant(typeof branch === "string", "Branch is required");
 
   return window.main.git.createNewGitBranch({
     branch,
@@ -285,11 +294,11 @@ export const checkoutGitBranchAction: ActionFunction = async ({
   params,
 }): Promise<CheckoutGitBranchResult> => {
   const { projectId } = params;
-  invariant(projectId, 'Project ID is required');
+  invariant(projectId, "Project ID is required");
 
   const formData = await request.formData();
-  const branch = formData.get('branch');
-  invariant(typeof branch === 'string', 'Branch is required');
+  const branch = formData.get("branch");
+  invariant(typeof branch === "string", "Branch is required");
 
   return window.main.git.checkoutGitBranch({
     branch,
@@ -322,11 +331,11 @@ export const deleteGitBranchAction: ActionFunction = async ({
   params,
 }): Promise<DeleteGitBranchResult> => {
   const { projectId } = params;
-  invariant(projectId, 'Project ID is required');
+  invariant(projectId, "Project ID is required");
 
   const formData = await request.formData();
-  const branch = formData.get('branch');
-  invariant(typeof branch === 'string', 'Branch is required');
+  const branch = formData.get("branch");
+  invariant(typeof branch === "string", "Branch is required");
 
   return window.main.git.deleteGitBranch({
     branch,
@@ -343,33 +352,35 @@ export const pushToGitRemoteAction: ActionFunction = async ({
   params,
 }): Promise<PushToGitRemoteResult> => {
   const { projectId } = params;
-  invariant(projectId, 'Project ID is required');
+  invariant(projectId, "Project ID is required");
 
   const formData = await request.formData();
 
   return window.main.git.pushToGitRemote({
     projectId,
-    force: formData.get('force') === 'true',
+    force: formData.get("force") === "true",
   });
 };
 
-export const pullFromGitRemote = async ({ projectId }: { projectId: string }) => {
+export const pullFromGitRemote = async ({
+  projectId,
+}: {
+  projectId: string;
+}) => {
   return window.main.git.pullFromGitRemote({ projectId });
 };
 
-export const continueMerge = async (
-  {
-    projectId,
-    handledMergeConflicts,
-    commitMessage,
-    commitParent,
-  }: {
-    projectId: string;
-    handledMergeConflicts: MergeConflict[];
-    commitMessage: string;
-    commitParent: string[];
-  }
-) => {
+export const continueMerge = async ({
+  projectId,
+  handledMergeConflicts,
+  commitMessage,
+  commitParent,
+}: {
+  projectId: string;
+  handledMergeConflicts: MergeConflict[];
+  commitMessage: string;
+  commitParent: string[];
+}) => {
   return window.main.git.continueMerge({
     projectId,
     handledMergeConflicts,
@@ -394,9 +405,9 @@ export const discardChangesAction: ActionFunction = async ({
   errors?: string[];
 }> => {
   const { projectId } = params;
-  invariant(projectId, 'Project ID is required');
+  invariant(projectId, "Project ID is required");
 
-  const { paths } = await request.json() as { paths: string[] };
+  const { paths } = (await request.json()) as { paths: string[] };
 
   return window.main.git.discardChanges({ projectId, paths });
 };
@@ -407,9 +418,11 @@ export interface GitStatusResult {
   };
 }
 
-export const gitStatusAction: ActionFunction = async ({ params }): Promise<GitStatusResult> => {
+export const gitStatusAction: ActionFunction = async ({
+  params,
+}): Promise<GitStatusResult> => {
   const { projectId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
   return window.main.git.gitStatus({ projectId });
 };
 
@@ -428,8 +441,8 @@ export const stageChangesAction: ActionFunction = async ({
   errors?: string[];
 }> => {
   const { projectId } = params;
-  invariant(projectId, 'Project ID is required');
-  const { paths } = await request.json() as { paths: string[] };
+  invariant(projectId, "Project ID is required");
+  const { paths } = (await request.json()) as { paths: string[] };
 
   return window.main.git.stageChanges({ projectId, paths });
 };
@@ -441,43 +454,49 @@ export const unstageChangesAction: ActionFunction = async ({
   errors?: string[];
 }> => {
   const { projectId } = params;
-  invariant(projectId, 'Project ID is required');
-  const { paths } = await request.json() as { paths: string[] };
+  invariant(projectId, "Project ID is required");
+  const { paths } = (await request.json()) as { paths: string[] };
 
   return window.main.git.unstageChanges({ projectId, paths });
 };
 
-export type GitDiffResult = {
-  name: string;
-  diff?: {
-    before: string;
-    after: string;
-  };
-} | {
-  errors: string[];
-};
+export type GitDiffResult =
+  | {
+      name: string;
+      diff?: {
+        before: string;
+        after: string;
+      };
+    }
+  | {
+      errors: string[];
+    };
 
 export const diffFileLoader: LoaderFunction = async ({
   request,
   params,
 }): Promise<GitDiffResult> => {
   const { projectId } = params;
-  invariant(projectId, 'Project ID is required');
-  const urlParams = new URLSearchParams(request.url.split('?')[1]);
+  invariant(projectId, "Project ID is required");
+  const urlParams = new URLSearchParams(request.url.split("?")[1]);
 
-  const filepath = urlParams.get('filepath');
-  invariant(filepath, 'Filepath is required');
+  const filepath = urlParams.get("filepath");
+  invariant(filepath, "Filepath is required");
 
-  const staged = urlParams.get('staged') === 'true';
+  const staged = urlParams.get("staged") === "true";
 
   return window.main.git.diffFileLoader({ projectId, filepath, staged });
 };
 
-export type GetRepositoryDirectoryTreeResult = Awaited<ReturnType<typeof window.main.git.getRepositoryDirectoryTree>>;
+export type GetRepositoryDirectoryTreeResult = Awaited<
+  ReturnType<typeof window.main.git.getRepositoryDirectoryTree>
+>;
 
-export const getRepositoryDirectoryTree: ActionFunction = async ({ params }) => {
+export const getRepositoryDirectoryTree: ActionFunction = async ({
+  params,
+}) => {
   const { projectId } = params;
-  invariant(projectId, 'Project ID is required');
+  invariant(projectId, "Project ID is required");
 
   return window.main.git.getRepositoryDirectoryTree({ projectId });
 };

@@ -1,10 +1,10 @@
-import classnames from 'classnames';
-import React, { type FC, type PropsWithChildren, type ReactNode } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import classnames from "classnames";
+import React, { type FC, type PropsWithChildren, type ReactNode } from "react";
+import { useRouteLoaderData } from "react-router-dom";
 
-import type { RequestLoaderData } from '../../../../routes/request';
-import type { RequestGroupLoaderData } from '../../../../routes/request-group';
-import { HelpTooltip } from '../../../help-tooltip';
+import type { RequestLoaderData } from "../../../../routes/request";
+import type { RequestGroupLoaderData } from "../../../../routes/request-group";
+import { HelpTooltip } from "../../../help-tooltip";
 
 interface Props {
   labelFor: string;
@@ -13,11 +13,24 @@ interface Props {
   disabled?: boolean;
 }
 
-export const AuthRow: FC<PropsWithChildren<Props>> = ({ labelFor, label, help, disabled, children }) => {
-  const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const groupData = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
-  const { authentication } = reqData?.activeRequest || groupData.activeRequestGroup;
-  const isDisabled = (authentication && 'disabled' in authentication && authentication.disabled) || disabled;
+export const AuthRow: FC<PropsWithChildren<Props>> = ({
+  labelFor,
+  label,
+  help,
+  disabled,
+  children,
+}) => {
+  const reqData = useRouteLoaderData("request/:requestId") as RequestLoaderData;
+  const groupData = useRouteLoaderData(
+    "request-group/:requestGroupId",
+  ) as RequestGroupLoaderData;
+  const { authentication } =
+    reqData?.activeRequest || groupData.activeRequestGroup;
+  const isDisabled =
+    (authentication &&
+      "disabled" in authentication &&
+      authentication.disabled) ||
+    disabled;
   return (
     <tr key={labelFor}>
       <td className="pad-right no-wrap valign-middle">
@@ -28,9 +41,12 @@ export const AuthRow: FC<PropsWithChildren<Props>> = ({ labelFor, label, help, d
       </td>
       <td className="wide">
         <div
-          className={classnames('form-control form-control--underlined no-margin flex wide', {
-            'form-control--inactive': isDisabled,
-          })}
+          className={classnames(
+            "form-control form-control--underlined no-margin wide flex",
+            {
+              "form-control--inactive": isDisabled,
+            },
+          )}
         >
           {children}
         </div>

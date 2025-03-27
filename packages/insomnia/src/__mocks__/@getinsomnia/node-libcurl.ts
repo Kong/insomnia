@@ -1,14 +1,14 @@
 // Note: we cannot import these from `node-libcurl` like normal because they come from the native library and it's not possible to load it while testing because it was built to run with Electron.
 // That applies to these Enum type imports, but also applies to the members of the class below.
-import { CurlAuth } from '@getinsomnia/node-libcurl/dist/enum/CurlAuth';
-import { CurlCode } from '@getinsomnia/node-libcurl/dist/enum/CurlCode';
-import { CurlFeature } from '@getinsomnia/node-libcurl/dist/enum/CurlFeature';
-import { CurlHttpVersion } from '@getinsomnia/node-libcurl/dist/enum/CurlHttpVersion';
-import { CurlInfoDebug } from '@getinsomnia/node-libcurl/dist/enum/CurlInfoDebug';
-import { CurlNetrc } from '@getinsomnia/node-libcurl/dist/enum/CurlNetrc';
-import { CurlSslOpt } from '@getinsomnia/node-libcurl/dist/enum/CurlSslOpt';
-import { EventEmitter } from 'events';
-import fs from 'fs';
+import { CurlAuth } from "@getinsomnia/node-libcurl/dist/enum/CurlAuth";
+import { CurlCode } from "@getinsomnia/node-libcurl/dist/enum/CurlCode";
+import { CurlFeature } from "@getinsomnia/node-libcurl/dist/enum/CurlFeature";
+import { CurlHttpVersion } from "@getinsomnia/node-libcurl/dist/enum/CurlHttpVersion";
+import { CurlInfoDebug } from "@getinsomnia/node-libcurl/dist/enum/CurlInfoDebug";
+import { CurlNetrc } from "@getinsomnia/node-libcurl/dist/enum/CurlNetrc";
+import { CurlSslOpt } from "@getinsomnia/node-libcurl/dist/enum/CurlSslOpt";
+import { EventEmitter } from "events";
+import fs from "fs";
 
 class Curl extends EventEmitter {
   _options: { [key: string]: any } = {};
@@ -16,59 +16,59 @@ class Curl extends EventEmitter {
   _features: { [key: string]: any } = {};
 
   static info = {
-    COOKIELIST: 'COOKIELIST',
-    EFFECTIVE_URL: 'EFFECTIVE_URL',
-    SIZE_DOWNLOAD: 'SIZE_DOWNLOAD',
-    TOTAL_TIME: 'TOTAL_TIME',
+    COOKIELIST: "COOKIELIST",
+    EFFECTIVE_URL: "EFFECTIVE_URL",
+    SIZE_DOWNLOAD: "SIZE_DOWNLOAD",
+    TOTAL_TIME: "TOTAL_TIME",
   };
 
   static option = {
-    ACCEPT_ENCODING: 'ACCEPT_ENCODING',
-    CAINFO: 'CAINFO',
-    CAINFO_BLOB: 'CAINFO_BLOB',
-    COOKIEFILE: 'COOKIEFILE',
-    COOKIELIST: 'COOKIELIST',
-    CUSTOMREQUEST: 'CUSTOMREQUEST',
-    DEBUGFUNCTION: 'DEBUGFUNCTION',
-    FOLLOWLOCATION: 'FOLLOWLOCATION',
-    HTTPAUTH: 'HTTPAUTH',
-    HTTPGET: 'HTTPGET',
-    HTTPHEADER: 'HTTPHEADER',
-    HTTPPOST: 'HTTPPOST',
-    HTTP_VERSION: 'HTTP_VERSION',
-    INFILESIZE_LARGE: 'INFILESIZE_LARGE',
-    KEYPASSWD: 'KEYPASSWD',
-    MAXREDIRS: 'MAXREDIRS',
-    NETRC: 'NETRC',
-    NOBODY: 'NOBODY',
-    NOPROGRESS: 'NOPROGRESS',
-    NOPROXY: 'NOPROXY',
-    PASSWORD: 'PASSWORD',
-    POST: 'POST',
-    POSTFIELDS: 'POSTFIELDS',
-    PROXY: 'PROXY',
-    PROXYAUTH: 'PROXYAUTH',
-    READDATA: 'READDATA',
-    READFUNCTION: 'READFUNCTION',
-    SSLCERT: 'SSLCERT',
-    SSLCERTTYPE: 'SSLCERTTYPE',
-    SSLKEY: 'SSLKEY',
-    SSL_VERIFYHOST: 'SSL_VERIFYHOST',
-    SSL_VERIFYPEER: 'SSL_VERIFYPEER',
-    TIMEOUT_MS: 'TIMEOUT_MS',
-    UNIX_SOCKET_PATH: 'UNIX_SOCKET_PATH',
-    UPLOAD: 'UPLOAD',
-    URL: 'URL',
-    USERAGENT: 'USERAGENT',
-    USERNAME: 'USERNAME',
-    VERBOSE: 'VERBOSE',
-    WRITEFUNCTION: 'WRITEFUNCTION',
-    XFERINFOFUNCTION: 'XFERINFOFUNCTION',
-    SSL_OPTIONS: 'SSL_OPTIONS',
+    ACCEPT_ENCODING: "ACCEPT_ENCODING",
+    CAINFO: "CAINFO",
+    CAINFO_BLOB: "CAINFO_BLOB",
+    COOKIEFILE: "COOKIEFILE",
+    COOKIELIST: "COOKIELIST",
+    CUSTOMREQUEST: "CUSTOMREQUEST",
+    DEBUGFUNCTION: "DEBUGFUNCTION",
+    FOLLOWLOCATION: "FOLLOWLOCATION",
+    HTTPAUTH: "HTTPAUTH",
+    HTTPGET: "HTTPGET",
+    HTTPHEADER: "HTTPHEADER",
+    HTTPPOST: "HTTPPOST",
+    HTTP_VERSION: "HTTP_VERSION",
+    INFILESIZE_LARGE: "INFILESIZE_LARGE",
+    KEYPASSWD: "KEYPASSWD",
+    MAXREDIRS: "MAXREDIRS",
+    NETRC: "NETRC",
+    NOBODY: "NOBODY",
+    NOPROGRESS: "NOPROGRESS",
+    NOPROXY: "NOPROXY",
+    PASSWORD: "PASSWORD",
+    POST: "POST",
+    POSTFIELDS: "POSTFIELDS",
+    PROXY: "PROXY",
+    PROXYAUTH: "PROXYAUTH",
+    READDATA: "READDATA",
+    READFUNCTION: "READFUNCTION",
+    SSLCERT: "SSLCERT",
+    SSLCERTTYPE: "SSLCERTTYPE",
+    SSLKEY: "SSLKEY",
+    SSL_VERIFYHOST: "SSL_VERIFYHOST",
+    SSL_VERIFYPEER: "SSL_VERIFYPEER",
+    TIMEOUT_MS: "TIMEOUT_MS",
+    UNIX_SOCKET_PATH: "UNIX_SOCKET_PATH",
+    UPLOAD: "UPLOAD",
+    URL: "URL",
+    USERAGENT: "USERAGENT",
+    USERNAME: "USERNAME",
+    VERBOSE: "VERBOSE",
+    WRITEFUNCTION: "WRITEFUNCTION",
+    XFERINFOFUNCTION: "XFERINFOFUNCTION",
+    SSL_OPTIONS: "SSL_OPTIONS",
   };
 
   static getVersion() {
-    return 'libcurl/7.54.0 LibreSSL/2.0.20 zlib/1.2.11 nghttp2/1.24.0';
+    return "libcurl/7.54.0 LibreSSL/2.0.20 zlib/1.2.11 nghttp2/1.24.0";
   }
 
   enable(name: string | number) {
@@ -85,8 +85,8 @@ class Curl extends EventEmitter {
       return;
     }
 
-    if (name === Curl.option.READFUNCTION && typeof value === 'function') {
-      let body = '';
+    if (name === Curl.option.READFUNCTION && typeof value === "function") {
+      let body = "";
 
       // Only limiting this to prevent infinite loops
       for (let i = 0; i < 1000; i++) {
@@ -108,7 +108,7 @@ class Curl extends EventEmitter {
       this._options[name] = this._options[name] || [];
 
       this._options[name].push(value);
-    } else if (name === Curl.option.READDATA && typeof value === 'number') {
+    } else if (name === Curl.option.READDATA && typeof value === "number") {
       const { size } = fs.fstatSync(value);
       const buffer = Buffer.alloc(size);
       fs.readSync(value, buffer, 0, size, 0);
@@ -121,7 +121,9 @@ class Curl extends EventEmitter {
   getInfo(name: string) {
     switch (name) {
       case Curl.info.COOKIELIST:
-        return [`#HttpOnly_.insomnia.rest\tTRUE\t/url/path\tTRUE\t${Date.now() / 1000}\tfoo\tbar`];
+        return [
+          `#HttpOnly_.insomnia.rest\tTRUE\t/url/path\tTRUE\t${Date.now() / 1000}\tfoo\tbar`,
+        ];
 
       case Curl.info.EFFECTIVE_URL:
         return this._options[Curl.option.URL];
@@ -146,21 +148,21 @@ class Curl extends EventEmitter {
           features: this._features,
         }),
       );
-      this.emit('data', data);
+      this.emit("data", data);
 
       this._options.WRITEFUNCTION(data);
 
       process.nextTick(() => {
         this.emit(
-          'end',
-          'NOT_USED',
-          'NOT_USED',
+          "end",
+          "NOT_USED",
+          "NOT_USED",
           [
-            'HTTP/1.1 200 OK',
+            "HTTP/1.1 200 OK",
             `Content-Length: ${data.length}`,
-            'Content-Type: application/json',
-            '',
-          ].join('\n'),
+            "Content-Type: application/json",
+            "",
+          ].join("\n"),
         );
       });
     });
@@ -184,7 +186,7 @@ const getTsEnumOnlyWithNamedMembers = (enumObj: any) => {
   let obj = {};
 
   for (const member in enumObj) {
-    if (typeof enumObj[member] === 'number') {
+    if (typeof enumObj[member] === "number") {
       obj = { ...obj, [member]: member };
     }
   }

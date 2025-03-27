@@ -1,8 +1,8 @@
-import fuzzysort from 'fuzzysort';
-import { v4 as uuidv4 } from 'uuid';
-import zlib from 'zlib';
+import fuzzysort from "fuzzysort";
+import { v4 as uuidv4 } from "uuid";
+import zlib from "zlib";
 
-import { DEBOUNCE_MILLIS } from './constants';
+import { DEBOUNCE_MILLIS } from "./constants";
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
@@ -11,14 +11,17 @@ interface Header {
   value: string;
 }
 
-export function filterHeaders<T extends { name: string; value: string }>(headers: T[], name?: string): T[] {
-  if (!Array.isArray(headers) || !name || typeof name !== 'string') {
+export function filterHeaders<T extends { name: string; value: string }>(
+  headers: T[],
+  name?: string,
+): T[] {
+  if (!Array.isArray(headers) || !name || typeof name !== "string") {
     return [];
   }
 
-  return headers.filter(header => {
+  return headers.filter((header) => {
     // Never match against invalid headers
-    if (!header || !header.name || typeof header.name !== 'string') {
+    if (!header || !header.name || typeof header.name !== "string") {
       return false;
     }
 
@@ -27,51 +30,55 @@ export function filterHeaders<T extends { name: string; value: string }>(headers
 }
 
 export function hasContentTypeHeader<T extends Header>(headers: T[]) {
-  return filterHeaders(headers, 'content-type').length > 0;
+  return filterHeaders(headers, "content-type").length > 0;
 }
 
 export function hasContentLengthHeader<T extends Header>(headers: T[]) {
-  return filterHeaders(headers, 'content-length').length > 0;
+  return filterHeaders(headers, "content-length").length > 0;
 }
 
 export function hasAuthHeader<T extends Header>(headers: T[]) {
-  return filterHeaders(headers, 'authorization').length > 0;
+  return filterHeaders(headers, "authorization").length > 0;
 }
 
 export function hasAcceptHeader<T extends Header>(headers: T[]) {
-  return filterHeaders(headers, 'accept').length > 0;
+  return filterHeaders(headers, "accept").length > 0;
 }
 
 export function hasAcceptEncodingHeader<T extends Header>(headers: T[]) {
-  return filterHeaders(headers, 'accept-encoding').length > 0;
+  return filterHeaders(headers, "accept-encoding").length > 0;
 }
 
 export function getSetCookieHeaders<T extends Header>(headers: T[]): T[] {
-  return filterHeaders(headers, 'set-cookie');
+  return filterHeaders(headers, "set-cookie");
 }
 
 export function getLocationHeader<T extends Header>(headers: T[]): T | null {
-  const matches = filterHeaders(headers, 'location');
+  const matches = filterHeaders(headers, "location");
   return matches.length ? matches[0] : null;
 }
 
 export function getContentTypeHeader<T extends Header>(headers: T[]): T | null {
-  const matches = filterHeaders(headers, 'content-type');
+  const matches = filterHeaders(headers, "content-type");
   return matches.length ? matches[0] : null;
 }
 
-export function getMethodOverrideHeader<T extends Header>(headers: T[]): T | null {
-  const matches = filterHeaders(headers, 'x-http-method-override');
+export function getMethodOverrideHeader<T extends Header>(
+  headers: T[],
+): T | null {
+  const matches = filterHeaders(headers, "x-http-method-override");
   return matches.length ? matches[0] : null;
 }
 
 export function getHostHeader<T extends Header>(headers: T[]): T | null {
-  const matches = filterHeaders(headers, 'host');
+  const matches = filterHeaders(headers, "host");
   return matches.length ? matches[0] : null;
 }
 
-export function getContentDispositionHeader<T extends Header>(headers: T[]): T | null {
-  const matches = filterHeaders(headers, 'content-disposition');
+export function getContentDispositionHeader<T extends Header>(
+  headers: T[],
+): T | null {
+  const matches = filterHeaders(headers, "content-disposition");
   return matches.length ? matches[0] : null;
 }
 
@@ -81,7 +88,7 @@ export function getContentDispositionHeader<T extends Header>(headers: T[]): T |
  * @returns {string}
  */
 export function generateId(prefix?: string) {
-  const id = uuidv4().replace(/-/g, '');
+  const id = uuidv4().replace(/-/g, "");
 
   if (prefix) {
     return `${prefix}_${id}`;
@@ -91,12 +98,12 @@ export function generateId(prefix?: string) {
 }
 
 export function delay(milliseconds: number = DEBOUNCE_MILLIS) {
-  return new Promise<void>(resolve => setTimeout(resolve, milliseconds));
+  return new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
 }
 
 export function keyedDebounce<T>(
   callback: (t: Record<string, T[]>) => void,
-  millis: number = DEBOUNCE_MILLIS
+  millis: number = DEBOUNCE_MILLIS,
 ) {
   let timeout: NodeJS.Timeout;
   let results: Record<string, T[]> = {};
@@ -122,10 +129,10 @@ export function debounce<T extends Function>(
 ): T {
   // For regular debounce, just use a keyed debounce with a fixed key
   // @ts-expect-error -- unsound contravariance
-  return keyedDebounce(results => {
+  return keyedDebounce((results) => {
     // eslint-disable-next-line prefer-spread -- don't know if there was a "this binding" reason for this being this way so I'm leaving it alone
     callback.apply(null, results.__key__);
-  }, milliseconds).bind(null, '__key__');
+  }, milliseconds).bind(null, "__key__");
 }
 
 export function describeByteSize(bytes: number, long = false) {
@@ -137,24 +144,27 @@ export function describeByteSize(bytes: number, long = false) {
 
   if (bytes < 1024 * 2) {
     size = bytes;
-    unit = long ? 'bytes' : 'B';
+    unit = long ? "bytes" : "B";
   } else if (bytes < 1024 * 1024 * 2) {
     size = bytes / 1024;
-    unit = long ? 'kilobytes' : 'KB';
+    unit = long ? "kilobytes" : "KB";
   } else if (bytes < 1024 * 1024 * 1024 * 2) {
     size = bytes / 1024 / 1024;
-    unit = long ? 'megabytes' : 'MB';
+    unit = long ? "megabytes" : "MB";
   } else {
     size = bytes / 1024 / 1024 / 1024;
-    unit = long ? 'gigabytes' : 'GB';
+    unit = long ? "gigabytes" : "GB";
   }
 
   const rounded = Math.round(size * 10) / 10;
   return `${rounded} ${unit}`;
 }
 
-export function fnOrString(v: string | ((...args: any[]) => any), ...args: any[]) {
-  if (typeof v === 'string') {
+export function fnOrString(
+  v: string | ((...args: any[]) => any),
+  ...args: any[]
+) {
+  if (typeof v === "string") {
     return v;
   } else {
     return v(...args);
@@ -163,16 +173,18 @@ export function fnOrString(v: string | ((...args: any[]) => any), ...args: any[]
 
 export function compressObject(obj: any) {
   const compressed = zlib.gzipSync(JSON.stringify(obj));
-  return compressed.toString('base64');
+  return compressed.toString("base64");
 }
 
-export function decompressObject<ObjectType>(input: string | null): ObjectType | null {
-  if (typeof input !== 'string') {
+export function decompressObject<ObjectType>(
+  input: string | null,
+): ObjectType | null {
+  if (typeof input !== "string") {
     return null;
   }
 
-  const jsonBuffer = zlib.gunzipSync(Buffer.from(input, 'base64'));
-  return JSON.parse(jsonBuffer.toString('utf8')) as ObjectType;
+  const jsonBuffer = zlib.gunzipSync(Buffer.from(input, "base64"));
+  return JSON.parse(jsonBuffer.toString("utf8")) as ObjectType;
 }
 
 /**
@@ -181,7 +193,7 @@ export function decompressObject<ObjectType>(input: string | null): ObjectType |
  * @returns {string} escaped string
  */
 export function escapeRegex(str: string) {
-  return str.replace(ESCAPE_REGEX_MATCH, '\\$&');
+  return str.replace(ESCAPE_REGEX_MATCH, "\\$&");
 }
 
 export interface FuzzyMatchOptions {
@@ -209,7 +221,7 @@ export function fuzzyMatchAll(
     return null;
   }
 
-  const words = searchString.split(' ').filter(w => w.trim());
+  const words = searchString.split(" ").filter((w) => w.trim());
   const terms = options.splitSpace ? [...words, searchString] : [searchString];
   let maxScore: number | null = null;
   let indexes: number[] = [];
@@ -218,7 +230,7 @@ export function fuzzyMatchAll(
   for (const term of terms) {
     let matchedTerm = false;
 
-    for (const text of allText.filter(t => !t || t.trim())) {
+    for (const text of allText.filter((t) => !t || t.trim())) {
       const result = fuzzysort.single(term, text);
 
       if (!result) {
@@ -255,12 +267,12 @@ export function fuzzyMatchAll(
   return {
     score: maxScore,
     indexes,
-    target: allText.join(' '),
+    target: allText.join(" "),
   };
 }
 
 export function isNotNullOrUndefined<ValueType>(
-  value: ValueType | null | undefined
+  value: ValueType | null | undefined,
 ): value is ValueType {
   if (value === null || value === undefined) {
     return false;
@@ -269,4 +281,4 @@ export function isNotNullOrUndefined<ValueType>(
   return true;
 }
 
-export const toKebabCase = (value: string) => value.replace(/ /g, '-');
+export const toKebabCase = (value: string) => value.replace(/ /g, "-");

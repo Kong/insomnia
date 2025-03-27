@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 
 class ElectronStorage {
   _buffer: Record<string, string> = {};
@@ -31,7 +31,7 @@ class ElectronStorage {
     try {
       contents = String(fs.readFileSync(path));
     } catch (error) {
-      if (error.code === 'ENOENT') {
+      if (error.code === "ENOENT") {
         this.setItem(key, defaultObj);
       }
     }
@@ -39,7 +39,9 @@ class ElectronStorage {
     try {
       return JSON.parse(contents);
     } catch (error) {
-      console.error(`[ElectronStorage] Failed to parse item from electron storage: ${error}`);
+      console.error(
+        `[ElectronStorage] Failed to parse item from electron storage: ${error}`,
+      );
       return defaultObj;
     }
   }
@@ -53,8 +55,10 @@ class ElectronStorage {
     try {
       fs.unlinkSync(path);
     } catch (error) {
-      if (error.code !== 'ENOENT') {
-        console.error(`[localstorage] Failed to delete item from LocalStorage: ${error}`);
+      if (error.code !== "ENOENT") {
+        console.error(
+          `[localstorage] Failed to delete item from LocalStorage: ${error}`,
+        );
       }
     }
   }
@@ -76,7 +80,9 @@ class ElectronStorage {
       try {
         fs.writeFileSync(path, contents);
       } catch (error) {
-        console.error(`[ElectronStorage] Failed to save to electron storage: ${error}`);
+        console.error(
+          `[ElectronStorage] Failed to save to electron storage: ${error}`,
+        );
       }
     }
   }

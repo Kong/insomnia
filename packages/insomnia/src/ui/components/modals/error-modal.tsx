@@ -1,9 +1,15 @@
-import React, { forwardRef, type ReactNode, useImperativeHandle, useRef, useState } from 'react';
+import React, {
+  forwardRef,
+  type ReactNode,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 
-import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
-import { ModalBody } from '../base/modal-body';
-import { ModalFooter } from '../base/modal-footer';
-import { ModalHeader } from '../base/modal-header';
+import { Modal, type ModalHandle, type ModalProps } from "../base/modal";
+import { ModalBody } from "../base/modal-body";
+import { ModalFooter } from "../base/modal-footer";
+import { ModalHeader } from "../base/modal-header";
 // NOTE: this is only used by the plugin api
 export interface ErrorModalOptions {
   title?: string;
@@ -18,28 +24,34 @@ export interface ErrorModalHandle {
 export const ErrorModal = forwardRef<ErrorModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<ErrorModalOptions>({
-    title: '',
+    title: "",
     error: null,
-    message: '',
+    message: "",
     addCancel: false,
   });
 
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: options => {
-      setState(options);
-      modalRef.current?.show();
-    },
-  }), []);
+  useImperativeHandle(
+    ref,
+    () => ({
+      hide: () => {
+        modalRef.current?.hide();
+      },
+      show: (options) => {
+        setState(options);
+        modalRef.current?.show();
+      },
+    }),
+    [],
+  );
   const { error, title, addCancel } = state;
   const message = state.message || error?.message;
   return (
     <Modal ref={modalRef}>
-      <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
+      <ModalHeader>{title || "Uh Oh!"}</ModalHeader>
       <ModalBody className="wide pad">
-        {message ? <div className="notice error pre whitespace-pre-wrap">{message}</div> : null}
+        {message ? (
+          <div className="notice error pre whitespace-pre-wrap">{message}</div>
+        ) : null}
         {error && (
           <details>
             <summary>Stack trace</summary>
@@ -64,4 +76,4 @@ export const ErrorModal = forwardRef<ErrorModalHandle, ModalProps>((_, ref) => {
     </Modal>
   );
 });
-ErrorModal.displayName = 'ErrorModal';
+ErrorModal.displayName = "ErrorModal";

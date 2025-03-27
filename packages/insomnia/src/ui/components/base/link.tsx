@@ -1,5 +1,5 @@
-import classnames from 'classnames';
-import React, { type FC, type ReactNode, useCallback } from 'react';
+import classnames from "classnames";
+import React, { type FC, type ReactNode, useCallback } from "react";
 
 interface Props {
   href: string;
@@ -20,11 +20,14 @@ export const Link: FC<Props> = ({
   noTheme,
   ...other
 }) => {
-  const handleClick = useCallback((event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
-    event?.preventDefault();
-    onClick?.(event); // Also call onClick that was passed to us if there was one
-    window.main.openInBrowser(href);
-  }, [onClick, href]);
+  const handleClick = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
+      event?.preventDefault();
+      onClick?.(event); // Also call onClick that was passed to us if there was one
+      window.main.openInBrowser(href);
+    },
+    [onClick, href],
+  );
 
   if (button) {
     return (
@@ -39,7 +42,7 @@ export const Link: FC<Props> = ({
       href={href}
       onClick={handleClick}
       className={classnames(className, {
-        'theme--link': !noTheme,
+        "theme--link": !noTheme,
       })}
       {...other}
     >

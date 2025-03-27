@@ -1,13 +1,13 @@
-import path from 'path';
-import { describe, expect, it } from 'vitest';
+import path from "path";
+import { describe, expect, it } from "vitest";
 
-import gitAdapter from './git-adapter';
+import gitAdapter from "./git-adapter";
 
-describe('gitAdapter()', () => {
-  const fixturesPath = path.join(__dirname, '../fixtures');
+describe("gitAdapter()", () => {
+  const fixturesPath = path.join(__dirname, "../fixtures");
 
-  it('should seed with git-repo directory', async () => {
-    const workingDir = path.join(fixturesPath, 'git-repo');
+  it("should seed with git-repo directory", async () => {
+    const workingDir = path.join(fixturesPath, "git-repo");
     const db = await gitAdapter(workingDir);
     expect(db?.ApiSpec.length).toBe(1);
     expect(db?.Environment.length).toBe(2);
@@ -18,9 +18,9 @@ describe('gitAdapter()', () => {
     expect(db?.UnitTest.length).toBe(4);
   });
 
-  it('should seed with git-repo directory with filter', async () => {
-    const workingDir = path.join(fixturesPath, 'git-repo');
-    const db = await gitAdapter(workingDir, ['Environment']);
+  it("should seed with git-repo directory with filter", async () => {
+    const workingDir = path.join(fixturesPath, "git-repo");
+    const db = await gitAdapter(workingDir, ["Environment"]);
     expect(db?.ApiSpec.length).toBe(0);
     expect(db?.Environment.length).toBe(2);
     expect(db?.Request.length).toBe(0);
@@ -30,8 +30,8 @@ describe('gitAdapter()', () => {
     expect(db?.UnitTest.length).toBe(0);
   });
 
-  it('should return null if data directory is invalid', async () => {
-    const workingDir = path.join(fixturesPath, 'nedb');
+  it("should return null if data directory is invalid", async () => {
+    const workingDir = path.join(fixturesPath, "nedb");
     const db = await gitAdapter(workingDir);
     expect(db).toBe(null);
   });

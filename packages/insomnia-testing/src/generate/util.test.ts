@@ -1,33 +1,33 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
-import { escapeJsStr, indent } from './util';
+import { escapeJsStr, indent } from "./util";
 
-describe('util', () => {
-  describe('indent()', () => {
-    it('skips indent on <= 0', () => {
-      expect(indent(0, 'hello')).toBe('hello');
-      expect(indent(-1, 'hello')).toBe('hello');
+describe("util", () => {
+  describe("indent()", () => {
+    it("skips indent on <= 0", () => {
+      expect(indent(0, "hello")).toBe("hello");
+      expect(indent(-1, "hello")).toBe("hello");
     });
 
-    it('indents single lines', () => {
-      expect(indent(1, 'hello')).toBe('  hello');
-      expect(indent(3, 'hello')).toBe('      hello');
+    it("indents single lines", () => {
+      expect(indent(1, "hello")).toBe("  hello");
+      expect(indent(3, "hello")).toBe("      hello");
     });
 
-    it('indents multi-line blocks', () => {
-      const text = 'function greet() {\n  console.log(\'Hello World!\');\n}';
+    it("indents multi-line blocks", () => {
+      const text = "function greet() {\n  console.log('Hello World!');\n}";
       expect(indent(1, text)).toBe(
-        '  function greet() {\n    console.log(\'Hello World!\');\n  }',
+        "  function greet() {\n    console.log('Hello World!');\n  }",
       );
     });
   });
 
-  describe('escapeJsStr()', () => {
-    it('does not escape something without quotes', () => {
-      expect(escapeJsStr('Hello World')).toBe('Hello World');
+  describe("escapeJsStr()", () => {
+    it("does not escape something without quotes", () => {
+      expect(escapeJsStr("Hello World")).toBe("Hello World");
     });
 
-    it('escapes something with quotes', () => {
+    it("escapes something with quotes", () => {
       // eslint-disable-next-line @typescript-eslint/quotes -- want to test both quote styles
       expect(escapeJsStr(`"Hello" 'World'`)).toBe(`"Hello" \\'World\\'`);
     });

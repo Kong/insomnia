@@ -1,50 +1,62 @@
-import { describe, expect, it } from 'vitest';
-import YAML from 'yaml';
+import { describe, expect, it } from "vitest";
+import YAML from "yaml";
 
-import { parseApiSpec } from '../api-specs';
+import { parseApiSpec } from "../api-specs";
 
-describe('parseApiSpec()', () => {
-  it('parses YAML and JSON OpenAPI specs', () => {
+describe("parseApiSpec()", () => {
+  it("parses YAML and JSON OpenAPI specs", () => {
     const objSpec = {
-      openapi: '3.0.0',
+      openapi: "3.0.0",
       info: {
-        title: 'My API',
+        title: "My API",
       },
     };
     const yamlSpec = YAML.stringify(objSpec);
     const jsonSpec = JSON.stringify(objSpec);
     const expected = {
-      format: 'openapi',
-      formatVersion: '3.0.0',
+      format: "openapi",
+      formatVersion: "3.0.0",
       contents: objSpec,
     };
-    expect(parseApiSpec(yamlSpec)).toEqual({ ...expected, rawContents: yamlSpec });
-    expect(parseApiSpec(jsonSpec)).toEqual({ ...expected, rawContents: jsonSpec });
+    expect(parseApiSpec(yamlSpec)).toEqual({
+      ...expected,
+      rawContents: yamlSpec,
+    });
+    expect(parseApiSpec(jsonSpec)).toEqual({
+      ...expected,
+      rawContents: jsonSpec,
+    });
   });
 
-  it('parses YAML and JSON Swagger specs', () => {
+  it("parses YAML and JSON Swagger specs", () => {
     const objSpec = {
-      swagger: '2.0.0',
+      swagger: "2.0.0",
       info: {
-        title: 'My API',
+        title: "My API",
       },
     };
     const expected = {
-      format: 'swagger',
-      formatVersion: '2.0.0',
+      format: "swagger",
+      formatVersion: "2.0.0",
       contents: objSpec,
     };
     const yamlSpec = YAML.stringify(objSpec);
     const jsonSpec = JSON.stringify(objSpec);
-    expect(parseApiSpec(yamlSpec)).toEqual({ ...expected, rawContents: yamlSpec });
-    expect(parseApiSpec(jsonSpec)).toEqual({ ...expected, rawContents: jsonSpec });
+    expect(parseApiSpec(yamlSpec)).toEqual({
+      ...expected,
+      rawContents: yamlSpec,
+    });
+    expect(parseApiSpec(jsonSpec)).toEqual({
+      ...expected,
+      rawContents: jsonSpec,
+    });
   });
 
-  it('parses YAML and JSON Unknown specs', () => {
+  it("parses YAML and JSON Unknown specs", () => {
     const objSpec = {
-      funnyBusiness: '2.0.0',
+      funnyBusiness: "2.0.0",
       info: {
-        title: 'My API',
+        title: "My API",
       },
     };
     const expected = {
@@ -54,22 +66,30 @@ describe('parseApiSpec()', () => {
     };
     const yamlSpec = YAML.stringify(objSpec);
     const jsonSpec = JSON.stringify(objSpec);
-    expect(parseApiSpec(yamlSpec)).toEqual({ ...expected, rawContents: yamlSpec });
-    expect(parseApiSpec(jsonSpec)).toEqual({ ...expected, rawContents: jsonSpec });
+    expect(parseApiSpec(yamlSpec)).toEqual({
+      ...expected,
+      rawContents: yamlSpec,
+    });
+    expect(parseApiSpec(jsonSpec)).toEqual({
+      ...expected,
+      rawContents: jsonSpec,
+    });
   });
 
-  it('returns the default result if empty document', () => {
+  it("returns the default result if empty document", () => {
     const expected = {
       format: null,
       formatVersion: null,
       contents: null,
-      rawContents: '',
+      rawContents: "",
     };
-    expect(parseApiSpec('')).toEqual(expected);
+    expect(parseApiSpec("")).toEqual(expected);
   });
 
-  it('Fails on malformed JSON/YAML', () => {
-    const rawSpec = ['openapi: 3.0.0', 'info: {{{'].join('\n');
-    expect(() => parseApiSpec(rawSpec)).toThrowError('Failed to parse API spec');
+  it("Fails on malformed JSON/YAML", () => {
+    const rawSpec = ["openapi: 3.0.0", "info: {{{"].join("\n");
+    expect(() => parseApiSpec(rawSpec)).toThrowError(
+      "Failed to parse API spec",
+    );
   });
 });

@@ -1,14 +1,18 @@
-import { parse as urlParse, URL } from 'url';
+import { parse as urlParse, URL } from "url";
 
-import { escapeRegex } from '../common/misc';
-import { setDefaultProtocol } from '../utils/url/protocol';
+import { escapeRegex } from "../common/misc";
+import { setDefaultProtocol } from "../utils/url/protocol";
 
 const DEFAULT_PORT = 443;
 
-export function urlMatchesCertHost(certificateHost: string, requestUrl: string, needCheckPort: boolean = true) {
-  const cHostWithProtocol = setDefaultProtocol(certificateHost, 'https:');
+export function urlMatchesCertHost(
+  certificateHost: string,
+  requestUrl: string,
+  needCheckPort: boolean = true,
+) {
+  const cHostWithProtocol = setDefaultProtocol(certificateHost, "https:");
   const { hostname, port } = urlParse(requestUrl);
-  let certificateHostWithProtocol = new URL('https://example.com');
+  let certificateHostWithProtocol = new URL("https://example.com");
   try {
     certificateHostWithProtocol = new URL(cHostWithProtocol);
   } catch {
@@ -19,13 +23,13 @@ export function urlMatchesCertHost(certificateHost: string, requestUrl: string, 
   // @ts-expect-error -- TSCONVERSION `parseInt(null)` returns `NaN`
   const assumedPort = parseInt(port) || DEFAULT_PORT;
   const assumedCPort = parseInt(cPort) || DEFAULT_PORT;
-  const cHostnameRegex = escapeRegex(cHostname || '').replace(/\\\*/g, '.*');
-  const cPortRegex = escapeRegex(cPort || '').replace(/\\\*/g, '.*');
+  const cHostnameRegex = escapeRegex(cHostname || "").replace(/\\\*/g, ".*");
+  const cPortRegex = escapeRegex(cPort || "").replace(/\\\*/g, ".*");
 
   // Check ports
   if (needCheckPort) {
-    if ((cPort + '').includes('*')) {
-      if (!(port || '').match(`^${cPortRegex}$`)) {
+    if ((cPort + "").includes("*")) {
+      if (!(port || "").match(`^${cPortRegex}$`)) {
         return false;
       }
     } else {
@@ -36,7 +40,7 @@ export function urlMatchesCertHost(certificateHost: string, requestUrl: string, 
   }
 
   // Check hostnames
-  if (!(hostname || '').match(`^${cHostnameRegex}$`)) {
+  if (!(hostname || "").match(`^${cHostnameRegex}$`)) {
     return false;
   }
 

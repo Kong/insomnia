@@ -1,4 +1,6 @@
-export type SendRequestCallback<TResponse> = (requestId: string) => Promise<TResponse>;
+export type SendRequestCallback<TResponse> = (
+  requestId: string,
+) => Promise<TResponse>;
 
 export interface InsomniaOptions<TResponse> {
   sendRequest: SendRequestCallback<TResponse>;
@@ -40,7 +42,7 @@ export class Insomnia<TResponse = {}> {
     const requestId = reqId || this.activeRequestId;
 
     if (!requestId) {
-      throw new Error('No selected request');
+      throw new Error("No selected request");
     }
 
     const result = await this.sendRequest(requestId);

@@ -1,6 +1,6 @@
 interface SystemErrorConstructor {
   /** The string error code */
-  code: 'EBADF' | 'ENOTEMPTY' | 'EEXIST' | 'ENOENT' | 'ENOTDIR' | 'EISDIR';
+  code: "EBADF" | "ENOTEMPTY" | "EEXIST" | "ENOENT" | "ENOTDIR" | "EISDIR";
 
   /** The system-provided error number */
   errno: -9 | -66 | -17 | -2 | -20 | -21;
@@ -11,7 +11,7 @@ interface SystemErrorConstructor {
   path: string;
 
   /** The name of the system call that triggered the error */
-  syscall: 'write' | 'rmdir' | 'open' | 'scandir';
+  syscall: "write" | "rmdir" | "open" | "scandir";
 }
 
 /**
@@ -19,18 +19,12 @@ interface SystemErrorConstructor {
  * see https://nodejs.org/api/errors.html#errors_class_systemerror
  */
 export class SystemError extends Error {
-  code: SystemErrorConstructor['code'];
-  errno: SystemErrorConstructor['errno'];
-  path: SystemErrorConstructor['path'];
-  syscall: SystemErrorConstructor['syscall'];
+  code: SystemErrorConstructor["code"];
+  errno: SystemErrorConstructor["errno"];
+  path: SystemErrorConstructor["path"];
+  syscall: SystemErrorConstructor["syscall"];
 
-  constructor({
-    code,
-    errno,
-    message,
-    path,
-    syscall,
-  }: SystemErrorConstructor) {
+  constructor({ code, errno, message, path, syscall }: SystemErrorConstructor) {
     super(message);
 
     const error = new Error(message);

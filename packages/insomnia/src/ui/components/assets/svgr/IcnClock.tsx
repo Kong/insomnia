@@ -1,14 +1,14 @@
-import React, { memo, type SVGProps } from 'react';
-export const SvgIcnClock = memo<SVGProps<SVGSVGElement>>(props => (
+import React, { memo, type SVGProps } from "react";
+export const SvgIcnClock = memo<SVGProps<SVGSVGElement>>((props) => (
   <svg
     width="1em"
     height="1em"
     viewBox="0 0 12 12"
     xmlns="http://www.w3.org/2000/svg"
     style={{
-      fillRule: 'evenodd',
-      clipRule: 'evenodd',
-      strokeLinejoin: 'round',
+      fillRule: "evenodd",
+      clipRule: "evenodd",
+      strokeLinejoin: "round",
       strokeMiterlimit: 2,
     }}
     role="img"

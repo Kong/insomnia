@@ -1,23 +1,23 @@
-import { format } from 'date-fns';
-import type { SaveDialogOptions } from 'electron';
-import fs from 'fs';
-import { extension as mimeExtension } from 'mime-types';
-import multiparty from 'multiparty';
-import path from 'path';
-import React, { type FC, useCallback, useEffect, useState } from 'react';
-import { Button } from 'react-aria-components';
-import { PassThrough } from 'stream';
+import { format } from "date-fns";
+import type { SaveDialogOptions } from "electron";
+import fs from "fs";
+import { extension as mimeExtension } from "mime-types";
+import multiparty from "multiparty";
+import path from "path";
+import React, { type FC, useCallback, useEffect, useState } from "react";
+import { Button } from "react-aria-components";
+import { PassThrough } from "stream";
 
 import {
   getContentTypeFromHeaders,
   PREVIEW_MODE_FRIENDLY,
-} from '../../../common/constants';
-import type { ResponseHeader } from '../../../models/response';
-import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
-import { showModal } from '../modals/index';
-import { WrapperModal } from '../modals/wrapper-modal';
-import { ResponseHeadersViewer } from './response-headers-viewer';
-import { ResponseViewer } from './response-viewer';
+} from "../../../common/constants";
+import type { ResponseHeader } from "../../../models/response";
+import { Dropdown, DropdownItem, ItemContent } from "../base/dropdown";
+import { showModal } from "../modals/index";
+import { WrapperModal } from "../modals/wrapper-modal";
+import { ResponseHeadersViewer } from "./response-headers-viewer";
+import { ResponseViewer } from "./response-viewer";
 
 interface Part {
   id: number;
@@ -89,15 +89,18 @@ export const ResponseMultipartViewer: FC<Props> = ({
     if (!selectedPart) {
       return;
     }
-    const contentType = getContentTypeFromHeaders(selectedPart.headers, 'text/plain');
-    const extension = mimeExtension(contentType) || '.txt';
-    const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
-    const dir = lastDir || window.app.getPath('desktop');
-    const date = format(Date.now(), 'yyyy-MM-dd');
+    const contentType = getContentTypeFromHeaders(
+      selectedPart.headers,
+      "text/plain",
+    );
+    const extension = mimeExtension(contentType) || ".txt";
+    const lastDir = window.localStorage.getItem("insomnia.lastExportPath");
+    const dir = lastDir || window.app.getPath("desktop");
+    const date = format(Date.now(), "yyyy-MM-dd");
     const filename = selectedPart.filename || `${selectedPart.name}_${date}`;
     const options: SaveDialogOptions = {
-      title: 'Save as File',
-      buttonLabel: 'Save',
+      title: "Save as File",
+      buttonLabel: "Save",
       defaultPath: path.join(dir, filename),
       filters: [
         // @ts-expect-error https://github.com/electron/electron/pull/29322
@@ -113,13 +116,16 @@ export const ResponseMultipartViewer: FC<Props> = ({
     }
 
     // Remember last exported path
-    window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
+    window.localStorage.setItem(
+      "insomnia.lastExportPath",
+      path.dirname(filename),
+    );
 
     // Save the file
     try {
       await fs.promises.writeFile(filePath, selectedPart.value);
     } catch (err) {
-      console.warn('Failed to save multipart to file', err);
+      console.warn("Failed to save multipart to file", err);
     }
   }, [selectedPart]);
 
@@ -143,26 +149,26 @@ export const ResponseMultipartViewer: FC<Props> = ({
     <div
       className="pad-sm tall wide"
       style={{
-        display: 'grid',
-        gridTemplateRows: 'auto minmax(0, 1fr)',
+        display: "grid",
+        gridTemplateRows: "auto minmax(0, 1fr)",
       }}
     >
       <div
         className="pad-bottom-sm"
         style={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr) auto',
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1fr) auto",
         }}
       >
         <div>
           <Dropdown
-            aria-label='Select Part Dropdown'
+            aria-label="Select Part Dropdown"
             triggerButton={
-              <Button className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]">
+              <Button className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]">
                 <div
                   style={{
-                    minWidth: '200px',
-                    display: 'inline-block',
+                    minWidth: "200px",
+                    display: "inline-block",
                   }}
                 >
                   {selectedPart.title}
@@ -171,13 +177,10 @@ export const ResponseMultipartViewer: FC<Props> = ({
               </Button>
             }
           >
-            {parts.map(part => (
-              <DropdownItem
-                aria-label={part.title}
-                key={part.id}
-              >
+            {parts.map((part) => (
+              <DropdownItem aria-label={part.title} key={part.id}>
                 <ItemContent
-                  icon={selectedPart?.id === part.id ? 'check' : 'empty'}
+                  icon={selectedPart?.id === part.id ? "check" : "empty"}
                   label={part.title}
                   onClick={() => setSelectedPart(part)}
                 />
@@ -186,21 +189,21 @@ export const ResponseMultipartViewer: FC<Props> = ({
           </Dropdown>
         </div>
         <Dropdown
-          aria-label='Part Actions Dropdown'
+          aria-label="Part Actions Dropdown"
           triggerButton={
-            <Button className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]">
+            <Button className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]">
               <i className="fa fa-bars" />
             </Button>
           }
         >
-          <DropdownItem aria-label='View Headers'>
+          <DropdownItem aria-label="View Headers">
             <ItemContent
               icon="list"
               label="View Headers"
               onClick={viewHeaders}
             />
           </DropdownItem>
-          <DropdownItem aria-label='Save as File'>
+          <DropdownItem aria-label="Save as File">
             <ItemContent
               icon="save"
               label="Save as File"
@@ -212,7 +215,10 @@ export const ResponseMultipartViewer: FC<Props> = ({
       <div className="tall wide">
         <ResponseViewer
           bytes={selectedPart.bytes || 0}
-          contentType={getContentTypeFromHeaders(selectedPart.headers, 'text/plain')}
+          contentType={getContentTypeFromHeaders(
+            selectedPart.headers,
+            "text/plain",
+          )}
           disableHtmlPreviewJs={disableHtmlPreviewJs}
           disablePreviewLinks={disablePreviewLinks}
           download={download}
@@ -220,19 +226,24 @@ export const ResponseMultipartViewer: FC<Props> = ({
           error={null}
           filter={filter}
           filterHistory={filterHistory}
-          bodyBuffer={Buffer.from(selectedPart?.value || '')}
+          bodyBuffer={Buffer.from(selectedPart?.value || "")}
           key={`${responseId}::${selectedPart?.id}`}
           previewMode={PREVIEW_MODE_FRIENDLY}
           responseId={`${responseId}[${selectedPart?.id}]`}
           url={url}
         />
       </div>
-
     </div>
   );
 };
 
-function multipartBufferToArray({ bodyBuffer, contentType }: { bodyBuffer: Buffer | null; contentType: string }): Promise<Part[]> {
+function multipartBufferToArray({
+  bodyBuffer,
+  contentType,
+}: {
+  bodyBuffer: Buffer | null;
+  contentType: string;
+}): Promise<Part[]> {
   return new Promise((resolve, reject) => {
     const parts: Part[] = [];
 
@@ -243,28 +254,30 @@ function multipartBufferToArray({ bodyBuffer, contentType }: { bodyBuffer: Buffe
     const fakeReq = new PassThrough();
     // @ts-expect-error -- TSCONVERSION investigate `stream` types
     fakeReq.headers = {
-      'content-type': contentType,
+      "content-type": contentType,
     };
     const form = new multiparty.Form();
     let id = 0;
-    form.on('part', part => {
+    form.on("part", (part) => {
       const dataBuffers: any[] = [];
-      part.on('data', data => {
+      part.on("data", (data) => {
         dataBuffers.push(data);
       });
-      part.on('error', err => {
+      part.on("error", (err) => {
         reject(new Error(`Failed to parse part: ${err.message}`));
       });
-      part.on('end', () => {
-        const title = part.filename ? `${part.name} (${part.filename})` : part.name;
+      part.on("end", () => {
+        const title = part.filename
+          ? `${part.name} (${part.filename})`
+          : part.name;
         parts.push({
           id,
           title,
-          value: dataBuffers ? Buffer.concat(dataBuffers) : Buffer.from(''),
+          value: dataBuffers ? Buffer.concat(dataBuffers) : Buffer.from(""),
           name: part.name,
           filename: part.filename || null,
           bytes: part.byteCount,
-          headers: Object.keys(part.headers).map(name => ({
+          headers: Object.keys(part.headers).map((name) => ({
             name,
             value: part.headers[name],
           })),
@@ -272,10 +285,10 @@ function multipartBufferToArray({ bodyBuffer, contentType }: { bodyBuffer: Buffe
         id += 1;
       });
     });
-    form.on('error', err => {
+    form.on("error", (err) => {
       reject(err);
     });
-    form.on('close', () => {
+    form.on("close", () => {
       resolve(parts);
     });
     // @ts-expect-error -- TSCONVERSION

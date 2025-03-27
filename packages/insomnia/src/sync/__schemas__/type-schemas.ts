@@ -1,18 +1,25 @@
-import { createBuilder, type Schema } from '@develohpanda/fluent-builder';
+import { createBuilder, type Schema } from "@develohpanda/fluent-builder";
 
-import { baseModelSchema } from '../../models/__schemas__/model-schemas';
-import type { BackendProject, Branch, MergeConflict, SnapshotStateEntry, StatusCandidate, Team } from '../types';
-import type { BackendProjectWithTeam } from '../vcs/normalize-backend-project-team';
+import { baseModelSchema } from "../../models/__schemas__/model-schemas";
+import type {
+  BackendProject,
+  Branch,
+  MergeConflict,
+  SnapshotStateEntry,
+  StatusCandidate,
+  Team,
+} from "../types";
+import type { BackendProjectWithTeam } from "../vcs/normalize-backend-project-team";
 
 export const projectSchema: Schema<BackendProject> = {
-  id: () => 'id',
-  rootDocumentId: () => 'rootDocumentId',
-  name: () => 'name',
+  id: () => "id",
+  rootDocumentId: () => "rootDocumentId",
+  name: () => "name",
 };
 
 export const teamSchema: Schema<Team> = {
-  id: () => 'teamId',
-  name: () => 'teamName',
+  id: () => "teamId",
+  name: () => "teamName",
 };
 
 export const backendProjectWithTeamSchema: Schema<BackendProjectWithTeam> = {
@@ -23,29 +30,29 @@ export const backendProjectWithTeamSchema: Schema<BackendProjectWithTeam> = {
 export const branchSchema: Schema<Branch> = {
   created: () => new Date(0),
   modified: () => new Date(0),
-  name: () => '',
+  name: () => "",
   snapshots: () => [],
 };
 
 export const mergeConflictSchema: Schema<MergeConflict> = {
-  key: () => 'key',
+  key: () => "key",
   choose: () => null,
   mineBlob: () => null,
   mineBlobContent: () => null,
   theirsBlob: () => null,
   theirsBlobContent: () => null,
-  message: () => 'message',
-  name: () => 'name',
+  message: () => "message",
+  name: () => "name",
 };
 
 export const statusCandidateSchema: Schema<StatusCandidate> = {
-  key: () => 'key',
-  name: () => 'name',
+  key: () => "key",
+  name: () => "name",
   document: () => createBuilder(baseModelSchema).build(),
 };
 
 export const snapshotStateEntrySchema: Schema<SnapshotStateEntry> = {
-  blob: () => 'blob',
-  key: () => 'key',
-  name: () => 'name',
+  blob: () => "blob",
+  key: () => "key",
+  name: () => "name",
 };

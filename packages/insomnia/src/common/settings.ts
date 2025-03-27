@@ -1,4 +1,4 @@
-import type { ValueOf } from 'type-fest';
+import type { ValueOf } from "type-fest";
 
 /**
  * The readable definition of a hotkey.
@@ -29,34 +29,34 @@ export interface PlatformKeyCombinations {
 }
 
 export type KeyboardShortcut =
-  | 'workspace_showSettings'
-  | 'request_showSettings'
-  | 'preferences_showKeyboardShortcuts'
-  | 'preferences_showGeneral'
-  | 'request_quickSwitch'
-  | 'plugin_reload'
-  | 'showAutocomplete'
-  | 'request_send'
-  | 'request_showOptions'
-  | 'environment_showEditor'
-  | 'environment_showSwitchMenu'
-  | 'request_toggleHttpMethodMenu'
-  | 'request_toggleHistory'
-  | 'request_focusUrl'
-  | 'request_showGenerateCodeEditor'
-  | 'sidebar_focusFilter'
-  | 'sidebar_toggle'
-  | 'response_focus'
-  | 'showCookiesEditor'
-  | 'request_createHTTP'
-  | 'request_showDelete'
-  | 'request_showCreateFolder'
-  | 'request_showDuplicate'
-  | 'request_togglePin'
-  | 'environment_showVariableSourceAndValue'
-  | 'beautifyRequestBody'
-  | 'graphql_explorer_focus_filter'
-  | 'close_tab';
+  | "workspace_showSettings"
+  | "request_showSettings"
+  | "preferences_showKeyboardShortcuts"
+  | "preferences_showGeneral"
+  | "request_quickSwitch"
+  | "plugin_reload"
+  | "showAutocomplete"
+  | "request_send"
+  | "request_showOptions"
+  | "environment_showEditor"
+  | "environment_showSwitchMenu"
+  | "request_toggleHttpMethodMenu"
+  | "request_toggleHistory"
+  | "request_focusUrl"
+  | "request_showGenerateCodeEditor"
+  | "sidebar_focusFilter"
+  | "sidebar_toggle"
+  | "response_focus"
+  | "showCookiesEditor"
+  | "request_createHTTP"
+  | "request_showDelete"
+  | "request_showCreateFolder"
+  | "request_showDuplicate"
+  | "request_togglePin"
+  | "environment_showVariableSourceAndValue"
+  | "beautifyRequestBody"
+  | "graphql_explorer_focus_filter"
+  | "close_tab";
 
 /**
  * The collection of defined hotkeys.
@@ -66,25 +66,27 @@ export type HotKeyRegistry = Record<KeyboardShortcut, PlatformKeyCombinations>;
 
 // HTTP version codes
 export const HttpVersions = {
-  V1_0: 'V1_0',
-  V1_1: 'V1_1',
-  V2PriorKnowledge: 'V2PriorKnowledge',
-  V2_0: 'V2_0',
-  v3: 'v3',
-  default: 'default',
+  V1_0: "V1_0",
+  V1_1: "V1_1",
+  V2PriorKnowledge: "V2PriorKnowledge",
+  V2_0: "V2_0",
+  v3: "v3",
+  default: "default",
 } as const;
 
 export type HttpVersion = ValueOf<typeof HttpVersions>;
 
 export enum UpdateChannel {
-  stable = 'stable',
-  beta = 'beta',
+  stable = "stable",
+  beta = "beta",
 }
 
 /** Gets a subset of Settings where the values match a condition */
-export type SettingsOfType<MatchType> = NonNullable<{
-  [Key in keyof Settings]: Settings[Key] extends MatchType ? Key : never;
-}[keyof Settings]>;
+export type SettingsOfType<MatchType> = NonNullable<
+  {
+    [Key in keyof Settings]: Settings[Key] extends MatchType ? Key : never;
+  }[keyof Settings]
+>;
 
 export interface PluginConfig {
   disabled: boolean;

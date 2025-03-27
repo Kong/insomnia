@@ -1,12 +1,12 @@
-import { basename as pathBasename } from 'path';
-import React, { type HTMLAttributes, useCallback } from 'react';
+import { basename as pathBasename } from "path";
+import React, { type HTMLAttributes, useCallback } from "react";
 
-import { selectFileOrFolder } from '../../../common/select-file-or-folder';
+import { selectFileOrFolder } from "../../../common/select-file-or-folder";
 
-interface Props extends Omit<HTMLAttributes<HTMLButtonElement>, 'onChange'> {
+interface Props extends Omit<HTMLAttributes<HTMLButtonElement>, "onChange"> {
   onChange: (path: string) => void;
   path?: string;
-  itemtypes?: ('file' | 'directory')[];
+  itemtypes?: ("file" | "directory")[];
   extensions?: string[];
   showFileName?: boolean;
   showFileIcon?: boolean;
@@ -15,10 +15,20 @@ interface Props extends Omit<HTMLAttributes<HTMLButtonElement>, 'onChange'> {
 }
 
 export const FileInputButton = (props: Props) => {
-  const { showFileName, showFileIcon, path, name, onChange, itemtypes, extensions, disabled, ...extraProps } = props;
+  const {
+    showFileName,
+    showFileIcon,
+    path,
+    name,
+    onChange,
+    itemtypes,
+    extensions,
+    disabled,
+    ...extraProps
+  } = props;
   // NOTE: Basename fails if path is not a string, so let's make sure it is
-  const fileName = typeof path === 'string' ? pathBasename(path) : null;
-  const _handleChooseFile =  useCallback(async () => {
+  const fileName = typeof path === "string" ? pathBasename(path) : null;
+  const _handleChooseFile = useCallback(async () => {
     const { canceled, filePath } = await selectFileOrFolder({
       itemTypes: itemtypes,
       extensions,
@@ -40,7 +50,7 @@ export const FileInputButton = (props: Props) => {
       {...extraProps}
     >
       {showFileIcon && <i className="fa fa-file-o space-right" />}
-      {showFileName && fileName ? `${fileName}` : `Choose ${name || 'File'}`}
+      {showFileName && fileName ? `${fileName}` : `Choose ${name || "File"}`}
     </button>
   );
 };

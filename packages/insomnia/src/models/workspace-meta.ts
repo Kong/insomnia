@@ -1,9 +1,9 @@
-import { database as db } from '../common/database';
-import type { BaseModel } from './index';
+import { database as db } from "../common/database";
+import type { BaseModel } from "./index";
 
-export const name = 'Workspace Meta';
-export const type = 'WorkspaceMeta';
-export const prefix = 'wrkm';
+export const name = "Workspace Meta";
+export const type = "WorkspaceMeta";
+export const prefix = "wrkm";
 export const canDuplicate = false;
 export const canSync = false;
 
@@ -23,9 +23,9 @@ export interface BaseWorkspaceMeta {
 
 export type WorkspaceMeta = BaseWorkspaceMeta & BaseModel;
 
-export const isWorkspaceMeta = (model: Pick<BaseModel, 'type'>): model is WorkspaceMeta => (
-  model.type === type
-);
+export const isWorkspaceMeta = (
+  model: Pick<BaseModel, "type">,
+): model is WorkspaceMeta => model.type === type;
 
 export function init(): BaseWorkspaceMeta {
   return {
@@ -49,17 +49,25 @@ export function migrate(doc: WorkspaceMeta) {
 
 export function create(patch: Partial<WorkspaceMeta> = {}) {
   if (!patch.parentId) {
-    throw new Error(`New WorkspaceMeta missing parentId ${JSON.stringify(patch)}`);
+    throw new Error(
+      `New WorkspaceMeta missing parentId ${JSON.stringify(patch)}`,
+    );
   }
 
   return db.docCreate<WorkspaceMeta>(type, patch);
 }
 
-export function update(workspaceMeta: WorkspaceMeta, patch: Partial<WorkspaceMeta> = {}) {
+export function update(
+  workspaceMeta: WorkspaceMeta,
+  patch: Partial<WorkspaceMeta> = {},
+) {
   return db.docUpdate<WorkspaceMeta>(workspaceMeta, patch);
 }
 
-export async function updateByParentId(parentId: string, patch: Partial<WorkspaceMeta> = {}) {
+export async function updateByParentId(
+  parentId: string,
+  patch: Partial<WorkspaceMeta> = {},
+) {
   const meta = await getByParentId(parentId);
   // @ts-expect-error -- TSCONVERSION appears to be a genuine error not previously caught by Flow
   return db.docUpdate<WorkspaceMeta>(meta, patch);

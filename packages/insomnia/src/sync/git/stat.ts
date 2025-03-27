@@ -1,5 +1,5 @@
 interface StatObj {
-  type: 'file' | 'dir' | 'symlink';
+  type: "file" | "dir" | "symlink";
   mode: number;
   size: number;
   ino: number;
@@ -8,7 +8,7 @@ interface StatObj {
 }
 
 export default class Stat {
-  type: 'file' | 'dir' | 'symlink';
+  type: "file" | "dir" | "symlink";
   mode: number;
   size: number;
   ino: number;
@@ -31,14 +31,14 @@ export default class Stat {
   }
 
   isFile() {
-    return this.type === 'file';
+    return this.type === "file";
   }
 
   isDirectory() {
-    return this.type === 'dir';
+    return this.type === "dir";
   }
 
   isSymbolicLink() {
-    return this.type === 'symlink';
+    return this.type === "symlink";
   }
 }

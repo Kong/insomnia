@@ -1,1 +1,1 @@
-export default ['gzip', 'compress', 'deflate', 'br', 'identity', '*'];
+export default ["gzip", "compress", "deflate", "br", "identity", "*"];

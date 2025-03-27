@@ -1,4 +1,4 @@
-const BINARY_PREFIX = 'Insomnia.Core';
+const BINARY_PREFIX = "Insomnia.Core";
 
 // NOTE: USE_HARD_LINKS
 // https://github.com/electron-userland/electron-builder/issues/4594#issuecomment-574653870
@@ -9,48 +9,48 @@ const BINARY_PREFIX = 'Insomnia.Core';
  */
 const config = {
   npmRebuild: false,
-  appId: 'com.insomnia.app',
+  appId: "com.insomnia.app",
   protocols: [
     {
-      name: 'Insomnia',
-      role: 'Viewer',
-      schemes: ['insomnia'],
+      name: "Insomnia",
+      role: "Viewer",
+      schemes: ["insomnia"],
     },
   ],
   files: [
     {
-      from: './build',
-      to: '.',
-      filter: ['**/*'],
+      from: "./build",
+      to: ".",
+      filter: ["**/*"],
     },
-    './package.json',
+    "./package.json",
   ],
   publish: null,
   extraResources: [
     {
-      from: './bin',
-      to: './bin',
-      filter: 'yarn-standalone.js',
+      from: "./bin",
+      to: "./bin",
+      filter: "yarn-standalone.js",
     },
   ],
   extraMetadata: {
-    main: 'main.min.js', // Override the main path in package.json
+    main: "main.min.js", // Override the main path in package.json
   },
   fileAssociations: [],
   mac: {
     hardenedRuntime: true,
-    category: 'public.app-category.developer-tools',
-    entitlements: './build/static/entitlements.mac.inherit.plist',
-    entitlementsInherit: './build/static/entitlements.mac.inherit.plist',
+    category: "public.app-category.developer-tools",
+    entitlements: "./build/static/entitlements.mac.inherit.plist",
+    entitlementsInherit: "./build/static/entitlements.mac.inherit.plist",
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
     target: [
       {
-        target: 'dmg',
-        arch: 'universal',
+        target: "dmg",
+        arch: "universal",
       },
       {
-        target: 'zip',
-        arch: 'universal',
+        target: "zip",
+        arch: "universal",
       },
     ],
     mergeASARs: false,
@@ -59,11 +59,9 @@ const config = {
     },
     // If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
     notarize: {
-      teamId: 'FX44YY62GV',
+      teamId: "FX44YY62GV",
     },
-    asarUnpack: [
-      'node_modules/@getinsomnia/node-libcurl',
-    ],
+    asarUnpack: ["node_modules/@getinsomnia/node-libcurl"],
   },
   dmg: {
     window: {
@@ -78,24 +76,24 @@ const config = {
       {
         x: 409,
         y: 186,
-        type: 'link',
-        path: '/Applications',
+        type: "link",
+        path: "/Applications",
       },
     ],
   },
   win: {
     target: [
       {
-        target: 'squirrel',
+        target: "squirrel",
       },
     ],
-    sign: './customSign.js',
-    signingHashAlgorithms: ['sha256'], // avoid duplicate signing hook calls https://github.com/electron-userland/electron-builder/issues/3995#issuecomment-505725704
+    sign: "./customSign.js",
+    signingHashAlgorithms: ["sha256"], // avoid duplicate signing hook calls https://github.com/electron-userland/electron-builder/issues/3995#issuecomment-505725704
   },
   squirrelWindows: {
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
     iconUrl:
-      'https://github.com/kong/insomnia/blob/develop/packages/insomnia/src/icons/icon.ico?raw=true',
+      "https://github.com/kong/insomnia/blob/develop/packages/insomnia/src/icons/icon.ico?raw=true",
   },
   portable: {
     artifactName: `${BINARY_PREFIX}-\${version}-portable.\${ext}`,
@@ -103,30 +101,31 @@ const config = {
   linux: {
     // artifactName: `${BINARY_PREFIX}-\${version}-\${arch}.\${ext}`, // TODO-ARM64 - Re-enable when we have ARM64 build from insomnia-ee
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
-    executableName: 'insomnia',
-    synopsis: 'The Collaborative API Client and Design Tool',
-    category: 'Development',
+    executableName: "insomnia",
+    synopsis: "The Collaborative API Client and Design Tool",
+    category: "Development",
     desktop: {
-      Name: 'Insomnia',
-      Comment: 'Insomnia is a cross-platform REST client, built on top of Electron.',
-      Categories: 'Development',
-      Keywords: 'GraphQL;REST;gRPC;SOAP;openAPI;GitOps;',
+      Name: "Insomnia",
+      Comment:
+        "Insomnia is a cross-platform REST client, built on top of Electron.",
+      Categories: "Development",
+      Keywords: "GraphQL;REST;gRPC;SOAP;openAPI;GitOps;",
     },
     target: [
       {
-        target: 'AppImage',
+        target: "AppImage",
       },
       {
-        target: 'deb',
+        target: "deb",
       },
       {
-        target: 'tar.gz',
+        target: "tar.gz",
       },
       {
-        target: 'rpm',
+        target: "rpm",
       },
       {
-        target: 'snap',
+        target: "snap",
       },
     ],
   },
@@ -134,20 +133,23 @@ const config = {
     // Prevents RPM from packaging build-id metadata, some of which is the
     // same across all electron-builder applications, which causes package
     // conflicts
-    fpm: [
-      '--rpm-rpmbuild-define=_build_id_links none',
-    ],
+    fpm: ["--rpm-rpmbuild-define=_build_id_links none"],
   },
   snap: {
-    base: 'core22',
+    base: "core22",
   },
 };
 
-const { env: { BUILD_TARGETS }, platform } = process;
-const targets = BUILD_TARGETS?.split(',');
+const {
+  env: { BUILD_TARGETS },
+  platform,
+} = process;
+const targets = BUILD_TARGETS?.split(",");
 if (platform && targets) {
-  console.log('overriding build targets to: ', targets);
-  const PLATFORM_MAP = { darwin: 'mac', linux: 'linux', win32: 'win' };
-  config[PLATFORM_MAP[platform]].target = config[PLATFORM_MAP[platform]].target.filter(({ target }) => targets.includes(target));
+  console.log("overriding build targets to: ", targets);
+  const PLATFORM_MAP = { darwin: "mac", linux: "linux", win32: "win" };
+  config[PLATFORM_MAP[platform]].target = config[
+    PLATFORM_MAP[platform]
+  ].target.filter(({ target }) => targets.includes(target));
 }
 module.exports = config;

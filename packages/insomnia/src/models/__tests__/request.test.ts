@@ -1,12 +1,14 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from "vitest";
 
-import { CONTENT_TYPE_GRAPHQL } from '../../common/constants';
-import { newBodyGraphQL, updateMimeType } from '../../ui/components/dropdowns/content-type-dropdown';
-import * as models from '../index';
+import { CONTENT_TYPE_GRAPHQL } from "../../common/constants";
+import {
+  newBodyGraphQL,
+  updateMimeType,
+} from "../../ui/components/dropdowns/content-type-dropdown";
+import * as models from "../index";
 
-describe('init()', () => {
-
-  it('contains all required fields', async () => {
+describe("init()", () => {
+  it("contains all required fields", async () => {
     Date.now = vi.fn().mockReturnValue(1478795580200);
     expect(models.request.init()).toEqual({
       isPrivate: false,
@@ -14,102 +16,100 @@ describe('init()', () => {
       body: {},
       headers: [],
       metaSortKey: -1478795580200,
-      method: 'GET',
-      name: 'New Request',
-      description: '',
+      method: "GET",
+      name: "New Request",
+      description: "",
       parameters: [],
       pathParameters: undefined,
       preRequestScript: undefined,
       afterResponseScript: undefined,
-      url: '',
+      url: "",
       settingStoreCookies: true,
       settingSendCookies: true,
       settingDisableRenderRequestBody: false,
       settingEncodeUrl: true,
       settingRebuildPath: true,
-      settingFollowRedirects: 'global',
+      settingFollowRedirects: "global",
     });
   });
 });
 
-describe('create()', () => {
-
-  it('creates a valid request', async () => {
+describe("create()", () => {
+  it("creates a valid request", async () => {
     Date.now = vi.fn().mockReturnValue(1478795580200);
     const request = await models.request.create({
-      name: 'Test Request',
-      parentId: 'fld_124',
-      description: 'A test Request',
+      name: "Test Request",
+      parentId: "fld_124",
+      description: "A test Request",
     });
     const expected = {
-      _id: 'req_cc1dd2ca4275747aa88199e8efd42403',
+      _id: "req_cc1dd2ca4275747aa88199e8efd42403",
       isPrivate: false,
       created: 1478795580200,
       modified: 1478795580200,
-      parentId: 'fld_124',
-      type: 'Request',
+      parentId: "fld_124",
+      type: "Request",
       authentication: {},
-      description: 'A test Request',
+      description: "A test Request",
       body: {},
       headers: [],
       metaSortKey: -1478795580200,
-      method: 'GET',
-      name: 'Test Request',
+      method: "GET",
+      name: "Test Request",
       parameters: [],
       pathParameters: undefined,
       preRequestScript: undefined,
       afterResponseScript: undefined,
-      url: '',
+      url: "",
       settingStoreCookies: true,
       settingSendCookies: true,
       settingDisableRenderRequestBody: false,
       settingEncodeUrl: true,
       settingRebuildPath: true,
-      settingFollowRedirects: 'global',
+      settingFollowRedirects: "global",
     };
     expect(request).toEqual(expected);
     expect(await models.request.getById(expected._id)).toEqual(expected);
   });
 
-  it('fails when missing parentId', async () => {
+  it("fails when missing parentId", async () => {
     Date.now = vi.fn().mockReturnValue(1478795580200);
     expect(() =>
       models.request.create({
-        name: 'Test Request',
+        name: "Test Request",
       }),
-    ).toThrow('New Requests missing `parentId`');
+    ).toThrow("New Requests missing `parentId`");
   });
 });
 
-describe('updateMimeType()', () => {
-
-  it('adds header when does not exist', async () => {
+describe("updateMimeType()", () => {
+  it("adds header when does not exist", async () => {
     const request = await models.request.create({
-      name: 'My Request',
-      parentId: 'fld_1',
+      name: "My Request",
+      parentId: "fld_1",
     });
     expect(request).not.toBeNull();
-    const newRequest = await updateMimeType(request, 'text/html');
+    const newRequest = await updateMimeType(request, "text/html");
     expect(newRequest.headers).toEqual([
       {
-        name: 'Content-Type',
-        value: 'text/html',
+        name: "Content-Type",
+        value: "text/html",
       },
     ]);
   });
 
-  it('replaces header when exists', async () => {
+  it("replaces header when exists", async () => {
     const request = await models.request.create({
-      name: 'My Request',
-      parentId: 'fld_1',
+      name: "My Request",
+      parentId: "fld_1",
       headers: [
         {
-          name: 'content-tYPE',
-          value: 'application/json',
+          name: "content-tYPE",
+          value: "application/json",
         },
         {
-          name: 'foo',
-          value: 'bar',
+          name: "foo",
+          value: "bar",
         },
         {
           bad: true,
@@ -118,15 +118,15 @@ describe('updateMimeType()', () => {
       ],
     });
     expect(request).not.toBeNull();
-    const newRequest = await updateMimeType(request, 'text/html');
+    const newRequest = await updateMimeType(request, "text/html");
     expect(newRequest.headers).toEqual([
       {
-        name: 'Content-Type',
-        value: 'text/html',
+        name: "Content-Type",
+        value: "text/html",
       },
       {
-        name: 'foo',
-        value: 'bar',
+        name: "foo",
+        value: "bar",
       },
       {
         bad: true,
@@ -135,35 +135,35 @@ describe('updateMimeType()', () => {
     ]);
   });
 
-  it('replaces header when exists2', async () => {
+  it("replaces header when exists2", async () => {
     const request = await models.request.create({
-      name: 'My Request',
-      parentId: 'fld_1',
+      name: "My Request",
+      parentId: "fld_1",
       headers: [
         {
-          name: 'content-tYPE',
-          value: 'application/json',
+          name: "content-tYPE",
+          value: "application/json",
         },
       ],
     });
     expect(request).not.toBeNull();
-    const newRequest = await updateMimeType(request, 'text/html');
+    const newRequest = await updateMimeType(request, "text/html");
     expect(newRequest.headers).toEqual([
       {
-        name: 'Content-Type',
-        value: 'text/html',
+        name: "Content-Type",
+        value: "text/html",
       },
     ]);
   });
 
-  it('removes existing content-type when set to null (i.e. no body)', async () => {
+  it("removes existing content-type when set to null (i.e. no body)", async () => {
     const request = await models.request.create({
-      name: 'My Request',
-      parentId: 'fld_1',
+      name: "My Request",
+      parentId: "fld_1",
       headers: [
         {
-          name: 'content-tYPE',
-          value: 'application/json',
+          name: "content-tYPE",
+          value: "application/json",
         },
       ],
     });
@@ -174,100 +174,99 @@ describe('updateMimeType()', () => {
   });
 });
 
-describe('migrate()', () => {
-
-  it('migrates basic case', () => {
+describe("migrate()", () => {
+  it("migrates basic case", () => {
     const original = {
       headers: [],
-      body: 'hello world!',
+      body: "hello world!",
     };
     const expected = {
       headers: [],
       body: {
-        mimeType: '',
-        text: 'hello world!',
+        mimeType: "",
+        text: "hello world!",
       },
-      url: '',
+      url: "",
     };
     expect(models.request.migrate(original)).toEqual(expected);
   });
 
-  it('migrates form-urlencoded', () => {
+  it("migrates form-urlencoded", () => {
     const original = {
       headers: [
         {
-          name: 'content-type',
-          value: 'application/x-www-form-urlencoded',
+          name: "content-type",
+          value: "application/x-www-form-urlencoded",
         },
       ],
-      body: 'foo=bar&baz={{ hello }}',
+      body: "foo=bar&baz={{ hello }}",
     };
     const expected = {
       headers: [
         {
-          name: 'content-type',
-          value: 'application/x-www-form-urlencoded',
+          name: "content-type",
+          value: "application/x-www-form-urlencoded",
         },
       ],
       body: {
-        mimeType: 'application/x-www-form-urlencoded',
+        mimeType: "application/x-www-form-urlencoded",
         params: [
           {
-            name: 'foo',
-            value: 'bar',
+            name: "foo",
+            value: "bar",
           },
           {
-            name: 'baz',
-            value: '{{ hello }}',
+            name: "baz",
+            value: "{{ hello }}",
           },
         ],
       },
-      url: '',
+      url: "",
     };
     expect(models.request.migrate(original)).toEqual(expected);
   });
 
-  it('migrates form-urlencoded with charset', () => {
+  it("migrates form-urlencoded with charset", () => {
     const original = {
       headers: [
         {
-          name: 'content-type',
-          value: 'application/x-www-form-urlencoded; charset=utf-8',
+          name: "content-type",
+          value: "application/x-www-form-urlencoded; charset=utf-8",
         },
       ],
-      body: 'foo=bar&baz={{ hello }}',
+      body: "foo=bar&baz={{ hello }}",
     };
     const expected = {
       headers: [
         {
-          name: 'content-type',
-          value: 'application/x-www-form-urlencoded; charset=utf-8',
+          name: "content-type",
+          value: "application/x-www-form-urlencoded; charset=utf-8",
         },
       ],
       body: {
-        mimeType: 'application/x-www-form-urlencoded',
+        mimeType: "application/x-www-form-urlencoded",
         params: [
           {
-            name: 'foo',
-            value: 'bar',
+            name: "foo",
+            value: "bar",
           },
           {
-            name: 'baz',
-            value: '{{ hello }}',
+            name: "baz",
+            value: "{{ hello }}",
           },
         ],
       },
-      url: '',
+      url: "",
     };
     expect(models.request.migrate(original)).toEqual(expected);
   });
 
-  it('migrates form-urlencoded malformed', () => {
+  it("migrates form-urlencoded malformed", () => {
     const original = {
       headers: [
         {
-          name: 'content-type',
-          value: 'application/x-www-form-urlencoded',
+          name: "content-type",
+          value: "application/x-www-form-urlencoded",
         },
       ],
       body: '{"foo": "bar"}',
@@ -275,77 +274,77 @@ describe('migrate()', () => {
     const expected = {
       headers: [
         {
-          name: 'content-type',
-          value: 'application/x-www-form-urlencoded',
+          name: "content-type",
+          value: "application/x-www-form-urlencoded",
         },
       ],
       body: {
-        mimeType: 'application/x-www-form-urlencoded',
+        mimeType: "application/x-www-form-urlencoded",
         params: [
           {
             name: '{"foo": "bar"}',
-            value: '',
+            value: "",
           },
         ],
       },
-      url: '',
+      url: "",
     };
     expect(models.request.migrate(original)).toEqual(expected);
   });
 
-  it('migrates mime-type', () => {
+  it("migrates mime-type", () => {
     const contentToMimeMap = {
-      'application/json; charset=utf-8': 'application/json',
-      'text/plain': 'text/plain',
-      malformed: 'malformed',
+      "application/json; charset=utf-8": "application/json",
+      "text/plain": "text/plain",
+      malformed: "malformed",
     };
 
     for (const contentType of Object.keys(contentToMimeMap)) {
       const original = {
         headers: [
           {
-            name: 'content-type',
+            name: "content-type",
             value: contentType,
           },
         ],
-        body: '',
+        body: "",
       };
       const expected = {
         headers: [
           {
-            name: 'content-type',
+            name: "content-type",
             value: contentType,
           },
         ],
         body: {
           mimeType: contentToMimeMap[contentType],
-          text: '',
+          text: "",
         },
-        url: '',
+        url: "",
       };
       expect(models.request.migrate(original)).toEqual(expected);
     }
   });
 
-  it('skips migrate for schema 1', () => {
+  it("skips migrate for schema 1", () => {
     const original = {
       body: {
-        mimeType: 'text/plain',
-        text: 'foo',
+        mimeType: "text/plain",
+        text: "foo",
       },
     };
     expect(models.request.migrate(original)).toBe(original);
   });
 
-  it('migrates with weird data', () => {
+  it("migrates with weird data", () => {
     const newBody = {
       body: {
-        mimeType: '',
-        text: 'foo bar!',
+        mimeType: "",
+        text: "foo bar!",
       },
     };
     const stringBody = {
-      body: 'foo bar!',
+      body: "foo bar!",
     };
     const nullBody = {
       body: null,
@@ -353,14 +352,14 @@ describe('migrate()', () => {
     const noBody = {};
     const expected = {
       body: {
-        mimeType: '',
-        text: 'foo bar!',
+        mimeType: "",
+        text: "foo bar!",
       },
-      url: '',
+      url: "",
     };
     const expected2 = {
       body: {},
-      url: '',
+      url: "",
     };
     expect(models.request.migrate(newBody)).toEqual(expected);
     expect(models.request.migrate(stringBody)).toEqual(expected);
@@ -368,24 +367,24 @@ describe('migrate()', () => {
     expect(models.request.migrate(noBody)).toEqual(expected2);
   });
 
-  it('migrates from initModel()', async () => {
+  it("migrates from initModel()", async () => {
     Date.now = vi.fn().mockReturnValue(1478795580200);
     const original = {
-      _id: 'req_123',
+      _id: "req_123",
       headers: [],
-      body: 'hello world!',
+      body: "hello world!",
     };
     const expected = {
-      _id: 'req_123',
+      _id: "req_123",
       isPrivate: false,
-      type: 'Request',
-      url: '',
+      type: "Request",
+      url: "",
       created: 1478795580200,
       modified: 1478795580200,
       metaSortKey: -1478795580200,
-      name: 'New Request',
-      description: '',
-      method: 'GET',
+      name: "New Request",
+      description: "",
+      method: "GET",
       headers: [],
       authentication: {},
       parameters: [],
@@ -394,26 +393,27 @@ describe('migrate()', () => {
       afterResponseScript: undefined,
       parentId: null,
       body: {
-        mimeType: '',
-        text: 'hello world!',
+        mimeType: "",
+        text: "hello world!",
       },
       settingStoreCookies: true,
       settingSendCookies: true,
       settingDisableRenderRequestBody: false,
       settingEncodeUrl: true,
       settingRebuildPath: true,
-      settingFollowRedirects: 'global',
+      settingFollowRedirects: "global",
     };
     const migrated = await models.initModel(models.request.type, original);
     expect(migrated).toEqual(expected);
   });
 });
 
-describe('newBodyGraphQL()', () => {
-  it('strips \\\\n characters', () => {
+describe("newBodyGraphQL()", () => {
+  it("strips \\\\n characters", () => {
     const input =
       '{"query": "query getCustomer() {\\\\n id\\\\n name\\\\n email\\\\n __typename\\\\n }\\\\n"}';
-    const expectedTextOutput = '{"query": "query getCustomer() { id name email __typename }"}';
+    const expectedTextOutput =
+      '{"query": "query getCustomer() { id name email __typename }"}';
     const actualOutput = newBodyGraphQL(input);
     expect(actualOutput).toEqual({
       mimeType: CONTENT_TYPE_GRAPHQL,
@@ -421,9 +421,9 @@ describe('newBodyGraphQL()', () => {
     });
   });
 
-  it('does nothing to empty string', () => {
-    const input = '';
-    const expectedTextOutput = '';
+  it("does nothing to empty string", () => {
+    const input = "";
+    const expectedTextOutput = "";
     const actualOutput = newBodyGraphQL(input);
     expect(actualOutput).toEqual({
       mimeType: CONTENT_TYPE_GRAPHQL,
@@ -431,7 +431,7 @@ describe('newBodyGraphQL()', () => {
     });
   });
 
-  it('does nothing to object that has no \\\\n characters', () => {
+  it("does nothing to object that has no \\\\n characters", () => {
     const input = '{ "foo": "bar" }';
     const expectedTextOutput = '{ "foo": "bar" }';
     const actualOutput = newBodyGraphQL(input);

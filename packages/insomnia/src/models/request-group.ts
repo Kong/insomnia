@@ -1,22 +1,19 @@
-import { database as db } from '../common/database';
-import type { EnvironmentKvPairData, EnvironmentType } from './environment';
-import type { BaseModel } from './index';
-import type { RequestAuthentication, RequestHeader } from './request';
+import { database as db } from "../common/database";
+import type { EnvironmentKvPairData, EnvironmentType } from "./environment";
+import type { BaseModel } from "./index";
+import type { RequestAuthentication, RequestHeader } from "./request";
 
-export const name = 'Folder';
+export const name = "Folder";
 
-export const type = 'RequestGroup';
+export const type = "RequestGroup";
 
-export const prefix = 'fld';
+export const prefix = "fld";
 
 export const canDuplicate = true;
 
 export const canSync = true;
 // for those keys do not need to add in model init method
-export const optionalKeys = [
-  'kvPairData',
-  'environmentType',
-];
+export const optionalKeys = ["kvPairData", "environmentType"];
 interface BaseRequestGroup {
   name: string;
   description: string;
@@ -33,14 +30,14 @@ interface BaseRequestGroup {
 
 export type RequestGroup = BaseModel & BaseRequestGroup;
 
-export const isRequestGroup = (model: Pick<BaseModel, 'type'>): model is RequestGroup => (
-  model.type === type
-);
+export const isRequestGroup = (
+  model: Pick<BaseModel, "type">,
+): model is RequestGroup => model.type === type;
 
 export function init(): BaseRequestGroup {
   return {
-    name: 'New Folder',
-    description: '',
+    name: "New Folder",
+    description: "",
     environment: {},
     environmentPropertyOrder: null,
     metaSortKey: -1 * Date.now(),
@@ -57,13 +54,18 @@ export function migrate(doc: RequestGroup) {
 
 export function create(patch: Partial<RequestGroup> = {}) {
   if (!patch.parentId) {
-    throw new Error('New RequestGroup missing `parentId`: ' + JSON.stringify(patch));
+    throw new Error(
+      "New RequestGroup missing `parentId`: " + JSON.stringify(patch),
+    );
   }
 
   return db.docCreate<RequestGroup>(type, patch);
 }
 
-export function update(requestGroup: RequestGroup, patch: Partial<RequestGroup> = {}) {
+export function update(
+  requestGroup: RequestGroup,
+  patch: Partial<RequestGroup> = {},
+) {
   return db.docUpdate<RequestGroup>(requestGroup, patch);
 }
 
@@ -83,7 +85,10 @@ export function all() {
   return db.all<RequestGroup>(type);
 }
 
-export async function duplicate(requestGroup: RequestGroup, patch: Partial<RequestGroup> = {}) {
+export async function duplicate(
+  requestGroup: RequestGroup,
+  patch: Partial<RequestGroup> = {},
+) {
   if (!patch.name) {
     patch.name = `${requestGroup.name} (Copy)`;
   }

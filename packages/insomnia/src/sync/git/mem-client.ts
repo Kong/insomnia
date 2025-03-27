@@ -1,11 +1,11 @@
-import type { PromiseFsClient } from 'isomorphic-git';
-import path from 'path';
+import type { PromiseFsClient } from "isomorphic-git";
+import path from "path";
 
-import Stat from './stat';
-import { SystemError } from './system-error';
+import Stat from "./stat";
+import { SystemError } from "./system-error";
 
 interface FSFile {
-  readonly type: 'file';
+  readonly type: "file";
   readonly ino: number;
   readonly mtimeMs: number;
   readonly name: string;
@@ -14,7 +14,7 @@ interface FSFile {
 }
 
 interface FSLink {
-  readonly type: 'symlink';
+  readonly type: "symlink";
   readonly ino: number;
   readonly mtimeMs: number;
   readonly name: string;
@@ -23,7 +23,7 @@ interface FSLink {
 }
 
 interface FSDir {
-  readonly type: 'dir';
+  readonly type: "dir";
   readonly ino: number;
   readonly mtimeMs: number;
   readonly name: string;
@@ -49,16 +49,16 @@ export class MemClient {
   constructor() {
     this.__ino = 0;
     this.__fs = {
-      type: 'dir',
-      path: path.normalize('/'),
-      name: '',
+      type: "dir",
+      path: path.normalize("/"),
+      name: "",
       children: [],
       ino: this.__ino,
       mtimeMs: Date.now(),
     };
   }
 
-  async tree(baseDir = '/') {
+  async tree(baseDir = "/") {
     baseDir = path.normalize(baseDir);
 
     const next = async (dir: string, toPrint: string) => {
@@ -68,9 +68,9 @@ export class MemClient {
         return toPrint;
       }
 
-      const indent = new Array((dir.match(/\//g) || []).length).join('|   ');
+      const indent = new Array((dir.match(/\//g) || []).length).join("|   ");
 
-      if (entry.type === 'dir') {
+      if (entry.type === "dir") {
         if (entry.path !== baseDir) {
           toPrint += `${indent}${entry.name}/\n`;
         }
@@ -85,7 +85,7 @@ export class MemClient {
       return toPrint;
     };
 
-    console.log(await next(baseDir, ''));
+    console.log(await next(baseDir, ""));
   }
 
   async readFile(
@@ -94,7 +94,7 @@ export class MemClient {
   ) {
     filePath = path.normalize(filePath);
 
-    if (typeof options === 'string') {
+    if (typeof options === "string") {
       options = {
         encoding: options,
       };
@@ -104,7 +104,7 @@ export class MemClient {
 
     const entry = this._assertFile(filePath);
 
-    const raw = Buffer.from(entry.contents, 'base64');
+    const raw = Buffer.from(entry.contents, "base64");
 
     if (encoding) {
       return raw.toString(encoding);
@@ -120,17 +120,17 @@ export class MemClient {
   ) {
     filePath = path.normalize(filePath);
 
-    if (typeof options === 'string') {
+    if (typeof options === "string") {
       options = {
         encoding: options,
       };
     }
 
-    const flag = options && options.flag ? options.flag : 'w';
-    const encoding = options && options.encoding ? options.encoding : 'utf8';
+    const flag = options && options.flag ? options.flag : "w";
+    const encoding = options && options.encoding ? options.encoding : "utf8";
 
     // Make sure file doesn't exist for "x" flags
-    if (flag[1] === 'x') {
+    if (flag[1] === "x") {
       await this._assertDoesNotExist(filePath);
     }
 
@@ -144,34 +144,35 @@ export class MemClient {
       const name = path.basename(filePath);
       file = {
         name,
-        type: 'file',
+        type: "file",
         ino: this.__ino++,
         mtimeMs: Date.now(),
-        contents: '',
+        contents: "",
         path: filePath,
       };
       dirEntry.children.push(file);
     }
 
-    const dataBuff: Buffer = data instanceof Buffer ? data : Buffer.from(data, encoding);
+    const dataBuff: Buffer =
+      data instanceof Buffer ? data : Buffer.from(data, encoding);
     let newContents = Buffer.alloc(0);
 
-    if (flag[0] === 'w') {
+    if (flag[0] === "w") {
       newContents = dataBuff;
-    } else if (flag[0] === 'a') {
-      const contentsBuff: Buffer = Buffer.from(file.contents, 'base64');
+    } else if (flag[0] === "a") {
+      const contentsBuff: Buffer = Buffer.from(file.contents, "base64");
       newContents = Buffer.concat([contentsBuff, dataBuff]);
     } else {
       throw new SystemError({
-        code: 'EBADF',
+        code: "EBADF",
         errno: -9,
-        message: 'EBADF: bad file descriptor, write',
+        message: "EBADF: bad file descriptor, write",
         path: filePath,
-        syscall: 'write',
+        syscall: "write",
       });
     }
 
-    file.contents = newContents.toString('base64');
+    file.contents = newContents.toString("base64");
     return Promise.resolve();
   }
 
@@ -186,7 +187,7 @@ export class MemClient {
 
     const entry = this._assertDir(basePath);
 
-    const names = entry.children.map(c => c.name);
+    const names = entry.children.map((c) => c.name);
     names.sort();
     return names;
   }
@@ -200,10 +201,10 @@ export class MemClient {
       this._assertDir(path.dirname(dirPath));
     }
 
-    const pathSegments = dirPath.split(path.sep).filter(s => s !== '');
+    const pathSegments = dirPath.split(path.sep).filter((s) => s !== "");
     // Recurse over all sub paths, ensure they are all directories,
     // create them if they don't exist
-    let currentPath = '/';
+    let currentPath = "/";
 
     for (const pathSegment of pathSegments) {
       const dirEntry = this._assertDir(currentPath);
@@ -211,9 +212,9 @@ export class MemClient {
       const nextPath = path.join(currentPath, pathSegment);
 
       // Create dir if it doesn't exist yet
-      if (!dirEntry.children.find(child => child.name === pathSegment)) {
+      if (!dirEntry.children.find((child) => child.name === pathSegment)) {
         dirEntry.children.push({
-          type: 'dir',
+          type: "dir",
           ino: this.__ino++,
           mtimeMs: Date.now(),
           name: pathSegment,
@@ -233,11 +234,11 @@ export class MemClient {
 
     if (dirEntry.children.length > 0) {
       throw new SystemError({
-        code: 'ENOTEMPTY',
+        code: "ENOTEMPTY",
         errno: -66,
         message: `ENOTEMPTY: directory not empty, rmdir '${dirPath}'`,
         path: dirPath,
-        syscall: 'rmdir',
+        syscall: "rmdir",
       });
     }
 
@@ -277,7 +278,7 @@ export class MemClient {
     const parentEntry = this._assertDir(path.dirname(filePath));
 
     parentEntry.children.push({
-      type: 'symlink',
+      type: "symlink",
       ino: this.__ino++,
       mtimeMs: Date.now(),
       name: path.basename(filePath),
@@ -301,11 +302,13 @@ export class MemClient {
     filePath = path.normalize(filePath);
     let current = this.__fs;
     // Ignore empty and current directory '.' segments
-    const pathSegments = filePath.split(path.sep).filter(s => s !== '' && s !== '.');
+    const pathSegments = filePath
+      .split(path.sep)
+      .filter((s) => s !== "" && s !== ".");
 
     for (const expectedName of pathSegments) {
       // @ts-expect-error -- TSCONVERSION
-      const e = (current.children || []).find(c => c.name === expectedName);
+      const e = (current.children || []).find((c) => c.name === expectedName);
 
       if (!e) {
         return null;
@@ -323,11 +326,11 @@ export class MemClient {
 
     if (entry) {
       throw new SystemError({
-        code: 'EEXIST',
+        code: "EEXIST",
         errno: -17,
         message: `EEXIST: file already exists, open '${filePath}'`,
         path: filePath,
-        syscall: 'open',
+        syscall: "open",
       });
     }
   }
@@ -337,11 +340,11 @@ export class MemClient {
 
     if (!entry) {
       throw new SystemError({
-        code: 'ENOENT',
+        code: "ENOENT",
         errno: -2,
         message: `ENOENT: no such file or directory, scandir '${filePath}'`,
         path: filePath,
-        syscall: 'scandir',
+        syscall: "scandir",
       });
     }
 
@@ -349,13 +352,13 @@ export class MemClient {
   }
 
   _assertDirEntry(entry: FSEntry) {
-    if (entry.type !== 'dir') {
+    if (entry.type !== "dir") {
       throw new SystemError({
-        code: 'ENOTDIR',
+        code: "ENOTDIR",
         errno: -20,
         message: `ENOTDIR: not a directory, scandir '${entry.path}'`,
         path: entry.path,
-        syscall: 'scandir',
+        syscall: "scandir",
       });
     }
 
@@ -369,13 +372,13 @@ export class MemClient {
   }
 
   _assertSymlinkEntry(entry: FSEntry) {
-    if (entry.type !== 'symlink') {
+    if (entry.type !== "symlink") {
       throw new SystemError({
-        code: 'ENOTDIR',
+        code: "ENOTDIR",
         errno: -20,
         message: `ENOTDIR: not a symlink, scandir '${entry.path}'`,
         path: entry.path,
-        syscall: 'scandir',
+        syscall: "scandir",
       });
     }
 
@@ -389,12 +392,12 @@ export class MemClient {
   }
 
   _resolveLinks(entry: FSEntry): FSFile | FSDir {
-    if (entry.type === 'symlink') {
+    if (entry.type === "symlink") {
       const other = this._find(entry.linkTo);
 
       if (!other) {
         // Should never happen
-        throw new Error('Failed to resolve link');
+        throw new Error("Failed to resolve link");
       }
 
       return this._resolveLinks(other);
@@ -406,13 +409,13 @@ export class MemClient {
   _assertFileEntry(entry: FSEntry) {
     entry = this._resolveLinks(entry);
 
-    if (entry.type === 'dir') {
+    if (entry.type === "dir") {
       throw new SystemError({
-        code: 'EISDIR',
+        code: "EISDIR",
         errno: -21,
         message: `EISDIR: illegal operation on a directory '${entry.path}'`,
         path: entry.path,
-        syscall: 'open',
+        syscall: "open",
       });
     }
 
@@ -428,7 +431,7 @@ export class MemClient {
   _remove(entry: FSEntry) {
     const parentEntry = this._assertDir(path.dirname(entry.path));
 
-    const index = parentEntry.children.findIndex(c => c === entry);
+    const index = parentEntry.children.findIndex((c) => c === entry);
 
     if (index < 0) {
       // Should never happen so w/e

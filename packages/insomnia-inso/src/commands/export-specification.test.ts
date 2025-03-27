@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
-import { exportSpecification } from './export-specification';
+import { exportSpecification } from "./export-specification";
 
-describe('exportSpecification()', () => {
+describe("exportSpecification()", () => {
   const withKongTags = `openapi: 3.0.1
 info:
   description: Description
@@ -24,13 +24,19 @@ paths:
       responses:
         "200":
           description: OK`;
-  it('should not remove all x-kong annotations from spec if skipAnnotations false', async () => {
-    const result = await exportSpecification({ specContent: withKongTags, skipAnnotations: false });
+  it("should not remove all x-kong annotations from spec if skipAnnotations false", async () => {
+    const result = await exportSpecification({
+      specContent: withKongTags,
+      skipAnnotations: false,
+    });
     expect(result).toBe(withKongTags);
   });
 
-  it('should remove all x-kong annotations from spec if skipAnnotations true', async () => {
-    const result = await exportSpecification({ specContent: withKongTags, skipAnnotations: true });
+  it("should remove all x-kong annotations from spec if skipAnnotations true", async () => {
+    const result = await exportSpecification({
+      specContent: withKongTags,
+      skipAnnotations: true,
+    });
     expect(result).toBe(`openapi: 3.0.1
 info:
   description: Description
@@ -47,5 +53,4 @@ paths:
           description: OK
 `);
   });
-
 });

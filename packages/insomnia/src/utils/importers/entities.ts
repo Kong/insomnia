@@ -1,4 +1,4 @@
-import type * as Har from 'har-format';
+import type * as Har from "har-format";
 
 export interface Comment {
   comment?: string;
@@ -12,8 +12,8 @@ export interface Authentication extends Comment {
   clientId?: string;
   clientSecret?: Variable;
   scope?: string;
-  type?: 'basic' | 'oauth2';
-  grantType?: 'authorization_code' | 'password' | 'client_credentials';
+  type?: "basic" | "oauth2";
+  grantType?: "authorization_code" | "password" | "client_credentials";
   disabled?: boolean;
   username?: string;
   password?: string;
@@ -25,7 +25,7 @@ export interface Parameter extends Comment {
   filename?: string;
   fileName?: string;
   disabled?: boolean;
-  type?: 'file' | string;
+  type?: "file" | string;
 }
 
 export type Body =
@@ -42,7 +42,7 @@ export interface Cookie {
 }
 
 export interface Header extends Comment {
-  name: 'Cookie' | 'Content-Type' | string;
+  name: "Cookie" | "Content-Type" | string;
   disabled?: boolean;
   value: any;
 }
@@ -52,10 +52,10 @@ export interface QueryString extends Comment {
 }
 
 export type ImportRequestType =
-  | 'environment'
-  | 'request'
-  | 'request_group'
-  | 'workspace';
+  | "environment"
+  | "request"
+  | "request_group"
+  | "workspace";
 
 export interface ImportRequest<T extends {} = {}> extends Comment {
   _id?: string;

@@ -1,14 +1,15 @@
-import { cp, mkdir, readdir, stat, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readdir, stat, writeFile } from "node:fs/promises";
 
-import childProcess from 'child_process';
-import * as electron from 'electron';
-import { app } from 'electron';
-import path from 'path';
+import childProcess from "child_process";
+import * as electron from "electron";
+import { app } from "electron";
+import path from "path";
 
-import { isDevelopment, isWindows } from '../common/constants';
-import * as models from '../models';
+import { isDevelopment, isWindows } from "../common/constants";
+import * as models from "../models";
 
-const YARN_DEPRECATED_WARN = /(?<keyword>warning)(?<dependencies>[^>:].+[>:])(?<issue>.+)/;
+const YARN_DEPRECATED_WARN =
+  /(?<keyword>warning)(?<dependencies>[^>:].+[>:])(?<issue>.+)/;
 
 interface InsomniaPlugin {
   // Insomnia attribute from package.json
@@ -50,7 +51,11 @@ export default async function (lookupName: string) {
       info = await _isInsomniaPlugin(lookupName);
       // Get actual module name without version suffixes and things
       const moduleName = info.name;
-      const pluginDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'plugins', moduleName);
+      const pluginDir = path.join(
+        process.env["INSOMNIA_DATA_PATH"] || electron.app.getPath("userData"),
+        "plugins",
+        moduleName,
+      );
 
       // Make plugin directory
       await mkdir(pluginDir, { recursive: true });
@@ -59,7 +64,11 @@ export default async function (lookupName: string) {
       try {
         await electron.net.fetch(info.dist.tarball);
       } catch (err) {
-        reject(new Error(`Failed to make plugin request ${info?.dist.tarball}: ${err.message}`));
+        reject(
+          new Error(
+            `Failed to make plugin request ${info?.dist.tarball}: ${err.message}`,
+          ),
+        );
         return;
       }
 
@@ -67,10 +76,13 @@ export default async function (lookupName: string) {
       console.log(`[plugins] Moving plugin from ${tmpDir} to ${pluginDir}`);
 
       // Move entire module to plugins folder
-      await cp(path.join(tmpDir, moduleName), pluginDir, { recursive: true, verbatimSymlinks: true });
+      await cp(path.join(tmpDir, moduleName), pluginDir, {
+        recursive: true,
+        verbatimSymlinks: true,
+      });
 
       // Move each dependency into node_modules folder
-      const pluginModulesDir = path.join(pluginDir, 'node_modules');
+      const pluginModulesDir = path.join(pluginDir, "node_modules");
       await mkdir(pluginModulesDir, { recursive: true });
 
       for (const filename of await readdir(tmpDir)) {
@@ -94,17 +106,17 @@ export default async function (lookupName: string) {
 
 async function _isInsomniaPlugin(lookupName: string) {
   return new Promise<InsomniaPlugin>(async (resolve, reject) => {
-    console.log('[plugins] Fetching module info from npm');
+    console.log("[plugins] Fetching module info from npm");
     childProcess.execFile(
       escape(process.execPath),
       [
-        '--no-deprecation', // Because Yarn still uses `new Buffer()`
+        "--no-deprecation", // Because Yarn still uses `new Buffer()`
         escape(_getYarnPath()),
-        'info',
+        "info",
         lookupName,
-        '--json',
-        '--registry',
-        'https://registry.npmjs.org/',
+        "--json",
+        "--registry",
+        "https://registry.npmjs.org/",
       ],
       {
         timeout: 5 * 60 * 1000,
@@ -137,8 +149,12 @@ async function _isInsomniaPlugin(lookupName: string) {
 
         const data = yarnOutput.data;
 
-        if (!data.hasOwnProperty('insomnia')) {
-          reject(new Error(`"${lookupName}" not a plugin! Package missing "insomnia" attribute`));
+        if (!data.hasOwnProperty("insomnia")) {
+          reject(
+            new Error(
+              `"${lookupName}" not a plugin! Package missing "insomnia" attribute`,
+            ),
+          );
           return;
         }
 
@@ -161,8 +177,8 @@ async function _isInsomniaPlugin(lookupName: string) {
 async function _getYarnEnvValues() {
   const settings = await models.settings.get();
   const yarnEnv: Record<string, string> = {
-    NODE_ENV: 'production',
-    ELECTRON_RUN_AS_NODE: 'true',
+    NODE_ENV: "production",
+    ELECTRON_RUN_AS_NODE: "true",
   };
   if (settings.pluginNodeExtraCerts) {
     yarnEnv.NODE_EXTRA_CA_CERTS = settings.pluginNodeExtraCerts;
@@ -183,29 +199,36 @@ async function _getYarnEnvValues() {
 
 async function _installPluginToTmpDir(lookupName: string) {
   return new Promise<{ tmpDir: string }>(async (resolve, reject) => {
-    const tmpDir = path.join(electron.app.getPath('temp'), `${lookupName}-${Date.now()}`);
+    const tmpDir = path.join(
+      electron.app.getPath("temp"),
+      `${lookupName}-${Date.now()}`,
+    );
     await mkdir(tmpDir, { recursive: true });
     // Write a dummy package.json so that yarn doesn't traverse up the directory tree
-    await writeFile(path.join(tmpDir, 'package.json'), JSON.stringify({ license: 'ISC', workspaces: [] }), 'utf-8');
+    await writeFile(
+      path.join(tmpDir, "package.json"),
+      JSON.stringify({ license: "ISC", workspaces: [] }),
+      "utf-8",
+    );
 
     console.log(`[plugins] Installing plugin to ${tmpDir}`);
     childProcess.execFile(
       escape(process.execPath),
       [
-        '--no-deprecation', // Because Yarn still uses `new Buffer()`
+        "--no-deprecation", // Because Yarn still uses `new Buffer()`
         escape(_getYarnPath()),
-        'add',
+        "add",
         lookupName,
-        '--modules-folder',
+        "--modules-folder",
         escape(tmpDir),
-        '--cwd',
+        "--cwd",
         escape(tmpDir),
-        '--no-lockfile',
-        '--production',
-        '--no-progress',
-        '--ignore-workspace-root-check',
-        '--registry',
-        'https://registry.npmjs.org/',
+        "--no-lockfile",
+        "--production",
+        "--no-progress",
+        "--ignore-workspace-root-check",
+        "--registry",
+        "https://registry.npmjs.org/",
       ],
       {
         timeout: 5 * 60 * 1000,
@@ -216,11 +239,11 @@ async function _installPluginToTmpDir(lookupName: string) {
         env: await _getYarnEnvValues(),
       },
       (err, stdout, stderr) => {
-        console.log('[plugins] Install complete', { err, stdout, stderr });
+        console.log("[plugins] Install complete", { err, stdout, stderr });
         // Check yarn/electron process exit code.
         // In certain environments electron can exit with error even if the command was performed successfully.
         // Checking for success message in output is a workaround for false errors.
-        if (err && !stdout.toString().includes('success')) {
+        if (err && !stdout.toString().includes("success")) {
           reject(new Error(`${lookupName} install error: ${err.message}`));
           return;
         }
@@ -240,11 +263,16 @@ async function _installPluginToTmpDir(lookupName: string) {
 
 export function containsOnlyDeprecationWarnings(stderr: string) {
   // Split on line breaks and remove falsy values (null, undefined, 0, -0, NaN, "", false)
-  const arr = stderr.split(/\r?\n/).filter(error => error);
+  const arr = stderr.split(/\r?\n/).filter((error) => error);
   // Retrieve all matching deprecated dependency warning
-  const warnings = arr.filter(error => isDeprecatedDependencies(error));
+  const warnings = arr.filter((error) => isDeprecatedDependencies(error));
   // Print each deprecation warnings to the console, so we don't hide them.
-  warnings.forEach(warning => console.warn('[plugins] deprecation warning during installation: ', warning));
+  warnings.forEach((warning) =>
+    console.warn(
+      "[plugins] deprecation warning during installation: ",
+      warning,
+    ),
+  );
   // If they mismatch, it means there are warnings and errors
   return warnings.length === arr.length;
 }
@@ -263,18 +291,18 @@ export function isDeprecatedDependencies(str: string) {
   // !! is not a mistake, makes it returns boolean instead of undefined on error
   return !!(
     message &&
-    message.includes('no longer maintained') &&
-    message.includes('not recommended for usage') &&
-    message.includes('upgrade your dependencies')
+    message.includes("no longer maintained") &&
+    message.includes("not recommended for usage") &&
+    message.includes("upgrade your dependencies")
   );
 }
 
 function _getYarnPath() {
   // TODO: This is brittle. Make finding this more robust.
   if (isDevelopment()) {
-    return path.resolve(app.getAppPath(), './bin/yarn-standalone.js');
+    return path.resolve(app.getAppPath(), "./bin/yarn-standalone.js");
   } else {
-    return path.resolve(app.getAppPath(), '../bin/yarn-standalone.js');
+    return path.resolve(app.getAppPath(), "../bin/yarn-standalone.js");
   }
 }
 
@@ -284,6 +312,6 @@ function escape(p: string) {
     return `"${p}"`;
   } else {
     // Escape whitespace and parenthesis with backslashes for Unix paths
-    return p.replace(/([\s()])/g, '\\$1');
+    return p.replace(/([\s()])/g, "\\$1");
   }
 }

@@ -1,8 +1,8 @@
-import { type FC, useEffect } from 'react';
+import { type FC, useEffect } from "react";
 
-import { useGlobalKeyboardShortcuts } from '../hooks/use-global-keyboard-shortcuts';
-import { useSettingsSideEffects } from '../hooks/use-settings-side-effects';
-import { useThemeChange } from '../hooks/use-theme-change';
+import { useGlobalKeyboardShortcuts } from "../hooks/use-global-keyboard-shortcuts";
+import { useSettingsSideEffects } from "../hooks/use-settings-side-effects";
+import { useThemeChange } from "../hooks/use-theme-change";
 
 export const AppHooks: FC = () => {
   useSettingsSideEffects();

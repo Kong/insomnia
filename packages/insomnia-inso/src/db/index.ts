@@ -1,13 +1,13 @@
-import { stat } from 'fs/promises';
-import { CaCertificate } from 'insomnia/src/models/ca-certificate';
-import { ClientCertificate } from 'insomnia/src/models/client-certificate';
-import { CookieJar } from 'insomnia/src/models/cookie-jar';
-import { Settings } from 'insomnia/src/models/settings';
+import { stat } from "fs/promises";
+import { CaCertificate } from "insomnia/src/models/ca-certificate";
+import { ClientCertificate } from "insomnia/src/models/client-certificate";
+import { CookieJar } from "insomnia/src/models/cookie-jar";
+import { Settings } from "insomnia/src/models/settings";
 
-import { logger } from '../cli';
-import gitAdapter from './adapters/git-adapter';
-import insomniaExportAdapter from './adapters/insomnia-adapter';
-import neDbAdapter from './adapters/ne-db-adapter';
+import { logger } from "../cli";
+import gitAdapter from "./adapters/git-adapter";
+import insomniaExportAdapter from "./adapters/insomnia-adapter";
+import neDbAdapter from "./adapters/ne-db-adapter";
 import type {
   ApiSpec,
   BaseModel,
@@ -16,7 +16,7 @@ import type {
   UnitTestSuite,
   Workspace,
   WorkspaceMeta,
-} from './models/types';
+} from "./models/types";
 
 export interface Database {
   ApiSpec: ApiSpec[];
@@ -65,32 +65,38 @@ export const isFile = async (path: string) => {
     return false;
   }
 };
-export const loadDb = async ({
-  pathToSearch,
-  filterTypes,
-}: Options) => {
+export const loadDb = async ({ pathToSearch, filterTypes }: Options) => {
   // if path to file is provided try to it is an insomnia export file
   const isFilePath = await isFile(pathToSearch);
   if (isFilePath) {
     const exportDb = await insomniaExportAdapter(pathToSearch, filterTypes);
     if (exportDb) {
-      logger.debug(`Data store configured from Insomnia export at \`${pathToSearch}\``);
+      logger.debug(
+        `Data store configured from Insomnia export at \`${pathToSearch}\``,
+      );
       return exportDb;
     }
   }
 
   // try load from git
   const git = await gitAdapter(pathToSearch, filterTypes);
-  git && logger.debug(`Data store configured from git repository at \`${pathToSearch}\``);
+  git &&
+    logger.debug(
+      `Data store configured from git repository at \`${pathToSearch}\``,
+    );
   if (git) {
-    logger.debug(`Data store configured from git repository at \`${pathToSearch}\``);
+    logger.debug(
+      `Data store configured from git repository at \`${pathToSearch}\``,
+    );
     return git;
   }
 
   // try load from nedb
   const nedb = await neDbAdapter(pathToSearch, filterTypes);
   if (nedb) {
-    logger.debug(`Data store configured from app data directory  at \`${pathToSearch}\``);
+    logger.debug(
+      `Data store configured from app data directory  at \`${pathToSearch}\``,
+    );
     return nedb;
   }
 

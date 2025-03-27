@@ -1,18 +1,22 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Button } from 'react-aria-components';
-import { useFetcher } from 'react-router-dom';
-import { useInterval } from 'react-use';
+import React, { useCallback, useEffect, useState } from "react";
+import { Button } from "react-aria-components";
+import { useFetcher } from "react-router-dom";
+import { useInterval } from "react-use";
 
-import { getProductName } from '../../../common/constants';
-import { decryptVaultKeyFromSession, deleteVaultKeyFromStorage, saveVaultKeyIfNecessary } from '../../../utils/vault';
-import { useRootLoaderData } from '../../routes/root';
-import { CopyButton } from '../base/copy-button';
-import { HelpTooltip } from '../help-tooltip';
-import { Icon } from '../icon';
-import { showError, showModal } from '../modals';
-import { AskModal } from '../modals/ask-modal';
-import { InputVaultKeyModal } from '../modals/input-vault-key-modal';
-import { BooleanSetting } from './boolean-setting';
+import { getProductName } from "../../../common/constants";
+import {
+  decryptVaultKeyFromSession,
+  deleteVaultKeyFromStorage,
+  saveVaultKeyIfNecessary,
+} from "../../../utils/vault";
+import { useRootLoaderData } from "../../routes/root";
+import { CopyButton } from "../base/copy-button";
+import { HelpTooltip } from "../help-tooltip";
+import { Icon } from "../icon";
+import { showError, showModal } from "../modals";
+import { AskModal } from "../modals/ask-modal";
+import { InputVaultKeyModal } from "../modals/input-vault-key-modal";
+import { BooleanSetting } from "./boolean-setting";
 
 export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
   const [showCopyConfirmation, setShowCopyConfirmation] = useState(false);
@@ -22,11 +26,12 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
   }, 2000);
 
   const donwloadVaultKey = async () => {
-    const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
-      title: 'Download Vault Key',
-      buttonLabel: 'Save',
-      defaultPath: `${getProductName()}-vault-key-${Date.now()}.txt`,
-    });
+    const { canceled, filePath: outputPath } =
+      await window.dialog.showSaveDialog({
+        title: "Download Vault Key",
+        buttonLabel: "Save",
+        defaultPath: `${getProductName()}-vault-key-${Date.now()}.txt`,
+      });
 
     if (canceled || !outputPath) {
       return;
@@ -39,7 +44,7 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
   };
 
   return (
-    <div className="flex items-center gap-3 bg-[--hl-xs] px-2 py-1 border border-solid border-[--hl-sm] w-full">
+    <div className="flex w-full items-center gap-3 border border-solid border-[--hl-sm] bg-[--hl-xs] px-2 py-1">
       <div
         className="w-[calc(100%-50px)] truncate"
         data-testid="VaultKeyDisplayPanel"
@@ -48,7 +53,7 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
           event.stopPropagation();
           if (vaultKey) {
             window.clipboard.writeText(vaultKey);
-          };
+          }
           setShowCopyConfirmation(true);
         }}
       >
@@ -67,7 +72,6 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
         <i className="fa-solid fa-download" />
       </Button>
     </div>
-
   );
 };
 
@@ -75,18 +79,21 @@ export const VaultKeyPanel = () => {
   const { userSession, settings } = useRootLoaderData();
   const { saveVaultKeyLocally } = settings;
   const [isGenerating, setGenerating] = useState(false);
-  const [vaultKeyValue, setVaultKeyValue] = useState('');
+  const [vaultKeyValue, setVaultKeyValue] = useState("");
   const [showInputVaultKeyModal, setShowModal] = useState(false);
   const { accountId, vaultKey, vaultSalt } = userSession;
   const vaultKeyFetcher = useFetcher();
   const vaultSaltFetcher = useFetcher();
-  const vaultSaltExists = typeof vaultSalt === 'string' && vaultSalt.length > 0;
-  const vaultKeyExists = typeof vaultKey === 'string' && vaultKey.length > 0;
+  const vaultSaltExists = typeof vaultSalt === "string" && vaultSalt.length > 0;
+  const vaultKeyExists = typeof vaultKey === "string" && vaultKey.length > 0;
 
   const showVaultKey = useCallback(async () => {
     if (vaultKey) {
       // decrypt vault key saved in user session
-      const decryptedVaultKey = await decryptVaultKeyFromSession(vaultKey, false);
+      const decryptedVaultKey = await decryptVaultKeyFromSession(
+        vaultKey,
+        false,
+      );
       setVaultKeyValue(decryptedVaultKey);
     }
   }, [vaultKey]);
@@ -98,31 +105,40 @@ export const VaultKeyPanel = () => {
   }, [showVaultKey, vaultKeyExists]);
 
   useEffect(() => {
-    if (vaultKeyFetcher.data && !vaultKeyFetcher.data.error && vaultKeyFetcher.state === 'idle') {
+    if (
+      vaultKeyFetcher.data &&
+      !vaultKeyFetcher.data.error &&
+      vaultKeyFetcher.state === "idle"
+    ) {
       setGenerating(false);
       setVaultKeyValue(vaultKeyFetcher.data);
-    };
+    }
   }, [vaultKeyFetcher.data, vaultKeyFetcher.state]);
 
   useEffect(() => {
-    if (vaultKeyFetcher.data && vaultKeyFetcher.data.error && vaultKeyFetcher.state === 'idle') {
+    if (
+      vaultKeyFetcher.data &&
+      vaultKeyFetcher.data.error &&
+      vaultKeyFetcher.state === "idle"
+    ) {
       setGenerating(false);
       // user has created vault key in another device;
-      if (vaultKeyFetcher.data.error.toLowerCase().includes('conflict')) {
+      if (vaultKeyFetcher.data.error.toLowerCase().includes("conflict")) {
         // get vault salt from server
-        vaultSaltFetcher.submit('', {
-          action: '/auth/updateVaultSalt',
-          method: 'POST',
+        vaultSaltFetcher.submit("", {
+          action: "/auth/updateVaultSalt",
+          method: "POST",
         });
         showModal(AskModal, {
-          title: 'Vault Key Already Exists',
-          message: 'You have generated the vault key in other device. Please input your vault key',
-          yesText: 'OK',
-          noText: 'Cancel',
+          title: "Vault Key Already Exists",
+          message:
+            "You have generated the vault key in other device. Please input your vault key",
+          yesText: "OK",
+          noText: "Cancel",
         });
       } else {
         showError({
-          title: 'Can not generate vault key',
+          title: "Can not generate vault key",
           message: vaultKeyFetcher.data.error,
         });
       }
@@ -132,16 +148,16 @@ export const VaultKeyPanel = () => {
 
   const generateVaultKey = async () => {
     setGenerating(true);
-    vaultKeyFetcher.submit('', {
-      action: '/auth/createVaultKey',
-      method: 'POST',
+    vaultKeyFetcher.submit("", {
+      action: "/auth/createVaultKey",
+      method: "POST",
     });
   };
 
   const handleModalClose = (newVaultKey?: string) => {
     if (newVaultKey) {
       setVaultKeyValue(newVaultKey);
-    };
+    }
     setShowModal(false);
   };
 
@@ -150,37 +166,46 @@ export const VaultKeyPanel = () => {
     if (saveVaultKeyLocally) {
       if (vaultKeyValue.length > 0) {
         saveVaultKeyIfNecessary(accountId, vaultKeyValue);
-      };
+      }
     } else {
       deleteVaultKeyFromStorage(accountId);
-    };
+    }
   }, [saveVaultKeyLocally, accountId, vaultKeyValue]);
 
   return (
     <div>
       {/* Show Gen Vault button when vault salt does not exist */}
-      {!vaultSaltExists &&
+      {!vaultSaltExists && (
         <div className="form-row pad-top-sm justify-start">
           <Button
-            className={`flex items-center btn btn--outlined btn--super-compact ${isGenerating ? 'w-56' : 'w-48'}`}
+            className={`btn btn--outlined btn--super-compact flex items-center ${isGenerating ? "w-56" : "w-48"}`}
             onPress={generateVaultKey}
             isDisabled={isGenerating}
-            aria-label='Generate Vault Key'
+            aria-label="Generate Vault Key"
           >
-            {isGenerating && <Icon icon="spinner" className="text-[--color-font] animate-spin m-auto inline-block mr-2" />}
+            {isGenerating && (
+              <Icon
+                icon="spinner"
+                className="m-auto mr-2 inline-block animate-spin text-[--color-font]"
+              />
+            )}
             Generate Vault Key
             <HelpTooltip className="space-left">
-              Generate an encryption key to save secrets in private environment. This ensures all secrets are securely stored and encrypted locally.
+              Generate an encryption key to save secrets in private environment.
+              This ensures all secrets are securely stored and encrypted
+              locally.
             </HelpTooltip>
           </Button>
         </div>
-      }
-      {vaultSaltExists && vaultKeyExists && vaultKeyValue !== '' &&
+      )}
+      {vaultSaltExists && vaultKeyExists && vaultKeyValue !== "" && (
         <>
           <div className="form-row pad-top-sm flex-col">
             <div className="mb-[var(--padding-xs)]">
               <span className="font-semibold">Vault Key</span>
-              <HelpTooltip className="space-left">The vault key will be needed when you login again.</HelpTooltip>
+              <HelpTooltip className="space-left">
+                The vault key will be needed when you login again.
+              </HelpTooltip>
             </div>
             <VaultKeyDisplayInput vaultKey={vaultKeyValue} />
           </div>
@@ -188,9 +213,10 @@ export const VaultKeyPanel = () => {
             <BooleanSetting
               label="Save encrypted vault key locally"
               setting="saveVaultKeyLocally"
-              confirmMessage={isChecked => isChecked ?
-                'Are you sure to save the vault key locally? The vault key will be encrypted and saved locally.' :
-                'Are you sure to remove the local vault key? You will need to input it when you login again.'
+              confirmMessage={(isChecked) =>
+                isChecked
+                  ? "Are you sure to save the vault key locally? The vault key will be encrypted and saved locally."
+                  : "Are you sure to remove the local vault key? You will need to input it when you login again."
               }
               confirmBeforeToggle
             />
@@ -199,16 +225,16 @@ export const VaultKeyPanel = () => {
             <BooleanSetting
               label="Enable vault in scripts"
               help="Allow pre-request and after-response script to access vault secrets."
-              setting='enableVaultInScripts'
+              setting="enableVaultInScripts"
             />
           </div>
         </>
-      }
+      )}
       {/* User has not input vault key after re-login */}
-      {vaultSaltExists && !vaultKeyExists &&
+      {vaultSaltExists && !vaultKeyExists && (
         <div className="form-row pad-top-sm justify-start">
           <Button
-            className="flex items-center w-48 btn btn--outlined btn--super-compact"
+            className="btn btn--outlined btn--super-compact flex w-48 items-center"
             onPress={() => setShowModal(true)}
           >
             Enter Vault Key
@@ -217,10 +243,10 @@ export const VaultKeyPanel = () => {
             </HelpTooltip>
           </Button>
         </div>
-      }
-      {showInputVaultKeyModal &&
+      )}
+      {showInputVaultKeyModal && (
         <InputVaultKeyModal onClose={handleModalClose} />
-      }
+      )}
     </div>
   );
 };

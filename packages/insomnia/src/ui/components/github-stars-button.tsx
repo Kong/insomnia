@@ -1,17 +1,17 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-aria-components';
-import { useMount, useMountedState } from 'react-use';
+import React, { useCallback, useEffect, useState } from "react";
+import { Link } from "react-aria-components";
+import { useMount, useMountedState } from "react-use";
 
-import { getGitHubRestApiUrl } from '../../common/constants';
-import { SegmentEvent } from '../analytics';
-import { Icon } from './icon';
+import { getGitHubRestApiUrl } from "../../common/constants";
+import { SegmentEvent } from "../analytics";
+import { Icon } from "./icon";
 
-const LOCALSTORAGE_GITHUB_STARS_KEY = 'insomnia:github-stars';
+const LOCALSTORAGE_GITHUB_STARS_KEY = "insomnia:github-stars";
 
 export const GitHubStarsButton = () => {
   const isMounted = useMountedState();
   const localStorageStars = localStorage.getItem(LOCALSTORAGE_GITHUB_STARS_KEY);
-  const initialState = parseInt(localStorageStars || '30000', 10);
+  const initialState = parseInt(localStorageStars || "30000", 10);
   const [starCount, setStarCount] = useState(initialState);
 
   useEffect(() => {
@@ -26,10 +26,10 @@ export const GitHubStarsButton = () => {
     }
 
     fetch(`${getGitHubRestApiUrl()}/repos/Kong/insomnia`)
-      .then(data => data.json())
-      .then(info => {
-        if (!('watchers' in info)) {
-          throw new Error('unable to get stars from GitHub API');
+      .then((data) => data.json())
+      .then((info) => {
+        if (!("watchers" in info)) {
+          throw new Error("unable to get stars from GitHub API");
         }
 
         if (!isMounted()) {
@@ -39,12 +39,12 @@ export const GitHubStarsButton = () => {
         setStarCount(info.watchers);
         setError(null);
       })
-      .catch(error => {
+      .catch((error) => {
         if (!isMounted()) {
           return;
         }
 
-        console.error('error fetching GitHub stars', error);
+        console.error("error fetching GitHub stars", error);
         setError(error);
       });
   });
@@ -53,8 +53,8 @@ export const GitHubStarsButton = () => {
     window.main.trackSegmentEvent({
       event: SegmentEvent.buttonClick,
       properties: {
-        type: 'GitHub stars',
-        action: 'clicked star',
+        type: "GitHub stars",
+        action: "clicked star",
       },
     });
   }, []);
@@ -63,8 +63,8 @@ export const GitHubStarsButton = () => {
     window.main.trackSegmentEvent({
       event: SegmentEvent.buttonClick,
       properties: {
-        type: 'GitHub stars',
-        action: 'clicked stargazers',
+        type: "GitHub stars",
+        action: "clicked stargazers",
       },
     });
   }, []);
@@ -72,13 +72,13 @@ export const GitHubStarsButton = () => {
   const shouldShowCount = !Boolean(error);
 
   return (
-    <div className="flex select-none rounded-lg divide-x divide-[--hl-md] divide-solid border border-solid border-[--hl-md]">
+    <div className="flex select-none divide-x divide-solid divide-[--hl-md] rounded-lg border border-solid border-[--hl-md]">
       <Link onPress={starClick}>
         <a
           href="https://github.com/Kong/insomnia"
-          className="px-4 py-1 rounded-l-lg last-of-type:rounded-r-lg outline-none flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className="flex items-center justify-center gap-2 rounded-l-lg px-4 py-1 text-sm text-[--color-font] outline-none ring-transparent transition-all last-of-type:rounded-r-lg hover:bg-[--hl-xs] focus:ring-1 focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
         >
-          <Icon icon={['fab', 'github']} />
+          <Icon icon={["fab", "github"]} />
           Star
         </a>
       </Link>
@@ -86,7 +86,7 @@ export const GitHubStarsButton = () => {
         <Link onPress={counterClick}>
           <a
             href="https://github.com/Kong/insomnia/stargazers"
-            className="px-4 py-1 rounded-r-lg outline-none flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+            className="flex items-center justify-center gap-2 rounded-r-lg px-4 py-1 text-sm text-[--color-font] outline-none ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-1 focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
           >
             {starCount.toLocaleString()}
           </a>

@@ -1,54 +1,67 @@
-import CodeMirror, { type Token } from 'codemirror';
+import CodeMirror, { type Token } from "codemirror";
 
-import * as misc from '../../../../common/misc';
-import { getTagDefinitions } from '../../../../templating/index';
-import type { HandleRender, RenderContextAndKeys } from '../../../../templating/types';
-import { tokenizeTag } from '../../../../templating/utils';
-import { showModal } from '../../modals/index';
-import { NunjucksModal } from '../../modals/nunjucks-modal';
+import * as misc from "../../../../common/misc";
+import { getTagDefinitions } from "../../../../templating/index";
+import type {
+  HandleRender,
+  RenderContextAndKeys,
+} from "../../../../templating/types";
+import { tokenizeTag } from "../../../../templating/utils";
+import { showModal } from "../../modals/index";
+import { NunjucksModal } from "../../modals/nunjucks-modal";
 
-CodeMirror.defineExtension('enableNunjucksTags', function (
-  this: CodeMirror.Editor,
-  handleRender: HandleRender,
-  handleGetRenderContext: (contextCacheKey?: string) => Promise<RenderContextAndKeys>,
-  showVariableSourceAndValue = false,
-  editorId = '',
-) {
-  if (!handleRender) {
-    console.warn("enableNunjucksTags wasn't passed a render function");
-    return;
-  }
-
-  const refreshFn = _highlightNunjucksTags.bind(
-    this,
-    handleRender,
-    handleGetRenderContext,
-    showVariableSourceAndValue,
-    editorId,
-  );
-
-  const debouncedRefreshFn = misc.debounce(refreshFn);
-  this.on('change', (_cm: any, change: any) => {
-    const origin = change.origin || 'unknown';
-
-    if (!origin.match(/^[+*]/)) {
-      // Refresh immediately on non-joinable events
-      // (cut, paste, autocomplete; as opposed to +input, +delete)
-      refreshFn();
-    } else {
-      // Debounce all joinable events
-      debouncedRefreshFn();
+CodeMirror.defineExtension(
+  "enableNunjucksTags",
+  function (
+    this: CodeMirror.Editor,
+    handleRender: HandleRender,
+    handleGetRenderContext: (
+      contextCacheKey?: string,
+    ) => Promise<RenderContextAndKeys>,
+    showVariableSourceAndValue = false,
+    editorId = "",
+  ) {
+    if (!handleRender) {
+      console.warn("enableNunjucksTags wasn't passed a render function");
+      return;
     }
-  });
-  this.on('cursorActivity', debouncedRefreshFn);
-  this.on('viewportChange', debouncedRefreshFn);
-  // Trigger once right away to snappy perf
-  refreshFn();
-},
+
+    const refreshFn = _highlightNunjucksTags.bind(
+      this,
+      handleRender,
+      handleGetRenderContext,
+      showVariableSourceAndValue,
+      editorId,
+    );
+
+    const debouncedRefreshFn = misc.debounce(refreshFn);
+    this.on("change", (_cm: any, change: any) => {
+      const origin = change.origin || "unknown";
+
+      if (!origin.match(/^[+*]/)) {
+        // Refresh immediately on non-joinable events
+        // (cut, paste, autocomplete; as opposed to +input, +delete)
+        refreshFn();
+      } else {
+        // Debounce all joinable events
+        debouncedRefreshFn();
+      }
+    });
+    this.on("cursorActivity", debouncedRefreshFn);
+    this.on("viewportChange", debouncedRefreshFn);
+    // Trigger once right away to snappy perf
+    refreshFn();
+  },
 );
 
-async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRender, renderContext: (contextCacheKey?: string) => Promise<RenderContextAndKeys>, showVariableSourceAndValue: boolean, editorId: string) {
-  const renderCacheKey = Math.random() + '';
+async function _highlightNunjucksTags(
+  this: CodeMirror.Editor,
+  render: HandleRender,
+  renderContext: (contextCacheKey?: string) => Promise<RenderContextAndKeys>,
+  showVariableSourceAndValue: boolean,
+  editorId: string,
+) {
+  const renderCacheKey = Math.random() + "";
 
   const renderString = (text: any) => render(text, renderCacheKey);
   const renderContextWithCacheKey = () => renderContext(renderCacheKey);
@@ -61,7 +74,9 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
 
   for (let lineNo = vp.from; lineNo < vp.to; lineNo++) {
     const line = this.getLineTokens(lineNo);
-    const tokens = line.filter(({ type }: any) => type?.indexOf('nunjucks') >= 0);
+    const tokens = line.filter(
+      ({ type }: any) => type?.indexOf("nunjucks") >= 0,
+    );
 
     // Aggregate same tokens
     const newTokens: Token[] = [];
@@ -70,7 +85,11 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
     for (let i = 0; i < tokens.length; i++) {
       const nextTok = tokens[i];
 
-      if (currTok && currTok.type === nextTok.type && currTok.end === nextTok.start) {
+      if (
+        currTok &&
+        currTok.type === nextTok.type &&
+        currTok.end === nextTok.start
+      ) {
         currTok.end = nextTok.end;
         currTok.string += nextTok.string;
       } else if (currTok) {
@@ -99,7 +118,8 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
       };
       const cursor = doc.getCursor();
       const isSameLine = cursor.line === lineNo;
-      const isCursorInToken = isSameLine && cursor.ch > tok.start && cursor.ch < tok.end;
+      const isCursorInToken =
+        isSameLine && cursor.ch > tok.start && cursor.ch < tok.end;
       const isFocused = this.hasFocus();
 
       // Show the token again if we're not inside of it.
@@ -125,12 +145,12 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
         continue;
       }
 
-      const el = document.createElement('span');
+      const el = document.createElement("span");
       el.className = `nunjucks-tag ${tok.type}`;
-      el.setAttribute('draggable', 'true');
-      el.setAttribute('data-error', 'off');
-      el.setAttribute('data-template', tok.string);
-      el.innerHTML = '<label></label>' + tok.string;
+      el.setAttribute("draggable", "true");
+      el.setAttribute("data-error", "off");
+      el.setAttribute("data-template", tok.string);
+      el.innerHTML = "<label></label>" + tok.string;
       const mark = this.markText(start, end, {
         // @ts-expect-error not a known property of TextMarkerOptions
         __nunjucks: true,
@@ -151,7 +171,7 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
       })();
 
       // Update it every mouseenter because it may generate a new value every time
-      el.addEventListener('mouseenter', async () => {
+      el.addEventListener("mouseenter", async () => {
         await _updateElementText(
           renderString,
           mark,
@@ -161,7 +181,7 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
         );
       });
       activeMarks.push(mark);
-      el.addEventListener('click', async () => {
+      el.addEventListener("click", async () => {
         // Define the dialog HTML
         showModal(NunjucksModal, {
           // @ts-expect-error not a known property of TextMarkerOptions
@@ -176,7 +196,7 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               this.replaceRange(template!, from, to);
             } else {
-              console.warn('Tried to replace mark that did not exist', mark);
+              console.warn("Tried to replace mark that did not exist", mark);
             }
           },
         });
@@ -188,8 +208,8 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
 
       // Modify paste events so we can merge into them
       const beforeChangeCb = (_cm: any, change: any) => {
-        if (change.origin === 'paste') {
-          change.origin = '+dnd';
+        if (change.origin === "paste") {
+          change.origin = "+dnd";
         }
       };
 
@@ -198,19 +218,20 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
       };
 
       // Set up the drag
-      el.addEventListener('dragstart', event => {
+      el.addEventListener("dragstart", (event) => {
         // Setup the drag contents
         if (event.dataTransfer) {
-          const template = (event.target as typeof el)?.getAttribute('data-template') || '';
-          event.dataTransfer.setData('text/plain', template);
-          event.dataTransfer.effectAllowed = 'copyMove';
-          event.dataTransfer.dropEffect = 'move';
+          const template =
+            (event.target as typeof el)?.getAttribute("data-template") || "";
+          event.dataTransfer.setData("text/plain", template);
+          event.dataTransfer.effectAllowed = "copyMove";
+          event.dataTransfer.dropEffect = "move";
         }
         // Add some listeners
-        this.on('beforeChange', beforeChangeCb);
-        this.on('drop', dropCb);
+        this.on("beforeChange", beforeChangeCb);
+        this.on("drop", dropCb);
       });
-      el.addEventListener('dragend', () => {
+      el.addEventListener("dragend", () => {
         // If dragged within same editor, delete the old reference
         // TODO: Actually only use dropEffect for this logic. For some reason
         // changing it doesn't seem to take affect in Chromium 56 (maybe bug?)
@@ -218,15 +239,15 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
           // TODO: unsound non-null assertion
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           const { from, to } = mark.find()!;
-          this.replaceRange('', from, to, '+dnd');
+          this.replaceRange("", from, to, "+dnd");
         }
 
         // Remove listeners we added
-        this.off('beforeChange', beforeChangeCb);
-        this.off('drop', dropCb);
+        this.off("beforeChange", beforeChangeCb);
+        this.off("drop", dropCb);
       });
       // Don't allow dropping on itself
-      el.addEventListener('drop', event => {
+      el.addEventListener("drop", (event) => {
         event.stopPropagation();
       });
     }
@@ -272,26 +293,28 @@ async function _updateElementText(
   mark: CodeMirror.TextMarker<CodeMirror.MarkerRange>,
   text: string,
   renderContext: (contextCacheKey?: string) => Promise<RenderContextAndKeys>,
-  showVariableSourceAndValue: boolean
+  showVariableSourceAndValue: boolean,
 ) {
   const el = mark.replacedWith!;
   let innerHTML = text;
-  let title = '';
-  let dataIgnore = '';
-  let dataError = '';
-  const str = text.replace(/\\/g, '');
+  let title = "";
+  let dataIgnore = "";
+  let dataError = "";
+  const str = text.replace(/\\/g, "");
   const tagMatch = str.match(/{% *([^ ]+) *.*%}/);
   const cleanedStr = str
-    .replace(/^{%/, '')
-    .replace(/%}$/, '')
-    .replace(/^{{/, '')
-    .replace(/}}$/, '')
+    .replace(/^{%/, "")
+    .replace(/%}$/, "")
+    .replace(/^{{/, "")
+    .replace(/}}$/, "")
     .trim();
 
   try {
     if (tagMatch) {
       const tagData = tokenizeTag(str);
-      const tagDefinition = (await getTagDefinitions()).find(d => d.name === tagData.name);
+      const tagDefinition = (await getTagDefinitions()).find(
+        (d) => d.name === tagData.name,
+      );
 
       if (tagDefinition) {
         // Try rendering these so we can show errors if needed
@@ -300,10 +323,12 @@ async function _updateElementText(
 
         if (liveDisplayName) {
           innerHTML = liveDisplayName;
-        } else if (firstArg && firstArg.type === 'enum') {
+        } else if (firstArg && firstArg.type === "enum") {
           const argData = tagData.args[0];
           // @ts-expect-error -- TSCONVERSION
-          const foundOption = firstArg.options.find(d => d.value === argData.value);
+          const foundOption = firstArg.options.find(
+            (d) => d.value === argData.value,
+          );
           const option = foundOption || firstArg.options[0];
           innerHTML = `${tagDefinition.displayName} &rArr; ${option.displayName}`;
         } else {
@@ -311,11 +336,13 @@ async function _updateElementText(
         }
 
         const preview = await render(text);
-        title = tagDefinition.disablePreview(tagData.args) ? preview.replace(/./g, '*') : preview;
+        title = tagDefinition.disablePreview(tagData.args)
+          ? preview.replace(/./g, "*")
+          : preview;
       } else {
         innerHTML = cleanedStr;
-        title = 'Unrecognized tag';
-        dataIgnore = 'on';
+        title = "Unrecognized tag";
+        dataIgnore = "on";
       }
     } else {
       // Render if it's a variable
@@ -324,27 +351,30 @@ async function _updateElementText(
       const con = context.context.getKeysContext();
       const contextForKey = con.keyContext[cleanedStr];
       // Only prefix the title with context, if context is found
-      const valueAndContext = contextForKey ? `{${contextForKey}}: ${title}` : title;
+      const valueAndContext = contextForKey
+        ? `{${contextForKey}}: ${title}`
+        : title;
 
       // Swap what's shown in the tooltip vs the innerHTML
       innerHTML = showVariableSourceAndValue ? valueAndContext : cleanedStr;
       title = showVariableSourceAndValue ? cleanedStr : valueAndContext;
     }
 
-    dataError = 'off';
+    dataError = "off";
   } catch (err) {
-    title = err.message.replace(/\[.+,.+]\s*/, '');
-    dataError = 'on';
+    title = err.message.replace(/\[.+,.+]\s*/, "");
+    dataError = "on";
   }
 
   el.title = title;
-  el.setAttribute('data-ignore', dataIgnore);
+  el.setAttribute("data-ignore", dataIgnore);
 
-  if (dataError === 'on') {
-    el.setAttribute('data-error', dataError);
-    el.innerHTML = '<label><i class="fa fa-exclamation-triangle"></i></label>' + cleanedStr;
+  if (dataError === "on") {
+    el.setAttribute("data-error", dataError);
+    el.innerHTML =
+      '<label><i class="fa fa-exclamation-triangle"></i></label>' + cleanedStr;
   } else {
-    el.innerHTML = '<label></label>' + innerHTML;
+    el.innerHTML = "<label></label>" + innerHTML;
   }
 
   mark.changed();

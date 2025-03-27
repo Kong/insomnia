@@ -2,12 +2,12 @@
  * Insomnia Less!!! :)
  */
 /* Libs */
-@import 'lib/fontawesome/css/fontawesome.css';
-@import 'lib/fontawesome/css/solid.css';
-@import 'lib/fontawesome/css/brands.css';
-@import 'lib/fontawesome/css/v4-font-face.css';
-@import 'lib/fontawesome/css/v4-shims.css';
-@import '../../../../../node_modules/swagger-ui-dist/swagger-ui.css';
+@import "lib/fontawesome/css/fontawesome.css";
+@import "lib/fontawesome/css/solid.css";
+@import "lib/fontawesome/css/brands.css";
+@import "lib/fontawesome/css/v4-font-face.css";
+@import "lib/fontawesome/css/v4-shims.css";
+@import "../../../../../node_modules/swagger-ui-dist/swagger-ui.css";
 /* Boilerplate */
 /* http://meyerweb.com/eric/tools/css/reset/
    v2.0 | 20110126
@@ -353,7 +353,7 @@ p.notice a:hover {
 }
 div.notice::before,
 p.notice::before {
-  content: ' ';
+  content: " ";
   position: absolute;
   left: 0;
   right: 0;
@@ -823,12 +823,12 @@ strong {
   box-sizing: border-box;
 }
 .form-control button,
-.form-control input[type='radio'],
-.form-control input[type='checkbox'] {
+.form-control input[type="radio"],
+.form-control input[type="checkbox"] {
   width: auto;
 }
-.form-control input[type='radio'],
-.form-control input[type='checkbox'] {
+.form-control input[type="radio"],
+.form-control input[type="checkbox"] {
   height: 1rem;
   float: left;
   margin-top: 1px;
@@ -889,9 +889,9 @@ strong {
 .form-control.form-control--underlined:not(.form-control--tall) select {
   height: var(--line-height-xs);
 }
-.form-control.form-control--padded .input[data-focused='on'],
-.form-control.form-control--outlined .input[data-focused='on'],
-.form-control.form-control--underlined .input[data-focused='on'],
+.form-control.form-control--padded .input[data-focused="on"],
+.form-control.form-control--outlined .input[data-focused="on"],
+.form-control.form-control--underlined .input[data-focused="on"],
 .form-control.form-control--padded textarea:focus,
 .form-control.form-control--outlined textarea:focus,
 .form-control.form-control--underlined textarea:focus,
@@ -904,7 +904,7 @@ strong {
   background-color: transparent;
   border-color: var(--hl-lg);
 }
-.form-control.form-control--underlined .input[data-focused='on'],
+.form-control.form-control--underlined .input[data-focused="on"],
 .form-control.form-control--underlined input:focus,
 .form-control.form-control--underlined textarea:focus {
   border-color: var(--hl);
@@ -964,7 +964,7 @@ strong {
   margin-right: 0 !important;
 }
 .form-control--no-label::before {
-  content: 'nothing';
+  content: "nothing";
   opacity: 0;
   padding-top: var(--padding-xs);
   display: block;
@@ -1102,7 +1102,7 @@ button::-webkit-input-placeholder,
 select::-webkit-input-placeholder {
   color: var(--hl-lg);
 }
-input[type='number']::-webkit-inner-spin-button {
+input[type="number"]::-webkit-inner-spin-button {
   opacity: 0.8;
 }
 input.input--error,
@@ -1126,10 +1126,10 @@ label {
   position: relative;
   z-index: 1;
 }
-label input[type='checkbox']:focus::before,
-label input[type='radio']:focus::before {
+label input[type="checkbox"]:focus::before,
+label input[type="radio"]:focus::before {
   z-index: -1;
-  content: ' ';
+  content: " ";
   position: absolute;
   top: var(--padding-xxs);
   bottom: var(--padding-xxs);
@@ -1167,8 +1167,8 @@ button {
   --color-bg: rgba(5, 5, 5, 0.8);
   --color-font: #ddd;
 }
-[class^='http-method-'],
-[class*=' http-method-'] {
+[class^="http-method-"],
+[class*=" http-method-"] {
   color: var(--color-font);
 }
 .success,
@@ -1180,7 +1180,7 @@ button {
   color: var(--color-notice) !important;
 }
 .method-grpc {
-  color: #2FA3A3 !important;
+  color: #2fa3a3 !important;
 }
 .warning,
 .http-method-PUT {
@@ -1307,10 +1307,12 @@ html {
   font-size: var(--font-size-xxl) !important;
 }
 html {
-  --font-monospace: Menlo, Monaco, Consolas, 'Droid Sans Mono', 'Courier New', monospace,
-    'Droid Sans Fallback';
-  --font-default: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', 'HelveticaNeue-Light',
-    'Ubuntu', 'Droid Sans', sans-serif;
+  --font-monospace:
+    Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace,
+    "Droid Sans Fallback";
+  --font-default:
+    -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI",
+    "HelveticaNeue-Light", "Ubuntu", "Droid Sans", sans-serif;
   --font-ligatures: normal;
 }
 /* Components */
@@ -1322,11 +1324,11 @@ html {
   grid-template-rows: minmax(0, 1fr) auto;
   grid-template-columns: 100%;
 }
-.editor[data-editor-type='password'] .CodeMirror-line {
+.editor[data-editor-type="password"] .CodeMirror-line {
   -webkit-text-security: disc;
 }
-.editor[data-editor-type='password'] .CodeMirror-line [cm-text=''],
-.editor[data-editor-type='password'] .CodeMirror-line .CodeMirror-widget {
+.editor[data-editor-type="password"] .CodeMirror-line [cm-text=""],
+.editor[data-editor-type="password"] .CodeMirror-line .CodeMirror-widget {
   -webkit-text-security: none;
 }
 .editor .editor__container {
@@ -1388,7 +1390,7 @@ html {
 .editor .CodeMirror-foldgutter-folded,
 .editor .CodeMirror-foldgutter-open {
   font-size: 1.2em;
-  font-family: 'Times New Roman', serif;
+  font-family: "Times New Roman", serif;
   margin-left: -2px;
 }
 .editor .CodeMirror-guttermarker-subtle {
@@ -1425,14 +1427,18 @@ html {
   text-align: center;
   width: 100%;
   font-size: 0.7em;
-  content: '⬤';
+  content: "⬤";
 }
 .editor .CodeMirror-activeline-gutter,
 .editor .CodeMirror-activeline-background {
   background-color: transparent;
 }
-.editor:not(.editor--readonly) .CodeMirror-focused .CodeMirror-activeline-gutter,
-.editor:not(.editor--readonly) .CodeMirror-focused .CodeMirror-activeline-background {
+.editor:not(.editor--readonly)
+  .CodeMirror-focused
+  .CodeMirror-activeline-gutter,
+.editor:not(.editor--readonly)
+  .CodeMirror-focused
+  .CodeMirror-activeline-background {
   background-color: var(--hl-xs);
 }
 .editor.editor--readonly .CodeMirror-cursors {
@@ -1486,8 +1492,10 @@ html {
 }
 
 /* Get the child div element that is inside .Codemirror-scroll, between the elements with class .CodeMirror-sizer and CodeMirror-gutters */
-.editor.editor--single-line .CodeMirror-scroll > div:has(+ .CodeMirror-gutters, + .CodeMirror-sizer) {
-  height: 0!important;
+.editor.editor--single-line
+  .CodeMirror-scroll
+  > div:has(+ .CodeMirror-gutters, + .CodeMirror-sizer) {
+  height: 0 !important;
 }
 
 .editor.editor--single-line .nunjucks-tag {
@@ -1500,7 +1508,7 @@ html {
 }
 
 .editor.editor--environment-inline .editor--environment-inline-focus {
-  position: absolute!important;
+  position: absolute !important;
   top: 0.25rem;
   background: var(--color-bg);
   z-index: 50;
@@ -1610,7 +1618,7 @@ html {
 }
 .CodeMirror-hints li.CodeMirror-hint:not(.fancy-hint)::before {
   margin-left: calc(var(--padding-sm) * -1);
-  content: '\1d43a';
+  content: "\1d43a";
   background: var(--color-warning);
   color: var(--color-font-warning);
 }
@@ -1828,7 +1836,7 @@ html {
   left: 0;
   height: 100%;
   width: 100%;
-  content: ' ';
+  content: " ";
   z-index: -1;
   border-radius: 0.2em;
   box-sizing: border-box;
@@ -1865,13 +1873,13 @@ html {
 .editor .nunjucks-tag:hover {
   background: rgba(255, 255, 255, 0.1);
 }
-.editor .nunjucks-tag[data-error='on'] {
+.editor .nunjucks-tag[data-error="on"] {
   color: var(--color-font-danger);
 }
-.editor .nunjucks-tag[data-error='on']::after {
+.editor .nunjucks-tag[data-error="on"]::after {
   background: var(--color-danger);
 }
-.editor .nunjucks-tag[data-ignore='on']::after {
+.editor .nunjucks-tag[data-ignore="on"]::after {
   background: var(--hl-xl);
   color: bar(--color-font);
 }
@@ -1902,7 +1910,10 @@ html {
   display: grid;
   height: 100%;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: minmax(0%, min-content) minmax(50%, 1fr) min-content min-content min-content minmax(0%, min-content) min-content;
+  grid-template-rows: minmax(0%, min-content) minmax(
+      50%,
+      1fr
+    ) min-content min-content min-content minmax(0%, min-content) min-content;
 }
 .graphql-editor > h2 {
   color: var(--hl);
@@ -2101,7 +2112,10 @@ input.editable {
   height: 100%;
   padding: 0;
 }
-.env-modal.modal__body .env-modal__sidebar .env-modal__sidebar-heading > *:first-child {
+.env-modal.modal__body
+  .env-modal__sidebar
+  .env-modal__sidebar-heading
+  > *:first-child {
   width: 100%;
   padding: var(--padding-sm) 0 var(--padding-sm) var(--padding-sm);
 }
@@ -2110,7 +2124,10 @@ input.editable {
   height: 100%;
   padding: var(--padding-sm);
 }
-.env-modal.modal__body .env-modal__sidebar .env-modal__sidebar-heading button:hover {
+.env-modal.modal__body
+  .env-modal__sidebar
+  .env-modal__sidebar-heading
+  button:hover {
   color: var(--color-font);
 }
 .env-modal.modal__body .env-modal__main {
@@ -2176,7 +2193,9 @@ input.editable {
   padding-bottom: var(--padding-sm);
   box-sizing: border-box;
 }
-.key-value-editor .key-value-editor__row-wrapper.key-value-editor__row-wrapper--clicker input {
+.key-value-editor
+  .key-value-editor__row-wrapper.key-value-editor__row-wrapper--clicker
+  input {
   border-color: var(--hl-sm) !important;
 }
 .key-value-editor .key-value-editor__row {
@@ -2601,7 +2620,8 @@ input.editable {
   border-bottom: 1px solid var(--hl-md);
 }
 .pane .pane__header .pane__header__right {
-  box-shadow: calc(var(--padding-md) * -1) 0 var(--padding-md) calc(var(--padding-sm) * -1) var(--color-bg);
+  box-shadow: calc(var(--padding-md) * -1) 0 var(--padding-md)
+    calc(var(--padding-sm) * -1) var(--color-bg);
   background: var(--color-bg);
   font-size: var(--font-size-sm);
 }
@@ -2849,13 +2869,34 @@ input.editable {
 .requests-tree .tree__list .tree__list .tree__list .tree__list .tree__indent {
   padding-left: calc(var(--padding-sm) + var(--padding-md) * 3);
 }
-.requests-tree .tree__list .tree__list .tree__list .tree__list .tree__list .tree__indent {
+.requests-tree
+  .tree__list
+  .tree__list
+  .tree__list
+  .tree__list
+  .tree__list
+  .tree__indent {
   padding-left: calc(var(--padding-sm) + var(--padding-md) * 4);
 }
-.requests-tree .tree__list .tree__list .tree__list .tree__list .tree__list .tree__list .tree__indent {
+.requests-tree
+  .tree__list
+  .tree__list
+  .tree__list
+  .tree__list
+  .tree__list
+  .tree__list
+  .tree__indent {
   padding-left: calc(var(--padding-sm) + var(--padding-md) * 5);
 }
-.requests-tree .tree__list .tree__list .tree__list .tree__list .tree__list .tree__list .tree__list .tree__indent {
+.requests-tree
+  .tree__list
+  .tree__list
+  .tree__list
+  .tree__list
+  .tree__list
+  .tree__list
+  .tree__list
+  .tree__indent {
   padding-left: calc(var(--padding-sm) + var(--padding-md) * 6);
 }
 .response-pane {
@@ -3105,7 +3146,7 @@ input.editable {
   right: 0;
   left: 0;
   border-bottom: 2px dotted var(--color-surprise);
-  content: ' ';
+  content: " ";
   display: block;
 }
 .sidebar .sidebar__item {
@@ -3169,16 +3210,42 @@ input.editable {
 .sidebar .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
   padding-left: calc(var(--padding-sm) + var(--padding-md) * 2);
 }
-.sidebar .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
+.sidebar
+  .sidebar__list
+  .sidebar__list
+  .sidebar__list
+  .sidebar__list
+  .sidebar__clickable {
   padding-left: calc(var(--padding-sm) + var(--padding-md) * 3);
 }
-.sidebar .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
+.sidebar
+  .sidebar__list
+  .sidebar__list
+  .sidebar__list
+  .sidebar__list
+  .sidebar__list
+  .sidebar__clickable {
   padding-left: calc(var(--padding-sm) + var(--padding-md) * 4);
 }
-.sidebar .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
+.sidebar
+  .sidebar__list
+  .sidebar__list
+  .sidebar__list
+  .sidebar__list
+  .sidebar__list
+  .sidebar__list
+  .sidebar__clickable {
   padding-left: calc(var(--padding-sm) + var(--padding-md) * 5);
 }
-.sidebar .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
+.sidebar
+  .sidebar__list
+  .sidebar__list
+  .sidebar__list
+  .sidebar__list
+  .sidebar__list
+  .sidebar__list
+  .sidebar__list
+  .sidebar__clickable {
   padding-left: calc(var(--padding-sm) + var(--padding-md) * 6);
 }
 .sidebar .sidebar__expand {
@@ -3359,7 +3426,11 @@ input.editable {
   display: grid;
   grid-template-columns: auto auto;
   grid-template-rows: auto;
-  transition: opacity 200ms, right 300ms, bottom 300ms, transform 200ms ease-out;
+  transition:
+    opacity 200ms,
+    right 300ms,
+    bottom 300ms,
+    transform 200ms ease-out;
   padding: var(--padding-sm);
   transform: scale(0.8);
   border-radius: var(--radius-md);

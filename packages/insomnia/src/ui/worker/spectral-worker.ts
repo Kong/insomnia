@@ -1,9 +1,12 @@
-import type { ISpectralDiagnostic, RulesetDefinition } from '@stoplight/spectral-core';
-import { Spectral } from '@stoplight/spectral-core';
+import type {
+  ISpectralDiagnostic,
+  RulesetDefinition,
+} from "@stoplight/spectral-core";
+import { Spectral } from "@stoplight/spectral-core";
 // @ts-expect-error - tsconfig needs to be updated to separate main/renderer code
-import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
-import { oas } from '@stoplight/spectral-rulesets';
-import fs from 'fs';
+import { bundleAndLoadRuleset } from "@stoplight/spectral-ruleset-bundler/with-loader";
+import { oas } from "@stoplight/spectral-rulesets";
+import fs from "fs";
 
 interface SpectralRunParams {
   contents: string;
@@ -20,7 +23,7 @@ const cachedRuleset: {
   path: string;
   ruleset: RulesetDefinition;
 } = {
-  path: '',
+  path: "",
   ruleset: oas as RulesetDefinition,
 };
 
@@ -41,14 +44,18 @@ const loadRuleset = async (rulesetPath: string) => {
       cachedRuleset.path = rulesetPath;
       cachedRuleset.ruleset = ruleset;
     } catch (err) {
-      console.log('[spectral] Error while parsing ruleset:', err);
+      console.log("[spectral] Error while parsing ruleset:", err);
     }
   }
 
   return ruleset;
 };
 
-const spectralRun = async ({ contents, rulesetPath, taskId }: SpectralRunParams) => {
+const spectralRun = async ({
+  contents,
+  rulesetPath,
+  taskId,
+}: SpectralRunParams) => {
   try {
     const spectral = new Spectral();
     const ruleset = await loadRuleset(rulesetPath);
@@ -65,6 +72,6 @@ const spectralRun = async ({ contents, rulesetPath, taskId }: SpectralRunParams)
   }
 };
 
-onmessage = async e => {
+onmessage = async (e) => {
   spectralRun(e.data);
 };

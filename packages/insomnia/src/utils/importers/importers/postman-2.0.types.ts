@@ -127,7 +127,7 @@ export type FormParameter =
        * When set to true, prevents this form data entity from being sent.
        */
       disabled?: boolean;
-      type?: 'text';
+      type?: "text";
       /**
        * Override Content-Type header of this form data entity.
        */
@@ -142,7 +142,7 @@ export type FormParameter =
        * When set to true, prevents this form data entity from being sent.
        */
       disabled?: boolean;
-      type?: 'file';
+      type?: "file";
       /**
        * Override Content-Type header of this form data entity.
        */
@@ -255,7 +255,7 @@ export interface Variable2 {
   /**
    * A variable may have multiple types. This field specifies the type of the variable.
    */
-  type?: 'string' | 'boolean' | 'any' | 'number';
+  type?: "string" | "boolean" | "any" | "number";
   /**
    * Variable name
    */
@@ -324,21 +324,21 @@ export interface Request1 {
   certificate?: Certificate;
   method?:
     | (
-        | 'GET'
-        | 'PUT'
-        | 'POST'
-        | 'PATCH'
-        | 'DELETE'
-        | 'COPY'
-        | 'HEAD'
-        | 'OPTIONS'
-        | 'LINK'
-        | 'UNLINK'
-        | 'PURGE'
-        | 'LOCK'
-        | 'UNLOCK'
-        | 'PROPFIND'
-        | 'VIEW'
+        | "GET"
+        | "PUT"
+        | "POST"
+        | "PATCH"
+        | "DELETE"
+        | "COPY"
+        | "HEAD"
+        | "OPTIONS"
+        | "LINK"
+        | "UNLINK"
+        | "PURGE"
+        | "LOCK"
+        | "UNLOCK"
+        | "PROPFIND"
+        | "VIEW"
       )
     | string;
   description?: DefinitionsDescription;
@@ -347,7 +347,7 @@ export interface Request1 {
     /**
      * Postman stores the type of data associated with this request in this field.
      */
-    mode?: 'raw' | 'urlencoded' | 'formdata' | 'file' | 'graphql';
+    mode?: "raw" | "urlencoded" | "formdata" | "file" | "graphql";
     raw?: string;
     urlencoded?: UrlEncodedParameter[];
     formdata?: FormParameter[];
@@ -378,17 +378,17 @@ export interface Request1 {
  */
 export interface Auth {
   type:
-    | 'apikey'
-    | 'awsv4'
-    | 'basic'
-    | 'bearer'
-    | 'digest'
-    | 'edgegrid'
-    | 'hawk'
-    | 'ntlm'
-    | 'noauth'
-    | 'oauth1'
-    | 'oauth2';
+    | "apikey"
+    | "awsv4"
+    | "basic"
+    | "bearer"
+    | "digest"
+    | "edgegrid"
+    | "hawk"
+    | "ntlm"
+    | "noauth"
+    | "oauth1"
+    | "oauth2";
   noauth?: unknown;
   apikey?: APIKeyAuthentication;
   awsv4?: AWSSignatureV4;

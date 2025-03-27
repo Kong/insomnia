@@ -1,11 +1,11 @@
-import { database as db } from '../common/database';
-import type { BaseModel } from './index';
+import { database as db } from "../common/database";
+import type { BaseModel } from "./index";
 
-export const name = 'Client Certificate';
+export const name = "Client Certificate";
 
-export const type = 'ClientCertificate';
+export const type = "ClientCertificate";
 
-export const prefix = 'crt';
+export const prefix = "crt";
 
 export const canDuplicate = true;
 
@@ -27,8 +27,8 @@ export type ClientCertificate = BaseModel & BaseClientCertificate;
 
 export function init(): BaseClientCertificate {
   return {
-    parentId: '',
-    host: '',
+    parentId: "",
+    host: "",
     passphrase: null,
     disabled: false,
     cert: null,
@@ -38,9 +38,9 @@ export function init(): BaseClientCertificate {
   };
 }
 
-export const isClientCertificate = (model: Pick<BaseModel, 'type'>): model is ClientCertificate => (
-  model.type === type
-);
+export const isClientCertificate = (
+  model: Pick<BaseModel, "type">,
+): model is ClientCertificate => model.type === type;
 
 export function migrate(doc: ClientCertificate) {
   return doc;
@@ -48,7 +48,9 @@ export function migrate(doc: ClientCertificate) {
 
 export function create(patch: Partial<ClientCertificate> = {}) {
   if (!patch.parentId) {
-    throw new Error('New ClientCertificate missing `parentId`: ' + JSON.stringify(patch));
+    throw new Error(
+      "New ClientCertificate missing `parentId`: " + JSON.stringify(patch),
+    );
   }
 
   return db.docCreate<ClientCertificate>(type, patch);

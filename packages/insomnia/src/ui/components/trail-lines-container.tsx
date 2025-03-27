@@ -1,9 +1,9 @@
 // Left from @marckong here: slightly modified from this PR - https://github.com/Kong/insomnia-website/pull/41
-import type { PropsWithChildren } from 'react';
-import React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import type { PropsWithChildren } from "react";
+import React from "react";
+import { useEffect, useRef, useState } from "react";
 
-import TrailLines, { type TrailsLineHandle } from './trail-lines';
+import TrailLines, { type TrailsLineHandle } from "./trail-lines";
 
 interface Size {
   width: number;
@@ -25,10 +25,10 @@ export const TrailLinesContainer = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     updateDimensions();
 
-    window.addEventListener('resize', updateDimensions);
+    window.addEventListener("resize", updateDimensions);
 
     return () => {
-      window.removeEventListener('resize', updateDimensions);
+      window.removeEventListener("resize", updateDimensions);
     };
   }, []);
 
@@ -42,7 +42,12 @@ export const TrailLinesContainer = ({ children }: PropsWithChildren) => {
     const childrenWidth = childrenContainerRef.current?.clientWidth;
     const childrenHeight = childrenContainerRef.current?.clientHeight;
 
-    if (!containerWidth || !containerHeight || !childrenWidth || !childrenHeight) {
+    if (
+      !containerWidth ||
+      !containerHeight ||
+      !childrenWidth ||
+      !childrenHeight
+    ) {
       return;
     }
 
@@ -50,7 +55,10 @@ export const TrailLinesContainer = ({ children }: PropsWithChildren) => {
       return;
     }
 
-    const matrix: Size = { width: (containerWidth - childrenWidth) / 2, height: containerHeight };
+    const matrix: Size = {
+      width: (containerWidth - childrenWidth) / 2,
+      height: containerHeight,
+    };
 
     setDimensions(matrix);
   };
@@ -58,17 +66,30 @@ export const TrailLinesContainer = ({ children }: PropsWithChildren) => {
   return (
     <div
       ref={containerRef}
-      className='z-0 flex justify-center items-center m-0 auto w-full overflow-hidden'
+      className="auto z-0 m-0 flex w-full items-center justify-center overflow-hidden"
     >
       <div>
-        {dimensions && <TrailLines id="start" ref={startTailRef} width={dimensions.width} height={dimensions.height} />}
+        {dimensions && (
+          <TrailLines
+            id="start"
+            ref={startTailRef}
+            width={dimensions.width}
+            height={dimensions.height}
+          />
+        )}
       </div>
-      <div className='flex w-min' ref={childrenContainerRef}>
+      <div className="flex w-min" ref={childrenContainerRef}>
         {children}
       </div>
       <div>
         {dimensions && (
-          <TrailLines id="end" ref={endTailRef} width={dimensions.width} height={dimensions.height} reverse />
+          <TrailLines
+            id="end"
+            ref={endTailRef}
+            width={dimensions.width}
+            height={dimensions.height}
+            reverse
+          />
         )}
       </div>
     </div>

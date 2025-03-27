@@ -1,7 +1,7 @@
-import type { GraphQLSchema, GraphQLType } from 'graphql';
-import React, { Fragment, PureComponent } from 'react';
+import type { GraphQLSchema, GraphQLType } from "graphql";
+import React, { Fragment, PureComponent } from "react";
 
-import { GraphQLExplorerTypeLink } from './graph-ql-explorer-type-link';
+import { GraphQLExplorerTypeLink } from "./graph-ql-explorer-type-link";
 
 interface Props {
   onNavigateType: (type: GraphQLType) => void;
@@ -19,7 +19,7 @@ export class GraphQLExplorerSchema extends PureComponent<Props> {
 
     return (
       <Fragment>
-        <span className="success">query</span>:{' '}
+        <span className="success">query</span>:{" "}
         <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
       </Fragment>
     );
@@ -35,7 +35,7 @@ export class GraphQLExplorerSchema extends PureComponent<Props> {
 
     return (
       <Fragment>
-        <span className="success">mutation</span>:{' '}
+        <span className="success">mutation</span>:{" "}
         <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
       </Fragment>
     );
@@ -51,7 +51,7 @@ export class GraphQLExplorerSchema extends PureComponent<Props> {
 
     return (
       <Fragment>
-        <span className="success">subscription</span>:{' '}
+        <span className="success">subscription</span>:{" "}
         <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
       </Fragment>
     );

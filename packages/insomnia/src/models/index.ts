@@ -15,42 +15,42 @@ import {
   EXPORT_TYPE_WEBSOCKET_PAYLOAD,
   EXPORT_TYPE_WEBSOCKET_REQUEST,
   EXPORT_TYPE_WORKSPACE,
-} from '../common/constants';
-import { generateId } from '../common/misc';
-import * as _apiSpec from './api-spec';
-import * as _caCertificate from './ca-certificate';
-import * as _clientCertificate from './client-certificate';
-import * as _cookieJar from './cookie-jar';
-import * as _environment from './environment';
-import * as _gitCredentials from './git-credentials';
-import * as _gitRepository from './git-repository';
-import * as _grpcRequest from './grpc-request';
-import * as _grpcRequestMeta from './grpc-request-meta';
-import * as _mockRoute from './mock-route';
-import * as _mockServer from './mock-server';
-import * as _oAuth2Token from './o-auth-2-token';
-import * as _pluginData from './plugin-data';
-import * as _project from './project';
-import * as _protoDirectory from './proto-directory';
-import * as _protoFile from './proto-file';
-import * as _request from './request';
-import * as _requestGroup from './request-group';
-import * as _requestGroupMeta from './request-group-meta';
-import * as _requestMeta from './request-meta';
-import * as _requestVersion from './request-version';
-import * as _response from './response';
-import * as _runnerTestResult from './runner-test-result';
-import * as _settings from './settings';
-import * as _stats from './stats';
-import * as _unitTest from './unit-test';
-import * as _unitTestResult from './unit-test-result';
-import * as _unitTestSuite from './unit-test-suite';
-import * as _userSession from './user-session';
-import * as _webSocketPayload from './websocket-payload';
-import * as _webSocketRequest from './websocket-request';
-import * as _webSocketResponse from './websocket-response';
-import * as _workspace from './workspace';
-import * as _workspaceMeta from './workspace-meta';
+} from "../common/constants";
+import { generateId } from "../common/misc";
+import * as _apiSpec from "./api-spec";
+import * as _caCertificate from "./ca-certificate";
+import * as _clientCertificate from "./client-certificate";
+import * as _cookieJar from "./cookie-jar";
+import * as _environment from "./environment";
+import * as _gitCredentials from "./git-credentials";
+import * as _gitRepository from "./git-repository";
+import * as _grpcRequest from "./grpc-request";
+import * as _grpcRequestMeta from "./grpc-request-meta";
+import * as _mockRoute from "./mock-route";
+import * as _mockServer from "./mock-server";
+import * as _oAuth2Token from "./o-auth-2-token";
+import * as _pluginData from "./plugin-data";
+import * as _project from "./project";
+import * as _protoDirectory from "./proto-directory";
+import * as _protoFile from "./proto-file";
+import * as _request from "./request";
+import * as _requestGroup from "./request-group";
+import * as _requestGroupMeta from "./request-group-meta";
+import * as _requestMeta from "./request-meta";
+import * as _requestVersion from "./request-version";
+import * as _response from "./response";
+import * as _runnerTestResult from "./runner-test-result";
+import * as _settings from "./settings";
+import * as _stats from "./stats";
+import * as _unitTest from "./unit-test";
+import * as _unitTestResult from "./unit-test-result";
+import * as _unitTestSuite from "./unit-test-suite";
+import * as _userSession from "./user-session";
+import * as _webSocketPayload from "./websocket-payload";
+import * as _webSocketRequest from "./websocket-request";
+import * as _webSocketResponse from "./websocket-response";
+import * as _workspace from "./workspace";
+import * as _workspaceMeta from "./workspace-meta";
 
 export interface BaseModel {
   _id: string;
@@ -99,7 +99,7 @@ export const webSocketRequest = _webSocketRequest;
 export const webSocketResponse = _webSocketResponse;
 export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
-export * as organization from './organization';
+export * as organization from "./organization";
 export const userSession = _userSession;
 
 export function all() {
@@ -145,7 +145,7 @@ export function all() {
 }
 
 export function types() {
-  return all().map(model => model.type);
+  return all().map((model) => model.type);
 }
 
 export function canSync(d: BaseModel) {
@@ -163,14 +163,16 @@ export function canSync(d: BaseModel) {
 }
 
 export function getModel(type: string) {
-  return all().find(m => m.type === type) || null;
+  return all().find((m) => m.type === type) || null;
 }
 
 export function mustGetModel(type: string) {
   const model = getModel(type);
 
   if (!model) {
-    throw new Error(`The model type ${type} must exist but could not be found.`);
+    throw new Error(
+      `The model type ${type} must exist but could not be found.`,
+    );
   }
 
   return model;
@@ -181,14 +183,19 @@ export function canDuplicate(type: string) {
   return model ? model.canDuplicate : false;
 }
 
-export async function initModel<T extends BaseModel>(type: string, ...sources: Record<string, any>[]): Promise<T> {
+export async function initModel<T extends BaseModel>(
+  type: string,
+  ...sources: Record<string, any>[]
+): Promise<T> {
   const model = getModel(type);
 
   if (!model) {
     const choices = all()
-      .map(m => m.type)
-      .join(', ');
-    throw new Error(`Tried to init invalid model "${type}". Choices are ${choices}`);
+      .map((m) => m.type)
+      .join(", ");
+    throw new Error(
+      `Tried to init invalid model "${type}". Choices are ${choices}`,
+    );
   }
 
   // Define global default fields
@@ -215,10 +222,14 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
   const migratedDoc = model.migrate(fullObject);
   // optional keys do not generated in init method but should allow update.
   // If we put those keys in init method, all related models will show as modified in git sync.
-  const modelOptionalKeys: string[] = 'optionalKeys' in model ? model.optionalKeys || [] : [];
+  const modelOptionalKeys: string[] =
+    "optionalKeys" in model ? model.optionalKeys || [] : [];
   // Prune extra keys from doc
   for (const key of Object.keys(migratedDoc)) {
-    if (!objectDefaults.hasOwnProperty(key) && !modelOptionalKeys.includes(key)) {
+    if (
+      !objectDefaults.hasOwnProperty(key) &&
+      !modelOptionalKeys.includes(key)
+    ) {
       // @ts-expect-error -- mapping unsoundness
       delete migratedDoc[key];
     }

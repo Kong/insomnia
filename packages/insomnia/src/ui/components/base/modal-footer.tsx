@@ -1,5 +1,5 @@
-import classnames from 'classnames';
-import React, { type FC, memo, type ReactNode } from 'react';
+import classnames from "classnames";
+import React, { type FC, memo, type ReactNode } from "react";
 
 interface Props {
   className?: string;
@@ -7,9 +7,9 @@ interface Props {
 }
 
 export const ModalFooter: FC<Props> = memo(({ children, className }) => (
-  <div className={classnames('modal__footer theme--dialog__footer', className)}>
+  <div className={classnames("modal__footer theme--dialog__footer", className)}>
     {children}
   </div>
 ));
 
-ModalFooter.displayName = 'ModalFooter';
+ModalFooter.displayName = "ModalFooter";

@@ -1,9 +1,9 @@
-import React, { type FC, Fragment, useMemo } from 'react';
-import { URL } from 'url';
+import React, { type FC, Fragment, useMemo } from "react";
+import { URL } from "url";
 
-import type { ResponseHeader } from '../../../models/response';
-import { CopyButton } from '../base/copy-button';
-import { Link } from '../base/link';
+import type { ResponseHeader } from "../../../models/response";
+import { CopyButton } from "../base/copy-button";
+import { Link } from "../base/link";
 
 interface Props {
   headers: ResponseHeader[];
@@ -18,10 +18,14 @@ const validateURL = ({ value }: ResponseHeader) => {
   }
 };
 
-const headerAsString = (header: ResponseHeader) => `${header.name}: ${header.value}`;
+const headerAsString = (header: ResponseHeader) =>
+  `${header.name}: ${header.value}`;
 
 export const ResponseHeadersViewer: FC<Props> = ({ headers }) => {
-  const headersString = useMemo(() => headers.map(headerAsString).join('\n'), [headers]);
+  const headersString = useMemo(
+    () => headers.map(headerAsString).join("\n"),
+    [headers],
+  );
 
   return (
     <Fragment>
@@ -33,13 +37,15 @@ export const ResponseHeadersViewer: FC<Props> = ({ headers }) => {
           </tr>
         </thead>
         <tbody>
-          {headers.map(header => (
+          {headers.map((header) => (
             <tr className="selectable" key={headerAsString(header)}>
-              <td className='force-wrap w-1/2'>
-                {header.name}
-              </td>
-              <td className='force-wrap w-1/2'>
-                {validateURL(header) ? <Link href={header.value}>{header.value}</Link> : header.value}
+              <td className="force-wrap w-1/2">{header.name}</td>
+              <td className="force-wrap w-1/2">
+                {validateURL(header) ? (
+                  <Link href={header.value}>{header.value}</Link>
+                ) : (
+                  header.value
+                )}
               </td>
             </tr>
           ))}

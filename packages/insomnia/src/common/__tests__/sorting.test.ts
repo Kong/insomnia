@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
-import { grpcRequest, request, requestGroup } from '../../models';
+import { grpcRequest, request, requestGroup } from "../../models";
 import {
   METHOD_DELETE,
   METHOD_GET,
@@ -16,141 +16,142 @@ import {
   SORT_NAME_DESC,
   SORT_TYPE_ASC,
   SORT_TYPE_DESC,
-} from '../constants';
+} from "../constants";
 import {
   ascendingFirstIndexStringSort,
   ascendingNumberSort,
   descendingNumberSort,
   metaSortKeySort,
   sortMethodMap,
-} from '../sorting';
+} from "../sorting";
 
-describe('Sorting methods', () => {
-  it('defaults to ascending metaSortKey aka descending but flipped (* -1)', () => {
+describe("Sorting methods", () => {
+  it("defaults to ascending metaSortKey aka descending but flipped (* -1)", () => {
     const unsorted = [
-      { _id: '', metaSortKey: -990 },
-      { _id: '', metaSortKey: -800 },
-      { _id: '', metaSortKey: -799 },
-      { _id: '', metaSortKey: -1000 },
-      { _id: '', metaSortKey: -999 }];
-    const sorted = unsorted.sort(sortMethodMap['type-manual']);
+      { _id: "", metaSortKey: -990 },
+      { _id: "", metaSortKey: -800 },
+      { _id: "", metaSortKey: -799 },
+      { _id: "", metaSortKey: -1000 },
+      { _id: "", metaSortKey: -999 },
+    ];
+    const sorted = unsorted.sort(sortMethodMap["type-manual"]);
     expect(sorted).toEqual([
-      { _id: '', metaSortKey: -1000 },
-      { _id: '', metaSortKey: -999 },
-      { _id: '', metaSortKey: -990 },
-      { _id: '', metaSortKey: -800 },
-      { _id: '', metaSortKey: -799 },
+      { _id: "", metaSortKey: -1000 },
+      { _id: "", metaSortKey: -999 },
+      { _id: "", metaSortKey: -990 },
+      { _id: "", metaSortKey: -800 },
+      { _id: "", metaSortKey: -799 },
     ]);
   });
-  it('sorts by name', () => {
+  it("sorts by name", () => {
     const ascendingNameSort = sortMethodMap[SORT_NAME_ASC];
     expect(
       ascendingNameSort(
         {
-          name: 'a',
+          name: "a",
         },
         {
-          name: 'b',
-        },
-      ),
-    ).toBe(-1);
-    expect(
-      ascendingNameSort(
-        {
-          name: 'b',
-        },
-        {
-          name: 'a',
-        },
-      ),
-    ).toBe(1);
-    expect(
-      ascendingNameSort(
-        {
-          name: 'ab',
-        },
-        {
-          name: 'abb',
+          name: "b",
         },
       ),
     ).toBe(-1);
     expect(
       ascendingNameSort(
         {
-          name: 'abb',
+          name: "b",
         },
         {
-          name: 'ab',
+          name: "a",
         },
       ),
     ).toBe(1);
     expect(
       ascendingNameSort(
         {
-          name: 'Abb',
+          name: "ab",
         },
         {
-          name: 'bbb',
+          name: "abb",
         },
       ),
     ).toBe(-1);
     expect(
       ascendingNameSort(
         {
-          name: 'bbb',
+          name: "abb",
         },
         {
-          name: 'Abb',
+          name: "ab",
         },
       ),
     ).toBe(1);
     expect(
       ascendingNameSort(
         {
-          name: 'abb',
+          name: "Abb",
         },
         {
-          name: 'Bbb',
+          name: "bbb",
         },
       ),
     ).toBe(-1);
     expect(
       ascendingNameSort(
         {
-          name: 'Bbb',
+          name: "bbb",
         },
         {
-          name: 'abb',
+          name: "Abb",
         },
       ),
     ).toBe(1);
     expect(
       ascendingNameSort(
         {
-          name: 'åbb',
+          name: "abb",
         },
         {
-          name: 'bbb',
+          name: "Bbb",
         },
       ),
     ).toBe(-1);
     expect(
       ascendingNameSort(
         {
-          name: 'bbb',
+          name: "Bbb",
         },
         {
-          name: 'åbb',
+          name: "abb",
         },
       ),
     ).toBe(1);
     expect(
       ascendingNameSort(
         {
-          name: 'abcdef',
+          name: "åbb",
         },
         {
-          name: 'abcdef',
+          name: "bbb",
+        },
+      ),
+    ).toBe(-1);
+    expect(
+      ascendingNameSort(
+        {
+          name: "bbb",
+        },
+        {
+          name: "åbb",
+        },
+      ),
+    ).toBe(1);
+    expect(
+      ascendingNameSort(
+        {
+          name: "abcdef",
+        },
+        {
+          name: "abcdef",
         },
       ),
     ).toBe(0);
@@ -158,116 +159,116 @@ describe('Sorting methods', () => {
     expect(
       descendingNameSort(
         {
-          name: 'a',
+          name: "a",
         },
         {
-          name: 'b',
-        },
-      ),
-    ).toBe(1);
-    expect(
-      descendingNameSort(
-        {
-          name: 'b',
-        },
-        {
-          name: 'a',
-        },
-      ),
-    ).toBe(-1);
-    expect(
-      descendingNameSort(
-        {
-          name: 'ab',
-        },
-        {
-          name: 'abb',
+          name: "b",
         },
       ),
     ).toBe(1);
     expect(
       descendingNameSort(
         {
-          name: 'abb',
+          name: "b",
         },
         {
-          name: 'ab',
+          name: "a",
         },
       ),
     ).toBe(-1);
     expect(
       descendingNameSort(
         {
-          name: 'Abb',
+          name: "ab",
         },
         {
-          name: 'bbb',
+          name: "abb",
         },
       ),
     ).toBe(1);
     expect(
       descendingNameSort(
         {
-          name: 'bbb',
+          name: "abb",
         },
         {
-          name: 'Abb',
+          name: "ab",
         },
       ),
     ).toBe(-1);
     expect(
       descendingNameSort(
         {
-          name: 'abb',
+          name: "Abb",
         },
         {
-          name: 'Bbb',
+          name: "bbb",
         },
       ),
     ).toBe(1);
     expect(
       descendingNameSort(
         {
-          name: 'Bbb',
+          name: "bbb",
         },
         {
-          name: 'abb',
+          name: "Abb",
         },
       ),
     ).toBe(-1);
     expect(
       descendingNameSort(
         {
-          name: 'åbb',
+          name: "abb",
         },
         {
-          name: 'bbb',
+          name: "Bbb",
         },
       ),
     ).toBe(1);
     expect(
       descendingNameSort(
         {
-          name: 'bbb',
+          name: "Bbb",
         },
         {
-          name: 'åbb',
+          name: "abb",
         },
       ),
     ).toBe(-1);
     expect(
       descendingNameSort(
         {
-          name: 'abcdef',
+          name: "åbb",
         },
         {
-          name: 'abcdef',
+          name: "bbb",
+        },
+      ),
+    ).toBe(1);
+    expect(
+      descendingNameSort(
+        {
+          name: "bbb",
+        },
+        {
+          name: "åbb",
+        },
+      ),
+    ).toBe(-1);
+    expect(
+      descendingNameSort(
+        {
+          name: "abcdef",
+        },
+        {
+          name: "abcdef",
         },
       ),
     ).toBe(0);
   });
 
-  it('sorts by timestamp', () => {
+  it("sorts by timestamp", () => {
     const createdFirstSort = sortMethodMap[SORT_CREATED_ASC];
     expect(
       createdFirstSort(
@@ -372,7 +373,7 @@ describe('Sorting methods', () => {
     ).toBe(0);
   });
 
-  it('sorts by type', () => {
+  it("sorts by type", () => {
     const ascendingTypeSort = sortMethodMap[SORT_TYPE_ASC];
     expect(
       ascendingTypeSort(
@@ -665,7 +666,7 @@ describe('Sorting methods', () => {
     ).toBe(1);
   });
 
-  it('sorts by HTTP method', () => {
+  it("sorts by HTTP method", () => {
     const httpMethodSort = sortMethodMap[SORT_HTTP_METHOD];
     expect(
       httpMethodSort(
@@ -779,11 +780,11 @@ describe('Sorting methods', () => {
       httpMethodSort(
         {
           type: request.type,
-          method: 'CUSTOM_A',
+          method: "CUSTOM_A",
         },
         {
           type: request.type,
-          method: 'CUSTOM_B',
+          method: "CUSTOM_B",
         },
       ),
     ).toBe(-1);
@@ -791,7 +792,7 @@ describe('Sorting methods', () => {
       httpMethodSort(
         {
           type: request.type,
-          method: 'CUSTOM',
+          method: "CUSTOM",
         },
         {
           type: request.type,
@@ -875,12 +876,12 @@ describe('Sorting methods', () => {
       httpMethodSort(
         {
           type: request.type,
-          method: 'CUSTOM',
+          method: "CUSTOM",
           metaSortKey: 1,
         },
         {
           type: request.type,
-          method: 'CUSTOM',
+          method: "CUSTOM",
           metaSortKey: 2,
         },
       ),
@@ -889,12 +890,12 @@ describe('Sorting methods', () => {
       httpMethodSort(
         {
           type: request.type,
-          method: 'CUSTOM',
+          method: "CUSTOM",
           metaSortKey: 2,
         },
         {
           type: request.type,
-          method: 'CUSTOM',
+          method: "CUSTOM",
           metaSortKey: 1,
         },
       ),
@@ -957,7 +958,7 @@ describe('Sorting methods', () => {
     ).toBe(1);
   });
 
-  it('sorts by metaSortKey', () => {
+  it("sorts by metaSortKey", () => {
     expect(
       metaSortKeySort(
         {
@@ -1024,7 +1025,7 @@ describe('Sorting methods', () => {
     ).toBe(1);
   });
 
-  it('sorts by number', () => {
+  it("sorts by number", () => {
     expect(ascendingNumberSort(1, 2)).toBe(-1);
     expect(ascendingNumberSort(-2, 1)).toBe(-1);
     expect(ascendingNumberSort(2, 1)).toBe(1);
@@ -1035,13 +1036,13 @@ describe('Sorting methods', () => {
     expect(descendingNumberSort(1, -2)).toBe(-1);
   });
 
-  it('sorts the first string value in an array', () => {
-    expect(ascendingFirstIndexStringSort(['a'], ['b'])).toBe(-1);
-    expect(ascendingFirstIndexStringSort(['b'], ['a'])).toBe(1);
-    expect(ascendingFirstIndexStringSort(['ab'], ['abb'])).toBe(-1);
-    expect(ascendingFirstIndexStringSort(['abb'], ['ab'])).toBe(1);
-    expect(ascendingFirstIndexStringSort(['Abb'], ['bbb'])).toBe(-1);
-    expect(ascendingFirstIndexStringSort(['bbb'], ['Abb'])).toBe(1);
-    expect(ascendingFirstIndexStringSort(['x'], ['x'])).toBe(0);
+  it("sorts the first string value in an array", () => {
+    expect(ascendingFirstIndexStringSort(["a"], ["b"])).toBe(-1);
+    expect(ascendingFirstIndexStringSort(["b"], ["a"])).toBe(1);
+    expect(ascendingFirstIndexStringSort(["ab"], ["abb"])).toBe(-1);
+    expect(ascendingFirstIndexStringSort(["abb"], ["ab"])).toBe(1);
+    expect(ascendingFirstIndexStringSort(["Abb"], ["bbb"])).toBe(-1);
+    expect(ascendingFirstIndexStringSort(["bbb"], ["Abb"])).toBe(1);
+    expect(ascendingFirstIndexStringSort(["x"], ["x"])).toBe(0);
   });
 });

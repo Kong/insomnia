@@ -1,9 +1,9 @@
-import { database as db } from '../common/database';
-import type { BaseModel } from './index';
+import { database as db } from "../common/database";
+import type { BaseModel } from "./index";
 
-export const name = 'gRPC Request';
-export const type = 'GrpcRequest';
-export const prefix = 'greq';
+export const name = "gRPC Request";
+export const type = "GrpcRequest";
+export const prefix = "greq";
 export const canDuplicate = true;
 export const canSync = true;
 
@@ -38,32 +38,31 @@ interface BaseGrpcRequest {
 
 export type GrpcRequest = BaseModel & BaseGrpcRequest;
 
-export const isGrpcRequest = (model: Pick<BaseModel, 'type'>): model is GrpcRequest => (
-  model.type === type
-);
+export const isGrpcRequest = (
+  model: Pick<BaseModel, "type">,
+): model is GrpcRequest => model.type === type;
 
-export const isGrpcRequestId = (id?: string | null) => (
-  id?.startsWith(`${prefix}_`)
-);
+export const isGrpcRequestId = (id?: string | null) =>
+  id?.startsWith(`${prefix}_`);
 
 export function init(): BaseGrpcRequest {
   return {
-    url: '',
-    name: 'New gRPC Request',
-    description: '',
-    protoFileId: '',
-    protoMethodName: '',
+    url: "",
+    name: "New gRPC Request",
+    description: "",
+    protoFileId: "",
+    protoMethodName: "",
     metadata: [],
     body: {
-      text: '{}',
+      text: "{}",
     },
     metaSortKey: -1 * Date.now(),
     isPrivate: false,
     reflectionApi: {
       enabled: false,
-      url: 'https://buf.build',
-      apiKey: '',
-      module: 'buf.build/connectrpc/eliza',
+      url: "https://buf.build",
+      apiKey: "",
+      module: "buf.build/connectrpc/eliza",
     },
   };
 }
@@ -74,7 +73,7 @@ export function migrate(doc: GrpcRequest) {
 
 export function create(patch: Partial<GrpcRequest> = {}) {
   if (!patch.parentId) {
-    throw new Error('New GrpcRequest missing `parentId`');
+    throw new Error("New GrpcRequest missing `parentId`");
   }
 
   return db.docCreate<GrpcRequest>(type, patch);
@@ -101,7 +100,10 @@ export function findByParentId(parentId: string) {
 }
 
 // This is duplicated (lol) from models/request.js
-export async function duplicate(request: GrpcRequest, patch: Partial<GrpcRequest> = {}) {
+export async function duplicate(
+  request: GrpcRequest,
+  patch: Partial<GrpcRequest> = {},
+) {
   // Only set name and "(Copy)" if the patch does
   // not define it and the request itself has a name.
   // Otherwise leave it blank so the request URL can
@@ -120,7 +122,9 @@ export async function duplicate(request: GrpcRequest, patch: Partial<GrpcRequest
   const [nextRequest] = await db.find<GrpcRequest>(type, q, {
     metaSortKey: 1,
   });
-  const nextSortKey = nextRequest ? nextRequest.metaSortKey : request.metaSortKey + 100;
+  const nextSortKey = nextRequest
+    ? nextRequest.metaSortKey
+    : request.metaSortKey + 100;
   // Calculate new sort key
   const sortKeyIncrement = (nextSortKey - request.metaSortKey) / 2;
   const metaSortKey = request.metaSortKey + sortKeyIncrement;

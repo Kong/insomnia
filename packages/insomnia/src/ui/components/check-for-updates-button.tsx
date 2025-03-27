@@ -1,35 +1,37 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
-import type { UpdateStatus } from '../../main/updates';
-import { Icon } from './icon';
+import type { UpdateStatus } from "../../main/updates";
+import { Icon } from "./icon";
 
-type UpdateStatusIcon = 'refresh' | 'check' | null;
+type UpdateStatusIcon = "refresh" | "check" | null;
 
 export const CheckForUpdatesButton = () => {
   const [disabled, setDisabled] = useState(false);
-  const [status, setStatus] = useState<UpdateStatus>('Check Now');
+  const [status, setStatus] = useState<UpdateStatus>("Check Now");
 
   useEffect(() => {
-    const unsubscribe = window.main.on('updaterStatus',
+    const unsubscribe = window.main.on(
+      "updaterStatus",
       (_e: Electron.IpcRendererEvent, status: UpdateStatus) => {
         setStatus(status);
-    });
+      },
+    );
     return () => {
       unsubscribe();
     };
   });
 
   let statusIcon: UpdateStatusIcon = null;
-  if (['Performing backup...', 'Downloading...', 'Checking'].includes(status)) {
-    statusIcon = 'refresh';
+  if (["Performing backup...", "Downloading...", "Checking"].includes(status)) {
+    statusIcon = "refresh";
   }
-  if (['Up to Date', 'Updated (Restart Required)'].includes(status)) {
-    statusIcon = 'check';
+  if (["Up to Date", "Updated (Restart Required)"].includes(status)) {
+    statusIcon = "check";
   }
 
   return (
     <button
-      className="flex items-center gap-2 btn btn--outlined btn--super-compact"
+      className="btn btn--outlined btn--super-compact flex items-center gap-2"
       disabled={disabled}
       onClick={() => {
         window.main.manualUpdateCheck();
@@ -38,7 +40,12 @@ export const CheckForUpdatesButton = () => {
         setDisabled(true);
       }}
     >
-      {statusIcon && <Icon className={statusIcon === 'refresh' ? 'animate-spin' : ''} icon={statusIcon} />}
+      {statusIcon && (
+        <Icon
+          className={statusIcon === "refresh" ? "animate-spin" : ""}
+          icon={statusIcon}
+        />
+      )}
       {status}
     </button>
   );

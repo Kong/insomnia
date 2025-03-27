@@ -1,8 +1,8 @@
-import classnames from 'classnames';
-import React, { type FC, memo } from 'react';
+import classnames from "classnames";
+import React, { type FC, memo } from "react";
 
-import * as misc from '../../../common/misc';
-import { Tooltip } from '../tooltip';
+import * as misc from "../../../common/misc";
+import { Tooltip } from "../tooltip";
 
 interface Props {
   bytesRead: number;
@@ -12,41 +12,47 @@ interface Props {
   tooltipDelay?: number;
 }
 
-export const SizeTag: FC<Props> = memo(({ bytesRead, bytesContent, small, className, tooltipDelay }) => {
-  const responseSizeReadStringShort = misc.describeByteSize(bytesRead);
-  const responseSizeReadString = misc.describeByteSize(bytesRead, true);
-  const responseSizeRawString = misc.describeByteSize(bytesContent, true);
-  const message = (
-    <table>
-      <tbody>
-        <tr>
-          <td className="text-left pad-right">Read</td>
-          <td className="text-right selectable no-wrap">{responseSizeReadString}</td>
-        </tr>
-        {bytesContent >= 0 && (
+export const SizeTag: FC<Props> = memo(
+  ({ bytesRead, bytesContent, small, className, tooltipDelay }) => {
+    const responseSizeReadStringShort = misc.describeByteSize(bytesRead);
+    const responseSizeReadString = misc.describeByteSize(bytesRead, true);
+    const responseSizeRawString = misc.describeByteSize(bytesContent, true);
+    const message = (
+      <table>
+        <tbody>
           <tr>
-            <td className="text-left pad-right">Content</td>
-            <td className="text-right selectable no-wrap">{responseSizeRawString}</td>
+            <td className="pad-right text-left">Read</td>
+            <td className="selectable no-wrap text-right">
+              {responseSizeReadString}
+            </td>
           </tr>
+          {bytesContent >= 0 && (
+            <tr>
+              <td className="pad-right text-left">Content</td>
+              <td className="selectable no-wrap text-right">
+                {responseSizeRawString}
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    );
+    return (
+      <div
+        className={classnames(
+          "tag",
+          {
+            "tag--small": small,
+          },
+          className,
         )}
-      </tbody>
-    </table>
-  );
-  return (
-    <div
-      className={classnames(
-        'tag',
-        {
-          'tag--small': small,
-        },
-        className,
-      )}
-    >
-      <Tooltip message={message} position="bottom" delay={tooltipDelay}>
-        {responseSizeReadStringShort}
-      </Tooltip>
-    </div>
-  );
-});
+      >
+        <Tooltip message={message} position="bottom" delay={tooltipDelay}>
+          {responseSizeReadStringShort}
+        </Tooltip>
+      </div>
+    );
+  },
+);
 
-SizeTag.displayName = 'SizeTag';
+SizeTag.displayName = "SizeTag";

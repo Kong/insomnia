@@ -1,8 +1,12 @@
-import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML } from '../../../common/constants';
-import type { AuthTypeOAuth2 } from '../../../models/request';
-import { forceBracketNotation } from '../../../templating/utils';
-import { fakerFunctions } from '../../../ui/components/templating/faker-functions';
-import type { Converter, ImportRequest, Parameter } from '../entities';
+import {
+  CONTENT_TYPE_JSON,
+  CONTENT_TYPE_PLAINTEXT,
+  CONTENT_TYPE_XML,
+} from "../../../common/constants";
+import type { AuthTypeOAuth2 } from "../../../models/request";
+import { forceBracketNotation } from "../../../templating/utils";
+import { fakerFunctions } from "../../../ui/components/templating/faker-functions";
+import type { Converter, ImportRequest, Parameter } from "../entities";
 import type {
   Auth as V200Auth,
   EventList as V200EventList,
@@ -14,7 +18,7 @@ import type {
   Request1 as V200Request1,
   Url,
   UrlEncodedParameter as V200UrlEncodedParameter,
-} from './postman-2.0.types';
+} from "./postman-2.0.types";
 import type {
   Auth as V210Auth,
   Auth1 as V210Auth1,
@@ -27,18 +31,18 @@ import type {
   QueryParam,
   Request1 as V210Request1,
   UrlEncodedParameter as V210UrlEncodedParameter,
-} from './postman-2.1.types';
+} from "./postman-2.1.types";
 
-export const id = 'postman';
-export const name = 'Postman';
-export const description = 'Importer for Postman collections';
+export const id = "postman";
+export const name = "Postman";
+export const description = "Importer for Postman collections";
 
 type PostmanCollection = V200Schema | V210Schema;
 type EventList = V200EventList | V210EventList;
 
 type Authentication = V200Auth | V210Auth;
 
-type Body = V200Request1['body'] | V210Request1['body'];
+type Body = V200Request1["body"] | V210Request1["body"];
 
 type UrlEncodedParameter = V200UrlEncodedParameter | V210UrlEncodedParameter;
 
@@ -53,22 +57,30 @@ type Header = V200Header | V210Header;
 let requestCount = 1;
 let requestGroupCount = 1;
 const fakerTags = Object.keys(fakerFunctions);
-const postmanTagRegexs = fakerTags.map(tag => ({ tag, regex: new RegExp(`\\{\\{\\$${tag}\\}\\}`, 'g') }));
+const postmanTagRegexs = fakerTags.map((tag) => ({
+  tag,
+  regex: new RegExp(`\\{\\{\\$${tag}\\}\\}`, "g"),
+}));
 // example: { 'guid' : '{% faker 'guid' %}' }
 const postmanToNunjucksLookup = fakerTags
-  .map(tag => ({ [tag]: `{% faker '${tag}' %}` }))
+  .map((tag) => ({ [tag]: `{% faker '${tag}' %}` }))
   .reduce((acc, obj) => ({ ...acc, ...obj }), {});
 
-export const transformPostmanToNunjucksString = (inputString?: string | null) => {
+export const transformPostmanToNunjucksString = (
+  inputString?: string | null,
+) => {
   if (!inputString) {
-    return '';
+    return "";
   }
-  if (typeof inputString !== 'string') {
+  if (typeof inputString !== "string") {
     return inputString;
   }
-  const replaceFaker = postmanTagRegexs.reduce((transformedString, { tag, regex }) => {
-    return transformedString.replace(regex, postmanToNunjucksLookup[tag]);
-  }, inputString);
+  const replaceFaker = postmanTagRegexs.reduce(
+    (transformedString, { tag, regex }) => {
+      return transformedString.replace(regex, postmanToNunjucksLookup[tag]);
+    },
+    inputString,
+  );
   return normaliseJsonPath(replaceFaker);
 };
 
@@ -76,39 +88,39 @@ export const transformPostmanToNunjucksString = (inputString?: string | null) =>
 // new: {{ _['arr-name-with-dash'] }}
 export const normaliseJsonPath = (input?: string) => {
   if (!input) {
-    return '';
+    return "";
   }
-  if (!input.includes('-')) {
+  if (!input.includes("-")) {
     return input;
   }
   // Use a regular expression to find and replace the pattern
   return input.replace(/{{\s*([^ }]+)\s*[^}]*\s*}}/g, (_, match) => {
     // Replace hyphens with underscores within the match
-    const replaced = forceBracketNotation('_', match);
+    const replaced = forceBracketNotation("_", match);
     // Return the replaced pattern within the curly braces
     return `{{${replaced}}}`;
   });
 };
 
 const POSTMAN_SCHEMA_URLS_V2_0 = [
-  'https://schema.getpostman.com/json/collection/v2.0.0/collection.json',
-  'https://schema.postman.com/json/collection/v2.0.0/collection.json',
+  "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+  "https://schema.postman.com/json/collection/v2.0.0/collection.json",
 ];
 const POSTMAN_SCHEMA_URLS_V2_1 = [
-  'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
-  'https://schema.postman.com/json/collection/v2.1.0/collection.json',
+  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+  "https://schema.postman.com/json/collection/v2.1.0/collection.json",
 ];
 
 const mapGrantTypeToInsomniaGrantType = (grantType: string) => {
-  if (grantType === 'authorization_code_with_pkce') {
-    return 'authorization_code';
+  if (grantType === "authorization_code_with_pkce") {
+    return "authorization_code";
   }
 
-  if (grantType === 'password_credentials') {
-    return 'password';
+  if (grantType === "password_credentials") {
+    return "password";
   }
 
-  return grantType || 'authorization_code';
+  return grantType || "authorization_code";
 };
 
 export function translateHandlersInScript(scriptContent: string): string {
@@ -118,10 +130,14 @@ export function translateHandlersInScript(scriptContent: string): string {
   // This is a simple implementation that only replaces the first instance of pm.* in the script
   let offset = 0;
   for (let i = 0; i < scriptContent.length - 2; i++) {
-    const isPM = scriptContent.slice(i, i + 3) === 'pm.';
-    const isPrevCharacterAlphaNumeric = i - 1 >= 0 && /[0-9a-zA-Z\_\$]/.test(scriptContent[i - 1]);
+    const isPM = scriptContent.slice(i, i + 3) === "pm.";
+    const isPrevCharacterAlphaNumeric =
+      i - 1 >= 0 && /[0-9a-zA-Z\_\$]/.test(scriptContent[i - 1]);
     if (isPM && !isPrevCharacterAlphaNumeric) {
-      translated = translated.slice(0, i + offset) + 'insomnia.' + translated.slice(i + 3 + offset);
+      translated =
+        translated.slice(0, i + offset) +
+        "insomnia." +
+        translated.slice(i + 3 + offset);
       offset += 6;
     }
   }
@@ -153,12 +169,12 @@ export class ImportPostman {
   };
 
   importItems = (
-    items: PostmanCollection['item'],
-    parentId = '__WORKSPACE_ID__',
+    items: PostmanCollection["item"],
+    parentId = "__WORKSPACE_ID__",
   ): ImportRequest[] => {
     // @ts-expect-error this is because there are devergent behaviors for how the function treats this collection.  This is handled appropriately in the function itself in different branches.
     return items.reduce((accumulator: ImportRequest[], item: Item | Folder) => {
-      if (Object.prototype.hasOwnProperty.call(item, 'request')) {
+      if (Object.prototype.hasOwnProperty.call(item, "request")) {
         return [...accumulator, this.importRequestItem(item as Item, parentId)];
       }
 
@@ -167,7 +183,7 @@ export class ImportPostman {
         ...accumulator,
         requestGroup,
         ...this.importItems(
-          item.item as PostmanCollection['item'],
+          item.item as PostmanCollection["item"],
           requestGroup._id,
         ),
       ];
@@ -176,59 +192,65 @@ export class ImportPostman {
 
   importPreRequestScript = (events: EventList | undefined): string => {
     if (events == null) {
-      return '';
+      return "";
     }
 
     const preRequestEvent = events.find(
-      event => event.listen === 'prerequest'
+      (event) => event.listen === "prerequest",
     );
 
-    const scriptOrRows = preRequestEvent != null ? preRequestEvent.script : '';
-    if (scriptOrRows == null || scriptOrRows === '') {
-      return '';
+    const scriptOrRows = preRequestEvent != null ? preRequestEvent.script : "";
+    if (scriptOrRows == null || scriptOrRows === "") {
+      return "";
     }
 
-    const scriptContent = scriptOrRows.exec != null ?
-      (Array.isArray(scriptOrRows.exec) ? scriptOrRows.exec.join('\n') : scriptOrRows.exec) :
-      '';
+    const scriptContent =
+      scriptOrRows.exec != null
+        ? Array.isArray(scriptOrRows.exec)
+          ? scriptOrRows.exec.join("\n")
+          : scriptOrRows.exec
+        : "";
 
     return translateHandlersInScript(scriptContent);
   };
 
   importAfterResponseScript = (events: EventList | undefined): string => {
     if (events == null) {
-      return '';
+      return "";
     }
 
-    const afterResponseEvent = events.find(
-      event => event.listen === 'test'
-    );
+    const afterResponseEvent = events.find((event) => event.listen === "test");
 
-    const scriptOrRows = afterResponseEvent ? afterResponseEvent.script : '';
+    const scriptOrRows = afterResponseEvent ? afterResponseEvent.script : "";
     if (!scriptOrRows) {
-      return '';
+      return "";
     }
 
-    const scriptContent = scriptOrRows.exec ?
-      (Array.isArray(scriptOrRows.exec) ? scriptOrRows.exec.join('\n') : scriptOrRows.exec) :
-      '';
+    const scriptContent = scriptOrRows.exec
+      ? Array.isArray(scriptOrRows.exec)
+        ? scriptOrRows.exec.join("\n")
+        : scriptOrRows.exec
+      : "";
 
     return translateHandlersInScript(scriptContent);
   };
 
   importRequestItem = (
-    { request, name = '', event }: Item,
+    { request, name = "", event }: Item,
     parentId: string,
   ): ImportRequest => {
-    if (typeof request === 'string') {
+    if (typeof request === "string") {
       return {};
     }
 
-    const { authentication, headers } = this.importAuthentication(request.auth, request.header as Header[]);
+    const { authentication, headers } = this.importAuthentication(
+      request.auth,
+      request.header as Header[],
+    );
 
     let parameters = [] as Parameter[];
 
-    if (typeof request.url === 'object' && request.url?.query) {
+    if (typeof request.url === "object" && request.url?.query) {
       parameters = this.importParameters(request.url?.query);
     }
 
@@ -238,13 +260,13 @@ export class ImportPostman {
     // Add Content-Type header for raw body because we don't add it automatically when sending the request
     const body = this.importBody(request.body);
     if (
-      request.body?.mode === 'raw' &&
-      !headers.find(({ key }) => key.toLowerCase() === 'content-type') &&
-      typeof body === 'object' &&
+      request.body?.mode === "raw" &&
+      !headers.find(({ key }) => key.toLowerCase() === "content-type") &&
+      typeof body === "object" &&
       body?.mimeType
     ) {
       headers.push({
-        key: 'Content-Type',
+        key: "Content-Type",
         value: body.mimeType,
       });
     }
@@ -252,17 +274,17 @@ export class ImportPostman {
     return {
       parentId,
       _id: `__REQ_${requestCount++}__`,
-      _type: 'request',
+      _type: "request",
       name,
-      description: (request.description as string) || '',
+      description: (request.description as string) || "",
       url: transformPostmanToNunjucksString(this.importUrl(request.url)),
       parameters: parameters,
-      method: request.method || 'GET',
+      method: request.method || "GET",
       headers: headers.map(({ key, value, disabled, description }) => ({
         name: transformPostmanToNunjucksString(key),
         value: transformPostmanToNunjucksString(value),
-        ...(typeof disabled !== 'undefined' ? { disabled } : {}),
-        ...(typeof description !== 'undefined' ? { description } : {}),
+        ...(typeof disabled !== "undefined" ? { disabled } : {}),
+        ...(typeof description !== "undefined" ? { description } : {}),
       })),
       body,
       authentication,
@@ -275,23 +297,29 @@ export class ImportPostman {
     if (!parameters || parameters?.length === 0) {
       return [];
     }
-    return parameters.map(({ key, value, disabled }) => ({
-      name: transformPostmanToNunjucksString(key),
-      value: transformPostmanToNunjucksString(value),
-      disabled: disabled || false,
-    }) as Parameter);
+    return parameters.map(
+      ({ key, value, disabled }) =>
+        ({
+          name: transformPostmanToNunjucksString(key),
+          value: transformPostmanToNunjucksString(value),
+          disabled: disabled || false,
+        }) as Parameter,
+    );
   };
 
-  importFolderItem = ({ name, description, event, auth }: Folder, parentId: string) => {
+  importFolderItem = (
+    { name, description, event, auth }: Folder,
+    parentId: string,
+  ) => {
     const { authentication } = this.importAuthentication(auth);
     const preRequestScript = this.importPreRequestScript(event);
     const afterResponseScript = this.importAfterResponseScript(event);
     return {
       parentId,
       _id: `__GRP_${requestGroupCount++}__`,
-      _type: 'request_group',
+      _type: "request_group",
       name,
-      description: description || '',
+      description: description || "",
       preRequestScript,
       afterResponseScript,
       authentication,
@@ -307,17 +335,19 @@ export class ImportPostman {
       event,
     } = this.collection;
 
-    const postmanVariable = this.importVariable((variable as { [key: string]: string }[]) || []);
+    const postmanVariable = this.importVariable(
+      (variable as { [key: string]: string }[]) || [],
+    );
     const { authentication } = this.importAuthentication(auth);
     const preRequestScript = this.importPreRequestScript(event);
     const afterResponseScript = this.importAfterResponseScript(event);
 
     const collectionFolder: ImportRequest = {
-      parentId: '__WORKSPACE_ID__',
+      parentId: "__WORKSPACE_ID__",
       _id: `__GRP_${requestGroupCount++}__`,
-      _type: 'request_group',
+      _type: "request_group",
       name,
-      description: typeof description === 'string' ? description : '',
+      description: typeof description === "string" ? description : "",
       authentication,
       preRequestScript,
       afterResponseScript,
@@ -332,50 +362,50 @@ export class ImportPostman {
 
   importUrl = (url?: Url | string) => {
     if (!url) {
-      return '';
+      return "";
     }
 
     // remove ? and everything after it if there are QueryParams strictly defined
-    if (typeof url === 'object' && url.query && url.raw?.includes('?')) {
-      return url.raw?.slice(0, url.raw.indexOf('?')) || '';
+    if (typeof url === "object" && url.query && url.raw?.includes("?")) {
+      return url.raw?.slice(0, url.raw.indexOf("?")) || "";
     }
 
-    if (typeof url === 'object' && url.raw) {
+    if (typeof url === "object" && url.raw) {
       return url.raw;
     }
 
-    if (typeof url === 'string') {
+    if (typeof url === "string") {
       return url;
     }
-    return '';
+    return "";
   };
 
-  importBody = (body: Body): ImportRequest['body'] => {
+  importBody = (body: Body): ImportRequest["body"] => {
     if (!body) {
       return {};
     }
 
     switch (body.mode) {
-      case 'raw':
+      case "raw":
         let language: string | undefined = undefined;
         if (
-          typeof body.options?.raw === 'object' &&
+          typeof body.options?.raw === "object" &&
           body.options?.raw &&
-          'language' in body.options?.raw &&
-          typeof body.options.raw.language === 'string'
+          "language" in body.options?.raw &&
+          typeof body.options.raw.language === "string"
         ) {
           language = body.options.raw.language;
         }
         return this.importBodyRaw(body.raw, language);
 
-      case 'urlencoded':
+      case "urlencoded":
         return this.importBodyFormUrlEncoded(body.urlencoded);
 
-      case 'formdata':
+      case "formdata":
         // TODO: Handle this as properly as multipart/form-data
         return this.importBodyFormdata(body.formdata);
 
-      case 'graphql':
+      case "graphql":
         return this.importBodyGraphQL(body.graphql);
 
       default:
@@ -399,9 +429,9 @@ export class ImportPostman {
           item.disabled = !!disabled;
         }
 
-        if (type === 'file') {
+        if (type === "file") {
           item.fileName = src as string;
-        } else if (typeof value === 'string') {
+        } else if (typeof value === "string") {
           item.value = transformPostmanToNunjucksString(value);
         } else {
           item.value = value as string;
@@ -413,13 +443,13 @@ export class ImportPostman {
 
     return {
       params,
-      mimeType: 'multipart/form-data',
+      mimeType: "multipart/form-data",
     };
   };
 
   importBodyFormUrlEncoded = (
     urlEncoded?: UrlEncodedParameter[],
-  ): ImportRequest['body'] => {
+  ): ImportRequest["body"] => {
     const { schema } = this.collection.info;
 
     const params = urlEncoded?.map(({ key, value, enabled, disabled }) => {
@@ -439,29 +469,29 @@ export class ImportPostman {
 
     return {
       params,
-      mimeType: 'application/x-www-form-urlencoded',
+      mimeType: "application/x-www-form-urlencoded",
     };
   };
 
   importBodyRaw = (raw?: string, language?: string) => {
-    if (raw === '') {
+    if (raw === "") {
       return {};
     }
 
     let mimeType;
     switch (language) {
-      case 'xml':
+      case "xml":
         mimeType = CONTENT_TYPE_XML;
         break;
-      case 'text':
+      case "text":
         mimeType = CONTENT_TYPE_PLAINTEXT;
         break;
-      case 'json':
+      case "json":
         mimeType = CONTENT_TYPE_JSON;
         break;
       // TODO: we do not support these types yet
-      case 'javascript':
-      case 'html':
+      case "javascript":
+      case "html":
       default:
         mimeType = CONTENT_TYPE_PLAINTEXT;
     }
@@ -478,14 +508,19 @@ export class ImportPostman {
     }
 
     return {
-      mimeType: 'application/graphql',
+      mimeType: "application/graphql",
       text: transformPostmanToNunjucksString(JSON.stringify(graphql)),
     };
   };
 
-  importAuthentication = (authentication?: Authentication | null, originalHeaders: Header[] = []) => {
-    const isAuthorizationHeader = ({ key }: Header) => key === 'Authorization';
-    const authorizationHeader = originalHeaders.find(isAuthorizationHeader)?.value;
+  importAuthentication = (
+    authentication?: Authentication | null,
+    originalHeaders: Header[] = [],
+  ) => {
+    const isAuthorizationHeader = ({ key }: Header) => key === "Authorization";
+    const authorizationHeader = originalHeaders.find(
+      isAuthorizationHeader,
+    )?.value;
 
     // It is a business logic decision to remove the "Authorization" header.
     // If you think about it, this makes sense because if you've used Insomnia to fill out an Authorization form (e.g. Basic Auth), you wouldn't then also want the header to be added separately.
@@ -497,32 +532,40 @@ export class ImportPostman {
 
     if (!authentication) {
       if (authorizationHeader) {
-        switch (authorizationHeader?.substring(0, authorizationHeader.indexOf(' '))) {
-
-          case 'Bearer': // will work for OAuth2 as well
+        switch (
+          authorizationHeader?.substring(0, authorizationHeader.indexOf(" "))
+        ) {
+          case "Bearer": // will work for OAuth2 as well
             return {
-              authentication: this.importBearerAuthenticationFromHeader(authorizationHeader),
+              authentication:
+                this.importBearerAuthenticationFromHeader(authorizationHeader),
               headers,
             };
 
-          case 'Basic':
+          case "Basic":
             return {
-              authentication: this.importBasicAuthenticationFromHeader(authorizationHeader),
+              authentication:
+                this.importBasicAuthenticationFromHeader(authorizationHeader),
               headers,
             };
 
-          case 'AWS4-HMAC-SHA256':
-            return this.importАwsv4AuthenticationFromHeader(authorizationHeader, headers);
+          case "AWS4-HMAC-SHA256":
+            return this.importАwsv4AuthenticationFromHeader(
+              authorizationHeader,
+              headers,
+            );
 
-          case 'Digest':
+          case "Digest":
             return {
-              authentication: this.importDigestAuthenticationFromHeader(authorizationHeader),
+              authentication:
+                this.importDigestAuthenticationFromHeader(authorizationHeader),
               headers,
             };
 
-          case 'OAuth':
+          case "OAuth":
             return {
-              authentication: this.importOauth1AuthenticationFromHeader(authorizationHeader),
+              authentication:
+                this.importOauth1AuthenticationFromHeader(authorizationHeader),
               headers,
             };
 
@@ -540,43 +583,43 @@ export class ImportPostman {
     }
 
     switch (authentication.type) {
-      case 'awsv4':
+      case "awsv4":
         return {
           authentication: this.importAwsV4Authentication(authentication),
           headers,
         };
 
-      case 'basic':
+      case "basic":
         return {
           authentication: this.importBasicAuthentication(authentication),
           headers,
         };
 
-      case 'bearer':
+      case "bearer":
         return {
           authentication: this.importBearerTokenAuthentication(authentication),
           headers,
         };
 
-      case 'digest':
+      case "digest":
         return {
           authentication: this.importDigestAuthentication(authentication),
           headers,
         };
 
-      case 'oauth1':
+      case "oauth1":
         return {
           authentication: this.importOauth1Authentication(authentication),
           headers,
         };
 
-      case 'oauth2':
+      case "oauth2":
         return {
           authentication: this.importOauth2Authentication(authentication),
           headers,
         };
 
-      case 'apikey':
+      case "apikey":
         return {
           authentication: this.importApiKeyAuthentication(authentication),
           headers,
@@ -596,18 +639,18 @@ export class ImportPostman {
     }
 
     const item = {
-      type: 'iam',
+      type: "iam",
       disabled: false,
-      accessKeyId: 'aws-access-key',
-      region: 'aws-region',
-      secretAccessKey: 'aws-secret-key',
-      service: 'aws-service-name',
-      sessionToken: 'aws-session-token',
+      accessKeyId: "aws-access-key",
+      region: "aws-region",
+      secretAccessKey: "aws-secret-key",
+      service: "aws-service-name",
+      sessionToken: "aws-session-token",
     };
 
     const { schema } = this.collection.info;
     if (POSTMAN_SCHEMA_URLS_V2_0.includes(schema)) {
-      const awsv4 = auth.awsv4 as V200Auth['awsv4'];
+      const awsv4 = auth.awsv4 as V200Auth["awsv4"];
       item.accessKeyId = awsv4?.accessKey as string;
       item.region = awsv4?.region as string;
       item.secretAccessKey = awsv4?.secretKey as string;
@@ -616,12 +659,12 @@ export class ImportPostman {
     }
 
     if (POSTMAN_SCHEMA_URLS_V2_1.includes(schema)) {
-      const awsv4 = auth.awsv4 as V210Auth['awsv4'];
-      item.accessKeyId = this.findValueByKey(awsv4, 'accessKey');
-      item.region = this.findValueByKey(awsv4, 'region');
-      item.secretAccessKey = this.findValueByKey(awsv4, 'secretKey');
-      item.service = this.findValueByKey(awsv4, 'service');
-      item.sessionToken = this.findValueByKey(awsv4, 'sessionToken');
+      const awsv4 = auth.awsv4 as V210Auth["awsv4"];
+      item.accessKeyId = this.findValueByKey(awsv4, "accessKey");
+      item.region = this.findValueByKey(awsv4, "region");
+      item.secretAccessKey = this.findValueByKey(awsv4, "secretKey");
+      item.service = this.findValueByKey(awsv4, "service");
+      item.sessionToken = this.findValueByKey(awsv4, "sessionToken");
     }
 
     return item;
@@ -631,28 +674,34 @@ export class ImportPostman {
    * example of AWS header:
    * @example AWS4-HMAC-SHA256 Credential=<accessKeyId>/20220110/<region>/<service>/aws4_request, SignedHeaders=accept;content-type;host;x-amz-date;x-amz-security-token, Signature=ed270ed6ad1cad3513f6edad9692e4496e321e44954c70a86504eea5e0ef1ff5
    */
-  importАwsv4AuthenticationFromHeader = (authHeader: string, headers: Header[]) => {
+  importАwsv4AuthenticationFromHeader = (
+    authHeader: string,
+    headers: Header[],
+  ) => {
     if (!authHeader) {
       return {
         authentication: {},
         headers,
       };
     }
-    const isAMZSecurityTokenHeader = ({ key }: Header) => key === 'X-Amz-Security-Token';
+    const isAMZSecurityTokenHeader = ({ key }: Header) =>
+      key === "X-Amz-Security-Token";
     const sessionToken = headers?.find(isAMZSecurityTokenHeader)?.value;
-    const credentials = RegExp(/(?<=Credential=).*/).exec(authHeader)?.[0].split('/');
+    const credentials = RegExp(/(?<=Credential=).*/)
+      .exec(authHeader)?.[0]
+      .split("/");
 
     return {
       authentication: {
-        type: 'iam',
+        type: "iam",
         disabled: false,
         accessKeyId: credentials?.[0],
         region: credentials?.[2],
-        secretAccessKey: '',
+        secretAccessKey: "",
         service: credentials?.[3],
         ...(sessionToken ? { sessionToken } : {}),
       },
-      headers: headers.filter(h => !isAMZSecurityTokenHeader(h)),
+      headers: headers.filter((h) => !isAMZSecurityTokenHeader(h)),
     };
   };
 
@@ -662,23 +711,23 @@ export class ImportPostman {
     }
 
     const item = {
-      type: 'basic',
+      type: "basic",
       disabled: false,
-      username: '',
-      password: '',
+      username: "",
+      password: "",
     };
     const { schema } = this.collection.info;
 
     if (POSTMAN_SCHEMA_URLS_V2_0.includes(schema)) {
-      const basic = auth.basic as V200Auth['basic'];
+      const basic = auth.basic as V200Auth["basic"];
       item.username = basic?.username as string;
       item.password = basic?.password as string;
     }
 
     if (POSTMAN_SCHEMA_URLS_V2_1.includes(schema)) {
-      const basic = auth.basic as V210Auth['basic'];
-      item.username = this.findValueByKey(basic, 'username');
-      item.password = this.findValueByKey(basic, 'password');
+      const basic = auth.basic as V210Auth["basic"];
+      item.username = this.findValueByKey(basic, "username");
+      item.password = this.findValueByKey(basic, "password");
     }
 
     return item;
@@ -689,12 +738,14 @@ export class ImportPostman {
       return {};
     }
 
-    const authStringIndex = authHeader.trim().replace(/\s+/g, ' ').indexOf(' ');
+    const authStringIndex = authHeader.trim().replace(/\s+/g, " ").indexOf(" ");
     const hasEncodedAuthString = authStringIndex !== -1;
-    const encodedAuthString = hasEncodedAuthString ? authHeader.substring(authStringIndex + 1) : '';
-    const authString = Buffer.from(encodedAuthString, 'base64').toString();
+    const encodedAuthString = hasEncodedAuthString
+      ? authHeader.substring(authStringIndex + 1)
+      : "";
+    const authString = Buffer.from(encodedAuthString, "base64").toString();
     const item = {
-      type: 'basic',
+      type: "basic",
       disabled: false,
       username: RegExp(/.+?(?=\:)/).exec(authString)?.[0],
       password: RegExp(/(?<=\:).*/).exec(authString)?.[0],
@@ -711,21 +762,21 @@ export class ImportPostman {
     }
 
     const item = {
-      type: 'bearer',
+      type: "bearer",
       disabled: false,
-      token: '',
-      prefix: '',
+      token: "",
+      prefix: "",
     };
     const { schema } = this.collection.info;
 
     if (POSTMAN_SCHEMA_URLS_V2_0.includes(schema)) {
-      item.token = (auth.bearer as V200Auth['bearer'])?.token as string;
+      item.token = (auth.bearer as V200Auth["bearer"])?.token as string;
     }
 
     if (POSTMAN_SCHEMA_URLS_V2_1.includes(schema)) {
       item.token = this.findValueByKey(
-        auth.bearer as V210Auth['bearer'],
-        'token',
+        auth.bearer as V210Auth["bearer"],
+        "token",
       );
     }
     item.token = transformPostmanToNunjucksString(item.token);
@@ -736,13 +787,15 @@ export class ImportPostman {
     if (!authHeader) {
       return {};
     }
-    const authHeader2 = transformPostmanToNunjucksString(authHeader.replace(/\s+/, ' '));
-    const tokenIndex = authHeader.indexOf(' ');
+    const authHeader2 = transformPostmanToNunjucksString(
+      authHeader.replace(/\s+/, " "),
+    );
+    const tokenIndex = authHeader.indexOf(" ");
     return {
-      type: 'bearer',
+      type: "bearer",
       disabled: false,
-      token: tokenIndex + 1 ? authHeader2.substring(tokenIndex + 1) : '',
-      prefix: '',
+      token: tokenIndex + 1 ? authHeader2.substring(tokenIndex + 1) : "",
+      prefix: "",
     };
   };
 
@@ -752,24 +805,24 @@ export class ImportPostman {
     }
 
     const item = {
-      type: 'digest',
+      type: "digest",
       disabled: false,
-      username: '',
-      password: '',
+      username: "",
+      password: "",
     };
 
     const { schema } = this.collection.info;
 
     if (POSTMAN_SCHEMA_URLS_V2_0.includes(schema)) {
-      const digest = auth.digest as V200Auth['digest'];
+      const digest = auth.digest as V200Auth["digest"];
       item.username = digest?.username as string;
       item.password = digest?.password as string;
     }
 
     if (POSTMAN_SCHEMA_URLS_V2_1.includes(schema)) {
       const digest = auth.digest as V210Auth1[];
-      item.username = this.findValueByKey<V210Auth1>(digest, 'username');
-      item.password = this.findValueByKey<V210Auth1>(digest, 'password');
+      item.username = this.findValueByKey<V210Auth1>(digest, "username");
+      item.password = this.findValueByKey<V210Auth1>(digest, "password");
     }
 
     return item;
@@ -778,10 +831,10 @@ export class ImportPostman {
   // example: Digest username="Username", realm="Realm", nonce="Nonce", uri="//api/v1/report?start_date_min=2019-01-01T00%3A00%3A00%2B00%3A00&start_date_max=2019-01-01T23%3A59%3A59%2B00%3A00&projects[]=%2Fprojects%2F1&include_child_projects=1&search_query=meeting&columns[]=project&include_project_data=1&sort[]=-duration", algorithm="MD5", response="f3f762321e158aefe103529eda4ddb7c", opaque="Opaque"
   importDigestAuthenticationFromHeader = (authHeader: string) => {
     const item = {
-      type: 'digest',
+      type: "digest",
       disabled: false,
       username: RegExp(/(?<=username=")(.*?)(?=")/).exec(authHeader)?.[0],
-      password: '',
+      password: "",
     };
 
     return item;
@@ -793,25 +846,25 @@ export class ImportPostman {
     }
 
     const item = {
-      type: 'oauth1',
+      type: "oauth1",
       disabled: false,
-      callback: '',
-      consumerKey: '',
-      consumerSecret: '',
-      nonce: '',
-      privateKey: '',
-      realm: '',
-      signatureMethod: '',
-      timestamp: '',
-      tokenKey: '',
-      tokenSecret: '',
-      verifier: '',
-      version: '',
+      callback: "",
+      consumerKey: "",
+      consumerSecret: "",
+      nonce: "",
+      privateKey: "",
+      realm: "",
+      signatureMethod: "",
+      timestamp: "",
+      tokenKey: "",
+      tokenSecret: "",
+      verifier: "",
+      version: "",
     };
 
     const { schema } = this.collection.info;
     if (POSTMAN_SCHEMA_URLS_V2_0.includes(schema)) {
-      const oauth1 = auth.oauth1 as V200Auth['oauth1'];
+      const oauth1 = auth.oauth1 as V200Auth["oauth1"];
       item.consumerKey = oauth1?.consumerKey as string;
       item.consumerSecret = oauth1?.consumerSecret as string;
       item.nonce = oauth1?.nonce as string;
@@ -824,16 +877,16 @@ export class ImportPostman {
     }
 
     if (POSTMAN_SCHEMA_URLS_V2_1.includes(schema)) {
-      const oauth1 = auth.oauth1 as V210Auth['oauth1'];
-      item.consumerKey = this.findValueByKey(oauth1, 'consumerKey');
-      item.consumerSecret = this.findValueByKey(oauth1, 'consumerSecret');
-      item.nonce = this.findValueByKey(oauth1, 'nonce');
-      item.realm = this.findValueByKey(oauth1, 'realm');
-      item.signatureMethod = this.findValueByKey(oauth1, 'signatureMethod');
-      item.timestamp = this.findValueByKey(oauth1, 'timestamp');
-      item.tokenKey = this.findValueByKey(oauth1, 'token');
-      item.tokenSecret = this.findValueByKey(oauth1, 'tokenSecret');
-      item.version = this.findValueByKey(oauth1, 'version');
+      const oauth1 = auth.oauth1 as V210Auth["oauth1"];
+      item.consumerKey = this.findValueByKey(oauth1, "consumerKey");
+      item.consumerSecret = this.findValueByKey(oauth1, "consumerSecret");
+      item.nonce = this.findValueByKey(oauth1, "nonce");
+      item.realm = this.findValueByKey(oauth1, "realm");
+      item.signatureMethod = this.findValueByKey(oauth1, "signatureMethod");
+      item.timestamp = this.findValueByKey(oauth1, "timestamp");
+      item.tokenKey = this.findValueByKey(oauth1, "token");
+      item.tokenSecret = this.findValueByKey(oauth1, "tokenSecret");
+      item.version = this.findValueByKey(oauth1, "version");
     }
 
     return item;
@@ -841,39 +894,43 @@ export class ImportPostman {
 
   // Example: OAuth realm="Realm",oauth_consumer_key="Consumer%20Key",oauth_token="Access%20Token",oauth_signature_method="HMAC-SHA1",oauth_timestamp="Timestamp",oauth_nonce="Nonce",oauth_version="Version",oauth_callback="Callback%20URL",oauth_verifier="Verifier",oauth_signature="TwJvZVasVWTL6X%2Bz3lmuiyvaX2Q%3D"
   importOauth1AuthenticationFromHeader = (authHeader: string) => {
-
     const item = {
-      type: 'oauth1',
+      type: "oauth1",
       disabled: false,
       callback: RegExp(/(?<=oauth_callback=")(.*?)(?=")/).exec(authHeader)?.[0],
-      consumerKey: RegExp(/(?<=oauth_consumer_key=")(.*?)(?=")/).exec(authHeader)?.[0],
-      consumerSecret: '',
+      consumerKey: RegExp(/(?<=oauth_consumer_key=")(.*?)(?=")/).exec(
+        authHeader,
+      )?.[0],
+      consumerSecret: "",
       nonce: RegExp(/(?<=oauth_nonce=")(.*?)(?=")/).exec(authHeader)?.[0],
-      privateKey: '',
+      privateKey: "",
       realm: RegExp(/(?<=realm=")(.*?)(?=")/).exec(authHeader)?.[0],
-      signatureMethod: RegExp(/(?<=oauth_signature_method=")(.*?)(?=")/).exec(authHeader)?.[0],
-      timestamp: RegExp(/(?<=oauth_timestamp=")(.*?)(?=")/).exec(authHeader)?.[0],
+      signatureMethod: RegExp(/(?<=oauth_signature_method=")(.*?)(?=")/).exec(
+        authHeader,
+      )?.[0],
+      timestamp: RegExp(/(?<=oauth_timestamp=")(.*?)(?=")/).exec(
+        authHeader,
+      )?.[0],
       tokenKey: RegExp(/(?<=oauth_token=")(.*?)(?=")/).exec(authHeader)?.[0],
-      tokenSecret: '',
+      tokenSecret: "",
       verifier: RegExp(/(?<=oauth_verifier=")(.*?)(?=")/).exec(authHeader)?.[0],
       version: RegExp(/(?<=oauth_version=")(.*?)(?=")/).exec(authHeader)?.[0],
     };
 
     return item;
-
   };
 
   importApiKeyAuthentication = (auth: Authentication) => {
     if (!auth.apikey) {
       return {};
     }
-    const apikey = auth.apikey as V200Auth['apikey'] | V210Auth['apikey'];
+    const apikey = auth.apikey as V200Auth["apikey"] | V210Auth["apikey"];
     let keyVal, valueVal, inVal: string;
     if (Array.isArray(apikey)) {
       // V2.1
-      keyVal = this.findValueByKey(apikey, 'key');
-      valueVal = this.findValueByKey(apikey, 'value');
-      inVal = this.findValueByKey(apikey, 'in');
+      keyVal = this.findValueByKey(apikey, "key");
+      valueVal = this.findValueByKey(apikey, "value");
+      inVal = this.findValueByKey(apikey, "in");
     } else {
       // V2.0
       keyVal = apikey?.key as string;
@@ -882,10 +939,10 @@ export class ImportPostman {
     }
 
     return {
-      type: 'apikey',
+      type: "apikey",
       key: keyVal,
       value: valueVal,
-      addTo: inVal === 'query' ? 'queryParams' : 'header',
+      addTo: inVal === "query" ? "queryParams" : "header",
       disabled: false,
     };
   };
@@ -897,37 +954,39 @@ export class ImportPostman {
     // Workaround for https://github.com/Kong/insomnia/issues/4437
     // Note: We only support importing OAuth2 configuration from Postman v2.1
     if (POSTMAN_SCHEMA_URLS_V2_1.includes(schema)) {
-      const oauth2 = auth.oauth2 as V210Auth['oauth2'];
-      const grantTypeField = this.findValueByKey(oauth2, 'grant_type');
+      const oauth2 = auth.oauth2 as V210Auth["oauth2"];
+      const grantTypeField = this.findValueByKey(oauth2, "grant_type");
       const grantType = mapGrantTypeToInsomniaGrantType(grantTypeField);
 
       return {
-        type: 'oauth2',
+        type: "oauth2",
         disabled: false,
-        pkceMethod: this.findValueByKey(oauth2, 'challengeAlgorithm'),
-        state: this.findValueByKey(oauth2, 'state'),
-        scope: this.findValueByKey(oauth2, 'scope'),
-        tokenPrefix: this.findValueByKey(oauth2, 'headerPrefix'),
-        credentialsInBody: this.findValueByKey(oauth2, 'addTokenTo') !== 'header',
-        accessTokenUrl: this.findValueByKey(oauth2, 'accessTokenUrl'),
-        authorizationUrl: this.findValueByKey(oauth2, 'authUrl'),
+        pkceMethod: this.findValueByKey(oauth2, "challengeAlgorithm"),
+        state: this.findValueByKey(oauth2, "state"),
+        scope: this.findValueByKey(oauth2, "scope"),
+        tokenPrefix: this.findValueByKey(oauth2, "headerPrefix"),
+        credentialsInBody:
+          this.findValueByKey(oauth2, "addTokenTo") !== "header",
+        accessTokenUrl: this.findValueByKey(oauth2, "accessTokenUrl"),
+        authorizationUrl: this.findValueByKey(oauth2, "authUrl"),
         grantType,
-        password: this.findValueByKey(oauth2, 'password'),
-        username: this.findValueByKey(oauth2, 'username'),
-        usePkce: grantTypeField === 'authorization_code_with_pkce' ? true : undefined,
-        clientId: this.findValueByKey(oauth2, 'clientId'),
-        clientSecret: this.findValueByKey(oauth2, 'clientSecret'),
-        redirectUrl: this.findValueByKey(oauth2, 'redirect_uri'),
+        password: this.findValueByKey(oauth2, "password"),
+        username: this.findValueByKey(oauth2, "username"),
+        usePkce:
+          grantTypeField === "authorization_code_with_pkce" ? true : undefined,
+        clientId: this.findValueByKey(oauth2, "clientId"),
+        clientSecret: this.findValueByKey(oauth2, "clientSecret"),
+        redirectUrl: this.findValueByKey(oauth2, "redirect_uri"),
       };
     }
     const item = {
-      type: 'oauth2',
+      type: "oauth2",
       disabled: true,
-      accessTokenUrl: '',
-      authorizationUrl: '',
-      grantType: 'authorization_code',
-      password: '',
-      username: '',
+      accessTokenUrl: "",
+      authorizationUrl: "",
+      grantType: "authorization_code",
+      password: "",
+      username: "",
     };
     return item;
   };
@@ -937,20 +996,20 @@ export class ImportPostman {
     key?: keyof T,
   ) => {
     if (!array) {
-      return '';
+      return "";
     }
 
-    const obj = array.find(o => o.key === key);
+    const obj = array.find((o) => o.key === key);
 
-    if (obj && typeof obj.value === 'string') {
-      return obj.value || '';
+    if (obj && typeof obj.value === "string") {
+      return obj.value || "";
     }
 
-    return '';
+    return "";
   };
 }
 
-export const convert: Converter = rawData => {
+export const convert: Converter = (rawData) => {
   requestCount = 1;
   requestGroupCount = 1;
 

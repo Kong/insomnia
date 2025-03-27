@@ -1,12 +1,20 @@
-import 'codemirror/addon/mode/overlay';
+import "codemirror/addon/mode/overlay";
 
-import CodeMirror, { type EnvironmentAutocompleteOptions, type Hint, type ShowHintOptions } from 'codemirror';
+import CodeMirror, {
+  type EnvironmentAutocompleteOptions,
+  type Hint,
+  type ShowHintOptions,
+} from "codemirror";
 
-import { getPlatformKeyCombinations } from '../../../../common/hotkeys';
-import { escapeRegex, fnOrString, isNotNullOrUndefined } from '../../../../common/misc';
-import type { NunjucksParsedTag } from '../../../../templating/types';
-import { getDefaultFill } from '../../../../templating/utils';
-import { isNunjucksMode } from '../modes/nunjucks';
+import { getPlatformKeyCombinations } from "../../../../common/hotkeys";
+import {
+  escapeRegex,
+  fnOrString,
+  isNotNullOrUndefined,
+} from "../../../../common/misc";
+import type { NunjucksParsedTag } from "../../../../templating/types";
+import { getDefaultFill } from "../../../../templating/utils";
+import { isNunjucksMode } from "../modes/nunjucks";
 
 const NAME_MATCH_FLEXIBLE = /[\w.\][\-/]+$/;
 const NAME_MATCH = /[\w.\][]+$/;
@@ -16,213 +24,235 @@ const COMPLETE_AFTER_WORD = /[\w.\][-]+/;
 const COMPLETE_AFTER_CURLIES = /[^{]*{[{%]\s*/;
 const COMPLETION_CLOSE_KEYS = /[}|-]/;
 const MAX_HINT_LOOK_BACK = 100;
-const TYPE_VARIABLE = 'variable';
-const TYPE_TAG = 'tag';
-const TYPE_CONSTANT = 'constant';
-const TYPE_SNIPPET = 'snippet';
+const TYPE_VARIABLE = "variable";
+const TYPE_TAG = "tag";
+const TYPE_CONSTANT = "constant";
+const TYPE_SNIPPET = "snippet";
 const MAX_CONSTANTS = -1;
 const MAX_SNIPPETS = -1;
 const MAX_VARIABLES = -1;
 const MAX_TAGS = -1;
 const ICONS = {
   [TYPE_CONSTANT]: {
-    char: '𝒄',
-    title: 'Constant',
+    char: "𝒄",
+    title: "Constant",
   },
   [TYPE_SNIPPET]: {
-    char: '§',
-    title: 'Snippet',
+    char: "§",
+    title: "Snippet",
   },
   [TYPE_VARIABLE]: {
-    char: '𝑥',
-    title: 'Environment Variable',
+    char: "𝑥",
+    title: "Environment Variable",
   },
   [TYPE_TAG]: {
-    char: 'ƒ',
-    title: 'Generator Tag',
+    char: "ƒ",
+    title: "Generator Tag",
   },
 };
 
-CodeMirror.defineExtension('isHintDropdownActive', function (this: CodeMirror.Editor) {
-  return (
-    this.state.completionActive &&
-    this.state.completionActive.data &&
-    this.state.completionActive.data.list &&
-    this.state.completionActive.data.list.length
-  );
-});
+CodeMirror.defineExtension(
+  "isHintDropdownActive",
+  function (this: CodeMirror.Editor) {
+    return (
+      this.state.completionActive &&
+      this.state.completionActive.data &&
+      this.state.completionActive.data.list &&
+      this.state.completionActive.data.list.length
+    );
+  },
+);
 
-CodeMirror.defineExtension('closeHintDropdown', function (this: CodeMirror.Editor) {
-  this.state.completionActive?.close();
-});
+CodeMirror.defineExtension(
+  "closeHintDropdown",
+  function (this: CodeMirror.Editor) {
+    this.state.completionActive?.close();
+  },
+);
 
-CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.Editor, options: EnvironmentAutocompleteOptions) => {
-  if (!options) {
-    return;
-  }
-
-  async function completeAfter(cm: CodeMirror.Editor, callback?: () => boolean, showAllOnNoMatch = false) {
-    // Bail early if didn't match the callback test
-    if (callback && !callback()) {
+CodeMirror.defineOption(
+  "environmentAutocomplete",
+  null,
+  (cm: CodeMirror.Editor, options: EnvironmentAutocompleteOptions) => {
+    if (!options) {
       return;
     }
 
-    if (!cm.hasFocus()) {
-      return;
-    }
+    async function completeAfter(
+      cm: CodeMirror.Editor,
+      callback?: () => boolean,
+      showAllOnNoMatch = false,
+    ) {
+      // Bail early if didn't match the callback test
+      if (callback && !callback()) {
+        return;
+      }
 
-    // Bail early if completions are showing already
-    if (cm.isHintDropdownActive()) {
-      return;
-    }
+      if (!cm.hasFocus()) {
+        return;
+      }
 
-    const hintsContainer = document.querySelector<HTMLElement>('#hints-container');
+      // Bail early if completions are showing already
+      if (cm.isHintDropdownActive()) {
+        return;
+      }
 
-    if (!hintsContainer) {
-      console.warn('Hints container not found');
-      throw new Error('Hints container not found');
-    }
+      const hintsContainer =
+        document.querySelector<HTMLElement>("#hints-container");
 
-    const constants = options.getConstants ? await options.getConstants() : null;
-    const variables = options.getVariables ? await options.getVariables() : null;
-    const snippets = options.getSnippets ? await options.getSnippets() : null;
-    const tags = options.getTags ? await options.getTags() : null;
-    // Actually show the hint
-    cm.showHint({
-      // Insomnia-specific options
-      constants: constants || [],
-      variables: variables || [],
-      snippets: snippets || [],
-      tags: tags || [],
-      showAllOnNoMatch,
-      // Codemirror native options
-      hint,
-      container: hintsContainer,
-      closeCharacters: COMPLETION_CLOSE_KEYS,
-      completeSingle: false,
-      extraKeys: {
-        Tab: (_cm, widget) => {
-          // Override default behavior and don't select hint on Tab
-          widget.close();
-          return CodeMirror.Pass;
+      if (!hintsContainer) {
+        console.warn("Hints container not found");
+        throw new Error("Hints container not found");
+      }
+
+      const constants = options.getConstants
+        ? await options.getConstants()
+        : null;
+      const variables = options.getVariables
+        ? await options.getVariables()
+        : null;
+      const snippets = options.getSnippets ? await options.getSnippets() : null;
+      const tags = options.getTags ? await options.getTags() : null;
+      // Actually show the hint
+      cm.showHint({
+        // Insomnia-specific options
+        constants: constants || [],
+        variables: variables || [],
+        snippets: snippets || [],
+        tags: tags || [],
+        showAllOnNoMatch,
+        // Codemirror native options
+        hint,
+        container: hintsContainer,
+        closeCharacters: COMPLETION_CLOSE_KEYS,
+        completeSingle: false,
+        extraKeys: {
+          Tab: (_cm, widget) => {
+            // Override default behavior and don't select hint on Tab
+            widget.close();
+            return CodeMirror.Pass;
+          },
         },
-      },
-      // Good for debugging
-      // closeOnUnfocus: false,
-    });
-  }
+        // Good for debugging
+        // closeOnUnfocus: false,
+      });
+    }
 
-  function completeIfInVariableName(cm: CodeMirror.Editor) {
-    completeAfter(cm, () => {
-      const cur = cm.getCursor();
-      const pos = CodeMirror.Pos(cur.line, cur.ch - MAX_HINT_LOOK_BACK);
-      const range = cm.getRange(pos, cur);
-
-      return COMPLETE_AFTER_WORD.test(range);
-    });
-    return CodeMirror.Pass;
-  }
-
-  function completeIfAfterTagOrVarOpen(cm: CodeMirror.Editor) {
-    completeAfter(
-      cm,
-      () => {
+    function completeIfInVariableName(cm: CodeMirror.Editor) {
+      completeAfter(cm, () => {
         const cur = cm.getCursor();
         const pos = CodeMirror.Pos(cur.line, cur.ch - MAX_HINT_LOOK_BACK);
         const range = cm.getRange(pos, cur);
 
-        return COMPLETE_AFTER_CURLIES.test(range);
+        return COMPLETE_AFTER_WORD.test(range);
+      });
+      return CodeMirror.Pass;
+    }
+
+    function completeIfAfterTagOrVarOpen(cm: CodeMirror.Editor) {
+      completeAfter(
+        cm,
+        () => {
+          const cur = cm.getCursor();
+          const pos = CodeMirror.Pos(cur.line, cur.ch - MAX_HINT_LOOK_BACK);
+          const range = cm.getRange(pos, cur);
+
+          return COMPLETE_AFTER_CURLIES.test(range);
+        },
+        true,
+      );
+      return CodeMirror.Pass;
+    }
+
+    function completeForce(cm: CodeMirror.Editor) {
+      completeAfter(cm, undefined, true);
+      return CodeMirror.Pass;
+    }
+
+    function setupKeyMap(
+      cm: CodeMirror.Editor,
+      {
+        completeIfAfterTagOrVarOpen,
+        completeForce,
+      }: {
+        completeIfAfterTagOrVarOpen: (
+          cm: CodeMirror.Editor,
+        ) => void | typeof CodeMirror.Pass;
+        completeForce: (cm: CodeMirror.Editor) => void | typeof CodeMirror.Pass;
       },
-      true,
-    );
-    return CodeMirror.Pass;
-  }
+    ) {
+      // Remove keymap if we're already added it
+      cm.removeKeyMap("autocomplete-keymap");
 
-  function completeForce(cm: CodeMirror.Editor) {
-    completeAfter(cm, undefined, true);
-    return CodeMirror.Pass;
-  }
+      const keyBindings = options.hotKeyRegistry.showAutocomplete;
+      const keyCombs = getPlatformKeyCombinations(keyBindings);
 
-  function setupKeyMap(
-    cm: CodeMirror.Editor,
-    {
-      completeIfAfterTagOrVarOpen,
-      completeForce,
-    }: {
-      completeIfAfterTagOrVarOpen: (
-        cm: CodeMirror.Editor
-      ) => void | typeof CodeMirror.Pass;
-      completeForce: (
-        cm: CodeMirror.Editor
-      ) => void | typeof CodeMirror.Pass;
-    }
-  ) {
-    // Remove keymap if we're already added it
-    cm.removeKeyMap('autocomplete-keymap');
+      const keymap: CodeMirror.KeyMap = {
+        name: "autocomplete-keymap",
+        "' '": completeIfAfterTagOrVarOpen,
+      };
 
-    const keyBindings = options.hotKeyRegistry.showAutocomplete;
-    const keyCombs = getPlatformKeyCombinations(keyBindings);
+      // Construct valid codemirror key names from KeyCombination items. The order (Shift-Cmd-Ctrl-Alt) of the modifier is important https://codemirror.net/doc/manual.html#keymaps
+      for (const keyComb of keyCombs) {
+        const alt = keyComb.alt ? "Alt-" : "";
+        const ctrl = keyComb.ctrl ? "Ctrl-" : "";
+        // Cmd- is used to register the meta key of all platforms by CodeMirror
+        const meta = keyComb.meta ? "Cmd-" : "";
+        const shift = keyComb.shift ? "Shift-" : "";
+        const keyname = CodeMirror.keyNames[keyComb.keyCode];
 
-    const keymap: CodeMirror.KeyMap = {
-      name: 'autocomplete-keymap',
-      "' '": completeIfAfterTagOrVarOpen,
-    };
+        const key = `${shift}${meta}${ctrl}${alt}${keyname}`;
+        keymap[key] = completeForce;
+      }
 
-    // Construct valid codemirror key names from KeyCombination items. The order (Shift-Cmd-Ctrl-Alt) of the modifier is important https://codemirror.net/doc/manual.html#keymaps
-    for (const keyComb of keyCombs) {
-      const alt = keyComb.alt ? 'Alt-' : '';
-      const ctrl = keyComb.ctrl ? 'Ctrl-' : '';
-      // Cmd- is used to register the meta key of all platforms by CodeMirror
-      const meta = keyComb.meta ? 'Cmd-' : '';
-      const shift = keyComb.shift ? 'Shift-' : '';
-      const keyname = CodeMirror.keyNames[keyComb.keyCode];
-
-      const key = `${shift}${meta}${ctrl}${alt}${keyname}`;
-      keymap[key] = completeForce;
+      cm.addKeyMap(keymap);
     }
 
-    cm.addKeyMap(keymap);
-  }
+    let keydownTimeoutHandle: NodeJS.Timeout | null = null;
+    cm.on("keydown", (cm: CodeMirror.Editor, event) => {
+      // Close autocomplete on Escape if it's open
+      if (cm.isHintDropdownActive() && event.key === "Escape") {
+        if (!cm.state.completionActive) {
+          return;
+        }
 
-  let keydownTimeoutHandle: NodeJS.Timeout | null = null;
-  cm.on('keydown', (cm: CodeMirror.Editor, event) => {
-    // Close autocomplete on Escape if it's open
-    if (cm.isHintDropdownActive() && event.key === 'Escape') {
-      if (!cm.state.completionActive) {
+        event.preventDefault();
+        event.stopPropagation();
+        cm.state.completionActive.close();
+      }
+
+      // Only operate on one-letter keys. This will filter out
+      // any special keys (Backspace, Enter, etc)
+      if (
+        event.metaKey ||
+        event.ctrlKey ||
+        event.altKey ||
+        event.key.length > 1
+      ) {
         return;
       }
 
-      event.preventDefault();
-      event.stopPropagation();
-      cm.state.completionActive.close();
-    }
+      if (keydownTimeoutHandle !== null) {
+        clearTimeout(keydownTimeoutHandle);
+      }
 
-    // Only operate on one-letter keys. This will filter out
-    // any special keys (Backspace, Enter, etc)
-    if (event.metaKey || event.ctrlKey || event.altKey || event.key.length > 1) {
-      return;
-    }
+      if (options.autocompleteDelay > 0) {
+        keydownTimeoutHandle = setTimeout(() => {
+          completeIfInVariableName(cm);
+        }, options.autocompleteDelay);
+      }
+    });
 
-    if (keydownTimeoutHandle !== null) {
-      clearTimeout(keydownTimeoutHandle);
-    }
+    // Clear timeout if we already closed the completion
+    cm.on("endCompletion", () => {
+      if (keydownTimeoutHandle !== null) {
+        clearTimeout(keydownTimeoutHandle);
+      }
+    });
 
-    if (options.autocompleteDelay > 0) {
-      keydownTimeoutHandle = setTimeout(() => {
-        completeIfInVariableName(cm);
-      }, options.autocompleteDelay);
-    }
-  });
-
-  // Clear timeout if we already closed the completion
-  cm.on('endCompletion', () => {
-    if (keydownTimeoutHandle !== null) {
-      clearTimeout(keydownTimeoutHandle);
-    }
-  });
-
-  setupKeyMap(cm, { completeForce, completeIfAfterTagOrVarOpen });
-});
+    setupKeyMap(cm, { completeForce, completeIfAfterTagOrVarOpen });
+  },
+);
 
 /**
  * Function to retrieve the list items
@@ -232,13 +262,22 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.Editor,
  */
 function hint(cm: CodeMirror.Editor, options: ShowHintOptions) {
   // Add type to all things (except constants, which need to convert to an object)
-  const variablesToMatch: VariableCompletionItem[] = (options.variables || []).map(v => ({ ...v, type: TYPE_VARIABLE }));
-  const snippetsToMatch: SnippetCompletionItem[] = (options.snippets || []).map(v => ({ ...v, type: TYPE_SNIPPET }));
-  const tagsToMatch: TagCompletionItem[] = (options.tags || []).map(v => ({ ...v, type: TYPE_TAG }));
-  const constantsToMatch: ConstantCompletionItem[] = (options.constants || []).map(s => ({
+  const variablesToMatch: VariableCompletionItem[] = (
+    options.variables || []
+  ).map((v) => ({ ...v, type: TYPE_VARIABLE }));
+  const snippetsToMatch: SnippetCompletionItem[] = (options.snippets || []).map(
+    (v) => ({ ...v, type: TYPE_SNIPPET }),
+  );
+  const tagsToMatch: TagCompletionItem[] = (options.tags || []).map((v) => ({
+    ...v,
+    type: TYPE_TAG,
+  }));
+  const constantsToMatch: ConstantCompletionItem[] = (
+    options.constants || []
+  ).map((s) => ({
     name: s,
     value: s,
-    displayValue: '',
+    displayValue: "",
     // No display since name === value
     type: TYPE_CONSTANT,
   }));
@@ -254,7 +293,9 @@ function hint(cm: CodeMirror.Editor, options: ShowHintOptions) {
   const allowMatchingTags = isInNothing || isInTag;
   const allowMatchingConstants = isInNothing;
   // Define fallback segment to match everything or nothing
-  const fallbackSegment = options.showAllOnNoMatch ? '' : '__will_not_match_anything__';
+  const fallbackSegment = options.showAllOnNoMatch
+    ? ""
+    : "__will_not_match_anything__";
   // See if we're completing a variable name
   const nameMatch = previousText.match(NAME_MATCH);
   const nameMatchLong = previousText.match(NAME_MATCH_FLEXIBLE);
@@ -265,11 +306,11 @@ function hint(cm: CodeMirror.Editor, options: ShowHintOptions) {
   let lowPriorityMatches: Hint[] = [];
   let highPriorityMatches: Hint[] = [];
 
-  const modeOption = cm.getOption('mode') ?? 'unknown';
+  const modeOption = cm.getOption("mode") ?? "unknown";
 
-  let mode = 'unknown';
+  let mode = "unknown";
 
-  if (typeof modeOption === 'string') {
+  if (typeof modeOption === "string") {
     mode = modeOption;
   } else if (isNunjucksMode(modeOption)) {
     mode = modeOption.baseMode;
@@ -277,12 +318,28 @@ function hint(cm: CodeMirror.Editor, options: ShowHintOptions) {
 
   // Match variables
   if (allowMatchingVariables) {
-    const sortVariableCompletionHints = getCompletionHints(variablesToMatch, nameSegment, TYPE_VARIABLE, MAX_VARIABLES);
-    lowPriorityMatches = [...lowPriorityMatches, ...sortVariableCompletionHints];
+    const sortVariableCompletionHints = getCompletionHints(
+      variablesToMatch,
+      nameSegment,
+      TYPE_VARIABLE,
+      MAX_VARIABLES,
+    );
+    lowPriorityMatches = [
+      ...lowPriorityMatches,
+      ...sortVariableCompletionHints,
+    ];
 
-    const longVariableCompletionHints = getCompletionHints(variablesToMatch, nameSegmentLong, TYPE_VARIABLE, MAX_VARIABLES);
+    const longVariableCompletionHints = getCompletionHints(
+      variablesToMatch,
+      nameSegmentLong,
+      TYPE_VARIABLE,
+      MAX_VARIABLES,
+    );
 
-    highPriorityMatches = [...highPriorityMatches, ...longVariableCompletionHints];
+    highPriorityMatches = [
+      ...highPriorityMatches,
+      ...longVariableCompletionHints,
+    ];
   }
 
   // Match constants
@@ -290,31 +347,51 @@ function hint(cm: CodeMirror.Editor, options: ShowHintOptions) {
     const cur = cm.getCursor();
     const token = cm.getTokenAt(cur);
 
-    if (mode === 'graphql-variables') {
+    if (mode === "graphql-variables") {
       const segment = token.string
         .trim()
-        .replace(/^{?"?/, '') // Remove leading '{' and spaces
-        .replace(/"?}?$/, '');
+        .replace(/^{?"?/, "") // Remove leading '{' and spaces
+        .replace(/"?}?$/, "");
 
       // Remove trailing quotes and spaces
-      if (token.type === 'variable') {
+      if (token.type === "variable") {
         // We're inside a JSON key
-        const constantCompletionHints = getCompletionHints(constantsToMatch, segment, TYPE_CONSTANT, MAX_CONSTANTS);
-        highPriorityMatches = [...highPriorityMatches, ...constantCompletionHints];
-
+        const constantCompletionHints = getCompletionHints(
+          constantsToMatch,
+          segment,
+          TYPE_CONSTANT,
+          MAX_CONSTANTS,
+        );
+        highPriorityMatches = [
+          ...highPriorityMatches,
+          ...constantCompletionHints,
+        ];
       } else if (
-        token.type === 'invalidchar' ||
-        token.type === 'ws' ||
-        (token.type === 'punctuation' && token.string === '{')
+        token.type === "invalidchar" ||
+        token.type === "ws" ||
+        (token.type === "punctuation" && token.string === "{")
       ) {
         // We're outside of a JSON key
-        const constantCompletionHints = getCompletionHints(constantsToMatch, segment, TYPE_CONSTANT, MAX_CONSTANTS).map(hint => ({ ...hint, text: '"' + hint.text + '": ' }));
+        const constantCompletionHints = getCompletionHints(
+          constantsToMatch,
+          segment,
+          TYPE_CONSTANT,
+          MAX_CONSTANTS,
+        ).map((hint) => ({ ...hint, text: '"' + hint.text + '": ' }));
 
-        highPriorityMatches = [...highPriorityMatches, ...constantCompletionHints];
+        highPriorityMatches = [
+          ...highPriorityMatches,
+          ...constantCompletionHints,
+        ];
       }
     } else {
       // Otherwise match full segments
-      const hints = getCompletionHints(constantsToMatch, nameSegmentFull, TYPE_CONSTANT, MAX_CONSTANTS);
+      const hints = getCompletionHints(
+        constantsToMatch,
+        nameSegmentFull,
+        TYPE_CONSTANT,
+        MAX_CONSTANTS,
+      );
 
       highPriorityMatches = [...highPriorityMatches, ...hints];
     }
@@ -322,16 +399,31 @@ function hint(cm: CodeMirror.Editor, options: ShowHintOptions) {
 
   // Match tags
   if (allowMatchingTags) {
-    const lowPriorityTagHints = getCompletionHints(tagsToMatch, nameSegment, TYPE_TAG, MAX_TAGS);
+    const lowPriorityTagHints = getCompletionHints(
+      tagsToMatch,
+      nameSegment,
+      TYPE_TAG,
+      MAX_TAGS,
+    );
 
     lowPriorityMatches = [...lowPriorityMatches, ...lowPriorityTagHints];
 
-    const highPriorityTagHints = getCompletionHints(tagsToMatch, nameSegmentLong, TYPE_TAG, MAX_TAGS);
+    const highPriorityTagHints = getCompletionHints(
+      tagsToMatch,
+      nameSegmentLong,
+      TYPE_TAG,
+      MAX_TAGS,
+    );
 
     highPriorityMatches = [...highPriorityMatches, ...highPriorityTagHints];
   }
 
-  const snippetHints = getCompletionHints(snippetsToMatch, nameSegment, TYPE_SNIPPET, MAX_SNIPPETS);
+  const snippetHints = getCompletionHints(
+    snippetsToMatch,
+    nameSegment,
+    TYPE_SNIPPET,
+    MAX_SNIPPETS,
+  );
 
   highPriorityMatches = [...highPriorityMatches, ...snippetHints];
 
@@ -339,7 +431,7 @@ function hint(cm: CodeMirror.Editor, options: ShowHintOptions) {
   // Autocomplete from longest matched segment
   const segment = highPriorityMatches.length ? nameSegmentLong : nameSegment;
   const uniqueMatches = matches.reduce(
-    (arr, v) => (arr.find(a => a.text === v.text) ? arr : [...arr, v]),
+    (arr, v) => (arr.find((a) => a.text === v.text) ? arr : [...arr, v]),
     [] as Hint[], // Default value
   );
   return {
@@ -357,7 +449,7 @@ function hint(cm: CodeMirror.Editor, options: ShowHintOptions) {
  * @param data
  */
 async function replaceHintMatch(cm: CodeMirror.Editor, _self: any, data: any) {
-  if (typeof data.text === 'function') {
+  if (typeof data.text === "function") {
     data.text = await data.text();
   }
 
@@ -368,31 +460,31 @@ async function replaceHintMatch(cm: CodeMirror.Editor, _self: any, data: any) {
   const prevChars = cm.getRange(prevStart, from);
   const nextEnd = CodeMirror.Pos(to.line, to.ch + 10);
   const nextChars = cm.getRange(to, nextEnd);
-  let prefix = '';
-  let suffix = '';
+  let prefix = "";
+  let suffix = "";
 
   if (data.type === TYPE_VARIABLE && !prevChars.match(/{{[^}]*$/)) {
-    prefix = '{{ '; // If no closer before
+    prefix = "{{ "; // If no closer before
   } else if (data.type === TYPE_VARIABLE && prevChars.match(/{{$/)) {
-    prefix = ' '; // If no space after opener
+    prefix = " "; // If no space after opener
   } else if (data.type === TYPE_TAG && prevChars.match(/{%$/)) {
-    prefix = ' '; // If no space after opener
+    prefix = " "; // If no space after opener
   } else if (data.type === TYPE_TAG && !prevChars.match(/{%[^%]*$/)) {
-    prefix = '{% '; // If no closer before
+    prefix = "{% "; // If no closer before
   }
 
   if (data.type === TYPE_VARIABLE && !nextChars.match(/^\s*}}/)) {
-    suffix = ' }}'; // If no closer after
+    suffix = " }}"; // If no closer after
   } else if (data.type === TYPE_VARIABLE && nextChars.match(/^}}/)) {
-    suffix = ' '; // If no space before closer
+    suffix = " "; // If no space before closer
   } else if (data.type === TYPE_TAG && nextChars.match(/^%}/)) {
-    suffix = ' '; // If no space before closer
+    suffix = " "; // If no space before closer
   } else if (data.type === TYPE_TAG && nextChars.match(/^\s*}/)) {
     // Edge case because "%" doesn't auto-close tags so sometimes you end
     // up in the scenario of {% foo}
-    suffix = ' %';
+    suffix = " %";
   } else if (data.type === TYPE_TAG && !nextChars.match(/^\s*%}/)) {
-    suffix = ' %}'; // If no closer after
+    suffix = " %}"; // If no closer after
   }
 
   cm.replaceRange(`${prefix}${data.text}${suffix}`, from, to);
@@ -404,7 +496,11 @@ interface CompletionItemKind {
   displayName?: string;
   displayValue?: string;
   value?: string | (() => PromiseLike<unknown>);
-  type: typeof TYPE_CONSTANT | typeof TYPE_SNIPPET | typeof TYPE_VARIABLE | typeof TYPE_TAG;
+  type:
+    | typeof TYPE_CONSTANT
+    | typeof TYPE_SNIPPET
+    | typeof TYPE_VARIABLE
+    | typeof TYPE_TAG;
 }
 
 interface ConstantCompletionItem extends CompletionItemKind {
@@ -426,17 +522,27 @@ interface TagCompletionItem extends NunjucksParsedTag, CompletionItemKind {
   type: typeof TYPE_TAG;
 }
 
-type CompletionItem = ConstantCompletionItem | VariableCompletionItem | SnippetCompletionItem | TagCompletionItem;
+type CompletionItem =
+  | ConstantCompletionItem
+  | VariableCompletionItem
+  | SnippetCompletionItem
+  | TagCompletionItem;
 
-function isConstantCompletionItem(item: CompletionItem): item is ConstantCompletionItem {
+function isConstantCompletionItem(
+  item: CompletionItem,
+): item is ConstantCompletionItem {
   return item.type === TYPE_CONSTANT;
 }
 
-function isVariableCompletionItem(item: CompletionItem): item is VariableCompletionItem {
+function isVariableCompletionItem(
+  item: CompletionItem,
+): item is VariableCompletionItem {
   return item.type === TYPE_VARIABLE;
 }
 
-function isSnippetCompletionItem(item: CompletionItem): item is SnippetCompletionItem {
+function isSnippetCompletionItem(
+  item: CompletionItem,
+): item is SnippetCompletionItem {
   return item.type === TYPE_SNIPPET;
 }
 
@@ -444,14 +550,19 @@ function isTagCompletionItem(item: CompletionItem): item is TagCompletionItem {
   return item.type === TYPE_TAG;
 }
 
-function getCompletionHints(completionItems: CompletionItem[], segment: string, type: CompletionItem['type'], limit = -1) {
+function getCompletionHints(
+  completionItems: CompletionItem[],
+  segment: string,
+  type: CompletionItem["type"],
+  limit = -1,
+) {
   const matches: Hint[] = [];
 
   for (const item of completionItems) {
-    const name = typeof item === 'string' ? item : item.name;
-    const value = typeof item === 'string' ? '' : item.value ?? '';
+    const name = typeof item === "string" ? item : item.name;
+    const value = typeof item === "string" ? "" : (item.value ?? "");
     const displayName = item.displayName || name;
-    let defaultFill = '';
+    let defaultFill = "";
 
     if (isConstantCompletionItem(item) || isSnippetCompletionItem(item)) {
       defaultFill = fnOrString(item.value);
@@ -462,16 +573,16 @@ function getCompletionHints(completionItems: CompletionItem[], segment: string, 
     }
 
     const matchSegment = segment.toLowerCase();
-    const matchName = displayName.toLowerCase() || '';
+    const matchName = displayName.toLowerCase() || "";
 
     // Throw away things that don't match
     if (!matchName.includes(matchSegment)) {
       continue;
     }
 
-    let displayValue = item.displayValue || '';
+    let displayValue = item.displayValue || "";
 
-    if (typeof item.displayValue !== 'string' && typeof value !== 'function') {
+    if (typeof item.displayValue !== "string" && typeof value !== "function") {
       displayValue = JSON.stringify(value);
     }
 
@@ -498,26 +609,40 @@ function getCompletionHints(completionItems: CompletionItem[], segment: string, 
 /**
  * Replace all occurrences of string
  */
-function replaceWithSurround(text: string, find: string, prefix: string, suffix: string) {
+function replaceWithSurround(
+  text: string,
+  find: string,
+  prefix: string,
+  suffix: string,
+) {
   const escapedString = escapeRegex(find);
-  const re = new RegExp(escapedString, 'gi');
-  return text.replace(re, matched => prefix + matched + suffix);
+  const re = new RegExp(escapedString, "gi");
+  return text.replace(re, (matched) => prefix + matched + suffix);
 }
 
 function escapeHTML(unsafeText: string) {
-  const div = document.createElement('div');
+  const div = document.createElement("div");
   div.innerText = unsafeText;
   return div.innerHTML;
 }
 /**
  * Render the autocomplete list entry
  */
-function renderHintMatch(li: HTMLElement, _allHints: CodeMirror.Hints, hint: Hint) {
+function renderHintMatch(
+  li: HTMLElement,
+  _allHints: CodeMirror.Hints,
+  hint: Hint,
+) {
   // Bold the matched text
   const { displayText, segment, type, displayValue } = hint;
-  const markedName = replaceWithSurround(displayText || '', segment, '<strong>', '</strong>');
+  const markedName = replaceWithSurround(
+    displayText || "",
+    segment,
+    "<strong>",
+    "</strong>",
+  );
   const { char, title } = ICONS[type];
-  let safeValue = '';
+  let safeValue = "";
 
   if (isNotNullOrUndefined<string>(displayValue)) {
     const escaped = escapeHTML(displayValue);

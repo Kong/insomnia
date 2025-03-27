@@ -1,34 +1,34 @@
 export function deterministicStringify(value: any) {
   const t = Object.prototype.toString.call(value);
 
-  if (t === '[object Object]') {
+  if (t === "[object Object]") {
     const pairs: string[] = [];
 
     for (const key of Object.keys(value).sort()) {
       const k = deterministicStringify(key);
       const v = deterministicStringify(value[key]);
 
-      if (v !== '' && k !== '') {
+      if (v !== "" && k !== "") {
         pairs.push(`${k}:${v}`);
       }
     }
 
-    return `{${pairs.join(',')}}`;
-  } else if (t === '[object Array]') {
+    return `{${pairs.join(",")}}`;
+  } else if (t === "[object Array]") {
     const items: string[] = [];
 
     for (const v of value) {
       const vStr = deterministicStringify(v);
 
-      if (vStr !== '') {
+      if (vStr !== "") {
         items.push(vStr);
       }
     }
 
-    return `[${items.join(',')}]`;
+    return `[${items.join(",")}]`;
   }
 
   const str = JSON.stringify(value);
   // Only return valid stringifyable things
-  return str === undefined ? '' : str;
+  return str === undefined ? "" : str;
 }

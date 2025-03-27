@@ -1,32 +1,39 @@
-import * as Sentry from '@sentry/electron/renderer';
-import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
+import * as Sentry from "@sentry/electron/renderer";
+import {
+  type ActionFunction,
+  type LoaderFunction,
+  redirect,
+} from "react-router-dom";
 
-import { database, type Operation } from '../../common/database';
-import { isNotNullOrUndefined } from '../../common/misc';
-import { SentryMetrics } from '../../common/sentry';
-import * as models from '../../models';
-import { canSync } from '../../models';
-import type { ApiSpec } from '../../models/api-spec';
-import type { Environment } from '../../models/environment';
-import type { GrpcRequest } from '../../models/grpc-request';
-import type { MockRoute } from '../../models/mock-route';
-import type { MockServer } from '../../models/mock-server';
-import type { Request } from '../../models/request';
-import type { RequestGroup } from '../../models/request-group';
-import type { UnitTest } from '../../models/unit-test';
-import type { UnitTestSuite } from '../../models/unit-test-suite';
-import type { WebSocketRequest } from '../../models/websocket-request';
-import { scopeToActivity, type Workspace } from '../../models/workspace';
+import { database, type Operation } from "../../common/database";
+import { isNotNullOrUndefined } from "../../common/misc";
+import { SentryMetrics } from "../../common/sentry";
+import * as models from "../../models";
+import { canSync } from "../../models";
+import type { ApiSpec } from "../../models/api-spec";
+import type { Environment } from "../../models/environment";
+import type { GrpcRequest } from "../../models/grpc-request";
+import type { MockRoute } from "../../models/mock-route";
+import type { MockServer } from "../../models/mock-server";
+import type { Request } from "../../models/request";
+import type { RequestGroup } from "../../models/request-group";
+import type { UnitTest } from "../../models/unit-test";
+import type { UnitTestSuite } from "../../models/unit-test-suite";
+import type { WebSocketRequest } from "../../models/websocket-request";
+import { scopeToActivity, type Workspace } from "../../models/workspace";
 import type {
   BackendProject,
   Compare,
   Snapshot,
   Status,
   StatusCandidate,
-} from '../../sync/types';
-import { UserAbortResolveMergeConflictError, VCSInstance } from '../../sync/vcs/insomnia-sync';
-import { pullBackendProject } from '../../sync/vcs/pull-backend-project';
-import { invariant } from '../../utils/invariant';
+} from "../../sync/types";
+import {
+  UserAbortResolveMergeConflictError,
+  VCSInstance,
+} from "../../sync/vcs/insomnia-sync";
+import { pullBackendProject } from "../../sync/vcs/pull-backend-project";
+import { invariant } from "../../utils/invariant";
 
 async function getSyncItems({ workspaceId }: { workspaceId: string }) {
   const syncItemsList: (
@@ -43,19 +50,19 @@ async function getSyncItems({ workspaceId }: { workspaceId: string }) {
     | MockRoute
   )[] = [];
   const activeWorkspace = await models.workspace.getById(workspaceId);
-  invariant(activeWorkspace, 'Workspace could not be found');
+  invariant(activeWorkspace, "Workspace could not be found");
 
   // first recursion to get all the folders ids in order to use nedb search by an array
   const flattenFoldersIntoList = async (id: string): Promise<string[]> => {
     const parentIds: string[] = [id];
     const folderIds = (await models.requestGroup.findByParentId(id)).map(
-      r => r._id
+      (r) => r._id,
     );
     if (folderIds.length) {
       await Promise.all(
-        folderIds.map(async folderIds =>
-          parentIds.push(...(await flattenFoldersIntoList(folderIds)))
-        )
+        folderIds.map(async (folderIds) =>
+          parentIds.push(...(await flattenFoldersIntoList(folderIds))),
+        ),
       );
     }
     return parentIds;
@@ -82,7 +89,7 @@ async function getSyncItems({ workspaceId }: { workspaceId: string }) {
   )[];
   const testSuites = await models.unitTestSuite.findByParentId(workspaceId);
   const tests = await database.find<UnitTest>(models.unitTest.type, {
-    parentId: { $in: testSuites.map(t => t._id) },
+    parentId: { $in: testSuites.map((t) => t._id) },
   });
 
   const mockServer = await models.mockServer.getByParentId(workspaceId);
@@ -91,30 +98,30 @@ async function getSyncItems({ workspaceId }: { workspaceId: string }) {
     const mockRoutes = await database.find<MockRoute>(models.mockRoute.type, {
       parentId: mockServer._id,
     });
-    mockRoutes.map(m => syncItemsList.push(m));
+    mockRoutes.map((m) => syncItemsList.push(m));
   }
 
   const baseEnvironment = await models.environment.getByParentId(workspaceId);
-  invariant(baseEnvironment, 'Base environment not found');
+  invariant(baseEnvironment, "Base environment not found");
 
   const subEnvironments = (
     await models.environment.findByParentId(baseEnvironment._id)
   ).sort((e1, e2) => e1.metaSortKey - e2.metaSortKey);
-  allRequests.map(r => syncItemsList.push(r));
-  tests.map(t => syncItemsList.push(t));
-  testSuites.map(t => syncItemsList.push(t));
+  allRequests.map((r) => syncItemsList.push(r));
+  tests.map((t) => syncItemsList.push(t));
+  testSuites.map((t) => syncItemsList.push(t));
   syncItemsList.push(activeWorkspace);
   syncItemsList.push(baseEnvironment);
-  subEnvironments.forEach(e => syncItemsList.push(e));
+  subEnvironments.forEach((e) => syncItemsList.push(e));
   if (activeApiSpec) {
     syncItemsList.push(activeApiSpec);
   }
 
   const syncItems: StatusCandidate[] = syncItemsList
     .filter(canSync)
-    .map(i => ({
+    .map((i) => ({
       key: i._id,
-      name: i.name || '',
+      name: i.name || "",
       document: i,
     }));
 
@@ -129,13 +136,19 @@ export const pullRemoteCollectionAction: ActionFunction = async ({
 }) => {
   try {
     const { organizationId } = params;
-    invariant(typeof organizationId === 'string', 'Organization Id is required');
+    invariant(
+      typeof organizationId === "string",
+      "Organization Id is required",
+    );
     const formData = await request.formData();
 
-    const backendProjectId = formData.get('backendProjectId');
-    invariant(typeof backendProjectId === 'string', 'Collection Id is required');
-    const remoteId = formData.get('remoteId');
-    invariant(typeof remoteId === 'string', 'Remote Id is required');
+    const backendProjectId = formData.get("backendProjectId");
+    invariant(
+      typeof backendProjectId === "string",
+      "Collection Id is required",
+    );
+    const remoteId = formData.get("remoteId");
+    invariant(typeof remoteId === "string", "Remote Id is required");
 
     const vcs = VCSInstance();
 
@@ -145,14 +158,14 @@ export const pullRemoteCollectionAction: ActionFunction = async ({
     });
 
     const backendProject = remoteBackendProjects.find(
-      p => p.id === backendProjectId
+      (p) => p.id === backendProjectId,
     );
 
-    invariant(backendProject, 'Backend project not found');
+    invariant(backendProject, "Backend project not found");
 
     const project = await models.project.getByRemoteId(remoteId);
 
-    invariant(project?.remoteId, 'Project is not a remote project');
+    invariant(project?.remoteId, "Project is not a remote project");
 
     // Clone old VCS so we don't mess anything up while working on other backend projects
     const newVCS = vcs.newInstance();
@@ -167,16 +180,16 @@ export const pullRemoteCollectionAction: ActionFunction = async ({
 
     const workspace = await models.workspace.getById(workspaceId);
 
-    invariant(workspace, 'Workspace not found');
+    invariant(workspace, "Workspace not found");
     const activity = scopeToActivity(workspace?.scope);
 
     return redirect(
-      `/organization/${organizationId}/project/${project._id}/workspace/${workspaceId}/${activity}`
+      `/organization/${organizationId}/project/${project._id}/workspace/${workspaceId}/${activity}`,
     );
   } catch (e) {
-    console.warn('Failed to pull remote collection', e);
+    console.warn("Failed to pull remote collection", e);
     return {
-      error: 'Failed to pull remote collection',
+      error: "Failed to pull remote collection",
     };
   }
 };
@@ -189,12 +202,12 @@ export const remoteLoader: LoaderFunction = async ({
   params,
 }): Promise<RemoteCollectionsLoaderData> => {
   const { organizationId, projectId } = params;
-  invariant(typeof organizationId === 'string', 'Organization Id is required');
-  invariant(typeof projectId === 'string', 'Project Id is required');
+  invariant(typeof organizationId === "string", "Organization Id is required");
+  invariant(typeof projectId === "string", "Project Id is required");
 
   try {
     const project = await models.project.getById(projectId);
-    invariant(project, 'Project not found');
+    invariant(project, "Project not found");
 
     const remoteId = project.remoteId;
     if (!remoteId) {
@@ -206,7 +219,7 @@ export const remoteLoader: LoaderFunction = async ({
 
     const allPulledBackendProjectsForRemoteId = (
       await vcs.localBackendProjects()
-    ).filter(p => p.id === remoteId);
+    ).filter((p) => p.id === remoteId);
     // Remote backend projects are fetched from the backend since they are not stored locally
     const allFetchedRemoteBackendProjectsForRemoteId =
       await vcs.remoteBackendProjects({
@@ -222,24 +235,26 @@ export const remoteLoader: LoaderFunction = async ({
           $in: [
             ...allPulledBackendProjectsForRemoteId,
             ...allFetchedRemoteBackendProjectsForRemoteId,
-          ].map(p => p.rootDocumentId),
+          ].map((p) => p.rootDocumentId),
         },
         parentId: project._id,
-      }
+      },
     );
 
     // Get the list of remote backend projects that we need to pull
     const backendProjectsToPull =
       allFetchedRemoteBackendProjectsForRemoteId.filter(
-        p =>
-          !workspacesWithBackendProjects.find(w => w._id === p.rootDocumentId)
+        (p) =>
+          !workspacesWithBackendProjects.find(
+            (w) => w._id === p.rootDocumentId,
+          ),
       );
 
     return {
       backendProjectsToPull,
     };
   } catch (e) {
-    console.warn('Failed to load backend projects', e);
+    console.warn("Failed to load backend projects", e);
   }
 
   return {
@@ -259,18 +274,17 @@ interface SyncData {
 }
 
 const remoteBranchesCache: Record<string, string[]> = {};
-const remoteCompareCache: Record<string, Compare> =
-  {};
+const remoteCompareCache: Record<string, Compare> = {};
 const remoteBackendProjectsCache: Record<string, BackendProject[]> = {};
 
 export const syncDataAction: ActionFunction = async ({ params }) => {
   const { projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
   try {
     const project = await models.project.getById(projectId);
-    invariant(project, 'Project not found');
-    invariant(project.remoteId, 'Project is not remote');
+    invariant(project, "Project not found");
+    invariant(project.remoteId, "Project is not remote");
     const vcs = VCSInstance();
     const remoteBranches = (await vcs.getRemoteBranchNames()).sort();
     const compare = await vcs.compareRemoteBranch();
@@ -291,7 +305,7 @@ export const syncDataAction: ActionFunction = async ({ params }) => {
     };
   } catch (e) {
     const errorMessage =
-      e instanceof Error ? e.message : 'Unknown error while syncing data.';
+      e instanceof Error ? e.message : "Unknown error while syncing data.";
     delete remoteBranchesCache[workspaceId];
     delete remoteCompareCache[workspaceId];
     delete remoteBackendProjectsCache[workspaceId];
@@ -304,26 +318,26 @@ export const syncDataAction: ActionFunction = async ({ params }) => {
 export type SyncDataLoaderData =
   | SyncData
   | {
-    error: string;
-  };
+      error: string;
+    };
 
 export const syncDataLoader: LoaderFunction = async ({
   params,
 }): Promise<SyncDataLoaderData> => {
   try {
     const { projectId, workspaceId } = params;
-    invariant(typeof projectId === 'string', 'Project Id is required');
-    invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+    invariant(typeof projectId === "string", "Project Id is required");
+    invariant(typeof workspaceId === "string", "Workspace Id is required");
 
     const project = await models.project.getById(projectId);
-    invariant(project, 'Project not found');
-    invariant(project.remoteId, 'Project is not remote');
+    invariant(project, "Project not found");
+    invariant(project.remoteId, "Project is not remote");
     const vcs = VCSInstance();
     const { syncItems } = await getSyncItems({ workspaceId });
     const localBranches = (await vcs.getBranchNames()).sort();
     const currentBranch = await vcs.getCurrentBranchName();
     const history = (await vcs.getHistory()).sort((a, b) =>
-      b.created > a.created ? 1 : -1
+      b.created > a.created ? 1 : -1,
     );
     const historyCount = await vcs.getHistoryCount();
     const status = await vcs.status(syncItems);
@@ -334,7 +348,8 @@ export const syncDataLoader: LoaderFunction = async ({
       remoteBranches = (
         remoteBranchesCache[workspaceId] || (await vcs.getRemoteBranchNames())
       ).sort();
-      compare = remoteCompareCache[workspaceId] || (await vcs.compareRemoteBranch());
+      compare =
+        remoteCompareCache[workspaceId] || (await vcs.compareRemoteBranch());
       const remoteBackendProjects =
         remoteBackendProjectsCache[workspaceId] ||
         (await vcs.remoteBackendProjects({
@@ -357,7 +372,7 @@ export const syncDataLoader: LoaderFunction = async ({
         hasUncommittedChanges,
         hasUnpushedChanges: compare?.ahead > 0,
       });
-    } catch { }
+    } catch {}
 
     return {
       syncItems,
@@ -371,7 +386,7 @@ export const syncDataLoader: LoaderFunction = async ({
     };
   } catch (e) {
     const errorMessage =
-      e instanceof Error ? e.message : 'Unknown error while loading sync data.';
+      e instanceof Error ? e.message : "Unknown error while loading sync data.";
     return {
       error: errorMessage,
     };
@@ -383,12 +398,12 @@ export const checkoutBranchAction: ActionFunction = async ({
   params,
 }) => {
   const { organizationId, projectId, workspaceId } = params;
-  invariant(typeof organizationId === 'string', 'Organization Id is required');
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof organizationId === "string", "Organization Id is required");
+  invariant(typeof projectId === "string", "Project Id is required");
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
   const formData = await request.formData();
-  const branch = formData.get('branch');
-  invariant(typeof branch === 'string', 'Branch is required');
+  const branch = formData.get("branch");
+  invariant(typeof branch === "string", "Branch is required");
   const vcs = VCSInstance();
   const { syncItems } = await getSyncItems({ workspaceId });
   try {
@@ -399,14 +414,14 @@ export const checkoutBranchAction: ActionFunction = async ({
     const errorMessage =
       err instanceof Error
         ? err.message
-        : 'Unknown error while checking out branch.';
+        : "Unknown error while checking out branch.";
     return {
       error: errorMessage,
     };
   }
 
   return redirect(
-    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`
+    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`,
   );
 };
 
@@ -415,10 +430,10 @@ export const mergeBranchAction: ActionFunction = async ({
   params,
 }) => {
   const { workspaceId } = params;
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
   const formData = await request.formData();
-  const branch = formData.get('branch');
-  invariant(typeof branch === 'string', 'Branch is required');
+  const branch = formData.get("branch");
+  invariant(typeof branch === "string", "Branch is required");
   const vcs = VCSInstance();
   const { syncItems } = await getSyncItems({ workspaceId });
   let delta;
@@ -438,7 +453,7 @@ export const mergeBranchAction: ActionFunction = async ({
     const errorMessage =
       err instanceof Error
         ? err.message
-        : 'Unknown error while merging branch.';
+        : "Unknown error while merging branch.";
     return {
       error: errorMessage,
     };
@@ -452,10 +467,10 @@ export const createBranchAction: ActionFunction = async ({
   params,
 }) => {
   const { workspaceId } = params;
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
   const formData = await request.formData();
-  const branchName = formData.get('branchName');
-  invariant(typeof branchName === 'string', 'Branch is required');
+  const branchName = formData.get("branchName");
+  invariant(typeof branchName === "string", "Branch is required");
   const { syncItems } = await getSyncItems({ workspaceId });
   try {
     const vcs = VCSInstance();
@@ -468,7 +483,7 @@ export const createBranchAction: ActionFunction = async ({
     const errorMessage =
       err instanceof Error
         ? err.message
-        : 'Unknown error while merging branch.';
+        : "Unknown error while merging branch.";
     return {
       error: errorMessage,
     };
@@ -482,10 +497,10 @@ export const deleteBranchAction: ActionFunction = async ({
   request,
 }) => {
   const { organizationId, projectId, workspaceId } = params;
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
   const formData = await request.formData();
-  const branch = formData.get('branch');
-  invariant(typeof branch === 'string', 'Branch is required');
+  const branch = formData.get("branch");
+  invariant(typeof branch === "string", "Branch is required");
 
   try {
     const vcs = VCSInstance();
@@ -501,27 +516,27 @@ export const deleteBranchAction: ActionFunction = async ({
     const errorMessage =
       err instanceof Error
         ? err.message
-        : 'Unknown error while merging branch.';
+        : "Unknown error while merging branch.";
     return {
       error: errorMessage,
     };
   }
 
   return redirect(
-    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`
+    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`,
   );
 };
 
 export const pullFromRemoteAction: ActionFunction = async ({ params }) => {
   const startPullActionTime = performance.now();
   const { organizationId, projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
   const project = await models.project.getById(projectId);
-  invariant(project, 'Project not found');
+  invariant(project, "Project not found");
   const { syncItems } = await getSyncItems({ workspaceId });
   try {
-    invariant(project.remoteId, 'Project is not remote');
+    invariant(project.remoteId, "Project is not remote");
     const vcs = VCSInstance();
     const delta = await vcs.pull({
       candidates: syncItems,
@@ -535,21 +550,21 @@ export const pullFromRemoteAction: ActionFunction = async ({ params }) => {
 
     const duration = performance.now() - startPullActionTime;
     Sentry.metrics.distribution(SentryMetrics.CLOUD_SYNC_DURATION, duration, {
-      unit: 'millisecond',
-      tags: { action: 'pull' },
+      unit: "millisecond",
+      tags: { action: "pull" },
     });
   } catch (err) {
     const errorMessage =
       err instanceof Error
         ? err.message
-        : 'Unknown error while pulling from remote.';
+        : "Unknown error while pulling from remote.";
     return {
       error: errorMessage,
     };
   }
 
   return redirect(
-    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`
+    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`,
   );
 };
 
@@ -558,19 +573,19 @@ export const fetchRemoteBranchAction: ActionFunction = async ({
   params,
 }) => {
   const { projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
   const project = await models.project.getById(projectId);
-  invariant(project, 'Project not found');
+  invariant(project, "Project not found");
 
   const formData = await request.formData();
-  const branch = formData.get('branch');
-  invariant(typeof branch === 'string', 'Branch is required');
+  const branch = formData.get("branch");
+  invariant(typeof branch === "string", "Branch is required");
   const vcs = VCSInstance();
   const currentBranch = await vcs.getCurrentBranchName();
 
   try {
-    invariant(project.remoteId, 'Project is not remote');
+    invariant(project.remoteId, "Project is not remote");
     await vcs.checkout([], branch);
     const delta = await vcs.pull({
       candidates: [],
@@ -585,7 +600,7 @@ export const fetchRemoteBranchAction: ActionFunction = async ({
     const errorMessage =
       err instanceof Error
         ? err.message
-        : 'Unknown error while fetching remote branch.';
+        : "Unknown error while fetching remote branch.";
     return {
       error: errorMessage,
     };
@@ -597,12 +612,12 @@ export const fetchRemoteBranchAction: ActionFunction = async ({
 export const pushToRemoteAction: ActionFunction = async ({ params }) => {
   const startPushActionTime = performance.now();
   const { projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
 
   const project = await models.project.getById(projectId);
-  invariant(project, 'Project not found');
-  invariant(project.remoteId, 'Project is not remote');
+  invariant(project, "Project not found");
+  invariant(project.remoteId, "Project is not remote");
 
   try {
     const vcs = VCSInstance();
@@ -614,14 +629,14 @@ export const pushToRemoteAction: ActionFunction = async ({ params }) => {
 
     const duration = performance.now() - startPushActionTime;
     Sentry.metrics.distribution(SentryMetrics.CLOUD_SYNC_DURATION, duration, {
-      unit: 'millisecond',
-      tags: { action: 'push' },
+      unit: "millisecond",
+      tags: { action: "push" },
     });
   } catch (err) {
     const errorMessage =
       err instanceof Error
         ? err.message
-        : 'Unknown error while pushing to remote.';
+        : "Unknown error while pushing to remote.";
     return {
       error: errorMessage,
     };
@@ -632,7 +647,7 @@ export const pushToRemoteAction: ActionFunction = async ({ params }) => {
 
 export const rollbackChangesAction: ActionFunction = async ({ params }) => {
   const { organizationId, projectId, workspaceId } = params;
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
   try {
     const vcs = VCSInstance();
     const { syncItems } = await getSyncItems({ workspaceId });
@@ -643,14 +658,14 @@ export const rollbackChangesAction: ActionFunction = async ({ params }) => {
     const errorMessage =
       err instanceof Error
         ? err.message
-        : 'Unknown error while rolling back changes.';
+        : "Unknown error while rolling back changes.";
     return {
       error: errorMessage,
     };
   }
 
   return redirect(
-    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`
+    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`,
   );
 };
 
@@ -659,10 +674,10 @@ export const restoreChangesAction: ActionFunction = async ({
   params,
 }) => {
   const { organizationId, projectId, workspaceId } = params;
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
   const formData = await request.formData();
-  const id = formData.get('id');
-  invariant(typeof id === 'string', 'Id is required');
+  const id = formData.get("id");
+  invariant(typeof id === "string", "Id is required");
   try {
     const vcs = VCSInstance();
     const { syncItems } = await getSyncItems({ workspaceId });
@@ -673,14 +688,14 @@ export const restoreChangesAction: ActionFunction = async ({
     const errorMessage =
       err instanceof Error
         ? err.message
-        : 'Unknown error while restoring changes.';
+        : "Unknown error while restoring changes.";
     return {
       error: errorMessage,
     };
   }
 
   return redirect(
-    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`
+    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`,
   );
 };
 
@@ -689,17 +704,17 @@ export const stageChangesAction: ActionFunction = async ({
   params,
 }) => {
   const { workspaceId } = params;
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
   const data = await request.json();
   const keys = data.keys;
-  invariant(Array.isArray(keys), 'Keys is required');
+  invariant(Array.isArray(keys), "Keys is required");
   const { syncItems } = await getSyncItems({ workspaceId });
   const vcs = VCSInstance();
   const status = await vcs.status(syncItems);
   // Staging needs to happen since it creates blobs for the files
   const itemsToStage = keys
-    .map(key => {
-      if (typeof key === 'string') {
+    .map((key) => {
+      if (typeof key === "string") {
         const item = status.unstaged[key];
         return item;
       }
@@ -718,17 +733,17 @@ export const unstageChangesAction: ActionFunction = async ({
   params,
 }) => {
   const { workspaceId } = params;
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
   const data = await request.json();
   const keys = data.keys;
-  invariant(Array.isArray(keys), 'Keys is required');
+  invariant(Array.isArray(keys), "Keys is required");
   const { syncItems } = await getSyncItems({ workspaceId });
   const vcs = VCSInstance();
   const status = await vcs.status(syncItems);
   // Staging needs to happen since it creates blobs for the files
   const itemsToUnstage = keys
-    .map(key => {
-      if (typeof key === 'string') {
+    .map((key) => {
+      if (typeof key === "string") {
         const item = status.stage[key];
         return item;
       }
@@ -747,10 +762,10 @@ export const createSnapshotAction: ActionFunction = async ({
   params,
 }) => {
   const { workspaceId } = params;
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
   const formData = await request.formData();
-  const message = formData.get('message');
-  invariant(typeof message === 'string', 'Message is required');
+  const message = formData.get("message");
+  invariant(typeof message === "string", "Message is required");
 
   const vcs = VCSInstance();
 
@@ -761,7 +776,7 @@ export const createSnapshotAction: ActionFunction = async ({
     const errorMessage =
       err instanceof Error
         ? err.message
-        : 'Unknown error while creating snapshot.';
+        : "Unknown error while creating snapshot.";
     return {
       error: errorMessage,
     };
@@ -775,15 +790,15 @@ export const createSnapshotAndPushAction: ActionFunction = async ({
   params,
 }) => {
   const { projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
 
   const project = await models.project.getById(projectId);
-  invariant(project, 'Project not found');
-  invariant(project.remoteId, 'Project is not remote');
+  invariant(project, "Project not found");
+  invariant(project.remoteId, "Project is not remote");
   const formData = await request.formData();
-  const message = formData.get('message');
-  invariant(typeof message === 'string', 'Message is required');
+  const message = formData.get("message");
+  invariant(typeof message === "string", "Message is required");
   const vcs = VCSInstance();
 
   try {
@@ -797,7 +812,7 @@ export const createSnapshotAndPushAction: ActionFunction = async ({
     const errorMessage =
       err instanceof Error
         ? err.message
-        : 'Unknown error while creating snapshot.';
+        : "Unknown error while creating snapshot.";
     return {
       error: errorMessage,
     };

@@ -1,9 +1,9 @@
-import classnames from 'classnames';
-import React, { type FC, type PropsWithChildren } from 'react';
+import classnames from "classnames";
+import React, { type FC, type PropsWithChildren } from "react";
 
 interface PaneProps {
   className?: string;
-  type: 'request' | 'response';
+  type: "request" | "response";
 }
 
 interface PaneHeaderProps {
@@ -15,21 +15,41 @@ interface PaneBodyProps {
   placeholder?: boolean;
 }
 
-export const Pane: FC<PropsWithChildren<PaneProps>> = ({ className, type, children }) => (
-  <section className={classnames(`${type}-pane`, 'theme--pane', 'pane', className)} data-testid={`${type}-pane`}>
+export const Pane: FC<PropsWithChildren<PaneProps>> = ({
+  className,
+  type,
+  children,
+}) => (
+  <section
+    className={classnames(`${type}-pane`, "theme--pane", "pane", className)}
+    data-testid={`${type}-pane`}
+  >
     {children}
   </section>
 );
 
-export const PaneHeader: FC<PropsWithChildren<PaneHeaderProps>> = ({ className, children }) => (
-  <header className={classnames('pane__header', 'theme--pane__header', className)}>
+export const PaneHeader: FC<PropsWithChildren<PaneHeaderProps>> = ({
+  className,
+  children,
+}) => (
+  <header
+    className={classnames("pane__header", "theme--pane__header", className)}
+  >
     {children}
   </header>
 );
 
-export const paneBodyClasses = 'pane__body theme--pane__body';
-export const PaneBody: FC<PropsWithChildren<PaneBodyProps>> = ({ placeholder, children }) => (
-  <div className={classnames(paneBodyClasses, placeholder && 'pane__body--placeholder')}>
+export const paneBodyClasses = "pane__body theme--pane__body";
+export const PaneBody: FC<PropsWithChildren<PaneBodyProps>> = ({
+  placeholder,
+  children,
+}) => (
+  <div
+    className={classnames(
+      paneBodyClasses,
+      placeholder && "pane__body--placeholder",
+    )}
+  >
     {children}
   </div>
 );

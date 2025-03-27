@@ -1,8 +1,8 @@
-import type { Node } from '@react-types/shared';
-import React from 'react';
-import { useRef } from 'react';
-import { useMenuItem } from 'react-aria';
-import type { TreeState } from 'react-stately';
+import type { Node } from "@react-types/shared";
+import React from "react";
+import { useRef } from "react";
+import { useMenuItem } from "react-aria";
+import type { TreeState } from "react-stately";
 
 interface Props<T> {
   item: Node<T>;
@@ -36,19 +36,20 @@ export const MenuItem = <T extends object>({
   // of if the dropdown is not set to close on select.
   const shouldRemainOpen = withPrompt || stayOpenAfterClick;
 
-  const {
-    menuItemProps,
-    isFocused,
-  } = useMenuItem({
-    key: item.key,
-    'aria-label': item['aria-label'],
-    closeOnSelect: closeOnSelect || !shouldRemainOpen,
-    onAction: !withPrompt && !isDisabled && onClick,
-  }, state, ref);
+  const { menuItemProps, isFocused } = useMenuItem(
+    {
+      key: item.key,
+      "aria-label": item["aria-label"],
+      closeOnSelect: closeOnSelect || !shouldRemainOpen,
+      onAction: !withPrompt && !isDisabled && onClick,
+    },
+    state,
+    ref,
+  );
 
   return (
     <li
-      className={`flex items-center leading-10 text-left text-[--color-font] m-0 min-w-[15rem] whitespace-nowrap ${isFocused ? 'bg-[--hl-sm]' : 'bg-transparent'} ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'} hover:bg-[--hl-xs] focus:outline-0`}
+      className={`m-0 flex min-w-[15rem] items-center whitespace-nowrap text-left leading-10 text-[--color-font] ${isFocused ? "bg-[--hl-sm]" : "bg-transparent"} ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"} hover:bg-[--hl-xs] focus:outline-0`}
       {...menuItemProps}
       ref={ref}
     >

@@ -1,17 +1,31 @@
-import React, { type FC, useEffect } from 'react';
-import { Button, Dialog, GridList, GridListItem, Heading, Label, Modal, ModalOverlay, TextArea, TextField, Tooltip, TooltipTrigger } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router-dom';
+import React, { type FC, useEffect } from "react";
+import {
+  Button,
+  Dialog,
+  GridList,
+  GridListItem,
+  Heading,
+  Label,
+  Modal,
+  ModalOverlay,
+  TextArea,
+  TextField,
+  Tooltip,
+  TooltipTrigger,
+} from "react-aria-components";
+import { useFetcher, useParams } from "react-router-dom";
 
-import type { GitRepository } from '../../../models/git-repository';
-import type { GitChangesLoaderData, GitDiffResult } from '../../routes/git-actions';
-import { DiffEditor } from '../diff-view-editor';
-import { ConfigLink } from '../github-app-config-link';
-import { Icon } from '../icon';
-import { showAlert } from '.';
+import type { GitRepository } from "../../../models/git-repository";
+import type {
+  GitChangesLoaderData,
+  GitDiffResult,
+} from "../../routes/git-actions";
+import { DiffEditor } from "../diff-view-editor";
+import { ConfigLink } from "../github-app-config-link";
+import { Icon } from "../icon";
+import { showAlert } from ".";
 
-export const GitStagingModal: FC<{ onClose: () => void }> = ({
-  onClose,
-}) => {
+export const GitStagingModal: FC<{ onClose: () => void }> = ({ onClose }) => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -33,9 +47,9 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
   function diffChanges({ path, staged }: { path: string; staged: boolean }) {
     let url = `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/diff`;
     const params = new URLSearchParams();
-    params.set('filepath', path);
-    params.set('staged', staged ? 'true' : 'false');
-    url += '?' + params.toString();
+    params.set("filepath", path);
+    params.set("staged", staged ? "true" : "false");
+    url += "?" + params.toString();
     diffChangesFetcher.load(`${url}`);
   }
 
@@ -45,10 +59,10 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
         paths,
       },
       {
-        method: 'POST',
+        method: "POST",
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/stage`,
-        encType: 'application/json',
-      }
+        encType: "application/json",
+      },
     );
   }
 
@@ -58,27 +72,28 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
         paths,
       },
       {
-        method: 'POST',
+        method: "POST",
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/unstage`,
-        encType: 'application/json',
-      }
+        encType: "application/json",
+      },
     );
   }
 
   function undoUnstagedChanges(paths: string[]) {
     showAlert({
-      message: 'Are you sure you want to undo your changes? This action cannot be undone and will revert all changes made since the last commit that are unstaged.',
-      title: 'Undo changes',
+      message:
+        "Are you sure you want to undo your changes? This action cannot be undone and will revert all changes made since the last commit that are unstaged.",
+      title: "Undo changes",
       onConfirm: () => {
         undoUnstagedChangesFetcher.submit(
           {
             paths,
           },
           {
-            method: 'POST',
+            method: "POST",
             action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/discard`,
-            encType: 'application/json',
-          }
+            encType: "application/json",
+          },
         );
       },
       addCancel: true,
@@ -86,33 +101,45 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
   }
 
   useEffect(() => {
-    if (gitChangesFetcher.state === 'idle' && !gitChangesFetcher.data) {
+    if (gitChangesFetcher.state === "idle" && !gitChangesFetcher.data) {
       // file://./../../routes/git-actions.tsx#gitChangesLoader
-      gitChangesFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/changes`);
+      gitChangesFetcher.load(
+        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/changes`,
+      );
     }
   }, [organizationId, projectId, workspaceId, gitChangesFetcher]);
 
-  const {
-    changes,
-  } = gitChangesFetcher.data || {
+  const { changes } = gitChangesFetcher.data || {
     changes: {
       staged: [],
       unstaged: [],
     },
-    branch: '',
+    branch: "",
     statusNames: {},
   };
 
-  const { Form, formAction, state, data } = useFetcher<{ errors?: string[]; gitRepository: GitRepository }>();
+  const { Form, formAction, state, data } = useFetcher<{
+    errors?: string[];
+    gitRepository: GitRepository;
+  }>();
 
-  const isCreatingSnapshot = state !== 'idle' && formAction === `/organization/${organizationId}/project/${projectId}/workspace/:workspaceId/git/commit`;
-  const isPushing = state !== 'idle' && formAction === `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/commit-and-push`;
+  const isCreatingSnapshot =
+    state !== "idle" &&
+    formAction ===
+      `/organization/${organizationId}/project/${projectId}/workspace/:workspaceId/git/commit`;
+  const isPushing =
+    state !== "idle" &&
+    formAction ===
+      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/commit-and-push`;
 
-  const previewDiffItem = diffChangesFetcher.data && 'diff' in diffChangesFetcher.data ? diffChangesFetcher.data : null;
+  const previewDiffItem =
+    diffChangesFetcher.data && "diff" in diffChangesFetcher.data
+      ? diffChangesFetcher.data
+      : null;
 
   const allChanges = [...changes.staged, ...changes.unstaged];
   const allChangesLength = allChanges.length;
-  const noCommitErrors = data && 'errors' in data && data.errors?.length === 0;
+  const noCommitErrors = data && "errors" in data && data.errors?.length === 0;
 
   useEffect(() => {
     if (allChangesLength === 0 && noCommitErrors) {
@@ -123,139 +150,168 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
   return (
     <ModalOverlay
       isOpen
-      onOpenChange={isOpen => {
+      onOpenChange={(isOpen) => {
         !isOpen && onClose();
       }}
       isDismissable
-      className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
+      className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
     >
       <Modal
-        onOpenChange={isOpen => {
+        onOpenChange={(isOpen) => {
           !isOpen && onClose();
         }}
-        className="flex flex-col w-[calc(100%-var(--padding-xl))] h-[calc(100%-var(--padding-xl))] rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] bg-[--color-bg] text-[--color-font]"
+        className="flex h-[calc(100%-var(--padding-xl))] w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
       >
         <Dialog
-          data-loading={gitChangesFetcher.state === 'loading' ? 'true' : undefined}
-          className="outline-none flex-1 h-full flex flex-col overflow-hidden data-[loading]:animate-pulse"
+          data-loading={
+            gitChangesFetcher.state === "loading" ? "true" : undefined
+          }
+          className="flex h-full flex-1 flex-col overflow-hidden outline-none data-[loading]:animate-pulse"
         >
           {({ close }) => (
-            <div className='flex-1 flex flex-col gap-4 overflow-hidden'>
-              <div className='flex-shrink-0 flex gap-2 items-center justify-between'>
-                <Heading slot="title" className='text-2xl'>Commit changes</Heading>
+            <div className="flex flex-1 flex-col gap-4 overflow-hidden">
+              <div className="flex flex-shrink-0 items-center justify-between gap-2">
+                <Heading slot="title" className="text-2xl">
+                  Commit changes
+                </Heading>
                 <Button
-                  className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                   onPress={close}
                 >
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className='grid [grid-template-columns:300px_1fr] h-full overflow-hidden divide-x divide-solid divide-[--hl-md] gap-2'>
-                <div className='flex-1 flex flex-col gap-4 overflow-hidden'>
-                  <Form method="POST" className='flex flex-col gap-2'>
-                    <TextField className="flex flex-col gap-2 flex-shrink-0">
-                      <Label className='font-bold'>
-                        Message
-                      </Label>
+              <div className="grid h-full gap-2 divide-x divide-solid divide-[--hl-md] overflow-hidden [grid-template-columns:300px_1fr]">
+                <div className="flex flex-1 flex-col gap-4 overflow-hidden">
+                  <Form method="POST" className="flex flex-col gap-2">
+                    <TextField className="flex flex-shrink-0 flex-col gap-2">
+                      <Label className="font-bold">Message</Label>
                       <TextArea
                         rows={3}
                         name="message"
-                        className="border border-solid border-[--hl-sm] placeholder:text-[--hl-md] rounded-sm p-2 resize-none"
+                        className="resize-none rounded-sm border border-solid border-[--hl-sm] p-2 placeholder:text-[--hl-md]"
                         placeholder="This is a helpful message that describes the changes made in this commit."
                         required
                       />
                     </TextField>
 
-                    <div className="flex flex-shrink-0 justify-stretch gap-2 items-center">
+                    <div className="flex flex-shrink-0 items-center justify-stretch gap-2">
                       <Button
-                        type='submit'
-                        isDisabled={state !== 'idle' || changes.staged.length === 0}
+                        type="submit"
+                        isDisabled={
+                          state !== "idle" || changes.staged.length === 0
+                        }
                         formAction={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/commit`}
-                        className="flex-1 flex h-8 items-center justify-center px-4 gap-2 bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                        className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                       >
-                        <Icon icon={isCreatingSnapshot ? 'spinner' : 'check'} className={`w-5 ${isCreatingSnapshot ? 'animate-spin' : ''}`} /> Commit
+                        <Icon
+                          icon={isCreatingSnapshot ? "spinner" : "check"}
+                          className={`w-5 ${isCreatingSnapshot ? "animate-spin" : ""}`}
+                        />{" "}
+                        Commit
                       </Button>
                       <Button
                         type="submit"
-                        isDisabled={state !== 'idle' || changes.staged.length === 0}
+                        isDisabled={
+                          state !== "idle" || changes.staged.length === 0
+                        }
                         formAction={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/commit-and-push`}
-                        className="flex-1 flex h-8 items-center justify-center px-4 gap-2 bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                        className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                       >
-                        <Icon icon={isPushing ? 'spinner' : 'cloud-arrow-up'} className={`w-5 ${isPushing ? 'animate-spin' : ''}`} /> Commit and push
+                        <Icon
+                          icon={isPushing ? "spinner" : "cloud-arrow-up"}
+                          className={`w-5 ${isPushing ? "animate-spin" : ""}`}
+                        />{" "}
+                        Commit and push
                       </Button>
                     </div>
                     {data && data.errors && data.errors.length > 0 && (
-                      <p className="bg-opacity-20 text-sm text-[--color-font-danger] p-2 rounded-sm bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))]">
-                        <Icon icon="exclamation-triangle" /> {data.errors.join('\n')}
+                      <p className="rounded-sm bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))] bg-opacity-20 p-2 text-sm text-[--color-font-danger]">
+                        <Icon icon="exclamation-triangle" />{" "}
+                        {data.errors.join("\n")}
                         <ConfigLink small {...data} />
                       </p>
                     )}
                   </Form>
 
-                  <div className='grid auto-rows-auto gap-2 overflow-y-auto'>
-                    <div className='flex flex-col gap-2 overflow-hidden max-h-96 w-full'>
-                      <Heading className='group font-semibold flex-shrink-0 w-full flex items-center gap-2 py-1 justify-between'>
-                        <span className='flex-1'>Staged changes</span>
+                  <div className="grid auto-rows-auto gap-2 overflow-y-auto">
+                    <div className="flex max-h-96 w-full flex-col gap-2 overflow-hidden">
+                      <Heading className="group flex w-full flex-shrink-0 items-center justify-between gap-2 py-1 font-semibold">
+                        <span className="flex-1">Staged changes</span>
                         <TooltipTrigger>
                           <Button
-                            className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base'
+                            className="flex aspect-square h-6 items-center justify-center rounded-sm text-base text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
                             slot={null}
-                            name='Unstage all changes'
+                            name="Unstage all changes"
                             onPress={() => {
-                              unstageChanges(changes.staged.map(entry => entry.path));
+                              unstageChanges(
+                                changes.staged.map((entry) => entry.path),
+                              );
                             }}
                           >
-                            <Icon icon="minus" aria-hidden pointerEvents="none" />
+                            <Icon
+                              icon="minus"
+                              aria-hidden
+                              pointerEvents="none"
+                            />
                           </Button>
                           <Tooltip
                             offset={8}
-                            className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                            className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
                           >
                             Unstage all changes
                           </Tooltip>
                         </TooltipTrigger>
-                        <span className='text-sm rounded-full size-6 flex items-center justify-center px-1 text-[--hl] bg-[--hl-sm]'>{changes.staged.length}</span>
+                        <span className="flex size-6 items-center justify-center rounded-full bg-[--hl-sm] px-1 text-sm text-[--hl]">
+                          {changes.staged.length}
+                        </span>
                       </Heading>
-                      <div className='flex-1 flex overflow-y-auto w-full select-none'>
+                      <div className="flex w-full flex-1 select-none overflow-y-auto">
                         <GridList
                           className="w-full"
-                          items={changes.staged.map(entry => ({
+                          items={changes.staged.map((entry) => ({
                             entry,
                             id: entry.path,
                             textValue: entry.path,
                           }))}
-                          aria-label='Unstaged changes'
-                          onAction={key => {
+                          aria-label="Unstaged changes"
+                          onAction={(key) => {
                             diffChanges({
                               path: key.toString(),
                               staged: true,
                             });
                           }}
                           renderEmptyState={() => (
-                            <p className='p-2 text-[--hl] text-sm'>
+                            <p className="p-2 text-sm text-[--hl]">
                               Stage your changes to commit them.
                             </p>
                           )}
                         >
-                          {item => {
+                          {(item) => {
                             return (
-                              <GridListItem className="group outline-none select-none aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-sm] overflow-hidden text-[--hl] transition-colors w-full flex items-center px-2 py-1 justify-between">
-                                <span className='truncate'>{item.entry.name}</span>
-                                <div className='flex items-center gap-1'>
+                              <GridListItem className="group flex w-full select-none items-center justify-between overflow-hidden px-2 py-1 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font]">
+                                <span className="truncate">
+                                  {item.entry.name}
+                                </span>
+                                <div className="flex items-center gap-1">
                                   <TooltipTrigger>
                                     <Button
-                                      className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
+                                      className="flex aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
                                       slot={null}
                                       name="Unstage change"
                                       onPress={() => {
                                         unstageChanges([item.entry.path]);
                                       }}
                                     >
-                                      <Icon icon="minus" aria-hidden pointerEvents="none" />
+                                      <Icon
+                                        icon="minus"
+                                        aria-hidden
+                                        pointerEvents="none"
+                                      />
                                     </Button>
                                     <Tooltip
                                       offset={8}
-                                      className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                                      className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
                                     >
                                       Unstage change
                                     </Tooltip>
@@ -278,17 +334,19 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                         </GridList>
                       </div>
                     </div>
-                    <div className='flex flex-col gap-2 overflow-hidden max-h-96 w-full'>
-                      <Heading className='group font-semibold flex-shrink-0 w-full flex items-center py-1 justify-between'>
+                    <div className="flex max-h-96 w-full flex-col gap-2 overflow-hidden">
+                      <Heading className="group flex w-full flex-shrink-0 items-center justify-between py-1 font-semibold">
                         <span>Changes</span>
-                        <div className='flex items-center gap-2'>
+                        <div className="flex items-center gap-2">
                           <TooltipTrigger>
                             <Button
-                              className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base'
+                              className="flex aspect-square h-6 items-center justify-center rounded-sm text-base text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
                               slot={null}
-                              name='Discard all changes'
+                              name="Discard all changes"
                               onPress={() => {
-                                undoUnstagedChanges(changes.unstaged.map(entry => entry.path));
+                                undoUnstagedChanges(
+                                  changes.unstaged.map((entry) => entry.path),
+                                );
                               }}
                             >
                               <svg
@@ -302,57 +360,67 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                             </Button>
                             <Tooltip
                               offset={8}
-                              className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                              className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
                             >
                               Discard all changes
                             </Tooltip>
                           </TooltipTrigger>
                           <TooltipTrigger>
                             <Button
-                              className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] px-2 gap-2 rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base'
+                              className="flex aspect-square h-6 items-center justify-center gap-2 rounded-sm px-2 text-base text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
                               slot={null}
                               name="Stage all changes"
                               onPress={() => {
-                                stageChanges(changes.unstaged.map(entry => entry.path));
+                                stageChanges(
+                                  changes.unstaged.map((entry) => entry.path),
+                                );
                               }}
                             >
-                              <Icon icon="plus" aria-hidden pointerEvents="none" />
+                              <Icon
+                                icon="plus"
+                                aria-hidden
+                                pointerEvents="none"
+                              />
                             </Button>
                             <Tooltip
                               offset={8}
-                              className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                              className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
                             >
                               Stage all changes
                             </Tooltip>
                           </TooltipTrigger>
-                          <span className='text-sm rounded-full size-6 flex items-center justify-center px-1 text-[--hl] bg-[--hl-sm]'>{changes.unstaged.length}</span>
+                          <span className="flex size-6 items-center justify-center rounded-full bg-[--hl-sm] px-1 text-sm text-[--hl]">
+                            {changes.unstaged.length}
+                          </span>
                         </div>
                       </Heading>
-                      <div className='flex-1 flex overflow-y-auto w-full select-none'>
+                      <div className="flex w-full flex-1 select-none overflow-y-auto">
                         <GridList
                           className="w-full"
-                          items={changes.unstaged.map(entry => ({
+                          items={changes.unstaged.map((entry) => ({
                             entry,
                             id: entry.path,
                             key: entry.path,
                             textValue: entry.path,
                           }))}
-                          aria-label='Unstaged changes'
-                          onAction={key => {
+                          aria-label="Unstaged changes"
+                          onAction={(key) => {
                             diffChanges({
                               path: key.toString(),
                               staged: false,
                             });
                           }}
                         >
-                          {item => {
+                          {(item) => {
                             return (
-                              <GridListItem className="group outline-none select-none aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-sm] overflow-hidden text-[--hl] transition-colors w-full flex items-center px-2 py-1 justify-between">
-                                <span className='truncate'>{item.entry.name}</span>
-                                <div className='flex items-center gap-1'>
+                              <GridListItem className="group flex w-full select-none items-center justify-between overflow-hidden px-2 py-1 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font]">
+                                <span className="truncate">
+                                  {item.entry.name}
+                                </span>
+                                <div className="flex items-center gap-1">
                                   <TooltipTrigger>
                                     <Button
-                                      className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
+                                      className="flex aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
                                       slot={null}
                                       name="Discard change"
                                       onPress={() => {
@@ -370,25 +438,29 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                                     </Button>
                                     <Tooltip
                                       offset={8}
-                                      className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                                      className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
                                     >
                                       Discard change
                                     </Tooltip>
                                   </TooltipTrigger>
                                   <TooltipTrigger>
                                     <Button
-                                      className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
+                                      className="flex aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
                                       slot={null}
                                       name="Stage change"
                                       onPress={() => {
                                         stageChanges([item.entry.path]);
                                       }}
                                     >
-                                      <Icon icon="plus" aria-hidden pointerEvents="none" />
+                                      <Icon
+                                        icon="plus"
+                                        aria-hidden
+                                        pointerEvents="none"
+                                      />
                                     </Button>
                                     <Tooltip
                                       offset={8}
-                                      className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                                      className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
                                     >
                                       Stage change
                                     </Tooltip>
@@ -413,27 +485,30 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                     </div>
                   </div>
                 </div>
-                {previewDiffItem?.diff ? <div className='p-2 pb-0 flex flex-col gap-2 h-full overflow-y-auto'>
-                  <Heading className='font-bold flex items-center gap-2'>
-                    <Icon icon="code-compare" />
-                    {previewDiffItem.name}
-                  </Heading>
-                  {previewDiffItem && (
-                    <div
-                      className='bg-[--hl-xs] rounded-sm p-2 flex-1 overflow-y-auto text-[--color-font]'
-                    >
-                      <DiffEditor original={previewDiffItem.diff.before} modified={previewDiffItem.diff.after} />
-                    </div>
-                  )}
-                </div> : <div className='p-2 h-full flex flex-col gap-4 items-center justify-center'>
-                  <Heading className='font-semibold flex justify-center items-center gap-2 text-4xl text-[--hl-md]'>
-                    <Icon icon="code-compare" />
-                    Diff view
-                  </Heading>
-                  <p className='text-[--hl]'>
-                    Select an item to compare
-                  </p>
-                </div>}
+                {previewDiffItem?.diff ? (
+                  <div className="flex h-full flex-col gap-2 overflow-y-auto p-2 pb-0">
+                    <Heading className="flex items-center gap-2 font-bold">
+                      <Icon icon="code-compare" />
+                      {previewDiffItem.name}
+                    </Heading>
+                    {previewDiffItem && (
+                      <div className="flex-1 overflow-y-auto rounded-sm bg-[--hl-xs] p-2 text-[--color-font]">
+                        <DiffEditor
+                          original={previewDiffItem.diff.before}
+                          modified={previewDiffItem.diff.after}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex h-full flex-col items-center justify-center gap-4 p-2">
+                    <Heading className="flex items-center justify-center gap-2 text-4xl font-semibold text-[--hl-md]">
+                      <Icon icon="code-compare" />
+                      Diff view
+                    </Heading>
+                    <p className="text-[--hl]">Select an item to compare</p>
+                  </div>
+                )}
               </div>
             </div>
           )}

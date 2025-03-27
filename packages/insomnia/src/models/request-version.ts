@@ -1,18 +1,18 @@
-import deepEqual from 'deep-equal';
+import deepEqual from "deep-equal";
 
-import { database as db } from '../common/database';
-import { compressObject, decompressObject } from '../common/misc';
-import * as requestOperations from '../models/helpers/request-operations';
-import type { GrpcRequest } from './grpc-request';
-import type { BaseModel } from './index';
-import { isRequest, type Request } from './request';
-import { isWebSocketRequest, type WebSocketRequest } from './websocket-request';
+import { database as db } from "../common/database";
+import { compressObject, decompressObject } from "../common/misc";
+import * as requestOperations from "../models/helpers/request-operations";
+import type { GrpcRequest } from "./grpc-request";
+import type { BaseModel } from "./index";
+import { isRequest, type Request } from "./request";
+import { isWebSocketRequest, type WebSocketRequest } from "./websocket-request";
 
-export const name = 'Request Version';
+export const name = "Request Version";
 
-export const type = 'RequestVersion';
+export const type = "RequestVersion";
 
-export const prefix = 'rvr';
+export const prefix = "rvr";
 
 export const canDuplicate = false;
 
@@ -25,19 +25,19 @@ interface BaseRequestVersion {
 export type RequestVersion = BaseModel & BaseRequestVersion;
 
 const FIELDS_TO_IGNORE = [
-  '_id',
-  'type',
-  'created',
-  'modified',
-  'metaSortKey',
-  'description',
-  'parentId',
-  'name',
+  "_id",
+  "type",
+  "created",
+  "modified",
+  "metaSortKey",
+  "description",
+  "parentId",
+  "name",
 ] as const;
 
-export const isRequestVersion = (model: Pick<BaseModel, 'type'>): model is RequestVersion => (
-  model.type === type
-);
+export const isRequestVersion = (
+  model: Pick<BaseModel, "type">,
+): model is RequestVersion => model.type === type;
 
 export function init() {
   return {
@@ -57,15 +57,22 @@ export function findByParentId(parentId: string) {
   return db.find<RequestVersion>(type, { parentId });
 }
 
-export async function create(request: Request | WebSocketRequest | GrpcRequest) {
+export async function create(
+  request: Request | WebSocketRequest | GrpcRequest,
+) {
   if (!isRequest(request) && !isWebSocketRequest(request)) {
-    throw new Error(`New ${type} was not given a valid ${request.type} instance`);
+    throw new Error(
+      `New ${type} was not given a valid ${request.type} instance`,
+    );
   }
 
   const parentId = request._id;
-  const latestRequestVersion: RequestVersion | null = await getLatestByParentId(parentId);
+  const latestRequestVersion: RequestVersion | null =
+    await getLatestByParentId(parentId);
   const latestRequest = latestRequestVersion
-    ? decompressObject<Request | WebSocketRequest>(latestRequestVersion.compressedRequest)
+    ? decompressObject<Request | WebSocketRequest>(
+        latestRequestVersion.compressedRequest,
+      )
     : null;
 
   const hasChanged = _diffRequests(latestRequest, request);
@@ -95,7 +102,9 @@ export async function restore(requestVersionId: string) {
     return null;
   }
 
-  const requestPatch = decompressObject<Request | WebSocketRequest | GrpcRequest>(requestVersion.compressedRequest);
+  const requestPatch = decompressObject<
+    Request | WebSocketRequest | GrpcRequest
+  >(requestVersion.compressedRequest);
 
   if (!requestPatch) {
     return null;
@@ -116,14 +125,17 @@ export async function restore(requestVersionId: string) {
 
   return requestOperations.update(originalRequest, requestPatch);
 }
-function _diffRequests(rOld: Request | WebSocketRequest | null, rNew: Request | WebSocketRequest) {
+function _diffRequests(
+  rOld: Request | WebSocketRequest | null,
+  rNew: Request | WebSocketRequest,
+) {
   if (!rOld) {
     return true;
   }
 
   for (const key of Object.keys(rOld) as (keyof typeof rOld)[]) {
     // Skip fields that aren't useful
-    if (FIELDS_TO_IGNORE.find(field => field === key)) {
+    if (FIELDS_TO_IGNORE.find((field) => field === key)) {
       continue;
     }
     if (!deepEqual(rOld[key], rNew[key])) {

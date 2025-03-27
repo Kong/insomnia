@@ -1,8 +1,8 @@
-import type { Converter } from '../entities';
+import type { Converter } from "../entities";
 
-export const id = 'postman-environment';
-export const name = 'Postman Environment';
-export const description = 'Importer for Postman environments';
+export const id = "postman-environment";
+export const name = "Postman Environment";
+export const description = "Importer for Postman environments";
 
 interface EnvVar {
   enabled: boolean;
@@ -13,21 +13,21 @@ interface EnvVar {
 interface Environment {
   name: string;
   values: EnvVar[];
-  _postman_variable_scope: 'environment' | string;
+  _postman_variable_scope: "environment" | string;
 }
 
 type Data = {
-  [key in EnvVar['key']]: EnvVar['value'];
+  [key in EnvVar["key"]]: EnvVar["value"];
 };
 
 export enum POSTMAN_ENV_TYPE {
-  GLOBAL = 'globals',
-  ENVIRONMENT = 'environment',
-};
+  GLOBAL = "globals",
+  ENVIRONMENT = "environment",
+}
 
 const validPostmanEnvTypeList = Object.values(POSTMAN_ENV_TYPE) as string[];
 
-export const convert: Converter<Data> = rawData => {
+export const convert: Converter<Data> = (rawData) => {
   try {
     const { _postman_variable_scope, name, values } = JSON.parse(
       rawData,
@@ -39,9 +39,9 @@ export const convert: Converter<Data> = rawData => {
 
     return [
       {
-        _id: '__ENV_1__',
-        _type: 'environment',
-        name: name || 'Postman Environment',
+        _id: "__ENV_1__",
+        _type: "environment",
+        name: name || "Postman Environment",
         data: values.reduce((accumulator, { enabled, key, value }) => {
           if (!enabled) {
             return accumulator;

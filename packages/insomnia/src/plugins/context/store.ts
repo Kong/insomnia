@@ -1,5 +1,5 @@
-import * as models from '../../models';
-import type { Plugin } from '../index';
+import * as models from "../../models";
+import type { Plugin } from "../index";
 
 export interface PluginStore {
   hasItem(arg0: string): Promise<boolean>;
@@ -15,7 +15,7 @@ export interface PluginStore {
   >;
 }
 
-export function init(plugin: Plugin):{store: PluginStore} {
+export function init(plugin: Plugin): { store: PluginStore } {
   return {
     store: {
       async hasItem(key: string) {
@@ -45,9 +45,9 @@ export function init(plugin: Plugin):{store: PluginStore} {
           key: string;
           value: string;
         }[]
-        > {
-        const docs = await models.pluginData.all(plugin.name) || [];
-        return docs.map(d => ({
+      > {
+        const docs = (await models.pluginData.all(plugin.name)) || [];
+        return docs.map((d) => ({
           value: d.value,
           key: d.key,
         }));

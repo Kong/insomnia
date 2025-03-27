@@ -1,8 +1,8 @@
 const delimitersData = [
   // Procedence matters
-  ['#{', '}'],
-  ['{', '}'],
-  ['[', ']'],
+  ["#{", "}"],
+  ["{", "}"],
+  ["[", "]"],
 ];
 
 const [startDelimiters, endDelimiters] = delimitersData.reduce(
@@ -11,7 +11,7 @@ const [startDelimiters, endDelimiters] = delimitersData.reduce(
     acc[1].push(e[1]);
     return acc;
   },
-  [[], []] as typeof delimitersData
+  [[], []] as typeof delimitersData,
 );
 
 function tokenize(edn: string) {
@@ -19,15 +19,15 @@ function tokenize(edn: string) {
 
   const tokens: string[] = [];
 
-  let symbol = '';
+  let symbol = "";
 
   for (const c of edn) {
     if (!insideString) {
       // Ignore when
-      if (c === ',' || c === '\n' || c === '\r' || c === '\t' || (c === ' ')) {
+      if (c === "," || c === "\n" || c === "\r" || c === "\t" || c === " ") {
         if (symbol) {
           tokens.push(symbol);
-          symbol = '';
+          symbol = "";
         }
         continue;
       } else if (c === '"') {
@@ -35,23 +35,23 @@ function tokenize(edn: string) {
         symbol += c;
       } else if (startDelimiters.includes(symbol + c)) {
         tokens.push(symbol + c);
-        symbol = '';
+        symbol = "";
       } else if (endDelimiters.includes(c)) {
         if (symbol) {
           tokens.push(symbol);
         }
         tokens.push(c);
-        symbol = '';
+        symbol = "";
       } else {
         symbol += c;
       }
       continue;
     }
 
-    if (c === '"' && symbol.at(-1) !== '\\') {
+    if (c === '"' && symbol.at(-1) !== "\\") {
       insideString = false;
       tokens.push(symbol + c);
-      symbol = '';
+      symbol = "";
     } else {
       symbol += c;
     }
@@ -64,8 +64,8 @@ function spacesOnLeft(spaces: number[]) {
   const length = spaces.reduce((acc, e) => acc + e, 0);
 
   return Array.from({ length })
-    .map(() => ' ')
-    .join('');
+    .map(() => " ")
+    .join("");
 }
 
 function tokensToLines(tokens: ReturnType<typeof tokenize>) {
@@ -84,11 +84,11 @@ function tokensToLines(tokens: ReturnType<typeof tokenize>) {
     const nextEnding = nextToken && endDelimiters.includes(nextToken);
 
     if (tokenUsed) {
-      const line = currentLine.join('');
+      const line = currentLine.join("");
       // Check if its a empty structure, in that case, store current line and start a new one
       if (!nextEnding && line.trim()) {
         lines.push(currentLine);
-        currentLine = [spacesOnLeft(elements.map(e => e.spaces))];
+        currentLine = [spacesOnLeft(elements.map((e) => e.spaces))];
       }
       tokenUsed = false;
       continue;
@@ -104,9 +104,17 @@ function tokensToLines(tokens: ReturnType<typeof tokenize>) {
         currentLine.push(nextToken);
         tokenUsed = true;
       } else {
-        const currenLineLength = currentLine.map(e => e.length).reduce((acc, e) => acc + e);
-        const spacesAlreadyCounted = elements.reduce((acc, e) => acc + e.spaces, 0);
-        elements.push({ spaces: currenLineLength - spacesAlreadyCounted, perLine: t === '{' ? 2 : 1 });
+        const currenLineLength = currentLine
+          .map((e) => e.length)
+          .reduce((acc, e) => acc + e);
+        const spacesAlreadyCounted = elements.reduce(
+          (acc, e) => acc + e.spaces,
+          0,
+        );
+        elements.push({
+          spaces: currenLineLength - spacesAlreadyCounted,
+          perLine: t === "{" ? 2 : 1,
+        });
       }
       continue;
     }
@@ -120,7 +128,7 @@ function tokensToLines(tokens: ReturnType<typeof tokenize>) {
         lines.at(-1)!.push(t);
       }
       elements.pop();
-      currentLine = [spacesOnLeft(elements.map(e => e.spaces))];
+      currentLine = [spacesOnLeft(elements.map((e) => e.spaces))];
       continue;
     }
 
@@ -128,7 +136,7 @@ function tokensToLines(tokens: ReturnType<typeof tokenize>) {
 
     // Token can be a key, value or metadata, only key and value are valid for line count
     // Metadata are tokens started with # like #uuid
-    if (!t.startsWith('#')) {
+    if (!t.startsWith("#")) {
       keyValue.push(t);
     }
 
@@ -142,7 +150,7 @@ function tokensToLines(tokens: ReturnType<typeof tokenize>) {
 
     // If line is not ending and next token is not a closing delimiter, continue for next token
     if (!endLine && !nextEnding) {
-      currentLine.push(' ');
+      currentLine.push(" ");
       continue;
     }
 
@@ -154,12 +162,12 @@ function tokensToLines(tokens: ReturnType<typeof tokenize>) {
     }
 
     lines.push(currentLine);
-    currentLine = [spacesOnLeft(elements.map(e => e.spaces))];
+    currentLine = [spacesOnLeft(elements.map((e) => e.spaces))];
   }
 
   lines.push(currentLine);
 
-  return lines.map(l => l.join('')).filter(e => e);
+  return lines.map((l) => l.join("")).filter((e) => e);
 }
 
 export const ednPrettify = (edn: string) => {
@@ -171,5 +179,5 @@ export const ednPrettify = (edn: string) => {
 
   const lines = tokensToLines(tokens);
 
-  return lines.join('\n');
+  return lines.join("\n");
 };

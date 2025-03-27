@@ -1,16 +1,16 @@
-import type { PromiseFsClient } from 'isomorphic-git';
-import path from 'path';
-import YAML from 'yaml';
+import type { PromiseFsClient } from "isomorphic-git";
+import path from "path";
+import YAML from "yaml";
 
-import { database as db } from '../../common/database';
-import type { BaseModel } from '../../models';
-import * as models from '../../models';
-import { isWorkspace } from '../../models/workspace';
-import { resetKeys } from '../ignore-keys';
-import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';
-import parseGitPath from './parse-git-path';
-import Stat from './stat';
-import { SystemError } from './system-error';
+import { database as db } from "../../common/database";
+import type { BaseModel } from "../../models";
+import * as models from "../../models";
+import { isWorkspace } from "../../models/workspace";
+import { resetKeys } from "../ignore-keys";
+import { GIT_INSOMNIA_DIR_NAME } from "./git-vcs";
+import parseGitPath from "./parse-git-path";
+import Stat from "./stat";
+import { SystemError } from "./system-error";
 
 /**
  * A fs client to access workspace data stored in NeDB as files.
@@ -23,12 +23,11 @@ export class NeDBClient {
 
   constructor(workspaceId: string, projectId: string) {
     if (!workspaceId) {
-      throw new Error('Cannot use NeDBClient without workspace ID');
+      throw new Error("Cannot use NeDBClient without workspace ID");
     }
 
     this._workspaceId = workspaceId;
     this._projectId = projectId;
-
   }
 
   static createClient(workspaceId: string, projectId: string): PromiseFsClient {
@@ -44,7 +43,7 @@ export class NeDBClient {
     filePath = path.normalize(filePath);
     options = options || {};
 
-    if (typeof options === 'string') {
+    if (typeof options === "string") {
       options = {
         encoding: options,
       };
@@ -75,7 +74,7 @@ export class NeDBClient {
     //     throw new Error(`Not found under workspace ${filePath}`);
     //   }
     // }
-    const raw = Buffer.from(YAML.stringify(doc), 'utf8');
+    const raw = Buffer.from(YAML.stringify(doc), "utf8");
 
     if (options.encoding) {
       return raw.toString(options.encoding);
@@ -96,22 +95,29 @@ export class NeDBClient {
     const dataStr = data.toString();
 
     // Skip the file if there is a conflict marker
-    if (dataStr.split('\n').includes('=======')) {
+    if (dataStr.split("\n").includes("=======")) {
       return;
     }
 
     const doc: BaseModel = YAML.parse(dataStr);
 
     if (id !== doc._id) {
-      throw new Error(`Doc _id does not match file path [${doc._id} != ${id || 'null'}]`);
+      throw new Error(
+        `Doc _id does not match file path [${doc._id} != ${id || "null"}]`,
+      );
     }
 
     if (type !== doc.type) {
-      throw new Error(`Doc type does not match file path [${doc.type} != ${type || 'null'}]`);
+      throw new Error(
+        `Doc type does not match file path [${doc.type} != ${type || "null"}]`,
+      );
     }
 
     if (isWorkspace(doc)) {
-      console.log('[git] setting workspace parent to be that of the active project', { original: doc.parentId, new: this._projectId });
+      console.log(
+        "[git] setting workspace parent to be that of the active project",
+        { original: doc.parentId, new: this._projectId },
+      );
       // Whenever we write a workspace into nedb we should set the parentId to be that of the current project
       // This is because the parentId (or a project) is not synced into git, so it will be cleared whenever git writes the workspace into the db, thereby removing it from the project on the client
       // In order to reproduce this bug, comment out the following line, then clone a repository into a local project, then open the workspace, you'll notice it will have moved into the default project
@@ -171,10 +177,14 @@ export class NeDBClient {
       const workspace = await db.get(models.workspace.type, this._workspaceId);
       let typeFilter = [type];
 
-      const modelTypesWithinFolders = [models.request.type, models.grpcRequest.type, models.webSocketRequest.type];
+      const modelTypesWithinFolders = [
+        models.request.type,
+        models.grpcRequest.type,
+        models.webSocketRequest.type,
+      ];
       if (modelTypesWithinFolders.includes(type)) {
         typeFilter = [models.requestGroup.type, type];
-      };
+      }
 
       if (type === models.unitTest.type) {
         typeFilter = [models.unitTestSuite.type, type];
@@ -193,17 +203,17 @@ export class NeDBClient {
       }
 
       const children = await db.withDescendants(workspace, null, typeFilter);
-      docs = children.filter(d => d.type === type && !d.isPrivate);
+      docs = children.filter((d) => d.type === type && !d.isPrivate);
     } else {
       throw this._errMissing(filePath);
     }
 
-    const ids = docs.map(d => `${d._id}.yml`);
+    const ids = docs.map((d) => `${d._id}.yml`);
     return [...ids, ...otherFolders].sort();
   }
 
   async mkdir() {
-    throw new Error('NeDBClient is not writable');
+    throw new Error("NeDBClient is not writable");
   }
 
   async stat(filePath: string) {
@@ -232,7 +242,7 @@ export class NeDBClient {
     if (fileBuff) {
       const doc: BaseModel = YAML.parse(fileBuff.toString());
       return new Stat({
-        type: 'file',
+        type: "file",
         mode: 0o777,
         size: fileBuff.length,
         // @ts-expect-error should be number instead of string https://nodejs.org/api/fs.html#fs_stats_ino
@@ -241,7 +251,7 @@ export class NeDBClient {
       });
     } else {
       return new Stat({
-        type: 'dir',
+        type: "dir",
         mode: 0o777,
         size: 0,
         ino: 0,
@@ -264,15 +274,15 @@ export class NeDBClient {
   }
 
   async symlink() {
-    throw new Error('NeDBClient symlink not supported');
+    throw new Error("NeDBClient symlink not supported");
   }
 
   _errMissing(filePath: string) {
     return new SystemError({
       message: `ENOENT: no such file or directory, scandir '${filePath}'`,
       errno: -2,
-      code: 'ENOENT',
-      syscall: 'scandir',
+      code: "ENOENT",
+      syscall: "scandir",
       path: filePath,
     });
   }

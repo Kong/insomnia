@@ -1,4 +1,4 @@
-import { expect } from 'vitest';
+import { expect } from "vitest";
 
 export function setupDateMocks() {
   let ts = 1000000000000;
@@ -36,5 +36,5 @@ export async function assertAsyncError(promise: Promise<any>, code?: string) {
     return;
   }
 
-  throw new Error('Promise did not throw');
+  throw new Error("Promise did not throw");
 }

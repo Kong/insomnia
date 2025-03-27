@@ -1,15 +1,15 @@
-import classnames from 'classnames';
-import React, { type FC } from 'react';
-import { Button } from 'react-aria-components';
+import classnames from "classnames";
+import React, { type FC } from "react";
+import { Button } from "react-aria-components";
 
-import { describeByteSize } from '../../../common/misc';
-import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
-import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
-import { FileInputButton } from '../base/file-input-button';
-import { PromptButton } from '../base/prompt-button';
-import { OneLineEditor } from '../codemirror/one-line-editor';
-import { CodePromptModal } from '../modals/code-prompt-modal';
-import { showModal } from '../modals/index';
+import { describeByteSize } from "../../../common/misc";
+import { useNunjucksEnabled } from "../../context/nunjucks/nunjucks-enabled-context";
+import { Dropdown, DropdownItem, ItemContent } from "../base/dropdown";
+import { FileInputButton } from "../base/file-input-button";
+import { PromptButton } from "../base/prompt-button";
+import { OneLineEditor } from "../codemirror/one-line-editor";
+import { CodePromptModal } from "../modals/code-prompt-modal";
+import { showModal } from "../modals/index";
 
 export interface Pair {
   id?: string;
@@ -22,7 +22,9 @@ export interface Pair {
   multiline?: boolean | string;
 }
 
-export type AutocompleteHandler = (pair: Pair) => string[] | PromiseLike<string[]>;
+export type AutocompleteHandler = (
+  pair: Pair,
+) => string[] | PromiseLike<string[]>;
 
 interface Props {
   addPair: () => void;
@@ -67,125 +69,148 @@ export const Row: FC<Props> = ({
   const { enabled } = useNunjucksEnabled();
 
   const classes = classnames(className, {
-    'key-value-editor__row-wrapper': true,
-    'key-value-editor__row-wrapper--disabled': pair.disabled,
+    "key-value-editor__row-wrapper": true,
+    "key-value-editor__row-wrapper--disabled": pair.disabled,
   });
 
   const isFileOrMultiline = allowMultiline || allowFile;
-  const hiddenButtons = isFileOrMultiline ? (<button>
-    <i className="fa fa-empty" />
-  </button>) : null;
+  const hiddenButtons = isFileOrMultiline ? (
+    <button>
+      <i className="fa fa-empty" />
+    </button>
+  ) : null;
 
-  const isFile = pair.type === 'file';
-  const isMultiline = pair.type === 'text' && pair.multiline;
-  const bytes = isMultiline ? Buffer.from(pair.value, 'utf8').length : 0;
+  const isFile = pair.type === "file";
+  const isMultiline = pair.type === "text" && pair.multiline;
+  const bytes = isMultiline ? Buffer.from(pair.value, "utf8").length : 0;
 
   return (
     <li onKeyDown={onKeydown} onClick={onClick} className={classes}>
       <div className="key-value-editor__row">
         <div
-          className={classnames('form-control form-control--underlined form-control--wide', {
-            'form-control--inactive': pair.disabled,
-          })}
+          className={classnames(
+            "form-control form-control--underlined form-control--wide",
+            {
+              "form-control--inactive": pair.disabled,
+            },
+          )}
         >
           <OneLineEditor
-            id={'key-value-editor__name' + pair.id}
-            placeholder={namePlaceholder || 'Name'}
+            id={"key-value-editor__name" + pair.id}
+            placeholder={namePlaceholder || "Name"}
             defaultValue={pair.name}
-            getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(pair) || []}
+            getAutocompleteConstants={() =>
+              handleGetAutocompleteNameConstants?.(pair) || []
+            }
             readOnly={readOnly}
-            onChange={name => onChange({ ...pair, name })}
+            onChange={(name) => onChange({ ...pair, name })}
             onBlur={onBlur}
           />
         </div>
         <div
-          className={classnames('form-control form-control--underlined form-control--wide', {
-            'form-control--inactive': pair.disabled,
-          })}
+          className={classnames(
+            "form-control form-control--underlined form-control--wide",
+            {
+              "form-control--inactive": pair.disabled,
+            },
+          )}
         >
           {isFile ? (
             <FileInputButton
               showFileName
               showFileIcon
               className="btn btn--outlined btn--super-super-compact wide ellipsis"
-              path={pair.fileName || ''}
-              onChange={fileName => onChange({ ...pair, fileName })}
+              path={pair.fileName || ""}
+              onChange={(fileName) => onChange({ ...pair, fileName })}
             />
           ) : isMultiline ? (
             <button
               className="btn btn--outlined btn--super-super-compact wide ellipsis"
-              onClick={() => showModal(CodePromptModal, {
-                submitName: 'Done',
-                title: `Edit ${pair.name}`,
-                defaultValue: pair.value,
-                onChange: (value: string) => onChange({ ...pair, value }),
-                enableRender: enabled,
-                mode: pair.multiline && typeof pair.multiline === 'string' ? pair.multiline : 'text/plain',
-                onModeChange: (mode: string) => onChange({ ...pair, multiline: mode }),
-              })}
+              onClick={() =>
+                showModal(CodePromptModal, {
+                  submitName: "Done",
+                  title: `Edit ${pair.name}`,
+                  defaultValue: pair.value,
+                  onChange: (value: string) => onChange({ ...pair, value }),
+                  enableRender: enabled,
+                  mode:
+                    pair.multiline && typeof pair.multiline === "string"
+                      ? pair.multiline
+                      : "text/plain",
+                  onModeChange: (mode: string) =>
+                    onChange({ ...pair, multiline: mode }),
+                })
+              }
             >
               <i className="fa fa-pencil-square-o space-right" />
-              {bytes > 0 ? describeByteSize(bytes, true) : 'Click to Edit'}
+              {bytes > 0 ? describeByteSize(bytes, true) : "Click to Edit"}
             </button>
           ) : (
             <OneLineEditor
-              id={'key-value-editor__value' + pair.id}
+              id={"key-value-editor__value" + pair.id}
               onBlur={onBlur}
               type="text"
               readOnly={readOnly}
-              placeholder={valuePlaceholder || 'Value'}
+              placeholder={valuePlaceholder || "Value"}
               defaultValue={pair.value}
-              onChange={value => onChange({ ...pair, value })}
-              getAutocompleteConstants={() => handleGetAutocompleteValueConstants?.(pair) || []}
+              onChange={(value) => onChange({ ...pair, value })}
+              getAutocompleteConstants={() =>
+                handleGetAutocompleteValueConstants?.(pair) || []
+              }
             />
-          )
-          }
+          )}
         </div>
         {showDescription ? (
           <div
             className={classnames(
-              'form-control form-control--underlined form-control--wide no-min-width',
-              { 'form-control--inactive': pair.disabled },
+              "form-control form-control--underlined form-control--wide no-min-width",
+              { "form-control--inactive": pair.disabled },
             )}
           >
             <OneLineEditor
-              id={'key-value-editor__description' + pair.id}
+              id={"key-value-editor__description" + pair.id}
               readOnly={readOnly}
-              placeholder={descriptionPlaceholder || 'Description'}
-              defaultValue={pair.description || ''}
-              onChange={description => onChange({ ...pair, description })}
+              placeholder={descriptionPlaceholder || "Description"}
+              defaultValue={pair.description || ""}
+              onChange={(description) => onChange({ ...pair, description })}
             />
           </div>
         ) : null}
 
-        {hideButtons ? hiddenButtons : isFileOrMultiline ? (
+        {hideButtons ? (
+          hiddenButtons
+        ) : isFileOrMultiline ? (
           <Dropdown
-            aria-label='Select type Dropdown'
+            aria-label="Select type Dropdown"
             triggerButton={
               <Button>
                 <i className="fa fa-caret-down" />
               </Button>
             }
           >
-            <DropdownItem aria-label='Text'>
+            <DropdownItem aria-label="Text">
               <ItemContent
                 label="Text"
-                onClick={() => onChange({ ...pair, type: 'text', multiline: false })}
+                onClick={() =>
+                  onChange({ ...pair, type: "text", multiline: false })
+                }
               />
             </DropdownItem>
-            <DropdownItem aria-label='Text (Multi-line)'>
+            <DropdownItem aria-label="Text (Multi-line)">
               {allowMultiline && (
                 <ItemContent
                   label="Text (Multi-line)"
-                  onClick={() => onChange({ ...pair, type: 'text', multiline: true })}
+                  onClick={() =>
+                    onChange({ ...pair, type: "text", multiline: true })
+                  }
                 />
               )}
             </DropdownItem>
-            <DropdownItem aria-label='File'>
+            <DropdownItem aria-label="File">
               {allowFile && (
                 <ItemContent
                   label="File"
-                  onClick={() => onChange({ ...pair, type: 'file' })}
+                  onClick={() => onChange({ ...pair, type: "file" })}
                 />
               )}
             </DropdownItem>
@@ -195,7 +220,7 @@ export const Row: FC<Props> = ({
         {!hideButtons ? (
           <button
             onClick={() => onChange({ ...pair, disabled: !pair.disabled })}
-            title={pair.disabled ? 'Enable item' : 'Disable item'}
+            title={pair.disabled ? "Enable item" : "Disable item"}
           >
             {pair.disabled ? (
               <i className="fa fa-square-o" />
@@ -227,4 +252,4 @@ export const Row: FC<Props> = ({
     </li>
   );
 };
-Row.displayName = 'Row';
+Row.displayName = "Row";

@@ -1,15 +1,22 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { OverlayContainer } from 'react-aria';
+import React, { useEffect, useRef, useState } from "react";
+import { OverlayContainer } from "react-aria";
 
-import type { Request } from '../../../models/request';
-import { convert } from '../../../utils/importers/convert';
-import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
-import { ModalBody } from '../base/modal-body';
-import { ModalFooter } from '../base/modal-footer';
-import { ModalHeader } from '../base/modal-header';
-import { CodeEditor } from '../codemirror/code-editor';
+import type { Request } from "../../../models/request";
+import { convert } from "../../../utils/importers/convert";
+import { Modal, type ModalHandle, type ModalProps } from "../base/modal";
+import { ModalBody } from "../base/modal-body";
+import { ModalFooter } from "../base/modal-footer";
+import { ModalHeader } from "../base/modal-header";
+import { CodeEditor } from "../codemirror/code-editor";
 
-export const PasteCurlModal = ({ onHide, onImport, defaultValue }: ModalProps & { onImport: (req: Partial<Request>) => void; defaultValue?: string }) => {
+export const PasteCurlModal = ({
+  onHide,
+  onImport,
+  defaultValue,
+}: ModalProps & {
+  onImport: (req: Partial<Request>) => void;
+  defaultValue?: string;
+}) => {
   const modalRef = useRef<ModalHandle>(null);
   const [isValid, setIsValid] = useState<boolean>(true);
   const [req, setReq] = useState<any>({});
@@ -17,14 +24,13 @@ export const PasteCurlModal = ({ onHide, onImport, defaultValue }: ModalProps & 
   useEffect(() => {
     async function parseCurlToRequest() {
       try {
-        const { data } = await convert(defaultValue || '');
+        const { data } = await convert(defaultValue || "");
         const { resources } = data;
         const importedRequest = resources[0];
         setIsValid(true);
         setReq(importedRequest);
-
       } catch (error) {
-        console.log('[importer] error', error);
+        console.log("[importer] error", error);
         setIsValid(false);
         setReq({});
       } finally {
@@ -32,22 +38,21 @@ export const PasteCurlModal = ({ onHide, onImport, defaultValue }: ModalProps & 
       }
     }
     parseCurlToRequest();
-
   }, [defaultValue]);
 
   return (
-    <OverlayContainer onClick={e => e.stopPropagation()}>
+    <OverlayContainer onClick={(e) => e.stopPropagation()}>
       <Modal ref={modalRef} tall onHide={onHide}>
         <ModalHeader>Paste Curl to import request</ModalHeader>
         <ModalBody className="">
           <CodeEditor
             id="paste-curl-content"
             placeholder="Paste curl request here"
-            className=" border-top"
+            className="border-top"
             mode="text"
             dynamicHeight
             defaultValue={defaultValue}
-            onChange={async value => {
+            onChange={async (value) => {
               if (!value) {
                 return;
               }
@@ -57,9 +62,8 @@ export const PasteCurlModal = ({ onHide, onImport, defaultValue }: ModalProps & 
                 const importedRequest = resources[0];
                 setIsValid(true);
                 setReq(importedRequest);
-
               } catch (error) {
-                console.log('[importer] error', error);
+                console.log("[importer] error", error);
                 setIsValid(false);
                 setReq({});
               }
@@ -67,8 +71,10 @@ export const PasteCurlModal = ({ onHide, onImport, defaultValue }: ModalProps & 
           />
         </ModalBody>
         <ModalFooter>
-          <div className="margin-left italic txt-sm truncate">
-            {isValid ? `Detected ${req.method} request to ${req.url}` : 'Invalid input'}
+          <div className="margin-left txt-sm truncate italic">
+            {isValid
+              ? `Detected ${req.method} request to ${req.url}`
+              : "Invalid input"}
           </div>
           <div>
             <button className="btn" onClick={() => modalRef.current?.hide()}>

@@ -1,7 +1,14 @@
-import { GraphQLEnumType, GraphQLInputObjectType, GraphQLInt, GraphQLObjectType, GraphQLSchema, GraphQLString } from 'graphql';
+import {
+  GraphQLEnumType,
+  GraphQLInputObjectType,
+  GraphQLInt,
+  GraphQLObjectType,
+  GraphQLSchema,
+  GraphQLString,
+} from "graphql";
 
 const TypeVars = new GraphQLObjectType({
-  name: 'Vars',
+  name: "Vars",
   fields: () => ({
     stringVar: { type: GraphQLString },
     intVar: { type: GraphQLInt },
@@ -9,7 +16,7 @@ const TypeVars = new GraphQLObjectType({
 });
 
 const InputVars = new GraphQLInputObjectType({
-  name: 'VarsInput',
+  name: "VarsInput",
   fields: () => ({
     stringVar: { type: GraphQLString },
     intVar: { type: GraphQLInt },
@@ -18,16 +25,16 @@ const InputVars = new GraphQLInputObjectType({
 
 export const schema = new GraphQLSchema({
   query: new GraphQLObjectType({
-    name: 'Query',
+    name: "Query",
     fields: {
       hello: {
         type: GraphQLString,
-        resolve: () => 'Hello world!',
+        resolve: () => "Hello world!",
       },
       bearer: {
         type: new GraphQLEnumType({
-          name: 'RingBearer',
-          description: 'Characters who at any time bore a Ring of Power.',
+          name: "RingBearer",
+          description: "Characters who at any time bore a Ring of Power.",
           values: {
             Frodo: { value: 0 },
             Bilbo: { value: 1 },
@@ -47,16 +54,16 @@ export const schema = new GraphQLSchema({
       echoNum: {
         type: GraphQLInt,
         args: {
-          'intVar': { type: GraphQLInt },
+          intVar: { type: GraphQLInt },
         },
         resolve: () => 777,
       },
       echoVars: {
         type: TypeVars,
         args: {
-          'vars': { type: InputVars },
+          vars: { type: InputVars },
         },
-        resolve: vars => vars,
+        resolve: (vars) => vars,
       },
     },
   }),

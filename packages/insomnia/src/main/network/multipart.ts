@@ -1,15 +1,15 @@
-if (process.type === 'renderer') {
-  throw new Error('multipart.ts unavailable in renderer');
+if (process.type === "renderer") {
+  throw new Error("multipart.ts unavailable in renderer");
 }
 
-import fs from 'fs';
-import { lookup } from 'mime-types';
-import os from 'os';
-import path from 'path';
+import fs from "fs";
+import { lookup } from "mime-types";
+import os from "os";
+import path from "path";
 
-import type { RequestBodyParameter } from '../../models/request';
+import type { RequestBodyParameter } from "../../models/request";
 
-export const DEFAULT_BOUNDARY = 'X-INSOMNIA-BOUNDARY';
+export const DEFAULT_BOUNDARY = "X-INSOMNIA-BOUNDARY";
 
 interface Multipart {
   boundary: typeof DEFAULT_BOUNDARY;
@@ -19,9 +19,9 @@ interface Multipart {
 
 export async function buildMultipart(params: RequestBodyParameter[]) {
   return new Promise<Multipart>(async (resolve, reject) => {
-    const filePath = path.join(os.tmpdir(), Math.random() + '.body');
+    const filePath = path.join(os.tmpdir(), Math.random() + ".body");
     const writeStream = fs.createWriteStream(filePath);
-    const lineBreak = '\r\n';
+    const lineBreak = "\r\n";
     let totalSize = 0;
 
     function addFile(path: string) {
@@ -35,10 +35,10 @@ export async function buildMultipart(params: RequestBodyParameter[]) {
         }
 
         const stream = fs.createReadStream(path);
-        stream.once('end', () => {
+        stream.once("end", () => {
           resolve();
         });
-        stream.once('error', err => {
+        stream.once("error", (err) => {
           reject(err);
         });
         stream.pipe(writeStream, {
@@ -67,12 +67,12 @@ export async function buildMultipart(params: RequestBodyParameter[]) {
       addString(`--${DEFAULT_BOUNDARY}`);
       addString(lineBreak);
 
-      if (param.type === 'file' && param.fileName) {
-        const name = param.name || '';
+      if (param.type === "file" && param.fileName) {
+        const name = param.name || "";
         const fileName = param.fileName;
-        const contentType = lookup(fileName) || 'application/octet-stream';
+        const contentType = lookup(fileName) || "application/octet-stream";
         addString(
-          'Content-Disposition: form-data; ' +
+          "Content-Disposition: form-data; " +
             `name="${name.replace(/"/g, '\\"')}"; ` +
             `filename="${path.basename(fileName).replace(/"/g, '\\"')}"`,
         );
@@ -87,13 +87,13 @@ export async function buildMultipart(params: RequestBodyParameter[]) {
           return reject(err);
         }
       } else {
-        const name = param.name || '';
-        const value = param.value || '';
+        const name = param.name || "";
+        const value = param.value || "";
         const contentType = param.multiline;
         addString(`Content-Disposition: form-data; name="${name}"`);
         addString(lineBreak);
 
-        if (typeof contentType === 'string') {
+        if (typeof contentType === "string") {
           addString(`Content-Type: ${contentType}`);
           addString(lineBreak);
         }
@@ -107,10 +107,10 @@ export async function buildMultipart(params: RequestBodyParameter[]) {
 
     addString(`--${DEFAULT_BOUNDARY}--`);
     addString(lineBreak);
-    writeStream.once('error', err => {
+    writeStream.once("error", (err) => {
       reject(err);
     });
-    writeStream.once('close', () => {
+    writeStream.once("close", () => {
       resolve({
         boundary: DEFAULT_BOUNDARY,
         filePath,

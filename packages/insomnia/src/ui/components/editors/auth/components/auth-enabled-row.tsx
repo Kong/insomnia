@@ -1,5 +1,7 @@
-import React, { type FC } from 'react';
+import React, { type FC } from "react";
 
-import { AuthToggleRow } from './auth-toggle-row';
+import { AuthToggleRow } from "./auth-toggle-row";
 
-export const AuthEnabledRow: FC = () => <AuthToggleRow label="Enabled" property="disabled" invert />;
+export const AuthEnabledRow: FC = () => (
+  <AuthToggleRow label="Enabled" property="disabled" invert />
+);

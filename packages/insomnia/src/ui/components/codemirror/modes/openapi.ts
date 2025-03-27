@@ -1,7 +1,7 @@
-import CodeMirror from 'codemirror';
-CodeMirror.defineMode('openapi', function () {
-  const cons = ['true', 'false', 'on', 'off', 'yes', 'no'];
-  const keywordRegex = new RegExp('\\b((' + cons.join(')|(') + '))$', 'i');
+import CodeMirror from "codemirror";
+CodeMirror.defineMode("openapi", function () {
+  const cons = ["true", "false", "on", "off", "yes", "no"];
+  const keywordRegex = new RegExp("\\b((" + cons.join(")|(") + "))$", "i");
   return {
     token: function (stream, state) {
       const ch = stream.peek();
@@ -9,18 +9,21 @@ CodeMirror.defineMode('openapi', function () {
       state.escaped = false;
 
       /* comments */
-      if (ch === '#' && (stream.pos === 0 || /\s/.test(stream.string.charAt(stream.pos - 1)))) {
+      if (
+        ch === "#" &&
+        (stream.pos === 0 || /\s/.test(stream.string.charAt(stream.pos - 1)))
+      ) {
         stream.skipToEnd();
-        return 'comment';
+        return "comment";
       }
 
       if (stream.match(/^('([^']|\\.)*'?|"([^"]|\\.)*"?)/)) {
-        return 'string';
+        return "string";
       }
 
       if (state.literal && stream.indentation() > state.keyCol) {
         stream.skipToEnd();
-        return 'string';
+        return "string";
       } else if (state.literal) {
         state.literal = false;
       }
@@ -32,48 +35,48 @@ CodeMirror.defineMode('openapi', function () {
 
         /* document start */
         if (stream.match(/---/)) {
-          return 'def';
+          return "def";
         }
 
         /* document end */
         if (stream.match(/\.\.\./)) {
-          return 'def';
+          return "def";
         }
 
         /* array list item */
         if (stream.match(/\s*-\s+/)) {
-          return 'meta';
+          return "meta";
         }
       }
 
       /* inline pairs/lists */
       if (stream.match(/^(\{|\}|\[|\])/)) {
-        if (ch === '{') {
+        if (ch === "{") {
           state.inlinePairs++;
-        } else if (ch === '}') {
+        } else if (ch === "}") {
           state.inlinePairs--;
-        } else if (ch === '[') {
+        } else if (ch === "[") {
           state.inlineList++;
         } else {
           state.inlineList--;
         }
 
-        return 'meta';
+        return "meta";
       }
 
       /* list separator */
-      if (state.inlineList > 0 && !esc && ch === ',') {
+      if (state.inlineList > 0 && !esc && ch === ",") {
         stream.next();
-        return 'meta';
+        return "meta";
       }
 
       /* pairs separator */
-      if (state.inlinePairs > 0 && !esc && ch === ',') {
+      if (state.inlinePairs > 0 && !esc && ch === ",") {
         state.keyCol = 0;
         state.pair = false;
         state.pairStart = false;
         stream.next();
-        return 'meta';
+        return "meta";
       }
 
       /* start of value of a pair */
@@ -81,47 +84,52 @@ CodeMirror.defineMode('openapi', function () {
         /* block literals */
         if (stream.match(/^\s*(\||>)\s*/)) {
           state.literal = true;
-          return 'meta';
+          return "meta";
         }
 
         /* references */
         if (stream.match(/^\s*(&|\*)[a-z0-9._-]+\b/i)) {
-          return 'variable-2';
+          return "variable-2";
         }
 
         /* numbers */
         if (state.inlinePairs === 0 && stream.match(/^\s*-?[0-9.,]+\s?$/)) {
-          return 'number';
+          return "number";
         }
 
-        if (state.inlinePairs > 0 && stream.match(/^\s*-?[0-9.,]+\s?(?=(,|}))/)) {
-          return 'number';
+        if (
+          state.inlinePairs > 0 &&
+          stream.match(/^\s*-?[0-9.,]+\s?(?=(,|}))/)
+        ) {
+          return "number";
         }
 
         /* keywords */
         if (stream.match(keywordRegex)) {
-          return 'keyword';
+          return "keyword";
         }
       }
 
       /* pairs (associative arrays) -> key */
       if (
         !state.pair &&
-        stream.match(/^\s*(?:[,[\]{}&*!|>'"%@`][^\s'":]|[^,[\]{}#&*!|>'"%@`])[^#]*?(?=\s*:($|\s))/)
+        stream.match(
+          /^\s*(?:[,[\]{}&*!|>'"%@`][^\s'":]|[^,[\]{}#&*!|>'"%@`])[^#]*?(?=\s*:($|\s))/,
+        )
       ) {
         state.pair = true;
         state.keyCol = stream.indentation();
-        return 'atom';
+        return "atom";
       }
 
       if (state.pair && stream.match(/^:\s*/)) {
         state.pairStart = true;
-        return 'meta';
+        return "meta";
       }
 
       /* nothing found, continue */
       state.pairStart = false;
-      state.escaped = ch === '\\';
+      state.escaped = ch === "\\";
       stream.next();
       return null;
     },
@@ -136,9 +144,9 @@ CodeMirror.defineMode('openapi', function () {
         escaped: false,
       };
     },
-    lineComment: '#',
-    fold: 'indent',
+    lineComment: "#",
+    fold: "indent",
   };
 });
-CodeMirror.defineMIME('text/x-openapi', 'openapi');
-CodeMirror.defineMIME('text/openapi', 'openapi');
+CodeMirror.defineMIME("text/x-openapi", "openapi");
+CodeMirror.defineMIME("text/openapi", "openapi");

@@ -1,153 +1,152 @@
-import fs from 'fs';
-import path from 'path';
-import { describe, expect, it } from 'vitest';
+import fs from "fs";
+import path from "path";
+import { describe, expect, it } from "vitest";
 
-import { buildMultipart, DEFAULT_BOUNDARY } from '../../main/network/multipart';
+import { buildMultipart, DEFAULT_BOUNDARY } from "../../main/network/multipart";
 
-describe('buildMultipart()', () => {
-
-  it('builds a simple request', async () => {
+describe("buildMultipart()", () => {
+  it("builds a simple request", async () => {
     const { filePath, boundary, contentLength } = await buildMultipart([
       {
-        name: 'foo',
-        value: 'bar',
+        name: "foo",
+        value: "bar",
       },
       {
-        name: 'multi-line',
-        value: 'Hello\nWorld!',
+        name: "multi-line",
+        value: "Hello\nWorld!",
       },
     ]);
     expect(boundary).toBe(DEFAULT_BOUNDARY);
     expect(contentLength).toBe(189);
-    expect(fs.readFileSync(filePath, 'utf8')).toBe(
+    expect(fs.readFileSync(filePath, "utf8")).toBe(
       [
         `--${boundary}`,
         'Content-Disposition: form-data; name="foo"',
-        '',
-        'bar',
+        "",
+        "bar",
         `--${boundary}`,
         'Content-Disposition: form-data; name="multi-line"',
-        '',
-        'Hello\nWorld!',
+        "",
+        "Hello\nWorld!",
         `--${boundary}--`,
-        '',
-      ].join('\r\n'),
+        "",
+      ].join("\r\n"),
     );
   });
 
-  it('builds a multiline request with content-type', async () => {
+  it("builds a multiline request with content-type", async () => {
     const { filePath, boundary, contentLength } = await buildMultipart([
       {
-        name: 'foo',
-        value: 'bar',
+        name: "foo",
+        value: "bar",
       },
       {
-        name: 'json',
+        name: "json",
         value: '{"hello": "world"}',
-        multiline: 'application/json',
+        multiline: "application/json",
       },
       {
-        name: 'text',
-        value: 'text',
+        name: "text",
+        value: "text",
         multiline: true,
       },
     ]);
     expect(boundary).toBe(DEFAULT_BOUNDARY);
     expect(contentLength).toBe(297);
-    expect(fs.readFileSync(filePath, 'utf8')).toBe(
+    expect(fs.readFileSync(filePath, "utf8")).toBe(
       [
         `--${boundary}`,
         'Content-Disposition: form-data; name="foo"',
-        '',
-        'bar',
+        "",
+        "bar",
         `--${boundary}`,
         'Content-Disposition: form-data; name="json"',
-        'Content-Type: application/json',
-        '',
+        "Content-Type: application/json",
+        "",
         '{"hello": "world"}',
         `--${boundary}`,
         'Content-Disposition: form-data; name="text"',
-        '',
-        'text',
+        "",
+        "text",
         `--${boundary}--`,
-        '',
-      ].join('\r\n'),
+        "",
+      ].join("\r\n"),
     );
   });
 
-  it('builds with file', async () => {
-    const fileName = path.resolve(path.join(__dirname, './testfile.txt'));
+  it("builds with file", async () => {
+    const fileName = path.resolve(path.join(__dirname, "./testfile.txt"));
     const { filePath, boundary, contentLength } = await buildMultipart([
       {
-        name: 'foo',
-        value: 'bar',
+        name: "foo",
+        value: "bar",
       },
       {
-        name: 'file',
-        type: 'file',
+        name: "file",
+        type: "file",
         fileName: fileName,
       },
       {
-        name: 'baz',
-        value: 'qux',
+        name: "baz",
+        value: "qux",
       },
     ]);
     expect(boundary).toBe(DEFAULT_BOUNDARY);
     expect(contentLength).toBe(322);
-    expect(fs.readFileSync(filePath, 'utf8')).toBe(
+    expect(fs.readFileSync(filePath, "utf8")).toBe(
       [
         `--${boundary}`,
         'Content-Disposition: form-data; name="foo"',
-        '',
-        'bar',
+        "",
+        "bar",
         `--${boundary}`,
         'Content-Disposition: form-data; name="file"; filename="testfile.txt"',
-        'Content-Type: text/plain',
-        '',
-        'Hello World!\n\nHow are you?',
+        "Content-Type: text/plain",
+        "",
+        "Hello World!\n\nHow are you?",
         `--${boundary}`,
         'Content-Disposition: form-data; name="baz"',
-        '',
-        'qux',
+        "",
+        "qux",
         `--${boundary}--`,
-        '',
-      ].join('\r\n'),
+        "",
+      ].join("\r\n"),
     );
   });
 
-  it('skips entries with no name or value', async () => {
+  it("skips entries with no name or value", async () => {
     const { filePath, boundary, contentLength } = await buildMultipart([
       {
-        value: 'bar',
+        value: "bar",
       },
       {
-        name: 'foo',
+        name: "foo",
       },
       {
-        name: '',
-        value: '',
+        name: "",
+        value: "",
       },
       {
-        name: '',
-        type: 'file',
-        fileName: '',
+        name: "",
+        type: "file",
+        fileName: "",
       },
     ]);
     expect(boundary).toBe(DEFAULT_BOUNDARY);
     expect(contentLength).toBe(167);
-    expect(fs.readFileSync(filePath, 'utf8')).toBe(
+    expect(fs.readFileSync(filePath, "utf8")).toBe(
       [
         `--${boundary}`,
         'Content-Disposition: form-data; name=""',
-        '',
-        'bar',
+        "",
+        "bar",
         `--${boundary}`,
         'Content-Disposition: form-data; name="foo"',
-        '',
-        '',
+        "",
+        "",
         `--${boundary}--`,
-        '',
-      ].join('\r\n'),
+        "",
+      ].join("\r\n"),
     );
   });
 });

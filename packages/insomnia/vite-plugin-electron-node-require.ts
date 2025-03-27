@@ -1,6 +1,6 @@
-import { createRequire } from 'node:module';
+import { createRequire } from "node:module";
 
-import type { Plugin } from 'vite';
+import type { Plugin } from "vite";
 
 export interface Options {
   modules: string[];
@@ -10,18 +10,16 @@ export interface Options {
  * Allows Vite to import modules that will be resolved by Node's require() function.
  */
 export function electronNodeRequire(options: Options): Plugin {
-  const {
-    modules = [],
-  } = options;
+  const { modules = [] } = options;
 
   return {
-    name: 'vite-plugin-electron-node-require',
+    name: "vite-plugin-electron-node-require",
     config(conf) {
       // Exclude the modules from Vite's dependency optimization (pre-bundling)
       conf.optimizeDeps = {
         ...conf.optimizeDeps,
         exclude: [
-          ...conf.optimizeDeps?.exclude ? conf.optimizeDeps.exclude : [],
+          ...(conf.optimizeDeps?.exclude ? conf.optimizeDeps.exclude : []),
           ...modules,
         ],
       };
@@ -30,21 +28,19 @@ export function electronNodeRequire(options: Options): Plugin {
       conf.resolve ??= {};
       conf.resolve.alias = {
         ...conf.resolve.alias,
-        ...Object.fromEntries(modules.map(e => [e, `virtual:external:${e}`])),
+        ...Object.fromEntries(modules.map((e) => [e, `virtual:external:${e}`])),
       };
 
       // Ignore the modules from Rollup's commonjs plugin so that we can resolve them with this plugin
       conf.build ??= {};
       conf.build.commonjsOptions ??= {};
       conf.build.commonjsOptions?.ignore ?? [];
-      conf.build.commonjsOptions.ignore = [
-        ...modules,
-      ];
+      conf.build.commonjsOptions.ignore = [...modules];
 
       return conf;
     },
     resolveId(id) {
-      const externalId = id.split('virtual:external:')[1];
+      const externalId = id.split("virtual:external:")[1];
       if (modules.includes(externalId)) {
         // Return a virtual module ID so that Vite knows to use this plugin to resolve the module
         // The \0 is a special convention by Rollup to indicate that the module is virtual and should not be resolved by other plugins
@@ -55,11 +51,11 @@ export function electronNodeRequire(options: Options): Plugin {
       return null;
     },
     load(id) {
-      if (id.includes('virtual:external:')) {
-        const externalId = id.split('virtual:external:')[1];
+      if (id.includes("virtual:external:")) {
+        const externalId = id.split("virtual:external:")[1];
 
         // We need to handle electron because it's different when required in the renderer process
-        if (externalId === 'electron') {
+        if (externalId === "electron") {
           return `
             const electron = require('electron');
             export { electron as default };
@@ -78,7 +74,7 @@ export function electronNodeRequire(options: Options): Plugin {
         const exports = Object.keys(nodeRequire(externalId));
 
         // Filter out the exports that are valid javascript variable keywords:
-        const validExports = exports.filter(e => {
+        const validExports = exports.filter((e) => {
           try {
             new Function(`const ${e} = true`);
             return true;
@@ -89,9 +85,9 @@ export function electronNodeRequire(options: Options): Plugin {
 
         return [
           `const requiredModule = require('${externalId}');`,
-          `${validExports.map(e => `export const ${e} = requiredModule.${e};`).join('\n')}`,
-          `${exports.includes('default') ? 'export default requiredModule.default;' : 'export default requiredModule'}`,
-        ].join('\n');
+          `${validExports.map((e) => `export const ${e} = requiredModule.${e};`).join("\n")}`,
+          `${exports.includes("default") ? "export default requiredModule.default;" : "export default requiredModule"}`,
+        ].join("\n");
       }
 
       // Return null to indicate that this plugin should not resolve the module

@@ -1,5 +1,5 @@
-import type { ImportRequest } from './entities';
-import { setDefaults } from './utils';
+import type { ImportRequest } from "./entities";
+import { setDefaults } from "./utils";
 
 export interface InsomniaImporter {
   id: string;
@@ -10,7 +10,7 @@ export interface InsomniaImporter {
 export interface ConvertResult {
   type: InsomniaImporter;
   data: {
-    _type: 'export';
+    _type: "export";
     __export_format: 4;
     __export_date: string;
     __export_source: `insomnia.importers:v${string}`;
@@ -19,7 +19,7 @@ export interface ConvertResult {
 }
 
 export const convert = async (rawData: string) => {
-  const importers = (await import('./importers')).importers;
+  const importers = (await import("./importers")).importers;
   for (const importer of importers) {
     const resources = await importer.convert(rawData);
 
@@ -41,10 +41,10 @@ export const convert = async (rawData: string) => {
         description: importer.description,
       },
       data: {
-        _type: 'export',
+        _type: "export",
         __export_format: 4,
         __export_date: new Date().toISOString(),
-        __export_source: 'insomnia.importers:v0.1.0',
+        __export_source: "insomnia.importers:v0.1.0",
         resources: resources.map(setDefaults) as ImportRequest[],
       },
     };
@@ -52,14 +52,16 @@ export const convert = async (rawData: string) => {
     return convertedResult;
   }
 
-  throw new Error('No importers found for file');
+  throw new Error("No importers found for file");
 };
 
 // this checks invalid keys ahead, or nedb would return an error in importing.
 export function dotInKeyNameInvariant(entity: object) {
   JSON.stringify(entity, (key, value) => {
-    if (key.includes('.')) {
-      throw new Error(`Detected invalid key "${key}", which contains '.'. Please update it in the original tool and re-import it.`);
+    if (key.includes(".")) {
+      throw new Error(
+        `Detected invalid key "${key}", which contains '.'. Please update it in the original tool and re-import it.`,
+      );
     }
 
     return value;

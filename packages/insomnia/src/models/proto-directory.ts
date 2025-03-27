@@ -1,12 +1,12 @@
-import { database as db } from '../common/database';
-import { generateId } from '../common/misc';
-import type { BaseModel } from './index';
+import { database as db } from "../common/database";
+import { generateId } from "../common/misc";
+import type { BaseModel } from "./index";
 
-export const name = 'Proto Directory';
+export const name = "Proto Directory";
 
-export const type = 'ProtoDirectory';
+export const type = "ProtoDirectory";
 
-export const prefix = 'pd';
+export const prefix = "pd";
 
 export const canDuplicate = true;
 
@@ -18,13 +18,13 @@ interface BaseProtoDirectory {
 
 export type ProtoDirectory = BaseModel & BaseProtoDirectory;
 
-export const isProtoDirectory = (model: Pick<BaseModel, 'type'>): model is ProtoDirectory => (
-  model.type === type
-);
+export const isProtoDirectory = (
+  model: Pick<BaseModel, "type">,
+): model is ProtoDirectory => model.type === type;
 
 export function init(): BaseProtoDirectory {
   return {
-    name: 'New Proto Directory',
+    name: "New Proto Directory",
   };
 }
 
@@ -38,7 +38,7 @@ export function createId() {
 
 export function create(patch: Partial<ProtoDirectory> = {}) {
   if (!patch.parentId) {
-    throw new Error('New ProtoDirectory missing `parentId`');
+    throw new Error("New ProtoDirectory missing `parentId`");
   }
 
   return db.docCreate<ProtoDirectory>(type, patch);

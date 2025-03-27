@@ -1,8 +1,8 @@
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 
-import * as models from '../../models';
-import type { ProtoDirectory } from '../../models/proto-directory';
+import * as models from "../../models";
+import type { ProtoDirectory } from "../../models/proto-directory";
 
 interface IngestResult {
   createdDir?: ProtoDirectory | null;
@@ -29,11 +29,11 @@ export class ProtoDirectoryLoader {
     const extension = path.extname(entryPath);
 
     // Ignore if not a .proto file
-    if (extension !== '.proto') {
+    if (extension !== ".proto") {
       return false;
     }
 
-    const contents = await fs.promises.readFile(entryPath, 'utf-8');
+    const contents = await fs.promises.readFile(entryPath, "utf-8");
     const name = path.basename(entryPath);
     const { _id } = await models.protoFile.create({
       name,
@@ -44,7 +44,10 @@ export class ProtoDirectoryLoader {
     return true;
   }
 
-  async _ingest(dirPath: string, parentId: string): Promise<ProtoDirectory | null> {
+  async _ingest(
+    dirPath: string,
+    parentId: string,
+  ): Promise<ProtoDirectory | null> {
     // Check exists
     if (!fs.existsSync(dirPath)) {
       return null;

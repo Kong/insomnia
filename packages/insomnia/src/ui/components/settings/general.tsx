@@ -1,4 +1,4 @@
-import React, { type FC, Fragment } from 'react';
+import React, { type FC, Fragment } from "react";
 
 import {
   EditorKeyMap,
@@ -8,30 +8,33 @@ import {
   MIN_EDITOR_FONT_SIZE,
   MIN_INTERFACE_FONT_SIZE,
   updatesSupported,
-} from '../../../common/constants';
-import { docsKeyMaps } from '../../../common/documentation';
-import { type HttpVersion, HttpVersions, UpdateChannel } from '../../../common/settings';
-import { strings } from '../../../common/strings';
-import { initNewOAuthSession } from '../../../network/o-auth-2/get-token';
-import { useRootLoaderData } from '../../routes/root';
-import { Link } from '../base/link';
-import { CheckForUpdatesButton } from '../check-for-updates-button';
-import { BooleanSetting } from './boolean-setting';
-import { EnumSetting } from './enum-setting';
-import { NumberSetting } from './number-setting';
-import { TextSetting } from './text-setting';
-import { VaultKeyPanel } from './vault-key-panel';
+} from "../../../common/constants";
+import { docsKeyMaps } from "../../../common/documentation";
+import {
+  type HttpVersion,
+  HttpVersions,
+  UpdateChannel,
+} from "../../../common/settings";
+import { strings } from "../../../common/strings";
+import { initNewOAuthSession } from "../../../network/o-auth-2/get-token";
+import { useRootLoaderData } from "../../routes/root";
+import { Link } from "../base/link";
+import { CheckForUpdatesButton } from "../check-for-updates-button";
+import { BooleanSetting } from "./boolean-setting";
+import { EnumSetting } from "./enum-setting";
+import { NumberSetting } from "./number-setting";
+import { TextSetting } from "./text-setting";
+import { VaultKeyPanel } from "./vault-key-panel";
 
 export const General: FC = () => {
-  const {
-    settings,
-    userSession,
-  } = useRootLoaderData();
+  const { settings, userSession } = useRootLoaderData();
   const isLoggedIn = Boolean(userSession.id);
 
   return (
     <div className="relative p-4">
-      <h2 className='font-bold pt-2 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Application</h2>
+      <h2 className="sticky left-0 top-0 z-10 bg-[--color-bg] pb-2 pt-2 text-lg font-bold">
+        Application
+      </h2>
 
       <div className="">
         <div>
@@ -51,15 +54,9 @@ export const General: FC = () => {
           />
         </div>
         <div>
-          <BooleanSetting
-            label="Reveal passwords"
-            setting="showPasswords"
-          />
+          <BooleanSetting label="Reveal passwords" setting="showPasswords" />
           {!isMac() && (
-            <BooleanSetting
-              label="Hide menu bar"
-              setting="autoHideMenuBar"
-            />
+            <BooleanSetting label="Hide menu bar" setting="autoHideMenuBar" />
           )}
           <BooleanSetting
             label="Raw template syntax"
@@ -79,7 +76,9 @@ export const General: FC = () => {
         />
       </div>
 
-      <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Font</h2>
+      <h2 className="sticky left-0 top-0 z-10 bg-[--color-bg] pb-2 pt-5 text-lg font-bold">
+        Font
+      </h2>
 
       <div className="row-fill row-fill--top">
         <div>
@@ -144,17 +143,22 @@ export const General: FC = () => {
         <EnumSetting<EditorKeyMap>
           label="Text Editor Key Map"
           setting="editorKeyMap"
-          help={isMac() && settings.editorKeyMap === EditorKeyMap.vim && (
-            <Fragment>
-              To enable key-repeating with Vim on macOS, see <Link href={docsKeyMaps}>
-                documentation <i className="fa fa-external-link-square" /></Link>
-            </Fragment>
-          )}
+          help={
+            isMac() &&
+            settings.editorKeyMap === EditorKeyMap.vim && (
+              <Fragment>
+                To enable key-repeating with Vim on macOS, see{" "}
+                <Link href={docsKeyMaps}>
+                  documentation <i className="fa fa-external-link-square" />
+                </Link>
+              </Fragment>
+            )
+          }
           values={[
-            { value: EditorKeyMap.default, name: 'Default' },
-            { value: EditorKeyMap.vim, name: 'Vim' },
-            { value: EditorKeyMap.emacs, name: 'Emacs' },
-            { value: EditorKeyMap.sublime, name: 'Sublime' },
+            { value: EditorKeyMap.default, name: "Default" },
+            { value: EditorKeyMap.vim, name: "Vim" },
+            { value: EditorKeyMap.emacs, name: "Emacs" },
+            { value: EditorKeyMap.sublime, name: "Sublime" },
           ]}
         />
       </div>
@@ -165,7 +169,9 @@ export const General: FC = () => {
         />
       </div>
 
-      <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Request / Response</h2>
+      <h2 className="sticky left-0 top-0 z-10 bg-[--color-bg] pb-2 pt-5 text-lg font-bold">
+        Request / Response
+      </h2>
 
       <div className="row-fill row-fill--top">
         <div>
@@ -174,10 +180,7 @@ export const General: FC = () => {
             setting="validateSSL"
             help="If checked, validate SSL certificates for API requests. This does not affect SSL certificate validation during authentication."
           />
-          <BooleanSetting
-            label="Follow redirects"
-            setting="followRedirects"
-          />
+          <BooleanSetting label="Follow redirects" setting="followRedirects" />
           <BooleanSetting
             label="Filter responses by environment"
             setting="filterResponsesByEnv"
@@ -207,11 +210,14 @@ export const General: FC = () => {
           label="Preferred HTTP version"
           setting="preferredHttpVersion"
           values={[
-            { value: HttpVersions.default, name: 'Default' },
-            { value: HttpVersions.V1_0, name: 'HTTP 1.0' },
-            { value: HttpVersions.V1_1, name: 'HTTP 1.1' },
-            { value: HttpVersions.V2PriorKnowledge, name: 'HTTP/2 PriorKnowledge' },
-            { value: HttpVersions.V2_0, name: 'HTTP/2' },
+            { value: HttpVersions.default, name: "Default" },
+            { value: HttpVersions.V1_0, name: "HTTP 1.0" },
+            { value: HttpVersions.V1_1, name: "HTTP 1.1" },
+            {
+              value: HttpVersions.V2PriorKnowledge,
+              name: "HTTP/2 PriorKnowledge",
+            },
+            { value: HttpVersions.V2_0, name: "HTTP/2" },
             // Enable when our version of libcurl supports HTTP/3
             // see: https://github.com/JCMais/node-libcurl/issues/233
             // { value: HttpVersions.v3, name: 'HTTP/3' },
@@ -251,7 +257,9 @@ export const General: FC = () => {
         />
       </div>
 
-      <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Security</h2>
+      <h2 className="sticky left-0 top-0 z-10 bg-[--color-bg] pb-2 pt-5 text-lg font-bold">
+        Security
+      </h2>
       <div className="form-row pad-top-sm">
         <BooleanSetting
           label="Clear OAuth 2 session on start"
@@ -259,7 +267,7 @@ export const General: FC = () => {
           help="If checked, clears the OAuth session every time Insomnia is relaunched."
         />
         <button
-          className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs] pointer"
+          className="pointer h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
           style={{
             padding: 0,
           }}
@@ -279,8 +287,10 @@ export const General: FC = () => {
 
       {updatesSupported() && (
         <Fragment>
-          <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Software Updates</h2>
-          <div className="w-full flex gap-2 justify-between">
+          <h2 className="sticky left-0 top-0 z-10 bg-[--color-bg] pb-2 pt-5 text-lg font-bold">
+            Software Updates
+          </h2>
+          <div className="flex w-full justify-between gap-2">
             <BooleanSetting
               label="Automatically download and install updates"
               setting="updateAutomatically"
@@ -294,8 +304,8 @@ export const General: FC = () => {
               label="Update channel"
               setting="updateChannel"
               values={[
-                { value: UpdateChannel.stable, name: 'Release (recommended)' },
-                { value: UpdateChannel.beta, name: 'Early access (beta)' },
+                { value: UpdateChannel.stable, name: "Release (recommended)" },
+                { value: UpdateChannel.beta, name: "Early access (beta)" },
               ]}
             />
           </div>
@@ -303,15 +313,19 @@ export const General: FC = () => {
       )}
 
       {!updatesSupported() && (
-        <><hr className="pad-top" />
+        <>
+          <hr className="pad-top" />
           <h2>Notifications</h2>
           <BooleanSetting
             label="Do not notify of new releases"
             setting="disableUpdateNotification"
-          /></>
+          />
+        </>
       )}
 
-      <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Plugins</h2>
+      <h2 className="sticky left-0 top-0 z-10 bg-[--color-bg] pb-2 pt-5 text-lg font-bold">
+        Plugins
+      </h2>
       <TextSetting
         label="Additional Plugin Path"
         setting="pluginPath"
@@ -321,21 +335,27 @@ export const General: FC = () => {
 
       {!isLoggedIn && (
         <>
-          <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Network Activity</h2>
+          <h2 className="sticky left-0 top-0 z-10 bg-[--color-bg] pb-2 pt-5 text-lg font-bold">
+            Network Activity
+          </h2>
           <BooleanSetting
             label="Send Anonymous Usage Statistics"
             setting="enableAnalytics"
             disabled={isLoggedIn}
           />
-          <div className="text-sm opacity-50 pl-5 py-2">
-            Help Kong improve its products by sending anonymous data about features and plugins used, hardware and software configuration, statistics on number of requests, {strings.collection.plural.toLowerCase()}, {strings.document.plural.toLowerCase()}, etc.
+          <div className="py-2 pl-5 text-sm opacity-50">
+            Help Kong improve its products by sending anonymous data about
+            features and plugins used, hardware and software configuration,
+            statistics on number of requests,{" "}
+            {strings.collection.plural.toLowerCase()},{" "}
+            {strings.document.plural.toLowerCase()}, etc.
           </div>
-          <div className="text-sm opacity-50 pl-5 py-2">
-            Please note that this will not include personal data or any sensitive information, such as request data, names, etc.
+          <div className="py-2 pl-5 text-sm opacity-50">
+            Please note that this will not include personal data or any
+            sensitive information, such as request data, names, etc.
           </div>
         </>
-      )
-      }
+      )}
     </div>
   );
 };

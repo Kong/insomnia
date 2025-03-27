@@ -1,9 +1,9 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from "node:fs/promises";
 
-import path from 'path';
-import YAML from 'yaml';
+import path from "path";
+import YAML from "yaml";
 
-import { InsoError } from '../cli';
+import { InsoError } from "../cli";
 
 export async function writeFileWithCliOptions(
   outputPath: string,
@@ -19,16 +19,22 @@ export async function writeFileWithCliOptions(
   }
 }
 
-export async function exportSpecification({ specContent, skipAnnotations }: { specContent: string; skipAnnotations: boolean }) {
+export async function exportSpecification({
+  specContent,
+  skipAnnotations,
+}: {
+  specContent: string;
+  skipAnnotations: boolean;
+}) {
   if (!skipAnnotations) {
     return specContent;
   }
 
   const recursiveDeleteKey = (obj: any) => {
-    Object.keys(obj).forEach(key => {
-      if (key.startsWith('x-kong-')) {
+    Object.keys(obj).forEach((key) => {
+      if (key.startsWith("x-kong-")) {
         delete obj[key];
-      } else if (typeof obj[key] === 'object') {
+      } else if (typeof obj[key] === "object") {
         recursiveDeleteKey(obj[key]);
       }
     });

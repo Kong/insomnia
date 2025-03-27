@@ -4,52 +4,51 @@ export interface StringInfo {
 }
 
 type StringId =
-  | 'collection'
-  | 'mock'
-  | 'document'
-  | 'project'
-  | 'workspace'
-  | 'defaultProject'
-  | 'localProject'
-  | 'remoteProject'
-  | 'environment'
-  ;
+  | "collection"
+  | "mock"
+  | "document"
+  | "project"
+  | "workspace"
+  | "defaultProject"
+  | "localProject"
+  | "remoteProject"
+  | "environment";
 
 export const strings: Record<StringId, StringInfo> = {
   collection: {
-    singular: 'Collection',
-    plural: 'Collections',
+    singular: "Collection",
+    plural: "Collections",
   },
   mock: {
-    singular: 'Mock',
-    plural: 'Mocks',
+    singular: "Mock",
+    plural: "Mocks",
   },
   document: {
-    singular: 'Document',
-    plural: 'Documents',
+    singular: "Document",
+    plural: "Documents",
   },
   project: {
-    singular: 'Project',
-    plural: 'Projects',
+    singular: "Project",
+    plural: "Projects",
   },
   workspace: {
-    singular: 'Workspace',
-    plural: 'Workspaces',
+    singular: "Workspace",
+    plural: "Workspaces",
   },
   defaultProject: {
-    singular: 'Default',
-    plural: 'Default',
+    singular: "Default",
+    plural: "Default",
   },
   localProject: {
-    singular: 'Local',
-    plural: 'Local',
+    singular: "Local",
+    plural: "Local",
   },
   remoteProject: {
-    singular: 'Remote',
-    plural: 'Remote',
+    singular: "Remote",
+    plural: "Remote",
   },
   environment: {
-    singular: 'Environment',
-    plural: 'Environments',
+    singular: "Environment",
+    plural: "Environments",
   },
 };

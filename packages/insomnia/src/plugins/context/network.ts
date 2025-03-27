@@ -1,12 +1,19 @@
-import * as models from '../../models';
-import type { Request } from '../../models/request';
-import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
+import * as models from "../../models";
+import type { Request } from "../../models/request";
+import {
+  fetchRequestData,
+  responseTransform,
+  sendCurlAndWriteTimeline,
+  tryToInterpolateRequest,
+  tryToTransformRequestWithPlugins,
+} from "../../network/network";
 
 export function init() {
   return {
     network: {
       async sendRequest(req: Request, extraInfo?: { requestChain: string[] }) {
-        const { request,
+        const {
+          request,
           environment,
           settings,
           clientCertificates,
@@ -16,18 +23,32 @@ export function init() {
           responseId,
         } = await fetchRequestData(req._id);
 
-        const renderResult = await tryToInterpolateRequest({ request, environment: environment._id, purpose: 'send', extraInfo });
-        const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+        const renderResult = await tryToInterpolateRequest({
+          request,
+          environment: environment._id,
+          purpose: "send",
+          extraInfo,
+        });
+        const renderedRequest =
+          await tryToTransformRequestWithPlugins(renderResult);
         const response = await sendCurlAndWriteTimeline(
           renderedRequest,
           clientCertificates,
           caCert,
           settings,
           timelinePath,
-          responseId
+          responseId,
         );
-        const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
-        return models.response.create(responsePatch, settings.maxHistoryResponses);
+        const responsePatch = await responseTransform(
+          response,
+          activeEnvironmentId,
+          renderedRequest,
+          renderResult.context,
+        );
+        return models.response.create(
+          responsePatch,
+          settings.maxHistoryResponses,
+        );
       },
     },
   };

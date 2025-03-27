@@ -1,20 +1,20 @@
-import fs from 'fs';
-import type { RequestTestResult } from 'insomnia-sdk';
-import { Readable } from 'stream';
-import zlib from 'zlib';
+import fs from "fs";
+import type { RequestTestResult } from "insomnia-sdk";
+import { Readable } from "stream";
+import zlib from "zlib";
 
-import { database as db, type Query } from '../common/database';
-import type { ResponseTimelineEntry } from '../main/network/libcurl-promise';
-import * as requestOperations from '../models/helpers/request-operations';
-import { deserializeNDJSON } from '../utils/ndjson';
-import type { BaseModel } from './index';
-import * as models from './index';
+import { database as db, type Query } from "../common/database";
+import type { ResponseTimelineEntry } from "../main/network/libcurl-promise";
+import * as requestOperations from "../models/helpers/request-operations";
+import { deserializeNDJSON } from "../utils/ndjson";
+import type { BaseModel } from "./index";
+import * as models from "./index";
 
-export const name = 'Response';
+export const name = "Response";
 
-export const type = 'Response';
+export const type = "Response";
 
-export const prefix = 'res';
+export const prefix = "res";
 
 export const canDuplicate = false;
 
@@ -25,7 +25,7 @@ export interface ResponseHeader {
   value: string;
 }
 
-export type Compression = 'zip' | null | '__NEEDS_MIGRATION__' | undefined;
+export type Compression = "zip" | null | "__NEEDS_MIGRATION__" | undefined;
 
 export interface BaseResponse {
   environmentId: string | null;
@@ -56,36 +56,35 @@ export interface BaseResponse {
 
 export type Response = BaseModel & BaseResponse;
 
-export const isResponse = (model: Pick<BaseModel, 'type'>): model is Response => (
-  model.type === type
-);
+export const isResponse = (model: Pick<BaseModel, "type">): model is Response =>
+  model.type === type;
 
 export function init(): BaseResponse {
   return {
     statusCode: 0,
-    statusMessage: '',
-    httpVersion: '',
-    contentType: '',
-    url: '',
+    statusMessage: "",
+    httpVersion: "",
+    contentType: "",
+    url: "",
     bytesRead: 0,
     // -1 means that it was legacy and this property didn't exist yet
     bytesContent: -1,
     elapsedTime: 0,
     headers: [],
     // Actual timelines are stored on the filesystem
-    timelinePath: '',
+    timelinePath: "",
     // Actual bodies are stored on the filesystem
-    bodyPath: '',
+    bodyPath: "",
     // For legacy bodies
-    bodyCompression: '__NEEDS_MIGRATION__',
-    error: '',
+    bodyCompression: "__NEEDS_MIGRATION__",
+    error: "",
     // Things from the request
     requestVersionId: null,
     settingStoreCookies: null,
     settingSendCookies: null,
     // Responses sent before environment filtering will have a special value
     // so they don't show up at all when filtering is on.
-    environmentId: '__LEGACY__',
+    environmentId: "__LEGACY__",
     requestTestResults: [],
     globalEnvironmentId: null,
   };
@@ -95,16 +94,19 @@ export function migrate(doc: Response) {
   try {
     return migrateBodyCompression(doc);
   } catch (e) {
-    console.log('[db] Error during response migration', e);
+    console.log("[db] Error during response migration", e);
     throw e;
   }
 }
 
 export function hookDatabaseInit(consoleLog: typeof console.log = console.log) {
-  consoleLog('[db] Init responses DB');
+  consoleLog("[db] Init responses DB");
 }
 
-export function hookRemove(doc: Response, consoleLog: typeof console.log = console.log) {
+export function hookRemove(
+  doc: Response,
+  consoleLog: typeof console.log = console.log,
+) {
   fs.unlink(doc.bodyPath, () => {
     consoleLog(`[response] Delete body ${doc.bodyPath}`);
   });
@@ -125,7 +127,10 @@ export async function all() {
   return db.all<Response>(type);
 }
 
-export async function removeForRequest(parentId: string, environmentId?: string | null) {
+export async function removeForRequest(
+  parentId: string,
+  environmentId?: string | null,
+) {
   const settings = await models.settings.get();
   const query: Record<string, any> = {
     parentId,
@@ -174,28 +179,38 @@ export async function getLatestForRequest(
   return response || null;
 }
 
-export async function create(patch: Partial<Response> = {}, maxResponses = 20): Promise<Response> {
+export async function create(
+  patch: Partial<Response> = {},
+  maxResponses = 20,
+): Promise<Response> {
   if (!patch.parentId) {
-    console.log('[db] Attempted to create response without `parentId`', patch);
-    throw new Error('New Response missing `parentId`');
+    console.log("[db] Attempted to create response without `parentId`", patch);
+    throw new Error("New Response missing `parentId`");
   }
 
   const { parentId } = patch;
   // Create request version snapshot
   const request = await requestOperations.getById(parentId);
-  const requestVersion = request ? await models.requestVersion.create(request) : null;
+  const requestVersion = request
+    ? await models.requestVersion.create(request)
+    : null;
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
   // Filter responses by environment if setting is enabled
   const settings = await models.settings.get();
-  const shouldQueryByEnvId = patch.hasOwnProperty('environmentId') && settings.filterResponsesByEnv;
+  const shouldQueryByEnvId =
+    patch.hasOwnProperty("environmentId") && settings.filterResponsesByEnv;
   const query = {
     parentId,
     ...(shouldQueryByEnvId ? { environmentId: patch.environmentId } : {}),
   };
 
   // Delete all other responses before creating the new one
-  const allResponses = await db.findMostRecentlyModified<Response>(type, query, Math.max(1, maxResponses));
-  const recentIds = allResponses.map(r => r._id);
+  const allResponses = await db.findMostRecentlyModified<Response>(
+    type,
+    query,
+    Math.max(1, maxResponses),
+  );
+  const recentIds = allResponses.map((r) => r._id);
   // Remove all that were in the last query, except the first `maxResponses` IDs
   await db.removeWhere(type, {
     ...query,
@@ -223,30 +238,37 @@ export const getBodyStream = (
   try {
     fs.statSync(response?.bodyPath);
   } catch (err) {
-    console.warn('Failed to read response body', err.message);
+    console.warn("Failed to read response body", err.message);
     return readFailureValue === undefined ? null : readFailureValue;
   }
-  if (response?.bodyCompression === 'zip') {
+  if (response?.bodyCompression === "zip") {
     return fs.createReadStream(response?.bodyPath).pipe(zlib.createGunzip());
   } else {
     return fs.createReadStream(response?.bodyPath);
   }
 };
-export const readCurlResponse = async (options: { bodyPath?: string; bodyCompression?: Compression }) => {
-  const readFailureMsg = '[main/curlBridgeAPI] failed to read response body message';
+export const readCurlResponse = async (options: {
+  bodyPath?: string;
+  bodyCompression?: Compression;
+}) => {
+  const readFailureMsg =
+    "[main/curlBridgeAPI] failed to read response body message";
   const bodyBufferOrErrMsg = await getBodyBuffer(options, readFailureMsg);
   // TODO(jackkav): simplify the fail msg and reuse in other getBodyBuffer renderer calls
 
   if (!bodyBufferOrErrMsg) {
-    return { body: '', error: readFailureMsg };
-  } else if (typeof bodyBufferOrErrMsg === 'string') {
+    return { body: "", error: readFailureMsg };
+  } else if (typeof bodyBufferOrErrMsg === "string") {
     if (bodyBufferOrErrMsg === readFailureMsg) {
-      return { body: '', error: readFailureMsg };
+      return { body: "", error: readFailureMsg };
     }
-    return { body: '', error: `unknown error in loading response body: ${bodyBufferOrErrMsg}` };
+    return {
+      body: "",
+      error: `unknown error in loading response body: ${bodyBufferOrErrMsg}`,
+    };
   }
 
-  return { body: bodyBufferOrErrMsg.toString('utf8'), error: '' };
+  return { body: bodyBufferOrErrMsg.toString("utf8"), error: "" };
 };
 export const getBodyBuffer = async (
   response?: { bodyPath?: string; bodyCompression?: Compression },
@@ -258,13 +280,17 @@ export const getBodyBuffer = async (
   }
   try {
     const rawBuffer = await fs.promises.readFile(response?.bodyPath);
-    if (response?.bodyCompression === 'zip') {
-      return new Promise((resolve, reject) => zlib.gunzip(rawBuffer, (err, buffer) => err ? reject(err) : resolve(buffer)));
+    if (response?.bodyCompression === "zip") {
+      return new Promise((resolve, reject) =>
+        zlib.gunzip(rawBuffer, (err, buffer) =>
+          err ? reject(err) : resolve(buffer),
+        ),
+      );
     }
 
     return rawBuffer;
   } catch (err) {
-    console.warn('Failed to read response body', err.message);
+    console.warn("Failed to read response body", err.message);
     return readFailureValue === undefined ? Buffer.alloc(0) : readFailureValue;
   }
 };
@@ -279,29 +305,31 @@ export function getTimeline(response: Response, showBody?: boolean) {
   try {
     const rawBuffer = fs.readFileSync(timelinePath);
     const timelineString = rawBuffer.toString();
-    const isLegacyTimelineFormat = timelineString.startsWith('[');
+    const isLegacyTimelineFormat = timelineString.startsWith("[");
     const timeline = isLegacyTimelineFormat
-      ? JSON.parse(timelineString) as ResponseTimelineEntry[]
+      ? (JSON.parse(timelineString) as ResponseTimelineEntry[])
       : deserializeNDJSON(timelineString);
 
-    const body: ResponseTimelineEntry[] = showBody ? [
-      {
-        name: 'DataOut',
-        timestamp: Date.now(),
-        value: fs.readFileSync(bodyPath).toString(),
-      },
-    ] : [];
+    const body: ResponseTimelineEntry[] = showBody
+      ? [
+          {
+            name: "DataOut",
+            timestamp: Date.now(),
+            value: fs.readFileSync(bodyPath).toString(),
+          },
+        ]
+      : [];
     const output = [...timeline, ...body];
     return output;
   } catch (err) {
-    console.warn('Failed to read response body', err.message);
+    console.warn("Failed to read response body", err.message);
     return [];
   }
 }
 
 function migrateBodyCompression(doc: Response) {
-  if (doc.bodyCompression === '__NEEDS_MIGRATION__') {
-    doc.bodyCompression = 'zip';
+  if (doc.bodyCompression === "__NEEDS_MIGRATION__") {
+    doc.bodyCompression = "zip";
   }
 
   return doc;

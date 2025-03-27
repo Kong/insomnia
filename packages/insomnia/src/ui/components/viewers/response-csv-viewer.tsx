@@ -1,5 +1,5 @@
-import Papa from 'papaparse';
-import React, { type FC, useEffect, useRef, useState } from 'react';
+import Papa from "papaparse";
+import React, { type FC, useEffect, useRef, useState } from "react";
 
 interface Props {
   body: Buffer;
@@ -10,9 +10,9 @@ export const ResponseCSVViewer: FC<Props> = ({ body }) => {
   const tableRef = useRef<HTMLTableElement>(null);
 
   useEffect(() => {
-    Papa.parse<string[]>(body.toString('utf8'), {
+    Papa.parse<string[]>(body.toString("utf8"), {
       skipEmptyLines: true,
-      complete: result => {
+      complete: (result) => {
         setCSV(result);
       },
     });
@@ -20,7 +20,7 @@ export const ResponseCSVViewer: FC<Props> = ({ body }) => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.metaKey && event.key === 'a') {
+      if (event.metaKey && event.key === "a") {
         event.preventDefault();
 
         if (tableRef.current) {
@@ -35,27 +35,33 @@ export const ResponseCSVViewer: FC<Props> = ({ body }) => {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
 
   return (
     <div className="pad-sm">
-      {csv ?
-        <table ref={tableRef} className="table--fancy table--striped table--compact selectable">
+      {csv ? (
+        <table
+          ref={tableRef}
+          className="table--fancy table--striped table--compact selectable"
+        >
           <tbody>
             {csv.data.map((row, index) => (
-            // eslint-disable-next-line react/no-array-index-key -- data structure is unknown, cannot compute a valid key
+              // eslint-disable-next-line react/no-array-index-key -- data structure is unknown, cannot compute a valid key
               <tr key={index}>
-                {row.map(c => (
+                {row.map((c) => (
                   <td key={c}>{c}</td>
                 ))}
               </tr>
             ))}
           </tbody>
         </table>
-        : 'Parsing CSV...'}
-    </div>);
+      ) : (
+        "Parsing CSV..."
+      )}
+    </div>
+  );
 };

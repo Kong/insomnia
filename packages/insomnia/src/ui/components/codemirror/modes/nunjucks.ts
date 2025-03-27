@@ -1,13 +1,16 @@
-import CodeMirror from 'codemirror';
+import CodeMirror from "codemirror";
 
 export function isNunjucksMode(
-  mode: CodeMirror.ModeSpec<unknown>
-): mode is CodeMirror.ModeSpec<{ baseMode: 'string' }> {
-  return 'baseMode' in mode;
+  mode: CodeMirror.ModeSpec<unknown>,
+): mode is CodeMirror.ModeSpec<{ baseMode: "string" }> {
+  return "baseMode" in mode;
 }
 
-CodeMirror.defineMode('nunjucks', (config, parserConfig) => {
-  const baseMode = CodeMirror.getMode(config, parserConfig.baseMode || 'text/plain');
+CodeMirror.defineMode("nunjucks", (config, parserConfig) => {
+  const baseMode = CodeMirror.getMode(
+    config,
+    parserConfig.baseMode || "text/plain",
+  );
 
   const nunjucksMode = _nunjucksMode();
 
@@ -35,9 +38,9 @@ function _nunjucksMode() {
       if (m) {
         const name = m[1];
 
-        if (state.inRaw && name === 'endraw') {
+        if (state.inRaw && name === "endraw") {
           state.inRaw = false;
-        } else if (!state.inRaw && name === 'raw') {
+        } else if (!state.inRaw && name === "raw") {
           state.inRaw = true;
         } else if (state.inRaw) {
           // Inside raw tag so do nothing

@@ -1,27 +1,34 @@
-import classnames from 'classnames';
-import React, { type FC, type PropsWithChildren } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import classnames from "classnames";
+import React, { type FC, type PropsWithChildren } from "react";
+import { useRouteLoaderData } from "react-router-dom";
 
-import type { RequestAccordionKeys } from '../../../../../models/request-meta';
-import { useRequestMetaPatcher } from '../../../../hooks/use-request';
-import type { RequestLoaderData } from '../../../../routes/request';
+import type { RequestAccordionKeys } from "../../../../../models/request-meta";
+import { useRequestMetaPatcher } from "../../../../hooks/use-request";
+import type { RequestLoaderData } from "../../../../routes/request";
 
 interface Props {
   label: string;
   accordionKey: RequestAccordionKeys;
 }
 
-export const AuthAccordion: FC<PropsWithChildren<Props>> = ({ accordionKey, label, children }) => {
-  const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const expanded = !reqData || Boolean(reqData.activeRequestMeta?.expandedAccordionKeys[accordionKey]);
+export const AuthAccordion: FC<PropsWithChildren<Props>> = ({
+  accordionKey,
+  label,
+  children,
+}) => {
+  const reqData = useRouteLoaderData("request/:requestId") as RequestLoaderData;
+  const expanded =
+    !reqData ||
+    Boolean(reqData.activeRequestMeta?.expandedAccordionKeys[accordionKey]);
   const patchRequestMeta = useRequestMetaPatcher();
   const toggle = () => {
-    reqData && patchRequestMeta(reqData.activeRequest._id, {
-      expandedAccordionKeys: {
-        ...reqData.activeRequestMeta?.expandedAccordionKeys,
-        [accordionKey]: !expanded,
-      },
-    });
+    reqData &&
+      patchRequestMeta(reqData.activeRequest._id, {
+        expandedAccordionKeys: {
+          ...reqData.activeRequestMeta?.expandedAccordionKeys,
+          [accordionKey]: !expanded,
+        },
+      });
   };
 
   return (
@@ -31,11 +38,11 @@ export const AuthAccordion: FC<PropsWithChildren<Props>> = ({ accordionKey, labe
           <button onClick={toggle} className="faint">
             <i
               style={{
-                minWidth: '0.8rem',
+                minWidth: "0.8rem",
               }}
               className={classnames(
-                'fa fa--skinny',
-                `fa-caret-${expanded ? 'down' : 'right'}`,
+                "fa fa--skinny",
+                `fa-caret-${expanded ? "down" : "right"}`,
               )}
             />
             {label}

@@ -1,6 +1,6 @@
-import React, { PureComponent, type ReactNode } from 'react';
+import React, { PureComponent, type ReactNode } from "react";
 
-import { showError } from './modals/index';
+import { showError } from "./modals/index";
 
 interface Props {
   children: ReactNode;
@@ -28,9 +28,10 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
     },
   ) {
     const { children } = this.props;
-    const firstChild = Array.isArray(children) && children.length === 1 ? children[0] : children;
+    const firstChild =
+      Array.isArray(children) && children.length === 1 ? children[0] : children;
     this.setState({ error, info });
-    let componentName = 'component';
+    let componentName = "component";
 
     try {
       componentName = firstChild.type.name;
@@ -42,10 +43,13 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
       try {
         showError({
           error,
-          title: 'Application Error',
+          title: "Application Error",
           message: (
             <p>
-              Failed to render {componentName}. Please report the error to <a href="https://github.com/Kong/insomnia/issues">our GitHub Issues</a>
+              Failed to render {componentName}. Please report the error to{" "}
+              <a href="https://github.com/Kong/insomnia/issues">
+                our GitHub Issues
+              </a>
             </p>
           ),
         });
@@ -58,7 +62,9 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
   render() {
     if (this.state.error) {
       return (
-        <div className={this.props.errorClassName ?? 'font-error'}>Render Failure: {this.state.error.message}</div>
+        <div className={this.props.errorClassName ?? "font-error"}>
+          Render Failure: {this.state.error.message}
+        </div>
       );
     }
 
@@ -73,9 +79,5 @@ export const ErrorBoundary = (props: Props) => {
     return null;
   }
 
-  return (
-    <SingleErrorBoundary {...extraProps}>
-      {children}
-    </SingleErrorBoundary>
-  );
+  return <SingleErrorBoundary {...extraProps}>{children}</SingleErrorBoundary>;
 };

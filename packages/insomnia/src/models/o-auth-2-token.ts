@@ -1,13 +1,13 @@
-import { database as db } from '../common/database';
-import type { BaseModel } from './index';
+import { database as db } from "../common/database";
+import type { BaseModel } from "./index";
 
 export type OAuth2Token = BaseModel & BaseOAuth2Token;
 
-export const name = 'OAuth 2.0 Token';
+export const name = "OAuth 2.0 Token";
 
-export const type = 'OAuth2Token';
+export const type = "OAuth2Token";
 
-export const prefix = 'oa2';
+export const prefix = "oa2";
 
 export const canDuplicate = false;
 
@@ -28,24 +28,24 @@ export interface BaseOAuth2Token {
   errorUri: string;
 }
 
-export const isOAuth2Token = (model: Pick<BaseModel, 'type'>): model is OAuth2Token => (
-  model.type === type
-);
+export const isOAuth2Token = (
+  model: Pick<BaseModel, "type">,
+): model is OAuth2Token => model.type === type;
 
 export function init(): BaseOAuth2Token {
   return {
-    refreshToken: '',
-    accessToken: '',
-    identityToken: '',
+    refreshToken: "",
+    accessToken: "",
+    identityToken: "",
     expiresAt: null,
     // Should be Date.now() if valid
     // Debug
     xResponseId: null,
     xError: null,
     // Error handling
-    error: '',
-    errorDescription: '',
-    errorUri: '',
+    error: "",
+    errorDescription: "",
+    errorUri: "",
   };
 }
 
@@ -55,7 +55,9 @@ export function migrate(doc: OAuth2Token) {
 
 export function create(patch: Partial<OAuth2Token> = {}) {
   if (!patch.parentId) {
-    throw new Error(`New OAuth2Token missing \`parentId\` ${JSON.stringify(patch)}`);
+    throw new Error(
+      `New OAuth2Token missing \`parentId\` ${JSON.stringify(patch)}`,
+    );
   }
 
   return db.docCreate<OAuth2Token>(type, patch);

@@ -1,14 +1,14 @@
-import { PREVIEW_MODE_FRIENDLY, type PreviewMode } from '../common/constants';
-import { database as db } from '../common/database';
-import type { BaseModel } from './index';
+import { PREVIEW_MODE_FRIENDLY, type PreviewMode } from "../common/constants";
+import { database as db } from "../common/database";
+import type { BaseModel } from "./index";
 
-export const name = 'Request Meta';
-export const type = 'RequestMeta';
-export const prefix = 'reqm';
+export const name = "Request Meta";
+export const type = "RequestMeta";
+export const prefix = "reqm";
 export const canDuplicate = false;
 export const canSync = false;
 
-export type RequestAccordionKeys = 'OAuth2AdvancedOptions';
+export type RequestAccordionKeys = "OAuth2AdvancedOptions";
 
 export interface BaseRequestMeta {
   parentId: string;
@@ -25,15 +25,15 @@ export interface BaseRequestMeta {
 
 export type RequestMeta = BaseModel & BaseRequestMeta;
 
-export const isRequestMeta = (model: Pick<BaseModel, 'type'>): model is RequestMeta => (
-  model.type === type
-);
+export const isRequestMeta = (
+  model: Pick<BaseModel, "type">,
+): model is RequestMeta => model.type === type;
 
 export function init() {
   return {
     parentId: null,
     previewMode: PREVIEW_MODE_FRIENDLY,
-    responseFilter: '',
+    responseFilter: "",
     responseFilterHistory: [],
     activeResponseId: null,
     savedRequestBody: {},
@@ -50,7 +50,9 @@ export function migrate(doc: RequestMeta) {
 
 export function create(patch: Partial<RequestMeta> = {}) {
   if (!patch.parentId) {
-    throw new Error('New RequestMeta missing `parentId` ' + JSON.stringify(patch));
+    throw new Error(
+      "New RequestMeta missing `parentId` " + JSON.stringify(patch),
+    );
   }
 
   // expectParentToBeRequest(patch.parentId);
@@ -77,7 +79,10 @@ export async function getOrCreateByParentId(parentId: string) {
   return create({ parentId });
 }
 
-export async function updateOrCreateByParentId(parentId: string, patch: Partial<RequestMeta>) {
+export async function updateOrCreateByParentId(
+  parentId: string,
+  patch: Partial<RequestMeta>,
+) {
   const requestMeta = await getByParentId(parentId);
 
   if (requestMeta) {

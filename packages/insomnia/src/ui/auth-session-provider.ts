@@ -1,8 +1,12 @@
-import { keyPair, open } from '@getinsomnia/api-client/sealedbox';
+import { keyPair, open } from "@getinsomnia/api-client/sealedbox";
 
-import * as session from '../account/session';
-import { getAppWebsiteBaseURL, getInsomniaPublicKey, getInsomniaSecretKey } from '../common/constants';
-import { invariant } from '../utils/invariant';
+import * as session from "../account/session";
+import {
+  getAppWebsiteBaseURL,
+  getInsomniaPublicKey,
+  getInsomniaSecretKey,
+} from "../common/constants";
+import { invariant } from "../utils/invariant";
 
 interface AuthBox {
   token: string;
@@ -10,18 +14,24 @@ interface AuthBox {
 }
 
 const sessionKeyPair = keyPair();
-encodeBase64(sessionKeyPair.publicKey).then(res => {
+encodeBase64(sessionKeyPair.publicKey).then((res) => {
   try {
-    window.localStorage.setItem('insomnia.publicKey', getInsomniaPublicKey() || res);
+    window.localStorage.setItem(
+      "insomnia.publicKey",
+      getInsomniaPublicKey() || res,
+    );
   } catch {
-    console.error('Failed to store public key in localStorage.');
+    console.error("Failed to store public key in localStorage.");
   }
 });
-encodeBase64(sessionKeyPair.secretKey).then(res => {
+encodeBase64(sessionKeyPair.secretKey).then((res) => {
   try {
-    window.localStorage.setItem('insomnia.secretKey', getInsomniaSecretKey() || res);
+    window.localStorage.setItem(
+      "insomnia.secretKey",
+      getInsomniaSecretKey() || res,
+    );
   } catch {
-    console.error('Failed to store secret key in localStorage.');
+    console.error("Failed to store secret key in localStorage.");
   }
 });
 /**
@@ -31,15 +41,14 @@ encodeBase64(sessionKeyPair.secretKey).then(res => {
 
 export async function decodeBase64(base64: string): Promise<Uint8Array> {
   try {
-    let uri = 'data:application/octet-binary;base64,';
+    let uri = "data:application/octet-binary;base64,";
     uri += base64;
     const res = await fetch(uri);
     const buffer = await res.arrayBuffer();
     return new Uint8Array(buffer);
-
   } catch (error) {
     console.error(error);
-    throw new Error('Failed to decode base64');
+    throw new Error("Failed to decode base64");
   }
 }
 
@@ -47,7 +56,7 @@ export async function encodeBase64(data: Uint8Array): Promise<string> {
   const dataUri = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
-      if (typeof reader.result === 'string') {
+      if (typeof reader.result === "string") {
         resolve(reader.result);
       } else {
         reject();
@@ -57,7 +66,7 @@ export async function encodeBase64(data: Uint8Array): Promise<string> {
     reader.readAsDataURL(new Blob([data]));
   });
 
-  const dataAt = dataUri.indexOf(',');
+  const dataAt = dataUri.indexOf(",");
   if (dataAt === -1) {
     throw new Error(`unexpected data uri output: ${dataUri}`);
   }
@@ -68,10 +77,14 @@ export async function encodeBase64(data: Uint8Array): Promise<string> {
 export async function submitAuthCode(code: string) {
   try {
     const rawBox = await decodeBase64(code.trim());
-    const publicKey = await decodeBase64(window.localStorage.getItem('insomnia.publicKey') || '');
-    const secretKey = await decodeBase64(window.localStorage.getItem('insomnia.secretKey') || '');
+    const publicKey = await decodeBase64(
+      window.localStorage.getItem("insomnia.publicKey") || "",
+    );
+    const secretKey = await decodeBase64(
+      window.localStorage.getItem("insomnia.secretKey") || "",
+    );
     const boxData = open(rawBox, publicKey, secretKey);
-    invariant(boxData, 'Invalid authentication code.');
+    invariant(boxData, "Invalid authentication code.");
 
     const decoder = new TextDecoder();
     const box: AuthBox = JSON.parse(decoder.decode(boxData));
@@ -83,16 +96,16 @@ export async function submitAuthCode(code: string) {
 }
 
 export function getLoginUrl() {
-  const publicKey = window.localStorage.getItem('insomnia.publicKey');
+  const publicKey = window.localStorage.getItem("insomnia.publicKey");
   if (!publicKey) {
-    console.log('[auth] No public key found');
-    return '';
+    console.log("[auth] No public key found");
+    return "";
   }
 
   const url = new URL(getAppWebsiteBaseURL());
 
-  url.pathname = '/app/auth-app/';
-  url.searchParams.set('loginKey', encodeURIComponent(publicKey));
+  url.pathname = "/app/auth-app/";
+  url.searchParams.set("loginKey", encodeURIComponent(publicKey));
 
   return url.toString();
 }

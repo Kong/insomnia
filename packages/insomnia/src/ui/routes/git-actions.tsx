@@ -1,16 +1,16 @@
-import { fromUrl } from 'hosted-git-info';
-import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
+import { fromUrl } from "hosted-git-info";
+import {
+  type ActionFunction,
+  type LoaderFunction,
+  redirect,
+} from "react-router-dom";
 
-import { gitCredentials } from '../../models';
-import type { GitRepository } from '../../models/git-repository';
-import {
-  WorkspaceScopeKeys,
-} from '../../models/workspace';
-import {
-  type GitLogEntry,
-} from '../../sync/git/git-vcs';
-import type { MergeConflict } from '../../sync/types';
-import { invariant } from '../../utils/invariant';
+import { gitCredentials } from "../../models";
+import type { GitRepository } from "../../models/git-repository";
+import { WorkspaceScopeKeys } from "../../models/workspace";
+import { type GitLogEntry } from "../../sync/git/git-vcs";
+import type { MergeConflict } from "../../sync/types";
+import { invariant } from "../../utils/invariant";
 
 // Loaders
 export type GitRepoLoaderData =
@@ -27,8 +27,8 @@ export const gitRepoLoader: ActionFunction = async ({
   params,
 }): Promise<GitRepoLoaderData> => {
   const { projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
 
   return window.main.git.loadGitRepository({ projectId, workspaceId });
 };
@@ -46,8 +46,8 @@ export const gitBranchesLoader: LoaderFunction = async ({
   params,
 }): Promise<GitBranchesLoaderData> => {
   const { projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
 
   return window.main.git.getGitBranches({ projectId, workspaceId });
 };
@@ -60,8 +60,8 @@ export const gitFetchAction: ActionFunction = async ({
   params,
 }): Promise<GitFetchLoaderData> => {
   const { projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
 
   return window.main.git.gitFetchAction({ projectId, workspaceId });
 };
@@ -78,8 +78,8 @@ export const gitLogLoader: LoaderFunction = async ({
   params,
 }): Promise<GitLogLoaderData> => {
   const { projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
 
   return window.main.git.gitLogLoader({ projectId, workspaceId });
 };
@@ -102,8 +102,8 @@ export const gitChangesLoader: LoaderFunction = async ({
   params,
 }): Promise<GitChangesLoaderData> => {
   const { projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
   return window.main.git.gitChangesLoader({ projectId, workspaceId });
 };
 
@@ -111,10 +111,12 @@ export interface GitCanPushLoaderData {
   canPush: boolean;
 }
 
-export const canPushLoader: LoaderFunction = async ({ params }): Promise<GitCanPushLoaderData> => {
+export const canPushLoader: LoaderFunction = async ({
+  params,
+}): Promise<GitCanPushLoaderData> => {
   const { projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
 
   return window.main.git.canPushLoader({ projectId, workspaceId });
 };
@@ -128,16 +130,16 @@ type CloneGitActionResult =
 
 export function parseGitToHttpsURL(s: string) {
   // try to convert any git URL to https URL
-  let parsed = fromUrl(s)?.https({ noGitPlus: true }) || '';
+  let parsed = fromUrl(s)?.https({ noGitPlus: true }) || "";
 
   // fallback for self-hosted git servers, see https://github.com/Kong/insomnia/issues/5967
   // and https://github.com/npm/hosted-git-info/issues/11
-  if (parsed === '') {
+  if (parsed === "") {
     let temp = s;
     // handle "shorter scp-like syntax"
-    temp = temp.replace(/^git@([^:]+):/, 'https://$1/');
+    temp = temp.replace(/^git@([^:]+):/, "https://$1/");
     // handle proper SSH URLs
-    temp = temp.replace(/^ssh:\/\//, 'https://');
+    temp = temp.replace(/^ssh:\/\//, "https://");
 
     // final URL fallback for any other git URL
     temp = new URL(temp).href;
@@ -153,8 +155,8 @@ export const cloneGitRepoAction: ActionFunction = async ({
 }): Promise<CloneGitActionResult> => {
   const { organizationId, projectId } = params;
 
-  invariant(typeof organizationId === 'string', 'OrganizationId is required.');
-  invariant(typeof projectId === 'string', 'ProjectId is required.');
+  invariant(typeof organizationId === "string", "OrganizationId is required.");
+  invariant(typeof projectId === "string", "ProjectId is required.");
 
   const formData = await request.formData();
   const data = Object.fromEntries(formData.entries()) as {
@@ -179,17 +181,19 @@ export const cloneGitRepoAction: ActionFunction = async ({
   }
 
   if (result.existingWorkspace) {
-    return redirect(`/organization/${result.existingWorkspace.organizationId}/project/${result.existingWorkspace.projectId}/workspace/${result.existingWorkspace.workspaceId}/debug`);
+    return redirect(
+      `/organization/${result.existingWorkspace.organizationId}/project/${result.existingWorkspace.projectId}/workspace/${result.existingWorkspace.workspaceId}/debug`,
+    );
   }
 
   // Redirect to debug for collection scope initial clone
   if (result.scope === WorkspaceScopeKeys.collection) {
     return redirect(
-      `/organization/${organizationId}/project/${projectId}/workspace/${result.workspaceId}/debug`
+      `/organization/${organizationId}/project/${projectId}/workspace/${result.workspaceId}/debug`,
     );
   }
   return redirect(
-    `/organization/${organizationId}/project/${projectId}/workspace/${result.workspaceId}/spec`
+    `/organization/${organizationId}/project/${projectId}/workspace/${result.workspaceId}/spec`,
   );
 };
 
@@ -198,8 +202,8 @@ export const updateGitRepoAction: ActionFunction = async ({
   params,
 }) => {
   const { projectId, workspaceId } = params;
-  invariant(projectId, 'Project ID is required');
-  invariant(workspaceId, 'Workspace ID is required');
+  invariant(projectId, "Project ID is required");
+  invariant(workspaceId, "Workspace ID is required");
 
   const formData = await request.formData();
 
@@ -221,8 +225,8 @@ export const updateGitRepoAction: ActionFunction = async ({
 
 export const resetGitRepoAction: ActionFunction = async ({ params }) => {
   const { projectId, workspaceId } = params;
-  invariant(projectId, 'Project ID is required');
-  invariant(workspaceId, 'Workspace ID is required');
+  invariant(projectId, "Project ID is required");
+  invariant(workspaceId, "Workspace ID is required");
 
   return window.main.git.resetGitRepo({ projectId, workspaceId });
 };
@@ -237,11 +241,11 @@ export const commitToGitRepoAction: ActionFunction = async ({
   params,
 }): Promise<CommitToGitRepoResult> => {
   const { projectId, workspaceId } = params;
-  invariant(projectId, 'Project ID is required');
-  invariant(workspaceId, 'Workspace ID is required');
+  invariant(projectId, "Project ID is required");
+  invariant(workspaceId, "Workspace ID is required");
   const formData = await request.formData();
-  const message = formData.get('message');
-  invariant(typeof message === 'string', 'Message is required');
+  const message = formData.get("message");
+  invariant(typeof message === "string", "Message is required");
 
   return window.main.git.commitToGitRepo({ projectId, workspaceId, message });
 };
@@ -251,12 +255,12 @@ export const commitAndPushToGitRepoAction: ActionFunction = async ({
   params,
 }): Promise<CommitToGitRepoResult> => {
   const { projectId, workspaceId } = params;
-  invariant(projectId, 'Project ID is required');
-  invariant(workspaceId, 'Workspace ID is required');
+  invariant(projectId, "Project ID is required");
+  invariant(workspaceId, "Workspace ID is required");
 
   const formData = await request.formData();
-  const message = formData.get('message');
-  invariant(typeof message === 'string', 'Message is required');
+  const message = formData.get("message");
+  invariant(typeof message === "string", "Message is required");
 
   return window.main.git.commitAndPushToGitRepo({
     projectId,
@@ -274,12 +278,12 @@ export const createNewGitBranchAction: ActionFunction = async ({
   params,
 }): Promise<CreateNewGitBranchResult> => {
   const { projectId, workspaceId } = params;
-  invariant(projectId, 'Project ID is required');
-  invariant(workspaceId, 'Workspace ID is required');
+  invariant(projectId, "Project ID is required");
+  invariant(workspaceId, "Workspace ID is required");
 
   const formData = await request.formData();
-  const branch = formData.get('branch');
-  invariant(typeof branch === 'string', 'Branch is required');
+  const branch = formData.get("branch");
+  invariant(typeof branch === "string", "Branch is required");
 
   return window.main.git.createNewGitBranch({
     branch,
@@ -296,12 +300,12 @@ export const checkoutGitBranchAction: ActionFunction = async ({
   params,
 }): Promise<CheckoutGitBranchResult> => {
   const { projectId, workspaceId } = params;
-  invariant(projectId, 'Project ID is required');
-  invariant(workspaceId, 'Workspace ID is required');
+  invariant(projectId, "Project ID is required");
+  invariant(workspaceId, "Workspace ID is required");
 
   const formData = await request.formData();
-  const branch = formData.get('branch');
-  invariant(typeof branch === 'string', 'Branch is required');
+  const branch = formData.get("branch");
+  invariant(typeof branch === "string", "Branch is required");
 
   return window.main.git.checkoutGitBranch({
     branch,
@@ -316,10 +320,10 @@ export const mergeGitBranch = async ({
   workspaceId,
   allowUncommittedChangesBeforeMerge = false,
 }: {
-    projectId: string;
-    workspaceId: string;
-    theirsBranch: string;
-    allowUncommittedChangesBeforeMerge?: boolean;
+  projectId: string;
+  workspaceId: string;
+  theirsBranch: string;
+  allowUncommittedChangesBeforeMerge?: boolean;
 }) => {
   return await window.main.git.mergeGitBranch({
     projectId,
@@ -338,12 +342,12 @@ export const deleteGitBranchAction: ActionFunction = async ({
   params,
 }): Promise<DeleteGitBranchResult> => {
   const { projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
 
   const formData = await request.formData();
-  const branch = formData.get('branch');
-  invariant(typeof branch === 'string', 'Branch is required');
+  const branch = formData.get("branch");
+  invariant(typeof branch === "string", "Branch is required");
 
   return window.main.git.deleteGitBranch({
     branch,
@@ -362,40 +366,41 @@ export const pushToGitRemoteAction: ActionFunction = async ({
   params,
 }): Promise<PushToGitRemoteResult> => {
   const { projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
 
   const formData = await request.formData();
 
   return window.main.git.pushToGitRemote({
     projectId,
     workspaceId,
-    force: formData.get('force') === 'true',
+    force: formData.get("force") === "true",
   });
 };
 
-export async function pullFromGitRemote({ projectId, workspaceId }: {
+export async function pullFromGitRemote({
+  projectId,
+  workspaceId,
+}: {
   projectId: string;
   workspaceId: string;
 }) {
   return window.main.git.pullFromGitRemote({ projectId, workspaceId });
-};
+}
 
-export async function continueMerge(
-  {
-    projectId,
-    workspaceId,
-    handledMergeConflicts,
-    commitMessage,
-    commitParent,
-  }: {
-      projectId: string;
-      workspaceId: string;
-    handledMergeConflicts: MergeConflict[];
-      commitMessage: string;
-      commitParent: string[];
-    }
-) {
+export async function continueMerge({
+  projectId,
+  workspaceId,
+  handledMergeConflicts,
+  commitMessage,
+  commitParent,
+}: {
+  projectId: string;
+  workspaceId: string;
+  handledMergeConflicts: MergeConflict[];
+  commitMessage: string;
+  commitParent: string[];
+}) {
   return window.main.git.continueMerge({
     projectId,
     workspaceId,
@@ -403,7 +408,7 @@ export async function continueMerge(
     commitMessage,
     commitParent,
   });
-};
+}
 
 export interface GitChange {
   path: string;
@@ -421,10 +426,10 @@ export const discardChangesAction: ActionFunction = async ({
   errors?: string[];
 }> => {
   const { projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
 
-  const { paths } = await request.json() as { paths: string[] };
+  const { paths } = (await request.json()) as { paths: string[] };
 
   return window.main.git.discardChanges({ projectId, workspaceId, paths });
 };
@@ -439,25 +444,31 @@ export const gitStatusAction: ActionFunction = async ({
   params,
 }): Promise<GitStatusResult> => {
   const { projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === "string", "Project Id is required");
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
 
   return window.main.git.gitStatus({ projectId, workspaceId });
 };
 
-export async function checkGitChanges({ projectId, workspaceId }: {
+export async function checkGitChanges({
+  projectId,
+  workspaceId,
+}: {
   projectId: string;
   workspaceId: string;
 }) {
   return window.main.git.gitChangesLoader({ projectId, workspaceId });
-};
+}
 
-export async function checkGitCanPush({ projectId, workspaceId }: {
+export async function checkGitCanPush({
+  projectId,
+  workspaceId,
+}: {
   projectId: string;
   workspaceId: string;
 }) {
   return window.main.git.canPushLoader({ projectId, workspaceId });
-};
+}
 
 export const stageChangesAction: ActionFunction = async ({
   request,
@@ -466,9 +477,9 @@ export const stageChangesAction: ActionFunction = async ({
   errors?: string[];
 }> => {
   const { projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
-  const { paths } = await request.json() as { paths: string[] };
+  invariant(typeof projectId === "string", "Project Id is required");
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
+  const { paths } = (await request.json()) as { paths: string[] };
 
   return window.main.git.stageChanges({ projectId, workspaceId, paths });
 };
@@ -480,42 +491,49 @@ export const unstageChangesAction: ActionFunction = async ({
   errors?: string[];
 }> => {
   const { projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
-  const { paths } = await request.json() as { paths: string[] };
+  invariant(typeof projectId === "string", "Project Id is required");
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
+  const { paths } = (await request.json()) as { paths: string[] };
 
   return window.main.git.unstageChanges({ projectId, workspaceId, paths });
 };
 
-export type GitDiffResult = {
-  name: string;
-  diff?: {
-    before: string;
-    after: string;
-  };
-} | {
-  errors: string[];
-};
+export type GitDiffResult =
+  | {
+      name: string;
+      diff?: {
+        before: string;
+        after: string;
+      };
+    }
+  | {
+      errors: string[];
+    };
 
 export const diffFileLoader: LoaderFunction = async ({
   request,
   params,
 }): Promise<GitDiffResult> => {
   const { projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
-  const urlParams = new URLSearchParams(request.url.split('?')[1]);
+  invariant(typeof projectId === "string", "Project Id is required");
+  invariant(typeof workspaceId === "string", "Workspace Id is required");
+  const urlParams = new URLSearchParams(request.url.split("?")[1]);
 
-  const filepath = urlParams.get('filepath');
-  invariant(filepath, 'Filepath is required');
+  const filepath = urlParams.get("filepath");
+  invariant(filepath, "Filepath is required");
 
-  const staged = urlParams.get('staged') === 'true';
+  const staged = urlParams.get("staged") === "true";
 
-  return window.main.git.diffFileLoader({ projectId, workspaceId, filepath, staged });
+  return window.main.git.diffFileLoader({
+    projectId,
+    workspaceId,
+    filepath,
+    staged,
+  });
 };
 
 export const loadGitHubCredentials: LoaderFunction = async () => {
-  const credentials = await gitCredentials.getByProvider('github');
+  const credentials = await gitCredentials.getByProvider("github");
 
   return credentials;
 };
@@ -527,7 +545,11 @@ export const initSignInToGitHub: ActionFunction = async () => {
 };
 
 export const completeSignInToGitHub: ActionFunction = async ({ request }) => {
-  const { code, state } = await request.json() as { code: string; state: string; path: string };
+  const { code, state } = (await request.json()) as {
+    code: string;
+    state: string;
+    path: string;
+  };
   await window.main.git.completeSignInToGitHub({
     code,
     state,
@@ -543,7 +565,7 @@ export const signOutOfGitHub: ActionFunction = async () => {
 };
 
 export const loadGitLabCredentials: LoaderFunction = async () => {
-  const credentials = await gitCredentials.getByProvider('gitlab');
+  const credentials = await gitCredentials.getByProvider("gitlab");
 
   return credentials;
 };
@@ -555,7 +577,11 @@ export const initSignInToGitLab: ActionFunction = async () => {
 };
 
 export const completeSignInToGitLab: ActionFunction = async ({ request }) => {
-  const { code, state } = await request.json() as { code: string; state: string; path: string };
+  const { code, state } = (await request.json()) as {
+    code: string;
+    state: string;
+    path: string;
+  };
   await window.main.git.completeSignInToGitLab({
     code,
     state,

@@ -1,5 +1,5 @@
-import React, { type FC, type ReactNode } from 'react';
-import { Toolbar } from 'react-aria-components';
+import React, { type FC, type ReactNode } from "react";
+import { Toolbar } from "react-aria-components";
 
 import {
   AUTH_API_KEY,
@@ -13,24 +13,31 @@ import {
   AUTH_NTLM,
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
-} from '../../../../common/constants';
-import type { AuthTypes, RequestAuthentication } from '../../../../models/request';
-import { getAuthObjectOrNull } from '../../../../network/authentication';
-import { AuthDropdown } from '../../dropdowns/auth-dropdown';
-import { ApiKeyAuth } from './api-key-auth';
-import { AsapAuth } from './asap-auth';
-import { AWSAuth } from './aws-auth';
-import { BasicAuth } from './basic-auth';
-import { BearerAuth } from './bearer-auth';
-import { DigestAuth } from './digest-auth';
-import { HawkAuth } from './hawk-auth';
-import { NetrcAuth } from './netrc-auth';
-import { NTLMAuth } from './ntlm-auth';
-import { OAuth1Auth } from './o-auth-1-auth';
-import { OAuth2Auth } from './o-auth-2-auth';
+} from "../../../../common/constants";
+import type {
+  AuthTypes,
+  RequestAuthentication,
+} from "../../../../models/request";
+import { getAuthObjectOrNull } from "../../../../network/authentication";
+import { AuthDropdown } from "../../dropdowns/auth-dropdown";
+import { ApiKeyAuth } from "./api-key-auth";
+import { AsapAuth } from "./asap-auth";
+import { AWSAuth } from "./aws-auth";
+import { BasicAuth } from "./basic-auth";
+import { BearerAuth } from "./bearer-auth";
+import { DigestAuth } from "./digest-auth";
+import { HawkAuth } from "./hawk-auth";
+import { NetrcAuth } from "./netrc-auth";
+import { NTLMAuth } from "./ntlm-auth";
+import { OAuth1Auth } from "./o-auth-1-auth";
+import { OAuth2Auth } from "./o-auth-2-auth";
 
-export const AuthWrapper: FC<{ authentication?: RequestAuthentication | {}; disabled?: boolean; authTypes?: AuthTypes[] }> = ({ authentication, disabled = false, authTypes }) => {
-  const type = getAuthObjectOrNull(authentication)?.type || '';
+export const AuthWrapper: FC<{
+  authentication?: RequestAuthentication | {};
+  disabled?: boolean;
+  authTypes?: AuthTypes[];
+}> = ({ authentication, disabled = false, authTypes }) => {
+  const type = getAuthObjectOrNull(authentication)?.type || "";
   let authBody: ReactNode = null;
 
   if (type === AUTH_BASIC) {
@@ -57,12 +64,12 @@ export const AuthWrapper: FC<{ authentication?: RequestAuthentication | {}; disa
     authBody = <AsapAuth />;
   } else {
     authBody = (
-      <div className="flex w-full h-full select-none items-center justify-center">
-        <p className="text-sm text-center p-4 text-[--hl]">
+      <div className="flex h-full w-full select-none items-center justify-center">
+        <p className="p-4 text-center text-sm text-[--hl]">
           <i
             className="fa fa-unlock-alt"
             style={{
-              fontSize: '8rem',
+              fontSize: "8rem",
               opacity: 0.3,
             }}
           />
@@ -74,12 +81,12 @@ export const AuthWrapper: FC<{ authentication?: RequestAuthentication | {}; disa
     );
   }
 
-  return <>
-    <Toolbar className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
-      <AuthDropdown authentication={authentication} authTypes={authTypes} />
-    </Toolbar>
-    <div className='flex-1 overflow-y-auto '>
-    {authBody}
-    </div>
-  </>;
+  return (
+    <>
+      <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2">
+        <AuthDropdown authentication={authentication} authTypes={authTypes} />
+      </Toolbar>
+      <div className="flex-1 overflow-y-auto">{authBody}</div>
+    </>
+  );
 };

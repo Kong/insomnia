@@ -1,4 +1,4 @@
-import type { BaseDriver } from './base';
+import type { BaseDriver } from "./base";
 export default class MemoryDriver implements BaseDriver {
   // TODO: unsound definite property assignment assertion
   _db!: Record<string, Buffer>;
@@ -35,14 +35,14 @@ export default class MemoryDriver implements BaseDriver {
 
   async keys(prefix: string, recursive: boolean) {
     const keys: string[] = [];
-    const baseLevels = prefix.split('/').length;
+    const baseLevels = prefix.split("/").length;
 
     for (const key of Object.keys(this._db)) {
       if (key.indexOf(prefix) !== 0) {
         continue;
       }
 
-      const levels = key.split('/').length;
+      const levels = key.split("/").length;
       const isInBaseLevel = levels === baseLevels + 1;
 
       if (!recursive && !isInBaseLevel) {

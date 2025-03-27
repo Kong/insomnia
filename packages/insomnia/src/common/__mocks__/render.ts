@@ -1,8 +1,8 @@
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
-import * as renderOriginal from '../render';
+import * as renderOriginal from "../render";
 
-const _render = vi.requireActual('../render') as typeof renderOriginal;
+const _render = vi.requireActual("../render") as typeof renderOriginal;
 _render.getRenderedGrpcRequest = vi.fn();
 _render.getRenderedGrpcRequestMessage = vi.fn();
 

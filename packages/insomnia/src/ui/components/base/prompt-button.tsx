@@ -6,9 +6,9 @@ import React, {
   useEffect,
   useRef,
   useState,
-} from 'react';
+} from "react";
 
-type PromptStateEnum = 'default' | 'ask' | 'loading' | 'done';
+type PromptStateEnum = "default" | "ask" | "loading" | "done";
 
 interface Props<T> {
   className?: string;
@@ -24,12 +24,12 @@ interface Props<T> {
   referToOnClickReturnValue?: boolean;
 }
 
-export const PromptButton = <T, >({
+export const PromptButton = <T,>({
   onClick,
   disabled,
-  confirmMessage = 'Click to confirm',
-  doneMessage = 'Done',
-  loadingMessage = 'Loading',
+  confirmMessage = "Click to confirm",
+  doneMessage = "Done",
+  loadingMessage = "Loading",
   tabIndex,
   title,
   className,
@@ -39,7 +39,7 @@ export const PromptButton = <T, >({
   referToOnClickReturnValue = false,
 }: PropsWithChildren<Props<T>>) => {
   // Create flag to store the state value.
-  const [state, setState] = useState<PromptStateEnum>('default');
+  const [state, setState] = useState<PromptStateEnum>("default");
 
   // Timeout instancies
   const doneTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -53,19 +53,19 @@ export const PromptButton = <T, >({
   }, []);
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
-    if (state === 'default') {
+    if (state === "default") {
       // Prevent events (ex. won't close dropdown if it's in one)
       event.preventDefault();
       event.stopPropagation();
       // Toggle the confirmation notice
-      setState('ask');
+      setState("ask");
       // Set a timeout to hide the confirmation
       // using global.setTimeout to force use of the Node timeout rather than DOM timeout
       triggerTimeout.current = global.setTimeout(() => {
-        setState('default');
+        setState("default");
       }, 2000);
     }
-    if (state === 'ask') {
+    if (state === "ask") {
       if (triggerTimeout.current !== null) {
         // Clear existing timeouts
         clearTimeout(triggerTimeout.current);
@@ -76,25 +76,29 @@ export const PromptButton = <T, >({
         // Set the state to done (but delay a bit to not alarm user)
         // using global.setTimeout to force use of the Node timeout rather than DOM timeout
         doneTimeout.current = global.setTimeout(() => {
-          setState('done');
+          setState("done");
         }, 100);
         // Set a timeout to hide the confirmation
         // using global.setTimeout to force use of the Node timeout rather than DOM timeout
         triggerTimeout.current = global.setTimeout(() => {
-          setState('default');
+          setState("default");
         }, 2000);
       } else {
         if (retVal instanceof Promise) {
-          setState('loading');
-          retVal.then(() => {
-            setState('done');
-          }).finally(() => {
-            triggerTimeout.current = global.setTimeout(() => {
-              setState('default');
-            }, 1000);
-          });
+          setState("loading");
+          retVal
+            .then(() => {
+              setState("done");
+            })
+            .finally(() => {
+              triggerTimeout.current = global.setTimeout(() => {
+                setState("default");
+              }, 1000);
+            });
         } else {
-          throw new Error('onClick must return a Promise when referToOnClickReturnValue is true');
+          throw new Error(
+            "onClick must return a Promise when referToOnClickReturnValue is true",
+          );
         }
       }
     }
@@ -109,7 +113,7 @@ export const PromptButton = <T, >({
       className={className}
       aria-label={ariaLabel}
       style={{
-        width: fullWidth ? '100%' : 'auto',
+        width: fullWidth ? "100%" : "auto",
       }}
     >
       <PromptMessage
@@ -131,30 +135,33 @@ interface PromptMessageProps {
   loadingMessage: string;
   children: ReactNode;
 }
-const PromptMessage: FunctionComponent<PromptMessageProps> = ({ promptState, confirmMessage, doneMessage, loadingMessage, children }) => {
-
-  if (promptState === 'ask') {
+const PromptMessage: FunctionComponent<PromptMessageProps> = ({
+  promptState,
+  confirmMessage,
+  doneMessage,
+  loadingMessage,
+  children,
+}) => {
+  if (promptState === "ask") {
     return (
-      <span className='warning' title='Click again to confirm'>
-        <i className='fa fa-exclamation-circle' />
-        {confirmMessage && (
-          <span className='space-left'>{confirmMessage}</span>
-        )}
+      <span className="warning" title="Click again to confirm">
+        <i className="fa fa-exclamation-circle" />
+        {confirmMessage && <span className="space-left">{confirmMessage}</span>}
       </span>
     );
   }
 
-  if (promptState === 'loading') {
+  if (promptState === "loading") {
     return (
-      <span className='warning' title='loading'>
-        <i className='fa fa-spinner animate-spin' />
-        <span className='space-left'>{loadingMessage}</span>
+      <span className="warning" title="loading">
+        <i className="fa fa-spinner animate-spin" />
+        <span className="space-left">{loadingMessage}</span>
       </span>
     );
   }
 
-  if (promptState === 'done' && doneMessage) {
-    return <span className='space-left'>{doneMessage}</span>;
+  if (promptState === "done" && doneMessage) {
+    return <span className="space-left">{doneMessage}</span>;
   }
 
   return <>{children}</>;

@@ -1,6 +1,13 @@
 // Taken from https://github.com/astoilkov/use-local-storage-state/blob/main/src/useLocalStorageState.ts
-import type { Dispatch, SetStateAction } from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import type { Dispatch, SetStateAction } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 // in memory fallback used when `localStorage` throws an error
 export const inMemoryData = new Map<string, unknown>();
@@ -12,7 +19,7 @@ export interface LocalStorageOptions<T> {
     stringify: (value: unknown) => string;
     parse: (value: string) => unknown;
   };
-};
+}
 
 // - `useLocalStorageState()` return type
 // - first two values are the same as `useState`
@@ -31,7 +38,7 @@ export default function useLocalStorageState(
 ): LocalStorageState<unknown>;
 export default function useLocalStorageState<T>(
   key: string,
-  options?: Omit<LocalStorageOptions<T | undefined>, 'defaultValue'>,
+  options?: Omit<LocalStorageOptions<T | undefined>, "defaultValue">,
 ): LocalStorageState<T | undefined>;
 export default function useLocalStorageState<T>(
   key: string,
@@ -68,7 +75,7 @@ function useLocalStorage<T>(
   const value = useSyncExternalStore(
     // useSyncExternalStore.subscribe
     useCallback(
-      onStoreChange => {
+      (onStoreChange) => {
         const onChange = (localKey: string): void => {
           if (key === localKey) {
             onStoreChange();
@@ -131,7 +138,9 @@ function useLocalStorage<T>(
   const setState = useCallback(
     (newValue: SetStateAction<T | undefined>): void => {
       const value =
-        newValue instanceof Function ? newValue(storageItem.current.parsed) : newValue;
+        newValue instanceof Function
+          ? newValue(storageItem.current.parsed)
+          : newValue;
 
       // reasons for `localStorage` to throw an error:
       // - maximum quota is exceeded
@@ -173,9 +182,9 @@ function useLocalStorage<T>(
       }
     };
 
-    window.addEventListener('storage', onStorage);
+    window.addEventListener("storage", onStorage);
 
-    return (): void => window.removeEventListener('storage', onStorage);
+    return (): void => window.removeEventListener("storage", onStorage);
   }, [key, storageSync]);
 
   return useMemo(
@@ -202,7 +211,7 @@ function triggerCallbacks(key: string): void {
 // a wrapper for `JSON.parse()` that supports "undefined" value. otherwise,
 // `JSON.parse(JSON.stringify(undefined))` returns the string "undefined" not the value `undefined`
 function parseJSON(value: string): unknown {
-  return value === 'undefined' ? undefined : JSON.parse(value);
+  return value === "undefined" ? undefined : JSON.parse(value);
 }
 
 function goodTry<T>(tryFn: () => T): T | undefined {

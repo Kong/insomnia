@@ -1,15 +1,15 @@
-import type { Merge } from 'type-fest';
+import type { Merge } from "type-fest";
 
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../common/constants';
-import { database as db } from '../common/database';
-import { strings } from '../common/strings';
-import type { BaseModel } from './index';
-import * as models from './index';
-import { isProjectId } from './project';
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from "../common/constants";
+import { database as db } from "../common/database";
+import { strings } from "../common/strings";
+import type { BaseModel } from "./index";
+import * as models from "./index";
+import { isProjectId } from "./project";
 
-export const name = 'Workspace';
-export const type = 'Workspace';
-export const prefix = 'wrk';
+export const name = "Workspace";
+export const type = "Workspace";
+export const prefix = "wrk";
 export const canDuplicate = true;
 export const canSync = true;
 
@@ -17,43 +17,39 @@ export interface BaseWorkspace {
   name: string;
   description: string;
   certificates?: any; // deprecated
-  scope: 'design' | 'collection' | 'mock-server' | 'environment';
+  scope: "design" | "collection" | "mock-server" | "environment";
 }
 
-export type WorkspaceScope = BaseWorkspace['scope'];
+export type WorkspaceScope = BaseWorkspace["scope"];
 
 export const WorkspaceScopeKeys = {
-  design: 'design',
-  collection: 'collection',
-  mockServer: 'mock-server',
-  environment: 'environment',
+  design: "design",
+  collection: "collection",
+  mockServer: "mock-server",
+  environment: "environment",
 } as const;
 
 export type Workspace = BaseModel & BaseWorkspace;
 
-export const isWorkspace = (model: Pick<BaseModel, 'type'>): model is Workspace => (
-  model.type === type
-);
+export const isWorkspace = (
+  model: Pick<BaseModel, "type">,
+): model is Workspace => model.type === type;
 
-export const isDesign = (workspace: Pick<Workspace, 'scope'>) => (
-  workspace.scope === WorkspaceScopeKeys.design
-);
+export const isDesign = (workspace: Pick<Workspace, "scope">) =>
+  workspace.scope === WorkspaceScopeKeys.design;
 
-export const isCollection = (workspace: Pick<Workspace, 'scope'>) => (
-  workspace.scope === WorkspaceScopeKeys.collection
-);
+export const isCollection = (workspace: Pick<Workspace, "scope">) =>
+  workspace.scope === WorkspaceScopeKeys.collection;
 
-export const isMockServer = (workspace: Pick<Workspace, 'scope'>) => (
-  workspace.scope === WorkspaceScopeKeys.mockServer
-);
+export const isMockServer = (workspace: Pick<Workspace, "scope">) =>
+  workspace.scope === WorkspaceScopeKeys.mockServer;
 
-export const isEnvironment = (workspace: Pick<Workspace, 'scope'>) => (
-  workspace.scope === WorkspaceScopeKeys.environment
-);
+export const isEnvironment = (workspace: Pick<Workspace, "scope">) =>
+  workspace.scope === WorkspaceScopeKeys.environment;
 
 export const init = (): BaseWorkspace => ({
   name: `New ${strings.collection.singular}`,
-  description: '',
+  description: "",
   scope: WorkspaceScopeKeys.collection,
 });
 
@@ -64,7 +60,7 @@ export function migrate(doc: Workspace) {
     doc = _migrateScope(doc);
     return doc;
   } catch (e) {
-    console.log('[db] Error during workspace migration', e);
+    console.log("[db] Error during workspace migration", e);
     throw e;
   }
 }
@@ -110,7 +106,7 @@ function _migrateExtractClientCertificates(workspace: Workspace) {
   for (const cert of certificates) {
     models.clientCertificate.create({
       parentId: workspace._id,
-      host: cert.host || '',
+      host: cert.host || "",
       passphrase: cert.passphrase || null,
       cert: cert.cert || null,
       key: cert.key || null,
@@ -131,29 +127,34 @@ function _migrateExtractClientCertificates(workspace: Workspace) {
  * corrected.
  */
 function _migrateEnsureName(workspace: Workspace) {
-  if (typeof workspace.name !== 'string') {
-    workspace.name = 'My Workspace';
+  if (typeof workspace.name !== "string") {
+    workspace.name = "My Workspace";
   }
 
   return workspace;
 }
 
 // Translate the old value
-type OldScopeTypes = 'spec' | 'debug' | 'designer' | null;
-type MigrationWorkspace = Merge<Workspace, { scope: OldScopeTypes | Workspace['scope'] }>;
+type OldScopeTypes = "spec" | "debug" | "designer" | null;
+type MigrationWorkspace = Merge<
+  Workspace,
+  { scope: OldScopeTypes | Workspace["scope"] }
+>;
 
 /**
  * Ensure workspace scope is set to a valid entry
  */
 function _migrateScope(workspace: MigrationWorkspace) {
-  if (workspace.scope === WorkspaceScopeKeys.design
-    || workspace.scope === WorkspaceScopeKeys.collection
-    || workspace.scope === WorkspaceScopeKeys.mockServer
-    || workspace.scope === WorkspaceScopeKeys.environment) {
+  if (
+    workspace.scope === WorkspaceScopeKeys.design ||
+    workspace.scope === WorkspaceScopeKeys.collection ||
+    workspace.scope === WorkspaceScopeKeys.mockServer ||
+    workspace.scope === WorkspaceScopeKeys.environment
+  ) {
     return workspace as Workspace;
   }
   // designer and spec => design, unset => collection
-  if (workspace.scope === 'designer' || workspace.scope === 'spec') {
+  if (workspace.scope === "designer" || workspace.scope === "spec") {
     workspace.scope = WorkspaceScopeKeys.design;
   } else {
     workspace.scope = WorkspaceScopeKeys.collection;
@@ -163,11 +164,11 @@ function _migrateScope(workspace: MigrationWorkspace) {
 
 function expectParentToBeProject(parentId?: string | null) {
   if (parentId && !isProjectId(parentId)) {
-    throw new Error('Expected the parent of a Workspace to be a Project');
+    throw new Error("Expected the parent of a Workspace to be a Project");
   }
 }
 
-export const SCRATCHPAD_WORKSPACE_ID = 'wrk_scratchpad';
+export const SCRATCHPAD_WORKSPACE_ID = "wrk_scratchpad";
 
 export function isScratchpad(workspace?: Workspace) {
   return workspace?._id === SCRATCHPAD_WORKSPACE_ID;
@@ -180,9 +181,9 @@ export const scopeToActivity = (scope: WorkspaceScope) => {
     case WorkspaceScopeKeys.design:
       return ACTIVITY_SPEC;
     case WorkspaceScopeKeys.mockServer:
-      return 'mock-server';
+      return "mock-server";
     case WorkspaceScopeKeys.environment:
-      return 'environment';
+      return "environment";
     default:
       return ACTIVITY_DEBUG;
   }

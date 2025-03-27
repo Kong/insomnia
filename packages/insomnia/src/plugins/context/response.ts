@@ -1,7 +1,7 @@
-import fs from 'fs';
+import fs from "fs";
 
-import * as models from '../../models/index';
-import type { ResponseHeader } from '../../models/response';
+import * as models from "../../models/index";
+import type { ResponseHeader } from "../../models/response";
 
 interface MaybeResponse {
   parentId?: string;
@@ -16,7 +16,7 @@ interface MaybeResponse {
 
 export function init(response?: MaybeResponse) {
   if (!response) {
-    throw new Error('contexts.response initialized without response');
+    throw new Error("contexts.response initialized without response");
   }
 
   return {
@@ -28,7 +28,7 @@ export function init(response?: MaybeResponse) {
       // },
 
       getRequestId() {
-        return response.parentId || '';
+        return response.parentId || "";
       },
 
       getStatusCode() {
@@ -36,7 +36,7 @@ export function init(response?: MaybeResponse) {
       },
 
       getStatusMessage() {
-        return response.statusMessage || '';
+        return response.statusMessage || "";
       },
 
       getBytesRead() {
@@ -58,7 +58,7 @@ export function init(response?: MaybeResponse) {
       setBody(body: Buffer) {
         // Should never happen but just in case it does...
         if (!response.bodyPath) {
-          throw new Error('Could not set body without existing body path');
+          throw new Error("Could not set body without existing body path");
         }
 
         fs.writeFileSync(response.bodyPath, body);
@@ -67,10 +67,12 @@ export function init(response?: MaybeResponse) {
 
       getHeader(name: string): string | string[] | null {
         const headers = response.headers || [];
-        const matchedHeaders = headers.filter(h => h.name.toLowerCase() === name.toLowerCase());
+        const matchedHeaders = headers.filter(
+          (h) => h.name.toLowerCase() === name.toLowerCase(),
+        );
 
         if (matchedHeaders.length > 1) {
-          return matchedHeaders.map(h => h.value);
+          return matchedHeaders.map((h) => h.value);
         } else if (matchedHeaders.length === 1) {
           return matchedHeaders[0].value;
         } else {
@@ -79,7 +81,7 @@ export function init(response?: MaybeResponse) {
       },
 
       getHeaders() {
-        return response.headers?.map(h => ({
+        return response.headers?.map((h) => ({
           name: h.name,
           value: h.value,
         }));

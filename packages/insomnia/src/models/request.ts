@@ -1,4 +1,4 @@
-import { OperationTypeNode } from 'graphql';
+import { OperationTypeNode } from "graphql";
 
 import {
   AUTH_API_KEY,
@@ -17,34 +17,35 @@ import {
   HAWK_ALGORITHM_SHA1,
   HAWK_ALGORITHM_SHA256,
   METHOD_GET,
-} from '../common/constants';
-import { database as db } from '../common/database';
-import type { OAuth1SignatureMethod } from '../network/o-auth-1/constants';
-import { getOperationType } from '../utils/graph-ql';
-import { deconstructQueryStringToParams } from '../utils/url/querystring';
-import type { BaseModel } from './index';
+} from "../common/constants";
+import { database as db } from "../common/database";
+import type { OAuth1SignatureMethod } from "../network/o-auth-1/constants";
+import { getOperationType } from "../utils/graph-ql";
+import { deconstructQueryStringToParams } from "../utils/url/querystring";
+import type { BaseModel } from "./index";
 
-export const name = 'Request';
+export const name = "Request";
 
-export const type = 'Request';
+export const type = "Request";
 
-export const prefix = 'req';
+export const prefix = "req";
 
 export const canDuplicate = true;
 
 export const canSync = true;
-export type AuthTypes = 'none'
-  | 'apikey'
-  | 'oauth2'
-  | 'oauth1'
-  | 'basic'
-  | 'digest'
-  | 'bearer'
-  | 'ntlm'
-  | 'hawk'
-  | 'iam'
-  | 'netrc'
-  | 'asap';
+export type AuthTypes =
+  | "none"
+  | "apikey"
+  | "oauth2"
+  | "oauth1"
+  | "basic"
+  | "digest"
+  | "bearer"
+  | "ntlm"
+  | "hawk"
+  | "iam"
+  | "netrc"
+  | "asap";
 
 export interface AuthTypeBasic {
   type: typeof AUTH_BASIC;
@@ -61,9 +62,14 @@ export interface AuthTypeAPIKey {
   addTo?: string;
 }
 export interface AuthTypeOAuth2 {
-  type: 'oauth2';
+  type: "oauth2";
   disabled?: boolean;
-  grantType: 'authorization_code' | 'client_credentials' | 'password' | 'implicit' | 'refresh_token';
+  grantType:
+    | "authorization_code"
+    | "client_credentials"
+    | "password"
+    | "implicit"
+    | "refresh_token";
   accessTokenUrl?: string;
   authorizationUrl?: string;
   clientId?: string;
@@ -156,7 +162,8 @@ export interface AuthTypeNone {
   type: typeof AUTH_NONE;
   disabled?: boolean;
 }
-export type RequestAuthentication = AuthTypeOAuth2
+export type RequestAuthentication =
+  | AuthTypeOAuth2
   | AuthTypeBasic
   | AuthTypeBearer
   | AuthTypeDigest
@@ -169,7 +176,12 @@ export type RequestAuthentication = AuthTypeOAuth2
   | AuthTypeAPIKey
   | AuthTypeNTLM;
 
-export type OAuth2ResponseType = 'code' | 'id_token' | 'id_token token' | 'none' | 'token';
+export type OAuth2ResponseType =
+  | "code"
+  | "id_token"
+  | "id_token token"
+  | "none"
+  | "token";
 
 export interface RequestHeader {
   name: string;
@@ -206,13 +218,20 @@ export const PATH_PARAMETER_REGEX = /\/:[^/?#:]+/g;
 
 export const getPathParametersFromUrl = (url: string): string[] => {
   // Find all path parameters in the URL. Path parameters are defined as segments of the URL that start with a colon.
-  const urlPathParameters = url.match(PATH_PARAMETER_REGEX)?.map(String).map(match => match.replace('\/:', '')) || [];
+  const urlPathParameters =
+    url
+      .match(PATH_PARAMETER_REGEX)
+      ?.map(String)
+      .map((match) => match.replace("\/:", "")) || [];
   const uniqueUrlPathParameters = [...new Set(urlPathParameters)];
 
   return uniqueUrlPathParameters;
 };
 
-export const getCombinedPathParametersFromUrl = (url: string, pathParameters: RequestPathParameter[]): RequestPathParameter[] => {
+export const getCombinedPathParametersFromUrl = (
+  url: string,
+  pathParameters: RequestPathParameter[],
+): RequestPathParameter[] => {
   // Extract path parameters from the URL
   const urlPathParameters = getPathParametersFromUrl(url);
 
@@ -222,7 +241,9 @@ export const getCombinedPathParametersFromUrl = (url: string, pathParameters: Re
   // Check if there are any path parameters in the active request
   if (pathParameters) {
     // Filter out the saved path parameters
-    savedPathParameters = pathParameters.filter(p => urlPathParameters.includes(p.name));
+    savedPathParameters = pathParameters.filter((p) =>
+      urlPathParameters.includes(p.name),
+    );
   }
 
   // Initialize an empty set for unsaved URL path parameters
@@ -232,8 +253,9 @@ export const getCombinedPathParametersFromUrl = (url: string, pathParameters: Re
   if (urlPathParameters) {
     // Filter out the unsaved URL path parameters
     unsavedUrlPathParameters = new Set(
-      urlPathParameters.filter(p => !savedPathParameters.map(p => p.name).includes(p))
-        .map(p => ({ name: p, value: '' }))
+      urlPathParameters
+        .filter((p) => !savedPathParameters.map((p) => p.name).includes(p))
+        .map((p) => ({ name: p, value: "" })),
     );
   }
 
@@ -268,31 +290,29 @@ export interface BaseRequest {
   settingDisableRenderRequestBody: boolean;
   settingEncodeUrl: boolean;
   settingRebuildPath: boolean;
-  settingFollowRedirects: 'global' | 'on' | 'off';
+  settingFollowRedirects: "global" | "on" | "off";
 }
 
 export type Request = BaseModel & BaseRequest;
 
-export const isRequest = (model: Pick<BaseModel, 'type'>): model is Request => (
-  model.type === type
-);
+export const isRequest = (model: Pick<BaseModel, "type">): model is Request =>
+  model.type === type;
 
-export const isRequestId = (id?: string | null) => (
-  id?.startsWith(`${prefix}_`)
-);
+export const isRequestId = (id?: string | null) => id?.startsWith(`${prefix}_`);
 
-export const isEventStreamRequest = (model: Pick<BaseModel, 'type'>) => (
-  isRequest(model) && model.headers?.find(h => h.name === 'Accept')?.value === 'text/event-stream'
-);
-export const isGraphqlSubscriptionRequest = (model: Pick<BaseModel, 'type'>) => (
-  isRequest(model) && getOperationType(model) === OperationTypeNode.SUBSCRIPTION
-);
+export const isEventStreamRequest = (model: Pick<BaseModel, "type">) =>
+  isRequest(model) &&
+  model.headers?.find((h) => h.name === "Accept")?.value ===
+    "text/event-stream";
+export const isGraphqlSubscriptionRequest = (model: Pick<BaseModel, "type">) =>
+  isRequest(model) &&
+  getOperationType(model) === OperationTypeNode.SUBSCRIPTION;
 
 export function init(): BaseRequest {
   return {
-    url: '',
-    name: 'New Request',
-    description: '',
+    url: "",
+    name: "New Request",
+    description: "",
     method: METHOD_GET,
     body: {},
     parameters: [],
@@ -309,7 +329,7 @@ export function init(): BaseRequest {
     settingDisableRenderRequestBody: false,
     settingEncodeUrl: true,
     settingRebuildPath: true,
-    settingFollowRedirects: 'global',
+    settingFollowRedirects: "global",
   };
 }
 
@@ -320,14 +340,16 @@ export function migrate(doc: Request): Request {
     doc = migrateAuthType(doc);
     return doc;
   } catch (e) {
-    console.log('[db] Error during request migration', e);
+    console.log("[db] Error during request migration", e);
     throw e;
   }
 }
 
 export function create(patch: Partial<Request> = {}) {
   if (!patch.parentId) {
-    throw new Error(`New Requests missing \`parentId\`: ${JSON.stringify(patch)}`);
+    throw new Error(
+      `New Requests missing \`parentId\`: ${JSON.stringify(patch)}`,
+    );
   }
 
   return db.docCreate<Request>(type, patch);
@@ -349,7 +371,10 @@ export function update(request: Request, patch: Partial<Request>) {
   return db.docUpdate<Request>(request, patch);
 }
 
-export async function duplicate(request: Request, patch: Partial<Request> = {}) {
+export async function duplicate(
+  request: Request,
+  patch: Partial<Request> = {},
+) {
   // Only set name and "(Copy)" if the patch does
   // not define it and the request itself has a name.
   // Otherwise leave it blank so the request URL can
@@ -369,7 +394,9 @@ export async function duplicate(request: Request, patch: Partial<Request> = {}) 
     metaSortKey: 1,
   });
 
-  const nextSortKey = nextRequest ? nextRequest.metaSortKey : request.metaSortKey + 100;
+  const nextSortKey = nextRequest
+    ? nextRequest.metaSortKey
+    : request.metaSortKey + 100;
   // Calculate new sort key
   const sortKeyIncrement = (nextSortKey - request.metaSortKey) / 2;
   const metaSortKey = request.metaSortKey + sortKeyIncrement;
@@ -397,30 +424,39 @@ export async function all() {
  * @param request
  */
 function migrateBody(request: Request) {
-  if (request.body && typeof request.body === 'object') {
+  if (request.body && typeof request.body === "object") {
     return request;
   }
 
   // Second, convert all existing urlencoded bodies to new format
-  const contentType = getContentTypeFromHeaders(request.headers) || '';
-  const wasFormUrlEncoded = !!contentType.match(/^application\/x-www-form-urlencoded/i);
+  const contentType = getContentTypeFromHeaders(request.headers) || "";
+  const wasFormUrlEncoded = !!contentType.match(
+    /^application\/x-www-form-urlencoded/i,
+  );
 
   if (wasFormUrlEncoded) {
     // Convert old-style form-encoded request bodies to new style
     request.body = {
       mimeType: CONTENT_TYPE_FORM_URLENCODED,
-      params: deconstructQueryStringToParams(typeof request.body === 'string' ? request.body : '', false),
+      params: deconstructQueryStringToParams(
+        typeof request.body === "string" ? request.body : "",
+        false,
+      ),
     };
   } else if (!request.body && !contentType) {
     request.body = {};
   } else {
-    const rawBody: string = typeof request.body === 'string' ? request.body : '';
-    request.body = typeof contentType !== 'string' ? {
-      text: rawBody,
-    } : {
-      mimeType: contentType.split(';')[0],
-      text: rawBody,
-    };
+    const rawBody: string =
+      typeof request.body === "string" ? request.body : "";
+    request.body =
+      typeof contentType !== "string"
+        ? {
+            text: rawBody,
+          }
+        : {
+            mimeType: contentType.split(";")[0],
+            text: rawBody,
+          };
   }
 
   return request;
@@ -433,8 +469,8 @@ function migrateBody(request: Request) {
 function migrateWeirdUrls(request: Request) {
   // Some people seem to have requests with URLs that don't have the indexOf
   // function. This should clear that up. This can be removed at a later date.
-  if (typeof request.url !== 'string') {
-    request.url = '';
+  if (typeof request.url !== "string") {
+    request.url = "";
   }
 
   return request;
@@ -445,7 +481,10 @@ function migrateWeirdUrls(request: Request) {
  * @param request
  */
 function migrateAuthType(request: Request) {
-  const isAuthSet = request?.authentication && 'username' in request.authentication && request.authentication.username;
+  const isAuthSet =
+    request?.authentication &&
+    "username" in request.authentication &&
+    request.authentication.username;
   // @ts-expect-error -- old model
   if (isAuthSet && !request.authentication.type) {
     // @ts-expect-error -- old model

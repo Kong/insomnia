@@ -5,15 +5,15 @@
  */
 export const setDefaultProtocol = (url: string, defaultProto?: string) => {
   const trimmedUrl = url.trim();
-  defaultProto = defaultProto || 'http:';
+  defaultProto = defaultProto || "http:";
 
   // If no url, don't bother returning anything
   if (!trimmedUrl) {
-    return '';
+    return "";
   }
 
   // Default the proto if it doesn't exist
-  if (trimmedUrl.indexOf('://') === -1) {
+  if (trimmedUrl.indexOf("://") === -1) {
     return `${defaultProto}//${trimmedUrl}`;
   }
 

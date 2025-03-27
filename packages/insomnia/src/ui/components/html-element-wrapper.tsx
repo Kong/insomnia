@@ -1,4 +1,4 @@
-import React, { type FC, useEffect, useRef } from 'react';
+import React, { type FC, useEffect, useRef } from "react";
 
 interface Props {
   el: HTMLElement;
@@ -13,7 +13,7 @@ export const HtmlElementWrapper: FC<Props> = ({ el, onUnmount }) => {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (ref.current) {
-      ref.current.innerHTML = '';
+      ref.current.innerHTML = "";
       ref.current.appendChild(el);
     }
     return () => {

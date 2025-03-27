@@ -1,10 +1,13 @@
-import type { GraphQLNamedType, GraphQLSchema, GraphQLType } from 'graphql';
-import React, { PureComponent } from 'react';
+import type { GraphQLNamedType, GraphQLSchema, GraphQLType } from "graphql";
+import React, { PureComponent } from "react";
 
-import { fuzzyMatch, fuzzyMatchAll } from '../../../common/misc';
-import { GraphQLExplorerFieldsList } from './graph-ql-explorer-fields-list';
-import { GraphQLExplorerTypeLink } from './graph-ql-explorer-type-link';
-import type { GraphQLFieldWithOptionalArgs, GraphQLFieldWithParentName } from './graph-ql-types';
+import { fuzzyMatch, fuzzyMatchAll } from "../../../common/misc";
+import { GraphQLExplorerFieldsList } from "./graph-ql-explorer-fields-list";
+import { GraphQLExplorerTypeLink } from "./graph-ql-explorer-type-link";
+import type {
+  GraphQLFieldWithOptionalArgs,
+  GraphQLFieldWithParentName,
+} from "./graph-ql-types";
 
 interface Props {
   schema: GraphQLSchema;
@@ -56,9 +59,9 @@ export class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
     const { schema, filter } = this.props;
     const typeMap = schema.getTypeMap();
 
-    const types = Object
-      .values(typeMap)
-      .filter(({ name }) => Boolean(fuzzyMatch(filter, name, { splitSpace: true, loose: true })));
+    const types = Object.values(typeMap).filter(({ name }) =>
+      Boolean(fuzzyMatch(filter, name, { splitSpace: true, loose: true })),
+    );
 
     return types;
   }
@@ -66,19 +69,31 @@ export class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
   searchForFields() {
     const { schema, filter } = this.props;
     const typeMap = schema.getTypeMap();
-    const fields = Object.values(typeMap).reduce((acc: GraphQLFieldWithParentName[], type: any) => {
-      if (typeof type.getFields !== 'function') {
-        return acc;
-      }
+    const fields = Object.values(typeMap).reduce(
+      (acc: GraphQLFieldWithParentName[], type: any) => {
+        if (typeof type.getFields !== "function") {
+          return acc;
+        }
 
-      const fields: GraphQLFieldWithOptionalArgs[] = type.getFields();
-      const relevantFields: GraphQLFieldWithParentName[] = Object
-        .values(fields)
-        // Fuzzy match on field.name and field.args[*].name
-        .filter(({ name, args }) => Boolean(fuzzyMatchAll(filter, [name, ...(args?.map(arg => arg.name) || [])], { splitSpace: true, loose: true })))
-        .map(field => ({ ...field, parentName: type.name }));
-      return [...acc, ...relevantFields];
-    }, []);
+        const fields: GraphQLFieldWithOptionalArgs[] = type.getFields();
+        const relevantFields: GraphQLFieldWithParentName[] = Object.values(
+          fields,
+        )
+          // Fuzzy match on field.name and field.args[*].name
+          .filter(({ name, args }) =>
+            Boolean(
+              fuzzyMatchAll(
+                filter,
+                [name, ...(args?.map((arg) => arg.name) || [])],
+                { splitSpace: true, loose: true },
+              ),
+            ),
+          )
+          .map((field) => ({ ...field, parentName: type.name }));
+        return [...acc, ...relevantFields];
+      },
+      [],
+    );
 
     return fields;
   }
@@ -97,9 +112,12 @@ export class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
     return (
       <>
         <ul className="graphql-explorer__defs">
-          {foundTypes.slice(0, numberOfTypesToRender).map(type => (
+          {foundTypes.slice(0, numberOfTypesToRender).map((type) => (
             <li key={type.name}>
-              <GraphQLExplorerTypeLink type={type} onNavigate={onNavigateType} />
+              <GraphQLExplorerTypeLink
+                type={type}
+                onNavigate={onNavigateType}
+              />
             </li>
           ))}
         </ul>
@@ -107,9 +125,14 @@ export class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
           <a
             href="#"
             className="surprise"
-            onClick={() => this.setState(({ displayedTypeBatches: oldValue }) => ({ displayedTypeBatches: oldValue + 1 }))}
+            onClick={() =>
+              this.setState(({ displayedTypeBatches: oldValue }) => ({
+                displayedTypeBatches: oldValue + 1,
+              }))
+            }
           >
-            And {numberOfAllTypes - numberOfTypesToRender} more types found... Click here to show {BATCH_SIZE} more.
+            And {numberOfAllTypes - numberOfTypesToRender} more types found...
+            Click here to show {BATCH_SIZE} more.
           </a>
         )}
       </>
@@ -138,9 +161,14 @@ export class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
           <a
             href="#"
             className="surprise"
-            onClick={() => this.setState(({ displayedFieldBatches: oldValue }) => ({ displayedFieldBatches: oldValue + 1 }))}
+            onClick={() =>
+              this.setState(({ displayedFieldBatches: oldValue }) => ({
+                displayedFieldBatches: oldValue + 1,
+              }))
+            }
           >
-            And {numberOfAllFields - numberOfFieldsToRender} more fields found... Click here to show {BATCH_SIZE} more.
+            And {numberOfAllFields - numberOfFieldsToRender} more fields
+            found... Click here to show {BATCH_SIZE} more.
           </a>
         )}
       </>
@@ -152,9 +180,13 @@ export class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
     return (
       <div ref={this.ref} className="graphql-explorer__search-reults">
         {!foundTypes.length && !foundFields.length && <p>No results found.</p>}
-        {foundTypes.length > 0 && <h2 className="graphql-explorer__subheading">Found Types</h2>}
+        {foundTypes.length > 0 && (
+          <h2 className="graphql-explorer__subheading">Found Types</h2>
+        )}
         {this.renderFoundTypes()}
-        {foundFields.length > 0 && <h2 className="graphql-explorer__subheading">Found Fields</h2>}
+        {foundFields.length > 0 && (
+          <h2 className="graphql-explorer__subheading">Found Fields</h2>
+        )}
         {this.renderFoundFields()}
       </div>
     );

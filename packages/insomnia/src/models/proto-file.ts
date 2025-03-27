@@ -1,11 +1,11 @@
-import { database as db } from '../common/database';
-import type { BaseModel } from './index';
+import { database as db } from "../common/database";
+import type { BaseModel } from "./index";
 
-export const name = 'Proto File';
+export const name = "Proto File";
 
-export const type = 'ProtoFile';
+export const type = "ProtoFile";
 
-export const prefix = 'pf';
+export const prefix = "pf";
 
 export const canDuplicate = true;
 
@@ -18,14 +18,14 @@ interface BaseProtoFile {
 
 export type ProtoFile = BaseModel & BaseProtoFile;
 
-export const isProtoFile = (model: Pick<BaseModel, 'type'>): model is ProtoFile => (
-  model.type === type
-);
+export const isProtoFile = (
+  model: Pick<BaseModel, "type">,
+): model is ProtoFile => model.type === type;
 
 export function init(): BaseProtoFile {
   return {
-    name: 'New Proto File',
-    protoText: '',
+    name: "New Proto File",
+    protoText: "",
   };
 }
 
@@ -35,7 +35,7 @@ export function migrate(doc: ProtoFile) {
 
 export function create(patch: Partial<ProtoFile> = {}) {
   if (!patch.parentId) {
-    throw new Error('New ProtoFile missing `parentId`');
+    throw new Error("New ProtoFile missing `parentId`");
   }
 
   return db.docCreate<ProtoFile>(type, patch);

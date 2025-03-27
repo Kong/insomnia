@@ -1,10 +1,10 @@
-import clone from 'clone';
-import crypto from 'crypto';
+import clone from "clone";
+import crypto from "crypto";
 
-import { strings } from '../../common/strings';
-import type { BaseModel } from '../../models';
-import { deleteKeys, resetKeys, shouldIgnoreKey } from '../ignore-keys';
-import { deterministicStringify } from '../lib/deterministicStringify';
+import { strings } from "../../common/strings";
+import type { BaseModel } from "../../models";
+import { deleteKeys, resetKeys, shouldIgnoreKey } from "../ignore-keys";
+import { deterministicStringify } from "../lib/deterministicStringify";
 import type {
   Branch,
   Compare,
@@ -17,9 +17,11 @@ import type {
   StageEntry,
   StatusCandidate,
   StatusCandidateMap,
-} from '../types';
+} from "../types";
 
-export function generateSnapshotStateMap(snapshot: Snapshot | null): SnapshotStateMap {
+export function generateSnapshotStateMap(
+  snapshot: Snapshot | null,
+): SnapshotStateMap {
   if (!snapshot) {
     return {};
   }
@@ -27,7 +29,9 @@ export function generateSnapshotStateMap(snapshot: Snapshot | null): SnapshotSta
   return generateStateMap(snapshot.state);
 }
 
-export function generateStateMap(state: SnapshotState | null): SnapshotStateMap {
+export function generateStateMap(
+  state: SnapshotState | null,
+): SnapshotStateMap {
   if (!state) {
     return {};
   }
@@ -41,7 +45,9 @@ export function generateStateMap(state: SnapshotState | null): SnapshotStateMap 
   return map;
 }
 
-export function generateCandidateMap(candidates: StatusCandidate[]): StatusCandidateMap {
+export function generateCandidateMap(
+  candidates: StatusCandidate[],
+): StatusCandidateMap {
   const map: StatusCandidateMap = {};
 
   for (const candidate of candidates) {
@@ -51,9 +57,9 @@ export function generateCandidateMap(candidates: StatusCandidate[]): StatusCandi
   return map;
 }
 
-export function combinedMapKeys<T extends SnapshotStateMap | StatusCandidateMap>(
-  ...maps: T[]
-): DocumentKey[] {
+export function combinedMapKeys<
+  T extends SnapshotStateMap | StatusCandidateMap,
+>(...maps: T[]): DocumentKey[] {
   const keyMap: Record<string, unknown> = {};
 
   for (const map of maps) {
@@ -100,7 +106,13 @@ export function threeWayMerge(
     // ~~~~~~~~~~ //
     // (1/12)
     // Unmodified
-    if (root && trunk && other && root.blob === trunk.blob && root.blob === other.blob) {
+    if (
+      root &&
+      trunk &&
+      other &&
+      root.blob === trunk.blob &&
+      root.blob === other.blob
+    ) {
       newState.push(trunk);
       continue;
     }
@@ -136,7 +148,7 @@ export function threeWayMerge(
         conflicts.push({
           key,
           name: other.name,
-          message: 'both added',
+          message: "both added",
           mineBlob: trunk.blob,
           theirsBlob: other.blob,
           choose: other.blob,
@@ -166,12 +178,18 @@ export function threeWayMerge(
     // ~~~~~~~~~~~~~ //
     // (8/12)
     // Modified in both
-    if (root && trunk && other && root.blob !== trunk.blob && root.blob !== other.blob) {
+    if (
+      root &&
+      trunk &&
+      other &&
+      root.blob !== trunk.blob &&
+      root.blob !== other.blob
+    ) {
       if (trunk.blob !== other.blob) {
         conflicts.push({
           key,
           name: other.name,
-          message: 'both modified',
+          message: "both modified",
           mineBlob: trunk.blob,
           theirsBlob: other.blob,
           choose: other.blob,
@@ -184,14 +202,26 @@ export function threeWayMerge(
 
     // (9/12)
     // Modified in trunk
-    if (root && trunk && other && root.blob !== trunk.blob && root.blob === other.blob) {
+    if (
+      root &&
+      trunk &&
+      other &&
+      root.blob !== trunk.blob &&
+      root.blob === other.blob
+    ) {
       newState.push(trunk);
       continue;
     }
 
     // (10/12)
     // Modified in other
-    if (root && trunk && other && root.blob === trunk.blob && root.blob !== other.blob) {
+    if (
+      root &&
+      trunk &&
+      other &&
+      root.blob === trunk.blob &&
+      root.blob !== other.blob
+    ) {
       newState.push(other);
       continue;
     }
@@ -205,7 +235,7 @@ export function threeWayMerge(
       conflicts.push({
         key,
         name: other.name,
-        message: 'you deleted and they modified',
+        message: "you deleted and they modified",
         mineBlob: null,
         theirsBlob: other.blob,
         choose: other.blob,
@@ -220,7 +250,7 @@ export function threeWayMerge(
       conflicts.push({
         key,
         name: root.name,
-        message: 'they deleted and you modified',
+        message: "they deleted and you modified",
         mineBlob: trunk.blob,
         theirsBlob: null,
         choose: trunk.blob,
@@ -230,7 +260,7 @@ export function threeWayMerge(
     }
 
     // This should never actually happen, but let's error just to be safe
-    throw new Error('3-way merge hit impossible state');
+    throw new Error("3-way merge hit impossible state");
   }
 
   return {
@@ -239,10 +269,7 @@ export function threeWayMerge(
   };
 }
 
-export function compareBranches(
-  a: Branch | null,
-  b: Branch | null,
-): Compare {
+export function compareBranches(a: Branch | null, b: Branch | null): Compare {
   const snapshotsA = a ? a.snapshots : [];
   const snapshotsB = b ? b.snapshots : [];
   const latestA = snapshotsA[snapshotsA.length - 1] || null;
@@ -285,10 +312,7 @@ export interface StateDelta {
   remove: SnapshotStateEntry[];
 }
 
-export function stateDelta(
-  base: SnapshotState,
-  desired: SnapshotState,
-) {
+export function stateDelta(base: SnapshotState, desired: SnapshotState) {
   const result: StateDelta = {
     add: [],
     update: [],
@@ -320,7 +344,10 @@ export function stateDelta(
   return result;
 }
 
-export function getStagable(state: SnapshotState, candidates: StatusCandidate[]) {
+export function getStagable(
+  state: SnapshotState,
+  candidates: StatusCandidate[],
+) {
   const stagable: StageEntry[] = [];
   const stateMap = generateStateMap(state);
   const candidateMap = generateCandidateMap(candidates);
@@ -375,10 +402,13 @@ export function getStagable(state: SnapshotState, candidates: StatusCandidate[])
   return stagable;
 }
 
-export function getRootSnapshot(a: Branch | null, b: Branch | null): string | null {
+export function getRootSnapshot(
+  a: Branch | null,
+  b: Branch | null,
+): string | null {
   const snapshotsA = a ? a.snapshots : [];
   const snapshotsB = b ? b.snapshots : [];
-  const rootSnapshotId = '';
+  const rootSnapshotId = "";
 
   for (let ai = snapshotsA.length - 1; ai >= 0; ai--) {
     for (let bi = snapshotsB.length - 1; bi >= 0; bi--) {
@@ -457,11 +487,11 @@ export function hash(obj?: any): {
   hash: string;
 } {
   if (!obj) {
-    throw new Error('Cannot hash undefined value');
+    throw new Error("Cannot hash undefined value");
   }
 
   const content = deterministicStringify(obj);
-  const hash = crypto.createHash('sha1').update(content).digest('hex');
+  const hash = crypto.createHash("sha1").update(content).digest("hex");
   return {
     hash,
     content,
@@ -480,11 +510,14 @@ export function hashDocument(doc?: BaseModel) {
   return hash(newDoc);
 }
 
-export function updateStateWithConflictResolutions(state: SnapshotState, conflicts: MergeConflict[]) {
+export function updateStateWithConflictResolutions(
+  state: SnapshotState,
+  conflicts: MergeConflict[],
+) {
   const newStateMap = generateStateMap(state);
 
   for (const { choose, key, name } of conflicts) {
-    const stateEntry = state.find(e => e.key === key);
+    const stateEntry = state.find((e) => e.key === key);
 
     // Not in the state, but we choose the conflict
     if (!stateEntry && choose !== null) {
@@ -510,14 +543,14 @@ export function updateStateWithConflictResolutions(state: SnapshotState, conflic
     delete newStateMap[key];
   }
 
-  return Object.keys(newStateMap).map(k => newStateMap[k]);
+  return Object.keys(newStateMap).map((k) => newStateMap[k]);
 }
 
 export function describeChanges<T extends BaseModel>(a: T, b: T): string[] {
   const aT = Object.prototype.toString.call(a);
   const bT = Object.prototype.toString.call(b);
 
-  if (aT !== '[object Object]' || bT !== '[object Object]') {
+  if (aT !== "[object Object]" || bT !== "[object Object]") {
     return [];
   }
 
@@ -553,24 +586,24 @@ export function describeChanges<T extends BaseModel>(a: T, b: T): string[] {
   return changes;
 }
 
-export const interceptAccessError = async <T>(
-  {
-    callback,
-    action,
-    resourceName,
-    resourceType = strings.collection.singular.toLowerCase(),
-  }: {
-    callback: () => T | Promise<T>;
-    action: string;
-    resourceName: string;
-    resourceType?: string;
-  }
-) => {
+export const interceptAccessError = async <T>({
+  callback,
+  action,
+  resourceName,
+  resourceType = strings.collection.singular.toLowerCase(),
+}: {
+  callback: () => T | Promise<T>;
+  action: string;
+  resourceName: string;
+  resourceType?: string;
+}) => {
   try {
     return await callback();
   } catch (error: unknown) {
-    if (error instanceof Error && error.message.includes('invalid access')) {
-      throw new Error(`You no longer have permission to ${action} the "${resourceName}" ${resourceType}.  Contact your team administrator if you think this is an error.`);
+    if (error instanceof Error && error.message.includes("invalid access")) {
+      throw new Error(
+        `You no longer have permission to ${action} the "${resourceName}" ${resourceType}.  Contact your team administrator if you think this is an error.`,
+      );
     }
     throw error;
   }

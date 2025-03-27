@@ -1,5 +1,5 @@
 interface Options {
-  itemTypes?: ('file' | 'directory')[];
+  itemTypes?: ("file" | "directory")[];
   extensions?: string[];
 }
 
@@ -8,42 +8,47 @@ interface FileSelection {
   canceled: boolean;
 }
 
-export const selectFileOrFolder = async ({ itemTypes, extensions }: Options) => {
+export const selectFileOrFolder = async ({
+  itemTypes,
+  extensions,
+}: Options) => {
   // If no types are selected then default to just files and not directories
-  const types = itemTypes || ['file'];
-  let title = 'Select ';
+  const types = itemTypes || ["file"];
+  let title = "Select ";
 
-  if (types.includes('file')) {
-    title += ' File';
+  if (types.includes("file")) {
+    title += " File";
 
     if (types.length > 2) {
-      title += ' or';
+      title += " or";
     }
   }
 
-  if (types.includes('directory')) {
-    title += ' Directory';
+  if (types.includes("directory")) {
+    title += " Directory";
   }
 
   const { canceled, filePaths } = await window.dialog.showOpenDialog({
     title,
-    buttonLabel: 'Select',
-    properties: types.map(type => {
+    buttonLabel: "Select",
+    properties: types.map((type) => {
       switch (type) {
-        case 'file':
-          return 'openFile';
+        case "file":
+          return "openFile";
 
-        case 'directory':
-          return 'openDirectory';
+        case "directory":
+          return "openDirectory";
 
         default:
           throw new Error(`unrecognized item type: "${type}"`);
       }
     }),
-    filters: [{
-      extensions: (extensions?.length ? extensions : ['*']),
-      name: '',
-    }],
+    filters: [
+      {
+        extensions: extensions?.length ? extensions : ["*"],
+        name: "",
+      },
+    ],
   });
 
   const fileSelection: FileSelection = {

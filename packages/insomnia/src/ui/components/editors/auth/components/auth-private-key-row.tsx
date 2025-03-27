@@ -1,15 +1,18 @@
-import React, { type FC, type ReactNode, useCallback } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import React, { type FC, type ReactNode, useCallback } from "react";
+import { useRouteLoaderData } from "react-router-dom";
 
-import { toKebabCase } from '../../../../../common/misc';
-import { invariant } from '../../../../../utils/invariant';
-import { useNunjucks } from '../../../../context/nunjucks/use-nunjucks';
-import { useRequestGroupPatcher, useRequestPatcher } from '../../../../hooks/use-request';
-import type { RequestLoaderData } from '../../../../routes/request';
-import type { RequestGroupLoaderData } from '../../../../routes/request-group';
-import { showModal } from '../../../modals';
-import { CodePromptModal } from '../../../modals/code-prompt-modal';
-import { AuthRow } from './auth-row';
+import { toKebabCase } from "../../../../../common/misc";
+import { invariant } from "../../../../../utils/invariant";
+import { useNunjucks } from "../../../../context/nunjucks/use-nunjucks";
+import {
+  useRequestGroupPatcher,
+  useRequestPatcher,
+} from "../../../../hooks/use-request";
+import type { RequestLoaderData } from "../../../../routes/request";
+import type { RequestGroupLoaderData } from "../../../../routes/request-group";
+import { showModal } from "../../../modals";
+import { CodePromptModal } from "../../../modals/code-prompt-modal";
+import { AuthRow } from "./auth-row";
 
 const PRIVATE_KEY_PLACEHOLDER = `
 -----BEGIN RSA PRIVATE KEY-----
@@ -26,35 +29,46 @@ cJV+wRTs/Szp6LXAgMmTkKMJ+9XXErUIUgwbl27Y3Rv/9ox1p5VRg+A=
 
 interface Props {
   label: string;
-  property: 'privateKey';
+  property: "privateKey";
   help?: ReactNode;
 }
 
 export const AuthPrivateKeyRow: FC<Props> = ({ label, property, help }) => {
-  const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const groupData = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
+  const reqData = useRouteLoaderData("request/:requestId") as RequestLoaderData;
+  const groupData = useRouteLoaderData(
+    "request-group/:requestGroupId",
+  ) as RequestGroupLoaderData;
   const patchRequest = useRequestPatcher();
   const patchRequestGroup = useRequestGroupPatcher();
   const patcher = Boolean(reqData) ? patchRequest : patchRequestGroup;
 
-  const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
-  invariant('privateKey' in authentication, 'must have privateKey property in authentication object');
+  const { authentication, _id } =
+    reqData?.activeRequest || groupData.activeRequestGroup;
+  invariant(
+    "privateKey" in authentication,
+    "must have privateKey property in authentication object",
+  );
 
   const { handleGetRenderContext, handleRender } = useNunjucks();
 
   const privateKey = authentication[property];
-  const onChange = useCallback((value: string) => patcher(_id, { authentication: { ...authentication, [property]: value } }),
-    [_id, authentication, patcher, property]);
+  const onChange = useCallback(
+    (value: string) =>
+      patcher(_id, {
+        authentication: { ...authentication, [property]: value },
+      }),
+    [_id, authentication, patcher, property],
+  );
 
   const editPrivateKey = () => {
     showModal(CodePromptModal, {
-      submitName: 'Done',
-      title: 'Edit Private Key',
-      defaultValue: privateKey || '',
+      submitName: "Done",
+      title: "Edit Private Key",
+      defaultValue: privateKey || "",
       onChange,
       enableRender: Boolean(handleRender || handleGetRenderContext),
       placeholder: PRIVATE_KEY_PLACEHOLDER,
-      mode: 'text/plain',
+      mode: "text/plain",
       hideMode: true,
     });
   };
@@ -65,7 +79,7 @@ export const AuthPrivateKeyRow: FC<Props> = ({ label, property, help }) => {
     <AuthRow labelFor={id} label={label} help={help}>
       <button id={id} className="btn btn--clicky wide" onClick={editPrivateKey}>
         <i className="fa fa-edit space-right" />
-        {privateKey ? 'Click to Edit' : 'Click to Add'}
+        {privateKey ? "Click to Edit" : "Click to Add"}
       </button>
     </AuthRow>
   );

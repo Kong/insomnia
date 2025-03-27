@@ -1,12 +1,6 @@
 {
   "$schema": "../../node_modules/oxlint/configuration_schema.json",
-  "plugins": [
-    "typescript",
-    "oxc",
-    "import",
-    "node",
-    "react"
-  ],
+  "plugins": ["typescript", "oxc", "import", "node", "react"],
   "categories": {
     "correctness": "off"
   },
@@ -17,10 +11,7 @@
     "curly": "error",
     "default-case": "error",
     "default-case-last": "error",
-    "eqeqeq": [
-      "error",
-      "smart"
-    ],
+    "eqeqeq": ["error", "smart"],
     "no-async-promise-executor": "off",
     "no-case-declarations": "off",
     "no-duplicate-imports": "off",
@@ -51,10 +42,7 @@
       }
     ],
     "@typescript-eslint/ban-types": "off",
-    "@typescript-eslint/consistent-type-definitions": [
-      "error",
-      "interface"
-    ],
+    "@typescript-eslint/consistent-type-definitions": ["error", "interface"],
     "@typescript-eslint/no-empty-interface": [
       "error",
       {

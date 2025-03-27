@@ -1,38 +1,38 @@
-const STATE_IN_NUN_VAR = 'nunvar';
-const STATE_IN_NUN_TAG = 'nuntag';
-const STATE_IN_NUN_COM = 'nuncom';
-const STATE_IN_STRING = 'string';
-const STATE_NONE = 'none';
+const STATE_IN_NUN_VAR = "nunvar";
+const STATE_IN_NUN_TAG = "nuntag";
+const STATE_IN_NUN_COM = "nuncom";
+const STATE_IN_STRING = "string";
+const STATE_NONE = "none";
 
 const NUNJUCKS_OPEN_STATES: {
-  '{{': typeof STATE_IN_NUN_VAR;
-  '{%': typeof STATE_IN_NUN_TAG;
-  '{#': typeof STATE_IN_NUN_COM;
+  "{{": typeof STATE_IN_NUN_VAR;
+  "{%": typeof STATE_IN_NUN_TAG;
+  "{#": typeof STATE_IN_NUN_COM;
   [anythingElse: string]: string | undefined;
 } = {
-  '{{': STATE_IN_NUN_VAR,
-  '{%': STATE_IN_NUN_TAG,
-  '{#': STATE_IN_NUN_COM,
+  "{{": STATE_IN_NUN_VAR,
+  "{%": STATE_IN_NUN_TAG,
+  "{#": STATE_IN_NUN_COM,
 };
 
 const NUNJUCKS_CLOSE_STATES: {
-  '}}': typeof STATE_IN_NUN_VAR;
-  '%}': typeof STATE_IN_NUN_TAG;
-  '#}': typeof STATE_IN_NUN_COM;
+  "}}": typeof STATE_IN_NUN_VAR;
+  "%}": typeof STATE_IN_NUN_TAG;
+  "#}": typeof STATE_IN_NUN_COM;
   [anythingElse: string]: string | undefined;
 } = {
-  '}}': STATE_IN_NUN_VAR,
-  '%}': STATE_IN_NUN_TAG,
-  '#}': STATE_IN_NUN_COM,
+  "}}": STATE_IN_NUN_VAR,
+  "%}": STATE_IN_NUN_TAG,
+  "#}": STATE_IN_NUN_COM,
 };
 
 function ensureStringify(val?: string | Object): string {
-  let defaultVal = '';
+  let defaultVal = "";
   if (!val) {
     return defaultVal;
   }
 
-  if (typeof val === 'object') {
+  if (typeof val === "object") {
     try {
       defaultVal = JSON.stringify(val);
     } catch {
@@ -50,9 +50,17 @@ function ensureStringify(val?: string | Object): string {
  *
  * Code taken from jsonlint (http://zaa.ch/jsonlint/)
  */
-export const jsonPrettify = (json?: string | Object, indentChars = '\t', replaceUnicode = true) => {
+export const jsonPrettify = (
+  json?: string | Object,
+  indentChars = "\t",
+  replaceUnicode = true,
+) => {
   let prePrettify = ensureStringify(json);
-  if (!prePrettify.includes('{') && !prePrettify.includes('[') && !prePrettify.includes('"')) {
+  if (
+    !prePrettify.includes("{") &&
+    !prePrettify.includes("[") &&
+    !prePrettify.includes('"')
+  ) {
     return prePrettify;
   }
 
@@ -63,14 +71,14 @@ export const jsonPrettify = (json?: string | Object, indentChars = '\t', replace
       prePrettify = convertUnicode(prePrettify);
     } catch (err) {
       // Just in case (should never happen)
-      console.warn('Prettify failed to handle unicode', err);
+      console.warn("Prettify failed to handle unicode", err);
     }
   }
 
   let i = 0;
   const il = prePrettify.length;
   const tab = indentChars;
-  let newJson = '';
+  let newJson = "";
   let indentLevel = 0;
   let currentChar: string | null = null;
   let nextChar: string | null = null;
@@ -79,7 +87,7 @@ export const jsonPrettify = (json?: string | Object, indentChars = '\t', replace
 
   for (; i < il; i += 1) {
     currentChar = prePrettify.charAt(i);
-    nextChar = prePrettify.charAt(i + 1) || '';
+    nextChar = prePrettify.charAt(i + 1) || "";
     nextTwo = currentChar + nextChar;
 
     if (state === STATE_IN_STRING) {
@@ -87,7 +95,7 @@ export const jsonPrettify = (json?: string | Object, indentChars = '\t', replace
         state = STATE_NONE;
         newJson += currentChar;
         continue;
-      } else if (currentChar === '\\') {
+      } else if (currentChar === "\\") {
         newJson += currentChar + nextChar;
         i++;
         continue;
@@ -104,7 +112,7 @@ export const jsonPrettify = (json?: string | Object, indentChars = '\t', replace
         state = STATE_NONE;
         if (closeState === STATE_IN_NUN_COM) {
           // Put comments on their own lines
-          newJson += nextTwo + '\n' + repeatString(tab, indentLevel);
+          newJson += nextTwo + "\n" + repeatString(tab, indentLevel);
         } else {
           newJson += nextTwo;
         }
@@ -130,46 +138,46 @@ export const jsonPrettify = (json?: string | Object, indentChars = '\t', replace
     }
 
     switch (currentChar) {
-      case ',':
-        newJson += currentChar + '\n' + repeatString(tab, indentLevel);
+      case ",":
+        newJson += currentChar + "\n" + repeatString(tab, indentLevel);
         continue;
-      case '{':
-        if (nextChar === '}') {
+      case "{":
+        if (nextChar === "}") {
           newJson += currentChar + nextChar;
           i++;
         } else {
           indentLevel++;
-          newJson += currentChar + '\n' + repeatString(tab, indentLevel);
+          newJson += currentChar + "\n" + repeatString(tab, indentLevel);
         }
         continue;
-      case '[':
-        if (nextChar === ']') {
+      case "[":
+        if (nextChar === "]") {
           newJson += currentChar + nextChar;
           i++;
         } else {
           indentLevel++;
-          newJson += currentChar + '\n' + repeatString(tab, indentLevel);
+          newJson += currentChar + "\n" + repeatString(tab, indentLevel);
         }
         continue;
-      case '}':
+      case "}":
         indentLevel--;
-        newJson += '\n' + repeatString(tab, indentLevel) + currentChar;
+        newJson += "\n" + repeatString(tab, indentLevel) + currentChar;
         continue;
-      case ']':
+      case "]":
         indentLevel--;
-        newJson += '\n' + repeatString(tab, indentLevel) + currentChar;
+        newJson += "\n" + repeatString(tab, indentLevel) + currentChar;
         continue;
-      case ':':
-        newJson += ': ';
+      case ":":
+        newJson += ": ";
         continue;
       case '"':
         state = STATE_IN_STRING;
         newJson += currentChar;
         continue;
-      case ' ':
-      case '\n':
-      case '\t':
-      case '\r':
+      case " ":
+      case "\n":
+      case "\t":
+      case "\r":
         // Don't add whitespace
         continue;
       default:
@@ -179,13 +187,13 @@ export const jsonPrettify = (json?: string | Object, indentChars = '\t', replace
   }
 
   // Remove lines that only contain whitespace
-  return newJson.replace(/^\s*\n/gm, '');
+  return newJson.replace(/^\s*\n/gm, "");
 };
 
 const repeatString = (str: string, count: number) => {
   if (count < 0) {
-    return '';
-  };
+    return "";
+  }
   return new Array(count + 1).join(str);
 };
 
@@ -202,10 +210,10 @@ const convertUnicode = (originalStr: string) => {
   // Matches \u#### but not \\u####
   const unicodeRegex = /\\u[0-9a-fA-F]{4}/g;
 
-  let convertedStr = '';
+  let convertedStr = "";
   while ((m = unicodeRegex.exec(originalStr))) {
     // Don't convert if the backslash itself is escaped
-    if (originalStr[m.index - 1] === '\\') {
+    if (originalStr[m.index - 1] === "\\") {
       continue;
     }
 
@@ -222,7 +230,7 @@ const convertUnicode = (originalStr: string) => {
       lastI = m.index + m[0].length;
     } catch (err) {
       // Some reason we couldn't convert a char. Should never actually happen
-      console.warn('Failed to convert unicode char', m[0], err);
+      console.warn("Failed to convert unicode char", m[0], err);
     }
   }
 

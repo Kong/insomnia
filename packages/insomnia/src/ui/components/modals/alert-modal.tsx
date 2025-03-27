@@ -1,10 +1,16 @@
-import classnames from 'classnames';
-import React, { forwardRef, type ReactNode, useImperativeHandle, useRef, useState } from 'react';
+import classnames from "classnames";
+import React, {
+  forwardRef,
+  type ReactNode,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 
-import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
-import { ModalBody } from '../base/modal-body';
-import { ModalFooter } from '../base/modal-footer';
-import { ModalHeader } from '../base/modal-header';
+import { Modal, type ModalHandle, type ModalProps } from "../base/modal";
+import { ModalBody } from "../base/modal-body";
+import { ModalFooter } from "../base/modal-footer";
+import { ModalHeader } from "../base/modal-header";
 
 export interface AlertModalOptions {
   title?: string;
@@ -21,41 +27,46 @@ export interface AlertModalHandle {
 export const AlertModal = forwardRef<AlertModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<AlertModalOptions>({
-    title: '',
-    message: '',
+    title: "",
+    message: "",
     addCancel: false,
-    okLabel: '',
-    bodyClassName: '',
+    okLabel: "",
+    bodyClassName: "",
   });
 
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: ({ title, message, addCancel, onConfirm, okLabel, bodyClassName = '' }) => {
-      setState({
+  useImperativeHandle(
+    ref,
+    () => ({
+      hide: () => {
+        modalRef.current?.hide();
+      },
+      show: ({
         title,
         message,
         addCancel,
-        okLabel,
         onConfirm,
-        bodyClassName,
-      });
-      modalRef.current?.show();
-    },
-  }), []);
+        okLabel,
+        bodyClassName = "",
+      }) => {
+        setState({
+          title,
+          message,
+          addCancel,
+          okLabel,
+          onConfirm,
+          bodyClassName,
+        });
+        modalRef.current?.show();
+      },
+    }),
+    [],
+  );
 
   const { message, title, addCancel, okLabel, bodyClassName } = state;
   return (
     <Modal ref={modalRef}>
-      <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
-      <ModalBody
-        className={classnames([
-          'wide',
-          'pad',
-          bodyClassName,
-        ])}
-      >
+      <ModalHeader>{title || "Uh Oh!"}</ModalHeader>
+      <ModalBody className={classnames(["wide", "pad", bodyClassName])}>
         {message}
       </ModalBody>
       <ModalFooter>
@@ -69,16 +80,16 @@ export const AlertModal = forwardRef<AlertModalHandle, ModalProps>((_, ref) => {
             className="btn"
             onClick={() => {
               modalRef.current?.hide();
-              if (typeof state.onConfirm === 'function') {
+              if (typeof state.onConfirm === "function") {
                 state.onConfirm();
               }
             }}
           >
-            {okLabel || 'Ok'}
+            {okLabel || "Ok"}
           </button>
         </div>
       </ModalFooter>
     </Modal>
   );
 });
-AlertModal.displayName = 'AlertModal';
+AlertModal.displayName = "AlertModal";

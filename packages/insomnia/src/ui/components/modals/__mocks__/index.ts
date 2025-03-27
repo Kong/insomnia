@@ -1,9 +1,9 @@
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
-import * as modalsOriginal from '../index';
+import * as modalsOriginal from "../index";
 
 // eslint-disable-next-line filenames/match-exported
-const modals = vi.requireActual('../index') as typeof modalsOriginal;
+const modals = vi.requireActual("../index") as typeof modalsOriginal;
 
 modals.showError = vi.fn();
 modals.showAlert = vi.fn();

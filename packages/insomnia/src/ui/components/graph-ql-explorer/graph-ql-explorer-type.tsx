@@ -1,11 +1,17 @@
-import { GraphQLInterfaceType, GraphQLObjectType, GraphQLSchema, type GraphQLType, GraphQLUnionType } from 'graphql';
-import React, { type FC, Fragment } from 'react';
+import {
+  GraphQLInterfaceType,
+  GraphQLObjectType,
+  GraphQLSchema,
+  type GraphQLType,
+  GraphQLUnionType,
+} from "graphql";
+import React, { type FC, Fragment } from "react";
 
-import { ascendingNameSort } from '../../../common/sorting';
-import { MarkdownPreview } from '../markdown-preview';
-import { GraphQLExplorerFieldsList } from './graph-ql-explorer-fields-list';
-import { GraphQLExplorerTypeLink } from './graph-ql-explorer-type-link';
-import { type GraphQLFieldWithParentName } from './graph-ql-types';
+import { ascendingNameSort } from "../../../common/sorting";
+import { MarkdownPreview } from "../markdown-preview";
+import { GraphQLExplorerFieldsList } from "./graph-ql-explorer-fields-list";
+import { GraphQLExplorerTypeLink } from "./graph-ql-explorer-type-link";
+import { type GraphQLFieldWithParentName } from "./graph-ql-types";
 
 interface Props {
   onNavigateType: (type: GraphQLType) => void;
@@ -13,21 +19,27 @@ interface Props {
   type: GraphQLType;
   schema: GraphQLSchema | null;
 }
-export const GraphQLExplorerType: FC<Props> = ({ schema, type, onNavigateType, onNavigateField }) => {
+export const GraphQLExplorerType: FC<Props> = ({
+  schema,
+  type,
+  onNavigateType,
+  onNavigateField,
+}) => {
   const getTitle = () => {
     if (type instanceof GraphQLUnionType) {
-      return 'Possible Types';
+      return "Possible Types";
     }
     if (type instanceof GraphQLInterfaceType) {
-      return 'Implementations';
+      return "Implementations";
     }
     if (type instanceof GraphQLObjectType) {
-      return 'Implements';
+      return "Implements";
     }
-    return 'Types';
+    return "Types";
   };
   const getTypes = () => {
-    const isUnionOrInterface = type instanceof GraphQLUnionType || type instanceof GraphQLInterfaceType;
+    const isUnionOrInterface =
+      type instanceof GraphQLUnionType || type instanceof GraphQLInterfaceType;
     if (schema && isUnionOrInterface) {
       return schema.getPossibleTypes(type);
     }
@@ -37,40 +49,47 @@ export const GraphQLExplorerType: FC<Props> = ({ schema, type, onNavigateType, o
     return [];
   };
 
-  const markdown = ('description' in type) ? (type.description || '') : '*no description*';
+  const markdown =
+    "description" in type ? type.description || "" : "*no description*";
 
   const types = getTypes();
   const hasSchemaAndTypes = schema && types.length;
 
   const title = getTitle();
 
-  const sortedFields = 'getFields' in type ? Object.values(type.getFields()).sort(ascendingNameSort) : [];
+  const sortedFields =
+    "getFields" in type
+      ? Object.values(type.getFields()).sort(ascendingNameSort)
+      : [];
 
   return (
     <div className="graphql-explorer__type">
       <MarkdownPreview markdown={markdown} />
-      {hasSchemaAndTypes ?
+      {hasSchemaAndTypes ? (
         <Fragment>
           <h2 className="graphql-explorer__subheading">{title}</h2>
           <ul className="graphql-explorer__defs">
-            {types.map(type => (
+            {types.map((type) => (
               <li key={type.name}>
-                <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
+                <GraphQLExplorerTypeLink
+                  onNavigate={onNavigateType}
+                  type={type}
+                />
               </li>
             ))}
           </ul>
         </Fragment>
-        : null}
-      {sortedFields.length
-        ? (<Fragment>
+      ) : null}
+      {sortedFields.length ? (
+        <Fragment>
           <h2 className="graphql-explorer__subheading">Fields</h2>
           <GraphQLExplorerFieldsList
             fields={sortedFields}
             onNavigateType={onNavigateType}
             onNavigateField={onNavigateField}
           />
-        </Fragment>)
-        : null}
+        </Fragment>
+      ) : null}
     </div>
   );
 };

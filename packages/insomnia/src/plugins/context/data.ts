@@ -1,15 +1,19 @@
-import { exportWorkspacesHAR } from '../../common/export';
-import { fetchImportContentFromURI, importResourcesToProject, scanResources } from '../../common/import';
-import { getInsomniaV5DataExport } from '../../common/insomnia-v5';
-import * as models from '../../models';
-import type { Workspace } from '../../models/workspace';
+import { exportWorkspacesHAR } from "../../common/export";
+import {
+  fetchImportContentFromURI,
+  importResourcesToProject,
+  scanResources,
+} from "../../common/import";
+import { getInsomniaV5DataExport } from "../../common/insomnia-v5";
+import * as models from "../../models";
+import type { Workspace } from "../../models/workspace";
 
 interface InsomniaExport {
   workspace?: Workspace;
   includePrivate?: boolean;
 }
 
-type HarExport = Omit<InsomniaExport, 'format'>;
+type HarExport = Omit<InsomniaExport, "format">;
 
 const getWorkspaces = (activeProjectId?: string) => {
   if (activeProjectId) {
@@ -53,11 +57,12 @@ export const init = (activeProjectId?: string) => ({
       },
     },
     export: {
-      insomnia: async ({
-        workspace,
-      }: { workspace: Workspace }) => {
+      insomnia: async ({ workspace }: { workspace: Workspace }) => {
         if (workspace) {
-          const insomniaExport = await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments: false });
+          const insomniaExport = await getInsomniaV5DataExport({
+            workspaceId: workspace._id,
+            includePrivateEnvironments: false,
+          });
 
           return [insomniaExport];
         }
@@ -67,20 +72,21 @@ export const init = (activeProjectId?: string) => ({
         const allInsomniaExports = [];
 
         for (const workspace of workspaces) {
-          const insomniaExport = await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments: false });
+          const insomniaExport = await getInsomniaV5DataExport({
+            workspaceId: workspace._id,
+            includePrivateEnvironments: false,
+          });
           allInsomniaExports.push(insomniaExport);
         }
 
         return allInsomniaExports;
       },
 
-      har: async ({
-        workspace,
-        includePrivate,
-      }: HarExport = {}) => exportWorkspacesHAR(
-        workspace ? [workspace] : await getWorkspaces(activeProjectId),
-        Boolean(includePrivate),
-      ),
+      har: async ({ workspace, includePrivate }: HarExport = {}) =>
+        exportWorkspacesHAR(
+          workspace ? [workspace] : await getWorkspaces(activeProjectId),
+          Boolean(includePrivate),
+        ),
     },
   },
 });

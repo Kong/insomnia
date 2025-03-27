@@ -1,5 +1,5 @@
 // @TODO We should make a PR for improving the types of httpsnippet.
-declare module 'httpsnippet' {
+declare module "httpsnippet" {
   export interface HTTPSnippetClient {
     key: string;
     title: string;

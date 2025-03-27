@@ -1,9 +1,9 @@
-import React from 'react';
+import React from "react";
 
 export const GrpcTag = () => (
   <div
     style={{
-      position: 'relative',
+      position: "relative",
     }}
   >
     <div className="tag tag--no-bg tag--small method-grpc">

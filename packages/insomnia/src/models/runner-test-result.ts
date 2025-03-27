@@ -1,14 +1,14 @@
-import type { RequestTestResult } from 'insomnia-sdk';
+import type { RequestTestResult } from "insomnia-sdk";
 
-import { database as db } from '../common/database';
-import type { RunnerSource } from '../ui/routes/request';
-import type { BaseModel } from './index';
+import { database as db } from "../common/database";
+import type { RunnerSource } from "../ui/routes/request";
+import type { BaseModel } from "./index";
 
-export const name = 'Runner Test Result';
+export const name = "Runner Test Result";
 
-export const type = 'RunnerTestResult';
+export const type = "RunnerTestResult";
 
-export const prefix = 'rtr';
+export const prefix = "rtr";
 
 export const canDuplicate = false;
 
@@ -36,24 +36,24 @@ export interface BaseRunnerTestResult {
   avgRespTime: number; // millisecond
   iterationResults: RunnerResultPerRequestPerIteration;
   responsesInfo: ResponseInfo[];
-  version: '1'; // We might want to add or remove result features in future
+  version: "1"; // We might want to add or remove result features in future
 }
 
 export type RunnerTestResult = BaseModel & BaseRunnerTestResult;
 
-export const isRunnerTestResult = (model: Pick<BaseModel, 'type'>): model is RunnerTestResult => (
-  model.type === type
-);
+export const isRunnerTestResult = (
+  model: Pick<BaseModel, "type">,
+): model is RunnerTestResult => model.type === type;
 
 export function init() {
   return {
-    source: 'runner',
+    source: "runner",
     iterations: 0,
     duration: 0,
     avgRespTime: 0,
     iterationResults: [],
     responsesInfo: [],
-    version: '1',
+    version: "1",
   };
 }
 
@@ -63,13 +63,18 @@ export function migrate(doc: RunnerTestResult) {
 
 export function create(patch: Partial<RunnerTestResult> = {}) {
   if (!patch.parentId) {
-    throw new Error('New RunnerTestResult missing `parentId` ' + JSON.stringify(patch));
+    throw new Error(
+      "New RunnerTestResult missing `parentId` " + JSON.stringify(patch),
+    );
   }
 
   return db.docCreate(type, patch);
 }
 
-export function update(testResult: RunnerTestResult, patch: Partial<RunnerTestResult>) {
+export function update(
+  testResult: RunnerTestResult,
+  patch: Partial<RunnerTestResult>,
+) {
   return db.docUpdate(testResult, patch);
 }
 

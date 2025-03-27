@@ -1,4 +1,4 @@
-import path from 'path';
+import path from "path";
 
 const win32SepRegex = /\\/g;
 const posixSepRegex = /\//g;
