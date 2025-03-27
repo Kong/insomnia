@@ -20,7 +20,7 @@
     "inso": "bin/inso"
   },
   "scripts": {
-    "lint": "eslint . --ext .js,.ts,.tsx --cache",
+    "lint": "npx oxlint",
     "test:unit": "vitest run --exclude '**/cli.test.ts'",
     "test:bundle": "vitest cli.test.ts -t \"inso dev bundle\"",
     "test:binary": "vitest cli.test.ts -t \"inso packaged binary\"",
