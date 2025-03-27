@@ -469,6 +469,8 @@ test.describe('pre-request features tests', async () => {
 
         expect(bodyJson).toEqual({
             // no environment is selected so the environment value will be persisted to the base environment
+            'fromUrlValue': 'fromUrlValue',
+            'fromEditorValue': 'fromEditorValue',
             '__fromScript1': 'baseEnvironment',
             '__fromScript2': 'collection',
             '__fromScript': 'environment',
