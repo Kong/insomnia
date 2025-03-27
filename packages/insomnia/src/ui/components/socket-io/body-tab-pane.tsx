@@ -1,44 +1,100 @@
-import React, { useMemo, useRef } from 'react';
-import { Button, Checkbox, Collection, Input, ListBox, ListBoxItem, Popover, Select, SelectValue, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
+import React, { useMemo, useRef, useState } from 'react';
+import { Button, Checkbox, Collection, Input, type Key, ListBox, ListBoxItem, Popover, Select, SelectValue, Tab, TabList, TabPanel, Tabs, TextField, Toolbar } from 'react-aria-components';
+import { v4 as uuidv4 } from 'uuid';
 
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT } from '../../../common/constants';
-import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';
+import type { SocketIOPayload } from '../../../models/socket-io-payload';
+import type { SocketIORequest } from '../../../models/socket-io-request';
+import { useRequestPayloadPatcher } from '../../hooks/use-request';
+import { CodeEditor } from '../codemirror/code-editor';
 import { Icon } from '../icon';
 
 const contentTypes: {
   id: string;
   name: string;
 }[] = [
-  {
-    id: CONTENT_TYPE_JSON,
-    name: 'JSON',
-  },
-  {
-    id: CONTENT_TYPE_PLAINTEXT,
-    name: 'Raw',
-  },
-];
+    {
+      id: CONTENT_TYPE_JSON,
+      name: 'JSON',
+    },
+    {
+      id: CONTENT_TYPE_PLAINTEXT,
+      name: 'Text',
+    },
+  ];
 
-export const SocketIOBodyTabPane = ({ }) => {
+interface Props {
+  request: SocketIORequest;
+  requestPayload: SocketIOPayload;
+}
+
+export const SocketIOBodyTabPane = ({
+  request,
+  requestPayload,
+}: Props) => {
   const readyState = 1;
-  const selectedContentType = CONTENT_TYPE_JSON;
-  const ack = true;
-  const eventName = 'eventName';
+  const editorsRef = useRef(new Map());
 
-  const handleAddArg = () => { };
+  const [selectedArg, setSelectedArg] = useState<Key>('');
+  console.log(selectedArg, 'selectedArg');
+  const requestPayloadPatcher = useRequestPayloadPatcher();
+  // console.log('args', args);
 
-  const args = [1, 2];
+  const handleAddArg = async () => {
+    const args = requestPayload?.value || [];
+    const newId = uuidv4();
+    console.log('newId', newId);
+    const newArgs = [...args, { id: newId, value: '', mode: CONTENT_TYPE_PLAINTEXT }];
+    requestPayloadPatcher(request._id, { value: newArgs });
+    setSelectedArg(newId);
+  };
 
-  const editorRef = useRef<CodeEditorHandle>(null);
+  const handleChange = async (id: string, value: string) => {
+    const args = requestPayload?.value || [];
+    const newArgs = [...args];
+    const item = newArgs.find(arg => arg.id === id);
+    if (item) {
+      item.value = value;
+      requestPayloadPatcher(request._id, { value: newArgs });
+    }
+  };
 
   const tabs = useMemo(() => {
+    const args = requestPayload?.value || [];
     return args.map((item, index) => {
       return {
         title: `Arg ${index + 1}`,
-        content: item,
+        ...item,
       };
     });
-  }, [args]);
+  }, [requestPayload]);
+
+  const contentType = useMemo(() => {
+    const args = requestPayload?.value || [];
+    if (args.length <= 1) {
+      return args[0]?.mode || CONTENT_TYPE_JSON;
+    } else {
+      const item = args.find(arg => arg.id === selectedArg);
+      return item?.mode || CONTENT_TYPE_JSON;
+    }
+  }, [requestPayload?.value, selectedArg]);
+
+  const handleContentTypeChange = (value: string) => {
+    const currentArgId = selectedArg || requestPayload?.value?.[0]?.id;
+    const newArgs = requestPayload?.value?.map(arg => {
+      if (arg.id === currentArgId) {
+        return { ...arg, mode: value };
+      }
+      return arg;
+    });
+    requestPayloadPatcher(request._id, { value: newArgs });
+  };
+
+  const handleDelete = (id: string) => {
+    const newArgs = requestPayload?.value?.filter(arg => arg.id !== id);
+    requestPayloadPatcher(request._id, { value: newArgs });
+  };
+
   return (
     <>
       <Toolbar className="w-full flex-shrink-0 px-2 border-b border-solid border-[--hl-md] py-2 h-[--line-height-sm] flex items-center gap-2 justify-between">
@@ -47,8 +103,8 @@ export const SocketIOBodyTabPane = ({ }) => {
           <Select
             aria-label="Change Body Type"
             name="body-type"
-            onSelectionChange={() => {}}
-            selectedKey={selectedContentType}
+            onSelectionChange={value => handleContentTypeChange(value.toString())}
+            selectedKey={contentType}
           >
             <Button className="px-4 min-w-[12ch] py-1 font-bold flex flex-1 items-center justify-between gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
               <SelectValue<{ id: string; name: string }>
@@ -91,19 +147,27 @@ export const SocketIOBodyTabPane = ({ }) => {
           </Select>
         </div>
         <div className='flex items-center justify-between gap-2'>
-          <Checkbox isSelected={ack} onChange={() => {}} className="cursor-pointer group p-0 flex items-center h-full">
-            Ack
-            <div className="ml-2 w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
+          <Checkbox
+            isSelected={requestPayload?.ack}
+            onChange={value => requestPayloadPatcher(request._id, { ack: value })}
+            className="cursor-pointer group p-0 flex items-center h-full"
+          >
+            <div className="mr-2 w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
               <Icon icon={'check'} className='opacity-0 group-data-[selected]:opacity-100 group-data-[indeterminate]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
             </div>
+            Ack
           </Checkbox>
-          <Input
-            required
+          <TextField
+            aria-label='Event Name'
+            value={requestPayload?.eventName || ''}
+            onChange={value => requestPayloadPatcher(request._id, { eventName: value })}
             className='py-1 h-8 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors flex-1 placeholder:italic placeholder:opacity-60 col-span-3'
-            type="text"
-            placeholder="event name"
-            value={''}
-          />
+          >
+            <Input
+              type="text"
+              placeholder="event name"
+            />
+          </TextField>
           <button
             className='hover:brightness-75'
             style={{
@@ -120,28 +184,61 @@ export const SocketIOBodyTabPane = ({ }) => {
           </button>
         </div>
       </Toolbar>
-      <Tabs orientation='vertical' className="flex flex-1">
-        <TabList className="overflow-x-auto border-solid border-r border-r-[--hl-md] bg-[--color-bg] " aria-label="Dynamic tabs" items={tabs}>
-          {arg => <Tab className="flex-shrink-0 flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300" id={arg.title}>{arg.title}</Tab>}
-        </TabList>
-        <Collection items={tabs}>
-          {arg => (
-            <TabPanel className="flex-1" id={arg.title}>
-              <CodeEditor
-                id="socket-io-message-editor"
-                showPrettifyButton
-                // TODO: Add uniqueness key
-                uniquenessKey={''}
-                mode={selectedContentType}
-                ref={editorRef}
-                onChange={() => {}}
-                enableNunjucks
-                className="w-full"
-              />
-            </TabPanel>
-          )}
-        </Collection>
-      </Tabs>
+      {tabs.length > 1 ? (
+        <Tabs selectedKey={selectedArg} onSelectionChange={setSelectedArg} orientation='vertical' className="flex flex-1" >
+          <TabList className="overflow-x-auto border-solid border-r border-r-[--hl-md] bg-[--color-bg] " aria-label="Dynamic tabs" items={tabs}>
+            {arg => (
+              <Tab
+                className="relative flex-shrink-0 flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-6 py-2 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300"
+                id={arg.id}
+              >
+                {({ isHovered }) => (
+                  <>
+                    <Button
+                      onPress={() => handleDelete(arg.id)}
+                      className={`w-4 h-4 absolute right-0 top-0 hover:bg-[--hl-lg] ${!isHovered && 'hidden'}`}
+                    >
+                      <Icon icon="close" className='w-4 h-4 align-top' />
+                    </Button>
+                    {arg.title}
+                  </>
+                )}
+              </Tab>
+            )}
+          </TabList>
+          <Collection items={tabs}>
+            {arg => (
+              <TabPanel className="flex-1" id={arg.id}>
+                <CodeEditor
+                  id="socket-io-message-editor"
+                  showPrettifyButton
+                  // TODO: Add uniqueness key
+                  uniquenessKey={''}
+                  mode={contentType}
+                  ref={ref => editorsRef.current?.set(arg.id, ref)}
+                  onChange={value => handleChange(arg.id, value)}
+                  enableNunjucks
+                  className="w-full"
+                  defaultValue={arg.value}
+                />
+              </TabPanel>
+            )}
+          </Collection>
+        </Tabs>
+      ) : (
+        <CodeEditor
+          id="socket-io-message-editor"
+          showPrettifyButton
+          // TODO: Add uniqueness key
+          uniquenessKey={''}
+          mode={contentType}
+          ref={ref => editorsRef.current?.set(tabs[0].id, ref)}
+          onChange={value => handleChange(tabs[0].id, value)}
+          enableNunjucks
+          className="w-full"
+          defaultValue={tabs[0]?.value}
+        />
+      )}
     </>
   );
 };
