@@ -1,4 +1,7 @@
 
+# if you're curious about what this does and why it's here,
+# see packages/insomnia/src/cpp/README.md
+
 set -e
 
 BUILD_CONTEXT=$1
