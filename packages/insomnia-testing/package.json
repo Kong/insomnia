@@ -15,7 +15,7 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {
-    "lint": "npx oxlint",
+    "lint": "oxlint",
     "test": "vitest run",
     "type-check": "tsc --noEmit --project tsconfig.json"
   },

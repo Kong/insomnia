@@ -13,6 +13,7 @@
   },
   "version": "11.0.1",
   "scripts": {
+    "lint": "oxlint",
     "test:dev": "xvfb-maybe cross-env BUNDLE=dev playwright test",
     "test:build": "xvfb-maybe cross-env BUNDLE=build playwright test",
     "test:package": "xvfb-maybe cross-env BUNDLE=package playwright test",

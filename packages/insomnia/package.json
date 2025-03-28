@@ -21,7 +21,7 @@
     "build:app": "esr --cache ./scripts/build.ts --noErrorTruncation",
     "generate:schema": "esr ./src/schema.ts",
     "build:main.min.js": "cross-env NODE_ENV=development esr esbuild.main.ts",
-    "lint": "npx oxlint",
+    "lint": "oxlint",
     "package": "npm run build:app && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js",
     "package:windows:unpacked": "npm run build:app && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --dir",
     "package:windows:dist": "cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --win squirrel --prepackaged ./dist/win-unpacked",
