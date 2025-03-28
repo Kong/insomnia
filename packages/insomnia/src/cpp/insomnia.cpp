@@ -82,11 +82,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   ::GetModuleFileNameW(NULL, insomniaExecutable, sizeof(insomniaExecutable));
   ::DebugLog((L"Insomnia executable: " + std::wstring(insomniaExecutable)).c_str());
 
-  std::wstring currentPath(insomniaExecutable);
-  currentPath = currentPath.substr(0, currentPath.find_last_of(L"\\"));
-  ::DebugLog((L"Current path: " + currentPath).c_str());
+  std::wstring workDir(insomniaExecutable);
+  workDir = workDir.substr(0, workDir.find_last_of(L"\\"));
+  ::DebugLog((L"Current path: " + workDir).c_str());
 
-  std::wstring updatePath(currentPath);
+  std::wstring updatePath(workDir);
   // get one directory above
   updatePath = updatePath.substr(0, updatePath.find_last_of(L"\\")) + L"\\Update.exe";
   ::DebugLog((L"Update path: " + updatePath).c_str());
@@ -132,8 +132,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   ::STARTUPINFOW si;
   ::PROCESS_INFORMATION pi;
   ::HANDLE outrd, outwr;
-  ::DWORD insomniaOutputBytesRead;
-  char insomniaOutputBuffer[__INSOMNIA_OUTPUT_BUFFER_SIZE];
+  ::DWORD outRead;
+  char outBuf[__INSOMNIA_OUTPUT_BUFFER_SIZE];
 
   if (!::GetProcessMitigationPolicy(::GetCurrentProcess(), psp, &pmbsp, sizeof(pmbsp))) {
     return ::ExitWithWarning(nCmdShow, L"Could not get ProcessImageLoadPolicy.");
@@ -175,11 +175,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   si.hStdOutput = outwr;
   si.hStdError = outwr;
 
-  std::wstring sourceInsomniaExe = std::wstring(currentPath) + L"\\insomnia.dll";
+  std::wstring sourceInsomniaExe = std::wstring(workDir) + L"\\insomnia.dll";
   ::DebugLog((L"Source insomnia executable: " + sourceInsomniaExe).c_str());
 
   // create the insomnia-$VERSION.exe file
-  std::wstring tmpExe = std::wstring(currentPath) + L"\\insomnia-" + INSOMNIA_VERSION + L".exe";
+  std::wstring tmpExe = std::wstring(workDir) + L"\\insomnia-" + INSOMNIA_VERSION + L".exe";
 
   ::DebugLog((L"Copying insomnia executable to: " + tmpExe).c_str());
   if (!::CopyFileW(sourceInsomniaExe.c_str(), tmpExe.c_str(), FALSE)) {
@@ -188,9 +188,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   }
   ::DebugLog(L"File copied.");
 
-  ::DebugLog(L"Creating process...");
-  if (!::CreateProcessW(tmpExe.c_str(), NULL, NULL, NULL, TRUE, 0, NULL, currentPath.c_str(), &si,
-                        &pi)) {
+  // std::wstring wrappedExe = std::wstring(L"\"") + tmpExe + L"\"";
+  // ::DebugLog((L"Creating process: " + wrappedExe).c_str());
+  if (!::CreateProcessW(tmpExe.c_str(), 0, 0, 0, TRUE, 0, 0, workDir.c_str(), &si, &pi)) {
     ::DebugLog(L"Could not create process.");
     ::CloseHandle(outrd);
     ::CloseHandle(outwr);
@@ -202,11 +202,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   ::CloseHandle(outwr);
 
   // loops until the pipe is closed because the write handle is closed
-  while (::ReadFile(outrd, insomniaOutputBuffer, sizeof(insomniaOutputBuffer) - 1,
-                    &insomniaOutputBytesRead, NULL) &&
-         insomniaOutputBytesRead > 0) {
-    ::WriteFile(::GetStdHandle(STD_OUTPUT_HANDLE), insomniaOutputBuffer, insomniaOutputBytesRead,
-                NULL, NULL);
+  while (::ReadFile(outrd, outBuf, sizeof(outBuf) - 1, &outRead, NULL) && outRead > 0) {
+    ::WriteFile(::GetStdHandle(STD_OUTPUT_HANDLE), outBuf, outRead, NULL, NULL);
   }
 
   // no more to read
