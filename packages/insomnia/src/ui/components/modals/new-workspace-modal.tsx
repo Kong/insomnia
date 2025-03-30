@@ -20,10 +20,11 @@ import {
 } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
-import { isGitProject, ORG_STORAGE_RULE, type Project } from '../../../models/project';
+import { isGitProject, type Project } from '../../../models/project';
 import { type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../routes/actions';
 import type { GetRepositoryDirectoryTreeResult } from '../../routes/git-project-actions';
+import type { StorageRules } from '../../routes/organization';
 import { Icon } from '../icon';
 
 const titleByScope: Record<WorkspaceScope, string> = {
@@ -45,13 +46,13 @@ export const NewWorkspaceModal = ({
   onOpenChange,
   project,
   scope,
-  storageRule,
+  storageRules,
   currentPlan,
 }: {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   project: Project;
-  storageRule: ORG_STORAGE_RULE;
+  storageRules: StorageRules;
   currentPlan?: { type: string };
   scope: WorkspaceScope;
 }) => {
@@ -59,8 +60,8 @@ export const NewWorkspaceModal = ({
 
   const isLocalProject = !project.remoteId;
   const isEnterprise = currentPlan?.type.includes('enterprise');
-  const isSelfHostedDisabled = !isEnterprise || storageRule === ORG_STORAGE_RULE.CLOUD_ONLY;
-  const isCloudProjectDisabled = isLocalProject || storageRule === ORG_STORAGE_RULE.LOCAL_ONLY;
+  const isSelfHostedDisabled = !isEnterprise || !storageRules.enableLocalVault;
+  const isCloudProjectDisabled = isLocalProject || !storageRules.enableCloudSync;
 
   const canOnlyCreateSelfHosted = isLocalProject && isEnterprise;
 
