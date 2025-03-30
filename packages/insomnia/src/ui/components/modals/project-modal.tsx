@@ -4,10 +4,10 @@ import { useFetcher, useNavigation, useParams } from 'react-router-dom';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
 import { type GitRepository } from '../../../models/git-repository';
-import { getDefaultProjectStorageType, isGitProject, isRemoteProject, type Project } from '../../../models/project';
+import { getDefaultProjectStorageType, getProjectStorageTypeLabel, isGitProject, isRemoteProject, type Project } from '../../../models/project';
 import type { UpdateProjectActionResult } from '../../routes/actions';
 import type { InitGitCloneResult } from '../../routes/git-project-actions';
-import { ORG_STORAGE_RULE } from '../../routes/organization';
+import { type StorageRules } from '../../routes/organization';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../../routes/project';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
@@ -35,14 +35,14 @@ function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote
 export const ProjectModal = ({
   isOpen,
   onOpenChange,
-  storageRule,
+  storageRules,
   isGitSyncEnabled,
   project,
   gitRepository,
 }: {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  storageRule: ORG_STORAGE_RULE;
+  storageRules: StorageRules;
   isGitSyncEnabled: boolean;
   project?: Project;
   gitRepository?: GitRepository;
@@ -60,7 +60,7 @@ export const ProjectModal = ({
     oauth2format?: OauthProviderName;
   }>({
     name: project?.name || 'My Project',
-    storageType: getDefaultProjectStorageType(storageRule, project),
+    storageType: getDefaultProjectStorageType(storageRules, project),
     authorName: gitRepository?.author?.name || '',
     authorEmail: gitRepository?.author?.email || '',
     uri: gitRepository?.uri || '',
@@ -73,7 +73,7 @@ export const ProjectModal = ({
   const [activeView, setActiveView] = useState<'project' | 'git-clone' | 'git-results' | 'switch-storage-type'>('project');
   const [selectedTab, setTab] = useState<OauthProviderName>('github');
 
-  const showStorageRestrictionMessage = storageRule !== ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL;
+  const showStorageRestrictionMessage = !storageRules.enableCloudSync || !storageRules.enableLocalVault || !storageRules.enableGitSync;
   const initCloneGitRepositoryFetcher = useFetcher<InitGitCloneResult>();
   const upsertProjectFetcher = useFetcher<UpdateProjectActionResult>();
 
@@ -211,7 +211,7 @@ export const ProjectModal = ({
                       </Label>
                       <div className="flex gap-2">
                         <Radio
-                          isDisabled={storageRule === ORG_STORAGE_RULE.CLOUD_ONLY}
+                          isDisabled={!storageRules.enableLocalVault}
                           value="local"
                           className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                         >
@@ -225,7 +225,7 @@ export const ProjectModal = ({
                         </Radio>
 
                         <Radio
-                          isDisabled={storageRule === ORG_STORAGE_RULE.LOCAL_ONLY}
+                          isDisabled={!storageRules.enableCloudSync}
                           value="remote"
                           className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                         >
@@ -238,7 +238,7 @@ export const ProjectModal = ({
                           </p>
                         </Radio>
                         <Radio
-                          isDisabled={!isGitSyncEnabled}
+                          isDisabled={!isGitSyncEnabled || !storageRules.enableGitSync}
                           value="git"
                           className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                         >
@@ -256,7 +256,7 @@ export const ProjectModal = ({
                       <div className="flex items-center px-2 py-1 gap-2 text-sm rounded-sm text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]">
                         <Icon icon="triangle-exclamation" />
                         <span>
-                          The organization owner mandates that projects must be created and stored {storageRule.split('_').join(' ')}.
+                          The organization owner mandates that projects must be created and stored {getProjectStorageTypeLabel(storageRules)}.
                         </span>
                       </div>
                     )}
