@@ -11,7 +11,7 @@ import { isRequest } from '../../../models/request';
 import { isEnvironment, isMockServer, isScratchpad, type Workspace } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../routes/actions';
 import type { GetRepositoryDirectoryTreeResult } from '../../routes/git-project-actions';
-import { fetchAndCacheOrganizationStorageRule, ORG_STORAGE_RULE, type OrganizationLoaderData } from '../../routes/organization';
+import { DEFAULT_STORAGE_RULES, fetchAndCacheOrganizationStorageRule, type OrganizationLoaderData, type StorageRules } from '../../routes/organization';
 import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
@@ -28,10 +28,10 @@ interface Props {
 export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockServer, onClose }: Props) => {
   const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
   const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
-  const [orgStorageRule, setOrgStorageRule] = useState<ORG_STORAGE_RULE>(ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL);
+  const [orgStorageRules, setOrgStorageRules] = useState<StorageRules>(DEFAULT_STORAGE_RULES);
   const [description, setDescription] = useState<string>(workspace.description);
   useEffect(() => {
-    fetchAndCacheOrganizationStorageRule(organizationId as string).then(setOrgStorageRule);
+    fetchAndCacheOrganizationStorageRule(organizationId as string).then(setOrgStorageRules);
   }, [organizationId]);
 
   const gitRepoTreeFetcher = useFetcher<GetRepositoryDirectoryTreeResult>();
@@ -44,8 +44,8 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
 
   const isLocalProject = !project?.remoteId;
   const isEnterprise = currentPlan?.type.includes('enterprise');
-  const isSelfHostedDisabled = !isEnterprise || orgStorageRule === ORG_STORAGE_RULE.CLOUD_ONLY;
-  const isCloudProjectDisabled = isLocalProject || orgStorageRule === ORG_STORAGE_RULE.LOCAL_ONLY;
+  const isSelfHostedDisabled = !isEnterprise || !orgStorageRules.enableLocalVault;
+  const isCloudProjectDisabled = isLocalProject || !orgStorageRules.enableCloudSync;
 
   const isScratchpadWorkspace = isScratchpad(workspace);
 
