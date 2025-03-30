@@ -1,5 +1,6 @@
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
+import type { StorageRules } from '../ui/routes/organization';
 import { type BaseModel } from './index';
 
 export const name = 'Project';
@@ -92,18 +93,12 @@ export function isDefaultOrganizationProject(project: Project) {
   return project.remoteId?.startsWith('proj_team') || project.remoteId?.startsWith('proj_org');
 }
 
-export enum ORG_STORAGE_RULE {
-  CLOUD_PLUS_LOCAL = 'cloud_plus_local',
-  CLOUD_ONLY = 'cloud_only',
-  LOCAL_ONLY = 'local_only',
-}
-
-export function getDefaultProjectStorageType(storage: ORG_STORAGE_RULE, project?: Project): 'local' | 'remote' | 'git' {
-  if (storage === ORG_STORAGE_RULE.CLOUD_ONLY) {
+export function getDefaultProjectStorageType(storageRules: StorageRules, project?: Project): 'local' | 'remote' | 'git' {
+  if (storageRules.enableCloudSync && !storageRules.enableLocalVault && !storageRules.enableGitSync) {
     return 'remote';
   }
 
-  if (storage === ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL) {
+  if (storageRules.enableCloudSync && storageRules.enableLocalVault) {
     if (project && isGitProject(project)) {
       return 'git';
     }
@@ -120,4 +115,21 @@ export function getDefaultProjectStorageType(storage: ORG_STORAGE_RULE, project?
   }
 
   return 'local';
+}
+
+export function getProjectStorageTypeLabel(storageRules: StorageRules): string {
+  const storageTypes = {
+    'Cloud Sync': storageRules.enableCloudSync,
+    'Local Vault': storageRules.enableLocalVault,
+    'Git Sync': storageRules.enableGitSync,
+  };
+
+  const allowedStorageTypes = Object.entries(storageTypes)
+    .filter(([, enabled]) => enabled)
+    .map(([label]) => label);
+
+  // Join with ", " but use "and" before the last item
+  return allowedStorageTypes.length
+    ? allowedStorageTypes.join(', ').replace(/, ([^,]+)$/, ' and $1')
+    : 'No storage types selected';
 }
