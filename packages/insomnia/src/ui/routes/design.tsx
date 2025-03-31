@@ -50,6 +50,7 @@ import { ACTIVITY_SPEC, DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import { debounce, isNotNullOrUndefined } from '../../common/misc';
 import type { ApiSpec } from '../../models/api-spec';
 import * as models from '../../models/index';
+import { isGitProject } from '../../models/project';
 import { invariant } from '../../utils/invariant';
 import {
   CodeEditor,
@@ -78,7 +79,6 @@ import {
 import { SpectralRunner } from '../worker/spectral-handler';
 import { useRootLoaderData } from './root';
 import type { WorkspaceLoaderData } from './workspace';
-import { isGitProject } from '../../models/project';
 
 interface LoaderData {
   apiSpec: ApiSpec;
