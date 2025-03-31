@@ -149,27 +149,30 @@ async function syncNewWorkspaceIfNeeded(newWorkspace: Workspace) {
   const project = await models.project.getById(newWorkspace.parentId);
   invariant(project, 'Project not found');
   const userSession = await models.userSession.getOrCreate();
-  const storageRule = await fetchAndCacheOrganizationStorageRule(project.parentId);
-  invariant(storageRule, 'Storage rule not found');
 
-  if (userSession.id && isRemoteProject(project) && storageRule.enableCloudSync) {
-    // Create default env, cookie jar, and meta
-    await models.environment.getOrCreateForParentId(newWorkspace._id);
-    await models.cookieJar.getOrCreateForParentId(newWorkspace._id);
-    await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
-    try {
-      const vcs = VCSInstance().newInstance();
-      await initializeLocalBackendProjectAndMarkForSync({
-        vcs,
-        workspace: newWorkspace,
-      });
-      await pushSnapshotOnInitialize({
-        vcs,
-        workspace: newWorkspace,
-        project,
-      });
-    } catch (e) {
-      console.warn(`Failed to initialize sync to insomnia cloud for workspace ${newWorkspace._id}. This will be retried when the workspace is opened on the app. ${e.message}`);
+  if (userSession.id && isRemoteProject(project)) {
+    const storageRules = await fetchAndCacheOrganizationStorageRule(project.parentId);
+    invariant(storageRules, 'Storage rules not found');
+
+    if (storageRules.enableCloudSync) {
+      // Create default env, cookie jar, and meta
+      await models.environment.getOrCreateForParentId(newWorkspace._id);
+      await models.cookieJar.getOrCreateForParentId(newWorkspace._id);
+      await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
+      try {
+        const vcs = VCSInstance().newInstance();
+        await initializeLocalBackendProjectAndMarkForSync({
+          vcs,
+          workspace: newWorkspace,
+        });
+        await pushSnapshotOnInitialize({
+          vcs,
+          workspace: newWorkspace,
+          project,
+        });
+      } catch (e) {
+        console.warn(`Failed to initialize sync to insomnia cloud for workspace ${newWorkspace._id}. This will be retried when the workspace is opened on the app. ${e.message}`);
+      }
     }
   }
 }
