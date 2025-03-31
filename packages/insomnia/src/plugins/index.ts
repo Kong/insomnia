@@ -187,9 +187,9 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
       .map(p => {
         if (p.indexOf('~/') === 0) {
           return path.join(process.env['HOME'] || '/', p.slice(1));
-        } else {
-          return p;
         }
+          return p;
+
       });
     // Make sure the default directories exist
     const pluginPath = path.join(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'), 'plugins');

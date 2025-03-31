@@ -65,9 +65,9 @@ export async function get() {
 
   if (results.length === 0) {
     return create();
-  } else {
-    return results[0];
   }
+    return results[0];
+
 }
 
 export function all() {

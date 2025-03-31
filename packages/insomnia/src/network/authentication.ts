@@ -88,9 +88,9 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
         name: 'Authorization',
         value: oAuth1Token.Authorization,
       };
-    } else {
-      return;
     }
+      return;
+
   }
 
   if (authentication.type === AUTH_HAWK) {

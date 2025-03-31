@@ -77,10 +77,10 @@ export async function create(request: Request | WebSocketRequest | GrpcRequest) 
       parentId,
       compressedRequest,
     });
-  } else {
+  }
     // Re-use the latest version if not modified since
     return latestRequestVersion;
-  }
+
 }
 
 export function getLatestByParentId(parentId: string) {

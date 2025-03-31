@@ -65,9 +65,9 @@ export function insomniaSchemaTypeToScope(type: InsomniaFile['type']): Workspace
     return 'environment';
   } else if (type === 'spec.insomnia.rest/5.0') {
     return 'design';
-  } else {
-    return 'mock-server';
   }
+  return 'mock-server';
+
 }
 
 function getWorkspace(file: InsomniaFile): WithExportType<Workspace> {
@@ -742,9 +742,9 @@ export async function getInsomniaV5DataExport({
       };
 
       return stringify(removeEmptyFields(mockServer), {});
-    } else {
-      throw new Error('Unknown workspace scope');
     }
+    throw new Error('Unknown workspace scope');
+
   } catch (err) {
     console.error('Failed to export Insomnia v5 data', err);
     return '';

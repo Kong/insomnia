@@ -313,13 +313,13 @@ export const loader: LoaderFunction = async () => {
       user,
       currentPlan,
     };
-  } else {
+  }
     return {
       organizations: [],
       user: undefined,
       currentPlan: undefined,
     };
-  }
+
 };
 
 export interface FeatureStatus {

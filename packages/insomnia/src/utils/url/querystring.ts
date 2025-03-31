@@ -65,10 +65,10 @@ export const extractQueryStringFromUrl = (url: string) => {
   const things = url.split('?');
   if (things.length === 1) {
     return '';
-  } else {
+  }
     const qsWithHash = things.slice(1).join('?');
     return qsWithHash.replace(/#.*/, '');
-  }
+
 };
 
 /**
@@ -105,9 +105,9 @@ export const buildQueryParameter = (
     const name = flexibleEncodeComponent(param.name || '');
 
     return `${name}=${value}`;
-  } else {
-    return flexibleEncodeComponent(param.name);
   }
+    return flexibleEncodeComponent(param.name);
+
 };
 
 /**
@@ -206,7 +206,7 @@ export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQuerySt
 
   if (!encode) {
     return urlWithProto;
-  } else {
+  }
     // Parse the URL into components
     const parsedUrl = urlParse(urlWithProto);
 
@@ -240,7 +240,7 @@ export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQuerySt
     }
 
     return urlFormat(parsedUrl);
-  }
+
 };
 
 /**

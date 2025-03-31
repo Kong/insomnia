@@ -239,9 +239,9 @@ function sortBranches(branchA: string, branchB: string) {
     return -1;
   } else if (branchB === 'master') {
     return 1;
-  } else {
-    return branchA.localeCompare(branchB);
   }
+    return branchA.localeCompare(branchB);
+
 }
 
 export const GitBranchesModal: FC<Props> = (({

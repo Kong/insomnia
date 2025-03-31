@@ -64,9 +64,9 @@ export const RunnerTestResultPane: FC<Props> = ({
         <div className='border-solid border-1 border-gray-600' />
         {resultByRequest}
       </div>;
-    } else {
-      return <div key={key}>Invalid test result format</div>;
     }
+      return <div key={key}>Invalid test result format</div>;
+
   });
 
   return <>

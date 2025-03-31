@@ -95,9 +95,9 @@ export function init(
         // Use the last header if there are multiple of the same
         const header = headers[headers.length - 1];
         return header.value || '';
-      } else {
-        return null;
       }
+        return null;
+
     },
 
     getHeaders() {
@@ -144,9 +144,9 @@ export function init(
         // Use the last parameter if there are multiple of the same
         const parameter = parameters[parameters.length - 1];
         return parameter.value || '';
-      } else {
-        return null;
       }
+        return null;
+
     },
 
     getParameters() {

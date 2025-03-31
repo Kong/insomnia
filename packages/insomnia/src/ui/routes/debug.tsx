@@ -728,7 +728,7 @@ export const Debug: FC = () => {
     if (settings.forceVerticalLayout) {
       setDirection('vertical');
       return () => { };
-    } else {
+    }
       // Listen on media query changes
       const mediaQuery = window.matchMedia('(max-width: 880px)');
       setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
@@ -742,7 +742,7 @@ export const Debug: FC = () => {
       return () => {
         mediaQuery.removeEventListener('change', handleChange);
       };
-    }
+
   }, [settings.forceVerticalLayout, direction]);
 
   useEffect(() => {

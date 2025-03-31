@@ -211,9 +211,9 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
       return -1;
     } else if (branchB === 'master') {
       return 1;
-    } else {
-      return branchA.localeCompare(branchB);
     }
+      return branchA.localeCompare(branchB);
+
   }
 
   return (

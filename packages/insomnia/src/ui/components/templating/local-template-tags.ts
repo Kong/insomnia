@@ -203,9 +203,9 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
         if (typeof value !== 'string') {
           return JSON.stringify(value);
-        } else {
-          return value;
         }
+          return value;
+
       },
     },
   },
@@ -477,9 +477,9 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         if (context.renderPurpose !== 'send') {
           if (cachedValue !== null) {
             return cachedValue;
-          } else {
-            return defaultValue || '';
           }
+            return defaultValue || '';
+
         }
 
         const value = await context.app.prompt(title || 'Enter Value', {
@@ -749,10 +749,10 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
             if (typeof results[0] !== 'string') {
               return JSON.stringify(results[0]);
-            } else {
-              return results[0];
             }
-          } else {
+              return results[0];
+
+          }
             const DOMParser = (await import('@xmldom/xmldom')).DOMParser;
             const dom = new DOMParser().parseFromString(body);
             if (sanitizedFilter === undefined) {
@@ -796,7 +796,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             } catch (err) {
               throw new Error(`Invalid XPath query: ${sanitizedFilter}`);
             }
-          }
+
         }
         throw new Error('Oops');
       },

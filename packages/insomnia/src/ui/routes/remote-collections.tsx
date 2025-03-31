@@ -427,9 +427,9 @@ export const mergeBranchAction: ActionFunction = async ({
   } catch (err) {
     if (err instanceof UserAbortResolveMergeConflictError) {
       return null;
-    } else {
-      throw err;
     }
+      throw err;
+
   }
   try {
     await database.batchModifyDocs(delta as Operation);

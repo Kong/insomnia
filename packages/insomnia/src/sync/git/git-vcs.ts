@@ -715,9 +715,9 @@ export class GitVCS {
             oursBranch,
             theirsBranch,
           );
-        } else {
-          throw err;
         }
+          throw err;
+
       },
     );
   }
@@ -1083,9 +1083,9 @@ export class GitVCS {
         return -1;
       } else if (b === 'master') {
         return 1;
-      } else {
-        return b > a ? -1 : 1;
       }
+        return b > a ? -1 : 1;
+
     });
     return newBranches;
   }

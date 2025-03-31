@@ -73,9 +73,9 @@ export function init(response?: MaybeResponse) {
           return matchedHeaders.map(h => h.value);
         } else if (matchedHeaders.length === 1) {
           return matchedHeaders[0].value;
-        } else {
-          return null;
         }
+          return null;
+
       },
 
       getHeaders() {

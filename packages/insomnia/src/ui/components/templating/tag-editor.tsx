@@ -183,9 +183,9 @@ export const TagEditor: FC<Props> = props => {
       return updateArg(parseFloat(event.currentTarget.value), argIndex);
     } else if (event.currentTarget.type === 'checkbox') {
       return updateArg((event.currentTarget as HTMLInputElement).checked, argIndex);
-    } else {
-      return updateArg(event.currentTarget.value, argIndex);
     }
+      return updateArg(event.currentTarget.value, argIndex);
+
   }
   async function update(
     tagDefinitions: NunjucksParsedTag[],

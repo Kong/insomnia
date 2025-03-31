@@ -228,9 +228,9 @@ export const getBodyStream = (
   }
   if (response?.bodyCompression === 'zip') {
     return fs.createReadStream(response?.bodyPath).pipe(zlib.createGunzip());
-  } else {
-    return fs.createReadStream(response?.bodyPath);
   }
+    return fs.createReadStream(response?.bodyPath);
+
 };
 export const readCurlResponse = async (options: { bodyPath?: string; bodyCompression?: Compression }) => {
   const readFailureMsg = '[main/curlBridgeAPI] failed to read response body message';

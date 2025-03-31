@@ -416,9 +416,9 @@ const prepareBody = (
     return {
       mimeType: mimeTypes[0] || undefined,
     };
-  } else {
-    return {};
   }
+    return {};
+
 };
 
 type TypeExample =
@@ -483,9 +483,9 @@ const generateParameterExample = (
 
       if (collectionFormat === 'csv') {
         return value;
-      } else {
-        return [value];
       }
+        return [value];
+
     },
   };
 

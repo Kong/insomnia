@@ -108,9 +108,9 @@ export class MemClient {
 
     if (encoding) {
       return raw.toString(encoding);
-    } else {
-      return raw;
     }
+      return raw;
+
   }
 
   async writeFile(

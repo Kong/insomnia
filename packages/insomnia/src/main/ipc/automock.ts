@@ -136,9 +136,9 @@ function mockField(field: Field, stackDepth: StackDepth): any {
     const resolvedField = field.resolve();
 
     return mockField(resolvedField, stackDepth);
-  } else {
-    return mockPropertyValue;
   }
+    return mockPropertyValue;
+
 }
 
 function mockMapField(field: MapField, stackDepth: StackDepth): any {

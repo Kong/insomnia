@@ -105,10 +105,10 @@ const ObjectPath = {
                 return (key !== 0) ? '.' + property : property;
             } else if (!forceQuote && /^\d+$/.exec(property)) { // str with only numbers will display `foo[0]`
                 return '[' + property + ']';
-            } else {
+            }
                 property = property.replace(regexp, '\\$1');
                 return '[' + quote + property + quote + ']';
-            }
+
         }).join('');
     },
 
