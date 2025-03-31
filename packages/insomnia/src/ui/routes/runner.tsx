@@ -644,37 +644,6 @@ export const Runner: FC<{}> = () => {
                       Stop run if an error occurs
                     </label>
                   </div>
-                  <div>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        disabled={true}
-                        checked
-                      />
-                      Keep variable values
-                      <HelpTooltip className="space-left">Enabling this will persist generated values.</HelpTooltip>
-                    </label>
-                  </div>
-                  <div>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        disabled={true}
-                      />
-                      Run collection without using stored cookies
-                    </label>
-                  </div>
-                  <div>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        disabled={true}
-                        checked
-                      />
-                      Save cookies after collection run
-                      <HelpTooltip className="space-left">Cookies in the running will be saved to the cookie manager.</HelpTooltip>
-                    </label>
-                  </div>
                 </div>
               </TabPanel>
             </Tabs>
