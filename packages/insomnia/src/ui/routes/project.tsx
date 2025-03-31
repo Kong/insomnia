@@ -1176,7 +1176,7 @@ const ProjectRoute: FC = () => {
                   <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
                     <p className='text-base'>
                       <Icon icon="exclamation-triangle" className='mr-2' />
-                      The organization owner mandates that projects must be created and stored {getProjectStorageTypeLabel(storageRules)}.
+                      The organization owner mandates that projects must be created and stored using {getProjectStorageTypeLabel(storageRules)}.
                     </p>
                     <Button onPress={() => setIsUpdateProjectModalOpen(true)} className="flex items-center justify-center border border-solid border-white px-2 py-1 rounded-sm">Update</Button>
                   </div>

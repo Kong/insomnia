@@ -4,7 +4,7 @@ import { useFetcher, useNavigation, useParams } from 'react-router-dom';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
 import { type GitRepository } from '../../../models/git-repository';
-import { getDefaultProjectStorageType, getProjectStorageTypeLabel, isGitProject, isRemoteProject, type Project } from '../../../models/project';
+import { getDefaultProjectStorageType, getProjectStorageTypeLabel, isGitProject, isRemoteProject, isSwitchingStorageType, type Project } from '../../../models/project';
 import type { UpdateProjectActionResult } from '../../routes/actions';
 import type { InitGitCloneResult } from '../../routes/git-project-actions';
 import { type StorageRules } from '../../routes/organization';
@@ -15,22 +15,6 @@ import { InsomniaLogo } from '../insomnia-icon';
 import { CustomRepositorySettingsFormGroup } from './git-repository-settings-modal/custom-repository-settings-form-group';
 import { GitHubRepositorySetupFormGroup } from './git-repository-settings-modal/github-repository-settings-form-group';
 import { GitLabRepositorySetupFormGroup } from './git-repository-settings-modal/gitlab-repository-settings-form-group';
-
-function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
-  if (storageType === 'git' && !isGitProject(project)) {
-    return true;
-  }
-
-  if (storageType === 'local' && (isRemoteProject(project) || isGitProject(project))) {
-    return true;
-  }
-
-  if (storageType === 'remote' && !isRemoteProject(project)) {
-    return true;
-  }
-
-  return false;
-}
 
 export const ProjectModal = ({
   isOpen,
@@ -256,7 +240,7 @@ export const ProjectModal = ({
                       <div className="flex items-center px-2 py-1 gap-2 text-sm rounded-sm text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]">
                         <Icon icon="triangle-exclamation" />
                         <span>
-                          The organization owner mandates that projects must be created and stored {getProjectStorageTypeLabel(storageRules)}.
+                          The organization owner mandates that projects must be created and stored using {getProjectStorageTypeLabel(storageRules)}.
                         </span>
                       </div>
                     )}
