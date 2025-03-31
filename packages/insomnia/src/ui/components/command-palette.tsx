@@ -19,7 +19,7 @@ import { useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { showAlert } from './modals';
 import { getMethodShortHand } from './tags/method-tag';
 
-export const CommandPalette = memo(function CommandPalette({ style = {} }: { style?: React.CSSProperties }) {
+export const CommandPalette = memo(({ style = {} }: { style?: React.CSSProperties }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { settings } = useRouteLoaderData('root') as RootLoaderData;
 

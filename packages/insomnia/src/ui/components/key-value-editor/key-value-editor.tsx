@@ -71,7 +71,7 @@ export const KeyValueEditor: FC<Props> = ({
   );
   const initialReadOnlyItems = readOnlyPairs?.map(pair => ({ ...pair, id: pair.id || generateId('pair') })) || [];
 
-  const upsertPair = useCallback(function upsertPair(pairsListItems: Pair[], pair: Pair) {
+  const upsertPair = useCallback((pairsListItems: Pair[], pair: Pair) => {
     if (pairsListItems.find(item => item.id === pair.id)) {
       onChange(pairsListItems.map(item => (item.id === pair.id ? pair : item)));
     } else {

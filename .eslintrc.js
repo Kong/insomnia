@@ -87,6 +87,7 @@ module.exports = {
     'no-trailing-spaces': ERROR,
     'no-multiple-empty-lines': [ERROR, { 'max': 1, 'maxEOF': 0 }],
     'object-curly-spacing': [ERROR, 'always'],
+    'prefer-arrow-callback': ERROR,
     'quotes': OFF(UNKNOWN),
     'semi': SUCCESSOR(TYPESCRIPT_EXTENSION),
     'space-before-function-paren': [ERROR, { anonymous: 'always', named: 'never', asyncArrow: 'always' }],
