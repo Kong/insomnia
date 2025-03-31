@@ -4,8 +4,8 @@ on:
   merge_group:
   workflow_dispatch:
   push:
-    branches:
-      - develop
+    branches: develop
+    paths-ignore: '**/*.md'
   pull_request:
     types:
       - opened
