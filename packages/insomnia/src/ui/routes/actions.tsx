@@ -1104,11 +1104,11 @@ export const generateCollectionFromApiSpecAction: ActionFunction = async ({
   invariant(typeof projectId === 'string', 'Project ID is required');
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
-  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+  const project = await models.project.getById(projectId);
+  invariant(project, 'Project not found');
 
-  if (!apiSpec) {
-    throw new Error('No API Specification was found');
-  }
+  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+  invariant(apiSpec, 'No API Specification was found');
 
   const workspace = await models.workspace.getById(workspaceId);
 
@@ -1117,9 +1117,12 @@ export const generateCollectionFromApiSpecAction: ActionFunction = async ({
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
 
   const isLintError = (result: IRuleResult) => result.severity === 0;
+
+  const gitRepositoryId = isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
+
   const rulesetPath = path.join(
     process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-    `version-control/git/${workspaceMeta?.gitRepositoryId}/other/.spectral.yaml`,
+    `version-control/git/${gitRepositoryId}/other/.spectral.yaml`,
   );
 
   const spectralRunner = new SpectralRunner();
