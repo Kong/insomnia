@@ -94,27 +94,69 @@ export function isDefaultOrganizationProject(project: Project) {
 }
 
 export function getDefaultProjectStorageType(storageRules: StorageRules, project?: Project): 'local' | 'remote' | 'git' {
-  if (storageRules.enableCloudSync && !storageRules.enableLocalVault && !storageRules.enableGitSync) {
-    return 'remote';
-  }
-
-  if (storageRules.enableCloudSync && storageRules.enableLocalVault) {
-    if (project && isGitProject(project)) {
-      return 'git';
-    }
-
-    if (project && isRemoteProject(project)) {
+  // When the project exist. That means the user open the settings modal
+  if (project) {
+    if (isGitProject(project)) {
+      if (storageRules.enableGitSync) {
+        return 'git';
+      }
+      if (storageRules.enableLocalVault) {
+        return 'local';
+      }
       return 'remote';
     }
 
+    if (isRemoteProject(project)) {
+      if (storageRules.enableCloudSync) {
+        return 'remote';
+      }
+      if (storageRules.enableLocalVault) {
+        return 'local';
+      }
+      return 'git';
+    }
+
+    if (storageRules.enableLocalVault) {
+      return 'local';
+    }
+
+    if (storageRules.enableCloudSync) {
+      return 'remote';
+    }
+
+    return 'git';
+  }
+
+  // When the project doesn't exist. That means the user create a new project
+  if (storageRules.enableLocalVault) {
     return 'local';
   }
 
-  if (project && isGitProject(project)) {
+  if (storageRules.enableCloudSync) {
+    return 'remote';
+  }
+
+  if (storageRules.enableGitSync) {
     return 'git';
   }
 
   return 'local';
+}
+
+export function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
+  if (storageType === 'git' && !isGitProject(project)) {
+    return true;
+  }
+
+  if (storageType === 'local' && (isRemoteProject(project) || isGitProject(project))) {
+    return true;
+  }
+
+  if (storageType === 'remote' && !isRemoteProject(project)) {
+    return true;
+  }
+
+  return false;
 }
 
 export function getProjectStorageTypeLabel(storageRules: StorageRules): string {
