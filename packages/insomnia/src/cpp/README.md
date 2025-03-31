@@ -12,8 +12,7 @@ Move that `.sfx.exe` file to wherever you'd like the MSYS2 installation to be, a
 
 Then, open the MSYS2 terminal to finish the installation (`C:\msys64\msys2.exe`).
 
-Close that terminal, an open the `ucrt64` terminal (`C:\msys64\ucrt64.exe`).
-
+Close that terminal, and open the `ucrt64` terminal (`C:\msys64\ucrt64.exe`).
 Install the build system:
 
 ```bash
