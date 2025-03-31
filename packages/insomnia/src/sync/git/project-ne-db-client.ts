@@ -89,6 +89,12 @@ export class GitProjectNeDBClient {
 
     const bufferId = await db.bufferChanges();
 
+    const workspace = dataToImport.find(isWorkspace) as Workspace | undefined;
+
+    const isExistingWorkspace = workspace && await models.workspace.getById(workspace._id);
+    // Remove the workspace if it already exists to clean up any descendants that might have been removed.
+    isExistingWorkspace && await models.workspace.remove(workspace);
+
     for (const doc of dataToImport) {
       if (isWorkspace(doc)) {
         console.log('[git] setting workspace parent to be that of the active project', { original: doc.parentId, new: this._projectId });
