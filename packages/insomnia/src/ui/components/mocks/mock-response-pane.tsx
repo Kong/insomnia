@@ -244,8 +244,7 @@ const HistoryViewWrapperComponentFactory = ({ mockServer, mockRoute }: { mockSer
   );
 };
 
-const PreviewModeDropdown = ({ activeResponse, previewMode, setPreviewMode }: { activeResponse: Response; previewMode: PreviewMode; setPreviewMode: (mode: PreviewMode) => void }) => {
-  return (
+const PreviewModeDropdown = ({ activeResponse, previewMode, setPreviewMode }: { activeResponse: Response; previewMode: PreviewMode; setPreviewMode: (mode: PreviewMode) => void }) => (
     <Dropdown
       aria-label='Preview Mode Dropdown'
       triggerButton={
@@ -375,4 +374,3 @@ const PreviewModeDropdown = ({ activeResponse, previewMode, setPreviewMode }: { 
       </DropdownSection>
     </Dropdown>
   );
-};

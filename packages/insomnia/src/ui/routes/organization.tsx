@@ -116,7 +116,7 @@ export interface CurrentPlan {
   quantity: number;
   type: PersonalPlanType;
   planName: string;
-};
+}
 
 function sortOrganizations(accountId: string, organizations: Organization[]): Organization[] {
   const home = organizations.find(organization => isPersonalOrganization(organization) && isOwnerOfOrganization({
@@ -251,7 +251,7 @@ async function migrateProjectsUnderOrganization(personalOrganizationId: string, 
       }
     }
   }
-};
+}
 
 export const indexLoader: LoaderFunction = async () => {
   const { id: sessionId, accountId } = await userSession.getOrCreate();
@@ -344,7 +344,7 @@ export enum ORG_STORAGE_RULE {
   CLOUD_PLUS_LOCAL = 'cloud_plus_local',
   CLOUD_ONLY = 'cloud_only',
   LOCAL_ONLY = 'local_only',
-};
+}
 
 export interface StorageRule {
   storage: ORG_STORAGE_RULE;
@@ -461,9 +461,7 @@ export const organizationPermissionsLoader: LoaderFunction = async ({ params }):
   }
 };
 
-export const useOrganizationLoaderData = () => {
-  return useRouteLoaderData('/organization') as OrganizationLoaderData;
-};
+export const useOrganizationLoaderData = () => useRouteLoaderData('/organization') as OrganizationLoaderData;
 
 interface IndicatorProps {
   user?: UserProfileResponse;
@@ -848,8 +846,7 @@ const OrganizationRoute = () => {
                   onChange={setIsOganizationSidebarOpen}
                   isSelected={isOrganizationSidebarOpen}
                 >
-                  {({ isSelected }) => {
-                    return (
+                  {({ isSelected }) => (
                       <svg
                         width={10}
                         height={10}
@@ -867,8 +864,7 @@ const OrganizationRoute = () => {
                           <path d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm0 13V2h4v12H2zm5 0V2h7v12H7z" />
                         )}
                       </svg>
-                    );
-                  }}
+                    )}
                 </ToggleButton>
                 <Tooltip
                   placement="top"
@@ -886,8 +882,7 @@ const OrganizationRoute = () => {
                   }}
                   isSelected={!isMinimal}
                 >
-                  {({ isSelected }) => {
-                    return (
+                  {({ isSelected }) => (
                       <svg
                         width={10}
                         height={10}
@@ -905,8 +900,7 @@ const OrganizationRoute = () => {
                           <path d="M2 1L1 2v12l1 1h12l1-1V2l-1-1H2zm0 13V2h4v12H2zm5 0V2h7v12H7z" />
                         )}
                       </svg>
-                    );
-                  }}
+                    )}
                 </ToggleButton>
                 <Tooltip
                   placement="top"

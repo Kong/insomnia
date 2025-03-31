@@ -320,14 +320,12 @@ export const mergeGitBranch = async ({
     workspaceId: string;
     theirsBranch: string;
     allowUncommittedChangesBeforeMerge?: boolean;
-}) => {
-  return await window.main.git.mergeGitBranch({
+}) => await window.main.git.mergeGitBranch({
     projectId,
     workspaceId,
     theirsBranch,
     allowUncommittedChangesBeforeMerge,
   });
-};
 
 export interface DeleteGitBranchResult {
   errors?: string[];
@@ -379,7 +377,7 @@ export async function pullFromGitRemote({ projectId, workspaceId }: {
   workspaceId: string;
 }) {
   return window.main.git.pullFromGitRemote({ projectId, workspaceId });
-};
+}
 
 export async function continueMerge(
   {
@@ -403,7 +401,7 @@ export async function continueMerge(
     commitMessage,
     commitParent,
   });
-};
+}
 
 export interface GitChange {
   path: string;
@@ -450,14 +448,14 @@ export async function checkGitChanges({ projectId, workspaceId }: {
   workspaceId: string;
 }) {
   return window.main.git.gitChangesLoader({ projectId, workspaceId });
-};
+}
 
 export async function checkGitCanPush({ projectId, workspaceId }: {
   projectId: string;
   workspaceId: string;
 }) {
   return window.main.git.canPushLoader({ projectId, workspaceId });
-};
+}
 
 export const stageChangesAction: ActionFunction = async ({
   request,

@@ -35,11 +35,7 @@ interface GitCredentialsOAuth {
 
 export type GitCredentials = GitCredentialsBase | GitCredentialsOAuth;
 
-export const isGitCredentialsOAuth = (
-  credentials: GitCredentials
-): credentials is GitCredentialsOAuth => {
-  return 'oauth2format' in credentials;
-};
+export const isGitCredentialsOAuth = (credentials: GitCredentials) => 'oauth2format' in credentials;
 
 export type GitHash = string;
 

@@ -52,8 +52,7 @@ interface Bounds {
 export function init() {
   initElectronStorage();
 }
-const stopAndWaitForHiddenBrowserWindow = async (runningHiddenBrowserWindow: BrowserWindow) => {
-  return await new Promise<void>(resolve => {
+const stopAndWaitForHiddenBrowserWindow = async (runningHiddenBrowserWindow: BrowserWindow) => await new Promise<void>(resolve => {
     // overwrite the closed handler
     runningHiddenBrowserWindow.on('closed', () => {
       console.log('[main] restarting hidden browser window:', runningHiddenBrowserWindow.id);
@@ -62,7 +61,6 @@ const stopAndWaitForHiddenBrowserWindow = async (runningHiddenBrowserWindow: Bro
     });
     stopHiddenBrowserWindow();
   });
-};
 
 export async function createHiddenBrowserWindow() {
   const mainWindow = browserWindows.get('Insomnia');
@@ -248,9 +246,7 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
     }
   });
 
-  mainBrowserWindow.webContents.setWindowOpenHandler(() => {
-    return { action: 'deny' };
-  });
+  mainBrowserWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
 
   // Load the html of the app.
   const appPath = path.resolve(__dirname, './index.html');

@@ -30,11 +30,8 @@ export const generate = (suites: TestSuite[]) => {
   return lines.join('\n');
 };
 
-export const generateToFile = async (
-  filepath: string,
-  suites: TestSuite[],
-) => {
-  return new Promise<void>((resolve, reject) => {
+export const generateToFile = async (filepath: string,
+  suites: TestSuite[]) => new Promise<void>((resolve, reject) => {
     const js = generate(suites);
     return writeFile(filepath, js, err => {
       if (err) {
@@ -44,7 +41,6 @@ export const generateToFile = async (
       }
     });
   });
-};
 
 const generateSuiteLines = (
   n: number,

@@ -69,7 +69,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     projectId: string;
     workspaceId: string;
     requestId: string;
-    };
+  };
 
   const { userSession } = useRouteLoaderData('root') as RootLoaderData;
   const { presence } = useInsomniaEventStreamContext();
@@ -214,11 +214,11 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           {getMethodShortHand(request.item)}
         </span>
       ) : isWebSocketRequest(request.item) ? (
-          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
           WS
         </span>
-        ) : isGrpcRequest(request.item) && (
-            <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
+      ) : isGrpcRequest(request.item) && (
+        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
           gRPC
         </span>
       ),
@@ -241,13 +241,11 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       presence: presence
         .filter(p => p.project === file.item.teamProjectId && p.file === file.id)
         .filter(p => p.acct !== accountId)
-        .map(user => {
-          return {
-            key: user.acct,
-            alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
-            src: user.avatar,
-          };
-        }),
+        .map(user => ({
+          key: user.acct,
+          alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+          src: user.avatar,
+        })),
     })),
   });
 
@@ -295,11 +293,11 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
           {getMethodShortHand(request.item)}
         </span>
       ) : isWebSocketRequest(request.item) ? (
-          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
           WS
         </span>
       ) : isGrpcRequest(request.item) && (
-            <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
+        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
           gRPC
         </span>
       ),
@@ -322,13 +320,11 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       presence: presence
         .filter(p => p.project === file.item.teamProjectId && p.file === file.id)
         .filter(p => p.acct !== accountId)
-        .map(user => {
-          return {
-            key: user.acct,
-            alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
-            src: user.avatar,
-          };
-        }),
+        .map(user => ({
+          key: user.acct,
+          alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+          src: user.avatar,
+        })),
     })),
   });
 
@@ -383,13 +379,11 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
 
         commandsLoader.load(`/commands?${searchParams.toString()}`);
       }}
-      defaultFilter={(textValue, filter) => {
-        return Boolean(fuzzyMatch(
-          filter,
-          textValue,
-          { splitSpace: false, loose: true }
-        )?.indexes);
-      }}
+      defaultFilter={(textValue, filter) => Boolean(fuzzyMatch(
+        filter,
+        textValue,
+        { splitSpace: false, loose: true }
+      )?.indexes)}
       onSelectionChange={itemId => {
         if (!itemId) {
           return;
@@ -410,72 +404,70 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         }
       }}
     >
-      {({ isOpen }) => {
-        return (
-          <>
-            <Label
-              aria-label="Filter"
-              className="group relative flex items-center flex-1 pt-0"
-            >
-              {isPullingFile ? (
-                <>
-                  <Icon icon="spinner" className="text-[--color-font] absolute left-4 animate-spin" />
-                  <div
-                    slot='input'
-                    className="py-3 pl-10 pr-7 w-full bg-[--color-bg] transition-none text-[--color-font] rounded-md group-data-[open]:rounded-b-none border border-solid border-[--hl-sm]"
-                  >
-                    Pulling: {pullingFile?.name}
-                  </div>
-                </>
-              ) : (
-                <>
-                    <Icon icon="search" className="text-[--color-font] absolute left-4" />
-                    <Input
-                      slot='input'
-                      placeholder="Search and switch between requests, collections and documents"
-                      className="py-3 pl-10 pr-7 w-full bg-[--color-bg] transition-none text-[--color-font] rounded-md group-data-[open]:rounded-b-none border border-solid border-[--hl-sm]"
-                    />
-                </>
-              )}
-            </Label>
-            <Popover offset={0} className={`outline-none rounded-b-md w-[--trigger-width] bg-[--color-bg] text-[--color-font] relative overflow-y-auto flex-1 border ${isOpen ? 'border-solid' : ''} border-[--hl-sm]`}>
-                <ListBox
-                  aria-label='Commands'
-                  className="outline-none relative overflow-y-auto flex-1"
-                  items={comboboxSections}
+      {({ isOpen }) => (
+        <>
+          <Label
+            aria-label="Filter"
+            className="group relative flex items-center flex-1 pt-0"
+          >
+            {isPullingFile ? (
+              <>
+                <Icon icon="spinner" className="text-[--color-font] absolute left-4 animate-spin" />
+                <div
+                  slot='input'
+                  className="py-3 pl-10 pr-7 w-full bg-[--color-bg] transition-none text-[--color-font] rounded-md group-data-[open]:rounded-b-none border border-solid border-[--hl-sm]"
                 >
-                  {section => (
-                    <Section className='flex-1 flex flex-col'>
-                      <Header className='p-2 text-xs uppercase text-[--hl] select-none'>{section.name}</Header>
-                      <Collection items={section.children}>
-                        {item => (
-                          <ListBoxItem textValue={item.textValue} className="group outline-none select-none">
-                            <div
-                              className={`flex select-none outline-none ${item.id === workspaceId || item.id === requestId ? 'text-[--color-font] font-bold' : 'text-[--hl]'} group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-data-[focused]:bg-[--hl-sm] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden`}
-                            >
-                              {item.icon}
-                              <Text className="flex-shrink-0 px-1 truncate" slot="label">{item.name}</Text>
-                              {item.presence.length > 0 && (
-                                <span className='w-[70px]'>
-                                  <AvatarGroup
-                                    size="small"
-                                    maxAvatars={3}
-                                    items={item.presence}
-                                  />
-                                </span>
-                              )}
-                              <Text className="flex-1 px-1 truncate text-sm text-[--hl-md]" slot="description">{item.description}</Text>
-                            </div>
-                          </ListBoxItem>
-                        )}
-                      </Collection>
-                    </Section>
-                  )}
-              </ListBox>
-            </Popover>
-          </>
-        );
-      }}
+                  Pulling: {pullingFile?.name}
+                </div>
+              </>
+            ) : (
+              <>
+                <Icon icon="search" className="text-[--color-font] absolute left-4" />
+                <Input
+                  slot='input'
+                  placeholder="Search and switch between requests, collections and documents"
+                  className="py-3 pl-10 pr-7 w-full bg-[--color-bg] transition-none text-[--color-font] rounded-md group-data-[open]:rounded-b-none border border-solid border-[--hl-sm]"
+                />
+              </>
+            )}
+          </Label>
+          <Popover offset={0} className={`outline-none rounded-b-md w-[--trigger-width] bg-[--color-bg] text-[--color-font] relative overflow-y-auto flex-1 border ${isOpen ? 'border-solid' : ''} border-[--hl-sm]`}>
+            <ListBox
+              aria-label='Commands'
+              className="outline-none relative overflow-y-auto flex-1"
+              items={comboboxSections}
+            >
+              {section => (
+                <Section className='flex-1 flex flex-col'>
+                  <Header className='p-2 text-xs uppercase text-[--hl] select-none'>{section.name}</Header>
+                  <Collection items={section.children}>
+                    {item => (
+                      <ListBoxItem textValue={item.textValue} className="group outline-none select-none">
+                        <div
+                          className={`flex select-none outline-none ${item.id === workspaceId || item.id === requestId ? 'text-[--color-font] font-bold' : 'text-[--hl]'} group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-data-[focused]:bg-[--hl-sm] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden`}
+                        >
+                          {item.icon}
+                          <Text className="flex-shrink-0 px-1 truncate" slot="label">{item.name}</Text>
+                          {item.presence.length > 0 && (
+                            <span className='w-[70px]'>
+                              <AvatarGroup
+                                size="small"
+                                maxAvatars={3}
+                                items={item.presence}
+                              />
+                            </span>
+                          )}
+                          <Text className="flex-1 px-1 truncate text-sm text-[--hl-md]" slot="description">{item.description}</Text>
+                        </div>
+                      </ListBoxItem>
+                    )}
+                  </Collection>
+                </Section>
+              )}
+            </ListBox>
+          </Popover>
+        </>
+      )}
 
     </ComboBox>
   );

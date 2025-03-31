@@ -39,14 +39,10 @@ export async function registerInsomniaProtocols() {
     });
   }
   if (!protocol.isProtocolHandled(httpsScheme)) {
-    protocol.handle(httpsScheme, async request => {
-      return net.fetch(request, { bypassCustomProtocolHandlers: true });
-    });
+    protocol.handle(httpsScheme, async request => net.fetch(request, { bypassCustomProtocolHandlers: true }));
   }
   if (!protocol.isProtocolHandled(httpScheme)) {
-    protocol.handle(httpScheme, async request => {
-      return net.fetch(request, { bypassCustomProtocolHandlers: true });
-    });
+    protocol.handle(httpScheme, async request => net.fetch(request, { bypassCustomProtocolHandlers: true }));
   }
   if (!protocol.isProtocolHandled(templatingWorkerDatabaseInterface)) {
     protocol.handle(templatingWorkerDatabaseInterface, resolveDbByKey);

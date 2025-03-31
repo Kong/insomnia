@@ -28,8 +28,7 @@ const MillisecondTimer = ({ startedAt }: { startedAt: number }) => {
   return ms > 0 ? `${ms.toFixed(1)} s` : '0 s';
 };
 
-export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRequestId, steps }) => {
-  return (
+export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRequestId, steps }) => (
     <div className="flex overlay theme--transparent-overlay-darker w-full h-full">
       <div className="m-auto w-[60%] min-w-[400px]">
         <div className="timer-list mx-auto">
@@ -68,4 +67,3 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
       </div>
     </div>
   );
-};

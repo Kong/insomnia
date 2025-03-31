@@ -10,13 +10,11 @@ interface NunjucksEnabledState {
 
 const NunjucksEnabledContext = createContext<NunjucksEnabledState | undefined>(undefined);
 
-export const NunjucksEnabledProvider: FC<PropsWithChildren<Props>> = ({ disable, children }) => {
-  return (
+export const NunjucksEnabledProvider: FC<PropsWithChildren<Props>> = ({ disable, children }) => (
     <NunjucksEnabledContext.Provider value={{ enabled: !disable }}>
       {children}
     </NunjucksEnabledContext.Provider>
   );
-};
 
 export const useNunjucksEnabled = () => {
   const context = useContext(NunjucksEnabledContext);

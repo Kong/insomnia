@@ -586,7 +586,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
 
             default:
               return;
-          };
+          }
         } else {
           codeMirror.current?.replaceSelection(tag);
         }
@@ -619,9 +619,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
       }
       codeMirror.current?.getDoc()?.setCursor(codeMirror.current.getDoc().lineCount(), 0);
     },
-    getCursor: () => {
-      return codeMirror.current?.getCursor();
-    },
+    getCursor: () => codeMirror.current?.getCursor(),
     setCursorLine: (lineNumber: number) => {
       codeMirror.current?.setCursor(lineNumber);
     },

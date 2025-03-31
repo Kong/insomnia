@@ -111,9 +111,7 @@ export function useImageCache(src: string, cache: ImageCache): string {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
 
   const subscribe = useCallback(
-    (callback: () => void) => {
-      return cache.subscribe(base, callback);
-    },
+    (callback: () => void) => cache.subscribe(base, callback),
     [base, cache]
   );
 

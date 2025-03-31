@@ -36,8 +36,7 @@ import { WebSocketActionBar } from './action-bar';
 
 const supportedAuthTypes: AuthTypes[] = ['apikey', 'basic', 'bearer'];
 
-const PaneReadOnlyBanner = () => {
-  return (
+const PaneReadOnlyBanner = () => (
     <div
       style={{
         paddingTop: 'var(--padding-md)',
@@ -50,7 +49,6 @@ const PaneReadOnlyBanner = () => {
       </p>
     </div>
   );
-};
 
 interface FormProps {
   request: WebSocketRequest;

@@ -13,8 +13,7 @@ export const id = 'wsdl';
 export const name = 'WSDL';
 export const description = 'Importer for WSDL files';
 
-const pathToSwagger = (swagger: any, path: string[]) => {
-  return path.reduce((acc, v: string) => {
+const pathToSwagger = (swagger: any, path: string[]) => path.reduce((acc, v: string) => {
     try {
       acc = acc[v];
     } catch (e) {
@@ -22,7 +21,6 @@ const pathToSwagger = (swagger: any, path: string[]) => {
     }
     return acc;
   }, swagger);
-};
 
 const convertToPostman = (items: Swagger[]) => {
   const item = items.map(swagger => {

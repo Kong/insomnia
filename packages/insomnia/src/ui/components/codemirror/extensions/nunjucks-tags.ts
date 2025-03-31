@@ -140,15 +140,15 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
         replacedWith: el,
       });
 
-      (async function () {
-        await _updateElementText(
+      (async () => {
+  await _updateElementText(
           renderString,
           mark,
           tok.string,
           renderContextWithCacheKey,
           showVariableSourceAndValue,
         );
-      })();
+})();
 
       // Update it every mouseenter because it may generate a new value every time
       el.addEventListener('mouseenter', async () => {

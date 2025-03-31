@@ -108,7 +108,7 @@ export interface RequestRow {
   method: string;
   url: string;
   parentId: string;
-};
+}
 
 const defaultAdvancedConfig = {
   bail: true,
@@ -176,15 +176,13 @@ export const Runner: FC<{}> = () => {
   }, [reqList, requestRows, selectedKeys]);
 
   const { dragAndDropHooks: requestsDnD } = useDragAndDrop({
-    getItems: keys => {
-      return [...keys].map(key => {
-        const name = entityMap.get(key as string)?.doc.name || '';
-        return {
-          'text/plain': key.toString(),
-          name,
-        };
-      });
-    },
+    getItems: keys => [...keys].map(key => {
+      const name = entityMap.get(key as string)?.doc.name || '';
+      return {
+        'text/plain': key.toString(),
+        name,
+      };
+    }),
     onReorder: event => {
       let newList = reqList;
       if (event.target.dropPosition === 'before') {
@@ -208,9 +206,7 @@ export const Runner: FC<{}> = () => {
           return (
             <DropIndicator
               target={target}
-              className={({ isDropTarget }) => {
-                return `${isDropTarget ? 'border border-solid border-[--hl-sm]' : ''}`;
-              }}
+              className={({ isDropTarget }) => `${isDropTarget ? 'border border-solid border-[--hl-sm]' : ''}`}
             />
           );
         }
@@ -408,9 +404,7 @@ export const Runner: FC<{}> = () => {
   }, [setSelectedTab]);
 
   const allKeys = reqList.map(item => item.id);
-  const disabledKeys = useMemo(() => {
-    return isRunning ? allKeys : [];
-  }, [isRunning, allKeys]);
+  const disabledKeys = useMemo(() => isRunning ? allKeys : [], [isRunning, allKeys]);
   const isDisabled = isRunning || Array.from(selectedKeys).length === 0;
 
   const [deletedItems, setDeletedItems] = useState<string[]>([]);
@@ -569,15 +563,13 @@ export const Runner: FC<{}> = () => {
                     disabledKeys={disabledKeys}
                   >
                     {item => {
-                      const parentFolders = item.ancestorNames.map((parentFolderName: string, i: number) => {
-                        // eslint-disable-next-line react/no-array-index-key
-                        return <TooltipTrigger key={`parent-folder-${i}=${parentFolderName}`} >
-                          <Tooltip message={parentFolderName}>
-                            <i className="fa fa-folder fa-1x h-4 mr-0.3 text-[--color-font]" />
-                            <i className="fa fa-caret-right fa-1x h-4 mr-0.3 text-[--color-font]-50  opacity-50" />
-                          </Tooltip>
-                        </TooltipTrigger>;
-                      });
+                      // eslint-disable-next-line react/no-array-index-key
+                      const parentFolders = item.ancestorNames.map((parentFolderName: string, i: number) => <TooltipTrigger key={`parent-folder-${i}=${parentFolderName}`} >
+                        <Tooltip message={parentFolderName}>
+                          <i className="fa fa-folder fa-1x h-4 mr-0.3 text-[--color-font]" />
+                          <i className="fa fa-caret-right fa-1x h-4 mr-0.3 text-[--color-font]-50  opacity-50" />
+                        </Tooltip>
+                      </TooltipTrigger>);
                       const parentFolderContainer = parentFolders.length > 0 ? <span className="ml-2">{parentFolders}</span> : null;
 
                       return (
@@ -790,33 +782,26 @@ export const Runner: FC<{}> = () => {
 
 export default Runner;
 
-const RequestItem = (
-  { children, ...props }: GridListItemProps
-) => {
-
-  return (
-    <GridListItem {...props}>
-      {() => (
-        <>
-          <Button slot="drag" className="hover:cursor-grab">
-            <Icon icon="grip-vertical" className='w-2 text-[--hl] mr-2' />
-          </Button>
-          <Checkbox slot="selection">
-            {({ isSelected }) => {
-              return <>
-                {isSelected ?
-                  <i className="fa fa-square-check fa-1x h-4 mr-2" style={{ color: 'rgb(74 222 128)' }} /> :
-                  <i className="fa fa-square fa-1x h-4 mr-2" />
-                }
-              </>;
-            }}
-          </Checkbox>
-          {children}
-        </>
-      )}
-    </GridListItem>
-  );
-};
+const RequestItem = ({ children, ...props }: GridListItemProps) => (
+  <GridListItem {...props}>
+    {() => (
+      <>
+        <Button slot="drag" className="hover:cursor-grab">
+          <Icon icon="grip-vertical" className='w-2 text-[--hl] mr-2' />
+        </Button>
+        <Checkbox slot="selection">
+          {({ isSelected }) => <>
+            {isSelected ?
+              <i className="fa fa-square-check fa-1x h-4 mr-2" style={{ color: 'rgb(74 222 128)' }} /> :
+              <i className="fa fa-square fa-1x h-4 mr-2" />
+            }
+          </>}
+        </Checkbox>
+        {children}
+      </>
+    )}
+  </GridListItem>
+);
 
 // This is required for tracking the active request for one runner execution
 // Then in runner cancellation, both the active request and the runner execution will be canceled
@@ -824,7 +809,7 @@ const RequestItem = (
 interface ExecutionInfo {
   activeRequestId?: string;
   error?: string;
-};
+}
 const runnerExecutions = new Map<string, ExecutionInfo>();
 function startExecution(workspaceId: string) {
   runnerExecutions.set(workspaceId, {});
@@ -857,7 +842,7 @@ const wrapAroundIterationOverIterationData = (list?: UserUploadEnvironment[], cu
   }
   if (list.length >= currentIteration + 1) {
     return list[currentIteration];
-  };
+  }
   return list[(currentIteration + 1) % list.length];
 };
 export interface runCollectionActionParams {
@@ -992,7 +977,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
           }) as RequestContext | null;
           if (mutatedContext?.execution?.nextRequestIdOrName) {
             nextRequestIdOrName = mutatedContext.execution.nextRequestIdOrName || '';
-          };
+          }
 
           const requestResults: RunnerResultPerRequest = {
             requestName: targetRequest.name,

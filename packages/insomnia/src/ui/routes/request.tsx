@@ -653,9 +653,7 @@ export const sendActionImplementation = async (options: {
       ...postTestResults,
     ];
     const timingSteps = await window.main.getExecution({ requestId });
-    testResultCollector.duration = timingSteps.reduce((acc: number, cur: TimingStep) => {
-      return acc + (cur.duration || 0);
-    }, 0);
+    testResultCollector.duration = timingSteps.reduce((acc: number, cur: TimingStep) => acc + (cur.duration || 0), 0);
     testResultCollector.responseId = response._id;
   }
   const responsePatch = postMutatedContext ?

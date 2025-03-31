@@ -37,7 +37,7 @@ export interface GlobalOptions {
   printOptions: boolean;
   verbose: boolean;
   workingDir: string;
-};
+}
 
 export type TestReporter = 'dot' | 'list' | 'spec' | 'min' | 'progress' | 'tap';
 export const reporterTypes: TestReporter[] = ['dot', 'list', 'min', 'progress', 'spec', 'tap'];
@@ -129,9 +129,7 @@ export const getDefaultProductName = (): string => {
   return name;
 };
 
-export const getAbsoluteFilePath = ({ workingDir, file }: { workingDir?: string; file: string }) => {
-  return file && path.resolve(workingDir || process.cwd(), file);
-};
+export const getAbsoluteFilePath = ({ workingDir, file }: { workingDir?: string; file: string }) => file && path.resolve(workingDir || process.cwd(), file);
 export const logErrorAndExit = (err?: Error) => {
   if (err instanceof InsoError) {
     logger.fatal(err.message);
@@ -289,8 +287,7 @@ const getListFromFileOrUrl = (content: string, fileType?: string): Record<string
   throw new Error(`Uploaded file is unsupported ${fileType}`);
 };
 
-const transformIterationDataToEnvironmentList = (list: Record<string, string>[]): UserUploadEnvironment[] => {
-  return list?.map(data => {
+const transformIterationDataToEnvironmentList = (list: Record<string, string>[]) => list?.map(data => {
     const orderedJson = orderedJSON.parse<Record<string, any>>(
       JSON.stringify(data || []),
       JSON_ORDER_PREFIX,
@@ -302,7 +299,6 @@ const transformIterationDataToEnvironmentList = (list: Record<string, string>[])
       dataPropertyOrder: orderedJson.map || null,
     };
   });
-};
 
 export const go = (args?: string[]) => {
 

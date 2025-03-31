@@ -45,12 +45,10 @@ export const PromptButton = <T, >({
   const doneTimeout = useRef<NodeJS.Timeout | null>(null);
   const triggerTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    return () => {
+  useEffect(() => () => {
       triggerTimeout.current && clearTimeout(triggerTimeout.current);
       doneTimeout.current && clearTimeout(doneTimeout.current);
-    };
-  }, []);
+    }, []);
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     if (state === 'default') {

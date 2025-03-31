@@ -10,7 +10,7 @@ export interface InsomniaCookieExtensions {
     creationIndex?: number;
     lastAccessed?: Date;
     pathIsDefault?: boolean;
-};
+}
 
 export interface CookieOptions extends InsomniaCookieExtensions {
     id?: string;
@@ -147,16 +147,13 @@ export class Cookie extends Property {
         return this.cookie.toString() + hostOnlyPart + sessionPart + extensionPart;
     };
 
-    override valueOf = () => {
-        return this.cookie.toJSON().value;
-    };
+    override valueOf = () => this.cookie.toJSON().value;
 
     get key() {
         return this.cookie.toJSON().key;
     };
 
-    override toJSON = () => {
-        return {
+    override toJSON = () => ({
             id: this.id,
             key: this.cookie.key,
             value: this.cookie.value,
@@ -174,8 +171,7 @@ export class Cookie extends Property {
             creationIndex: this.insoExtensions.creationIndex,
             lastAccessed: this.insoExtensions.lastAccessed,
             pathIsDefault: this.insoExtensions.pathIsDefault,
-        };
-    };
+        });
 }
 
 export class CookieList extends PropertyList<Cookie> {

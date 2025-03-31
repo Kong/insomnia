@@ -207,21 +207,13 @@ export const loader: LoaderFunction = async args => {
     ...subEnvironments,
   ] : [];
 
-  const currentRequests = allRequests.filter(request => {
-    return parentReferences.get(request.parentId)!.workspaceId === workspaceId;
-  });
+  const currentRequests = allRequests.filter(request => parentReferences.get(request.parentId)!.workspaceId === workspaceId);
 
-  const otherRequests = allRequests.filter(request => {
-    return parentReferences.get(request.parentId)!.workspaceId !== workspaceId;
-  });
+  const otherRequests = allRequests.filter(request => parentReferences.get(request.parentId)!.workspaceId !== workspaceId);
 
-  const currentFiles = allOrganizationWorkspaces.filter(workspace => {
-    return workspace.parentId === projectId;
-  });
+  const currentFiles = allOrganizationWorkspaces.filter(workspace => workspace.parentId === projectId);
 
-  const otherFiles = allOrganizationWorkspaces.filter(workspace => {
-    return workspace.parentId !== projectId;
-  });
+  const otherFiles = allOrganizationWorkspaces.filter(workspace => workspace.parentId !== projectId);
 
   return {
     current: {

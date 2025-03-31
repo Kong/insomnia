@@ -61,11 +61,9 @@ export const useCloseConnection = ({ organizationId }: { organizationId: string 
   }, [handleTabClose, handleActiveEnvironmentChange]);
 
   // close all connections when organizationId change
-  useEffect(() => {
-    return () => {
+  useEffect(() => () => {
       window.main.webSocket.closeAll();
       window.main.grpc.closeAll();
       window.main.curl.closeAll();
-    };
-  }, [organizationId]);
+    }, [organizationId]);
 };

@@ -1182,13 +1182,11 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
     parentId: workspaceId,
   });
 
-  const requests = allRequestsFromResources.filter(isRequest).map(request => {
-    return {
-      ...request,
-      _id: generateId(models.request.prefix),
-      parentId: aiGeneratedRequestGroup._id,
-    };
-  }) || [];
+  const requests = allRequestsFromResources.filter(isRequest).map(request => ({
+    ...request,
+    _id: generateId(models.request.prefix),
+    parentId: aiGeneratedRequestGroup._id,
+  })) || [];
 
   await Promise.all(requests.map(request => models.request.create(request)));
 
@@ -1205,9 +1203,7 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
 
       const pathMatches = specPaths.filter(path => request.url.endsWith(path));
 
-      const closestPath = pathMatches.sort((a, b) => {
-        return a.length - b.length;
-      })[0];
+      const closestPath = pathMatches.sort((a, b) => a.length - b.length)[0];
 
       const methodInfo = spec.contents?.paths[closestPath][request.method.toLowerCase()];
 
@@ -1218,14 +1214,12 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
     }
   };
 
-  const tests: Partial<UnitTest>[] = requests.map(request => {
-    return {
-      name: `Test: ${request.name}`,
-      code: '',
-      parentId: aiTestSuite._id,
-      requestId: request._id,
-    };
-  });
+  const tests: Partial<UnitTest>[] = requests.map(request => ({
+    name: `Test: ${request.name}`,
+    code: '',
+    parentId: aiTestSuite._id,
+    requestId: request._id,
+  }));
 
   const total = tests.length;
   let progress = 0;
@@ -1309,14 +1303,12 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
     parentId: workspaceId,
   });
 
-  const tests: Partial<UnitTest>[] = requests.map(request => {
-    return {
-      name: `Test: ${request.name}`,
-      code: '',
-      parentId: aiTestSuite._id,
-      requestId: request._id,
-    };
-  });
+  const tests: Partial<UnitTest>[] = requests.map(request => ({
+    name: `Test: ${request.name}`,
+    code: '',
+    parentId: aiTestSuite._id,
+    requestId: request._id,
+  }));
 
   const total = tests.length;
   let progress = 0;

@@ -9,8 +9,7 @@ interface DashboardSortDropdownProps {
   onSelect: (value: DashboardSortOrder) => void;
 }
 
-export const DashboardSortDropdown: FC<DashboardSortDropdownProps> = ({ onSelect, value }) => {
-  return (
+export const DashboardSortDropdown: FC<DashboardSortDropdownProps> = ({ onSelect, value }) => (
     <Dropdown
       aria-label='Dashboard Sort Dropdown'
       className="margin-left"
@@ -34,4 +33,3 @@ export const DashboardSortDropdown: FC<DashboardSortDropdownProps> = ({ onSelect
       ))}
     </Dropdown>
   );
-};

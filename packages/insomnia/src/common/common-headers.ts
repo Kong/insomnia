@@ -35,6 +35,4 @@ export const getCommonHeaderValues = (pair: RequestHeader): any[] => {
   }
 };
 
-export const getCommonHeaderNames = (): any[] => {
-  return allHeaderNames;
-};
+export const getCommonHeaderNames = () => allHeaderNames;

@@ -7,8 +7,7 @@ import { SegmentEvent } from '../analytics';
 import { getLoginUrl } from '../auth-session-provider';
 import { Icon } from '../components/icon';
 
-const GoogleIcon = (props: React.ReactSVGElement['props']) => {
-  return (
+const GoogleIcon = (props: React.ReactSVGElement['props']) => (
     <svg {...props} viewBox="0 0 22 22">
       <path
         d="M19.9885 9.20471H19.2502V9.16667H11.0002V12.8333H16.1807C15.4249 14.9678 13.394 16.5 11.0002 16.5C7.96279 16.5 5.50016 14.0374 5.50016 11C5.50016 7.96263 7.96279 5.5 11.0002 5.5C12.4022 5.5 13.6777 6.02892 14.649 6.89288L17.2417 4.30009C15.6046 2.77429 13.4147 1.83334 11.0002 1.83334C5.93787 1.83334 1.8335 5.93771 1.8335 11C1.8335 16.0623 5.93787 20.1667 11.0002 20.1667C16.0625 20.1667 20.1668 16.0623 20.1668 11C20.1668 10.3854 20.1036 9.78542 19.9885 9.20471Z"
@@ -28,7 +27,6 @@ const GoogleIcon = (props: React.ReactSVGElement['props']) => {
       />
     </svg>
   );
-};
 
 export const action: ActionFunction = async ({
   request,

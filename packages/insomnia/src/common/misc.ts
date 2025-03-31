@@ -100,8 +100,8 @@ export function keyedDebounce<T>(
 ) {
   let timeout: NodeJS.Timeout;
   let results: Record<string, T[]> = {};
-  const t = function (key: string, ...args: T[]) {
-    results[key] = args;
+  const t = (key: string, ...args: T[]) => {
+  results[key] = args;
     if (timeout) {
       clearTimeout(timeout);
     }
@@ -112,7 +112,7 @@ export function keyedDebounce<T>(
       callback(results);
       results = {};
     }, millis);
-  };
+};
   return t;
 }
 

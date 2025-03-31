@@ -305,13 +305,11 @@ export const mergeGitBranch = async ({
   theirsBranch: string;
   projectId: string;
   allowUncommittedChangesBeforeMerge?: boolean;
-}) => {
-  return await window.main.git.mergeGitBranch({
+}) => await window.main.git.mergeGitBranch({
     projectId,
     theirsBranch,
     allowUncommittedChangesBeforeMerge,
   });
-};
 
 export interface DeleteGitBranchResult {
   errors?: string[];
@@ -353,12 +351,9 @@ export const pushToGitRemoteAction: ActionFunction = async ({
   });
 };
 
-export const pullFromGitRemote = async ({ projectId }: { projectId: string }) => {
-  return window.main.git.pullFromGitRemote({ projectId });
-};
+export const pullFromGitRemote = async ({ projectId }: { projectId: string }) => window.main.git.pullFromGitRemote({ projectId });
 
-export const continueMerge = async (
-  {
+export const continueMerge = async ({
     projectId,
     handledMergeConflicts,
     commitMessage,
@@ -368,15 +363,12 @@ export const continueMerge = async (
     handledMergeConflicts: MergeConflict[];
     commitMessage: string;
     commitParent: string[];
-  }
-) => {
-  return window.main.git.continueMerge({
+  }) => window.main.git.continueMerge({
     projectId,
     handledMergeConflicts,
     commitMessage,
     commitParent,
   });
-};
 
 export interface GitChange {
   path: string;
@@ -413,13 +405,9 @@ export const gitStatusAction: ActionFunction = async ({ params }): Promise<GitSt
   return window.main.git.gitStatus({ projectId });
 };
 
-export const checkGitChanges = async (projectId: string) => {
-  return window.main.git.gitChangesLoader({ projectId });
-};
+export const checkGitChanges = async (projectId: string) => window.main.git.gitChangesLoader({ projectId });
 
-export const checkGitCanPush = async (projectId: string) => {
-  return window.main.git.canPushLoader({ projectId });
-};
+export const checkGitCanPush = async (projectId: string) => window.main.git.canPushLoader({ projectId });
 
 export const stageChangesAction: ActionFunction = async ({
   request,

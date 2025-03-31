@@ -249,8 +249,7 @@ const Design: FC = () => {
 
       try {
         const diagnostics = await runner.runDiagnostics({ contents, rulesetPath });
-        const lintResult = diagnostics.map(({ severity, code, message, range }) => {
-          return {
+        const lintResult = diagnostics.map(({ severity, code, message, range }) => ({
             from: CodeMirror.Pos(
               range.start.line,
               range.start.character
@@ -261,14 +260,13 @@ const Design: FC = () => {
             type: (['error', 'warning'][severity] ?? 'info') as LintMessage['type'],
             range,
             line: range.start.line,
-          };
-        });
+          }));
         setLintMessages?.(lintResult);
         return lintResult;
       } catch (e) {
         // return a rejected promise so that codemirror do nothing
         return Promise.reject(e);
-      };
+      }
     });
   };
 

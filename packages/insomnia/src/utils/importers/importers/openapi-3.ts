@@ -122,9 +122,7 @@ export type SpecExtension = `x-${string}`;
  * Checks if the given property name is an open-api extension
  * @param property The property name
  */
-const isSpecExtension = (property: string): property is SpecExtension => {
-  return property.indexOf('x-') === 0;
-};
+const isSpecExtension = (property: string) => property.indexOf('x-') === 0;
 
 /**
  * Create env definitions based on openapi document.
@@ -313,12 +311,10 @@ const importRequest = (
 /**
  * Imports insomnia definitions of query parameters.
  */
-const prepareQueryParams = (endpointSchema: OpenAPIV3.PathItemObject) => {
-  return convertParameters(
+const prepareQueryParams = (endpointSchema: OpenAPIV3.PathItemObject) => convertParameters(
     endpointSchema.parameters?.filter(parameter => (
       (parameter as OpenAPIV3.ParameterObject).in === 'query'
     )) as OpenAPIV3.ParameterObject[]);
-};
 
 /**
  * Imports insomnia definitions of header parameters.
@@ -363,15 +359,11 @@ const parseSecurity = (
   }
 
   const supportedSchemes = security
-    .flatMap(securityPolicy => {
-      return Object.keys(securityPolicy).map((securityRequirement: string | number) => {
-        return {
+    .flatMap(securityPolicy => Object.keys(securityPolicy).map((securityRequirement: string | number) => ({
           // @ts-expect-error the base types do not include an index but from what I can tell, they should
           schemeDetails: securitySchemes[securityRequirement],
           securityScopes: securityPolicy[securityRequirement],
-        };
-      });
-    })
+        })))
     .filter(({ schemeDetails }) => (
       schemeDetails && SUPPORTED_SECURITY_TYPES.includes(schemeDetails.type)
     ));
@@ -532,11 +524,7 @@ const prepareBody = (endpointSchema: OpenAPIV3.OperationObject): ImportRequest['
   const { content } = (endpointSchema.requestBody || { content: {} }) as OpenAPIV3.RequestBodyObject;
 
   const mimeTypes = Object.keys(content);
-  const supportedMimeType = mimeTypes.find(reqMimeType => {
-    return SUPPORTED_MIME_TYPES.some(supportedMimeType => {
-      return reqMimeType.includes(supportedMimeType);
-    });
-  });
+  const supportedMimeType = mimeTypes.find(reqMimeType => SUPPORTED_MIME_TYPES.some(supportedMimeType => reqMimeType.includes(supportedMimeType)));
 
   if (supportedMimeType && supportedMimeType.includes(MIMETYPE_JSON)) {
     const bodyParameter = content[supportedMimeType];
@@ -571,8 +559,7 @@ const prepareBody = (endpointSchema: OpenAPIV3.OperationObject): ImportRequest['
 /**
  * Converts openapi schema of parameters into insomnia one.
  */
-const convertParameters = (parameters: OpenAPIV3.ParameterObject[] = []) => {
-  return parameters.map(parameter => {
+const convertParameters = (parameters: OpenAPIV3.ParameterObject[] = []) => parameters.map(parameter => {
     const { required, name, schema } = parameter;
     return {
       name,
@@ -580,7 +567,6 @@ const convertParameters = (parameters: OpenAPIV3.ParameterObject[] = []) => {
       value: `${generateParameterExample(schema as OpenAPIV3.SchemaObject)}`,
     };
   });
-};
 
 /**
  * Generate example value of parameter based on it's schema.

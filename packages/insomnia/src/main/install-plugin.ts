@@ -42,7 +42,7 @@ interface InsomniaPlugin {
   };
 }
 
-export default async function (lookupName: string) {
+export default async (lookupName: string) => {
   return new Promise<void>(async (resolve, reject) => {
     let info: InsomniaPlugin | null = null;
 
@@ -90,7 +90,7 @@ export default async function (lookupName: string) {
 
     resolve();
   });
-}
+};
 
 async function _isInsomniaPlugin(lookupName: string) {
   return new Promise<InsomniaPlugin>(async (resolve, reject) => {

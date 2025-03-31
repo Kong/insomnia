@@ -17,25 +17,25 @@ import {
 
 function hashFunction(signatureMethod: OAuth1SignatureMethod) {
   if (signatureMethod === SIGNATURE_METHOD_HMAC_SHA1) {
-    return function (baseString: string, key: string) {
+    return (baseString: string, key: string) => {
       return crypto.createHmac('sha1', key).update(baseString).digest('base64');
     };
   }
 
   if (signatureMethod === SIGNATURE_METHOD_HMAC_SHA256) {
-    return function (baseString: string, key: string) {
+    return (baseString: string, key: string) => {
       return crypto.createHmac('sha256', key).update(baseString).digest('base64');
     };
   }
 
   if (signatureMethod === SIGNATURE_METHOD_RSA_SHA1) {
-    return function (baseString: string, privatekey: string) {
+    return (baseString: string, privatekey: string) => {
       return crypto.createSign('RSA-SHA1').update(baseString).sign(privatekey, 'base64');
     };
   }
 
   if (signatureMethod === SIGNATURE_METHOD_PLAINTEXT) {
-    return function (baseString: string) {
+    return (baseString: string) => {
       return baseString;
     };
   }
@@ -43,12 +43,10 @@ function hashFunction(signatureMethod: OAuth1SignatureMethod) {
   throw new Error(`Invalid signature method ${signatureMethod}`);
 }
 
-export default async function (
-  url: string,
+export default async (url: string,
   method: string,
   authentication: Extract<RequestAuthentication, { type: typeof AUTH_OAUTH_1 }>,
-  body: RequestBody | null = null,
-) {
+  body: RequestBody | null = null) => {
   const oauth = new OAuth1({
     consumer: {
       key: authentication.consumerKey || '',
@@ -113,11 +111,11 @@ export default async function (
     };
 
     // We override getSigningKey for RSA-SHA1 because we don't want ddo/oauth-1.0a to percentEncode the token
-    oauth.getSigningKey = function (tokenSecret) {
+    oauth.getSigningKey = tokenSecret => {
       return tokenSecret || '';
     };
   }
 
   const data = oauth.authorize(requestData, token);
   return oauth.toHeader(data);
-}
+};

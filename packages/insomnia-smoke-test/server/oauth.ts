@@ -15,9 +15,7 @@ export const oauthRoutes = async (port: number) => {
   /* eslint-disable camelcase */
   const oidcConfig = {
     interactions: {
-      url: (_, interaction) => {
-        return `/oidc/interaction/${interaction.uid}`;
-      },
+      url: (_, interaction) => `/oidc/interaction/${interaction.uid}`,
     },
     cookies: {
       long: {
@@ -84,19 +82,14 @@ export const oauthRoutes = async (port: number) => {
         'S256',
         'plain',
       ],
-      required: (_, client) => {
-        // Require PKCE for the PKCE client id
-        return client.clientId === clientIDAuthorizationCodePKCE;
-      },
+      required: (_, client) => client.clientId === clientIDAuthorizationCodePKCE,
     },
     responseTypes: [
       'code',
       'id_token', 'id_token token',
       'none',
     ],
-    issueRefreshToken: () => {
-      return false;
-    },
+    issueRefreshToken: () => false,
     // https://github.com/panva/node-oidc-provider/blob/main/recipes/skip_consent.md
     loadExistingGrant: async ctx => {
       const grantId = (ctx.oidc.result?.consent?.grantId) || (ctx.oidc.session!.grantIdFor(ctx.oidc.client!.clientId));

@@ -66,32 +66,20 @@ export function registerMainHandlers() {
   ipcMainOn('addExecutionStep', (_, options: { requestId: string; stepName: string }) => {
     addExecutionStep(options.requestId, options.stepName);
   });
-  ipcMainOn('startExecution', (_, options: { requestId: string }) => {
-    return startExecution(options.requestId);
-  });
-  ipcMainOn('completeExecutionStep', (_, options: { requestId: string }) => {
-    return completeExecutionStep(options.requestId);
-  });
+  ipcMainOn('startExecution', (_, options: { requestId: string }) => startExecution(options.requestId));
+  ipcMainOn('completeExecutionStep', (_, options: { requestId: string }) => completeExecutionStep(options.requestId));
   ipcMainOn('updateLatestStepName', (_, options: { requestId: string; stepName: string }) => {
     updateLatestStepName(options.requestId, options.stepName);
   });
-  ipcMainHandle('getExecution', (_, options: { requestId: string }) => {
-    return getExecution(options.requestId);
-  });
-  ipcMainHandle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => {
-    return models.caCertificate.create(options);
-  });
+  ipcMainHandle('getExecution', (_, options: { requestId: string }) => getExecution(options.requestId));
+  ipcMainHandle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => models.caCertificate.create(options));
   ipcMainOn('loginStateChange', async () => {
     BrowserWindow.getAllWindows().forEach(w => {
       w.webContents.send('loggedIn');
     });
   });
-  ipcMainHandle('backup', async () => {
-    return backup();
-  });
-  ipcMainHandle('restoreBackup', async (_, options: string) => {
-    return restoreBackup(options);
-  });
+  ipcMainHandle('backup', async () => backup());
+  ipcMainHandle('restoreBackup', async (_, options: string) => restoreBackup(options));
   ipcMainHandle('authorizeUserInWindow', (_, options: Parameters<typeof authorizeUserInWindow>[0]) => {
     const { url, urlSuccessRegex, urlFailureRegex, sessionId } = options;
     return authorizeUserInWindow({ url, urlSuccessRegex, urlFailureRegex, sessionId });
@@ -114,7 +102,7 @@ export function registerMainHandlers() {
       if (iconv.encodingExists(encoding)) {
         const content = iconv.decode(contentBuffer, encoding);
         return { content, encoding };
-      };
+      }
       throw new Error(`Unsupported encoding: ${encoding} to read file`);
     }
     // using chardet to detect encoding
@@ -123,7 +111,7 @@ export function registerMainHandlers() {
       if (iconv.encodingExists(detecedEncoding)) {
         const content = iconv.decode(contentBuffer, detecedEncoding);
         return { content, encoding: detecedEncoding };
-      };
+      }
       throw new Error(`Unsupported encoding: ${detecedEncoding} to read file`);
     }
     // failed to detect encoding, use default utf-8 as fallback
@@ -133,9 +121,7 @@ export function registerMainHandlers() {
     };
   });
 
-  ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => {
-    return curlRequest(options);
-  });
+  ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => curlRequest(options));
 
   ipcMainOn('cancelCurlRequest', (_, requestId: string): void => {
     cancelCurlRequest(requestId);
@@ -148,9 +134,7 @@ export function registerMainHandlers() {
     trackPageView(options.name);
   });
 
-  ipcMainHandle('installPlugin', (_, lookupName: string) => {
-    return installPlugin(lookupName);
-  });
+  ipcMainHandle('installPlugin', (_, lookupName: string) => installPlugin(lookupName));
 
   ipcMainOn('restart', () => {
     app.relaunch();

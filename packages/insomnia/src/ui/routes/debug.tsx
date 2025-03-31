@@ -184,9 +184,7 @@ const EventStreamSpinner = ({ requestId }: { requestId: string }) => {
   return readyState ? <div className='flex-shrink-0 bg-[--color-success] mr-[--padding-sm] w-2.5 h-2.5 rounded-full' data-testid="EventStreamSpinner__Connected" /> : null;
 };
 
-const getRequestNameOrFallback = (doc: Request | RequestGroup | GrpcRequest | WebSocketRequest): string => {
-  return !isRequestGroup(doc) ? doc.name || doc.url || 'Untitled request' : doc.name || 'Untitled folder';
-};
+const getRequestNameOrFallback = (doc: Request | RequestGroup | GrpcRequest | WebSocketRequest) => !isRequestGroup(doc) ? doc.name || doc.url || 'Untitled request' : doc.name || 'Untitled folder';
 
 const RequestTiming = ({ requestId }: { requestId: string }) => {
   const { isExecuting } = useExecutionState({ requestId });
@@ -868,12 +866,10 @@ export const Debug: FC = () => {
                 </Button>
                 <Popover className="min-w-max overflow-y-hidden flex flex-col">
                   <ListBox
-                    items={SORT_ORDERS.map(order => {
-                      return {
-                        id: order,
-                        name: sortOrderName[order],
-                      };
-                    })}
+                    items={SORT_ORDERS.map(order => ({
+                      id: order,
+                      name: sortOrderName[order],
+                    }))}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
                   >
                     {item => (
@@ -988,68 +984,65 @@ export const Debug: FC = () => {
                 }
               }}
             >
-              {item => {
-
-                return (
-                  <GridListItem
-                    key={item.doc._id}
-                    id={item.doc._id}
-                    className="group outline-none select-none"
-                    textValue={item.doc.name}
-                    data-testid={item.doc.name}
+              {item => (
+                <GridListItem
+                  key={item.doc._id}
+                  id={item.doc._id}
+                  className="group outline-none select-none"
+                  textValue={item.doc.name}
+                  data-testid={item.doc.name}
+                >
+                  <div
+                    className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                   >
-                    <div
-                      className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
-                    >
-                      <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
-                      {isRequest(item.doc) && (
-                        <span
-                          className={
-                            `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
+                    <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
+                    {isRequest(item.doc) && (
+                      <span
+                        className={
+                          `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
                             ${{
-                              'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
-                              'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
-                              'HEAD': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
-                              'OPTIONS': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
-                              'DELETE': 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
-                              'PUT': 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
-                              'PATCH': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
-                            }[item.doc.method] || 'text-[--color-font] bg-[--hl-md]'}`
-                          }
-                        >
-                          {getMethodShortHand(item.doc)}
-                        </span>
-                      )}
-                      {isWebSocketRequest(item.doc) && (
-                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
-                          WS
-                        </span>
-                      )}
-                      {isGrpcRequest(item.doc) && (
-                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
-                          gRPC
-                        </span>
-                      )}
-                      <EditableInput
-                        value={getRequestNameOrFallback(item.doc)}
-                        name="request name"
-                        ariaLabel="request name"
-                        className="px-1 flex-1"
-                        onSubmit={name => {
-                          if (isRequestGroup(item.doc)) {
-                            patchGroup(item.doc._id, { name });
-                          } else {
-                            patchRequest(item.doc._id, { name });
-                          }
-                        }}
-                      />
-                      {item.pinned && (
-                        <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
-                      )}
-                    </div>
-                  </GridListItem>
-                );
-              }}
+                            'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
+                            'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
+                            'HEAD': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                            'OPTIONS': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                            'DELETE': 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
+                            'PUT': 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
+                            'PATCH': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
+                          }[item.doc.method] || 'text-[--color-font] bg-[--hl-md]'}`
+                        }
+                      >
+                        {getMethodShortHand(item.doc)}
+                      </span>
+                    )}
+                    {isWebSocketRequest(item.doc) && (
+                      <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+                        WS
+                      </span>
+                    )}
+                    {isGrpcRequest(item.doc) && (
+                      <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
+                        gRPC
+                      </span>
+                    )}
+                    <EditableInput
+                      value={getRequestNameOrFallback(item.doc)}
+                      name="request name"
+                      ariaLabel="request name"
+                      className="px-1 flex-1"
+                      onSubmit={name => {
+                        if (isRequestGroup(item.doc)) {
+                          patchGroup(item.doc._id, { name });
+                        } else {
+                          patchRequest(item.doc._id, { name });
+                        }
+                      }}
+                    />
+                    {item.pinned && (
+                      <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
+                    )}
+                  </div>
+                </GridListItem>
+              )}
             </GridList>
 
             <div className='flex-1 overflow-y-auto' ref={parentRef} >

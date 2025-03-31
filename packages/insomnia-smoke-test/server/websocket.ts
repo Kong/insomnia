@@ -80,9 +80,9 @@ const upgrade = (wss: WebSocketServer, request: IncomingMessage, socket: Socket,
   }
   if (request.url === '/delay') {
     const delaySec = Number.parseInt(request.headers.duration as string || '5');
-    setTimeout(function() {
-      redirectOnSuccess(socket);
-    }, delaySec * 1000);
+    setTimeout(() => {
+  redirectOnSuccess(socket);
+}, delaySec * 1000);
     return ;
   }
   if (request.url === '/basic-auth') {

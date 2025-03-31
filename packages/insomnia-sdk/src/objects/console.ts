@@ -15,9 +15,7 @@ class Console {
     printLog = (rows: Row[], level: LogLevel, ...values: any) => {
         try {
             const content = values.map(
-                (value: any) => {
-                    return typeof value === 'string' ? value : JSON.stringify(value, null, 2);
-                }
+                (value: any) => typeof value === 'string' ? value : JSON.stringify(value, null, 2)
             ).join(' ');
 
             const row = {
@@ -61,16 +59,12 @@ class Console {
         throw Error('currently "clear" is not supported for the timeline');
     };
 
-    dumpLogs = () => {
-        return this.rows
+    dumpLogs = () => this.rows
             .map(row => JSON.stringify(row) + '\n')
             .join('\n');
-    };
 
-    dumpLogsAsArray = () => {
-        return this.rows
+    dumpLogsAsArray = () => this.rows
             .map(row => JSON.stringify(row) + '\n');
-    };
 }
 
 let builtInConsole = new Console();

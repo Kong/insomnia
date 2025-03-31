@@ -14,13 +14,9 @@ export class Environment {
         return this._name;
     }
 
-    has = (variableName: string) => {
-        return this.kvs.has(variableName);
-    };
+    has = (variableName: string) => this.kvs.has(variableName);
 
-    get = (variableName: string) => {
-        return this.kvs.get(variableName);
-    };
+    get = (variableName: string) => this.kvs.get(variableName);
 
     set = (variableName: string, variableValue: boolean | number | string | undefined | null) => {
         if (variableValue === null) {
@@ -38,19 +34,13 @@ export class Environment {
         this.kvs.clear();
     };
 
-    replaceIn = (template: string) => {
-        return getInterpolator().render(template, this.toObject());
-    };
+    replaceIn = (template: string) => getInterpolator().render(template, this.toObject());
 
-    toObject = () => {
-        return Object.fromEntries(this.kvs.entries());
-    };
+    toObject = () => Object.fromEntries(this.kvs.entries());
 }
 
 function mergeFolderLevelVars(folderLevelVars: Environment[]) {
-    const mergedFolderLevelObject = folderLevelVars.reduce((merged: object, folderLevelEnv: Environment) => {
-        return { ...merged, ...folderLevelEnv.toObject() };
-    }, {});
+    const mergedFolderLevelObject = folderLevelVars.reduce((merged: object, folderLevelEnv: Environment) => ({ ...merged, ...folderLevelEnv.toObject() }), {});
     return new Environment('mergedFolderLevelVars', mergedFolderLevelObject);
 }
 
@@ -125,8 +115,7 @@ export class Variables {
         return getInterpolator().render(template, context);
     };
 
-    toObject = () => {
-        return [
+    toObject = () => [
             this.globalVars,
             this.collectionVars,
             this.environmentVars,
@@ -139,11 +128,8 @@ export class Variables {
             (ctx, obj) => ({ ...ctx, ...obj }),
             {},
         );
-    };
 
-    localVarsToObject = () => {
-        return this.localVars.toObject();
-    };
+    localVarsToObject = () => this.localVars.toObject();
 }
 
 export class Vault extends Environment {

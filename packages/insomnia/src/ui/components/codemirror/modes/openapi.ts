@@ -1,10 +1,10 @@
 import CodeMirror from 'codemirror';
-CodeMirror.defineMode('openapi', function () {
+CodeMirror.defineMode('openapi', () => {
   const cons = ['true', 'false', 'on', 'off', 'yes', 'no'];
   const keywordRegex = new RegExp('\\b((' + cons.join(')|(') + '))$', 'i');
   return {
-    token: function (stream, state) {
-      const ch = stream.peek();
+    token: (stream, state) => {
+  const ch = stream.peek();
       const esc = state.escaped;
       state.escaped = false;
 
@@ -124,9 +124,9 @@ CodeMirror.defineMode('openapi', function () {
       state.escaped = ch === '\\';
       stream.next();
       return null;
-    },
-    startState: function () {
-      return {
+},
+    startState: () => {
+  return {
         pair: false,
         pairStart: false,
         keyCol: 0,
@@ -135,7 +135,7 @@ CodeMirror.defineMode('openapi', function () {
         literal: false,
         escaped: false,
       };
-    },
+},
     lineComment: '#',
     fold: 'indent',
   };

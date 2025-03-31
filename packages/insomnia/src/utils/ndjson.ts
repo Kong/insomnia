@@ -1,8 +1,5 @@
-export const serializeNDJSON = (data: any[]): string => {
-  return data.map((item: any) => JSON.stringify(item)).join('\n') + '\n';
-};
-export const deserializeNDJSON = (data: string): any[] => {
-  return data.split('\n').filter(e => e?.trim()).map((line: string) => {
+export const serializeNDJSON = (data: any[]) => data.map((item: any) => JSON.stringify(item)).join('\n') + '\n';
+export const deserializeNDJSON = (data: string) => data.split('\n').filter(e => e?.trim()).map((line: string) => {
     try {
       return JSON.parse(line);
     } catch (e) {
@@ -10,4 +7,3 @@ export const deserializeNDJSON = (data: string): any[] => {
       return undefined;
     }
   }).filter(e => e !== undefined);
-};

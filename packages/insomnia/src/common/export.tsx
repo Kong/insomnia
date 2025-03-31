@@ -142,8 +142,7 @@ const showSelectExportTypeModal = ({ onDone }: {
   });
 };
 
-const showExportPrivateEnvironmentsModal = async () => {
-  return new Promise<boolean>(resolve => {
+const showExportPrivateEnvironmentsModal = async () => new Promise<boolean>(resolve => {
     showModal(AskModal, {
       title: 'Export Private Environments?',
       message: 'Do you want to include private environments in your export?',
@@ -156,7 +155,6 @@ const showExportPrivateEnvironmentsModal = async () => {
       },
     });
   });
-};
 
 const showSaveExportedFileDialog = async ({
   exportedFileNamePrefix,
@@ -197,7 +195,7 @@ async function writeExportedFileToFileSystem(filename: string, data: string) {
   // Remember last exported path
   window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
   await writeFile(filename, data);
-};
+}
 
 export const exportProjectToFile = (activeProjectName: string, workspacesForActiveProject: Workspace[]) => {
   if (!workspacesForActiveProject.length) {

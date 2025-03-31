@@ -16,8 +16,7 @@ export const WebSocketPreviewModeDropdown: FC<Props> = ({
   copyToClipboard,
   previewMode,
   setPreviewMode,
-}) => {
-  return (
+}) => (
     <Dropdown
       aria-label="Websocket Preview Mode Dropdown"
       triggerButton={
@@ -65,4 +64,3 @@ export const WebSocketPreviewModeDropdown: FC<Props> = ({
       </DropdownSection>
     </Dropdown>
   );
-};

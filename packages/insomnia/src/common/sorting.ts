@@ -18,13 +18,9 @@ import {
 type SortableModel = Request | RequestGroup | GrpcRequest;
 type SortFunction<SortableType> = (a: SortableType, b: SortableType) => number;
 
-export const ascendingNameSort: SortFunction<{ name: string }> = (a, b) => {
-  return a.name.localeCompare(b.name);
-};
+export const ascendingNameSort: SortFunction<{ name: string }> = (a, b) => a.name.localeCompare(b.name);
 
-export const descendingNameSort: SortFunction<{ name: string }> = (a, b) => {
-  return b.name.localeCompare(a.name);
-};
+export const descendingNameSort: SortFunction<{ name: string }> = (a, b) => b.name.localeCompare(a.name);
 
 export const createdFirstSort: SortFunction<{ created: number }> = (a, b) => {
   if (a.created === b.created) {
@@ -117,13 +113,9 @@ export const metaSortKeySort: SortFunction<Pick<SortableModel, '_id' | 'metaSort
   return a.metaSortKey < b.metaSortKey ? -1 : 1;
 };
 
-export const ascendingNumberSort: SortFunction<number> = (a, b) => {
-  return a < b ? -1 : 1;
-};
+export const ascendingNumberSort: SortFunction<number> = (a, b) => a < b ? -1 : 1;
 
-export const descendingNumberSort: SortFunction<number> = (a, b) => {
-  return ascendingNumberSort(b, a);
-};
+export const descendingNumberSort: SortFunction<number> = (a, b) => ascendingNumberSort(b, a);
 
 export const ascendingFirstIndexStringSort: SortFunction<string[]> = (a, b) => a[0].localeCompare(b[0]);
 

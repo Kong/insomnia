@@ -9,8 +9,7 @@ interface Props {
   className?: string;
 }
 
-export const DocumentTab = ({ organizationId, projectId, workspaceId, className }: Props) => {
-  return (
+export const DocumentTab = ({ organizationId, projectId, workspaceId, className }: Props) => (
     <nav className={`flex w-full h-[40px] items-center ${className} px-1 justify-around`}>
       {[
         { id: 'spec', name: 'Spec' },
@@ -31,4 +30,3 @@ export const DocumentTab = ({ organizationId, projectId, workspaceId, className 
       ))}
     </nav>
   );
-};

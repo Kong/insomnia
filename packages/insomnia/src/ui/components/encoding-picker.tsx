@@ -48,8 +48,7 @@ const BUILT_IN_ENCODINGS = [
   { key: 'KOI8-T', label: 'KOI8-T' },
 ];
 
-export const EncodingPicker = ({ encoding, onChange }: { encoding: string; onChange: (value: string) => void }) => {
-  return (
+export const EncodingPicker = ({ encoding, onChange }: { encoding: string; onChange: (value: string) => void }) => (
     <ComboBox
       aria-label='Encoding Selector'
       className='inline-block'
@@ -104,4 +103,3 @@ export const EncodingPicker = ({ encoding, onChange }: { encoding: string; onCha
       </Popover>
     </ComboBox>
   );
-};

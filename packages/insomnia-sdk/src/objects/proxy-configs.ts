@@ -162,9 +162,7 @@ export class ProxyConfigList<T extends ProxyConfig> extends PropertyList<T> {
 
         const urlStr = url.toString();
         const matches = this.list
-            .filter((proxyConfig: ProxyConfig) => {
-                return proxyConfig.test(urlStr);
-            })
+            .filter((proxyConfig: ProxyConfig) => proxyConfig.test(urlStr))
             .map(proxyConfig => proxyConfig.toJSON());
 
         if (matches.length > 0) {

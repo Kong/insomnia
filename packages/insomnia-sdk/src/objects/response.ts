@@ -134,7 +134,7 @@ export class Response extends Property {
             name: 'unknown',
         };
 
-        const contentDisposition = this.headers.find(header => header.key === 'Content-Disposition');;
+        const contentDisposition = this.headers.find(header => header.key === 'Content-Disposition');
         if (contentDisposition) {
             const directives = contentDisposition.valueOf().split('; ');
             directives.forEach(dir => {
@@ -292,9 +292,7 @@ export function toScriptResponse(
     const insoCookieOptions = partialResponse.headers ?
         partialResponse.headers
             .filter(
-                header => {
-                    return header.name.toLowerCase() === 'set-cookie';
-                },
+                (header) => header.name.toLowerCase() === 'set-cookie',
                 {},
             ).map(
                 setCookieHeader => Cookie.parse(setCookieHeader.value)
@@ -314,7 +312,7 @@ export function toScriptResponse(
     };
 
     return new Response(responseOption);
-};
+}
 
 export async function readBodyFromPath(response: sendCurlAndWriteTimelineResponse | sendCurlAndWriteTimelineError | undefined) {
     // it allows to execute scripts (e.g., for testing) but body contains nothing

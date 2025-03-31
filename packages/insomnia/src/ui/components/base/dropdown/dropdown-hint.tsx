@@ -7,9 +7,7 @@ interface Props {
   keyBindings: PlatformKeyCombinations;
 }
 
-export const DropdownHint = (props: Props) => {
-  return <Hotkey
-    className='ml-auto text-[--hl-xl] pl-[--padding-lg]'
-    keyBindings={props.keyBindings}
-  />;
-};
+export const DropdownHint = (props: Props) => <Hotkey
+  className='ml-auto text-[--hl-xl] pl-[--padding-lg]'
+  keyBindings={props.keyBindings}
+/>;

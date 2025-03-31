@@ -116,16 +116,13 @@ export class InsomniaObject {
         this.requestTestResults = [...this.requestTestResults, testResult];
     };
 
-    expect = (exp: boolean | number | string | object) => {
-        return this._expect(exp);
-    };
+    expect = (exp: boolean | number | string | object) => this._expect(exp);
 
     get settings() {
         return undefined;
     }
 
-    toObject = () => {
-        return {
+    toObject = () => ({
             globals: this.globals.toObject(),
             environment: this.environment.toObject(),
             baseEnvironment: this.baseEnvironment.toObject(),
@@ -140,8 +137,7 @@ export class InsomniaObject {
             requestTestResults: this.requestTestResults,
             execution: this.execution.toObject(),
             parentFolders: this.parentFolders.toObject(),
-        };
-    };
+        });
 }
 
 export async function initInsomniaObject(
@@ -279,4 +275,4 @@ export async function initInsomniaObject(
         execution,
         parentFolders,
     });
-};
+}

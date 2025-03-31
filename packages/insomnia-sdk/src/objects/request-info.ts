@@ -6,7 +6,7 @@ export interface RequestInfoOption {
     iterationCount?: number;
     requestName?: string;
     requestId?: string;
-};
+}
 
 export class RequestInfo {
     public eventName: EventName;
@@ -23,13 +23,11 @@ export class RequestInfo {
         this.requestId = options.requestId || '';
     }
 
-    toObject = () => {
-        return {
+    toObject = () => ({
             eventName: this.eventName,
             iteration: this.iteration,
             iterationCount: this.iterationCount,
             requestName: this.requestName,
             requestId: this.requestId,
-        };
-    };
+        });
 }

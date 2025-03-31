@@ -285,14 +285,12 @@ export function registerElectronHandlers() {
   });
 
   ipcMainOn('showContextMenu', (event, options: { key: string; menuItems: MenuItemConstructorOptions[]; extra?: Record<string, any> }) => {
-    const menuItems = options.menuItems.map(item => {
-      return {
-        ...item,
-        click: () => {
-          event.sender.send('contextMenuCommand', { key: options.key, label: item.label, extra: options.extra });
-        },
-      };
-    });
+    const menuItems = options.menuItems.map(item => ({
+      ...item,
+      click: () => {
+        event.sender.send('contextMenuCommand', { key: options.key, label: item.label, extra: options.extra });
+      },
+    }));
     const menu = Menu.buildFromTemplate(menuItems);
     menu.popup();
   });

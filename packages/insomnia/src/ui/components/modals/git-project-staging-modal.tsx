@@ -233,30 +233,29 @@ export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({
                             </p>
                           )}
                         >
-                          {item => {
-                            return (
-                              <GridListItem className="group outline-none select-none aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-sm] overflow-hidden text-[--hl] transition-colors w-full flex items-center px-2 py-1 justify-between">
-                                <span className='truncate'>{item.entry.path}</span>
-                                <div className='flex items-center gap-1'>
-                                  <TooltipTrigger>
-                                    <Button
-                                      className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
-                                      slot={null}
-                                      name="Unstage change"
-                                      onPress={() => {
-                                        unstageChanges([item.entry.path]);
-                                      }}
-                                    >
-                                      <Icon icon="minus" aria-hidden pointerEvents="none" />
-                                    </Button>
-                                    <Tooltip
-                                      offset={8}
-                                      className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                                    >
-                                      Unstage change
-                                    </Tooltip>
-                                  </TooltipTrigger>
-                                  {/* <TooltipTrigger>
+                          {item => (
+                            <GridListItem className="group outline-none select-none aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-sm] overflow-hidden text-[--hl] transition-colors w-full flex items-center px-2 py-1 justify-between">
+                              <span className='truncate'>{item.entry.path}</span>
+                              <div className='flex items-center gap-1'>
+                                <TooltipTrigger>
+                                  <Button
+                                    className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
+                                    slot={null}
+                                    name="Unstage change"
+                                    onPress={() => {
+                                      unstageChanges([item.entry.path]);
+                                    }}
+                                  >
+                                    <Icon icon="minus" aria-hidden pointerEvents="none" />
+                                  </Button>
+                                  <Tooltip
+                                    offset={8}
+                                    className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                                  >
+                                    Unstage change
+                                  </Tooltip>
+                                </TooltipTrigger>
+                                {/* <TooltipTrigger>
                                     <Button className="cursor-default">
                                       {'added' in item.entry ? 'U' : 'deleted' in item.entry ? 'D' : 'M'}
                                     </Button>
@@ -267,10 +266,9 @@ export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({
                                       {'added' in item.entry ? 'Untracked' : 'deleted' in item.entry ? 'Deleted' : 'Modified'}
                                     </Tooltip>
                                   </TooltipTrigger> */}
-                                </div>
-                              </GridListItem>
-                            );
-                          }}
+                              </div>
+                            </GridListItem>
+                          )}
                         </GridList>
                       </div>
                     </div>
@@ -341,55 +339,54 @@ export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({
                             });
                           }}
                         >
-                          {item => {
-                            return (
-                              <GridListItem className="group outline-none select-none aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-sm] overflow-hidden text-[--hl] transition-colors w-full flex items-center px-2 py-1 justify-between">
-                                <span className='truncate'>{item.entry.path}</span>
-                                <div className='flex items-center gap-1'>
-                                  <TooltipTrigger>
-                                    <Button
-                                      className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
-                                      slot={null}
-                                      name="Discard change"
-                                      onPress={() => {
-                                        undoUnstagedChanges([item.entry.path]);
-                                      }}
+                          {item => (
+                            <GridListItem className="group outline-none select-none aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-sm] overflow-hidden text-[--hl] transition-colors w-full flex items-center px-2 py-1 justify-between">
+                              <span className='truncate'>{item.entry.path}</span>
+                              <div className='flex items-center gap-1'>
+                                <TooltipTrigger>
+                                  <Button
+                                    className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
+                                    slot={null}
+                                    name="Discard change"
+                                    onPress={() => {
+                                      undoUnstagedChanges([item.entry.path]);
+                                    }}
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      viewBox="0 0 24 24"
+                                      fill="currentColor"
+                                      className="size-4"
                                     >
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 24 24"
-                                        fill="currentColor"
-                                        className="size-4"
-                                      >
-                                        <path d="M5.828 7l2.536 2.535L6.95 10.95 2 6l4.95-4.95 1.414 1.415L5.828 5H13a8 8 0 110 16H4v-2h9a6 6 0 000-12H5.828z" />
-                                      </svg>
-                                    </Button>
-                                    <Tooltip
-                                      offset={8}
-                                      className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                                    >
-                                      Discard change
-                                    </Tooltip>
-                                  </TooltipTrigger>
-                                  <TooltipTrigger>
-                                    <Button
-                                      className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
-                                      slot={null}
-                                      name="Stage change"
-                                      onPress={() => {
-                                        stageChanges([item.entry.path]);
-                                      }}
-                                    >
-                                      <Icon icon="plus" aria-hidden pointerEvents="none" />
-                                    </Button>
-                                    <Tooltip
-                                      offset={8}
-                                      className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                                    >
-                                      Stage change
-                                    </Tooltip>
-                                  </TooltipTrigger>
-                                  {/* <TooltipTrigger>
+                                      <path d="M5.828 7l2.536 2.535L6.95 10.95 2 6l4.95-4.95 1.414 1.415L5.828 5H13a8 8 0 110 16H4v-2h9a6 6 0 000-12H5.828z" />
+                                    </svg>
+                                  </Button>
+                                  <Tooltip
+                                    offset={8}
+                                    className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                                  >
+                                    Discard change
+                                  </Tooltip>
+                                </TooltipTrigger>
+                                <TooltipTrigger>
+                                  <Button
+                                    className='opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus-within:opacity-100 group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
+                                    slot={null}
+                                    name="Stage change"
+                                    onPress={() => {
+                                      stageChanges([item.entry.path]);
+                                    }}
+                                  >
+                                    <Icon icon="plus" aria-hidden pointerEvents="none" />
+                                  </Button>
+                                  <Tooltip
+                                    offset={8}
+                                    className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                                  >
+                                    Stage change
+                                  </Tooltip>
+                                </TooltipTrigger>
+                                {/* <TooltipTrigger>
                                     <Button className="cursor-default">
                                       {'added' in item.entry ? 'U' : 'deleted' in item.entry ? 'D' : 'M'}
                                     </Button>
@@ -400,10 +397,9 @@ export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({
                                       {'added' in item.entry ? 'Untracked' : 'deleted' in item.entry ? 'Deleted' : 'Modified'}
                                     </Tooltip>
                                   </TooltipTrigger> */}
-                                </div>
-                              </GridListItem>
-                            );
-                          }}
+                              </div>
+                            </GridListItem>
+                          )}
                         </GridList>
                       </div>
                     </div>

@@ -180,8 +180,7 @@ const FileField: FC = () => {
   );
 };
 
-const InsomniaIcon = (props: React.SVGProps<SVGSVGElement>) => {
-  return (
+const InsomniaIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width={18}
@@ -219,10 +218,8 @@ const InsomniaIcon = (props: React.SVGProps<SVGSVGElement>) => {
       </defs>
     </svg>
   );
-};
 
-const SwaggerIcon = (props: React.SVGProps<SVGSVGElement>) => {
-  return (
+const SwaggerIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width="18px"
@@ -244,10 +241,8 @@ const SwaggerIcon = (props: React.SVGProps<SVGSVGElement>) => {
       />
     </svg>
   );
-};
 
-const OpenAPIIcon = (props: React.SVGProps<SVGSVGElement>) => {
-  return (
+const OpenAPIIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width={17}
@@ -261,10 +256,8 @@ const OpenAPIIcon = (props: React.SVGProps<SVGSVGElement>) => {
       />
     </svg>
   );
-};
 
-const CurlIcon = (props: React.SVGProps<SVGSVGElement>) => {
-  return (
+const CurlIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width={18}
@@ -320,7 +313,6 @@ const CurlIcon = (props: React.SVGProps<SVGSVGElement>) => {
       />
     </svg>
   );
-};
 
 interface ImportModalProps extends ModalProps {
   organizationId: string;
@@ -381,9 +373,7 @@ export const ImportModal: FC<ImportModalProps> = ({
     }
   }, [importFetcher.data]);
   // allow workspace import if there is only one workspace
-  const totalWorkspacesCount = useMemo(() => {
-    return scanResourcesFetcherData?.reduce((accumulator, scanResult) => accumulator + (scanResult.workspaces?.length || 0), 0) || 0;
-  }, [scanResourcesFetcherData]);
+  const totalWorkspacesCount = useMemo(() => scanResourcesFetcherData?.reduce((accumulator, scanResult) => accumulator + (scanResult.workspaces?.length || 0), 0) || 0, [scanResourcesFetcherData]);
   const shouldImportToWorkspace = !!defaultWorkspaceId && totalWorkspacesCount <= 1;
   // TODO: need to add a more strong way to inform users that resources will be imported into project rather than current workspace
   const header = shouldImportToWorkspace ? `Import to "${workspaceName}" Workspace` : `Import to "${projectName}" Project`;
@@ -398,9 +388,7 @@ export const ImportModal: FC<ImportModalProps> = ({
     ...cannotImportToWorkspace ? ['Cannot import multiple files to ScratchPad. Please try to import your files one by one.'] : [],
   ];
 
-  const hasAnyDataToImport = useMemo(() => {
-    return scanResourcesFetcherData && scanResourcesFetcherData.some(({ errors }) => errors.length === 0);
-  }, [scanResourcesFetcherData]);
+  const hasAnyDataToImport = useMemo(() => scanResourcesFetcherData && scanResourcesFetcherData.some(({ errors }) => errors.length === 0), [scanResourcesFetcherData]);
 
   return (
     <OverlayContainer onClick={e => e.stopPropagation()}>

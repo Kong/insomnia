@@ -38,8 +38,7 @@ export class GraphQLExplorerField extends PureComponent<Props> {
       <Fragment>
         <h2 className="graphql-explorer__subheading">Arguments</h2>
         <ul className="graphql-explorer__defs">
-          {field.args.map(a => {
-            return (
+          {field.args.map(a => (
               <li key={a.name}>
                 <span className="info">{a.name}</span>:{' '}
                 <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={a.type} />
@@ -49,8 +48,7 @@ export class GraphQLExplorerField extends PureComponent<Props> {
                 />
                 {a.description && <MarkdownPreview markdown={a.description} />}
               </li>
-            );
-          })}
+            ))}
         </ul>
       </Fragment>
     );

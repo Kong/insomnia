@@ -182,7 +182,7 @@ export async function buildRenderContext(
     finalRenderContext = await renderSubContext(envObject, finalRenderContext);
   }
 
-  finalRenderContext[vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(finalRenderContext[vaultEnvironmentPath], renderContext?.getPurpose());;
+  finalRenderContext[vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(finalRenderContext[vaultEnvironmentPath], renderContext?.getPurpose());
   // Merge all vault environments under vaultEnvironmentPath to vaultEnvironmentRuntimePath which is more human readable.
   // This will also keep all legacy environment variables defined under the vaultEnvironmentRuntimePath.
   if (finalRenderContext[vaultEnvironmentPath]) {
@@ -198,7 +198,7 @@ export async function buildRenderContext(
       ...finalRenderContext[vaultEnvironmentRuntimePath],
     };
     delete finalRenderContext[vaultEnvironmentPath];
-  };
+  }
 
   const keys = _getOrderedEnvironmentKeys(finalRenderContext);
 
@@ -235,13 +235,11 @@ export async function buildRenderContext(
 
   return finalRenderContext;
 }
-const renderInThisProcess = async (input: { input: string; context: BaseRenderContext; path: string; ignoreUndefinedEnvVariable: boolean }) => {
-  return templating.render(input.input, {
+const renderInThisProcess = async (input: { input: string; context: BaseRenderContext; path: string; ignoreUndefinedEnvVariable: boolean }) => templating.render(input.input, {
     context: input.context,
     path: input.path,
     ignoreUndefinedEnvVariable: input.ignoreUndefinedEnvVariable,
   });
-};
 /**
  * Recursively render any JS object and return a new one
  * @param {*} obj - object to render

@@ -306,37 +306,29 @@ const setupAuthentication = (
  *
  * I.e. "/foo/:bar" => "/foo/{{ bar }}"
  */
-const pathWithParamsAsVariables = (path?: string) => {
-  return path?.replace(/{([^}]+)}/g, '{{ _.$1 }}');
-};
+const pathWithParamsAsVariables = (path?: string) => path?.replace(/{([^}]+)}/g, '{{ _.$1 }}');
 
 /**
  * Imports insomnia definitions of query parameters.
  */
-const prepareQueryParams = (endpointSchema: OpenAPIV2.OperationObject) => {
-  return (
-    convertParameters(
-      ((endpointSchema.parameters as unknown) as OpenAPIV2.Parameter[])?.filter(
-        parameter => parameter.in === 'query',
-      ),
-    ) || []
-  );
-};
+const prepareQueryParams = (endpointSchema: OpenAPIV2.OperationObject) => (
+  convertParameters(
+    ((endpointSchema.parameters as unknown) as OpenAPIV2.Parameter[])?.filter(
+      parameter => parameter.in === 'query',
+    ),
+  ) || []
+);
 
 /**
  * Imports insomnia definitions of header parameters.
  */
-const prepareHeaders = (
-  endpointSchema: OpenAPIV2.OperationObject,
-): Header[] => {
-  return (
-    (convertParameters(
-      ((endpointSchema.parameters as unknown) as OpenAPIV2.Parameter[])?.filter(
-        parameter => parameter.in === 'header',
-      ),
-    ) as Header[]) || []
-  );
-};
+const prepareHeaders = (endpointSchema: OpenAPIV2.OperationObject) => (
+  (convertParameters(
+    ((endpointSchema.parameters as unknown) as OpenAPIV2.Parameter[])?.filter(
+      parameter => parameter.in === 'header',
+    ),
+  ) as Header[]) || []
+);
 
 const resolve$ref = (document: OpenAPIV2.Document, $ref: string) => {
   const [, ...parts] = $ref.split('/') as (keyof OpenAPIV2.Document)[];
@@ -358,11 +350,7 @@ const prepareBody = (
 ) => {
   const mimeTypes = endpointSchema.consumes || globalMimeTypes || [];
 
-  const supportedMimeType = mimeTypes.find(reqMimeType => {
-    return SUPPORTED_MIME_TYPES.some(supportedMimeType => {
-      return reqMimeType.includes(supportedMimeType);
-    });
-  });
+  const supportedMimeType = mimeTypes.find(reqMimeType => SUPPORTED_MIME_TYPES.some(supportedMimeType => reqMimeType.includes(supportedMimeType)));
 
   if (supportedMimeType && supportedMimeType.includes(MIMETYPE_JSON)) {
     const parameters = endpointSchema.parameters || [];
@@ -519,25 +507,23 @@ const generateParameterExample = (
 /**
  * Converts swagger schema of parameters into insomnia one.
  */
-const convertParameters = (parameters?: OpenAPIV2.Parameter[]) => {
-  return parameters?.map(parameter => {
-    const { required, name, type } = parameter;
+const convertParameters = (parameters?: OpenAPIV2.Parameter[]) => parameters?.map(parameter => {
+  const { required, name, type } = parameter;
 
-    if (type === 'file') {
-      return {
-        name,
-        disabled: required !== true,
-        type: 'file',
-      };
-    }
-
+  if (type === 'file') {
     return {
       name,
       disabled: required !== true,
-      value: `${generateParameterExample(parameter) as string}`,
+      type: 'file',
     };
-  });
-};
+  }
+
+  return {
+    name,
+    disabled: required !== true,
+    value: `${generateParameterExample(parameter) as string}`,
+  };
+});
 
 export const convert: Converter = async rawData => {
   requestCount = 1; // Validate

@@ -12,8 +12,7 @@ interface Props {
   isDismissable?: boolean;
 }
 
-export const VariableMissingErrorModal = ({ isOpen, title, cancelText, onCancel, okText, children, onOk, isDismissable = false }: Props) => {
-  return (
+export const VariableMissingErrorModal = ({ isOpen, title, cancelText, onCancel, okText, children, onOk, isDismissable = false }: Props) => (
     <ModalOverlay
       isOpen={isOpen}
       onOpenChange={isOpen => {
@@ -58,4 +57,3 @@ export const VariableMissingErrorModal = ({ isOpen, title, cancelText, onCancel,
       </Modal>
     </ModalOverlay>
   );
-};

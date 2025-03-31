@@ -5,19 +5,17 @@ import type { Cookie as CookieModel } from '../models/cookie-jar';
 /**
  * Get a list of cookie objects from a request.jar()
  */
-export const cookiesFromJar = (cookieJar: CookieJar): Promise<CookieJSON[]> => {
-  return new Promise(resolve => {
-    cookieJar.store.getAllCookies((err, cookies) => {
-      if (err) {
-        console.warn('Failed to get cookies form jar', err);
-        resolve([]);
-      } else {
-        // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
-        resolve(cookies.map(cookie => cookie.toJSON()));
-      }
-    });
+export const cookiesFromJar = (cookieJar: CookieJar): Promise<CookieJSON[]> => new Promise(resolve => {
+  cookieJar.store.getAllCookies((err, cookies) => {
+    if (err) {
+      console.warn('Failed to get cookies form jar', err);
+      resolve([]);
+    } else {
+      // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
+      resolve(cookies.map(cookie => cookie.toJSON()));
+    }
   });
-};
+});
 
 /**
  * Get a request.jar() from a list of cookie objects

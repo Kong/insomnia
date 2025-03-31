@@ -33,9 +33,7 @@ export interface RootLoaderData {
   userSession: UserSession;
 }
 
-export const useRootLoaderData = () => {
-  return useRouteLoaderData('root') as RootLoaderData;
-};
+export const useRootLoaderData = () => useRouteLoaderData('root') as RootLoaderData;
 
 export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
   const settings = await models.settings.get();
@@ -59,8 +57,7 @@ const Root = () => {
   const actionFetcher = useFetcher();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    return window.main.on(
+  useEffect(() => window.main.on(
       'shell:open',
       async (_: IpcRendererEvent, url: string) => {
         // Get the url without params
@@ -240,8 +237,7 @@ const Root = () => {
           }
         }
       },
-    );
-  }, [actionFetcher, navigate]);
+    ), [actionFetcher, navigate]);
 
   return (
     <AIProvider>

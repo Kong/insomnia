@@ -23,8 +23,7 @@ const contentTypes: {
     },
   ];
 
-export const WebSocketPreviewMode: FC<Props> = ({ previewMode, onSelect }) => {
-  return (
+export const WebSocketPreviewMode: FC<Props> = ({ previewMode, onSelect }) => (
     <Select
       aria-label="Change Body Type"
       name="body-type"
@@ -73,4 +72,3 @@ export const WebSocketPreviewMode: FC<Props> = ({ previewMode, onSelect }) => {
       </Popover>
     </Select>
   );
-};

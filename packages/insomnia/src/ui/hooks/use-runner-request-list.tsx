@@ -12,8 +12,7 @@ export const useRunnerRequestList = (organizationId: string, targetFolderId: str
   const { collection } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const entityMapRef = useRef(new Map<string, Child>());
 
-  const requestRows: RequestRow[] = useMemo(() => {
-    return collection
+  const requestRows: RequestRow[] = useMemo(() => collection
       .filter(item => {
         entityMapRef.current.set(item.doc._id, item);
         return isRequest(item.doc);
@@ -48,8 +47,7 @@ export const useRunnerRequestList = (organizationId: string, targetFolderId: str
           return item.ancestorIds.includes(targetFolderId);
         }
         return true;
-      });
-  }, [collection, targetFolderId]);
+      }), [collection, targetFolderId]);
 
   const { runnerStateMap, runnerStateRef, updateRunnerState } = useRunnerContext();
 

@@ -8,14 +8,10 @@ class Interpolator {
         this.engine = configure(config);
     }
 
-    render = (template: string, context: object) => {
-        // TODO: handle timeout
-        // TODO: support plugin?
-        return this.engine.renderString(
+    render = (template: string, context: object) => this.engine.renderString(
             this.renderWithFaker(template),
             context
         );
-    };
 
     renderWithFaker = (template: string) => {
         const segments = template.split('}}');
@@ -40,7 +36,7 @@ class Interpolator {
 
             if (!fakerFunctions[funcName]) {
                 throw Error(`replaceIn: no faker function is found: ${funcName}`);
-            };
+            }
 
             const generated = fakerFunctions[funcName]();
             return segment.slice(0, tagStart) + generated;

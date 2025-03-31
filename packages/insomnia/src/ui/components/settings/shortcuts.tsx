@@ -51,13 +51,11 @@ export const Shortcuts: FC = () => {
               <tr key={keyboardShortcut}>
                 <td style={{ verticalAlign: 'middle' }}>{keyboardShortcutDescriptions[keyboardShortcut]}</td>
                 <td className="text-right">
-                  {keyCombosForThisPlatform.map(keyComb => {
-                    return (
-                      <code key={keyComb.id} className="margin-left-sm" style={{ lineHeight: '1.25em' }}>
-                        <Hotkey keyCombination={keyComb} />
-                      </code>
-                    );
-                  })}
+                  {keyCombosForThisPlatform.map(keyComb => (
+                    <code key={keyComb.id} className="margin-left-sm" style={{ lineHeight: '1.25em' }}>
+                      <Hotkey keyCombination={keyComb} />
+                    </code>
+                  ))}
                 </td>
                 <td className="text-right options" style={{ verticalAlign: 'middle' }}>
                   <Dropdown
@@ -93,7 +91,7 @@ export const Shortcuts: FC = () => {
                       title='Remove existing'
                     >
                       {
-                      /* Dropdown items to remove key combinations. */
+                        /* Dropdown items to remove key combinations. */
                         keyCombosForThisPlatform.map((keyComb: KeyCombination) => {
                           const display = constructKeyCombinationDisplay(keyComb, false);
                           return (

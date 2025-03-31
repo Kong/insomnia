@@ -97,11 +97,7 @@ const cleanCycles = (obj: Error) => {
 /**
  * Transform an Error object into a JSON object.
  */
-const errorJSON = (error: Error) => {
-  return (Object.getOwnPropertyNames(error) as (keyof Error)[]).reduce((accumulator, key) => {
-    return {
+const errorJSON = (error: Error) => (Object.getOwnPropertyNames(error) as (keyof Error)[]).reduce((accumulator, key) => ({
       ...accumulator,
       [key]: error[key],
-    };
-  }, {});
-};
+    }), {});

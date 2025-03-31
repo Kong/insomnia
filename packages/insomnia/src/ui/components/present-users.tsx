@@ -20,20 +20,16 @@ export const PresentUsers = () => {
   }
 
   const activeUsers = presence
-    .filter(p => {
-      return p.project === remoteId && p.file === workspaceId;
-    })
+    .filter(p => p.project === remoteId && p.file === workspaceId)
     .filter(p => p.acct !== userSession.accountId)
-    .map(user => {
-      return {
-        key: user.acct,
-        alt:
-          user.firstName || user.lastName
-            ? `${user.firstName} ${user.lastName}`
-            : user.acct,
-        src: user.avatar,
-      };
-    });
+    .map(user => ({
+      key: user.acct,
+      alt:
+        user.firstName || user.lastName
+          ? `${user.firstName} ${user.lastName}`
+          : user.acct,
+      src: user.avatar,
+    }));
 
   return <AvatarGroup size="medium" items={activeUsers} />;
 };

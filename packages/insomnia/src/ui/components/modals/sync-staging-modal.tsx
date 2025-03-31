@@ -87,12 +87,12 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
     ...entry,
     document: syncItems.find(item => item.key === key)?.document || 'deleted' in entry ? { type: getModelTypeById(key) } : undefined,
     id: `staged-${key}`,
-  }));;
+  }));
   const unstagedChanges = Object.entries(status.unstaged).map(([key, entry]) => ({
     ...entry,
     document: syncItems.find(item => item.key === key)?.document || 'deleted' in entry ? { type: getModelTypeById(key) } : undefined,
     id: `unstaged-${key}`,
-  }));;
+  }));
 
   const stageChangesFetcher = useFetcher();
 
@@ -240,8 +240,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                             </p>
                           )}
                         >
-                          {item => {
-                            return (
+                          {item => (
                               <GridListItem className="group outline-none select-none aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-sm] overflow-hidden text-[--hl] transition-colors w-full flex items-center px-2 py-1 justify-between">
                                 <span className='truncate'>{item.entry.name || item.entry.document?.type}</span>
                                 <div className='flex items-center gap-1'>
@@ -267,8 +266,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                                   </TooltipTrigger>
                                 </div>
                               </GridListItem>
-                            );
-                          }}
+                            )}
                         </GridList>
                       </div>
                     </div>
@@ -302,8 +300,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                             setSelectedItemId(key.toString());
                           }}
                         >
-                          {item => {
-                            return (
+                          {item => (
                               <GridListItem className="group outline-none select-none aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-sm] overflow-hidden text-[--hl] transition-colors w-full flex items-center px-2 py-1 justify-between">
                                 <span className='truncate'>{item.entry.name || item.entry.document?.type}</span>
                                 <div className='flex items-center gap-1'>
@@ -329,8 +326,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                                   </TooltipTrigger>
                                 </div>
                               </GridListItem>
-                            );
-                          }}
+                            )}
                         </GridList>
                       </div>
                     </div>

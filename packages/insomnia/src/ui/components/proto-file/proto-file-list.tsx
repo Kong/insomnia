@@ -82,14 +82,12 @@ const recursiveRender = (
             }
           }}
         >
-          {({ isSelected }) => {
-            return <>
+          {({ isSelected }) => <>
               {isSelected ?
                 <i className="fa fa-square-check fa-1x h-4 mr-2" style={{ color: 'rgb(74 222 128)' }} /> :
                 <i className="fa fa-square fa-1x h-4 mr-2" />
               }
-            </>;
-          }}
+            </>}
         </Checkbox>
         <span className="wide">
           <i className="fa fa-file-o pad-right-sm" />

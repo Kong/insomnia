@@ -237,8 +237,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                             </p>
                           )}
                         >
-                          {item => {
-                            return (
+                          {item => (
                               <GridListItem className="group outline-none select-none aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-sm] overflow-hidden text-[--hl] transition-colors w-full flex items-center px-2 py-1 justify-between">
                                 <span className='truncate'>{item.entry.name}</span>
                                 <div className='flex items-center gap-1'>
@@ -273,8 +272,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                                   </TooltipTrigger> */}
                                 </div>
                               </GridListItem>
-                            );
-                          }}
+                            )}
                         </GridList>
                       </div>
                     </div>
@@ -345,8 +343,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                             });
                           }}
                         >
-                          {item => {
-                            return (
+                          {item => (
                               <GridListItem className="group outline-none select-none aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font] hover:bg-[--hl-xs] focus:bg-[--hl-sm] overflow-hidden text-[--hl] transition-colors w-full flex items-center px-2 py-1 justify-between">
                                 <span className='truncate'>{item.entry.name}</span>
                                 <div className='flex items-center gap-1'>
@@ -406,8 +403,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({
                                   </TooltipTrigger> */}
                                 </div>
                               </GridListItem>
-                            );
-                          }}
+                            )}
                         </GridList>
                       </div>
                     </div>

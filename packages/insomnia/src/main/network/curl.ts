@@ -311,11 +311,7 @@ const deleteRequestMaps = async (requestId: string, message: string, event?: Cur
   CurlConnections.delete(requestId);
 };
 
-const getCurlReadyState = async (
-  options: { requestId: string }
-): Promise<CurlConnection['isOpen']> => {
-  return CurlConnections.get(options.requestId)?.isOpen ?? false;
-};
+const getCurlReadyState = async (options: { requestId: string }) => CurlConnections.get(options.requestId)?.isOpen ?? false;
 
 const closeCurlConnection = (
   _event: Electron.IpcMainInvokeEvent,

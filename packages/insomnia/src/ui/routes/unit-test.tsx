@@ -391,8 +391,7 @@ const TestRoute: FC = () => {
                 }
               }}
             >
-              {item => {
-                return (
+              {item => (
                   <GridListItem
                     key={item._id}
                     id={item._id}
@@ -453,8 +452,7 @@ const TestRoute: FC = () => {
                       </MenuTrigger>
                     </div>
                   </GridListItem>
-                );
-              }}
+                )}
             </GridList>
           </div>
           <WorkspaceSyncDropdown />

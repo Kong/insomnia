@@ -339,27 +339,19 @@ export const getSelectedMethod = async (
   invariant(methods, 'No reflection methods found');
   return methods.find(c => c.path === request.protoMethodName);
 };
-export const getMethodsFromPackageDefinition = (packageDefinition: PackageDefinition): MethodDefs[] => {
-  return Object.values(packageDefinition)
-    .filter(isServiceDefinition)
-    .flatMap(Object.values);
-};
+export const getMethodsFromPackageDefinition = (packageDefinition: PackageDefinition) => Object.values(packageDefinition)
+  .filter(isServiceDefinition)
+  .flatMap(Object.values);
 
-const isServiceDefinition = (definition: AnyDefinition): definition is ServiceDefinition => {
-  return !!asServiceDefinition(definition);
-};
+const isServiceDefinition = (definition: AnyDefinition) => !!asServiceDefinition(definition);
 const asServiceDefinition = (definition: AnyDefinition): ServiceDefinition | null => {
   if (isMessageDefinition(definition) || isEnumDefinition(definition)) {
     return null;
   }
   return definition;
 };
-const isMessageDefinition = (definition: AnyDefinition): definition is MessageTypeDefinition => {
-  return (definition as MessageTypeDefinition).format === 'Protocol Buffer 3 DescriptorProto';
-};
-const isEnumDefinition = (definition: AnyDefinition): definition is EnumTypeDefinition => {
-  return (definition as EnumTypeDefinition).format === 'Protocol Buffer 3 EnumDescriptorProto';
-};
+const isMessageDefinition = (definition: AnyDefinition): definition is MessageTypeDefinition => (definition as MessageTypeDefinition).format === 'Protocol Buffer 3 DescriptorProto';
+const isEnumDefinition = (definition: AnyDefinition): definition is EnumTypeDefinition => (definition as EnumTypeDefinition).format === 'Protocol Buffer 3 EnumDescriptorProto';
 
 const getChannelCredentials = ({ url, rejectUnauthorized, clientCert, clientKey, caCertificate }: { url: string; rejectUnauthorized: boolean; clientCert?: string; clientKey?: string; caCertificate?: string }): ChannelCredentials => {
   if (url.toLowerCase().startsWith('grpcs:')) {

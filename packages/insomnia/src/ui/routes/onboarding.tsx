@@ -44,8 +44,7 @@ const features = [
   rounded?: boolean;
 }[];
 
-const FeatureWizardView = () => {
-  return (
+const FeatureWizardView = () => (
     <Routes>
       <Route
         path="/"
@@ -125,7 +124,6 @@ const FeatureWizardView = () => {
       ]}
     </Routes>
   );
-};
 
 const Onboarding = () => {
   const location = useLocation();

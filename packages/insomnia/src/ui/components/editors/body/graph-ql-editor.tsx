@@ -32,9 +32,7 @@ import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
 import { TimeFromNow } from '../../time-from-now';
 
 // Type guard to ensure loc is non-nullable
-const hasLocation = (def: OperationDefinitionNode): def is OperationDefinitionNode & { loc: NonNullable<OperationDefinitionNode['loc']> } => {
-  return def.loc !== null && def.loc !== undefined;
-};
+const hasLocation = (def: OperationDefinitionNode): def is OperationDefinitionNode & { loc: NonNullable<OperationDefinitionNode['loc']> } => def.loc !== null && def.loc !== undefined;
 /** note that `null` is a valid operation name.  For example, `null` is the operation name of an anonymous `query` operation. */
 const matchesOperation = (operationName: string | null | undefined) => ({ name }: OperationDefinitionNode) => {
   // For matching an anonymous function, `operationName` will be `null` and `operation.name` will be `undefined`
@@ -355,7 +353,7 @@ export const GraphQLEditor: FC<Props> = ({
       if (isString(query) && query.trim() === '') {
         // update request body when query is empty
         onChange(getGraphQLContent(state.body, query, ''));
-      };
+      }
       setState(state => ({
         ...state,
         documentAST: null,

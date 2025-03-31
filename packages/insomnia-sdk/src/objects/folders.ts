@@ -12,13 +12,11 @@ export class Folder {
         this.environment = new Environment(`${id}.environment`, environmentObject);
     }
 
-    toObject = () => {
-        return {
+    toObject = () => ({
             id: this.id,
             name: this.name,
             environment: this.environment.toObject(),
-        };
-    };
+        });
 }
 
 // ParentFolders reprensents ancestor folders of the active request
@@ -54,11 +52,7 @@ export class ParentFolders {
         return targetEnv !== undefined ? targetEnv.environment.get(valueKey) : undefined;
     };
 
-    toObject = () => {
-        return this.folders.map(folder => folder.toObject());
-    };
+    toObject = () => this.folders.map(folder => folder.toObject());
 
-    getEnvironments = () => {
-        return this.folders.map(folder => folder.environment);
-    };
+    getEnvironments = () => this.folders.map(folder => folder.environment);
 }

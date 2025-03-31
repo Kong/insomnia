@@ -41,7 +41,7 @@ export async function sendRequest(
             resolve(undefined);
         }
     });
-};
+}
 
 function requestToCurlOptions(req: string | Request | RequestOptions, settings: Settings) {
     const id = uuidv4();
@@ -220,9 +220,7 @@ async function curlOutputToResponse(
         (header: { name: string; value: string }) => ({ key: header.name, value: header.value })
     );
 
-    const cookieHeaders = lastRedirect.headers.filter(header => {
-        return header.name.toLowerCase() === 'set-cookie';
-    });
+    const cookieHeaders = lastRedirect.headers.filter((header) => header.name.toLowerCase() === 'set-cookie');
     // TODO: tackle stream field but currently it is just a duplication of body
     const cookies = cookieHeaders
         .map(cookieHeader => {

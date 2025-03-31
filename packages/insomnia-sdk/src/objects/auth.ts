@@ -46,7 +46,7 @@ export interface OAuth2AuthOption {
     key: string;
     value: string | OAuth2Param[];
     type?: string;
-};
+}
 
 export interface BasicOptions {
     password: string;
@@ -220,16 +220,12 @@ function rawOptionsToVariables(options: VariableList<Variable> | Variable[] | Au
         // options is AuthOptions
         const optsObj = options as AuthOptions;
         const optsVarLists = Object.entries(optsObj)
-            .filter(optsObjEntry => {
-                return optsObjEntry[0] === targetType;
-            })
+            .filter((optsObjEntry) => optsObjEntry[0] === targetType)
             .map(optsEntry => {
-                const optVars = optsEntry[1].map((opt: AuthOption) => {
-                    return new Variable({
+                const optVars = optsEntry[1].map((opt: AuthOption) => new Variable({
                         key: opt.key,
                         value: opt.value,
-                    });
-                });
+                    }));
                 return new VariableList(undefined, optVars);
             });
 
@@ -259,13 +255,11 @@ export class RequestAuth extends Property {
 
         optsEntries.map((optsEntry: [string, AuthOption[]]) => {
             const optVars = optsEntry[1]
-                .map(opt => {
-                    return new Variable({
+                .map((opt) => new Variable({
                         key: opt.key,
                         value: opt.value,
                         type: opt.type,
-                    });
-                });
+                    }));
 
             return {
                 type: optsEntry[0],
@@ -471,7 +465,7 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
                 // responseType is currently always set to '' in our request auth model, this should be investigated what is correct to be set
                 if (['code', 'id_token', 'id_token token', 'none', 'token', ''].includes(inputResponseType)) {
                     return inputResponseType as OAuth2ResponseType;
-                };
+                }
                 throw Error(`unknown response type for oauth2: "${inputResponseType}", it could be: 'code' | 'id_token' | 'id_token token' | 'none' | 'token' | ''`);
             })();
 

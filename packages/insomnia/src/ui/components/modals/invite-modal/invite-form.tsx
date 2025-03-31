@@ -38,7 +38,7 @@ export interface EmailInput {
   isValid: boolean;
   picture?: string;
   teamId?: string;
-};
+}
 
 const isValidEmail = (email: string): boolean => {
   const emailRegex = new RegExp(
@@ -307,8 +307,7 @@ export const InviteForm = ({
   );
 };
 
-const UserItem = (props: ListBoxItemProps & { children: React.ReactNode; isSelected: boolean }) => {
-  return (
+const UserItem = (props: ListBoxItemProps & { children: React.ReactNode; isSelected: boolean }) => (
     <ListBoxItem
       {...props}
       className="group flex select-none items-center gap-2 rounded px-1 py-1 outline-none cursor-pointer hover:bg-[--hl-xs] hover:text-[--color-font] focus:bg-[--hl-xs] focus:text-[--color-font]"
@@ -319,13 +318,12 @@ const UserItem = (props: ListBoxItemProps & { children: React.ReactNode; isSelec
       {props.isSelected && <Icon icon="check" className="h-4 w-4 text-primary" />}
     </ListBoxItem>
   );
-};
 export interface GroupMemberKey {
   accountId: string;
   organizationId: string;
   projectId: string;
   encKey: string;
-};
+}
 
 export async function updateInvitationRole(roleId: string, invitationId: string, organizationId: string) {
   return insomniaFetch({

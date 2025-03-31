@@ -40,9 +40,7 @@ const bridge: HiddenBrowserWindowToMainBridgeAPI = {
   setBusy: busy => ipcRenderer.send('set-hidden-window-busy-status', busy),
   // TODO: following methods are for simulating current behavior of running async tasks
   // in the future, it should be better to keep standard way of handling async tasks to avoid confusion
-  appendFile: (logPath: string, logContent: string) => {
-    return fs.promises.appendFile(logPath, logContent);
-  },
+  appendFile: (logPath: string, logContent: string) => fs.promises.appendFile(logPath, logContent),
   Promise: OriginalPromise,
   asyncTasksAllSettled,
   stopMonitorAsyncTasks,

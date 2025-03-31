@@ -17,7 +17,7 @@ export class Execution {
         get: (target, prop, receiver) => {
           if (prop === 'current') {
             return target.length > 0 ? target[target.length - 1] : '';
-          };
+          }
           return Reflect.get(target, prop, receiver);
         },
       });
@@ -36,11 +36,9 @@ export class Execution {
     this._nextRequestIdOrName = requestIdOrName;
   };
 
-  toObject = () => {
-    return {
+  toObject = () => ({
       location: Array.from(this.location),
       skipRequest: this._skipRequest,
       nextRequestIdOrName: this._nextRequestIdOrName,
-    };
-  };
-};
+    });
+}

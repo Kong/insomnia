@@ -35,9 +35,7 @@ function groupBy(list: {}[], keyGetter: (item: any) => string): Record<string, a
   return Object.fromEntries(map);
 }
 
-export const groupGrpcMethodsByPackage = (methodInfoList: GrpcMethodInfo[]): Record<string, GrpcMethodInfo[]> => {
-  return groupBy(methodInfoList, ({ fullPath }) => PROTO_PATH_REGEX.exec(fullPath)?.groups?.package || NO_PACKAGE_KEY);
-};
+export const groupGrpcMethodsByPackage = (methodInfoList: GrpcMethodInfo[]): Record<string, GrpcMethodInfo[]> => groupBy(methodInfoList, ({ fullPath }) => PROTO_PATH_REGEX.exec(fullPath)?.groups?.package || NO_PACKAGE_KEY);
 
 // If all segments are found, return a shorter path, otherwise the original path
 export const getShortGrpcPath = (fullPath: string): string => {

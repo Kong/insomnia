@@ -85,14 +85,9 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
     }
   }, [gitStatusFetcher, organizationId, projectId, shouldFetchGitRepoStatus]);
 
-  useEffect(() => {
-    // update committed state on unmount
-    // this is a sync action which is responsible for cheaply updating a piece of state representing the existence of a diff
-    // ideally this would not be needed and a diff would be cheaper to find.
-    return () => {
+  useEffect(() => () => {
       checkGitChanges(projectId);
-    };
-  }, [projectId]);
+    }, [projectId]);
 
   useEffect(() => {
     if (shouldFetchGitRepoStatus) {

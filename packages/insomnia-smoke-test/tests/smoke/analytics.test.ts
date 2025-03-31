@@ -65,12 +65,10 @@ test('analytics events are sent', async ({ page, app }) => {
 
     const segmentLogs = await app.evaluate(() => globalThis.segmentLogs);
 
-    const decodedLogs: SegmentLog[] = segmentLogs.map((log: { url: string; data: { type: string; bytes: number[] }[] }) => {
-        return {
+    const decodedLogs: SegmentLog[] = segmentLogs.map((log: { url: string; data: { type: string; bytes: number[] }[] }) => ({
             url: log.url,
             data: log.data.map(data => JSON.parse(Buffer.from(Object.values(data.bytes)).toString('utf-8'))),
-        };
-    });
+        }));
 
     const analyticsBatch = decodedLogs[0].data[0].batch;
     const [appStartEvent, ...restEvents] = analyticsBatch;

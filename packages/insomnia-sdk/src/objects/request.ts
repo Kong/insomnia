@@ -642,16 +642,14 @@ export function mergeRequestBody(
             text: textContent,
             fileName: updatedReqBody?.file,
             params: updatedReqBody?.urlencoded?.map(
-                (param: QueryParam) => {
-                    return {
+                (param: QueryParam) => ({
                         name: param.key,
                         value: param.value,
                         type: param.type,
                         fileName: param.fileName,
                         multiline: param.multiline,
                         disabled: param.disabled,
-                    };
-                },
+                    }),
                 {},
             ),
         };

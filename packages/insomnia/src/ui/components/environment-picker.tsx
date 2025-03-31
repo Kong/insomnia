@@ -130,14 +130,12 @@ export const EnvironmentPicker = ({
                 }}
                 defaultInputValue={selectedGlobalBaseEnvironment?.workspaceName || selectedGlobalBaseEnvironment?.name || 'No Global Environment'}
                 selectedKey={selectedGlobalBaseEnvironmentId || ''}
-                defaultItems={[{ id: '', icon: 'cancel', name: 'No Global Environment', textValue: 'No Global Environment' }, ...globalBaseEnvironments.map(baseEnv => {
-                  return {
-                    id: baseEnv._id,
-                    icon: 'code',
-                    name: baseEnv.workspaceName || baseEnv.name,
-                    textValue: baseEnv.workspaceName || baseEnv.name,
-                  };
-                })]}
+                defaultItems={[{ id: '', icon: 'cancel', name: 'No Global Environment', textValue: 'No Global Environment' }, ...globalBaseEnvironments.map(baseEnv => ({
+                  id: baseEnv._id,
+                  icon: 'code',
+                  name: baseEnv.workspaceName || baseEnv.name,
+                  textValue: baseEnv.workspaceName || baseEnv.name,
+                }))]}
               >
                 <div className='px-2 mx-2 my-2 flex items-center gap-2 group rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors'>
                   <Input aria-label='Global Environment' placeholder='Choose a global environment' className="py-1 placeholder:italic w-full pl-2 pr-7 " />

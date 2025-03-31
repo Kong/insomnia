@@ -347,15 +347,13 @@ const sendAccessTokenRequest = async (requestOrGroupId: string, authentication: 
 
   return await models.response.create(responsePatch);
 };
-export const encodePKCE = (buffer: Buffer) => {
-  return buffer.toString('base64')
+export const encodePKCE = (buffer: Buffer) => buffer.toString('base64')
     // The characters + / = are reserved for PKCE as per the RFC,
     // so we replace them with unreserved characters
     // Docs: https://tools.ietf.org/html/rfc7636#section-4.2
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=/g, '');
-};
 const tryToParse = (body: string): Record<string, any> | null => {
   try {
     return JSON.parse(body);

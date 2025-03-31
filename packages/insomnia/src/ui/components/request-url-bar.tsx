@@ -397,9 +397,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         <div>
           These environment variables have been defined, but have not been valued with in the currently active environment:
           <div className='flex gap-2 flex-wrap max-h-80 overflow-y-auto'>
-            {undefinedEnvironmentVariableList?.map(item => {
-              return <div key={item} className="bg-[--color-surprise] text-[--color-font-surprise] mt-3 px-3 py-1 mr-3 rounded-sm">{item}</div>;
-            })}
+            {undefinedEnvironmentVariableList?.map(item => <div key={item} className="bg-[--color-surprise] text-[--color-font-surprise] mt-3 px-3 py-1 mr-3 rounded-sm">{item}</div>)}
           </div>
         </div>
         {!vaultKey && undefinedEnvironmentVariableList.some(variableName => variableName.startsWith(`${vaultEnvironmentRuntimePath}.`)) &&
@@ -415,9 +413,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
               Click to input vault key
             </Button>
             <div className='flex gap-2 flex-wrap max-h-80 overflow-y-auto'>
-              {undefinedEnvironmentVariableList?.filter(variableName => variableName.startsWith(`${vaultEnvironmentRuntimePath}.`)).map(item => {
-                return <div key={item} className="bg-[--color-surprise] text-[--color-font-surprise] mt-3 px-3 py-1 mr-3 rounded-sm">{item}</div>;
-              })}
+              {undefinedEnvironmentVariableList?.filter(variableName => variableName.startsWith(`${vaultEnvironmentRuntimePath}.`)).map(item => <div key={item} className="bg-[--color-surprise] text-[--color-font-surprise] mt-3 px-3 py-1 mr-3 rounded-sm">{item}</div>)}
             </div>
           </div>
         }

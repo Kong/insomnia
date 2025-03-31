@@ -95,8 +95,7 @@ export const validateThemeName = (name: string) => {
 export const containsNunjucks = (data: string) => (
   data.includes('{{') && data.includes('}}')
 );
-const getChildValue = (theme: any, path: string[]) => {
-  return path.reduce((acc, v: string) => {
+const getChildValue = (theme: any, path: string[]) => path.reduce((acc, v: string) => {
     try {
       acc = acc[v];
     } catch (e) {
@@ -104,7 +103,6 @@ const getChildValue = (theme: any, path: string[]) => {
     }
     return acc;
   }, theme);
-};
 
 /** In July 2022, the ability to use Nunjucks in themes was removed. This validator is a means of alerting any users of a theme depending on Nunjucks.  The failure mode for this case (in practice) is that the CSS variable will just not be used, thus it's not something we'd want to go as far as throwing an error about. */
 export const validateTheme = (pluginTheme: PluginTheme) => {

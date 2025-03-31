@@ -531,9 +531,7 @@ export const TagEditor: FC<Props> = props => {
                 onClick={async () => {
                   const pluginTemplateTags = await plugins.getTemplateTags();
                   const templateTags = [...pluginTemplateTags, ...localTemplateTags] as plugins.TemplateTag[];
-                  const activeTemplateTag = templateTags.find(({ templateTag }) => {
-                    return templateTag.name === state.activeTagData?.name;
-                  });
+                  const activeTemplateTag = templateTags.find(({ templateTag }) => templateTag.name === state.activeTagData?.name);
                   if (activeTemplateTag) {
                     await action.run(pluginContexts.store.init(activeTemplateTag.plugin));
                   }

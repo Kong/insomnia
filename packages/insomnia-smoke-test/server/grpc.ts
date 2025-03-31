@@ -71,8 +71,8 @@ const listFeatures: HandleCall<any, any> = (call: any) => {
   const top = Math.max(lo.latitude, hi.latitude);
   const bottom = Math.min(lo.latitude, hi.latitude);
   // For each feature, check if it is in the given bounding box
-  featureList.forEach(function(feature) {
-    if (feature.name === '') {
+  featureList.forEach((feature) => {
+  if (feature.name === '') {
       return;
     }
     if (feature.location.longitude >= left &&
@@ -81,7 +81,7 @@ const listFeatures: HandleCall<any, any> = (call: any) => {
         feature.location.latitude <= top) {
       call.write(feature);
     }
-  });
+});
   call.end();
 };
 
@@ -121,8 +121,8 @@ const recordRoute: HandleCall<any, any> = (call: any, callback: any) => {
   let previous: { latitude: number; longitude: number } | null = null;
   // Start a timer
   const startTime = process.hrtime();
-  call.on('data', function(point: any) {
-    pointCount += 1;
+  call.on('data', (point: any) => {
+  pointCount += 1;
     if (checkFeature(point).name !== '') {
       featureCount += 1;
     }
@@ -132,9 +132,9 @@ const recordRoute: HandleCall<any, any> = (call: any, callback: any) => {
       distance += getDistance(previous, point);
     }
     previous = point;
-  });
-  call.on('end', function() {
-    callback(null, {
+});
+  call.on('end', () => {
+  callback(null, {
       point_count: pointCount,
       feature_count: featureCount,
       // Cast the distance to an integer
@@ -142,7 +142,7 @@ const recordRoute: HandleCall<any, any> = (call: any, callback: any) => {
       // End the timer
       elapsed_time: process.hrtime(startTime)[0],
     });
-  });
+});
 };
 
 const routeNotes = {};
@@ -162,30 +162,29 @@ function pointKey(point: { latitude: string; longitude: string }) {
  * @param {Duplex} call The stream for incoming and outgoing messages
  */
 const routeChat: HandleCall<any, any> = (call: any) => {
-  call.on('data', function(note: any) {
-    const key = pointKey(note.location);
+  call.on('data', (note: any) => {
+  const key = pointKey(note.location);
     /* For each note sent, respond with all previous notes that correspond to
      * the same point */
     if (routeNotes.hasOwnProperty(key)) {
-      routeNotes[key].forEach(function(note: any) {
-        call.write(note);
-      });
+      routeNotes[key].forEach((note: any) => {
+  call.write(note);
+});
     } else {
       routeNotes[key] = [];
     }
     // Then add the new note to the list
     routeNotes[key].push(JSON.parse(JSON.stringify(note)));
-  });
-  call.on('end', function() {
-    call.end();
-  });
+});
+  call.on('end', () => {
+  call.end();
+});
 };
 
 /**
  * Starts an RPC server that uses Route Guide example for PreRelease tests
  */
-export const startGRPCServer = (port: number) => {
-  return new Promise<void>((resolve, reject) => {
+export const startGRPCServer = (port: number) => new Promise<void>((resolve, reject) => {
     const server = new grpc.Server();
 
     // Enable reflection
@@ -204,15 +203,15 @@ export const startGRPCServer = (port: number) => {
       }
 
       const dbPath = '../../packages/insomnia/src/network/grpc/__fixtures__/library/route_guide_db.json';
-      fs.readFile(path.resolve(dbPath), function(err, data) {
-        if (err) {
+      fs.readFile(path.resolve(dbPath), (err, data) => {
+  if (err) {
           throw err;
         }
         featureList = JSON.parse(data.toString());
         console.log(`Listening at grpc://localhost:${port} for route_guide.proto`);
         server.start();
         resolve();
-      });
+});
     });
 
     const serverWithTLS = new grpc.Server();
@@ -258,4 +257,3 @@ export const startGRPCServer = (port: number) => {
       });
     });
   });
-};

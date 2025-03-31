@@ -333,8 +333,7 @@ const Environments = () => {
             }
           }}
         >
-          {item => {
-            return (
+          {item => (
               <GridListItem
                 key={item._id}
                 id={item._id}
@@ -446,8 +445,7 @@ const Environments = () => {
                   )}
                 </div>
               </GridListItem>
-            );
-          }}
+            )}
         </GridList>
         <WorkspaceSyncDropdown />
       </Panel>

@@ -88,14 +88,14 @@ const MockServerRoute = () => {
                   message: `Path "${name}" and method must be unique. Please enter a different name.`,
                 });
                 return;
-              };
+              }
               if (name[0] !== '/') {
                 showModal(AlertModal, {
                   title: 'Error',
                   message: 'Path must begin with a /',
                 });
                 return;
-              };
+              }
               name && patchMockRoute(id, { name });
             },
           });
@@ -193,86 +193,85 @@ const MockServerRoute = () => {
   return (
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
       <Panel id="sidebar" className='sidebar theme--sidebar' defaultSize={DEFAULT_SIDEBAR_SIZE} maxSize={40} minSize={10} collapsible>
-      <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
+        <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
           <div className={`flex items-center gap-2 h-[${INSOMNIA_TAB_HEIGHT}px] px-[--padding-sm]`}>
-          <Breadcrumbs className='flex list-none items-center m-0 p-0 gap-2 font-bold w-full'>
-            <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
-              <NavLink data-testid="project" className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm" to={`/organization/${organizationId}/project/${projectId}`}>
-                <Icon className='text-xs' icon="chevron-left" />
-              </NavLink>
-              <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
-            </Breadcrumb>
-            <Breadcrumb className="flex truncate select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
-              <WorkspaceDropdown />
-            </Breadcrumb>
-          </Breadcrumbs>
-        </div>
-        <div className="p-[--padding-sm]">
-          <Button
-            className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-            onPress={() => {
-              showPrompt({
-                title: 'New mock route',
-                defaultValue: '/',
-                submitName: 'Create',
-                placeholder: '/path/to/resource',
-                onComplete: name => {
-                  const hasRouteInServer = mockRoutes.find(m => m.name === name && m.method.toUpperCase() === 'GET');
-                  if (hasRouteInServer) {
-                    showModal(AlertModal, {
-                      title: 'Error',
-                      message: `Path "${name}" and must be unique. Please enter a different name.`,
-                    });
-                    return;
-                  };
-                  if (name[0] !== '/') {
-                    showModal(AlertModal, {
-                      title: 'Error',
-                      message: 'Path must begin with a /',
-                    });
-                    return;
-                  };
-                  fetcher.submit(
-                    {
-                      name,
-                      parentId: mockServerId,
-                    },
-                    {
-                      encType: 'application/json',
-                      method: 'post',
-                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/new`,
+            <Breadcrumbs className='flex list-none items-center m-0 p-0 gap-2 font-bold w-full'>
+              <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
+                <NavLink data-testid="project" className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm" to={`/organization/${organizationId}/project/${projectId}`}>
+                  <Icon className='text-xs' icon="chevron-left" />
+                </NavLink>
+                <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
+              </Breadcrumb>
+              <Breadcrumb className="flex truncate select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
+                <WorkspaceDropdown />
+              </Breadcrumb>
+            </Breadcrumbs>
+          </div>
+          <div className="p-[--padding-sm]">
+            <Button
+              className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              onPress={() => {
+                showPrompt({
+                  title: 'New mock route',
+                  defaultValue: '/',
+                  submitName: 'Create',
+                  placeholder: '/path/to/resource',
+                  onComplete: name => {
+                    const hasRouteInServer = mockRoutes.find(m => m.name === name && m.method.toUpperCase() === 'GET');
+                    if (hasRouteInServer) {
+                      showModal(AlertModal, {
+                        title: 'Error',
+                        message: `Path "${name}" and must be unique. Please enter a different name.`,
+                      });
+                      return;
                     }
-                  );
-                },
-              });
+                    if (name[0] !== '/') {
+                      showModal(AlertModal, {
+                        title: 'Error',
+                        message: 'Path must begin with a /',
+                      });
+                      return;
+                    }
+                    fetcher.submit(
+                      {
+                        name,
+                        parentId: mockServerId,
+                      },
+                      {
+                        encType: 'application/json',
+                        method: 'post',
+                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/new`,
+                      }
+                    );
+                  },
+                });
+              }}
+            >
+              <Icon icon="plus" />
+              New Mock Route
+            </Button>
+          </div>
+          <GridList
+            aria-label="Mock Routes"
+            items={mockRoutes.map(route => ({
+              id: route._id,
+              key: route._id,
+              ...route,
+            }))}
+            className="overflow-y-auto flex-1 data-[empty]:py-0 py-[--padding-sm]"
+            disallowEmptySelection
+            selectedKeys={[mockRouteId]}
+            selectionMode="single"
+            onSelectionChange={keys => {
+              if (keys !== 'all') {
+                const value = keys.values().next().value;
+                navigate({
+                  pathname: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/${value}`,
+                });
+              }
             }}
           >
-            <Icon icon="plus" />
-            New Mock Route
-          </Button>
-        </div>
-        <GridList
-          aria-label="Mock Routes"
-          items={mockRoutes.map(route => ({
-            id: route._id,
-            key: route._id,
-            ...route,
-          }))}
-          className="overflow-y-auto flex-1 data-[empty]:py-0 py-[--padding-sm]"
-          disallowEmptySelection
-          selectedKeys={[mockRouteId]}
-          selectionMode="single"
-          onSelectionChange={keys => {
-            if (keys !== 'all') {
-              const value = keys.values().next().value;
-              navigate({
-                pathname: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/${value}`,
-              });
-            }
-          }}
-        >
-          {item => {
-            return (
+            {item => (
               <GridListItem
                 key={item._id}
                 id={item._id}
@@ -310,14 +309,14 @@ const MockServerRoute = () => {
                           message: `Path "${name}" and method must be unique. Please enter a different name.`,
                         });
                         return;
-                      };
+                      }
                       if (name[0] !== '/') {
                         showModal(AlertModal, {
                           title: 'Error',
                           message: 'Path must begin with a /',
                         });
                         return;
-                      };
+                      }
                       name && fetcher.submit(
                         { name },
                         {
@@ -364,11 +363,10 @@ const MockServerRoute = () => {
                   </MenuTrigger>
                 </div>
               </GridListItem>
-            );
-          }}
-        </GridList>
+            )}
+          </GridList>
 
-        <WorkspaceSyncDropdown />
+          <WorkspaceSyncDropdown />
         </div>
       </Panel>
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
@@ -377,47 +375,47 @@ const MockServerRoute = () => {
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
           <Panel id="pane-one" minSize={10} className='pane-one theme--pane'>
             <Routes>
-      <Route
-        path={'mock-route/:mockRouteId/*'}
-        element={
-          <Suspense>
-            <MockRouteRoute />
-          </Suspense>
-        }
-      />
-      <Route
-        path="*"
-        element={
-          <EmptyStatePane
-            icon={<SvgIcon icon="bug" />}
-            documentationLinks={[]}
-            title="Create a route to configure mock response here"
-          />
-        }
-      />
+              <Route
+                path={'mock-route/:mockRouteId/*'}
+                element={
+                  <Suspense>
+                    <MockRouteRoute />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="*"
+                element={
+                  <EmptyStatePane
+                    icon={<SvgIcon icon="bug" />}
+                    documentationLinks={[]}
+                    title="Create a route to configure mock response here"
+                  />
+                }
+              />
             </Routes>
           </Panel>
           <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
           <Panel id="pane-two" minSize={10} className='pane-two theme--pane'>
             <Routes>
-      <Route
-        path={'mock-route/:mockRouteId/*'}
-        element={
-          <Suspense>
-            <MockRouteResponse />
-          </Suspense>
-        }
-      />
-      <Route
-        path="*"
-        element={
-          <EmptyStatePane
-            icon={<SvgIcon icon="bug" />}
-            documentationLinks={[]}
-            title="Create a route to see mock server activity here"
-          />
-        }
-      />
+              <Route
+                path={'mock-route/:mockRouteId/*'}
+                element={
+                  <Suspense>
+                    <MockRouteResponse />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="*"
+                element={
+                  <EmptyStatePane
+                    icon={<SvgIcon icon="bug" />}
+                    documentationLinks={[]}
+                    title="Create a route to see mock server activity here"
+                  />
+                }
+              />
             </Routes>
           </Panel>
         </PanelGroup>

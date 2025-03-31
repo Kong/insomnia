@@ -445,11 +445,7 @@ const deleteRequestMaps = async (requestId: string, message: string, event?: Web
   WebSocketConnections.delete(requestId);
 };
 
-const getWebSocketReadyState = async (
-  options: { requestId: string }
-): Promise<boolean> => {
-  return WebSocketConnections.get(options.requestId)?.readyState === WebSocket.OPEN;
-};
+const getWebSocketReadyState = async (options: { requestId: string }) => WebSocketConnections.get(options.requestId)?.readyState === WebSocket.OPEN;
 
 const sendPayload = async (ws: WebSocket, options: { payload: string; requestId: string }): Promise<void> => {
   ws.send(options.payload, error => {

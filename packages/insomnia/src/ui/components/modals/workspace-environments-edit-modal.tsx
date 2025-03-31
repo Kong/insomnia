@@ -71,33 +71,33 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
           method: 'post',
           action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/duplicate`,
         });
-      },
-    }, {
-        id: 'delete',
-        name: 'Delete',
-        icon: 'trash',
-        action: async (environment: Environment) => {
-          showAlert({
-            title: 'Delete Environment',
-            message: `Are you sure you want to delete "${environment.name}"?`,
-            addCancel: true,
-            okLabel: 'Delete',
-            onConfirm: async () => {
-              deleteEnvironmentFetcher.submit(
-                {
-                  environmentId: environment._id,
-                },
-                {
-                  method: 'post',
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/delete`,
-                }
-              );
-
-              setSelectedEnvironmentId(baseEnvironment._id);
+    },
+  }, {
+    id: 'delete',
+    name: 'Delete',
+    icon: 'trash',
+    action: async (environment: Environment) => {
+      showAlert({
+        title: 'Delete Environment',
+        message: `Are you sure you want to delete "${environment.name}"?`,
+        addCancel: true,
+        okLabel: 'Delete',
+        onConfirm: async () => {
+          deleteEnvironmentFetcher.submit(
+            {
+              environmentId: environment._id,
             },
-          });
+            {
+              method: 'post',
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/delete`,
+            }
+          );
+
+          setSelectedEnvironmentId(baseEnvironment._id);
         },
-      },
+      });
+    },
+  },
     ];
 
   const createEnvironmentActionsList: {
@@ -125,8 +125,8 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
       }, {
         id: 'private',
         name: 'Private environment',
-      description: 'Local and not exportable',
-      icon: 'lock',
+        description: 'Local and not exportable',
+        icon: 'lock',
         action: async () => {
           createEnvironmentFetcher.submit({
             isPrivate: true,
@@ -279,121 +279,119 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: {
                     }
                   }}
                 >
-                  {item => {
-                    return (
-                      <GridListItem
-                        key={item._id}
-                        id={item._id}
-                        textValue={item.name}
-                        className="group outline-none select-none"
-                      >
-                        <div className={`${item.parentId === workspaceId ? 'pl-4' : 'pl-8'} pr-4 flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]`}>
-                          <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
-                          <Icon
-                            icon={
-                              item.isPrivate ? 'lock' : isUsingGitSync ? ['fab', 'git-alt'] : isUsingInsomniaCloudSync ? 'globe-americas' : 'file-arrow-down'
-                            }
-                            className='w-5'
-                            style={{
-                              color: item.color || undefined,
-                            }}
-                          />
-                          <EditableInput
-                            value={item.name}
-                            name="name"
-                            ariaLabel="Environment name"
-                            className="px-1 flex-1 hover:!bg-transparent"
-                            onSubmit={name => {
-                              name && updateEnvironmentFetcher.submit({
-                                patch: {
-                                  name,
-                                },
-                                environmentId: item._id,
-                              }, {
-                                method: 'post',
-                                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
-                                encType: 'application/json',
-                              });
-                            }}
-                          />
-                          {item.parentId !== workspaceId && <MenuTrigger>
-                            <Button
-                              aria-label="Environment Actions"
-                              className="opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  {item => (
+                    <GridListItem
+                      key={item._id}
+                      id={item._id}
+                      textValue={item.name}
+                      className="group outline-none select-none"
+                    >
+                      <div className={`${item.parentId === workspaceId ? 'pl-4' : 'pl-8'} pr-4 flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]`}>
+                        <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
+                        <Icon
+                          icon={
+                            item.isPrivate ? 'lock' : isUsingGitSync ? ['fab', 'git-alt'] : isUsingInsomniaCloudSync ? 'globe-americas' : 'file-arrow-down'
+                          }
+                          className='w-5'
+                          style={{
+                            color: item.color || undefined,
+                          }}
+                        />
+                        <EditableInput
+                          value={item.name}
+                          name="name"
+                          ariaLabel="Environment name"
+                          className="px-1 flex-1 hover:!bg-transparent"
+                          onSubmit={name => {
+                            name && updateEnvironmentFetcher.submit({
+                              patch: {
+                                name,
+                              },
+                              environmentId: item._id,
+                            }, {
+                              method: 'post',
+                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
+                              encType: 'application/json',
+                            });
+                          }}
+                        />
+                        {item.parentId !== workspaceId && <MenuTrigger>
+                          <Button
+                            aria-label="Environment Actions"
+                            className="opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                          >
+                            <Icon icon="caret-down" />
+                          </Button>
+                          <Popover className="min-w-max overflow-y-hidden flex flex-col">
+                            <Menu
+                              aria-label="Environment Actions menu"
+                              selectionMode="single"
+                              onAction={key => {
+                                environmentActionsList
+                                  .find(({ id }) => key === id)
+                                  ?.action(item);
+                              }}
+                              items={environmentActionsList}
+                              className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
                             >
-                              <Icon icon="caret-down" />
+                              {item => (
+                                <MenuItem
+                                  key={item.id}
+                                  id={item.id}
+                                  className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                                  aria-label={item.name}
+                                >
+                                  <Icon className='w-5' icon={item.icon} />
+                                  <span>{item.name}</span>
+                                </MenuItem>
+                              )}
+                            </Menu>
+                          </Popover>
+                        </MenuTrigger>}
+                        {item.parentId === workspaceId && (
+                          <MenuTrigger>
+                            <Button
+                              aria-label="Create Environment"
+                              data-testid="CreateEnvironmentDropdown"
+                              className="items-center flex justify-center h-6 aspect-square data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                            >
+                              <Icon icon="plus-circle" />
                             </Button>
                             <Popover className="min-w-max overflow-y-hidden flex flex-col">
                               <Menu
-                                aria-label="Environment Actions menu"
+                                aria-label="Create Environment menu"
                                 selectionMode="single"
                                 onAction={key => {
-                                  environmentActionsList
+                                  createEnvironmentActionsList
                                     .find(({ id }) => key === id)
                                     ?.action(item);
                                 }}
-                                items={environmentActionsList}
+                                items={createEnvironmentActionsList}
                                 className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
                               >
                                 {item => (
                                   <MenuItem
                                     key={item.id}
                                     id={item.id}
-                                    className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                                    className="flex flex-col gap-1 px-[--padding-md] py-2 aria-selected:font-bold text-[--color-font] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                                     aria-label={item.name}
                                   >
-                                    <Icon className='w-5' icon={item.icon} />
-                                    <span>{item.name}</span>
+                                    <div className='flex gap-2 items-center'>
+                                      <Icon className='w-5' icon={item.icon} />
+                                      <span>{item.name}</span>
+                                    </div>
+                                    <Text slot="description" className='text-xs text-[--hl]'>
+                                      {item.description}
+                                    </Text>
                                   </MenuItem>
                                 )}
                               </Menu>
                             </Popover>
-                          </MenuTrigger>}
-                          {item.parentId === workspaceId && (
-                            <MenuTrigger>
-                              <Button
-                                aria-label="Create Environment"
-                                data-testid="CreateEnvironmentDropdown"
-                                className="items-center flex justify-center h-6 aspect-square data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                              >
-                                <Icon icon="plus-circle" />
-                              </Button>
-                              <Popover className="min-w-max overflow-y-hidden flex flex-col">
-                                <Menu
-                                  aria-label="Create Environment menu"
-                                  selectionMode="single"
-                                  onAction={key => {
-                                    createEnvironmentActionsList
-                                      .find(({ id }) => key === id)
-                                      ?.action(item);
-                                  }}
-                                  items={createEnvironmentActionsList}
-                                  className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
-                                >
-                                  {item => (
-                                    <MenuItem
-                                      key={item.id}
-                                      id={item.id}
-                                      className="flex flex-col gap-1 px-[--padding-md] py-2 aria-selected:font-bold text-[--color-font] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                                      aria-label={item.name}
-                                    >
-                                      <div className='flex gap-2 items-center'>
-                                        <Icon className='w-5' icon={item.icon} />
-                                        <span>{item.name}</span>
-                                      </div>
-                                      <Text slot="description" className='text-xs text-[--hl]'>
-                                        {item.description}
-                                      </Text>
-                                    </MenuItem>
-                                  )}
-                                </Menu>
-                              </Popover>
-                            </MenuTrigger>
-                          )}
-                        </div>
-                      </GridListItem>
-                    );
-                  }}
+                          </MenuTrigger>
+                        )}
+                      </div>
+                    </GridListItem>
+                  )}
                 </GridList>
                 <div className='flex-1 flex flex-col divide-solid divide-y divide-[--hl-md] overflow-hidden'>
                   <div className='flex items-center justify-between gap-2 w-full px-[--padding-sm] overflow-hidden'>

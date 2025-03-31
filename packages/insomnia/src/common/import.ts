@@ -36,9 +36,7 @@ interface ConvertResult {
   };
 }
 
-const isSubEnvironmentResource = (environment: Environment) => {
-  return !environment.parentId || environment.parentId.startsWith(models.environment.prefix) || environment.parentId.startsWith('__BASE_ENVIRONMENT_ID__');
-};
+const isSubEnvironmentResource = (environment: Environment) => !environment.parentId || environment.parentId.startsWith(models.environment.prefix) || environment.parentId.startsWith('__BASE_ENVIRONMENT_ID__');
 
 export const isInsomniaV4Import = ({ id }: Pick<InsomniaImporter, 'id'>) =>
   id === 'insomnia-4';
@@ -114,7 +112,7 @@ interface ResourceCacheType {
   content: string;
   resources: BaseModel[];
   importer: InsomniaImporter;
-};
+}
 
 let resourceCacheList: ResourceCacheType[] = [];
 

@@ -166,8 +166,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
         } else if (isRequestGroup(doc)) {
           const folderEntities = await database.withDescendants(doc, models.request.type, [models.request.type, models.requestGroup.type]);
           console.log('folderEntities:', folderEntities);
-          const batchUpdates = [doc, ...folderEntities].map(entity => {
-            return {
+          const batchUpdates = [doc, ...folderEntities].map(entity => ({
               id: entity._id,
               fields: {
                 workspaceId: workspace._id,
@@ -176,8 +175,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
                   ? `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request-group/${entity._id}`
                   : `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${entity._id}`,
               },
-            };
-          });
+            }));
           batchUpdateTabs?.(batchUpdates);
         }
       }
@@ -314,7 +312,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     onReorder: e => {
       const moveKey = Array.from(e.keys)[0].toString();
       if (e.target.dropPosition === 'before') {
-        moveBefore?.(e.target.key.toString(), moveKey);;
+        moveBefore?.(e.target.key.toString(), moveKey);
       } else if (e.target.dropPosition === 'after') {
         moveAfter?.(e.target.key.toString(), moveKey);
       }
@@ -331,7 +329,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
 
   if (!tabList.length) {
     return null;
-  };
+  }
 
   return (
     <div className="flex box-content bg-[--color-bg]" style={{ height: `${INSOMNIA_TAB_HEIGHT + 1}px` }} >

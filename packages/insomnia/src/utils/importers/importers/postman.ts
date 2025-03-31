@@ -66,9 +66,7 @@ export const transformPostmanToNunjucksString = (inputString?: string | null) =>
   if (typeof inputString !== 'string') {
     return inputString;
   }
-  const replaceFaker = postmanTagRegexs.reduce((transformedString, { tag, regex }) => {
-    return transformedString.replace(regex, postmanToNunjucksLookup[tag]);
-  }, inputString);
+  const replaceFaker = postmanTagRegexs.reduce((transformedString, { tag, regex }) => transformedString.replace(regex, postmanToNunjucksLookup[tag]), inputString);
   return normaliseJsonPath(replaceFaker);
 };
 
@@ -151,7 +149,6 @@ export class ImportPostman {
     }
     return variable;
   };
-
   importItems = (
     items: PostmanCollection['item'],
     parentId = '__WORKSPACE_ID__',

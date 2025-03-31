@@ -72,8 +72,7 @@ export const RequestRow: FC<{
   handleSetItemSelected,
   request,
   isSelected,
-}) => {
-    return (
+}) => (
       <li className="flex items-center gap-2 p-2">
         <Checkbox
           slot={null}
@@ -121,7 +120,6 @@ export const RequestRow: FC<{
         </div>
       </li>
     );
-  };
 
 export const Tree: FC<{
   root?: Node | null;

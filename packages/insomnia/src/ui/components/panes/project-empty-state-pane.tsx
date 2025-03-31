@@ -36,8 +36,7 @@ interface Props {
   importFrom: () => void;
 }
 
-export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, createMockServer, createEnvironment, importFrom }) => {
-  return (
+export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, createMockServer, createEnvironment, importFrom }) => (
     <div className='flex flex-col flex-wrap items-center justify-center w-full h-full text-center opacity-[calc(var(--opacity-subtle)*0.8)]'>
       <span className='font-bold'>This is an empty project, to get started create your first resource:</span>
       <div className='flex flex-wrap justify-center w-full gap-[var(--padding-md)] mt-[var(--padding-md)]'>
@@ -87,4 +86,3 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
       </div>
     </div>
   );
-};

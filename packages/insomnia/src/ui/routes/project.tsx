@@ -659,9 +659,7 @@ const ProjectRoute: FC = () => {
   const [remoteFiles] = useLoaderDeferData<InsomniaFile[]>(remoteFilesPromise, projectId);
   const [checkAllProjectSyncStatus] = useLoaderDeferData<Record<string, boolean>>(projectsSyncStatusPromise);
 
-  const allFiles = useMemo(() => {
-    return remoteFiles ? [...localFiles, ...remoteFiles] : localFiles;
-  }, [localFiles, remoteFiles]);
+  const allFiles = useMemo(() => remoteFiles ? [...localFiles, ...remoteFiles] : localFiles, [localFiles, remoteFiles]);
 
   const { userSession } = useRootLoaderData();
   const pullFileFetcher = useFetcher();
@@ -725,13 +723,11 @@ const ProjectRoute: FC = () => {
     const workspacePresence = presence
       .filter(p => p.project === activeProject?.remoteId && p.file === file.id)
       .filter(p => p.acct !== userSession.accountId)
-      .map(user => {
-        return {
-          key: user.acct,
-          alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
-          src: user.avatar,
-        };
-      });
+      .map(user => ({
+        key: user.acct,
+        alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+        src: user.avatar,
+      }));
     return {
       ...file,
       loading: loadingBackendProjects.includes(file.remoteId) || pullFileFetcher.formData?.get('backendProjectId') && pullFileFetcher.formData?.get('backendProjectId') === file.remoteId,
@@ -765,13 +761,11 @@ const ProjectRoute: FC = () => {
     const projectPresence = presence
       .filter(p => p.project === project.remoteId)
       .filter(p => p.acct !== userSession.accountId)
-      .map(user => {
-        return {
-          key: user.acct,
-          alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
-          src: user.avatar,
-        };
-      });
+      .map(user => ({
+        key: user.acct,
+        alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+        src: user.avatar,
+      }));
     return {
       ...project,
       presence: projectPresence,
@@ -930,9 +924,7 @@ const ProjectRoute: FC = () => {
                 >
                   <Button className="px-4 py-1 font-bold flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                     <SelectValue<Organization> className="flex truncate items-center justify-center gap-2">
-                      {({ selectedItem }) => {
-                        return selectedItem?.display_name || 'Select an organization';
-                      }}
+                      {({ selectedItem }) => selectedItem?.display_name || 'Select an organization'}
                     </SelectValue>
                     <Icon icon="caret-down" />
                   </Button>
@@ -1016,42 +1008,40 @@ const ProjectRoute: FC = () => {
                     }
                   }}
                 >
-                  {item => {
-                    return (
-                      <GridListItem
-                        key={item._id}
-                        id={item._id}
-                        textValue={item.name}
-                        className="group outline-none select-none"
-                      >
-                        <div className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]">
-                          <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
-                          <Icon
-                            icon={
-                              isRemoteProject(item) ? 'globe-americas' : isGitProject(item) ? ['fab', 'git-alt'] : 'laptop'
-                            }
+                  {item => (
+                    <GridListItem
+                      key={item._id}
+                      id={item._id}
+                      textValue={item.name}
+                      className="group outline-none select-none"
+                    >
+                      <div className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]">
+                        <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
+                        <Icon
+                          icon={
+                            isRemoteProject(item) ? 'globe-americas' : isGitProject(item) ? ['fab', 'git-alt'] : 'laptop'
+                          }
+                        />
+                        <span className={'truncate'}>{item.name}</span>
+                        <span className="flex-1" />
+                        {item.presence.length > 0 && (
+                          <AvatarGroup
+                            size="small"
+                            maxAvatars={3}
+                            items={item.presence}
                           />
-                          <span className={'truncate'}>{item.name}</span>
-                          <span className="flex-1" />
-                          {item.presence.length > 0 && (
-                            <AvatarGroup
-                              size="small"
-                              maxAvatars={3}
-                              items={item.presence}
-                            />
-                          )}
-                          {item._id !== SCRATCHPAD_PROJECT_ID && (
-                            <ProjectDropdown
-                              organizationId={organizationId}
-                              project={item}
-                              storage={storage}
-                              isGitSyncEnabled={isGitSyncEnabled}
-                            />
-                          )}
-                        </div>
-                      </GridListItem>
-                    );
-                  }}
+                        )}
+                        {item._id !== SCRATCHPAD_PROJECT_ID && (
+                          <ProjectDropdown
+                            organizationId={organizationId}
+                            project={item}
+                            storage={storage}
+                            isGitSyncEnabled={isGitSyncEnabled}
+                          />
+                        )}
+                      </div>
+                    </GridListItem>
+                  )}
                 </GridList>
               </div>
               {activeProject && (
@@ -1071,33 +1061,31 @@ const ProjectRoute: FC = () => {
                       }
                     }}
                   >
-                    {item => {
-                      return (
-                        <GridListItem textValue={item.label} className="group outline-none select-none">
-                          <div
-                            className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-aria-selected:bg-[--hl-sm] group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-12 w-full overflow-hidden text-[--hl]"
-                          >
-                            <span className='w-6 h-6 flex items-center justify-center'>
-                              <Icon icon={item.icon} className='w-6' />
-                            </span>
+                    {item => (
+                      <GridListItem textValue={item.label} className="group outline-none select-none">
+                        <div
+                          className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-aria-selected:bg-[--hl-sm] group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-12 w-full overflow-hidden text-[--hl]"
+                        >
+                          <span className='w-6 h-6 flex items-center justify-center'>
+                            <Icon icon={item.icon} className='w-6' />
+                          </span>
 
-                            <span className="truncate capitalize">
-                              {item.label}
-                            </span>
-                            <span className="flex-1" />
-                            {item.action && (
-                              <Button
-                                onPress={item.action.run}
-                                aria-label={item.action.label}
-                                className="opacity-80 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                              >
-                                <Icon icon={item.action.icon} />
-                              </Button>
-                            )}
-                          </div>
-                        </GridListItem>
-                      );
-                    }}
+                          <span className="truncate capitalize">
+                            {item.label}
+                          </span>
+                          <span className="flex-1" />
+                          {item.action && (
+                            <Button
+                              onPress={item.action.run}
+                              aria-label={item.action.label}
+                              className="opacity-80 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                            >
+                              <Icon icon={item.action.icon} />
+                            </Button>
+                          )}
+                        </div>
+                      </GridListItem>
+                    )}
                   </GridList>
                   {isGitProject(activeProject) && (
                     <GitProjectSyncDropdown
@@ -1210,12 +1198,10 @@ const ProjectRoute: FC = () => {
                     </Button>
                     <Popover className="min-w-max overflow-y-hidden flex flex-col">
                       <ListBox
-                        items={DASHBOARD_SORT_ORDERS.map(order => {
-                          return {
-                            id: order,
-                            name: dashboardSortOrderName[order],
-                          };
-                        })}
+                        items={DASHBOARD_SORT_ORDERS.map(order => ({
+                          id: order,
+                          name: dashboardSortOrderName[order],
+                        }))}
                         className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
                       >
                         {item => (
@@ -1320,110 +1306,108 @@ const ProjectRoute: FC = () => {
                       );
                     }}
                   >
-                    {item => {
-                      return (
-                        <GridListItem
-                          key={item.id}
-                          id={item.id}
-                          textValue={item.name}
-                          onAction={item.action}
-                          className={`flex-1 overflow-hidden flex-col outline-none p-[--padding-md] flex select-none w-full rounded-md hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all ${item.loading ? 'animate-pulse' : ''}`}
-                        >
-                          <div className="flex gap-2 h-[20px]">
-                            <div className="flex pr-2 h-full flex-shrink-0 items-center rounded-sm gap-2 bg-[--hl-xs] text-[--color-font] text-sm">
-                              <div className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm`}>
-                                <Icon icon={item.loading ? 'spinner' : scopeToIconMap[item.scope]} className={item.loading ? 'animate-spin' : ''} />
-                              </div>
-                              <span>{item.label}</span>
+                    {item => (
+                      <GridListItem
+                        key={item.id}
+                        id={item.id}
+                        textValue={item.name}
+                        onAction={item.action}
+                        className={`flex-1 overflow-hidden flex-col outline-none p-[--padding-md] flex select-none w-full rounded-md hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all ${item.loading ? 'animate-pulse' : ''}`}
+                      >
+                        <div className="flex gap-2 h-[20px]">
+                          <div className="flex pr-2 h-full flex-shrink-0 items-center rounded-sm gap-2 bg-[--hl-xs] text-[--color-font] text-sm">
+                            <div className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm`}>
+                              <Icon icon={item.loading ? 'spinner' : scopeToIconMap[item.scope]} className={item.loading ? 'animate-spin' : ''} />
                             </div>
-                            <span className="flex-1" />
-                            {item.presence.length > 0 && (
-                              <AvatarGroup
-                                size="small"
-                                maxAvatars={3}
-                                items={item.presence}
-                              />
-                            )}
-                            {activeProject && item.scope !== 'unsynced' && item.workspace && (
-                              <WorkspaceCardDropdown
-                                workspace={item.workspace}
-                                mockServer={item.mockServer}
-                                gitFilePath={item.gitFilePath || undefined}
-                                apiSpec={item.apiSpec}
-                                project={activeProject}
-                                projects={projects}
-                              />
-                            )}
+                            <span>{item.label}</span>
                           </div>
-                          <TooltipTrigger>
-                            <Link
-                              onPress={item.action}
-                              className="pt-4 text-base font-bold line-clamp-4 outline-none"
-                            >
-                              {item.name}
-                            </Link>
-                            <Tooltip
-                              offset={8}
-                              className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                            >
-                              <span>{item.name}</span>
-                            </Tooltip>
-                          </TooltipTrigger>
-                          <div className="flex-1 flex flex-col gap-2 justify-end text-sm text-[--hl]">
-                            {item.gitFilePath && (
-                              <div className="text-sm flex items-center gap-2">
-                                <Icon icon="file-alt" />
-                                <span className='truncate' title={item.gitFilePath}>
-                                  {item.gitFilePath}
-                                </span>
-                              </div>
-                            )}
-                            {item.version && (
-                              <div className="flex-1 pt-2">
-                                {item.version}
-                              </div>
-                            )}
-                            {item.oasFormat && (
-                              <div className="text-sm flex items-center gap-2">
-                                <Icon icon="file-alt" />
-                                <span>
-                                  {item.oasFormat}
-                                </span>
-                              </div>
-                            )}
-                            {item.branch && (
-                              <div className="text-sm flex items-center gap-2">
-                                <Icon icon="code-branch" />
-                                <span className="truncate">
-                                  {item.branch}
-                                </span>
-                              </div>
-                            )}
-                            {Boolean(item.lastModifiedTimestamp) && (
-                              <div className="text-sm flex items-center gap-2 truncate">
-                                <Icon icon="clock" />
-                                <TimeFromNow
-                                  title={text => `Last updated ${text}, and created on ${new Date(item.created).toLocaleDateString()}`}
-                                  timestamp={
-                                    item.lastModifiedTimestamp
-                                  }
-                                />
-                                <span className="truncate">
-                                  {item.lastCommit}
-                                </span>
-                              </div>
-                            )}
-                            {(item.hasUncommittedChanges || item.hasUnpushedChanges) && (
-                              <div className="text-sm text-[rgba(var(--color-warning-rgb),0.8)] flex items-center gap-2">
-                                <span>
-                                  {item.hasUncommittedChanges ? 'Uncommitted changes' : 'Unpushed changes'}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </GridListItem>
-                      );
-                    }}
+                          <span className="flex-1" />
+                          {item.presence.length > 0 && (
+                            <AvatarGroup
+                              size="small"
+                              maxAvatars={3}
+                              items={item.presence}
+                            />
+                          )}
+                          {activeProject && item.scope !== 'unsynced' && item.workspace && (
+                            <WorkspaceCardDropdown
+                              workspace={item.workspace}
+                              mockServer={item.mockServer}
+                              gitFilePath={item.gitFilePath || undefined}
+                              apiSpec={item.apiSpec}
+                              project={activeProject}
+                              projects={projects}
+                            />
+                          )}
+                        </div>
+                        <TooltipTrigger>
+                          <Link
+                            onPress={item.action}
+                            className="pt-4 text-base font-bold line-clamp-4 outline-none"
+                          >
+                            {item.name}
+                          </Link>
+                          <Tooltip
+                            offset={8}
+                            className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                          >
+                            <span>{item.name}</span>
+                          </Tooltip>
+                        </TooltipTrigger>
+                        <div className="flex-1 flex flex-col gap-2 justify-end text-sm text-[--hl]">
+                          {item.gitFilePath && (
+                            <div className="text-sm flex items-center gap-2">
+                              <Icon icon="file-alt" />
+                              <span className='truncate' title={item.gitFilePath}>
+                                {item.gitFilePath}
+                              </span>
+                            </div>
+                          )}
+                          {item.version && (
+                            <div className="flex-1 pt-2">
+                              {item.version}
+                            </div>
+                          )}
+                          {item.oasFormat && (
+                            <div className="text-sm flex items-center gap-2">
+                              <Icon icon="file-alt" />
+                              <span>
+                                {item.oasFormat}
+                              </span>
+                            </div>
+                          )}
+                          {item.branch && (
+                            <div className="text-sm flex items-center gap-2">
+                              <Icon icon="code-branch" />
+                              <span className="truncate">
+                                {item.branch}
+                              </span>
+                            </div>
+                          )}
+                          {Boolean(item.lastModifiedTimestamp) && (
+                            <div className="text-sm flex items-center gap-2 truncate">
+                              <Icon icon="clock" />
+                              <TimeFromNow
+                                title={text => `Last updated ${text}, and created on ${new Date(item.created).toLocaleDateString()}`}
+                                timestamp={
+                                  item.lastModifiedTimestamp
+                                }
+                              />
+                              <span className="truncate">
+                                {item.lastCommit}
+                              </span>
+                            </div>
+                          )}
+                          {(item.hasUncommittedChanges || item.hasUnpushedChanges) && (
+                            <div className="text-sm text-[rgba(var(--color-warning-rgb),0.8)] flex items-center gap-2">
+                              <span>
+                                {item.hasUncommittedChanges ? 'Uncommitted changes' : 'Unpushed changes'}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </GridListItem>
+                    )}
                   </GridList>
                 </div>
               </div>
