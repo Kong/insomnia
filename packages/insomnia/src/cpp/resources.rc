@@ -10,7 +10,7 @@ FILETYPE 0x1
 {
 BLOCK "StringFileInfo"
 {
-	BLOCK "040904b0"
+	BLOCK "040904B0"
 	{
 		VALUE "CompanyName", "Kong"
 		VALUE "FileDescription", "Insomnia"

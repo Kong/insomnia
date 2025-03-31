@@ -2,168 +2,176 @@
 #define _WIN32_WINNT 0x602
 #define __INSOMNIA_OUTPUT_BUFFER_SIZE 8192
 
-#include <cstdio>
-#include <cstring>
-#include <io.h>
+#include <iostream>
 #include <string>
 #include <windows.h>
 
-// #define DEBUG
+const wchar_t *INSOMNIA_VERSION = L"__VERSION__";
 
-const char *INSOMNIA_VERSION = "__VERSION__";
+const wchar_t *INSOMNIA_ISSUE_REPORT_PREFIX = L"\n\nPlease report this issue on GitHub:\n";
+const wchar_t *INSOMNIA_ISSUE_URL = L"https://github.com/Kong/insomnia/issues";
+const wchar_t *INSOMNIA_ISSUE_REPORT_POSTFIX =
+    L"\nWould you like to open the issue report URL in your default browser?";
 
-const char *INSOMNIA_ISSUE_REPORT_PREFIX =
-    "\n\nPlease report this issue on GitHub:\n";
-const char *INSOMNIA_ISSUE_URL = "https://github.com/Kong/insomnia/issues";
-const char *INSOMNIA_ISSUE_REPORT_POSTFIX =
-    "\nWould you like to open the issue report URL in your default browser?";
+const wchar_t *SQUIRREL_INSTALL = L"--squirrel-install";
+const wchar_t *SQUIRREL_UPDATED = L"--squirrel-updated";
+const wchar_t *SQUIRREL_OBSOLETE = L"--squirrel-obsolete";
+const wchar_t *SQUIRREL_UNINSTALL = L"--squirrel-uninstall";
+const wchar_t *SQUIRREL_FIRST_RUN = L"--squirrel-first-run";
 
-const char *SQUIRREL_INSTALL = "--squirrel-install";
-const char *SQUIRREL_UPDATED = "--squirrel-updated";
-const char *SQUIRREL_OBSOLETE = "--squirrel-obsolete";
-const char *SQUIRREL_UNINSTALL = "--squirrel-uninstall";
-const char *SQUIRREL_FIRST_RUN = "--squirrel-first-run";
+BOOL DebugMode = FALSE;
 
-#ifdef DEBUG
-HANDLE hDebugLog;
-BOOL handleCreated = FALSE;
-
-void DebugLog(const char *msg) {
-  if (handleCreated) {
-    ::WriteFile(hDebugLog, msg, strlen(msg), NULL, NULL);
-    ::WriteFile(hDebugLog, "\n", 1, NULL, NULL);
-  }
-}
-#endif
-
-int ExitWithWarning(int cmdShow, const char *msg) {
-  std::string finalMsg(msg);
-  finalMsg += INSOMNIA_ISSUE_REPORT_POSTFIX;
-  finalMsg += INSOMNIA_ISSUE_URL;
-  finalMsg += INSOMNIA_ISSUE_REPORT_POSTFIX;
-  if (::MessageBox(NULL, finalMsg.c_str(),
-                   "Insomnia was unable to start up properly",
-                   MB_YESNO | MB_ICONERROR) == IDYES) {
+int ExitWithWarning(int cmdShow, const wchar_t *msg) {
+  std::wstring finalMsg = std::wstring(msg) + INSOMNIA_ISSUE_REPORT_PREFIX + INSOMNIA_ISSUE_URL +
+                          INSOMNIA_ISSUE_REPORT_POSTFIX;
+  if (::MessageBoxW(NULL, finalMsg.c_str(), L"Insomnia was unable to start up properly",
+                    MB_YESNO | MB_ICONERROR) == IDYES) {
     // Open the issue report URL in the default browser
-    ::ShellExecute(0, 0, INSOMNIA_ISSUE_URL, NULL, NULL, cmdShow);
+    ::ShellExecuteW(0, 0, INSOMNIA_ISSUE_URL, NULL, NULL, cmdShow);
   }
-#ifdef DEBUG
-  if (handleCreated) {
-    ::CloseHandle(hDebugLog);
-  }
-#endif
   return 1;
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-                   LPSTR lpCmdLine, int nCmdShow) {
+std::wstring GetTimestamp() {
+  SYSTEMTIME st;
+  GetLocalTime(&st);
 
-#ifdef DEBUG
-  char temporaryPath[MAX_PATH];
-  ::GetTempPath(MAX_PATH, temporaryPath);
+  wchar_t buffer[32];
+  swprintf(buffer, 32, L"%04d-%02d-%02d %02d:%02d:%02d", st.wYear, st.wMonth, st.wDay, st.wHour,
+           st.wMinute, st.wSecond);
 
-  std::string tempPath(temporaryPath);
-  tempPath.append("insomnia.log");
+  return buffer;
+}
 
-  hDebugLog = ::CreateFile(tempPath.c_str(), FILE_APPEND_DATA, FILE_SHARE_WRITE,
-                           NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+void DebugLog(const wchar_t *msg) {
+  if (!DebugMode)
+    return;
+  wchar_t temporaryPath[MAX_PATH];
+  ::GetTempPathW(MAX_PATH, temporaryPath);
+
+  std::wstring tempPath = std::wstring(temporaryPath) + L"insomnia.log";
+
+  HANDLE hDebugLog =
+      ::CreateFileW(tempPath.c_str(), GENERIC_WRITE, FILE_SHARE_WRITE, NULL, OPEN_ALWAYS,
+                    FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, NULL);
   if (hDebugLog == INVALID_HANDLE_VALUE) {
-    return ::ExitWithWarning(nCmdShow, "Could not create debug log file.");
+    std::wcerr << msg << std::endl;
+    return;
   }
-  handleCreated = TRUE;
-  DebugLog("__________________________________________________");
-  DebugLog(lpCmdLine);
-#endif
 
-  char insomniaExecutable[MAX_PATH];
-  ::GetModuleFileName(NULL, insomniaExecutable, sizeof(insomniaExecutable));
+  if (::GetLastError() == ERROR_FILE_NOT_FOUND) {
+    std::wcerr << L"File not found, creating new file." << std::endl;
+    // write the utf-16 BOM
+    const wchar_t bom[1] = {0xFEFF};
+    ::WriteFile(hDebugLog, &bom, sizeof(bom), NULL, NULL);
+  }
 
-  std::string currentPath(insomniaExecutable);
-  currentPath = currentPath.substr(0, currentPath.find_last_of("\\/"));
+  ::SetFilePointer(hDebugLog, 0, NULL, FILE_END);
 
+  std::wstring finalMsg = L"[" + GetTimestamp() + L"] " + msg;
+  ::WriteFile(hDebugLog, finalMsg.c_str(), static_cast<DWORD>(finalMsg.length() * sizeof(wchar_t)),
+              NULL, NULL);
+  ::WriteFile(hDebugLog, L"\r\n", 2 * sizeof(wchar_t), NULL, NULL);
+  ::CloseHandle(hDebugLog);
+}
+
+std::wstring ConvertLPSTRToWString(LPSTR lpstr) {
+  int size_needed = MultiByteToWideChar(CP_ACP, 0, lpstr, -1, NULL, 0);
+  std::wstring wstr(size_needed, 0);
+  ::MultiByteToWideChar(CP_ACP, 0, lpstr, -1, &wstr[0], size_needed);
+  return wstr;
+}
+
+bool PathHasSpace(const std::wstring &path) { return path.find(L' ') != std::wstring::npos; }
+
+std::wstring QuotePathIfNeeded(const std::wstring &path) {
+  return PathHasSpace(path) ? L"\"" + path + L"\"" : path;
+}
+
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+  std::wstring cmdLine = ::ConvertLPSTRToWString(lpCmdLine);
+  DebugMode = cmdLine.find(L"--debug") != std::wstring::npos;
+
+  ::DebugLog(L"__________________________________________________");
+  ::DebugLog((L"Command line: " + cmdLine).c_str());
+
+  wchar_t insomniaExecutable[MAX_PATH];
+  ::GetModuleFileNameW(NULL, insomniaExecutable, sizeof(insomniaExecutable));
+  ::DebugLog((L"Insomnia executable: " + std::wstring(insomniaExecutable)).c_str());
+
+  std::wstring workDir(insomniaExecutable);
+  workDir = workDir.substr(0, workDir.find_last_of(L"\\"));
+  ::DebugLog((L"Current path: " + workDir).c_str());
+
+  std::wstring updatePath(workDir);
   // get one directory above
-  std::string updatePath(currentPath);
-  updatePath = updatePath.substr(0, updatePath.find_last_of("\\/"));
-  updatePath.append("\\Update.exe");
+  updatePath = updatePath.substr(0, updatePath.find_last_of(L"\\")) + L"\\Update.exe";
+  updatePath = QuotePathIfNeeded(updatePath);
+  ::DebugLog((L"Update path: " + updatePath).c_str());
 
   // preserve the console output from the original executable
   ::AttachConsole(-1);
-  ::WriteConsole(::GetStdHandle(STD_OUTPUT_HANDLE), "Insomnia is starting...\n",
-                 25, NULL, NULL);
-  ::WriteConsole(::GetStdHandle(STD_OUTPUT_HANDLE), lpCmdLine,
-                 strlen(lpCmdLine), NULL, NULL);
-  ::WriteConsole(::GetStdHandle(STD_OUTPUT_HANDLE), "\n", 1, NULL, NULL);
 
-  if (strncmp(lpCmdLine, SQUIRREL_INSTALL, strlen(SQUIRREL_INSTALL)) == 0) {
-#ifdef DEBUG
-    ::DebugLog("Squirrel.Windows install");
-#endif
+  HANDLE stdHandle = ::GetStdHandle(STD_OUTPUT_HANDLE);
+  ::WriteConsoleW(stdHandle, L"Insomnia is starting...\n", 24, NULL, NULL);
+  ::WriteConsoleW(stdHandle, (L"Command line arguments: " + cmdLine + L"\n").c_str(),
+                  cmdLine.size() + 25, NULL, NULL);
+
+  if (cmdLine.find(SQUIRREL_INSTALL) != std::wstring::npos) {
+    ::DebugLog(L"Squirrel.Windows install");
 
     // Squirrel.Windows install
-    std::string args = "--createShortcut=";
-    args.append(insomniaExecutable);
-    ::ShellExecute(0, "open", updatePath.c_str(), args.c_str(), NULL, SW_HIDE);
+    std::wstring shortcut = QuotePathIfNeeded(insomniaExecutable);
+    std::wstring args = std::wstring(L"--createShortcut=") + shortcut;
+    ::ShellExecuteW(0, L"open", updatePath.c_str(), args.c_str(), NULL, SW_HIDE);
 
     return 0;
-  } else if (strncmp(lpCmdLine, SQUIRREL_UPDATED, strlen(SQUIRREL_UPDATED)) ==
-                 0 ||
-             strncmp(lpCmdLine, SQUIRREL_OBSOLETE, strlen(SQUIRREL_OBSOLETE)) ==
-                 0) {
-#ifdef DEBUG
-    ::DebugLog("Squirrel.Windows updated or obsoleted");
-#endif
+  } else if (cmdLine.find(SQUIRREL_UPDATED) != std::wstring::npos ||
+             cmdLine.find(SQUIRREL_OBSOLETE) != std::wstring::npos) {
+    ::DebugLog(L"Squirrel.Windows updated or obsoleted");
     // Squirrel.Windows update
     return 0;
-  } else if (strncmp(lpCmdLine, SQUIRREL_UNINSTALL,
-                     strlen(SQUIRREL_UNINSTALL)) == 0) {
+  } else if (cmdLine.find(SQUIRREL_UNINSTALL) != std::wstring::npos) {
     // Squirrel.Windows uninstall
-    std::string args = "--removeShortcut=";
-    args.append(insomniaExecutable);
-    ::ShellExecute(0, "open", updatePath.c_str(), args.c_str(), NULL, SW_HIDE);
-#ifdef DEBUG
-    ::DebugLog("Squirrel.Windows uninstall");
-#endif
+    std::wstring shortcut = QuotePathIfNeeded(insomniaExecutable);
+    std::wstring args = std::wstring(L"--removeShortcut=") + shortcut;
+    ::ShellExecuteW(0, L"open", updatePath.c_str(), args.c_str(), NULL, SW_HIDE);
+    ::DebugLog(L"Squirrel.Windows uninstall");
 
     return 0;
-  } else if (strncmp(lpCmdLine, SQUIRREL_FIRST_RUN,
-                     strlen(SQUIRREL_FIRST_RUN)) == 0) {
+  } else if (cmdLine.find(SQUIRREL_FIRST_RUN) != std::wstring::npos) {
     // Squirrel.Windows first run
-#ifdef DEBUG
-    ::DebugLog("Squirrel.Windows first run");
-#endif
+    ::DebugLog(L"Squirrel.Windows first run");
   }
 
   ::PROCESS_MITIGATION_POLICY psp = ::ProcessSignaturePolicy;
   ::PROCESS_MITIGATION_POLICY pilp = ::ProcessImageLoadPolicy;
   ::PROCESS_MITIGATION_BINARY_SIGNATURE_POLICY pmbsp;
   ::PROCESS_MITIGATION_IMAGE_LOAD_POLICY pmilp;
-  ::PROCESS_INFORMATION pi;
   ::SECURITY_ATTRIBUTES sa;
-  ::STARTUPINFO si;
-  ::DWORD insomniaOutputBytesRead;
-  char insomniaOutputBuffer[__INSOMNIA_OUTPUT_BUFFER_SIZE];
+  ::STARTUPINFOW si;
+  ::PROCESS_INFORMATION pi;
+  ::HANDLE outrd, outwr;
+  ::DWORD outRead;
+  char outBuf[__INSOMNIA_OUTPUT_BUFFER_SIZE];
 
-  if (!::GetProcessMitigationPolicy(::GetCurrentProcess(), psp, &pmbsp,
-                                    sizeof(pmbsp))) {
-    return ::ExitWithWarning(nCmdShow, "Could not get ProcessImageLoadPolicy.");
+  if (!::GetProcessMitigationPolicy(::GetCurrentProcess(), psp, &pmbsp, sizeof(pmbsp))) {
+    return ::ExitWithWarning(nCmdShow, L"Could not get ProcessImageLoadPolicy.");
   }
   if (pmbsp.MitigationOptIn == 0) {
     pmbsp.MitigationOptIn = 1;
     if (!::SetProcessMitigationPolicy(psp, &pmbsp, sizeof(pmbsp))) {
-      return ::ExitWithWarning(nCmdShow,
-                               "Could not set ProcessImageLoadPolicy.");
+      return ::ExitWithWarning(nCmdShow, L"Could not set ProcessImageLoadPolicy.");
     }
   }
 
-  if (!::GetProcessMitigationPolicy(::GetCurrentProcess(), pilp, &pmilp,
-                                    sizeof(pmilp))) {
-    return ::ExitWithWarning(nCmdShow, "Could not get ProcessImageLoadPolicy.");
+  if (!::GetProcessMitigationPolicy(::GetCurrentProcess(), pilp, &pmilp, sizeof(pmilp))) {
+    return ::ExitWithWarning(nCmdShow, L"Could not get ProcessImageLoadPolicy.");
   }
   if (pmilp.PreferSystem32Images == 0) {
     pmilp.PreferSystem32Images = 1;
     if (!::SetProcessMitigationPolicy(pilp, &pmilp, sizeof(pmilp))) {
-      return ::ExitWithWarning(nCmdShow,
-                               "Could not set ProcessImageLoadPolicy.");
+      return ::ExitWithWarning(nCmdShow, L"Could not set ProcessImageLoadPolicy.");
     }
   }
 
@@ -174,14 +182,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   sa.bInheritHandle = TRUE;
   sa.lpSecurityDescriptor = NULL;
 
-  HANDLE outrd, outwr;
-
   if (!::CreatePipe(&outrd, &outwr, &sa, 0)) {
-    return ::ExitWithWarning(nCmdShow, "Could not create pipe.");
+    return ::ExitWithWarning(nCmdShow, L"Could not create pipe.");
   }
 
   if (!::SetHandleInformation(outrd, HANDLE_FLAG_INHERIT, 0)) {
-    return ::ExitWithWarning(nCmdShow, "Could not set handle information.");
+    return ::ExitWithWarning(nCmdShow, L"Could not set handle information.");
   }
 
   si.cb = sizeof(si);
@@ -189,58 +195,47 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   si.hStdOutput = outwr;
   si.hStdError = outwr;
 
-  std::string sourceInsomniaExe(currentPath);
-  sourceInsomniaExe.append("\\insomnia.dll");
+  std::wstring sourceInsomniaExe = std::wstring(workDir) + L"\\insomnia.dll";
+  ::DebugLog((L"Source insomnia executable: " + sourceInsomniaExe).c_str());
 
-#ifdef DEBUG
-  ::DebugLog("Current path:");
-  ::DebugLog(currentPath.c_str());
-  ::DebugLog("Source insomnia executable:");
-  ::DebugLog(sourceInsomniaExe.c_str());
-#endif
+  std::wstring tmpExe = std::wstring(workDir) + L"\\insomnia-" + INSOMNIA_VERSION + L".exe";
 
-  // create the insomnia-$VERSION.exe file
-  std::string tmpExe(currentPath);
-  tmpExe.append("\\insomnia-");
-  tmpExe.append(INSOMNIA_VERSION);
-  tmpExe.append(".exe");
+  // if the file already exists, continue as normal since another instance of Insomnia
+  // is likely already running
+  DWORD attrs = ::GetFileAttributesW(tmpExe.c_str());
+  if (attrs != INVALID_FILE_ATTRIBUTES && !(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
+    ::DebugLog(L"File already exists, skipping copy.");
+  } else {
+    // if it's a directory, then exit and prompt the user to uninstall
+    if (attrs != INVALID_FILE_ATTRIBUTES) {
+      ::DebugLog(L"File is a directory, exiting.");
+      return ::ExitWithWarning(nCmdShow, L"Insomnia installation is corrupted. Please reinstall.");
+    }
 
-#ifdef DEBUG
-  ::DebugLog("Creating insomnia executable:");
-  ::DebugLog(tmpExe.c_str());
-  ::DebugLog("Copying file");
-#endif
-
-  if (!::CopyFile(sourceInsomniaExe.c_str(), tmpExe.c_str(), FALSE)) {
-#ifdef DEBUG
-    DebugLog("Could not copy file.");
-#endif
-    return ::ExitWithWarning(nCmdShow,
-                             "Cannot read or write to executable folder.");
+    ::DebugLog((L"Copying insomnia executable to: " + tmpExe).c_str());
+    // create the insomnia-$VERSION.exe file
+    if (!::CopyFileW(sourceInsomniaExe.c_str(), tmpExe.c_str(), FALSE)) {
+      ::DebugLog(L"Could not copy file.");
+      return ::ExitWithWarning(nCmdShow, L"Cannot read or write to executable folder.");
+    }
+    ::DebugLog(L"File copied.");
   }
 
-  if (!::CreateProcess(NULL, (LPSTR)tmpExe.c_str(), NULL, NULL, TRUE, 0, NULL,
-                       currentPath.c_str(), &si, &pi)) {
-#ifdef DEBUG
-    ::DebugLog("Could not create process:");
-    ::DebugLog(lpCmdLine);
-    ::DebugLog(__TIME__);
+  std::wstring exePath = QuotePathIfNeeded(tmpExe);
+  if (!::CreateProcessW(0, &exePath[0], 0, 0, TRUE, 0, 0, workDir.c_str(), &si, &pi)) {
+    ::DebugLog((L"Could not create process with command: " + exePath).c_str());
     ::CloseHandle(outrd);
     ::CloseHandle(outwr);
-#endif
-    return ::ExitWithWarning(nCmdShow, "Unable to Launch Insomnia.");
+    return ::ExitWithWarning(nCmdShow, L"Unable to Launch Insomnia.");
   }
+  ::DebugLog(L"Process created.");
 
   // yes, close the write handle here, trust me
   ::CloseHandle(outwr);
 
   // loops until the pipe is closed because the write handle is closed
-  while (::ReadFile(outrd, insomniaOutputBuffer,
-                    sizeof(insomniaOutputBuffer) - 1, &insomniaOutputBytesRead,
-                    NULL) &&
-         insomniaOutputBytesRead > 0) {
-    ::WriteFile(::GetStdHandle(STD_OUTPUT_HANDLE), insomniaOutputBuffer,
-                insomniaOutputBytesRead, NULL, NULL);
+  while (::ReadFile(outrd, outBuf, sizeof(outBuf) - 1, &outRead, NULL) && outRead > 0) {
+    ::WriteFile(::GetStdHandle(STD_OUTPUT_HANDLE), outBuf, outRead, NULL, NULL);
   }
 
   // no more to read
@@ -254,26 +249,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   ::CloseHandle(pi.hProcess);
   ::CloseHandle(pi.hThread);
 
-  // finally, delete the insomnia-$VERSION.exe file after waiting up to 3s for
+  // finally, delete the insomnia-$VERSION.exe file after waiting up to 5s for
   // the handle to fully release
-  for (int i = 0; i < 2; i++) {
+  for (int i = 1; i < 5; i++) {
     Sleep(1000);
-    if (!::DeleteFile(tmpExe.c_str())) {
-#ifdef DEBUG
-      DWORD lastErr = ::GetLastError();
-      ::DebugLog("Attempted to delete file:");
-      ::DebugLog(tmpExe.c_str());
-      ::DebugLog("Return value:");
-      ::DebugLog(std::to_string(lastErr).c_str());
-#endif
-    } else {
+    ::DebugLog((std::wstring(L"Attempt ") + std::to_wstring(i) + L" to delete " + tmpExe).c_str());
+    if (::DeleteFileW(tmpExe.c_str())) {
+      ::DebugLog(L"File deleted.");
       break;
     }
+    DWORD lastErr = ::GetLastError();
+    ::DebugLog((L"Failed to delete file: " + tmpExe).c_str());
+    ::DebugLog((L"Return value: " + std::to_wstring(lastErr)).c_str());
   }
-
-#ifdef DEBUG
-  ::CloseHandle(hDebugLog);
-#endif
 
   return 0;
 }
