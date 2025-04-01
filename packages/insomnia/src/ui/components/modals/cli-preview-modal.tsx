@@ -19,13 +19,14 @@ function generateCommandArgumentsForRequests(workspaceId: string, targetFolderId
 
 export const CLIPreviewModal = ({ onClose, requestIds, targetFolderId, keepManualOrder, iterationCount, delay, filePath, bail }: { onClose: () => void; requestIds: string[]; targetFolderId: string | null; keepManualOrder: boolean; iterationCount: number; delay: number; filePath: string; bail: boolean }) => {
   const { workspaceId } = useParams() as { workspaceId: string };
-  const { activeEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { activeEnvironment, activeGlobalEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const workspaceIdAndRequestIds = generateCommandArgumentsForRequests(workspaceId, targetFolderId, requestIds, keepManualOrder);
   const iterationCountArgument = iterationCount > 1 ? ` -n ${iterationCount}` : '';
   const delayArgument = delay > 0 ? ` --delay-request ${delay}` : '';
   const iterationFilePath = filePath ? ` -d "${filePath}"` : '';
   const bailArgument = bail ? ' --bail' : '';
-  const cliCommand = `inso run collection ${workspaceIdAndRequestIds} -e ${activeEnvironment._id.slice(0, 10)}${iterationCountArgument}${delayArgument}${iterationFilePath}${bailArgument}`;
+  const globalEnvironmentArgument = activeGlobalEnvironment ? ` --globals ${activeGlobalEnvironment._id.slice(0, 10)}` : '';
+  const cliCommand = `inso run collection ${workspaceIdAndRequestIds} -e ${activeEnvironment._id.slice(0, 10)}${globalEnvironmentArgument}${iterationCountArgument}${delayArgument}${iterationFilePath}${bailArgument}`;
 
   return (
     <ModalOverlay
