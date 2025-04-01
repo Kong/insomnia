@@ -3,7 +3,7 @@
     /* Basic */
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "target": "es2020",
+    "target": "es2023",
     "allowJs": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
@@ -22,6 +22,7 @@
     "verbatimModuleSyntax": true
   },
   "include": [
+    "**/*.d.ts",
     "src/main/**/*",
     "src/preload.ts",
     "esbuild.main.ts",
