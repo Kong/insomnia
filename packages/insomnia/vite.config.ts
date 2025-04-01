@@ -67,5 +67,10 @@ export default defineConfig(({ mode }) => {
         }),
       ],
     },
+    resolve: process.env.USE_SUBMODULE ? {
+      alias: {
+        'insomnia-enterprise': path.resolve(__dirname, '../../insomnia-submodule/lib/index.ts'),
+      },
+    } : undefined,
   };
 });
