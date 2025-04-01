@@ -52,7 +52,7 @@ export default defineConfig(({ mode }) => {
       electronNodeRequire({
         modules: [
           'electron',
-          ...Object.keys(pkg.dependencies),
+          ...(Object.keys(pkg.dependencies).filter(pkg => pkg !== 'insomnia-enterprise')),
           ...builtinModules.filter(m => m !== 'buffer'),
           ...builtinModules.map(m => `node:${m}`),
         ],
@@ -70,7 +70,12 @@ export default defineConfig(({ mode }) => {
     resolve: process.env.USE_SUBMODULE ? {
       alias: {
         'insomnia-enterprise': path.resolve(__dirname, '../../insomnia-submodule/lib/index.ts'),
+        'insomnia': __dirname,
       },
-    } : undefined,
+    } : {
+      alias: {
+        'insomnia': __dirname,
+      },
+    },
   };
 });
