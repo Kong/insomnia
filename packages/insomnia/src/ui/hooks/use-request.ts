@@ -8,6 +8,7 @@ import type { RequestGroupMeta } from '../../models/request-group-meta';
 import type { RequestMeta } from '../../models/request-meta';
 import type { Settings } from '../../models/settings';
 import type { SocketIOPayload } from '../../models/socket-io-payload';
+import type { SocketIORequest } from '../../models/socket-io-request';
 import type { WebSocketRequest } from '../../models/websocket-request';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
@@ -20,7 +21,7 @@ export const useRequestPatcher = () => {
   }>();
   const { updateTabById } = useInsomniaTabContext();
   const fetcher = useFetcher();
-  return (requestId: string, patch: Partial<GrpcRequest> | Partial<Request> | Partial<WebSocketRequest>) => {
+  return (requestId: string, patch: Partial<GrpcRequest> | Partial<Request> | Partial<WebSocketRequest> | Partial<SocketIORequest>) => {
     updateTabById?.(requestId, { temporary: false });
     fetcher.submit(JSON.stringify(patch), {
       action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,

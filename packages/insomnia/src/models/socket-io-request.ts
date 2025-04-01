@@ -12,6 +12,12 @@ export const canDuplicate = true;
 
 export const canSync = true;
 
+export interface SocketIOEventListeners {
+  eventName: string;
+  desc: string;
+  isOpen: boolean;
+}
+
 export interface BaseSocketIORequest {
   name: string;
   description: string;
@@ -25,6 +31,7 @@ export interface BaseSocketIORequest {
   settingStoreCookies: boolean;
   settingSendCookies: boolean;
   settingFollowRedirects: 'global' | 'on' | 'off';
+  eventListeners: SocketIOEventListeners[];
 }
 
 export type SocketIORequest = BaseModel & BaseSocketIORequest & { type: typeof type };
@@ -50,6 +57,7 @@ export const init = (): BaseSocketIORequest => ({
   settingSendCookies: true,
   settingFollowRedirects: 'global',
   description: '',
+  eventListeners: [],
 });
 
 export const create = (patch: Partial<SocketIORequest> = {}) => {
