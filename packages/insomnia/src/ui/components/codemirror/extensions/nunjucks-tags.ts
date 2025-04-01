@@ -333,7 +333,7 @@ async function _updateElementText(
 
     dataError = 'off';
   } catch (err) {
-    title = err.message.replace(/\[.+,.+]\s*/, '');
+    title = err.message.toString().replace(/\[.+,.+]\s*/, '');
     dataError = 'on';
   }
 
