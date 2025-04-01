@@ -1,14 +1,9 @@
-import { getExistingConsole } from './console';
 import { Property, PropertyBase, PropertyList } from './properties';
 import { checkIfUrlIncludesTag } from './utils';
 
 let UrlSearchParams = URLSearchParams;
 export function setUrlSearchParams(provider: any) {
     UrlSearchParams = provider;
-}
-
-function canNotBeModifiedWarning(originalUrl: string | undefined) {
-    getExistingConsole().warn(`The url "${originalUrl || 'undefined'}" can not be parsed, only 'insomnia.request.url.update(..)' will take effect.`);
 }
 
 export interface QueryParamOptions {
@@ -110,6 +105,10 @@ export class QueryParam extends Property {
         return params.toString();
     }
 
+    toRawString() {
+        return `${this.key}=${this.value}`;
+    }
+
     update(param: string | { key: string; value: string; type?: string }) {
         if (typeof param === 'string') {
             const paramObj = QueryParam.parseSingle(param);
@@ -147,6 +146,9 @@ export class Url extends PropertyBase {
     override _kind: string = 'Url';
 
     id?: string;
+    private urlObject?: URL;
+    private origin?: string;
+    private queryParams: QueryParam[] = []; // query params are handled separately as URL object encodes content
 
     get auth(): { username: string; password: string } | undefined {
         // TODO: probably it should be related to the RequestAuth class
@@ -172,23 +174,16 @@ export class Url extends PropertyBase {
         return this.urlObject ? this.urlObject.protocol : '';
     }
     get query(): PropertyList<QueryParam> {
-        const queryList = this.urlObject?.searchParams ?
-            Array.from(this.urlObject.searchParams.entries())
-                .map(queryEntry => new QueryParam({ key: queryEntry[0], value: queryEntry[1] }), {}) :
-            [];
         return new PropertyList<QueryParam>(
-                QueryParam,
-                undefined,
-                queryList
+            QueryParam,
+            undefined,
+            this.queryParams,
         );
     }
     get variables(): string[] {
         // TODO: it's usage is unknown
         return [];
     }
-
-    private urlObject?: URL;
-    private origin?: string;
 
     constructor(
         def: UrlOptions | string
@@ -203,6 +198,11 @@ export class Url extends PropertyBase {
             const ifUrlIncludesTag = checkIfUrlIncludesTag(urlOptions);
             if (URL.canParse(urlOptions) && !ifUrlIncludesTag) {
                 this.urlObject = new URL(urlOptions);
+                // maintain query params separately
+                this.urlObject.searchParams.forEach((value: string, key: string) => {
+                    this.queryParams = [...this.queryParams, new QueryParam({ key, value })];
+                });
+                this.urlObject.search = '';
             } else {
                 this.urlObject = undefined;
             }
@@ -220,6 +220,11 @@ export class Url extends PropertyBase {
 
             if (URL.canParse(urlString)) {
                 this.urlObject = new URL(urlString);
+                // maintain query params separately
+                this.urlObject.searchParams.forEach((value: string, key: string) => {
+                    this.queryParams = [...this.queryParams, new QueryParam({ key, value })];
+                });
+                this.urlObject.search = '';
             } else {
                 this.urlObject = undefined;
             }
@@ -257,27 +262,22 @@ export class Url extends PropertyBase {
         return undefined;
     }
 
-    addQueryParams(params: { key: string; value: string }[] | string) {
-        if (this.urlObject !== undefined) {
-            if (typeof params === 'string') {
-                const searchParams = new UrlSearchParams(params);
-                Array.from(searchParams.entries())
-                    .forEach(pair => {
-                        if (this.urlObject) {
-                            this.urlObject.searchParams.append(pair[0], pair[1]);
-                        }
-                    });
-            } else if (Array.isArray(params)) {
-                params.forEach(pair => {
-                    if (this.urlObject) {
-                        this.urlObject.searchParams.append(pair.key, pair.value);
-                    }
+    addQueryParams(params: QueryParamOptions[] | string) {
+        if (typeof params === 'string') {
+            // URLSearchParams is not used here as it encodes content
+            const pairs = params.split('&');
+            pairs
+                .forEach(pair => {
+                    const parts = pair.split('=');
+                    this.queryParams = [...this.queryParams, new QueryParam({ key: parts[0], value: parts[1] })];
+                    // this.urlObject.searchParams.append(pair[0], pair[1]);
                 });
-            } else {
-                throw Error(`addQueryParams: failed to add params: ${JSON.stringify(params)}`);
-            }
+        } else if (Array.isArray(params)) {
+            params.forEach(pair => {
+                this.queryParams = [...this.queryParams, new QueryParam({ ...pair })];
+            });
         } else {
-            canNotBeModifiedWarning(this.origin);
+            throw Error(`addQueryParams: invalid params: ${JSON.stringify(params)}`);
         }
     }
 
@@ -304,10 +304,7 @@ export class Url extends PropertyBase {
     }
 
     getQueryString() {
-        if (this.urlObject) {
-            return this.urlObject.search.replace('?', '');
-        }
-        return '';
+        return this.queryParams.map(param => param.toRawString()).join('&');
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -319,33 +316,45 @@ export class Url extends PropertyBase {
     }
 
     removeQueryParams(params: QueryParam[] | string[] | string) {
-        if (this.urlObject) {
-            if (typeof params === 'string') {
-                if (this.urlObject) {
-                    this.urlObject.searchParams.delete(params);
-                }
-            } else if (Array.isArray(params)) {
-                params.forEach((pair: QueryParam | string) => {
-                    if (this.urlObject) {
-                        if (typeof pair === 'string') {
-                            this.urlObject.searchParams.delete(pair);
-                        } else {
-                            this.urlObject.searchParams.delete(pair.key, pair.value);
-                        }
+        if (typeof params === 'string') {
+            this.queryParams = this.queryParams.filter(param => param.key !== params);
+        } else if (Array.isArray(params)) {
+            this.queryParams = this.queryParams.filter(param => {
+                const shouldDelete = params.some(paramToRemove => {
+                    if (typeof paramToRemove === 'string') {
+                        return param.key === paramToRemove;
                     }
+                    return param.key === paramToRemove.key;
                 });
-            } else {
-                throw Error('removeQueryParams: failed to remove query params: unknown params type, only supports QueryParam[], string[] or string');
-            }
+
+                return !shouldDelete;
+            });
         } else {
-            canNotBeModifiedWarning(this.origin);
+            throw Error('removeQueryParams: failed to remove query params: unknown params type, only supports QueryParam[], string[] or string');
         }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     override toString(_forceProtocol?: boolean) {
         if (this.urlObject) {
-            const urlInString = this.urlObject.toString();
+            const newUrlObject = new URL(this.urlObject.toString());
+            newUrlObject.search = this.getQueryString();
+            const urlInString = newUrlObject.toString();
+            if (this.urlObject.pathname === '/' && urlInString === this.origin + '/') {
+                // try to avoid replacing empty path with '/'
+                return urlInString.slice(0, urlInString.length - 1);
+            }
+            return urlInString;
+        }
+        return this.origin || '';
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    toStringWithoutQuery(_forceProtocol?: boolean) {
+        if (this.urlObject) {
+            const newUrlObject = new URL(this.urlObject.toString());
+            newUrlObject.search = '';
+            const urlInString = newUrlObject.toString();
             if (this.urlObject.pathname === '/' && urlInString === this.origin + '/') {
                 // try to avoid replacing empty path with '/'
                 return urlInString.slice(0, urlInString.length - 1);

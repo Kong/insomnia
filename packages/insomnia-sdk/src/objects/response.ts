@@ -66,7 +66,7 @@ export class Response extends Property {
         this.stream = options.stream;
         const detectedStatus = options.reason || RESPONSE_CODE_REASONS[options.code];
         if (!detectedStatus) {
-            throw Error('Response constructor: reason or code field must be set in the options');
+            throw Error(`Response constructor: reason or code field must be set in the options(reason: ${options.reason}, code:${options.code})`);
         } else {
             this.status = detectedStatus;
         }
@@ -274,7 +274,7 @@ export function toScriptResponse(
     responseBody: string,
 ): Response | undefined {
     if ('error' in partialInsoResponse) {
-    // it is sendCurlAndWriteTimelineError and basically doesn't contain anything useful
+        // it is sendCurlAndWriteTimelineError and basically doesn't contain anything useful
         return undefined;
     }
     const partialResponse = partialInsoResponse as sendCurlAndWriteTimelineResponse;
@@ -298,7 +298,7 @@ export function toScriptResponse(
                 {},
             ).map(
                 setCookieHeader => Cookie.parse(setCookieHeader.value)
-        )
+            )
         : [];
 
     const responseOption = {

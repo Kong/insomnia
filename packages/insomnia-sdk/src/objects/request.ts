@@ -664,9 +664,17 @@ export function mergeRequests(
     originalReq: InsomniaRequest,
     updatedReq: Request
 ): InsomniaRequest {
+    const queryParamObjects = updatedReq.url.query.map(
+        queryParam => ({
+            name: queryParam.key,
+            value: queryParam.value,
+            disabled: queryParam.disabled,
+        }),
+        {},
+    );
     const updatedReqProperties: Partial<InsomniaRequest> = {
         name: updatedReq.name,
-        url: updatedReq.url.toString(),
+        url: updatedReq.url.toStringWithoutQuery(),
         method: updatedReq.method,
         body: mergeRequestBody(updatedReq.body, originalReq.body),
         headers: updatedReq.headers
@@ -676,12 +684,12 @@ export function mergeRequests(
                     value: header.value,
                     disabled: header.disabled,
                 }),
-            {},
-        ),
+                {},
+            ),
         authentication: fromPreRequestAuth(updatedReq.auth),
         preRequestScript: '',
         pathParameters: updatedReq.pathParameters,
-        parameters: [], // set empty array as parameters will be part of url field
+        parameters: queryParamObjects,
     };
 
     return {

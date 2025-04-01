@@ -469,6 +469,8 @@ test.describe('pre-request features tests', async () => {
 
         expect(bodyJson).toEqual({
             // no environment is selected so the environment value will be persisted to the base environment
+            'fromUrlValue': 'fromUrlValue',
+            'fromEditorValue': 'fromEditorValue',
             '__fromScript1': 'baseEnvironment',
             '__fromScript2': 'collection',
             '__fromScript': 'environment',
@@ -506,6 +508,26 @@ test.describe('pre-request features tests', async () => {
         await page.getByText('__environment_type').click();
         await page.getByText('__environment_value_kv').click();
         await page.getByText('http://url-from-script').click();
+    });
+
+    test('query params should be transformed correctly', async ({ page }) => {
+        await page.getByLabel('Request Collection').getByTestId('testQueryParams').press('Enter');
+
+        // send
+        await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+        // verify response
+        const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
+        await page.waitForSelector('[data-testid="response-status-tag"]:visible');
+        await expect(statusTag).toContainText('200 OK');
+
+        const responsePane = page.getByTestId('response-pane');
+        await page.getByRole('tab', { name: 'Console' }).click();
+
+        await expect(responsePane).toContainText('key=fromUrl');
+        await expect(responsePane).toContainText('key=fromUrlValue');
+        await expect(responsePane).toContainText('key=fromEditorValue');
+        await expect(responsePane).toContainText('key=%2F');
     });
 });
 
