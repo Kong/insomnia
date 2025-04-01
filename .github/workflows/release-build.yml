@@ -210,6 +210,12 @@ jobs:
       - name: Create Inso zip/tar/gz artifacts
         run: npm run artifacts -w insomnia-inso
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@3d58c274f17dffee475a5520cbe67f0a882c4dbb # v2.1.0
+        with:
+          username: ${{ secrets.DOCKER_REGISTRY_USER }}
+          password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+
       - name: Create inso Docker Image artifacts
         if: runner.os == 'Linux' && runner.arch == 'X64'
         run: |
