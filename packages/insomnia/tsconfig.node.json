@@ -1,0 +1,46 @@
+{
+  "compilerOptions": {
+    /* Basic */
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "es2020",
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "isolatedModules": true,
+    /* Transpiling Options */
+    "module": "ESNext",
+    "sourceMap": true,
+    "jsx": "preserve",
+    /* Strictness */
+    "strict": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "useUnknownInCatchVariables": false,
+    "verbatimModuleSyntax": true
+  },
+  "include": [
+    "src/main/**/*",
+    "src/preload.ts",
+    "esbuild.main.ts",
+    "scripts/build.ts",
+    "vite-plugin-electron-node-require.ts",
+    "setup-vitest.ts",
+    "vite.config.ts",
+    "vitest.config.ts",
+  ],
+  "exclude": [
+    "node_modules",
+    "src/coverage",
+    "src/main.min.js",
+    "src/preload.js",
+    "src/hidden-window-preload.js",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/__mocks__",
+    "**/__snapshots__",
+    "**/__tests__",
+  ],
+}

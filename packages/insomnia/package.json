@@ -30,8 +30,9 @@
     "start:electron": "cross-env NODE_ENV=development esr esbuild.main.ts && electron --inspect=5858 .",
     "test": "vitest run",
     "electron:dev-build": "electron ./build/main.min.js",
-    "type-check": "tsc --noEmit --project tsconfig.json",
-    "type-check:watch": "npm run type-check -- --watch",
+    "type-check:node": "tsc --noEmit -p tsconfig.node.json --composite false",
+    "type-check:web": "tsc --noEmit -p tsconfig.web.json --composite false",
+    "type-check": "npm run typecheck:node && npm run typecheck:web",
     "convert-svg": "npm_config_yes=true npx @svgr/cli@6.4.0 --no-index --config-file svgr.config.js --out-dir src/ui/components/assets/svgr src/ui/components/assets/"
   },
   "dependencies": {
