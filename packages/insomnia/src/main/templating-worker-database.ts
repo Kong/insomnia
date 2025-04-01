@@ -30,6 +30,30 @@ export const resolveDbByKey = async (request: Request) => {
     if (url.host === 'response.getBodyBuffer'.toLowerCase()) {
         result = await models.response.getBodyBuffer(body.response, body.readFailureValue);
     }
+    if (url.host === 'pluginData.hasItem'.toLowerCase()) {
+        const doc = await models.pluginData.getByKey(body.pluginName, body.key);
+        result = doc !== null;
+    }
+    if (url.host === 'pluginData.setItem'.toLowerCase()) {
+        result = models.pluginData.upsertByKey(body.pluginName, body.key, String(body.value));
+    }
+    if (url.host === 'pluginData.getItem'.toLowerCase()) {
+        const doc = await models.pluginData.getByKey(body.pluginName, body.key);
+        result = doc ? doc.value : null;
+    }
+    if (url.host === 'pluginData.removeItem'.toLowerCase()) {
+        result = models.pluginData.removeByKey(body.pluginName, body.key);
+    }
+    if (url.host === 'pluginData.clear'.toLowerCase()) {
+        result = models.pluginData.removeAll(body.pluginName);
+    }
+    if (url.host === 'pluginData.all'.toLowerCase()) {
+        const docs = await models.pluginData.all(body.pluginName) || [];
+        result = docs.map(d => ({
+            value: d.value,
+            key: d.key,
+        }));
+    }
     if (url.host === 'network.sendRequest'.toLowerCase()) {
         const { request,
             environment,

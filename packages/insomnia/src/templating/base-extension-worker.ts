@@ -141,8 +141,53 @@ export default class BaseExtension {
           clear: () => electron.clipboard.clear(),
         },
       },
-      // @ts-expect-error -- TODO
-      store: {},
+      store: {
+        hasItem: async (key: string) => {
+          const resp = await fetch('insomnia-templating-worker-database://pluginData.hasItem', {
+            method: 'post',
+            body: JSON.stringify({ pluginName: this._plugin?.name, key }),
+          });
+
+          const body = await resp.json();
+          return body;
+        },
+        setItem: async (key: string, value: string) => {
+          await fetch('insomnia-templating-worker-database://pluginData.setItem', {
+            method: 'post',
+            body: JSON.stringify({ pluginName: this._plugin?.name, key, value }),
+          });
+        },
+        getItem: async (key: string) => {
+          const resp = await fetch('insomnia-templating-worker-database://pluginData.getItem', {
+            method: 'post',
+            body: JSON.stringify({ pluginName: this._plugin?.name, key }),
+          });
+
+          const body = await resp.json();
+          return body;
+        },
+        removeItem: async (key: string) => {
+          await fetch('insomnia-templating-worker-database://pluginData.removeItem', {
+            method: 'post',
+            body: JSON.stringify({ pluginName: this._plugin?.name, key }),
+          });
+        },
+        clear: async () => {
+          await fetch('insomnia-templating-worker-database://pluginData.removeItem', {
+            method: 'post',
+            body: JSON.stringify({ pluginName: this._plugin?.name }),
+          });
+        },
+        all: async (): Promise<{ key: string; value: string }[]> => {
+          const resp = await fetch('insomnia-templating-worker-database://pluginData.getItem', {
+            method: 'post',
+            body: JSON.stringify({ pluginName: this._plugin?.name }),
+          });
+
+          const body = await resp.json();
+          return body;
+        },
+      },
       network: {
         sendRequest: async (request: Request, extraInfo?: { requestChain: string[] }): Promise<Response> => {
           const resp = await fetch('insomnia-templating-worker-database://network.sendRequest', {
