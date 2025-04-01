@@ -1742,7 +1742,7 @@ export const createCloudCredentialAction: ActionFunction = async ({ request }) =
         await models.cloudCredential.update(existingCredential[0], patch);
       }
       return credentials;
-    } else {
+    }
       const authenciateResponse = await window.main.cloudService.authenticate({ provider, credentials });
       const { success, error, result } = authenciateResponse!;
       if (success) {
@@ -1759,7 +1759,7 @@ export const createCloudCredentialAction: ActionFunction = async ({ request }) =
         };
       }
       return result;
-    }
+
   }
   return { error: 'Invalid paramters for creating cloud credential' };
 };

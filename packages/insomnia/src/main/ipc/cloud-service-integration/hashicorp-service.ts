@@ -123,11 +123,11 @@ export class HashiCorpService implements ICloudService {
               expires_at: timeNow + expires_in * 1000,
             },
           };
-        } else {
+        }
           const errorResult = await this._parseResponseError(authResponse);
           return errorResult;
-        }
-      } else {
+
+      }
         const { authMethod, serverAddress } = this._credential;
         const finalUrl = serverAddress.endsWith('/') ? serverAddress.substring(0, serverAddress.length - 1) : serverAddress;
         if (authMethod === HashiCorpVaultAuthMethod.appRole) {
@@ -155,10 +155,10 @@ export class HashiCorpService implements ICloudService {
                 expires_at: timeNow + lease_duration * 1000,
               },
             };
-          } else {
+          }
             const errorResult = await this._parseResponseError(authResponse);
             return errorResult;
-          }
+
         } else if (authMethod === HashiCorpVaultAuthMethod.token) {
           const { access_token } = this._credential;
           const requestConfig: RequestInit = {
@@ -182,18 +182,16 @@ export class HashiCorpService implements ICloudService {
                 expires_at: ttl === neverExpireTokenTTL ? neverExpireTokenTTL : timeNow + ttl * 1000,
               },
             };
-          } else {
+          }
             const errorResult = await this._parseResponseError(authResponse);
             return errorResult;
-          }
-        } else {
+
+        }
           return {
             success: false,
             result: null,
             error: { errorMessage: `Invalid type ${type} with authMethod ${authMethod} for HashiCorp`, errorCode: '' },
           };
-        }
-      };
     } catch (error) {
       return {
         success: false,
@@ -214,7 +212,7 @@ export class HashiCorpService implements ICloudService {
       const uniqueKey = `${providerName}:${organizationId}:${projectId}:${appName}:${type}:${secretName}:${version || 'latest'}`;
       const uniqueKeyHash = crypto.createHash('md5').update(uniqueKey).digest('hex');
       return uniqueKeyHash;
-    } else {
+    }
       const { kvVersion, secretEnginePath } = config as HashiCorpVaultKVV1SecretConfig | HashiCorpVaultKVV2SecretConfig;
       switch (kvVersion) {
         case 'v1':
@@ -229,7 +227,7 @@ export class HashiCorpService implements ICloudService {
         default:
           return defaultUniqueKeyHash;
       }
-    }
+
   };
 
   async getSecret(secretName: string, config: HashiCorpSecretConfig): Promise<CloudServiceResult<HashiCorpGetSecretValue>> {
@@ -255,11 +253,11 @@ export class HashiCorpService implements ICloudService {
               success: true,
               result: secretResponseBody,
             };
-          } else {
+          }
             const errorResult = await this._parseResponseError(secretResponse);
             return errorResult;
-          }
-        } else {
+
+        }
           // kv version v2
           const { version } = config as HashiCorpVaultKVV2SecretConfig;
           let v2Url = `${finalUrl}/v1/${secretEnginePath}/data/${secretName}`;
@@ -283,12 +281,11 @@ export class HashiCorpService implements ICloudService {
               success: true,
               result: secretResponseBody,
             };
-          } else {
+          }
             const errorResult = await this._parseResponseError(secretResponse);
             return errorResult;
-          }
-        }
-      } else {
+
+      }
         // cloud vault
         const { organizationId, projectId, appName, version } = config as HCPSecretConfig;
         const secretRequestBaseUrl = `${hcp_api_url}/secrets/${hcp_api_version}/organizations/${organizationId}/projects/${projectId}/apps/${appName}/secrets/${secretName}`;
@@ -315,11 +312,10 @@ export class HashiCorpService implements ICloudService {
             success: true,
             result: secretResult,
           };
-        } else {
+        }
           const errorResult = await this._parseResponseError(secretResponse);
           return errorResult;
-        }
-      }
+
     } catch (error) {
       return {
         success: false,

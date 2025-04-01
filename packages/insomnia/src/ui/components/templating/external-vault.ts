@@ -50,7 +50,7 @@ export const getAWSSecret = async (context: PluginTemplateTagContext, secretConf
     let parsedJSON;
     if (SecretType === 'plaintext' || !SecretKey) {
       return SecretString;
-    } else {
+    }
       try {
         parsedJSON = JSON.parse(SecretString || '{}');
       } catch (error) {
@@ -60,7 +60,7 @@ export const getAWSSecret = async (context: PluginTemplateTagContext, secretConf
         return parsedJSON[SecretKey];
       }
       throw new Error(`Get secret from AWS failed: Secret key ${SecretKey} does not exist in key/value secret ${SecretString}`);
-    }
+
   } else {
     throw new Error(`Get secret from AWS failed: ${error?.errorMessage}`);
   }
@@ -81,9 +81,9 @@ export const getGCPSecret = async (context: PluginTemplateTagContext, secretConf
   const { success, error, result } = secretResult;
   if (success && result) {
     return result.value;
-  } else {
-    throw new Error(`Get secret from GCP failed: ${error?.errorMessage}`);
   }
+    throw new Error(`Get secret from GCP failed: ${error?.errorMessage}`);
+
 };
 
 export const getHashiCorpSecret = async (context: PluginTemplateTagContext, secretConfig: HashiCorpSecretConfig, providerCredential: CloudProviderCredential) => {
@@ -142,7 +142,7 @@ export const getHashiCorpSecret = async (context: PluginTemplateTagContext, secr
       // cloud static secret value
       const { value } = result as HCPStaticSecretValue;
       return value;
-    } else {
+    }
       const { kvVersion, secretKey } = secretConfig as HashiCorpVaultKVV1SecretConfig | HashiCorpVaultKVV2SecretConfig;
       if (kvVersion === 'v1') {
         // onPrem kv v1 secert value
@@ -150,9 +150,9 @@ export const getHashiCorpSecret = async (context: PluginTemplateTagContext, secr
         if (secretKey) {
           if (secretKey in data) {
             return data[secretKey];
-          } else {
-            throw new Error(`Secret key ${secretKey} does not exist in kv secert data ${JSON.stringify(data)}`);
           }
+            throw new Error(`Secret key ${secretKey} does not exist in kv secert data ${JSON.stringify(data)}`);
+
         } else {
           return JSON.stringify(data);
         }
@@ -163,16 +163,16 @@ export const getHashiCorpSecret = async (context: PluginTemplateTagContext, secr
         if (secretKey) {
           if (secretKey in secretV2Data) {
             return secretV2Data[secretKey];
-          } else {
-            throw new Error(`Secret key ${secretKey} does not exist in kv secert data ${JSON.stringify(secretV2Data)}`);
           }
+            throw new Error(`Secret key ${secretKey} does not exist in kv secert data ${JSON.stringify(secretV2Data)}`);
+
         } else {
           return JSON.stringify(secretV2Data);
         }
       };
-    };
+    ;
     return result.toString();
-  } else {
-    throw new Error(error?.errorMessage);
   }
+    throw new Error(error?.errorMessage);
+
 };
