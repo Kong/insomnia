@@ -1,9 +1,8 @@
-import electron from 'electron';
-
 import { getAppPlatform, getAppVersion } from '../common/constants';
+import type { Request } from '../models/request';
+import type { Response } from '../models/response';
 import type { Workspace } from '../models/workspace';
 import type { Plugin } from '../plugins/index';
-import { invariant } from '../utils/invariant';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
 import * as templating from './worker';
 export function decodeEncoding<T>(value: T) {
@@ -108,41 +107,91 @@ export default class BaseExtension {
     const helperContext: PluginTemplateTagContext = {
       app: {
         alert: () => {
-          throw new Error('Not implemented');
+          throw new Error('Not available in safe mode, this can be enabled in plugin settings');
         },
         dialog: () => {
-          throw new Error('Not implemented');
+          throw new Error('Not available in safe mode, this can be enabled in plugin settings');
         },
         prompt: () => {
-          throw new Error('Not implemented');
+          throw new Error('Not available in safe mode, this can be enabled in plugin settings');
         },
-        getPath: (name: string) => {
-          invariant(name.toLowerCase() === 'desktop', `Unknown path name ${name}`);
-          return electron.app.getPath('desktop');
+        getPath: () => {
+          throw new Error('Not available in safe mode, this can be enabled in plugin settings');
         },
         getInfo: () => ({ version: getAppVersion(), platform: getAppPlatform() }),
-        showSaveDialog: async (options = {}) => {
-          const sendOrNoRender = renderPurpose === 'send' || renderPurpose === 'no-render';
-          if (!sendOrNoRender) {
-            return null;
-          }
-          const { filePath } = await electron.dialog.showSaveDialog({
-            title: 'Save File',
-            buttonLabel: 'Save',
-            defaultPath: options.defaultPath,
-          });
-          return filePath || null;
+        showSaveDialog: async () => {
+          throw new Error('Not available in safe mode, this can be enabled in plugin settings');
         },
         clipboard: {
-          readText: () => electron.clipboard.readText(),
-          writeText: text => electron.clipboard.writeText(text),
-          clear: () => electron.clipboard.clear(),
+          readText: () => {
+            throw new Error('Not available in safe mode, this can be enabled in plugin settings');
+          },
+          writeText: () => {
+            throw new Error('Not available in safe mode, this can be enabled in plugin settings');
+          },
+          clear: () => {
+            throw new Error('Not available in safe mode, this can be enabled in plugin settings');
+          },
         },
       },
-      // @ts-expect-error -- TODO
-      store: {},
-      // @ts-expect-error -- TODO
-      network: {},
+      store: {
+        hasItem: async (key: string) => {
+          const resp = await fetch('insomnia-templating-worker-database://pluginData.hasItem', {
+            method: 'post',
+            body: JSON.stringify({ pluginName: this._plugin?.name, key }),
+          });
+
+          const body = await resp.json();
+          return body;
+        },
+        setItem: async (key: string, value: string) => {
+          await fetch('insomnia-templating-worker-database://pluginData.setItem', {
+            method: 'post',
+            body: JSON.stringify({ pluginName: this._plugin?.name, key, value }),
+          });
+        },
+        getItem: async (key: string) => {
+          const resp = await fetch('insomnia-templating-worker-database://pluginData.getItem', {
+            method: 'post',
+            body: JSON.stringify({ pluginName: this._plugin?.name, key }),
+          });
+
+          const body = await resp.json();
+          return body;
+        },
+        removeItem: async (key: string) => {
+          await fetch('insomnia-templating-worker-database://pluginData.removeItem', {
+            method: 'post',
+            body: JSON.stringify({ pluginName: this._plugin?.name, key }),
+          });
+        },
+        clear: async () => {
+          await fetch('insomnia-templating-worker-database://pluginData.removeItem', {
+            method: 'post',
+            body: JSON.stringify({ pluginName: this._plugin?.name }),
+          });
+        },
+        all: async (): Promise<{ key: string; value: string }[]> => {
+          const resp = await fetch('insomnia-templating-worker-database://pluginData.getItem', {
+            method: 'post',
+            body: JSON.stringify({ pluginName: this._plugin?.name }),
+          });
+
+          const body = await resp.json();
+          return body;
+        },
+      },
+      network: {
+        sendRequest: async (request: Request, extraInfo?: { requestChain: string[] }): Promise<Response> => {
+          const resp = await fetch('insomnia-templating-worker-database://network.sendRequest', {
+            method: 'post',
+            body: JSON.stringify({ request, extraInfo }),
+          });
+
+          const body = await resp.json();
+          return body as Response;
+        },
+      },
       context: renderContext,
       meta: renderMeta,
       renderPurpose,

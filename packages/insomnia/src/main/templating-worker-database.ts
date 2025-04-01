@@ -3,6 +3,7 @@ import * as models from '../models';
 import type { Request as DBRequest } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Workspace } from '../models/workspace';
+import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
 import { cloudServiceProviderAuthentication, getSecret } from './ipc/cloud-service-integration/cloud-service';
 
 export const resolveDbByKey = async (request: Request) => {
@@ -41,6 +42,51 @@ export const resolveDbByKey = async (request: Request) => {
     }
     if (url.host === 'response.getBodyBuffer'.toLowerCase()) {
         result = await models.response.getBodyBuffer(body.response, body.readFailureValue);
+    }
+    if (url.host === 'pluginData.hasItem'.toLowerCase()) {
+        const doc = await models.pluginData.getByKey(body.pluginName, body.key);
+        result = doc !== null;
+    }
+    if (url.host === 'pluginData.setItem'.toLowerCase()) {
+        result = models.pluginData.upsertByKey(body.pluginName, body.key, String(body.value));
+    }
+    if (url.host === 'pluginData.getItem'.toLowerCase()) {
+        const doc = await models.pluginData.getByKey(body.pluginName, body.key);
+        result = doc ? doc.value : null;
+    }
+    if (url.host === 'pluginData.removeItem'.toLowerCase()) {
+        result = models.pluginData.removeByKey(body.pluginName, body.key);
+    }
+    if (url.host === 'pluginData.clear'.toLowerCase()) {
+        result = models.pluginData.removeAll(body.pluginName);
+    }
+    if (url.host === 'pluginData.all'.toLowerCase()) {
+        const docs = await models.pluginData.all(body.pluginName) || [];
+        result = docs.map(d => ({
+            value: d.value,
+            key: d.key,
+        }));
+    }
+    if (url.host === 'network.sendRequest'.toLowerCase()) {
+        const { request,
+            environment,
+            settings,
+            clientCertificates,
+            caCert,
+            timelinePath,
+            responseId,
+        } = await fetchRequestData(body.request._id);
+
+        const renderResult = await tryToInterpolateRequest({ request, environment: environment._id, purpose: 'send', extraInfo: body.extraInfo });
+        const response = await sendCurlAndWriteTimeline(
+            renderResult.request,
+            clientCertificates,
+            caCert,
+            settings,
+            timelinePath,
+            responseId
+        );
+        result = await models.response.create({ ...response, bodyCompression: null }, settings.maxHistoryResponses);
     }
 
     return new Response(JSON.stringify(result));

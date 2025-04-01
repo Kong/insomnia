@@ -1,0 +1,97 @@
+type: collection.insomnia.rest/5.0
+name: test chains
+meta:
+  id: wrk_99f6f391d4564778a68e3eed275b69d6
+  created: 1743513876980
+  modified: 1743513876980
+collection:
+  - url: localhost:4010/echo
+    name: first
+    meta:
+      id: req_2f12c17ddab14f22ae962c73097aa5a1
+      created: 1743513001176
+      modified: 1743514003181
+      isPrivate: false
+      sortKey: -1743513335718
+    method: GET
+    body:
+      mimeType: text/plain
+      text: first
+    headers:
+      - name: Content-Type
+        value: text/plain
+      - name: User-Agent
+        value: insomnia/11.0.2-beta.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: localhost:4010/echo
+    name: second
+    meta:
+      id: req_2a2e2c0ed386426597388319f608ca6b
+      created: 1743513102015
+      modified: 1743514045148
+      isPrivate: false
+      sortKey: -1743513335668
+    method: GET
+    body:
+      mimeType: text/plain
+      text: "{% response 'body', 'req_2f12c17ddab14f22ae962c73097aa5a1',
+        'b64::JC5kYXRh::46b', 'always', 60 %} and second"
+    headers:
+      - name: Content-Type
+        value: text/plain
+      - name: User-Agent
+        value: insomnia/11.0.2-beta.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: localhost:4010/echo
+    name: third
+    meta:
+      id: req_abeede7e313642bfba09a7fa8b8cdf62
+      created: 1743513335618
+      modified: 1743514047701
+      isPrivate: false
+      sortKey: -1743513335618
+    method: GET
+    body:
+      mimeType: text/plain
+      text: "{% response 'body', 'req_2a2e2c0ed386426597388319f608ca6b',
+        'b64::JC5kYXRh::46b', 'always', 60 %} and third"
+    headers:
+      - name: Content-Type
+        value: text/plain
+      - name: User-Agent
+        value: insomnia/11.0.2-beta.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_f8b0fe46acd746aeb74f6166e296f9e3
+    created: 1743512996853
+    modified: 1743512996853
+environments:
+  name: Base Environment
+  meta:
+    id: env_56e6d84b14394efdbf166ff23057a61f
+    created: 1743512996853
+    modified: 1743512996853
+    isPrivate: false
