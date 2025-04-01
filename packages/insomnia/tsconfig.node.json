@@ -33,6 +33,7 @@
     "vitest.config.ts",
   ],
   "exclude": [
+    "**/global.d.ts",
     "node_modules",
     "src/coverage",
     "src/main.min.js",
