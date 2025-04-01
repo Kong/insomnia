@@ -275,7 +275,7 @@ const TestRoute: FC = () => {
     if (settings.forceVerticalLayout) {
       setDirection('vertical');
       return () => { };
-    } else {
+    }
       // Listen on media query changes
       const mediaQuery = window.matchMedia('(max-width: 880px)');
       setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
@@ -289,7 +289,7 @@ const TestRoute: FC = () => {
       return () => {
         mediaQuery.removeEventListener('change', handleChange);
       };
-    }
+
   }, [settings.forceVerticalLayout, direction]);
 
   useInsomniaTab({

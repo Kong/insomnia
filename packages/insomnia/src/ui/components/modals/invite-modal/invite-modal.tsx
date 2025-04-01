@@ -544,7 +544,7 @@ export const InviteModalContainer: FC<{
 
   if (loadingOrgInfo || !organizationId || !isOpen) {
     return null;
-  } else {
+  }
     invariant(currentUserRoleInOrg, 'currentUserRoleInOrg should not be null');
     invariant(orgFeatures, 'orgFeatures should not be null');
 
@@ -562,10 +562,10 @@ export const InviteModalContainer: FC<{
           revalidateCurrentUserRoleAndPermissionsInOrg={revalidateCurrentUserRoleAndPermissionsInOrg}
         />
       );
-    } else {
-      return null;
     }
-  };
+      return null;
+
+  ;
 };
 
 function checkPermissionRefType(permissionRef: MutableRefObject<Record<Permission, boolean> | undefined>): permissionRef is MutableRefObject<Record<Permission, boolean>> {

@@ -681,7 +681,7 @@ export const sendActionImplementation = async (options: {
       ? contentDisposition.parse(header.value).parameters.filename
       : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.${responsePatch.contentType && mimeExtension(responsePatch.contentType) || 'unknown'}`;
     return writeToDownloadPath(path.join(requestMeta.downloadPath, name), responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
-  } else {
+  }
     const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
     const { filePath } = await window.dialog.showSaveDialog({
       title: 'Select Download Location',
@@ -694,7 +694,7 @@ export const sendActionImplementation = async (options: {
     }
     window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
     return writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
-  }
+
 };
 
 export const createAndSendToMockbinAction: ActionFunction = async ({ request }) => {

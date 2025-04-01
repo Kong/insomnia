@@ -62,12 +62,12 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
     const content = await readFile(path, 'utf8');
 
     return content;
-  } else {
-    // Treat everything else as raw text
-    const content = decodeURIComponent(uri);
-
-    return content;
   }
+  // Treat everything else as raw text
+  const content = decodeURIComponent(uri);
+
+  return content;
+
 }
 
 export interface ImportFileDetail {

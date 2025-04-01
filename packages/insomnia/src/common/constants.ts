@@ -129,12 +129,12 @@ export const getMockServiceURL = () => env.INSOMNIA_MOCK_API_URL || 'https://moc
 export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
   if (!mockServer.useInsomniaCloud) {
     return `${mockServer.url}/bin/${mockServer._id}${path}`;
-  } else {
-    const baseUrl = getMockServiceURL();
-    const url = new URL(baseUrl);
-    url.host = mockServer._id.replace('_', '-') + '.' + url.host;
-    return url.origin + path;
   }
+  const baseUrl = getMockServiceURL();
+  const url = new URL(baseUrl);
+  url.host = mockServer._id.replace('_', '-') + '.' + url.host;
+  return url.origin + path;
+
 };
 
 export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai-helper.insomnia.rest';
@@ -376,9 +376,9 @@ export type PreviewMode = 'friendly' | 'source' | 'raw';
 export function getPreviewModeName(previewMode: PreviewMode, useLong = false) {
   if (previewModeMap.hasOwnProperty(previewMode)) {
     return useLong ? previewModeMap[previewMode][1] : previewModeMap[previewMode][0];
-  } else {
-    return '';
   }
+  return '';
+
 }
 export function getMimeTypeFromContentType(contentType: string) {
   // Check if the Content-Type header is provided
@@ -410,9 +410,9 @@ export function getContentTypeName(contentType?: string | null, useLong = false)
 export function getAuthTypeName(authType?: string, useLong = false) {
   if (authType && authTypesMap.hasOwnProperty(authType)) {
     return useLong ? authTypesMap[authType][1] : authTypesMap[authType][0];
-  } else {
-    return 'Auth';
   }
+  return 'Auth';
+
 }
 
 export function getContentTypeFromHeaders(headers: any[], defaultValue: string | null = null) {

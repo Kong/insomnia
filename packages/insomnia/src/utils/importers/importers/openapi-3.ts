@@ -563,9 +563,9 @@ const prepareBody = (endpointSchema: OpenAPIV3.OperationObject): ImportRequest['
     return {
       mimeType: mimeTypes[0] || undefined,
     };
-  } else {
-    return {};
   }
+    return {};
+
 };
 
 /**
@@ -619,9 +619,9 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
 
       if (schema.collectionFormat === 'csv') {
         return value;
-      } else {
-        return [value];
       }
+        return [value];
+
     },
   };
 

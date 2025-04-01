@@ -139,10 +139,10 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         });
 
         return true;
-      } else {
+      }
         navigate(file.url);
         return null;
-      }
+
     },
   })) || [];
 
@@ -184,10 +184,10 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
         });
 
         return true;
-      } else {
+      }
         navigate(file.url);
         return null;
-      }
+
     },
   })) || [];
 

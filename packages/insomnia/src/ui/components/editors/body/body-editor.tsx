@@ -130,7 +130,7 @@ export const BodyEditor: FC<Props> = ({
           title="Enter a URL and connect to start receiving event stream data"
         />
       );
-    } else {
+    }
       return (
         <EmptyStatePane
           icon={<SvgIcon icon="bug" />}
@@ -139,7 +139,7 @@ export const BodyEditor: FC<Props> = ({
           title="Enter a URL and send to get a response"
         />
       );
-    }
+
   }
 
   return (

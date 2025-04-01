@@ -490,9 +490,9 @@ function getCompletionHints(completionItems: CompletionItem[], segment: string, 
 
   if (limit >= 0) {
     return matches.slice(0, limit);
-  } else {
-    return matches;
   }
+    return matches;
+
 }
 
 /**

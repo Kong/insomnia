@@ -85,9 +85,9 @@ export function generateId(prefix?: string) {
 
   if (prefix) {
     return `${prefix}_${id}`;
-  } else {
-    return id;
   }
+  return id;
+
 }
 
 export function delay(milliseconds: number = DEBOUNCE_MILLIS) {
@@ -156,9 +156,9 @@ export function describeByteSize(bytes: number, long = false) {
 export function fnOrString(v: string | ((...args: any[]) => any), ...args: any[]) {
   if (typeof v === 'string') {
     return v;
-  } else {
-    return v(...args);
   }
+  return v(...args);
+
 }
 
 export function compressObject(obj: any) {

@@ -131,9 +131,9 @@ const normalizeMimeType = (mode?: string) => {
     // code-mirror doesn't recognize text/yaml or application/yaml
     // as a valid mime-type
     return 'yaml';
-  } else {
-    return mimeType;
   }
+    return mimeType;
+
 };
 export interface CodeEditorHandle {
   setValue: (value: string) => void;

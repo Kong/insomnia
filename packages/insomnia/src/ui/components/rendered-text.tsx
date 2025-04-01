@@ -59,9 +59,9 @@ class RenderedTextInternal extends PureComponent<Props, State> {
           {this.state.error || 'Unknown Error'}
         </span>
       );
-    } else {
-      return this.state.renderedText || '';
     }
+      return this.state.renderedText || '';
+
   }
 }
 

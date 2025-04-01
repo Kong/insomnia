@@ -358,9 +358,9 @@ const OAuth2TokenInput: FC<{ token: OAuth2Token | null; label: string; property:
       return token && renderIdentityTokenExpiry(token);
     } else if (property === 'accessToken') {
       return token && renderAccessTokenExpiry(token);
-    } else {
-      return null;
     }
+      return null;
+
   }, [property, token]);
 
   const id = toKebabCase(label);

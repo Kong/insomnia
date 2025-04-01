@@ -58,9 +58,9 @@ export class GitProjectNeDBClient {
 
       if (options.encoding) {
         return raw.toString(options.encoding);
-      } else {
-        return raw;
       }
+        return raw;
+
     } catch (err) {
       throw this._errMissing(filePath);
     }
@@ -189,7 +189,7 @@ export class GitProjectNeDBClient {
         ino: doc?.meta?.id,
         mtimeMs: doc?.meta?.modified || 0,
       });
-    } else {
+    }
       return new Stat({
         type: 'dir',
         mode: 0o777,
@@ -197,7 +197,7 @@ export class GitProjectNeDBClient {
         ino: 0,
         mtimeMs: 0,
       });
-    }
+
   }
 
   async readlink(filePath: string, ...x: any[]) {

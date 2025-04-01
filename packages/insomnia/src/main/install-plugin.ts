@@ -273,17 +273,17 @@ function _getYarnPath() {
   // TODO: This is brittle. Make finding this more robust.
   if (isDevelopment()) {
     return path.resolve(app.getAppPath(), './bin/yarn-standalone.js');
-  } else {
-    return path.resolve(app.getAppPath(), '../bin/yarn-standalone.js');
   }
+  return path.resolve(app.getAppPath(), '../bin/yarn-standalone.js');
+
 }
 
 function escape(p: string) {
   if (isWindows()) {
     // Quote for Windows paths
     return `"${p}"`;
-  } else {
-    // Escape whitespace and parenthesis with backslashes for Unix paths
-    return p.replace(/([\s()])/g, '\\$1');
   }
+  // Escape whitespace and parenthesis with backslashes for Unix paths
+  return p.replace(/([\s()])/g, '\\$1');
+
 }

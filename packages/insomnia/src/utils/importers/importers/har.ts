@@ -54,12 +54,12 @@ const importPostData = (postData?: Har.PostData): Body => {
         ...(fileName ? { fileName } : { value }),
       })),
     };
-  } else {
+  }
     return {
       mimeType,
       text,
     };
-  }
+
 };
 
 const importRequest = (request: ImportRequest): ImportRequest => {
