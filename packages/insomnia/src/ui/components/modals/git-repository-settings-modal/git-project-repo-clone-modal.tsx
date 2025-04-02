@@ -10,11 +10,11 @@ import { ModalBody } from '../../base/modal-body';
 import { ModalFooter } from '../../base/modal-footer';
 import { ModalHeader } from '../../base/modal-header';
 import { ErrorBoundary } from '../../error-boundary';
+import { CustomRepositorySettingsFormGroup } from '../../git-credentials/custom-repository-settings-form';
+import { GitHubRepositorySetupFormGroup } from '../../git-credentials/github-repository-settings-form';
+import { GitLabRepositorySetupFormGroup } from '../../git-credentials/gitlab-repository-settings-form';
 import { HelpTooltip } from '../../help-tooltip';
 import { showAlert } from '..';
-import { CustomRepositorySettingsFormGroup } from './custom-repository-settings-form-group';
-import { GitHubRepositorySetupFormGroup } from './github-repository-settings-form-group';
-import { GitLabRepositorySetupFormGroup } from './gitlab-repository-settings-form-group';
 
 export const GitProjectRepositoryCloneModal = (props: ModalProps) => {
   const { organizationId } = useParams() as { organizationId: string };
@@ -87,7 +87,7 @@ export const GitProjectRepositoryCloneModal = (props: ModalProps) => {
             aria-label='Git repository settings tabs'
             className="flex-1 w-full h-full flex flex-col"
           >
-            <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+            <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
               <Tab
                 className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
                 id='github'
