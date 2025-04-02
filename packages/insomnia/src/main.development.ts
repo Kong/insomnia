@@ -3,6 +3,7 @@ import { BrowserWindow } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import fs from 'fs/promises';
+import { plusAndTime } from 'insomnia-enterprise';
 import path from 'path';
 
 import { userDataFolder } from '../config/config.json';
@@ -28,6 +29,8 @@ import * as models from './models/index';
 import type { Project, RemoteProject } from './models/project';
 import type { Stats } from './models/stats';
 import type { ToastNotification } from './ui/components/toast';
+
+console.log('import enterprise from main process', plusAndTime(1, 2, 3));
 
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage

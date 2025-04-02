@@ -70,9 +70,12 @@ export default async function build(options: Options) {
     external: [
       'electron',
       '@getinsomnia/node-libcurl',
-      ...Object.keys(pkg.dependencies),
+      ...(Object.keys(pkg.dependencies).filter(pkg => pkg !== 'insomnia-enterprise')),
       ...Object.keys(builtinModules),
     ],
+    alias: process.env.USE_SUBMODULE ? {
+      'insomnia-enterprise': path.resolve(__dirname, '../../insomnia-submodule/lib/index.ts'),
+    } : undefined,
   });
 
   return Promise.all([
