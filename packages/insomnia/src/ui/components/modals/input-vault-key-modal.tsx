@@ -32,7 +32,7 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
       const newVaultKey = resetVaultKeyFetcher.data;
       setVaultKey(newVaultKey);
       setResetDone(true);
-    };
+    }
   }, [resetVaultKeyFetcher.data, resetVaultKeyFetcher.state]);
 
   useEffect(() => {
@@ -46,7 +46,7 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
       // close modal and return user input vault key if srp validation success
       if (validateVaultKeyFetcher.data && !validateVaultKeyFetcher.data.error && validateVaultKeyFetcher.state === 'idle') {
         onClose(validateVaultKeyFetcher.data.vaultKey);
-      };
+      }
     })();
   }, [validateVaultKeyFetcher.data, validateVaultKeyFetcher.state, onClose, userSession]);
 

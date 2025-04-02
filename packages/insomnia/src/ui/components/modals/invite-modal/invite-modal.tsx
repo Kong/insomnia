@@ -439,7 +439,7 @@ interface PaginationBarProps {
   isHidden?: boolean;
   onPrevPress?: () => void;
   onNextPress?: () => void;
-};
+}
 
 const PaginationBar = ({ isNextDisabled, isPrevDisabled, isHidden, onPrevPress, onNextPress }: PaginationBarProps) => {
   if (isHidden) {
@@ -565,7 +565,6 @@ export const InviteModalContainer: FC<{
     }
       return null;
 
-  ;
 };
 
 function checkPermissionRefType(permissionRef: MutableRefObject<Record<Permission, boolean> | undefined>): permissionRef is MutableRefObject<Record<Permission, boolean>> {
@@ -603,18 +602,18 @@ export async function getCurrentUserPermissionsInOrg(
 export interface FeatureStatus {
   enabled: boolean;
   reason?: string;
-};
+}
 
 export interface OrgFeatures {
   gitSync: FeatureStatus;
   orgBasicRbac: FeatureStatus;
   cloudSync: FeatureStatus;
   localVault: FeatureStatus;
-};
+}
 
 export interface Features {
   features: OrgFeatures;
-};
+}
 
 async function getOrganizationFeatures(
   organizationId: string,
@@ -656,7 +655,7 @@ export async function getCurrentUserRoleInOrg(organizationId: string): Promise<R
 export interface OrganizationBranding {
   logo_url: string;
   colors: string[];
-};
+}
 
 export type OrganizationType = 'personal' | 'team' | 'enterprise';
 
@@ -664,7 +663,7 @@ export interface Metadata {
   organizationType: OrganizationType;
   ownerAccountId?: string;
   description?: string;
-};
+}
 
 export interface OrganizationAuth0 {
   id: string;
@@ -672,7 +671,7 @@ export interface OrganizationAuth0 {
   display_name: string;
   branding: OrganizationBranding;
   metadata: Metadata;
-};
+}
 
 async function getOrganization(
   organizationId: string,

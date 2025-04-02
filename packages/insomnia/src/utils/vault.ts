@@ -32,7 +32,7 @@ export const decryptVaultKeyFromSession = async (vaultKey: string, toJsonWebKey:
     const decryptedVaultKey = await window.main.secretStorage.decryptString(vaultKey);
     if (toJsonWebKey) {
       return base64decode(decryptedVaultKey, true);
-    };
+    }
     return decryptedVaultKey;
   }
   return '';

@@ -38,7 +38,7 @@ export interface EmailInput {
   isValid: boolean;
   picture?: string;
   teamId?: string;
-};
+}
 
 const isValidEmail = (email: string): boolean => {
   const emailRegex = new RegExp(
@@ -325,7 +325,7 @@ export interface GroupMemberKey {
   organizationId: string;
   projectId: string;
   encKey: string;
-};
+}
 
 export async function updateInvitationRole(roleId: string, invitationId: string, organizationId: string) {
   return insomniaFetch({

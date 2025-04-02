@@ -41,7 +41,7 @@ export interface BaseEnvironment {
 export enum EnvironmentType {
   JSON = 'json',
   KVPAIR = 'kv'
-};
+}
 export enum EnvironmentKvPairDataType {
   JSON = 'json',
   STRING = 'str',
@@ -83,7 +83,7 @@ export function getKVPairFromData(data: Record<string, any>, dataPropertyOrder: 
         type: isValidObject ? EnvironmentKvPairDataType.JSON : EnvironmentKvPairDataType.STRING,
         enabled: true,
       });
-    };
+    }
   });
   return kvPair;
 }
@@ -97,7 +97,7 @@ export function getDataFromKVPair(kvPair: EnvironmentKvPairData[]) {
         if (!data[vaultEnvironmentPath]) {
           // create object storing all secret items
           data[vaultEnvironmentPath] = {};
-        };
+        }
         data[vaultEnvironmentPath][name] = value;
       } else {
         data[name] = type === EnvironmentKvPairDataType.JSON ? JSON.parse(value) : value;
@@ -126,7 +126,7 @@ export const maskVaultEnvironmentData = (environment: Environment) => {
         data[vaultEnvironmentPath][vaultKey] = vaultEnvironmentMaskValue;
       });
     }
-  };
+  }
   return environment;
 };
 

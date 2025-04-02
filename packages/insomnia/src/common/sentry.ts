@@ -17,7 +17,7 @@ export const enum SentryMetrics {
   ORGANIZATION_SWITCH_DURATION = 'organization_switch_duration',
   PROJECT_SWITCH_DURATION = 'project_switch_duration',
   CLOUD_SYNC_DURATION = 'cloud_sync_duration',
-};
+}
 
 export const enum LandingPage {
   ProjectDashboard = 'projectDashboard',

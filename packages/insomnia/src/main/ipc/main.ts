@@ -114,7 +114,7 @@ export function registerMainHandlers() {
       if (iconv.encodingExists(encoding)) {
         const content = iconv.decode(contentBuffer, encoding);
         return { content, encoding };
-      };
+      }
       throw new Error(`Unsupported encoding: ${encoding} to read file`);
     }
     // using chardet to detect encoding
@@ -123,7 +123,7 @@ export function registerMainHandlers() {
       if (iconv.encodingExists(detecedEncoding)) {
         const content = iconv.decode(contentBuffer, detecedEncoding);
         return { content, encoding: detecedEncoding };
-      };
+      }
       throw new Error(`Unsupported encoding: ${detecedEncoding} to read file`);
     }
     // failed to detect encoding, use default utf-8 as fallback

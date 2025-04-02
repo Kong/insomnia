@@ -11,7 +11,7 @@ interface PaginatedList {
   length: number;
   total: number;
   next: string;
-};
+}
 
 export type CollaboratorType = 'invite' | 'member' | 'group';
 
@@ -23,7 +23,7 @@ interface CollaboratorMetadata {
   userId?: string;
   expiresAt?: string;
   groupTotal?: number;
-};
+}
 
 export interface Collaborator {
   id: string;
@@ -32,7 +32,7 @@ export interface Collaborator {
   name: string;
   createdAt?: string;
   metadata: CollaboratorMetadata;
-};
+}
 
 export type CollaboratorsListLoaderResult = PaginatedList & {
   collaborators: Collaborator[];
@@ -76,7 +76,7 @@ export interface CollaboratorSearchResultItem {
   picture: string;
   type: CollaboratorType;
   name: string;
-};
+}
 
 export type CollaboratorSearchLoaderResult = CollaboratorSearchResultItem[];
 

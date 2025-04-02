@@ -182,7 +182,7 @@ export async function buildRenderContext(
     finalRenderContext = await renderSubContext(envObject, finalRenderContext);
   }
 
-  finalRenderContext[vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(finalRenderContext[vaultEnvironmentPath], renderContext?.getPurpose());;
+  finalRenderContext[vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(finalRenderContext[vaultEnvironmentPath], renderContext?.getPurpose());
   // Merge all vault environments under vaultEnvironmentPath to vaultEnvironmentRuntimePath which is more human readable.
   // This will also keep all legacy environment variables defined under the vaultEnvironmentRuntimePath.
   if (finalRenderContext[vaultEnvironmentPath]) {
@@ -198,7 +198,7 @@ export async function buildRenderContext(
       ...finalRenderContext[vaultEnvironmentRuntimePath],
     };
     delete finalRenderContext[vaultEnvironmentPath];
-  };
+  }
 
   const keys = _getOrderedEnvironmentKeys(finalRenderContext);
 

@@ -174,7 +174,7 @@ export class NeDBClient {
       const modelTypesWithinFolders = [models.request.type, models.grpcRequest.type, models.webSocketRequest.type];
       if (modelTypesWithinFolders.includes(type)) {
         typeFilter = [models.requestGroup.type, type];
-      };
+      }
 
       if (type === models.unitTest.type) {
         typeFilter = [models.unitTestSuite.type, type];

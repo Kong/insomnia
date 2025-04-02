@@ -55,12 +55,12 @@ export const action: ActionFunction = async ({
           // Encrypt vault key and save encrypted vault key & raw vault salt to session
           const encryptedVaultKey = await window.main.secretStorage.encryptString(localVaultKey);
           await sessionModel.update(userSession, { vaultKey: encryptedVaultKey, vaultSalt });
-        };
+        }
       }
-    };
+    }
   } catch (err) {
     console.error(err);
-  };
+  }
 
   return redirect('/organization');
 };

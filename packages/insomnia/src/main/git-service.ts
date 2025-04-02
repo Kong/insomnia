@@ -1486,7 +1486,7 @@ export async function pullFromGitRemote({
       errors: [errorMessage],
     };
   }
-};
+}
 
 export const continueMerge = async (
   {
@@ -1752,7 +1752,7 @@ interface GitRepoDirectory {
   name: string;
   type: 'directory';
   children: (GitRepoDirectory | GitRepoFile)[];
-};
+}
 
 type FileTree = {
   id: string;

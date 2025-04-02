@@ -23,7 +23,7 @@ type Data = {
 export enum POSTMAN_ENV_TYPE {
   GLOBAL = 'globals',
   ENVIRONMENT = 'environment',
-};
+}
 
 const validPostmanEnvTypeList = Object.values(POSTMAN_ENV_TYPE) as string[];
 

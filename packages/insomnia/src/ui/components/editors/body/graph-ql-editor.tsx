@@ -355,7 +355,7 @@ export const GraphQLEditor: FC<Props> = ({
       if (isString(query) && query.trim() === '') {
         // update request body when query is empty
         onChange(getGraphQLContent(state.body, query, ''));
-      };
+      }
       setState(state => ({
         ...state,
         documentAST: null,

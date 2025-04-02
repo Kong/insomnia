@@ -47,7 +47,7 @@ export const BooleanSetting: FC<{
                   onDone: async (isYes: boolean) => {
                     if (isYes) {
                       patchSettings({ [setting]: isChecked });
-                    };
+                    }
                   },
                 });
               } else {

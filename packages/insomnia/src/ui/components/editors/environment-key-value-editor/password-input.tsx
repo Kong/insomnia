@@ -12,7 +12,7 @@ export interface PasswordInputProps {
   onChange: (value: string) => void;
   onShowPassword?: (value: string) => void;
   onHidePassword?: (value: string) => void;
-};
+}
 
 export const PasswordInput = (props: PasswordInputProps) => {
   const { value, className, placeholder, enabled, itemId, onShowPassword, onHidePassword, onChange } = props;

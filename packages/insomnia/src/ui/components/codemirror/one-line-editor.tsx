@@ -37,7 +37,7 @@ export interface OneLineEditorProps {
 export interface EditorEventListener<T extends keyof EditorEventMap> {
   eventName: T;
   handler: EditorEventMap[T];
-};
+}
 export interface OneLineEditorHandle {
   selectAll: () => void;
   focusEnd: () => void;
@@ -280,7 +280,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
             isOwner,
           });
           return;
-        };
+        }
         if (nunjucksTag) {
           const { type, template, range } = nunjucksTag as nunjucksTagContextMenuOptions;
           switch (type) {
@@ -301,7 +301,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
 
             default:
               return;
-          };
+          }
         } else {
           codeMirror.current?.replaceSelection(tag);
         }

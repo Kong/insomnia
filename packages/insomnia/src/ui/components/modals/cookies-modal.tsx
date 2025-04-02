@@ -312,7 +312,7 @@ interface PaginationBarProps {
   totalPages: number;
   onPrevPress?: () => void;
   onNextPress?: () => void;
-};
+}
 
 const PaginationBar = ({ isNextDisabled, isPrevDisabled, isHidden, page, totalPages, onPrevPress, onNextPress }: PaginationBarProps) => {
   if (isHidden) {

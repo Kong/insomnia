@@ -586,7 +586,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
 
             default:
               return;
-          };
+          }
         } else {
           codeMirror.current?.replaceSelection(tag);
         }

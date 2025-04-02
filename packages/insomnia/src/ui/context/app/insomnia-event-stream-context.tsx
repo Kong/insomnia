@@ -25,7 +25,7 @@ interface TeamProjectChangedEvent {
   type: 'TeamProjectChanged';
   team: string;
   project: string;
-};
+}
 
 interface FileDeletedEvent {
   'topic': string;
@@ -33,7 +33,7 @@ interface FileDeletedEvent {
   'team': string;
   'project': string;
   'file': string;
-};
+}
 
 interface BranchDeletedEvent {
   'topic': string;
@@ -57,7 +57,7 @@ interface VaultKeyChangeEvent {
   type: 'VaultKeyChanged';
   topic: string;
   sessionId: string;
-};
+}
 
 export interface UserPresence {
   acct: string;
@@ -198,7 +198,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
                 method: 'POST',
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`,
               });
-            };
+            }
           } catch (e) {
             console.log('[sse] Error parsing response from SSE', e);
           }

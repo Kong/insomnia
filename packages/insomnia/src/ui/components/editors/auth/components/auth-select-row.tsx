@@ -23,7 +23,7 @@ export const AuthSelectRow: FC<Props> = ({ label, property, help, options, disab
   const groupData = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
   const patchRequest = useRequestPatcher();
   const patchRequestGroup = useRequestGroupPatcher();
-  const patcher = Boolean(reqData) ? patchRequest : patchRequestGroup;
+  const patcher = reqData ? patchRequest : patchRequestGroup;
 
   const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
   // @ts-expect-error -- garbage abstraction

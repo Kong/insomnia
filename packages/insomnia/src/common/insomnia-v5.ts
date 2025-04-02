@@ -391,7 +391,7 @@ export function importInsomniaV5Data(rawData: string) {
     console.error('Failed to import Insomnia v5 data', err);
     return [];
   }
-};
+}
 
 export async function getInsomniaV5DataExport({
   workspaceId,
@@ -749,4 +749,4 @@ export async function getInsomniaV5DataExport({
     console.error('Failed to export Insomnia v5 data', err);
     return '';
   }
-};
+}

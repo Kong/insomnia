@@ -114,7 +114,7 @@ interface ResourceCacheType {
   content: string;
   resources: BaseModel[];
   importer: InsomniaImporter;
-};
+}
 
 let resourceCacheList: ResourceCacheType[] = [];
 

@@ -268,7 +268,7 @@ const Design: FC = () => {
       } catch (e) {
         // return a rejected promise so that codemirror do nothing
         return Promise.reject(e);
-      };
+      }
     });
   };
 
