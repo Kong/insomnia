@@ -94,38 +94,18 @@ export function delay(milliseconds: number = DEBOUNCE_MILLIS) {
   return new Promise<void>(resolve => setTimeout(resolve, milliseconds));
 }
 
-export function keyedDebounce<T>(
-  callback: (t: Record<string, T[]>) => void,
-  millis: number = DEBOUNCE_MILLIS
-) {
-  let timeout: NodeJS.Timeout;
-  let results: Record<string, T[]> = {};
-  const t = function (key: string, ...args: T[]) {
-    results[key] = args;
-    if (timeout) {
-      clearTimeout(timeout);
-    }
-    timeout = setTimeout(() => {
-      if (!Object.keys(results).length) {
-        return;
-      }
-      callback(results);
-      results = {};
-    }, millis);
-  };
-  return t;
-}
+export const debounce = <F extends (...args: Parameters<F>) => ReturnType<F>>(
+  func: F,
+  waitFor: number = DEBOUNCE_MILLIS,
+) => {
+  let timeout: NodeJS.Timeout
 
-export function debounce<T extends Function>(
-  callback: T,
-  milliseconds: number = DEBOUNCE_MILLIS,
-): T {
-  // For regular debounce, just use a keyed debounce with a fixed key
-  // @ts-expect-error -- unsound contravariance
-  return keyedDebounce(results => {
-    // eslint-disable-next-line prefer-spread -- don't know if there was a "this binding" reason for this being this way so I'm leaving it alone
-    callback.apply(null, results.__key__);
-  }, milliseconds).bind(null, '__key__');
+  const debounced = (...args: Parameters<F>) => {
+    clearTimeout(timeout)
+    timeout = setTimeout(() => func(...args), waitFor)
+  }
+
+  return debounced
 }
 
 export function describeByteSize(bytes: number, long = false) {
