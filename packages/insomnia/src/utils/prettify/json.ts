@@ -26,7 +26,7 @@ const NUNJUCKS_CLOSE_STATES: {
   '#}': STATE_IN_NUN_COM,
 };
 
-function ensureStringify(val?: string | Object): string {
+function ensureStringify(val?: string | object): string {
   let defaultVal = '';
   if (!val) {
     return defaultVal;
@@ -50,7 +50,7 @@ function ensureStringify(val?: string | Object): string {
  *
  * Code taken from jsonlint (http://zaa.ch/jsonlint/)
  */
-export const jsonPrettify = (json?: string | Object, indentChars = '\t', replaceUnicode = true) => {
+export const jsonPrettify = (json?: string | object, indentChars = '\t', replaceUnicode = true) => {
   let prePrettify = ensureStringify(json);
   if (!prePrettify.includes('{') && !prePrettify.includes('[') && !prePrettify.includes('"')) {
     return prePrettify;

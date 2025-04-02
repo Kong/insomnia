@@ -108,7 +108,6 @@ module.exports = {
     '@typescript-eslint/no-namespace': ['error', { allowDeclarations: true }],
     '@typescript-eslint/no-redeclare': 'error',
     '@typescript-eslint/no-require-imports': 'off',
-    '@typescript-eslint/no-wrapper-object-types': 'off', // TODO: Enable this rule
     '@typescript-eslint/no-unsafe-function-type': 'off', // TODO: Enable this rule
     '@typescript-eslint/no-unused-expressions': 'off', // TODO: Enable this rule
     '@typescript-eslint/no-unused-vars': 'off', // TODO: Enable this rule

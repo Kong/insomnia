@@ -6,7 +6,7 @@ import { fuzzyMatch } from '../../../common/misc';
 export interface HighlightProps {
   search: string;
   text: string;
-  blankValue?: String;
+  blankValue?: string;
 }
 
 export const Highlight: FC<HighlightProps> = ({
