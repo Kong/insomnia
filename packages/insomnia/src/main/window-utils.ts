@@ -243,7 +243,6 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
     event.preventDefault();
     const { protocol } = new URL(url);
     if (protocol === 'http:' || protocol === 'https:') {
-      // eslint-disable-next-line no-restricted-properties
       shell.openExternal(url);
     }
   });
@@ -290,7 +289,6 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
       },
       {
         label: `${MNEMONIC_SYM}Changelog`,
-        // eslint-disable-next-line no-restricted-properties
         click: () => shell.openExternal('https://github.com/Kong/insomnia/releases'),
       },
       {
@@ -474,7 +472,6 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
         click: () => {
           const { protocol } = new URL(docsBase);
           if (protocol === 'http:' || protocol === 'https:') {
-            // eslint-disable-next-line no-restricted-properties
             shell.openExternal(docsBase);
           }
         },
@@ -509,14 +506,12 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
       {
         label: 'Show Software Bill of Materials',
         click: () => {
-          // eslint-disable-next-line no-restricted-properties
           shell.openExternal('https://github.com/Kong/insomnia/releases');
         },
       },
       {
         label: 'Show Software License',
         click: () => {
-          // eslint-disable-next-line no-restricted-properties
           shell.openExternal('https://insomnia.rest/license');
         },
       },

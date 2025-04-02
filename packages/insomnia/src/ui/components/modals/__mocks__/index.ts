@@ -2,7 +2,6 @@ import { vi } from 'vitest';
 
 import * as modalsOriginal from '../index';
 
-// eslint-disable-next-line filenames/match-exported
 const modals = vi.requireActual('../index') as typeof modalsOriginal;
 
 modals.showError = vi.fn();

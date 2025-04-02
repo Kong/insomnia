@@ -30,9 +30,6 @@ module.exports = {
   plugins: [
     '@typescript-eslint',
     'react',
-    'html',
-    'json',
-    'filenames',
     'react-hooks',
     'import',
     'simple-import-sort',
@@ -132,9 +129,5 @@ module.exports = {
     'simple-import-sort/imports': ERROR,
     '@typescript-eslint/no-use-before-define': OFF(TYPESCRIPT_CONVERSION),
     '@typescript-eslint/no-explicit-any': OFF(TYPESCRIPT_CONVERSION),
-    'no-restricted-properties': [ERROR, {
-      property: 'openExternal',
-      message: 'use the `window.main.openInBrowser` function instead.  see https://security.stackexchange.com/questions/225799/dangers-of-electrons-shell-openexternal-on-untrusted-content for more information.',
-    }],
   },
 };

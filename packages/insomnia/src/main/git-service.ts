@@ -1831,7 +1831,6 @@ async function initSignInToGitHub() {
     state,
   }).toString();
 
-  // eslint-disable-next-line no-restricted-properties
   await shell.openExternal(url.toString());
 }
 
@@ -2098,7 +2097,6 @@ async function initSignInToGitLab() {
     code_challenge_method: 'S256',
   }).toString();
 
-  // eslint-disable-next-line no-restricted-properties
   await shell.openExternal(gitlabURL.toString());
 }
 
