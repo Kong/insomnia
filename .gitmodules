@@ -1,0 +1,3 @@
+[submodule "insomnia-submodule"]
+	path = insomnia-submodule
+	url = https://github.com/Kong/insomnia-submodule.git
