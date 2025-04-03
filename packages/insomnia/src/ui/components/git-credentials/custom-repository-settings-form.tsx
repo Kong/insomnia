@@ -50,7 +50,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
           defaultValue={uri}
           disabled={Boolean(uri)}
           placeholder="https://github.com/org/repo.git"
-          className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+          className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors placeholder:text-sm"
         />
       </TextField>
       <div className='flex items-center justify-between gap-2'>
@@ -60,7 +60,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
             placeholder="Name"
             disabled={Boolean(uri)}
             defaultValue={author?.name}
-            className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+            className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors placeholder:text-sm"
           />
         </TextField>
         <TextField name="authorName" className="flex flex-col w-full gap-1 px-0.5" isRequired>
@@ -69,7 +69,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
             placeholder="Name"
             disabled={Boolean(uri)}
             defaultValue={author?.name}
-            className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+            className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors placeholder:text-sm"
           />
         </TextField>
       </div>
@@ -80,7 +80,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
             placeholder="MyUser"
             disabled={Boolean(uri)}
             defaultValue={credentials?.username}
-            className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+            className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors placeholder:text-sm"
           />
         </TextField>
         <TextField name="token" className="flex flex-col w-full gap-1 px-0.5" isRequired>
@@ -107,7 +107,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
             disabled={Boolean(uri)}
             defaultValue={'token' in credentials ? credentials?.token : ''}
             placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"
-            className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+            className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors placeholder:text-sm"
           />
         </TextField>
       </div>
