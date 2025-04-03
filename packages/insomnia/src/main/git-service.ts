@@ -1314,11 +1314,11 @@ export const mergeGitBranch = async ({
     if (err instanceof MergeConflictError) {
       return err.data;
     }
+    let errorMessage = err instanceof Error ? err.message : 'Unknown Error';
 
     if (err instanceof Errors.HttpError) {
-      err = new Error(`${err.message}, ${err.data.response}`);
+      errorMessage = `${err.message}, ${err.data.response}`;
     }
-    const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
 
     trackSegmentEvent(
       SegmentEvent.vcsAction,
@@ -1473,10 +1473,11 @@ export async function pullFromGitRemote({
       return err.data;
     }
 
+    let errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+
     if (err instanceof Errors.HttpError) {
-      err = new Error(`${err.message}, ${err.data.response}`);
+      errorMessage = `${err.message}, ${err.data.response}`;
     }
-    const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
     trackSegmentEvent(
       SegmentEvent.vcsAction,
       vcsSegmentEventProperties('git', 'pull', errorMessage),

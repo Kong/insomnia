@@ -893,6 +893,13 @@ export const runAllTestsAction: ActionFunction = async ({
 
   try {
     results = await runTests(src, { sendRequest });
+    const testResult = await models.unitTestResult.create({
+      results,
+      parentId: workspaceId,
+    });
+    window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun });
+
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`);
   } catch (err) {
     // create a result manually so that it can be displayed in the UI
     results.stats.failures = 1;
@@ -916,7 +923,6 @@ export const runAllTestsAction: ActionFunction = async ({
         title: 'Test Error',
       },
     );
-  } finally {
     const testResult = await models.unitTestResult.create({
       results,
       parentId: workspaceId,
@@ -1036,6 +1042,13 @@ export const runTestAction: ActionFunction = async ({ params }) => {
 
   try {
     results = await runTests(src, { sendRequest });
+    const testResult = await models.unitTestResult.create({
+      results,
+      parentId: unitTest.parentId,
+    });
+    window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun });
+
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`);
   } catch (error) {
     // create a result manually so that it can be displayed in the UI
     results.stats.failures = 1;
@@ -1059,7 +1072,6 @@ export const runTestAction: ActionFunction = async ({ params }) => {
         title: unitTest.name,
       },
     );
-  } finally {
     const testResult = await models.unitTestResult.create({
       results,
       parentId: unitTest.parentId,
@@ -1594,7 +1606,7 @@ export const deleteClientCertificateAction: ActionFunction = async ({ request })
 
 export const updateSettingsAction: ActionFunction = async ({ request }) => {
   const patch = await request.json();
-  if (patch.hasOwnProperty('enableAnalytics') && !patch.enableAnalytics) {
+  if ('enableAnalytics' in patch && !patch.enableAnalytics) {
     window.main.trackSegmentEvent({ event: SegmentEvent.analyticsDisabled });
   }
   await models.settings.patch(patch);

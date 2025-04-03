@@ -88,8 +88,6 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
         } else {
           setInvalidFileReason('CSV file must contain at least two rows with first row as variable names');
         }
-      } else {
-
       }
     } catch (error) {
       setInvalidFileReason(`Failed to read file ${error?.message}`);

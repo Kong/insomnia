@@ -218,7 +218,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
   const modelOptionalKeys: string[] = 'optionalKeys' in model ? model.optionalKeys || [] : [];
   // Prune extra keys from doc
   for (const key of Object.keys(migratedDoc)) {
-    if (!objectDefaults.hasOwnProperty(key) && !modelOptionalKeys.includes(key)) {
+    if (!(key in objectDefaults) && !modelOptionalKeys.includes(key)) {
       // @ts-expect-error -- mapping unsoundness
       delete migratedDoc[key];
     }

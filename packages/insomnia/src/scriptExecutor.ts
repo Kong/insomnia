@@ -103,12 +103,8 @@ function proxiedSetTimeout(
 
   return setTimeout(
     () => {
-      try {
-        callback();
-        resolveHdl(null);
-      } catch (e) {
-        throw e;
-      }
+      callback();
+      resolveHdl(null);
     },
     ms,
   );

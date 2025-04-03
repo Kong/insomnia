@@ -137,7 +137,7 @@ async function _isInsomniaPlugin(lookupName: string) {
 
         const data = yarnOutput.data;
 
-        if (!data.hasOwnProperty('insomnia')) {
+        if (!('insomnia' in data)) {
           reject(new Error(`"${lookupName}" not a plugin! Package missing "insomnia" attribute`));
           return;
         }

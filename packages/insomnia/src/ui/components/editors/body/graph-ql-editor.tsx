@@ -501,7 +501,7 @@ export const GraphQLEditor: FC<Props> = ({
     }
 
     // Remove current query highlighting
-    for (const textMarker of disabledOperationMarkers?.current) {
+    for (const textMarker of disabledOperationMarkers?.current || []) {
       textMarker.clear();
     }
 

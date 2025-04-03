@@ -52,7 +52,7 @@ export async function exportRequestsHAR(
     const workspace = ancestors.find(isWorkspace);
     mapRequestIdToWorkspace[request._id] = workspace;
 
-    if (workspace == null || workspaceLookup.hasOwnProperty(workspace._id)) {
+    if (workspace == null || workspace._id in workspaceLookup) {
       continue;
     }
 

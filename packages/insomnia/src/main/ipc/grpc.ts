@@ -80,15 +80,11 @@ const grpcOptions = {
   oneofs: true,
 };
 const loadMethodsFromFilePath = async (filePath: string, includeDirs: string[]): Promise<MethodDefs[]> => {
-  try {
-    const definition = await protoLoader.load(filePath, {
-      ...grpcOptions,
-      includeDirs,
-    });
-    return getMethodsFromPackageDefinition(definition);
-  } catch (error) {
-    throw error;
-  }
+  const definition = await protoLoader.load(filePath, {
+    ...grpcOptions,
+    includeDirs,
+  });
+  return getMethodsFromPackageDefinition(definition);
 };
 const loadMethods = async (protoFileId: string): Promise<GrpcMethodInfo[]> => {
   const protoFile = await models.protoFile.getById(protoFileId);

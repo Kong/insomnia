@@ -374,7 +374,7 @@ export const dashboardSortOrderName: Record<DashboardSortOrder, string> = {
 export type PreviewMode = 'friendly' | 'source' | 'raw';
 
 export function getPreviewModeName(previewMode: PreviewMode, useLong = false) {
-  if (previewModeMap.hasOwnProperty(previewMode)) {
+  if (previewMode in previewModeMap) {
     return useLong ? previewModeMap[previewMode][1] : previewModeMap[previewMode][0];
   }
   return '';
@@ -408,7 +408,7 @@ export function getContentTypeName(contentType?: string | null, useLong = false)
 }
 
 export function getAuthTypeName(authType?: string, useLong = false) {
-  if (authType && authTypesMap.hasOwnProperty(authType)) {
+  if (authType && authType in authTypesMap) {
     return useLong ? authTypesMap[authType][1] : authTypesMap[authType][0];
   }
   return 'Auth';

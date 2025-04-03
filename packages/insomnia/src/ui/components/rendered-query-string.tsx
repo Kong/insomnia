@@ -71,7 +71,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
           // Replace path parameters in URL with their rendered values
           // Path parameters are path segments that start with a colon, e.g. :id
           url = url.replace(PATH_PARAMETER_REGEX, match => {
-            const pathParam = match.replace('\/:', '');
+            const pathParam = match.replace('/:', '');
             const param = pathParameters?.find(p => p.name === pathParam);
 
             if (param && param.value) {

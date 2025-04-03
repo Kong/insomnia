@@ -61,6 +61,7 @@ module.exports = {
     'eqeqeq': ['error', 'smart'],
     'arrow-parens': ['error', 'as-needed'],
     'arrow-spacing': 'error',
+    'no-async-promise-executor': 'off',
     'no-else-return': 'error',
     'no-empty': ["error", { "allowEmptyCatch": true }],
     'no-var': 'error',

@@ -472,11 +472,7 @@ export async function getRenderContext(
     for (let index = 0; index < ancestors.length; index++) {
       const ancestor: any = ancestors[index] || {};
 
-      if (
-        isRequestGroup(ancestor) &&
-        ancestor.hasOwnProperty('environment') &&
-        ancestor.hasOwnProperty('name')
-      ) {
+      if (isRequestGroup(ancestor) && 'environment' in ancestor && 'name' in ancestor) {
         getKeySource(ancestor.environment || {}, inKey, ancestor.name || '');
       }
     }

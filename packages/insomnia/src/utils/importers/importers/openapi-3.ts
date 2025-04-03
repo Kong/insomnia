@@ -564,7 +564,7 @@ const prepareBody = (endpointSchema: OpenAPIV3.OperationObject): ImportRequest['
       mimeType: mimeTypes[0] || undefined,
     };
   }
-    return {};
+  return {};
 
 };
 
@@ -620,7 +620,7 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
       if (schema.collectionFormat === 'csv') {
         return value;
       }
-        return [value];
+      return [value];
 
     },
   };
@@ -672,7 +672,7 @@ const generateUniqueRequestId = (
     .slice(0, 8);
 
   // Suffix the ID with a counter in case we try creating two with the same hash
-  if (requestCounts.hasOwnProperty(hash)) {
+  if (hash in requestCounts) {
     requestCounts[hash] += 1;
   } else {
     requestCounts[hash] = 0;
