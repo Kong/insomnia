@@ -184,7 +184,7 @@ export const TagEditor: FC<Props> = props => {
     } else if (event.currentTarget.type === 'checkbox') {
       return updateArg((event.currentTarget as HTMLInputElement).checked, argIndex);
     }
-      return updateArg(event.currentTarget.value, argIndex);
+    return updateArg(event.currentTarget.value, argIndex);
 
   }
   async function update(
@@ -239,22 +239,6 @@ export const TagEditor: FC<Props> = props => {
     // Make rendering take at least this long so we can see a spinner
     await delay(300 - (Date.now() - start));
     setState(state => ({ ...state, rendering: false, preview }));
-  }
-
-  function resolveRequestGroupPrefix(requestGroupId: string, allRequestGroups: any[]) {
-    let prefix = '';
-    let reqGroup: any;
-    do {
-      // Get prefix from inner most request group.
-      reqGroup = allRequestGroups.find(rg => rg._id === requestGroupId);
-      if (reqGroup == null) {
-        break;
-      }
-      const name = typeof reqGroup.name === 'string' ? reqGroup.name : '';
-      prefix = `[${name}] ` + prefix;
-      requestGroupId = reqGroup.parentId;
-    } while (true);
-    return prefix;
   }
 
   const { error, preview, activeTagDefinition, activeTagData, rendering } = state;
@@ -379,12 +363,13 @@ export const TagEditor: FC<Props> = props => {
                   // Show parent folder with name if it's a request
                   if (isRequest(doc)) {
                     const requests = state.allDocs[models.request.type] || [];
-                    const request: any = requests.find(r => r._id === doc._id);
+                    const request = requests.find(r => r._id === doc._id) as Request;
                     const method = request && typeof request.method === 'string' ? request.method : 'GET';
                     const parentId = request ? request.parentId : 'n/a';
                     const allRequestGroups = state.allDocs[models.requestGroup.type] || [];
-                    const requestGroupPrefix = resolveRequestGroupPrefix(parentId, allRequestGroups);
-                    namePrefix = `${requestGroupPrefix + method} `;
+                    const reqGroup = allRequestGroups.find(rg => rg._id === parentId) as RequestGroup | undefined;
+                    const folderName = reqGroup ? `[${typeof reqGroup.name === 'string' ? reqGroup.name : ''}] ` : ''
+                    namePrefix = `${folderName + method} `;
                   }
                   return (
                     <option key={doc._id} value={doc._id}>
