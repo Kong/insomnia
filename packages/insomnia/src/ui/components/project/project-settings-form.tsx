@@ -338,8 +338,12 @@ export const ProjectSettingsForm: FC<Props> = ({
         <>
           {initCloneGitRepositoryFetcher.state !== 'idle' && (
             <div className='w-full flex flex-col gap-2 pt-4 items-center justify-center'>
-              <InsomniaLogo loading className='w-12 h-12' />
-              Loading Insomnia files from repository
+              <div className="flex flex-col w-full items-center p-4 gap-2 text-sm rounded-sm text-[--color-font-success] bg-[--hl-xs]">
+                <span className='flex items-center justify-center relative'>
+                  <InsomniaLogo className='w-12 h-12' />
+                </span>
+                <p className='p-2 text-center font-bold text-[--color-font]'>Loading Insomnia files from repository</p>
+              </div>
             </div>
           )}
           {(insomniaFiles.length === 0 && initCloneGitRepositoryFetcher.state === 'idle') && (
