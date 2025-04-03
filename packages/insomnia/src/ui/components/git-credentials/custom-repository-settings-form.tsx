@@ -1,4 +1,5 @@
 import React, { type FunctionComponent } from 'react';
+import { Input, Label, TextField } from 'react-aria-components';
 
 import { docsGitAccessToken } from '../../../common/documentation';
 import type { GitRepository } from '../../../models/git-repository';
@@ -24,7 +25,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
   return (
     <form
       id="custom"
-      className='form-group'
+      className='flex flex-col gap-4'
       onSubmit={event => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
@@ -41,65 +42,56 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
         });
       }}
     >
-      <div className="form-control form-control--outlined">
-        <label>
-          Git URI (https, including .git suffix)
-          <input
-            type="url"
-            required
-            autoFocus
-            name="uri"
-            defaultValue={uri}
+      <TextField name="uri" className="flex flex-col w-full gap-1" isRequired isInvalid={Boolean('fasdfadsf')}>
+        <Label className='text-start text-sm font-semibold'>Git URI (https, including .git suffix)</Label>
+        <Input
+          type="url"
+          autoFocus
+
+          defaultValue={uri}
+          disabled={Boolean(uri)}
+          placeholder="https://github.com/org/repo.git"
+          className="border border-solid border-[--hl-sm] rounded-sm py-1 px-3 placeholder:text-sm"
+        />
+      </TextField>
+      <div className='flex items-center justify-between gap-2'>
+        <TextField className="flex flex-col w-full gap-1" isRequired>
+          <Label className='text-start text-sm font-semibold'>Author Name</Label>
+          <Input
+            type="text"
+            name="authorName"
+            placeholder="Name"
             disabled={Boolean(uri)}
-            placeholder="https://github.com/org/repo.git"
+            defaultValue={author?.name}
+            className="border border-solid border-[--hl-sm] rounded-sm py-1 px-3 placeholder:text-sm"
           />
-        </label>
+        </TextField>
+        <TextField className="flex flex-col w-full gap-1" isRequired>
+          <Label className='text-start text-sm font-semibold'>Author Name</Label>
+          <Input
+            type="text"
+            name="authorName"
+            placeholder="Name"
+            disabled={Boolean(uri)}
+            defaultValue={author?.name}
+            className="border border-solid border-[--hl-sm] rounded-sm py-1 px-3 placeholder:text-sm"
+          />
+        </TextField>
       </div>
-      <div className="form-row">
-        <div className="form-control form-control--outlined">
-          <label>
-            Author Name
-            <input
-              required
-              type="text"
-              name="authorName"
-              placeholder="Name"
-              disabled={Boolean(uri)}
-              defaultValue={author?.name}
-            />
-          </label>
-        </div>
-        <div className="form-control form-control--outlined">
-          <label>
-            Author Email
-            <input
-              required
-              type="text"
-              name="authorEmail"
-              placeholder="Email"
-              disabled={Boolean(uri)}
-              defaultValue={author?.email}
-            />
-          </label>
-        </div>
-      </div>
-      <div className="form-row">
-        <div className="form-control form-control--outlined">
-          <label>
-            Username
-            <input
-              required
-              type="text"
-              name="username"
-              placeholder="MyUser"
-              disabled={Boolean(uri)}
-              defaultValue={credentials?.username}
-            />
-          </label>
-        </div>
-        <div className="form-control form-control--outlined">
-          <label>
-            Authentication Token
+      <div className='flex items-center justify-between gap-2'>
+        <TextField className="flex flex-col w-full gap-1" isRequired>
+          <Label className='text-start text-sm font-semibold'>Username</Label>
+          <Input
+            type="text"
+            name="username"
+            placeholder="MyUser"
+            disabled={Boolean(uri)}
+            defaultValue={credentials?.username}
+            className="border border-solid border-[--hl-sm] rounded-sm py-1 px-3 placeholder:text-sm"
+          />
+        </TextField>
+        <TextField className="flex flex-col w-full gap-1" isRequired>
+          <Label className='text-start text-sm font-semibold'>Authentication Token
             <HelpTooltip className="space-left">
               Create a personal access token
               <br />
@@ -116,17 +108,17 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
               <Link href={docsGitAccessToken.azureDevOps}>
                 Azure DevOps {linkIcon}
               </Link>
-            </HelpTooltip>
-            <input
-              required
-              type="password"
-              name="token"
-              disabled={Boolean(uri)}
-              defaultValue={'token' in credentials ? credentials?.token : ''}
-              placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"
-            />
-          </label>
-        </div>
+            </HelpTooltip></Label>
+          <Input
+            required
+            type="password"
+            name="token"
+            disabled={Boolean(uri)}
+            defaultValue={'token' in credentials ? credentials?.token : ''}
+            placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"
+            className="border border-solid border-[--hl-sm] rounded-sm py-1 px-3 placeholder:text-sm"
+          />
+        </TextField>
       </div>
     </form>
   );
