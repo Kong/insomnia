@@ -56,113 +56,113 @@ const InviteModal: FC<{
   currentUserAccountId,
   revalidateCurrentUserRoleAndPermissionsInOrg,
 }) => {
-  const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
 
-  const [queryInputString, setQueryInputString] = useState('');
-  const [error, setError] = useState<string | null>(null);
+    const [queryInputString, setQueryInputString] = useState('');
+    const [error, setError] = useState<string | null>(null);
 
-  const collaboratorsListLoader = useFetcher<CollaboratorsListLoaderResult>();
+    const collaboratorsListLoader = useFetcher<CollaboratorsListLoaderResult>();
 
-  const page = searchParams.get('page') ? Number(searchParams.get('page')) : 0;
+    const page = searchParams.get('page') ? Number(searchParams.get('page')) : 0;
 
-  const total = collaboratorsListLoader.data && 'total' in collaboratorsListLoader?.data && collaboratorsListLoader.data.total || 0;
-  const collaboratorListError = collaboratorsListLoader.data && 'error' in collaboratorsListLoader?.data && 'message' in collaboratorsListLoader?.data && collaboratorsListLoader.data?.message as string || null;
-  const collaborators = collaboratorsListLoader.data && 'collaborators' in collaboratorsListLoader?.data && collaboratorsListLoader.data?.collaborators || [];
+    const total = collaboratorsListLoader.data && 'total' in collaboratorsListLoader.data && collaboratorsListLoader.data.total || 0;
+    const collaboratorListError = collaboratorsListLoader.data && 'error' in collaboratorsListLoader.data && 'message' in collaboratorsListLoader.data && collaboratorsListLoader.data?.message as string || null;
+    const collaborators = collaboratorsListLoader.data && 'collaborators' in collaboratorsListLoader.data && collaboratorsListLoader.data?.collaborators || [];
 
-  useEffect(() => {
-    if (!collaboratorsListLoader.data && collaboratorsListLoader.state === 'idle') {
-      collaboratorsListLoader.load(`/organization/${organizationId}/collaborators?page=0&per_page=${ItemsPerPage}`);
-    }
-  }, [collaboratorsListLoader, organizationId]);
+    useEffect(() => {
+      if (!collaboratorsListLoader.data && collaboratorsListLoader.state === 'idle') {
+        collaboratorsListLoader.load(`/organization/${organizationId}/collaborators?page=0&per_page=${ItemsPerPage}`);
+      }
+    }, [collaboratorsListLoader, organizationId]);
 
-  const handleSearch = debounce((filter: string) => {
-    if (filter.trim() === '') {
+    const handleSearch = debounce((filter: string) => {
+      if (filter.trim() === '') {
+        collaboratorsListLoader.load(`/organization/${organizationId}/collaborators?page=0&per_page=${ItemsPerPage}`);
+        setSearchParams(getSearchParamsString(searchParams, { page: 0, filter: '' }));
+      } else {
+        collaboratorsListLoader.load(`/organization/${organizationId}/collaborators?page=0&per_page=${ItemsPerPage}&filter=${encodeURIComponent(filter)}`);
+        setSearchParams(getSearchParamsString(searchParams, { page: 0, filter }));
+      }
+    }, 500);
+
+    const resetCollaboratorsList = () => {
+      setQueryInputString('');
       collaboratorsListLoader.load(`/organization/${organizationId}/collaborators?page=0&per_page=${ItemsPerPage}`);
       setSearchParams(getSearchParamsString(searchParams, { page: 0, filter: '' }));
-    } else {
-      collaboratorsListLoader.load(`/organization/${organizationId}/collaborators?page=0&per_page=${ItemsPerPage}&filter=${encodeURIComponent(filter)}`);
-      setSearchParams(getSearchParamsString(searchParams, { page: 0, filter }));
-    }
-  }, 500);
+    };
 
-  const resetCollaboratorsList = () => {
-    setQueryInputString('');
-    collaboratorsListLoader.load(`/organization/${organizationId}/collaborators?page=0&per_page=${ItemsPerPage}`);
-    setSearchParams(getSearchParamsString(searchParams, { page: 0, filter: '' }));
-  };
+    const resetCurrentPage = () => {
+      collaboratorsListLoader.load(`/organization/${organizationId}/collaborators?page=${page}&per_page=${ItemsPerPage}`);
+      setSearchParams(getSearchParamsString(searchParams, { page, filter: queryInputString }));
+    };
 
-  const resetCurrentPage = () => {
-    collaboratorsListLoader.load(`/organization/${organizationId}/collaborators?page=${page}&per_page=${ItemsPerPage}`);
-    setSearchParams(getSearchParamsString(searchParams, { page, filter: queryInputString }));
-  };
-
-  return (
-    <ModalOverlay
-      isDismissable={true}
-      isOpen={true}
-      onOpenChange={setIsOpen}
-      className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-[--color-bg] theme--transparent-overlay"
-    >
-      <Modal className="fixed top-[100px] w-full max-w-[900px] rounded-md border border-solid border-[--hl-sm] p-[32px] h-fit bg-[--color-bg] text-[--color-font] theme--dialog">
-        <Dialog className="outline-none relative">
-          {({ close }) => (
-            <>
-              <Heading slot="title" className="text-[22px] leading-[34px] mb-[24px]">
-                Invite collaborators
-              </Heading>
-              <Button onPress={close} className="fa fa-times absolute top-0 right-0 text-xl" />
-              {permissionRef.current?.['create:invitation'] && (
-                <>
-                  <InviteForm
-                    onInviteCompleted={() => {
-                      if (organizationId) {
-                        resetCollaboratorsList();
-                      }
-                    }}
-                    allRoles={allRoles}
-                  />
-                  <hr className="border my-[24px]" />
-                </>
-              )}
-
-              <div className='flex justify-between leading-[24px] mb-[16px]'>
-                <p>WHO HAS ACCESS ({total})</p>
-                <Group
-                  className="w-[50%] bg-[--hl-xs] py-[4px] px-[8px] rounded flex items-center gap-2"
-                  isDisabled={collaboratorsListLoader.state !== 'idle'}
-                >
-                  <i
-                    className="fa fa-search"
-                  />
-                  <TextField
-                    value={queryInputString}
-                    onChange={value => {
-                      setQueryInputString(value);
-                      handleSearch(value);
-                    }}
-                    aria-label="Member search query"
-                    className="flex-1"
-                  >
-                    <Input
-                      className="w-full"
-                      placeholder="Search collaborators"
+    return (
+      <ModalOverlay
+        isDismissable={true}
+        isOpen={true}
+        onOpenChange={setIsOpen}
+        className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-[--color-bg] theme--transparent-overlay"
+      >
+        <Modal className="fixed top-[100px] w-full max-w-[900px] rounded-md border border-solid border-[--hl-sm] p-[32px] h-fit bg-[--color-bg] text-[--color-font] theme--dialog">
+          <Dialog className="outline-none relative">
+            {({ close }) => (
+              <>
+                <Heading slot="title" className="text-[22px] leading-[34px] mb-[24px]">
+                  Invite collaborators
+                </Heading>
+                <Button onPress={close} className="fa fa-times absolute top-0 right-0 text-xl" />
+                {permissionRef.current?.['create:invitation'] && (
+                  <>
+                    <InviteForm
+                      onInviteCompleted={() => {
+                        if (organizationId) {
+                          resetCollaboratorsList();
+                        }
+                      }}
+                      allRoles={allRoles}
                     />
-                  </TextField>
-                  {queryInputString && (
-                    <Button onPress={resetCollaboratorsList}>
-                      <Icon icon="circle-xmark" className='h-4 w-4' />
-                    </Button>
-                  )}
-                </Group>
-              </div>
-              {collaboratorListError && <div className='flex items-center justify-center h-[200px]'>
-                <p className="text-[12px] text-[--color-danger] first-letter:capitalize">{collaboratorListError}</p>
-              </div>}
-              {collaborators?.length === 0 && page === 0 ? !collaboratorListError && (
-                <div className='flex items-center justify-center h-[200px]'>
-                  <p className="text-[14px] text-[--color-font]">{queryInputString ? `No member or team found for the search: "${queryInputString}"` : 'No members or teams'}</p>
+                    <hr className="border my-[24px]" />
+                  </>
+                )}
+
+                <div className='flex justify-between leading-[24px] mb-[16px]'>
+                  <p>WHO HAS ACCESS ({total})</p>
+                  <Group
+                    className="w-[50%] bg-[--hl-xs] py-[4px] px-[8px] rounded flex items-center gap-2"
+                    isDisabled={collaboratorsListLoader.state !== 'idle'}
+                  >
+                    <i
+                      className="fa fa-search"
+                    />
+                    <TextField
+                      value={queryInputString}
+                      onChange={value => {
+                        setQueryInputString(value);
+                        handleSearch(value);
+                      }}
+                      aria-label="Member search query"
+                      className="flex-1"
+                    >
+                      <Input
+                        className="w-full"
+                        placeholder="Search collaborators"
+                      />
+                    </TextField>
+                    {queryInputString && (
+                      <Button onPress={resetCollaboratorsList}>
+                        <Icon icon="circle-xmark" className='h-4 w-4' />
+                      </Button>
+                    )}
+                  </Group>
                 </div>
-              ) : (
+                {collaboratorListError && <div className='flex items-center justify-center h-[200px]'>
+                  <p className="text-[12px] text-[--color-danger] first-letter:capitalize">{collaboratorListError}</p>
+                </div>}
+                {collaborators?.length === 0 && page === 0 ? !collaboratorListError && (
+                  <div className='flex items-center justify-center h-[200px]'>
+                    <p className="text-[14px] text-[--color-font]">{queryInputString ? `No member or team found for the search: "${queryInputString}"` : 'No members or teams'}</p>
+                  </div>
+                ) : (
                   <>
                     <ListBox
                       aria-label="Invitation list"
@@ -246,17 +246,17 @@ const MemberListItem: FC<{
     const updateMemberRoleFetcher = useFetcher();
     const memberRoleUpdating = updateMemberRoleFetcher.state !== 'idle';
 
-  const [isFailed, setIsFailed] = useState(false);
+    const [isFailed, setIsFailed] = useState(false);
 
     const isAcceptedMember = member.type === 'member';
     const isPendingMember = member.type === 'invite';
-  const isGroup = member.type === 'group';
+    const isGroup = member.type === 'group';
 
     const textValue = member.name ?? member.metadata.email;
-  const isCurrentUser = isAcceptedMember && currentUserAccountId === member.metadata.userId;
+    const isCurrentUser = isAcceptedMember && currentUserAccountId === member.metadata.userId;
 
-  const isPendingInvitationExpired = isPendingMember && member.metadata.expiresAt && isAfter(new Date(), new Date(member.metadata.expiresAt));
-  const memberRoleName = allRoles.find((r: Role) => r.id === member.metadata.roleId)?.name ?? 'member';
+    const isPendingInvitationExpired = isPendingMember && member.metadata.expiresAt && isAfter(new Date(), new Date(member.metadata.expiresAt));
+    const memberRoleName = allRoles.find((r: Role) => r.id === member.metadata.roleId)?.name ?? 'member';
 
     useEffect(() => {
       if (updateMemberRoleFetcher.data && 'error' in updateMemberRoleFetcher.data && updateMemberRoleFetcher.state === 'idle') {
@@ -439,7 +439,7 @@ interface PaginationBarProps {
   isHidden?: boolean;
   onPrevPress?: () => void;
   onNextPress?: () => void;
-};
+}
 
 const PaginationBar = ({ isNextDisabled, isPrevDisabled, isHidden, onPrevPress, onNextPress }: PaginationBarProps) => {
   if (isHidden) {
@@ -480,71 +480,71 @@ export const InviteModalContainer: FC<{
   isOpen,
   setIsOpen,
 }) => {
-  const [loadingOrgInfo, setLoadingOrgInfo] = useState(true);
-  const { organizationId } = useParams();
-  const [allRoles, setAllRoles] = useState<Role[]>([]);
-  const [currentUserRoleInOrg, setCurrentUserRoleInOrg] = useState<Role | null>(null);
-  const [orgFeatures, setOrgFeatures] = useState<Features | null>(null);
-  const permissionRef = useRef<Record<Permission, boolean>>();
-  const [currentUserAccountId, setCurrentUserAccountId] = useState('');
-  const [currentOrgInfo, setCurrentOrgInfo] = useState<OrganizationAuth0 | null>(null);
+    const [loadingOrgInfo, setLoadingOrgInfo] = useState(true);
+    const { organizationId } = useParams();
+    const [allRoles, setAllRoles] = useState<Role[]>([]);
+    const [currentUserRoleInOrg, setCurrentUserRoleInOrg] = useState<Role | null>(null);
+    const [orgFeatures, setOrgFeatures] = useState<Features | null>(null);
+    const permissionRef = useRef<Record<Permission, boolean>>();
+    const [currentUserAccountId, setCurrentUserAccountId] = useState('');
+    const [currentOrgInfo, setCurrentOrgInfo] = useState<OrganizationAuth0 | null>(null);
 
-  const isCurrentUserOrganizationOwner = currentUserAccountId === currentOrgInfo?.metadata?.ownerAccountId;
+    const isCurrentUserOrganizationOwner = currentUserAccountId === currentOrgInfo?.metadata?.ownerAccountId;
 
-  function getBaseInfo(organizationId: string) {
-    return Promise.all([
-      getCurrentUserRoleInOrg(organizationId).then(setCurrentUserRoleInOrg),
-      getOrganizationFeatures(organizationId).then(setOrgFeatures),
-      getCurrentUserPermissionsInOrg(organizationId).then(permissions => {
-        permissionRef.current = permissions;
-      }),
-      getAccountId().then(setCurrentUserAccountId),
-      getOrganization(organizationId).then(setCurrentOrgInfo),
-    ]);
-  }
+    function getBaseInfo(organizationId: string) {
+      return Promise.all([
+        getCurrentUserRoleInOrg(organizationId).then(setCurrentUserRoleInOrg),
+        getOrganizationFeatures(organizationId).then(setOrgFeatures),
+        getCurrentUserPermissionsInOrg(organizationId).then(permissions => {
+          permissionRef.current = permissions;
+        }),
+        getAccountId().then(setCurrentUserAccountId),
+        getOrganization(organizationId).then(setCurrentOrgInfo),
+      ]);
+    }
 
-  function revalidateCurrentUserRoleAndPermissionsInOrg(organizationId: string) {
-    return Promise.all([
-      getCurrentUserRoleInOrg(organizationId).then(setCurrentUserRoleInOrg),
-      getCurrentUserPermissionsInOrg(organizationId).then(permissions => {
-        permissionRef.current = permissions;
-      }),
-    ]);
-  }
+    function revalidateCurrentUserRoleAndPermissionsInOrg(organizationId: string) {
+      return Promise.all([
+        getCurrentUserRoleInOrg(organizationId).then(setCurrentUserRoleInOrg),
+        getCurrentUserPermissionsInOrg(organizationId).then(permissions => {
+          permissionRef.current = permissions;
+        }),
+      ]);
+    }
 
-  // get info every time organizationId changes
-  useEffect(() => {
-    (async () => {
-      if (organizationId) {
-        setLoadingOrgInfo(true);
-        await Promise.all([
-          getAllRoles().then(setAllRoles),
-          getBaseInfo(organizationId),
-        ]);
-        setLoadingOrgInfo(false);
+    // get info every time organizationId changes
+    useEffect(() => {
+      (async () => {
+        if (organizationId) {
+          setLoadingOrgInfo(true);
+          await Promise.all([
+            getAllRoles().then(setAllRoles),
+            getBaseInfo(organizationId),
+          ]);
+          setLoadingOrgInfo(false);
+        }
+      })();
+    }, [organizationId]);
+
+    // get info every time modal is opened
+    useEffect(() => {
+      if (organizationId && isOpen) {
+        getBaseInfo(organizationId);
       }
-    })();
-  }, [organizationId]);
+    }, [organizationId, isOpen]);
 
-  // get info every time modal is opened
-  useEffect(() => {
-    if (organizationId && isOpen) {
-      getBaseInfo(organizationId);
+    // track event when modal is opened
+    useEffect(() => {
+      if (isOpen) {
+        window.main.trackSegmentEvent({ event: SegmentEvent.inviteTrigger });
+      }
+    }, [
+      isOpen,
+    ]);
+
+    if (loadingOrgInfo || !organizationId || !isOpen) {
+      return null;
     }
-  }, [organizationId, isOpen]);
-
-  // track event when modal is opened
-  useEffect(() => {
-    if (isOpen) {
-      window.main.trackSegmentEvent({ event: SegmentEvent.inviteTrigger });
-    }
-  }, [
-    isOpen,
-  ]);
-
-  if (loadingOrgInfo || !organizationId || !isOpen) {
-    return null;
-  }
     invariant(currentUserRoleInOrg, 'currentUserRoleInOrg should not be null');
     invariant(orgFeatures, 'orgFeatures should not be null');
 
@@ -563,10 +563,9 @@ export const InviteModalContainer: FC<{
         />
       );
     }
-      return null;
+    return null;
 
-  ;
-};
+  };
 
 function checkPermissionRefType(permissionRef: MutableRefObject<Record<Permission, boolean> | undefined>): permissionRef is MutableRefObject<Record<Permission, boolean>> {
   return Boolean(permissionRef.current);
@@ -603,18 +602,18 @@ export async function getCurrentUserPermissionsInOrg(
 export interface FeatureStatus {
   enabled: boolean;
   reason?: string;
-};
+}
 
 export interface OrgFeatures {
   gitSync: FeatureStatus;
   orgBasicRbac: FeatureStatus;
   cloudSync: FeatureStatus;
   localVault: FeatureStatus;
-};
+}
 
 export interface Features {
   features: OrgFeatures;
-};
+}
 
 async function getOrganizationFeatures(
   organizationId: string,
@@ -656,7 +655,7 @@ export async function getCurrentUserRoleInOrg(organizationId: string): Promise<R
 export interface OrganizationBranding {
   logo_url: string;
   colors: string[];
-};
+}
 
 export type OrganizationType = 'personal' | 'team' | 'enterprise';
 
@@ -664,7 +663,7 @@ export interface Metadata {
   organizationType: OrganizationType;
   ownerAccountId?: string;
   description?: string;
-};
+}
 
 export interface OrganizationAuth0 {
   id: string;
@@ -672,7 +671,7 @@ export interface OrganizationAuth0 {
   display_name: string;
   branding: OrganizationBranding;
   metadata: Metadata;
-};
+}
 
 async function getOrganization(
   organizationId: string,

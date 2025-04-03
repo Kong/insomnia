@@ -87,12 +87,12 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
     ...entry,
     document: syncItems.find(item => item.key === key)?.document || 'deleted' in entry ? { type: getModelTypeById(key) } : undefined,
     id: `staged-${key}`,
-  }));;
+  }));
   const unstagedChanges = Object.entries(status.unstaged).map(([key, entry]) => ({
     ...entry,
     document: syncItems.find(item => item.key === key)?.document || 'deleted' in entry ? { type: getModelTypeById(key) } : undefined,
     id: `unstaged-${key}`,
-  }));;
+  }));
 
   const stageChangesFetcher = useFetcher();
 

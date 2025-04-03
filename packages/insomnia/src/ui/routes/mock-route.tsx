@@ -171,14 +171,14 @@ export const MockRouteRoute = () => {
         message: `Path "${pathInput}" and method must be unique. Please enter a different name.`,
       });
       return;
-    };
+    }
     if (pathInput?.[0] !== '/') {
       showModal(AlertModal, {
         title: 'Error',
         message: 'Path must begin with a /',
       });
       return;
-    };
+    }
     const compoundId = mockRoute.parentId + pathInput;
     const error = await upsertBinOnRemoteFromResponse(compoundId);
     if (error) {
@@ -207,14 +207,14 @@ export const MockRouteRoute = () => {
         message: `Path "${pathInput}" and method must be unique. Please enter a different name.`,
       });
       return;
-    };
+    }
     if (pathInput[0] !== '/') {
       showModal(AlertModal, {
         title: 'Error',
         message: 'Path must begin with a /',
       });
       return;
-    };
+    }
     await upsertMockbinHar(pathInput);
     createAndSendPrivateRequest({
       url: getMockServiceBinURL(mockServer, pathInput),

@@ -184,28 +184,22 @@ export function unTokenizeTag(tagData: NunjucksParsedTag) {
 /** Get the default Nunjucks string for an extension */
 export function getDefaultFill(name: string, args: NunjucksParsedTagArg[]) {
   const stringArgs: string[] = (args || []).map(argDefinition => {
-    switch (argDefinition.type) {
-      case 'enum':
-        const { defaultValue, options } = argDefinition;
-        const fallback = options && options.length ? options[0].value : '';
-        const value = defaultValue !== undefined ? String(defaultValue) : String(fallback);
-        return `'${value}'`;
-
-      case 'number':
-        // @ts-expect-error -- TSCONVERSION
-        return `${parseFloat(argDefinition.defaultValue) || 0}`;
-
-      case 'boolean':
-        return argDefinition.defaultValue ? 'true' : 'false';
-
-      case 'string':
-      case 'file':
-      case 'model':
-        return `'${(argDefinition.defaultValue as any) || ''}'`;
-
-      default:
-        return "''";
+    if (argDefinition.type === 'enum') {
+      const { defaultValue, options } = argDefinition;
+      const fallback = options && options.length ? options[0].value : '';
+      const value = defaultValue !== undefined ? String(defaultValue) : String(fallback);
+      return `'${value}'`;
     }
+    if (argDefinition.type === 'number') {
+      return `${parseFloat(argDefinition.defaultValue + '') || 0}`;
+    }
+    if (argDefinition.type === 'boolean') {
+      return argDefinition.defaultValue ? 'true' : 'false';
+    }
+    if (argDefinition.type === 'string' || argDefinition.type === 'file' || argDefinition.type === 'model') {
+      return `'${(argDefinition.defaultValue as any) || ''}'`;
+    }
+    return "''";
   });
   return `${name} ${stringArgs.join(', ')}`;
 }

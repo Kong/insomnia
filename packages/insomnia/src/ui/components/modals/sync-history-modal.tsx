@@ -128,7 +128,7 @@ export const SyncHistoryModal = ({ history, onClose }: Props) => {
                         </Cell>
                         <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
                           <div className='p-2' >
-                            {Boolean(authorName(item)) ? (
+                            {authorName(item) ? (
                               <>
                                 {authorName(item)}{' '}
                                 <HelpTooltip

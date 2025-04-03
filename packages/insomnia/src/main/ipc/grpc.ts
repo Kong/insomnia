@@ -80,15 +80,11 @@ const grpcOptions = {
   oneofs: true,
 };
 const loadMethodsFromFilePath = async (filePath: string, includeDirs: string[]): Promise<MethodDefs[]> => {
-  try {
-    const definition = await protoLoader.load(filePath, {
-      ...grpcOptions,
-      includeDirs,
-    });
-    return getMethodsFromPackageDefinition(definition);
-  } catch (error) {
-    throw error;
-  }
+  const definition = await protoLoader.load(filePath, {
+    ...grpcOptions,
+    includeDirs,
+  });
+  return getMethodsFromPackageDefinition(definition);
 };
 const loadMethods = async (protoFileId: string): Promise<GrpcMethodInfo[]> => {
   const protoFile = await models.protoFile.getById(protoFileId);
@@ -406,51 +402,46 @@ export const start = (
     try {
       const messageBody = JSON.parse(request.body.text || '');
       const requestPath = path + method.path;
-      switch (methodType) {
-        case 'unary':
-          const unaryCall = client.makeUnaryRequest(
-            requestPath,
-            method.requestSerialize,
-            method.responseDeserialize,
-            messageBody,
-            filterDisabledOrInvalidMetaData(request.metadata),
-            onUnaryResponse(event, request._id),
-          );
-          unaryCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
-          grpcCalls.set(request._id, unaryCall);
-          break;
-        case 'client':
-          const clientCall = client.makeClientStreamRequest(
-            requestPath,
-            method.requestSerialize,
-            method.responseDeserialize,
-            filterDisabledOrInvalidMetaData(request.metadata),
-            onUnaryResponse(event, request._id));
-          clientCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
-          grpcCalls.set(request._id, clientCall);
-          break;
-        case 'server':
-          const serverCall = client.makeServerStreamRequest(
-            requestPath,
-            method.requestSerialize,
-            method.responseDeserialize,
-            messageBody,
-            filterDisabledOrInvalidMetaData(request.metadata),
-          );
-          onStreamingResponse(event, serverCall, request._id);
-          grpcCalls.set(request._id, serverCall);
-          break;
-        case 'bidi':
-          const bidiCall = client.makeBidiStreamRequest(
-            requestPath,
-            method.requestSerialize,
-            method.responseDeserialize,
-            filterDisabledOrInvalidMetaData(request.metadata));
-          onStreamingResponse(event, bidiCall, request._id);
-          grpcCalls.set(request._id, bidiCall);
-          break;
-        default:
-          return;
+      if (methodType === 'unary') {
+        const unaryCall = client.makeUnaryRequest(
+          requestPath,
+          method.requestSerialize,
+          method.responseDeserialize,
+          messageBody,
+          filterDisabledOrInvalidMetaData(request.metadata),
+          onUnaryResponse(event, request._id),
+        );
+        unaryCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
+        grpcCalls.set(request._id, unaryCall);
+      } else if (methodType === 'client') {
+        const clientCall = client.makeClientStreamRequest(
+          requestPath,
+          method.requestSerialize,
+          method.responseDeserialize,
+          filterDisabledOrInvalidMetaData(request.metadata),
+          onUnaryResponse(event, request._id));
+        clientCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
+        grpcCalls.set(request._id, clientCall);
+      } else if (methodType === 'server') {
+        const serverCall = client.makeServerStreamRequest(
+          requestPath,
+          method.requestSerialize,
+          method.responseDeserialize,
+          messageBody,
+          filterDisabledOrInvalidMetaData(request.metadata),
+        );
+        onStreamingResponse(event, serverCall, request._id);
+        grpcCalls.set(request._id, serverCall);
+      } else if (methodType === 'bidi') {
+        const bidiCall = client.makeBidiStreamRequest(
+          requestPath,
+          method.requestSerialize,
+          method.responseDeserialize,
+          filterDisabledOrInvalidMetaData(request.metadata));
+        onStreamingResponse(event, bidiCall, request._id);
+        grpcCalls.set(request._id, bidiCall);
+      } else {
+        throw new Error(`Unsupported method type: ${methodType}`);
       }
       // Update request stats
       models.stats.incrementExecutedRequests();

@@ -23,7 +23,7 @@ interface OrgRunnerStateMap {
 
 interface RunnerStateMap {
   [orgId: string]: OrgRunnerStateMap;
-};
+}
 interface ContextProps {
   runnerStateMap: RunnerStateMap;
   runnerStateRef?: React.MutableRefObject<RunnerStateMap>;

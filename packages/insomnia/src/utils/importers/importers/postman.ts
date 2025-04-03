@@ -119,7 +119,7 @@ export function translateHandlersInScript(scriptContent: string): string {
   let offset = 0;
   for (let i = 0; i < scriptContent.length - 2; i++) {
     const isPM = scriptContent.slice(i, i + 3) === 'pm.';
-    const isPrevCharacterAlphaNumeric = i - 1 >= 0 && /[0-9a-zA-Z\_\$]/.test(scriptContent[i - 1]);
+    const isPrevCharacterAlphaNumeric = i - 1 >= 0 && /[0-9a-zA-Z_$]/.test(scriptContent[i - 1]);
     if (isPM && !isPrevCharacterAlphaNumeric) {
       translated = translated.slice(0, i + offset) + 'insomnia.' + translated.slice(i + 3 + offset);
       offset += 6;
@@ -354,33 +354,20 @@ export class ImportPostman {
     if (!body) {
       return {};
     }
-
-    switch (body.mode) {
-      case 'raw':
-        let language: string | undefined = undefined;
-        if (
-          typeof body.options?.raw === 'object' &&
-          body.options?.raw &&
-          'language' in body.options?.raw &&
-          typeof body.options.raw.language === 'string'
-        ) {
-          language = body.options.raw.language;
-        }
-        return this.importBodyRaw(body.raw, language);
-
-      case 'urlencoded':
-        return this.importBodyFormUrlEncoded(body.urlencoded);
-
-      case 'formdata':
-        // TODO: Handle this as properly as multipart/form-data
-        return this.importBodyFormdata(body.formdata);
-
-      case 'graphql':
-        return this.importBodyGraphQL(body.graphql);
-
-      default:
-        return {};
+    if (body.mode === 'graphql') {
+      return this.importBodyGraphQL(body.graphql);
     }
+    if (body.mode === 'formdata') {
+      return this.importBodyFormdata(body.formdata);
+    }
+    if (body.mode === 'urlencoded') {
+      return this.importBodyFormUrlEncoded(body.urlencoded);
+    }
+    if (body.mode === 'raw') {
+      const rawOptions = body.options?.raw as { language: string }
+      return this.importBodyRaw(body.raw, rawOptions?.language || '');
+    }
+    return {};
   };
 
   importBodyFormdata = (formdata?: FormParameter[]) => {
@@ -447,27 +434,20 @@ export class ImportPostman {
     if (raw === '') {
       return {};
     }
-
-    let mimeType;
-    switch (language) {
-      case 'xml':
-        mimeType = CONTENT_TYPE_XML;
-        break;
-      case 'text':
-        mimeType = CONTENT_TYPE_PLAINTEXT;
-        break;
-      case 'json':
-        mimeType = CONTENT_TYPE_JSON;
-        break;
-      // TODO: we do not support these types yet
-      case 'javascript':
-      case 'html':
-      default:
-        mimeType = CONTENT_TYPE_PLAINTEXT;
+    if (language === 'xml') {
+      return {
+        mimeType: CONTENT_TYPE_XML,
+        text: transformPostmanToNunjucksString(raw),
+      };
     }
-
+    if (language === 'json') {
+      return {
+        mimeType: CONTENT_TYPE_JSON,
+        text: transformPostmanToNunjucksString(raw),
+      };
+    }
     return {
-      mimeType,
+      mimeType: CONTENT_TYPE_PLAINTEXT,
       text: transformPostmanToNunjucksString(raw),
     };
   };
@@ -696,8 +676,8 @@ export class ImportPostman {
     const item = {
       type: 'basic',
       disabled: false,
-      username: RegExp(/.+?(?=\:)/).exec(authString)?.[0],
-      password: RegExp(/(?<=\:).*/).exec(authString)?.[0],
+      username: RegExp(/.+?(?=:)/).exec(authString)?.[0],
+      password: RegExp(/(?<=:).*/).exec(authString)?.[0],
     };
     item.username = transformPostmanToNunjucksString(item.username);
     item.password = transformPostmanToNunjucksString(item.password);

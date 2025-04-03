@@ -12,7 +12,7 @@ export interface LocalStorageOptions<T> {
     stringify: (value: unknown) => string;
     parse: (value: string) => unknown;
   };
-};
+}
 
 // - `useLocalStorageState()` return type
 // - first two values are the same as `useState`

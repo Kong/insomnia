@@ -88,8 +88,6 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
         } else {
           setInvalidFileReason('CSV file must contain at least two rows with first row as variable names');
         }
-      } else {
-
       }
     } catch (error) {
       setInvalidFileReason(`Failed to read file ${error?.message}`);
@@ -101,14 +99,14 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
     setUploadData([]);
     if (!fileList) {
       return;
-    };
+    }
     const files = Array.from(fileList);
     const file = files[0];
     const fileType = file.type;
     if (!supportedFileTypes.includes(fileType)) {
       setInvalidFileReason(`Uploaded file is unsupported ${file.type}`);
       return;
-    };
+    }
     const filePath = window.webUtils.getPathForFile(file);
     try {
       const { content, encoding } = await window.main.readFile({ path: filePath });
@@ -153,7 +151,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
       const { data, headers } = genPreviewTableData(userUploadData);
       setUploadDataHeaders(headers);
       setUploadData(data);
-    };
+    }
   }, [userUploadData]);
 
   return (

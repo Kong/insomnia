@@ -187,7 +187,7 @@ export async function create(patch: Partial<Response> = {}, maxResponses = 20): 
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
   // Filter responses by environment if setting is enabled
   const settings = await models.settings.get();
-  const shouldQueryByEnvId = patch.hasOwnProperty('environmentId') && settings.filterResponsesByEnv;
+  const shouldQueryByEnvId = 'environmentId' in patch && settings.filterResponsesByEnv;
   const query = {
     parentId,
     ...(shouldQueryByEnvId ? { environmentId: patch.environmentId } : {}),
@@ -229,7 +229,7 @@ export const getBodyStream = (
   if (response?.bodyCompression === 'zip') {
     return fs.createReadStream(response?.bodyPath).pipe(zlib.createGunzip());
   }
-    return fs.createReadStream(response?.bodyPath);
+  return fs.createReadStream(response?.bodyPath);
 
 };
 export const readCurlResponse = async (options: { bodyPath?: string; bodyCompression?: Compression }) => {

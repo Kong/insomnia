@@ -7,7 +7,7 @@ import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 
 interface Props {
   defaultValue: string;
-  onChange: Function;
+  onChange: (arg: string) => void;
 }
 
 export const VariableEditor: FC<Props> = ({ onChange, defaultValue }) => {

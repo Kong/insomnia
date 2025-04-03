@@ -71,7 +71,7 @@ const checkIfAllow = ({
 export enum SELECTOR_TYPE {
   UPDATE = 'update',
   INVITE = 'invite',
-};
+}
 
 interface Props {
   type: SELECTOR_TYPE.UPDATE | SELECTOR_TYPE.INVITE;

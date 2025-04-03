@@ -314,7 +314,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     onReorder: e => {
       const moveKey = Array.from(e.keys)[0].toString();
       if (e.target.dropPosition === 'before') {
-        moveBefore?.(e.target.key.toString(), moveKey);;
+        moveBefore?.(e.target.key.toString(), moveKey);
       } else if (e.target.dropPosition === 'after') {
         moveAfter?.(e.target.key.toString(), moveKey);
       }
@@ -331,7 +331,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
 
   if (!tabList.length) {
     return null;
-  };
+  }
 
   return (
     <div className="flex box-content bg-[--color-bg]" style={{ height: `${INSOMNIA_TAB_HEIGHT + 1}px` }} >

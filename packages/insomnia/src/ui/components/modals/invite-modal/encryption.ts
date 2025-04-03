@@ -78,20 +78,16 @@ async function decryptProjectKeys(
   decryptionKey: JsonWebKey,
   projectKeys: EncryptedProjectKey[],
 ): Promise<DecryptedProjectKey[]> {
-  try {
-    const promises = projectKeys.map(key => {
-      const symmetricKey = decryptRSAWithJWK(decryptionKey, key.encKey);
-      return {
-        projectId: key.projectId,
-        symmetricKey,
-      };
-    });
+  const promises = projectKeys.map(key => {
+    const symmetricKey = decryptRSAWithJWK(decryptionKey, key.encKey);
+    return {
+      projectId: key.projectId,
+      symmetricKey,
+    };
+  });
 
-    const decrypted = await Promise.all(promises);
-    return decrypted;
-  } catch (error) {
-    throw error;
-  }
+  const decrypted = await Promise.all(promises);
+  return decrypted;
 }
 
 interface StartInviteParams {

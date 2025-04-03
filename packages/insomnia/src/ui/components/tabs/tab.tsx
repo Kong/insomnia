@@ -24,7 +24,7 @@ export interface BaseTab {
   tag?: string;
   method?: string;
   temporary?: boolean;
-};
+}
 
 const REQUEST_METHOD_STYLE_MAP: Record<string, string> = {
   'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
@@ -86,7 +86,7 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
     }
     if (type === 'runner') {
       return <Icon icon="play" />;
-    };
+    }
 
     if (type === 'testSuite') {
       return <Icon icon="check" />;

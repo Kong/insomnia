@@ -88,14 +88,14 @@ const MockServerRoute = () => {
                   message: `Path "${name}" and method must be unique. Please enter a different name.`,
                 });
                 return;
-              };
+              }
               if (name[0] !== '/') {
                 showModal(AlertModal, {
                   title: 'Error',
                   message: 'Path must begin with a /',
                 });
                 return;
-              };
+              }
               name && patchMockRoute(id, { name });
             },
           });
@@ -224,14 +224,14 @@ const MockServerRoute = () => {
                       message: `Path "${name}" and must be unique. Please enter a different name.`,
                     });
                     return;
-                  };
+                  }
                   if (name[0] !== '/') {
                     showModal(AlertModal, {
                       title: 'Error',
                       message: 'Path must begin with a /',
                     });
                     return;
-                  };
+                  }
                   fetcher.submit(
                     {
                       name,
@@ -310,14 +310,14 @@ const MockServerRoute = () => {
                           message: `Path "${name}" and method must be unique. Please enter a different name.`,
                         });
                         return;
-                      };
+                      }
                       if (name[0] !== '/') {
                         showModal(AlertModal, {
                           title: 'Error',
                           message: 'Path must begin with a /',
                         });
                         return;
-                      };
+                      }
                       name && fetcher.submit(
                         { name },
                         {

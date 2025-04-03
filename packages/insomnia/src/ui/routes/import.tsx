@@ -169,4 +169,4 @@ async function syncNewWorkspaceIfNeeded(newWorkspace: Workspace) {
       console.warn(`Failed to initialize sync to insomnia cloud for workspace ${newWorkspace._id}. This will be retried when the workspace is opened on the app. ${e.message}`);
     }
   }
-};
+}

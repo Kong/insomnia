@@ -185,7 +185,7 @@ export async function getUserSession(): Promise<SessionData> {
   const userData = await userSession.getOrCreate();
 
   return userData;
-};
+}
 
 async function _unsetSessionData() {
   await userSession.getOrCreate();

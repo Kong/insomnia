@@ -52,7 +52,7 @@ export async function exportRequestsHAR(
     const workspace = ancestors.find(isWorkspace);
     mapRequestIdToWorkspace[request._id] = workspace;
 
-    if (workspace == null || workspaceLookup.hasOwnProperty(workspace._id)) {
+    if (workspace == null || workspace._id in workspaceLookup) {
       continue;
     }
 
@@ -197,7 +197,7 @@ async function writeExportedFileToFileSystem(filename: string, data: string) {
   // Remember last exported path
   window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
   await writeFile(filename, data);
-};
+}
 
 export const exportProjectToFile = (activeProjectName: string, workspacesForActiveProject: Workspace[]) => {
   if (!workspacesForActiveProject.length) {

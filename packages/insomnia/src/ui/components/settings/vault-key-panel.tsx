@@ -48,7 +48,7 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
           event.stopPropagation();
           if (vaultKey) {
             window.clipboard.writeText(vaultKey);
-          };
+          }
           setShowCopyConfirmation(true);
         }}
       >
@@ -101,7 +101,7 @@ export const VaultKeyPanel = () => {
     if (vaultKeyFetcher.data && !vaultKeyFetcher.data.error && vaultKeyFetcher.state === 'idle') {
       setGenerating(false);
       setVaultKeyValue(vaultKeyFetcher.data);
-    };
+    }
   }, [vaultKeyFetcher.data, vaultKeyFetcher.state]);
 
   useEffect(() => {
@@ -141,7 +141,7 @@ export const VaultKeyPanel = () => {
   const handleModalClose = (newVaultKey?: string) => {
     if (newVaultKey) {
       setVaultKeyValue(newVaultKey);
-    };
+    }
     setShowModal(false);
   };
 
@@ -150,10 +150,10 @@ export const VaultKeyPanel = () => {
     if (saveVaultKeyLocally) {
       if (vaultKeyValue.length > 0) {
         saveVaultKeyIfNecessary(accountId, vaultKeyValue);
-      };
+      }
     } else {
       deleteVaultKeyFromStorage(accountId);
-    };
+    }
   }, [saveVaultKeyLocally, accountId, vaultKeyValue]);
 
   return (

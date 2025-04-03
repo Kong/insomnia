@@ -31,7 +31,7 @@ import { RequestSettingsModal } from '../modals/request-settings-modal';
 interface Props {
   activeEnvironment: Environment;
   activeProject: Project;
-  isPinned: Boolean;
+  isPinned: boolean;
   request: Request | GrpcRequest | WebSocketRequest;
   requestGroup?: RequestGroup;
   isOpen: boolean;

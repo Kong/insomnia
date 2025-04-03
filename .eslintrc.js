@@ -13,7 +13,7 @@ module.exports = {
     },
   },
   extends: [
-    'plugin:@typescript-eslint/eslint-recommended',
+    'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:react/recommended',
     'plugin:react-hooks/recommended',
@@ -61,10 +61,14 @@ module.exports = {
     'eqeqeq': ['error', 'smart'],
     'arrow-parens': ['error', 'as-needed'],
     'arrow-spacing': 'error',
+    'no-async-promise-executor': 'off',
     'no-else-return': 'error',
+    'no-empty': ["error", { "allowEmptyCatch": true }],
     'no-var': 'error',
     'no-trailing-spaces': 'error',
     'no-multiple-empty-lines': ['error', { 'max': 1, 'maxEOF': 0 }],
+    'no-inner-declarations': 'off',
+    'no-useless-escape': 'off', // TODO: Enable this rule
     'object-curly-spacing': ['error', 'always'],
     'space-before-function-paren': ['error', { anonymous: 'ignore', named: 'ignore', asyncArrow: 'always' }],
     'space-unary-ops': 'error',
@@ -101,15 +105,12 @@ module.exports = {
     'react-hooks/rules-of-hooks': 'error',
 
     '@typescript-eslint/array-type': ['error', { default: 'array', readonly: 'array' }],
-    '@typescript-eslint/ban-types': 'off',
     '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
     '@typescript-eslint/no-empty-interface': ['error', { 'allowSingleExtends': true }],
     '@typescript-eslint/no-empty-object-type': 'off', // TODO: Enable this rule
     '@typescript-eslint/no-namespace': ['error', { allowDeclarations: true }],
     '@typescript-eslint/no-redeclare': 'error',
     '@typescript-eslint/no-require-imports': 'off',
-    '@typescript-eslint/no-wrapper-object-types': 'off', // TODO: Enable this rule
-    '@typescript-eslint/no-unsafe-function-type': 'off', // TODO: Enable this rule
     '@typescript-eslint/no-unused-expressions': 'off', // TODO: Enable this rule
     '@typescript-eslint/no-unused-vars': 'off', // TODO: Enable this rule
 

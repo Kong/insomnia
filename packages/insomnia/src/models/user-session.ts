@@ -13,7 +13,7 @@ export interface BaseUserSession {
   encPrivateKey: AESMessage;
   vaultSalt?: string;
   vaultKey?: string;
-};
+}
 
 export interface HashedUserSession {
   hashedAccountId: string;

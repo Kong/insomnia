@@ -14,7 +14,7 @@ import { ModalHeader } from '../base/modal-header';
 import { Icon } from '../icon';
 
 interface AddRequestModalProps extends ModalProps {
-  onHide: Function;
+  onHide: () => void;
 }
 
 export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }) => {

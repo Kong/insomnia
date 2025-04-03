@@ -6,7 +6,7 @@ import { ErrorBoundary } from './error-boundary';
 import { MarkdownPreview } from './markdown-preview';
 
 interface Props {
-  onChange: Function;
+  onChange: (arg: string) => void;
   defaultValue: string;
   placeholder?: string;
   className?: string;

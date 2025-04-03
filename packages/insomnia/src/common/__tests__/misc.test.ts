@@ -9,7 +9,6 @@ import {
   generateId,
   hasAuthHeader,
   isNotNullOrUndefined,
-  keyedDebounce,
   toKebabCase,
 } from '../misc';
 
@@ -120,35 +119,6 @@ describe('filterHeaders()', () => {
       {
         name: 'good',
         value: 'valid',
-      },
-    ]);
-  });
-});
-
-describe('keyedDebounce()', () => {
-
-  it('debounces correctly', async () => {
-    vi.useFakeTimers();
-    const resultsList: Record<string, string[]>[] = [];
-    const setter = vi.fn((result: Record<string, string[]>) => {
-      resultsList.push(result);
-    });
-    vi.clearAllTimers();
-    const fn = keyedDebounce<string>(setter, 100);
-    fn('foo', 'bar');
-    fn('baz', 'bar');
-    fn('foo', 'bar2');
-    fn('foo', 'bar3');
-    fn('multi', 'foo', 'bar', 'baz');
-    expect(resultsList).toEqual([]);
-
-    vi.runAllTimers();
-
-    expect(resultsList).toEqual([
-      {
-        foo: ['bar3'],
-        baz: ['bar'],
-        multi: ['foo', 'bar', 'baz'],
       },
     ]);
   });

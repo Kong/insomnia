@@ -96,7 +96,7 @@ export enum ORG_STORAGE_RULE {
   CLOUD_PLUS_LOCAL = 'cloud_plus_local',
   CLOUD_ONLY = 'cloud_only',
   LOCAL_ONLY = 'local_only',
-};
+}
 
 export function getDefaultProjectStorageType(storage: ORG_STORAGE_RULE, project?: Project): 'local' | 'remote' | 'git' {
   if (storage === ORG_STORAGE_RULE.CLOUD_ONLY) {

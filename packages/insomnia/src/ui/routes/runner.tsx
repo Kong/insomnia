@@ -108,7 +108,7 @@ export interface RequestRow {
   method: string;
   url: string;
   parentId: string;
-};
+}
 
 const defaultAdvancedConfig = {
   bail: true,
@@ -793,7 +793,7 @@ const RequestItem = (
 interface ExecutionInfo {
   activeRequestId?: string;
   error?: string;
-};
+}
 const runnerExecutions = new Map<string, ExecutionInfo>();
 function startExecution(workspaceId: string) {
   runnerExecutions.set(workspaceId, {});
@@ -826,7 +826,7 @@ const wrapAroundIterationOverIterationData = (list?: UserUploadEnvironment[], cu
   }
   if (list.length >= currentIteration + 1) {
     return list[currentIteration];
-  };
+  }
   return list[(currentIteration + 1) % list.length];
 };
 export interface runCollectionActionParams {
@@ -961,7 +961,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
           }) as RequestContext | null;
           if (mutatedContext?.execution?.nextRequestIdOrName) {
             nextRequestIdOrName = mutatedContext.execution.nextRequestIdOrName || '';
-          };
+          }
 
           const requestResults: RunnerResultPerRequest = {
             requestName: targetRequest.name,

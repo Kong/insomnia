@@ -44,7 +44,7 @@ const InsomniaTabContext = createContext<ContextProps>({
 
 interface InsomniaTabs {
   [orgId: string]: OrganizationTabs;
-};
+}
 
 export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
   const {

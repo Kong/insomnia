@@ -6,7 +6,7 @@ import * as _ from 'lodash';
 
 export interface HiddenBrowserWindowBridgeAPI {
   runScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;
-};
+}
 
 Sentry.init({
   ...SENTRY_OPTIONS,
@@ -133,12 +133,8 @@ function proxiedSetTimeout(
 
   return setTimeout(
     () => {
-      try {
-        callback();
-        resolveHdl(null);
-      } catch (e) {
-        throw e;
-      }
+      callback();
+      resolveHdl(null);
     },
     ms,
   );

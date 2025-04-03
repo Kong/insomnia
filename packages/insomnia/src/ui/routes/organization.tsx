@@ -116,7 +116,7 @@ export interface CurrentPlan {
   quantity: number;
   type: PersonalPlanType;
   planName: string;
-};
+}
 
 function sortOrganizations(accountId: string, organizations: Organization[]): Organization[] {
   const home = organizations.find(organization => isPersonalOrganization(organization) && isOwnerOfOrganization({
@@ -251,7 +251,7 @@ async function migrateProjectsUnderOrganization(personalOrganizationId: string, 
       }
     }
   }
-};
+}
 
 export const indexLoader: LoaderFunction = async () => {
   const { id: sessionId, accountId } = await userSession.getOrCreate();
@@ -344,7 +344,7 @@ export enum ORG_STORAGE_RULE {
   CLOUD_PLUS_LOCAL = 'cloud_plus_local',
   CLOUD_ONLY = 'cloud_only',
   LOCAL_ONLY = 'local_only',
-};
+}
 
 export interface StorageRule {
   storage: ORG_STORAGE_RULE;

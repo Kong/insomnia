@@ -15,13 +15,13 @@ interface Props {
 interface State {
   isTag: boolean;
   template: string;
-  onDone: Function;
+  onDone: (arg: string) => void;
   editorId?: string;
 }
 
 interface NunjucksModalOptions {
   template: string;
-  onDone: Function;
+  onDone: (arg: string) => void;
   editorId?: string;
 }
 

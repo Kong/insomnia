@@ -30,7 +30,7 @@ const wrapAroundIterationOverIterationData = (list?: UserUploadEnvironment[], cu
   }
   if (list.length >= currentIteration + 1) {
     return list[currentIteration];
-  };
+  }
   return list[(currentIteration + 1) % list.length];
 };
 

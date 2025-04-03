@@ -32,7 +32,7 @@ const createVaultKeyRequest = async (sessionId: string, salt: string, verifier: 
     data: { salt, verifier },
     sessionId,
   }).catch(error => {
-    console.error(error);;
+    console.error(error);
   });
 
 const resetVaultKeyRequest = async (sessionId: string, salt: string, verifier: string) =>
@@ -42,7 +42,7 @@ const resetVaultKeyRequest = async (sessionId: string, salt: string, verifier: s
     sessionId,
     data: { salt, verifier },
   }).catch(error => {
-    console.error(error);;
+    console.error(error);
   });
 
 export const saveVaultKey = async (accountId: string, vaultKey: string) => {
@@ -76,13 +76,13 @@ const createVaultKey = async (type: 'create' | 'reset' = 'create') => {
       const response = await createVaultKeyRequest(sessionId, vaultSalt, verifier);
       if (response?.error) {
         return { error: `${response?.error}: ${response?.message}` };
-      };
+      }
     } else {
       const response = await resetVaultKeyRequest(sessionId, vaultSalt, verifier);
       if (response?.error) {
         return { error: `${response?.error}: ${response?.message}` };
-      };
-    };
+      }
+    }
 
     // save encrypted vault key and vault salt to session
     await sessionModel.patch({ vaultSalt: vaultSalt });
@@ -165,7 +165,7 @@ export const updateVaultSaltAction: ActionFunction = async () => {
   });
   if (vaultSalt) {
     await sessionModel.update(userSession, { vaultSalt });
-  };
+  }
   return vaultSalt;
 };
 
@@ -217,9 +217,9 @@ export const validateVaultKeyAction: ActionFunction = async ({ request }) => {
     }
     if (saveVaultKeyLocally) {
       await saveVaultKey(accountId, vaultKey);
-    };
+    }
     return { vaultKey, srpK: validateResult };
   } catch (error) {
     return { error: error.toString() };
-  };
+  }
 };

@@ -145,7 +145,7 @@ async function _traversePluginPath(
         const pluginJson = global.require(packageJSONPath);
 
         // Not an Insomnia plugin because it doesn't have the package.json['insomnia']
-        if (!pluginJson.hasOwnProperty('insomnia')) {
+        if (!('insomnia' in pluginJson)) {
           continue;
         }
 
@@ -157,7 +157,7 @@ async function _traversePluginPath(
           description: pluginJson.description || pluginJson.insomnia.description || '',
           version: pluginJson.version || 'unknown',
           directory: modulePath || '',
-          config: allConfigs.hasOwnProperty(pluginJson.name)
+          config: (pluginJson.name in allConfigs)
             ? allConfigs[pluginJson.name]
             : { disabled: false },
           module: module,
@@ -188,7 +188,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
         if (p.indexOf('~/') === 0) {
           return path.join(process.env['HOME'] || '/', p.slice(1));
         }
-          return p;
+        return p;
 
       });
     // Make sure the default directories exist

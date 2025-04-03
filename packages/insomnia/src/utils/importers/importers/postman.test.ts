@@ -13,7 +13,7 @@ describe('postman', () => {
   } = {}) => JSON.parse(JSON.stringify({
     info: {
       name: 'Postman Schema',
-      schema: `https:\/\/schema.getpostman.com\/json\/collection\/${version}\/collection.json`,
+      schema: `https://schema.getpostman.com/json/collection/${version}/collection.json`,
     },
     item: [
       {
