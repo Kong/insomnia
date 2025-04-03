@@ -62,9 +62,12 @@ module.exports = {
     'arrow-parens': ['error', 'as-needed'],
     'arrow-spacing': 'error',
     'no-else-return': 'error',
+    'no-empty': ["error", { "allowEmptyCatch": true }],
     'no-var': 'error',
     'no-trailing-spaces': 'error',
     'no-multiple-empty-lines': ['error', { 'max': 1, 'maxEOF': 0 }],
+    'no-inner-declarations': 'off',
+    'no-useless-escape': 'off', // TODO: Enable this rule
     'object-curly-spacing': ['error', 'always'],
     'space-before-function-paren': ['error', { anonymous: 'ignore', named: 'ignore', asyncArrow: 'always' }],
     'space-unary-ops': 'error',

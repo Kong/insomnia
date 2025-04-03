@@ -80,165 +80,134 @@ const Root = () => {
             'insomnia://',
           );
         }
-        switch (urlWithoutParams) {
-          case 'insomnia://app/alert':
-            showModal(AlertModal, {
-              title: params.title,
-              message: params.message,
-            });
-            break;
-
-          case 'insomnia://app/auth/login':
-            if (params.message) {
-              window.localStorage.setItem('logoutMessage', params.message);
-            }
-            actionFetcher.submit(
-              {},
-              {
-                action: '/auth/logout',
-                method: 'POST',
-              },
-            );
-            break;
-
-          case 'insomnia://app/import':
-            setImportUri(params.uri);
-            break;
-
-          case 'insomnia://plugins/install':
-            showModal(AskModal, {
-              title: 'Plugin Install',
-              message: (
-                <>
-                  Do you want to install <code>{params.name}</code>?
-                </>
-              ),
-              yesText: 'Install',
-              noText: 'Cancel',
-              onDone: async (isYes: boolean) => {
-                if (isYes) {
-                  try {
-                    await window.main.installPlugin(params.name);
-                    showModal(SettingsModal, { tab: TAB_INDEX_PLUGINS });
-                  } catch (err) {
-                    showError({
-                      title: 'Plugin Install',
-                      message: 'Failed to install plugin',
-                      error: err.message,
-                    });
-                  }
-                }
-              },
-            });
-            break;
-
-          case 'insomnia://plugins/theme':
-            const parsedTheme = JSON.parse(decodeURIComponent(params.theme));
-            showModal(AskModal, {
-              title: 'Install Theme',
-              message: (
-                <>
-                  Do you want to install <code>{parsedTheme.displayName}</code>?
-                </>
-              ),
-              yesText: 'Install',
-              noText: 'Cancel',
-              onDone: async (isYes: boolean) => {
-                if (isYes) {
-                  const mainJsContent = `module.exports.themes = [${JSON.stringify(
-                    parsedTheme,
-                    null,
-                    2,
-                  )}];`;
-                  await createPlugin(
-                    `theme-${parsedTheme.name}`,
-                    '0.0.1',
-                    mainJsContent,
-                  );
-                  const settings = await models.settings.get();
-                  await models.settings.update(settings, {
-                    theme: parsedTheme.name,
-                  });
-                  await reloadPlugins();
-                  await setTheme(parsedTheme.name);
-                  showModal(SettingsModal, { tab: TAB_INDEX_THEMES });
-                }
-              },
-            });
-            break;
-
-          case 'insomnia://oauth/github/authenticate': {
-            const { code, state } = params;
-            actionFetcher.submit({
-              code,
-              state,
-            }, {
-              action: '/git-credentials/github/complete-sign-in',
-              method: 'POST',
-              encType: 'application/json',
-            });
-            break;
-          }
-
-          case 'insomnia://oauth/github-app/authenticate': {
-            const { code, state } = params;
-            actionFetcher.submit({
-              code,
-              state,
-            }, {
-              action: '/git-credentials/github/complete-sign-in',
-              method: 'POST',
-              encType: 'application/json',
-            });
-
-            break;
-          }
-
-          case 'insomnia://oauth/gitlab/authenticate': {
-            const { code, state } = params;
-            actionFetcher.submit({
-              code,
-              state,
-            }, {
-              action: '/git-credentials/gitlab/complete-sign-in',
-              method: 'POST',
-              encType: 'application/json',
-            });
-            break;
-          }
-
-          case 'insomnia://app/auth/finish': {
-            actionFetcher.submit(
-              {
-                code: params.box,
-              },
-              {
-                action: '/auth/authorize',
-                method: 'POST',
-                encType: 'application/json',
-              },
-            );
-            break;
-          }
-
-          case 'insomnia://app/open/organization':
-            // if user is logged out, navigate to authorize instead
-            // gracefully handle open org in app from browser
-            const userSession = await models.userSession.getOrCreate();
-            if (!userSession.id || userSession.id === '') {
-              const url = new URL(getLoginUrl());
-              window.main.openInBrowser(url.toString());
-              window.localStorage.setItem('specificOrgRedirectAfterAuthorize', params.organizationId);
-              navigate('/auth/authorize');
-            } else {
-              navigate(`/organization/${params.organizationId}`);
-            }
-            break;
-
-          default: {
-            console.log(`Unknown deep link: ${url}`);
-          }
+        if (urlWithoutParams === 'insomnia://app/alert') {
+          return showModal(AlertModal, {
+            title: params.title,
+            message: params.message,
+          });
         }
+        if (urlWithoutParams === 'insomnia://app/auth/login') {
+          if (params.message) {
+            window.localStorage.setItem('logoutMessage', params.message);
+          }
+          return actionFetcher.submit(
+            {},
+            {
+              action: '/auth/logout',
+              method: 'POST',
+            },
+          );
+        }
+        if (urlWithoutParams === 'insomnia://app/import') {
+          return setImportUri(params.uri);
+        }
+        if (urlWithoutParams === 'insomnia://plugins/install') {
+          return showModal(AskModal, {
+            title: 'Plugin Install',
+            message: (
+              <>
+                Do you want to install <code>{params.name}</code>?
+              </>
+            ),
+            yesText: 'Install',
+            noText: 'Cancel',
+            onDone: async (isYes: boolean) => {
+              if (isYes) {
+                try {
+                  await window.main.installPlugin(params.name);
+                  showModal(SettingsModal, { tab: TAB_INDEX_PLUGINS });
+                } catch (err) {
+                  showError({
+                    title: 'Plugin Install',
+                    message: 'Failed to install plugin',
+                    error: err.message,
+                  });
+                }
+              }
+            },
+          });
+        }
+        if (urlWithoutParams === 'insomnia://plugins/theme') {
+          const parsedTheme = JSON.parse(decodeURIComponent(params.theme));
+          showModal(AskModal, {
+            title: 'Install Theme',
+            message: (
+              <>
+                Do you want to install <code>{parsedTheme.displayName}</code>?
+              </>
+            ),
+            yesText: 'Install',
+            noText: 'Cancel',
+            onDone: async (isYes: boolean) => {
+              if (isYes) {
+                const mainJsContent = `module.exports.themes = [${JSON.stringify(
+                  parsedTheme,
+                  null,
+                  2,
+                )}];`;
+                await createPlugin(
+                  `theme-${parsedTheme.name}`,
+                  '0.0.1',
+                  mainJsContent,
+                );
+                const settings = await models.settings.get();
+                await models.settings.update(settings, {
+                  theme: parsedTheme.name,
+                });
+                await reloadPlugins();
+                await setTheme(parsedTheme.name);
+                showModal(SettingsModal, { tab: TAB_INDEX_THEMES });
+              }
+            },
+          });
+        }
+        if (urlWithoutParams === 'insomnia://oauth/github/authenticate' || urlWithoutParams === 'insomnia://oauth/github-app/authenticate') {
+          const { code, state } = params;
+          return actionFetcher.submit({
+            code,
+            state,
+          }, {
+            action: '/git-credentials/github/complete-sign-in',
+            method: 'POST',
+            encType: 'application/json',
+          });
+        }
+        if (urlWithoutParams === 'insomnia://oauth/gitlab/authenticate') {
+          const { code, state } = params;
+          return actionFetcher.submit({
+            code,
+            state,
+          }, {
+            action: '/git-credentials/gitlab/complete-sign-in',
+            method: 'POST',
+            encType: 'application/json',
+          });
+        }
+        if (urlWithoutParams === 'insomnia://app/auth/finish') {
+          return actionFetcher.submit(
+            {
+              code: params.box,
+            },
+            {
+              action: '/auth/authorize',
+              method: 'POST',
+              encType: 'application/json',
+            },
+          );
+        }
+        if (urlWithoutParams === 'insomnia://app/open/organization') {
+          // if user is logged out, navigate to authorize instead
+          // gracefully handle open org in app from browser
+          const userSession = await models.userSession.getOrCreate();
+          if (!userSession.id || userSession.id === '') {
+            const url = new URL(getLoginUrl());
+            window.main.openInBrowser(url.toString());
+            window.localStorage.setItem('specificOrgRedirectAfterAuthorize', params.organizationId);
+            return navigate('/auth/authorize');
+          }
+          return navigate(`/organization/${params.organizationId}`);
+        }
+        console.log(`Unknown deep link: ${url}`);
       },
     );
   }, [actionFetcher, navigate]);

@@ -283,24 +283,19 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         }
         if (nunjucksTag) {
           const { type, template, range } = nunjucksTag as nunjucksTagContextMenuOptions;
-          switch (type) {
-            case 'edit':
-              showModal(NunjucksModal, {
-                template: template,
-                onDone: (template: string | null) => {
-                  const { from, to } = range;
-                  codeMirror.current?.replaceRange(template!, from, to);
-                },
-              });
-              return;
-
-            case 'delete':
-              const { from, to } = range;
-              codeMirror.current?.replaceRange('', from, to);
-              return;
-
-            default:
-              return;
+          if (type === 'edit') {
+            showModal(NunjucksModal, {
+              template: template,
+              onDone: (template: string | null) => {
+                const { from, to } = range;
+                codeMirror.current?.replaceRange(template!, from, to);
+              },
+            });
+          } else if (type === 'delete') {
+            const { from, to } = range;
+            codeMirror.current?.replaceRange('', from, to);
+          } else {
+            return
           }
         } else {
           codeMirror.current?.replaceSelection(tag);
