@@ -14,7 +14,7 @@ export const NoProjectView: FC<Props> = ({
   isGitSyncEnabled,
 }) => {
   return (
-    <div className='flex flex-col items-center pt-[15%] w-full h-full text-center gap-3 opacity-[calc(var(--opacity-subtle)*0.8)]'>
+    <div className='flex flex-col items-center pt-[15%] w-full h-full text-center gap-3'>
       <span className='font-semibold text-xl'>Welcome to your organization!</span>
       <span className='text-md'>Create a new project to get started</span>
       <ProjectSettingsForm storageRule={storageRule} isGitSyncEnabled={isGitSyncEnabled} defaultProjectName="My first project" />
