@@ -37,7 +37,7 @@ type RawTypeKey = 'api_spec'
   | 'unit_test_suite'
   | 'unit_test';
 
-/* eslint-disable camelcase */
+ 
 const rawTypeToParsedTypeMap: Record<RawTypeKey, BaseModel['type']> = {
   api_spec: 'ApiSpec',
   environment: 'Environment',
@@ -47,7 +47,7 @@ const rawTypeToParsedTypeMap: Record<RawTypeKey, BaseModel['type']> = {
   unit_test_suite: 'UnitTestSuite',
   unit_test: 'UnitTest',
 };
-/* eslint-enable camelcase */
+ 
 
 type ExtraProperties = Record<string, unknown>;
 

@@ -23,7 +23,7 @@ const runInternal = async <TReturn, TNetworkResponse>(
   // @ts-expect-error -- global hack
   global.insomnia = new Insomnia(options);
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   chai.use(require('chai-json-schema'));
   // @ts-expect-error -- global hack
   global.chai = chai;

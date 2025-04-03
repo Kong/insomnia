@@ -21,7 +21,7 @@ export function projectRoutableFSClient(
     for (const prefix of Object.keys(otherFS)) {
       if (filePath.indexOf(path.normalize(prefix)) === 0) {
         // TODO: remove non-null assertion
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+         
         return otherFS[prefix].promises[method]!(filePath, ...args);
       }
     }

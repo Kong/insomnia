@@ -63,6 +63,7 @@ export default tseslint.config(
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
       '@typescript-eslint/no-empty-interface': ['error', { 'allowSingleExtends': true }],
       '@typescript-eslint/no-empty-object-type': 'off', // TODO: Enable this rule
+      '@typescript-eslint/no-empty-function': 'off',
       '@typescript-eslint/no-namespace': ['error', { allowDeclarations: true }],
       '@typescript-eslint/no-redeclare': 'error',
       '@typescript-eslint/no-require-imports': 'off',
@@ -72,6 +73,9 @@ export default tseslint.config(
       'simple-import-sort/imports': 'error',
       '@typescript-eslint/no-use-before-define': 'off', // TODO: Enable this rule
       '@typescript-eslint/no-explicit-any': 'off', // TODO: Enable this rule
+      '@typescript-eslint/no-dynamic-delete': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-invalid-void-type': 'off',
     }
   },
   eslintConfigPrettier,
@@ -89,14 +93,18 @@ export default tseslint.config(
       '**/bin/*',
       '**/build/*',
       '**/coverage/*',
+      '**/customSign.js',
       '**/dist/*',
       '**/docker/*',
+      '**/electron/index.js',
       '**/fixtures',
       '**/hidden-window-preload.js',
       '**/node_modules/*',
+      '**/preload.js',
       '**/svgr',
       '**/traces/*',
-      '**/verify-pkg.js'
+      '**/verify-pkg.js',
+      '**/__mocks__/*',
     ]
   }
 );

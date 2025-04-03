@@ -142,8 +142,7 @@ export class ImportPostman {
     }
 
     const variable: Record<string, string> = {};
-    for (let i = 0; i < variables.length; i++) {
-      const { key, value } = variables[i];
+    for (const { key, value } of variables) {
       if (key === undefined) {
         continue;
       }

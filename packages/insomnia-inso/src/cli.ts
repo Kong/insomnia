@@ -73,9 +73,7 @@ export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: 
   return {};
 };
 
-export type LogsByType = {
-  [t in logType]?: string[]
-};
+export type LogsByType = Partial<Record<logType, string[]>>;
 
 export type ModifiedConsola = ReturnType<typeof consola.create> & { __getLogs: () => LogsByType };
 
