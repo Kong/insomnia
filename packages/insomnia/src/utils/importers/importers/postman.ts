@@ -365,7 +365,7 @@ export class ImportPostman {
     }
     if (body.mode === 'raw') {
       const rawOptions = body.options?.raw as { language: string }
-      return this.importBodyRaw(body.raw, rawOptions.language || '');
+      return this.importBodyRaw(body.raw, rawOptions?.language || '');
     }
     return {};
   };
