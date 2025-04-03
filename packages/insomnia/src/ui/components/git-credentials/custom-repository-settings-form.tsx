@@ -42,55 +42,48 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
         });
       }}
     >
-      <TextField name="uri" className="flex flex-col w-full gap-1" isRequired isInvalid={Boolean('fasdfadsf')}>
+      <TextField name="uri" className="flex flex-col w-full gap-1 px-0.5" isRequired>
         <Label className='text-start text-sm font-semibold'>Git URI (https, including .git suffix)</Label>
         <Input
           type="url"
           autoFocus
-
           defaultValue={uri}
           disabled={Boolean(uri)}
           placeholder="https://github.com/org/repo.git"
-          className="border border-solid border-[--hl-sm] rounded-sm py-1 px-3 placeholder:text-sm"
+          className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
         />
       </TextField>
       <div className='flex items-center justify-between gap-2'>
-        <TextField className="flex flex-col w-full gap-1" isRequired>
+        <TextField name="authorName" className="flex flex-col w-full gap-1 px-0.5" isRequired>
           <Label className='text-start text-sm font-semibold'>Author Name</Label>
           <Input
-            type="text"
-            name="authorName"
             placeholder="Name"
             disabled={Boolean(uri)}
             defaultValue={author?.name}
-            className="border border-solid border-[--hl-sm] rounded-sm py-1 px-3 placeholder:text-sm"
+            className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
           />
         </TextField>
-        <TextField className="flex flex-col w-full gap-1" isRequired>
+        <TextField name="authorName" className="flex flex-col w-full gap-1 px-0.5" isRequired>
           <Label className='text-start text-sm font-semibold'>Author Name</Label>
           <Input
-            type="text"
-            name="authorName"
             placeholder="Name"
             disabled={Boolean(uri)}
             defaultValue={author?.name}
-            className="border border-solid border-[--hl-sm] rounded-sm py-1 px-3 placeholder:text-sm"
+            className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
           />
         </TextField>
       </div>
       <div className='flex items-center justify-between gap-2'>
-        <TextField className="flex flex-col w-full gap-1" isRequired>
+        <TextField name="username" className="flex flex-col w-full gap-1 px-0.5" isRequired>
           <Label className='text-start text-sm font-semibold'>Username</Label>
           <Input
-            type="text"
-            name="username"
             placeholder="MyUser"
             disabled={Boolean(uri)}
             defaultValue={credentials?.username}
-            className="border border-solid border-[--hl-sm] rounded-sm py-1 px-3 placeholder:text-sm"
+            className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
           />
         </TextField>
-        <TextField className="flex flex-col w-full gap-1" isRequired>
+        <TextField name="token" className="flex flex-col w-full gap-1 px-0.5" isRequired>
           <Label className='text-start text-sm font-semibold'>Authentication Token
             <HelpTooltip className="space-left">
               Create a personal access token
@@ -110,13 +103,11 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
               </Link>
             </HelpTooltip></Label>
           <Input
-            required
             type="password"
-            name="token"
             disabled={Boolean(uri)}
             defaultValue={'token' in credentials ? credentials?.token : ''}
             placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"
-            className="border border-solid border-[--hl-sm] rounded-sm py-1 px-3 placeholder:text-sm"
+            className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
           />
         </TextField>
       </div>
