@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button } from 'react-aria-components';
+import { Button, Input, Label, TextField } from 'react-aria-components';
 import { useFetcher } from 'react-router-dom';
 
 import type { GitCredentials } from '../../../models/git-credentials';
@@ -133,23 +133,16 @@ const GitLabRepositoryForm = ({
           Sign out
         </Button>
       </div>
-      <div className="flex flex-col">
-        <span className="font-semibold flex gap-1 text-sm">
-          GitLab URI (https, including .git suffix)
-        </span>
-        <div className="form-control form-control--outlined">
-          <input
-            className="form-control"
-            defaultValue={uri}
-            type="url"
-            name="uri"
-            autoFocus
-            disabled={Boolean(uri)}
-            required
-            placeholder="https://gitlab.com/org/repo.git"
-          />
-        </div>
-      </div>
+      <TextField autoFocus name="uri" className="flex flex-col w-full gap-1 px-0.5" isRequired>
+        <Label className='text-start text-sm font-semibold'>Git URI (https, including .git suffix)</Label>
+        <Input
+          type="url"
+          defaultValue={uri}
+          disabled={Boolean(uri)}
+          placeholder="https://github.com/org/repo.git"
+          className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+        />
+      </TextField>
       {error && (
         <p className="notice error margin-bottom-sm">
           <button className="pull-right icon" onClick={() => setError('')}>
