@@ -140,7 +140,7 @@ const GitLabRepositoryForm = ({
           defaultValue={uri}
           disabled={Boolean(uri)}
           placeholder="https://github.com/org/repo.git"
-          className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+          className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors placeholder:text-sm"
         />
       </TextField>
       {error && (
