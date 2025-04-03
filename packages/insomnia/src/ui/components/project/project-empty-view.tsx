@@ -11,7 +11,7 @@ interface Props {
 
 export const ProjectEmptyView: FC<Props> = ({ onCreateRequestCollectionWithRequest, onCreateDesignDocument, onImportFrom }) => {
   return (
-    <div className='flex flex-col items-center pt-[15%] w-full h-full text-center gap-3 opacity-[calc(var(--opacity-subtle)*0.8)]'>
+    <div className='flex flex-col items-center pt-[15%] w-full h-full text-center gap-3'>
       <span className='font-semibold text-xl'>Welcome to your project!</span>
       <span className='text-md'>Start fresh or bring in existing work</span>
       <div className='flex flex-wrap justify-center w-full gap-[var(--padding-md)] mt-[var(--padding-lg)]'>
