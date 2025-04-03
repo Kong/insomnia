@@ -136,12 +136,12 @@ export class ImportPostman {
     this.collection = collection;
   }
 
-  importVariable = (variables: { [key: string]: string }[]) => {
+  importVariable = (variables: Record<string, string>[]) => {
     if (variables?.length === 0) {
       return null;
     }
 
-    const variable: { [key: string]: string } = {};
+    const variable: Record<string, string> = {};
     for (let i = 0; i < variables.length; i++) {
       const { key, value } = variables[i];
       if (key === undefined) {
@@ -307,7 +307,7 @@ export class ImportPostman {
       event,
     } = this.collection;
 
-    const postmanVariable = this.importVariable((variable as { [key: string]: string }[]) || []);
+    const postmanVariable = this.importVariable((variable as Record<string, string>[]) || []);
     const { authentication } = this.importAuthentication(auth);
     const preRequestScript = this.importPreRequestScript(event);
     const afterResponseScript = this.importAfterResponseScript(event);

@@ -42,9 +42,7 @@ const InsomniaTabContext = createContext<ContextProps>({
   changeActiveTab: () => { },
 });
 
-interface InsomniaTabs {
-  [orgId: string]: OrganizationTabs;
-}
+type InsomniaTabs = Record<string, OrganizationTabs>;
 
 export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
   const {

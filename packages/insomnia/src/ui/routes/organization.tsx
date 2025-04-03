@@ -377,7 +377,7 @@ export const syncOrganizationStorageRuleAction: ActionFunction = async ({ params
 
 export async function fetchAndCacheOrganizationStorageRule(
   organizationId: string | undefined,
-  forceFetch: boolean = false,
+  forceFetch = false,
 ): Promise<ORG_STORAGE_RULE> {
   invariant(organizationId, 'Organization ID is required');
 

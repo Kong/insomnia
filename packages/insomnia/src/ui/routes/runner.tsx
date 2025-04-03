@@ -881,7 +881,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
   startExecution(runnerId);
 
   const noLogRuntime = {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     appendTimeline: async (_timelinePath: string, _logs: string[]) => { }, // no op
   };
 

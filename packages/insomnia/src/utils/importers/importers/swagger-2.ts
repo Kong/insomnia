@@ -21,7 +21,7 @@ export const id = 'swagger2';
 export const name = 'Swagger 2.0';
 export const description = 'Importer for Swagger 2.0 specification (json/yaml)';
 
-/* eslint-disable camelcase -- this file uses camel case too often */
+ 
 
 /**
  * Return Insomnia folder / request group
@@ -102,7 +102,7 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
       ...accumulator,
       ...(name === undefined ? {} : { [name]: _id }),
     }),
-    {} as { [name: string]: string | undefined },
+    {} as Record<string, string | undefined>,
   );
 
   const requests: ImportRequest[] = [];
@@ -442,11 +442,9 @@ const generateParameterExample = (
   parameter: OpenAPIV2.Parameter | TypeExample,
   ancestors: OpenAPIV2.Parameter[] = [],
 ) => {
-  const typeExamples: {
-    [kind in TypeExample]: (
+  const typeExamples: Record<TypeExample, (
       parameter: OpenAPIV2.Parameter
-    ) => null | string | boolean | number | Record<string, unknown>;
-  } = {
+    ) => null | string | boolean | number | Record<string, unknown>> = {
     string: () => 'string',
     string_email: () => 'user@example.com',
     'string_date-time': () => new Date().toISOString(),

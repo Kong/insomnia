@@ -630,7 +630,7 @@ async function duplicateWorkspace(
   workspace: Workspace | null,
   duplicateToProject: Project | null,
   newWorkspaceName: string,
-  needPushSnapshotOnInitialize: boolean = false,
+  needPushSnapshotOnInitialize = false,
 ) {
   invariant(workspace, 'Workspace not found');
   invariant(duplicateToProject, 'Project not found');

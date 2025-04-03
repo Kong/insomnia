@@ -149,7 +149,7 @@ const openWebSocketConnection = async (
     }
     const readyStateChannel = `webSocket.${request._id}.readyState`;
 
-    const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: BaseWebSocketRequest['headers'][0]) =>
+    const reduceArrayToLowerCaseKeyedDictionary = (acc: Record<string, string>, { name, value }: BaseWebSocketRequest['headers'][0]) =>
       ({ ...acc, [name.toLowerCase() || '']: value || '' });
     const headers = options.headers;
     let url = options.url;

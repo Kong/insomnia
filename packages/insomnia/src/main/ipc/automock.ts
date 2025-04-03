@@ -4,13 +4,11 @@ import { Enum, Field, MapField, Message, OneOf, Service, Type } from 'protobufjs
 import { v4 } from 'uuid';
 
 export interface MethodPayload {
-  plain: {[key: string]: any};
+  plain: Record<string, any>;
   message: Message;
 }
 
-export interface ServiceMethodsPayload {
-  [name: string]: () => MethodPayload;
-}
+export type ServiceMethodsPayload = Record<string, () => MethodPayload>;
 
 const enum MethodType {
   request,
@@ -82,7 +80,7 @@ function mockTypeFields(type: Type, stackDepth: StackDepth): object {
     return {};
   }
 
-  const fieldsData: { [key: string]: any } = {};
+  const fieldsData: Record<string, any> = {};
   if (!type.fieldsArray) {
     return fieldsData;
   }
@@ -180,7 +178,7 @@ function isProtoType(resolvedType: Enum | Type | null): resolvedType is Type {
 }
 
 function pickOneOf(oneofs: OneOf[], stackDepth: StackDepth) {
-  return oneofs.reduce((fields: {[key: string]: any}, oneOf) => {
+  return oneofs.reduce((fields: Record<string, any>, oneOf) => {
     fields[oneOf.name] = mockField(oneOf.fieldsArray[0], stackDepth);
     return fields;
   }, {});
@@ -240,7 +238,7 @@ function interpretMockViaFieldName(fieldName: string): string {
 }
 
 class StackDepth {
-  private readonly depths: { [type: string]: number };
+  private readonly depths: Record<string, number>;
   readonly maxStackSize: number;
 
   constructor(maxStackSize = 3) {

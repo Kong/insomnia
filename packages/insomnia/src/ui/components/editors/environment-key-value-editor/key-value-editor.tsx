@@ -22,7 +22,7 @@ interface EditorProps {
 }
 const cellCommonStyle = 'h-full px-2 flex items-center';
 
-const createNewPair = (enabled: boolean = true): EnvironmentKvPairData => ({
+const createNewPair = (enabled = true): EnvironmentKvPairData => ({
   id: generateId('envPair'),
   name: '',
   value: '',

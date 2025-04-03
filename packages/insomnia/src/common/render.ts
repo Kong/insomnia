@@ -257,7 +257,7 @@ export async function render<T>(
   blacklistPathRegex: RegExp | null = null,
   errorMode: 'keep' | 'throw' = 'throw',
   name = '',
-  ignoreUndefinedEnvVariable: boolean = false,
+  ignoreUndefinedEnvVariable = false,
 ) {
   // Make a deep copy so no one gets mad :)
   const newObj = clone(obj);

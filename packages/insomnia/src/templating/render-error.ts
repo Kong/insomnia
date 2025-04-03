@@ -21,7 +21,7 @@ export class RenderError extends Error {
 
 // because nunjucks only report the first error, we need to extract all missing variables that are not present in the context
 // for example, if the text is `{{ a }} {{ b }}`, nunjucks only report `a` is missing, but we need to report both `a` and `b`
-export function extractUndefinedVariableKey(text: string = '', templatingContext: Record<string, any>): string[] {
+export function extractUndefinedVariableKey(text = '', templatingContext: Record<string, any>): string[] {
   const regexVariable = /{{\s*([^ }]+)\s*}}/g;
   const missingVariables: string[] = [];
   let match;
