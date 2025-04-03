@@ -68,7 +68,7 @@ export async function updateOrCreateByParentId(parentId: string, patch: Partial<
 
   if (requestMeta) {
     return update(requestMeta, patch);
-  } else {
+  }
     const newPatch = Object.assign(
       {
         parentId,
@@ -76,7 +76,7 @@ export async function updateOrCreateByParentId(parentId: string, patch: Partial<
       patch,
     );
     return create(newPatch);
-  }
+
 }
 
 export function all() {

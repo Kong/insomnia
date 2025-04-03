@@ -79,7 +79,8 @@ interface Entry {
 async function recurse(list: (FileDropItem | DirectoryDropItem)[] | AsyncIterable<FileDropItem | DirectoryDropItem>, filePathList: string[]) {
   for await (const item of list) {
     if (item.kind === 'file') {
-      const path = (await item.getFile()).path;
+      const file = await item.getFile();
+      const path = window.webUtils.getPathForFile(file);
       if (validImportExtensions.some(ext => path.endsWith(`.${ext}`))) {
         filePathList.push(path);
       }
@@ -112,6 +113,7 @@ const FileField: FC = () => {
     <div>
       <input
         className="hidden"
+        data-test-id="import-file-input"
         onChange={e => {
           const files = e.target.files;
           if (files) {
@@ -133,7 +135,7 @@ const FileField: FC = () => {
       <label
         {...dropProps}
         className={classNames(
-          'p-[var(--padding-sm)] rounded-[var(--radius-md)] flex items-center gap-[var(--padding-sm)] bg-[color:var(--hl-xs)] flex-wrap border border-solid',
+          'p-[var(--padding-sm)] rounded-[var(--radius-md)] flex items-center gap-[var(--padding-sm)] bg-[color:var(--hl-xs)] flex-wrap border border-solid max-h-[50vh] overflow-auto',
           {
             'border-[color:var(--color-surprise)]': isDropTarget,
             'border-[color:var(--hl-md)]': !isDropTarget,
@@ -143,7 +145,7 @@ const FileField: FC = () => {
       >
         <input type="hidden" name="filePaths" value={filePaths} />
         {filePathList.length ? (<div
-          className="bg-[color:var(--color-bg)] rounded-[var(--radius-md)] text-ellipsis overflow-hidden whitespace-nowrap flex flex-col items-center justify-center p-[var(--padding-md)] gap-[var(--padding-sm)] w-full"
+          className="bg-[color:var(--color-bg)] rounded-[var(--radius-md)] text-ellipsis whitespace-nowrap flex flex-col items-center justify-start p-[var(--padding-md)] gap-[var(--padding-sm)] w-full"
         >
           {entryList.map(({ name, type }) => (
             <div
@@ -157,22 +159,22 @@ const FileField: FC = () => {
             </div>
           ))}
         </div>) : (
-            <div
-              className="flex flex-col items-center justify-center p-[var(--padding-md)] gap-[var(--padding-sm)] w-full"
-            >
-              <div>
-                <i className="fa fa-upload fa-xl" />
-              </div>
-              <div>
-                Drag and Drop or{' '}
-                <span
-                  className="text-[color:var(--color-surprise)]"
-                >
-                  Choose Files
-                </span>{' '}
-                to import
-              </div>
+          <div
+            className="flex flex-col items-center justify-center p-[var(--padding-md)] gap-[var(--padding-sm)] w-full"
+          >
+            <div>
+              <i className="fa fa-upload fa-xl" />
             </div>
+            <div>
+              Drag and Drop or{' '}
+              <span
+                className="text-[color:var(--color-surprise)]"
+              >
+                Choose Files
+              </span>{' '}
+              to import
+            </div>
+          </div>
         )}
       </label>
     </div>
@@ -432,19 +434,19 @@ export const ImportModal: FC<ImportModalProps> = ({
             }}
           />
         ) : (
-            <ScanResourcesForm
-              from={from}
-              scanResults={scanResourcesFetcherData}
-              onSubmit={e => {
-                e.preventDefault();
-                // file://./../../routes/import.tsx#scanForResourcesAction
-                scanResourcesFetcher.submit(e.currentTarget, {
-                  method: 'post',
-                  action: '/import/scan',
-                });
-              }}
-              loading={scanResourcesFetcher.state !== 'idle'}
-            />
+          <ScanResourcesForm
+            from={from}
+            scanResults={scanResourcesFetcherData}
+            onSubmit={e => {
+              e.preventDefault();
+              // file://./../../routes/import.tsx#scanForResourcesAction
+              scanResourcesFetcher.submit(e.currentTarget, {
+                method: 'post',
+                action: '/import/scan',
+              });
+            }}
+            loading={scanResourcesFetcher.state !== 'idle'}
+          />
         )}
       </Modal>
     </OverlayContainer>
@@ -459,8 +461,8 @@ const ScanResourcesForm = ({
 }: {
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
   from?: ImportModalProps['from'];
-    scanResults?: ScanResult[];
-    loading: boolean;
+  scanResults?: ScanResult[];
+  loading: boolean;
 }) => {
   const id = useId();
   const [importFrom, setImportFrom] = useState(from?.type || 'uri');
@@ -528,9 +530,7 @@ const ScanResourcesForm = ({
           )}
         </form>
         {scanResults && (
-          <div
-            className='margin-top-sm overflow-y-auto'
-          >
+          <div className='margin-top-sm overflow-y-auto max-h-[20vh]'>
             <ScanResultsTable scanResults={scanResults} />
           </div>
         )}
@@ -602,21 +602,21 @@ const ImportResourcesForm = ({
   disabled,
   loading,
 }: {
-    scanResults: ScanResult[];
+  scanResults: ScanResult[];
   organizationId: string;
   defaultProjectId?: string;
   defaultWorkspaceId?: string;
   errors?: string[];
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
   disabled: boolean;
-    loading: boolean;
+  loading: boolean;
 }
 ) => {
   const id = useId();
   return (
     <Fragment>
       <div
-        className='flex flex-col gap-[var(--padding-md)]'
+        className='flex flex-col gap-[var(--padding-md)] overflow-auto max-h-[50vh]'
       >
         <form
           onSubmit={onSubmit}
@@ -645,8 +645,15 @@ const ImportResourcesForm = ({
       </div>
 
       <div
-        className='flex gap-[var(--padding-sm)] w-full justify-end items-end'
+        className='flex gap-[var(--padding-sm)] w-full justify-between items-end'
       >
+        <div>
+          <div
+            className='pb-[var(--padding-sm)]'
+          >
+            Insomnia provides features that may automatically execute code. Only import files from trusted sources.
+          </div>
+        </div>
         <Button
           variant="contained"
           bg="surprise"
@@ -748,7 +755,7 @@ const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] }) => {
                       className="table--no-outline-row"
                     >
                       <td>
-                          <div className="flex items-center gap-[var(--padding-md)]">
+                        <div className="flex items-center gap-[var(--padding-md)]">
                           {scanResult.apiSpecs.length}{' '}
                           {scanResult.apiSpecs.length === 1 ? 'OpenAPI Spec' : 'OpenAPI Specs'}
                         </div>

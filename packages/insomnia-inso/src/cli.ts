@@ -37,7 +37,7 @@ export interface GlobalOptions {
   printOptions: boolean;
   verbose: boolean;
   workingDir: string;
-};
+}
 
 export type TestReporter = 'dot' | 'list' | 'spec' | 'min' | 'progress' | 'tap';
 export const reporterTypes: TestReporter[] = ['dot', 'list', 'min', 'progress', 'spec', 'tap'];

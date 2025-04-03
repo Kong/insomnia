@@ -4,7 +4,6 @@ import { Button, Collection, Header, Menu, MenuItem, MenuTrigger, Popover, Secti
 import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { toKebabCase } from '../../../common/misc';
-import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { PlatformKeyCombinations } from '../../../common/settings';
 import * as models from '../../../models';
 import type { Request } from '../../../models/request';
@@ -25,6 +24,7 @@ import { RequestGroupSettingsModal } from '../modals/request-group-settings-moda
 interface Props extends Partial<DropdownProps> {
   requestGroup: RequestGroup;
   isOpen: boolean;
+  triggerRef: React.RefObject<HTMLDivElement>;
   onOpenChange: (isOpen: boolean) => void;
   onRename: () => void;
 }
@@ -32,6 +32,7 @@ interface Props extends Partial<DropdownProps> {
 export const RequestGroupActionsDropdown = ({
   requestGroup,
   isOpen,
+  triggerRef,
   onOpenChange,
   onRename,
 }: Props) => {
@@ -106,7 +107,7 @@ export const RequestGroupActionsDropdown = ({
 
     try {
       const context = {
-        ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
+        ...(pluginContexts.app.init('no-render') as Record<string, any>),
         ...pluginContexts.data.init(activeProject._id),
         ...(pluginContexts.store.init(plugin) as Record<string, any>),
         ...(pluginContexts.network.init() as Record<string, any>),
@@ -301,11 +302,11 @@ export const RequestGroupActionsDropdown = ({
         <Button
           data-testid={`Dropdown-${toKebabCase(requestGroup.name)}`}
           aria-label="Request Group Actions"
-          className="opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className="hidden items-center group-focus:flex group-hover:flex data-[focused]:flex aria-pressed:flex justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
         >
           <Icon icon="caret-down" />
         </Button>
-        <Popover className="min-w-max overflow-y-hidden flex flex-col" >
+        <Popover className="min-w-max overflow-y-hidden flex flex-col" triggerRef={triggerRef} placement="bottom end" offset={5}>
           <Menu
             aria-label="Request Group Actions Menu"
             selectionMode="single"

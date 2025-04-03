@@ -1,0 +1,51 @@
+type: collection.insomnia.rest/5.0
+name: headerTemplates
+meta:
+  id: wrk_bbe65db250e94e31a7d88d8f779c9dd5
+  created: 1741133210975
+  modified: 1742840304001
+collection:
+  - url: "{{ _.baseUrl }}/pets/2"
+    name: pet2
+    meta:
+      id: req_eaa7211a4c2e4fd492a38db5c7c926fd
+      created: 1741133214878
+      modified: 1742840346014
+      isPrivate: false
+      sortKey: -1741133214878
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/11.0.0-beta.3
+        id: pair_b4cf2c942ed84dd28857d2ccfff55907
+        disabled: true
+      - id: pair_a16a834b625d453183898c8896abfde7
+        name: "{{ _.xHeaderExample }}"
+        value: baz
+        disabled: false
+    authentication:
+      type: none
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_0e0f846c6042e206736fb4edf8d2b90ed218362d
+    created: 1741133210977
+    modified: 1742840291561
+environments:
+  name: example
+  meta:
+    id: env_0e0f846c6042e206736fb4edf8d2b90ed218362d
+    created: 1741133210976
+    modified: 1742840291562
+    isPrivate: false
+  data:
+    xHeaderExample: X-Foo-Bar
+    baseUrl: http://localhost:4010

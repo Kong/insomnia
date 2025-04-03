@@ -30,8 +30,9 @@ describe('Git-VCS', () => {
         repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
+        legacyDiff: true,
       });
-      await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
 
       // foo.txt and bar.txt should be in the unstaged list
       const status = await GitVCS.status();
@@ -109,8 +110,9 @@ describe('Git-VCS', () => {
         repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
+        legacyDiff: true,
       });
-      await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
       expect(await GitVCS.log()).toEqual([]);
     });
 
@@ -126,9 +128,10 @@ describe('Git-VCS', () => {
         repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
+        legacyDiff: true,
       });
 
-      await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
 
       const status = await GitVCS.status();
       const fooStatus = status.unstaged.find(f => f.path.includes(fooTxt));
@@ -212,8 +215,9 @@ First commit!
         repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
+        legacyDiff: true,
       });
-      await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
       const status = await GitVCS.status();
       const fooStatus = status.unstaged.find(f => f.path.includes(fooTxt));
       fooStatus && await GitVCS.stageChanges([fooStatus]);
@@ -260,9 +264,10 @@ First commit!
         repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
+        legacyDiff: true,
       });
       // Commit
-      await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
 
       const status = await GitVCS.status();
 
@@ -318,11 +323,12 @@ First commit!
         repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
+        legacyDiff: true,
       });
       // Write to all files
       await Promise.all(files.map(f => fsClient.promises.writeFile(f, originalContent)));
       // Commit all files
-      await GitVCS.setAuthor('Karen Brown', 'karen@example.com');
+      await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
       const status = await GitVCS.status();
       await GitVCS.stageChanges(status.unstaged);
       await GitVCS.commit('First commit!');

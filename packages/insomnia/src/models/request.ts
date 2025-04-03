@@ -206,7 +206,7 @@ export const PATH_PARAMETER_REGEX = /\/:[^/?#:]+/g;
 
 export const getPathParametersFromUrl = (url: string): string[] => {
   // Find all path parameters in the URL. Path parameters are defined as segments of the URL that start with a colon.
-  const urlPathParameters = url.match(PATH_PARAMETER_REGEX)?.map(String).map(match => match.replace('\/:', '')) || [];
+  const urlPathParameters = url.match(PATH_PARAMETER_REGEX)?.map(String).map(match => match.replace('/:', '')) || [];
   const uniqueUrlPathParameters = [...new Set(urlPathParameters)];
 
   return uniqueUrlPathParameters;

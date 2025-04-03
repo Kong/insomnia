@@ -1,6 +1,8 @@
 import { contextBridge, ipcRenderer, webUtils as _webUtils } from 'electron';
 
+import type { GitServiceAPI } from './main/git-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
+import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
 import type { CurlBridgeAPI } from './main/network/curl';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 import { invariant } from './utils/invariant';
@@ -40,6 +42,53 @@ const grpc: gRPCBridgeAPI = {
   loadMethods: options => ipcRenderer.invoke('grpc.loadMethods', options),
   loadMethodsFromReflection: options => ipcRenderer.invoke('grpc.loadMethodsFromReflection', options),
 };
+
+const secretStorage: secretStorageBridgeAPI = {
+  setSecret: (key, secret) => ipcRenderer.invoke('secretStorage.setSecret', key, secret),
+  getSecret: key => ipcRenderer.invoke('secretStorage.getSecret', key),
+  deleteSecret: key => ipcRenderer.invoke('secretStorage.deleteSecret', key),
+  encryptString: raw => ipcRenderer.invoke('secretStorage.encryptString', raw),
+  decryptString: cipherText => ipcRenderer.invoke('secretStorage.decryptString', cipherText),
+};
+
+const git: GitServiceAPI = {
+  loadGitRepository: options => ipcRenderer.invoke('git.loadGitRepository', options),
+  getGitBranches: options => ipcRenderer.invoke('git.getGitBranches', options),
+  gitFetchAction: options => ipcRenderer.invoke('git.gitFetchAction', options),
+  gitLogLoader: options => ipcRenderer.invoke('git.gitLogLoader', options),
+  gitChangesLoader: options => ipcRenderer.invoke('git.gitChangesLoader', options),
+  canPushLoader: options => ipcRenderer.invoke('git.canPushLoader', options),
+  cloneGitRepo: options => ipcRenderer.invoke('git.cloneGitRepo', options),
+  initGitRepoClone: options => ipcRenderer.invoke('git.initGitRepoClone', options),
+  updateGitRepo: options => ipcRenderer.invoke('git.updateGitRepo', options),
+  resetGitRepo: options => ipcRenderer.invoke('git.resetGitRepo', options),
+  commitToGitRepo: options => ipcRenderer.invoke('git.commitToGitRepo', options),
+  commitAndPushToGitRepo: options => ipcRenderer.invoke('git.commitAndPushToGitRepo', options),
+  createNewGitBranch: options => ipcRenderer.invoke('git.createNewGitBranch', options),
+  checkoutGitBranch: options => ipcRenderer.invoke('git.checkoutGitBranch', options),
+  mergeGitBranch: options => ipcRenderer.invoke('git.mergeGitBranch', options),
+  deleteGitBranch: options => ipcRenderer.invoke('git.deleteGitBranch', options),
+  pushToGitRemote: options => ipcRenderer.invoke('git.pushToGitRemote', options),
+  pullFromGitRemote: options => ipcRenderer.invoke('git.pullFromGitRemote', options),
+  continueMerge: options => ipcRenderer.invoke('git.continueMerge', options),
+  discardChanges: options => ipcRenderer.invoke('git.discardChanges', options),
+  gitStatus: options => ipcRenderer.invoke('git.gitStatus', options),
+  stageChanges: options => ipcRenderer.invoke('git.stageChanges', options),
+  unstageChanges: options => ipcRenderer.invoke('git.unstageChanges', options),
+  diffFileLoader: options => ipcRenderer.invoke('git.diffFileLoader', options),
+  getRepositoryDirectoryTree: options => ipcRenderer.invoke('git.getRepositoryDirectoryTree', options),
+
+  initSignInToGitHub: () => ipcRenderer.invoke('git.initSignInToGitHub'),
+  completeSignInToGitHub: options => ipcRenderer.invoke('git.completeSignInToGitHub', options),
+  signOutOfGitHub: () => ipcRenderer.invoke('git.signOutOfGitHub'),
+  getGitHubRepositories: options => ipcRenderer.invoke('git.getGitHubRepositories', options),
+  getGitHubRepository: options => ipcRenderer.invoke('git.getGitHubRepository', options),
+
+  initSignInToGitLab: () => ipcRenderer.invoke('git.initSignInToGitLab'),
+  completeSignInToGitLab: options => ipcRenderer.invoke('git.completeSignInToGitLab', options),
+  signOutOfGitLab: () => ipcRenderer.invoke('git.signOutOfGitLab'),
+};
+
 const main: Window['main'] = {
   startExecution: options => ipcRenderer.send('startExecution', options),
   addExecutionStep: options => ipcRenderer.send('addExecutionStep', options),
@@ -60,16 +109,20 @@ const main: Window['main'] = {
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
   writeFile: options => ipcRenderer.invoke('writeFile', options),
+  readFile: options => ipcRenderer.invoke('readFile', options),
   on: (channel, listener) => {
     ipcRenderer.on(channel, listener);
     return () => ipcRenderer.removeListener(channel, listener);
   },
   webSocket,
+  git,
   grpc,
   curl,
+  secretStorage,
   trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
-  showContextMenu: options => ipcRenderer.send('show-context-menu', options),
+  showNunjucksContextMenu: options => ipcRenderer.send('show-nunjucks-context-menu', options),
+  showContextMenu: options => ipcRenderer.send('showContextMenu', options),
   database: {
     caCertificate: {
       create: options => ipcRenderer.invoke('database.caCertificate.create', options),

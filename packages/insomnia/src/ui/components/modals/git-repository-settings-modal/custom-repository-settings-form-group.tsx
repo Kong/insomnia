@@ -6,7 +6,7 @@ import { Link } from '../../base/link';
 import { HelpTooltip } from '../../help-tooltip';
 
 export interface Props {
-  gitRepository?: GitRepository | null;
+  gitRepository?: Partial<GitRepository> | null;
   onSubmit: (args: Partial<GitRepository>) => void;
 }
 
@@ -65,7 +65,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
               name="authorName"
               placeholder="Name"
               disabled={Boolean(uri)}
-              defaultValue={author.name}
+              defaultValue={author?.name}
             />
           </label>
         </div>
@@ -78,7 +78,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
               name="authorEmail"
               placeholder="Email"
               disabled={Boolean(uri)}
-              defaultValue={author.email}
+              defaultValue={author?.email}
             />
           </label>
         </div>

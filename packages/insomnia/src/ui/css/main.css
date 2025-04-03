@@ -1894,47 +1894,8 @@ html {
 .changelog hr {
   margin: var(--padding-lg) 0 !important;
 }
-.cookie-list {
-  height: 100%;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-}
-.cookie-list table input:not([type='checkbox']) {
-  padding: var(--padding-xs) var(--padding-xxs);
-  width: 100%;
-  background: none;
-}
-.cookie-list table .btn {
-  cursor: pointer;
-  margin: 0;
-  padding: 0 var(--padding-sm);
-  height: var(--line-height-xs);
-}
-.cookie-list .cookie-list__list {
-  height: 100%;
-  padding: 0 var(--padding-md) var(--padding-md) var(--padding-md);
-  position: relative;
-  overflow-y: auto;
-}
-.cookie-modify.modal__body {
-  overflow: visible;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-}
-.cookie-modify.modal__body table input:not([type='checkbox']) {
-  padding: var(--padding-xs) var(--padding-xxs);
-  width: 100%;
-  background: none;
-}
-.cookie-modify.modal__body table td {
-  cursor: pointer;
-  vertical-align: middle;
-}
-.cookie-modify.modal__body table .btn {
-  cursor: pointer;
-  margin: 0;
-  padding: 0 var(--padding-sm);
-  height: var(--line-height-xs);
+.calendar-invert::-webkit-calendar-picker-indicator {
+  filter: invert(1);
 }
 .graphql-editor {
   position: relative;

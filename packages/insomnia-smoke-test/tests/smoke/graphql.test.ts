@@ -38,7 +38,9 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
   await expect(statusTag).toContainText('200 OK');
 
   // Export GraphQL request
+  await page.getByText('GraphQL request with number').click();
   await page.getByTestId('Dropdown-GraphQL-request-with-number').click();
+
   await page.getByText('Copy as cURL').click();
   const handle = await page.evaluateHandle(() => navigator.clipboard.readText());
   const clipboardContent = await handle.jsonValue();
@@ -46,10 +48,13 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
   // expect exported curl body to be JSON string
   expect(clipboardContent.split('--data ')[1]?.replace(/[\n\s\']/g, '')).toContain(exepctResult);
 
+  await page.getByRole('button', { name: 'Send' }).click();
+
   const responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
     has: page.locator('.CodeMirror-activeline'),
   });
-  await expect(responseBody).toContainText('"bearer": "Gandalf"');
+
+  await expect(responseBody).toContainText('"echoNum": 777');
 });
 
 test('can render schema and send GraphQL requests with object variables', async ({ app, page }) => {

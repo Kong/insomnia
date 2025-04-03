@@ -20,8 +20,16 @@ export const fsClient = (basePath: string) => {
 
   const wrap = (fn: FSWraps) => async (filePath: string, ...args: any[]) => {
     const modifiedPath = path.join(basePath, path.normalize(filePath));
+
     // @ts-expect-error -- TSCONVERSION
     return fn(modifiedPath, ...args);
+  };
+
+  const wrapSymlink = (fn: typeof fs.promises.symlink) => async (filePath: string, target: string, ...args: any[]) => {
+    const modifiedPath = path.join(basePath, path.normalize(filePath));
+    const modifiedTarget = path.join(basePath, path.normalize(target));
+
+    return fn(modifiedPath, modifiedTarget, ...args);
   };
 
   return {
@@ -35,7 +43,7 @@ export const fsClient = (basePath: string) => {
       stat: wrap(fs.promises.stat),
       lstat: wrap(fs.promises.lstat),
       readlink: wrap(fs.promises.readlink),
-      symlink: wrap(fs.promises.symlink),
+      symlink: wrapSymlink(fs.promises.symlink),
     },
   };
 };

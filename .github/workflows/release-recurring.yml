@@ -50,11 +50,16 @@ jobs:
 
       - name: Bump version
         shell: bash
-        run: npm --workspaces version prerelease --preid="$(git rev-parse --short HEAD)${{ github.event_name == 'pull_request' && '.pr-$PR_NUMBER' || '' }}" --no-git-tag-version
+        run: npm --workspaces version prerelease --preid="alpha-pr-$(git rev-parse --short HEAD)" --no-git-tag-version
 
       - name: Package
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
+
+      - name: Verify secure wrapper (Windows)
+        if: ${{ matrix.os == 'windows-latest' }}
+        shell: bash
+        run: NODE_OPTIONS='--max_old_space_size=6144' ./build-secure-wrapper.sh
 
       # See https://github.com/electron/electron/issues/42510#issuecomment-2171583086
       - if: ${{ runner.os == 'Linux' }}
@@ -62,12 +67,13 @@ jobs:
         run: sudo sysctl kernel/apparmor_restrict_unprivileged_userns=0
 
       - name: Test critical path on packaged electron app
-        run: npm run test:package -w packages/insomnia-smoke-test -- --project=Critical
+        run: npm run test:crit:package
         env:
           INSOMNIA_UPDATES_URL: http://localhost:4010
 
       - name: Upload smoke test traces
         uses: actions/upload-artifact@v4
+        if: failure()
         with:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-package-critical-test-traces-${{ github.run_number }}

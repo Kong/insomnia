@@ -197,7 +197,11 @@ export const remoteLoader: LoaderFunction = async ({
     invariant(project, 'Project not found');
 
     const remoteId = project.remoteId;
-    invariant(remoteId, 'Project is not a remote project');
+    if (!remoteId) {
+      return {
+        backendProjectsToPull: [],
+      };
+    }
     const vcs = VCSInstance();
 
     const allPulledBackendProjectsForRemoteId = (
@@ -423,9 +427,9 @@ export const mergeBranchAction: ActionFunction = async ({
   } catch (err) {
     if (err instanceof UserAbortResolveMergeConflictError) {
       return null;
-    } else {
-      throw err;
     }
+      throw err;
+
   }
   try {
     await database.batchModifyDocs(delta as Operation);

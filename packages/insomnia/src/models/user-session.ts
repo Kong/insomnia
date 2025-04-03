@@ -11,7 +11,9 @@ export interface BaseUserSession {
   symmetricKey: JsonWebKey;
   publicKey: JsonWebKey;
   encPrivateKey: AESMessage;
-};
+  vaultSalt?: string;
+  vaultKey?: string;
+}
 
 export interface HashedUserSession {
   hashedAccountId: string;
@@ -34,6 +36,8 @@ export function init(): BaseUserSession {
     symmetricKey: {} as JsonWebKey,
     publicKey: {} as JsonWebKey,
     encPrivateKey: {} as AESMessage,
+    vaultKey: '',
+    vaultSalt: '',
   };
 }
 

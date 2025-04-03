@@ -1,6 +1,7 @@
 import iconv from 'iconv-lite';
 import React, {
   Fragment,
+  useCallback,
   useRef,
   useState,
 } from 'react';
@@ -45,7 +46,8 @@ export interface ResponseViewerProps {
   editorFontSize: number;
   filter: string;
   filterHistory: string[];
-  getBody: (...args: any[]) => any;
+  bodyBuffer?: Buffer;
+  getBody?: (...args: any[]) => Promise<Buffer | string>;
   previewMode: string;
   responseId: string;
   url: string;
@@ -55,6 +57,7 @@ export interface ResponseViewerProps {
 
 export const ResponseViewer = ({
   bytes,
+  bodyBuffer,
   getBody,
   contentType: originalContentType,
   disableHtmlPreviewJs,
@@ -74,36 +77,30 @@ export const ResponseViewer = ({
   const [blockingBecauseTooLarge, setBlockingBecauseTooLarge] = useState(!alwaysShowLargeResponses && largeResponse);
   const [parseError, setParseError] = useState('');
 
-  let initialBody = null;
-  try {
-    if (!blockingBecauseTooLarge) {
-      initialBody = getBody();
-    }
-  } catch (err) {
-    setParseError(`Failed reading response from filesystem: ${err.stack}`);
-  }
-  const [bodyBuffer, setBodyBuffer] = useState<Buffer | null>(initialBody);
+  const [overSizedBody, setOversizedBody] = useState<Buffer | null>(bodyBuffer || null);
 
   const editorRef = useRef<CodeEditorHandle>(null);
 
-  function _handleDismissBlocker() {
+  const _handleDismissBlocker = useCallback(async () => {
     setBlockingBecauseTooLarge(false);
 
     try {
-      const bodyBuffer = getBody();
-      setBodyBuffer(bodyBuffer);
-      setBlockingBecauseTooLarge(false);
+      const buffer = await getBody?.();
+      const bufferOrError = typeof buffer === 'string' ? Buffer.from(buffer) : buffer;
+
+      return setOversizedBody(bufferOrError || null);
     } catch (err) {
       setParseError(`Failed reading response from filesystem: ${err.stack}`);
     }
-  }
+  }, [getBody]);
 
-  function _handleDisableBlocker() {
+  const _handleDisableBlocker = useCallback(() => {
     alwaysShowLargeResponses = true;
 
     _handleDismissBlocker();
-  }
+  }, [_handleDismissBlocker]);
 
+  // focus the code editor by hotkey
   useDocBodyKeyboardShortcuts({
     response_focus: () => {
       if (editorRef.current) {
@@ -118,16 +115,16 @@ export const ResponseViewer = ({
     },
   });
 
-  function _getContentType() {
+  const _getContentType = useCallback(() => {
     const lowercasedOriginalContentType = originalContentType.toLowerCase();
-    if (!bodyBuffer || bodyBuffer.length === 0) {
+    if (!overSizedBody || overSizedBody.length === 0) {
       return lowercasedOriginalContentType;
     }
     // Try to detect JSON in all cases (even if a different header is set).
     // Apparently users often send JSON with weird content-types like text/plain.
     try {
-      if (bodyBuffer && bodyBuffer.length > 0) {
-        JSON.parse(bodyBuffer.toString('utf8'));
+      if (overSizedBody && overSizedBody.length > 0) {
+        JSON.parse(overSizedBody.toString('utf8'));
         return 'application/json';
       }
     } catch (error) { }
@@ -135,7 +132,7 @@ export const ResponseViewer = ({
     // It is fairly common for webservers to send errors in HTML by default.
     // NOTE: This will probably never throw but I'm not 100% so wrap anyway
     try {
-      const isProbablyHTML = bodyBuffer
+      const isProbablyHTML = overSizedBody
         .slice(0, 100)
         .toString()
         .trim()
@@ -150,10 +147,10 @@ export const ResponseViewer = ({
     } catch (error) { }
 
     return lowercasedOriginalContentType;
-  }
+  }, [originalContentType, overSizedBody]);
 
-  function getBodyAsString() {
-    if (!bodyBuffer) {
+  const getBodyAsString = useCallback(() => {
+    if (!overSizedBody) {
       return '';
     }
     // Show everything else as "source"
@@ -161,12 +158,12 @@ export const ResponseViewer = ({
     const charset = match && match.length >= 2 ? match[1] : 'utf-8';
     // Sometimes iconv conversion fails so fallback to regular buffer
     try {
-      return iconv.decode(bodyBuffer, charset);
+      return iconv.decode(overSizedBody, charset);
     } catch (err) {
       console.warn('[response] Failed to decode body', err);
-      return bodyBuffer.toString();
+      return overSizedBody.toString();
     }
-  }
+  }, [overSizedBody, _getContentType]);
 
   if (responseError || parseError) {
     return (
@@ -222,7 +219,7 @@ export const ResponseViewer = ({
     );
   }
 
-  if (!bodyBuffer) {
+  if (!overSizedBody) {
     return (
       <div className="pad faint">
         Failed to read response body from filesystem
@@ -230,17 +227,51 @@ export const ResponseViewer = ({
     );
   }
 
-  if (bodyBuffer.length === 0) {
+  if (overSizedBody.length === 0) {
     return <div className="pad faint">No body returned for response</div>;
   }
 
   const contentType = _getContentType();
+
+  if (
+    previewMode === PREVIEW_MODE_FRIENDLY &&
+    contentType === 'application/json'
+  ) {
+    let bodyStr = getBodyAsString();
+    // Although there is a prettifier for json inside the CodeEditor, but it is to prettify json strings that is being edited which may have syntax errors.
+    // There are some cases that the prettifier inside the CodeEditor can not handle.
+    // See https://github.com/Kong/insomnia/issues/1556
+    // Here the CodeEditor is readonly and the bodyStr is supposed to be a valid json string.
+    // So we try to use the native JSON.stringify to prettify the json string better. The native way can handle the issue.
+    try {
+      bodyStr = JSON.stringify(JSON.parse(bodyStr));
+    } catch (err) { }
+    return (
+      <CodeEditor
+        id="json-response-viewer"
+        key={`${responseId}-json`}
+        ref={editorRef}
+        autoPrettify
+        defaultValue={bodyStr}
+        filter={filter}
+        filterHistory={filterHistory}
+        mode={contentType}
+        noMatchBrackets
+        onClickLink={url => !disablePreviewLinks && window.main.openInBrowser(getBodyAsString()?.match(/^\s*<\?xml [^?]*\?>/) ? xmlDecode(url) : url)}
+        placeholder="..."
+        readOnly
+        uniquenessKey={responseId}
+        updateFilter={updateFilter}
+      />
+    );
+  }
+
   if (
     previewMode === PREVIEW_MODE_FRIENDLY &&
     contentType.indexOf('image/') === 0
   ) {
     const justContentType = contentType.split(';')[0];
-    const base64Body = bodyBuffer.toString('base64');
+    const base64Body = overSizedBody.toString('base64');
     return (
       <div className="scrollable-container tall wide">
         <div className="scrollable">
@@ -275,7 +306,7 @@ export const ResponseViewer = ({
   ) {
     return (
       <div className="tall wide scrollable">
-        <ResponsePDFViewer body={bodyBuffer} key={responseId} />
+        <ResponsePDFViewer body={overSizedBody} key={responseId} />
       </div>
     );
   }
@@ -286,7 +317,7 @@ export const ResponseViewer = ({
   ) {
     return (
       <div className="tall wide scrollable">
-        <ResponseCSVViewer body={bodyBuffer} key={responseId} />
+        <ResponseCSVViewer body={overSizedBody} key={responseId} />
       </div>
     );
   }
@@ -297,7 +328,7 @@ export const ResponseViewer = ({
   ) {
     return (
       <ResponseMultipartViewer
-        bodyBuffer={bodyBuffer}
+        bodyBuffer={overSizedBody}
         contentType={contentType}
         disableHtmlPreviewJs={disableHtmlPreviewJs}
         disablePreviewLinks={disablePreviewLinks}
@@ -317,7 +348,7 @@ export const ResponseViewer = ({
     contentType.indexOf('audio/') === 0
   ) {
     const justContentType = contentType.split(';')[0];
-    const base64Body = bodyBuffer.toString('base64');
+    const base64Body = overSizedBody.toString('base64');
     return (
       <div className="vertically-center" key={responseId}>
         <audio controls>
@@ -365,5 +396,3 @@ export const ResponseViewer = ({
     />
   );
 };
-
-ResponseViewer.displayName = 'ResponseViewer';

@@ -79,9 +79,9 @@ export class NeDBClient {
 
     if (options.encoding) {
       return raw.toString(options.encoding);
-    } else {
-      return raw;
     }
+      return raw;
+
   }
 
   async writeFile(filePath: string, data: Buffer | string) {
@@ -174,7 +174,7 @@ export class NeDBClient {
       const modelTypesWithinFolders = [models.request.type, models.grpcRequest.type, models.webSocketRequest.type];
       if (modelTypesWithinFolders.includes(type)) {
         typeFilter = [models.requestGroup.type, type];
-      };
+      }
 
       if (type === models.unitTest.type) {
         typeFilter = [models.unitTestSuite.type, type];
@@ -239,7 +239,7 @@ export class NeDBClient {
         ino: doc._id,
         mtimeMs: doc.modified,
       });
-    } else {
+    }
       return new Stat({
         type: 'dir',
         mode: 0o777,
@@ -247,7 +247,7 @@ export class NeDBClient {
         ino: 0,
         mtimeMs: 0,
       });
-    }
+
   }
 
   async readlink(filePath: string, ...x: any[]) {

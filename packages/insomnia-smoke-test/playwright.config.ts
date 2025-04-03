@@ -32,6 +32,7 @@ const config: PlaywrightTestConfig = {
       mode: 'retain-on-failure',
       screenshots: true,
       snapshots: true,
+      sources: true,
     },
   },
   reporter: process.env.CI ? 'github' : 'list',

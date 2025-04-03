@@ -5,13 +5,9 @@ import { useFetcher, useParams, useRevalidator } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
 import type { GitRepository } from '../../../models/git-repository';
-import { deleteGitRepository } from '../../../models/helpers/git-repository-operations';
-import { MergeConflictError } from '../../../sync/git/git-vcs';
 import { getOauth2FormatName } from '../../../sync/git/utils';
 import type { MergeConflict } from '../../../sync/types';
 import {
-  checkGitCanPush,
-  checkGitChanges,
   continueMerge,
   type GitFetchLoaderData,
   type GitRepoLoaderData,
@@ -19,6 +15,7 @@ import {
   pullFromGitRemote,
   type PushToGitRemoteResult,
 } from '../../routes/git-actions';
+import { ConfigLink } from '../github-app-config-link';
 import { Icon } from '../icon';
 import { showAlert, showModal } from '../modals';
 import { GitBranchesModal } from '../modals/git-branches-modal';
@@ -30,9 +27,10 @@ import { SyncMergeModal } from '../modals/sync-merge-modal';
 interface Props {
   gitRepository: GitRepository | null;
   isInsomniaSyncEnabled: boolean;
+  showDeprecatedWarning: boolean;
 }
 
-export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnabled }) => {
+export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnabled, showDeprecatedWarning }) => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -50,6 +48,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
   const gitRepoDataFetcher = useFetcher<GitRepoLoaderData>();
   const gitFetchFetcher = useFetcher<GitFetchLoaderData>();
   const gitStatusFetcher = useFetcher<GitStatusResult>();
+  const resetGitStatusFetcher = useFetcher();
 
   const loadingPush = gitPushFetcher.state === 'loading';
   const loadingFetch = gitFetchFetcher.state === 'loading';
@@ -90,29 +89,17 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
   }, [gitStatusFetcher, organizationId, projectId, shouldFetchGitRepoStatus, workspaceId]);
 
   useEffect(() => {
-    // update committed state on unmount
-    // this is a sync action which is responsible for cheaply updating a piece of state representing the existence of a diff
-    // ideally this would not be needed and a diff would be cheaper to find.
-    return () => {
-      checkGitChanges(workspaceId);
-    };
-  }, [workspaceId]);
-
-  useEffect(() => {
-    if (shouldFetchGitRepoStatus) {
-      checkGitCanPush(workspaceId);
-    }
-  }, [gitRepoDataFetcher.data, gitRepository?._id, gitRepository?.uri, workspaceId, shouldFetchGitRepoStatus]);
-
-  useEffect(() => {
     const errors = [...(gitPushFetcher.data?.errors ?? [])];
     if (errors.length > 0) {
       showAlert({
         title: 'Push Failed',
-        message: errors.join('\n'),
+        message: <>
+          {errors.join('\n')}
+          <ConfigLink {...gitPushFetcher.data} />
+        </>,
       });
     }
-  }, [gitPushFetcher.data?.errors]);
+  }, [gitPushFetcher.data]);
 
   useEffect(() => {
     const gitRepoDataErrors =
@@ -121,12 +108,15 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
         : [];
     const errors = [...gitRepoDataErrors];
     if (errors.length > 0) {
+      if (isGitRepoSettingsModalOpen) { // user just clicked 'Reset'
+        return;
+      }
       showAlert({
         title: 'Loading of Git Repository Failed',
         message: errors.join('\n'),
       });
     }
-  }, [gitRepoDataFetcher.data]);
+  }, [isGitRepoSettingsModalOpen, gitRepoDataFetcher.data]);
 
   useEffect(() => {
     const errors = [...(gitCheckoutFetcher.data?.errors ?? [])];
@@ -197,39 +187,58 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       action: async () => {
         try {
           setIsPulling(true);
-          await pullFromGitRemote(workspaceId).finally(() => {
+          await pullFromGitRemote({ projectId, workspaceId }).then(result => {
+            if ('errors' in result && result.errors) {
+              showAlert({
+                title: 'Pull Failed',
+                message: (
+                  <>
+                    {result.errors.join('\n')}
+                    <ConfigLink {...{ gitRepository, errors: [result.errors.join('\n')] }} />
+                  </>
+                ),
+                bodyClassName: 'whitespace-break-spaces',
+              });
+            }
+            if ('conflicts' in result) {
+              showModal(SyncMergeModal, {
+                conflicts: result.conflicts,
+                labels: result.labels,
+                handleDone: (conflicts?: MergeConflict[]) => {
+                  if (Array.isArray(conflicts) && conflicts.length > 0) {
+                    setIsPulling(true);
+                    continueMerge({
+                      projectId,
+                      workspaceId,
+                      handledMergeConflicts: conflicts,
+                      commitMessage: result.commitMessage,
+                      commitParent: result.commitParent,
+                    }).finally(() => {
+                      setIsPulling(false);
+                      revalidate();
+                    });
+                  } else {
+                    // user aborted merge, do nothing
+                  }
+                },
+              });
+            }
+          }).finally(() => {
             setIsPulling(false);
             revalidate();
           });
         } catch (err) {
-          if (err instanceof MergeConflictError) {
-            const data = err.data;
-            showModal(SyncMergeModal, {
-              conflicts: data.conflicts,
-              labels: data.labels,
-              handleDone: (conflicts?: MergeConflict[]) => {
-                if (Array.isArray(conflicts) && conflicts.length > 0) {
-                  setIsPulling(true);
-                  continueMerge({
-                    handledMergeConflicts: conflicts,
-                    commitMessage: data.commitMessage,
-                    commitParent: data.commitParent,
-                  }).finally(() => {
-                    setIsPulling(false);
-                    revalidate();
-                  });
-                } else {
-                  // user aborted merge, do nothing
-                }
-              },
-            });
-          } else {
-            showAlert({
-              title: 'Pull Failed',
-              message: err.message,
-              bodyClassName: 'whitespace-break-spaces',
-            });
-          }
+          const errorMessage = err instanceof Error ? err.message : 'An error occurred while pulling';
+          showAlert({
+            title: 'Pull Failed',
+            message: (
+              <>
+                {errorMessage}
+                <ConfigLink {...{ gitRepository, errors: [errorMessage] }} />
+              </>
+            ),
+            bodyClassName: 'whitespace-break-spaces',
+          });
         }
       },
     },
@@ -319,8 +328,10 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
       label: 'Switch to Insomnia Sync',
       icon: 'cloud',
       action: async () => {
-        gitRepository && await deleteGitRepository(gitRepository);
-        revalidate();
+        resetGitStatusFetcher.submit({}, {
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/reset`,
+          method: 'post',
+        });
         },
       },
     ] : [];
@@ -355,6 +366,14 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
 
   return (
     <>
+      {showDeprecatedWarning && <div className='p-[--padding-sm]'>
+        <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-xs] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
+          <p className='text-sm'>
+            <Icon icon="exclamation-triangle" className='mr-2' />
+            You are using the legacy Git integration in this project, learn more about converting to the new Git Sync capability. <Button className="underline" onPress={() => window.main.openInBrowser('https://docs.insomnia.rest/insomnia/git-sync')}>Migration Guide</Button>
+          </p>
+        </div>
+      </div>}
       <MenuTrigger>
         <div className="flex items-center h-[--line-height-sm] w-full aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
           <Button
@@ -369,8 +388,8 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
             <span className='truncate'>{isSynced ? currentBranch : 'Not synced'}</span>
           </Button>
           <TooltipTrigger>
-            <Button className="px-[--padding-md] h-full">
-              <Icon icon={loadingStatus ? 'refresh' : 'cube'} className={`transition-colors ${isLoading ? 'animate-pulse' : loadingStatus ? 'animate-spin' : 'opacity-50'}`} />
+            <Button className={`px-[--padding-md] h-full ${status?.localChanges ? 'text-[--color-warning]' : ''}`}>
+              <Icon icon={loadingStatus ? 'refresh' : 'cube'} className={`transition-colors ${isLoading ? 'animate-pulse' : loadingStatus ? 'animate-spin' : ''}`} />
             </Button>
             <Tooltip
               placement="top end"

@@ -17,7 +17,7 @@ import type { GrpcRequest } from '../../models/grpc-request';
 import type { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import { sortProjects } from '../../models/helpers/project';
 import type { MockServer } from '../../models/mock-server';
-import type { Project } from '../../models/project';
+import { isGitProject, type Project } from '../../models/project';
 import type { Request } from '../../models/request';
 import { isRequestGroup, type RequestGroup } from '../../models/request-group';
 import type { RequestGroupMeta } from '../../models/request-group-meta';
@@ -89,8 +89,9 @@ export const workspaceLoader: LoaderFunction = async ({
     workspaceId,
   );
   invariant(activeWorkspaceMeta, 'Workspace meta not found');
+  const gitRepositoryId = isGitProject(activeProject) ? activeProject.gitRepositoryId : activeWorkspaceMeta.gitRepositoryId;
   const gitRepository = await models.gitRepository.getById(
-    activeWorkspaceMeta.gitRepositoryId || '',
+    gitRepositoryId || '',
   );
 
   const baseEnvironment = await models.environment.getByParentId(workspaceId);
@@ -259,7 +260,8 @@ export const workspaceLoader: LoaderFunction = async ({
   }
 
   const userSession = await models.userSession.getOrCreate();
-  if (userSession.id && !gitRepository) {
+  const isLoggedinIsCloudProjectAndIsNotGitRepo = userSession.id && activeProject.remoteId && !gitRepository;
+  if (isLoggedinIsCloudProjectAndIsNotGitRepo) {
     try {
       const vcs = VCSInstance();
       await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);
@@ -313,6 +315,24 @@ export const workspaceLoader: LoaderFunction = async ({
     grpcRequests: grpcReqs,
     collection,
   };
+};
+
+export const revalidateWorkspaceActiveRequest = async (requestId: string, workspaceId: string) => {
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  if (workspaceMeta?.activeRequestId === requestId) {
+    await models.workspaceMeta.update(workspaceMeta, { activeRequestId: null });
+  }
+};
+
+export const revalidateWorkspaceActiveRequestByFolder = async (requestGroup: RequestGroup, workspaceId: string) => {
+  const docs = await database.withDescendants(requestGroup, models.request.type, [models.request.type, models.requestGroup.type]);
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  for (const doc of docs) {
+    if (workspaceMeta?.activeRequestId === doc._id) {
+      await models.workspaceMeta.update(workspaceMeta, { activeRequestId: null });
+      return;
+    }
+  }
 };
 
 const WorkspaceRoute = () => {

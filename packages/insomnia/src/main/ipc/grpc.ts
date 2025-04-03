@@ -29,9 +29,8 @@ import electron, { type IpcMainEvent } from 'electron';
 import * as grpcReflection from 'grpc-reflection-js';
 
 import { version } from '../../../package.json';
-import type { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
 import * as models from '../../models';
-import type { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
+import type { GrpcRequest, GrpcRequestBody, GrpcRequestHeader } from '../../models/grpc-request';
 import { parseGrpcUrl } from '../../network/grpc/parse-grpc-url';
 import { writeProtoFile } from '../../network/grpc/write-proto-file';
 import { invariant } from '../../utils/invariant';
@@ -41,7 +40,7 @@ import { ipcMainHandle, ipcMainOn } from './electron';
 const grpcCalls = new Map<string, Call>();
 
 export interface GrpcIpcRequestParams {
-  request: RenderedGrpcRequest;
+  request: GrpcRequest;
   clientCert?: string;
   clientKey?: string;
   caCertificate?: string;
@@ -50,7 +49,7 @@ export interface GrpcIpcRequestParams {
 
 export interface GrpcIpcMessageParams {
   requestId: string;
-  body: RenderedGrpcRequestBody;
+  body: GrpcRequestBody;
 }
 
 export interface gRPCBridgeAPI {
@@ -81,15 +80,11 @@ const grpcOptions = {
   oneofs: true,
 };
 const loadMethodsFromFilePath = async (filePath: string, includeDirs: string[]): Promise<MethodDefs[]> => {
-  try {
-    const definition = await protoLoader.load(filePath, {
-      ...grpcOptions,
-      includeDirs,
-    });
-    return getMethodsFromPackageDefinition(definition);
-  } catch (error) {
-    throw error;
-  }
+  const definition = await protoLoader.load(filePath, {
+    ...grpcOptions,
+    includeDirs,
+  });
+  return getMethodsFromPackageDefinition(definition);
 };
 const loadMethods = async (protoFileId: string): Promise<GrpcMethodInfo[]> => {
   const protoFile = await models.protoFile.getById(protoFileId);
@@ -213,56 +208,56 @@ const getMethodsFromReflection = async (
   if (reflectionApi.enabled) {
     return getMethodsFromReflectionServer(reflectionApi);
   }
-    const { url, path } = parseGrpcUrl(host);
-    const client = new grpcReflection.Client(
-      url,
-      getChannelCredentials({ url: host, caCertificate, clientCert, clientKey, rejectUnauthorized }),
-      grpcOptions,
-      filterDisabledOrInvalidMetaData(metadata),
-      path
+  const { url, path } = parseGrpcUrl(host);
+  const client = new grpcReflection.Client(
+    url,
+    getChannelCredentials({ url: host, caCertificate, clientCert, clientKey, rejectUnauthorized }),
+    grpcOptions,
+    filterDisabledOrInvalidMetaData(metadata),
+    path
+  );
+  const services = await client.listServices();
+  const methodsPromises = services.map(async service => {
+    const fileContainingSymbol = await client.fileContainingSymbol(service);
+    const fullService = fileContainingSymbol.lookupService(service);
+    const mockedRequestMethods = mockRequestMethods(fullService);
+    const descriptorMessage = fileContainingSymbol.toDescriptor('proto3');
+    const packageDefinition = protoLoader.loadFileDescriptorSetFromObject(
+      descriptorMessage,
+      {}
     );
-    const services = await client.listServices();
-    const methodsPromises = services.map(async service => {
-      const fileContainingSymbol = await client.fileContainingSymbol(service);
-      const fullService = fileContainingSymbol.lookupService(service);
-      const mockedRequestMethods = mockRequestMethods(fullService);
-      const descriptorMessage = fileContainingSymbol.toDescriptor('proto3');
-      const packageDefinition = protoLoader.loadFileDescriptorSetFromObject(
-        descriptorMessage,
-        {}
-      );
-      const tryToGetMethods = () => {
-        try {
-          console.log('[grpc] loading service from reflection:', service);
-          const serviceDefinition = asServiceDefinition(
-            packageDefinition[service]
+    const tryToGetMethods = () => {
+      try {
+        console.log('[grpc] loading service from reflection:', service);
+        const serviceDefinition = asServiceDefinition(
+          packageDefinition[service]
+        );
+        invariant(
+          serviceDefinition,
+          `'${service}' was not a valid ServiceDefinition`
+        );
+        const serviceMethods = Object.values(serviceDefinition);
+        return serviceMethods.map(m => {
+          const methodName = Object.keys(mockedRequestMethods).find(name =>
+            m.path.endsWith(`/${name}`)
           );
-          invariant(
-            serviceDefinition,
-            `'${service}' was not a valid ServiceDefinition`
-          );
-          const serviceMethods = Object.values(serviceDefinition);
-          return serviceMethods.map(m => {
-            const methodName = Object.keys(mockedRequestMethods).find(name =>
-              m.path.endsWith(`/${name}`)
-            );
-            if (!methodName) {
-              return m;
-            }
-            return {
-              ...m,
-              example: mockedRequestMethods[methodName]().plain,
-            };
-          });
-        } catch (e) {
-          console.error(e);
-          return [];
-        }
-      };
-      const methods = tryToGetMethods();
-      return methods;
-    });
-    return (await Promise.all(methodsPromises)).flat();
+          if (!methodName) {
+            return m;
+          }
+          return {
+            ...m,
+            example: mockedRequestMethods[methodName]().plain,
+          };
+        });
+      } catch (e) {
+        console.error(e);
+        return [];
+      }
+    };
+    const methods = tryToGetMethods();
+    return methods;
+  });
+  return (await Promise.all(methodsPromises)).flat();
 };
 export const loadMethodsFromReflection = async (options: {
   url: string;
@@ -407,51 +402,46 @@ export const start = (
     try {
       const messageBody = JSON.parse(request.body.text || '');
       const requestPath = path + method.path;
-      switch (methodType) {
-        case 'unary':
-          const unaryCall = client.makeUnaryRequest(
-            requestPath,
-            method.requestSerialize,
-            method.responseDeserialize,
-            messageBody,
-            filterDisabledOrInvalidMetaData(request.metadata),
-            onUnaryResponse(event, request._id),
-          );
-          unaryCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
-          grpcCalls.set(request._id, unaryCall);
-          break;
-        case 'client':
-          const clientCall = client.makeClientStreamRequest(
-            requestPath,
-            method.requestSerialize,
-            method.responseDeserialize,
-            filterDisabledOrInvalidMetaData(request.metadata),
-            onUnaryResponse(event, request._id));
-          clientCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
-          grpcCalls.set(request._id, clientCall);
-          break;
-        case 'server':
-          const serverCall = client.makeServerStreamRequest(
-            requestPath,
-            method.requestSerialize,
-            method.responseDeserialize,
-            messageBody,
-            filterDisabledOrInvalidMetaData(request.metadata),
-          );
-          onStreamingResponse(event, serverCall, request._id);
-          grpcCalls.set(request._id, serverCall);
-          break;
-        case 'bidi':
-          const bidiCall = client.makeBidiStreamRequest(
-            requestPath,
-            method.requestSerialize,
-            method.responseDeserialize,
-            filterDisabledOrInvalidMetaData(request.metadata));
-          onStreamingResponse(event, bidiCall, request._id);
-          grpcCalls.set(request._id, bidiCall);
-          break;
-        default:
-          return;
+      if (methodType === 'unary') {
+        const unaryCall = client.makeUnaryRequest(
+          requestPath,
+          method.requestSerialize,
+          method.responseDeserialize,
+          messageBody,
+          filterDisabledOrInvalidMetaData(request.metadata),
+          onUnaryResponse(event, request._id),
+        );
+        unaryCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
+        grpcCalls.set(request._id, unaryCall);
+      } else if (methodType === 'client') {
+        const clientCall = client.makeClientStreamRequest(
+          requestPath,
+          method.requestSerialize,
+          method.responseDeserialize,
+          filterDisabledOrInvalidMetaData(request.metadata),
+          onUnaryResponse(event, request._id));
+        clientCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
+        grpcCalls.set(request._id, clientCall);
+      } else if (methodType === 'server') {
+        const serverCall = client.makeServerStreamRequest(
+          requestPath,
+          method.requestSerialize,
+          method.responseDeserialize,
+          messageBody,
+          filterDisabledOrInvalidMetaData(request.metadata),
+        );
+        onStreamingResponse(event, serverCall, request._id);
+        grpcCalls.set(request._id, serverCall);
+      } else if (methodType === 'bidi') {
+        const bidiCall = client.makeBidiStreamRequest(
+          requestPath,
+          method.requestSerialize,
+          method.responseDeserialize,
+          filterDisabledOrInvalidMetaData(request.metadata));
+        onStreamingResponse(event, bidiCall, request._id);
+        grpcCalls.set(request._id, bidiCall);
+      } else {
+        throw new Error(`Unsupported method type: ${methodType}`);
       }
       // Update request stats
       models.stats.incrementExecutedRequests();

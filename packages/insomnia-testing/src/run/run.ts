@@ -30,7 +30,7 @@ const runInternal = async <TReturn, TNetworkResponse>(
 
   const mocha: Mocha = new Mocha({
     //       ms   * sec * min
-    timeout: 1000 * 60  * 1,
+    timeout: 1000 * 60 * 1,
     globals: ['insomnia', 'chai'],
     bail,
     reporter,
@@ -97,7 +97,7 @@ export const runTestsCli = async <TNetworkResponse>(
   testSrc,
   options,
   reporter,
-  runner => !Boolean(runner.stats?.failures),
+  runner => !runner.stats?.failures,
 );
 
 /**

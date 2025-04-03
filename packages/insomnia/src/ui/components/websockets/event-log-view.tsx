@@ -23,9 +23,9 @@ function getIcon(event: WebSocketEvent | CurlEvent): IconId {
     case 'message': {
       if (event.direction === 'OUTGOING') {
         return 'sent';
-      } else {
-        return 'receive';
       }
+        return 'receive';
+
     }
     case 'open': {
       return 'checkmark-circle';

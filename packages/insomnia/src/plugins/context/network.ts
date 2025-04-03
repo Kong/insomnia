@@ -1,4 +1,3 @@
-import { type ExtraRenderInfo } from '../../common/render';
 import * as models from '../../models';
 import type { Request } from '../../models/request';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
@@ -6,7 +5,7 @@ import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInt
 export function init() {
   return {
     network: {
-      async sendRequest(req: Request, extraInfo?: ExtraRenderInfo) {
+      async sendRequest(req: Request, extraInfo?: { requestChain: string[] }) {
         const { request,
           environment,
           settings,

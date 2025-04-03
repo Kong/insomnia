@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { importInsomniaV5Data } from 'insomnia/src/common/insomnia-v5';
 import path from 'path';
 import YAML from 'yaml';
 
@@ -82,18 +83,31 @@ const insomniaAdapter: DbAdapter = async (filePath, filterTypes) => {
     __export_format: number;
     resources: RawTypeModel[];
   } | undefined;
+
   try {
     parsed = YAML.parse(content);
+
+    if (!parsed?.__export_format) {
+      const insomnia5Import = importInsomniaV5Data(content);
+
+      if (insomnia5Import.length > 0) {
+        parsed = {
+          __export_format: 5,
+          // @ts-expect-error -- TSCONVERSION
+          resources: insomnia5Import,
+        };
+      }
+    }
   } catch (error) {
     throw new InsoError(`Failed to parse ${fileName}.`, error);
   }
 
-  // We are supporting only v4 files
+  // We are supporting only v4 and v5 files
   if (!parsed) {
     throw new InsoError(`Failed to parse ${fileName}.`);
   } else if (!parsed.__export_format) {
     throw new InsoError(`Expected an Insomnia v4 export file; unexpected data found in ${fileName}.`);
-  } else if (parsed.__export_format !== 4) {
+  } else if (parsed.__export_format !== 4 && parsed.__export_format !== 5) {
     throw new InsoError(`Expected an Insomnia v4 export file; found an Insomnia v${parsed.__export_format} export file in ${fileName}.`);
   }
 

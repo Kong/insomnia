@@ -1,45 +1,58 @@
-import React from 'react';
-import { Button, Dialog, Heading, Input, Label, Modal, ModalOverlay, Radio, RadioGroup, TextField } from 'react-aria-components';
-import { useFetcher, useRouteLoaderData } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Button, Dialog, FieldError, Form, Heading, Input, Label, Modal, ModalOverlay, Radio, RadioGroup, TextField } from 'react-aria-components';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import * as models from '../../../models/index';
 import type { MockServer } from '../../../models/mock-server';
+import { isGitProject, type Project } from '../../../models/project';
 import { isRequest } from '../../../models/request';
 import { isEnvironment, isMockServer, isScratchpad, type Workspace } from '../../../models/workspace';
-import type { WorkspaceLoaderData } from '../../routes/workspace';
+import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../routes/actions';
+import type { GetRepositoryDirectoryTreeResult } from '../../routes/git-project-actions';
+import { fetchAndCacheOrganizationStorageRule, ORG_STORAGE_RULE, type OrganizationLoaderData } from '../../routes/organization';
 import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
 import { MarkdownEditor } from '../markdown-editor';
-import { showModal } from '.';
-import { AlertModal } from './alert-modal';
-import { useAvailableMockServerType } from './mock-server-settings-modal';
 
 interface Props {
   onClose: () => void;
   workspace: Workspace;
   mockServer?: MockServer | null;
+  gitFilePath?: string | null;
+  project?: Project;
 }
 
-export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props) => {
-  // file://./../../routes/workspace.tsx#workspaceLoader
-  const workspaceLoaderData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
-  const isLocalProject = !workspaceLoaderData?.activeProject?.remoteId;
-  const {
-    isSelfHostedDisabled,
-    isCloudProjectDisabled,
-    organizationId,
-    projectId,
-    isEnterprise,
-  } = useAvailableMockServerType(isLocalProject);
+export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockServer, onClose }: Props) => {
+  const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+  const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  const [orgStorageRule, setOrgStorageRule] = useState<ORG_STORAGE_RULE>(ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL);
+  const [description, setDescription] = useState<string>(workspace.description);
+  useEffect(() => {
+    fetchAndCacheOrganizationStorageRule(organizationId as string).then(setOrgStorageRule);
+  }, [organizationId]);
+
+  const gitRepoTreeFetcher = useFetcher<GetRepositoryDirectoryTreeResult>();
+
+  useEffect(() => {
+    if (project && isGitProject(project) && gitRepoTreeFetcher.state === 'idle' && !gitRepoTreeFetcher.data) {
+      gitRepoTreeFetcher.load(`/organization/${organizationId}/project/${project._id}/git/repository-tree`);
+    }
+  }, [project, gitRepoTreeFetcher, organizationId]);
+
+  const isLocalProject = !project?.remoteId;
+  const isEnterprise = currentPlan?.type.includes('enterprise');
+  const isSelfHostedDisabled = !isEnterprise || orgStorageRule === ORG_STORAGE_RULE.CLOUD_ONLY;
+  const isCloudProjectDisabled = isLocalProject || orgStorageRule === ORG_STORAGE_RULE.LOCAL_ONLY;
+
   const isScratchpadWorkspace = isScratchpad(workspace);
 
   const activeWorkspaceName = workspace.name;
 
   const workspaceFetcher = useFetcher();
-  const mockServerFetcher = useFetcher();
+
   const workspacePatcher = (workspaceId: string, patch: Partial<Workspace>) => {
     workspaceFetcher.submit({ ...patch, workspaceId }, {
       action: `/organization/${organizationId}/project/${projectId}/workspace/update`,
@@ -47,14 +60,18 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
       encType: 'application/json',
     });
   };
-  const mockServerPatcher = (mockServerId: string, patch: Partial<MockServer>) => {
-    // file://./../../routes/actions.tsx#updateMockServerAction
-    mockServerFetcher.submit({ ...patch, mockServerId }, {
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/mock-server/update`,
-      method: 'post',
-      encType: 'application/json',
-    });
-  };
+
+  useEffect(() => {
+    if (workspaceFetcher.state === 'idle' && workspaceFetcher.data && workspaceFetcher.data.success) {
+      onClose();
+    }
+  }, [onClose, workspaceFetcher]);
+
+  // From the folderPath we need to get the folder children and validate that there is no file with the same name
+  // Get the folder from the gitFilePath
+  const selectedFolder = gitFilePath?.split('/').slice(1).join('/') || '';
+  const fileName = gitFilePath?.split('/').pop() || '';
+  const selectedFolderChildren = gitRepoTreeFetcher.data?.folderList[selectedFolder] || [];
 
   return (
     <ModalOverlay
@@ -75,7 +92,18 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
           className="outline-none flex-1 h-full flex flex-col overflow-hidden"
         >
           {({ close }) => (
-            <div className='flex-1 flex flex-col gap-4 overflow-hidden h-full'>
+            <Form
+              validationBehavior='native'
+              onSubmit={event => {
+                event.preventDefault();
+
+                const form = event.currentTarget;
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                workspacePatcher(workspace._id, data);
+              }}
+              className='flex-1 flex flex-col gap-4 overflow-hidden h-full'
+            >
               <div className='flex gap-2 items-center justify-between'>
                 <Heading slot="title" className='text-2xl flex items-center gap-2'>{getWorkspaceLabel(workspace).singular} Settings{' '}</Heading>
                 <Button
@@ -86,19 +114,52 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                 </Button>
               </div>
               <div className='rounded flex-1 w-full overflow-hidden basis-96 flex flex-col gap-2 select-none overflow-y-auto'>
-                <Label className='text-sm text-[--hl]'>
-                  Name
-                </Label>
-                <Input
-                  name='name'
-                  type='text'
-                  required
-                  readOnly={isScratchpadWorkspace}
+                <TextField
+                  name="name"
+                  isRequired
+                  isReadOnly={isScratchpadWorkspace}
                   defaultValue={activeWorkspaceName}
-                  placeholder='Awesome API'
-                  className='p-2 w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors'
-                  onChange={event => workspacePatcher(workspace._id, { name: event.target.value })}
-                />
+                  className="group relative flex-shrink-0 flex flex-col gap-2 overflow-hidden max-w-full"
+                >
+                  <Label className='text-sm text-[--hl]'>
+                    Name
+                  </Label>
+                  <Input
+                    placeholder='Awesome API'
+                    className='p-2 w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors'
+                  />
+                </TextField>
+                {project && isGitProject(project) && gitRepoTreeFetcher.data && (
+                  <TextField
+                    name="fileName"
+                    isRequired
+                    validate={fileName => {
+                      if (selectedFolderChildren.filter(name => name !== fileName).includes(safeToUseInsomniaFileNameWithExt(fileName))) {
+                        return 'A file with the same name already exists in the selected folder';
+                      }
+
+                      return null;
+                    }}
+                    defaultValue={safeToUseInsomniaFileName(fileName || '')}
+                    className="group relative w-full flex-shrink-0 flex flex-col gap-2 overflow-hidden max-w-full"
+                  >
+                    <Label className="group relative flex flex-col gap-2 overflow-hidden">
+                      <span className='text-sm text-[--hl]'>
+                        File name
+                      </span>
+
+                      <div className="overflow-hidden grid [grid-template-columns:min-content_auto] [grid-template-areas:'input_extension'] focus:outline-none py-1 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:ring-1 focus:ring-[--hl-md] transition-colors">
+                        <Input
+                          placeholder={workspace.name ? safeToUseInsomniaFileName(workspace.name) : 'name'}
+                          className="[grid-area:input] placeholder:italic outline-none focus:outline-none w-full min-w-[3ch]"
+                        />
+                        <span className='[grid-area:input] -z-10 opacity-0 truncate w-min'>{safeToUseInsomniaFileName(fileName || workspace.name || 'name')}</span>
+                        <span className='[grid-area:extension] text-[--hl]'>.yaml</span>
+                      </div>
+                    </Label>
+                    <FieldError className='text-red-500 text-xs' />
+                  </TextField>
+                )}
                 {!isMockServer(workspace) && (
                   <>
                     <Label className='text-sm text-[--hl]' aria-label='Description'>
@@ -109,9 +170,10 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                       placeholder="Write a description"
                       defaultValue={workspace.description}
                       onChange={(description: string) => {
-                        workspacePatcher(workspace._id, { description });
+                        setDescription(description);
                       }}
                     />
+                    <Input name="description" className='sr-only' value={description} />
                     {!isEnvironment(workspace) && (
                       <>
                         <Heading>Actions</Heading>
@@ -137,15 +199,12 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                     <RadioGroup
                       name="mockServerType"
                       defaultValue={mockServer?.useInsomniaCloud ? 'cloud' : 'self-hosted'}
-                      onChange={value => {
+                      validate={value => {
                         if (!isEnterprise && value === 'self-hosted') {
-                          showModal(AlertModal, {
-                            title: 'Upgrade required',
-                            message: 'Self-hosted Mocks are only supported for Enterprise users.',
-                          });
-                          return;
+                          return 'Self-hosted Mocks are only supported for Enterprise users.';
                         }
-                        mockServer && mockServerPatcher(mockServer._id, { useInsomniaCloud: value === 'cloud' });
+
+                        return null;
                       }}
                       className="flex flex-col gap-2"
                     >
@@ -180,6 +239,7 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                           </p>
                         </Radio>
                       </div>
+                      <FieldError className="text-red-500 text-xs" />
                     </RadioGroup>
                     <div className="flex items-center gap-2 text-sm">
                       <Icon icon="info-circle" />
@@ -190,7 +250,7 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                     {!isSelfHostedDisabled && (
                       <TextField
                         autoFocus
-                        name="name"
+                        name="mockServerUrl"
                         defaultValue={mockServer?.url || ''}
                         className={`group relative flex-1 flex flex-col gap-2 ${mockServer?.useInsomniaCloud ? 'disabled' : ''}`}
                       >
@@ -200,7 +260,6 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
                         <Input
                           disabled={mockServer?.useInsomniaCloud}
                           placeholder={mockServer?.useInsomniaCloud ? '' : 'https://example.com'}
-                          onChange={e => mockServer && mockServerPatcher(mockServer._id, { url: e.target.value })}
                           className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                         />
                       </TextField>
@@ -210,17 +269,18 @@ export const WorkspaceSettingsModal = ({ workspace, mockServer, onClose }: Props
               </div>
               <div className='flex items-center gap-2 justify-end'>
                 <Button
-                  onPress={close}
+                  type='submit'
                   className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
                 >
                   Update
                 </Button>
               </div>
-            </div>
+            </Form>
           )}
         </Dialog>
       </Modal>
     </ModalOverlay>
   );
 };
+
 WorkspaceSettingsModal.displayName = 'WorkspaceSettingsModal';

@@ -6,7 +6,6 @@ import { parseApiSpec } from '../../../common/api-specs';
 import { getProductName } from '../../../common/constants';
 import { exportGlobalEnvironmentToFile, exportMockServerToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { ApiSpec } from '../../../models/api-spec';
 import type { MockServer } from '../../../models/mock-server';
 import { isRemoteProject, type Project } from '../../../models/project';
@@ -27,6 +26,7 @@ import { SvgIcon } from '../svg-icon';
 
 interface Props {
   workspace: Workspace;
+  gitFilePath?: string;
   apiSpec?: ApiSpec;
   mockServer?: MockServer;
   project: Project;
@@ -49,7 +49,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
 
     try {
       const context = {
-        ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
+        ...pluginContexts.app.init('no-render'),
         ...pluginContexts.data.init(project._id),
         ...pluginContexts.store.init(p.plugin),
       };
@@ -82,7 +82,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
 };
 
 export const WorkspaceCardDropdown: FC<Props> = props => {
-  const { workspace, mockServer, project } = props;
+  const { workspace, mockServer, project, gitFilePath } = props;
   const fetcher = useFetcher();
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -214,6 +214,8 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
         <WorkspaceSettingsModal
           workspace={workspace}
           mockServer={mockServer}
+          gitFilePath={gitFilePath}
+          project={project}
           onClose={() => setIsSettingsModalOpen(false)}
         />
       )}

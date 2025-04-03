@@ -7,9 +7,9 @@ export function setupDateMocks() {
     constructor(arg) {
       if (!arg) {
         return new Date(ts++);
-      } else {
-        super(arg);
       }
+        super(arg);
+
     }
 
     getTimezoneOffset() {

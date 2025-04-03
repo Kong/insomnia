@@ -388,12 +388,12 @@ export class Request extends Property {
     }
 
     size(): RequestSize {
-        return calculateRequestSize(this.body, this.headers);
+        return calculatePayloadSize((this.body || '').toString(), this.headers);
     }
 
     override toJSON() {
         return {
-            url: this.url,
+            url: this.url.toString(),
             method: this.method,
             header: this.headers.map(header => header.toJSON(), {}),
             body: {
@@ -523,7 +523,7 @@ export function mergeClientCertificates(
         };
 
     if (updatedReq.certificate.pfx && updatedReq.certificate.pfx?.src !== '') {
-        return [{
+        const specifiedCert: ClientCertificate = {
             ...baseCertificate,
             key: null,
             cert: null,
@@ -531,7 +531,10 @@ export function mergeClientCertificates(
             disabled: updatedReq.certificate.disabled || false,
             passphrase: updatedReq.certificate.passphrase || null,
             pfx: updatedReq.certificate.pfx?.src,
-        }];
+            host: '*',
+        };
+
+        return [specifiedCert, ...originalClientCertificates];
     } else if (
         updatedReq &&
         updatedReq.certificate.key &&
@@ -539,7 +542,7 @@ export function mergeClientCertificates(
         updatedReq.certificate.key?.src !== '' &&
         updatedReq.certificate.cert?.src !== ''
     ) {
-        return [{
+        const specifiedCert: ClientCertificate = {
             ...baseCertificate,
 
             _id: '',
@@ -550,11 +553,14 @@ export function mergeClientCertificates(
             isPrivate: false,
             name: updatedReq.certificate.name || '',
             disabled: updatedReq.certificate.disabled || false,
+            host: '*',
             key: updatedReq.certificate.key?.src,
             cert: updatedReq.certificate.cert?.src,
             passphrase: updatedReq.certificate.passphrase || null,
             pfx: null,
-        }];
+        };
+
+        return [specifiedCert, ...originalClientCertificates];
     }
 
     throw Error('Invalid certificate configuration: "cert+key" and "pfx" can not be set at the same time');
@@ -658,9 +664,17 @@ export function mergeRequests(
     originalReq: InsomniaRequest,
     updatedReq: Request
 ): InsomniaRequest {
+    const queryParamObjects = updatedReq.url.query.map(
+        queryParam => ({
+            name: queryParam.key,
+            value: queryParam.value,
+            disabled: queryParam.disabled,
+        }),
+        {},
+    );
     const updatedReqProperties: Partial<InsomniaRequest> = {
         name: updatedReq.name,
-        url: updatedReq.url.toString(),
+        url: updatedReq.url.toStringWithoutQuery(),
         method: updatedReq.method,
         body: mergeRequestBody(updatedReq.body, originalReq.body),
         headers: updatedReq.headers
@@ -670,12 +684,12 @@ export function mergeRequests(
                     value: header.value,
                     disabled: header.disabled,
                 }),
-            {},
-        ),
+                {},
+            ),
         authentication: fromPreRequestAuth(updatedReq.auth),
         preRequestScript: '',
         pathParameters: updatedReq.pathParameters,
-        parameters: [], // set empty array as parameters will be part of url field
+        parameters: queryParamObjects,
     };
 
     return {
@@ -684,8 +698,18 @@ export function mergeRequests(
     };
 }
 
-export function calculateRequestSize(body: RequestBody | undefined, headers: HeaderList<Header>): RequestSize {
-    const bodySize = new Blob([(body || '').toString()]).size;
+export function calculatePayloadSize(body: string, headers: HeaderList<Header>): RequestSize {
+    const bodySize = new Blob([body]).size;
+    const headerSize = calculateHeadersSize(headers);
+    return {
+        body: bodySize,
+        header: headerSize,
+        total: bodySize + headerSize,
+        source: 'COMPUTED',
+    };
+}
+
+export function calculateHeadersSize(headers: HeaderList<Header>): number {
     const headerSize = new Blob([
         headers.reduce(
             (acc, header) => (acc + header.toString() + '\n'),
@@ -694,10 +718,5 @@ export function calculateRequestSize(body: RequestBody | undefined, headers: Hea
         ),
     ]).size;
 
-    return {
-        body: bodySize,
-        header: headerSize,
-        total: bodySize + headerSize,
-        source: 'COMPUTED',
-    };
+    return headerSize;
 }

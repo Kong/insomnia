@@ -1,7 +1,9 @@
 import * as Sentry from '@sentry/electron/main';
+import chardet from 'chardet';
 import type { MarkerRange } from 'codemirror';
-import { app, BrowserWindow, type IpcRendererEvent, shell } from 'electron';
+import { app, BrowserWindow, type IpcRendererEvent, type MenuItemConstructorOptions, shell } from 'electron';
 import fs from 'fs';
+import iconv from 'iconv-lite';
 
 import { APP_START_TIME, LandingPage, SentryMetrics } from '../../common/sentry';
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
@@ -9,6 +11,7 @@ import * as models from '../../models';
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { backup, restoreBackup } from '../backup';
+import type { GitServiceAPI } from '../git-service';
 import installPlugin from '../install-plugin';
 import type { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
@@ -17,7 +20,7 @@ import type { WebSocketBridgeAPI } from '../network/websocket';
 import { ipcMainHandle, ipcMainOn, ipcMainOnce, type RendererOnChannels } from './electron';
 import extractPostmanDataDumpHandler from './extractPostmanDataDump';
 import type { gRPCBridgeAPI } from './grpc';
-
+import type { secretStorageBridgeAPI } from './secret-storage';
 export interface RendererToMainBridgeAPI {
   loginStateChange: () => void;
   openInBrowser: (url: string) => void;
@@ -31,15 +34,20 @@ export interface RendererToMainBridgeAPI {
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
   writeFile: (options: { path: string; content: string }) => Promise<string>;
+  readFile: (options: { path: string; encoding?: string }) => Promise<{ content: string; encoding: string }>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
   on: (channel: RendererOnChannels, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
   webSocket: WebSocketBridgeAPI;
   grpc: gRPCBridgeAPI;
   curl: CurlBridgeAPI;
+  git: GitServiceAPI;
+  secretStorage: secretStorageBridgeAPI;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
-  showContextMenu: (options: { key: string; nunjucksTag?: { template: string; range: MarkerRange } }) => void;
+  showNunjucksContextMenu: (options: { key: string; nunjucksTag?: { template: string; range: MarkerRange } }) => void;
+  showContextMenu: (options: { key: string; menuItems: MenuItemConstructorOptions[]; extra?: Record<string, any> }) => void;
+
   database: {
     caCertificate: {
       create: (options: { parentId: string; path: string }) => Promise<string>;
@@ -98,6 +106,33 @@ export function registerMainHandlers() {
     }
   });
 
+  ipcMainHandle('readFile', async (_, options: { path: string; encoding?: string }) => {
+    const defaultEncoding = 'utf8';
+    const contentBuffer = await fs.promises.readFile(options.path);
+    const { encoding } = options;
+    if (encoding) {
+      if (iconv.encodingExists(encoding)) {
+        const content = iconv.decode(contentBuffer, encoding);
+        return { content, encoding };
+      }
+      throw new Error(`Unsupported encoding: ${encoding} to read file`);
+    }
+    // using chardet to detect encoding
+    const detecedEncoding = chardet.detect(contentBuffer);
+    if (detecedEncoding) {
+      if (iconv.encodingExists(detecedEncoding)) {
+        const content = iconv.decode(contentBuffer, detecedEncoding);
+        return { content, encoding: detecedEncoding };
+      }
+      throw new Error(`Unsupported encoding: ${detecedEncoding} to read file`);
+    }
+    // failed to detect encoding, use default utf-8 as fallback
+    return {
+      content: iconv.decode(contentBuffer, defaultEncoding),
+      encoding: defaultEncoding,
+    };
+  });
+
   ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => {
     return curlRequest(options);
   });
@@ -125,7 +160,6 @@ export function registerMainHandlers() {
   ipcMainOn('openInBrowser', (_, href: string) => {
     const { protocol } = new URL(href);
     if (protocol === 'http:' || protocol === 'https:') {
-      // eslint-disable-next-line no-restricted-properties
       shell.openExternal(href);
     }
   });

@@ -11,14 +11,14 @@ import { isWorkspace, type Workspace } from '../models/workspace';
 import { getAuthHeader } from '../network/authentication';
 import * as plugins from '../plugins';
 import * as pluginContexts from '../plugins/context/index';
-import { RenderError } from '../templating/index';
+import { RenderError } from '../templating/render-error';
+import type { RenderedRequest } from '../templating/types';
 import { parseGraphQLReqeustBody } from '../utils/graph-ql';
 import { smartEncodeUrl } from '../utils/url/querystring';
 import { getAppVersion } from './constants';
 import { jarFromCookies } from './cookies';
 import { database } from './database';
 import { filterHeaders, getSetCookieHeaders, hasAuthHeader } from './misc';
-import type { RenderedRequest } from './render';
 import { getRenderedRequestAndContext } from './render';
 
 export interface ExportRequest {
@@ -144,7 +144,7 @@ export async function exportHarResponse(response: Response | null) {
     httpVersion: 'HTTP/1.1',
     cookies: getResponseCookies(response),
     headers: getResponseHeaders(response),
-    content: getResponseContent(response),
+    content: await getResponseContent(response),
     redirectURL: '',
     headersSize: -1,
     bodySize: -1,
@@ -343,8 +343,8 @@ function mapCookie(cookie: ToughCookie) {
   return harCookie;
 }
 
-function getResponseContent(response: Response) {
-  let body = models.response.getBodyBuffer(response);
+async function getResponseContent(response: Response) {
+  let body = await models.response.getBodyBuffer(response);
 
   if (body === null) {
     body = Buffer.alloc(0);

@@ -37,6 +37,7 @@ export function init(): BaseSettings {
     editorIndentSize: 2,
     editorIndentWithTabs: true,
     editorKeyMap: 'default',
+    enableKeyMapForInlineTextEditors: false,
     editorLineWrapping: true,
     enableAnalytics: true,
     showVariableSourceAndValue: false,
@@ -54,6 +55,8 @@ export function init(): BaseSettings {
     maxHistoryResponses: 20,
     maxRedirects: 10,
     maxTimelineDataSizeKB: 10,
+    pluginNodeExtraCerts: '',
+    pluginsAllowElevatedAccess: false,
     noProxy: '',
     nunjucksPowerUserMode: false,
     pluginConfig: {},
@@ -70,6 +73,9 @@ export function init(): BaseSettings {
     useBulkParametersEditor: false,
     validateAuthSSL: true,
     validateSSL: true,
+    saveVaultKeyLocally: true,
+    enableVaultInScripts: false,
+    saveVaultKeyToOSSecretManager: true,
   };
 }
 

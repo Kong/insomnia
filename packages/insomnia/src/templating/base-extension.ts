@@ -4,17 +4,13 @@ import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context';
-import type { PluginTemplateTag } from './extensions';
+import type { Plugin } from '../plugins/index';
 import * as templating from './index';
+import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
 import { decodeEncoding } from './utils';
 
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
-export interface HelperContext {
-  context: any;
-  meta: any;
-  renderPurpose: any;
-  util: any;
-}
+
 export default class BaseExtension {
   _ext: PluginTemplateTag | null = null;
   _plugin: Plugin | null = null;
@@ -47,11 +43,7 @@ export default class BaseExtension {
 
   getLiveDisplayName() {
     return (
-      // @ts-expect-error -- TSCONVERSION
-      this._ext?.liveDisplayName ||
-      function() {
-        return '';
-      }
+      this._ext?.liveDisplayName || (() => '')
     );
   }
 
@@ -71,9 +63,8 @@ export default class BaseExtension {
     return this._ext?.deprecated || false;
   }
 
-  run(...args: any[]) {
-    // @ts-expect-error -- TSCONVERSION
-    return this._ext?.run(...args);
+  run(context: PluginTemplateTagContext, ...arg: any[]) {
+    return this._ext?.run(context, ...arg);
   }
 
   parse(parser: any, nodes: any, lexer: any) {
@@ -92,20 +83,18 @@ export default class BaseExtension {
     return new nodes.CallExtensionAsync(this, 'asyncRun', args);
   }
 
-  asyncRun({ ctx: renderContext }: any, ...runArgs: any[]) {
-    // Pull the callback off the end
+  asyncRun({ ctx }: any, ...runArgs: any[]) {
+    const renderContext = ctx as BaseRenderContext & { value: string | number };
     const callback = runArgs[runArgs.length - 1];
-    // Pull out the meta helper
-    const renderMeta = renderContext.getMeta ? renderContext.getMeta() : {};
-    // Pull out the purpose
-    const renderPurpose = renderContext.getPurpose ? renderContext.getPurpose() : null;
+    const renderMeta = renderContext.getMeta?.();
+    const renderPurpose = renderContext.getPurpose?.();
     // Extract the rest of the args
     const args = runArgs
       .slice(0, runArgs.length - 1)
       .filter(a => a !== EMPTY_ARG)
       .map(decodeEncoding);
     // Define a helper context with utils
-    const helperContext: HelperContext = {
+    const helperContext: PluginTemplateTagContext = {
       ...pluginContexts.app.init(renderPurpose),
       // @ts-expect-error -- TSCONVERSION
       ...pluginContexts.store.init(this._plugin),
@@ -136,7 +125,7 @@ export default class BaseExtension {
             getByRequestId: models.oAuth2Token.getByParentId,
           },
           cookieJar: {
-            getOrCreateForWorkspace: (workspace: any) => {
+            getOrCreateForWorkspace: (workspace: Workspace) => {
               return models.cookieJar.getOrCreateForParentId(workspace._id);
             },
           },

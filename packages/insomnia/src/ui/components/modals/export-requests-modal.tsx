@@ -256,7 +256,7 @@ export const ExportRequestsModal = ({ workspaceIdToExport, onClose }: { workspac
     return !!node.children.find(child => setRequestGroupCollapsed(child, isCollapsed, requestGroupId));
   };
 
-  const isExportDisabled = state?.treeRoot?.selectedRequests === 0 || false;
+  const isExportDisabled = (state?.treeRoot?.totalRequests && state?.treeRoot?.totalRequests > 0 && state?.treeRoot?.selectedRequests === 0) || false;
 
   return (
     <ModalOverlay

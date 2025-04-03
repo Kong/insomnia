@@ -55,7 +55,8 @@ export type KeyboardShortcut =
   | 'request_togglePin'
   | 'environment_showVariableSourceAndValue'
   | 'beautifyRequestBody'
-  | 'graphql_explorer_focus_filter';
+  | 'graphql_explorer_focus_filter'
+  | 'close_tab';
 
 /**
  * The collection of defined hotkeys.
@@ -89,7 +90,7 @@ export interface PluginConfig {
   disabled: boolean;
 }
 
-export type PluginConfigMap = Record<string, PluginConfig>;
+export type PluginConfigMap = Record<string, { disabled: boolean }>;
 
 export interface Settings {
   autoDetectColorScheme: boolean;
@@ -106,6 +107,8 @@ export interface Settings {
 
   /** If true, Insomnia won’t show a notification when new updates are available. Users can still check for updates in Preferences. */
   disableUpdateNotification: boolean;
+
+  enableKeyMapForInlineTextEditors: boolean;
   editorFontSize: number;
   editorIndentSize: number;
   editorIndentWithTabs: boolean;
@@ -133,7 +136,9 @@ export interface Settings {
   noProxy: string;
   nunjucksPowerUserMode: boolean;
   pluginConfig: PluginConfigMap;
+  pluginNodeExtraCerts: string;
   pluginPath: string;
+  pluginsAllowElevatedAccess: boolean;
   preferredHttpVersion: HttpVersion;
   proxyEnabled: boolean;
   showPasswords: boolean;
@@ -145,4 +150,8 @@ export interface Settings {
   useBulkParametersEditor: boolean;
   validateAuthSSL: boolean;
   validateSSL: boolean;
+  // vault related settings
+  saveVaultKeyLocally: boolean;
+  enableVaultInScripts: boolean;
+  saveVaultKeyToOSSecretManager: boolean;
 }

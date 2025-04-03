@@ -3,27 +3,20 @@ import * as Sentry from '@sentry/electron/renderer';
 import React, { type FC, Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
-  Dialog,
   GridList,
   GridListItem,
   Heading,
   Input,
-  Label,
   Link,
   ListBox,
   ListBoxItem,
   Menu,
   MenuItem,
   MenuTrigger,
-  Modal,
-  ModalOverlay,
   Popover,
-  Radio,
-  RadioGroup,
   SearchField,
   Select,
   SelectValue,
-  TextField,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
@@ -57,12 +50,14 @@ import { LandingPage, SentryMetrics } from '../../common/sentry';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { userSession } from '../../models';
-import type { ApiSpec } from '../../models/api-spec';
+import { type ApiSpec } from '../../models/api-spec';
+import type { GitRepository } from '../../models/git-repository';
 import { sortProjects } from '../../models/helpers/project';
 import type { MockServer } from '../../models/mock-server';
 import type { Organization } from '../../models/organization';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../../models/organization';
 import {
+  isGitProject,
   isRemoteProject,
   type Project,
   SCRATCHPAD_PROJECT_ID,
@@ -70,22 +65,21 @@ import {
 import { isDesign, scopeToActivity, type Workspace, type WorkspaceScope } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
-import { showModal } from '../../ui/components/modals';
-import { AskModal } from '../../ui/components/modals/ask-modal';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { getInitialRouteForOrganization } from '../../utils/router';
 import { AvatarGroup } from '../components/avatar';
+import { GitProjectSyncDropdown } from '../components/dropdowns/git-project-sync-dropdown';
 import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { WorkspaceCardDropdown } from '../components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
-import { showAlert, showPrompt } from '../components/modals';
-import { AlertModal } from '../components/modals/alert-modal';
 import { GitRepositoryCloneModal } from '../components/modals/git-repository-settings-modal/git-repo-clone-modal';
 import { ImportModal } from '../components/modals/import-modal';
-import { MockServerSettingsModal } from '../components/modals/mock-server-settings-modal';
+import { NewWorkspaceModal } from '../components/modals/new-workspace-modal';
+import { ProjectModal } from '../components/modals/project-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
+import { OrganizationTabList } from '../components/tabs/tab-list';
 import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
 import { useLoaderDeferData } from '../hooks/use-loader-defer-data';
@@ -157,7 +151,7 @@ async function syncTeamProjects({
 }: {
   teamProjects: TeamProject[];
   organizationId: string;
-  }) {
+}) {
   // assumption: api teamProjects is the source of truth for migrated projects
   // once migrated orgs become the source of truth for projects
   // its important that migration be completed before this code is run
@@ -266,6 +260,7 @@ export interface InsomniaFile {
   apiSpec?: ApiSpec;
   hasUncommittedChanges?: boolean;
   hasUnpushedChanges?: boolean;
+  gitFilePath?: string | null;
 }
 
 export interface ProjectIdLoaderData {
@@ -281,7 +276,8 @@ export interface ProjectLoaderData {
   mockServersCount: number;
   projectsCount: number;
   activeProject?: Project;
-  projects: Project[];
+  activeProjectGitRepository?: GitRepository | null;
+  projects: (Project & { gitRepository?: GitRepository })[];
   learningFeaturePromise?: Promise<LearningFeature>;
   remoteFilesPromise?: Promise<InsomniaFile[]>;
   projectsSyncStatusPromise?: Promise<Record<string, boolean>>;
@@ -311,6 +307,12 @@ async function getAllLocalFiles({
     }),
   ]);
 
+  const gitRepositories = await database.find<GitRepository>(models.gitRepository.type, {
+    parentId: {
+      $in: workspaceMetas.map(wm => wm.gitRepositoryId).filter(isNotNullOrUndefined),
+    },
+  });
+
   const files: InsomniaFile[] = projectWorkspaces.map(workspace => {
     const apiSpec = apiSpecs.find(spec => spec.parentId === workspace._id);
     const mockServer = mockServers.find(mock => mock.parentId === workspace._id);
@@ -329,10 +331,11 @@ async function getAllLocalFiles({
       }
     }
     const workspaceMeta = workspaceMetas.find(wm => wm.parentId === workspace._id);
+    const gitRepository = gitRepositories.find(gr => gr._id === workspaceMeta?.gitRepositoryId);
 
-    const lastActiveBranch = workspaceMeta?.cachedGitRepositoryBranch;
+    const lastActiveBranch = gitRepository?.cachedGitRepositoryBranch;
 
-    const lastCommitAuthor = workspaceMeta?.cachedGitLastAuthor;
+    const lastCommitAuthor = gitRepository?.cachedGitLastAuthor;
 
     // WorkspaceMeta is a good proxy for last modified time
     const workspaceModified = workspaceMeta?.modified || workspace.modified;
@@ -346,7 +349,7 @@ async function getAllLocalFiles({
       workspace?.modified,
       workspaceMeta?.modified,
       modifiedLocally,
-      workspaceMeta?.cachedGitLastCommitTime,
+      gitRepository?.cachedGitLastCommitTime,
     ];
 
     const lastModifiedTimestamp = lastModifiedFrom
@@ -355,8 +358,8 @@ async function getAllLocalFiles({
 
     const hasUnsavedChanges = Boolean(
       isDesign(workspace) &&
-        workspaceMeta?.cachedGitLastCommitTime &&
-        modifiedLocally > workspaceMeta?.cachedGitLastCommitTime
+      gitRepository?.cachedGitLastCommitTime &&
+      modifiedLocally > gitRepository?.cachedGitLastCommitTime
     );
 
     const specVersion = spec?.info?.version ? String(spec?.info?.version) : '';
@@ -367,9 +370,9 @@ async function getAllLocalFiles({
       scope: workspace.scope,
       label: scopeToLabelMap[workspace.scope],
       created: workspace.created,
-      lastModifiedTimestamp: (hasUnsavedChanges && modifiedLocally) || workspaceMeta?.cachedGitLastCommitTime || lastModifiedTimestamp,
+      lastModifiedTimestamp: (hasUnsavedChanges && modifiedLocally) || gitRepository?.cachedGitLastCommitTime || lastModifiedTimestamp,
       branch: lastActiveBranch || '',
-      lastCommit: hasUnsavedChanges && workspaceMeta?.cachedGitLastCommitTime && lastCommitAuthor ? `by ${lastCommitAuthor}` : '',
+      lastCommit: hasUnsavedChanges && gitRepository?.cachedGitLastCommitTime && lastCommitAuthor ? `by ${lastCommitAuthor}` : '',
       version: specVersion ? `${specVersion?.startsWith('v') ? '' : 'v'}${specVersion}` : '',
       oasFormat: specFormat ? `${specFormat === 'openapi' ? 'OpenAPI' : 'Swagger'} ${specFormatVersion || ''}` : '',
       mockServer,
@@ -377,6 +380,7 @@ async function getAllLocalFiles({
       workspace,
       hasUncommittedChanges: workspaceMeta?.hasUncommittedChanges,
       hasUnpushedChanges: workspaceMeta?.hasUnpushedChanges,
+      gitFilePath: workspaceMeta?.gitFilePath,
     };
   });
   return files;
@@ -394,12 +398,14 @@ async function getAllRemoteFiles({
     invariant(project, 'Project not found');
 
     const remoteId = project.remoteId;
-    invariant(remoteId, 'Project is not a remote project');
+    if (!remoteId) {
+      return [];
+    }
     const vcs = VCSInstance();
 
     const [allPulledBackendProjectsForRemoteId, allFetchedRemoteBackendProjectsForRemoteId] = await Promise.all([
       vcs.localBackendProjects().then(projects => projects.filter(p => p.id === remoteId)),
-    // Remote backend projects are fetched from the backend since they are not stored locally
+      // Remote backend projects are fetched from the backend since they are not stored locally
       vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId }),
     ]);
 
@@ -481,6 +487,7 @@ interface LearningFeature {
   cta: string;
   url: string;
 }
+
 const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
   let learningFeature = fallbackLearningFeature;
   const lastFetchedString = window.localStorage.getItem('learning-feature-last-fetch');
@@ -525,6 +532,32 @@ const CheckAllProjectSyncStatus = async (projects: Project[]) => {
   return obj;
 };
 
+async function getProjectsWithGitRepositories({
+  organizationId,
+}: {
+  organizationId: string;
+}): Promise<(Project & { gitRepository?: GitRepository })[]> {
+  const projects = await database.find<Project>(models.project.type, {
+    parentId: organizationId,
+  });
+
+  const gitRepositoryIds = projects.map(p => p.gitRepositoryId).filter(isNotNullOrUndefined);
+
+  const gitRepositories = await database.find<GitRepository>(models.gitRepository.type, {
+    _id: {
+      $in: gitRepositoryIds,
+    },
+  });
+
+  return projects.map(project => {
+    const gitRepository = gitRepositories.find(gr => gr._id === project.gitRepositoryId);
+    return {
+      ...project,
+      gitRepository,
+    };
+  });
+}
+
 export const loader: LoaderFunction = async ({
   params,
 }) => {
@@ -564,9 +597,7 @@ export const loader: LoaderFunction = async ({
 
   const [localFiles, organizationProjects = []] = await Promise.all([
     getAllLocalFiles({ projectId }),
-    database.find<Project>(models.project.type, {
-      parentId: organizationId,
-    }),
+    getProjectsWithGitRepositories({ organizationId }),
   ]);
 
   const remoteFilesPromise = getAllRemoteFiles({ projectId, organizationId });
@@ -576,6 +607,8 @@ export const loader: LoaderFunction = async ({
 
   const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
 
+  const activeProjectGitRepository = isGitProject(project) ? await models.gitRepository.getById(project.gitRepositoryId || '') : null;
+
   return defer({
     localFiles,
     learningFeaturePromise,
@@ -583,6 +616,7 @@ export const loader: LoaderFunction = async ({
     projects,
     projectsCount: organizationProjects.length,
     activeProject: project,
+    activeProjectGitRepository,
     allFilesCount: localFiles.length,
     environmentsCount: localFiles.filter(
       file => file.scope === 'environment'
@@ -604,6 +638,7 @@ const ProjectRoute: FC = () => {
   const {
     localFiles,
     activeProject,
+    activeProjectGitRepository,
     projects,
     allFilesCount,
     environmentsCount,
@@ -630,7 +665,6 @@ const ProjectRoute: FC = () => {
 
   const { userSession } = useRootLoaderData();
   const pullFileFetcher = useFetcher();
-  const updateProjectFetcher = useFetcher();
   const loadingBackendProjects = useFetchers().filter(fetcher => fetcher.formAction === `/organization/${organizationId}/project/${projectId}/remote-collections/pull`).map(f => f.formData?.get('backendProjectId'));
 
   const { organizations } = useOrganizationLoaderData();
@@ -660,7 +694,6 @@ const ProjectRoute: FC = () => {
   const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
-  const [projectType, setProjectType] = useState<'local' | 'remote' | ''>('');
   const organization = organizations.find(o => o.id === organizationId);
   const isUserOwner = organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
   const isPersonalOrg = organization && isPersonalOrganization(organization);
@@ -742,130 +775,33 @@ const ProjectRoute: FC = () => {
     return {
       ...project,
       presence: projectPresence,
-      hasUncommittedOrUnpushedChanges: checkAllProjectSyncStatus?.[project._id],
+      hasUncommittedOrUnpushedChanges: checkAllProjectSyncStatus?.[project._id] || project.gitRepository?.hasUncommittedChanges || project.gitRepository?.hasUnpushedChanges,
     };
   });
 
   const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =
     useState(false);
-  const [isMockServerSettingsModalOpen, setIsMockServerSettingsModalOpen] = useState(false);
 
-  const fetcher = useFetcher();
   const navigate = useNavigate();
 
-  const createNewCollection = () => {
-    activeProject?._id &&
-    showPrompt({
-      title: 'Create New Request Collection',
-      submitName: 'Create',
-      placeholder: 'My Collection',
-      defaultValue: 'My Collection',
-      selectText: true,
-      onComplete: async (name: string) => {
-        fetcher.submit(
-          {
-            name,
-            scope: 'collection',
-          },
-          {
-            action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
-            method: 'post',
-          }
-        );
-      },
-    });
-  };
+  const [newWorkspaceModalState, setNewWorkspaceModalState] = useState<{
+    scope: WorkspaceScope;
+    isOpen: boolean;
+  } | null>({
+    scope: 'collection',
+    isOpen: false,
+  });
 
-  const createNewDocument = () => {
-    activeProject?._id &&
-    showPrompt({
-      title: 'Create New Design Document',
-      submitName: 'Create',
-      placeholder: 'my-spec.yaml',
-      defaultValue: 'my-spec.yaml',
-      selectText: true,
-      onComplete: async (name: string) => {
-        fetcher.submit(
-          {
-            name,
-            scope: 'design',
-          },
-          {
-            action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
-            method: 'post',
-          }
-        );
-      },
-    });
-  };
+  const createNewCollection = () => setNewWorkspaceModalState({ scope: 'collection', isOpen: true });
+  const createNewDocument = () => setNewWorkspaceModalState({ scope: 'design', isOpen: true });
+  const createNewMockServer = () => canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true });
+  const createNewGlobalEnvironment = () => setNewWorkspaceModalState({ scope: 'environment', isOpen: true });
+
   const isEnterprise = currentPlan?.type.includes('enterprise');
   const isCloudProjectOrEnterprisePlan = activeProject?.remoteId || isEnterprise;
   const canCreateMockServer = activeProject?._id && isCloudProjectOrEnterprisePlan;
-  const createNewMockServer = () => {
-    canCreateMockServer
-      ? setIsMockServerSettingsModalOpen(true)
-      : showModal(AlertModal, {
-        title: 'Change Project',
-        message: 'Mock feature is only supported for Cloud projects and Enterprise local projects.',
-    });
-  };
-
-  const createNewGlobalEnvironment = () => {
-    activeProject?._id &&
-      showPrompt({
-        title: 'Create New Environment',
-        submitName: 'Create',
-        placeholder: 'New environment',
-        defaultValue: 'New environment',
-        selectText: true,
-        onComplete: async (name: string) => {
-          fetcher.submit(
-            {
-              name,
-              scope: 'environment',
-            },
-            {
-              action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
-              method: 'post',
-            }
-          );
-        },
-      });
-  };
 
   const isGitSyncEnabled = features.gitSync.enabled;
-
-  const showUpgradePlanModal = () => {
-    if (!organization || !userSession.accountId) {
-      return;
-    }
-    const isOwner = isOwnerOfOrganization({
-      organization,
-      accountId: userSession.accountId,
-    });
-
-    isOwner ?
-      showModal(AskModal, {
-        title: 'Upgrade Plan',
-        message: 'Git Sync is only enabled for Team plan or above, please upgrade your plan.',
-        yesText: 'Upgrade',
-        noText: 'Cancel',
-        onDone: async (isYes: boolean) => {
-          if (isYes) {
-            window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
-          }
-        },
-      }) : showModal(AlertModal, {
-        title: 'Upgrade Plan',
-        message: 'Git Sync is only enabled for Team plan or above, please ask the organization owner to upgrade.',
-      });
-  };
-
-  const importFromGit = () => {
-    isGitSyncEnabled ?
-      setIsGitRepositoryCloneModalOpen(true)
-      : showUpgradePlanModal();
-  };
 
   const createInProjectActionList: {
     id: string;
@@ -873,23 +809,23 @@ const ProjectRoute: FC = () => {
     icon: IconName;
     action: () => void;
   }[] = [
-    {
-      id: 'new-collection',
-      name: 'Request collection',
-      icon: 'bars',
-      action: createNewCollection,
-    },
-    {
-      id: 'new-document',
-      name: 'Design document',
-      icon: 'file',
-      action: createNewDocument,
-    },
-    {
-      id: 'new-mock-server',
-      name: 'Mock Server',
-      icon: 'server',
-      action: createNewMockServer,
+      {
+        id: 'new-collection',
+        name: 'Request collection',
+        icon: 'bars',
+        action: createNewCollection,
+      },
+      {
+        id: 'new-document',
+        name: 'Design document',
+        icon: 'file',
+        action: createNewDocument,
+      },
+      {
+        id: 'new-mock-server',
+        name: 'Mock Server',
+        icon: 'server',
+        action: createNewMockServer,
       },
       {
         id: 'new-environment',
@@ -897,13 +833,7 @@ const ProjectRoute: FC = () => {
         icon: 'code',
         action: createNewGlobalEnvironment,
       },
-      {
-      id: 'git-clone',
-      name: 'Git Clone',
-      icon: 'code-fork',
-      action: importFromGit,
-    },
-  ];
+    ];
 
   const scopeActionList: {
     id: string;
@@ -915,31 +845,31 @@ const ProjectRoute: FC = () => {
       run: () => void;
     };
   }[] = [
-    {
-      id: 'all',
-      label: `All files (${allFilesCount})`,
-      icon: 'border-all',
-    },
-    {
-      id: 'design',
-      label: `Documents (${documentsCount})`,
-      icon: 'file',
-      action: {
-        icon: 'plus',
-        label: 'New design document',
-        run: createNewDocument,
+      {
+        id: 'all',
+        label: `All files (${allFilesCount})`,
+        icon: 'border-all',
       },
-    },
-    {
-      id: 'collection',
-      label: `Collections (${collectionsCount})`,
-      icon: 'bars',
-      action: {
-        icon: 'plus',
-        label: 'New request collection',
-        run: createNewCollection,
+      {
+        id: 'design',
+        label: `Documents (${documentsCount})`,
+        icon: 'file',
+        action: {
+          icon: 'plus',
+          label: 'New design document',
+          run: createNewDocument,
+        },
       },
-    },
+      {
+        id: 'collection',
+        label: `Collections (${collectionsCount})`,
+        icon: 'bars',
+        action: {
+          icon: 'plus',
+          label: 'New request collection',
+          run: createNewCollection,
+        },
+      },
       {
         id: 'mock-server',
         label: `Mock (${mockServersCount})`,
@@ -960,12 +890,11 @@ const ProjectRoute: FC = () => {
           run: createNewGlobalEnvironment,
         },
       },
-  ];
-  const defaultStorageSelection = storage === ORG_STORAGE_RULE.LOCAL_ONLY ? 'local' : 'remote';
+    ];
+
   const isRemoteProjectInconsistent = activeProject && isRemoteProject(activeProject) && storage === ORG_STORAGE_RULE.LOCAL_ONLY;
   const isLocalProjectInconsistent = activeProject && !isRemoteProject(activeProject) && storage === ORG_STORAGE_RULE.CLOUD_ONLY;
   const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent;
-  const showStorageRestrictionMessage = storage !== ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL;
 
   useEffect(() => {
     window.main.landingPageRendered(LandingPage.ProjectDashboard);
@@ -991,7 +920,7 @@ const ProjectRoute: FC = () => {
         <PanelGroup autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
           <Panel id="sidebar" className='sidebar theme--sidebar' defaultSize={DEFAULT_SIDEBAR_SIZE} maxSize={40} minSize={10} collapsible>
             <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
-              <div className="p-[--padding-sm]">
+              <div className="p-[--padding-sm] h-[40px]">
                 <Select
                   aria-label="Organizations"
                   onSelectionChange={id => {
@@ -1099,7 +1028,7 @@ const ProjectRoute: FC = () => {
                           <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
                           <Icon
                             icon={
-                              isRemoteProject(item) ? 'globe-americas' : 'laptop'
+                              isRemoteProject(item) ? 'globe-americas' : isGitProject(item) ? ['fab', 'git-alt'] : 'laptop'
                             }
                           />
                           <span className={'truncate'}>{item.name}</span>
@@ -1116,6 +1045,7 @@ const ProjectRoute: FC = () => {
                               organizationId={organizationId}
                               project={item}
                               storage={storage}
+                              isGitSyncEnabled={isGitSyncEnabled}
                             />
                           )}
                         </div>
@@ -1125,49 +1055,57 @@ const ProjectRoute: FC = () => {
                 </GridList>
               </div>
               {activeProject && (
-                <GridList
-                  aria-label="Scope filter"
-                  items={scopeActionList}
-                  className="overflow-y-auto flex-shrink-0 flex-1 data-[empty]:py-0 py-[--padding-sm]"
-                  disallowEmptySelection
-                  selectedKeys={[workspaceListScope || 'all']}
-                  selectionMode="single"
-                  onSelectionChange={keys => {
-                    if (keys !== 'all') {
-                      const [value] = keys.values();
+                <>
+                  <GridList
+                    aria-label="Scope filter"
+                    items={scopeActionList}
+                    className="overflow-y-auto flex-shrink-0 flex-1 data-[empty]:py-0 py-[--padding-sm]"
+                    disallowEmptySelection
+                    selectedKeys={[workspaceListScope || 'all']}
+                    selectionMode="single"
+                    onSelectionChange={keys => {
+                      if (keys !== 'all') {
+                        const [value] = keys.values();
 
-                      setWorkspaceListScope(value.toString());
-                    }
-                  }}
-                >
-                  {item => {
-                    return (
-                      <GridListItem textValue={item.label} className="group outline-none select-none">
-                        <div
-                          className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-aria-selected:bg-[--hl-sm] group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-12 w-full overflow-hidden text-[--hl]"
-                        >
-                          <span className='w-6 h-6 flex items-center justify-center'>
-                            <Icon icon={item.icon} className='w-6' />
-                          </span>
+                        setWorkspaceListScope(value.toString());
+                      }
+                    }}
+                  >
+                    {item => {
+                      return (
+                        <GridListItem textValue={item.label} className="group outline-none select-none">
+                          <div
+                            className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-aria-selected:bg-[--hl-sm] group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-12 w-full overflow-hidden text-[--hl]"
+                          >
+                            <span className='w-6 h-6 flex items-center justify-center'>
+                              <Icon icon={item.icon} className='w-6' />
+                            </span>
 
-                          <span className="truncate capitalize">
-                            {item.label}
-                          </span>
-                          <span className="flex-1" />
-                          {item.action && (
-                            <Button
-                              onPress={item.action.run}
-                              aria-label={item.action.label}
-                              className="opacity-80 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                            >
-                              <Icon icon={item.action.icon} />
-                            </Button>
-                          )}
-                        </div>
-                      </GridListItem>
-                    );
-                  }}
-                </GridList>
+                            <span className="truncate capitalize">
+                              {item.label}
+                            </span>
+                            <span className="flex-1" />
+                            {item.action && (
+                              <Button
+                                onPress={item.action.run}
+                                aria-label={item.action.label}
+                                className="opacity-80 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                              >
+                                <Icon icon={item.action.icon} />
+                              </Button>
+                            )}
+                          </div>
+                        </GridListItem>
+                      );
+                    }}
+                  </GridList>
+                  {isGitProject(activeProject) && (
+                    <GitProjectSyncDropdown
+                      key={activeProjectGitRepository?._id}
+                      gitRepository={activeProjectGitRepository || null}
+                    />
+                  )}
+                </>
               )}
               {!isLearningFeatureDismissed && learningFeature?.active && (
                 <div className='flex flex-shrink-0 flex-col gap-2 p-[--padding-sm]'>
@@ -1196,9 +1134,10 @@ const ProjectRoute: FC = () => {
             </div>
           </Panel>
           <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
-          <Panel id="pane-one" className='pane-one theme--pane'>
+          <Panel id="pane-one" className='pane-one theme--pane flex flex-col'>
+            <OrganizationTabList showActiveStatus={false} />
             {activeProject ? (
-              <div className="w-full h-full flex flex-col overflow-hidden">
+              <div className="w-full flex flex-col overflow-hidden">
                 {billing.isActive ? null : <div className='p-[--padding-md] pb-0'>
                   <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
                     <p className='text-base'>
@@ -1310,7 +1249,7 @@ const ProjectRoute: FC = () => {
                       aria-label="Create in project"
                       className="flex items-center justify-center px-4 gap-2 h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                     >
-                      <Icon icon="plus-circle" /> Create
+                      <Icon icon="plus-circle" /> <span className='hidden md:block'>Create</span>
                     </Button>
                     <Popover className="min-w-max overflow-y-hidden flex flex-col">
                       <Menu
@@ -1349,7 +1288,7 @@ const ProjectRoute: FC = () => {
                     aria-label="Import"
                     className="flex items-center justify-center px-4 gap-2 h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                   >
-                    <Icon icon="file-import" /> Import
+                    <Icon icon="file-import" /> <span className='hidden md:block'>Import</span>
                   </Button>
 
                 </div>
@@ -1377,8 +1316,6 @@ const ProjectRoute: FC = () => {
                           createMockServer={createNewMockServer}
                           createEnvironment={createNewGlobalEnvironment}
                           importFrom={() => setImportModalType('file')}
-                          cloneFromGit={importFromGit}
-                          isGitSyncEnabled={isGitSyncEnabled}
                         />
                       );
                     }}
@@ -1399,9 +1336,6 @@ const ProjectRoute: FC = () => {
                               </div>
                               <span>{item.label}</span>
                             </div>
-                            {/* {(item.hasUncommittedChanges || item.hasUnpushedChanges) && <div className='flex items-center justify-center'>
-                              <Icon icon="circle" className='group-focus:hidden group-hover:hidden w-2 h-2' color="var(--color-warning)" />
-                            </div>} */}
                             <span className="flex-1" />
                             {item.presence.length > 0 && (
                               <AvatarGroup
@@ -1413,6 +1347,8 @@ const ProjectRoute: FC = () => {
                             {activeProject && item.scope !== 'unsynced' && item.workspace && (
                               <WorkspaceCardDropdown
                                 workspace={item.workspace}
+                                mockServer={item.mockServer}
+                                gitFilePath={item.gitFilePath || undefined}
                                 apiSpec={item.apiSpec}
                                 project={activeProject}
                                 projects={projects}
@@ -1434,6 +1370,14 @@ const ProjectRoute: FC = () => {
                             </Tooltip>
                           </TooltipTrigger>
                           <div className="flex-1 flex flex-col gap-2 justify-end text-sm text-[--hl]">
+                            {item.gitFilePath && (
+                              <div className="text-sm flex items-center gap-2">
+                                <Icon icon="file-alt" />
+                                <span className='truncate' title={item.gitFilePath}>
+                                  {item.gitFilePath}
+                                </span>
+                              </div>
+                            )}
                             {item.version && (
                               <div className="flex-1 pt-2">
                                 {item.version}
@@ -1485,15 +1429,15 @@ const ProjectRoute: FC = () => {
               </div>
             ) : (
               <div className="w-full h-full flex flex-col gap-2 items-center justify-center overflow-hidden">
-                <p className='text-lg'>
-                  This is an empty Organization. To get started create your first project.
+                <p className='text-lg px-8 mb-4 text-center'>
+                  This is an empty organization. Create a project to get started.
                 </p>
                 <Button
-                  aria-label="Create new Project"
+                  aria-label="Create Project"
                   onPress={() => setIsNewProjectModalOpen(true)}
                   className="flex items-center justify-center px-4 gap-2 py-2 bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
                 >
-                  <Icon icon="plus-circle" /> Create a new Project
+                  <Icon icon="plus-circle" /> Create Project
                 </Button>
               </div>
             )}
@@ -1504,333 +1448,39 @@ const ProjectRoute: FC = () => {
             onHide={() => setIsGitRepositoryCloneModalOpen(false)}
           />
         )}
-        <ModalOverlay isOpen={isNewProjectModalOpen} onOpenChange={isOpen => setIsNewProjectModalOpen(isOpen)} isDismissable className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30">
-          <Modal className="max-w-2xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
-            <Dialog className="outline-none" aria-label='Create or update dialog'>
-              {({ close }) => (
-                <div className='flex flex-col gap-4'>
-                  <div className='flex gap-2 items-center justify-between'>
-                    <Heading slot="title" className='text-2xl'>Create a new project</Heading>
-                    <Button
-                      className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                      onPress={close}
-                    >
-                      <Icon icon="x" />
-                    </Button>
-                  </div>
-                  <form
-                    className='flex flex-col gap-4'
-                    onSubmit={e => {
-                      e.preventDefault();
-                      const formData = new FormData(e.currentTarget);
-                      const type = formData.get('type');
-
-                      if (!type) {
-                        showAlert({
-                          title: 'Project type not selected',
-                          message: 'Please select a project type before continuing',
-                        });
-                        return;
-                      }
-
-                      const name = formData.get('name');
-
-                      createNewProject({
-                        organizationId,
-                        name: (typeof name === 'string') ? name : 'My project',
-                        projectType: type as ProjectType,
-                      }).then(
-                        newProjectId => {
-                          navigate(`/organization/${organizationId}/project/${newProjectId}`);
-                        },
-                        err => {
-                          const errMsg = err.message;
-                          if (errMsg === 'NEEDS_TO_UPGRADE') {
-                            showModal(AskModal, {
-                              title: 'Upgrade your plan',
-                              message: 'You are currently on the Free plan where you can invite as many collaborators as you want as long as you don\'t have more than one project. Since you have more than one project, you need to upgrade to "Individual" or above to continue.',
-                              yesText: 'Upgrade',
-                              noText: 'Cancel',
-                              onDone: async (isYes: boolean) => {
-                                if (isYes) {
-                                  window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=individual`);
-                                }
-                              },
-                            });
-                          } else if (errMsg === 'FORBIDDEN') {
-                            showAlert({
-                              title: 'Could not create project.',
-                              message: 'You do not have permission to create a project in this organization.',
-                            });
-                          } else {
-                            showAlert({
-                              title: 'Could not create project.',
-                              message: errMsg,
-                            });
-                          }
-                        },
-                      );
-
-                      close();
-                    }}
-                  >
-                    <TextField
-                      autoFocus
-                      name="name"
-                      defaultValue="My project"
-                      className="group relative flex-1 flex flex-col gap-2"
-                    >
-                      <Label className='text-sm text-[--hl]'>
-                        Project name
-                      </Label>
-                      <Input
-                        placeholder="My project"
-                        className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
-                      />
-                    </TextField>
-                    <RadioGroup name="type" defaultValue={defaultStorageSelection} className="flex flex-col gap-2">
-                      <Label className="text-sm text-[--hl]">
-                        Project type
-                      </Label>
-                      <div className="flex gap-2">
-                        <Radio
-                          isDisabled={storage === ORG_STORAGE_RULE.LOCAL_ONLY}
-                          value="remote"
-                          className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
-                        >
-                          <div className='flex items-center gap-2'>
-                            <Icon icon="globe" />
-                            <Heading className="text-lg font-bold">Cloud Sync</Heading>
-                          </div>
-                          <p className='pt-2'>
-                            Encrypted and synced securely to the cloud, ideal for out of the box collaboration.
-                          </p>
-                        </Radio>
-                        <Radio
-                          isDisabled={storage === ORG_STORAGE_RULE.CLOUD_ONLY}
-                          value="local"
-                          className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Icon icon="laptop" />
-                            <Heading className="text-lg font-bold">Local Vault</Heading>
-                          </div>
-                          <p className="pt-2">
-                            Stored locally only with no cloud. Ideal when collaboration is not needed.
-                          </p>
-                        </Radio>
-                      </div>
-                    </RadioGroup>
-                    <div className="flex justify-between gap-2 items-center">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Icon icon="info-circle" />
-                        <span>
-                          {showStorageRestrictionMessage && `The organization owner mandates that projects must be created and stored ${storage.split('_').join(' ')}.`} You can optionally enable Git Sync
-                        </span>
-                      </div>
-                      <div className='flex items-center gap-2'>
-                        <Button
-                          onPress={close}
-                          className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          type="submit"
-                          className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
-                        >
-                          Create
-                        </Button>
-                      </div>
-                    </div>
-                  </form>
-                </div>
-              )}
-            </Dialog>
-          </Modal>
-        </ModalOverlay>
-        <ModalOverlay
-          isOpen={isUpdateProjectModalOpen}
-          onOpenChange={isOpen => {
-            setProjectType('');
-            setIsUpdateProjectModalOpen(isOpen);
-          }}
-          isDismissable
-          className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
-        >
-          <Modal
+        {isNewProjectModalOpen && (
+          <ProjectModal
+            isOpen={isNewProjectModalOpen}
+            onOpenChange={setIsNewProjectModalOpen}
+            storageRule={storage}
+            isGitSyncEnabled={isGitSyncEnabled}
+          />
+        )}
+        {isUpdateProjectModalOpen && (
+          <ProjectModal
+            isOpen={isUpdateProjectModalOpen}
+            onOpenChange={setIsUpdateProjectModalOpen}
+            project={activeProject}
+            gitRepository={activeProjectGitRepository || undefined}
+            storageRule={storage}
+            isGitSyncEnabled={isGitSyncEnabled}
+          />
+        )}
+        {activeProject && newWorkspaceModalState?.isOpen && (
+          <NewWorkspaceModal
+            isOpen
+            project={activeProject}
+            storageRule={storage}
+            currentPlan={currentPlan}
+            scope={newWorkspaceModalState.scope}
             onOpenChange={isOpen => {
-              setProjectType('');
-              setIsUpdateProjectModalOpen(isOpen);
+              setNewWorkspaceModalState({
+                scope: newWorkspaceModalState.scope,
+                isOpen,
+              });
             }}
-            className="max-w-2xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]"
-          >
-            <Dialog
-              className="outline-none"
-            >
-              {({ close }) => (
-                <div className='flex flex-col gap-4'>
-                  <div className='flex gap-2 items-center justify-between'>
-                    <Heading className='text-2xl'>{projectType === 'local' ? 'Confirm conversion to local storage' : projectType === 'remote' ? 'Confirm cloud synchronization' : 'Project Settings'}</Heading>
-                    <Button
-                      className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                      onPress={close}
-                    >
-                      <Icon icon="x" />
-                    </Button>
-                  </div>
-                  <form
-                    className='flex flex-col gap-4'
-                    onSubmit={e => {
-                      e.preventDefault();
-                      const formData = new FormData(e.currentTarget);
-                      const type = formData.get('type');
-                      // If the project is local and the user is trying to change it to remote
-                      if (type === 'remote' && !activeProject?.remoteId && !projectType) {
-                        setProjectType('remote');
-                        // If the project is remote and the user is trying to change it to local
-                      } else if (type === 'local' && activeProject?.remoteId && !projectType) {
-                        setProjectType('local');
-                      } else {
-                        if (!type) {
-                          showAlert({
-                            title: 'Project type not selected',
-                            message: 'Please select a project type before continuing',
-                          });
-                          return;
-                        }
-
-                        updateProjectFetcher.submit(formData, {
-                          action: `/organization/${organizationId}/project/${projectId}/update`,
-                          method: 'post',
-                        });
-
-                        close();
-                      }
-                    }}
-                  >
-                    <div className={`flex flex-col gap-4 ${projectType ? 'hidden' : ''}`}>
-                      <TextField
-                        autoFocus
-                        name="name"
-                        defaultValue={activeProject?.name}
-                        className="group relative flex-1 flex flex-col gap-2"
-                      >
-                        <Label className='text-sm text-[--hl]'>
-                          Project name
-                        </Label>
-                        <Input
-                          placeholder="My project"
-                          className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
-                        />
-                      </TextField>
-                      <RadioGroup name="type" defaultValue={storage === ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL ? activeProject?.remoteId ? 'remote' : 'local' : storage !== ORG_STORAGE_RULE.CLOUD_ONLY ? 'local' : 'remote'} className="flex flex-col gap-2">
-                        <Label className="text-sm text-[--hl]">
-                          Project type
-                        </Label>
-                        <div className="flex gap-2">
-                          <Radio
-                            isDisabled={storage === ORG_STORAGE_RULE.LOCAL_ONLY}
-                            value="remote"
-                            className="data-[selected]:border-[--color-surprise] flex-1 data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
-                          >
-                            <div className='flex items-center gap-2'>
-                              <Icon icon="globe" />
-                              <Heading className="text-lg font-bold">Cloud Sync</Heading>
-                            </div>
-                            <p className='pt-2'>
-                              Encrypted and synced securely to the cloud, ideal for out of the box collaboration.
-                            </p>
-                          </Radio>
-                          <Radio
-                            isDisabled={storage === ORG_STORAGE_RULE.CLOUD_ONLY}
-                            value="local"
-                            className="data-[selected]:border-[--color-surprise] flex-1 data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
-                          >
-                            <div className='flex items-center gap-2'>
-                              <Icon icon="laptop" />
-                              <Heading className="text-lg font-bold">Local Vault</Heading>
-                            </div>
-                            <p className="pt-2">
-                              Stored locally only with no cloud. Ideal when collaboration is not needed.
-                            </p>
-                          </Radio>
-                        </div>
-                      </RadioGroup>
-                    </div>
-
-                    {projectType === 'local' && (
-                      <div className='text-[--color-font] flex flex-col gap-4'>
-                        <div className='flex flex-col gap-4'>
-                          <p>
-                            We will be converting your Cloud Sync project into a local project, and permanently remove all cloud data for this project from the cloud.
-                          </p>
-                          <ul className='text-left flex flex-col gap-2'>
-                            <li><i className="fa fa-check text-emerald-600" /> The project will be 100% stored locally.</li>
-                            <li><i className="fa fa-check text-emerald-600" /> Your collaborators will not be able to push and pull files anymore.</li>
-                            <li><i className="fa fa-check text-emerald-600" /> The project will become local also for every existing collaborator.</li>
-                          </ul>
-                          <p>
-                            You can still use Git Sync for local projects without using the cloud, and you can synchronize a local project back to the cloud if you decide to do so.
-                          </p>
-                          <p className='flex gap-2 items-center'>
-                            <Icon icon="triangle-exclamation" className='text-[--color-warning]' />
-                            Remember to pull your latest project updates before this operation
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    {projectType === 'remote' && (
-                      <div className='text-[--color-font] flex flex-col gap-4'>
-                        <div className='flex flex-col gap-4'>
-                          <p>
-                            We will be synchronizing your local project to Insomnia's Cloud in a secure encrypted format which will enable cloud collaboration.
-                          </p>
-                          <ul className='text-left flex flex-col gap-2'>
-                            <li><i className="fa fa-check text-emerald-600" /> Your data in the cloud is encrypted and secure.</li>
-                            <li><i className="fa fa-check text-emerald-600" /> You can now collaborate with any amount of users and use cloud features.</li>
-                            <li><i className="fa fa-check text-emerald-600" /> Your project will be always available on any client after logging in.</li>
-                          </ul>
-                          <p>
-                            You can still use Git Sync for cloud projects.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    <div className="flex justify-between gap-2 items-center">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Icon icon="info-circle" />
-                        <span>
-                          {showStorageRestrictionMessage && `The organization owner mandates that projects must be created and stored ${storage.split('_').join(' ')}.`} You can optionally enable Git Sync
-                        </span>
-                      </div>
-                      <div className='flex items-center gap-2'>
-                        <Button
-                          onPress={() => {
-                            if (projectType) {
-                              setProjectType('');
-                            } else {
-                              close();
-                            }
-                          }}
-                          className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          type="submit"
-                          className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
-                        >
-                          {projectType ? 'Confirm' : 'Update'}
-                        </Button>
-                      </div>
-                    </div>
-                  </form>
-                </div>
-              )}
-            </Dialog>
-          </Modal>
-        </ModalOverlay>
+          />
+        )}
         {activeProject && importModalType && (
           <ImportModal
             onHide={() => setImportModalType(null)}
@@ -1838,11 +1488,6 @@ const ProjectRoute: FC = () => {
             from={{ type: importModalType }}
             organizationId={organizationId}
             defaultProjectId={activeProject._id}
-          />
-        )}
-        {isMockServerSettingsModalOpen && (
-          <MockServerSettingsModal
-            onClose={() => setIsMockServerSettingsModalOpen(false)}
           />
         )}
       </Fragment>
@@ -1853,76 +1498,3 @@ const ProjectRoute: FC = () => {
 ProjectRoute.displayName = 'ProjectRoute';
 
 export default ProjectRoute;
-
-type ProjectType = 'local' | 'remote';
-
-async function createNewProject({
-  organizationId,
-  name,
-  projectType,
-}: {
-  organizationId: string;
-  name: string;
-  projectType: ProjectType;
-}) {
-  invariant(organizationId, 'Organization ID is required');
-  invariant(typeof name === 'string', 'Name is required');
-  invariant(projectType === 'local' || projectType === 'remote', 'Project type is required');
-
-  const user = await models.userSession.getOrCreate();
-  const sessionId = user.id;
-  invariant(sessionId, 'User must be logged in to create a project');
-
-  if (projectType === 'local') {
-    const project = await models.project.create({
-      name,
-      parentId: organizationId,
-    });
-    return project._id;
-  }
-
-  try {
-    const newCloudProject = await insomniaFetch<{
-      id: string;
-      name: string;
-    } | {
-      error: string;
-      message?: string;
-    }>({
-      path: `/v1/organizations/${organizationId}/team-projects`,
-      method: 'POST',
-      data: {
-        name,
-      },
-      sessionId,
-    });
-
-    if (!newCloudProject || 'error' in newCloudProject) {
-      let error = 'An unexpected error occurred while creating the project. Please try again.';
-      if (newCloudProject.error === 'FORBIDDEN') {
-        error = newCloudProject.error;
-      }
-
-      if (newCloudProject.error === 'NEEDS_TO_UPGRADE') {
-        error = 'Upgrade your account in order to create new Cloud Projects.';
-      }
-
-      if (newCloudProject.error === 'PROJECT_STORAGE_RESTRICTION') {
-        error = newCloudProject.message ?? 'The owner of the organization allows only Local Vault project creation.';
-      }
-
-      throw new Error(error);
-    }
-
-    const project = await models.project.create({
-      _id: newCloudProject.id,
-      name: newCloudProject.name,
-      remoteId: newCloudProject.id,
-      parentId: organizationId,
-    });
-
-    return project._id;
-  } catch (err) {
-    throw new Error(err instanceof Error ? err.message : `An unexpected error occurred while creating the project. Please try again. ${err}`);
-  }
-}

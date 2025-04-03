@@ -16,18 +16,21 @@ import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
 import * as misc from '../../../common/misc';
 import type { KeyCombination } from '../../../common/settings';
 import { getTagDefinitions } from '../../../templating/index';
-import { extractNunjucksTagFromCoords, type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '../../../templating/utils';
+import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '../../../templating/types';
+import { extractNunjucksTagFromCoords } from '../../../templating/utils';
 import { ednPrettify } from '../../../utils/prettify/edn';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { queryXPath } from '../../../utils/xpath/query';
 import { useGatedNunjucks } from '../../context/nunjucks/use-gated-nunjucks';
 import { useEditorRefresh } from '../../hooks/use-editor-refresh';
+import { usePlanData } from '../../hooks/use-plan';
 import { useRootLoaderData } from '../../routes/root';
 import { Icon } from '../icon';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
 import { NunjucksModal } from '../modals/nunjucks-modal';
+import { UpgradeModal } from '../modals/upgrade-modal';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';
 import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
 const TAB_SIZE = 4;
@@ -103,7 +106,7 @@ export interface CodeEditorProps {
   pinToBottom?: boolean;
   placeholder?: string;
   readOnly?: boolean;
-  style?: Object;
+  style?: object;
   // NOTE: for caching scroll and marks
   uniquenessKey?: string;
   updateFilter?: (filter: string) => void;
@@ -128,9 +131,9 @@ const normalizeMimeType = (mode?: string) => {
     // code-mirror doesn't recognize text/yaml or application/yaml
     // as a valid mime-type
     return 'yaml';
-  } else {
-    return mimeType;
   }
+  return mimeType;
+
 };
 export interface CodeEditorHandle {
   setValue: (value: string) => void;
@@ -188,6 +191,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
   const {
     settings,
   } = useRootLoaderData();
+  const { isOwner, isEnterprisePlan } = usePlanData();
   const indentSize = settings.editorIndentSize;
   const indentWithTabs = shouldIndentWithTabs({ mode, indentWithTabs: settings.editorIndentWithTabs });
   const indentChars = indentWithTabs ? '\t' : new Array((indentSize || TAB_SIZE) + 1).join(' ');
@@ -413,15 +417,17 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
       });
       // Stop the editor from handling global keyboard shortcuts except for the autocomplete binding
       const isShortcutButNotAutocomplete = isUserDefinedKeyboardShortcut && !isAutoCompleteBinding;
+
       // Should not capture escape in order to exit modals
       const isEscapeKey = event.code === 'Escape';
+
       if (isShortcutButNotAutocomplete) {
         // @ts-expect-error -- unsound property assignment
-        event.codemirrorIgnore = true;
+        event.codemirrorIgnore = settings.editorKeyMap !== 'vim';
         // Stop the editor from handling the escape key
       } else if (isEscapeKey) {
         // @ts-expect-error -- unsound property assignment
-        event.codemirrorIgnore = true;
+        event.codemirrorIgnore = settings.editorKeyMap !== 'vim';
       } else {
         event.stopPropagation();
 
@@ -477,7 +483,9 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
         codeMirror.current.foldCode(from, to);
       }
     }
-  }, [hideGutters, hideLineNumbers, placeholder, settings.editorLineWrapping, settings.editorKeyMap, settings.hotKeyRegistry, settings.autocompleteDelay, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, noLint, readOnly, noMatchBrackets, indentSize, hintOptions, infoOptions, dynamicHeight, jumpOptions, noStyleActiveLine, indentWithTabs, extraKeys, handleRender, mode, getAutocompleteConstants, getAutocompleteSnippets, persistState, maybePrettifyAndSetValue, defaultValue, filter, onClickLink, uniquenessKey, handleGetRenderContext, pinToBottom, onPaste, id]);
+    // settings.pluginsAllowElevatedAccess is not used here but we want to trigger this effect when it changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hideGutters, hideLineNumbers, placeholder, settings.editorLineWrapping, settings.editorKeyMap, settings.hotKeyRegistry, settings.autocompleteDelay, settings.nunjucksPowerUserMode, settings.pluginsAllowElevatedAccess, settings.showVariableSourceAndValue, noLint, readOnly, noMatchBrackets, indentSize, hintOptions, infoOptions, dynamicHeight, jumpOptions, noStyleActiveLine, indentWithTabs, extraKeys, handleRender, mode, getAutocompleteConstants, getAutocompleteSnippets, persistState, maybePrettifyAndSetValue, defaultValue, filter, onClickLink, uniquenessKey, handleGetRenderContext, pinToBottom, onPaste, id]);
 
   const cleanUpEditor = useCallback(() => {
     codeMirror.current?.toTextArea();
@@ -546,30 +554,33 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
     }
   };
   useEffect(() => {
-    const unsubscribe = window.main.on('context-menu-command', (_, { key, tag, nunjucksTag }) => {
+    const unsubscribe = window.main.on('nunjucks-context-menu-command', (_, { key, tag, nunjucksTag, needsEnterprisePlan, displayName }) => {
       if (id === key) {
+        if (needsEnterprisePlan && !isEnterprisePlan) {
+          // show modal if current user is not an enteprise user and the command is an enterprise feature
+          showModal(UpgradeModal, {
+            newPlan: 'enterprise',
+            featureName: displayName,
+            isOwner,
+          });
+          return;
+        }
         if (nunjucksTag) {
           const { type, template, range } = nunjucksTag as nunjucksTagContextMenuOptions;
-          switch (type) {
-            case 'edit':
-              showModal(NunjucksModal, {
-                template: template,
-                editorId: id,
-                onDone: (template: string | null) => {
-                  const { from, to } = range;
-                  codeMirror.current?.replaceRange(template!, from, to);
-                },
-              });
-              return;
-
-            case 'delete':
-              const { from, to } = range;
-              codeMirror.current?.replaceRange('', from, to);
-              return;
-
-            default:
-              return;
-          };
+          if (type === 'edit') {
+            showModal(NunjucksModal, {
+              template: template,
+              onDone: (template: string | null) => {
+                const { from, to } = range;
+                codeMirror.current?.replaceRange(template!, from, to);
+              },
+            });
+          } else if (type === 'delete') {
+            const { from, to } = range;
+            codeMirror.current?.replaceRange('', from, to);
+          } else {
+            return
+          }
         } else {
           codeMirror.current?.replaceSelection(tag);
         }
@@ -578,7 +589,7 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
     return () => {
       unsubscribe();
     };
-  }, [id]);
+  }, [id, isEnterprisePlan, isOwner]);
   useEffect(() => tryToSetOption('hintOptions', hintOptions), [hintOptions]);
   useEffect(() => tryToSetOption('info', infoOptions), [infoOptions]);
   useEffect(() => tryToSetOption('jump', jumpOptions), [jumpOptions]);
@@ -657,10 +668,10 @@ export const CodeEditor = memo(forwardRef<CodeEditorHandle, CodeEditorProps>(({
           const nunjucksTag = extractNunjucksTagFromCoords({ left: clientX, top: clientY }, codeMirror);
           if (nunjucksTag) {
             // show context menu for nunjucks tag
-            window.main.showContextMenu({ key: id, nunjucksTag });
+            window.main.showNunjucksContextMenu({ key: id, nunjucksTag });
           }
         } else {
-          window.main.showContextMenu({ key: id });
+          window.main.showNunjucksContextMenu({ key: id });
         }
       }}
     >

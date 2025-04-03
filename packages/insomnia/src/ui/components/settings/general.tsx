@@ -20,6 +20,7 @@ import { BooleanSetting } from './boolean-setting';
 import { EnumSetting } from './enum-setting';
 import { NumberSetting } from './number-setting';
 import { TextSetting } from './text-setting';
+import { VaultKeyPanel } from './vault-key-panel';
 
 export const General: FC = () => {
   const {
@@ -157,6 +158,12 @@ export const General: FC = () => {
           ]}
         />
       </div>
+      <div className="form-row">
+        <BooleanSetting
+          label="Enable Key Map settings for one-line editors (e.g. headers, query parameters, urls, etc.)"
+          setting="enableKeyMapForInlineTextEditors"
+        />
+      </div>
 
       <h2 className='font-bold pt-5 pb-2 text-lg sticky top-0 left-0 bg-[--color-bg] z-10'>Request / Response</h2>
 
@@ -268,6 +275,7 @@ export const General: FC = () => {
           help="If checked, validates SSL certificates during authentication flows."
         />
       </div>
+      {isLoggedIn && <VaultKeyPanel />}
 
       {updatesSupported() && (
         <Fragment>

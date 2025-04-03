@@ -18,6 +18,7 @@ export interface RequestContext {
     timelinePath: string;
     environment: IEnvironment;
     baseEnvironment: IEnvironment;
+    vault?: IEnvironment;
     collectionVariables?: object;
     globals?: object;
     iterationData?: Omit<IEnvironment, 'id'>;
@@ -32,4 +33,5 @@ export interface RequestContext {
     execution: ExecutionOption;
     logs: string[];
     transientVariables?: Omit<IEnvironment, 'id'>;
+    parentFolders: { id: string; name: string; environment: Record<string, any> }[];
 }

@@ -16,11 +16,8 @@ import type { Workspace } from '../../../models/workspace';
 import * as plugins from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import * as templating from '../../../templating';
-import {
-  type NunjucksParsedTag,
-  type NunjucksParsedTagArg,
-  sanitizeStrForWin32,
-} from '../../../templating/utils';
+import type { NunjucksParsedTag, NunjucksParsedTagArg } from '../../../templating/types';
+import { sanitizeStrForWin32 } from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -77,7 +74,7 @@ export const TagEditor: FC<Props> = props => {
     error: '',
     variables: [],
   });
-  const { handleRender, handleGetRenderContext } = useNunjucks();
+  const { handleRender, handleGetRenderContext } = useNunjucks({ renderContext: { purpose: 'preview' } });
 
   const refreshModels = useCallback(async () => {
     setState(state => ({ ...state, loadingDocs: true }));
@@ -185,10 +182,10 @@ export const TagEditor: FC<Props> = props => {
     if (event.currentTarget.type === 'number') {
       return updateArg(parseFloat(event.currentTarget.value), argIndex);
     } else if (event.currentTarget.type === 'checkbox') {
-      return updateArg(event.currentTarget.checked, argIndex);
-    } else {
-      return updateArg(event.currentTarget.value, argIndex);
+      return updateArg((event.currentTarget as HTMLInputElement).checked, argIndex);
     }
+    return updateArg(event.currentTarget.value, argIndex);
+
   }
   async function update(
     tagDefinitions: NunjucksParsedTag[],
@@ -242,22 +239,6 @@ export const TagEditor: FC<Props> = props => {
     // Make rendering take at least this long so we can see a spinner
     await delay(300 - (Date.now() - start));
     setState(state => ({ ...state, rendering: false, preview }));
-  }
-
-  function resolveRequestGroupPrefix(requestGroupId: string, allRequestGroups: any[]) {
-    let prefix = '';
-    let reqGroup: any;
-    do {
-      // Get prefix from inner most request group.
-      reqGroup = allRequestGroups.find(rg => rg._id === requestGroupId);
-      if (reqGroup == null) {
-        break;
-      }
-      const name = typeof reqGroup.name === 'string' ? reqGroup.name : '';
-      prefix = `[${name}] ` + prefix;
-      requestGroupId = reqGroup.parentId;
-    } while (true);
-    return prefix;
   }
 
   const { error, preview, activeTagDefinition, activeTagData, rendering } = state;
@@ -353,8 +334,7 @@ export const TagEditor: FC<Props> = props => {
               <select value={strValue} onChange={handleChange}>
                 {!argDefinition.options?.find(o => o.value === strValue) ? <option value="">-- Select Option --</option> : null}
                 {argDefinition.options?.map(option => (
-                  // @ts-expect-error -- TSCONVERSION boolean not accepted by option
-                  <option key={option.value.toString()} value={option.value}>
+                  <option key={option.value.toString()} value={option.value + ''}>
                     {option.description ? `${fnOrString(option.displayName, state.activeTagData?.args || [])} – ${option.description}` : fnOrString(option.displayName, state.activeTagData?.args || [])}
                   </option>
                 ))}
@@ -383,12 +363,13 @@ export const TagEditor: FC<Props> = props => {
                   // Show parent folder with name if it's a request
                   if (isRequest(doc)) {
                     const requests = state.allDocs[models.request.type] || [];
-                    const request: any = requests.find(r => r._id === doc._id);
+                    const request = requests.find(r => r._id === doc._id) as Request;
                     const method = request && typeof request.method === 'string' ? request.method : 'GET';
                     const parentId = request ? request.parentId : 'n/a';
                     const allRequestGroups = state.allDocs[models.requestGroup.type] || [];
-                    const requestGroupPrefix = resolveRequestGroupPrefix(parentId, allRequestGroups);
-                    namePrefix = `${requestGroupPrefix + method} `;
+                    const reqGroup = allRequestGroups.find(rg => rg._id === parentId) as RequestGroup | undefined;
+                    const folderName = reqGroup ? `[${typeof reqGroup.name === 'string' ? reqGroup.name : ''}] ` : ''
+                    namePrefix = `${folderName + method} `;
                   }
                   return (
                     <option key={doc._id} value={doc._id}>
@@ -449,8 +430,8 @@ export const TagEditor: FC<Props> = props => {
                     <option key="n/a" value="NO_VARIABLE">
                       -- Select Variable --
                     </option>
-                      {state.variables.map(v => (
-                        <option key={v.name} value={v.name}>
+                    {state.variables.map(v => (
+                      <option key={v.name} value={v.name}>
                         {v.name}
                       </option>
                     ))}

@@ -76,9 +76,9 @@ export async function getOrCreateForParentId(parentId: string) {
       // de-duplicate cookie jar.
       _id: `${prefix}_${crypto.createHash('sha1').update(parentId).digest('hex')}`,
     });
-  } else {
-    return cookieJars[0];
   }
+    return cookieJars[0];
+
 }
 
 export async function all() {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { type PluginTemplateTagContext } from '../../../../templating/extensions';
+import { type PluginTemplateTagContext } from '../../../../templating/types';
 import { invariant } from '../../../../utils/invariant';
 import { localTemplateTags } from '../local-template-tags';
 describe('base64 tag', () => {

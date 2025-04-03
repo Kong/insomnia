@@ -3,47 +3,42 @@ import fs from 'fs';
 import path from 'path';
 
 import type { ParsedApiSpec } from '../common/api-specs';
-import type { PluginConfig, PluginConfigMap } from '../common/settings';
+import type { PluginConfigMap } from '../common/settings';
 import * as models from '../models';
 import type { GrpcRequest } from '../models/grpc-request';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace } from '../models/workspace';
-import type { PluginTemplateTag } from '../templating/extensions/index';
+import type { PluginTemplateTag } from '../templating/types';
 import { showError } from '../ui/components/modals/index';
 import type { PluginTheme } from './misc';
 import themes from './themes';
-
-export interface Module {
-  templateTags?: PluginTemplateTag[];
-  requestHooks?: ((requestContext: any) => void)[];
-  responseHooks?: ((responseContext: any) => void)[];
-  themes?: PluginTheme[];
-  requestGroupActions?: OmitInternal<RequestGroupAction>[];
-  requestActions?: OmitInternal<RequestAction>[];
-  workspaceActions?: OmitInternal<WorkspaceAction>[];
-  documentActions?: OmitInternal<DocumentAction>[];
-}
 
 export interface Plugin {
   name: string;
   description: string;
   version: string;
   directory: string;
-  config: PluginConfig;
-  module: Module;
-}
-interface InternalProperties {
-  plugin: Plugin;
+  config: { disabled: boolean };
+  module: {
+    templateTags?: PluginTemplateTag[];
+    requestHooks?: ((requestContext: any) => void)[];
+    responseHooks?: ((responseContext: any) => void)[];
+    themes?: PluginTheme[];
+    requestGroupActions?: OmitInternal<RequestGroupAction>[];
+    requestActions?: OmitInternal<RequestAction>[];
+    workspaceActions?: OmitInternal<WorkspaceAction>[];
+    documentActions?: OmitInternal<DocumentAction>[];
+  };
 }
 
-type OmitInternal<T> = Omit<T, keyof InternalProperties>;
-export interface TemplateTag extends InternalProperties {
+type OmitInternal<T> = Omit<T, keyof { plugin: Plugin }>;
+export type TemplateTag = { plugin: Plugin } & {
   templateTag: PluginTemplateTag;
-}
+};
 
-export interface RequestGroupAction extends InternalProperties {
+export type RequestGroupAction = { plugin: Plugin } & {
   action: (
     context: Record<string, any>,
     models: {
@@ -53,9 +48,9 @@ export interface RequestGroupAction extends InternalProperties {
   ) => void | Promise<void>;
   label: string;
   icon?: string;
-}
+};
 
-export interface RequestAction extends InternalProperties {
+export type RequestAction = { plugin: Plugin } & {
   action: (
     context: Record<string, any>,
     models: {
@@ -65,9 +60,9 @@ export interface RequestAction extends InternalProperties {
   ) => void | Promise<void>;
   label: string;
   icon?: string;
-}
+};
 
-export interface WorkspaceAction extends InternalProperties {
+export type WorkspaceAction = { plugin: Plugin } & {
   action: (
     context: Record<string, any>,
     models: {
@@ -78,28 +73,28 @@ export interface WorkspaceAction extends InternalProperties {
   ) => void | Promise<void>;
   label: string;
   icon?: string;
-}
+};
 
-export interface DocumentAction extends InternalProperties {
+export type DocumentAction = { plugin: Plugin } & {
   action: (context: Record<string, any>, documents: ParsedApiSpec) => void | Promise<void>;
   label: string;
   hideAfterClick?: boolean;
-}
+};
 
 type RequestHookCallback = (context: any) => void;
 
-export interface RequestHook extends InternalProperties {
+export type RequestHook = { plugin: Plugin } & {
   hook: RequestHookCallback;
-}
+};
 
 type ResponseHookCallback = (context: any) => void;
-export interface ResponseHook extends InternalProperties {
+export type ResponseHook = { plugin: Plugin } & {
   hook: ResponseHookCallback;
-}
+};
 
-export interface Theme extends InternalProperties {
+export type Theme = { plugin: Plugin } & {
   theme: PluginTheme;
-}
+};
 
 export type ColorScheme = 'default' | 'light' | 'dark';
 
@@ -150,7 +145,7 @@ async function _traversePluginPath(
         const pluginJson = global.require(packageJSONPath);
 
         // Not an Insomnia plugin because it doesn't have the package.json['insomnia']
-        if (!pluginJson.hasOwnProperty('insomnia')) {
+        if (!('insomnia' in pluginJson)) {
           continue;
         }
 
@@ -162,7 +157,7 @@ async function _traversePluginPath(
           description: pluginJson.description || pluginJson.insomnia.description || '',
           version: pluginJson.version || 'unknown',
           directory: modulePath || '',
-          config: allConfigs.hasOwnProperty(pluginJson.name)
+          config: (pluginJson.name in allConfigs)
             ? allConfigs[pluginJson.name]
             : { disabled: false },
           module: module,
@@ -192,9 +187,9 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
       .map(p => {
         if (p.indexOf('~/') === 0) {
           return path.join(process.env['HOME'] || '/', p.slice(1));
-        } else {
-          return p;
         }
+        return p;
+
       });
     // Make sure the default directories exist
     const pluginPath = path.join(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'), 'plugins');
@@ -341,7 +336,8 @@ export async function getRequestHooks(): Promise<RequestHook[]> {
           console.log(`[header] Set default header ${name}: ${value}`);
         }
       }
-    } }];
+    },
+  }];
 
   for (const plugin of await getActivePlugins()) {
     const moreFunctions = plugin.module.requestHooks || [];

@@ -1,44 +1,17 @@
-_type: export
-__export_format: 4
-__export_date: 2022-11-21T14:14:03.301Z
-__export_source: insomnia.desktop.app:v2022.7.0-beta.5
-resources:
-  - _id: req_c54dc17f938c4b018c0e0f1f64e0ad73
-    parentId: wrk_2863ca2fd18d40efac9fe80a23c7533b
-    modified: 1669039727273
-    created: 1669039715014
-    url: localhost:4010/not-found
-    name: request B
-    description: ""
-    method: GET
-    body: {}
-    parameters: []
-    headers: []
-    authentication: {}
-    metaSortKey: -1669039715014
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: wrk_2863ca2fd18d40efac9fe80a23c7533b
-    parentId: null
-    modified: 1669039672707
-    created: 1669039672707
-    name: unit-test.yaml
-    description: ""
-    scope: design
-    _type: workspace
-  - _id: req_17ca8bbd46374144a089f891e32842d6
-    parentId: wrk_2863ca2fd18d40efac9fe80a23c7533b
-    modified: 1669039709867
-    created: 1669039678415
-    url: localhost:4010
+type: spec.insomnia.rest/5.0
+name: unit-test.yaml
+meta:
+  id: wrk_70e6a145cbf445d0948eed001afae869
+  created: 1736531228373
+  modified: 1736531228373
+collection:
+  - url: localhost:4010
     name: request A
-    description: ""
+    meta:
+      id: req_0d90cb103b114fceab26b2ddf31f94c9
+      created: 1669039678415
+      modified: 1669039709867
+      isPrivate: false
     method: GET
     body:
       mimeType: application/json
@@ -46,69 +19,68 @@ resources:
         {
         	"test": 123
         }
-    parameters: []
     headers:
       - name: Content-Type
         value: application/json
-    authentication: {}
-    metaSortKey: -1669039678415
-    isPrivate: false
-    settingStoreCookies: true
-    settingSendCookies: true
-    settingDisableRenderRequestBody: false
-    settingEncodeUrl: true
-    settingRebuildPath: true
-    settingFollowRedirects: global
-    _type: request
-  - _id: env_b01fdb83e35f3937f7d22870371ebdee5c15f190
-    parentId: wrk_2863ca2fd18d40efac9fe80a23c7533b
-    modified: 1669039672710
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: localhost:4010/not-found
+    name: request B
+    meta:
+      id: req_5b3c869841324716a49980330ed0fbcf
+      created: 1669039715014
+      modified: 1669039727273
+      isPrivate: false
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_0ee43669b6914a2bb5fddbff54c986d7
     created: 1669039672710
-    name: Base Environment
-    data: {}
-    dataPropertyOrder: null
-    color: null
-    isPrivate: false
-    metaSortKey: 1669039672710
-    _type: environment
-  - _id: jar_b01fdb83e35f3937f7d22870371ebdee5c15f190
-    parentId: wrk_2863ca2fd18d40efac9fe80a23c7533b
     modified: 1669039672710
+environments:
+  name: Base Environment
+  meta:
+    id: env_f87fdef5c6d4456d99e907f97aef0c5d
     created: 1669039672710
-    name: Default Jar
-    cookies: []
-    _type: cookie_jar
-  - _id: spc_556f1031c81a4e7c998ea93d89781416
-    parentId: wrk_2863ca2fd18d40efac9fe80a23c7533b
-    modified: 1669039672707
-    created: 1669039672707
-    fileName: unit-test.yaml
-    contents: ""
-    contentType: yaml
-    _type: api_spec
-  - _id: uts_d950d2775c194d66b0339bf01435a965
-    parentId: wrk_2863ca2fd18d40efac9fe80a23c7533b
-    modified: 1669039741641
-    created: 1669039741641
-    name: Existing Test Suite
-    _type: unit_test_suite
-  - _id: ut_20534ebe980c46228c25b665422263ea
-    parentId: uts_d950d2775c194d66b0339bf01435a965
-    modified: 1669039779620
-    created: 1669039749000
-    requestId: req_17ca8bbd46374144a089f891e32842d6
-    name: Request A is found
-    code: |-
-      const response1 = await insomnia.send();
-      expect(response1.status).to.equal(200);
-    _type: unit_test
-  - _id: ut_38716a279d4945de952d74cd9d2012b6
-    parentId: uts_d950d2775c194d66b0339bf01435a965
-    modified: 1669039788840
-    created: 1669039754892
-    requestId: req_c54dc17f938c4b018c0e0f1f64e0ad73
-    name: Request B is not found
-    code: |-
-      const response1 = await insomnia.send();
-      expect(response1.status).to.equal(404);
-    _type: unit_test
+    modified: 1669039672710
+    isPrivate: false
+testSuites:
+  - name: Existing Test Suite
+    meta:
+      id: uts_bef94ab6d321403e81d5705f3621eb19
+      created: 1669039741641
+      modified: 1669039741641
+    tests:
+      - name: Request A is found
+        meta:
+          id: ut_8e97ae098d344a08a02aad5c30972560
+          created: 1669039749000
+          modified: 1669039779620
+        requestId: req_0d90cb103b114fceab26b2ddf31f94c9
+        code: |-
+          const response1 = await insomnia.send();
+          expect(response1.status).to.equal(200);
+      - name: Request B is not found
+        meta:
+          id: ut_9aca52f880cc4e0cbda693631b9ec35b
+          created: 1669039754892
+          modified: 1669039788840
+        requestId: req_5b3c869841324716a49980330ed0fbcf
+        code: |-
+          const response1 = await insomnia.send();
+          expect(response1.status).to.equal(404);

@@ -7,6 +7,10 @@ export default (app: Application) => {
         id: 123456,
         full_name: 'kong-test/sleepless',
         clone_url: 'https://github.com/kong-test/sleepless.git',
+        permissions: {
+          push: true,
+          pull: true,
+        },
       },
     ]);
   });
@@ -31,6 +35,12 @@ export default (app: Application) => {
   });
 
   app.post('/v1/oauth/github', (_req, res) => {
+    res.status(200).send({
+      'access_token': '123456789',
+    });
+  });
+
+  app.post('/v1/oauth/github-app', (_req, res) => {
     res.status(200).send({
       'access_token': '123456789',
     });

@@ -19,38 +19,38 @@ export const MaskedSetting: FC<{
   placeholder,
   setting,
 }) => {
-  const [isHidden, setHidden] = useToggle(true);
+    const [isHidden, setHidden] = useToggle(true);
 
-  const {
-    settings,
-  } = useRootLoaderData();
+    const {
+      settings,
+    } = useRootLoaderData();
 
-  if (!settings.hasOwnProperty(setting)) {
-    throw new Error(`Invalid setting name ${setting}`);
-  }
-  const patchSettings = useSettingsPatcher();
+    if (!(setting in settings)) {
+      throw new Error(`Invalid setting name ${setting}`);
+    }
+    const patchSettings = useSettingsPatcher();
 
-  return (
-    <div>
-      <label>
-        {label}
-        {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
-      </label>
-      <div className="form-control form-control--outlined form-control--btn-right">
-        <input
-          defaultValue={String(settings[setting])}
-          disabled={disabled}
-          name={setting}
-          onChange={event => patchSettings({ [setting]: event.currentTarget.value })}
-          placeholder={placeholder}
-          type={!settings.showPasswords && isHidden ? 'password' : 'text'}
-        />
-        {!settings.showPasswords && (
-          <button className={'form-control__right'} onClick={setHidden}>
-            {isHidden ? <i className="fa fa-eye-slash" /> : <i className="fa fa-eye" />}
-          </button>
-        )}
+    return (
+      <div>
+        <label>
+          {label}
+          {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
+        </label>
+        <div className="form-control form-control--outlined form-control--btn-right">
+          <input
+            defaultValue={String(settings[setting])}
+            disabled={disabled}
+            name={setting}
+            onChange={event => patchSettings({ [setting]: event.currentTarget.value })}
+            placeholder={placeholder}
+            type={!settings.showPasswords && isHidden ? 'password' : 'text'}
+          />
+          {!settings.showPasswords && (
+            <button className={'form-control__right'} onClick={setHidden}>
+              {isHidden ? <i className="fa fa-eye-slash" /> : <i className="fa fa-eye" />}
+            </button>
+          )}
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };

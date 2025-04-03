@@ -1,12 +1,12 @@
 import * as Sentry from '@sentry/electron/renderer';
 import { SENTRY_OPTIONS } from 'insomnia/src/common/sentry';
-import { initInsomniaObject, InsomniaObject } from 'insomnia-sdk';
+import { initInsomniaObject, InsomniaObject, waitForAllTestsDone } from 'insomnia-sdk';
 import { getNewConsole, mergeClientCertificates, mergeCookieJar, mergeRequests, mergeSettings, type RequestContext } from 'insomnia-sdk';
 import * as _ from 'lodash';
 
 export interface HiddenBrowserWindowBridgeAPI {
   runScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;
-};
+}
 
 Sentry.init({
   ...SENTRY_OPTIONS,
@@ -37,12 +37,6 @@ window.bridge.onmessage(async (data, callback) => {
   }
 });
 
-// as insomnia.test accepts an async function, prepend await to it as user don't write it
-function translateTestHandlers(script: string): string {
-  const replacedTests = script.replace(/insomnia\.test\(/g, 'await insomnia.test(');
-  return replacedTests.replace(/insomnia\.test\.skip\(/g, 'await insomnia.test.skip(');
-}
-
 // This function is duplicated in scriptExecutor.ts to run in nodejs
 // TODO: consider removing this implementation and using only nodejs scripting
 const runScript = async (
@@ -52,7 +46,6 @@ const runScript = async (
 
   const executionContext = await initInsomniaObject(context, scriptConsole.log);
 
-  const translatedScript = translateTestHandlers(script);
   const AsyncFunction = (async () => { }).constructor;
   const executeScript = AsyncFunction(
     'insomnia',
@@ -64,10 +57,12 @@ const runScript = async (
     'setImmediate',
     'queueMicrotask',
     'process',
+    'waitForAllTestsDone',
     `
       const $ = insomnia;
       window.bridge.resetAsyncTasks(); // exclude unnecessary ones
-      ${translatedScript};
+      ${script};
+      await waitForAllTestsDone();
       window.bridge.stopMonitorAsyncTasks();  // the next one should not be monitored
       await window.bridge.asyncTasksAllSettled();
       return insomnia;`
@@ -82,6 +77,7 @@ const runScript = async (
     undefined,
     undefined,
     undefined,
+    waitForAllTestsDone,
   );
   if (mutatedInsomniaObject == null || !(mutatedInsomniaObject instanceof InsomniaObject)) {
     throw Error('insomnia object is invalid or script returns earlier than expected.');
@@ -89,7 +85,7 @@ const runScript = async (
   const mutatedContextObject = mutatedInsomniaObject.toObject();
   const updatedRequest = mergeRequests(context.request, mutatedContextObject.request);
   const updatedSettings = mergeSettings(context.settings, mutatedContextObject.request);
-  const updatedCertificates = mergeClientCertificates(context.clientCertificates, mutatedContextObject.request);
+  const updatedCertificates = mergeClientCertificates(mutatedContextObject.clientCertificates, mutatedContextObject.request);
   const updatedCookieJar = mergeCookieJar(context.cookieJar, mutatedContextObject.cookieJar);
 
   return {
@@ -120,6 +116,7 @@ const runScript = async (
     globals: mutatedContextObject.globals,
     requestTestResults: mutatedContextObject.requestTestResults,
     logs: scriptConsole.dumpLogsAsArray(),
+    parentFolders: mutatedContextObject.parentFolders,
   };
 };
 
@@ -136,12 +133,8 @@ function proxiedSetTimeout(
 
   return setTimeout(
     () => {
-      try {
-        callback();
-        resolveHdl(null);
-      } catch (e) {
-        throw e;
-      }
+      callback();
+      resolveHdl(null);
     },
     ms,
   );

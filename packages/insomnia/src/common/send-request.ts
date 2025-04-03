@@ -10,8 +10,6 @@ import { getBodyBuffer } from '../models/response';
 import type { Settings } from '../models/settings';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import {
-  getOrInheritAuthentication,
-  getOrInheritHeaders,
   responseTransform,
   sendCurlAndWriteTimeline,
   tryToExecuteAfterResponseScript,
@@ -32,7 +30,7 @@ const wrapAroundIterationOverIterationData = (list?: UserUploadEnvironment[], cu
   }
   if (list.length >= currentIteration + 1) {
     return list[currentIteration];
-  };
+  }
   return list[(currentIteration + 1) % list.length];
 };
 
@@ -75,11 +73,6 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     const workspaceId = workspaceDoc ? workspaceDoc._id : 'n/a';
     const workspace = await models.workspace.getById(workspaceId);
     invariant(workspace, 'failed to find workspace');
-
-    // check for authentication overrides in parent folders
-    const requestGroups = ancestors.filter(a => a.type === 'RequestGroup') as RequestGroup[];
-    request.authentication = getOrInheritAuthentication({ request, requestGroups });
-    request.headers = getOrInheritHeaders({ request, requestGroups });
 
     const settings = await models.settings.get();
     invariant(settings, 'failed to create settings');

@@ -5,6 +5,7 @@ import { useFetcher, useParams } from 'react-router-dom';
 
 import { docsGitSync } from '../../../../common/documentation';
 import type { GitRepository, OauthProviderName } from '../../../../models/git-repository';
+import type { GitCredentials } from '../../../../sync/git/git-vcs';
 import { Link } from '../../base/link';
 import { Modal, type ModalHandle, type ModalProps } from '../../base/modal';
 import { ModalBody } from '../../base/modal-body';
@@ -17,16 +18,27 @@ import { CustomRepositorySettingsFormGroup } from './custom-repository-settings-
 import { GitHubRepositorySetupFormGroup } from './github-repository-settings-form-group';
 import { GitLabRepositorySetupFormGroup } from './gitlab-repository-settings-form-group';
 
-export const GitRepositorySettingsModal = (props: ModalProps & {
+function getDefaultOAuthProvider(credentials?: GitCredentials | null): OauthProviderName {
+  if (!credentials) {
+    return 'github';
+  }
+
+  if ('oauth2format' in credentials && credentials.oauth2format) {
+    return credentials.oauth2format;
+  }
+
+  return 'custom';
+}
+
+export const GitRepositorySettingsModal = ({ gitRepository, ...modalProps }: ModalProps & {
   gitRepository?: GitRepository;
 }) => {
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
-  const { gitRepository } = props;
   const modalRef = useRef<ModalHandle>(null);
   const updateGitRepositoryFetcher = useFetcher();
   const deleteGitRepositoryFetcher = useFetcher();
 
-  const [selectedTab, setTab] = useState<OauthProviderName>('github');
+  const [selectedTab, setTab] = useState<OauthProviderName>(getDefaultOAuthProvider(gitRepository?.credentials));
 
   useEffect(() => {
     modalRef.current?.show();
@@ -75,7 +87,7 @@ export const GitRepositorySettingsModal = (props: ModalProps & {
 
   return (
     <OverlayContainer>
-      <Modal ref={modalRef} {...props}>
+      <Modal ref={modalRef} {...modalProps}>
         <ModalHeader>
           Repository Settings{' '}
           <HelpTooltip>
@@ -145,7 +157,7 @@ export const GitRepositorySettingsModal = (props: ModalProps & {
           >
             <button
               className="btn"
-              disabled={!gitRepository}
+              disabled={!hasGitRepository}
               onClick={() => {
                 deleteGitRepositoryFetcher.submit({}, {
                   action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/reset`,

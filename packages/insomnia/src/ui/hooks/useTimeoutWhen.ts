@@ -32,9 +32,9 @@ function useTimeoutWhen(
         return () => {
           window.clearTimeout(timeout);
         };
-      } else {
-        console.warn('useTimeoutWhen: window is undefined.');
       }
+        console.warn('useTimeoutWhen: window is undefined.');
+
     }
     return;
   }, [timeoutDelayMs, when]);

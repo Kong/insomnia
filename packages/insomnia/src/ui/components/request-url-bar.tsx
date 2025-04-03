@@ -5,6 +5,7 @@ import { useInterval } from 'react-use';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
+import { vaultEnvironmentRuntimePath } from '../../models/environment';
 import type { Request } from '../../models/request';
 import { isEventStreamRequest, isGraphqlSubscriptionRequest } from '../../models/request';
 import { isRequestGroup, type RequestGroup } from '../../models/request-group';
@@ -12,6 +13,7 @@ import { getOrInheritAuthentication, getOrInheritHeaders } from '../../network/n
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
+import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 import { useReadyState } from '../hooks/use-ready-state';
 import { useRequestPatcher } from '../hooks/use-request';
 import { useRequestMetaPatcher } from '../hooks/use-request';
@@ -25,6 +27,7 @@ import { MethodDropdown } from './dropdowns/method-dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { GenerateCodeModal } from './modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from './modals/index';
+import { InputVaultKeyModal } from './modals/input-vault-key-modal';
 import { VariableMissingErrorModal } from './modals/variable-missing-error-modal';
 
 interface Props {
@@ -44,13 +47,29 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   onPaste,
 }, ref) => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { userSession } = useRootLoaderData();
+  const { vaultKey } = userSession;
   const [showEnvVariableMissingModal, setShowEnvVariableMissingModal] = useState(false);
+  const [showInputVaultKeyModal, setShowInputVaultKeyModal] = useState(false);
   const [undefinedEnvironmentVariables, setUndefinedEnvironmentVariables] = useState('');
   const undefinedEnvironmentVariableList = undefinedEnvironmentVariables?.split(',');
   if (searchParams.has('error')) {
     if (searchParams.has('envVariableMissing') && searchParams.get('undefinedEnvironmentVariables')) {
       setShowEnvVariableMissingModal(true);
       setUndefinedEnvironmentVariables(searchParams.get('undefinedEnvironmentVariables')!);
+    } else {
+      // only for request render error
+      showAlert({
+        title: 'Unexpected Request Failure',
+        message: (
+          <div>
+            <p>The request failed due to an unhandled error:</p>
+            <code className="wide selectable">
+              <pre>{searchParams.get('error')}</pre>
+            </code>
+          </div>
+        ),
+      });
     }
 
     // clean up params
@@ -83,6 +102,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
   const fetcher = useFetcher();
 
+  const { updateTabById } = useInsomniaTabContext();
+
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const connect = useCallback((connectParams: ConnectActionParams) => {
     fetcher.submit(JSON.stringify(connectParams),
@@ -103,6 +124,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   }, [fetcher, organizationId, projectId, requestId, workspaceId]);
 
   const sendOrConnect = useCallback(async (shouldPromptForPathAfterResponse?: boolean, ignoreUndefinedEnvVariable?: boolean) => {
+    updateTabById?.(requestId, { temporary: false });
     models.stats.incrementExecutedRequests();
     window.main.trackSegmentEvent({
       event: SegmentEvent.requestExecute,
@@ -168,7 +190,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         ),
       });
     }
-  }, [activeEnvironment._id, activeRequest, activeWorkspace._id, connect, requestId, send, settings.preferredHttpVersion]);
+  }, [activeEnvironment._id, activeRequest, activeWorkspace._id, connect, requestId, send, settings.preferredHttpVersion, updateTabById]);
 
   useEffect(() => {
     const sendOnMetaEnter = (event: KeyboardEvent) => {
@@ -380,7 +402,29 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
             })}
           </div>
         </div>
+        {!vaultKey && undefinedEnvironmentVariableList.some(variableName => variableName.startsWith(`${vaultEnvironmentRuntimePath}.`)) &&
+          <div className='mt-4'>
+            <p>These are secret environment variables. However, the required vault key has not been provided yet.</p>
+            <Button
+              className="py-1 aria-pressed:bg-[--hl-sm] underline text-[--color-info] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] cursor-"
+              onPress={() => {
+                setShowInputVaultKeyModal(true);
+                setShowEnvVariableMissingModal(false);
+              }}
+            >
+              Click to input vault key
+            </Button>
+            <div className='flex gap-2 flex-wrap max-h-80 overflow-y-auto'>
+              {undefinedEnvironmentVariableList?.filter(variableName => variableName.startsWith(`${vaultEnvironmentRuntimePath}.`)).map(item => {
+                return <div key={item} className="bg-[--color-surprise] text-[--color-font-surprise] mt-3 px-3 py-1 mr-3 rounded-sm">{item}</div>;
+              })}
+            </div>
+          </div>
+        }
       </VariableMissingErrorModal>
+      {showInputVaultKeyModal &&
+        <InputVaultKeyModal onClose={() => setShowInputVaultKeyModal(false)} />
+      }
     </div>
   );
 });

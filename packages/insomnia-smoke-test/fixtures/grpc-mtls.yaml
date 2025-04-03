@@ -1,18 +1,18 @@
-_type: export
-__export_format: 4
-__export_date: 2024-12-05T20:16:41.919Z
-__export_source: insomnia.desktop.app:v10.2.0
-resources:
-  - _id: greq_7ef089deea314ab88dd86aa434838efd
-    parentId: wrk_5dac47ec0e6144c694f21b29740e9267
-    modified: 1733429659428
-    created: 1732118004917
-    url: grpcs://localhost:50052
+type: collection.insomnia.rest/5.0
+name: grpc
+meta:
+  id: wrk_a72883345e264d6696ef9294857f29c7
+  created: 1736278598088
+  modified: 1736278598088
+collection:
+  - url: grpcs://localhost:50052
     name: grpcs
-    description: ""
-    protoFileId: ""
-    protoMethodName: /routeguide.RouteGuide/GetFeature
-    metadata: []
+    meta:
+      id: greq_a3ec27d741fa45728b30187251feb93f
+      created: 1732118004917
+      modified: 1733429659428
+      isPrivate: false
+      sortKey: -1732118004917
     body:
       text: |-
         {
@@ -27,38 +27,21 @@ resources:
         	"latitude": "409146138",
         	"longitude": "-746188906"
         }
-    metaSortKey: -1732118004917
-    isPrivate: false
+    protoMethodName: /routeguide.RouteGuide/GetFeature
     reflectionApi:
       enabled: false
       url: https://buf.build
-      apiKey: ""
       module: buf.build/connectrpc/eliza
-    _type: grpc_request
-  - _id: wrk_5dac47ec0e6144c694f21b29740e9267
-    parentId: null
-    modified: 1732118001110
-    created: 1732118001110
-    name: grpc
-    description: ""
-    scope: collection
-    _type: workspace
-  - _id: env_d8277fde45580529bdde2cee008f33ba3e3a8873
-    parentId: wrk_5dac47ec0e6144c694f21b29740e9267
-    modified: 1732118001112
-    created: 1732118001112
-    name: Base Environment
-    data: {}
-    dataPropertyOrder: null
-    color: null
-    isPrivate: false
-    metaSortKey: 1732118001112
-    environmentType: kv
-    _type: environment
-  - _id: jar_d8277fde45580529bdde2cee008f33ba3e3a8873
-    parentId: wrk_5dac47ec0e6144c694f21b29740e9267
-    modified: 1732118001113
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_d8d132d589374b6faed4e890b42b2341
     created: 1732118001113
-    name: Default Jar
-    cookies: []
-    _type: cookie_jar
+    modified: 1732118001113
+environments:
+  name: Base Environment
+  meta:
+    id: env_92ac2df77f4542ee9390bd4cf30e3a3c
+    created: 1732118001112
+    modified: 1732118001112
+    isPrivate: false

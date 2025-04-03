@@ -17,6 +17,9 @@ export const getSkipOnboarding = () => env.INSOMNIA_SKIP_ONBOARDING;
 export const getInsomniaSession = () => env.INSOMNIA_SESSION;
 export const getInsomniaSecretKey = () => env.INSOMNIA_SECRET_KEY;
 export const getInsomniaPublicKey = () => env.INSOMNIA_PUBLIC_KEY;
+export const getInsomniaVaultSalt = () => env.INSOMNIA_VAULT_SALT;
+export const getInsomniaVaultKey = () => env.INSOMNIA_VAULT_KEY;
+export const getInsomniaVaultSrpSecret = () => env.INSOMNIA_VAULT_SRP_SECRET;
 export const getAppVersion = () => version;
 export const getProductName = () => appConfig.productName;
 export const getAppDefaultTheme = () => appConfig.theme;
@@ -66,6 +69,8 @@ export const LARGE_RESPONSE_MB = 5;
 export const HUGE_RESPONSE_MB = 100;
 export const FLEXIBLE_URL_REGEX = /^(http|https):\/\/[\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ\-_.]+[/\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ.\-+=:\][@%^*&!#?;$~'(),]*/;
 export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 24;
+
+export const ACCEPTED_NODE_CA_FILE_EXTS = ['.pem', '.crt', '.cer', '.p12'];
 
 // Available editor key map
 export enum EditorKeyMap {
@@ -124,12 +129,12 @@ export const getMockServiceURL = () => env.INSOMNIA_MOCK_API_URL || 'https://moc
 export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
   if (!mockServer.useInsomniaCloud) {
     return `${mockServer.url}/bin/${mockServer._id}${path}`;
-  } else {
-    const baseUrl = getMockServiceURL();
-    const url = new URL(baseUrl);
-    url.host = mockServer._id.replace('_', '-') + '.' + url.host;
-    return url.origin + path;
   }
+  const baseUrl = getMockServiceURL();
+  const url = new URL(baseUrl);
+  url.host = mockServer._id.replace('_', '-') + '.' + url.host;
+  return url.origin + path;
+
 };
 
 export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai-helper.insomnia.rest';
@@ -369,11 +374,11 @@ export const dashboardSortOrderName: Record<DashboardSortOrder, string> = {
 export type PreviewMode = 'friendly' | 'source' | 'raw';
 
 export function getPreviewModeName(previewMode: PreviewMode, useLong = false) {
-  if (previewModeMap.hasOwnProperty(previewMode)) {
+  if (previewMode in previewModeMap) {
     return useLong ? previewModeMap[previewMode][1] : previewModeMap[previewMode][0];
-  } else {
-    return '';
   }
+  return '';
+
 }
 export function getMimeTypeFromContentType(contentType: string) {
   // Check if the Content-Type header is provided
@@ -403,11 +408,11 @@ export function getContentTypeName(contentType?: string | null, useLong = false)
 }
 
 export function getAuthTypeName(authType?: string, useLong = false) {
-  if (authType && authTypesMap.hasOwnProperty(authType)) {
+  if (authType && authType in authTypesMap) {
     return useLong ? authTypesMap[authType][1] : authTypesMap[authType][0];
-  } else {
-    return 'Auth';
   }
+  return 'Auth';
+
 }
 
 export function getContentTypeFromHeaders(headers: any[], defaultValue: string | null = null) {

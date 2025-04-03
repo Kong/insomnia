@@ -230,9 +230,9 @@ export function newBodyGraphQL(rawBody: string): RequestBody {
         mimeType: CONTENT_TYPE_GRAPHQL,
         text: rawBody,
       };
-    } else {
-      throw error;
     }
+      throw error;
+
   }
 }
 

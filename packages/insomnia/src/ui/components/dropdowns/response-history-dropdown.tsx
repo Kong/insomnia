@@ -60,7 +60,7 @@ export const ResponseHistoryDropdown = ({
 
   const handleDeleteResponses = useCallback(async () => {
     if (isWebSocketResponse(activeResponse)) {
-      window.main.webSocket.closeAll();
+      window.main.webSocket.close({ requestId });
     }
     fetcher.submit({}, {
       action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/response/delete-all`,

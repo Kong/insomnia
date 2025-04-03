@@ -5,7 +5,6 @@ import { useFetcher, useParams } from 'react-router-dom';
 
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
-import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { PlatformKeyCombinations } from '../../../common/settings';
 import type { Environment } from '../../../models/environment';
 import type { GrpcRequest } from '../../../models/grpc-request';
@@ -33,10 +32,11 @@ import { getRenderedRequestAndContext } from '../../../common/render';
 interface Props {
   activeEnvironment: Environment;
   activeProject: Project;
-  isPinned: Boolean;
+  isPinned: boolean;
   request: Request | GrpcRequest | WebSocketRequest;
   requestGroup?: RequestGroup;
   isOpen: boolean;
+  triggerRef: React.RefObject<HTMLDivElement>;
   onOpenChange: (isOpen: boolean) => void;
   onRename: () => void;
 }
@@ -47,6 +47,7 @@ export const RequestActionsDropdown = ({
   isPinned,
   request,
   isOpen,
+  triggerRef,
   onOpenChange,
   onRename,
 }: Props) => {
@@ -89,7 +90,7 @@ export const RequestActionsDropdown = ({
   const handlePluginClick = async ({ plugin, action }: RequestAction) => {
     try {
       const context = {
-        ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER)),
+        ...(pluginContexts.app.init('no-render')),
         ...pluginContexts.data.init(activeProject._id),
         ...(pluginContexts.store.init(plugin)),
         ...(pluginContexts.network.init()),
@@ -282,11 +283,11 @@ export const RequestActionsDropdown = ({
         <Button
           data-testid={`Dropdown-${toKebabCase(request.name)}`}
           aria-label="Request Actions"
-          className="opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className="hidden items-center group-focus:flex group-hover:flex justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
         >
           <Icon icon="caret-down" />
         </Button>
-        <Popover className="min-w-max overflow-y-hidden flex flex-col">
+        <Popover className="min-w-max overflow-y-hidden flex flex-col" triggerRef={triggerRef} placement="bottom end" offset={5}>
           <Menu
             aria-label="Request Actions Menu"
             selectionMode="single"

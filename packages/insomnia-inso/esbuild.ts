@@ -8,7 +8,7 @@ const config: BuildOptions = {
   bundle: true,
   platform: 'node',
   minify: isProd,
-  target: 'node20',
+  target: 'node22',
   sourcemap: true,
   format: 'cjs',
   tsconfig: 'tsconfig.json',

@@ -1,3 +1,5 @@
+import { expect } from '@playwright/test';
+
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
@@ -23,18 +25,18 @@ test.describe('Cookie editor', async () => {
     await page.click('pre[role="presentation"]:has-text("bar")');
     await page.locator('[data-testid="CookieValue"] >> textarea').nth(1).fill('123');
     await page.locator('text=Done').nth(1).click();
-    await page.getByRole('cell', { name: 'foo=b123ar; Expires=' }).click();
+    await page.getByTestId('cookie-test-iteration-0').click();
 
     // Create a new cookie
-    await page.locator('.cookie-list').getByRole('button', { name: 'Actions' }).click();
-    await page.getByRole('menuitem', { name: 'Add Cookie' }).click();
+    await page.getByRole('button', { name: 'Add Cookie' }).click();
+
     await page.getByRole('button', { name: 'Edit' }).first().click();
 
     // Try to replace text in Raw view
     await page.getByRole('tab', { name: 'Raw' }).click();
     await page.locator('text=Raw Cookie String >> input[type="text"]').fill('foo2=bar2; Expires=Tue, 19 Jan 2038 03:14:07 GMT; Domain=localhost; Path=/');
     await page.locator('text=Done').nth(1).click();
-    await page.getByRole('cell', { name: 'foo2=bar2; Expires=' }).click();
+    await page.getByTestId('cookie-test-iteration-0').click();
 
     await page.click('text=Done');
 
@@ -44,7 +46,7 @@ test.describe('Cookie editor', async () => {
 
     // Check in the timeline that the cookie was sent
     await page.getByRole('tab', { name: 'Console' }).click();
-    await page.click('text=foo2=bar2; foo=b123ar');
+    await expect(page.getByText('foo2=bar2')).toBeVisible();
 
     // Send ws request
     await page.getByLabel('Request Collection').getByTestId('example websocket').press('Enter');
@@ -53,7 +55,6 @@ test.describe('Cookie editor', async () => {
 
     // Check in the timeline that the cookie was sent
     await page.getByRole('tab', { name: 'Console' }).click();
-    await page.click('text=foo2=bar2; foo=b123ar;');
+    await expect(page.getByText('foo2=bar2')).toBeVisible();
   });
-
 });

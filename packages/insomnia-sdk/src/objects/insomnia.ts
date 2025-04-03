@@ -5,9 +5,11 @@ import type { Settings } from 'insomnia/src/models/settings';
 import { filterClientCertificates } from 'insomnia/src/network/certificate';
 
 import { toPreRequestAuth } from './auth';
+import { getExistingConsole } from './console';
 import { CookieObject } from './cookies';
-import { Environment, Variables } from './environments';
+import { Environment, Variables, Vault } from './environments';
 import { Execution } from './execution';
+import { Folder, ParentFolders } from './folders';
 import type { RequestContext } from './interfaces';
 import { transformToSdkProxyOptions } from './proxy-configs';
 import { Request as ScriptRequest, type RequestOptions, toScriptRequestBody } from './request';
@@ -17,6 +19,7 @@ import { readBodyFromPath, toScriptResponse } from './response';
 import { sendRequest } from './send-request';
 import { type RequestTestResult, skip, test, type TestHandler } from './test';
 import { toUrlObject } from './urls';
+import { checkIfUrlIncludesTag } from './utils';
 
 export class InsomniaObject {
     public environment: Environment;
@@ -28,8 +31,9 @@ export class InsomniaObject {
     public info: RequestInfo;
     public response?: ScriptResponse;
     public execution: Execution;
+    public vault?: Vault;
 
-    private clientCertificates: ClientCertificate[];
+    public clientCertificates: ClientCertificate[];
     private _expect = expect;
     private _test = test;
     private _skip = skip;
@@ -40,6 +44,8 @@ export class InsomniaObject {
     private _settings: Settings;
 
     private requestTestResults: RequestTestResult[];
+
+    private parentFolders: ParentFolders;
 
     constructor(
         rawObj: {
@@ -55,6 +61,8 @@ export class InsomniaObject {
             requestInfo: RequestInfo;
             execution: Execution;
             response?: ScriptResponse;
+            parentFolders: ParentFolders;
+            vault?: Vault;
         },
     ) {
         this.globals = rawObj.globals;
@@ -66,6 +74,7 @@ export class InsomniaObject {
         this.cookies = rawObj.cookies;
         this.response = rawObj.response;
         this.execution = rawObj.execution;
+        this.vault = rawObj.vault;
 
         this.info = rawObj.requestInfo;
         this.request = rawObj.request;
@@ -73,6 +82,23 @@ export class InsomniaObject {
         this.clientCertificates = rawObj.clientCertificates;
 
         this.requestTestResults = new Array<RequestTestResult>();
+        this.parentFolders = rawObj.parentFolders;
+
+        return new Proxy(this, {
+            get: (target, prop, receiver) => {
+                if (prop === 'test') {
+                    const testHandler: TestHandler = async (msg: string, fn: () => Promise<void>) => {
+                        await this._test(msg, fn, this.pushRequestTestResult);
+                    };
+                    testHandler.skip = async (msg: string, fn: () => Promise<void>) => {
+                        await this._skip(msg, fn, this.pushRequestTestResult);
+                    };
+
+                    return testHandler;
+                }
+                return Reflect.get(target, prop, receiver);
+            },
+        });
     }
 
     sendRequest(
@@ -82,26 +108,18 @@ export class InsomniaObject {
         return sendRequest(request, cb, this._settings);
     }
 
-    get test() {
-        const testHandler: TestHandler = async (msg: string, fn: () => Promise<void>) => {
-            await this._test(msg, fn, this.pushRequestTestResult);
-        };
-        testHandler.skip = async (msg: string, fn: () => Promise<void>) => {
-            await this._skip(msg, fn, this.pushRequestTestResult);
-        };
-
-        return testHandler;
-    }
+    test = () => {
+        // this method is intercepted by the proxy above
+    };
 
     private pushRequestTestResult = (testResult: RequestTestResult) => {
         this.requestTestResults = [...this.requestTestResults, testResult];
     };
 
-    expect(exp: boolean | number | string | object) {
+    expect = (exp: boolean | number | string | object) => {
         return this._expect(exp);
-    }
+    };
 
-    // TODO: remove this after enabled iterationData
     get settings() {
         return undefined;
     }
@@ -121,6 +139,7 @@ export class InsomniaObject {
             response: this.response ? this.response.toObject() : undefined,
             requestTestResults: this.requestTestResults,
             execution: this.execution.toObject(),
+            parentFolders: this.parentFolders.toObject(),
         };
     };
 }
@@ -150,6 +169,9 @@ export async function initInsomniaObject(
         new Environment(rawObj.iterationData.name, rawObj.iterationData.data) : new Environment('iterationData', {});
     const localVariables = rawObj.transientVariables ?
         new Environment(rawObj.transientVariables.name, rawObj.transientVariables.data) : new Environment('transientVariables', {});
+    const enableVaultInScripts = rawObj.settings?.enableVaultInScripts || false;
+    const vault = rawObj.vault ?
+        new Vault('vault', rawObj.vault, enableVaultInScripts) : new Vault('vault', {}, enableVaultInScripts);
     const cookies = new CookieObject(rawObj.cookieJar);
     // TODO: update follows when post-request script and iterationData are introduced
     const requestInfo = new RequestInfo({
@@ -160,39 +182,49 @@ export async function initInsomniaObject(
         requestId: rawObj.request._id,
     });
 
+    const parentFolders = new ParentFolders(rawObj.parentFolders.map(folderObj =>
+        new Folder(
+            folderObj.id,
+            folderObj.name,
+            folderObj.environment,
+        )
+    ));
+
     const variables = new Variables({
         globalVars: globals,
         environmentVars: environment,
         collectionVars: baseEnvironment,
         iterationDataVars: iterationData,
+        folderLevelVars: parentFolders.getEnvironments(),
         localVars: localVariables,
     });
 
-    // sanitize URL, see _updateElementText in nunjuncks-tags.ts
-    const sanitizedRawUrl = rawObj.request.url.replace(/\\/g, '')
-        .replace(/^{%/, '')
-        .replace(/%}$/, '')
-        .replace(/^{{/, '')
-        .replace(/}}$/, '')
-        .trim();
-    const renderedRawUrl = variables.replaceIn(sanitizedRawUrl);
-    const renderedUrl = toUrlObject(renderedRawUrl);
-
-    // filter client certificates by the rendered base URL
-    const renderedBaseUrl = toUrlObject(`${renderedUrl.protocol || 'http:'}//${renderedUrl.getHost()}`);
-    const filteredCerts = filterClientCertificates(rawObj.clientCertificates || [], renderedBaseUrl.toString());
-    const existingClientCert = filteredCerts != null && filteredCerts.length > 0 && filteredCerts[0];
-    const certificate = existingClientCert ?
+    // todo: find if theres a better way to get the best cert
+    // (╯°□°）╯︵ ┻━┻
+    const ifUrlIncludesTag = checkIfUrlIncludesTag(rawObj.request.url);
+    const matchedCertificates = filterClientCertificates(rawObj.clientCertificates || [], rawObj.request.url);
+    const initEmptyCert = ifUrlIncludesTag || matchedCertificates?.length === 0;
+    if (initEmptyCert) {
+        getExistingConsole().warn('The URL contains tags or no matched certificate found, insomnia.request.certificate is initialized as an empty certificate.');
+    }
+    const defaultCertificate = initEmptyCert ?
         {
-            disabled: existingClientCert.disabled,
-            name: 'The first certificate from Settings',
-            matches: [existingClientCert.host],
-            key: { src: existingClientCert.key || '' },
-            cert: { src: existingClientCert.cert || '' },
-            passphrase: existingClientCert.passphrase || undefined,
-            pfx: { src: existingClientCert.pfx || '' }, // PFX or PKCS12 Certificate
-        } :
-        { disabled: true };
+            disabled: false,
+            name: 'Default Certificate',
+            matches: [],
+            key: undefined,
+            cert: undefined,
+            passphrase: undefined,
+            pfx: undefined,
+        } : {
+            disabled: matchedCertificates[0].disabled,
+            name: 'The first matched certificate from Settings',
+            matches: [matchedCertificates[0].host],
+            key: { src: matchedCertificates[0].key || '' },
+            cert: { src: matchedCertificates[0].cert || '' },
+            passphrase: matchedCertificates[0].passphrase || undefined,
+            pfx: { src: matchedCertificates[0].pfx || '' }, // PFX or PKCS12 Certificate
+        };
 
     const proxy = transformToSdkProxyOptions(
         rawObj.settings.httpProxy,
@@ -204,8 +236,7 @@ export async function initInsomniaObject(
     const reqUrl = toUrlObject(rawObj.request.url);
     reqUrl.addQueryParams(
         rawObj.request.parameters
-            .filter(param => !param.disabled)
-            .map(param => ({ key: param.name, value: param.value }))
+            .map(param => ({ key: param.name, value: param.value, disabled: param.disabled }))
     );
 
     const reqOpt: RequestOptions = {
@@ -218,7 +249,7 @@ export async function initInsomniaObject(
         body: toScriptRequestBody(rawObj.request.body),
         auth: toPreRequestAuth(rawObj.request.authentication),
         proxy,
-        certificate,
+        certificate: defaultCertificate,
         pathParameters: rawObj.request.pathParameters,
     };
     const request = new ScriptRequest(reqOpt);
@@ -236,6 +267,7 @@ export async function initInsomniaObject(
         environment,
         baseEnvironment,
         iterationData,
+        vault,
         variables,
         request,
         settings: rawObj.settings,
@@ -244,5 +276,6 @@ export async function initInsomniaObject(
         requestInfo,
         response,
         execution,
+        parentFolders,
     });
 };

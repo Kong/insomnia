@@ -1,7 +1,9 @@
 import React, { type FC, memo } from 'react';
 
 import { CONTENT_TYPE_GRAPHQL, METHOD_DELETE, METHOD_OPTIONS } from '../../../common/constants';
-import { isEventStreamRequest, type Request } from '../../../models/request';
+import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
+import { isEventStreamRequest, isRequest, type Request } from '../../../models/request';
+import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
 
 interface Props {
   method: string;
@@ -33,6 +35,25 @@ export function formatMethodName(method: string) {
 
   return methodName;
 }
+
+export const getRequestMethodShortHand = (doc?: Request | WebSocketRequest | GrpcRequest) => {
+  if (!doc) {
+    return '';
+  }
+  if (isRequest(doc)) {
+    return getMethodShortHand(doc);
+  }
+
+  if (isWebSocketRequest(doc)) {
+    return 'WS';
+  }
+
+  if (isGrpcRequest(doc)) {
+    return 'gRPC';
+  }
+
+  return '';
+};
 
 export const MethodTag: FC<Props> = memo(({ method, override, fullNames }) => {
   let methodName = method;

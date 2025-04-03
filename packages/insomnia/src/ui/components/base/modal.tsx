@@ -12,8 +12,8 @@ export interface ModalProps {
   tall?: boolean;
   wide?: boolean;
   skinny?: boolean;
-  onShow?: Function;
-  onHide?: Function;
+  onShow?: () => void;
+  onHide?: () => void;
   children?: ReactNode;
   className?: string;
 }

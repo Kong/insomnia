@@ -9,11 +9,13 @@ import {
   RouterProvider,
 } from 'react-router-dom';
 
-import { migrateFromLocalStorage, type SessionData, setSessionData } from '../account/session';
+import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from '../account/session';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_SPEC,
   getInsomniaSession,
+  getInsomniaVaultKey,
+  getInsomniaVaultSalt,
   getProductName,
   getSkipOnboarding,
   isDevelopment,
@@ -56,7 +58,7 @@ try {
   // we need to inject state into localStorage
   const skipOnboarding = getSkipOnboarding();
   if (skipOnboarding) {
-    window.localStorage.setItem('hasSeenOnboardingV10', skipOnboarding.toString());
+    window.localStorage.setItem('hasSeenOnboardingV11', skipOnboarding.toString());
     window.localStorage.setItem('hasUserLoggedInBefore', skipOnboarding.toString());
   }
 } catch (e) {
@@ -71,6 +73,8 @@ async function renderApp() {
 
   // Check if there is a Session provided by an env variable and use this
   const insomniaSession = getInsomniaSession();
+  const insomniaVaultKey = getInsomniaVaultKey() || '';
+  const insomniaVaultSalt = getInsomniaVaultSalt() || '';
   if (insomniaSession) {
     try {
       const session = JSON.parse(insomniaSession) as SessionData;
@@ -84,6 +88,9 @@ async function renderApp() {
         session.publicKey,
         session.encPrivateKey
       );
+      if (insomniaVaultSalt || insomniaVaultKey) {
+        await setVaultSessionData(insomniaVaultSalt, insomniaVaultKey);
+      }
     } catch (e) {
       console.log('[init] Failed to parse session data', e);
     }
@@ -127,6 +134,48 @@ async function renderApp() {
           {
             path: 'commands',
             loader: async (...args) => (await import('./routes/commands')).loader(...args),
+          },
+          {
+            path: 'git-credentials',
+            loader: async (...args) => (await import('./routes/git-actions')).loadGitCredentials(...args),
+            children: [
+              {
+                'path': 'github',
+                loader: async (...args) => (await import('./routes/git-actions')).loadGitHubCredentials(...args),
+                children: [
+                  {
+                    path: 'init-sign-in',
+                    action: async (...args) => (await import('./routes/git-actions')).initSignInToGitHub(...args),
+                  },
+                  {
+                    path: 'complete-sign-in',
+                    action: async (...args) => (await import('./routes/git-actions')).completeSignInToGitHub(...args),
+                  },
+                  {
+                    path: 'sign-out',
+                    action: async (...args) => (await import('./routes/git-actions')).signOutOfGitHub(...args),
+                  },
+                ],
+              },
+              {
+                'path': 'gitlab',
+                loader: async (...args) => (await import('./routes/git-actions')).loadGitLabCredentials(...args),
+                children: [
+                  {
+                    path: 'init-sign-in',
+                    action: async (...args) => (await import('./routes/git-actions')).initSignInToGitLab(...args),
+                  },
+                  {
+                    path: 'complete-sign-in',
+                    action: async (...args) => (await import('./routes/git-actions')).completeSignInToGitLab(...args),
+                  },
+                  {
+                    path: 'sign-out',
+                    action: async (...args) => (await import('./routes/git-actions')).signOutOfGitLab(...args),
+                  },
+                ],
+              },
+            ],
           },
           {
             path: 'remote-files',
@@ -189,6 +238,25 @@ async function renderApp() {
                       (await import('./routes/project')).indexLoader(...args),
                   },
                   {
+                    path: 'git',
+                    children: [
+                      {
+                        path: 'init-clone',
+                        action: async (...args) =>
+                          (
+                            await import('./routes/git-project-actions')
+                          ).initGitCloneAction(...args),
+                      },
+                      {
+                        path: 'clone',
+                        action: async (...args) =>
+                          (
+                            await import('./routes/git-project-actions')
+                          ).cloneGitRepoAction(...args),
+                      },
+                    ],
+                  },
+                  {
                     path: 'permissions',
                     loader: async (...args) =>
                       (
@@ -225,6 +293,60 @@ async function renderApp() {
                       ).accessAIApiAction(...args),
                   },
                   {
+                    path: 'collaborators',
+                    loader: async (...args) =>
+                      (
+                        await import('./routes/invite')
+                      ).collaboratorsListLoader(...args),
+                  },
+                  {
+                    path: 'collaborators-search',
+                    loader: async (...args) =>
+                      (
+                        await import('./routes/invite')
+                      ).collaboratorSearchLoader(...args),
+                  },
+                  {
+                    path: 'invites',
+                    children: [
+                      {
+                        path: ':invitationId',
+                        id: ':invitationId',
+                        action: async (...args) =>
+                          (
+                            await import('./routes/invite')
+                          ).updateInvitationRoleAction(...args),
+                        children: [
+                          {
+                            path: 'reinvite',
+                            action: async (...args) =>
+                              (
+                                await import('./routes/invite')
+                              ).reinviteCollaboratorAction(...args),
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  {
+                    path: 'members',
+                    children: [
+                      {
+                        path: ':userId',
+                        id: ':userId',
+                        children: [
+                          {
+                            path: 'roles',
+                            action: async (...args) =>
+                              (
+                                await import('./routes/invite')
+                              ).updateMemberRoleAction(...args),
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  {
                     path: 'project',
                     id: '/project',
                     children: [
@@ -237,6 +359,13 @@ async function renderApp() {
                             <Project />
                           </Suspense>
                         ),
+                      },
+                      {
+                        path: 'new',
+                        action: async (...args) =>
+                          (
+                            await import('./routes/actions')
+                          ).createNewProjectAction(...args),
                       },
                       {
                         path: ':projectId',
@@ -298,6 +427,106 @@ async function renderApp() {
                                   (
                                     await import('./routes/git-actions')
                                   ).cloneGitRepoAction(...args),
+                              },
+                              {
+                                path: 'repo',
+                                loader: async (...args) =>
+                                  (await import('./routes/git-project-actions')).gitRepoLoader(...args),
+                              },
+                              {
+                                path: 'changes',
+                                loader: async (...args) =>
+                                  (await import('./routes/git-project-actions')).gitChangesLoader(...args),
+                              },
+                              {
+                                path: 'log',
+                                loader: async (...args) =>
+                                  (await import('./routes/git-project-actions')).gitLogLoader(...args),
+                              },
+                              {
+                                path: 'branches',
+                                loader: async (...args) =>
+                                  (await import('./routes/git-project-actions')).gitBranchesLoader(...args),
+                              },
+                              {
+                                path: 'status',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).gitStatusAction(...args),
+                              },
+                              {
+                                path: 'commit',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).commitToGitRepoAction(...args),
+                              },
+                              {
+                                path: 'commit-and-push',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).commitAndPushToGitRepoAction(...args),
+                              },
+                              {
+                                path: 'fetch',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).gitFetchAction(...args),
+                              },
+                              {
+                                path: 'update',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).updateGitRepoAction(...args),
+                              },
+                              {
+                                path: 'reset',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).resetGitRepoAction(...args),
+                              },
+                              {
+                                path: 'push',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).pushToGitRemoteAction(...args),
+                              },
+                              {
+                                path: 'stage',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).stageChangesAction(...args),
+                              },
+                              {
+                                path: 'unstage',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).unstageChangesAction(...args),
+                              },
+                              {
+                                path: 'discard',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).discardChangesAction(...args),
+                              },
+                              {
+                                path: 'diff',
+                                loader: async (...args) =>
+                                  (await import('./routes/git-project-actions')).diffFileLoader(...args),
+                              },
+                              {
+                                path: 'repository-tree',
+                                loader: async (...args) =>
+                                  (await import('./routes/git-project-actions')).getRepositoryDirectoryTree(...args),
+                              },
+                              {
+                                path: 'branch',
+                                children: [
+                                  {
+                                    path: 'new',
+                                    action: async (...args) =>
+                                      (await import('./routes/git-project-actions')).createNewGitBranchAction(...args),
+                                  },
+                                  {
+                                    path: 'delete',
+                                    action: async (...args) =>
+                                      (await import('./routes/git-project-actions')).deleteGitBranchAction(...args),
+                                  },
+                                  {
+                                    path: 'checkout',
+                                    action: async (...args) =>
+                                      (await import('./routes/git-project-actions')).checkoutGitBranchAction(...args),
+                                  },
+                                ],
                               },
                             ],
                           },
@@ -1128,6 +1357,26 @@ async function renderApp() {
                 path: 'authorize',
                 action: async (...args) => (await import('./routes/auth.authorize')).action(...args),
                 element: <Authorize />,
+              },
+              {
+                path: 'updateVaultSalt',
+                action: async (...args) => (await import('./routes/auth.vaultKey')).updateVaultSaltAction(...args),
+              },
+              {
+                path: 'createVaultKey',
+                action: async (...args) => (await import('./routes/auth.vaultKey')).createVaultKeyAction(...args),
+              },
+              {
+                path: 'validateVaultKey',
+                action: async (...args) => (await import('./routes/auth.vaultKey')).validateVaultKeyAction(...args),
+              },
+              {
+                path: 'resetVaultKey',
+                action: async (...args) => (await import('./routes/auth.vaultKey')).resetVaultKeyAction(...args),
+              },
+              {
+                path: 'clearVaultKey',
+                action: async (...args) => (await import('./routes/auth.vaultKey')).clearVaultKeyAction(...args),
               },
             ],
           },

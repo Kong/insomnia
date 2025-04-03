@@ -29,6 +29,8 @@ export interface CurlRequestOptions {
   caCertficatePath: string | null;
   socketPath?: string;
   authHeader?: { name: string; value: string };
+  // make libcurl not decompress the response content
+  noDecompress?: boolean;
 }
 interface RequestUsedHere {
   headers: any;
@@ -102,7 +104,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     await fs.promises.mkdir(responsesDir, { recursive: true });
     const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
 
-    const { requestId, req, finalUrl, settings, certificates, caCertficatePath, socketPath, authHeader } = options;
+    const { requestId, req, finalUrl, settings, certificates, caCertficatePath, socketPath, authHeader, noDecompress = false } = options;
     const caCert = (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString());
 
     const { curl, debugTimeline } = createConfiguredCurlInstance({
@@ -112,6 +114,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       caCert,
       certificates,
       socketPath,
+      noDecompress,
     });
     const { method, body } = req;
     // Only set CURLOPT_CUSTOMREQUEST if not HEAD or GET.
@@ -225,6 +228,12 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       curl.isOpen && curl.close();
       await waitForStreamToFinish(responseBodyWriteStream);
 
+      // If libcurl can't decompress the response, retry without decompression
+      if (code === CurlCode.CURLE_BAD_CONTENT_ENCODING && !noDecompress) {
+        resolve(curlRequest({ ...options, noDecompress: true }));
+        return;
+      }
+
       let error = err + '';
       let statusMessage = 'Error';
 
@@ -260,6 +269,7 @@ export const createConfiguredCurlInstance = ({
   caCert,
   certificates,
   socketPath,
+  noDecompress = false,
 }: {
   req: RequestUsedHere;
   finalUrl: string;
@@ -267,15 +277,21 @@ export const createConfiguredCurlInstance = ({
   certificates: ClientCertificate[];
   caCert: string | null;
   socketPath?: string;
+  noDecompress?: boolean;
 }) => {
   const debugTimeline: ResponseTimelineEntry[] = [];
   const curl = new Curl();
   curl.setOpt(Curl.option.URL, finalUrl);
   socketPath && curl.setOpt(Curl.option.UNIX_SOCKET_PATH, socketPath);
 
-  curl.setOpt(Curl.option.VERBOSE, true); // Set all the basic options
-  curl.setOpt(Curl.option.NOPROGRESS, true); // True so debug function works
-  curl.setOpt(Curl.option.ACCEPT_ENCODING, ''); // True so curl doesn't print progress
+  // Set all the basic options
+
+  // True so debug function works
+  curl.setOpt(Curl.option.VERBOSE, true);
+  // True so curl doesn't print progress
+  curl.setOpt(Curl.option.NOPROGRESS, true);
+  // whether to decompress response content
+  curl.setOpt(Curl.option.ACCEPT_ENCODING, noDecompress ? null : '');
   // fallback to root certificates or leave unset to use keychain on macOS
   if (caCert) {
     curl.setOpt(Curl.option.CAINFO_BLOB, caCert);

@@ -179,6 +179,28 @@ test.describe('pre-request features tests', async () => {
                 'onlySetByFolderPreScript': 888,
             },
         },
+        {
+            name: 'manipulate folder envs',
+            expectedBody: {
+                'folder1ValByReq': 1,
+                'folder1ValByReqByName': 1,
+                'folder2ValByReq': 2,
+                'folder2ValByReqByName': 2,
+                'valFound': 2,
+
+                'folder1ValByFolder1': 1,
+                'folder1ValByFolder1ByName': 1,
+                'folder2ValByFolder1': 2,
+                'folder2ValByFolder1ByName': 2,
+                'valFoundByFolder1': 2,
+
+                'folder1ValByFolder2': 1,
+                'folder1ValByFolder2ByName': 1,
+                'folder2ValByFolder2': 2,
+                'folder2ValByFolder2ByName': 2,
+                'valFoundByFolder2': 2,
+            },
+        },
     ];
 
     for (let i = 0; i < testCases.length; i++) {
@@ -374,14 +396,14 @@ test.describe('pre-request features tests', async () => {
         await expect(responsePane).toContainText('Trying 127.0.0.1:8888'); // updated proxy
     });
 
-    test('insomnia.request / update clientCertificate', async ({ page }) => {
+    test('update clientCertificate if request url contains tag', async ({ page }) => {
         const responsePane = page.getByTestId('response-pane');
         const fixturePath = getFixturePath('certificates');
 
         // update proxy configuration
         await page.locator('text=Add Certificates').click();
         await page.locator('text=Add client certificate').click();
-        await page.locator('[name="host"]').fill('127.0.0.1');
+        await page.locator('[name="host"]').fill('127.0.0.1:4010');
         await page.locator('[data-key="pfx"]').click();
 
         const fileChooserPromise = page.waitForEvent('filechooser');
@@ -391,13 +413,26 @@ test.describe('pre-request features tests', async () => {
         await page.getByRole('button', { name: 'Add certificate' }).click();
         await page.getByRole('button', { name: 'Done' }).click();
 
+        await page.getByLabel('Request Collection').getByTestId('test certificate manipulation with tagged url').press('Enter');
+
+        // send
+        await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+        // verify
+        await page.getByRole('tab', { name: 'Console' }).click();
+        await expect(responsePane).toContainText('* Adding SSL PEM certificate');
+        await expect(responsePane).toContainText('Adding SSL KEY certificate');
+    });
+
+    test('insomnia.request / update clientCertificate', async ({ page }) => {
+        const responsePane = page.getByTestId('response-pane');
         await page.getByLabel('Request Collection').getByTestId('test certificate manipulation').press('Enter');
 
         // send
         await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
         // verify
         await page.getByRole('tab', { name: 'Console' }).click();
-        await expect(responsePane).toContainText('fixtures/certificates/fake.pfx'); // original proxy
+        await expect(responsePane).toContainText('Adding SSL PEM certificate');
+        await expect(responsePane).toContainText('Adding SSL KEY certificate');
     });
 
     test('pre: insomnia.test and insomnia.expect can work together', async ({ page }) => {
@@ -410,8 +445,8 @@ test.describe('pre-request features tests', async () => {
         await page.getByRole('tab', { name: 'Tests' }).click();
 
         const responsePane = page.getByTestId('response-pane');
-        expect(responsePane).toContainText('FAILunhappy tests | error: AssertionError: expected 199 to deeply equal 200 | ACTUAL: 199 | EXPECTED: 200Pre-request Test');
-        expect(responsePane).toContainText('PASShappy tests');
+        await expect(responsePane).toContainText('FAILunhappy tests | error: AssertionError: expected 199 to deeply equal 200 | ACTUAL: 199 | EXPECTED: 200Pre-request Test');
+        await expect(responsePane).toContainText('PASShappy tests');
     });
 
     test('environment and baseEnvironment can be persisted', async ({ page }) => {
@@ -434,6 +469,8 @@ test.describe('pre-request features tests', async () => {
 
         expect(bodyJson).toEqual({
             // no environment is selected so the environment value will be persisted to the base environment
+            'fromUrlValue': 'fromUrlValue',
+            'fromEditorValue': 'fromEditorValue',
             '__fromScript1': 'baseEnvironment',
             '__fromScript2': 'collection',
             '__fromScript': 'environment',
@@ -446,6 +483,51 @@ test.describe('pre-request features tests', async () => {
                 },
             },
         });
+    });
+
+    test('kv pair environment can be updated', async ({ page }) => {
+        const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
+        await page.getByLabel('Request Collection').getByTestId('update kv pair environment').press('Enter');
+        // switch to table view environment
+        await page.getByLabel('Manage Environments').click();
+        await page.getByRole('button', { name: 'Manage collection environments' }).click();
+        await page.getByLabel('Table Edit').click();
+        await page.getByRole('button', { name: 'Close' }).click();
+        await page.getByTestId('underlay').click();
+
+        // send request
+        await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+        // verify response
+        await page.waitForSelector('[data-testid="response-status-tag"]:visible');
+        await expect(statusTag).toContainText('200 OK');
+
+        // verify table environments have been updated
+        await page.getByRole('button', { name: 'Manage Environments' }).click();
+        await page.getByRole('button', { name: 'Manage collection environments' }).click();
+        await page.getByText('__environment_type').click();
+        await page.getByText('__environment_value_kv').click();
+        await page.getByText('http://url-from-script').click();
+    });
+
+    test('query params should be transformed correctly', async ({ page }) => {
+        await page.getByLabel('Request Collection').getByTestId('testQueryParams').press('Enter');
+
+        // send
+        await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+
+        // verify response
+        const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
+        await page.waitForSelector('[data-testid="response-status-tag"]:visible');
+        await expect(statusTag).toContainText('200 OK');
+
+        const responsePane = page.getByTestId('response-pane');
+        await page.getByRole('tab', { name: 'Console' }).click();
+
+        await expect(responsePane).toContainText('key=fromUrl');
+        await expect(responsePane).toContainText('key=fromUrlValue');
+        await expect(responsePane).toContainText('key=fromEditorValue');
+        await expect(responsePane).toContainText('key=%2F');
     });
 });
 

@@ -10,12 +10,15 @@ import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
 import * as misc from '../../../common/misc';
 import type { KeyCombination } from '../../../common/settings';
 import { getTagDefinitions } from '../../../templating/index';
-import { extractNunjucksTagFromCoords, type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '../../../templating/utils';
+import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '../../../templating/types';
+import { extractNunjucksTagFromCoords } from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { useEditorRefresh } from '../../hooks/use-editor-refresh';
+import { usePlanData } from '../../hooks/use-plan';
 import { useRootLoaderData } from '../../routes/root';
 import { showModal } from '../modals';
 import { NunjucksModal } from '../modals/nunjucks-modal';
+import { UpgradeModal } from '../modals/upgrade-modal';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';
 export interface OneLineEditorProps {
   defaultValue: string;
@@ -34,7 +37,7 @@ export interface OneLineEditorProps {
 export interface EditorEventListener<T extends keyof EditorEventMap> {
   eventName: T;
   handler: EditorEventMap[T];
-};
+}
 export interface OneLineEditorHandle {
   selectAll: () => void;
   focusEnd: () => void;
@@ -57,7 +60,15 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   const {
     settings,
   } = useRootLoaderData();
+  const { isOwner, isEnterprisePlan } = usePlanData();
   const { handleRender, handleGetRenderContext } = useNunjucks();
+
+  const getKeyMap = useCallback(() => {
+    if (!readOnly && settings.enableKeyMapForInlineTextEditors && settings.editorKeyMap) {
+      return settings.editorKeyMap;
+    }
+    return 'default';
+  }, [settings.enableKeyMapForInlineTextEditors, settings.editorKeyMap, readOnly]);
 
   const initEditor = useCallback(() => {
     if (!textAreaRef.current) {
@@ -97,7 +108,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       showCursorWhenSelecting: false,
       cursorScrollMargin: 12,
       // Only set keyMap if we're not read-only. This is so things like ctrl-a work on read-only mode.
-      keyMap: !readOnly && settings.editorKeyMap ? settings.editorKeyMap : 'default',
+      keyMap: getKeyMap(),
       extraKeys: CodeMirror.normalizeKeyMap({
         'Ctrl-Space': 'autocomplete',
         [isMac() ? 'Cmd-F' : 'Ctrl-F']: () => { },
@@ -201,7 +212,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         id,
       );
     }
-  }, [defaultValue, getAutocompleteConstants, handleGetRenderContext, handleRender, onBlur, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, settings.editorKeyMap, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.showVariableSourceAndValue, eventListeners, id]);
+    // settings.pluginsAllowElevatedAccess is not used here but we want to trigger this effect when it changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultValue, getAutocompleteConstants, handleGetRenderContext, handleRender, onBlur, onKeyDown, onPaste, placeholder, readOnly, settings.autocompleteDelay, getKeyMap, settings.hotKeyRegistry, settings.nunjucksPowerUserMode, settings.pluginsAllowElevatedAccess, settings.showVariableSourceAndValue, eventListeners, id]);
 
   const cleanUpEditor = useCallback(() => {
     codeMirror.current?.toTextArea();
@@ -228,22 +241,22 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       // we have a unique key for request panel, when connect to websocket, unique will change and component will mount again automatically
       // but when disconnect, the unique key will not change, so we need to update some configurations manually
       codeMirror.current.setOption('readOnly', readOnly);
-      codeMirror.current.setOption('keyMap', !readOnly && settings.editorKeyMap ? settings.editorKeyMap : 'default');
+      codeMirror.current.setOption('keyMap', getKeyMap());
     }
-  }, [readOnly, settings.editorKeyMap]);
+  }, [readOnly, getKeyMap]);
 
   useEffect(() => {
-      // Prevent these things if we're type === "password"
-      const preventDefault = (_: CodeMirror.Editor, event: Event) => type?.toLowerCase() === 'password' && event.preventDefault();
-      codeMirror.current?.on('copy', preventDefault);
-      codeMirror.current?.on('cut', preventDefault);
-      codeMirror.current?.on('dragstart', preventDefault);
+    // Prevent these things if we're type === "password"
+    const preventDefault = (_: CodeMirror.Editor, event: Event) => type?.toLowerCase() === 'password' && event.preventDefault();
+    codeMirror.current?.on('copy', preventDefault);
+    codeMirror.current?.on('cut', preventDefault);
+    codeMirror.current?.on('dragstart', preventDefault);
 
-      return () => {
-        codeMirror.current?.off('copy', preventDefault);
-        codeMirror.current?.off('cut', preventDefault);
-        codeMirror.current?.off('dragstart', preventDefault);
-      };
+    return () => {
+      codeMirror.current?.off('copy', preventDefault);
+      codeMirror.current?.off('cut', preventDefault);
+      codeMirror.current?.off('dragstart', preventDefault);
+    };
   }, [type]);
 
   useEffect(() => {
@@ -257,29 +270,33 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   }, [onChange]);
 
   useEffect(() => {
-    const unsubscribe = window.main.on('context-menu-command', (_, { key, tag, nunjucksTag }) => {
+    const unsubscribe = window.main.on('nunjucks-context-menu-command', (_, { key, tag, nunjucksTag, needsEnterprisePlan, displayName }) => {
       if (id === key) {
+        if (needsEnterprisePlan && !isEnterprisePlan) {
+          // show modal if current user is not an enteprise user and the command is an enterprise feature
+          showModal(UpgradeModal, {
+            newPlan: 'enterprise',
+            featureName: displayName,
+            isOwner,
+          });
+          return;
+        }
         if (nunjucksTag) {
           const { type, template, range } = nunjucksTag as nunjucksTagContextMenuOptions;
-          switch (type) {
-            case 'edit':
-              showModal(NunjucksModal, {
-                template: template,
-                onDone: (template: string | null) => {
-                  const { from, to } = range;
-                  codeMirror.current?.replaceRange(template!, from, to);
-                },
-              });
-              return;
-
-            case 'delete':
-              const { from, to } = range;
-              codeMirror.current?.replaceRange('', from, to);
-              return;
-
-            default:
-              return;
-          };
+          if (type === 'edit') {
+            showModal(NunjucksModal, {
+              template: template,
+              onDone: (template: string | null) => {
+                const { from, to } = range;
+                codeMirror.current?.replaceRange(template!, from, to);
+              },
+            });
+          } else if (type === 'delete') {
+            const { from, to } = range;
+            codeMirror.current?.replaceRange('', from, to);
+          } else {
+            return
+          }
         } else {
           codeMirror.current?.replaceSelection(tag);
         }
@@ -288,7 +305,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     return () => {
       unsubscribe();
     };
-  }, [id]);
+  }, [id, isEnterprisePlan, isOwner]);
 
   useImperativeHandle(ref, () => ({
     selectAll: () => codeMirror.current?.setSelection({ line: 0, ch: 0 }, { line: codeMirror.current.lineCount(), ch: 0 }),
@@ -320,10 +337,10 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
           const nunjucksTag = extractNunjucksTagFromCoords({ left: clientX, top: clientY }, codeMirror);
           if (nunjucksTag) {
             // show context menu for nunjucks tag
-            window.main.showContextMenu({ key: id, nunjucksTag });
+            window.main.showNunjucksContextMenu({ key: id, nunjucksTag });
           }
         } else {
-          window.main.showContextMenu({ key: id });
+          window.main.showNunjucksContextMenu({ key: id });
         }
       }}
     >

@@ -50,12 +50,14 @@ import { ACTIVITY_SPEC, DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import { debounce, isNotNullOrUndefined } from '../../common/misc';
 import type { ApiSpec } from '../../models/api-spec';
 import * as models from '../../models/index';
+import { isGitProject } from '../../models/project';
 import { invariant } from '../../utils/invariant';
 import {
   CodeEditor,
   type CodeEditorHandle,
 } from '../components/codemirror/code-editor';
 import { DesignEmptyState } from '../components/design-empty-state';
+import { DocumentTab } from '../components/document-tab';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { EnvironmentPicker } from '../components/environment-picker';
@@ -65,13 +67,16 @@ import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { CertificatesModal } from '../components/modals/workspace-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
+import { OrganizationTabList } from '../components/tabs/tab-list';
 import { formatMethodName } from '../components/tags/method-tag';
+import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useAIContext } from '../context/app/ai-context';
+import { useInsomniaTab } from '../hooks/use-insomnia-tab';
 import {
   useActiveApiSpecSyncVCSVersion,
   useGitVCSVersion,
 } from '../hooks/use-vcs-version';
-import { SpectralRunner } from '../worker/spectral-run';
+import { SpectralRunner } from '../worker/spectral-handler';
 import { useRootLoaderData } from './root';
 import type { WorkspaceLoaderData } from './workspace';
 
@@ -84,10 +89,16 @@ interface LoaderData {
 export const loader: LoaderFunction = async ({
   params,
 }): Promise<LoaderData> => {
-  const { workspaceId } = params;
+  const { projectId, workspaceId } = params;
+  invariant(projectId, 'Project ID is required');
   invariant(workspaceId, 'Workspace ID is required');
+
+  const project = await models.project.getById(projectId);
+  invariant(project, 'Project not found');
+
   const apiSpec = await models.apiSpec.getByParentId(workspaceId);
   invariant(apiSpec, 'API spec not found');
+
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
 
@@ -96,9 +107,11 @@ export const loader: LoaderFunction = async ({
   let rulesetPath = '';
 
   try {
+    const gitRepositoryId = isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
+
     const spectralRulesetPath = path.join(
       process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-      `version-control/git/${workspaceMeta?.gitRepositoryId}/other/.spectral.yaml`
+      `version-control/git/${gitRepositoryId}/other/.spectral.yaml`
     );
 
     if ((await stat(spectralRulesetPath)).isFile()) {
@@ -189,6 +202,7 @@ const Design: FC = () => {
     activeCookieJar,
     caCertificate,
     clientCertificates,
+    activeWorkspace,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const { settings } = useRootLoaderData();
 
@@ -254,7 +268,7 @@ const Design: FC = () => {
       } catch (e) {
         // return a rejected promise so that codemirror do nothing
         return Promise.reject(e);
-      };
+      }
     });
   };
 
@@ -433,7 +447,7 @@ const Design: FC = () => {
     if (settings.forceVerticalLayout) {
       setDirection('vertical');
       return () => { };
-    } else {
+    }
       // Listen on media query changes
       const mediaQuery = window.matchMedia('(max-width: 880px)');
       setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
@@ -447,52 +461,64 @@ const Design: FC = () => {
       return () => {
         mediaQuery.removeEventListener('change', handleChange);
       };
-    }
+
   }, [settings.forceVerticalLayout, direction]);
+
+  useInsomniaTab({
+    organizationId,
+    projectId,
+    workspaceId,
+    activeWorkspace,
+    activeProject,
+  });
 
   return (
     <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
       <Panel id="sidebar" className='sidebar theme--sidebar' defaultSize={DEFAULT_SIDEBAR_SIZE} maxSize={40} minSize={10} collapsible>
         <div className='flex h-full flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden'>
-          <div className="flex flex-col items-start">
-            <Breadcrumbs className='flex h-[--line-height-sm] list-none items-center m-0 gap-2 border-solid border-[--hl-md] border-b p-[--padding-sm] font-bold w-full'>
-              <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
-                <NavLink
-                  data-testid="project"
-                  className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                  to={`/organization/${organizationId}/project/${activeProject._id}`}
-                >
-                  <Icon className='text-xs' icon="chevron-left" />
-                </NavLink>
-                <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
-              </Breadcrumb>
-              <Breadcrumb className="flex truncate select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
-                <WorkspaceDropdown />
-              </Breadcrumb>
-            </Breadcrumbs>
-            <div className='flex flex-col items-start gap-2 p-[--padding-sm] w-full'>
+          <Breadcrumbs className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] px-[--padding-sm] list-none items-center m-0 gap-2 font-bold w-full`}>
+            <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
+              <NavLink
+                data-testid="project"
+                className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                to={`/organization/${organizationId}/project/${activeProject._id}`}
+              >
+                <Icon className='text-xs' icon="chevron-left" />
+              </NavLink>
+              <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
+            </Breadcrumb>
+            <Breadcrumb className="flex truncate select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
+              <WorkspaceDropdown />
+            </Breadcrumb>
+          </Breadcrumbs>
+          <DocumentTab
+            organizationId={organizationId}
+            projectId={projectId}
+            workspaceId={workspaceId}
+            className='border-solid border-b border-[--hl-sm]'
+          />
+          <div className='flex flex-col items-start gap-2 p-[--padding-sm] w-full'>
             <div className="flex w-full items-center gap-2 justify-between">
-                <EnvironmentPicker
-                  isOpen={isEnvironmentPickerOpen}
-                  onOpenChange={setIsEnvironmentPickerOpen}
-                  onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
-                />
-              </div>
+              <EnvironmentPicker
+                isOpen={isEnvironmentPickerOpen}
+                onOpenChange={setIsEnvironmentPickerOpen}
+                onOpenEnvironmentSettingsModal={() => setEnvironmentModalOpen(true)}
+              />
+            </div>
             <Button
               onPress={() => setIsCookieModalOpen(true)}
               className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             >
-                <Icon icon="cookie-bite" className='w-5 flex-shrink-0' />
-                <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies {activeCookieJar.cookies.length > 0 ? `(${activeCookieJar.cookies.length})` : ''}</span>
+              <Icon icon="cookie-bite" className='w-5 flex-shrink-0' />
+              <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies {activeCookieJar.cookies.length > 0 ? `(${activeCookieJar.cookies.length})` : ''}</span>
             </Button>
             <Button
               onPress={() => setCertificatesModalOpen(true)}
               className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             >
-                <Icon icon="file-contract" className='w-5 flex-shrink-0' />
-                <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length > 0 ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})` : ''}</span>
+              <Icon icon="file-contract" className='w-5 flex-shrink-0' />
+              <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length > 0 ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})` : ''}</span>
             </Button>
-          </div>
           </div>
           <div className="flex flex-shrink-0 items-center gap-2 p-[--padding-sm]">
             <Heading className="text-[--hl] uppercase">Spec</Heading>
@@ -974,7 +1000,7 @@ const Design: FC = () => {
             />
           )}
           {isCookieModalOpen && (
-            <CookiesModal onHide={() => setIsCookieModalOpen(false)} />
+            <CookiesModal setIsOpen={setIsCookieModalOpen} />
           )}
           {isCertificatesModalOpen && (
             <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />
@@ -982,7 +1008,8 @@ const Design: FC = () => {
         </div>
       </Panel>
       <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
-      <Panel>
+      <Panel className='flex flex-col'>
+        <OrganizationTabList />
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
           <Panel id="pane-one" minSize={10} className='pane-one theme--pane'>
             <div className="flex flex-col h-full w-full overflow-hidden divide-y divide-solid divide-[--hl-md]">

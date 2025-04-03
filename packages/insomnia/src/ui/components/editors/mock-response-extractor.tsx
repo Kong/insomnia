@@ -161,7 +161,7 @@ If you want to create a self-hosted mock server route from a request response in
                         message: `Path "${name}" and method must be unique. Please enter a different name.`,
                       });
                       return;
-                    };
+                    }
                     // auth mechanism is too sensitive to allow content length checks
                     const headersWithoutContentLength: ResponseHeader[] = activeResponse.headers.filter(h => h.name.toLowerCase() !== 'content-length');
                     fetcher.submit(

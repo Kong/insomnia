@@ -135,6 +135,7 @@ export const MockResponsePane = () => {
             error={activeResponse.error}
             filter={''}
             filterHistory={[]}
+            bodyBuffer={activeResponse.bodyBuffer}
             getBody={() => models.response.getBodyBuffer(activeResponse)}
             previewMode={previewMode}
             responseId={activeResponse._id}

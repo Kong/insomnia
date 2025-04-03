@@ -8,7 +8,7 @@ import { Cookie, type CookieOptions } from './cookies';
 import { CookieList } from './cookies';
 import { Header, type HeaderDefinition, HeaderList } from './headers';
 import { Property, unsupportedError } from './properties';
-import { Request } from './request';
+import { calculateHeadersSize, Request } from './request';
 
 export interface ResponseOptions {
     code: number;
@@ -20,6 +20,7 @@ export interface ResponseOptions {
     stream?: Buffer | ArrayBuffer;
     responseTime: number;
     originalRequest: Request;
+    bytesRead?: number; // this is from Insomnia for returning response size() directly
 }
 
 export interface ResponseContentInfo {
@@ -44,6 +45,8 @@ export class Response extends Property {
     status: string;
     stream?: Buffer | ArrayBuffer;
 
+    private bytesRead: number; //
+
     constructor(options: ResponseOptions) {
         super();
 
@@ -63,10 +66,12 @@ export class Response extends Property {
         this.stream = options.stream;
         const detectedStatus = options.reason || RESPONSE_CODE_REASONS[options.code];
         if (!detectedStatus) {
-            throw Error('Response constructor: reason or code field must be set in the options');
+            throw Error(`Response constructor: reason or code field must be set in the options(reason: ${options.reason}, code:${options.code})`);
         } else {
             this.status = detectedStatus;
         }
+
+        this.bytesRead = options.bytesRead || 0;
     }
 
     // TODO: the accurate type of the response should be given
@@ -173,21 +178,21 @@ export class Response extends Property {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     jsonp(_reviver?: (key: string, value: any) => any, _strict?: boolean) {
-        throw unsupportedError('jsonp');
+        throw unsupportedError('jsonp()');
     }
 
     reason() {
         return this.status;
     }
 
-    size(): number {
-        try {
-            const contentLength = this.headers.get('Content-Length');
-            // TODO: improve this by manual counting
-            return contentLength == null ? -1 : parseInt(contentLength.valueOf());
-        } catch (e) {
-            throw Error('size: ${e}');
-        }
+    size() {
+        const headerSize = calculateHeadersSize(this.headers);
+        return {
+            body: this.bytesRead,
+            header: headerSize,
+            total: this.bytesRead + headerSize,
+            source: 'COMPUTED',
+        };
     }
 
     text() {
@@ -269,7 +274,7 @@ export function toScriptResponse(
     responseBody: string,
 ): Response | undefined {
     if ('error' in partialInsoResponse) {
-    // it is sendCurlAndWriteTimelineError and basically doesn't contain anything useful
+        // it is sendCurlAndWriteTimelineError and basically doesn't contain anything useful
         return undefined;
     }
     const partialResponse = partialInsoResponse as sendCurlAndWriteTimelineResponse;
@@ -293,7 +298,7 @@ export function toScriptResponse(
                 {},
             ).map(
                 setCookieHeader => Cookie.parse(setCookieHeader.value)
-        )
+            )
         : [];
 
     const responseOption = {
@@ -305,6 +310,7 @@ export function toScriptResponse(
         // stream is duplicated with body
         responseTime: partialResponse.elapsedTime,
         originalRequest,
+        bytesRead: partialResponse.bytesRead,
     };
 
     return new Response(responseOption);

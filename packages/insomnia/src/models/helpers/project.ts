@@ -77,4 +77,4 @@ export async function updateLocalProjectToRemote({
   return {
     error: null,
   };
-};
+}

@@ -1,24 +1,14 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button as ComboButton, ComboBox, Input, ListBox, ListBoxItem, Popover } from 'react-aria-components';
 
 // import { useFetcher, useParams } from 'react-router-dom';
-import { getAppWebsiteBaseURL, getGitHubRestApiUrl } from '../../../../common/constants';
+import { getAppWebsiteBaseURL } from '../../../../common/constants';
+import { isGitHubAppUserToken } from '../../github-app-config-link';
 import { Icon } from '../../icon';
 import { Button } from '../../themed-button';
+import { showError } from '..';
 
-// fragment of what we receive from the GitHub API
-interface GitHubRepository {
-  id: string;
-  full_name: string;
-  clone_url: string;
-}
-
-const GITHUB_USER_REPOS_URL = `${getGitHubRestApiUrl()}/user/repos`;
-
-function isGitHubAppUserToken(token: string) {
-  // old oauth tokens start with 'gho_' and app user tokens start with 'ghu_'
-  return token.startsWith('ghu_');
-}
+type GitHubRepository = Awaited<ReturnType<typeof window.main.git.getGitHubRepositories>>['repos'][number];
 
 export const GitHubRepositorySelect = (
   { uri, token }: {
@@ -28,61 +18,42 @@ export const GitHubRepositorySelect = (
   const [loading, setLoading] = useState(false);
   const [repositories, setRepositories] = useState<GitHubRepository[]>([]);
   const [selectedRepository, setSelectedRepository] = useState<GitHubRepository | null>(null);
+  const [cannotFindRepository, setCannotFindRepository] = useState(false);
 
-  // this method assumes that GitHub will not change how it paginates this endpoint
-  const fetchRepositories = useCallback(async (url: string = `${GITHUB_USER_REPOS_URL}?per_page=100`) => {
-    try {
-      const opts = {
-        headers: {
-          Authorization: `token ${token}`,
-        },
-      };
-      const response = await fetch(url, opts);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch repositories');
-      }
-
-      const data = await response.json();
-      setRepositories(repos => ([...repos, ...data]));
-      const link = response.headers.get('link');
-      if (link && link.includes('rel="last"')) {
-        const last = link.match(/<([^>]+)>; rel="last"/)?.[1];
-        if (last) {
-          const lastUrl = new URL(last);
-          const lastPage = lastUrl.searchParams.get('page');
-          if (lastPage) {
-            const pages = Number(lastPage);
-            const pageList = await Promise.all(Array.from({ length: pages - 1 }, (_, i) => fetch(`${GITHUB_USER_REPOS_URL}?per_page=100&page=${i + 2}`, opts)));
-            for (const page of pageList) {
-              const pageData = await page.json();
-              setRepositories(repos => ([...repos, ...pageData]));
-              setLoading(false);
-            }
-            return;
-          }
-        }
-      }
-      if (link && link.includes('rel="next"')) {
-        const next = link.match(/<([^>]+)>; rel="next"/)?.[1];
-        fetchRepositories(next);
-        return;
-      }
-      setLoading(false);
-    } catch (err) {
-      setLoading(false);
+  const getRepositories = async () => {
+    setLoading(true);
+    setRepositories([]);
+    const { repos, errors } = await window.main.git.getGitHubRepositories({});
+    if (errors.length) {
+      showError({
+        title: 'Error fetching repositories',
+        message: errors.join('\n'),
+      });
     }
-  }, [token]);
+    setRepositories(repos);
+    setLoading(false);
+  };
 
   useEffect(() => {
     if (!token || uri) {
       return;
     }
+    getRepositories();
+  }, [token, uri]);
 
-    setLoading(true);
-
-    fetchRepositories();
-  }, [token, uri, fetchRepositories]);
+  useEffect(() => {
+    if (!uri) {
+      setCannotFindRepository(false);
+      return;
+    }
+    if ((!selectedRepository) && token && isGitHubAppUserToken(token)) {
+      (async function getRepository() {
+        const { repo, errors, notFound } = await window.main.git.getGitHubRepository({ uri });
+        setCannotFindRepository(notFound);
+        setSelectedRepository(errors.length ? null : repo!);
+      })();
+    }
+  }, [selectedRepository, token, uri]);
 
   return (
     <>
@@ -105,9 +76,9 @@ export const GitHubRepositorySelect = (
               <Icon icon="caret-down" className='w-5 flex-shrink-0' />
             </ComboButton>
           </div>
-          <Popover className="min-w-max border grid grid-flow-col overflow-hidden divide-x divide-solid divide-[--hl-md] select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] rounded-md focus:outline-none" placement='bottom start' offset={8}>
+          <Popover className="min-w-max border grid grid-flow-col overflow-y-auto divide-x divide-solid divide-[--hl-md] select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] rounded-md focus:outline-none" placement='bottom start' offset={8}>
             <ListBox<{ id: string; name: string }>
-              className="select-none text-sm min-w-max p-2 flex flex-col overflow-y-auto focus:outline-none"
+              className="select-none text-sm min-w-max p-2 flex flex-col focus:outline-none"
             >
               {item => (
                 <ListBoxItem
@@ -126,17 +97,20 @@ export const GitHubRepositorySelect = (
           disabled={loading}
           onClick={() => {
             setLoading(true);
-            setRepositories([]);
-            fetchRepositories();
+            getRepositories();
           }}
         >
           <Icon icon="refresh" />
         </Button>
       </div>
-        {isGitHubAppUserToken(token) && <div className="flex gap-1 text-sm">
-          Can't find a repository?
-          <a className="underline text-purple-500" href={`${getAppWebsiteBaseURL()}/oauth/github-app`}>Configure the App <i className="fa-solid fa-up-right-from-square" /></a>
-        </div>}</>}
+        {isGitHubAppUserToken(token) &&
+          <div className="flex gap-1 text-sm">
+            Can't find a repository?
+            <a className="underline text-purple-500" href={`${getAppWebsiteBaseURL()}/oauth/github-app`}>Configure the App <i className="fa-solid fa-up-right-from-square" /></a>
+          </div>}
+      </>}
+      {cannotFindRepository && <div className="text-sm text-red-500"><Icon icon="warning" /> Repository information could not be retrieved. Please <code>Reset</code> and select a different repository.</div>}
+      {selectedRepository !== null && !selectedRepository.permissions.push && <div className="text-sm text-orange-500 mt-2"><Icon icon="warning" /> You do not have write access to this repository</div>}
     </>
   );
 };

@@ -2,6 +2,14 @@ export const parseGrpcUrl = (grpcUrl: string): { url: string; enableTls: boolean
   if (!grpcUrl) {
     return { url: '', enableTls: false, path: '' };
   }
+
+  if (grpcUrl.startsWith('unix:')) {
+    return {
+      url: grpcUrl,
+      enableTls: false,
+      path: '',
+    };
+  }
   const url = new URL((grpcUrl.includes('://') ? '' : 'grpc://') + grpcUrl.toLowerCase());
   return {
     url: url.host,

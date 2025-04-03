@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia-inso",
-  "version": "10.3.1",
+  "version": "11.0.2",
   "homepage": "https://insomnia.rest",
   "description": "A CLI for Insomnia - The Collaborative API Design Tool",
   "author": "Kong <office@konghq.com>",
@@ -29,7 +29,7 @@
     "build:production": "cross-env NODE_ENV=production esr esbuild.ts",
     "start": "ESBUILD_WATCH=true esr esbuild.ts",
     "prepackage": "npm run build:production && rm -rf binaries/inso",
-    "package": "npx -y @yao-pkg/pkg@5.11.5 . --output binaries/inso --targets host",
+    "package": "npx -y @yao-pkg/pkg@6.3.2 . --output binaries/inso --targets host",
     "postpackage": "node src/scripts/verify-pkg.js",
     "artifacts": "esr src/scripts/artifacts.ts"
   },
@@ -37,7 +37,8 @@
     "cross-env": "^7.0.3",
     "esbuild": "^0.24.0",
     "esbuild-runner": "^2.2.2",
-    "vitest": "^2.0.4"
+    "vitest": "^2.0.4",
+    "shellwords": "^1.0.1"
   },
   "dependencies": {
     "@seald-io/nedb": "^4.0.4",

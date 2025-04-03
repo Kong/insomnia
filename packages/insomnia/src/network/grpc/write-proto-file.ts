@@ -82,7 +82,7 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
         .slice(1), protoFile.name),
       dirs: treeRootDirs,
     };
-  } else {
+  }
     // Write single file
     // Create temp folder
     const rootDir = path.join(os.tmpdir(), 'insomnia-grpc');
@@ -101,5 +101,5 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
     // Write file
     await fs.promises.writeFile(fullPath, protoFile.protoText);
     return result;
-  }
+
 };

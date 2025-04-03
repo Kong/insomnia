@@ -1,12 +1,11 @@
-import 'json-diff-kit/dist/viewer.css';
-
-import { Differ, Viewer } from 'json-diff-kit';
 import React, { useEffect, useState } from 'react';
 import { Button, Dialog, GridList, GridListItem, Heading, Label, Modal, ModalOverlay, TextArea, TextField, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
+import { stringify } from 'yaml';
 
 import { all } from '../../../models';
 import type { StageEntry, Status, StatusCandidate } from '../../../sync/types';
+import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 
 interface Props {
@@ -16,30 +15,58 @@ interface Props {
   onClose: () => void;
 }
 
-const differ = new Differ({
-  detectCircular: true,
-  maxDepth: Infinity,
-  showModifications: true,
-  arrayDiffMethod: 'lcs',
-});
+function getDiff(previewDiffItem?: StageEntry) {
+  let before = '{}';
+  let after = '{}';
 
-function getDiff(previewDiffItem: StageEntry) {
-  let previousContent = null;
-  let content = null;
+  if (previewDiffItem && 'previousBlobContent' in previewDiffItem && previewDiffItem.previousBlobContent) {
+    if (previewDiffItem.previousBlobContent === 'null') {
+      before = '';
+    } else {
+      before = previewDiffItem.previousBlobContent || '{}';
+    }
+  }
 
-  try {
-    previousContent = 'previousBlobContent' in previewDiffItem && previewDiffItem.previousBlobContent ? JSON.parse(previewDiffItem.previousBlobContent) : null;
-  } catch (err) {
-    console.error('Failed to parse previous blob content', err);
+  if (previewDiffItem && 'blobContent' in previewDiffItem && previewDiffItem.blobContent) {
+    if (previewDiffItem.blobContent === 'null') {
+      after = '';
+    } else {
+      after = previewDiffItem.blobContent || '{}';
+    }
   }
 
   try {
-    content = 'blobContent' in previewDiffItem && previewDiffItem.blobContent ? JSON.parse(previewDiffItem.blobContent) : null;
-  } catch (err) {
-    console.error('Failed to parse blob content', err);
+    before = stringify(JSON.parse(before));
+  } catch (e) {
+    console.warn('Failed to parse before JSON', e);
   }
 
-  return differ.diff(previousContent, content);
+  try {
+    after = stringify(JSON.parse(after));
+  } catch (e) {
+    console.warn('Failed to parse after JSON', e);
+  }
+
+  return {
+    before,
+    after,
+  };
+}
+
+function getPreviewItemName(previewDiffItem?: StageEntry & { document?: { type: string } }) {
+  if (!previewDiffItem) {
+    return 'Diff view';
+  }
+
+  if ('name' in previewDiffItem && previewDiffItem.name) {
+    return previewDiffItem.name;
+  }
+
+  if ('document' in previewDiffItem && previewDiffItem.document && 'type' in previewDiffItem.document) {
+    return previewDiffItem.document?.type;
+  }
+
+  return 'Diff view';
 }
 
 function getModelTypeById(id: string) {
@@ -60,12 +87,12 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
     ...entry,
     document: syncItems.find(item => item.key === key)?.document || 'deleted' in entry ? { type: getModelTypeById(key) } : undefined,
     id: `staged-${key}`,
-  }));;
+  }));
   const unstagedChanges = Object.entries(status.unstaged).map(([key, entry]) => ({
     ...entry,
     document: syncItems.find(item => item.key === key)?.document || 'deleted' in entry ? { type: getModelTypeById(key) } : undefined,
     id: `unstaged-${key}`,
-  }));;
+  }));
 
   const stageChangesFetcher = useFetcher();
 
@@ -106,6 +133,8 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
   const [selectedItemId, setSelectedItemId] = useState<string>('');
 
   const previewDiffItem = allChanges.find(item => item.id === selectedItemId);
+  const previewDiffItemName = getPreviewItemName(previewDiffItem);
+  const diff = getDiff(previewDiffItem);
 
   return (
     <ModalOverlay
@@ -310,18 +339,13 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                 {previewDiffItem ? <div className='p-2 pb-0 flex flex-col gap-2 h-full overflow-y-auto'>
                   <Heading className='font-bold flex items-center gap-2'>
                     <Icon icon="code-compare" />
-                    {previewDiffItem.name || ('document' in previewDiffItem && previewDiffItem.document && 'type' in previewDiffItem.document ? previewDiffItem.document?.type : '')}
+                    {previewDiffItemName}
                   </Heading>
                   {previewDiffItem && (
                     <div
                       className='bg-[--hl-xs] rounded-sm p-2 flex-1 overflow-y-auto text-[--color-font]'
                     >
-                      <Viewer
-                        diff={getDiff(previewDiffItem)}
-                        hideUnchangedLines
-                        highlightInlineDiff
-                        className='diff-viewer'
-                      />
+                      <DiffEditor original={diff.before} modified={diff.after} />
                     </div>
                   )}
                 </div> : <div className='p-2 h-full flex flex-col gap-4 items-center justify-center'>

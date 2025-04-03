@@ -1,50 +1,10 @@
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
-import _ from 'lodash';
 
-import type { DisplayName, PluginArgumentEnumOption, PluginTemplateTagActionContext } from './extensions';
+import { userSession } from '../models';
+import { decryptSecretValue, vaultEnvironmentMaskValue } from '../models/environment';
+import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';
+import { decryptVaultKeyFromSession } from '../utils/vault';
 import objectPath from './third_party/objectPath';
-
-export interface NunjucksParsedTagArg {
-  type: 'string' | 'number' | 'boolean' | 'variable' | 'expression' | 'enum' | 'file' | 'model';
-  encoding?: 'base64';
-  value?: string | number | boolean;
-  defaultValue?: string | number | boolean;
-  forceVariable?: boolean;
-  placeholder?: string;
-  help?: string;
-  displayName?: DisplayName;
-  quotedBy?: '"' | "'";
-  validate?: (value: any) => string;
-  hide?: (arg0: NunjucksParsedTagArg[]) => boolean;
-  model?: string;
-  options?: PluginArgumentEnumOption[];
-  itemTypes?: ('file' | 'directory')[];
-  extensions?: string[];
-  description?: string;
-}
-
-export interface NunjucksActionTag {
-  name: string;
-  icon?: string;
-  run: (context: PluginTemplateTagActionContext) => Promise<void>;
-}
-
-export interface NunjucksParsedTag {
-  name: string;
-  args: NunjucksParsedTagArg[];
-  actions?: NunjucksActionTag[];
-  rawValue?: string;
-  displayName?: string;
-  description?: string;
-  disablePreview?: (arg0: NunjucksParsedTagArg[]) => boolean;
-}
-
-export type NunjucksTagContextMenuAction = 'edit' | 'delete';
-
-interface Key {
-  name: string;
-  value: any;
-}
 
 /**
  * Get list of paths to all primitive types in nested object
@@ -55,8 +15,8 @@ interface Key {
 export function getKeys(
   obj: any,
   prefix = '',
-): Key[] {
-  let allKeys: Key[] = [];
+): { name: string; value: any }[] {
+  let allKeys: { name: string; value: any }[] = [];
   const typeOfObj = Object.prototype.toString.call(obj);
 
   if (typeOfObj === '[object Array]') {
@@ -224,28 +184,22 @@ export function unTokenizeTag(tagData: NunjucksParsedTag) {
 /** Get the default Nunjucks string for an extension */
 export function getDefaultFill(name: string, args: NunjucksParsedTagArg[]) {
   const stringArgs: string[] = (args || []).map(argDefinition => {
-    switch (argDefinition.type) {
-      case 'enum':
-        const { defaultValue, options } = argDefinition;
-        const fallback = options && options.length ? options[0].value : '';
-        const value = defaultValue !== undefined ? String(defaultValue) : String(fallback);
-        return `'${value}'`;
-
-      case 'number':
-        // @ts-expect-error -- TSCONVERSION
-        return `${parseFloat(argDefinition.defaultValue) || 0}`;
-
-      case 'boolean':
-        return argDefinition.defaultValue ? 'true' : 'false';
-
-      case 'string':
-      case 'file':
-      case 'model':
-        return `'${(argDefinition.defaultValue as any) || ''}'`;
-
-      default:
-        return "''";
+    if (argDefinition.type === 'enum') {
+      const { defaultValue, options } = argDefinition;
+      const fallback = options && options.length ? options[0].value : '';
+      const value = defaultValue !== undefined ? String(defaultValue) : String(fallback);
+      return `'${value}'`;
     }
+    if (argDefinition.type === 'number') {
+      return `${parseFloat(argDefinition.defaultValue + '') || 0}`;
+    }
+    if (argDefinition.type === 'boolean') {
+      return argDefinition.defaultValue ? 'true' : 'false';
+    }
+    if (argDefinition.type === 'string' || argDefinition.type === 'file' || argDefinition.type === 'model') {
+      return `'${(argDefinition.defaultValue as any) || ''}'`;
+    }
+    return "''";
   });
   return `${name} ${stringArgs.join(', ')}`;
 }
@@ -281,24 +235,37 @@ export function decodeEncoding<T>(value: T) {
   return value;
 }
 
-// because nunjucks only report the first error, we need to extract all missing variables that are not present in the context
-// for example, if the text is `{{ a }} {{ b }}`, nunjucks only report `a` is missing, but we need to report both `a` and `b`
-export function extractUndefinedVariableKey(text: string = '', templatingContext: Record<string, any>): string[] {
-  const regexVariable = /{{\s*([^ }]+)\s*}}/g;
-  const missingVariables: string[] = [];
-  let match;
-
-  while ((match = regexVariable.exec(text)) !== null) {
-    let variable = match[1];
-    if (variable.includes('_.')) {
-      variable = variable.split('_.')[1];
-    }
-    // Check if the variable is not present in the context
-    if (_.get(templatingContext, variable) === undefined) {
-      missingVariables.push(variable);
+export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: any, renderPurpose?: RenderPurpose) {
+  /**
+    * Decrypt secrets when renderPurpose is one of the following:
+    * - preview: render the template in variable editor to do the live preview
+    * - send: render the template when sending requests
+    * - script: render the template in pre-request or after-response script
+  */
+  const shouldDecrypt = renderPurpose === 'preview' || renderPurpose === 'send' || renderPurpose === 'script';
+  if (typeof vaultEnvironmentData === 'object') {
+    if (shouldDecrypt) {
+      const { vaultKey, vaultSalt } = await userSession.getOrCreate();
+      const isVaultEnabled = !!vaultSalt;
+      if (isVaultEnabled && vaultKey) {
+        const symmetricKey = await decryptVaultKeyFromSession(vaultKey, true) as JsonWebKey;
+        // decrypt all secert values under vaultEnvironmentPath property in context
+        Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
+          const encryptedValue = vaultEnvironmentData[vaultContextKey];
+          vaultEnvironmentData[vaultContextKey] = decryptSecretValue(encryptedValue, symmetricKey);
+        });
+      } else if (isVaultEnabled && !vaultKey) {
+        // remove all values under vaultEnvironmentPath if no vault key found
+        vaultEnvironmentData = {};
+      }
+    } else {
+      // mask all secert values under vaultEnvironmentPath property in context
+      Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
+        vaultEnvironmentData[vaultContextKey] = vaultEnvironmentMaskValue;
+      });
     }
   }
-  return missingVariables;
+  return vaultEnvironmentData;
 }
 
 export function extractNunjucksTagFromCoords(
@@ -320,10 +287,6 @@ export function extractNunjucksTagFromCoords(
       };
     }
   }
-}
-
-export interface nunjucksTagContextMenuOptions extends Exclude<ReturnType<typeof extractNunjucksTagFromCoords>, void> {
-  type: NunjucksTagContextMenuAction;
 }
 
 export const responseTagRegex = new RegExp('{% *response *.* %}');

@@ -19,7 +19,7 @@ import { Icon } from '../icon';
 
 interface WorkspaceDuplicateModalProps extends ModalProps {
   workspace: Workspace;
-  onHide: Function;
+  onHide: () => void;
 }
 
 export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ workspace, onHide }) => {

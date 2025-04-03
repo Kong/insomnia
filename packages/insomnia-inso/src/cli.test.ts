@@ -1,7 +1,6 @@
 import { exec, ExecException } from 'child_process';
 import path from 'path';
-import { describe, expect, it } from 'vitest';
-
+import { beforeAll, describe, expect, it } from 'vitest';
 // Tests both bundle and packaged versions of the CLI with the same commands and expectations.
 // Intended to be coarse grained (only checks for success or failure) smoke test to ensure packaging worked as expected.
 
@@ -36,19 +35,19 @@ const shouldReturnSuccessCode = [
 
   // run collection
   // export file
-  '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-smoke-test/fixtures/simple.yaml -e env_2eecf85b7f wrk_0702a5',
+  '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-smoke-test/fixtures/simple.yaml -e production wrk_dc393c',
   // with regex filter
-  '$PWD/packages/insomnia-inso/bin/inso run collection wrk_0702a57d75d44255a8cecd2c5fa87809 -w packages/insomnia-smoke-test/fixtures/simple.yaml -e env_2eecf85b7f --requestNamePattern "example http" wrk_0702a5',
+  '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-smoke-test/fixtures/simple.yaml -e production --requestNamePattern "example http" wrk_dc393c',
   // after-response script and test
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/after-response.yml wrk_616795 --verbose',
   // select request by id
-  '$PWD/packages/insomnia-inso/bin/inso run collection wrk_c992d40 -w packages/insomnia-inso/src/examples/three-requests.yml -i req_3fd28aabbb18447abab1f45e6ee4bdc1 -i req_6063adcdab5b409e9b4f00f47322df4a',
+  '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/three-requests.yml -i req_3fd28aabbb18447abab1f45e6ee4bdc1 -i req_6063adcdab5b409e9b4f00f47322df4a wrk_c992d40',
   // setNextRequest runs the next request then ends
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/set-next-request.yml wrk_cbc89e',
   // multiple --env-var overrides
-  '$PWD/packages/insomnia-inso/bin/inso run collection wrk_c992d40ce76f4a3cb44c5fdb8435cbeb -w packages/insomnia-inso/src/examples/with-missing-env-vars.yml -i req_3fd28aabbb18447abab1f45e6ee4bdc1 --env-var firstkey=first --env-var secondkey=second',
+  '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/with-missing-env-vars.yml -i req_3fd28aabbb18447abab1f45e6ee4bdc1 --env-var firstkey=first --env-var secondkey=second wrk_c992d40',
   // globals file path env overrides
-  '$PWD/packages/insomnia-inso/bin/inso run collection wrk_c992d40ce76f4a3cb44c5fdb8435cbeb -w packages/insomnia-inso/src/examples/with-missing-env-vars.yml -i req_3fd28aabbb18447abab1f45e6ee4bdc1 --globals packages/insomnia-inso/src/examples/global-environment.yml',
+  '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/with-missing-env-vars.yml -i req_3fd28aabbb18447abab1f45e6ee4bdc1 --globals packages/insomnia-inso/src/examples/global-environment.yml wrk_c992d40',
 ];
 
 const shouldReturnErrorCode = [
@@ -59,7 +58,10 @@ const shouldReturnErrorCode = [
   // after-response script and test
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/after-response-failed-test.yml wrk_616795 --verbose',
 ];
-
+beforeAll(async () => {
+  // ensure the test server is running
+  await fetch('http://localhost:4010');
+});
 describe('inso dev bundle', () => {
   describe('exit codes are consistent', () => {
     it.each(shouldReturnSuccessCode)('exit code should be 0: %p', async input => {
@@ -120,7 +122,7 @@ describe('inso dev bundle', () => {
     });
 
     it('iterationData and iterationCount args work', async () => {
-      const input = '$PWD/packages/insomnia-inso/bin/inso run collection wrk_c992d40 -d packages/insomnia-smoke-test/fixtures/files/runner-data.json -w packages/insomnia-inso/src/examples/three-requests.yml -n 2 -i req_3fd28aabbb18447abab1f45e6ee4bdc1 -e env_86e135 --verbose';
+      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -d packages/insomnia-smoke-test/fixtures/files/runner-data.json -w packages/insomnia-inso/src/examples/three-requests.yml -n 2 -i req_3fd28aabbb18447abab1f45e6ee4bdc1 -e env_86e135 wrk_c992d40 --verbose';
       const result = await runCliFromRoot(input);
       if (result.code !== 0) {
         console.log(result);
@@ -130,7 +132,7 @@ describe('inso dev bundle', () => {
     });
 
     it('send request with client cert and key', async () => {
-      const input = '$PWD/packages/insomnia-inso/bin/inso run collection wrk_0b96eff84c1c4eaa9c6e67ad74bbc85b -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withCertAndCA" --verbose "Insomnia Designer"';
+      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withCertAndCA" --verbose "Insomnia Designer" wrk_0b96eff';
       const result = await runCliFromRoot(input);
       if (result.code !== 0) {
         console.log(result);
@@ -140,13 +142,13 @@ describe('inso dev bundle', () => {
     });
 
     it('send request with settings enabled (by testing followRedirects)', async () => {
-      const input = '$PWD/packages/insomnia-inso/bin/inso run collection wrk_0b96eff84c1c4eaa9c6e67ad74bbc85b -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withSettings" --verbose "Insomnia Designer"';
+      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withSettings" --verbose "Insomnia Designer" wrk_0b96eff';
       const result = await runCliFromRoot(input);
       expect(result.stdout).not.toContain("Issue another request to this URL: 'https://insomnia.rest/'");
     });
 
     it('run collection: run requests in specified order', async () => {
-      const input = '$PWD/packages/insomnia-inso/bin/inso run collection wrk_c992d40 -w packages/insomnia-inso/src/examples/three-requests.yml -i req_6063adcdab5b409e9b4f00f47322df4a -i req_3fd28aabbb18447abab1f45e6ee4bdc1 -e env_86e135 --verbose';
+      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/three-requests.yml -i req_6063adcdab5b409e9b4f00f47322df4a -i req_3fd28aabbb18447abab1f45e6ee4bdc1 -e env_86e135 wrk_c992d40 --verbose';
       const result = await runCliFromRoot(input);
 
       expect(result.code).toBe(0);

@@ -57,7 +57,7 @@ export function encryptRSAWithJWK(publicKeyJWK: JsonWebKey, plaintext: string) {
 
 export function decryptRSAWithJWK(privateJWK: JsonWebKey, encryptedBlob: string) {
   if (!privateJWK.n || !privateJWK.e || !privateJWK.d || !privateJWK.p ||
-      !privateJWK.q || !privateJWK.dp || !privateJWK.dq || !privateJWK.qi) {
+    !privateJWK.q || !privateJWK.dp || !privateJWK.dq || !privateJWK.qi) {
     throw new Error('Private key is missing parameters');
   }
 
@@ -169,9 +169,9 @@ export function decryptAES(jwkOrKey: string | JsonWebKey, encryptedResult: AESMe
 
   if (decipher.finish()) {
     return decodeURIComponent(decipher.output.toString());
-  } else {
-    throw new Error('Failed to decrypt data');
   }
+  throw new Error('Failed to decrypt data');
+
 }
 
 /**
@@ -200,9 +200,9 @@ export function decryptAESToBuffer(jwkOrKey: string | JsonWebKey, encryptedResul
   if (decipher.finish()) {
     // @ts-expect-error -- TSCONVERSION needs to be converted to string
     return Buffer.from(forge.util.bytesToHex(decipher.output), 'hex');
-  } else {
-    throw new Error('Failed to decrypt data');
   }
+  throw new Error('Failed to decrypt data');
+
 }
 
 /**
@@ -224,17 +224,17 @@ export async function generateAES256Key() {
       ['encrypt', 'decrypt'],
     );
     return subtle.exportKey('jwk', key);
-  } else {
-    console.log('[crypt] Using Fallback Forge AES Key Generation');
-    const key = forge.util.bytesToHex(forge.random.getBytesSync(32));
-    return {
-      kty: 'oct',
-      alg: 'A256GCM',
-      ext: true,
-      key_ops: ['encrypt', 'decrypt'],
-      k: _hexToB64Url(key),
-    };
   }
+  console.log('[crypt] Using Fallback Forge AES Key Generation');
+  const key = forge.util.bytesToHex(forge.random.getBytesSync(32));
+  return {
+    kty: 'oct',
+    alg: 'A256GCM',
+    ext: true,
+    key_ops: ['encrypt', 'decrypt'],
+    k: _hexToB64Url(key),
+  };
+
 }
 
 /**
@@ -265,38 +265,38 @@ export async function generateKeyPairJWK() {
       publicKey: await subtle.exportKey('jwk', pair.publicKey),
       privateKey: await subtle.exportKey('jwk', pair.privateKey),
     };
-  } else {
-    console.log('[crypt] Using Forge RSA Generation');
-    const pair = forge.pki.rsa.generateKeyPair({
-      bits: 2048,
-      e: 0x10001,
-    });
-    const privateKey = {
-      alg: 'RSA-OAEP-256',
-      kty: 'RSA',
-      key_ops: ['decrypt'],
-      ext: true,
-      d: _bigIntToB64Url(pair.privateKey.d),
-      dp: _bigIntToB64Url(pair.privateKey.dP),
-      dq: _bigIntToB64Url(pair.privateKey.dQ),
-      e: _bigIntToB64Url(pair.privateKey.e),
-      n: _bigIntToB64Url(pair.privateKey.n),
-      p: _bigIntToB64Url(pair.privateKey.p),
-      q: _bigIntToB64Url(pair.privateKey.q),
-      qi: _bigIntToB64Url(pair.privateKey.qInv),
-    };
-    const publicKey = {
-      alg: 'RSA-OAEP-256',
-      kty: 'RSA',
-      key_ops: ['encrypt'],
-      e: _bigIntToB64Url(pair.publicKey.e),
-      n: _bigIntToB64Url(pair.publicKey.n),
-    };
-    return {
-      privateKey,
-      publicKey,
-    };
   }
+  console.log('[crypt] Using Forge RSA Generation');
+  const pair = forge.pki.rsa.generateKeyPair({
+    bits: 2048,
+    e: 0x10001,
+  });
+  const privateKey = {
+    alg: 'RSA-OAEP-256',
+    kty: 'RSA',
+    key_ops: ['decrypt'],
+    ext: true,
+    d: _bigIntToB64Url(pair.privateKey.d),
+    dp: _bigIntToB64Url(pair.privateKey.dP),
+    dq: _bigIntToB64Url(pair.privateKey.dQ),
+    e: _bigIntToB64Url(pair.privateKey.e),
+    n: _bigIntToB64Url(pair.privateKey.n),
+    p: _bigIntToB64Url(pair.privateKey.p),
+    q: _bigIntToB64Url(pair.privateKey.q),
+    qi: _bigIntToB64Url(pair.privateKey.qInv),
+  };
+  const publicKey = {
+    alg: 'RSA-OAEP-256',
+    kty: 'RSA',
+    key_ops: ['encrypt'],
+    e: _bigIntToB64Url(pair.publicKey.e),
+    n: _bigIntToB64Url(pair.publicKey.n),
+  };
+  return {
+    privateKey,
+    publicKey,
+  };
+
 }
 
 // ~~~~~~~~~~~~~~~~ //
@@ -371,15 +371,15 @@ async function _pbkdf2Passphrase(passphrase: string, salt: string) {
     };
     const derivedKeyRaw = await window.crypto.subtle.deriveBits(algo, k, DEFAULT_BYTE_LENGTH * 8);
     return Buffer.from(derivedKeyRaw).toString('hex');
-  } else {
-    console.log('[crypt] Using Forge PBKDF2');
-    const derivedKeyRaw = forge.pkcs5.pbkdf2(
-      passphrase,
-      forge.util.hexToBytes(salt),
-      DEFAULT_PBKDF2_ITERATIONS,
-      DEFAULT_BYTE_LENGTH,
-      forge.md.sha256.create(),
-    );
-    return forge.util.bytesToHex(derivedKeyRaw);
   }
+  console.log('[crypt] Using Forge PBKDF2');
+  const derivedKeyRaw = forge.pkcs5.pbkdf2(
+    passphrase,
+    forge.util.hexToBytes(salt),
+    DEFAULT_PBKDF2_ITERATIONS,
+    DEFAULT_BYTE_LENGTH,
+    forge.md.sha256.create(),
+  );
+  return forge.util.bytesToHex(derivedKeyRaw);
+
 }

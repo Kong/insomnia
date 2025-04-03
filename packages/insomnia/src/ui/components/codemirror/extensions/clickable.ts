@@ -5,10 +5,10 @@ import { decode } from 'html-entities';
 
 import { FLEXIBLE_URL_REGEX } from '../../../../common/constants';
 
-CodeMirror.defineExtension('makeLinksClickable', function(this: CodeMirror.Editor, handleClick: CodeMirrorLinkClickCallback) {
+CodeMirror.defineExtension('makeLinksClickable', function (this: CodeMirror.Editor, handleClick: CodeMirrorLinkClickCallback) {
   // Only add the click mode if we have links to click
   this.addOverlay({
-    token: function(stream: any) {
+    token: function (stream: any) {
       if (stream.match(FLEXIBLE_URL_REGEX, true)) {
         return 'clickable';
       }

@@ -33,7 +33,7 @@ export const AuthToggleRow: FC<Props> = ({
   const patchRequestGroup = useRequestGroupPatcher();
   const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
   const patchRequest = useRequestPatcher();
-  const patcher = Boolean(reqData) ? patchRequest : patchRequestGroup;
+  const patcher = reqData ? patchRequest : patchRequestGroup;
 
   // @ts-expect-error -- garbage abstraction
   const databaseValue = Boolean(authentication[property]);

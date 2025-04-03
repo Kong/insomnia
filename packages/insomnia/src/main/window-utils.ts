@@ -243,7 +243,6 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
     event.preventDefault();
     const { protocol } = new URL(url);
     if (protocol === 'http:' || protocol === 'https:') {
-      // eslint-disable-next-line no-restricted-properties
       shell.openExternal(url);
     }
   });
@@ -272,12 +271,10 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
   });
 
   mainBrowserWindow.on('focus', () => {
-    console.log('[main] window focus');
     mainBrowserWindow.webContents.send('mainWindowFocusChange', true);
   });
 
   mainBrowserWindow.on('blur', () => {
-    console.log('[main] window blur');
     mainBrowserWindow.webContents.send('mainWindowFocusChange', false);
   });
 
@@ -292,7 +289,6 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
       },
       {
         label: `${MNEMONIC_SYM}Changelog`,
-        // eslint-disable-next-line no-restricted-properties
         click: () => shell.openExternal('https://github.com/Kong/insomnia/releases'),
       },
       {
@@ -476,7 +472,6 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
         click: () => {
           const { protocol } = new URL(docsBase);
           if (protocol === 'http:' || protocol === 'https:') {
-            // eslint-disable-next-line no-restricted-properties
             shell.openExternal(docsBase);
           }
         },
@@ -511,14 +506,12 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
       {
         label: 'Show Software Bill of Materials',
         click: () => {
-          // eslint-disable-next-line no-restricted-properties
           shell.openExternal('https://github.com/Kong/insomnia/releases');
         },
       },
       {
         label: 'Show Software License',
         click: () => {
-          // eslint-disable-next-line no-restricted-properties
           shell.openExternal('https://insomnia.rest/license');
         },
       },
@@ -701,7 +694,13 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
     template.push(developerMenu);
   }
 
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+  if (isMac()) {
+    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+  } else {
+    // setMenu only works for Windows and Linux
+    mainBrowserWindow.setMenu(Menu.buildFromTemplate(template));
+  }
+
   return mainBrowserWindow;
 }
 
@@ -800,9 +799,12 @@ export const setZoom = (transformer: (current: number) => number) => () => {
   electronStorage?.setItem('zoomFactor', actual);
 };
 
-function initElectronStorage() {
+export function initElectronStorage() {
   const electronStoragePath = path.join(process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'), 'localStorage');
-  electronStorage = new ElectronStorage(electronStoragePath);
+  if (!electronStorage) {
+    electronStorage = new ElectronStorage(electronStoragePath);
+  }
+  return electronStorage;
 }
 
 export function createWindowsAndReturnMain({ firstLaunch }: { firstLaunch?: boolean } = {}) {

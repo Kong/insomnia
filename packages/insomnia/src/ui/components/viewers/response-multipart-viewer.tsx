@@ -71,12 +71,6 @@ export const ResponseMultipartViewer: FC<Props> = ({
     init();
   }, [bodyBuffer, contentType]);
 
-  const selectPart = useCallback((part: Part) => {
-    setSelectedPart(part);
-  }, []);
-
-  const partBuffer = useCallback(() => selectedPart?.value, [selectedPart]);
-
   const viewHeaders = useCallback(() => {
     if (!selectedPart) {
       return;
@@ -185,7 +179,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
                 <ItemContent
                   icon={selectedPart?.id === part.id ? 'check' : 'empty'}
                   label={part.title}
-                  onClick={() => selectPart(part)}
+                  onClick={() => setSelectedPart(part)}
                 />
               </DropdownItem>
             ))}
@@ -226,7 +220,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
           error={null}
           filter={filter}
           filterHistory={filterHistory}
-          getBody={partBuffer}
+          bodyBuffer={Buffer.from(selectedPart?.value || '')}
           key={`${responseId}::${selectedPart?.id}`}
           previewMode={PREVIEW_MODE_FRIENDLY}
           responseId={`${responseId}[${selectedPart?.id}]`}

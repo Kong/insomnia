@@ -25,7 +25,7 @@ const remote = {
       const req = new EventEmitter();
 
       // @ts-expect-error -- TSCONVERSION appears to be genuine
-      req.end = function() {};
+      req.end = function () {};
 
       return req;
     },

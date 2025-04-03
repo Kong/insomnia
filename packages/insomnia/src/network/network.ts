@@ -4,6 +4,7 @@ import type { ExecutionOption, RequestContext, RequestTestResult } from 'insomni
 import orderedJSON from 'json-order';
 import { join as pathJoin } from 'path';
 
+import { SINGLE_VALUE_HEADERS } from '../common/common-headers';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
 import {
@@ -12,17 +13,16 @@ import {
   getLocationHeader,
   getSetCookieHeaders,
 } from '../common/misc';
-import type { ExtraRenderInfo, RenderedRequest, RenderPurpose, RequestAndContext } from '../common/render';
 import {
   getRenderedRequestAndContext,
-  RENDER_PURPOSE_NO_RENDER,
 } from '../common/render';
+import { ascendingFirstIndexStringSort } from '../common/sorting';
 import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
 import type { CaCertificate } from '../models/ca-certificate';
 import type { ClientCertificate } from '../models/client-certificate';
 import type { Cookie, CookieJar } from '../models/cookie-jar';
-import type { Environment, UserUploadEnvironment } from '../models/environment';
+import { type Environment, EnvironmentType, getKVPairFromData, type UserUploadEnvironment, vaultEnvironmentPath } from '../models/environment';
 import type { MockRoute } from '../models/mock-route';
 import type { MockServer } from '../models/mock-server';
 import { isProject, type Project } from '../models/project';
@@ -33,6 +33,9 @@ import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
+import { RenderError } from '../templating/render-error';
+import type { RenderedRequest, RenderPurpose } from '../templating/types';
+import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
 import { defaultSendActionRuntime, type SendActionRuntime } from '../ui/routes/request';
 import { invariant } from '../utils/invariant';
 import { serializeNDJSON } from '../utils/ndjson';
@@ -63,15 +66,32 @@ export const getOrInheritAuthentication = ({ request, requestGroups }: { request
   // if no auth is specified on request or folders, default to none
   return { type: 'none' };
 };
-export function getOrInheritHeaders({ request, requestGroups }: { request: Pick<BaseRequest, 'headers'>; requestGroups: RequestGroup[] }): RequestHeader[] {
-  // recurse over each parent folder to append headers
-  // in case of duplicate, node-libcurl joins on comma
-  const headers = requestGroups
-    .reverse()
-    .map(({ headers }) => headers || [])
-    .flat();
-  // if parent has foo: bar and child has foo: baz, request will have foo: bar, baz
-  return [...headers, ...request.headers];
+export function getOrInheritHeaders({ request, requestGroups }: { request: Pick<BaseRequest, 'headers'>; requestGroups: Pick<RequestGroup, 'headers'>[] }): RequestHeader[] {
+  const httpHeaders = new Map<string, string>();
+  const originalCaseMap = new Map<string, string>();
+  // parent folders, then child folders, then request
+  const headerContexts = [...requestGroups.reverse(), request];
+  const headers = headerContexts.map(({ headers }) => headers || []).flat();
+  headers.forEach(({ name, value, disabled }) => {
+    if (disabled || !name.trim()) {
+      return;
+    }
+    const normalizedCase = name.toLowerCase();
+    // preserves the casing of the last header with the same name
+    originalCaseMap.set(normalizedCase, name);
+    const isStrictValueHeader = SINGLE_VALUE_HEADERS.includes(normalizedCase);
+    if (isStrictValueHeader) {
+      httpHeaders.set(normalizedCase, value);
+      return;
+    }
+    // appending will join matching header values with a comma
+    if (httpHeaders.has(normalizedCase)) {
+      httpHeaders.set(normalizedCase, `${httpHeaders.get(normalizedCase)}, ${value}`);
+      return;
+    }
+    httpHeaders.set(normalizedCase, value);
+  });
+  return Array.from(httpHeaders.entries()).sort(ascendingFirstIndexStringSort).map(([name, value]) => ({ name: originalCaseMap.get(name)!, value }));
 }
 // (only used for getOAuth2 token) Intended to gather all required database objects and initialize ids
 export const fetchRequestGroupData = async (requestGroupId: string) => {
@@ -125,10 +145,6 @@ export const fetchRequestData = async (requestId: string) => {
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'failed to find workspace');
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-  // check for authentication overrides in parent folders
-  const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
-  request.authentication = getOrInheritAuthentication({ request, requestGroups });
-  request.headers = getOrInheritHeaders({ request, requestGroups });
   // fallback to base environment
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
   const activeEnvironment = activeEnvironmentId && await models.environment.getById(activeEnvironmentId);
@@ -187,7 +203,6 @@ export const tryToExecutePreRequestScript = async (
   iterationCount?: number,
   runtime?: SendActionRuntime,
 ) => {
-
   const requestGroups = ancestors.filter(doc => isRequest(doc) || isRequestGroup(doc)) as RequestGroup[];
   const folderScripts = requestGroups.reverse()
     .filter(group => group?.preRequestScript)
@@ -196,6 +211,11 @@ export const tryToExecutePreRequestScript = async (
       }
       await fn${i}();
   `);
+  const originalRequestGroups = requestGroups
+    .filter(group => isRequestGroup(group));
+  const parentFolders = originalRequestGroups
+    .map(group => ({ id: group._id, name: group.name, environment: group.environment }));
+
   if (folderScripts.length === 0) {
     return {
       request,
@@ -209,6 +229,7 @@ export const tryToExecutePreRequestScript = async (
       requestTestResults: new Array<RequestTestResult>(),
       transientVariables,
       logs: '',
+      parentFolders,
     };
   }
   const joinedScript = [...folderScripts].join('\n');
@@ -231,6 +252,7 @@ export const tryToExecutePreRequestScript = async (
     settings,
     transientVariables,
     runtime,
+    parentFolders,
   });
   if (!mutatedContext || 'error' in mutatedContext) {
     return {
@@ -243,9 +265,10 @@ export const tryToExecutePreRequestScript = async (
       cookieJar,
       globals: activeGlobalEnvironment,
       requestTestResults: new Array<RequestTestResult>(),
+      parentFolders,
     };
   }
-  await savePatchesMadeByScript(mutatedContext, environment, baseEnvironment, activeGlobalEnvironment);
+  await savePatchesMadeByScript(mutatedContext, environment, baseEnvironment, activeGlobalEnvironment, originalRequestGroups);
 
   return {
     request: mutatedContext.request,
@@ -259,6 +282,7 @@ export const tryToExecutePreRequestScript = async (
     userUploadEnvironment: mutatedContext.userUploadEnvironment,
     execution: mutatedContext.execution,
     transientVariables: mutatedContext.transientVariables,
+    parentFolders: mutatedContext.parentFolders,
   };
 };
 
@@ -271,6 +295,7 @@ export async function savePatchesMadeByScript(
   environment: Environment,
   baseEnvironment: Environment,
   activeGlobalEnvironment: Environment | undefined,
+  originalRequestGroups: RequestGroup[],
   responseCookies?: Cookie[],
 ) {
   if (!mutatedContext) {
@@ -288,39 +313,50 @@ export async function savePatchesMadeByScript(
   // when base environment is activated, `mutatedContext.environment` points to it
   const isActiveEnvironmentBase = mutatedContext.environment?._id === baseEnvironment._id;
   const hasEnvironmentAndIsNotBase = mutatedContext.environment && !isActiveEnvironmentBase;
-  if (hasEnvironmentAndIsNotBase) {
+  const updateEnvironment = async (originEnvironment: Environment, mutatedContextEnvironment: Environment) => {
+    const { environmentType } = originEnvironment;
+    const { data, dataPropertyOrder } = mutatedContextEnvironment;
     await models.environment.update(
-      environment,
+      originEnvironment,
       {
-        data: mutatedContext.environment.data,
-        dataPropertyOrder: mutatedContext.environment.dataPropertyOrder,
-      }
+        data, dataPropertyOrder,
+        // also update kvPairData when environment type is table view(kv pair)
+        ...(environmentType === EnvironmentType.KVPAIR && {
+          kvPairData: getKVPairFromData(data, dataPropertyOrder),
+        }),
+      },
     );
+  };
+
+  if (hasEnvironmentAndIsNotBase) {
+    await updateEnvironment(environment, mutatedContext.environment);
   }
   if (mutatedContext.baseEnvironment) {
-    await models.environment.update(
-      baseEnvironment,
-      {
-        data: mutatedContext.baseEnvironment.data,
-        dataPropertyOrder: mutatedContext.baseEnvironment.dataPropertyOrder,
-      }
-    );
+    await updateEnvironment(baseEnvironment, mutatedContext.baseEnvironment);
   }
 
   if (activeGlobalEnvironment && mutatedContext) {
     invariant(mutatedContext.globals, 'globals must be defined when there is selected one');
-    await models.environment.update(
-      activeGlobalEnvironment,
-      {
-        data: mutatedContext.globals.data,
-        dataPropertyOrder: mutatedContext.globals.dataPropertyOrder,
-      }
-    );
+    await updateEnvironment(activeGlobalEnvironment, mutatedContext.globals);
   }
+
+  mutatedContext.parentFolders.forEach(mutatedFolder => {
+    const originalFolder = originalRequestGroups.find(originalFolder => originalFolder._id === mutatedFolder.id);
+    if (originalFolder) {
+      models.requestGroup.update(originalFolder, {
+        environment: mutatedFolder.environment,
+        // also update kvPairData when folder environment type is table view(kv pair)
+        ...(originalFolder.environmentType === EnvironmentType.KVPAIR && {
+          kvPairData: getKVPairFromData(mutatedFolder.environment, originalFolder.environmentPropertyOrder),
+        }),
+      });
+    }
+  });
 }
 
 export const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse) => {
-  const { script,
+  const {
+    script,
     request,
     environment,
     timelinePath,
@@ -338,6 +374,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     execution,
     transientVariables,
     runtime,
+    parentFolders,
   } = context;
   invariant(script, 'script must be provided');
 
@@ -347,6 +384,12 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     .filter(doc => isRequest(doc) || isRequestGroup(doc) || isWorkspace(doc) || isProject(doc))
     .reverse()
     .map(doc => doc.name);
+  let vault = undefined;
+  if (globals && vaultEnvironmentPath in globals.data && settings.enableVaultInScripts) {
+    // decrypt and set vault in insomnia sdk if necessary
+    globals.data[vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(globals.data[vaultEnvironmentPath], 'script');
+    vault = globals.data[vaultEnvironmentPath];
+  }
 
   try {
     const fn = process.type === 'renderer' ? runScriptConcurrently : cancellableRunScript;
@@ -377,6 +420,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
           iteration,
         },
         response,
+        vault,
         globals: globals?.data || undefined,
         iterationData: userUploadEnvironment ? {
           name: userUploadEnvironment.name,
@@ -388,6 +432,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         },
         transientVariables,
         logs: [],
+        parentFolders,
       },
     });
     if ('error' in originalOutput) {
@@ -430,6 +475,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       userUploadEnvironment.data = output?.iterationData?.data || [];
       userUploadEnvironment.dataPropertyOrder = userUploadEnvPropertyOrder.map;
     }
+
     if (runtime) {
       await runtime.appendTimeline(timelinePath, output.logs);
     }
@@ -456,6 +502,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       requestTestResults: output.requestTestResults,
       execution: output.execution,
       transientVariables,
+      parentFolders: output.parentFolders,
     };
   } catch (err) {
     await fs.promises.appendFile(
@@ -493,6 +540,7 @@ interface RequestContextForScript {
   settings: Settings;
   execution?: ExecutionOption;
   transientVariables: Environment;
+  parentFolders: { id: string; name: string; environment: Record<string, any> }[];
 }
 
 type RequestAndContextAndResponse = RequestContextForScript & {
@@ -510,6 +558,7 @@ type RequestAndContextAndOptionalResponse = RequestContextForScript & {
   iterationCount?: number;
   eventName?: RequestContext['requestInfo']['eventName'];
   runtime?: SendActionRuntime;
+  parentFolders: { id: string; name: string; environment: Record<string, any> }[];
 };
 
 export async function tryToExecuteAfterResponseScript(context: RequestAndContextAndResponse) {
@@ -521,6 +570,9 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
       }
       await fn${i}();
   `);
+  const originalRequestGroups = requestGroups
+    .filter(group => isRequestGroup(group));
+
   if (folderScripts.length === 0) {
     return {
       ...context,
@@ -540,9 +592,9 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
   const respondedWithoutError = context.response && !('error' in context.response);
   if (respondedWithoutError) {
     const resp = context.response as sendCurlAndWriteTimelineResponse;
-    await savePatchesMadeByScript(postMutatedContext, context.environment, context.baseEnvironment, context.globals, resp.cookies);
+    await savePatchesMadeByScript(postMutatedContext, context.environment, context.baseEnvironment, context.globals, originalRequestGroups, resp.cookies);
   } else {
-    await savePatchesMadeByScript(postMutatedContext, context.environment, context.baseEnvironment, context.globals);
+    await savePatchesMadeByScript(postMutatedContext, context.environment, context.baseEnvironment, context.globals, originalRequestGroups);
   }
 
   return postMutatedContext;
@@ -561,7 +613,7 @@ export const tryToInterpolateRequest = async ({
   request: Request;
   environment: string | Environment;
   purpose?: RenderPurpose;
-  extraInfo?: ExtraRenderInfo;
+  extraInfo?: { requestChain: string[] };
   baseEnvironment?: Environment;
   userUploadEnvironment?: UserUploadEnvironment;
   transientVariables?: Environment;
@@ -580,14 +632,17 @@ export const tryToInterpolateRequest = async ({
       ignoreUndefinedEnvVariable,
     });
   } catch (err) {
-    if ('type' in err && err.type === 'render') {
+    if (err instanceof RenderError) {
       throw err;
     }
     throw new Error(`Failed to render request: ${request._id}`);
   }
 };
 
-export const tryToTransformRequestWithPlugins = async (renderResult: RequestAndContext) => {
+export const tryToTransformRequestWithPlugins = async (renderResult: {
+  request: RenderedRequest;
+  context: Record<string, any>;
+}) => {
   const { request, context } = renderResult;
   try {
     return await _applyRequestPluginHooks(request, context);
@@ -615,6 +670,7 @@ export interface sendCurlAndWriteTimelineResponse extends ResponsePatch {
   statusMessage: string;
   cookies: Cookie[];
   timeline: string[];
+  bytesRead?: number;
 }
 
 export async function sendCurlAndWriteTimeline(
@@ -787,7 +843,7 @@ async function _applyRequestPluginHooks(
 
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
     const context = {
-      ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
+      ...(pluginContexts.app.init('no-render') as Record<string, any>),
       ...pluginContexts.data.init(renderedContext.getProjectId()),
       ...(pluginContexts.store.init(plugin) as Record<string, any>),
       ...(pluginContexts.request.init(newRenderedRequest, renderedContext) as Record<string, any>),
@@ -815,7 +871,7 @@ async function _applyResponsePluginHooks(
     const newRequest = clone(renderedRequest);
     for (const { plugin, hook } of await plugins.getResponseHooks()) {
       const context = {
-        ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
+        ...(pluginContexts.app.init('no-render') as Record<string, any>),
         ...pluginContexts.data.init(renderedContext.getProjectId()),
         ...(pluginContexts.store.init(plugin) as Record<string, any>),
         ...(pluginContexts.response.init(newResponse) as Record<string, any>),

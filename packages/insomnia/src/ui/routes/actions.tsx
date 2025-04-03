@@ -12,9 +12,10 @@ import { importResourcesToWorkspace, scanResources, type ScanResult } from '../.
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import { EnvironmentType } from '../../models/environment';
+import type { OauthProviderName } from '../../models/git-credentials';
 import { getById, update } from '../../models/helpers/request-operations';
 import type { MockServer } from '../../models/mock-server';
-import { isRemoteProject, type Project } from '../../models/project';
+import { isGitProject, isRemoteProject, type Project } from '../../models/project';
 import { isRequest, type Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { isRequestGroupMeta } from '../../models/request-group-meta';
@@ -28,19 +29,116 @@ import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
-import { SpectralRunner } from '../worker/spectral-run';
+import { SpectralRunner } from '../worker/spectral-handler';
+
+// Project
+export const createNewProjectAction: ActionFunction = async ({ request, params }) => {
+  const { organizationId } = params;
+  invariant(organizationId, 'Organization ID is required');
+  const newProjectData = await request.json() as {
+    name: string;
+    storageType: 'local' | 'remote' | 'git';
+    authorName: string;
+    authorEmail: string;
+    uri: string;
+    username: string;
+    password: string;
+    token: string;
+    oauth2format: OauthProviderName;
+  };
+
+  const user = await models.userSession.getOrCreate();
+  const sessionId = user.id;
+  invariant(sessionId, 'User must be logged in to create a project');
+
+  if (newProjectData.storageType === 'local') {
+    const project = await models.project.create({
+      name: newProjectData.name,
+      parentId: organizationId,
+    });
+
+    return redirect(`/organization/${organizationId}/project/${project._id}`);
+  }
+
+  if (newProjectData.storageType === 'git') {
+    const { projectId, errors } = await window.main.git.cloneGitRepo({
+      organizationId,
+      ...newProjectData,
+    });
+
+    if (errors) {
+      return {
+        error: errors.join(', '),
+      };
+    }
+
+    return redirect(`/organization/${organizationId}/project/${projectId}`);
+  }
+
+  try {
+    const newCloudProject = await insomniaFetch<{
+      id: string;
+      name: string;
+    } | {
+      error: string;
+      message?: string;
+    }>({
+      path: `/v1/organizations/${organizationId}/team-projects`,
+      method: 'POST',
+      data: {
+        name: newProjectData.name,
+      },
+      sessionId,
+    });
+
+    if (!newCloudProject || 'error' in newCloudProject) {
+      let error = 'An unexpected error occurred while creating the project. Please try again.';
+      if (newCloudProject.error === 'FORBIDDEN') {
+        error = 'You do not have permission to create a cloud project in this organization.';
+      }
+
+      if (newCloudProject.error === 'NEEDS_TO_UPGRADE') {
+        error = 'Upgrade your account in order to create new Cloud Projects.';
+      }
+
+      if (newCloudProject.error === 'PROJECT_STORAGE_RESTRICTION') {
+        error = newCloudProject.message ?? 'The owner of the organization allows only Local Vault project creation.';
+      }
+
+      return {
+        error,
+      };
+    }
+
+    const project = await models.project.create({
+      _id: newCloudProject.id,
+      name: newCloudProject.name,
+      remoteId: newCloudProject.id,
+      parentId: organizationId,
+    });
+
+    return redirect(`/organization/${organizationId}/project/${project._id}`);
+  } catch (err) {
+    console.log(err);
+    return {
+      error: err instanceof Error ? err.message : `An unexpected error occurred while creating the project. Please try again. ${err}`,
+    };
+  }
+};
+
+export interface UpdateProjectActionResult {
+  error?: string;
+  success?: boolean;
+}
 
 export const updateProjectAction: ActionFunction = async ({
   request,
   params,
 }) => {
-  const formData = await request.formData();
+  const { name, storageType, ...projectData } = await request.json();
 
-  const name = formData.get('name');
   invariant(typeof name === 'string', 'Name is required');
-
-  const type = formData.get('type');
-  invariant(type === 'local' || type === 'remote', 'Project type is required');
+  invariant(storageType === 'local' || storageType === 'remote' || storageType === 'git', 'Project type is required');
 
   const { organizationId, projectId } = params;
   invariant(projectId, 'Project ID is required');
@@ -54,7 +152,7 @@ export const updateProjectAction: ActionFunction = async ({
 
   try {
     // If its a cloud project, and we are renaming, then patch
-    if (sessionId && project.remoteId && type === 'remote' && name !== project.name) {
+    if (sessionId && project.remoteId && storageType === 'remote' && name !== project.name) {
       const response = await insomniaFetch<void | {
         error: string;
         message?: string;
@@ -70,7 +168,7 @@ export const updateProjectAction: ActionFunction = async ({
       if (response && 'error' in response) {
         let error = 'An unexpected error occurred while updating your project. Please try again.';
         if (response.error === 'FORBIDDEN') {
-          error = response.error;
+          error = 'You do not have permission to create a cloud project in this organization.';
         }
 
         if (response.error === 'NEEDS_TO_UPGRADE') {
@@ -87,11 +185,13 @@ export const updateProjectAction: ActionFunction = async ({
       }
 
       await models.project.update(project, { name });
-      return null;
+      return {
+        success: true,
+      };
     }
 
     // convert from cloud to local
-    if (type === 'local' && project.remoteId) {
+    if (storageType === 'local' && project.remoteId) {
       const response = await insomniaFetch<void | {
         error: string;
         message?: string;
@@ -118,10 +218,12 @@ export const updateProjectAction: ActionFunction = async ({
       }
 
       await models.project.update(project, { name, remoteId: null });
-      return null;
+      return {
+        success: true,
+      };
     }
-    // convert from local to cloud
-    if (type === 'remote' && !project.remoteId) {
+    // convert from local/git to cloud
+    if (storageType === 'remote' && !project.remoteId) {
       const newCloudProject = await insomniaFetch<{
         id: string;
         name: string;
@@ -156,13 +258,98 @@ export const updateProjectAction: ActionFunction = async ({
         };
       }
 
-      await models.project.update(project, { name, remoteId: newCloudProject.id });
-      return null;
+      if (project.gitRepositoryId) {
+        const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
+
+        gitRepository && await models.gitRepository.remove(gitRepository);
+      }
+
+      await models.project.update(project, { name, remoteId: newCloudProject.id, gitRepositoryId: null });
+      return {
+        success: true,
+      };
+    }
+
+    // convert to git
+    if (storageType === 'git' && !project.gitRepositoryId) {
+      if (project.remoteId) {
+        const response = await insomniaFetch<void | {
+          error: string;
+          message?: string;
+        }>({
+          path: `/v1/organizations/${organizationId}/team-projects/${project.remoteId}`,
+          method: 'DELETE',
+          sessionId,
+        });
+
+        if (response && 'error' in response) {
+          let error = 'An unexpected error occurred while updating your project. Please try again.';
+
+          if (response.error === 'FORBIDDEN') {
+            error = 'You do not have permission to change this project.';
+          }
+
+          if (response.error === 'PROJECT_STORAGE_RESTRICTION') {
+            error = 'The owner of the organization allows only Cloud Sync project creation, please try again.';
+          }
+
+          return {
+            error,
+          };
+        }
+      }
+
+      const { errors } = await window.main.git.cloneGitRepo({
+        organizationId,
+        cloneIntoProjectId: project._id,
+        ...projectData,
+      });
+
+      const projectWorkspaces = await models.workspace.findByParentId(project._id);
+      const bufferId = await database.bufferChanges();
+      const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
+        parentId: { $in: projectWorkspaces.map(w => w._id) },
+      });
+
+      for (const workspaceMeta of workspaceMetas) {
+        if (!workspaceMeta.gitFilePath) {
+          await models.workspaceMeta.update(workspaceMeta, {
+            gitFilePath: `insomnia.${workspaceMeta.parentId}.yaml`,
+          });
+        }
+      }
+
+      await database.flushChanges(bufferId);
+
+      if (errors) {
+        return {
+          error: errors.join(', '),
+        };
+      }
+
+      return {
+        success: true,
+      };
+    }
+
+    // convert from git to local
+    if (storageType === 'local' && project.gitRepositoryId) {
+      const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
+
+      gitRepository && await models.gitRepository.remove(gitRepository);
+      await models.project.update(project, { name, gitRepositoryId: null });
+
+      return {
+        success: true,
+      };
     }
 
     // local project rename
     await models.project.update(project, { name });
-    return null;
+
+    return {
+      success: true,
+    };
 
   } catch (err) {
     console.log(err);
@@ -184,6 +371,7 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
   invariant(sessionId, 'User must be logged in to delete a project');
 
   try {
+    const bufferId = await database.bufferChanges();
     if (project.remoteId) {
       const response = await insomniaFetch<void | {
         error: string;
@@ -201,9 +389,15 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
       }
     }
 
+    if (project.gitRepositoryId) {
+      const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
+      gitRepository && await models.gitRepository.remove(gitRepository);
+    }
+
     await models.stats.incrementDeletedRequestsForDescendents(project);
     await models.project.remove(project);
 
+    await database.flushChanges(bufferId);
     return redirect(`/organization/${organizationId}`);
   } catch (err) {
     console.log(err);
@@ -234,6 +428,21 @@ export const moveProjectAction: ActionFunction = async ({ request, params }) => 
   return null;
 };
 
+export function safeToUseInsomniaFileName(fileName: string) {
+  const fileNameWithoutExt = fileName.replace('.yaml', '').replace('.yml', '');
+  const fileNameWithSafeCharacters = fileNameWithoutExt
+    .toLowerCase()
+    .trim()
+    // Replace all non-alphanumeric characters with underscores, allow -
+    .replace(/[^a-z0-9_-]/g, '_');
+
+  return fileNameWithSafeCharacters;
+}
+
+export function safeToUseInsomniaFileNameWithExt(fileName: string) {
+  return `${safeToUseInsomniaFileName(fileName)}.yaml`;
+}
+
 // Workspace
 export const createNewWorkspaceAction: ActionFunction = async ({
   params,
@@ -250,6 +459,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   const formData = await request.formData();
 
   const name = formData.get('name');
+
   invariant(typeof name === 'string', 'Name is required');
 
   const scope = formData.get('scope');
@@ -264,6 +474,18 @@ export const createNewWorkspaceAction: ActionFunction = async ({
     scope,
     parentId: projectId,
   });
+
+  if (isGitProject(project)) {
+    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+
+    const fileName = formData.get('fileName')?.toString() || workspace.name;
+
+    const safeToUseFileNameWithExtension = safeToUseInsomniaFileNameWithExt(fileName);
+
+    await models.workspaceMeta.update(workspaceMeta, {
+      gitFilePath: path.join(formData.get('folderPath')?.toString() || '', safeToUseFileNameWithExtension),
+    });
+  }
 
   if (scope === 'mock-server') {
     const mockServerType = formData.get('mockServerType');
@@ -435,6 +657,12 @@ async function duplicateWorkspace(
   await models.cookieJar.getOrCreateForParentId(newWorkspace._id);
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
 
+  if (isGitProject(duplicateToProject)) {
+    await models.workspaceMeta.update(workspaceMeta, {
+      gitFilePath: `insomnia.${newWorkspace._id}.yaml`,
+    });
+  }
+
   const isGitSync = !!workspaceMeta.gitRepositoryId;
 
   // Automatically sync to cloud if needed
@@ -499,12 +727,26 @@ export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
       fileName: patch.name || workspace.name,
     });
   }
+
   if (workspace.scope === 'mock-server') {
     const mockServer = await models.mockServer.getByParentId(workspaceId);
     invariant(mockServer, 'No MockServer found for this workspace');
 
+    let useInsomniaCloud = mockServer.useInsomniaCloud;
+    if (patch.mockServerType && typeof patch.mockServerType === 'string') {
+      useInsomniaCloud = patch.mockServerType === 'cloud';
+    }
+
+    let mockServerUrl = mockServer.url;
+
+    if (patch.mockServerUrl && typeof patch.mockServerUrl === 'string') {
+      mockServerUrl = patch.mockServerUrl;
+    }
+
     await models.mockServer.update(mockServer, {
       name: patch.name || workspace.name,
+      useInsomniaCloud,
+      url: mockServerUrl,
     });
   }
 
@@ -512,7 +754,26 @@ export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
 
   await models.workspace.update(workspace, patch);
 
-  return null;
+  const project = await models.project.getById(workspace.parentId);
+  invariant(project, 'Project not found');
+  if (isGitProject(project)) {
+    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+
+    const existingPathDir = path.dirname(workspaceMeta.gitFilePath || '');
+    let fileName = path.basename(workspaceMeta.gitFilePath || '');
+
+    if (patch.fileName && typeof patch.fileName === 'string') {
+      fileName = patch.fileName;
+    }
+
+    await models.workspaceMeta.update(workspaceMeta, {
+      gitFilePath: path.join(existingPathDir, safeToUseInsomniaFileNameWithExt(fileName)),
+    });
+  }
+
+  return {
+    success: true,
+  };
 };
 
 export const moveWorkspaceIntoProjectAction: ActionFunction = async ({ request, params }) => {
@@ -632,6 +893,13 @@ export const runAllTestsAction: ActionFunction = async ({
 
   try {
     results = await runTests(src, { sendRequest });
+    const testResult = await models.unitTestResult.create({
+      results,
+      parentId: workspaceId,
+    });
+    window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun });
+
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`);
   } catch (err) {
     // create a result manually so that it can be displayed in the UI
     results.stats.failures = 1;
@@ -655,7 +923,6 @@ export const runAllTestsAction: ActionFunction = async ({
         title: 'Test Error',
       },
     );
-  } finally {
     const testResult = await models.unitTestResult.create({
       results,
       parentId: workspaceId,
@@ -775,6 +1042,13 @@ export const runTestAction: ActionFunction = async ({ params }) => {
 
   try {
     results = await runTests(src, { sendRequest });
+    const testResult = await models.unitTestResult.create({
+      results,
+      parentId: unitTest.parentId,
+    });
+    window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun });
+
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`);
   } catch (error) {
     // create a result manually so that it can be displayed in the UI
     results.stats.failures = 1;
@@ -798,7 +1072,6 @@ export const runTestAction: ActionFunction = async ({ params }) => {
         title: unitTest.name,
       },
     );
-  } finally {
     const testResult = await models.unitTestResult.create({
       results,
       parentId: unitTest.parentId,
@@ -843,11 +1116,11 @@ export const generateCollectionFromApiSpecAction: ActionFunction = async ({
   invariant(typeof projectId === 'string', 'Project ID is required');
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
-  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+  const project = await models.project.getById(projectId);
+  invariant(project, 'Project not found');
 
-  if (!apiSpec) {
-    throw new Error('No API Specification was found');
-  }
+  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+  invariant(apiSpec, 'No API Specification was found');
 
   const workspace = await models.workspace.getById(workspaceId);
 
@@ -856,9 +1129,12 @@ export const generateCollectionFromApiSpecAction: ActionFunction = async ({
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
 
   const isLintError = (result: IRuleResult) => result.severity === 0;
+
+  const gitRepositoryId = isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
+
   const rulesetPath = path.join(
     process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-    `version-control/git/${workspaceMeta?.gitRepositoryId}/other/.spectral.yaml`,
+    `version-control/git/${gitRepositoryId}/other/.spectral.yaml`,
   );
 
   const spectralRunner = new SpectralRunner();
@@ -1330,7 +1606,7 @@ export const deleteClientCertificateAction: ActionFunction = async ({ request })
 
 export const updateSettingsAction: ActionFunction = async ({ request }) => {
   const patch = await request.json();
-  if (patch.hasOwnProperty('enableAnalytics') && !patch.enableAnalytics) {
+  if ('enableAnalytics' in patch && !patch.enableAnalytics) {
     window.main.trackSegmentEvent({ event: SegmentEvent.analyticsDisabled });
   }
   await models.settings.patch(patch);
@@ -1351,7 +1627,7 @@ const getCollectionItem = async (id: string) => {
 };
 
 export const reorderCollectionAction: ActionFunction = async ({ request, params }) => {
-  const { workspaceId }  = params;
+  const { workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
   const { id, targetId, dropPosition, metaSortKey } = await request.json();
   invariant(typeof id === 'string', 'ID is required');

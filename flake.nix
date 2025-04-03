@@ -16,12 +16,12 @@
           in
           pkgs.mkShell {
             buildInputs = [
-              pkgs.nodejs_20
+              unstable.nodejs_22
               pkgs.yarn
             ];
 
-            ELECTRON_OVERRIDE_DIST_PATH = "${unstable.electron_33}/bin/";
-            ELECTRON_SKIP_BINARY_DOWNLOAD = 1;
+            # ELECTRON_OVERRIDE_DIST_PATH = "${unstable.electron_35}/bin/";
+            # ELECTRON_SKIP_BINARY_DOWNLOAD = 1;
             LD_LIBRARY_PATH = "${pkgs.stdenv.cc.cc.lib}/lib64:$LD_LIBRARY_PATH";
           });
     };

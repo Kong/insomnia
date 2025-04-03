@@ -103,7 +103,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id'
     );
-    const bodyBuffer = models.response.getBodyBuffer(response);
+    const bodyBuffer = await models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -182,7 +182,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id'
     );
-    const bodyBuffer = models.response.getBodyBuffer(response);
+    const bodyBuffer = await models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -210,7 +210,7 @@ describe('sendCurlAndWriteTimeline()', () => {
         USERAGENT: '',
         VERBOSE: true,
         SSL_OPTIONS: 'NativeCa',
-     },
+      },
     });
   });
 
@@ -286,7 +286,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id'
     );
-    const bodyBuffer = models.response.getBodyBuffer(response);
+    const bodyBuffer = await models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -350,7 +350,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id'
     );
-    const bodyBuffer = models.response.getBodyBuffer(response);
+    const bodyBuffer = await models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -434,7 +434,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id'
     );
-    const bodyBuffer = models.response.getBodyBuffer(response);
+    const bodyBuffer = await models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -499,7 +499,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id'
     );
-    const bodyBuffer = models.response.getBodyBuffer(response);
+    const bodyBuffer = await models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -543,7 +543,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id'
     );
-    const bodyBuffer = models.response.getBodyBuffer(response);
+    const bodyBuffer = await models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -586,7 +586,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id'
     );
-    const bodyBuffer = models.response.getBodyBuffer(response);
+    const bodyBuffer = await models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -630,7 +630,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id'
     );
-    const bodyBuffer = models.response.getBodyBuffer(response);
+    const bodyBuffer = await models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -735,7 +735,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id'
     );
-    const bodyBuffer = models.response.getBodyBuffer(response);
+    const bodyBuffer = await models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
@@ -790,7 +790,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       '/tmp/res_id',
       'res_id'
     );
-    expect(JSON.parse(String(models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
+    expect(JSON.parse(String(await models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
     expect(getHttpVersion(HttpVersions.V1_0).curlHttpVersion).toBe(CurlHttpVersion.V1_0);
     expect(getHttpVersion(HttpVersions.V1_1).curlHttpVersion).toBe(CurlHttpVersion.V1_1);
     expect(getHttpVersion(HttpVersions.V2PriorKnowledge).curlHttpVersion).toBe(CurlHttpVersion.V2PriorKnowledge);
@@ -1050,4 +1050,28 @@ describe('getCurrentUrl for tough-cookie', () => {
     const finalUrl = 'http://mergemyshit.dev';
     expect(networkUtils.getCurrentUrl({ headerResults, finalUrl })).toEqual(finalUrl + '/biscuit');
   });
+});
+
+describe('getOrInheritHeaders', () => {
+  it('should combine headers', () => {
+    const requestGroups = [{ headers: [{ name: 'foo', value: 'bar' }] }, { headers: [{ name: 'baz', value: 'qux' }] }];
+    const request = { headers: [{ name: 'foo', value: 'bar' }, { name: 'baz', value: 'qux' }] };
+    expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([{ name: 'baz', value: 'qux, qux' }, { name: 'foo', value: 'bar, bar' }]);
+  });
+  it('should use last header casing', () => {
+    const requestGroups = [{ headers: [{ name: 'x-foo', value: 'bar' }] }];
+    const request = { headers: [{ name: 'X-Foo', value: 'baz' }] };
+    expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([{ name: 'X-Foo', value: 'bar, baz' }]);
+  });
+  it('should not combine special headers', () => {
+    const requestGroups = [{ headers: [{ name: 'content-type', value: 'application/json' }, { name: 'Connection', value: 'close' }] }];
+    const request = { headers: [{ name: 'Content-Type', value: 'text/plain' }, { name: 'connection', value: 'keep-alive' }] };
+    expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([{ name: 'connection', value: 'keep-alive' }, { name: 'Content-Type', value: 'text/plain' }]);
+  });
+  it('should not allow an empty header name', () => {
+    const requestGroups = [{ headers: [{ name: '', value: 'bar' }, { name: ' ', value: 'foo' }] }];
+    const request = { headers: [{ name: '', value: 'baz' }, { name: '     ', value: 'qux' }] };
+    expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([]);
+  });
+
 });

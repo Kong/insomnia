@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as models from '../../models';
-import { _repairDatabase, database as db } from '../database';
+import { BaseModel } from '../../models';
+import { _repairDatabase, ChangeBufferEvent, database as db } from '../database';
 
 describe('init()', () => {
   it('handles being initialized twice', async () => {
@@ -25,7 +26,7 @@ describe('onChange()', () => {
       parentId: 'nothing',
       name: 'foo',
     };
-    const changesSeen: Function[] = [];
+    const changesSeen: ChangeBufferEvent<BaseModel>[] = [];
 
     const callback = change => {
       changesSeen.push(change);
@@ -37,8 +38,8 @@ describe('onChange()', () => {
       name: 'bar',
     });
     expect(changesSeen).toEqual([
-      [['insert', newDoc, false]],
-      [['update', updatedDoc, false]],
+      [['insert', newDoc, false, []]],
+      [['update', updatedDoc, false, [{ name: 'bar' }]]],
     ]);
     db.offChange(callback);
     await models.request.create(doc);
@@ -54,7 +55,7 @@ describe('bufferChanges()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen: Function[] = [];
+    const changesSeen: ChangeBufferEvent<BaseModel>[] = [];
 
     const callback = change => {
       changesSeen.push(change);
@@ -71,16 +72,16 @@ describe('bufferChanges()', () => {
     await db.flushChanges();
     expect(changesSeen).toEqual([
       [
-        ['insert', newDoc, false],
-        ['update', updatedDoc, false],
+        ['insert', newDoc, false, []],
+        ['update', updatedDoc, false, [true]],
       ],
     ]);
     // Assert no more changes seen after flush again
     await db.flushChanges();
     expect(changesSeen).toEqual([
       [
-        ['insert', newDoc, false],
-        ['update', updatedDoc, false],
+        ['insert', newDoc, false, []],
+        ['update', updatedDoc, false, [true]],
       ],
     ]);
   });
@@ -91,7 +92,7 @@ describe('bufferChanges()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen: Function[] = [];
+    const changesSeen: ChangeBufferEvent<BaseModel>[] = [];
 
     const callback = change => {
       changesSeen.push(change);
@@ -106,8 +107,8 @@ describe('bufferChanges()', () => {
     await new Promise(resolve => setTimeout(resolve, 1500));
     expect(changesSeen).toEqual([
       [
-        ['insert', newDoc, false],
-        ['update', updatedDoc, false],
+        ['insert', newDoc, false, []],
+        ['update', updatedDoc, false, [true]],
       ],
     ]);
   });
@@ -118,7 +119,7 @@ describe('bufferChanges()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen: Function[] = [];
+    const changesSeen: ChangeBufferEvent<BaseModel>[] = [];
 
     const callback = change => {
       changesSeen.push(change);
@@ -132,8 +133,8 @@ describe('bufferChanges()', () => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     expect(changesSeen).toEqual([
       [
-        ['insert', newDoc, false],
-        ['update', updatedDoc, false],
+        ['insert', newDoc, false, []],
+        ['update', updatedDoc, false, [true]],
       ],
     ]);
   });
@@ -147,7 +148,7 @@ describe('bufferChangesIndefinitely()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen: Function[] = [];
+    const changesSeen: ChangeBufferEvent<BaseModel>[] = [];
 
     const callback = change => {
       changesSeen.push(change);
@@ -166,8 +167,8 @@ describe('bufferChangesIndefinitely()', () => {
     await db.flushChanges();
     expect(changesSeen).toEqual([
       [
-        ['insert', newDoc, false],
-        ['update', updatedDoc, false],
+        ['insert', newDoc, false, []],
+        ['update', updatedDoc, false, [true]],
       ],
     ]);
   });
