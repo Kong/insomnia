@@ -9,7 +9,7 @@ import { Icon } from '../icon';
 const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme: { name: themeName } }) => (
   <svg
     // @ts-expect-error -- something about themes
-    // eslint-disable-next-line react/no-unknown-property
+     
     theme={themeName}
     className="theme-preview"
     width="100%"
@@ -26,7 +26,7 @@ const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme: { name: themeName } }
 
     <g
       // @ts-expect-error -- something about themes
-      // eslint-disable-next-line react/no-unknown-property
+       
       subtheme={themeName}
     >
       {/* App Header */}

@@ -11,7 +11,7 @@ import { GraphQLExplorerType } from './graph-ql-explorer-type';
 import type { ActiveReference, GraphQLFieldWithParentName } from './graph-ql-types';
 
 function getReferenceInfo(reference: SchemaReference) {
-  let field: GraphQLField<any, any, { [key: string]: any }> | undefined;
+  let field: GraphQLField<any, any, Record<string, any>> | undefined;
   if ('field' in reference) {
     field = reference.field;
   }
@@ -28,7 +28,7 @@ function isSameFieldAndType(
   currentType?: GraphQLType | null,
   type?: GraphQLType | null,
   currentField?: GraphQLFieldWithParentName,
-  field?: GraphQLField<any, any, { [key: string]: any }>
+  field?: GraphQLField<any, any, Record<string, any>>
 ) {
   // @TODO Simplify this function since it's hard to follow along
   const compare = <

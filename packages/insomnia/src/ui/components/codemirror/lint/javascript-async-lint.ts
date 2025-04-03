@@ -36,9 +36,7 @@ function validator(text: string, options: LintOptions): ValidationError[] {
 }
 
 function parseErrors(errors: LintError[], output: ValidationError[]) {
-  for (let i = 0; i < errors.length; i++) {
-    const error = errors[i];
-
+  for (const error of errors) {
     if (error) {
       if (error.line <= 0) {
         if (window.console) {

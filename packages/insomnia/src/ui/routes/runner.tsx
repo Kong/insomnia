@@ -45,8 +45,7 @@ async function aggregateAllTimelines(errorMsg: string | null, testResult: Runner
   let timelines = new Array<ResponseTimelineEntry>();
   const responsesInfo = testResult.responsesInfo;
 
-  for (let i = 0; i < responsesInfo.length; i++) {
-    const respInfo = responsesInfo[i];
+  for (const respInfo of responsesInfo) {
     const resp = await models.response.getById(respInfo.responseId);
 
     if (resp) {
@@ -149,19 +148,19 @@ export const Runner: FC<{}> = () => {
       setDirection('vertical');
       return () => { };
     }
-      // Listen on media query changes
-      const mediaQuery = window.matchMedia('(max-width: 880px)');
-      setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
+    // Listen on media query changes
+    const mediaQuery = window.matchMedia('(max-width: 880px)');
+    setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
 
-      const handleChange = (e: MediaQueryListEvent) => {
-        setDirection(e.matches ? 'vertical' : 'horizontal');
-      };
+    const handleChange = (e: MediaQueryListEvent) => {
+      setDirection(e.matches ? 'vertical' : 'horizontal');
+    };
 
-      mediaQuery.addEventListener('change', handleChange);
+    mediaQuery.addEventListener('change', handleChange);
 
-      return () => {
-        mediaQuery.removeEventListener('change', handleChange);
-      };
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
 
   }, [settings.forceVerticalLayout, direction]);
 
@@ -382,10 +381,10 @@ export const Runner: FC<{}> = () => {
 
     if (!isRunning) {
       if (executionResult?.iterationResults) {
-        for (let i = 0; i < executionResult.iterationResults.length; i++) { // iterations
-          for (let j = 0; j < executionResult.iterationResults[i].length; j++) { // requests
-            for (let k = 0; k < executionResult.iterationResults[i][j].results.length; k++) { // test cases
-              if (executionResult.iterationResults[i][j].results[k].status === 'passed') {
+        for (const iteration of executionResult.iterationResults) {
+          for (const requests of iteration) {
+            for (const testCase of requests.results) {
+              if (testCase.status === 'passed') {
                 passedTestCount++;
               }
               totalTestCount++;
@@ -881,7 +880,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
   startExecution(runnerId);
 
   const noLogRuntime = {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     appendTimeline: async (_timelinePath: string, _logs: string[]) => { }, // no op
   };
 

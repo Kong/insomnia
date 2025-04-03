@@ -564,7 +564,6 @@ export const InviteModalContainer: FC<{
       );
     }
     return null;
-
   };
 
 function checkPermissionRefType(permissionRef: MutableRefObject<Record<Permission, boolean> | undefined>): permissionRef is MutableRefObject<Record<Permission, boolean>> {

@@ -669,9 +669,7 @@ export const database = {
   },
 };
 
-interface DB {
-  [index: string]: NeDB;
-}
+type DB = Record<string, NeDB>;
 
 // @ts-expect-error -- TSCONVERSION _empty doesn't match the index signature, use something other than _empty in future
 const db: DB = {

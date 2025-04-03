@@ -181,7 +181,7 @@ const getMethodsFromOpenApiPathItem = (
     'patch',
     'trace',
   ].filter(method =>
-    // @ts-expect-error -- shrug
+    // @ts-expect-error -- shrug I don't care what pathItem has in it
     pathItem[method]);
 
   return methods;
@@ -448,19 +448,19 @@ const Design: FC = () => {
       setDirection('vertical');
       return () => { };
     }
-      // Listen on media query changes
-      const mediaQuery = window.matchMedia('(max-width: 880px)');
-      setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
+    // Listen on media query changes
+    const mediaQuery = window.matchMedia('(max-width: 880px)');
+    setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
 
-      const handleChange = (e: MediaQueryListEvent) => {
-        setDirection(e.matches ? 'vertical' : 'horizontal');
-      };
+    const handleChange = (e: MediaQueryListEvent) => {
+      setDirection(e.matches ? 'vertical' : 'horizontal');
+    };
 
-      mediaQuery.addEventListener('change', handleChange);
+    mediaQuery.addEventListener('change', handleChange);
 
-      return () => {
-        mediaQuery.removeEventListener('change', handleChange);
-      };
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
 
   }, [settings.forceVerticalLayout, direction]);
 

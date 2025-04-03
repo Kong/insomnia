@@ -42,6 +42,7 @@
     "download-all-npm-plugins": "esr ./scripts/download-all-npm-plugins.ts"
   },
   "devDependencies": {
+    "@eslint/js": "^9.23.0",
     "@types/chai": "^4.3.14",
     "@types/har-format": "^1.2.15",
     "@types/mocha": "^10.0.6",
@@ -50,14 +51,15 @@
     "@typescript-eslint/parser": "^8.29.0",
     "esbuild": "^0.24.0",
     "esbuild-runner": "^2.2.2",
-    "eslint": "^8.57.0",
-    "eslint-plugin-import": "^2.29.1",
+    "eslint": "^9.23.0",
+    "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "tslib": "2.0.1",
     "type-fest": "^4.15.0",
-    "typescript": "^5.6.2",
+    "typescript": "5.6.2",
+    "typescript-eslint": "^8.29.0",
     "vitest": "^2.0.4"
   },
   "dependencies": {

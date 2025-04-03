@@ -55,7 +55,7 @@ export default function useLocalStorageState<T = undefined>(
 function useLocalStorage<T>(
   key: string,
   defaultValue: T | undefined,
-  storageSync: boolean = true,
+  storageSync = true,
   parse: (value: string) => unknown = parseJSON,
   stringify: (value: unknown) => string = JSON.stringify,
 ): LocalStorageState<T | undefined> {
@@ -114,7 +114,7 @@ function useLocalStorage<T>(
         //   `localStorage.setItem()` will throw
         // - trying to access localStorage object when cookies are disabled in Safari throws
         //   "SecurityError: The operation is insecure."
-        // eslint-disable-next-line no-console
+         
         goodTry(() => {
           const string = stringify(defaultValue);
           localStorage.setItem(key, string);

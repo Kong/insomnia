@@ -7,7 +7,7 @@ import { VCS } from './vcs';
 let vcs: VCS | null = null;
 
 export class UserAbortResolveMergeConflictError extends Error {
-  constructor(msg: string = 'User aborted merge') {
+  constructor(msg = 'User aborted merge') {
     super(msg);
   }
   name = 'UserAbortResolveMergeConflictError';

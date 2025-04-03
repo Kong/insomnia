@@ -1,7 +1,0 @@
-build
-bin
-coverage
-src/*.js
-src/*.js.map
-**/svgr
-svgr.config.js

@@ -20,7 +20,7 @@ export function routableFSClient(
     for (const prefix of Object.keys(otherFS)) {
       if (filePath.indexOf(path.normalize(prefix)) === 0) {
         // TODO: remove non-null assertion
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+         
         return otherFS[prefix].promises[method]!(filePath, ...args);
       }
     }
@@ -29,7 +29,7 @@ export function routableFSClient(
     // console.log('[routablefs] Executing', method, filePath, { args });
     // Fallback to default if no prefix matched
     // TODO: remove non-null assertion
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+     
     const result = await defaultFS.promises[method]!(filePath, ...args);
     // If the method is returning a list of files for the root directory
     // we need to return the actual result plus inject the .insomnia directory

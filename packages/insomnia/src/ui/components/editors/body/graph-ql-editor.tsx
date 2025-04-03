@@ -544,8 +544,7 @@ export const GraphQLEditor: FC<Props> = ({
     const allOperationNames: (string | null)[] = [];
 
     // Loop through all operationDefinitions to see if one contains the cursor.
-    for (let i = 0; i < operationDefinitions.length; i++) {
-      const operation = operationDefinitions[i];
+    for (const operation of operationDefinitions) {
 
       if (!operation.name) {
         continue;

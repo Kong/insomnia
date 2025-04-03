@@ -17,13 +17,9 @@ interface RunnerState {
   reqList: RequestRow[];
 }
 
-interface OrgRunnerStateMap {
-  [runnerId: string]: Partial<RunnerState>;
-}
+type OrgRunnerStateMap = Record<string, Partial<RunnerState>>;
 
-interface RunnerStateMap {
-  [orgId: string]: OrgRunnerStateMap;
-}
+type RunnerStateMap = Record<string, OrgRunnerStateMap>;
 interface ContextProps {
   runnerStateMap: RunnerStateMap;
   runnerStateRef?: React.MutableRefObject<RunnerStateMap>;

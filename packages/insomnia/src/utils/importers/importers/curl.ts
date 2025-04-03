@@ -33,9 +33,7 @@ const SUPPORTED_ARGS = [
 
 type Pair = string | boolean;
 
-interface PairsByName {
-  [name: string]: Pair[];
-}
+type PairsByName = Record<string, Pair[]>;
 
 const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
   // ~~~~~~~~~~~~~~~~~~~~~ //

@@ -32,7 +32,7 @@ export function isUrlMatchedInNoProxyRule(url: string | undefined, noProxyRule: 
   }
   const port = uri.port || (uri.protocol === 'https:' ? '443' : '80');
   // TODO: remove non-null assertion
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+   
   const hostname = formatHostname(uri.hostname!);
   const noProxyList = noProxyRule.split(',');
 

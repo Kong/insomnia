@@ -26,18 +26,16 @@ export const RunnerResultHistoryPane: FC<Props> = ({
     let failedCount = 0;
     let skippedCount = 0;
 
-    for (let i = 0; i < runnerResult.iterationResults.length; i++) { // iterations
-      for (let j = 0; j < runnerResult.iterationResults[i].length; j++) { // requests
-        for (let k = 0; k < runnerResult.iterationResults[i][j].results.length; k++) { // test cases
-          const result = runnerResult.iterationResults[i][j].results[k];
-
-          if (result.status === 'failed') {
+    for (const iteration of runnerResult.iterationResults) {
+      for (const requests of iteration) {
+        for (const testCase of requests.results) {
+          if (testCase.status === 'failed') {
             failedCount++;
           }
-          if (result.status === 'skipped') {
+          if (testCase.status === 'skipped') {
             skippedCount++;
           }
-          if (result.status === 'passed') {
+          if (testCase.status === 'passed') {
             passedCount++;
           }
         }

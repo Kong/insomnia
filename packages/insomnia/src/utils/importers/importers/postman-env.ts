@@ -16,9 +16,7 @@ interface Environment {
   _postman_variable_scope: 'environment' | string;
 }
 
-type Data = {
-  [key in EnvVar['key']]: EnvVar['value'];
-};
+type Data = Record<EnvVar['key'], EnvVar['value']>;
 
 export enum POSTMAN_ENV_TYPE {
   GLOBAL = 'globals',
