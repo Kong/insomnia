@@ -4,8 +4,9 @@ import type { TestResults } from 'insomnia-testing/src/run/entities';
 import path from 'path';
 import { type ActionFunction, redirect } from 'react-router-dom';
 
+import { version } from '../../../package.json';
 import { parseApiSpec, resolveComponentSchemaRefs } from '../../common/api-specs';
-import { ACTIVITY_DEBUG, getAIServiceURL } from '../../common/constants';
+import { ACTIVITY_DEBUG, getAIServiceURL, METHOD_GET } from '../../common/constants';
 import { database } from '../../common/database';
 import { database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources, type ScanResult } from '../../common/import';
@@ -556,6 +557,28 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   window.main.trackSegmentEvent({
     event: event,
   });
+
+  // Parse the URL from the request
+  const url = new URL(request.url);
+
+  // Get a specific query parameter
+  const withRequest = url.searchParams.get('withRequest');
+
+  if (withRequest) {
+    const settings = await models.settings.getOrCreate();
+    const defaultHeaders = settings.disableAppVersionUserAgent ? [] : [{ name: 'User-Agent', value: `insomnia/${version}` }];
+
+    const activeRequestId = (await models.request.create({
+      parentId: workspace._id,
+      method: METHOD_GET,
+      name: 'My first request',
+      headers: defaultHeaders,
+    }))._id;
+
+    window.main.trackSegmentEvent({ event: SegmentEvent.requestCreate, properties: { requestType: 'HTTP' } });
+
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${activeRequestId}`);
+  }
 
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
 };
