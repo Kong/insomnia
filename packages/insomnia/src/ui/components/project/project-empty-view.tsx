@@ -16,6 +16,7 @@ export const ProjectEmptyView: FC<Props> = ({ onCreateRequestCollectionWithReque
       <span className='text-md'>Start fresh or bring in existing work</span>
       <div className='flex flex-wrap justify-center w-full gap-[var(--padding-md)] mt-[var(--padding-lg)]'>
         <Button
+          aria-label='Create request collection'
           className='w-full max-w-[180px] py-8 px-12 flex flex-col items-center justify-center border border-solid border-[--hl-sm] shadow-sm hover:bg-[--color-bg] gap-[var(--padding-xs)] sm:gap-[var(--padding-sm)] text-[var(--font-size-sm)] transition-all duration-100 rounded-md'
           onPress={onCreateRequestCollectionWithRequest}
         >
@@ -23,6 +24,7 @@ export const ProjectEmptyView: FC<Props> = ({ onCreateRequestCollectionWithReque
           Send a request
         </Button>
         <Button
+          aria-label='Create document'
           className='w-full max-w-[180px] py-8 px-12 flex flex-col items-center justify-center border border-solid border-[--hl-sm] shadow-sm hover:bg-[--color-bg] gap-[var(--padding-xs)] sm:gap-[var(--padding-sm)] text-[var(--font-size-sm)] transition-all duration-100 rounded-md'
           onPress={onCreateDesignDocument}
         >
@@ -30,6 +32,7 @@ export const ProjectEmptyView: FC<Props> = ({ onCreateRequestCollectionWithReque
           Create document
         </Button>
         <Button
+          aria-label='Import'
           className='w-full max-w-[180px] py-8 px-12 flex flex-col items-center justify-center border border-solid border-[--hl-sm] shadow-sm hover:bg-[--color-bg] gap-[var(--padding-xs)] sm:gap-[var(--padding-sm)] text-[var(--font-size-sm)] transition-all duration-100 rounded-md'
           onPress={onImportFrom}
         >
