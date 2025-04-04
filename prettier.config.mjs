@@ -7,6 +7,7 @@ const config = {
   printWidth: 120,
   arrowParens: "avoid",
   singleQuote: true,
+  quoteProps: "consistent",
   overrides: [
     {
       "files": "packages/insomnia/**/*",
