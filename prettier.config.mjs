@@ -6,6 +6,7 @@ const config = {
   trailingComma: "all",
   printWidth: 120,
   arrowParens: "avoid",
+  singleQuote: true,
   overrides: [
     {
       "files": "packages/insomnia/**/*",
