@@ -16,7 +16,8 @@ test.describe('Dashboard', async () => {
       await page.getByRole('button', { name: 'Create', exact: true }).click();
 
       // Check empty project
-      await expect(page.locator('.app')).toContainText('This is an empty project, to get started create your first resource:');
+      await expect(page.locator('.app')).toContainText('Welcome to your project!');
+      await expect(page.locator('.app')).toContainText('Start fresh or bring in existing work');
 
       // Rename Project
       await page.getByRole('row', { name: 'My Project' }).first().focus();
