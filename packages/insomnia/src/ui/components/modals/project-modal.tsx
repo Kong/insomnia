@@ -1,10 +1,9 @@
 import React, { useEffect } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
-import { useFetcher, useNavigation } from 'react-router-dom';
+import { useNavigation } from 'react-router-dom';
 
 import { type GitRepository } from '../../../models/git-repository';
 import { type Project } from '../../../models/project';
-import type { UpdateProjectActionResult } from '../../routes/actions';
 import { ORG_STORAGE_RULE } from '../../routes/organization';
 import { Icon } from '../icon';
 import { ProjectSettingsForm } from '../project/project-settings-form';
@@ -24,14 +23,6 @@ export const ProjectModal = ({
   project?: Project;
   gitRepository?: GitRepository;
 }) => {
-  const upsertProjectFetcher = useFetcher<UpdateProjectActionResult>();
-
-  useEffect(() => {
-    if (upsertProjectFetcher.data && upsertProjectFetcher.data.success) {
-      onOpenChange(false);
-    }
-  }, [onOpenChange, upsertProjectFetcher.data]);
-
   // Close the modal when a navigation happens
   const activeNavigation = useNavigation();
 
@@ -69,7 +60,14 @@ export const ProjectModal = ({
                   <Icon icon="x" />
                 </Button>
               </div>
-              <ProjectSettingsForm storageRule={storageRule} isGitSyncEnabled={isGitSyncEnabled} project={project} gitRepository={gitRepository} onCancel={close} />
+              <ProjectSettingsForm
+                storageRule={storageRule}
+                isGitSyncEnabled={isGitSyncEnabled}
+                project={project}
+                gitRepository={gitRepository}
+                onCancel={close}
+                onSuccessUpdate={() => onOpenChange(false)}
+              />
             </>
           )}
         </Dialog>
