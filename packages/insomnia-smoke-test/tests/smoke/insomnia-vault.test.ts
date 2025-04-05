@@ -16,6 +16,9 @@ test('Check vault key generation', async ({ page }) => {
   expect(vaultKeyValue.length).toBeGreaterThan(0);
   await page.locator('.app').press('Escape');
   // check secret vault environment could be created
+  await page.getByRole('button', { name: 'Create document', exact: true }).click();
+  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  await page.getByTestId('project').click();
   await page.getByLabel('Create in project').click();
   await page.getByLabel('Create', { exact: true }).getByText('Environment').click();
   await page.getByRole('button', { name: 'Create', exact: true }).click();
