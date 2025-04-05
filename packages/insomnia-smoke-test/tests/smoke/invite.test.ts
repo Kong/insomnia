@@ -35,5 +35,5 @@ test('Can invite users in app', async ({ page }) => {
 
   // Unlink the team
   await page.getByTestId('collaborator-test-iteration-0').getByRole('button', { name: 'Remove' }).click();
-  await page.getByRole('button', { name: 'Confirm' }).click();
+  await page.getByTestId('collaborator-test-iteration-0').getByRole('button', { name: 'Confirm' }).click();
 });
