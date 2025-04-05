@@ -40,6 +40,7 @@ interface Props {
   gitRepository?: GitRepository;
   defaultProjectName?: string;
   onCancel?(): void;
+  onSuccessUpdate?(): void;
 }
 
 export const ProjectSettingsForm: FC<Props> = ({
@@ -49,6 +50,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   gitRepository,
   defaultProjectName = 'My Project',
   onCancel,
+  onSuccessUpdate,
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
 
@@ -83,6 +85,12 @@ export const ProjectSettingsForm: FC<Props> = ({
 
   const showStorageRestrictionMessage = storageRule !== ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL;
   const insomniaFiles = initCloneGitRepositoryFetcher.data && 'files' in initCloneGitRepositoryFetcher.data ? initCloneGitRepositoryFetcher.data.files : [];
+
+  useEffect(() => {
+    if (upsertProjectFetcher.data && upsertProjectFetcher.data.success && onSuccessUpdate) {
+      onSuccessUpdate();
+    }
+  }, [onSuccessUpdate, upsertProjectFetcher.data]);
 
   useEffect(() => {
     if (upsertProjectFetcher.state === 'idle' && upsertProjectFetcher.data && upsertProjectFetcher.data?.error) {
