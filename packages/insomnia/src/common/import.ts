@@ -1,4 +1,5 @@
 import { z, type ZodError } from 'zod/v4';
+import orderedJSON from "json-order";
 
 import { insecureReadFile } from '~/main/secure-read-file';
 
@@ -21,6 +22,7 @@ import { isUnitTestSuite, type UnitTestSuite } from '../models/unit-test-suite';
 import { isWebSocketRequest, type WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import { invariant } from '../utils/invariant';
+import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
 import { tryImportV5Data } from './insomnia-v5';
 import { generateId } from './misc';
@@ -446,7 +448,16 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
       .filter(isEnvironment)
       .find(env => env.parentId && env.parentId.startsWith('__WORKSPACE_ID__'));
     if (baseEnvironmentFromResources) {
-      await models.environment.update(baseEnvironment, { data: baseEnvironmentFromResources.data });
+      const data = { ...baseEnvironment.data, ...baseEnvironmentFromResources.data }
+      const orderedJson = orderedJSON.parse<Record<string, any>>(
+          JSON.stringify(data || []),
+          JSON_ORDER_PREFIX,
+          JSON_ORDER_SEPARATOR,
+      );
+       await models.environment.update(baseEnvironment, {
+        data: orderedJson.object,
+        dataPropertyOrder: orderedJson.map
+      });
     }
     const subEnvironments = resources.filter(isEnvironment).filter(isSubEnvironmentResource) || [];
 
