@@ -58,6 +58,8 @@ test('analytics events are sent', async ({ page, app }) => {
     await page.getByRole('button', { name: 'Create document', exact: true }).click();
     await page.getByRole('button', { name: 'Create', exact: true }).click();
 
+    await page.getByTestId('workspace-debug').click();
+
     for (let i = 0; i < 10; i++) {
         await page.getByLabel('Create in collection').click();
         await page.getByRole('menuitemradio', { name: 'HTTP Request' }).press('Enter');
