@@ -94,7 +94,7 @@
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@getinsomnia/api-client": "0.0.10",
     "@getinsomnia/srp-js": "1.0.0-alpha.1",
-    "@sentry/electron": "^5.12.0",
+    "@sentry/electron": "^6.5.0",
     "@stoplight/spectral-core": "^1.19.5",
     "@stoplight/spectral-formats": "^1.8.2",
     "@stoplight/spectral-ruleset-bundler": "1.6.2",
