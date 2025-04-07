@@ -305,7 +305,7 @@ export const RequestSchema = z.object({
     fileName: z.string().optional(),
     params: z.array(z.object({
       name: z.string(),
-      value: z.string(),
+      value: z.string().optional().default(''),
       description: z.string().optional(),
       disabled: z.boolean().optional(),
       multiline: z.string().optional(),
