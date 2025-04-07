@@ -154,7 +154,7 @@ export async function loadGitRepository({
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
 
-    if (GitVCS.isInitializedForRepo(gitRepository._id)) {
+    if (GitVCS.isInitializedForRepo(gitRepository._id) && !gitRepository.needsFullClone) {
       return {
         branch: await GitVCS.getCurrentBranch(),
         branches: await GitVCS.listBranches(),
