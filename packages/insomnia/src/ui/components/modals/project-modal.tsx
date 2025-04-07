@@ -132,6 +132,15 @@ export const ProjectModal = ({
     }
   }, [activeNavigation, isOpen, onOpenChange]);
 
+  useEffect(() => {
+    if (storageRules) {
+      setProjectData({
+        ...projectData,
+        storageType: getDefaultProjectStorageType(storageRules, project),
+      });
+    }
+  }, [storageRules, project]);
+
   const title = project ? 'Update project' : 'Create a new project';
 
   return (
