@@ -98,6 +98,15 @@ export const ProjectSettingsForm: FC<Props> = ({
     }
   }, [upsertProjectFetcher.data, upsertProjectFetcher.state]);
 
+  useEffect(() => {
+    if (storageRule) {
+      setProjectData({
+        ...projectData,
+        storageType: getDefaultProjectStorageType(storageRule, project),
+      });
+    }
+  }, [storageRule, project]);
+
   const onGitRepoFormSubmit = (gitRepositoryPatch: Partial<GitRepository>) => {
     const {
       author,
