@@ -105,7 +105,7 @@ export const ProjectSettingsForm: FC<Props> = ({
         storageType: getDefaultProjectStorageType(storageRule, project),
       });
     }
-  }, [storageRule, project]);
+  }, [storageRule, project, projectData]);
 
   const onGitRepoFormSubmit = (gitRepositoryPatch: Partial<GitRepository>) => {
     const {
