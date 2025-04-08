@@ -60,7 +60,6 @@ export const ProjectSettingsForm: FC<Props> = ({
 
   const [projectData, setProjectData] = useState<{
     name: string;
-    storageType: 'local' | 'remote' | 'git';
     authorName?: string;
     authorEmail?: string;
     uri?: string;
@@ -70,7 +69,6 @@ export const ProjectSettingsForm: FC<Props> = ({
     oauth2format?: OauthProviderName;
   }>({
     name: project?.name || defaultProjectName,
-    storageType: getDefaultProjectStorageType(storageRule, project),
     authorName: gitRepository?.author?.name || '',
     authorEmail: gitRepository?.author?.email || '',
     uri: gitRepository?.uri || '',
@@ -79,6 +77,8 @@ export const ProjectSettingsForm: FC<Props> = ({
     token: gitRepository?.credentials && 'token' in gitRepository.credentials ? gitRepository?.credentials?.token : '',
     oauth2format: gitRepository?.credentials && 'oauth2format' in gitRepository.credentials ? gitRepository?.credentials?.oauth2format ?? 'github' : undefined,
   });
+
+  const [storageType, setStorageType] = useState<'local' | 'remote' | 'git'>(getDefaultProjectStorageType(storageRule, project));
 
   const initCloneGitRepositoryFetcher = useFetcher<InitGitCloneResult>();
   const upsertProjectFetcher = useFetcher<UpdateProjectActionResult>();
@@ -100,10 +100,7 @@ export const ProjectSettingsForm: FC<Props> = ({
 
   useEffect(() => {
     if (storageRule) {
-      setProjectData({
-        ...projectData,
-        storageType: getDefaultProjectStorageType(storageRule, project),
-      });
+      setStorageType(getDefaultProjectStorageType(storageRule, project));
     }
   }, [storageRule, project, projectData]);
 
@@ -144,7 +141,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   };
 
   const onUpsertProject = () => {
-    if (project && activeView !== 'switch-storage-type' && isSwitchingStorageType(project, projectData.storageType)) {
+    if (project && activeView !== 'switch-storage-type' && isSwitchingStorageType(project, storageType)) {
       setActiveView('switch-storage-type');
       return;
     }
@@ -193,9 +190,9 @@ export const ProjectSettingsForm: FC<Props> = ({
               className="flex flex-col gap-2 px-0.5"
               onChange={value => {
                 error && setError(null);
-                setProjectData({ ...projectData, storageType: value as 'local' | 'remote' | 'git' });
+                setStorageType(value as 'local' | 'remote' | 'git');
               }}
-              value={projectData.storageType}
+              value={storageType}
             >
               <Label className="text-sm text-[--hl]">
                 Project type
@@ -260,7 +257,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               >
                 Cancel
               </Button>}
-              {projectData.storageType === 'git' && (
+              {storageType === 'git' && (
                 <Button
                   onPress={() => setActiveView('git-clone')}
                   className="w-[10ch] text-[--color-font-surprise] font-semibold border border-solid border-[--hl-md] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] px-4 py-2 h-full flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-md hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
@@ -268,7 +265,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                   Next
                 </Button>
               )}
-              {projectData.storageType !== 'git' && (
+              {storageType !== 'git' && (
                 <Button
                   onPress={onUpsertProject}
                   isDisabled={upsertProjectFetcher.state !== 'idle'}
@@ -461,7 +458,7 @@ export const ProjectSettingsForm: FC<Props> = ({
       {activeView === 'switch-storage-type' && (
         <>
           <div className='flex flex-col justify-start gap-2 overflow-y-auto px-10'>
-            {projectData.storageType === 'git' && (
+            {storageType === 'git' && (
               <div className='text-[--color-font] flex flex-col gap-4'>
                 <div className='flex flex-col gap-4'>
                   <p>
@@ -484,7 +481,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                 </div>
               </div>
             )}
-            {projectData.storageType === 'local' && (
+            {storageType === 'local' && (
               <div className='text-[--color-font] flex flex-col gap-4'>
                 <div className='flex flex-col gap-4'>
                   <p>
@@ -516,7 +513,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                 </div>
               </div>
             )}
-            {projectData.storageType === 'remote' && (
+            {storageType === 'remote' && (
               <div className='text-[--color-font] flex flex-col gap-4'>
                 <div className='flex flex-col gap-4'>
                   <p>
