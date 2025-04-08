@@ -37,8 +37,6 @@ export function generateCommandMarkdown(command: commander.Command, programOptio
 title: ${commandName}
 ---
 
-# ${commandName}
-
 ## Command Description
 
 ${command.description()}
@@ -89,8 +87,6 @@ export function generateDocumentation(program: commander.Command): void {
     writeMarkdownFile('index.md', `---
 title: CLI Documentation
 ---
-
-# CLI Documentation
 
 ${generateOptionsMarkdown(program.options, 'Global Flags')}
 
