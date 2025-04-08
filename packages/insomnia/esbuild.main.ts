@@ -74,7 +74,7 @@ export default async function build(options: Options) {
       ...Object.keys(builtinModules),
     ],
     alias: process.env.USE_SUBMODULE ? {
-      'insomnia-enterprise': path.resolve(__dirname, '../../insomnia-submodule/lib/index.ts'),
+      'insomnia-enterprise/enterprise-feature-A/main': path.resolve(__dirname, '../../insomnia-submodule/lib/enterprise-feature-A/main.ts'),
     } : undefined,
   });
 
