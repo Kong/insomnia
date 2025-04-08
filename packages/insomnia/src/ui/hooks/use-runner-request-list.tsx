@@ -19,14 +19,12 @@ export const useRunnerRequestList = (organizationId: string, targetFolderId: str
         return isRequest(item.doc);
       })
       .map((item: Child) => {
-        const ancestorNames: string[] = [];
-        const ancestorIds: string[] = [];
+        const ancestors:{id:string;name:string}[]  = []
         if (item.ancestors) {
           item.ancestors.forEach(ancestorId => {
             const ancestor = entityMapRef.current.get(ancestorId);
             if (ancestor && isRequestGroup(ancestor?.doc)) {
-              ancestorNames.push(ancestor?.doc.name);
-              ancestorIds.push(ancestor?.doc._id);
+              ancestors.push({id:ancestor?.doc._id,name:ancestor?.doc.name})
             }
           });
         }
@@ -36,8 +34,7 @@ export const useRunnerRequestList = (organizationId: string, targetFolderId: str
         return {
           id: item.doc._id,
           name: item.doc.name,
-          ancestorNames,
-          ancestorIds,
+          ancestors,
           method: requestDoc.method,
           url: item.doc.url,
           parentId: item.doc.parentId,
@@ -45,7 +42,7 @@ export const useRunnerRequestList = (organizationId: string, targetFolderId: str
       })
       .filter(item => {
         if (targetFolderId) {
-          return item.ancestorIds.includes(targetFolderId);
+          return item.ancestors.map(a=>a.id).includes(targetFolderId);
         }
         return true;
       });
