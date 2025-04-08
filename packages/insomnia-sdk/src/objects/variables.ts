@@ -14,7 +14,7 @@ export class Variable extends Property {
     key: string;
     value: any;
     type: string;
-    override _kind: string = 'Variable';
+    override _kind = 'Variable';
 
     constructor(def?: VariableDefinition) {
         super();
@@ -52,7 +52,7 @@ export class Variable extends Property {
 }
 
 export class VariableList<T extends Variable> extends PropertyList<T> {
-    override _kind: string = 'VariableList';
+    override _kind = 'VariableList';
 
     constructor(parent: PropertyList<T> | undefined, populate: T[]) {
         super(

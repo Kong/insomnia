@@ -243,7 +243,7 @@ function rawOptionsToVariables(options: VariableList<Variable> | Variable[] | Au
 
 export class RequestAuth extends Property {
     private type: AuthOptionTypes;
-    private authOptions: Map<string, VariableList<Variable>> = new Map();
+    private authOptions = new Map<string, VariableList<Variable>>();
 
     constructor(options: AuthOptions, parent?: Property) {
         super();
@@ -405,7 +405,7 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
                 username: findValueInKvArray('username', authObj.ntlm),
                 password: findValueInKvArray('password', authObj.ntlm),
             };
-        case 'oauth1':
+        case 'oauth1': {
             const signMethod = ((): OAuth1SignatureMethod => {
                 const method = findValueInKvArray('signatureMethod', authObj.oauth1);
                 const unsupportedError = Error(`auth transforming(fromPreRequestAuth): unsupported signatureMethod type for oauth1: ${method}`);
@@ -446,7 +446,8 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
                 verifier: findValueInKvArray('verifier', authObj.oauth1),
                 includeBodyHash: findValueInKvArray('includeBodyHash', authObj.oauth1) === 'true',
             };
-        case 'oauth2':
+        };
+        case 'oauth2': {
             const inputGrantType = findValueInOauth2Options('grant_type', authObj.oauth2);
             const grantType = (() => {
                 switch (inputGrantType) {
@@ -501,6 +502,7 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
                 responseType: responseType,
                 origin: findValueInOauth2Options('origin', authObj.oauth2),
             };
+        };
         case 'awsv4':
             return {
                 type: 'iam',
@@ -623,7 +625,7 @@ export function toPreRequestAuth(auth: RequestAuthentication | {}): AuthOptions 
                     { key: 'includeBodyHash', value: auth.includeBodyHash ? 'true' : 'false' },
                 ],
             };
-        case 'oauth2':
+        case 'oauth2': {
             const inputGrantType = auth.grantType;
             const grantType = (() => {
                 switch (inputGrantType) {
@@ -691,6 +693,7 @@ export function toPreRequestAuth(auth: RequestAuthentication | {}): AuthOptions 
                     { key: 'origin', value: auth.origin || '' },
                 ],
             };
+        };
         case 'iam':
             return {
                 type: 'awsv4',

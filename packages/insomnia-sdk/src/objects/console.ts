@@ -9,8 +9,6 @@ export interface Row {
 class Console {
     rows: Row[] = [];
 
-    constructor() { }
-
     // TODO: support replacing substitution
     printLog = (rows: Row[], level: LogLevel, ...values: any) => {
         try {
@@ -56,7 +54,7 @@ class Console {
         this.printLog(this.rows, 'error', ...values);
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     clear = (_level: LogLevel, _message?: any, ..._optionalParams: any[]) => {
         throw Error('currently "clear" is not supported for the timeline');
     };

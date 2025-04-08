@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { Header, HeaderList } from '../headers';
-import { calculatePayloadSize, mergeRequestBody, Request, RequestBody, RequestBodyOptions, toScriptRequestBody } from '../request';
+import type { Header} from '../headers';
+import { HeaderList } from '../headers';
+import type { RequestBodyOptions} from '../request';
+import { calculatePayloadSize, mergeRequestBody, Request, RequestBody, toScriptRequestBody } from '../request';
 
 describe('test request and response objects', () => {
     it('test RequestBody methods', () => {

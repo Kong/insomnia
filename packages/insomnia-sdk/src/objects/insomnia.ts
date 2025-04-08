@@ -14,7 +14,7 @@ import type { RequestContext } from './interfaces';
 import { transformToSdkProxyOptions } from './proxy-configs';
 import { Request as ScriptRequest, type RequestOptions, toScriptRequestBody } from './request';
 import { RequestInfo } from './request-info';
-import { Response as ScriptResponse } from './response';
+import type { Response as ScriptResponse } from './response';
 import { readBodyFromPath, toScriptResponse } from './response';
 import { sendRequest } from './send-request';
 import { type RequestTestResult, skip, test, type TestHandler } from './test';

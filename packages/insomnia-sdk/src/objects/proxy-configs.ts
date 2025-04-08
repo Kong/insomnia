@@ -1,6 +1,7 @@
 import { getExistingConsole } from './console';
 import { Property, PropertyList } from './properties';
-import { Url, UrlMatchPattern, UrlMatchPatternList } from './urls';
+import type { Url} from './urls';
+import { UrlMatchPattern, UrlMatchPatternList } from './urls';
 
 export interface ProxyConfigOptions {
     match: string;
@@ -17,7 +18,7 @@ export interface ProxyConfigOptions {
 }
 
 export class ProxyConfig extends Property {
-    override _kind: string = 'ProxyConfig';
+    override _kind = 'ProxyConfig';
     type: string;
 
     host: string;
@@ -30,15 +31,15 @@ export class ProxyConfig extends Property {
     bypass: string[]; // it is for compatibility with Insomnia's bypass list
     protocol: string;
 
-    static authenticate: boolean = false;
+    static authenticate = false;
     static bypass: UrlMatchPatternList<UrlMatchPattern> = new UrlMatchPatternList<UrlMatchPattern>(undefined, []);
-    static host: string = '';
-    static match: string = '';
-    static password: string = '';
+    static host = '';
+    static match = '';
+    static password = '';
     static port?: number = undefined;
-    static tunnel: boolean = false; // unsupported
-    static username: string = '';
-    static protocol: string = 'https:';
+    static tunnel = false; // unsupported
+    static username = '';
+    static protocol = 'https:';
 
     constructor(def: {
         id?: string;
@@ -74,7 +75,7 @@ export class ProxyConfig extends Property {
         this.protocol = def.protocol;
     }
 
-    static override _index: string = 'key';
+    static override _index = 'key';
 
     static isProxyConfig(obj: object) {
         return '_kind' in obj && obj._kind === 'ProxyConfig';
@@ -128,7 +129,7 @@ export class ProxyConfig extends Property {
         this.password = options.password;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     updateProtocols(_protocols: string[]) {
         // In Insomnia there is no whitelist while there is a blacklist
         throw Error('updateProtocols is not supported in Insomnia');

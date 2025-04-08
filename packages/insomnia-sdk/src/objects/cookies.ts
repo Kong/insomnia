@@ -99,9 +99,9 @@ export class Cookie extends Property {
                 typeof entry.value === 'string'
             ) {
                 return { key: entry.key, value: entry.value };
-            } else {
+            } 
                 throw Error('failed to create cookie, extension must be: { key: string; value: string }[]');
-            }
+            
 
         });
 
@@ -179,7 +179,7 @@ export class Cookie extends Property {
 }
 
 export class CookieList extends PropertyList<Cookie> {
-    override _kind: string = 'CookieList';
+    override _kind = 'CookieList';
 
     constructor(cookies: Cookie[]) {
         super(
