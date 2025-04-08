@@ -21,8 +21,7 @@ export interface SocketIOArg {
 };
 
 export interface BaseSocketIOPayload {
-  name: string;
-  value: SocketIOArg[];
+  args: SocketIOArg[];
   eventName?: string;
   ack?: boolean;
 }
@@ -39,8 +38,7 @@ export const isSocketIOPayloadId = (id: string | null) => (
 
 export const init = (): BaseSocketIOPayload => {
   return {
-    name: 'New Payload',
-    value: [{ id: uuidv4(), value: '', mode: CONTENT_TYPE_JSON }],
+    args: [{ id: uuidv4(), value: '', mode: CONTENT_TYPE_JSON }],
     eventName: '',
     ack: false,
   };
@@ -86,15 +84,14 @@ export async function updateOrCreateByParentId(parentId: string, patch: Partial<
 
   if (requestPayload) {
     return update(requestPayload, patch);
-  } else {
-    const newPatch = Object.assign(
-      {
-        parentId,
-      },
-      patch,
-    );
-    return create(newPatch);
-  }
+  };
+  const newPatch = Object.assign(
+    {
+      parentId,
+    },
+    patch,
+  );
+  return create(newPatch);
 }
 
 export const all = () => database.all<SocketIOPayload>(type);

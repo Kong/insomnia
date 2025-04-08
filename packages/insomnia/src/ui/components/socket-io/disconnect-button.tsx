@@ -5,7 +5,7 @@ import { Dropdown as OriginalDropdown, DropdownItem, ItemContent } from '../base
 
 export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
   const handleCloseThisRequest = () => {
-    // TODO
+    window.main.socketIO.close({ requestId });
   };
   const handleCloseAllRequests = () => {
     // TODO

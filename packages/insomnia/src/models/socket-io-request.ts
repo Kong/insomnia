@@ -12,7 +12,8 @@ export const canDuplicate = true;
 
 export const canSync = true;
 
-export interface SocketIOEventListeners {
+export interface SocketIOEventListener {
+  id: string;
   eventName: string;
   desc: string;
   isOpen: boolean;
@@ -31,7 +32,7 @@ export interface BaseSocketIORequest {
   settingStoreCookies: boolean;
   settingSendCookies: boolean;
   settingFollowRedirects: 'global' | 'on' | 'off';
-  eventListeners: SocketIOEventListeners[];
+  eventListeners: SocketIOEventListener[];
 }
 
 export type SocketIORequest = BaseModel & BaseSocketIORequest & { type: typeof type };

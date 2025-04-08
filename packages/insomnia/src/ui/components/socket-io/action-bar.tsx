@@ -1,4 +1,5 @@
 import React, { type FC, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import { Button } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import * as models from '../../../models';
@@ -114,12 +115,12 @@ export const SocketIOActionBar: FC<ActionBarProps> = ({ request, environmentId, 
         </div>
         <div className="flex p-1">
           {isConnectingOrClosed ? (
-            <button
+            <Button
               className="hover:brightness-75 rounded-sm px-[--padding-md] text-center bg-[--color-surprise] text-[--color-font-surprise]"
               type="submit"
             >
               Connect
-            </button>
+            </Button>
           ) : (
             <DisconnectButton requestId={request._id} />
           )}
