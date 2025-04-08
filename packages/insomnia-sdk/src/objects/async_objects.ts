@@ -30,7 +30,7 @@ export class ProxiedPromise<T> extends Promise<T> {
     }
 
     // TODO: super.any seems not supported for the compile target (es2021)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     static any(_: Promise<any>[]) {
         return super.reject("'super.any' not supported");
     }
@@ -60,7 +60,7 @@ export class ProxiedPromise<T> extends Promise<T> {
     }
 
     // TODO: Promise.any seems not supported for the compile target (es2021)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     static withResolvers() {
         return super.reject("'Promise.withResolvers' not supported");
     }

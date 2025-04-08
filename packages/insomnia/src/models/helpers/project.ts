@@ -1,6 +1,6 @@
 import { database } from '../../common/database';
 import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-project';
-import { VCS } from '../../sync/vcs/vcs';
+import type { VCS } from '../../sync/vcs/vcs';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { isDefaultOrganizationProject, type Project, update as updateProject } from '../project';

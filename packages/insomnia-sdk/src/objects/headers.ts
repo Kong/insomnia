@@ -10,8 +10,8 @@ export interface HeaderDefinition {
 }
 
 export class Header extends Property {
-    override _kind: string = 'Header';
-    type: string = '';
+    override _kind = 'Header';
+    type = '';
     key: string;
     value: string;
 
@@ -35,7 +35,7 @@ export class Header extends Property {
         }
     }
 
-    static override _index: string = 'key';
+    static override _index = 'key';
 
     static create(input?: { key: string; value: string } | string, name?: string): Header {
         return new Header(input || { key: '', value: '' }, name);

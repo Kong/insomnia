@@ -1,4 +1,5 @@
-import { exec, ExecException } from 'child_process';
+import type { ExecException } from 'child_process';
+import { exec } from 'child_process';
 import path from 'path';
 import { beforeAll, describe, expect, it } from 'vitest';
 // Tests both bundle and packaged versions of the CLI with the same commands and expectations.

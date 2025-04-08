@@ -1,10 +1,10 @@
-import {
+import type {
   AnyMessage,
   MethodInfo,
   PartialMessage,
   ServiceType,
 } from '@bufbuild/protobuf';
-import { UnaryResponse } from '@connectrpc/connect';
+import type { UnaryResponse } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-node';
 import * as grpcReflection from 'grpc-reflection-js';
 import protobuf from 'protobufjs';

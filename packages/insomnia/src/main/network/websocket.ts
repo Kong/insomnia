@@ -1,7 +1,7 @@
 import electron, { BrowserWindow } from 'electron';
 import fs from 'fs';
 import { MessageType, parseMessage } from 'graphql-ws';
-import { IncomingMessage } from 'http';
+import type { IncomingMessage } from 'http';
 import path from 'path';
 import tls, { type KeyObject, type PxfObject } from 'tls';
 import { v4 as uuidV4 } from 'uuid';

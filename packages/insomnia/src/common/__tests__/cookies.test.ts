@@ -1,4 +1,5 @@
-import { Cookie, CookieJar } from 'tough-cookie';
+import type { Cookie} from 'tough-cookie';
+import { CookieJar } from 'tough-cookie';
 import { describe, expect, it, vi } from 'vitest';
 
 import { cookiesFromJar, jarFromCookies } from '../cookies';

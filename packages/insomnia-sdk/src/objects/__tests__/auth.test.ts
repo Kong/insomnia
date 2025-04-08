@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { type AuthOptions, fromPreRequestAuth, RequestAuth, toPreRequestAuth } from '../auth';
-import { Variable, VariableList } from '../variables';
+import type { Variable, VariableList } from '../variables';
 
 const varListToObject = (obj: VariableList<Variable> | undefined) => {
     if (!obj) {

@@ -1,4 +1,5 @@
-import { RulesetDefinition, Spectral } from '@stoplight/spectral-core';
+import type { RulesetDefinition} from '@stoplight/spectral-core';
+import { Spectral } from '@stoplight/spectral-core';
  
 const { bundleAndLoadRuleset } = require('@stoplight/spectral-ruleset-bundler/with-loader');
 import { oas } from '@stoplight/spectral-rulesets';

@@ -8,7 +8,8 @@ import { Cookie, type CookieOptions } from './cookies';
 import { CookieList } from './cookies';
 import { Header, type HeaderDefinition, HeaderList } from './headers';
 import { Property, unsupportedError } from './properties';
-import { calculateHeadersSize, Request } from './request';
+import type { Request } from './request';
+import { calculateHeadersSize } from './request';
 
 export interface ResponseOptions {
     code: number;
@@ -166,7 +167,7 @@ export class Response extends Property {
         return `data:${contentInfo.contentType};baseg4, ${bodyInBase64}`;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     json(reviver?: (key: string, value: any) => any, _strict?: boolean) {
         // TODO: enable strict after common module is introduced
         try {
@@ -176,7 +177,7 @@ export class Response extends Property {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     jsonp(_reviver?: (key: string, value: any) => any, _strict?: boolean) {
         throw unsupportedError('jsonp()');
     }
@@ -205,7 +206,7 @@ export class Response extends Property {
     get to() {
         type valueType = boolean | number | string | object | undefined;
 
-        const verify = (got: valueType, expected: valueType, checkEquality: boolean = true) => {
+        const verify = (got: valueType, expected: valueType, checkEquality = true) => {
             if (['boolean', 'number', 'string', 'undefined'].includes(typeof got)) {
                 if ((checkEquality && expected === got) || (!checkEquality && expected !== got)) {
                     return;

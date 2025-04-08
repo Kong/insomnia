@@ -1,6 +1,6 @@
 import SwaggerParser from '@apidevtools/swagger-parser';
 import crypto from 'crypto';
-import { OpenAPIV2 } from 'openapi-types';
+import type { OpenAPIV2 } from 'openapi-types';
 import YAML from 'yaml';
 
 import type { Converter, Header, ImportRequest } from '../entities';

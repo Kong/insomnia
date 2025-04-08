@@ -16,7 +16,7 @@ export interface QueryParamOptions {
 }
 
 export class QueryParam extends Property {
-    override _kind: string = 'QueryParam';
+    override _kind = 'QueryParam';
 
     key: string;
     value: string;
@@ -65,7 +65,7 @@ export class QueryParam extends Property {
             .map(entry => ({ key: entry[0], value: entry[1] }));
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     static parseSingle(paramStr: string, _idx?: number, _all?: string[]) {
         const pairs = QueryParam.parse(paramStr);
         if (pairs.length === 0) {
@@ -143,7 +143,7 @@ export interface UrlOptions {
 }
 
 export class Url extends PropertyBase {
-    override _kind: string = 'Url';
+    override _kind = 'Url';
 
     id?: string;
     private urlObject?: URL;
@@ -234,7 +234,7 @@ export class Url extends PropertyBase {
         }
     }
 
-    static _index: string = 'id';
+    static _index = 'id';
 
     static isUrl(obj: object) {
         return '_kind' in obj && obj._kind === 'Url';
@@ -288,7 +288,7 @@ export class Url extends PropertyBase {
         return '';
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     getPath(_unresolved?: boolean) {
         if (this.urlObject) {
             return this.urlObject.pathname;
@@ -307,7 +307,7 @@ export class Url extends PropertyBase {
         return this.queryParams.map(param => param.toRawString()).join('&');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     getRemote(_forcePort?: boolean) {
         if (this.urlObject) {
             return this.urlObject.host;
@@ -334,7 +334,7 @@ export class Url extends PropertyBase {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     override toString(_forceProtocol?: boolean) {
         if (this.urlObject) {
             const newUrlObject = new URL(this.urlObject.toString());
@@ -349,7 +349,7 @@ export class Url extends PropertyBase {
         return this.origin || '';
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     toStringWithoutQuery(_forceProtocol?: boolean) {
         if (this.urlObject) {
             const newUrlObject = new URL(this.urlObject.toString());
@@ -394,7 +394,7 @@ export class UrlMatchPattern extends Property {
     // "http://localhost/*"
     // It doesn't support match patterns for top Level domains (TLD).
 
-    override id: string = '';
+    override id = '';
     private pattern: string;
 
     constructor(pattern: string) {
@@ -577,10 +577,10 @@ export class UrlMatchPattern extends Property {
     testProtocol(protocol: string) {
         const protoPatterns = this.getProtocols();
 
-        for (let i = 0; i < protoPatterns.length; i++) {
-            if (protoPatterns[i] === '*') {
+        for (const pattern of protoPatterns) {
+            if (pattern === '*') {
                 return true;
-            } else if (protoPatterns[i] === protocol) {
+            } else if (pattern === protocol) {
                 return true;
             }
         }
@@ -597,7 +597,7 @@ export class UrlMatchPattern extends Property {
 }
 
 export class UrlMatchPatternList<T extends UrlMatchPattern> extends PropertyList<T> {
-    override _kind: string = 'UrlMatchPatternList';
+    override _kind = 'UrlMatchPatternList';
 
     constructor(parent: PropertyList<T> | undefined, populate: T[]) {
         super(UrlMatchPattern, undefined, populate);

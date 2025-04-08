@@ -5,10 +5,12 @@ import { app, BrowserWindow, type IpcRendererEvent, type MenuItemConstructorOpti
 import fs from 'fs';
 import iconv from 'iconv-lite';
 
-import { APP_START_TIME, LandingPage, SentryMetrics } from '../../common/sentry';
+import type { LandingPage} from '../../common/sentry';
+import { APP_START_TIME, SentryMetrics } from '../../common/sentry';
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
 import * as models from '../../models';
-import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
+import type { SegmentEvent} from '../analytics';
+import { trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { backup, restoreBackup } from '../backup';
 import type { GitServiceAPI } from '../git-service';

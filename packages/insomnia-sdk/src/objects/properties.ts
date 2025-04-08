@@ -205,7 +205,7 @@ export class Property extends PropertyBase {
 }
 
 export class PropertyList<T extends Property> {
-    protected _kind: string = 'PropertyList';
+    protected _kind = 'PropertyList';
     protected list: T[] = [];
 
     constructor(
@@ -265,7 +265,7 @@ export class PropertyList<T extends Property> {
     }
 
     // TODO: unsupported yet as properties are not organized as hierarchy
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     eachParent(_iterator: (parent: Property, prev: Property) => void, _context?: object) {
         throw unsupportedError('eachParent');
     }
@@ -299,7 +299,7 @@ export class PropertyList<T extends Property> {
     }
 
     // TODO: value is not used as its usage is unknown
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     has(item: T, _value?: any) {
         return this.indexOf(item) >= 0;
     }
@@ -319,12 +319,12 @@ export class PropertyList<T extends Property> {
 
             if (typeof item === 'string' && record[indexFieldName] === item) {
                 return i;
-            } else {
+            } 
                 const itemRecord = item as Record<string, any>;
                 if (record[indexFieldName] === itemRecord[indexFieldName]) {
                     return i;
                 }
-            }
+            
         }
         return -1;
     }
@@ -404,7 +404,7 @@ export class PropertyList<T extends Property> {
     }
 
     // TODO: unsupported yet
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     toObject(_excludeDisabled?: boolean, _caseSensitive?: boolean, _multiValue?: boolean, _sanitizeKeys?: boolean) {
         // it just dump all properties of each element without arguments
         // then user is able to handle them by themself

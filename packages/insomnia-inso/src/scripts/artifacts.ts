@@ -2,7 +2,8 @@
 import fs from 'node:fs/promises';
 import process from 'node:process';
 
-import { ProcessEnvOptions, spawn } from 'child_process';
+import type { ProcessEnvOptions} from 'child_process';
+import { spawn } from 'child_process';
 import path from 'path';
 
 import packageJson from '../../package.json';

@@ -6,6 +6,7 @@
   "main": "src/objects/index.ts",
   "types": "src/objects/index.ts",
   "scripts": {
+    "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "test": "vitest run",
     "type-check": "tsc --noEmit --project tsconfig.json"
   },

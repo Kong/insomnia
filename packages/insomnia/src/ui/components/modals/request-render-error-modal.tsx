@@ -5,7 +5,7 @@ import { docsTemplateTags } from '../../../common/documentation';
 import type { GrpcRequest } from '../../../models/grpc-request';
 import type { Request } from '../../../models/request';
 import type { WebSocketRequest } from '../../../models/websocket-request';
-import { RenderError } from '../../../templating/render-error';
+import type { RenderError } from '../../../templating/render-error';
 import { Link } from '../base/link';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';

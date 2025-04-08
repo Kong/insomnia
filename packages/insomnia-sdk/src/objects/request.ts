@@ -9,8 +9,9 @@ import type { HeaderDefinition } from './headers';
 import { Header, HeaderList } from './headers';
 import { Property, PropertyBase, PropertyList } from './properties';
 import { ProxyConfig, type ProxyConfigOptions } from './proxy-configs';
-import { QueryParam, toUrlObject, Url } from './urls';
-import { Variable, VariableList } from './variables';
+import type { Url } from './urls';
+import { QueryParam, toUrlObject } from './urls';
+import type { Variable, VariableList } from './variables';
 
 export type RequestBodyMode = undefined | 'formdata' | 'urlencoded' | 'raw' | 'file' | 'graphql';
 
@@ -373,9 +374,9 @@ export class Request extends Property {
                     return options != null && options.ignoreCase ?
                         header.key.toLocaleLowerCase() !== toRemove.key.toLocaleLowerCase() :
                         header.key !== toRemove.key;
-                } else {
+                } 
                     throw Error('type of the "toRemove" must be: string | Header');
-                }
+                
             },
             {},
         );

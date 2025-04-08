@@ -3,7 +3,8 @@ import { stat } from 'node:fs/promises';
 import NeDB from '@seald-io/nedb';
 import path from 'path';
 
-import { Database, DbAdapter, emptyDb } from '../index';
+import type { Database, DbAdapter} from '../index';
+import { emptyDb } from '../index';
 import type { BaseModel } from '../models/types';
 
 const neDbAdapter: DbAdapter = async (dir, filterTypes) => {

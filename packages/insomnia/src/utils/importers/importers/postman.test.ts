@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { ImportPostman, transformPostmanToNunjucksString } from './postman';
-import { HttpsSchemaGetpostmanComJsonCollectionV210, Request1 } from './postman-2.1.types';
+import type { HttpsSchemaGetpostmanComJsonCollectionV210, Request1 } from './postman-2.1.types';
 
 describe('postman', () => {
   const postmanSchema = ({
