@@ -4,9 +4,9 @@ import path from 'path';
 import YAML from 'yaml';
 
 import { InsoError } from '../../cli';
-import { DbAdapter } from '../index';
+import type { DbAdapter } from '../index';
 import { emptyDb } from '../index';
-import { BaseModel } from '../models/types';
+import type { BaseModel } from '../models/types';
 
 /**
  * When exporting from Insomnia, the `models.[kind].type` is converted from PascalCase to snake_case.

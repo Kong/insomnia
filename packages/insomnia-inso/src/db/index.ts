@@ -1,8 +1,8 @@
 import { stat } from 'fs/promises';
-import { CaCertificate } from 'insomnia/src/models/ca-certificate';
-import { ClientCertificate } from 'insomnia/src/models/client-certificate';
-import { CookieJar } from 'insomnia/src/models/cookie-jar';
-import { Settings } from 'insomnia/src/models/settings';
+import type { CaCertificate } from 'insomnia/src/models/ca-certificate';
+import type { ClientCertificate } from 'insomnia/src/models/client-certificate';
+import type { CookieJar } from 'insomnia/src/models/cookie-jar';
+import type { Settings } from 'insomnia/src/models/settings';
 
 import { logger } from '../cli';
 import gitAdapter from './adapters/git-adapter';
