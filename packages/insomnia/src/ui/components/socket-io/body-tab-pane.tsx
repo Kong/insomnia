@@ -32,35 +32,33 @@ export const SocketIOBodyTabPane = ({
   request,
   requestPayload,
 }: Props) => {
-  const readyState = 1;
   const editorsRef = useRef(new Map());
 
   const [selectedArg, setSelectedArg] = useState<Key>('');
-  console.log(selectedArg, 'selectedArg');
   const requestPayloadPatcher = useRequestPayloadPatcher();
   // console.log('args', args);
 
   const handleAddArg = async () => {
-    const args = requestPayload?.value || [];
+    const args = requestPayload?.args || [];
     const newId = uuidv4();
     console.log('newId', newId);
     const newArgs = [...args, { id: newId, value: '', mode: CONTENT_TYPE_PLAINTEXT }];
-    requestPayloadPatcher(request._id, { value: newArgs });
+    requestPayloadPatcher(request._id, { args: newArgs });
     setSelectedArg(newId);
   };
 
   const handleChange = async (id: string, value: string) => {
-    const args = requestPayload?.value || [];
+    const args = requestPayload?.args || [];
     const newArgs = [...args];
     const item = newArgs.find(arg => arg.id === id);
     if (item) {
       item.value = value;
-      requestPayloadPatcher(request._id, { value: newArgs });
+      requestPayloadPatcher(request._id, { args: newArgs });
     }
   };
 
   const tabs = useMemo(() => {
-    const args = requestPayload?.value || [];
+    const args = requestPayload?.args || [];
     return args.map((item, index) => {
       return {
         title: `Arg ${index + 1}`,
@@ -70,29 +68,39 @@ export const SocketIOBodyTabPane = ({
   }, [requestPayload]);
 
   const contentType = useMemo(() => {
-    const args = requestPayload?.value || [];
+    const args = requestPayload?.args || [];
     if (args.length <= 1) {
       return args[0]?.mode || CONTENT_TYPE_JSON;
-    } else {
-      const item = args.find(arg => arg.id === selectedArg);
-      return item?.mode || CONTENT_TYPE_JSON;
     }
-  }, [requestPayload?.value, selectedArg]);
+    const item = args.find(arg => arg.id === selectedArg);
+    return item?.mode || CONTENT_TYPE_JSON;
+
+  }, [requestPayload?.args, selectedArg]);
 
   const handleContentTypeChange = (value: string) => {
-    const currentArgId = selectedArg || requestPayload?.value?.[0]?.id;
-    const newArgs = requestPayload?.value?.map(arg => {
+    const currentArgId = selectedArg || requestPayload?.args?.[0]?.id;
+    const newArgs = requestPayload?.args?.map(arg => {
       if (arg.id === currentArgId) {
         return { ...arg, mode: value };
       }
       return arg;
     });
-    requestPayloadPatcher(request._id, { value: newArgs });
+    requestPayloadPatcher(request._id, { args: newArgs });
   };
 
   const handleDelete = (id: string) => {
-    const newArgs = requestPayload?.value?.filter(arg => arg.id !== id);
-    requestPayloadPatcher(request._id, { value: newArgs });
+    const newArgs = requestPayload?.args?.filter(arg => arg.id !== id);
+    requestPayloadPatcher(request._id, { args: newArgs });
+  };
+
+  const handleSend = () => {
+    // TODO handle JSON
+    window.main.socketIO.event.send({
+      requestId: request._id,
+      eventName: requestPayload?.eventName || 'message',
+      ack: requestPayload?.ack,
+      args: requestPayload?.args.map(item => item.value),
+    });
   };
 
   return (
@@ -168,20 +176,7 @@ export const SocketIOBodyTabPane = ({
               placeholder="event name"
             />
           </TextField>
-          <button
-            className='hover:brightness-75'
-            style={{
-              padding: '0 var(--padding-md)',
-              marginLeft: 'var(--padding-xs)',
-              height: '100%',
-              border: '1px solid var(--hl-lg)',
-              borderRadius: 'var(--radius-md)',
-              background: readyState ? 'var(--color-surprise)' : 'inherit',
-              color: readyState ? 'var(--color-font-surprise)' : 'inherit',
-            }}
-          >
-            Send
-          </button>
+          <Button onPress={handleSend} className='text-center bg-[--color-surprise] text-[--color-font-surprise] rounded px-[--padding-md]'>Send</Button>
         </div>
       </Toolbar>
       {tabs.length > 1 ? (

@@ -1,76 +1,95 @@
 import classNames from 'classnames';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Button, GridList, GridListItem, Switch } from 'react-aria-components';
 
-import type { SocketIOEventListeners, SocketIORequest } from '../../../models/socket-io-request';
+import { generateId } from '../../../common/misc';
+import type { SocketIOEventListener, SocketIORequest } from '../../../models/socket-io-request';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 import { Icon } from '../icon';
 
 interface Props {
   request: SocketIORequest;
-  eventListeners: SocketIOEventListeners[];
+  eventListeners: SocketIOEventListener[];
 }
+
+const createEmptyListener = () => {
+  return {
+    id: generateId('socketIO-event'),
+    eventName: '',
+    desc: '',
+    isOpen: false,
+  };
+};
 
 export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
   const requestPatcher = useRequestPatcher();
-  const handleAddEvent = () => {
-    // requestPatcher(request._id, { eventListeners });
-  };
 
-  const handleDeleteEvent = (eventName: string) => {
-    const newListeners = eventListeners.filter(item => item.eventName !== eventName);
+  const rows = useMemo(() => {
+    return eventListeners?.length > 0
+      ? eventListeners
+      : [createEmptyListener()];
+  }, [eventListeners]);
+
+  const handleDeleteEvent = (deleteItem: SocketIOEventListener) => {
+    const newListeners = eventListeners.filter(item => item.id !== deleteItem.id);
     requestPatcher(request._id, { eventListeners: newListeners });
+    if (deleteItem.eventName && deleteItem.isOpen) {
+      window.main.socketIO.event.off({
+        requestId: request._id,
+        eventName: deleteItem.eventName,
+      });
+    }
   };
 
-  const handleChange = (key: string, value: string | boolean, eventName: string) => {
-    let newListeners = [...eventListeners];
-    if (newListeners.length === 0) {
-      newListeners = [{
-        eventName: '',
-        desc: '',
-        isOpen: false,
-        [key]: value,
-      }];
-    } else {
-      const editExisting = newListeners.some(item => item.eventName === eventName);
-      if (!editExisting) {
-        newListeners = [...newListeners, {
-          eventName: '',
-          desc: '',
-          isOpen: false,
-          [key]: value,
-        }];
+  const handleAddEvent = () => {
+    requestPatcher(request._id, { eventListeners: [...rows, createEmptyListener()] });
+  };
+
+  const handleChange = (newItem: SocketIOEventListener, changeKey: 'isOpen' | 'eventName' | 'desc') => {
+    const newListeners = rows.map(item => {
+      if (item.id === newItem.id) {
+        return newItem;
+      }
+      return item;
+    });
+    requestPatcher(request._id, { eventListeners: newListeners });
+
+    if (changeKey === 'isOpen' && newItem.eventName) {
+      if (newItem.isOpen) {
+        window.main.socketIO.event.on({
+          requestId: request._id,
+          eventName: newItem.eventName,
+        });
       } else {
-        newListeners = newListeners.map(item => {
-          if (item.eventName === eventName) {
-            return {
-              ...item,
-              [key]: value,
-            };
-          }
-          return item;
+        window.main.socketIO.event.off({
+          requestId: request._id,
+          eventName: newItem.eventName,
+        });
+      }
+      return;
+    }
+
+    if (changeKey === 'eventName' && newItem.isOpen) {
+      const originListener = rows.find(item => item.id === newItem.id);
+      if (originListener) {
+        window.main.socketIO.event.off({
+          requestId: request._id,
+          eventName: originListener.eventName,
+        });
+      }
+      if (newItem.eventName !== '') {
+        window.main.socketIO.event.on({
+          requestId: request._id,
+          eventName: newItem.eventName,
         });
       }
     }
-    requestPatcher(request._id, { eventListeners: newListeners });
   };
-
-  const rows = [...eventListeners.map((item, index) => ({
-    id: index,
-    eventName: item.eventName,
-    isOpen: item.isOpen,
-    description: item.desc,
-  })), {
-    id: -1,
-    eventName: '',
-    isOpen: false,
-    description: '',
-  }];
 
   return (
     <div className='p-4'>
-      <div className='grid grid-cols-[30px_1fr_80px_1fr_50px] gap-2 border-solid border border-[--hl-md]'>
+      <div className='grid grid-cols-[30px_1fr_80px_1fr_50px] items-center gap-2 border-solid border border-[--hl-md]'>
         <div />
         <div className='flex items-center'>
           EVENTS
@@ -78,7 +97,7 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
             <Icon icon="plus" className='cursor-pointer' />
           </Button>
         </div>
-        <div className='border-solid border-r border-[--hl-md]'>LISTEN</div>
+        <div className='border-solid border-r border-[--hl-md] h-full'>LISTEN</div>
         <div>DESCRIPTION</div>
         <div />
       </div>
@@ -89,23 +108,23 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
       >
         {item => (
           <GridListItem
-            className="group h-[30px] grid grid-cols-[30px_1fr_80px_1fr_50px] gap-2 border-solid border-b border-x border-[--hl-md] [&:hover_.deleteBtn]:flex transition-all"
+            className="group h-[30px] grid grid-cols-[30px_1fr_80px_1fr_50px] items-center gap-2 border-solid border-b border-x border-[--hl-md] [&:hover_.deleteBtn]:flex transition-all"
             textValue='event item'
           >
             <div />
             <OneLineEditor
               defaultValue={item.eventName}
-              id={''}
+              id={`socketIO-event-listener-${item.id}`}
               placeholder='Add event'
-              onChange={value => {
-                handleChange('eventName', value, item.eventName);
+              onChange={eventName => {
+                handleChange({ ...item, eventName }, 'eventName');
               }}
             />
-            <div className='border-solid border-r border-[--hl-md] text-left'>
+            <div className='border-solid border-r border-[--hl-md] text-left h-full'>
               <Switch
                 isSelected={item.isOpen}
-                onChange={isSelected => {
-                  handleChange('isOpen', isSelected, item.eventName);
+                onChange={isOpen => {
+                  handleChange({ ...item, isOpen }, 'isOpen');
                 }}
                 className="cursor-pointer p-0 h-full flex items-center"
               >
@@ -122,14 +141,14 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
               </Switch>
             </div>
             <OneLineEditor
-              defaultValue={item.description}
-              id={''}
-              onChange={value => {
-                handleChange('desc', value, item.eventName);
+              defaultValue={item.desc}
+              id={`socketIO-event-listener-desc-${item.id}`}
+              onChange={desc => {
+                handleChange({ ...item, desc }, 'desc');
               }}
             />
             <div>
-              <Button className="hidden deleteBtn w-[25px] h-[25px] hover:bg-[--hl-xs] flex items-center justify-center" onPress={() => handleDeleteEvent(item.eventName)}>
+              <Button className="hidden deleteBtn w-[25px] h-[25px] hover:bg-[--hl-xs] flex items-center justify-center" onPress={() => handleDeleteEvent(item)}>
                 <Icon icon="trash" className='cursor-pointer' />
               </Button>
             </div>

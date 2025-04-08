@@ -7,6 +7,7 @@ import { useLocalStorage } from 'react-use';
 import type { Environment } from '../../../models/environment';
 import { getCombinedPathParametersFromUrl, type RequestPathParameter } from '../../../models/request';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
+import { useReadyState } from '../../hooks/use-ready-state';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import type { SocketIORequestLoaderData } from '../../routes/request';
@@ -95,7 +96,7 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
 
   // TODO: Implement readyState and disabled
   const disabled = false;
-  const readyState = false;
+  const readyState = useReadyState({ requestId: activeRequest._id, protocol: 'socketIO' });
   const eventsCount = 1;
 
   return (

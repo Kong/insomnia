@@ -462,6 +462,13 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
   }
   if (isSocketIORequest(req)) {
     // TODO: implement socket.io connection
+    window.main.socketIO.open({
+      requestId,
+      workspaceId,
+      url: rendered.url,
+      headers: rendered.headers,
+      cookieJar: rendered.cookieJar,
+    });
   }
   // HACK: even more elaborate hack to get the request to update
   return new Promise(resolve => {
