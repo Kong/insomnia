@@ -29,7 +29,6 @@ import { useLocalStorage } from 'react-use';
 
 import * as session from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
-import { database } from '../../common/database';
 import { SentryMetrics } from '../../common/sentry';
 import { userSession } from '../../models';
 import { updateLocalProjectToRemote } from '../../models/helpers/project';
@@ -212,7 +211,7 @@ export const syncOrgsAndProjectsAction: ActionFunction = async ({ request }) => 
 
     // When user switch to a new organization, there is no project in db cache, we need to redirect to the first project after sync project
     if (!projectId && asyncTaskList.includes(AsyncTask.SyncProjects)) {
-      const firstProject = await database.getWhere<Project>(ProjectType, { parentId: organizationId });
+      const firstProject = await window.main.database.getWhere<Project>(ProjectType, { parentId: organizationId });
       if (firstProject?._id) {
         return redirect(`/organization/${organizationId}/project/${firstProject?._id}`);
       }
@@ -235,7 +234,7 @@ async function migrateProjectsUnderOrganization(personalOrganizationId: string, 
 
     const preferredProjectType = localStorage.getItem('prefers-project-type');
     if (preferredProjectType === 'remote') {
-      const localProjects = await database.find<Project>('Project', {
+      const localProjects = await window.main.database.find<Project>('Project', {
         parentId: personalOrganizationId,
         remoteId: null,
       });

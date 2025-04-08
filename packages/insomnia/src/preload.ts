@@ -124,6 +124,8 @@ const main: Window['main'] = {
   showNunjucksContextMenu: options => ipcRenderer.send('show-nunjucks-context-menu', options),
   showContextMenu: options => ipcRenderer.send('showContextMenu', options),
   database: {
+    getWhere: options => ipcRenderer.invoke('database.getWhere', options),
+    find: options => ipcRenderer.invoke('database.find', options),
     caCertificate: {
       create: options => ipcRenderer.invoke('database.caCertificate.create', options),
     },

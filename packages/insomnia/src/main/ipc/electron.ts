@@ -15,6 +15,8 @@ export type HandleChannels =
   | 'curl.readyState'
   | 'curlRequest'
   | 'database.caCertificate.create'
+  | 'database.getWhere'
+  | 'database.find'
   | 'getExecution'
   | 'grpc.loadMethods'
   | 'grpc.loadMethodsFromReflection'

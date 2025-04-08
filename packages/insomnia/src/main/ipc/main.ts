@@ -7,7 +7,6 @@ import iconv from 'iconv-lite';
 
 import { APP_START_TIME, LandingPage, SentryMetrics } from '../../common/sentry';
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
-import * as models from '../../models';
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { backup, restoreBackup } from '../backup';
@@ -17,6 +16,7 @@ import type { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { addExecutionStep, completeExecutionStep, getExecution, startExecution, type TimingStep, updateLatestStepName } from '../network/request-timing';
 import type { WebSocketBridgeAPI } from '../network/websocket';
+import type { DatabaseBridgeAPI } from './database';
 import { ipcMainHandle, ipcMainOn, ipcMainOnce, type RendererOnChannels } from './electron';
 import extractPostmanDataDumpHandler from './extractPostmanDataDump';
 import type { gRPCBridgeAPI } from './grpc';
@@ -48,11 +48,7 @@ export interface RendererToMainBridgeAPI {
   showNunjucksContextMenu: (options: { key: string; nunjucksTag?: { template: string; range: MarkerRange } }) => void;
   showContextMenu: (options: { key: string; menuItems: MenuItemConstructorOptions[]; extra?: Record<string, any> }) => void;
 
-  database: {
-    caCertificate: {
-      create: (options: { parentId: string; path: string }) => Promise<string>;
-    };
-  };
+  database: DatabaseBridgeAPI;
   hiddenBrowserWindow: HiddenBrowserWindowBridgeAPI;
   getExecution: (options: { requestId: string }) => Promise<TimingStep[]>;
   addExecutionStep: (options: { requestId: string; stepName: string }) => void;
@@ -78,9 +74,7 @@ export function registerMainHandlers() {
   ipcMainHandle('getExecution', (_, options: { requestId: string }) => {
     return getExecution(options.requestId);
   });
-  ipcMainHandle('database.caCertificate.create', async (_, options: { parentId: string; path: string }) => {
-    return models.caCertificate.create(options);
-  });
+
   ipcMainOn('loginStateChange', async () => {
     BrowserWindow.getAllWindows().forEach(w => {
       w.webContents.send('loggedIn');

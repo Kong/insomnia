@@ -13,6 +13,7 @@ import { SegmentEvent, trackSegmentEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
 import { registerGitServiceAPI } from './main/git-service';
+import { registerDataBaseHandlers } from './main/ipc/database';
 import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
@@ -64,6 +65,7 @@ app.on('web-contents-created', (_, contents) => {
 app.on('ready', async () => {
   registerElectronHandlers();
   // @TODO - Maybe move the register stuff in the registerMainHandlers function
+  registerDataBaseHandlers();
   registerMainHandlers();
   registergRPCHandlers();
   registerGitServiceAPI();

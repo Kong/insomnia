@@ -143,7 +143,7 @@ export function all() {
     userSession,
   ] as const;
 }
-
+export type ModelTypes = "CaCertificate" | "Workspace" | "GitRepository" | "ApiSpec" | "Environment" | "CookieJar" | "Stats" | "Settings" | "Project" | "WorkspaceMeta" | "GitCredentials" | "RequestGroup" | "UserSession" | "RequestGroupMeta" | "Request" | "RequestVersion" | "RequestMeta" | "Response" | "MockServer" | "MockRoute" | "OAuth2Token" | "ClientCertificate" | "PluginData" | "UnitTestSuite" | "UnitTestResult" | "UnitTest" | "ProtoFile" | "ProtoDirectory" | "GrpcRequest" | "GrpcRequestMeta" | "RunnerTestResult" | "WebSocketPayload" | "WebSocketRequest" | "WebSocketResponse";
 export function types() {
   return all().map(model => model.type);
 }
