@@ -213,20 +213,23 @@ export class HashiCorpService implements ICloudService {
       const uniqueKeyHash = crypto.createHash('md5').update(uniqueKey).digest('hex');
       return uniqueKeyHash;
     }
-      const { kvVersion, secretEnginePath } = config as HashiCorpVaultKVV1SecretConfig | HashiCorpVaultKVV2SecretConfig;
-      switch (kvVersion) {
-        case 'v1':
-          const uniqueKeyV1 = `${providerName}:${secretEnginePath}:${secretName}`;
-          const uniqueKeyHashV1 = crypto.createHash('md5').update(uniqueKeyV1).digest('hex');
-          return uniqueKeyHashV1;
-        case 'v2':
-          const { version } = config as HashiCorpVaultKVV2SecretConfig;
-          const uniqueKeyV2 = `${providerName}:${secretEnginePath}:${secretName}:${version || 'latest'}`;
-          const uniqueKeyHashV2 = crypto.createHash('md5').update(uniqueKeyV2).digest('hex');
-          return uniqueKeyHashV2;
-        default:
-          return defaultUniqueKeyHash;
+    const { kvVersion, secretEnginePath } = config as HashiCorpVaultKVV1SecretConfig | HashiCorpVaultKVV2SecretConfig;
+    switch (kvVersion) {
+      case 'v1': {
+        const uniqueKeyV1 = `${providerName}:${secretEnginePath}:${secretName}`;
+        const uniqueKeyHashV1 = crypto.createHash('md5').update(uniqueKeyV1).digest('hex');
+        return uniqueKeyHashV1;
       }
+      case 'v2': {
+        const { version } = config as HashiCorpVaultKVV2SecretConfig;
+        const uniqueKeyV2 = `${providerName}:${secretEnginePath}:${secretName}:${version || 'latest'}`;
+        const uniqueKeyHashV2 = crypto.createHash('md5').update(uniqueKeyV2).digest('hex');
+        return uniqueKeyHashV2;
+      }
+      default: {
+        return defaultUniqueKeyHash;
+      }
+    }
 
   };
 

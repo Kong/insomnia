@@ -40,18 +40,16 @@ export function registerCloudServiceHandlers() {
 }
 
 // factory pattern to create cloud service class based on its provider name
-class ServiceFactory {
-  static createCloudService(name: CloudProviderName, credential: BaseCloudCredential['credentials']) {
-    switch (name) {
-      case 'aws':
-        return new AWSService(credential as AWSTemporaryCredential);
-      case 'gcp':
-        return new GCPService(credential as string);
-      case 'hashicorp':
-        return new HashiCorpService(credential as HashiCorpCredentials);
-      default:
-        throw new Error('Invalid cloud service provider name');
-    }
+function createCloudService(name: CloudProviderName, credential: BaseCloudCredential['credentials']) {
+  switch (name) {
+    case 'aws':
+      return new AWSService(credential as AWSTemporaryCredential);
+    case 'gcp':
+      return new GCPService(credential as string);
+    case 'hashicorp':
+      return new HashiCorpService(credential as HashiCorpCredentials);
+    default:
+      throw new Error('Invalid cloud service provider name');
   }
 };
 
@@ -66,13 +64,13 @@ const setCacheMaxAge = (newAge: number, unit: MaxAgeUnit = 'min') => {
 // authenticate with cloud service provider
 export const cloudServiceProviderAuthentication = (options: CloudServiceAuthOption) => {
   const { provider, credentials } = options;
-  const cloudService = ServiceFactory.createCloudService(provider, credentials);
+  const cloudService = createCloudService(provider, credentials);
   return cloudService.authenticate();
 };
 
 export const getSecret = async (options: CloudServiceSecretOption) => {
   const { provider, credentials, secretId, config } = options;
-  const cloudService = ServiceFactory.createCloudService(provider, credentials);
+  const cloudService = createCloudService(provider, credentials);
   const uniqueSecretKey = cloudService.getUniqueCacheKey(secretId, config as any);
   if (vaultCache.has(uniqueSecretKey)) {
     // return cache value if exists
