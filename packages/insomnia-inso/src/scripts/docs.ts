@@ -33,7 +33,11 @@ export function generateCommandMarkdown(command: commander.Command, programOptio
     const commandName = parentName ? `${parentName} ${command.name()}` : command.name();
     const fileName = `${commandName.replace(/\s+/g, '_')}.md`;
 
-    writeMarkdownFile(fileName, `# ${commandName}
+    writeMarkdownFile(fileName, `---
+title: ${commandName}
+---
+
+# ${commandName}
 
 ## Command Description
 
@@ -44,9 +48,9 @@ ${command.description()}
 \`${commandName} ${command.usage() || '[options]'}\`
 
 ${command.options.length > 0 ? generateOptionsMarkdown(command.options, 'Local Flags') : ''}${generateOptionsMarkdown(programOptions, 'Global Flags')}${generateSubcommandsMarkdown(commandName, command.commands.map(sub => ({
-    name: sub.name(),
-    description: sub.description() || 'No description available',
-})))}`);
+        name: sub.name(),
+        description: sub.description() || 'No description available',
+    })))}`);
 
     return {
         name: commandName,
@@ -82,8 +86,14 @@ export function generateDocumentation(program: commander.Command): void {
         });
     });
 
-    writeMarkdownFile('index.md', `# CLI Documentation 
+    writeMarkdownFile('index.md', `---
+title: CLI Documentation
+---
+
+# CLI Documentation
+
 ${generateOptionsMarkdown(program.options, 'Global Flags')}
+
 ## Commands
 
 ${allCommands.map(({ name, description, fileName }) => `- [\`${name}\`](/insomnia-inso/${fileName.replace('.md', '')}/{{page.release}}/): ${description}
