@@ -8,7 +8,7 @@ import { isValid } from 'date-fns';
 import electron from 'electron';
 import fs from 'fs';
 import path from 'path';
-import { Readable, Writable } from 'stream';
+import type { Readable, Writable } from 'stream';
 import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 

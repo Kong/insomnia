@@ -1,4 +1,4 @@
-import * as git from 'isomorphic-git';
+import type * as git from 'isomorphic-git';
 import path from 'path';
 
 type Methods = 'readFile' | 'writeFile' | 'unlink' | 'readdir' | 'mkdir' | 'rmdir' | 'stat' | 'lstat' | 'readlink' | 'symlink';

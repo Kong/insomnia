@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { baseModelSchema, workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
 import { projectSchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
-import { BackendProject } from '../../types';
+import type { BackendProject } from '../../types';
 import { describeChanges } from '../util';
 import { VCS } from '../vcs';
 

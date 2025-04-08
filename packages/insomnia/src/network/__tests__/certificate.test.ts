@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ClientCertificate } from '../../models/client-certificate';
+import type { ClientCertificate } from '../../models/client-certificate';
 import { filterClientCertificates } from '../certificate';
 
 describe('filterClientCertificates', () => {

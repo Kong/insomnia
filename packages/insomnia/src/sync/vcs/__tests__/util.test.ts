@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { baseModelSchema, workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
 import { branchSchema, mergeConflictSchema, statusCandidateSchema } from '../../__schemas__/type-schemas';
-import { StageEntry } from '../../types';
+import type { StageEntry } from '../../types';
 import {
   combinedMapKeys,
   compareBranches,

@@ -3,7 +3,7 @@ import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, shell } from 'ele
 
 import { fnOrString } from '../../common/misc';
 import { type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '../../templating/types';
-import { extractNunjucksTagFromCoords } from '../../templating/utils';
+import type { extractNunjucksTagFromCoords } from '../../templating/utils';
 import { localTemplateTags } from '../../ui/components/templating/local-template-tags';
 import { invariant } from '../../utils/invariant';
 

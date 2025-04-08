@@ -1,9 +1,9 @@
 import eslint from '@eslint/js';
-import tseslint from 'typescript-eslint';
+import eslintConfigPrettier from "eslint-config-prettier/flat";
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort';
-import eslintConfigPrettier from "eslint-config-prettier/flat";
+import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   eslint.configs.recommended,
@@ -61,6 +61,7 @@ export default tseslint.config(
 
       '@typescript-eslint/array-type': ['error', { default: 'array', readonly: 'array' }],
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
+      '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-empty-interface': ['error', { 'allowSingleExtends': true }],
       '@typescript-eslint/no-empty-object-type': 'off', // TODO: Enable this rule
       '@typescript-eslint/no-empty-function': 'off',

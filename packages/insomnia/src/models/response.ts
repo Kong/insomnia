@@ -1,6 +1,6 @@
 import fs from 'fs';
 import type { RequestTestResult } from 'insomnia-sdk';
-import { Readable } from 'stream';
+import type { Readable } from 'stream';
 import zlib from 'zlib';
 
 import { database as db, type Query } from '../common/database';

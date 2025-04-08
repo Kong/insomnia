@@ -5,7 +5,7 @@ import type { RemoteProject } from '../../models/project';
 import { isWorkspace, type Workspace } from '../../models/workspace';
 import type { BackendProjectWithTeam } from './normalize-backend-project-team';
 import { interceptAccessError } from './util';
-import { VCS } from './vcs';
+import type { VCS } from './vcs';
 
 interface Options {
   vcs: VCS;

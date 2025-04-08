@@ -1,7 +1,7 @@
 import { quote } from 'shell-quote';
 import { describe, expect, it } from 'vitest';
 
-import { Parameter } from '../entities';
+import type { Parameter } from '../entities';
 import { convert } from './curl';
 
 describe('curl', () => {

@@ -4,7 +4,7 @@ import { type BaseModel, canSync } from '../../models';
 import type { Project } from '../../models/project';
 import type { Workspace } from '../../models/workspace';
 import type { StatusCandidate } from '../types';
-import { VCS } from './vcs';
+import type { VCS } from './vcs';
 
 export const initializeLocalBackendProjectAndMarkForSync = async ({ vcs, workspace }: { vcs: VCS; workspace: Workspace }) => {
   // Create local project

@@ -1,6 +1,7 @@
 // From https://github.com/bloomrpc/bloomrpc-mock/blob/master/src/automock.ts
 // TODO simplify this and rename to generate example payload
-import { Enum, Field, MapField, Message, OneOf, Service, Type } from 'protobufjs';
+import type { Field, Message, OneOf, Service} from 'protobufjs';
+import { Enum, MapField, Type } from 'protobufjs';
 import { v4 } from 'uuid';
 
 export interface MethodPayload {

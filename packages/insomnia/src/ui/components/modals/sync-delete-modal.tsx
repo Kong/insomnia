@@ -4,7 +4,7 @@ import { useRouteLoaderData } from 'react-router-dom';
 
 import { strings } from '../../../common/strings';
 import { interceptAccessError } from '../../../sync/vcs/util';
-import { VCS } from '../../../sync/vcs/vcs';
+import type { VCS } from '../../../sync/vcs/vcs';
 import { Button } from '../../components/themed-button';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';

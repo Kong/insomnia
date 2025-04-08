@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { BaseModel } from '../../models';
 import * as models from '../../models';
-import { BaseModel } from '../../models';
-import { _repairDatabase, ChangeBufferEvent, database as db } from '../database';
+import type { ChangeBufferEvent} from '../database';
+import { _repairDatabase, database as db } from '../database';
 
 describe('init()', () => {
   it('handles being initialized twice', async () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { MockServer } from '../../models/mock-server';
+import type { MockServer } from '../../models/mock-server';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,

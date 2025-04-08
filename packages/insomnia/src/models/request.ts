@@ -1,10 +1,9 @@
 import { OperationTypeNode } from 'graphql';
 
-import {
+import type {
   AUTH_API_KEY,
   AUTH_ASAP,
   AUTH_AWS_IAM,
-  AUTH_BASIC,
   AUTH_BEARER,
   AUTH_DIGEST,
   AUTH_HAWK,
@@ -12,10 +11,12 @@ import {
   AUTH_NONE,
   AUTH_NTLM,
   AUTH_OAUTH_1,
+  HAWK_ALGORITHM_SHA1,
+  HAWK_ALGORITHM_SHA256} from '../common/constants';
+import {
+  AUTH_BASIC,
   CONTENT_TYPE_FORM_URLENCODED,
   getContentTypeFromHeaders,
-  HAWK_ALGORITHM_SHA1,
-  HAWK_ALGORITHM_SHA256,
   METHOD_GET,
 } from '../common/constants';
 import { database as db } from '../common/database';
