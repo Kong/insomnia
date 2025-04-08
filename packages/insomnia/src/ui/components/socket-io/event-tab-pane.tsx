@@ -89,7 +89,7 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
 
   return (
     <div className='p-4'>
-      <div className='grid grid-cols-[30px_1fr_80px_1fr_50px] items-center gap-2 border-solid border border-[--hl-md]'>
+      <div className='grid grid-cols-[30px_1fr_80px_1px_1fr_50px] items-center gap-2 border-solid border border-[--hl-md] h-[25px]'>
         <div />
         <div className='flex items-center'>
           EVENTS
@@ -97,7 +97,8 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
             <Icon icon="plus" className='cursor-pointer' />
           </Button>
         </div>
-        <div className='border-solid border-r border-[--hl-md] h-full'>LISTEN</div>
+        <div>LISTEN</div>
+        <span className='h-full bg-[--hl-md]' />
         <div>DESCRIPTION</div>
         <div />
       </div>
@@ -108,7 +109,7 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
       >
         {item => (
           <GridListItem
-            className="group h-[30px] grid grid-cols-[30px_1fr_80px_1fr_50px] items-center gap-2 border-solid border-b border-x border-[--hl-md] [&:hover_.deleteBtn]:flex transition-all"
+            className="group h-[30px] grid grid-cols-[30px_1fr_80px_1px_1fr_50px] items-center gap-2 border-solid border-b border-x border-[--hl-md] [&:hover_.deleteBtn]:flex transition-all"
             textValue='event item'
           >
             <div />
@@ -120,7 +121,7 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
                 handleChange({ ...item, eventName }, 'eventName');
               }}
             />
-            <div className='border-solid border-r border-[--hl-md] text-left h-full'>
+            <div className='text-left'>
               <Switch
                 isSelected={item.isOpen}
                 onChange={isOpen => {
@@ -140,6 +141,7 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
                 }}
               </Switch>
             </div>
+            <span className='h-full bg-[--hl-md]' />
             <OneLineEditor
               defaultValue={item.desc}
               id={`socketIO-event-listener-desc-${item.id}`}
