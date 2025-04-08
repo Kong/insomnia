@@ -24,7 +24,7 @@ ${options.map(option => `- \`${option.flags}\`: ${option.description}
 function generateSubcommandsMarkdown(commandName: string, subcommands: { name: string; description: string }[]): string {
     return subcommands.length ? `## Subcommands
 
-${subcommands.map(sub => `- [\`${commandName} ${sub.name}\`](/insomnia-inso/${commandName.replace(/\s+/g, '_')}_${sub.name.replace(/\s+/g, '_')}/{{page.release}}/): ${sub.description}
+${subcommands.map(sub => `- [\`${commandName} ${sub.name}\`](/inso-cli/reference/${commandName.replace(/\s+/g, '_')}_${sub.name.replace(/\s+/g, '_')}/{{page.release}}/): ${sub.description}
 `).join('')}
 ` : '';
 }
@@ -96,7 +96,7 @@ ${generateOptionsMarkdown(program.options, 'Global Flags')}
 
 ## Commands
 
-${allCommands.map(({ name, description, fileName }) => `- [\`${name}\`](/insomnia-inso/${fileName.replace('.md', '')}/{{page.release}}/): ${description}
+${allCommands.map(({ name, description, fileName }) => `- [\`${name}\`](/inso-cli/reference/${fileName.replace('.md', '')}/{{page.release}}/): ${description}
 `).join('')}
 ${allCommands.map(({ name, subcommands }) => `${generateSubcommandsMarkdown(name, subcommands)}
 `).join('')}`);
