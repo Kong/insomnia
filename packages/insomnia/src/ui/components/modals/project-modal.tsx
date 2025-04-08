@@ -34,7 +34,6 @@ export const ProjectModal = ({
   const { organizationId } = useParams() as { organizationId: string; projectId: string };
   const [projectData, setProjectData] = useState<{
     name: string;
-    storageType: 'local' | 'remote' | 'git';
     authorName?: string;
     authorEmail?: string;
     uri?: string;
@@ -44,7 +43,6 @@ export const ProjectModal = ({
     oauth2format?: OauthProviderName;
   }>({
     name: project?.name || 'My Project',
-    storageType: getDefaultProjectStorageType(storageRules, project),
     authorName: gitRepository?.author?.name || '',
     authorEmail: gitRepository?.author?.email || '',
     uri: gitRepository?.uri || '',
@@ -53,6 +51,8 @@ export const ProjectModal = ({
     token: gitRepository?.credentials && 'token' in gitRepository.credentials ? gitRepository?.credentials?.token : '',
     oauth2format: gitRepository?.credentials && 'oauth2format' in gitRepository.credentials ? gitRepository?.credentials?.oauth2format ?? 'github' : undefined,
   });
+
+  const [storageType, setStorageType] = useState<'local' | 'remote' | 'git'>(getDefaultProjectStorageType(storageRules, project));
 
   const [activeView, setActiveView] = useState<'project' | 'git-clone' | 'git-results' | 'switch-storage-type'>('project');
   const [selectedTab, setTab] = useState<OauthProviderName>('github');
@@ -100,7 +100,7 @@ export const ProjectModal = ({
   };
 
   const onUpsertProject = () => {
-    if (project && activeView !== 'switch-storage-type' && isSwitchingStorageType(project, projectData.storageType)) {
+    if (project && activeView !== 'switch-storage-type' && isSwitchingStorageType(project, storageType)) {
       setActiveView('switch-storage-type');
       return;
     }
@@ -134,10 +134,7 @@ export const ProjectModal = ({
 
   useEffect(() => {
     if (storageRules) {
-      setProjectData({
-        ...projectData,
-        storageType: getDefaultProjectStorageType(storageRules, project),
-      });
+      setStorageType(getDefaultProjectStorageType(storageRules, project));
     }
   }, [storageRules, project]);
 
@@ -196,8 +193,8 @@ export const ProjectModal = ({
                     <RadioGroup
                       name="type"
                       className="flex flex-col gap-2"
-                      onChange={value => setProjectData({ ...projectData, storageType: value as 'local' | 'remote' | 'git' })}
-                      value={projectData.storageType}
+                      onChange={value => setStorageType(value as 'local' | 'remote' | 'git')}
+                      value={storageType}
                     >
                       <Label className="text-sm text-[--hl]">
                         Project type
@@ -262,7 +259,7 @@ export const ProjectModal = ({
                       >
                         Cancel
                       </Button>
-                      {(projectData.storageType === 'git' && !gitRepository) && (
+                      {(storageType === 'git' && !gitRepository) && (
                         <Button
                           onPress={() => setActiveView('git-clone')}
                           className="hover:no-underline w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
@@ -270,7 +267,7 @@ export const ProjectModal = ({
                           Next
                         </Button>
                       )}
-                      {(projectData.storageType !== 'git' || gitRepository) && (
+                      {(storageType !== 'git' || gitRepository) && (
                         <Button
                           onPress={onUpsertProject}
                           isDisabled={upsertProjectFetcher.state !== 'idle'}
@@ -457,7 +454,7 @@ export const ProjectModal = ({
               {activeView === 'switch-storage-type' && (
                 <>
                   <div className='flex flex-col justify-start gap-2 overflow-y-auto px-10'>
-                    {projectData.storageType === 'git' && (
+                    {storageType === 'git' && (
                       <div className='text-[--color-font] flex flex-col gap-4'>
                         <div className='flex flex-col gap-4'>
                           <p>
@@ -480,7 +477,7 @@ export const ProjectModal = ({
                         </div>
                       </div>
                     )}
-                    {projectData.storageType === 'local' && (
+                    {storageType === 'local' && (
                       <div className='text-[--color-font] flex flex-col gap-4'>
                         <div className='flex flex-col gap-4'>
                           <p>
@@ -512,7 +509,7 @@ export const ProjectModal = ({
                         </div>
                       </div>
                     )}
-                    {projectData.storageType === 'remote' && (
+                    {storageType === 'remote' && (
                       <div className='text-[--color-font] flex flex-col gap-4'>
                         <div className='flex flex-col gap-4'>
                           <p>
