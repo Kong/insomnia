@@ -2,9 +2,9 @@ import React, { useEffect } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useNavigation } from 'react-router-dom';
 
-import { type GitRepository } from '../../../models/git-repository';
-import { type Project } from '../../../models/project';
-import { ORG_STORAGE_RULE } from '../../routes/organization';
+import type { GitRepository } from '../../../models/git-repository';
+import type { Project } from '../../../models/project';
+import type { ORG_STORAGE_RULE } from '../../routes/organization';
 import { Icon } from '../icon';
 import { ProjectSettingsForm } from '../project/project-settings-form';
 
