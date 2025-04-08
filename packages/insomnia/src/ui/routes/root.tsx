@@ -1,7 +1,7 @@
 import '../css/styles.css';
 
 import type { IpcRendererEvent } from 'electron';
-import { Button, plusAndTime } from 'insomnia-enterprise';
+import { Article } from 'insomnia-enterprise/enterprise-feature-A/renderer';
 import React, { useEffect, useState } from 'react';
 import { type LoaderFunction, Outlet, useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
@@ -249,9 +249,12 @@ const Root = () => {
       <NunjucksEnabledProvider>
         <ErrorBoundary>
           <div className="app">
-            <Button>
-              {plusAndTime(1, 2, 3)}
-            </Button>
+            <Article
+              headerProps={{
+                headerContent: 'Enterprise Feature A',
+              }}
+              articleContent="This is the content of Enterprise Feature A."
+            />
             <Outlet />
           </div>
           <Modals />

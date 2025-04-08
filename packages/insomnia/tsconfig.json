@@ -6,7 +6,7 @@
     "target": "es2020",
     "allowJs": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "isolatedModules": true,
     /* Transpiling Options */
     "module": "ESNext",
