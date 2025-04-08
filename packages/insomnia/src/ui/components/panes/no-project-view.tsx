@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import React from 'react';
 
-import { ORG_STORAGE_RULE } from '../../routes/organization';
+import type { ORG_STORAGE_RULE } from '../../routes/organization';
 import { ProjectSettingsForm } from '../project/project-settings-form';
 
 interface Props {
