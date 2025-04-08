@@ -5,7 +5,8 @@ import fs from 'fs';
 
 import { version } from '../../package.json';
 
-const DOCS_DIR = path.join(__dirname, `../reference/insomnia-inso/${version}`);
+const majorMinor = version.split('.').slice(0, 2).join('.');
+const DOCS_DIR = path.join(__dirname, `../reference/insomnia-inso/${majorMinor}`);
 
 function writeMarkdownFile(fileName: string, content: string): void {
     const outputPath = path.join(DOCS_DIR, fileName);
