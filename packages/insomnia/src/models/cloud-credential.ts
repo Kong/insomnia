@@ -1,3 +1,5 @@
+import type { AuthenticationResult as AzureOAuthCredential } from '@azure/msal-node';
+
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
@@ -59,7 +61,11 @@ export interface HashiCorpCredential extends IBaseCloudCredential {
   provider: 'hashicorp';
   credentials: HashiCorpCredentials;
 }
-export type BaseCloudCredential = AWSCloudCredential | GCPCloudCredential | HashiCorpCredential;
+export interface AzureCloudCredential extends IBaseCloudCredential {
+  provider: 'azure';
+  credentials: AzureOAuthCredential;
+}
+export type BaseCloudCredential = AWSCloudCredential | AzureCloudCredential | GCPCloudCredential | HashiCorpCredential;
 export type CloudProviderCredential = BaseModel & BaseCloudCredential;
 
 export const name = 'Cloud Credential';

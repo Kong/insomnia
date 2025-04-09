@@ -48,6 +48,24 @@ export interface HashiCorpVaultKVV2SecretConfig {
   secretKey?: string;
   version?: string | number;
 }
+
+export type AzureSecretType = 'secret' | 'key';
+export interface AzureSecretConfig {
+  secretIdentifier: string;
+  secretType: AzureSecretType;
+}
+
 export type HashiCorpSecretConfig = HCPSecretConfig | HashiCorpVaultKVV1SecretConfig | HashiCorpVaultKVV2SecretConfig;
 
-export type ExternalVaultConfig = AWSSecretConfig | GCPSecretConfig | HashiCorpSecretConfig;
+export type ExternalVaultConfig = AWSSecretConfig | GCPSecretConfig | HashiCorpSecretConfig | AzureSecretConfig;
+
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
+export abstract class OAuthCloudService {
+  static async openAuthUrl() {
+    throw new Error('Subclasses must implement the static method openAuthUrl');
+  };
+
+  static async exchangeCode(data: any): Promise<any> {
+    throw new Error(`Subclasses must implement the static method exchangeCode with ${data}`);
+  };
+};

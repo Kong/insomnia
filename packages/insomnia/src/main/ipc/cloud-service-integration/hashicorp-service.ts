@@ -124,74 +124,74 @@ export class HashiCorpService implements ICloudService {
             },
           };
         }
-          const errorResult = await this._parseResponseError(authResponse);
-          return errorResult;
+        const errorResult = await this._parseResponseError(authResponse);
+        return errorResult;
 
       }
-        const { authMethod, serverAddress } = this._credential;
-        const finalUrl = serverAddress.endsWith('/') ? serverAddress.substring(0, serverAddress.length - 1) : serverAddress;
-        if (authMethod === HashiCorpVaultAuthMethod.appRole) {
-          const { role_id, secret_id } = this._credential;
-          const requestConfig: RequestInit = {
-            method: 'POST',
-            body: JSON.stringify({
-              role_id, secret_id,
-            }),
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            signal: AbortSignal.timeout(INSOMNIA_FETCH_TIME_OUT),
-          };
-          // authenticate to on-prem deployement with app role
-          const authResponse = await net.fetch(`${finalUrl}/v1/auth/approle/login`, requestConfig);
-          if (authResponse.ok) {
-            const authResponseBody = await authResponse.json() as HashiCorpOnPremTokenReponse;
-            const { auth } = authResponseBody;
-            const { client_token, lease_duration } = auth;
-            return {
-              success: true,
-              result: {
-                access_token: client_token,
-                expires_at: timeNow + lease_duration * 1000,
-              },
-            };
-          }
-            const errorResult = await this._parseResponseError(authResponse);
-            return errorResult;
-
-        } else if (authMethod === HashiCorpVaultAuthMethod.token) {
-          const { access_token } = this._credential;
-          const requestConfig: RequestInit = {
-            method: 'GET',
-            headers: {
-              'X-Vault-Token': access_token,
-            },
-            signal: AbortSignal.timeout(INSOMNIA_FETCH_TIME_OUT),
-          };
-          // authenticate to on-prem deployement with token
-          const authResponse = await net.fetch(`${finalUrl}/v1/auth/token/lookup-self`, requestConfig);
-          if (authResponse.ok) {
-            const authResponseBody = await authResponse.json();
-            const { data } = authResponseBody as { data: { ttl: number } };
-            const { ttl } = data;
-            return {
-              success: true,
-              result: {
-                access_token,
-                // ttl 0 means the token never expires like root token
-                expires_at: ttl === neverExpireTokenTTL ? neverExpireTokenTTL : timeNow + ttl * 1000,
-              },
-            };
-          }
-            const errorResult = await this._parseResponseError(authResponse);
-            return errorResult;
-
-        }
+      const { authMethod, serverAddress } = this._credential;
+      const finalUrl = serverAddress.endsWith('/') ? serverAddress.substring(0, serverAddress.length - 1) : serverAddress;
+      if (authMethod === HashiCorpVaultAuthMethod.appRole) {
+        const { role_id, secret_id } = this._credential;
+        const requestConfig: RequestInit = {
+          method: 'POST',
+          body: JSON.stringify({
+            role_id, secret_id,
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          signal: AbortSignal.timeout(INSOMNIA_FETCH_TIME_OUT),
+        };
+        // authenticate to on-prem deployement with app role
+        const authResponse = await net.fetch(`${finalUrl}/v1/auth/approle/login`, requestConfig);
+        if (authResponse.ok) {
+          const authResponseBody = await authResponse.json() as HashiCorpOnPremTokenReponse;
+          const { auth } = authResponseBody;
+          const { client_token, lease_duration } = auth;
           return {
-            success: false,
-            result: null,
-            error: { errorMessage: `Invalid type ${type} with authMethod ${authMethod} for HashiCorp`, errorCode: '' },
+            success: true,
+            result: {
+              access_token: client_token,
+              expires_at: timeNow + lease_duration * 1000,
+            },
           };
+        }
+        const errorResult = await this._parseResponseError(authResponse);
+        return errorResult;
+
+      } else if (authMethod === HashiCorpVaultAuthMethod.token) {
+        const { access_token } = this._credential;
+        const requestConfig: RequestInit = {
+          method: 'GET',
+          headers: {
+            'X-Vault-Token': access_token,
+          },
+          signal: AbortSignal.timeout(INSOMNIA_FETCH_TIME_OUT),
+        };
+        // authenticate to on-prem deployement with token
+        const authResponse = await net.fetch(`${finalUrl}/v1/auth/token/lookup-self`, requestConfig);
+        if (authResponse.ok) {
+          const authResponseBody = await authResponse.json();
+          const { data } = authResponseBody as { data: { ttl: number } };
+          const { ttl } = data;
+          return {
+            success: true,
+            result: {
+              access_token,
+              // ttl 0 means the token never expires like root token
+              expires_at: ttl === neverExpireTokenTTL ? neverExpireTokenTTL : timeNow + ttl * 1000,
+            },
+          };
+        }
+        const errorResult = await this._parseResponseError(authResponse);
+        return errorResult;
+
+      }
+      return {
+        success: false,
+        result: null,
+        error: { errorMessage: `Invalid type ${type} with authMethod ${authMethod} for HashiCorp`, errorCode: '' },
+      };
     } catch (error) {
       return {
         success: false,
@@ -230,7 +230,6 @@ export class HashiCorpService implements ICloudService {
         return defaultUniqueKeyHash;
       }
     }
-
   };
 
   async getSecret(secretName: string, config: HashiCorpSecretConfig): Promise<CloudServiceResult<HashiCorpGetSecretValue>> {
@@ -257,67 +256,67 @@ export class HashiCorpService implements ICloudService {
               result: secretResponseBody,
             };
           }
-            const errorResult = await this._parseResponseError(secretResponse);
-            return errorResult;
+          const errorResult = await this._parseResponseError(secretResponse);
+          return errorResult;
 
         }
-          // kv version v2
-          const { version } = config as HashiCorpVaultKVV2SecretConfig;
-          let v2Url = `${finalUrl}/v1/${secretEnginePath}/data/${secretName}`;
-          if (version) {
-            // add version url params
-            const urlObj = new URL(v2Url);
-            urlObj.searchParams.append('version', version.toString());
-            v2Url = urlObj.toString();
-          }
-          const requestConfig: RequestInit = {
-            method: 'GET',
-            headers: {
-              'X-Vault-Token': access_token!,
-            },
-            signal: AbortSignal.timeout(INSOMNIA_FETCH_TIME_OUT),
-          };
-          const secretResponse = await net.fetch(v2Url, requestConfig);
-          if (secretResponse.ok) {
-            const secretResponseBody = await secretResponse.json() as HashiCorpVaultKVV2SecretValue;
-            return {
-              success: true,
-              result: secretResponseBody,
-            };
-          }
-            const errorResult = await this._parseResponseError(secretResponse);
-            return errorResult;
-
-      }
-        // cloud vault
-        const { organizationId, projectId, appName, version } = config as HCPSecretConfig;
-        const secretRequestBaseUrl = `${hcp_api_url}/secrets/${hcp_api_version}/organizations/${organizationId}/projects/${projectId}/apps/${appName}/secrets/${secretName}`;
-        const secretRequestUrl = version ? `${secretRequestBaseUrl}/versions/${version}:open` : `${secretRequestBaseUrl}:open`;
+        // kv version v2
+        const { version } = config as HashiCorpVaultKVV2SecretConfig;
+        let v2Url = `${finalUrl}/v1/${secretEnginePath}/data/${secretName}`;
+        if (version) {
+          // add version url params
+          const urlObj = new URL(v2Url);
+          urlObj.searchParams.append('version', version.toString());
+          v2Url = urlObj.toString();
+        }
         const requestConfig: RequestInit = {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${access_token}`,
+            'X-Vault-Token': access_token!,
           },
           signal: AbortSignal.timeout(INSOMNIA_FETCH_TIME_OUT),
         };
-        const secretResponse = await net.fetch(secretRequestUrl, requestConfig);
+        const secretResponse = await net.fetch(v2Url, requestConfig);
         if (secretResponse.ok) {
-          const secretResponseBody = await secretResponse.json();
-          let secretResult: HCPStaticSecretValue;
-          if (version) {
-            const { static_version } = secretResponseBody as HCPStaticSecretResultWithVersion;
-            secretResult = static_version;
-          } else {
-            const { secret } = secretResponseBody as HCPStaticSecretResultWithoutVersion;
-            secretResult = secret.static_version;
-          }
+          const secretResponseBody = await secretResponse.json() as HashiCorpVaultKVV2SecretValue;
           return {
             success: true,
-            result: secretResult,
+            result: secretResponseBody,
           };
         }
-          const errorResult = await this._parseResponseError(secretResponse);
-          return errorResult;
+        const errorResult = await this._parseResponseError(secretResponse);
+        return errorResult;
+
+      }
+      // cloud vault
+      const { organizationId, projectId, appName, version } = config as HCPSecretConfig;
+      const secretRequestBaseUrl = `${hcp_api_url}/secrets/${hcp_api_version}/organizations/${organizationId}/projects/${projectId}/apps/${appName}/secrets/${secretName}`;
+      const secretRequestUrl = version ? `${secretRequestBaseUrl}/versions/${version}:open` : `${secretRequestBaseUrl}:open`;
+      const requestConfig: RequestInit = {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${access_token}`,
+        },
+        signal: AbortSignal.timeout(INSOMNIA_FETCH_TIME_OUT),
+      };
+      const secretResponse = await net.fetch(secretRequestUrl, requestConfig);
+      if (secretResponse.ok) {
+        const secretResponseBody = await secretResponse.json();
+        let secretResult: HCPStaticSecretValue;
+        if (version) {
+          const { static_version } = secretResponseBody as HCPStaticSecretResultWithVersion;
+          secretResult = static_version;
+        } else {
+          const { secret } = secretResponseBody as HCPStaticSecretResultWithoutVersion;
+          secretResult = secret.static_version;
+        }
+        return {
+          success: true,
+          result: secretResult,
+        };
+      }
+      const errorResult = await this._parseResponseError(secretResponse);
+      return errorResult;
 
     } catch (error) {
       return {

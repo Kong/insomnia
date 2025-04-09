@@ -1,5 +1,8 @@
+import type { AuthenticationResult as AzureOAuthCredential } from '@azure/msal-node';
+
 import * as models from '../../../models';
 import type { AWSTemporaryCredential, BaseCloudCredential, CloudProviderName, HashiCorpCredentials } from '../../../models/cloud-credential';
+import { AzureService } from '../cloud-service-integration/azure-service';
 import { ipcMainHandle, ipcMainOn } from '../electron';
 import { type AWSGetSecretConfig, AWSService } from './aws-service';
 import { type GCPGetSecretConfig, GCPService } from './gcp-servcie';
@@ -15,6 +18,8 @@ export interface cloudServiceBridgeAPI {
   getSecret: typeof getSecret;
   clearCache: typeof clearVaultCache;
   setCacheMaxAge: typeof setCacheMaxAge;
+  openAuthUrl: typeof openAuthUrl;
+  exchangeCode: typeof exchangeCode;
 }
 export interface CloudServiceAuthOption {
   provider: CloudProviderName;
@@ -35,6 +40,8 @@ export type CloudServiceGetSecretConfig = AWSGetSecretConfig | GCPGetSecretConfi
 export function registerCloudServiceHandlers() {
   ipcMainHandle('cloudService.authenticate', (_event, options) => cloudServiceProviderAuthentication(options));
   ipcMainHandle('cloudService.getSecret', (_event, options) => getSecret(options));
+  ipcMainHandle('cloudService.exchangeCode', (_event, type, data) => exchangeCode(type, data));
+  ipcMainOn('cloudService.openAuthUrl', (_event, type) => openAuthUrl(type));
   ipcMainOn('cloudService.clearCache', () => clearVaultCache());
   ipcMainOn('cloudService.setCacheMaxAge', (_event, { maxAge, unit }) => setCacheMaxAge(maxAge, unit));
 }
@@ -48,6 +55,8 @@ function createCloudService(name: CloudProviderName, credential: BaseCloudCreden
       return new GCPService(credential as string);
     case 'hashicorp':
       return new HashiCorpService(credential as HashiCorpCredentials);
+    case 'azure':
+      return new AzureService(credential as AzureOAuthCredential);
     default:
       throw new Error('Invalid cloud service provider name');
   }
@@ -66,6 +75,24 @@ export const cloudServiceProviderAuthentication = (options: CloudServiceAuthOpti
   const { provider, credentials } = options;
   const cloudService = createCloudService(provider, credentials);
   return cloudService.authenticate();
+};
+
+const openAuthUrl = (type: 'azure') => {
+  switch (type) {
+    case 'azure':
+      AzureService.openAuthUrl();
+      break;
+    default:
+      return;
+  }
+};
+
+const exchangeCode = async (type: 'azure', data: any) => {
+  // eslint-disable-next-line default-case
+  switch (type) {
+    case 'azure':
+      return AzureService.exchangeCode(data);
+  }
 };
 
 export const getSecret = async (options: CloudServiceSecretOption) => {

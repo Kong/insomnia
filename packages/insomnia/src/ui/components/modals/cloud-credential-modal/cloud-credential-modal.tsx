@@ -1,9 +1,11 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useFetcher } from 'react-router-dom';
 
 import { type BaseCloudCredential, type CloudProviderCredential, type CloudProviderName, getProviderDisplayName } from '../../../../models/cloud-credential';
 import { Icon } from '../../icon';
+import { showModal } from '..';
+import { SettingsModal, TAB_CLOUD_CREDENTIAL } from '../settings-modal';
 import { AWSCredentialForm } from './aws-credential-form';
 import { GCPCredentialForm } from './gcp-credential-form';
 import { HashiCorpCredentialForm } from './hashicorp-credential-form';
@@ -17,6 +19,9 @@ export interface CloudCredentialModalProps {
 
 export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
   const { provider, providerCredential, onClose, onComplete } = props;
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [error, setError] = useState('');
+  const [manulInputUrl, setManualInputUrl] = useState('');
   const providerDisplayName = getProviderDisplayName(provider);
   const cloudCredentialFetcher = useFetcher();
   const isEditing = !!providerCredential;
@@ -40,6 +45,32 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
         encType: 'application/json',
       }
     );
+  };
+
+  const exchangeAzureCode = async () => {
+    try {
+      setError('');
+      const parsedURL = new URL(manulInputUrl);
+      const code = parsedURL.searchParams.get('code');
+      if (typeof code === 'string') {
+        const authResult = await window.main.cloudService.exchangeCode('azure', { code });
+        const { success, result, error } = authResult;
+        if (success) {
+          const { account, uniqueId } = result!;
+          handleFormSubmit({
+            name: account?.username || uniqueId,
+            provider: 'azure',
+            credentials: result!,
+            isAuthenticated: true,
+          });
+          showModal(SettingsModal, { tab: TAB_CLOUD_CREDENTIAL });
+        } else {
+          setError(error!.errorMessage);
+        }
+      }
+    } catch (error) {
+      setError(error.toString());
+    }
   };
 
   useEffect(() => {
@@ -104,6 +135,40 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
                   onSubmit={handleFormSubmit}
                   errorMessage={fetchErrorMessage}
                 />
+              }
+              {provider === 'azure' &&
+                <div className='flex flex-col place-content-center place-items-center p-[--padding-sm] border border-solid border-[--hl-sm] rounded-[--radius-md]'>
+                  <a
+                    className='cursor-pointer'
+                    onClick={() => {
+                      setIsAuthenticating(true);
+                      window.main.cloudService.openAuthUrl('azure');
+                    }}
+                  >
+                    {isAuthenticating ? 'Authenticating' : 'Click to authenticate'} with Azure
+                  </a>
+                  {isAuthenticating &&
+                    <label className="form-control form-control--outlined">
+                      <div className="form-row">
+                        <input
+                          placeholder='Manually paste the authentication url if you are not redirected'
+                          onChange={e => setManualInputUrl(e.target.value)}
+                        />
+                        <Button
+                          className='px-[--padding-md] h-[--line-height-xs] border border-solid border-[--hl-sm]'
+                          onPress={() => exchangeAzureCode()}
+                        >
+                          Authenticate
+                        </Button>
+                      </div>
+                    </label>
+                  }
+                  {error && (
+                    <p className="notice error margin-bottom-sm w-full">
+                      {error}
+                    </p>
+                  )}
+                </div>
               }
             </div>
           )}

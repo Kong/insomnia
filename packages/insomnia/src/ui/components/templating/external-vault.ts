@@ -1,6 +1,6 @@
 import type { CloudServiceSecretOption } from '../../../main/ipc/cloud-service-integration/cloud-service';
 import type { HashiCorpVaultKVV1SecretValue, HashiCorpVaultKVV2SecretValue, HCPStaticSecretValue } from '../../../main/ipc/cloud-service-integration/hashicorp-service';
-import type { AWSSecretConfig, ExternalVaultConfig, GCPSecretConfig, HashiCorpSecretConfig, HashiCorpVaultKVV1SecretConfig, HashiCorpVaultKVV2SecretConfig, HCPSecretConfig } from '../../../main/ipc/cloud-service-integration/types';
+import type { AWSSecretConfig, AzureSecretConfig, ExternalVaultConfig, GCPSecretConfig, HashiCorpSecretConfig, HashiCorpVaultKVV1SecretConfig, HashiCorpVaultKVV2SecretConfig, HCPSecretConfig } from '../../../main/ipc/cloud-service-integration/types';
 import type { CloudProviderCredential, CloudProviderName, HashiCorpCredentials } from '../../../models/cloud-credential';
 import type { PluginTemplateTagContext } from '../../../templating/types';
 import { invariant } from '../../../utils/invariant';
@@ -13,6 +13,8 @@ export const getExternalVault = async (_context: PluginTemplateTagContext, provi
       return getGCPSecret(_context, secretConfig as GCPSecretConfig, providerCredential);
     case 'hashicorp':
       return getHashiCorpSecret(_context, secretConfig as HashiCorpSecretConfig, providerCredential);
+    case 'azure':
+      return getAzureSecret(_context, secretConfig as AzureSecretConfig, providerCredential);
     default:
       return '';
   }
@@ -84,6 +86,25 @@ export const getGCPSecret = async (context: PluginTemplateTagContext, secretConf
   }
     throw new Error(`Get secret from GCP failed: ${error?.errorMessage}`);
 
+};
+
+export const getAzureSecret = async (context: PluginTemplateTagContext, secretConfig: AzureSecretConfig, providerCredential: CloudProviderCredential) => {
+  const { secretIdentifier } = secretConfig;
+  if (!secretIdentifier) {
+    throw new Error('Get secret from Azure failed: Secret Identifier is required');
+  }
+  const getSecretOption: CloudServiceSecretOption = {
+    provider: 'azure',
+    secretId: secretIdentifier,
+    credentials: providerCredential.credentials,
+    config: {},
+  };
+  const secretResult = await handleCloudServiceRequest(context, 'getSecret', getSecretOption);
+  const { success, error, result } = secretResult;
+  if (success && result) {
+    return result.value;
+  };
+  throw new Error(`Get secret from Azure failed: ${error?.errorMessage}`);
 };
 
 export const getHashiCorpSecret = async (context: PluginTemplateTagContext, secretConfig: HashiCorpSecretConfig, providerCredential: CloudProviderCredential) => {

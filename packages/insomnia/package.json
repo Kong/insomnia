@@ -46,6 +46,7 @@
     "@google-cloud/secret-manager": "^5.6.0",
     "@grpc/grpc-js": "^1.12.0",
     "@grpc/proto-loader": "^0.7.13",
+    "@azure/msal-node": "^2.16.2",
     "@seald-io/nedb": "^4.0.4",
     "@segment/analytics-node": "2.1.0",
     "apiconnect-wsdl": "2.0.36",

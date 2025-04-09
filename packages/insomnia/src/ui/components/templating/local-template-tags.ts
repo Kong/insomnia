@@ -33,6 +33,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             { displayName: 'AWS Secrets Manager', value: 'aws' },
             { displayName: 'GCP Secret Manager', value: 'gcp' },
             { displayName: 'HashiCorp Vault', value: 'hashicorp' },
+            { displayName: 'Azure Key Vault', value: 'azure' },
           ],
         },
         {
