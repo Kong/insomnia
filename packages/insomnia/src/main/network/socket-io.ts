@@ -68,6 +68,7 @@ interface OpenSocketIORequestOptions {
   requestId: string;
   workspaceId: string;
   url: string;
+  query: Record<string, string>;
   headers: RequestHeader[];
   cookieJar: CookieJar;
   initialPayload?: string;
@@ -76,6 +77,7 @@ const openSocketIOConnection = async (
   _event: Electron.IpcMainInvokeEvent,
   options: OpenSocketIORequestOptions
 ): Promise<void> => {
+  console.log('open socket io connection', options);
   const existingConnection = SocketIOConnections.get(options.requestId);
 
   if (existingConnection) {
@@ -113,6 +115,7 @@ const openSocketIOConnection = async (
 
     const socket = SocketIOClient(url, {
       extraHeaders: lowerCasedEnabledHeaders,
+      query: options.query,
     });
     SocketIOConnections.set(options.requestId, socket);
 

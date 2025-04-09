@@ -404,6 +404,7 @@ export interface ConnectActionParams {
   authentication: RequestAuthentication;
   cookieJar: CookieJar;
   suppressUserAgent: boolean;
+  query?: Record<string, string>;
 }
 export const connectAction: ActionFunction = async ({ request, params }) => {
   const { requestId, workspaceId } = params;
@@ -468,6 +469,7 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
       url: rendered.url,
       headers: rendered.headers,
       cookieJar: rendered.cookieJar,
+      query: rendered.query || {},
     });
   }
   // HACK: even more elaborate hack to get the request to update
