@@ -822,7 +822,7 @@ Test results:`);
       const scriptTask = __configFile?.scripts?.[scriptName];
 
       if (!scriptTask) {
-        logger.fatal(`Could not find inso script "${scriptName}" in the config file.`, Object.keys(__configFile.scripts || {}));
+        logger.fatal(`Could not find inso script "${scriptName}" in the config file.`, Object.keys(__configFile?.scripts || {}));
         return process.exit(1);
       }
 
