@@ -37,9 +37,7 @@
     "test:smoke:dev": "npm run test:dev -w insomnia-smoke-test -- --project=Smoke",
     "test:smoke:build": "npm run test:build -w insomnia-smoke-test -- --project=Smoke",
     "test:smoke:package": "npm run test:package -w insomnia-smoke-test -- --project=Smoke",
-    "test:crit:package": "npm run test:package -w insomnia-smoke-test -- --project=Critical",
-    "changelog-image": "esr ./scripts/changelog-image/changelog-image.ts",
-    "download-all-npm-plugins": "esr ./scripts/download-all-npm-plugins.ts"
+    "test:crit:package": "npm run test:package -w insomnia-smoke-test -- --project=Critical"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",
