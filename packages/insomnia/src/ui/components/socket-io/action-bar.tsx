@@ -51,8 +51,15 @@ export const SocketIOActionBar: FC<ActionBarProps> = ({ request, environmentId, 
         workspaceCookieJar,
       },
     });
+    const query: Record<string, string> = {};
+    rendered.parameters.forEach(({ name, value }: { name: string; value: string }) => {
+      if (name) {
+        query[name] = value;
+      }
+    });
     rendered && connect({
-      url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
+      url: rendered.url,
+      query,
       headers: rendered.headers,
       authentication: rendered.authentication,
       cookieJar: rendered.workspaceCookieJar,
