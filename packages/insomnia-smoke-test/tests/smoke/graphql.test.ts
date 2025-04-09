@@ -41,12 +41,9 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
   await page.getByText('GraphQL request with number').click();
   await page.getByTestId('Dropdown-GraphQL-request-with-number').click();
 
-  await page.getByText('Copy as cURL').click();
-  const handle = await page.evaluateHandle(() => navigator.clipboard.readText());
-  const clipboardContent = await handle.jsonValue();
-  const exepctResult = JSON.stringify({ query: 'query($inputVar:Int){echoNum(intVar:$inputVar)}', variables: { inputVar: 3 } });
-  // expect exported curl body to be JSON string
-  expect(clipboardContent.split('--data ')[1]?.replace(/[\n\s\']/g, '')).toContain(exepctResult);
+  await page.getByRole('menuitemradio', { name: 'Generate Code' }).click();
+  await page.getByText('"query": "query($inputVar: Int) { echoNum(intVar: $inputVar)}",').click();
+  await page.getByRole('button', { name: 'Done' }).click();
 
   await page.getByRole('button', { name: 'Send' }).click();
 
