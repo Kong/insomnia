@@ -107,13 +107,14 @@ export const ProjectModal = ({
 
     const action = project ? `/organization/${organizationId}/project/${project._id}/update` : `/organization/${organizationId}/project/new`;
 
-    upsertProjectFetcher.submit(
-      projectData,
-      {
-        action,
-        method: 'POST',
-        encType: 'application/json',
-      }
+    upsertProjectFetcher.submit({
+      ...projectData,
+      storageType,
+    }, {
+      action,
+      method: 'POST',
+      encType: 'application/json',
+    }
     );
   };
 

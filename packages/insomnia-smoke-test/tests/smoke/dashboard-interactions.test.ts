@@ -19,8 +19,8 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).toContainText('This is an empty project, to get started create your first resource:');
 
       // Rename Project
-      await page.getByRole('row', { name: 'My Project' }).focus();
-      await page.getByRole('row', { name: 'My Project' }).getByRole('button', { name: 'Project Actions' }).click();
+      await page.getByRole('row', { name: 'My Project' }).first().focus();
+      await page.getByRole('row', { name: 'My Project' }).first().getByRole('button', { name: 'Project Actions' }).click();
       await page.getByRole('menuitemradio', { name: 'Settings' }).click();
       await page.getByPlaceholder('My Project').click();
       await page.getByPlaceholder('My Project').fill('My Project123');
@@ -34,8 +34,8 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).toContainText('My Project123');
 
       // Delete project
-      await page.getByRole('row', { name: 'My Project' }).focus();
-      await page.getByRole('row', { name: 'My Project' }).getByRole('button', { name: 'Project Actions' }).click();
+      await page.getByRole('row', { name: 'My Project' }).first().focus();
+      await page.getByRole('row', { name: 'My Project' }).first().getByRole('button', { name: 'Project Actions' }).click();
       await page.getByRole('menuitemradio', { name: 'Delete' }).click();
       await page.getByRole('button', { name: 'Delete' }).click();
 
