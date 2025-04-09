@@ -30,7 +30,7 @@ import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
 import { TimeFromNow } from '../../time-from-now';
-import prettifyGraphql from './prettify-graphql';
+import { prettifyGraphql } from './prettify-graphql.mjs';
 
 // Type guard to ensure loc is non-nullable
 const hasLocation = (def: OperationDefinitionNode): def is OperationDefinitionNode & { loc: NonNullable<OperationDefinitionNode['loc']> } => {

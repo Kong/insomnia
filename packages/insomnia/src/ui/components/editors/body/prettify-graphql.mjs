@@ -1,5 +1,5 @@
-// taken from https://github.com/martin-888/graphql-prettier
-import { Kind,parse,print } from 'graphql';
+// taken from https://github.com/martin-888/graphql-prettier/blob/master/src/index.js
+import { Kind, parse, print } from 'graphql';
 
 const isSelectionsEmpty = (node) =>
   !node.selectionSet ||
@@ -126,7 +126,7 @@ const replaceFragments = (sourceNode, fragments) => {
   return newNode;
 };
 
-const prettify = (source, noDuplicates = true) => {
+export const prettifyGraphql = (source, noDuplicates = true) => {
   const document = parse(source);
 
   const fragments = document.definitions
@@ -136,7 +136,7 @@ const prettify = (source, noDuplicates = true) => {
   return document.definitions
     .filter(node => node.kind === Kind.OPERATION_DEFINITION)
     .map(operationNode => {
-      const newOperationNode = { ...operationNode };
+      let newOperationNode = { ...operationNode };
 
       newOperationNode.selectionSet.selections = newOperationNode.selectionSet.selections
         .map(selection => replaceFragments(selection, fragments));
@@ -152,4 +152,3 @@ const prettify = (source, noDuplicates = true) => {
     .join('\n');
 };
 
-export default prettify;
