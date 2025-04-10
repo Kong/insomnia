@@ -23,7 +23,7 @@ import { v4 as uuidv4 } from 'uuid';
 import packageJson from '../package.json';
 import { exportSpecification, writeFileWithCliOptions } from './commands/export-specification';
 import { getRuleSetFileFromFolderByFilename, lintSpecification } from './commands/lint-specification';
-import type { Database} from './db';
+import type { Database } from './db';
 import { isFile, loadDb } from './db';
 import { insomniaExportAdapter } from './db/adapters/insomnia-adapter';
 import { loadApiSpec, promptApiSpec } from './db/models/api-spec';
@@ -819,10 +819,10 @@ Test results:`);
       options.ci && logger.setReporters([new BasicReporter()]);
       options.printOptions && logger.log('Loaded options', options, '\n');
 
-      const scriptTask = options.__configFile?.scripts?.[scriptName];
+      const scriptTask = __configFile?.scripts?.[scriptName];
 
       if (!scriptTask) {
-        logger.fatal(`Could not find inso script "${scriptName}" in the config file.`);
+        logger.fatal(`Could not find inso script "${scriptName}" in the config file.`, Object.keys(__configFile?.scripts || {}));
         return process.exit(1);
       }
 
