@@ -4,7 +4,7 @@ import { useNavigation } from 'react-router-dom';
 
 import type { GitRepository } from '../../../models/git-repository';
 import type { Project } from '../../../models/project';
-import type { ORG_STORAGE_RULE } from '../../routes/organization';
+import type { StorageRules } from '../../routes/organization';
 import { Icon } from '../icon';
 import { ProjectSettingsForm } from '../project/project-settings-form';
 
@@ -32,12 +32,6 @@ export const ProjectModal = ({
     }
   }, [activeNavigation, isOpen, onOpenChange]);
 
-  useEffect(() => {
-    if (storageRules) {
-      setStorageType(getDefaultProjectStorageType(storageRules, project));
-    }
-  }, [storageRules, project]);
-
   const title = project ? 'Update project' : 'Create a new project';
 
   return (
@@ -61,7 +55,7 @@ export const ProjectModal = ({
                 </Button>
               </div>
               <ProjectSettingsForm
-                storageRule={storageRule}
+                storageRules={storageRules}
                 isGitSyncEnabled={isGitSyncEnabled}
                 project={project}
                 gitRepository={gitRepository}
