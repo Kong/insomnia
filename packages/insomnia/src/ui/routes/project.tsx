@@ -1463,7 +1463,7 @@ const ProjectRoute: FC = () => {
             ) : (
               <NoProjectView
                 isGitSyncEnabled={isGitSyncEnabled}
-                storageRule={storage}
+                storageRules={storageRules}
               />
             )}
           </Panel>
