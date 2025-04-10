@@ -57,6 +57,7 @@ import type { MockServer } from '../../models/mock-server';
 import type { Organization } from '../../models/organization';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../../models/organization';
 import {
+  getProjectStorageTypeLabel,
   isGitProject,
   isRemoteProject,
   type Project,
@@ -84,7 +85,7 @@ import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
 import { useLoaderDeferData } from '../hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
-import { ORG_STORAGE_RULE, type OrganizationLoaderData, type OrganizationStorageLoaderData, useOrganizationLoaderData } from './organization';
+import { DEFAULT_STORAGE_RULES, type OrganizationLoaderData, type OrganizationStorageLoaderData, useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 
 interface TeamProject {
@@ -685,7 +686,7 @@ const ProjectRoute: FC = () => {
 
   const { storagePromise } = storageRuleFetcher.data || {};
 
-  const [storage = ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL] = useLoaderDeferData(storagePromise);
+  const [storageRules = DEFAULT_STORAGE_RULES] = useLoaderDeferData(storagePromise);
 
   const [projectListFilter, setProjectListFilter] = useLocalStorage(`${organizationId}:project-list-filter`, '');
   const [workspaceListFilter, setWorkspaceListFilter] = useLocalStorage(`${projectId}:workspace-list-filter`, '');
@@ -892,9 +893,10 @@ const ProjectRoute: FC = () => {
       },
     ];
 
-  const isRemoteProjectInconsistent = activeProject && isRemoteProject(activeProject) && storage === ORG_STORAGE_RULE.LOCAL_ONLY;
-  const isLocalProjectInconsistent = activeProject && !isRemoteProject(activeProject) && storage === ORG_STORAGE_RULE.CLOUD_ONLY;
-  const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent;
+  const isRemoteProjectInconsistent = activeProject && isRemoteProject(activeProject) && !storageRules.enableCloudSync;
+  const isLocalProjectInconsistent = activeProject && !isRemoteProject(activeProject) && !storageRules.enableLocalVault;
+  const isGitSyncProjectInconsistent = activeProject && isGitProject(activeProject) && !storageRules.enableGitSync;
+  const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent || isGitSyncProjectInconsistent;
 
   useEffect(() => {
     window.main.landingPageRendered(LandingPage.ProjectDashboard);
@@ -1044,7 +1046,7 @@ const ProjectRoute: FC = () => {
                             <ProjectDropdown
                               organizationId={organizationId}
                               project={item}
-                              storage={storage}
+                              storageRules={storageRules}
                               isGitSyncEnabled={isGitSyncEnabled}
                             />
                           )}
@@ -1174,7 +1176,7 @@ const ProjectRoute: FC = () => {
                   <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
                     <p className='text-base'>
                       <Icon icon="exclamation-triangle" className='mr-2' />
-                      The organization owner mandates that projects must be created and stored {storage.split('_').join(' ')}. However, you can optionally enable Git Sync.
+                      The organization owner mandates that projects must be created and stored using {getProjectStorageTypeLabel(storageRules)}.
                     </p>
                     <Button onPress={() => setIsUpdateProjectModalOpen(true)} className="flex items-center justify-center border border-solid border-white px-2 py-1 rounded-sm">Update</Button>
                   </div>
@@ -1452,7 +1454,7 @@ const ProjectRoute: FC = () => {
           <ProjectModal
             isOpen={isNewProjectModalOpen}
             onOpenChange={setIsNewProjectModalOpen}
-            storageRule={storage}
+            storageRules={storageRules}
             isGitSyncEnabled={isGitSyncEnabled}
           />
         )}
@@ -1462,7 +1464,7 @@ const ProjectRoute: FC = () => {
             onOpenChange={setIsUpdateProjectModalOpen}
             project={activeProject}
             gitRepository={activeProjectGitRepository || undefined}
-            storageRule={storage}
+            storageRules={storageRules}
             isGitSyncEnabled={isGitSyncEnabled}
           />
         )}
@@ -1470,7 +1472,7 @@ const ProjectRoute: FC = () => {
           <NewWorkspaceModal
             isOpen
             project={activeProject}
-            storageRule={storage}
+            storageRules={storageRules}
             currentPlan={currentPlan}
             scope={newWorkspaceModalState.scope}
             onOpenChange={isOpen => {

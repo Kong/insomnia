@@ -181,7 +181,12 @@ const currentRole = {
   'description': 'Owner can manage the organization and also delete it.',
 };
 
-const storageRule = { 'storage': 'cloud_plus_local', 'isOverridden': false };
+const storageRule = {
+  'enableCloudSync': true,
+  'enableGitSync': true,
+  'enableLocalVault': true,
+  'isOverridden': false
+};
 
 const members = {
   'start': 0,

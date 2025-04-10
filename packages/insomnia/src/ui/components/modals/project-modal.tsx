@@ -4,10 +4,10 @@ import { useFetcher, useNavigation, useParams } from 'react-router-dom';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
 import { type GitRepository } from '../../../models/git-repository';
-import { getDefaultProjectStorageType, isGitProject, isRemoteProject, type Project } from '../../../models/project';
+import { getDefaultProjectStorageType, getProjectStorageTypeLabel, isGitProject, isRemoteProject, isSwitchingStorageType, type Project } from '../../../models/project';
 import type { UpdateProjectActionResult } from '../../routes/actions';
 import type { InitGitCloneResult } from '../../routes/git-project-actions';
-import { ORG_STORAGE_RULE } from '../../routes/organization';
+import { type StorageRules } from '../../routes/organization';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../../routes/project';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
@@ -16,33 +16,17 @@ import { CustomRepositorySettingsFormGroup } from './git-repository-settings-mod
 import { GitHubRepositorySetupFormGroup } from './git-repository-settings-modal/github-repository-settings-form-group';
 import { GitLabRepositorySetupFormGroup } from './git-repository-settings-modal/gitlab-repository-settings-form-group';
 
-function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
-  if (storageType === 'git' && !isGitProject(project)) {
-    return true;
-  }
-
-  if (storageType === 'local' && (isRemoteProject(project) || isGitProject(project))) {
-    return true;
-  }
-
-  if (storageType === 'remote' && !isRemoteProject(project)) {
-    return true;
-  }
-
-  return false;
-}
-
 export const ProjectModal = ({
   isOpen,
   onOpenChange,
-  storageRule,
+  storageRules,
   isGitSyncEnabled,
   project,
   gitRepository,
 }: {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  storageRule: ORG_STORAGE_RULE;
+  storageRules: StorageRules;
   isGitSyncEnabled: boolean;
   project?: Project;
   gitRepository?: GitRepository;
@@ -50,7 +34,6 @@ export const ProjectModal = ({
   const { organizationId } = useParams() as { organizationId: string; projectId: string };
   const [projectData, setProjectData] = useState<{
     name: string;
-    storageType: 'local' | 'remote' | 'git';
     authorName?: string;
     authorEmail?: string;
     uri?: string;
@@ -60,7 +43,6 @@ export const ProjectModal = ({
     oauth2format?: OauthProviderName;
   }>({
     name: project?.name || 'My Project',
-    storageType: getDefaultProjectStorageType(storageRule, project),
     authorName: gitRepository?.author?.name || '',
     authorEmail: gitRepository?.author?.email || '',
     uri: gitRepository?.uri || '',
@@ -70,10 +52,12 @@ export const ProjectModal = ({
     oauth2format: gitRepository?.credentials && 'oauth2format' in gitRepository.credentials ? gitRepository?.credentials?.oauth2format ?? 'github' : undefined,
   });
 
+  const [storageType, setStorageType] = useState<'local' | 'remote' | 'git'>(getDefaultProjectStorageType(storageRules, project));
+
   const [activeView, setActiveView] = useState<'project' | 'git-clone' | 'git-results' | 'switch-storage-type'>('project');
   const [selectedTab, setTab] = useState<OauthProviderName>('github');
 
-  const showStorageRestrictionMessage = storageRule !== ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL;
+  const showStorageRestrictionMessage = !storageRules.enableCloudSync || !storageRules.enableLocalVault || !storageRules.enableGitSync;
   const initCloneGitRepositoryFetcher = useFetcher<InitGitCloneResult>();
   const upsertProjectFetcher = useFetcher<UpdateProjectActionResult>();
 
@@ -116,20 +100,21 @@ export const ProjectModal = ({
   };
 
   const onUpsertProject = () => {
-    if (project && activeView !== 'switch-storage-type' && isSwitchingStorageType(project, projectData.storageType)) {
+    if (project && activeView !== 'switch-storage-type' && isSwitchingStorageType(project, storageType)) {
       setActiveView('switch-storage-type');
       return;
     }
 
     const action = project ? `/organization/${organizationId}/project/${project._id}/update` : `/organization/${organizationId}/project/new`;
 
-    upsertProjectFetcher.submit(
-      projectData,
-      {
-        action,
-        method: 'POST',
-        encType: 'application/json',
-      }
+    upsertProjectFetcher.submit({
+      ...projectData,
+      storageType,
+    }, {
+      action,
+      method: 'POST',
+      encType: 'application/json',
+    }
     );
   };
 
@@ -147,6 +132,12 @@ export const ProjectModal = ({
       onOpenChange(false);
     }
   }, [activeNavigation, isOpen, onOpenChange]);
+
+  useEffect(() => {
+    if (storageRules) {
+      setStorageType(getDefaultProjectStorageType(storageRules, project));
+    }
+  }, [storageRules, project]);
 
   const title = project ? 'Update project' : 'Create a new project';
 
@@ -203,15 +194,15 @@ export const ProjectModal = ({
                     <RadioGroup
                       name="type"
                       className="flex flex-col gap-2"
-                      onChange={value => setProjectData({ ...projectData, storageType: value as 'local' | 'remote' | 'git' })}
-                      value={projectData.storageType}
+                      onChange={value => setStorageType(value as 'local' | 'remote' | 'git')}
+                      value={storageType}
                     >
                       <Label className="text-sm text-[--hl]">
                         Project type
                       </Label>
                       <div className="flex gap-2">
                         <Radio
-                          isDisabled={storageRule === ORG_STORAGE_RULE.CLOUD_ONLY}
+                          isDisabled={!storageRules.enableLocalVault}
                           value="local"
                           className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                         >
@@ -225,7 +216,7 @@ export const ProjectModal = ({
                         </Radio>
 
                         <Radio
-                          isDisabled={storageRule === ORG_STORAGE_RULE.LOCAL_ONLY}
+                          isDisabled={!storageRules.enableCloudSync}
                           value="remote"
                           className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                         >
@@ -238,7 +229,7 @@ export const ProjectModal = ({
                           </p>
                         </Radio>
                         <Radio
-                          isDisabled={!isGitSyncEnabled}
+                          isDisabled={!isGitSyncEnabled || !storageRules.enableGitSync}
                           value="git"
                           className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                         >
@@ -256,7 +247,7 @@ export const ProjectModal = ({
                       <div className="flex items-center px-2 py-1 gap-2 text-sm rounded-sm text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]">
                         <Icon icon="triangle-exclamation" />
                         <span>
-                          The organization owner mandates that projects must be created and stored {storageRule.split('_').join(' ')}.
+                          The organization owner mandates that projects must be created and stored using {getProjectStorageTypeLabel(storageRules)}.
                         </span>
                       </div>
                     )}
@@ -269,7 +260,7 @@ export const ProjectModal = ({
                       >
                         Cancel
                       </Button>
-                      {(projectData.storageType === 'git' && !gitRepository) && (
+                      {(storageType === 'git' && !gitRepository) && (
                         <Button
                           onPress={() => setActiveView('git-clone')}
                           className="hover:no-underline w-[10ch] text-center bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
@@ -277,7 +268,7 @@ export const ProjectModal = ({
                           Next
                         </Button>
                       )}
-                      {(projectData.storageType !== 'git' || gitRepository) && (
+                      {(storageType !== 'git' || gitRepository) && (
                         <Button
                           onPress={onUpsertProject}
                           isDisabled={upsertProjectFetcher.state !== 'idle'}
@@ -464,7 +455,7 @@ export const ProjectModal = ({
               {activeView === 'switch-storage-type' && (
                 <>
                   <div className='flex flex-col justify-start gap-2 overflow-y-auto px-10'>
-                    {projectData.storageType === 'git' && (
+                    {storageType === 'git' && (
                       <div className='text-[--color-font] flex flex-col gap-4'>
                         <div className='flex flex-col gap-4'>
                           <p>
@@ -487,7 +478,7 @@ export const ProjectModal = ({
                         </div>
                       </div>
                     )}
-                    {projectData.storageType === 'local' && (
+                    {storageType === 'local' && (
                       <div className='text-[--color-font] flex flex-col gap-4'>
                         <div className='flex flex-col gap-4'>
                           <p>
@@ -519,7 +510,7 @@ export const ProjectModal = ({
                         </div>
                       </div>
                     )}
-                    {projectData.storageType === 'remote' && (
+                    {storageType === 'remote' && (
                       <div className='text-[--color-font] flex flex-col gap-4'>
                         <div className='flex flex-col gap-4'>
                           <p>

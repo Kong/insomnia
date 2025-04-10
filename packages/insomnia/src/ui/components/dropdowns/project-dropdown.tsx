@@ -13,11 +13,12 @@ import { useFetcher } from 'react-router-dom';
 
 import type { GitRepository } from '../../../models/git-repository';
 import {
+  getProjectStorageTypeLabel,
   isGitProject,
   isRemoteProject,
   type Project,
 } from '../../../models/project';
-import { ORG_STORAGE_RULE } from '../../routes/organization';
+import { type StorageRules } from '../../routes/organization';
 import { Icon } from '../icon';
 import { showAlert, showModal } from '../modals';
 import { AskModal } from '../modals/ask-modal';
@@ -26,7 +27,7 @@ import { ProjectModal } from '../modals/project-modal';
 interface Props {
   project: Project & { hasUncommittedOrUnpushedChanges?: boolean; gitRepository?: GitRepository };
   organizationId: string;
-  storage: ORG_STORAGE_RULE;
+  storageRules: StorageRules;
   isGitSyncEnabled: boolean;
 }
 
@@ -37,15 +38,16 @@ interface ProjectActionItem {
   action: (projectId: string, projectName: string) => void;
 }
 
-export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage, isGitSyncEnabled }) => {
+export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRules, isGitSyncEnabled }) => {
   const [isProjectSettingsModalOpen, setIsProjectSettingsModalOpen] =
     useState(false);
   const deleteProjectFetcher = useFetcher();
   const updateProjectFetcher = useFetcher();
 
-  const isRemoteProjectInconsistent = isRemoteProject(project) && storage === ORG_STORAGE_RULE.LOCAL_ONLY;
-  const isLocalProjectInconsistent = !isRemoteProject(project) && storage === ORG_STORAGE_RULE.CLOUD_ONLY;
-  const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent;
+  const isRemoteProjectInconsistent = isRemoteProject(project) && !storageRules.enableCloudSync;
+  const isLocalProjectInconsistent = !isRemoteProject(project) && !storageRules.enableLocalVault;
+  const isGitProjectInconsistent = isGitProject(project) && !storageRules.enableGitSync;
+  const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent || isGitProjectInconsistent;
 
   const projectActionList: ProjectActionItem[] = [
     {
@@ -123,7 +125,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage, i
             offset={4}
             className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
           >
-            {`This project type is not allowed by the organization owner. You can manually convert it to use ${storage === ORG_STORAGE_RULE.CLOUD_ONLY ? 'Cloud Sync' : 'Local Vault'}.`}
+            {`This project type is not allowed by the organization owner. You can manually convert it to use ${getProjectStorageTypeLabel(storageRules)}.`}
           </Tooltip>
         </TooltipTrigger>
       }
@@ -167,7 +169,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storage, i
         <ProjectModal
           project={project}
           isGitSyncEnabled={isGitSyncEnabled}
-          storageRule={storage}
+          storageRules={storageRules}
           gitRepository={project.gitRepository}
           isOpen={isProjectSettingsModalOpen}
           onOpenChange={setIsProjectSettingsModalOpen}

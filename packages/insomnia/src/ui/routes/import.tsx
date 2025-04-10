@@ -5,7 +5,7 @@ import type { ActionFunction } from 'react-router-dom';
 import type { PostmanDataDumpRawData } from '../../common/import';
 import { fetchImportContentFromURI, getFilesFromPostmanExportedDataDump, type ImportFileDetail, importResourcesToProject, importResourcesToWorkspace, scanResources, type ScanResult } from '../../common/import';
 import * as models from '../../models';
-import { isRemoteProject, ORG_STORAGE_RULE } from '../../models/project';
+import { isRemoteProject } from '../../models/project';
 import type { Workspace } from '../../models/workspace';
 import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-project';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
@@ -149,24 +149,30 @@ async function syncNewWorkspaceIfNeeded(newWorkspace: Workspace) {
   const project = await models.project.getById(newWorkspace.parentId);
   invariant(project, 'Project not found');
   const userSession = await models.userSession.getOrCreate();
-  if (userSession.id && isRemoteProject(project) && [ORG_STORAGE_RULE.CLOUD_ONLY, ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL].includes(await fetchAndCacheOrganizationStorageRule(project.parentId))) {
-    // Create default env, cookie jar, and meta
-    await models.environment.getOrCreateForParentId(newWorkspace._id);
-    await models.cookieJar.getOrCreateForParentId(newWorkspace._id);
-    await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
-    try {
-      const vcs = VCSInstance().newInstance();
-      await initializeLocalBackendProjectAndMarkForSync({
-        vcs,
-        workspace: newWorkspace,
-      });
-      await pushSnapshotOnInitialize({
-        vcs,
-        workspace: newWorkspace,
-        project,
-      });
-    } catch (e) {
-      console.warn(`Failed to initialize sync to insomnia cloud for workspace ${newWorkspace._id}. This will be retried when the workspace is opened on the app. ${e.message}`);
+
+  if (userSession.id && isRemoteProject(project)) {
+    const storageRules = await fetchAndCacheOrganizationStorageRule(project.parentId);
+    invariant(storageRules, 'Storage rules not found');
+
+    if (storageRules.enableCloudSync) {
+      // Create default env, cookie jar, and meta
+      await models.environment.getOrCreateForParentId(newWorkspace._id);
+      await models.cookieJar.getOrCreateForParentId(newWorkspace._id);
+      await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
+      try {
+        const vcs = VCSInstance().newInstance();
+        await initializeLocalBackendProjectAndMarkForSync({
+          vcs,
+          workspace: newWorkspace,
+        });
+        await pushSnapshotOnInitialize({
+          vcs,
+          workspace: newWorkspace,
+          project,
+        });
+      } catch (e) {
+        console.warn(`Failed to initialize sync to insomnia cloud for workspace ${newWorkspace._id}. This will be retried when the workspace is opened on the app. ${e.message}`);
+      }
     }
   }
 }
