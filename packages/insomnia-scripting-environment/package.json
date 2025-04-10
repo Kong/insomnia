@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "insomnia-sdk",
+  "name": "insomnia-scripting-environment",
   "version": "11.1.0-beta.1",
   "description": "",
   "main": "src/objects/index.ts",

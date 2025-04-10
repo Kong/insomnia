@@ -1,10 +1,10 @@
 import * as fs from 'node:fs';
 
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
-import { asyncTasksAllSettled, OriginalPromise, ProxiedPromise, type RequestContext, resetAsyncTasks, stopMonitorAsyncTasks } from 'insomnia-sdk';
 
+import { asyncTasksAllSettled, OriginalPromise, ProxiedPromise, type RequestContext, resetAsyncTasks, stopMonitorAsyncTasks } from '../../insomnia-scripting-environment/src/objects';
 import type { Compression } from './models/response';
-// this will also import lots of node_modules into the preload script, consider moving this file insomnia-sdk
+// this will also import lots of node_modules into the preload script, consider moving this file insomnia-scripting-environment
 import { requireInterceptor } from './requireInterceptor';
 
 export interface HiddenBrowserWindowToMainBridgeAPI {

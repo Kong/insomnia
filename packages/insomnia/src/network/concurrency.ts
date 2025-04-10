@@ -1,7 +1,7 @@
 import type { queueAsPromised } from 'fastq';
 import * as fastq from 'fastq';
-import type { RequestContext, RequestTestResult } from 'insomnia-sdk';
 
+import type { RequestContext, RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import type { ClientCertificate } from '../models/client-certificate';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment, UserUploadEnvironment } from '../models/environment';

@@ -94,7 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * fix: default user-agent for oauth2 [7672] by @filfreire in https://github.com/Kong/insomnia/pull/7675
 * inso fifth pass by @jackkav in https://github.com/Kong/insomnia/pull/7601
 * feat: inso parent folder auth by @jackkav in https://github.com/Kong/insomnia/pull/7676
-* chore: duplicate / symbol for import in insomnia-sdk/src/objects/(interfaces.ts, request.ts) by @Novsochetra in https://github.com/Kong/insomnia/pull/7686
+* chore: duplicate / symbol for import in insomnia-scripting-environment/src/objects/(interfaces.ts, request.ts) by @Novsochetra in https://github.com/Kong/insomnia/pull/7686
 * fix: changelog [no-ticket] by @filfreire in https://github.com/Kong/insomnia/pull/7677
 * chore: enable sentry tracing by @CurryYangxx in https://github.com/Kong/insomnia/pull/7688
 * force vite to always wipe cache by @jackkav in https://github.com/Kong/insomnia/pull/7690

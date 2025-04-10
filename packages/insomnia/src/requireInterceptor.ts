@@ -3,12 +3,13 @@ import chai from 'chai';
 import * as cheerio from 'cheerio';
 import cryptojs from 'crypto-js';
 import * as csvParseSync from 'csv-parse/sync';
-import { Collection as CollectionModule } from 'insomnia-sdk';
 import lodash from 'lodash';
 import moment from 'moment';
 import tv4 from 'tv4';
 import * as uuid from 'uuid';
 import xml2js from 'xml2js';
+
+import { Collection as CollectionModule } from '../../insomnia-scripting-environment/src/objects';
 
 const externalModules = new Map<string, object>([
   ['ajv', ajv],

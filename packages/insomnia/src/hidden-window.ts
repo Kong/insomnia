@@ -1,8 +1,9 @@
 import * as Sentry from '@sentry/electron/renderer';
 import { SENTRY_OPTIONS } from 'insomnia/src/common/sentry';
-import { initInsomniaObject, InsomniaObject, waitForAllTestsDone } from 'insomnia-sdk';
-import { getNewConsole, mergeClientCertificates, mergeCookieJar, mergeRequests, mergeSettings, type RequestContext } from 'insomnia-sdk';
 import * as _ from 'lodash';
+
+import { initInsomniaObject, InsomniaObject, waitForAllTestsDone } from '../../insomnia-scripting-environment/src/objects';
+import { getNewConsole, mergeClientCertificates, mergeCookieJar, mergeRequests, mergeSettings, type RequestContext } from '../../insomnia-scripting-environment/src/objects';
 
 export interface HiddenBrowserWindowBridgeAPI {
   runScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;

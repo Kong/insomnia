@@ -4,11 +4,11 @@ import path from 'node:path';
 import * as contentDisposition from 'content-disposition';
 import fs from 'fs';
 import { GRAPHQL_TRANSPORT_WS_PROTOCOL, MessageType } from 'graphql-ws';
-import type { RequestTestResult } from 'insomnia-sdk';
 import { extension as mimeExtension } from 'mime-types';
 import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 
+import type { RequestTestResult } from '../../../../insomnia-scripting-environment/src/objects';
 import { version } from '../../../package.json';
 import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
 import { type ChangeBufferEvent, database } from '../../common/database';
@@ -682,18 +682,18 @@ export const sendActionImplementation = async (options: {
       : `${requestData.request.name.replace(/\s/g, '-').toLowerCase()}.${responsePatch.contentType && mimeExtension(responsePatch.contentType) || 'unknown'}`;
     return writeToDownloadPath(path.join(requestMeta.downloadPath, name), responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
   }
-    const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
-    const { filePath } = await window.dialog.showSaveDialog({
-      title: 'Select Download Location',
-      buttonLabel: 'Save',
-      // NOTE: An error will be thrown if defaultPath is supplied but not a String
-      ...(defaultPath ? { defaultPath } : {}),
-    });
-    if (!filePath) {
-      return null;
-    }
-    window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-    return writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
+  const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
+  const { filePath } = await window.dialog.showSaveDialog({
+    title: 'Select Download Location',
+    buttonLabel: 'Save',
+    // NOTE: An error will be thrown if defaultPath is supplied but not a String
+    ...(defaultPath ? { defaultPath } : {}),
+  });
+  if (!filePath) {
+    return null;
+  }
+  window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
+  return writeToDownloadPath(filePath, responsePatch, requestMeta, requestData.settings.maxHistoryResponses);
 
 };
 
