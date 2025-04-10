@@ -1,9 +1,9 @@
 const BINARY_PREFIX = 'Insomnia.Core';
-import type { Configuration } from 'electron-builder';
 // NOTE: USE_HARD_LINKS
 // https://github.com/electron-userland/electron-builder/issues/4594#issuecomment-574653870
 
-const config: Configuration = {
+//  @type {import('electron-builder').Configuration}
+const config = {
   npmRebuild: false,
   appId: 'com.insomnia.app',
   protocols: [
@@ -54,10 +54,9 @@ const config: Configuration = {
       NSRequiresAquaSystemAppearance: false,
     },
     // If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
-    notarize: {
-      teamId: 'FX44YY62GV',
-
-    },
+    // notarize: {
+    //   teamId: 'FX44YY62GV',
+    // },
     asarUnpack: [
       'node_modules/@getinsomnia/node-libcurl',
     ],
@@ -151,4 +150,4 @@ if (platform && targets) {
   const PLATFORM_MAP = { darwin: 'mac', linux: 'linux', win32: 'win' };
   config[PLATFORM_MAP[platform]].target = config[PLATFORM_MAP[platform]].target.filter(({ target }) => targets.includes(target));
 }
-export default config;
+module.exports = config;
