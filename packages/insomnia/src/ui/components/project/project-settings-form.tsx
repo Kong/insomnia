@@ -5,10 +5,10 @@ import { useFetcher, useParams } from 'react-router-dom';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
 import type { GitRepository } from '../../../models/git-repository';
-import { getDefaultProjectStorageType, isGitProject, isRemoteProject, type Project } from '../../../models/project';
+import { getDefaultProjectStorageType, getProjectStorageTypeLabel, isGitProject, isRemoteProject, type Project } from '../../../models/project';
 import type { UpdateProjectActionResult } from '../../routes/actions';
 import type { InitGitCloneResult } from '../../routes/git-project-actions';
-import { ORG_STORAGE_RULE } from '../../routes/organization';
+import type { StorageRules } from '../../routes/organization';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../../routes/project';
 import { ErrorBoundary } from '../error-boundary';
 import { CustomRepositorySettingsFormGroup } from '../git-credentials/custom-repository-settings-form';
@@ -34,7 +34,7 @@ function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote
 }
 
 interface Props {
-  storageRule: ORG_STORAGE_RULE;
+  storageRules: StorageRules;
   isGitSyncEnabled: boolean;
   project?: Project;
   gitRepository?: GitRepository;
@@ -44,7 +44,7 @@ interface Props {
 }
 
 export const ProjectSettingsForm: FC<Props> = ({
-  storageRule,
+  storageRules,
   isGitSyncEnabled,
   project,
   gitRepository,
@@ -54,6 +54,7 @@ export const ProjectSettingsForm: FC<Props> = ({
 }) => {
   const { organizationId } = useParams() as { organizationId: string };
 
+  const [storageType, setStorageType] = useState<'local' | 'remote' | 'git'>(getDefaultProjectStorageType(storageRules, project));
   const [activeView, setActiveView] = useState<'project' | 'git-clone' | 'git-results' | 'switch-storage-type'>('project');
   const [selectedTab, setTab] = useState<OauthProviderName>('github');
   const [error, setError] = useState<string | null>(null);
@@ -78,12 +79,10 @@ export const ProjectSettingsForm: FC<Props> = ({
     oauth2format: gitRepository?.credentials && 'oauth2format' in gitRepository.credentials ? gitRepository?.credentials?.oauth2format ?? 'github' : undefined,
   });
 
-  const [storageType, setStorageType] = useState<'local' | 'remote' | 'git'>(getDefaultProjectStorageType(storageRule, project));
-
   const initCloneGitRepositoryFetcher = useFetcher<InitGitCloneResult>();
   const upsertProjectFetcher = useFetcher<UpdateProjectActionResult>();
 
-  const showStorageRestrictionMessage = storageRule !== ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL;
+  const showStorageRestrictionMessage = !storageRules.enableCloudSync || !storageRules.enableLocalVault || !storageRules.enableGitSync;
   const insomniaFiles = initCloneGitRepositoryFetcher.data && 'files' in initCloneGitRepositoryFetcher.data ? initCloneGitRepositoryFetcher.data.files : [];
 
   useEffect(() => {
@@ -99,10 +98,10 @@ export const ProjectSettingsForm: FC<Props> = ({
   }, [upsertProjectFetcher.data, upsertProjectFetcher.state]);
 
   useEffect(() => {
-    if (storageRule) {
-      setStorageType(getDefaultProjectStorageType(storageRule, project));
+    if (storageRules) {
+      setStorageType(getDefaultProjectStorageType(storageRules, project));
     }
-  }, [storageRule, project, projectData]);
+  }, [storageRules, project]);
 
   const onGitRepoFormSubmit = (gitRepositoryPatch: Partial<GitRepository>) => {
     const {
@@ -200,7 +199,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               </Label>
               <div className="flex gap-2">
                 <Radio
-                  isDisabled={storageRule === ORG_STORAGE_RULE.CLOUD_ONLY}
+                  isDisabled={!storageRules.enableLocalVault}
                   value="local"
                   className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                 >
@@ -214,7 +213,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                 </Radio>
 
                 <Radio
-                  isDisabled={storageRule === ORG_STORAGE_RULE.LOCAL_ONLY}
+                  isDisabled={!storageRules.enableCloudSync}
                   value="remote"
                   className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                 >
@@ -227,7 +226,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                   </p>
                 </Radio>
                 <Radio
-                  isDisabled={!isGitSyncEnabled}
+                  isDisabled={!isGitSyncEnabled || !storageRules.enableGitSync}
                   value="git"
                   className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] data-[disabled]:opacity-25 hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                 >
@@ -245,7 +244,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               <div className="flex items-center px-2 py-1 gap-2 text-sm rounded-sm text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]">
                 <Icon icon="triangle-exclamation" />
                 <span>
-                  The organization owner mandates that projects must be created and stored {storageRule.split('_').join(' ')}.
+                  The organization owner mandates that projects must be created and stored using {getProjectStorageTypeLabel(storageRules)}.
                 </span>
               </div>
             )}
