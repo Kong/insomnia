@@ -37,6 +37,9 @@ const config = {
     main: 'main.min.js', // Override the main path in package.json
   },
   fileAssociations: [],
+  electronFuses: {
+    runAsNode: false,
+  },
   mac: {
     hardenedRuntime: true,
     category: 'public.app-category.developer-tools',
