@@ -7,7 +7,7 @@ import { Folder, ParentFolders } from '../folders';
 describe('test Variables object', () => {
     it('test basic operations', () => {
         const variables = new Variables({
-            globalVars: new Environment('globals', { value: '777' }),
+            globalVars: new Environment('globals', { value: 'xyz' }),
             environmentVars: new Environment('environments', {}),
             collectionVars: new Environment('baseEnvironment', {}),
             iterationDataVars: new Environment('iterationData', {}),
@@ -15,8 +15,8 @@ describe('test Variables object', () => {
             localVars: new Environment('local', {}),
         });
 
-        const uuidAnd777 = variables.replaceIn('{{    $randomUUID }}{{value  }}');
-        expect(validate(uuidAnd777.replace('777', ''))).toBeTruthy();
+        const uuidAndXyz = variables.replaceIn('{{    $randomUUID }}{{value  }}');
+        expect(validate(uuidAndXyz.replace('xyz', ''))).toBeTruthy();
 
         const uuidAndBrackets1 = variables.replaceIn('{{    $randomUUID }}}}');
         expect(validate(uuidAndBrackets1.replace('}}', ''))).toBeTruthy();
