@@ -1,8 +1,8 @@
 import fs from 'fs';
-import type { RequestTestResult } from 'insomnia-sdk';
 import type { Readable } from 'stream';
 import zlib from 'zlib';
 
+import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import { database as db, type Query } from '../common/database';
 import type { ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as requestOperations from '../models/helpers/request-operations';

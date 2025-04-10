@@ -1,9 +1,9 @@
 import type { Snippet } from 'codemirror';
-import { CookieObject, Environment, Execution, InsomniaObject, Request as ScriptRequest, RequestInfo, Url, Variables, Vault } from 'insomnia-sdk';
-import { ParentFolders } from 'insomnia-sdk/src/objects/folders';
 import React, { type FC, useRef } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuTrigger, Popover, Section, Toolbar } from 'react-aria-components';
 
+import { CookieObject, Environment, Execution, InsomniaObject, Request as ScriptRequest, RequestInfo, Url, Variables, Vault } from '../../../../../insomnia-scripting-environment/src/objects';
+import { ParentFolders } from '../../../../../insomnia-scripting-environment/src/objects/folders';
 import type { Settings } from '../../../models/settings';
 import { translateHandlersInScript } from '../../../utils/importers/importers/postman';
 import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';

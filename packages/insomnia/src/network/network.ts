@@ -1,9 +1,9 @@
 import clone from 'clone';
 import fs from 'fs';
-import type { ExecutionOption, RequestContext, RequestTestResult } from 'insomnia-sdk';
 import orderedJSON from 'json-order';
 import { join as pathJoin } from 'path';
 
+import type { ExecutionOption, RequestContext, RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import { SINGLE_VALUE_HEADERS } from '../common/common-headers';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';

@@ -1,5 +1,4 @@
-import type { RequestContext } from 'insomnia-sdk';
-
+import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import type { CurlRequestOptions, CurlRequestOutput } from '../main/network/libcurl-promise';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Request } from '../models/request';

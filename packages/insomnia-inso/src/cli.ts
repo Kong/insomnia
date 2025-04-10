@@ -14,12 +14,12 @@ import { init, type as EnvironmentType } from 'insomnia/src/models/environment';
 import type { Request } from 'insomnia/src/models/request';
 import type { RequestGroup } from 'insomnia/src/models/request-group';
 import { deserializeNDJSON } from 'insomnia/src/utils/ndjson';
-import { type RequestTestResult } from 'insomnia-sdk';
 import { generate, runTestsCli } from 'insomnia-testing';
 import orderedJSON from 'json-order';
 import { parseArgsStringToArgv } from 'string-argv';
 import { v4 as uuidv4 } from 'uuid';
 
+import { type RequestTestResult } from '../../insomnia-scripting-environment/src/objects';
 import packageJson from '../package.json';
 import { exportSpecification, writeFileWithCliOptions } from './commands/export-specification';
 import { getRuleSetFileFromFolderByFilename, lintSpecification } from './commands/lint-specification';

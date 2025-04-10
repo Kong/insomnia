@@ -1,9 +1,9 @@
 import { appendFile } from 'node:fs/promises';
 
-import { initInsomniaObject, InsomniaObject } from 'insomnia-sdk';
-import { getNewConsole, mergeClientCertificates, mergeCookieJar, mergeRequests, mergeSettings, type RequestContext } from 'insomnia-sdk';
 import * as _ from 'lodash';
 
+import { initInsomniaObject, InsomniaObject } from '../../insomnia-scripting-environment/src/objects';
+import { getNewConsole, mergeClientCertificates, mergeCookieJar, mergeRequests, mergeSettings, type RequestContext } from '../../insomnia-scripting-environment/src/objects';
 import { invariant } from '../src/utils/invariant';
 import { requireInterceptor } from './requireInterceptor';
 

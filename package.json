@@ -19,7 +19,7 @@
     "packages/insomnia",
     "packages/insomnia-inso",
     "packages/insomnia-smoke-test",
-    "packages/insomnia-sdk"
+    "packages/insomnia-scripting-environment"
   ],
   "scripts": {
     "dev": "npm start -w insomnia",

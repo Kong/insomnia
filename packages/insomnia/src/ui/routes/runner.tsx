@@ -1,4 +1,3 @@
-import { type RequestContext } from 'insomnia-sdk';
 import porderedJSON from 'json-order';
 import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
@@ -7,6 +6,7 @@ import { type ActionFunction, type LoaderFunction, useNavigate, useParams, useRo
 import { useInterval } from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 
+import { type RequestContext } from '../../../../insomnia-scripting-environment/src/objects';
 import { Tooltip } from '../../../src/ui/components/tooltip';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../common/constants';
 import type { ResponseTimelineEntry } from '../../main/network/libcurl-promise';
