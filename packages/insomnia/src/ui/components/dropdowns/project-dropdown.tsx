@@ -46,7 +46,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
 
   const isRemoteProjectInconsistent = isRemoteProject(project) && !storageRules.enableCloudSync;
   const isLocalProjectInconsistent = !isRemoteProject(project) && !storageRules.enableLocalVault;
-  const isGitProjectInconsistent = isGitProject(project) && !storageRules.enableLocalVault;
+  const isGitProjectInconsistent = isGitProject(project) && !storageRules.enableGitSync;
   const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent || isGitProjectInconsistent;
 
   const projectActionList: ProjectActionItem[] = [
