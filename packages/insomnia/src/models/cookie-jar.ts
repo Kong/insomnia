@@ -37,9 +37,7 @@ export interface BaseCookieJar {
 
 export type CookieJar = BaseModel & BaseCookieJar;
 
-export const isCookieJar = (model: Pick<BaseModel, 'type'>): model is CookieJar => (
-  model.type === type
-);
+export const isCookieJar = (model: Pick<BaseModel, 'type'>): model is CookieJar => model.type === type;
 
 export function init() {
   return {
@@ -77,8 +75,7 @@ export async function getOrCreateForParentId(parentId: string) {
       _id: `${prefix}_${crypto.createHash('sha1').update(parentId).digest('hex')}`,
     });
   }
-    return cookieJars[0];
-
+  return cookieJars[0];
 }
 
 export async function all() {

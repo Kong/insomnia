@@ -55,24 +55,19 @@ const importPostData = (postData?: Har.PostData): Body => {
       })),
     };
   }
-    return {
-      mimeType,
-      text,
-    };
-
+  return {
+    mimeType,
+    text,
+  };
 };
 
 const importRequest = (request: ImportRequest): ImportRequest => {
-  const cookieHeaderValue = (request.cookies ?? [])
-    .map(({ name, value }) => `${name}=${value}`)
-    .join('; ');
+  const cookieHeaderValue = (request.cookies ?? []).map(({ name, value }) => `${name}=${value}`).join('; ');
 
   const headers = request.headers ? request.headers.map(removeComment) : [];
 
   // Convert cookie value to header
-  const existingCookieHeader = headers.find(
-    header => header.name.toLowerCase() === 'cookie',
-  );
+  const existingCookieHeader = headers.find(header => header.name.toLowerCase() === 'cookie');
 
   if (cookieHeaderValue && existingCookieHeader) {
     // Has existing cookie header, so let's update it
@@ -94,9 +89,7 @@ const importRequest = (request: ImportRequest): ImportRequest => {
     url: request.url,
     method: request.method?.toUpperCase(),
     body: importPostData(request.postData),
-    parameters: request.queryString
-      ? request.queryString.map(removeComment)
-      : [],
+    parameters: request.queryString ? request.queryString.map(removeComment) : [],
     headers: headers,
     // Authentication isn't part of HAR, but we should be able to sniff for things like Basic Authentication headers and pull out the auth info
     authentication: {},

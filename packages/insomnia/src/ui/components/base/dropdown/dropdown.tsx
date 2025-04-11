@@ -43,7 +43,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>((props: Dropdo
 
   const state: MenuTriggerState = useMenuTriggerState({
     ...props,
-    onOpenChange: isOpen => isOpen ? onOpen?.() : onClose?.(),
+    onOpenChange: isOpen => (isOpen ? onOpen?.() : onClose?.()),
   });
 
   useImperativeHandle(ref, () => ({
@@ -56,17 +56,20 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>((props: Dropdo
 
   const { menuTriggerProps, menuProps } = useMenuTrigger({ isDisabled }, state, triggerRef);
   return (
-    <div className={`relative inline-block dropdown ${className || ''}`} style={style} data-testid={dataTestId}>
+    <div className={`dropdown relative inline-block ${className || ''}`} style={style} data-testid={dataTestId}>
       <PressResponder {...menuTriggerProps} isPressed={state.isOpen} ref={triggerRef}>
-        {triggerButton || <Button>{label} <span aria-hidden="true" style={{ paddingLeft: 5 }}>?</span></Button>}
+        {triggerButton || (
+          <Button>
+            {label}{' '}
+            <span aria-hidden="true" style={{ paddingLeft: 5 }}>
+              ?
+            </span>
+          </Button>
+        )}
       </PressResponder>
 
       {state.isOpen && (
-        <Popover
-          state={state}
-          triggerRef={triggerRef}
-          placement={placement || 'bottom end'}
-        >
+        <Popover state={state} triggerRef={triggerRef} placement={placement || 'bottom end'}>
           <Menu
             {...mergeProps(props, menuProps)}
             selectionMode={selectionMode}

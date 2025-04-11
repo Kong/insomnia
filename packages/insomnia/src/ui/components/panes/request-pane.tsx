@@ -36,11 +36,7 @@ interface Props {
   onPaste: (text: string) => void;
 }
 
-export const RequestPane: FC<Props> = ({
-  environmentId,
-  settings,
-  onPaste,
-}) => {
+export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => {
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
 
@@ -61,10 +57,7 @@ export const RequestPane: FC<Props> = ({
 
     // Remove the search string (?foo=bar&...) from the Url
     const url = activeRequest.url.replace(`?${query}`, '');
-    const parameters = [
-      ...activeRequest.parameters,
-      ...deconstructQueryStringToParams(query),
-    ];
+    const parameters = [...activeRequest.parameters, ...deconstructQueryStringToParams(query)];
 
     // Only update if url changed
     if (url !== activeRequest.url) {
@@ -74,9 +67,7 @@ export const RequestPane: FC<Props> = ({
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
 
-  const { activeEnvironment } = useRouteLoaderData(
-    ':workspaceId',
-  ) as WorkspaceLoaderData;
+  const { activeEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniqueKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
 
@@ -92,9 +83,7 @@ export const RequestPane: FC<Props> = ({
   const parametersCount = pathParameters.length + activeRequest.parameters.filter(p => !p.disabled).length;
   const headersCount = activeRequest.headers.filter(h => !h.disabled).length + readOnlyHttpPairs.length;
   const urlHasQueryParameters = activeRequest.url.indexOf('?') >= 0;
-  const contentType =
-    getContentTypeFromHeaders(activeRequest.headers) ||
-    activeRequest.body.mimeType;
+  const contentType = getContentTypeFromHeaders(activeRequest.headers) || activeRequest.body.mimeType;
   const isBodyEmpty = Boolean(typeof activeRequest.body.mimeType !== 'string' && !activeRequest.body.text);
   const requestAuth = getAuthObjectOrNull(activeRequest.authentication);
   const isNoneOrInherited = requestAuth?.type === 'none' || requestAuth === null;
@@ -112,98 +101,98 @@ export const RequestPane: FC<Props> = ({
           />
         </ErrorBoundary>
       </PaneHeader>
-      <Tabs aria-label='Request pane tabs' className="flex-1 w-full h-full flex flex-col">
-        <TabList className='scrollbar-thin w-full flex-shrink-0  overflow-x-auto border-solid border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+      <Tabs aria-label="Request pane tabs" className="flex h-full w-full flex-1 flex-col">
+        <TabList
+          className="scrollbar-thin flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+          aria-label="Request pane tabs"
+        >
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='params'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="params"
           >
             <span>Params</span>
             {parametersCount > 0 && (
-              <span className='p-1 min-w-6 h-6 flex items-center justify-center text-xs rounded-lg border border-solid border-[--hl]'>
+              <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
                 {parametersCount}
               </span>
             )}
           </Tab>
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='content-type'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="content-type"
           >
             <span>Body</span>
             {!isBodyEmpty && (
-              <span className='p-1 min-w-6 h-6 flex items-center justify-center text-xs rounded-lg border border-solid border-[--hl]'>
-                <span className='w-2 h-2 bg-green-500 rounded-full' />
+              <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
+                <span className="h-2 w-2 rounded-full bg-green-500" />
               </span>
             )}
           </Tab>
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='auth'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="auth"
           >
             <span>Auth</span>
 
             {!isNoneOrInherited && (
-              <span className='p-1 min-w-6 h-6 flex items-center justify-center text-xs rounded-lg border border-solid border-[--hl]'>
-                <span className='w-2 h-2 bg-green-500 rounded-full' />
+              <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
+                <span className="h-2 w-2 rounded-full bg-green-500" />
               </span>
             )}
           </Tab>
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='headers'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="headers"
           >
             <span>Headers</span>
             {headersCount > 0 && (
-              <span className='p-1 min-w-6 h-6 flex items-center justify-center text-xs rounded-lg border border-solid border-[--hl]'>
+              <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
                 {headersCount}
               </span>
             )}
           </Tab>
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='scripts'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="scripts"
           >
             <span>Scripts</span>
             {Boolean(activeRequest.preRequestScript || activeRequest.afterResponseScript) && (
-              <span className='p-1 min-w-6 h-6 flex items-center justify-center text-xs rounded-lg border border-solid border-[--hl]'>
-                <span className='w-2 h-2 bg-green-500 rounded-full' />
+              <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
+                <span className="h-2 w-2 rounded-full bg-green-500" />
               </span>
             )}
           </Tab>
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='docs'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="docs"
           >
             <span>Docs</span>
             {activeRequest.description && (
-              <span className='p-1 min-w-6 h-6 flex items-center justify-center text-xs rounded-lg border border-solid border-[--hl]'>
-                <span className='w-2 h-2 bg-green-500 rounded-full' />
+              <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
+                <span className="h-2 w-2 rounded-full bg-green-500" />
               </span>
             )}
           </Tab>
         </TabList>
-        <TabPanel className='w-full flex-1 flex flex-col h-full overflow-y-auto' id='params'>
-          <div className="p-4 flex-shrink-0">
-            <div className="text-xs max-h-32 flex flex-col overflow-y-auto min-h-[2em] bg-[--hl-xs] px-2 py-1 border border-solid border-[--hl-sm]">
+        <TabPanel className="flex h-full w-full flex-1 flex-col overflow-y-auto" id="params">
+          <div className="flex-shrink-0 p-4">
+            <div className="flex max-h-32 min-h-[2em] flex-col overflow-y-auto border border-solid border-[--hl-sm] bg-[--hl-xs] px-2 py-1 text-xs">
               <label className="label--small no-pad-top">Url Preview</label>
-              <ErrorBoundary
-                key={uniqueKey}
-                errorClassName="tall wide vertically-align font-error pad text-center"
-              >
+              <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
                 <RenderedQueryString request={activeRequest} />
               </ErrorBoundary>
             </div>
           </div>
-          <PanelGroup className='flex-1 overflow-hidden' direction={'vertical'}>
+          <PanelGroup className="flex-1 overflow-hidden" direction={'vertical'}>
             <Panel minSize={20}>
-              <div className='h-full flex flex-col'>
-                <div className='flex items-center w-full p-4 h-4 justify-between'>
-                  <Heading className='text-xs font-bold uppercase text-[--hl]'>Query parameters</Heading>
-                  <div className='flex items-center gap-2'>
+              <div className="flex h-full flex-col">
+                <div className="flex h-4 w-full items-center justify-between p-4">
+                  <Heading className="text-xs font-bold uppercase text-[--hl]">Query parameters</Heading>
+                  <div className="flex items-center gap-2">
                     <Button
                       isDisabled={!urlHasQueryParameters}
                       onPress={handleImportQueryFromUrl}
-                      className="w-[14ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 py-1 h-full asma-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-colors text-sm"
+                      className="asma-pressed:bg-[--hl-sm] flex h-full w-[14ch] flex-shrink-0 items-center justify-start gap-2 rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:ring-inset focus:ring-[--hl-md] aria-selected:bg-[--hl-xs] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
                     >
                       Import from URL
                     </Button>
@@ -214,50 +203,47 @@ export const RequestPane: FC<Props> = ({
                         });
                       }}
                       isSelected={settings.useBulkParametersEditor}
-                      className="w-[14ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 py-1 h-full rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-colors text-sm"
+                      className="flex h-full w-[14ch] flex-shrink-0 items-center justify-start gap-2 rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-colors hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
                     >
                       {({ isSelected }) => (
                         <Fragment>
-                          <Icon icon={isSelected ? 'toggle-on' : 'toggle-off'} className={`${isSelected ? 'text-[--color-success]' : ''}`} />
-                          <span>{
-                            isSelected ? 'Regular Edit' : 'Bulk Edit'
-                          }</span>
+                          <Icon
+                            icon={isSelected ? 'toggle-on' : 'toggle-off'}
+                            className={`${isSelected ? 'text-[--color-success]' : ''}`}
+                          />
+                          <span>{isSelected ? 'Regular Edit' : 'Bulk Edit'}</span>
                         </Fragment>
                       )}
                     </ToggleButton>
                   </div>
                 </div>
-                <ErrorBoundary
-                  key={uniqueKey}
-                  errorClassName="tall wide vertically-align font-error pad text-center"
-                >
-                  <RequestParametersEditor
-                    key={contentType}
-                    bulk={settings.useBulkParametersEditor}
-                  />
+                <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
+                  <RequestParametersEditor key={contentType} bulk={settings.useBulkParametersEditor} />
                 </ErrorBoundary>
               </div>
             </Panel>
-            <PanelResizeHandle className='w-full h-[1px] bg-[--hl-md]' />
+            <PanelResizeHandle className="h-[1px] w-full bg-[--hl-md]" />
             <Panel minSize={20}>
-              <div className='h-full flex flex-col'>
-                <Heading className='text-xs font-bold uppercase text-[--hl] p-4'>Path parameters</Heading>
+              <div className="flex h-full flex-col">
+                <Heading className="p-4 text-xs font-bold uppercase text-[--hl]">Path parameters</Heading>
                 {pathParameters.length > 0 && (
-                  <div className="pr-[72.73px] w-full overflow-y-auto pl-4">
-                    <div className='grid gap-x-[20.8px] grid-cols-2 flex-shrink-0 w-full rounded-sm overflow-hidden'>
+                  <div className="w-full overflow-y-auto pl-4 pr-[72.73px]">
+                    <div className="grid w-full flex-shrink-0 grid-cols-2 gap-x-[20.8px] overflow-hidden rounded-sm">
                       {pathParameters.map(pathParameter => (
                         <Fragment key={pathParameter.name}>
-                          <span className='p-2 select-none border-b border-solid border-[--hl-md] truncate flex items-center justify-end rounded-sm'>
+                          <span className="flex select-none items-center justify-end truncate rounded-sm border-b border-solid border-[--hl-md] p-2">
                             {pathParameter.name}
                           </span>
-                          <div className='px-2 flex items-center h-full border-b border-solid border-[--hl-md]'>
+                          <div className="flex h-full items-center border-b border-solid border-[--hl-md] px-2">
                             <OneLineEditor
                               key={activeRequest._id}
                               id={'key-value-editor__name' + pathParameter.name}
                               placeholder="Parameter value"
                               defaultValue={pathParameter.value || ''}
                               onChange={name => {
-                                onPathParameterChange(pathParameters.map(p => p.name === pathParameter.name ? { ...p, value: name } : p));
+                                onPathParameterChange(
+                                  pathParameters.map(p => (p.name === pathParameter.name ? { ...p, value: name } : p)),
+                                );
                               }}
                             />
                           </div>
@@ -267,14 +253,14 @@ export const RequestPane: FC<Props> = ({
                   </div>
                 )}
                 {pathParameters.length === 0 && !dismissPathParameterTip && (
-                  <div className='text-sm text-[--hl] rounded-sm border border-solid border-[--hl-md] p-2 flex items-center gap-2'>
-                    <Icon icon='info-circle' />
+                  <div className="flex items-center gap-2 rounded-sm border border-solid border-[--hl-md] p-2 text-sm text-[--hl]">
+                    <Icon icon="info-circle" />
                     <span>Path parameters are url path segments that start with a colon ':' e.g. ':id' </span>
                     <Button
-                      className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ml-auto"
+                      className="ml-auto flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-[--color-font] hover:bg-[--hl-xs] aria-pressed:bg-[--hl-sm]"
                       onPress={() => setDismissPathParameterTip('true')}
                     >
-                      <Icon icon='close' />
+                      <Icon icon="close" />
                     </Button>
                   </div>
                 )}
@@ -282,27 +268,17 @@ export const RequestPane: FC<Props> = ({
             </Panel>
           </PanelGroup>
         </TabPanel>
-        <TabPanel className='w-full flex-1 flex flex-col' id='content-type'>
-          <BodyEditor
-            key={uniqueKey}
-            request={activeRequest}
-            environmentId={environmentId}
-          />
+        <TabPanel className="flex w-full flex-1 flex-col" id="content-type">
+          <BodyEditor key={uniqueKey} request={activeRequest} environmentId={environmentId} />
         </TabPanel>
-        <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='auth'>
-          <ErrorBoundary
-            key={uniqueKey}
-            errorClassName="font-error pad text-center"
-          >
+        <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="auth">
+          <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
             <AuthWrapper authentication={activeRequest.authentication} />
           </ErrorBoundary>
         </TabPanel>
-        <TabPanel className='w-full flex-1 flex flex-col relative overflow-hidden' id='headers'>
-          <ErrorBoundary
-            key={uniqueKey}
-            errorClassName="font-error pad text-center"
-          >
-            <div className='overflow-y-auto flex-1 flex-shrink-0'>
+        <TabPanel className="relative flex w-full flex-1 flex-col overflow-hidden" id="headers">
+          <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
+            <div className="flex-1 flex-shrink-0 overflow-y-auto">
               <RequestHeadersEditor
                 bulk={settings.useBulkHeaderEditor}
                 headers={activeRequest.headers}
@@ -311,9 +287,9 @@ export const RequestPane: FC<Props> = ({
             </div>
           </ErrorBoundary>
 
-          <div className="flex flex-row border-solid border-t border-[var(--hl-md)] h-[var(--line-height-sm)] text-[var(--font-size-sm)] box-border">
+          <div className="box-border flex h-[var(--line-height-sm)] flex-row border-t border-solid border-[var(--hl-md)] text-[var(--font-size-sm)]">
             <Button
-              className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-colors"
+              className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-colors hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
               onPress={() =>
                 patchSettings({
                   useBulkHeaderEditor: !settings.useBulkHeaderEditor,
@@ -324,43 +300,43 @@ export const RequestPane: FC<Props> = ({
             </Button>
           </div>
         </TabPanel>
-        <TabPanel className='w-full flex-1' id='scripts'>
-          <Tabs className="w-full h-full flex flex-col overflow-hidden">
-            <TabList className="w-full flex-shrink-0 overflow-x-auto border-solid border-b border-b-[--hl-md] px-2 bg-[--color-bg] flex items-center gap-2 h-[--line-height-sm]" aria-label="Request scripts tabs">
+        <TabPanel className="w-full flex-1" id="scripts">
+          <Tabs className="flex h-full w-full flex-col overflow-hidden">
+            <TabList
+              className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center gap-2 overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg] px-2"
+              aria-label="Request scripts tabs"
+            >
               <Tab
-                className="rounded-md flex-shrink-0 h-[--line-height-xxs] text-sm flex items-center justify-between cursor-pointer w-[10.5rem] outline-none select-none px-2 py-1 hover:bg-[rgba(var(--color-surprise-rgb),50%)] text-[--hl] aria-selected:text-[--color-font-surprise] hover:text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300"
+                className="flex h-[--line-height-xxs] w-[10.5rem] flex-shrink-0 cursor-pointer select-none items-center justify-between rounded-md px-2 py-1 text-sm text-[--hl] outline-none transition-colors duration-300 hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-[--color-font-surprise]"
                 id="pre-request"
               >
-                <div className='flex flex-1 items-center gap-2'>
+                <div className="flex flex-1 items-center gap-2">
                   <Icon icon="arrow-right-to-bracket" />
                   <span>Pre-request</span>
                 </div>
                 {Boolean(activeRequest.preRequestScript) && (
-                  <span className="p-2 rounded-lg">
-                    <span className="flex w-2 h-2 bg-green-500 rounded-full" />
+                  <span className="rounded-lg p-2">
+                    <span className="flex h-2 w-2 rounded-full bg-green-500" />
                   </span>
                 )}
               </Tab>
               <Tab
-                className="rounded-md flex-shrink-0 h-[--line-height-xxs] text-sm flex items-center justify-between cursor-pointer w-[10.5rem] outline-none select-none px-2 py-1 hover:bg-[rgba(var(--color-surprise-rgb),50%)] text-[--hl] aria-selected:text-[--color-font-surprise] hover:text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300"
+                className="flex h-[--line-height-xxs] w-[10.5rem] flex-shrink-0 cursor-pointer select-none items-center justify-between rounded-md px-2 py-1 text-sm text-[--hl] outline-none transition-colors duration-300 hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-[--color-font-surprise]"
                 id="after-response"
               >
-                <div className='flex flex-1 items-center gap-2'>
+                <div className="flex flex-1 items-center gap-2">
                   <Icon icon="arrow-right-from-bracket" />
                   <span>After-response</span>
                 </div>
                 {Boolean(activeRequest.afterResponseScript) && (
-                  <span className="p-2 rounded-lg">
-                    <span className="flex w-2 h-2 bg-green-500 rounded-full" />
+                  <span className="rounded-lg p-2">
+                    <span className="flex h-2 w-2 rounded-full bg-green-500" />
                   </span>
                 )}
               </Tab>
             </TabList>
-            <TabPanel className="w-full flex-1" id='pre-request'>
-              <ErrorBoundary
-                key={uniqueKey}
-                errorClassName="tall wide vertically-align font-error pad text-center"
-              >
+            <TabPanel className="w-full flex-1" id="pre-request">
+              <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
                 <RequestScriptEditor
                   uniquenessKey={`${activeRequest._id}:pre-request-script`}
                   defaultValue={activeRequest.preRequestScript || ''}
@@ -370,10 +346,7 @@ export const RequestPane: FC<Props> = ({
               </ErrorBoundary>
             </TabPanel>
             <TabPanel className="w-full flex-1" id="after-response">
-              <ErrorBoundary
-                key={uniqueKey}
-                errorClassName="tall wide vertically-align font-error pad text-center"
-              >
+              <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
                 <RequestScriptEditor
                   uniquenessKey={`${activeRequest._id}:after-response-script`}
                   defaultValue={activeRequest.afterResponseScript || ''}
@@ -384,7 +357,7 @@ export const RequestPane: FC<Props> = ({
             </TabPanel>
           </Tabs>
         </TabPanel>
-        <TabPanel className='w-full flex-1 overflow-y-auto' id='docs'>
+        <TabPanel className="w-full flex-1 overflow-y-auto" id="docs">
           <MarkdownEditor
             key={uniqueKey}
             placeholder="Write a description"
@@ -394,10 +367,7 @@ export const RequestPane: FC<Props> = ({
         </TabPanel>
       </Tabs>
       {isRequestSettingsModalOpen && (
-        <RequestSettingsModal
-          request={activeRequest}
-          onHide={() => setIsRequestSettingsModalOpen(false)}
-        />
+        <RequestSettingsModal request={activeRequest} onHide={() => setIsRequestSettingsModalOpen(false)} />
       )}
     </Pane>
   );

@@ -7,10 +7,9 @@ export function useReadyState({ requestId, protocol }: { requestId: string; prot
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
-      window.main[protocol].readyState.getCurrent({ requestId })
-        .then((currentReadyState: boolean) => {
-          isMounted && setReadyState(currentReadyState);
-        });
+      window.main[protocol].readyState.getCurrent({ requestId }).then((currentReadyState: boolean) => {
+        isMounted && setReadyState(currentReadyState);
+      });
     };
     fn();
     return () => {
@@ -21,10 +20,9 @@ export function useReadyState({ requestId, protocol }: { requestId: string; prot
   useEffect(() => {
     let isMounted = true;
     // @ts-expect-error -- we use a dynamic channel here
-    const unsubscribe = window.main.on(`${protocol}.${requestId}.readyState`,
-      (_, incomingReadyState: boolean) => {
-        isMounted && setReadyState(incomingReadyState);
-      });
+    const unsubscribe = window.main.on(`${protocol}.${requestId}.readyState`, (_, incomingReadyState: boolean) => {
+      isMounted && setReadyState(incomingReadyState);
+    });
     return () => {
       isMounted = false;
       unsubscribe();

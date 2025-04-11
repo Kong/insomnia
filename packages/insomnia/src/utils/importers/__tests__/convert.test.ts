@@ -30,10 +30,7 @@ describe('test dotInKeyNameInvariant', () => {
       noError: false,
     },
     {
-      input: [
-        '',
-        1,
-      ],
+      input: ['', 1],
       noError: true,
     },
   ].forEach(testCase => {

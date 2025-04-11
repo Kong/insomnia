@@ -27,15 +27,19 @@ export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle,
   });
   const { request, error } = state;
 
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: options => {
-      setState(options);
-      modalRef.current?.show();
-    },
-  }), []);
+  useImperativeHandle(
+    ref,
+    () => ({
+      hide: () => {
+        modalRef.current?.hide();
+      },
+      show: options => {
+        setState(options);
+        modalRef.current?.show();
+      },
+    }),
+    [],
+  );
 
   const fullPath = `Request.${error?.path}`;
   const result = JSONPath({ json: request, path: `$.${error?.path}` });
@@ -45,32 +49,38 @@ export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle,
   return (
     <Modal ref={modalRef}>
       <ModalHeader>Failed to Render Request</ModalHeader>
-      <ModalBody>{request && error ? (
-        <div className="pad">
-          <div className="notice warning">
-            <p>
-              Failed to render <strong>{fullPath}</strong> prior to sending
-            </p>
-            <div className="pad-top-sm">
-              <Link button href={docsTemplateTags} className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]">
-                Templating Documentation <i className="fa fa-external-link" />
-              </Link>
+      <ModalBody>
+        {request && error ? (
+          <div className="pad">
+            <div className="notice warning">
+              <p>
+                Failed to render <strong>{fullPath}</strong> prior to sending
+              </p>
+              <div className="pad-top-sm">
+                <Link
+                  button
+                  href={docsTemplateTags}
+                  className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+                >
+                  Templating Documentation <i className="fa fa-external-link" />
+                </Link>
+              </div>
             </div>
+
+            <p>
+              <strong>Render error</strong>
+              <code className="selectable block">{error.message}</code>
+            </p>
+
+            <p>
+              <strong>Caused by the following field</strong>
+              <code className="block">
+                {locationLabel} {fullPath}
+              </code>
+            </p>
           </div>
-
-          <p>
-            <strong>Render error</strong>
-            <code className="block selectable">{error.message}</code>
-          </p>
-
-          <p>
-            <strong>Caused by the following field</strong>
-            <code className="block">
-              {locationLabel} {fullPath}
-            </code>
-          </p>
-        </div>
-      ) : null}</ModalBody>
+        ) : null}
+      </ModalBody>
     </Modal>
   );
 });

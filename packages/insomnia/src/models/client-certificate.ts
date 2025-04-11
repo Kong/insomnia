@@ -38,9 +38,7 @@ export function init(): BaseClientCertificate {
   };
 }
 
-export const isClientCertificate = (model: Pick<BaseModel, 'type'>): model is ClientCertificate => (
-  model.type === type
-);
+export const isClientCertificate = (model: Pick<BaseModel, 'type'>): model is ClientCertificate => model.type === type;
 
 export function migrate(doc: ClientCertificate) {
   return doc;
@@ -54,10 +52,7 @@ export function create(patch: Partial<ClientCertificate> = {}) {
   return db.docCreate<ClientCertificate>(type, patch);
 }
 
-export function update(
-  cert: ClientCertificate,
-  patch: Partial<ClientCertificate> = {},
-) {
+export function update(cert: ClientCertificate, patch: Partial<ClientCertificate> = {}) {
   return db.docUpdate<ClientCertificate>(cert, patch);
 }
 

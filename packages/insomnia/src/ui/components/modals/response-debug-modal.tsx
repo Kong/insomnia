@@ -30,28 +30,32 @@ export const ResponseDebugModal = forwardRef<ResponseDebugModalHandle, ModalProp
     timeline: [],
     title: '',
   });
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: async options => {
-      let response = options.response;
-      if (!response) {
-        response = await models.response.getById(options.responseId || 'n/a');
-      }
-      if (!response) {
-        console.error('No response found');
-        return;
-      }
-      const timeline = await models.response.getTimeline(response, options.showBody);
-      setState({
-        responseId: response._id,
-        timeline,
-        title: options.title || null,
-      });
-      modalRef.current?.show();
-    },
-  }), []);
+  useImperativeHandle(
+    ref,
+    () => ({
+      hide: () => {
+        modalRef.current?.hide();
+      },
+      show: async options => {
+        let response = options.response;
+        if (!response) {
+          response = await models.response.getById(options.responseId || 'n/a');
+        }
+        if (!response) {
+          console.error('No response found');
+          return;
+        }
+        const timeline = await models.response.getTimeline(response, options.showBody);
+        setState({
+          responseId: response._id,
+          timeline,
+          title: options.title || null,
+        });
+        modalRef.current?.show();
+      },
+    }),
+    [],
+  );
   const { responseId, timeline, title } = state;
   return (
     <Modal ref={modalRef} tall>
@@ -63,11 +67,8 @@ export const ResponseDebugModal = forwardRef<ResponseDebugModalHandle, ModalProp
           }}
           className="tall"
         >
-          {(responseId && timeline) ? (
-            <ResponseTimelineViewer
-              key={responseId}
-              timeline={timeline}
-            />
+          {responseId && timeline ? (
+            <ResponseTimelineViewer key={responseId} timeline={timeline} />
           ) : (
             <div>No response found</div>
           )}

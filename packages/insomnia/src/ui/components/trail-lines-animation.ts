@@ -46,7 +46,7 @@ gsap.registerEffect({
             rect.x.baseVal.value = x - rect?.width?.baseVal?.value;
           },
         },
-        '<'
+        '<',
       )
       .to(rect, { attr: { x: '100%' } }, '>');
   },

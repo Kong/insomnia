@@ -26,7 +26,6 @@
     "lint": "npm run lint --workspaces --if-present",
     "type-check": "npm run type-check --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "lint:markdown": "npx markdownlint-cli2 \"**/*.md\" \"#**/node_modules\" \"#**/CHANGELOG.md\"",
     "clean": "git clean -dfX",
     "install-libcurl-electron": "node_modules/.bin/node-pre-gyp install --directory node_modules/@getinsomnia/node-libcurl --update-binary --runtime=electron --target=$target",
     "inso-start": "npm start -w insomnia-inso",

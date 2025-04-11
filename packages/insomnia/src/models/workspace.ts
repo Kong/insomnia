@@ -31,25 +31,16 @@ export const WorkspaceScopeKeys = {
 
 export type Workspace = BaseModel & BaseWorkspace;
 
-export const isWorkspace = (model: Pick<BaseModel, 'type'>): model is Workspace => (
-  model.type === type
-);
+export const isWorkspace = (model: Pick<BaseModel, 'type'>): model is Workspace => model.type === type;
 
-export const isDesign = (workspace: Pick<Workspace, 'scope'>) => (
-  workspace.scope === WorkspaceScopeKeys.design
-);
+export const isDesign = (workspace: Pick<Workspace, 'scope'>) => workspace.scope === WorkspaceScopeKeys.design;
 
-export const isCollection = (workspace: Pick<Workspace, 'scope'>) => (
-  workspace.scope === WorkspaceScopeKeys.collection
-);
+export const isCollection = (workspace: Pick<Workspace, 'scope'>) => workspace.scope === WorkspaceScopeKeys.collection;
 
-export const isMockServer = (workspace: Pick<Workspace, 'scope'>) => (
-  workspace.scope === WorkspaceScopeKeys.mockServer
-);
+export const isMockServer = (workspace: Pick<Workspace, 'scope'>) => workspace.scope === WorkspaceScopeKeys.mockServer;
 
-export const isEnvironment = (workspace: Pick<Workspace, 'scope'>) => (
-  workspace.scope === WorkspaceScopeKeys.environment
-);
+export const isEnvironment = (workspace: Pick<Workspace, 'scope'>) =>
+  workspace.scope === WorkspaceScopeKeys.environment;
 
 export const init = (): BaseWorkspace => ({
   name: `New ${strings.collection.singular}`,
@@ -146,10 +137,12 @@ type MigrationWorkspace = Merge<Workspace, { scope: OldScopeTypes | Workspace['s
  * Ensure workspace scope is set to a valid entry
  */
 function _migrateScope(workspace: MigrationWorkspace) {
-  if (workspace.scope === WorkspaceScopeKeys.design
-    || workspace.scope === WorkspaceScopeKeys.collection
-    || workspace.scope === WorkspaceScopeKeys.mockServer
-    || workspace.scope === WorkspaceScopeKeys.environment) {
+  if (
+    workspace.scope === WorkspaceScopeKeys.design ||
+    workspace.scope === WorkspaceScopeKeys.collection ||
+    workspace.scope === WorkspaceScopeKeys.mockServer ||
+    workspace.scope === WorkspaceScopeKeys.environment
+  ) {
     return workspace as Workspace;
   }
   // designer and spec => design, unset => collection

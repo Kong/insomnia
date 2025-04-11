@@ -19,7 +19,7 @@ interface BaseMockRoute {
   statusCode: number;
   statusText: string;
   name: string;
-  mimeType: string;// response body type
+  mimeType: string; // response body type
   method: string; // used only for sending the testing request
 }
 
@@ -38,9 +38,7 @@ export function init(): BaseMockRoute {
   };
 }
 
-export const isMockRoute = (model: Pick<BaseModel, 'type'>): model is MockRoute => (
-  model.type === type
-);
+export const isMockRoute = (model: Pick<BaseModel, 'type'>): model is MockRoute => model.type === type;
 
 export function migrate(doc: MockRoute) {
   return doc;
@@ -54,10 +52,7 @@ export function create(patch: Partial<MockRoute> = {}) {
   return db.docCreate<MockRoute>(type, patch);
 }
 
-export function update(
-  mockRoute: MockRoute,
-  patch: Partial<MockRoute> = {},
-) {
+export function update(mockRoute: MockRoute, patch: Partial<MockRoute> = {}) {
   return db.docUpdate<MockRoute>(mockRoute, patch);
 }
 

@@ -8,10 +8,7 @@ import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { PassThrough } from 'stream';
 
-import {
-  getContentTypeFromHeaders,
-  PREVIEW_MODE_FRIENDLY,
-} from '../../../common/constants';
+import { getContentTypeFromHeaders, PREVIEW_MODE_FRIENDLY } from '../../../common/constants';
 import type { ResponseHeader } from '../../../models/response';
 import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
 import { showModal } from '../modals/index';
@@ -156,9 +153,9 @@ export const ResponseMultipartViewer: FC<Props> = ({
       >
         <div>
           <Dropdown
-            aria-label='Select Part Dropdown'
+            aria-label="Select Part Dropdown"
             triggerButton={
-              <Button className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]">
+              <Button className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]">
                 <div
                   style={{
                     minWidth: '200px',
@@ -172,10 +169,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
             }
           >
             {parts.map(part => (
-              <DropdownItem
-                aria-label={part.title}
-                key={part.id}
-              >
+              <DropdownItem aria-label={part.title} key={part.id}>
                 <ItemContent
                   icon={selectedPart?.id === part.id ? 'check' : 'empty'}
                   label={part.title}
@@ -186,26 +180,18 @@ export const ResponseMultipartViewer: FC<Props> = ({
           </Dropdown>
         </div>
         <Dropdown
-          aria-label='Part Actions Dropdown'
+          aria-label="Part Actions Dropdown"
           triggerButton={
-            <Button className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]">
+            <Button className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]">
               <i className="fa fa-bars" />
             </Button>
           }
         >
-          <DropdownItem aria-label='View Headers'>
-            <ItemContent
-              icon="list"
-              label="View Headers"
-              onClick={viewHeaders}
-            />
+          <DropdownItem aria-label="View Headers">
+            <ItemContent icon="list" label="View Headers" onClick={viewHeaders} />
           </DropdownItem>
-          <DropdownItem aria-label='Save as File'>
-            <ItemContent
-              icon="save"
-              label="Save as File"
-              onClick={saveAsFile}
-            />
+          <DropdownItem aria-label="Save as File">
+            <ItemContent icon="save" label="Save as File" onClick={saveAsFile} />
           </DropdownItem>
         </Dropdown>
       </div>
@@ -227,12 +213,17 @@ export const ResponseMultipartViewer: FC<Props> = ({
           url={url}
         />
       </div>
-
     </div>
   );
 };
 
-function multipartBufferToArray({ bodyBuffer, contentType }: { bodyBuffer: Buffer | null; contentType: string }): Promise<Part[]> {
+function multipartBufferToArray({
+  bodyBuffer,
+  contentType,
+}: {
+  bodyBuffer: Buffer | null;
+  contentType: string;
+}): Promise<Part[]> {
   return new Promise((resolve, reject) => {
     const parts: Part[] = [];
 

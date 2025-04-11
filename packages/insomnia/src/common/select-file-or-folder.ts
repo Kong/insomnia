@@ -40,10 +40,12 @@ export const selectFileOrFolder = async ({ itemTypes, extensions }: Options) => 
           throw new Error(`unrecognized item type: "${type}"`);
       }
     }),
-    filters: [{
-      extensions: (extensions?.length ? extensions : ['*']),
-      name: '',
-    }],
+    filters: [
+      {
+        extensions: extensions?.length ? extensions : ['*'],
+        name: '',
+      },
+    ],
   });
 
   const fileSelection: FileSelection = {

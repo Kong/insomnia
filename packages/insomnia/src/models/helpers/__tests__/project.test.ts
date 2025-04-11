@@ -10,20 +10,10 @@ const remote0 = { name: '0', remoteId: 'notNull', _id: 'remote0' };
 
 describe('sortProjects', () => {
   it('sorts projects by default > local > remote > name', () => {
-    const unSortedProjects = [
-      remoteA,
-      defaultOrgProject,
-      remoteB,
-      remote0,
-    ];
+    const unSortedProjects = [remoteA, defaultOrgProject, remoteB, remote0];
     const result = sortProjects(unSortedProjects);
 
-    const sortedProjects = [
-      defaultOrgProject,
-      remote0,
-      remoteA,
-      remoteB,
-    ];
+    const sortedProjects = [defaultOrgProject, remote0, remoteA, remoteB];
     expect(result).toEqual(sortedProjects);
   });
 });

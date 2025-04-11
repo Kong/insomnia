@@ -1,5 +1,5 @@
 export const escapeJsStr = (s: string) => {
-  return s.replace(/'/g, '\\\'');
+  return s.replace(/'/g, "\\'");
 };
 
 export const indent = (level: number, code: string) => {

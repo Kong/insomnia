@@ -5,12 +5,7 @@ interface Props {
 }
 
 export const ResponsePDFViewer = (props: Props) => {
-  const url = (`data:application/pdf;base64,${props.body.toString('base64')}`);
+  const url = `data:application/pdf;base64,${props.body.toString('base64')}`;
 
-  return (
-    <webview
-      data-testid="ResponsePDFView"
-      src={url}
-    />
-  );
+  return <webview data-testid="ResponsePDFView" src={url} />;
 };

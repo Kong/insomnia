@@ -50,8 +50,7 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
     modalRef.current?.show();
   }, []);
 
-  const isBtnDisabled = requestFetcher.state !== 'idle'
-    || !selectedProjectId || !selectedWorkspaceId;
+  const isBtnDisabled = requestFetcher.state !== 'idle' || !selectedProjectId || !selectedWorkspaceId;
 
   const previousRequestFetcherState = useRef('idle');
 
@@ -86,7 +85,8 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
               <select name="projectId" value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)}>
                 {projectOptions.map(project => (
                   <option key={project._id} value={project._id}>
-                    {project.name}{project._id === currentProjectId && ' (current)'}
+                    {project.name}
+                    {project._id === currentProjectId && ' (current)'}
                   </option>
                 ))}
               </select>
@@ -106,10 +106,16 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
           <div className="form-control form-control--outlined">
             <label>
               {strings.collection.plural}:
-              <select aria-label='Select Workspace' name="workspaceId" value={selectedWorkspaceId} onChange={e => setSelectedWorkspaceId(e.target.value)}>
+              <select
+                aria-label="Select Workspace"
+                name="workspaceId"
+                value={selectedWorkspaceId}
+                onChange={e => setSelectedWorkspaceId(e.target.value)}
+              >
                 {workspaceOptions.map(workspace => (
                   <option aria-label={workspace.name} key={workspace._id} value={workspace._id}>
-                    {workspace.name}{workspace._id === currentWorkspaceId && ' (current)'}
+                    {workspace.name}
+                    {workspace._id === currentWorkspaceId && ' (current)'}
                   </option>
                 ))}
               </select>
@@ -126,9 +132,7 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
             </p>
           )}
           {requestFetcher.data?.error && (
-            <p className="notice error margin-bottom-sm mt-6">
-              {requestFetcher.data.error}
-            </p>
+            <p className="notice error margin-bottom-sm mt-6">{requestFetcher.data.error}</p>
           )}
         </ModalBody>
         <ModalFooter>
@@ -140,13 +144,8 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
             >
               Cancel
             </button>
-            <button
-              disabled={isBtnDisabled}
-              form="workspace-duplicate-form"
-              className="btn"
-              onClick={createNewRequest}
-            >
-              {requestFetcher.state !== 'idle' && <Icon icon='spinner' className='animate-spin' />} Add
+            <button disabled={isBtnDisabled} form="workspace-duplicate-form" className="btn" onClick={createNewRequest}>
+              {requestFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />} Add
             </button>
           </div>
         </ModalFooter>

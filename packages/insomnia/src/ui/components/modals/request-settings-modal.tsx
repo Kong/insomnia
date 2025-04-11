@@ -24,7 +24,11 @@ export interface RequestSettingsModalOptions {
 
 export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSettingsModalOptions) => {
   const modalRef = useRef<ModalHandle>(null);
-  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+  const { organizationId, projectId, workspaceId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  };
   const workspacesFetcher = useFetcher<ListWorkspacesLoaderData>();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
@@ -33,7 +37,11 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
     }
   }, [organizationId, projectId, workspacesFetcher]);
   const projectLoaderData = workspacesFetcher?.data;
-  const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined).filter(w => w.scope !== 'mock-server') || [];
+  const workspacesForActiveProject =
+    projectLoaderData?.files
+      .map(w => w.workspace)
+      .filter(isNotNullOrUndefined)
+      .filter(w => w.scope !== 'mock-server') || [];
   const [workspaceToCopyTo, setWorkspaceToCopyTo] = useState('');
   useEffect(() => {
     modalRef.current?.show();
@@ -43,12 +51,11 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
   const patchRequest = useRequestPatcher();
   const navigate = useNavigate();
   const duplicateRequest = (r: Partial<Request>) => {
-    requestFetcher.submit(JSON.stringify(r),
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/duplicate`,
-        method: 'post',
-        encType: 'application/json',
-      });
+    requestFetcher.submit(JSON.stringify(r), {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/duplicate`,
+      method: 'post',
+      encType: 'application/json',
+    });
   };
   async function handleMoveToWorkspace() {
     invariant(workspaceToCopyTo, 'Workspace ID is required');
@@ -81,15 +88,13 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
     <OverlayContainer>
       <Modal ref={modalRef} onHide={onHide}>
         <ModalHeader>
-          Request Settings{' '}
-          <span className="txt-sm selectable faint monospace">{request ? request._id : ''}</span>
+          Request Settings <span className="txt-sm selectable faint monospace">{request ? request._id : ''}</span>
         </ModalHeader>
         <ModalBody className="pad">
           <div>
             <div className="form-control form-control--outlined">
               <label>
-                Name{' '}
-                <span className="txt-sm faint italic">(also rename by double-clicking in sidebar)</span>
+                Name <span className="txt-sm faint italic">(also rename by double-clicking in sidebar)</span>
                 <input
                   type="text"
                   placeholder={request?.url || 'My Request'}
@@ -146,8 +151,8 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                     <label>
                       Move/Copy to Workspace
                       <HelpTooltip position="top" className="space-left">
-                        Copy or move the current request to a new workspace. It will be placed at the root of
-                        the new workspace's folder structure.
+                        Copy or move the current request to a new workspace. It will be placed at the root of the new
+                        workspace's folder structure.
                       </HelpTooltip>
                       <select
                         value={workspaceToCopyTo}
@@ -173,7 +178,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                   <div className="form-control form-control--no-label width-auto">
                     <button
                       disabled={!workspaceToCopyTo}
-                      className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]"
+                      className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
                       onClick={handleCopyToWorkspace}
                     >
                       Copy
@@ -182,14 +187,15 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                   <div className="form-control form-control--no-label width-auto">
                     <button
                       disabled={!workspaceToCopyTo}
-                      className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]"
+                      className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
                       onClick={handleMoveToWorkspace}
                     >
                       Move
                     </button>
                   </div>
                 </div>
-              </>)}
+              </>
+            )}
             {request && isGrpcRequest(request) && (
               <>
                 <div className="form-control form-control--thin pad-top-sm">
@@ -202,13 +208,16 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                       type="checkbox"
                       name="reflectionApi"
                       checked={request.reflectionApi.enabled}
-                      onChange={event => patchRequest(request._id, {
-                        reflectionApi: {
-                          ...request.reflectionApi,
-                          enabled: event.currentTarget.checked,
-                        },
-                      })}
-                    />̵
+                      onChange={event =>
+                        patchRequest(request._id, {
+                          reflectionApi: {
+                            ...request.reflectionApi,
+                            enabled: event.currentTarget.checked,
+                          },
+                        })
+                      }
+                    />
+                    ̵
                   </label>
                 </div>
                 <div className="form-row pad-top-sm">
@@ -264,7 +273,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                     </>
                   )}
                 </div>
-                <p className="faint italic pad-top">
+                <p className="faint pad-top italic">
                   Are there any gRPC settings you expect to see? Create a{' '}
                   <a href={'https://github.com/Kong/insomnia/issues/new/choose'}>feature request</a>!
                 </p>
@@ -306,8 +315,8 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                           onChange={toggleCheckBox}
                         />
                         <HelpTooltip position="top" className="space-left">
-                          Automatically encode special characters at send time (does not apply to query
-                          parameters editor)
+                          Automatically encode special characters at send time (does not apply to query parameters
+                          editor)
                         </HelpTooltip>
                       </label>
                     </div>
@@ -329,9 +338,8 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                       <label>
                         Rebuild path dot sequences
                         <HelpTooltip position="top" className="space-left">
-                          This instructs libcurl to squash sequences of "/../" or "/./" that may exist in the
-                          URL's path part and that is supposed to be removed according to RFC 3986 section
-                          5.2.4
+                          This instructs libcurl to squash sequences of "/../" or "/./" that may exist in the URL's path
+                          part and that is supposed to be removed according to RFC 3986 section 5.2.4
                         </HelpTooltip>
                         <input
                           type="checkbox"
@@ -367,8 +375,8 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                     <label>
                       Move/Copy to Workspace
                       <HelpTooltip position="top" className="space-left">
-                        Copy or move the current request to a new workspace. It will be placed at the root of
-                        the new workspace's folder structure.
+                        Copy or move the current request to a new workspace. It will be placed at the root of the new
+                        workspace's folder structure.
                       </HelpTooltip>
                       <select
                         value={workspaceToCopyTo}
@@ -394,7 +402,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                   <div className="form-control form-control--no-label width-auto">
                     <button
                       disabled={!workspaceToCopyTo}
-                      className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]"
+                      className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
                       onClick={handleCopyToWorkspace}
                     >
                       Copy
@@ -403,15 +411,15 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                   <div className="form-control form-control--no-label width-auto">
                     <button
                       disabled={!workspaceToCopyTo}
-                      className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]"
+                      className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
                       onClick={handleMoveToWorkspace}
                     >
                       Move
                     </button>
                   </div>
                 </div>
-              </>)
-            }
+              </>
+            )}
           </div>
         </ModalBody>
       </Modal>

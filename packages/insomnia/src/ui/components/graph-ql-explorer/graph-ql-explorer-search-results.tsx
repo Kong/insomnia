@@ -56,9 +56,9 @@ export class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
     const { schema, filter } = this.props;
     const typeMap = schema.getTypeMap();
 
-    const types = Object
-      .values(typeMap)
-      .filter(({ name }) => Boolean(fuzzyMatch(filter, name, { splitSpace: true, loose: true })));
+    const types = Object.values(typeMap).filter(({ name }) =>
+      Boolean(fuzzyMatch(filter, name, { splitSpace: true, loose: true })),
+    );
 
     return types;
   }
@@ -72,10 +72,13 @@ export class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
       }
 
       const fields: GraphQLFieldWithOptionalArgs[] = type.getFields();
-      const relevantFields: GraphQLFieldWithParentName[] = Object
-        .values(fields)
+      const relevantFields: GraphQLFieldWithParentName[] = Object.values(fields)
         // Fuzzy match on field.name and field.args[*].name
-        .filter(({ name, args }) => Boolean(fuzzyMatchAll(filter, [name, ...(args?.map(arg => arg.name) || [])], { splitSpace: true, loose: true })))
+        .filter(({ name, args }) =>
+          Boolean(
+            fuzzyMatchAll(filter, [name, ...(args?.map(arg => arg.name) || [])], { splitSpace: true, loose: true }),
+          ),
+        )
         .map(field => ({ ...field, parentName: type.name }));
       return [...acc, ...relevantFields];
     }, []);
@@ -107,7 +110,9 @@ export class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
           <a
             href="#"
             className="surprise"
-            onClick={() => this.setState(({ displayedTypeBatches: oldValue }) => ({ displayedTypeBatches: oldValue + 1 }))}
+            onClick={() =>
+              this.setState(({ displayedTypeBatches: oldValue }) => ({ displayedTypeBatches: oldValue + 1 }))
+            }
           >
             And {numberOfAllTypes - numberOfTypesToRender} more types found... Click here to show {BATCH_SIZE} more.
           </a>
@@ -138,7 +143,9 @@ export class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
           <a
             href="#"
             className="surprise"
-            onClick={() => this.setState(({ displayedFieldBatches: oldValue }) => ({ displayedFieldBatches: oldValue + 1 }))}
+            onClick={() =>
+              this.setState(({ displayedFieldBatches: oldValue }) => ({ displayedFieldBatches: oldValue + 1 }))
+            }
           >
             And {numberOfAllFields - numberOfFieldsToRender} more fields found... Click here to show {BATCH_SIZE} more.
           </a>

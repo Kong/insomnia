@@ -51,11 +51,7 @@ export interface QueryString extends Comment {
   name: string;
 }
 
-export type ImportRequestType =
-  | 'environment'
-  | 'request'
-  | 'request_group'
-  | 'workspace';
+export type ImportRequestType = 'environment' | 'request' | 'request_group' | 'workspace';
 
 export interface ImportRequest<T extends {} = {}> extends Comment {
   _id?: string;

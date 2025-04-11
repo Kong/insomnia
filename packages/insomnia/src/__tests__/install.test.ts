@@ -5,7 +5,7 @@ import { containsOnlyDeprecationWarnings, isDeprecatedDependencies } from '../ma
 describe('install.js', () => {
   describe('containsOnlyDeprecationWarning', () => {
     it('should return true when all lines in stderr are deprecation warnings', () => {
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const stderr = // Warning #1
         'warning insomnia-plugin-xxx-yyy > xyz > xyz > xyz > xyz > xyz: ' +
         'xyz is no longer maintained and not recommended for usage due to the number of issues. ' +
@@ -21,7 +21,7 @@ describe('install.js', () => {
     });
 
     it('should return false when stderr contains a deprecation warning and an error', () => {
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const stderr = // Warning #1
         'warning insomnia-plugin-xxx-yyy > xyz > xyz > xyz > xyz > xyz: ' +
         'xyz is no longer maintained and not recommended for usage due to the number of issues. ' +

@@ -84,7 +84,7 @@
         },
         {
           "value": "help"
-        },
+        }
       ]
     }
   ],
@@ -98,10 +98,7 @@
       },
       "stopAll": true,
       "preLaunchTask": "Insomnia: Compile (Watch)",
-      "configurations": [
-        "Electron: main",
-        "Electron: renderer"
-      ]
+      "configurations": ["Electron: main", "Electron: renderer"]
     }
   ]
 }

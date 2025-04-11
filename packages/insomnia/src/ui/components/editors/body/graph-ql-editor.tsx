@@ -4,8 +4,18 @@ import type { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import type { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import type { OpenDialogOptions } from 'electron';
 import { readFileSync } from 'fs';
-import type { GraphQLNonNull, GraphQLSchema, OperationTypeNode} from 'graphql';
-import { buildClientSchema, type DefinitionNode, type DocumentNode, getIntrospectionQuery, Kind, type NonNullTypeNode, type OperationDefinitionNode, parse, typeFromAST } from 'graphql';
+import type { GraphQLNonNull, GraphQLSchema, OperationTypeNode } from 'graphql';
+import {
+  buildClientSchema,
+  type DefinitionNode,
+  type DocumentNode,
+  getIntrospectionQuery,
+  Kind,
+  type NonNullTypeNode,
+  type OperationDefinitionNode,
+  parse,
+  typeFromAST,
+} from 'graphql';
 import type { Maybe } from 'graphql-language-service';
 import React, { type FC, useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Group, Heading, Toolbar, Tooltip, TooltipTrigger } from 'react-aria-components';
@@ -19,7 +29,13 @@ import { markdownToHTML } from '../../../../common/markdown-to-html';
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
 import * as models from '../../../../models';
 import type { Request } from '../../../../models/request';
-import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../../../network/network';
+import {
+  fetchRequestData,
+  responseTransform,
+  sendCurlAndWriteTimeline,
+  tryToInterpolateRequest,
+  tryToTransformRequestWithPlugins,
+} from '../../../../network/network';
 import { invariant } from '../../../../utils/invariant';
 import { jsonPrettify } from '../../../../utils/prettify/json';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
@@ -33,17 +49,21 @@ import { TimeFromNow } from '../../time-from-now';
 import { prettifyGraphql } from './prettify-graphql.mjs';
 
 // Type guard to ensure loc is non-nullable
-const hasLocation = (def: OperationDefinitionNode): def is OperationDefinitionNode & { loc: NonNullable<OperationDefinitionNode['loc']> } => {
+const hasLocation = (
+  def: OperationDefinitionNode,
+): def is OperationDefinitionNode & { loc: NonNullable<OperationDefinitionNode['loc']> } => {
   return def.loc !== null && def.loc !== undefined;
 };
 /** note that `null` is a valid operation name.  For example, `null` is the operation name of an anonymous `query` operation. */
-const matchesOperation = (operationName: string | null | undefined) => ({ name }: OperationDefinitionNode) => {
-  // For matching an anonymous function, `operationName` will be `null` and `operation.name` will be `undefined`
-  if (!operationName && !name) {
-    return true;
-  }
-  return name?.value === operationName;
-};
+const matchesOperation =
+  (operationName: string | null | undefined) =>
+  ({ name }: OperationDefinitionNode) => {
+    // For matching an anonymous function, `operationName` will be `null` and `operation.name` will be `undefined`
+    if (!operationName && !name) {
+      return true;
+    }
+    return name?.value === operationName;
+  };
 
 function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: string, variables?: string): string {
   // the body object is one dimensional, so we don't need to worry about shallow copying.
@@ -80,7 +100,8 @@ function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: st
 }
 
 const isString = (value?: string): value is string => typeof value === 'string' || (value as unknown) instanceof String;
-const isOperationDefinition = (def: DefinitionNode): def is OperationDefinitionNode => def.kind === Kind.OPERATION_DEFINITION;
+const isOperationDefinition = (def: DefinitionNode): def is OperationDefinitionNode =>
+  def.kind === Kind.OPERATION_DEFINITION;
 
 const fetchGraphQLSchemaForRequest = async ({
   requestId,
@@ -122,7 +143,8 @@ const fetchGraphQLSchemaForRequest = async ({
       }),
     );
 
-    const { request,
+    const {
+      request,
       environment,
       settings,
       clientCertificates,
@@ -226,7 +248,11 @@ export const GraphQLEditor: FC<Props> = ({
   } catch (error) {
     documentAST = null;
   }
-  const operations = documentAST?.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '').filter(Boolean) || [];
+  const operations =
+    documentAST?.definitions
+      .filter(isOperationDefinition)
+      ?.map(def => def.name?.value || '')
+      .filter(Boolean) || [];
   const operationName = requestBody.operationName || operations[0] || '';
   const disabledOperationMarkers = useRef<TextMarker[]>([]);
   const [state, setState] = useState<State>({
@@ -242,16 +268,16 @@ export const GraphQLEditor: FC<Props> = ({
     documentAST,
   });
 
-  const [automaticFetch, setAutoFetch] = useLocalStorage<boolean>(
-    'graphql.automaticFetch',
-    true
-  );
+  const [automaticFetch, setAutoFetch] = useLocalStorage<boolean>('graphql.automaticFetch', true);
   const [includeInputValueDeprecation, setIncludeInputValueDeprecation] = useState(false);
   const [schema, setSchema] = useState<GraphQLSchema | null>(null);
-  const [schemaFetchError, setSchemaFetchError] = useState<{
-    message: string;
-    response?: ResponsePatch | null;
-  } | undefined>();
+  const [schemaFetchError, setSchemaFetchError] = useState<
+    | {
+        message: string;
+        response?: ResponsePatch | null;
+      }
+    | undefined
+  >();
   const [schemaIsFetching, setSchemaIsFetching] = useState<boolean | null>(null);
   const [schemaLastFetchTime, setSchemaLastFetchTime] = useState<number>(0);
   const editorRef = useRef<CodeEditorHandle>(null);
@@ -293,11 +319,14 @@ export const GraphQLEditor: FC<Props> = ({
   useDocBodyKeyboardShortcuts({
     beautifyRequestBody,
   });
-  const changeOperationName = useCallback((operationName: string) => {
-    const content = getGraphQLContent(state.body, undefined, operationName);
-    onChange(content);
-    setState(prevState => ({ ...prevState, body: { ...prevState.body, operationName } }));
-  }, [onChange, state.body]);
+  const changeOperationName = useCallback(
+    (operationName: string) => {
+      const content = getGraphQLContent(state.body, undefined, operationName);
+      onChange(content);
+      setState(prevState => ({ ...prevState, body: { ...prevState.body, operationName } }));
+    },
+    [onChange, state.body],
+  );
 
   const changeVariables = (variablesInput: string) => {
     try {
@@ -317,7 +346,11 @@ export const GraphQLEditor: FC<Props> = ({
   const changeQuery = (query: string) => {
     try {
       const documentAST = parse(query);
-      const operations = documentAST.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '').filter(Boolean) || [];
+      const operations =
+        documentAST.definitions
+          .filter(isOperationDefinition)
+          ?.map(def => def.name?.value || '')
+          .filter(Boolean) || [];
 
       // default to first operation when none selected
       let operationName = operations[0] || '';
@@ -413,11 +446,7 @@ export const GraphQLEditor: FC<Props> = ({
     }
   };
 
-  const {
-    variablesSyntaxError,
-    activeReference,
-    explorerVisible,
-  } = state;
+  const { variablesSyntaxError, activeReference, explorerVisible } = state;
 
   const variableTypes: Record<string, GraphQLNonNull<any>> = {};
   if (schema) {
@@ -428,8 +457,7 @@ export const GraphQLEditor: FC<Props> = ({
         if (inputType) {
           variableTypes[variable.name.value] = inputType;
         }
-      }
-      );
+      });
     });
   }
 
@@ -446,16 +474,18 @@ export const GraphQLEditor: FC<Props> = ({
         reference={activeReference}
         handleClose={() => setState(state => ({ ...state, explorerVisible: false }))}
       />,
-      explorerContainer
+      explorerContainer,
     );
   }
 
-  let graphqlOptions: {
-    hintOptions: GraphQLHintOptions & ShowHintOptions;
-    infoOptions: GraphQLInfoOptions;
-    jumpOptions: ModifiedGraphQLJumpOptions;
-    lintOptions: LintOptions;
-  } | undefined;
+  let graphqlOptions:
+    | {
+        hintOptions: GraphQLHintOptions & ShowHintOptions;
+        infoOptions: GraphQLInfoOptions;
+        jumpOptions: ModifiedGraphQLJumpOptions;
+        lintOptions: LintOptions;
+      }
+    | undefined;
   const handleClickReference = (reference: Maybe<ActiveReference>, event: MouseEvent) => {
     event.preventDefault();
     if (reference) {
@@ -488,42 +518,43 @@ export const GraphQLEditor: FC<Props> = ({
   }
   const canShowSchema = schema && !schemaIsFetching && !schemaFetchError && schemaLastFetchTime > 0;
 
-  const highlightOperation = useCallback((operationName?: string | null) => {
+  const highlightOperation = useCallback(
+    (operationName?: string | null) => {
+      if (!state.documentAST || !editorRef.current) {
+        return;
+      }
 
-    if (!state.documentAST || !editorRef.current) {
-      return;
-    }
+      // Remove current query highlighting
+      for (const textMarker of disabledOperationMarkers?.current || []) {
+        textMarker.clear();
+      }
 
-    // Remove current query highlighting
-    for (const textMarker of disabledOperationMarkers?.current || []) {
-      textMarker.clear();
-    }
+      disabledOperationMarkers.current = state.documentAST?.definitions
+        .filter(isOperationDefinition)
+        .filter(name => {
+          const fn = matchesOperation(operationName);
+          return !fn(name);
+        })
+        .filter(hasLocation)
+        .map(({ loc: { startToken, endToken } }) => {
+          const from = {
+            line: startToken.line - 1,
+            ch: startToken.column - 1,
+          };
+          const to = {
+            line: endToken.line,
+            ch: endToken.column - 1,
+          };
 
-    disabledOperationMarkers.current = state.documentAST?.definitions
-      .filter(isOperationDefinition)
-      .filter(name => {
-        const fn = matchesOperation(operationName);
-        return !fn(name);
-      })
-      .filter(hasLocation)
-      .map(({ loc: { startToken, endToken } }) => {
-        const from = {
-          line: startToken.line - 1,
-          ch: startToken.column - 1,
-        };
-        const to = {
-          line: endToken.line,
-          ch: endToken.column - 1,
-        };
-
-        return editorRef.current?.getDoc()?.markText(from, to, {
-          className: 'opacity-70',
-        }) as TextMarker;
-      });
-  }, [state.documentAST]);
+          return editorRef.current?.getDoc()?.markText(from, to, {
+            className: 'opacity-70',
+          }) as TextMarker;
+        });
+    },
+    [state.documentAST],
+  );
 
   const getCurrentOperation = useCallback(() => {
-
     if (!editorRef.current || !editorRef.current.hasFocus()) {
       return state.body.operationName || null;
     }
@@ -539,7 +570,6 @@ export const GraphQLEditor: FC<Props> = ({
 
     // Loop through all operationDefinitions to see if one contains the cursor.
     for (const operation of operationDefinitions) {
-
       if (!operation.name) {
         continue;
       }
@@ -577,39 +607,36 @@ export const GraphQLEditor: FC<Props> = ({
 
   return (
     <>
-      <Toolbar aria-label='GraphQL toolbar' className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
+      <Toolbar
+        aria-label="GraphQL toolbar"
+        className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2"
+      >
         <Dropdown
-          aria-label='Operations Dropdown'
+          aria-label="Operations Dropdown"
           isDisabled={!state.operations.length}
           triggerButton={
-            <Button className="btn btn--compact text-[--hl] p-[--padding-xs] bg-transparent h-full">
+            <Button className="btn btn--compact h-full bg-transparent p-[--padding-xs] text-[--hl]">
               {state.body.operationName || 'Operations'}
             </Button>
           }
         >
           {state.operations.map(operationName => (
-            <DropdownItem
-              key={operationName}
-              aria-label={`Operation ${operationName}`}
-            >
-              <ItemContent
-                label={operationName}
-                onClick={() => changeOperationName(operationName)}
-              />
+            <DropdownItem key={operationName} aria-label={`Operation ${operationName}`}>
+              <ItemContent label={operationName} onClick={() => changeOperationName(operationName)} />
             </DropdownItem>
           ))}
         </Dropdown>
         <Dropdown
-          aria-label='Schema Dropdown'
+          aria-label="Schema Dropdown"
           triggerButton={
-            <Button
-              className="btn btn--compact text-[--hl] p-[--padding-xs] bg-transparent h-full"
-            >
-              <span>schema <i className="fa fa-wrench" /></span>
+            <Button className="btn btn--compact h-full bg-transparent p-[--padding-xs] text-[--hl]">
+              <span>
+                schema <i className="fa fa-wrench" />
+              </span>
             </Button>
           }
         >
-          <DropdownItem aria-label='Show Documentation'>
+          <DropdownItem aria-label="Show Documentation">
             <ItemContent
               isDisabled={!canShowSchema}
               icon="file-code-o"
@@ -619,11 +646,8 @@ export const GraphQLEditor: FC<Props> = ({
               }}
             />
           </DropdownItem>
-          <DropdownSection
-            aria-label='Remote GraphQL Schema Section'
-            title="Remote GraphQL Schema"
-          >
-            <DropdownItem aria-label='Refresh Schema'>
+          <DropdownSection aria-label="Remote GraphQL Schema Section" title="Remote GraphQL Schema">
+            <DropdownItem aria-label="Refresh Schema">
               <ItemContent
                 stayOpenAfterClick
                 icon={`refresh ${schemaIsFetching ? 'fa-spin' : ''}`}
@@ -643,7 +667,7 @@ export const GraphQLEditor: FC<Props> = ({
                 }}
               />
             </DropdownItem>
-            <DropdownItem aria-label='Automatic Fetch'>
+            <DropdownItem aria-label="Automatic Fetch">
               <ItemContent
                 stayOpenAfterClick
                 icon={`toggle-${automaticFetch ? 'on' : 'off'}`}
@@ -658,7 +682,7 @@ export const GraphQLEditor: FC<Props> = ({
                 }}
               />
             </DropdownItem>
-            <DropdownItem aria-label='Fetch deprecation values'>
+            <DropdownItem aria-label="Fetch deprecation values">
               <ItemContent
                 stayOpenAfterClick
                 icon={`toggle-${includeInputValueDeprecation ? 'on' : 'off'}`}
@@ -675,19 +699,16 @@ export const GraphQLEditor: FC<Props> = ({
             </DropdownItem>
           </DropdownSection>
 
-          <DropdownSection
-            aria-label="Local GraphQL Schema Section"
-            title="Local GraphQL Schema"
-          >
-            <DropdownItem aria-label='Load schema from JSON'>
+          <DropdownSection aria-label="Local GraphQL Schema Section" title="Local GraphQL Schema">
+            <DropdownItem aria-label="Load schema from JSON">
               <ItemContent
                 icon="file-code-o"
                 label={
                   <>
                     <span style={{ marginRight: '10px' }}>Load schema from JSON</span>
                     <HelpTooltip>
-                      Run <i>apollo-codegen introspect-schema schema.graphql --output schema.json</i> to
-                      convert GraphQL DSL to JSON.
+                      Run <i>apollo-codegen introspect-schema schema.graphql --output schema.json</i> to convert GraphQL
+                      DSL to JSON.
                     </HelpTooltip>
                   </>
                 }
@@ -699,7 +720,7 @@ export const GraphQLEditor: FC<Props> = ({
           </DropdownSection>
         </Dropdown>
       </Toolbar>
-      <PanelGroup direction={'vertical'} autoSaveId='graphql-variables'>
+      <PanelGroup direction={'vertical'} autoSaveId="graphql-variables">
         <Panel id="GraphQL Editor" minSize={20} defaultSize={60}>
           <CodeEditor
             id="graphql-editor"
@@ -720,19 +741,17 @@ export const GraphQLEditor: FC<Props> = ({
             lintOptions={graphqlOptions?.lintOptions}
           />
         </Panel>
-        <PanelResizeHandle className={'w-full h-[1px] bg-[--hl-md]'} />
-        <Panel id="GraphQL Variables editor" className='flex flex-col' minSize={20}>
-          <Heading className="w-full px-2 text-[--hl] select-none flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center">
+        <PanelResizeHandle className={'h-[1px] w-full bg-[--hl-md]'} />
+        <Panel id="GraphQL Variables editor" className="flex flex-col" minSize={20}>
+          <Heading className="flex h-[--line-height-sm] w-full flex-shrink-0 select-none items-center border-b border-solid border-[--hl-md] px-2 text-[--hl]">
             Query Variables
             <HelpTooltip className="space-left">
               Variables to use in GraphQL query <br />
               (JSON format)
             </HelpTooltip>
-            {variablesSyntaxError && (
-              <span className="text-danger italic pull-right">{variablesSyntaxError}</span>
-            )}
+            {variablesSyntaxError && <span className="text-danger pull-right italic">{variablesSyntaxError}</span>}
           </Heading>
-          <div className='flex-1 overflow-hidden'>
+          <div className="flex-1 overflow-hidden">
             <CodeEditor
               id="graphql-editor-variables"
               dynamicHeight
@@ -753,25 +772,30 @@ export const GraphQLEditor: FC<Props> = ({
           </div>
         </Panel>
       </PanelGroup>
-      <Toolbar className="w-full overflow-y-auto  select-none flex-shrink-0 h-[--line-height-sm] border-t border-solid border-[--hl-md] flex items-center">
-        <Button className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-sm hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all" onPress={beautifyRequestBody}>
+      <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 select-none items-center overflow-y-auto border-t border-solid border-[--hl-md]">
+        <Button
+          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          onPress={beautifyRequestBody}
+        >
           Prettify GraphQL
         </Button>
-        <span className='flex-1' />
-        {!schemaFetchError && <div className="flex flex-shrink-0 items-center gap-2 text-sm px-2">
-          <Icon icon="info-circle" />
-          {renderSchemaFetchMessage()}
-        </div>}
+        <span className="flex-1" />
+        {!schemaFetchError && (
+          <div className="flex flex-shrink-0 items-center gap-2 px-2 text-sm">
+            <Icon icon="info-circle" />
+            {renderSchemaFetchMessage()}
+          </div>
+        )}
         {schemaFetchError && (
-          <Group className="flex items-center h-full">
+          <Group className="flex h-full items-center">
             <TooltipTrigger>
-              <Button className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-sm hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all">
-                <Icon icon="exclamation-triangle" className='text-[--color-warning]' />
+              <Button className="flex h-full items-center justify-center gap-2 px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
+                <Icon icon="exclamation-triangle" className="text-[--color-warning]" />
                 <span>Error fetching Schema</span>
               </Button>
               <Tooltip
                 offset={8}
-                className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
               >
                 {schemaFetchError.message}
               </Tooltip>

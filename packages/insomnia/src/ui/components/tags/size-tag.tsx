@@ -20,13 +20,13 @@ export const SizeTag: FC<Props> = memo(({ bytesRead, bytesContent, small, classN
     <table>
       <tbody>
         <tr>
-          <td className="text-left pad-right">Read</td>
-          <td className="text-right selectable no-wrap">{responseSizeReadString}</td>
+          <td className="pad-right text-left">Read</td>
+          <td className="selectable no-wrap text-right">{responseSizeReadString}</td>
         </tr>
         {bytesContent >= 0 && (
           <tr>
-            <td className="text-left pad-right">Content</td>
-            <td className="text-right selectable no-wrap">{responseSizeRawString}</td>
+            <td className="pad-right text-left">Content</td>
+            <td className="selectable no-wrap text-right">{responseSizeRawString}</td>
           </tr>
         )}
       </tbody>

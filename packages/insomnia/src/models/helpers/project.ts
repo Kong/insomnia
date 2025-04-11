@@ -1,5 +1,8 @@
 import { database } from '../../common/database';
-import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-project';
+import {
+  initializeLocalBackendProjectAndMarkForSync,
+  pushSnapshotOnInitialize,
+} from '../../sync/vcs/initialize-backend-project';
 import type { VCS } from '../../sync/vcs/vcs';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
@@ -7,10 +10,8 @@ import { isDefaultOrganizationProject, type Project, update as updateProject } f
 import type { Workspace } from '../workspace';
 import { getOrCreateByParentId as getOrCreateWorkspaceMeta } from '../workspace-meta';
 export const sortProjects = (projects: Project[]) => [
-  ...projects.filter(p => isDefaultOrganizationProject(p))
-    .sort((a, b) => a.name.localeCompare(b.name)),
-  ...projects.filter(p => !isDefaultOrganizationProject(p))
-    .sort((a, b) => a.name.localeCompare(b.name)),
+  ...projects.filter(p => isDefaultOrganizationProject(p)).sort((a, b) => a.name.localeCompare(b.name)),
+  ...projects.filter(p => !isDefaultOrganizationProject(p)).sort((a, b) => a.name.localeCompare(b.name)),
 ];
 
 export async function updateLocalProjectToRemote({
@@ -24,13 +25,16 @@ export async function updateLocalProjectToRemote({
   sessionId: string;
   organizationId: string;
 }) {
-  const newCloudProject = await insomniaFetch<{
-    id: string;
-    name: string;
-  } | {
-    error: string;
-    message?: string;
-  }>({
+  const newCloudProject = await insomniaFetch<
+    | {
+        id: string;
+        name: string;
+      }
+    | {
+        error: string;
+        message?: string;
+      }
+  >({
     path: `/v1/organizations/${organizationId}/team-projects`,
     method: 'POST',
     data: {
@@ -53,9 +57,9 @@ export async function updateLocalProjectToRemote({
   const updatedProject = await updateProject(project, { name: newCloudProject.name, remoteId: newCloudProject.id });
 
   // For each workspace in the local project
-  const projectWorkspaces = (await database.find<Workspace>('Workspace', {
+  const projectWorkspaces = await database.find<Workspace>('Workspace', {
     parentId: updatedProject._id,
-  }));
+  });
 
   for (const workspace of projectWorkspaces) {
     const workspaceMeta = await getOrCreateWorkspaceMeta(workspace._id);
@@ -69,7 +73,10 @@ export async function updateLocalProjectToRemote({
         await pushSnapshotOnInitialize({ vcs, workspace, project: updatedProject });
       }
     } catch (e) {
-      console.warn('Failed to initialize sync on workspace. This will be retried when the workspace is opened on the app.', e);
+      console.warn(
+        'Failed to initialize sync on workspace. This will be retried when the workspace is opened on the app.',
+        e,
+      );
       // TODO: here we should show the try again dialog
     }
   }

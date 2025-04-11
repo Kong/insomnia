@@ -107,7 +107,7 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   });
 
   it('exports all workspaces as an HTTP Archive', async () => {
-    await db.init(models.types(), { inMemoryOnly: true }, true, () => { },);
+    await db.init(models.types(), { inMemoryOnly: true }, true, () => {});
 
     const wrk1 = await models.workspace.create({
       _id: 'wrk_1',

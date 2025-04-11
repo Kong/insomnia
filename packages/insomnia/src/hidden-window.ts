@@ -2,8 +2,19 @@ import * as Sentry from '@sentry/electron/renderer';
 import { SENTRY_OPTIONS } from 'insomnia/src/common/sentry';
 import * as _ from 'lodash';
 
-import { initInsomniaObject, InsomniaObject, waitForAllTestsDone } from '../../insomnia-scripting-environment/src/objects';
-import { getNewConsole, mergeClientCertificates, mergeCookieJar, mergeRequests, mergeSettings, type RequestContext } from '../../insomnia-scripting-environment/src/objects';
+import {
+  initInsomniaObject,
+  InsomniaObject,
+  waitForAllTestsDone,
+} from '../../insomnia-scripting-environment/src/objects';
+import {
+  getNewConsole,
+  mergeClientCertificates,
+  mergeCookieJar,
+  mergeRequests,
+  mergeSettings,
+  type RequestContext,
+} from '../../insomnia-scripting-environment/src/objects';
 
 export interface HiddenBrowserWindowBridgeAPI {
   runScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;
@@ -40,14 +51,12 @@ window.bridge.onmessage(async (data, callback) => {
 
 // This function is duplicated in scriptExecutor.ts to run in nodejs
 // TODO: consider removing this implementation and using only nodejs scripting
-const runScript = async (
-  { script, context }: { script: string; context: RequestContext },
-): Promise<RequestContext> => {
+const runScript = async ({ script, context }: { script: string; context: RequestContext }): Promise<RequestContext> => {
   const scriptConsole = getNewConsole();
 
   const executionContext = await initInsomniaObject(context, scriptConsole.log);
 
-  const AsyncFunction = (async () => { }).constructor;
+  const AsyncFunction = (async () => {}).constructor;
   const executeScript = AsyncFunction(
     'insomnia',
     'require',
@@ -66,7 +75,7 @@ const runScript = async (
       await waitForAllTestsDone();
       window.bridge.stopMonitorAsyncTasks();  // the next one should not be monitored
       await window.bridge.asyncTasksAllSettled();
-      return insomnia;`
+      return insomnia;`,
   );
 
   const mutatedInsomniaObject = await executeScript(
@@ -86,7 +95,10 @@ const runScript = async (
   const mutatedContextObject = mutatedInsomniaObject.toObject();
   const updatedRequest = mergeRequests(context.request, mutatedContextObject.request);
   const updatedSettings = mergeSettings(context.settings, mutatedContextObject.request);
-  const updatedCertificates = mergeClientCertificates(mutatedContextObject.clientCertificates, mutatedContextObject.request);
+  const updatedCertificates = mergeClientCertificates(
+    mutatedContextObject.clientCertificates,
+    mutatedContextObject.request,
+  );
   const updatedCookieJar = mergeCookieJar(context.cookieJar, mutatedContextObject.cookieJar);
 
   return {
@@ -101,10 +113,12 @@ const runScript = async (
       name: context.baseEnvironment.name,
       data: mutatedContextObject.baseEnvironment,
     },
-    iterationData: context.iterationData ? {
-      name: context.iterationData.name,
-      data: mutatedContextObject.iterationData,
-    } : undefined,
+    iterationData: context.iterationData
+      ? {
+          name: context.iterationData.name,
+          data: mutatedContextObject.iterationData,
+        }
+      : undefined,
     transientVariables: {
       name: context.transientVariables?.name || 'transientVariables',
       data: mutatedContextObject.variables,
@@ -122,21 +136,15 @@ const runScript = async (
 };
 
 // proxiedSetTimeout has to be here as callback could be an async task
-function proxiedSetTimeout(
-  callback: () => void,
-  ms?: number | undefined,
-) {
+function proxiedSetTimeout(callback: () => void, ms?: number | undefined) {
   let resolveHdl: (value: unknown) => void;
 
   new Promise(resolve => {
     resolveHdl = resolve;
   });
 
-  return setTimeout(
-    () => {
-      callback();
-      resolveHdl(null);
-    },
-    ms,
-  );
+  return setTimeout(() => {
+    callback();
+    resolveHdl(null);
+  }, ms);
 }

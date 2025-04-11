@@ -27,9 +27,7 @@ const validPostmanEnvTypeList = Object.values(POSTMAN_ENV_TYPE) as string[];
 
 export const convert: Converter<Data> = rawData => {
   try {
-    const { _postman_variable_scope, name, values } = JSON.parse(
-      rawData,
-    ) as Environment;
+    const { _postman_variable_scope, name, values } = JSON.parse(rawData) as Environment;
 
     if (!validPostmanEnvTypeList.includes(_postman_variable_scope)) {
       return null;

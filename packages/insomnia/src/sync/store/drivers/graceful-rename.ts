@@ -13,7 +13,13 @@ function wait(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function renameWithRetry(source: string, target: string, startTime: number, retryTimeout: number, attempt = 0): Promise<void> {
+async function renameWithRetry(
+  source: string,
+  target: string,
+  startTime: number,
+  retryTimeout: number,
+  attempt = 0,
+): Promise<void> {
   try {
     return await fs.rename(source, target);
   } catch (error) {
@@ -52,10 +58,7 @@ async function renameWithRetry(source: string, target: string, startTime: number
   }
 }
 
-export async function gracefulRename(
-  from: string,
-  to: string,
-) {
+export async function gracefulRename(from: string, to: string) {
   if (isWindows()) {
     return renameWithRetry(from, to, Date.now(), WINDOWS_RENAME_TIMEOUT);
   }

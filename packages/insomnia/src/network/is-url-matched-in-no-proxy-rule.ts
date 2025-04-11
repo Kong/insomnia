@@ -19,7 +19,7 @@ function parseNoProxyZone(zone: string) {
 function matchesHostname(hostname: string, noProxyZoneHostname: string) {
   const wildcardNeedle = noProxyZoneHostname.startsWith('.*.') ? noProxyZoneHostname.slice(2) : noProxyZoneHostname;
   const isMatchedAt = hostname.indexOf(wildcardNeedle);
-  return (isMatchedAt > -1 && (isMatchedAt === hostname.length - wildcardNeedle.length));
+  return isMatchedAt > -1 && isMatchedAt === hostname.length - wildcardNeedle.length;
 }
 
 export function isUrlMatchedInNoProxyRule(url: string | undefined, noProxyRule: any) {
@@ -32,7 +32,7 @@ export function isUrlMatchedInNoProxyRule(url: string | undefined, noProxyRule: 
   }
   const port = uri.port || (uri.protocol === 'https:' ? '443' : '80');
   // TODO: remove non-null assertion
-   
+
   const hostname = formatHostname(uri.hostname!);
   const noProxyList = noProxyRule.split(',');
 
@@ -43,7 +43,7 @@ export function isUrlMatchedInNoProxyRule(url: string | undefined, noProxyRule: 
     }
     const hostnameMatched = matchesHostname(hostname, noProxyZone.hostname);
     if (noProxyZone.hasPort) {
-      return (port === noProxyZone.port) && hostnameMatched;
+      return port === noProxyZone.port && hostnameMatched;
     }
     return hostnameMatched;
   });

@@ -1,26 +1,20 @@
 import { autoUpdater, BrowserWindow, dialog } from 'electron';
 
-import {
-  CHECK_FOR_UPDATES_INTERVAL,
-  getAppId,
-  getAppVersion,
-  isDevelopment,
-  UpdateURL,
-} from '../common/constants';
+import { CHECK_FOR_UPDATES_INTERVAL, getAppId, getAppVersion, isDevelopment, UpdateURL } from '../common/constants';
 import { delay } from '../common/misc';
 import * as models from '../models/index';
 import { invariant } from '../utils/invariant';
 import { ipcMainOn } from './ipc/electron';
 
-export type UpdateStatus = |
-  'Update Error' |
-  'Up to Date' |
-  'Downloading...' |
-  'Performing backup...' |
-  'Updated (Restart Required)' |
-  'Checking' |
-  'Updates Not Supported' |
-  'Check Now';
+export type UpdateStatus =
+  | 'Update Error'
+  | 'Up to Date'
+  | 'Downloading...'
+  | 'Performing backup...'
+  | 'Updated (Restart Required)'
+  | 'Checking'
+  | 'Updates Not Supported'
+  | 'Check Now';
 
 const isUpdateSupported = () => {
   if (process.platform === 'linux') {
@@ -75,17 +69,19 @@ export const init = async () => {
     _sendUpdateStatus('Performing backup...');
     _sendUpdateStatus('Updated (Restart Required)');
 
-    dialog.showMessageBox({
-      type: 'info',
-      buttons: ['Restart', 'Later'],
-      title: 'Application Update',
-      message: process.platform === 'win32' ? releaseNotes : releaseName,
-      detail: 'A new version of Insomnia has been downloaded. Restart the application to apply the updates.',
-    }).then(returnValue => {
-      if (returnValue.response === 0) {
-        autoUpdater.quitAndInstall();
-      }
-    });
+    dialog
+      .showMessageBox({
+        type: 'info',
+        buttons: ['Restart', 'Later'],
+        title: 'Application Update',
+        message: process.platform === 'win32' ? releaseNotes : releaseName,
+        detail: 'A new version of Insomnia has been downloaded. Restart the application to apply the updates.',
+      })
+      .then(returnValue => {
+        if (returnValue.response === 0) {
+          autoUpdater.quitAndInstall();
+        }
+      });
   });
 
   const settings = await models.settings.get();

@@ -155,12 +155,7 @@ class Curl extends EventEmitter {
           'end',
           'NOT_USED',
           'NOT_USED',
-          [
-            'HTTP/1.1 200 OK',
-            `Content-Length: ${data.length}`,
-            'Content-Type: application/json',
-            '',
-          ].join('\n'),
+          ['HTTP/1.1 200 OK', `Content-Length: ${data.length}`, 'Content-Type: application/json', ''].join('\n'),
         );
       });
     });

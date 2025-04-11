@@ -4,7 +4,6 @@ import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 test.describe('Cookie editor', async () => {
-
   test.beforeEach(async ({ app, page }) => {
     const text = await loadFixture('simple.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
@@ -16,7 +15,6 @@ test.describe('Cookie editor', async () => {
   });
 
   test('create and send a cookie', async ({ page }) => {
-
     // Open cookie editor
     await page.click('button:has-text("Cookies")');
 
@@ -34,7 +32,9 @@ test.describe('Cookie editor', async () => {
 
     // Try to replace text in Raw view
     await page.getByRole('tab', { name: 'Raw' }).click();
-    await page.locator('text=Raw Cookie String >> input[type="text"]').fill('foo2=bar2; Expires=Tue, 19 Jan 2038 03:14:07 GMT; Domain=localhost; Path=/');
+    await page
+      .locator('text=Raw Cookie String >> input[type="text"]')
+      .fill('foo2=bar2; Expires=Tue, 19 Jan 2038 03:14:07 GMT; Domain=localhost; Path=/');
     await page.locator('text=Done').nth(1).click();
     await page.getByTestId('cookie-test-iteration-0').click();
 

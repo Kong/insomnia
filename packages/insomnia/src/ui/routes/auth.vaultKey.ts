@@ -9,14 +9,7 @@ import { base64encode, saveVaultKeyIfNecessary } from '../../utils/vault';
 import type { ToastNotification } from '../components/toast';
 import { insomniaFetch } from '../insomniaFetch';
 
-const {
-  Buffer,
-  Client,
-  generateAES256Key,
-  getRandomHex,
-  params,
-  srpGenKey,
-} = srp;
+const { Buffer, Client, generateAES256Key, getRandomHex, params, srpGenKey } = srp;
 interface FetchError {
   error?: string;
   message?: string;
@@ -107,7 +100,11 @@ export const validateVaultKey = async (session: UserSession, vaultKey: string, v
   // Compute and Submit A  //
   // ~~~~~~~~~~~~~~~~~~~~~ //
   const srpA = srpClient.computeA().toString('hex');
-  const { sessionStarterId, srpB, error: verifyAError } = await insomniaFetch<{
+  const {
+    sessionStarterId,
+    srpB,
+    error: verifyAError,
+  } = await insomniaFetch<{
     sessionStarterId: string;
     srpB: string;
     error?: string;
@@ -174,16 +171,17 @@ export const clearVaultKeyAction: ActionFunction = async ({ request }) => {
 
   const userSession = await sessionModel.getOrCreate();
   const { id: sessionId } = userSession;
-  const { salt: newVaultSalt } = await insomniaFetch<{
-    salt?: string;
-    error?: string;
-  }>({
-    method: 'GET',
-    path: '/v1/user/vault',
-    sessionId,
-  }).catch(error => {
-    console.error(`failed to get vault salt ${error.toString()}`);
-  }) || {};
+  const { salt: newVaultSalt } =
+    (await insomniaFetch<{
+      salt?: string;
+      error?: string;
+    }>({
+      method: 'GET',
+      path: '/v1/user/vault',
+      sessionId,
+    }).catch(error => {
+      console.error(`failed to get vault salt ${error.toString()}`);
+    })) || {};
   // User on other device has reset the vault key.
   if (resetVaultClientSessionId !== sessionId) {
     // remove all secret environment variables

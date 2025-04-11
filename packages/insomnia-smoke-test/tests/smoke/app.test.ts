@@ -41,27 +41,39 @@ test('can send requests', async ({ app, page }) => {
   await page.getByRole('menuitem', { name: 'Raw Data' }).click();
   await expect(responseBody).toContainText('{"id":"1"}');
 
-  await page.getByLabel('Request Collection').getByTestId('connects to event stream and shows ping response').press('Enter');
+  await page
+    .getByLabel('Request Collection')
+    .getByTestId('connects to event stream and shows ping response')
+    .press('Enter');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Connect' }).click();
   await expect(statusTag).toContainText('200 OK');
   await page.getByRole('tab', { name: 'Console' }).click();
   await expect(responseBody).toContainText('Connected to 127.0.0.1');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Disconnect' }).click();
 
-  await page.getByLabel('Request Collection').getByTestId('sends dummy.csv request and shows rich response').press('Enter');
+  await page
+    .getByLabel('Request Collection')
+    .getByTestId('sends dummy.csv request and shows rich response')
+    .press('Enter');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect(statusTag).toContainText('200 OK');
   await page.getByRole('button', { name: 'Preview' }).click();
   await page.getByRole('menuitem', { name: 'Raw Data' }).click();
   await expect(responseBody).toContainText('a,b,c');
 
-  await page.getByLabel('Request Collection').getByTestId('sends dummy.xml request and shows raw response').press('Enter');
+  await page
+    .getByLabel('Request Collection')
+    .getByTestId('sends dummy.xml request and shows raw response')
+    .press('Enter');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('xml version="1.0"');
   await expect(responseBody).toContainText('<LoginResult>');
 
-  await page.getByLabel('Request Collection').getByTestId('sends dummy.pdf request and shows rich response').press('Enter');
+  await page
+    .getByLabel('Request Collection')
+    .getByTestId('sends dummy.pdf request and shows rich response')
+    .press('Enter');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect(statusTag).toContainText('200 OK');
   // TODO(filipe): re-add a check for the preview that is less flaky
@@ -73,7 +85,10 @@ test('can send requests', async ({ app, page }) => {
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('basic auth received');
 
-  await page.getByLabel('Request Collection').getByTestId('sends request with cookie and get cookie in response').press('Enter');
+  await page
+    .getByLabel('Request Collection')
+    .getByTestId('sends request with cookie and get cookie in response')
+    .press('Enter');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect(statusTag).toContainText('200 OK');
   await page.getByRole('tab', { name: 'Console' }).click();

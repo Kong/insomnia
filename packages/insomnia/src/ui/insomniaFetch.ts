@@ -1,4 +1,3 @@
-
 import { getApiBaseURL, getClientString, INSOMNIA_FETCH_TIME_OUT, PLAYWRIGHT } from '../common/constants';
 import { generateId } from '../common/misc';
 
@@ -61,9 +60,7 @@ export async function insomniaFetch<T = void>({
     if (uri) {
       window.main.openDeepLink(uri);
     }
-    const isJson =
-      response.headers.get('content-type')?.includes('application/json') ||
-      path.match(/\.json$/);
+    const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
     if (onlyResolveOnSuccess && !response.ok) {
       let errMsg = '';
       if (isJson) {

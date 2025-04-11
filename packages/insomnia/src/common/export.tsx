@@ -18,37 +18,30 @@ import * as har from './har';
 import { getInsomniaV5DataExport } from './insomnia-v5';
 import { strings } from './strings';
 
-const getDocWithDescendants = (includePrivateDocs = false) => async (parentDoc: BaseModel | null) => {
-  const docs = await db.withDescendants(parentDoc);
-  return docs.filter(
-    // Don't include if private, except if we want to
-    doc => !doc?.isPrivate || includePrivateDocs,
-  );
-};
+const getDocWithDescendants =
+  (includePrivateDocs = false) =>
+  async (parentDoc: BaseModel | null) => {
+    const docs = await db.withDescendants(parentDoc);
+    return docs.filter(
+      // Don't include if private, except if we want to
+      doc => !doc?.isPrivate || includePrivateDocs,
+    );
+  };
 
-export async function exportWorkspacesHAR(
-  workspaces: Workspace[],
-  includePrivateDocs = false,
-) {
+export async function exportWorkspacesHAR(workspaces: Workspace[], includePrivateDocs = false) {
   const promises = workspaces.map(getDocWithDescendants(includePrivateDocs));
   const docs = (await Promise.all(promises)).flat();
   const requests = docs.filter(isRequest);
   return exportRequestsHAR(requests, includePrivateDocs);
 }
 
-export async function exportRequestsHAR(
-  requests: BaseModel[],
-  includePrivateDocs = false,
-) {
+export async function exportRequestsHAR(requests: BaseModel[], includePrivateDocs = false) {
   const workspaces: BaseModel[] = [];
   const mapRequestIdToWorkspace: Record<string, any> = {};
   const workspaceLookup: Record<string, any> = {};
 
   for (const request of requests) {
-    const ancestors: BaseModel[] = await db.withAncestors(request, [
-      models.workspace.type,
-      models.requestGroup.type,
-    ]);
+    const ancestors: BaseModel[] = await db.withAncestors(request, [models.workspace.type, models.requestGroup.type]);
     const workspace = ancestors.find(isWorkspace);
     mapRequestIdToWorkspace[request._id] = workspace;
 
@@ -101,14 +94,9 @@ export async function exportRequestsHAR(
 const VALUE_YAML = 'yaml';
 const VALUE_HAR = 'har';
 
-export type SelectedFormat =
-  | typeof VALUE_HAR
-  | typeof VALUE_YAML
-  ;
+export type SelectedFormat = typeof VALUE_HAR | typeof VALUE_YAML;
 
-const showSelectExportTypeModal = ({ onDone }: {
-  onDone: (selectedFormat: SelectedFormat) => Promise<void>;
-}) => {
+const showSelectExportTypeModal = ({ onDone }: { onDone: (selectedFormat: SelectedFormat) => Promise<void> }) => {
   const options = [
     {
       name: 'Insomnia v5',
@@ -203,7 +191,12 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
   if (!workspacesForActiveProject.length) {
     showAlert({
       title: 'Cannot export',
-      message: <>There are no workspaces to export in the <strong>{activeProjectName}</strong> {strings.project.singular.toLowerCase()}.</>,
+      message: (
+        <>
+          There are no workspaces to export in the <strong>{activeProjectName}</strong>{' '}
+          {strings.project.singular.toLowerCase()}.
+        </>
+      ),
     });
     return;
   }
@@ -234,7 +227,10 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
             if (!fileName) {
               return;
             }
-            const stringifiedExport = await exportWorkspacesHAR(workspacesForActiveProject, shouldExportPrivateEnvironments);
+            const stringifiedExport = await exportWorkspacesHAR(
+              workspacesForActiveProject,
+              shouldExportPrivateEnvironments,
+            );
 
             await writeExportedFileToFileSystem(fileName, stringifiedExport);
 
@@ -258,7 +254,10 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
             for (const workspace of workspacesForActiveProject) {
               const workspaceName = workspace.name.replace(/ /g, '-');
               const fileName = path.join(insomniaProjectExportFolder, `${workspaceName}-${workspace._id}.yaml`);
-              const stringifiedExport = await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments: shouldExportPrivateEnvironments });
+              const stringifiedExport = await getInsomniaV5DataExport({
+                workspaceId: workspace._id,
+                includePrivateEnvironments: shouldExportPrivateEnvironments,
+              });
               await writeExportedFileToFileSystem(fileName, stringifiedExport);
             }
             break;
@@ -290,9 +289,15 @@ export const exportMockServerToFile = async (workspace: Workspace) => {
   }
 
   try {
-    const stringifiedExport = await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments: false });
+    const stringifiedExport = await getInsomniaV5DataExport({
+      workspaceId: workspace._id,
+      includePrivateEnvironments: false,
+    });
     await writeExportedFileToFileSystem(fileName, stringifiedExport);
-    window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: 'yaml', scope: 'mock-server' } });
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.dataExport,
+      properties: { type: 'yaml', scope: 'mock-server' },
+    });
   } catch (err) {
     showError({
       title: 'Export Failed',
@@ -326,9 +331,15 @@ export const exportGlobalEnvironmentToFile = async (workspace: Workspace) => {
   }
 
   try {
-    const stringifiedExport = await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments: shouldExportPrivateEnvironments });
+    const stringifiedExport = await getInsomniaV5DataExport({
+      workspaceId: workspace._id,
+      includePrivateEnvironments: shouldExportPrivateEnvironments,
+    });
     await writeExportedFileToFileSystem(fileName, stringifiedExport);
-    window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: 'yaml', scope: 'environment' } });
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.dataExport,
+      properties: { type: 'yaml', scope: 'environment' },
+    });
   } catch (err) {
     showError({
       title: 'Export Failed',
@@ -379,7 +390,11 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
             break;
 
           case VALUE_YAML:
-            stringifiedExport = await getInsomniaV5DataExport({ workspaceId, includePrivateEnvironments: shouldExportPrivateEnvironments, requestIds });
+            stringifiedExport = await getInsomniaV5DataExport({
+              workspaceId,
+              includePrivateEnvironments: shouldExportPrivateEnvironments,
+              requestIds,
+            });
             break;
 
           default:
@@ -395,7 +410,6 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
         });
         return;
       }
-
     },
   });
 };
@@ -420,11 +434,7 @@ export async function exportWorkspaceData({
   }
 }
 
-export async function exportAllData({
-  dirPath,
-}: {
-  dirPath: string;
-}): Promise<void> {
+export async function exportAllData({ dirPath }: { dirPath: string }): Promise<void> {
   const workspaces = await database.find<Workspace>(models.workspace.type);
 
   const baseEnvironments = await database.find<Environment>(environment.type, {

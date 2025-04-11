@@ -7,10 +7,13 @@ interface Props {
 }
 
 export const GraphQLExplorerTypeLink: FC<Props> = ({ type, onNavigate }) => {
-  const _handleClick = useCallback((event: React.MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-    onNavigate(type);
-  }, [onNavigate, type]);
+  const _handleClick = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>) => {
+      event.preventDefault();
+      onNavigate(type);
+    },
+    [onNavigate, type],
+  );
 
   if (type instanceof GraphQLList) {
     return (

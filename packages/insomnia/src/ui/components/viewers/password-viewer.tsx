@@ -4,7 +4,7 @@ import { useRootLoaderData } from '../../routes/root';
 
 const MASK_CHARACTER = '•';
 /** randomly get anywhere between 4 and 11 mask characters on each invocation */
-const getMask = () => MASK_CHARACTER.repeat(4 + (Math.random() * 7));
+const getMask = () => MASK_CHARACTER.repeat(4 + Math.random() * 7);
 
 export const PasswordViewer: FC<{
   onShow?: () => void;
@@ -19,15 +19,8 @@ export const PasswordViewer: FC<{
    * @note the number is random to avoid exposing the length of the password.
    */
   maskText?: boolean;
-}> = ({
-  onShow,
-  initiallyHidden = true,
-  text,
-  maskText = true,
-}) => {
-  const {
-    settings,
-  } = useRootLoaderData();
+}> = ({ onShow, initiallyHidden = true, text, maskText = true }) => {
+  const { settings } = useRootLoaderData();
   const { showPasswords } = settings;
   const [mask, setMask] = useState<string | null>(null);
   useEffect(() => {
@@ -44,7 +37,10 @@ export const PasswordViewer: FC<{
 
   return (
     <span className="monospace">
-      <i className={`fa ${textVisible ? 'fa-eye' : 'fa-eye-slash'} cursor-pointer pr-[--padding-xs]`} onClick={toggleVisible} />
+      <i
+        className={`fa ${textVisible ? 'fa-eye' : 'fa-eye-slash'} cursor-pointer pr-[--padding-xs]`}
+        onClick={toggleVisible}
+      />
       {textVisible ? <span className="selectable">{text}</span> : mask}
     </span>
   );

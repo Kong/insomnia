@@ -35,23 +35,28 @@ describe('util', () => {
     workspaceModelBuilder.reset();
   });
 
-  const DA1 = statusCandidateBuilder.reset()
+  const DA1 = statusCandidateBuilder
+    .reset()
     .key('a')
     .document(baseModelBuilder.reset()._id('a').name('1').build())
     .build();
-  const DA2 = statusCandidateBuilder.reset()
+  const DA2 = statusCandidateBuilder
+    .reset()
     .key('a')
     .document(baseModelBuilder.reset()._id('a').name('2').build())
     .build();
-  const DB1 = statusCandidateBuilder.reset()
+  const DB1 = statusCandidateBuilder
+    .reset()
     .key('b')
     .document(baseModelBuilder.reset()._id('b').name('1').build())
     .build();
-  const DB2 = statusCandidateBuilder.reset()
+  const DB2 = statusCandidateBuilder
+    .reset()
     .key('b')
     .document(baseModelBuilder.reset()._id('b').name('2').build())
     .build();
-  const DC1 = statusCandidateBuilder.reset()
+  const DC1 = statusCandidateBuilder
+    .reset()
     .key('c')
     .document(baseModelBuilder.reset()._id('c').name('1').build())
     .build();
@@ -90,10 +95,7 @@ describe('util', () => {
 
   describe('generateSnapshotStateMap()', () => {
     it('generates from simple states', async () => {
-      const snapshot = newSnapshot(1, [
-        newStateEntry('doc_1', 'blob_1'),
-        newStateEntry('doc_2', 'blob_2'),
-      ]);
+      const snapshot = newSnapshot(1, [newStateEntry('doc_1', 'blob_1'), newStateEntry('doc_2', 'blob_2')]);
       const map = generateSnapshotStateMap(snapshot);
       expect(Object.keys(map).sort()).toEqual(['doc_1', 'doc_2']);
     });
@@ -117,11 +119,7 @@ describe('util', () => {
 
   describe('generateCandidateMap()', () => {
     it('generates from simple candidates', async () => {
-      const candidates = [
-        newCandidate('doc_2', 2),
-        newCandidate('doc_1', 1),
-        newCandidate('doc_2', 2),
-      ];
+      const candidates = [newCandidate('doc_2', 2), newCandidate('doc_1', 1), newCandidate('doc_2', 2)];
       const map = generateCandidateMap(candidates);
       expect(Object.keys(map).sort()).toEqual(['doc_1', 'doc_2']);
     });
@@ -576,34 +574,24 @@ describe('util', () => {
     it('does it', () => {
       const state = [A1, B1, E1, F1];
       const conflicts = [
-        mergeConflictBuilder.reset()
+        mergeConflictBuilder
+          .reset()
           .key(A1.key)
           .name(A1.name)
           .mineBlob(A1.blob)
           .theirsBlob(A2.blob)
           .choose(A1.blob)
           .build(),
-        mergeConflictBuilder.reset()
-          .key(B1.key)
-          .name(B1.name)
-          .mineBlob(B1.blob)
-          .theirsBlob(null)
-          .choose(null)
-          .build(),
-        mergeConflictBuilder.reset()
+        mergeConflictBuilder.reset().key(B1.key).name(B1.name).mineBlob(B1.blob).theirsBlob(null).choose(null).build(),
+        mergeConflictBuilder
+          .reset()
           .key(C1.key)
           .name(C1.name)
           .mineBlob(null)
           .theirsBlob(C1.blob)
           .choose(C1.blob)
           .build(),
-        mergeConflictBuilder.reset()
-          .key(D1.key)
-          .name(D1.name)
-          .mineBlob(D1.blob)
-          .theirsBlob(null)
-          .choose(null)
-          .build(),
+        mergeConflictBuilder.reset().key(D1.key).name(D1.name).mineBlob(D1.blob).theirsBlob(null).choose(null).build(),
       ];
       expect(updateStateWithConflictResolutions(state, conflicts)).toEqual([A1, E1, F1, C1]);
     });
@@ -872,12 +860,8 @@ describe('util', () => {
       expect(result1.hash).toBe(result2.hash);
       expect(result1.hash).toBe('7eaaa8a03bada54b403aeada681aad6892a28ab3');
       expect(result2.hash).toBe('7eaaa8a03bada54b403aeada681aad6892a28ab3');
-      expect(result1.content).toBe(
-        '{"arr":[{"a":"a","b":"b"}],"obj":{"obj2":{"a":"a","b":"b"}}}',
-      );
-      expect(result2.content).toBe(
-        '{"arr":[{"a":"a","b":"b"}],"obj":{"obj2":{"a":"a","b":"b"}}}',
-      );
+      expect(result1.content).toBe('{"arr":[{"a":"a","b":"b"}],"obj":{"obj2":{"a":"a","b":"b"}}}');
+      expect(result2.content).toBe('{"arr":[{"a":"a","b":"b"}],"obj":{"obj2":{"a":"a","b":"b"}}}');
     });
 
     it('array order matters', () => {
@@ -930,15 +914,9 @@ describe('util', () => {
     });
 
     it('ignores global object keys that do not matter', () => {
-      const result1 = hashDocument(
-        baseModelBuilder.modified(123).parentId('abc').build(),
-      );
-      const result2 = hashDocument(
-        baseModelBuilder.modified(456).build(),
-      );
-      const result3 = hashDocument(
-        baseModelBuilder.name('abc').modified(456).build(),
-      );
+      const result1 = hashDocument(baseModelBuilder.modified(123).parentId('abc').build());
+      const result2 = hashDocument(baseModelBuilder.modified(456).build());
+      const result3 = hashDocument(baseModelBuilder.name('abc').modified(456).build());
       expect(result1.hash).toBe(result2.hash);
       expect(result1.hash).not.toBe(result3.hash);
     });
@@ -956,12 +934,8 @@ describe('util', () => {
       const original = hash(originalSyncedWorkspace);
 
       // Act
-      const withParent = hashDocument(
-        workspaceModelBuilder.parentId('abc').build(),
-      );
-      const unique = hashDocument(
-        workspaceModelBuilder.name('unique').parentId('abc').build(),
-      );
+      const withParent = hashDocument(workspaceModelBuilder.parentId('abc').build());
+      const unique = hashDocument(workspaceModelBuilder.name('unique').parentId('abc').build());
 
       // Assert
       expect(original.hash).toBe(withParent.hash);
@@ -990,12 +964,13 @@ function newStateEntry(key, blob) {
   };
 }
 
-const newCandidate = (key: string, n: number) => statusCandidateBuilder
-  .reset()
-  .key(key)
-  .name(`Candidate ${n}`)
-  .document(baseModelBuilder.reset().name(`Content for candidate ${key}.${n}`).build())
-  .build();
+const newCandidate = (key: string, n: number) =>
+  statusCandidateBuilder
+    .reset()
+    .key(key)
+    .name(`Candidate ${n}`)
+    .document(baseModelBuilder.reset().name(`Content for candidate ${key}.${n}`).build())
+    .build();
 
 const newBranch = (snapshots: string[]) => branchBuilder.snapshots(snapshots).build();
 
@@ -1004,34 +979,39 @@ describe('interceptAccessError', () => {
     // Arrange
 
     // Act
-    const action = async () => await interceptAccessError({
-      action: 'action',
-      callback: () => {
-        throw new Error('DANGER! invalid access to the fifth dimensional nebulo 9.');
-      },
-      resourceName: 'resourceName',
-      resourceType: 'resourceType',
-    }) as Error;
+    const action = async () =>
+      (await interceptAccessError({
+        action: 'action',
+        callback: () => {
+          throw new Error('DANGER! invalid access to the fifth dimensional nebulo 9.');
+        },
+        resourceName: 'resourceName',
+        resourceType: 'resourceType',
+      })) as Error;
 
     // Assert
     const result = expect(action).rejects;
     result.toBeInstanceOf(Error);
-    result.toThrowError('You no longer have permission to action the "resourceName" resourceType.  Contact your team administrator if you think this is an error.');
+    result.toThrowError(
+      'You no longer have permission to action the "resourceName" resourceType.  Contact your team administrator if you think this is an error.',
+    );
   });
 
-  it('does not intercept errors it doesn\'t care about', async () => {
+  it("does not intercept errors it doesn't care about", async () => {
     // Arrange
-    const message = 'Having been rejected by the planet smasher, Ziltoid seeks the council of the omnidimensional creator.';
+    const message =
+      'Having been rejected by the planet smasher, Ziltoid seeks the council of the omnidimensional creator.';
 
     // Act
-    const action = async () => await interceptAccessError({
-      action: 'action',
-      callback: () => {
-        throw new Error(message);
-      },
-      resourceName: 'resourceName',
-      resourceType: 'resourceType',
-    }) as Error;
+    const action = async () =>
+      (await interceptAccessError({
+        action: 'action',
+        callback: () => {
+          throw new Error(message);
+        },
+        resourceName: 'resourceName',
+        resourceType: 'resourceType',
+      })) as Error;
 
     // Assert
     const result = expect(action).rejects;

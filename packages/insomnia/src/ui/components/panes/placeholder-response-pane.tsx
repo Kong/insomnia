@@ -7,9 +7,7 @@ import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
 
 export const PlaceholderResponsePane: FC<PropsWithChildren<{}>> = ({ children }) => {
-  const {
-    settings,
-  } = useRootLoaderData();
+  const { settings } = useRootLoaderData();
   const { hotKeyRegistry } = settings;
   return (
     <Pane type="response">
@@ -23,15 +21,10 @@ export const PlaceholderResponsePane: FC<PropsWithChildren<{}>> = ({ children })
             'environment_showEditor',
             'preferences_showKeyboardShortcuts',
           ].map(shortcut => (
-            <div key={shortcut} className="flex items-center justify-between w-full m-[--padding-sm]">
-              <div className="mr-8">
-                {keyboardShortcutDescriptions[shortcut as KeyboardShortcut]}
-              </div>
+            <div key={shortcut} className="m-[--padding-sm] flex w-full items-center justify-between">
+              <div className="mr-8">{keyboardShortcutDescriptions[shortcut as KeyboardShortcut]}</div>
               <code>
-                <Hotkey
-                  keyBindings={hotKeyRegistry[shortcut as KeyboardShortcut]}
-                  useFallbackMessage
-                />
+                <Hotkey keyBindings={hotKeyRegistry[shortcut as KeyboardShortcut]} useFallbackMessage />
               </code>
             </div>
           ))}

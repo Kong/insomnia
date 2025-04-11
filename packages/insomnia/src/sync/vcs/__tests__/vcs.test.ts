@@ -32,20 +32,18 @@ describe('VCS', () => {
   describe('status()', () => {
     it('returns status with no commits', async () => {
       const v = await vcs('master');
-      const status = await v.status(
-        [
-          {
-            key: 'foo',
-            name: 'Foo',
-            document: newDoc('bar'),
-          },
-          {
-            key: 'baz',
-            name: 'Baz',
-            document: newDoc('qux'),
-          },
-        ],
-      );
+      const status = await v.status([
+        {
+          key: 'foo',
+          name: 'Foo',
+          document: newDoc('bar'),
+        },
+        {
+          key: 'baz',
+          name: 'Baz',
+          document: newDoc('qux'),
+        },
+      ]);
       expect(status).toEqual({
         key: '6dbc95d09d310cf9d8561bc46da440d8197c3bf1',
         stage: {},
@@ -159,7 +157,8 @@ describe('VCS', () => {
             blobId: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
             key: 'a',
             name: 'A',
-            previousBlobContent: '{\"_id\":\"aaa\",\"created\":1234,\"isPrivate\":false,\"name\":\"name\",\"parentId\":\"\",\"type\":\"base\"}',
+            previousBlobContent:
+              '{\"_id\":\"aaa\",\"created\":1234,\"isPrivate\":false,\"name\":\"name\",\"parentId\":\"\",\"type\":\"base\"}',
           },
           notA: {
             added: true,
@@ -174,8 +173,10 @@ describe('VCS', () => {
             key: 'c',
             name: 'C',
             blobId: '87a13a793c6bc2137732ba4f8dc8d877fc143bad',
-            blobContent: '{"_id":"modified","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
-            previousBlobContent: '{\"_id\":\"ccc\",\"created\":1234,\"isPrivate\":false,\"name\":\"name\",\"parentId\":\"\",\"type\":\"base\"}',
+            blobContent:
+              '{"_id":"modified","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
+            previousBlobContent:
+              '{\"_id\":\"ccc\",\"created\":1234,\"isPrivate\":false,\"name\":\"name\",\"parentId\":\"\",\"type\":\"base\"}',
           },
           d: {
             added: true,
@@ -187,36 +188,29 @@ describe('VCS', () => {
           },
         },
       });
-      await v.stage([
-        status.unstaged.a,
-        status.unstaged.notA,
-        status.unstaged.c,
-        status.unstaged.d,
+      await v.stage([status.unstaged.a, status.unstaged.notA, status.unstaged.c, status.unstaged.d]);
+      const status2 = await v.status([
+        {
+          key: 'notA',
+          name: 'Not A',
+          document: newDoc('aaa'),
+        },
+        {
+          key: 'b',
+          name: 'B',
+          document: newDoc('bbb'),
+        },
+        {
+          key: 'c',
+          name: 'C',
+          document: newDoc('modified'),
+        },
+        {
+          key: 'd',
+          name: 'D',
+          document: newDoc('ddd'),
+        },
       ]);
-      const status2 = await v.status(
-        [
-          {
-            key: 'notA',
-            name: 'Not A',
-            document: newDoc('aaa'),
-          },
-          {
-            key: 'b',
-            name: 'B',
-            document: newDoc('bbb'),
-          },
-          {
-            key: 'c',
-            name: 'C',
-            document: newDoc('modified'),
-          },
-          {
-            key: 'd',
-            name: 'D',
-            document: newDoc('ddd'),
-          },
-        ]
-      );
       expect(status2).toEqual({
         key: '872dd92bb678f7e26b8610e4d37c0438f2f04beb',
         stage: {
@@ -225,7 +219,8 @@ describe('VCS', () => {
             blobId: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
             key: 'a',
             name: 'A',
-            previousBlobContent: '{\"_id\":\"aaa\",\"created\":1234,\"isPrivate\":false,\"name\":\"name\",\"parentId\":\"\",\"type\":\"base\"}',
+            previousBlobContent:
+              '{\"_id\":\"aaa\",\"created\":1234,\"isPrivate\":false,\"name\":\"name\",\"parentId\":\"\",\"type\":\"base\"}',
           },
           notA: {
             added: true,
@@ -240,8 +235,10 @@ describe('VCS', () => {
             blobId: '87a13a793c6bc2137732ba4f8dc8d877fc143bad',
             key: 'c',
             name: 'C',
-            blobContent: '{"_id":"modified","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
-            previousBlobContent: '{\"_id\":\"ccc\",\"created\":1234,\"isPrivate\":false,\"name\":\"name\",\"parentId\":\"\",\"type\":\"base\"}',
+            blobContent:
+              '{"_id":"modified","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
+            previousBlobContent:
+              '{\"_id\":\"ccc\",\"created\":1234,\"isPrivate\":false,\"name\":\"name\",\"parentId\":\"\",\"type\":\"base\"}',
           },
           d: {
             added: true,
@@ -274,20 +271,18 @@ describe('VCS', () => {
         {},
       );
       await v.stage([status.unstaged.a]);
-      const status2 = await v.status(
-        [
-          {
-            key: 'a',
-            name: 'A',
-            document: newDoc('modified'),
-          },
-          {
-            key: 'b',
-            name: 'B',
-            document: newDoc('bbb'),
-          },
-        ],
-      );
+      const status2 = await v.status([
+        {
+          key: 'a',
+          name: 'A',
+          document: newDoc('modified'),
+        },
+        {
+          key: 'b',
+          name: 'B',
+          document: newDoc('bbb'),
+        },
+      ]);
       expect(status2).toEqual({
         key: '7e7b488b9010839218f8e8c7d1d48b0e0e6b5f8c',
         stage: {
@@ -306,8 +301,10 @@ describe('VCS', () => {
             blobId: '87a13a793c6bc2137732ba4f8dc8d877fc143bad',
             key: 'a',
             name: 'A',
-            blobContent: '{"_id":"modified","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
-            previousBlobContent: '{\"_id\":\"aaa\",\"created\":1234,\"isPrivate\":false,\"name\":\"name\",\"parentId\":\"\",\"type\":\"base\"}',
+            blobContent:
+              '{"_id":"modified","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
+            previousBlobContent:
+              '{\"_id\":\"aaa\",\"created\":1234,\"isPrivate\":false,\"name\":\"name\",\"parentId\":\"\",\"type\":\"base\"}',
           },
           b: {
             added: true,
@@ -382,20 +379,18 @@ describe('VCS', () => {
           previousBlobContent: 'null',
         },
       });
-      const status2 = await v.status(
-        [
-          {
-            key: 'foo',
-            name: 'Foo',
-            document: newDoc('bar'),
-          },
-          {
-            key: 'baz',
-            name: 'Baz',
-            document: newDoc('qux'),
-          },
-        ],
-      );
+      const status2 = await v.status([
+        {
+          key: 'foo',
+          name: 'Foo',
+          document: newDoc('bar'),
+        },
+        {
+          key: 'baz',
+          name: 'Baz',
+          document: newDoc('qux'),
+        },
+      ]);
       expect(status2).toEqual({
         key: 'cfd47b8a7d50f39dfa1ca956ac2ab60427d6351b',
         stage: {
@@ -459,15 +454,13 @@ describe('VCS', () => {
 
     it('commits deleted entity', async () => {
       const v = await vcs('master');
-      const status = await v.status(
-        [
-          {
-            key: 'foo',
-            name: 'Foo',
-            document: newDoc('bar'),
-          },
-        ],
-      );
+      const status = await v.status([
+        {
+          key: 'foo',
+          name: 'Foo',
+          document: newDoc('bar'),
+        },
+      ]);
       await v.stage([status.unstaged.foo]);
       await v.takeSnapshot('Add foo');
       const history = await v.getHistory();
@@ -562,15 +555,13 @@ describe('VCS', () => {
     it('remove branch', async () => {
       const v = await vcs('master');
       // Add something to master
-      const status1 = await v.status(
-        [
-          {
-            key: 'foo',
-            name: 'Foo',
-            document: newDoc('bar'),
-          },
-        ],
-      );
+      const status1 = await v.status([
+        {
+          key: 'foo',
+          name: 'Foo',
+          document: newDoc('bar'),
+        },
+      ]);
       await v.stage([status1.unstaged.foo]);
       await v.takeSnapshot('Add foo');
       // Checkout branch
@@ -654,25 +645,23 @@ describe('VCS', () => {
       ]);
       await v.fork('feature-a');
       await v.checkout([], 'feature-a');
-      const status2 = await v.status(
-        [
-          {
-            key: 'a',
-            name: 'A',
-            document: newDoc('aaa'),
-          },
-          {
-            key: 'b',
-            name: 'B',
-            document: newDoc('bbbbbbb'),
-          },
-          {
-            key: 'c',
-            name: 'C',
-            document: newDoc('ccc'),
-          },
-        ]
-      );
+      const status2 = await v.status([
+        {
+          key: 'a',
+          name: 'A',
+          document: newDoc('aaa'),
+        },
+        {
+          key: 'b',
+          name: 'B',
+          document: newDoc('bbbbbbb'),
+        },
+        {
+          key: 'c',
+          name: 'C',
+          document: newDoc('ccc'),
+        },
+      ]);
       await v.stage([status2.unstaged.b, status2.unstaged.c]);
       await v.takeSnapshot('Add C, modify B');
       expect((await v.getHistory())[1].state).toEqual(

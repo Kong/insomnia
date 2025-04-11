@@ -32,19 +32,12 @@ declare module 'apiconnect-wsdl' {
       req?: UNKNOWN;
       flatten?: boolean;
       sanitizeWSDL?: boolean;
-    }
+    },
   ): Promise<WSDL[]>;
 
-  export function getWSDLServices(
-    allWSDLs: WSDL[],
-    options?: {}
-  ): ServiceData;
+  export function getWSDLServices(allWSDLs: WSDL[], options?: {}): ServiceData;
 
-  export function findWSDLForServiceName(
-    allWSDLs: WSDL[],
-    serviceName: string,
-    serviceFilename?: string
-  ): WSDLEntry;
+  export function findWSDLForServiceName(allWSDLs: WSDL[], serviceName: string, serviceFilename?: string): WSDLEntry;
 
   export interface Swagger {
     definitions: {
@@ -71,6 +64,6 @@ declare module 'apiconnect-wsdl' {
     wsdlEntry: WSDLEntry,
     serviceName: string,
     wsdlId: string,
-    createOptions?: UNKNOWN_OBJ
+    createOptions?: UNKNOWN_OBJ,
   ): Swagger;
 }

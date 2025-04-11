@@ -36,7 +36,6 @@ export async function decodeBase64(base64: string): Promise<Uint8Array> {
     const res = await fetch(uri);
     const buffer = await res.arrayBuffer();
     return new Uint8Array(buffer);
-
   } catch (error) {
     console.error(error);
     throw new Error('Failed to decode base64');

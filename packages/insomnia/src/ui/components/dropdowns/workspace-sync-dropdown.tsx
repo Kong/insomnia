@@ -11,13 +11,8 @@ import { GitSyncDropdown } from './git-sync-dropdown';
 import { SyncDropdown } from './sync-dropdown';
 
 export const WorkspaceSyncDropdown: FC = () => {
-  const {
-    activeProject,
-    activeWorkspace,
-    gitRepository,
-    activeWorkspaceMeta,
-  } = useRouteLoaderData(
-    ':workspaceId'
+  const { activeProject, activeWorkspace, gitRepository, activeWorkspaceMeta } = useRouteLoaderData(
+    ':workspaceId',
   ) as WorkspaceLoaderData;
 
   const { userSession } = useRootLoaderData();
@@ -28,27 +23,28 @@ export const WorkspaceSyncDropdown: FC = () => {
     return null;
   }
 
-  const shouldShowCloudSyncDropdown = isRemoteProject(activeProject)
-    && !activeWorkspaceMeta?.gitRepositoryId;
+  const shouldShowCloudSyncDropdown = isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId;
 
   if (shouldShowCloudSyncDropdown) {
-    return (
-      <SyncDropdown
-        key={activeWorkspace?._id}
-        workspace={activeWorkspace}
-        project={activeProject}
-      />
-    );
+    return <SyncDropdown key={activeWorkspace?._id} workspace={activeWorkspace} project={activeProject} />;
   }
 
-  const shouldShowGitSyncDropdown = features.gitSync.enabled && (activeWorkspaceMeta?.gitRepositoryId || !isRemoteProject(activeProject));
+  const shouldShowGitSyncDropdown =
+    features.gitSync.enabled && (activeWorkspaceMeta?.gitRepositoryId || !isRemoteProject(activeProject));
   if (shouldShowGitSyncDropdown) {
     if (isGitProject(activeProject)) {
       return <GitProjectSyncDropdown key={gitRepository?._id} gitRepository={gitRepository} />;
     }
 
     if (gitRepository) {
-      return <GitSyncDropdown key={gitRepository?._id} isInsomniaSyncEnabled={isRemoteProject(activeProject)} gitRepository={gitRepository} showDeprecatedWarning={!isGitProject(activeProject)} />;
+      return (
+        <GitSyncDropdown
+          key={gitRepository?._id}
+          isInsomniaSyncEnabled={isRemoteProject(activeProject)}
+          gitRepository={gitRepository}
+          showDeprecatedWarning={!isGitProject(activeProject)}
+        />
+      );
     }
   }
 

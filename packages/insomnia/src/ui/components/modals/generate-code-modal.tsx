@@ -49,11 +49,11 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
   let storedClient: HTTPSnippetClient | undefined;
   try {
     storedTarget = JSON.parse(window.localStorage.getItem('insomnia::generateCode::target') || '') as HTTPSnippetTarget;
-  } catch (error) { }
+  } catch (error) {}
 
   try {
     storedClient = JSON.parse(window.localStorage.getItem('insomnia::generateCode::client') || '') as HTTPSnippetClient;
-  } catch (error) { }
+  } catch (error) {}
   const [state, setState] = useState<State>({
     request: undefined,
     target: storedTarget,
@@ -63,45 +63,54 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
 
   const [snippet, setSnippet] = useState<string>('');
 
-  const generateCode = useCallback(async (request: Request, target?: HTTPSnippetTarget, client?: HTTPSnippetClient) => {
-    const HTTPSnippet = (await import('httpsnippet')).default;
+  const generateCode = useCallback(
+    async (request: Request, target?: HTTPSnippetTarget, client?: HTTPSnippetClient) => {
+      const HTTPSnippet = (await import('httpsnippet')).default;
 
-    const targets = HTTPSnippet.availableTargets();
-    const targetOrFallback = target || targets.find(t => t.key === 'shell') as HTTPSnippetTarget;
-    const clientOrFallback = client || targetOrFallback.clients.find(t => t.key === 'curl') as HTTPSnippetClient;
+      const targets = HTTPSnippet.availableTargets();
+      const targetOrFallback = target || (targets.find(t => t.key === 'shell') as HTTPSnippetTarget);
+      const clientOrFallback = client || (targetOrFallback.clients.find(t => t.key === 'curl') as HTTPSnippetClient);
 
-    setState({
-      request,
-      client: clientOrFallback,
-      target: targetOrFallback,
-      targets,
-    });
-    // Save client/target for next time
-    window.localStorage.setItem('insomnia::generateCode::client', JSON.stringify(clientOrFallback));
-    window.localStorage.setItem('insomnia::generateCode::target', JSON.stringify(targetOrFallback));
+      setState({
+        request,
+        client: clientOrFallback,
+        target: targetOrFallback,
+        targets,
+      });
+      // Save client/target for next time
+      window.localStorage.setItem('insomnia::generateCode::client', JSON.stringify(clientOrFallback));
+      window.localStorage.setItem('insomnia::generateCode::target', JSON.stringify(targetOrFallback));
 
-    // Some clients need a content-length for the request to succeed
-    const addContentLength = Boolean((TO_ADD_CONTENT_LENGTH[targetOrFallback.key] || []).find(c => c === clientOrFallback.key));
-    const har = await exportHarWithRequest(request, props.environmentId, addContentLength);
-    if (har) {
-      const snippet = new HTTPSnippet(har);
-      const cmd = snippet.convert(targetOrFallback.key, clientOrFallback.key) || '';
-      setSnippet(cmd);
-    }
-  }, [props.environmentId]);
-
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: options => {
-      if (!options.request) {
-        return;
+      // Some clients need a content-length for the request to succeed
+      const addContentLength = Boolean(
+        (TO_ADD_CONTENT_LENGTH[targetOrFallback.key] || []).find(c => c === clientOrFallback.key),
+      );
+      const har = await exportHarWithRequest(request, props.environmentId, addContentLength);
+      if (har) {
+        const snippet = new HTTPSnippet(har);
+        const cmd = snippet.convert(targetOrFallback.key, clientOrFallback.key) || '';
+        setSnippet(cmd);
       }
-      generateCode(options.request, state.target, state.client);
-      modalRef.current?.show();
     },
-  }), [generateCode, state]);
+    [props.environmentId],
+  );
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      hide: () => {
+        modalRef.current?.hide();
+      },
+      show: options => {
+        if (!options.request) {
+          return;
+        }
+        generateCode(options.request, state.target, state.client);
+        modalRef.current?.show();
+      },
+    }),
+    [generateCode, state],
+  );
 
   const { target, targets, client, request } = state;
   // NOTE: Just some extra precautions in case the target is messed up
@@ -122,19 +131,16 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
       >
         <div className="pad">
           <Dropdown
-            aria-label='Select a target'
+            aria-label="Select a target"
             triggerButton={
-              <Button className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]">
+              <Button className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]">
                 {target ? target.title : 'n/a'}
                 <i className="fa fa-caret-down" />
               </Button>
             }
           >
             {targets.map(target => (
-              <DropdownItem
-                key={target.key}
-                aria-label={target.title}
-              >
+              <DropdownItem key={target.key} aria-label={target.title}>
                 <ItemContent
                   label={target.title}
                   onClick={() => {
@@ -149,19 +155,16 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
           </Dropdown>
           &nbsp;&nbsp;
           <Dropdown
-            aria-label='Select a client'
+            aria-label="Select a client"
             triggerButton={
-              <Button className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]">
+              <Button className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]">
                 {client ? client.title : 'n/a'}
                 <i className="fa fa-caret-down" />
               </Button>
             }
           >
             {clients.map(client => (
-              <DropdownItem
-                key={client.key}
-                aria-label={client.title}
-              >
+              <DropdownItem key={client.key} aria-label={client.title}>
                 <ItemContent
                   label={client.title}
                   onClick={() => request && generateCode(request, state.target, client)}
@@ -172,18 +175,20 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
           &nbsp;&nbsp;
           <CopyButton content={snippet} className="pull-right" />
         </div>
-        {target && <CodeEditor
-          id="generate-code-modal-content"
-          placeholder="Generating code snippet..."
-          className="border-top"
-          key={Date.now()}
-          mode={MODE_MAP[target.key] || target.key}
-          ref={editorRef}
-          defaultValue={snippet}
-        />}
+        {target && (
+          <CodeEditor
+            id="generate-code-modal-content"
+            placeholder="Generating code snippet..."
+            className="border-top"
+            key={Date.now()}
+            mode={MODE_MAP[target.key] || target.key}
+            ref={editorRef}
+            defaultValue={snippet}
+          />
+        )}
       </ModalBody>
       <ModalFooter>
-        <div className="margin-left italic txt-sm">
+        <div className="margin-left txt-sm italic">
           * Code snippets generated by&nbsp;
           <Link href="https://github.com/Kong/httpsnippet">httpsnippet</Link>
         </div>

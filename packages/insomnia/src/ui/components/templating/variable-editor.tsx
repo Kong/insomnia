@@ -21,9 +21,14 @@ export const VariableEditor: FC<Props> = ({ onChange, defaultValue }) => {
   const [options, setOptions] = useState<{ name: string; value: any }[]>([]);
   const [preview, setPreview] = useState('');
   const [error, setError] = useState('');
-  const isVaultVariable = selected
-    && selected.replace('{{', '').replace('}}', '').trim().startsWith(`${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}.${vaultEnvironmentRuntimePath}`)
-    && preview === vaultEnvironmentMaskValue;
+  const isVaultVariable =
+    selected &&
+    selected
+      .replace('{{', '')
+      .replace('}}', '')
+      .trim()
+      .startsWith(`${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}.${vaultEnvironmentRuntimePath}`) &&
+    preview === vaultEnvironmentMaskValue;
 
   useEffect(() => {
     let isMounted = true;
@@ -80,7 +85,7 @@ export const VariableEditor: FC<Props> = ({ onChange, defaultValue }) => {
         </div>
       )}
       <div className="form-control form-control--outlined">
-        {isVaultVariable &&
+        {isVaultVariable && (
           <button
             type="button"
             style={{
@@ -88,14 +93,11 @@ export const VariableEditor: FC<Props> = ({ onChange, defaultValue }) => {
               position: 'relative',
             }}
             className="txt-sm pull-right icon inline-block"
-            onClick={() => setPurpose(prevPurpose => prevPurpose === '' ? 'preview' : '')}
+            onClick={() => setPurpose(prevPurpose => (prevPurpose === '' ? 'preview' : ''))}
           >
-            {purpose === '' ?
-              <i className="fa-regular fa-eye" /> :
-              <i className="fa-regular fa-eye-slash" />
-            }
+            {purpose === '' ? <i className="fa-regular fa-eye" /> : <i className="fa-regular fa-eye-slash" />}
           </button>
-        }
+        )}
         <label>
           Live Preview
           <textarea className={`${error ? 'danger' : ''}`} value={preview || error} readOnly />

@@ -17,11 +17,18 @@ export interface RequestGroupSettingsModalOptions {
   requestGroup: RequestGroup;
 }
 
-export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps & {
+export const RequestGroupSettingsModal = ({
+  requestGroup,
+  onHide,
+}: ModalProps & {
   requestGroup: RequestGroup;
 }) => {
   const modalRef = useRef<ModalHandle>(null);
-  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+  const { organizationId, projectId, workspaceId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  };
   const workspacesFetcher = useFetcher<ListWorkspacesLoaderData>();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
@@ -30,18 +37,21 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
     }
   }, [organizationId, projectId, workspacesFetcher]);
   const projectLoaderData = workspacesFetcher?.data;
-  const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined).filter(w => w.scope !== 'mock-server') || [];
+  const workspacesForActiveProject =
+    projectLoaderData?.files
+      .map(w => w.workspace)
+      .filter(isNotNullOrUndefined)
+      .filter(w => w.scope !== 'mock-server') || [];
   const [workspaceToCopyTo, setWorkspaceToCopyTo] = useState('');
   const patchRequestGroup = useRequestGroupPatcher();
   const requestFetcher = useFetcher();
 
   const duplicateRequestGroup = (r: Partial<RequestGroup>) => {
-    requestFetcher.submit(JSON.stringify(r),
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/duplicate`,
-        method: 'post',
-        encType: 'application/json',
-      });
+    requestFetcher.submit(JSON.stringify(r), {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/duplicate`,
+      method: 'post',
+      encType: 'application/json',
+    });
   };
   useEffect(() => {
     modalRef.current?.show();
@@ -69,72 +79,70 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
     <OverlayContainer onClick={e => e.stopPropagation()}>
       <Modal ref={modalRef} onHide={onHide}>
         <ModalHeader>
-          Folder Settings{' '}
-          <span className="txt-sm selectable faint monospace">
-            {requestGroup?._id || ''}
-          </span>
+          Folder Settings <span className="txt-sm selectable faint monospace">{requestGroup?._id || ''}</span>
         </ModalHeader>
-        <ModalBody className="pad"><div>
-          <div className="form-control form-control--outlined">
-            <label>
-              Name
-              <input
-                type="text"
-                placeholder={requestGroup?.name || 'My Folder'}
-                defaultValue={requestGroup?.name}
-                onChange={async event => {
-                  invariant(requestGroup, 'No request group');
-                  patchRequestGroup(requestGroup._id, { name: event.target.value });
-                }}
-              />
-            </label>
-          </div>
-          <div className="form-row">
+        <ModalBody className="pad">
+          <div>
             <div className="form-control form-control--outlined">
               <label>
-                Move/Copy to Workspace
-                <HelpTooltip position="top" className="space-left">
-                  Copy or move the current folder to a new workspace. It will be
-                  placed at the root of the new workspace's folder structure.
-                </HelpTooltip>
-                <select
-                  value={workspaceToCopyTo}
-                  onChange={event => {
-                    setWorkspaceToCopyTo(event.currentTarget.value);
+                Name
+                <input
+                  type="text"
+                  placeholder={requestGroup?.name || 'My Folder'}
+                  defaultValue={requestGroup?.name}
+                  onChange={async event => {
+                    invariant(requestGroup, 'No request group');
+                    patchRequestGroup(requestGroup._id, { name: event.target.value });
                   }}
-                >
-                  <option value="">-- Select Workspace --</option>
-                  {workspacesForActiveProject
-                    .filter(w => workspaceId !== w._id)
-                    .map(w => (
-                      <option key={w._id} value={w._id}>
-                        {w.name}
-                      </option>
-                    ))
-                  }
-                </select>
+                />
               </label>
             </div>
-            <div className="form-control form-control--no-label width-auto">
-              <button
-                disabled={!workspaceToCopyTo}
-                className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]"
-                onClick={handleCopyToWorkspace}
-              >
-                Copy
-              </button>
-            </div>
-            <div className="form-control form-control--no-label width-auto">
-              <button
-                disabled={!workspaceToCopyTo}
-                className="border border-solid border-[--hl-lg] px-[--padding-md] h-[--line-height-xs] rounded-[--radius-md] hover:bg-[--hl-xs]"
-                onClick={handleMoveToWorkspace}
-              >
-                Move
-              </button>
+            <div className="form-row">
+              <div className="form-control form-control--outlined">
+                <label>
+                  Move/Copy to Workspace
+                  <HelpTooltip position="top" className="space-left">
+                    Copy or move the current folder to a new workspace. It will be placed at the root of the new
+                    workspace's folder structure.
+                  </HelpTooltip>
+                  <select
+                    value={workspaceToCopyTo}
+                    onChange={event => {
+                      setWorkspaceToCopyTo(event.currentTarget.value);
+                    }}
+                  >
+                    <option value="">-- Select Workspace --</option>
+                    {workspacesForActiveProject
+                      .filter(w => workspaceId !== w._id)
+                      .map(w => (
+                        <option key={w._id} value={w._id}>
+                          {w.name}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+              </div>
+              <div className="form-control form-control--no-label width-auto">
+                <button
+                  disabled={!workspaceToCopyTo}
+                  className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+                  onClick={handleCopyToWorkspace}
+                >
+                  Copy
+                </button>
+              </div>
+              <div className="form-control form-control--no-label width-auto">
+                <button
+                  disabled={!workspaceToCopyTo}
+                  className="h-[--line-height-xs] rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
+                  onClick={handleMoveToWorkspace}
+                >
+                  Move
+                </button>
+              </div>
             </div>
           </div>
-        </div></ModalBody>
+        </ModalBody>
       </Modal>
     </OverlayContainer>
   );

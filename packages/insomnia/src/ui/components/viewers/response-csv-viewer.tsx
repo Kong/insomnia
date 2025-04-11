@@ -43,11 +43,11 @@ export const ResponseCSVViewer: FC<Props> = ({ body }) => {
 
   return (
     <div className="pad-sm">
-      {csv ?
+      {csv ? (
         <table ref={tableRef} className="table--fancy table--striped table--compact selectable">
           <tbody>
             {csv.data.map((row, index) => (
-            // eslint-disable-next-line react/no-array-index-key -- data structure is unknown, cannot compute a valid key
+              // eslint-disable-next-line react/no-array-index-key -- data structure is unknown, cannot compute a valid key
               <tr key={index}>
                 {row.map(c => (
                   <td key={c}>{c}</td>
@@ -56,6 +56,9 @@ export const ResponseCSVViewer: FC<Props> = ({ body }) => {
             ))}
           </tbody>
         </table>
-        : 'Parsing CSV...'}
-    </div>);
+      ) : (
+        'Parsing CSV...'
+      )}
+    </div>
+  );
 };

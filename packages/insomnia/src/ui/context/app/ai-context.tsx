@@ -5,8 +5,8 @@ import { useRootLoaderData } from '../../routes/root';
 
 const AIContext = createContext({
   generating: false,
-  generateTests: () => { },
-  generateTestsFromSpec: () => { },
+  generateTests: () => {},
+  generateTestsFromSpec: () => {},
   access: {
     enabled: false,
     loading: false,
@@ -18,11 +18,7 @@ const AIContext = createContext({
 });
 
 export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
-  const {
-    organizationId,
-    projectId,
-    workspaceId,
-  } = useParams() as {
+  const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
@@ -36,7 +32,9 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
   const aiAccessFetcher = useFetcher();
   const aiGenerateTestsFetcher = useFetcher();
   const aiGenerateTestsFromSpecFetcher = useFetcher();
-  const loading = useFetchers().filter(loader => loader.formAction?.includes('/ai/generate/')).some(loader => loader.state !== 'idle');
+  const loading = useFetchers()
+    .filter(loader => loader.formAction?.includes('/ai/generate/'))
+    .some(loader => loader.state !== 'idle');
 
   const previousOrganizationIdRef = useRef(organizationId);
 
@@ -50,10 +48,13 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
 
     if (fetcherHasNotRun || organizationIdHasChanged) {
       previousOrganizationIdRef.current = organizationId;
-      aiAccessFetcher.submit({}, {
-        method: 'post',
-        action: `/organization/${organizationId}/ai/access`,
-      });
+      aiAccessFetcher.submit(
+        {},
+        {
+          method: 'post',
+          action: `/organization/${organizationId}/ai/access`,
+        },
+      );
     }
   }, [aiAccessFetcher, organizationId, userSession.id]);
 
@@ -65,11 +66,13 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
     if (aiGenerateTestsProgressStream) {
       const progress = aiGenerateTestsProgressStream.readable;
 
-      progress.pipeTo(new WritableStream({
-        write: (chunk: any) => {
-          setProgress(chunk);
-        },
-      }));
+      progress.pipeTo(
+        new WritableStream({
+          write: (chunk: any) => {
+            setProgress(chunk);
+          },
+        }),
+      );
     }
   }, [aiGenerateTestsProgressStream]);
 
@@ -79,11 +82,13 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
     if (aiGenerateTestsFromSpecProgressStream) {
       const progress = aiGenerateTestsFromSpecProgressStream.readable;
 
-      progress.pipeTo(new WritableStream({
-        write: (chunk: any) => {
-          setProgress(chunk);
-        },
-      }));
+      progress.pipeTo(
+        new WritableStream({
+          write: (chunk: any) => {
+            setProgress(chunk);
+          },
+        }),
+      );
     }
   }, [aiGenerateTestsFromSpecProgressStream]);
 
@@ -93,16 +98,22 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
         generating: loading || (progress.total > 0 && progress.progress < progress.total),
         progress,
         generateTests: () => {
-          aiGenerateTestsFetcher.submit({}, {
-            method: 'post',
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/ai/generate/tests`,
-          });
+          aiGenerateTestsFetcher.submit(
+            {},
+            {
+              method: 'post',
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/ai/generate/tests`,
+            },
+          );
         },
         generateTestsFromSpec: () => {
-          aiGenerateTestsFromSpecFetcher.submit({}, {
-            method: 'post',
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/ai/generate/collection-and-tests`,
-          });
+          aiGenerateTestsFromSpecFetcher.submit(
+            {},
+            {
+              method: 'post',
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/ai/generate/collection-and-tests`,
+            },
+          );
         },
         access: {
           enabled: isAIEnabled,

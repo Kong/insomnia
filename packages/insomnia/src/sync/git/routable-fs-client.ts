@@ -1,7 +1,17 @@
 import type * as git from 'isomorphic-git';
 import path from 'path';
 
-type Methods = 'readFile' | 'writeFile' | 'unlink' | 'readdir' | 'mkdir' | 'rmdir' | 'stat' | 'lstat' | 'readlink' | 'symlink';
+type Methods =
+  | 'readFile'
+  | 'writeFile'
+  | 'unlink'
+  | 'readdir'
+  | 'mkdir'
+  | 'rmdir'
+  | 'stat'
+  | 'lstat'
+  | 'readlink'
+  | 'symlink';
 
 /**
  * An isometric-git FS client that can route to various client depending on what the filePath is.
@@ -10,17 +20,14 @@ type Methods = 'readFile' | 'writeFile' | 'unlink' | 'readdir' | 'mkdir' | 'rmdi
  * @param otherFS – map of path prefixes to clients
  * @returns {{promises: *}}
  */
-export function routableFSClient(
-  defaultFS: git.PromiseFsClient,
-  otherFS: Record<string, git.PromiseFsClient>,
-) {
+export function routableFSClient(defaultFS: git.PromiseFsClient, otherFS: Record<string, git.PromiseFsClient>) {
   const execMethod = async (method: Methods, filePath: string, ...args: any[]) => {
     filePath = path.normalize(filePath);
 
     for (const prefix of Object.keys(otherFS)) {
       if (filePath.indexOf(path.normalize(prefix)) === 0) {
         // TODO: remove non-null assertion
-         
+
         return otherFS[prefix].promises[method]!(filePath, ...args);
       }
     }
@@ -29,7 +36,7 @@ export function routableFSClient(
     // console.log('[routablefs] Executing', method, filePath, { args });
     // Fallback to default if no prefix matched
     // TODO: remove non-null assertion
-     
+
     const result = await defaultFS.promises[method]!(filePath, ...args);
     // If the method is returning a list of files for the root directory
     // we need to return the actual result plus inject the .insomnia directory

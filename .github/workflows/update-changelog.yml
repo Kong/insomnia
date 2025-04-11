@@ -1,10 +1,9 @@
 # .github/workflows/update-changelog.yaml
-name: "Update Changelog"
+name: 'Update Changelog'
 
 on:
   release:
     types: [released]
-
 
 jobs:
   update:

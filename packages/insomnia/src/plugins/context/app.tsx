@@ -11,10 +11,13 @@ import { WrapperModal } from '../../ui/components/modals/wrapper-modal';
 import { invariant } from '../../utils/invariant';
 
 export interface PrivateProperties {
-  loadRendererModules: () => Promise<{
-    ReactDOM: typeof ReactDOM;
-    React: typeof React;
-  } | {}>;
+  loadRendererModules: () => Promise<
+    | {
+        ReactDOM: typeof ReactDOM;
+        React: typeof React;
+      }
+    | {}
+  >;
 }
 
 export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContext; __private: PrivateProperties } => ({
@@ -50,7 +53,7 @@ export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContex
             selected = value;
           },
           // don't resolve the overall promise until the modal has hidden after clicking submit
-          onHide: () => selected !== null ? resolve(selected) : reject(new Error(`Prompt ${title} cancelled`)),
+          onHide: () => (selected !== null ? resolve(selected) : reject(new Error(`Prompt ${title} cancelled`))),
         });
       });
     },

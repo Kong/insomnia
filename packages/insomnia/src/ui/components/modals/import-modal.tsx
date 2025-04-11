@@ -25,9 +25,7 @@ import { Icon } from '../icon';
 import { Button } from '../themed-button';
 
 const Pill: FC<PropsWithChildren> = ({ children }) => (
-  <div
-    className="flex items-center gap-[var(--padding-xs)] p-[var(--padding-sm)] rounded-[var(--radius-md)] text-[length:var(--font-size-xs)]"
-  >
+  <div className="flex items-center gap-[var(--padding-xs)] rounded-[var(--radius-md)] p-[var(--padding-sm)] text-[length:var(--font-size-xs)]">
     {children}
   </div>
 );
@@ -54,13 +52,15 @@ const Radio: FC<{
         style={{
           clip: 'rect(0,0,0,0)',
         }}
-        className="absolute w-px h-px overflow-hidden whitespace-nowrap -m-px p-0 border-0"
+        className="absolute -m-px h-px w-px overflow-hidden whitespace-nowrap border-0 p-0"
       />
       <label
-        className="p-[var(--padding-sm)] rounded-[var(--radius-md)] flex items-center gap-[var(--padding-sm)]"
+        className="flex items-center gap-[var(--padding-sm)] rounded-[var(--radius-md)] p-[var(--padding-sm)]"
         data-test-id={`import-from-${value}`}
         htmlFor={id}
-      >{children}</label>
+      >
+        {children}
+      </label>
     </div>
   );
 };
@@ -76,7 +76,10 @@ interface Entry {
 }
 
 // get all files' paths from drop items
-async function recurse(list: (FileDropItem | DirectoryDropItem)[] | AsyncIterable<FileDropItem | DirectoryDropItem>, filePathList: string[]) {
+async function recurse(
+  list: (FileDropItem | DirectoryDropItem)[] | AsyncIterable<FileDropItem | DirectoryDropItem>,
+  filePathList: string[],
+) {
   for await (const item of list) {
     if (item.kind === 'file') {
       const file = await item.getFile();
@@ -102,7 +105,9 @@ const FileField: FC = () => {
     ref: dropRef,
     onDrop: async event => {
       const list = event.items.filter(item => item.kind === 'file' || item.kind === 'directory');
-      setEntryList(list.map(item => ({ type: item.kind === 'file' ? ENTRY_TYPE.FILE : ENTRY_TYPE.DIR, name: item.name })));
+      setEntryList(
+        list.map(item => ({ type: item.kind === 'file' ? ENTRY_TYPE.FILE : ENTRY_TYPE.DIR, name: item.name })),
+      );
       const filePathList: string[] = [];
       await recurse(list, filePathList);
       setFilePathList(filePathList);
@@ -135,44 +140,31 @@ const FileField: FC = () => {
       <label
         {...dropProps}
         className={classNames(
-          'p-[var(--padding-sm)] rounded-[var(--radius-md)] flex items-center gap-[var(--padding-sm)] bg-[color:var(--hl-xs)] flex-wrap border border-solid max-h-[50vh] overflow-auto',
+          'flex max-h-[50vh] flex-wrap items-center gap-[var(--padding-sm)] overflow-auto rounded-[var(--radius-md)] border border-solid bg-[color:var(--hl-xs)] p-[var(--padding-sm)]',
           {
             'border-[color:var(--color-surprise)]': isDropTarget,
             'border-[color:var(--hl-md)]': !isDropTarget,
-          }
+          },
         )}
         htmlFor={id}
       >
         <input type="hidden" name="filePaths" value={filePaths} />
-        {filePathList.length ? (<div
-          className="bg-[color:var(--color-bg)] rounded-[var(--radius-md)] text-ellipsis whitespace-nowrap flex flex-col items-center justify-start p-[var(--padding-md)] gap-[var(--padding-sm)] w-full"
-        >
-          {entryList.map(({ name, type }) => (
-            <div
-              key={name}
-            >
-              <Icon
-                icon={type === ENTRY_TYPE.DIR ? 'folder' : 'file'}
-                className="mr-1"
-              />
-              {name}
-            </div>
-          ))}
-        </div>) : (
-          <div
-            className="flex flex-col items-center justify-center p-[var(--padding-md)] gap-[var(--padding-sm)] w-full"
-          >
+        {filePathList.length ? (
+          <div className="flex w-full flex-col items-center justify-start gap-[var(--padding-sm)] text-ellipsis whitespace-nowrap rounded-[var(--radius-md)] bg-[color:var(--color-bg)] p-[var(--padding-md)]">
+            {entryList.map(({ name, type }) => (
+              <div key={name}>
+                <Icon icon={type === ENTRY_TYPE.DIR ? 'folder' : 'file'} className="mr-1" />
+                {name}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex w-full flex-col items-center justify-center gap-[var(--padding-sm)] p-[var(--padding-md)]">
             <div>
               <i className="fa fa-upload fa-xl" />
             </div>
             <div>
-              Drag and Drop or{' '}
-              <span
-                className="text-[color:var(--color-surprise)]"
-              >
-                Choose Files
-              </span>{' '}
-              to import
+              Drag and Drop or <span className="text-[color:var(--color-surprise)]">Choose Files</span> to import
             </div>
           </div>
         )}
@@ -183,14 +175,7 @@ const FileField: FC = () => {
 
 const InsomniaIcon = (props: React.SVGProps<SVGSVGElement>) => {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={18}
-      height={18}
-      viewBox="0 0 32 32"
-      fill="none"
-      {...props}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width={18} height={18} viewBox="0 0 32 32" fill="none" {...props}>
       <path
         d="M16 31.186c8.387 0 15.186-6.799 15.186-15.186S24.387.814 16 .814.814 7.613.814 16 7.613 31.186 16 31.186z"
         fill="var(--color-bg)"
@@ -224,13 +209,7 @@ const InsomniaIcon = (props: React.SVGProps<SVGSVGElement>) => {
 
 const SwaggerIcon = (props: React.SVGProps<SVGSVGElement>) => {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="18px"
-      height="18px"
-      viewBox="0 0 256 256"
-      {...props}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 256 256" {...props}>
       <path
         fill="var(--color-font)"
         d="M127.999 249.895c-67.215 0-121.9-54.68-121.9-121.896C6.1 60.782 60.785 6.102 128 6.102c67.214 0 121.899 54.685 121.899 121.9 0 67.214-54.685 121.893-121.9 121.893z"
@@ -249,13 +228,7 @@ const SwaggerIcon = (props: React.SVGProps<SVGSVGElement>) => {
 
 const OpenAPIIcon = (props: React.SVGProps<SVGSVGElement>) => {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={17}
-      height={17}
-      viewBox="0 0 512 512"
-      {...props}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width={17} height={17} viewBox="0 0 512 512" {...props}>
       <path
         fill="currentColor"
         d="M.204 294.376l135.073-.002a91.735 91.735 0 008.452 30.17L27.94 394.298C12.75 368.103 3.166 334.783.204 294.376zm131.802 196.803l51.407-124.841a91.475 91.475 0 01-14.938-9.955l-95.47 95.472c19.49 17.557 39.562 30.71 59.001 39.324zm-65.604-45.647l95.284-95.286c-4.933-4.963-9.482-10.85-13.667-17.616L32.512 402.213c10.491 17.069 22.148 31.847 33.89 43.319zm313.997 6.327l-95.53-95.525a91.813 91.813 0 01-3.184 2.466l69.71 115.72c9.73-6.055 19.39-13.823 29.004-22.66zm-36.74 27.532l-69.565-115.479c-25.964 14.5-53.318 17.553-82.406 6.337l-51.301 124.583c70.2 28.467 142.961 20.313 203.272-15.441zM171.713 211.67L102.005 95.95c-10.164 6.523-19.819 14.106-29.006 22.66l95.527 95.527a135.39 135.39 0 013.187-2.467zM0 285.236l134.762-.002c.291-23.838 8.71-45.682 26.928-65.006l-95.287-95.287C22.416 171.553.512 225.056 0 285.236zm226.694-91.938L226.7 58.54c-44.728.274-84.005 12.326-116.96 32.539l69.563 115.48c13.077-7.677 28.664-12.98 47.39-13.26zm186.404-37.118l-99.449 99.452a93.73 93.73 0 014.453 20.46h135.09c-.883-40.98-14.404-80.939-40.094-119.912zm40.28 129.052H318.631c-.468 25.24-9.9 48.244-26.924 65.014l95.29 95.286c43.82-43.123 65.122-96.948 66.381-160.3zM235.84 58.74l-.006 135.087c7.082.802 13.883 2.342 20.466 4.455l99.415-99.415c-35.132-24.575-76.54-38.362-119.875-40.127zM430.95 2.597c-39.165 11.457-55.533 55.183-38.782 88.672L254.808 228.63c-32.407-16.157-74.902-1.57-87.795 36.034-15.716 45.84 24.243 91.802 71.754 82.533 42.01-8.196 62.31-54.188 44.466-90.01L420.722 119.7c34.66 17.226 79.533-1.065 89.396-41.654 11.43-47.037-32.658-89.054-79.168-75.449z"
@@ -266,13 +239,7 @@ const OpenAPIIcon = (props: React.SVGProps<SVGSVGElement>) => {
 
 const CurlIcon = (props: React.SVGProps<SVGSVGElement>) => {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={18}
-      height={18}
-      viewBox="0 0 123.184 102.926"
-      {...props}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width={18} height={18} viewBox="0 0 123.184 102.926" {...props}>
       <defs>
         <symbol overflow="visible">
           <path
@@ -333,31 +300,19 @@ interface ImportModalProps extends ModalProps {
   // undefined when in workspace selection page
   defaultWorkspaceId?: string;
   from:
-  | {
-    type: 'file';
-  }
-  | {
-    type: 'uri';
-    defaultValue?: string;
-  }
-  | {
-    type: 'clipboard';
-  };
+    | {
+        type: 'file';
+      }
+    | {
+        type: 'uri';
+        defaultValue?: string;
+      }
+    | {
+        type: 'clipboard';
+      };
 }
 
-const validImportExtensions = [
-  'sh',
-  'txt',
-  'json',
-  'har',
-  'curl',
-  'bash',
-  'shell',
-  'yaml',
-  'yml',
-  'wsdl',
-  'zip',
-];
+const validImportExtensions = ['sh', 'txt', 'json', 'har', 'curl', 'bash', 'shell', 'yaml', 'yml', 'wsdl', 'zip'];
 
 export const ImportModal: FC<ImportModalProps> = ({
   projectName,
@@ -383,20 +338,31 @@ export const ImportModal: FC<ImportModalProps> = ({
   }, [importFetcher.data]);
   // allow workspace import if there is only one workspace
   const totalWorkspacesCount = useMemo(() => {
-    return scanResourcesFetcherData?.reduce((accumulator, scanResult) => accumulator + (scanResult.workspaces?.length || 0), 0) || 0;
+    return (
+      scanResourcesFetcherData?.reduce(
+        (accumulator, scanResult) => accumulator + (scanResult.workspaces?.length || 0),
+        0,
+      ) || 0
+    );
   }, [scanResourcesFetcherData]);
   const shouldImportToWorkspace = !!defaultWorkspaceId && totalWorkspacesCount <= 1;
   // TODO: need to add a more strong way to inform users that resources will be imported into project rather than current workspace
-  const header = shouldImportToWorkspace ? `Import to "${workspaceName}" Workspace` : `Import to "${projectName}" Project`;
-  const isScratchPad = defaultProjectId && isScratchpadProject({
-    _id: defaultProjectId,
-  });
+  const header = shouldImportToWorkspace
+    ? `Import to "${workspaceName}" Workspace`
+    : `Import to "${projectName}" Project`;
+  const isScratchPad =
+    defaultProjectId &&
+    isScratchpadProject({
+      _id: defaultProjectId,
+    });
 
   const cannotImportToWorkspace = totalWorkspacesCount > 1 && isScratchPad;
 
   const importErrors = [
     ...(importFetcher.data?.errors || []),
-    ...cannotImportToWorkspace ? ['Cannot import multiple files to ScratchPad. Please try to import your files one by one.'] : [],
+    ...(cannotImportToWorkspace
+      ? ['Cannot import multiple files to ScratchPad. Please try to import your files one by one.']
+      : []),
   ];
 
   const hasAnyDataToImport = useMemo(() => {
@@ -424,13 +390,15 @@ export const ImportModal: FC<ImportModalProps> = ({
                 method: 'post',
                 action: '/import/resources',
               });
-              scanResourcesFetcherData.filter(({ errors }) => errors.length === 0).forEach(scanResult => {
-                const type = scanResult.type?.id ?? 'unknown';
-                window.main.trackSegmentEvent({
-                  event: SegmentEvent.dataImport,
-                  properties: { 'data-import-type': type },
+              scanResourcesFetcherData
+                .filter(({ errors }) => errors.length === 0)
+                .forEach(scanResult => {
+                  const type = scanResult.type?.id ?? 'unknown';
+                  window.main.trackSegmentEvent({
+                    event: SegmentEvent.dataImport,
+                    properties: { 'data-import-type': type },
+                  });
                 });
-              });
             }}
           />
         ) : (
@@ -469,22 +437,16 @@ const ScanResourcesForm = ({
 
   return (
     <Fragment>
-      <div
-        className='flex flex-col'
-      >
+      <div className="flex flex-col">
         <form
           aria-label="Import from"
           id={id}
           onSubmit={onSubmit}
           method="post"
-          className='flex flex-col gap-[var(--padding-sm)]'
+          className="flex flex-col gap-[var(--padding-sm)]"
         >
-          <fieldset
-            className='flex flex-col gap-[var(--padding-md)]'
-          >
-            <div
-              className='flex p-[var(--padding-xs)] border border-[color:var(--hl-md)] rounded-[var(--radius-md)] bg-[color:var(--hl-xs)] border-solid'
-            >
+          <fieldset className="flex flex-col gap-[var(--padding-md)]">
+            <div className="flex rounded-[var(--radius-md)] border border-solid border-[color:var(--hl-md)] bg-[color:var(--hl-xs)] p-[var(--padding-xs)]">
               <Radio
                 onChange={() => setImportFrom('file')}
                 name="importFrom"
@@ -494,12 +456,7 @@ const ScanResourcesForm = ({
                 <i className="fa fa-plus" />
                 File
               </Radio>
-              <Radio
-                onChange={() => setImportFrom('uri')}
-                name="importFrom"
-                value="uri"
-                checked={importFrom === 'uri'}
-              >
+              <Radio onChange={() => setImportFrom('uri')} name="importFrom" value="uri" checked={importFrom === 'uri'}>
                 <i className="fa fa-link" />
                 Url
               </Radio>
@@ -530,23 +487,15 @@ const ScanResourcesForm = ({
           )}
         </form>
         {scanResults && (
-          <div className='margin-top-sm overflow-y-auto max-h-[20vh]'>
+          <div className="margin-top-sm max-h-[20vh] overflow-y-auto">
             <ScanResultsTable scanResults={scanResults} />
           </div>
         )}
       </div>
-      <div
-        className='flex gap-[var(--padding-sm)] justify-between items-end'
-      >
+      <div className="flex items-end justify-between gap-[var(--padding-sm)]">
         <div>
-          <div
-            className='pb-[var(--padding-sm)]'
-          >
-            Supported Formats
-          </div>
-          <div
-            className='flex flex-wrap gap-[var(--padding-sm)]'
-          >
+          <div className="pb-[var(--padding-sm)]">Supported Formats</div>
+          <div className="flex flex-wrap gap-[var(--padding-sm)]">
             <Pill>
               <InsomniaIcon />
               Insomnia
@@ -577,15 +526,9 @@ const ScanResourcesForm = ({
             </Pill>
           </div>
         </div>
-        <Button
-          variant="contained"
-          bg="surprise"
-          type="submit"
-          form={id}
-          className="btn h-10 gap-[var(--padding-sm)]"
-        >
+        <Button variant="contained" bg="surprise" type="submit" form={id} className="btn h-10 gap-[var(--padding-sm)]">
           <i className="fa fa-file-import" /> Scan
-          {loading && (<Icon icon="spinner" className="animate-spin ml-[4px]" />)}
+          {loading && <Icon icon="spinner" className="ml-[4px] animate-spin" />}
         </Button>
       </div>
     </Fragment>
@@ -610,47 +553,32 @@ const ImportResourcesForm = ({
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
   disabled: boolean;
   loading: boolean;
-}
-) => {
+}) => {
   const id = useId();
   return (
     <Fragment>
-      <div
-        className='flex flex-col gap-[var(--padding-md)] overflow-auto max-h-[50vh]'
-      >
-        <form
-          onSubmit={onSubmit}
-          method="post"
-          action="/import/resources"
-          id={id}
-          className='hidden'
-        >
+      <div className="flex max-h-[50vh] flex-col gap-[var(--padding-md)] overflow-auto">
+        <form onSubmit={onSubmit} method="post" action="/import/resources" id={id} className="hidden">
           <input hidden name="organizationId" readOnly value={organizationId} />
           <input hidden name="projectId" readOnly value={defaultProjectId} />
           <input hidden name="workspaceId" readOnly value={defaultWorkspaceId} />
         </form>
-        <div
-          className='overflow-y-auto'
-        >
+        <div className="overflow-y-auto">
           <ScanResultsTable scanResults={scanResults} />
         </div>
         <div>
           {errors && errors.length > 0 && (
             <div className="notice error margin-top-sm">
-              <Heading className='font-bold'>Error while importing to Insomnia:</Heading>
+              <Heading className="font-bold">Error while importing to Insomnia:</Heading>
               <p>{errors[0]}</p>
             </div>
           )}
         </div>
       </div>
 
-      <div
-        className='flex gap-[var(--padding-sm)] w-full justify-between items-end'
-      >
+      <div className="flex w-full items-end justify-between gap-[var(--padding-sm)]">
         <div>
-          <div
-            className='pb-[var(--padding-sm)]'
-          >
+          <div className="pb-[var(--padding-sm)]">
             Insomnia provides features that may automatically execute code. Only import files from trusted sources.
           </div>
         </div>
@@ -691,9 +619,12 @@ const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] }) => {
               <tr className="table--no-outline-row">
                 <td className="bg-[color:var(--hl-xxs)]">
                   <div
-                    className={classNames({
-                      'text-danger': hasErrors,
-                    }, 'flex items-center gap-[var(--padding-sm)]')}
+                    className={classNames(
+                      {
+                        'text-danger': hasErrors,
+                      },
+                      'flex items-center gap-[var(--padding-sm)]',
+                    )}
                   >
                     {hasErrors ? (
                       <Fragment>
@@ -702,7 +633,7 @@ const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] }) => {
                       </Fragment>
                     ) : (
                       <Fragment>
-                        {getImporterSign(scanResult)}{' '}resources to be imported from {scanResult.oriFileName}:
+                        {getImporterSign(scanResult)} resources to be imported from {scanResult.oriFileName}:
                       </Fragment>
                     )}
                   </div>
@@ -718,9 +649,7 @@ const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] }) => {
                     >
                       {scanResult.errors.map((error, idx) => {
                         const key = `${uniqueKey}${scanResult.oriFileName}${idx}`;
-                        return (
-                          <li key={key}>{error}</li>
-                        );
+                        return <li key={key}>{error}</li>;
                       })}
                     </ul>
                   </td>
@@ -728,32 +657,21 @@ const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] }) => {
               ) : (
                 <Fragment>
                   {scanResult.workspaces && scanResult.workspaces?.length > 0 && (
-                    <tr
-                      key={scanResult.workspaces[0]._id}
-                      className="table--no-outline-row"
-                    >
+                    <tr key={scanResult.workspaces[0]._id} className="table--no-outline-row">
                       <td>
-                        {scanResult.workspaces.length}{' '}
-                        {scanResult.workspaces.length === 1 ? 'Workspace' : 'Workspaces'}
+                        {scanResult.workspaces.length} {scanResult.workspaces.length === 1 ? 'Workspace' : 'Workspaces'}
                       </td>
                     </tr>
                   )}
                   {scanResult.requests && scanResult.requests?.length > 0 && (
-                    <tr
-                      key={scanResult.requests[0]._id}
-                      className="table--no-outline-row"
-                    >
+                    <tr key={scanResult.requests[0]._id} className="table--no-outline-row">
                       <td>
-                        {scanResult.requests.length}{' '}
-                        {scanResult.requests.length === 1 ? 'Request' : 'Requests'}
+                        {scanResult.requests.length} {scanResult.requests.length === 1 ? 'Request' : 'Requests'}
                       </td>
                     </tr>
                   )}
                   {scanResult.apiSpecs && scanResult.apiSpecs?.length > 0 && (
-                    <tr
-                      key={scanResult.apiSpecs[0]._id}
-                      className="table--no-outline-row"
-                    >
+                    <tr key={scanResult.apiSpecs[0]._id} className="table--no-outline-row">
                       <td>
                         <div className="flex items-center gap-[var(--padding-md)]">
                           {scanResult.apiSpecs.length}{' '}
@@ -762,45 +680,36 @@ const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] }) => {
                       </td>
                     </tr>
                   )}
-                  {scanResult.environments &&
-                    scanResult.environments.length > 0 && (
-                      <tr className="table--no-outline-row">
-                        <td>
-                          {scanResult.environments.length}{' '}
-                          {scanResult.environments.length === 1
-                            ? 'Environment'
-                            : 'Environments'}
-                          {' with '}
-                          {scanResult.cookieJars?.length}{' '}
-                          {scanResult.cookieJars?.length === 1 ? 'Cookie Jar' : 'Cookie Jars'}
-                        </td>
-                      </tr>
-                    )}
-                  {scanResult.unitTestSuites &&
-                    scanResult.unitTestSuites?.length > 0 && (
-                      <tr className="table--no-outline-row">
-                        <td>
-                          {scanResult.unitTestSuites.length}{' '}
-                          {scanResult.unitTestSuites.length === 1
-                            ? 'Test Suite'
-                            : 'Test Suites'}
-                          {' with '}
-                          {scanResult.unitTests?.length}
-                          {scanResult.unitTests?.length === 1 ? ' Test' : ' Tests'}
-                        </td>
-                      </tr>
-                    )}
-                  {scanResult.mockRoutes &&
-                    scanResult.mockRoutes?.length > 0 && (
-                      <tr className="table--no-outline-row">
-                        <td>
-                          {scanResult.mockRoutes?.length}{' '}
-                          {scanResult.mockRoutes?.length === 1
-                            ? 'Mock Route'
-                            : 'Mock Routes'}
-                        </td>
-                      </tr>
-                    )}
+                  {scanResult.environments && scanResult.environments.length > 0 && (
+                    <tr className="table--no-outline-row">
+                      <td>
+                        {scanResult.environments.length}{' '}
+                        {scanResult.environments.length === 1 ? 'Environment' : 'Environments'}
+                        {' with '}
+                        {scanResult.cookieJars?.length}{' '}
+                        {scanResult.cookieJars?.length === 1 ? 'Cookie Jar' : 'Cookie Jars'}
+                      </td>
+                    </tr>
+                  )}
+                  {scanResult.unitTestSuites && scanResult.unitTestSuites?.length > 0 && (
+                    <tr className="table--no-outline-row">
+                      <td>
+                        {scanResult.unitTestSuites.length}{' '}
+                        {scanResult.unitTestSuites.length === 1 ? 'Test Suite' : 'Test Suites'}
+                        {' with '}
+                        {scanResult.unitTests?.length}
+                        {scanResult.unitTests?.length === 1 ? ' Test' : ' Tests'}
+                      </td>
+                    </tr>
+                  )}
+                  {scanResult.mockRoutes && scanResult.mockRoutes?.length > 0 && (
+                    <tr className="table--no-outline-row">
+                      <td>
+                        {scanResult.mockRoutes?.length}{' '}
+                        {scanResult.mockRoutes?.length === 1 ? 'Mock Route' : 'Mock Routes'}
+                      </td>
+                    </tr>
+                  )}
                 </Fragment>
               )}
             </React.Fragment>
@@ -817,27 +726,32 @@ function getImporterSign(scanResult: ScanResult) {
   if (scanResult.type?.id) {
     const id = scanResult.type.id;
     if (id.includes('insomnia')) {
-      icon = (<InsomniaIcon width={24} height={24} />);
+      icon = <InsomniaIcon width={24} height={24} />;
       name = 'Insomnia';
     } else if (id.includes('postman')) {
-      icon = (<i className="fa-regular fa-file fa-lg" />);
+      icon = <i className="fa-regular fa-file fa-lg" />;
       name = 'Postman';
     } else if (id.includes('swagger')) {
-      icon = (<SwaggerIcon width={24} height={24} />);
+      icon = <SwaggerIcon width={24} height={24} />;
       name = 'Swagger';
     } else if (id.includes('openapi')) {
-      icon = (<OpenAPIIcon width={24} height={24} />);
+      icon = <OpenAPIIcon width={24} height={24} />;
       name = 'OpenAPI';
     } else if (id.includes('wsdl')) {
-      icon = (<i className="fa-regular fa-file fa-lg" />);
+      icon = <i className="fa-regular fa-file fa-lg" />;
       name = 'WSDL';
     } else if (id.includes('har')) {
-      icon = (<i className="fa-regular fa-file fa-lg" />);
+      icon = <i className="fa-regular fa-file fa-lg" />;
       name = 'HAR';
     } else if (id.includes('curl')) {
-      icon = (<CurlIcon width={24} height={24} />);
+      icon = <CurlIcon width={24} height={24} />;
       name = 'cURL';
     }
   }
-  return (<Fragment>{icon}{name}</Fragment>);
+  return (
+    <Fragment>
+      {icon}
+      {name}
+    </Fragment>
+  );
 }

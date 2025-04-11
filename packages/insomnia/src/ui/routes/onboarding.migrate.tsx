@@ -9,7 +9,7 @@ import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
 
 export const loader: LoaderFunction = async () => {
-  if (!await shouldMigrateProjectUnderOrganization()) {
+  if (!(await shouldMigrateProjectUnderOrganization())) {
     return redirect('/organization');
   }
 
@@ -34,36 +34,33 @@ export const Migrate = () => {
   const { Form, state } = useFetcher<MigrationActionData>();
 
   return (
-    <div className='relative h-full w-full text-left text-base flex bg-[--color-bg]'>
+    <div className="relative flex h-full w-full bg-[--color-bg] text-left text-base">
       <TrailLinesContainer>
-        <div
-          className='flex justify-center items-center flex-col h-full w-[540px] min-h-[min(450px,90%)]'
-        >
-          <div
-            className='flex flex-col gap-[var(--padding-sm)] items-center justify-center p-[--padding-lg] pt-12 w-full h-full bg-[--hl-xs] rounded-[var(--radius-md)] border-solid border border-[--hl-sm] relative'
-          >
-            <InsomniaLogo
-              className='transform translate-x-[-50%] translate-y-[-50%] absolute top-0 left-1/2 w-16 h-16'
-            />
-            <div
-              className='flex justify-center items-center flex-col h-full pt-2'
-            >
-              <div className='text-[--color-font] flex flex-col gap-4'>
-                <h1 className='text-xl font-bold text-center'>Collaboration with Cloud Sync now available</h1>
-                <div className='flex flex-col gap-4'>
+        <div className="flex h-full min-h-[min(450px,90%)] w-[540px] flex-col items-center justify-center">
+          <div className="relative flex h-full w-full flex-col items-center justify-center gap-[var(--padding-sm)] rounded-[var(--radius-md)] border border-solid border-[--hl-sm] bg-[--hl-xs] p-[--padding-lg] pt-12">
+            <InsomniaLogo className="absolute left-1/2 top-0 h-16 w-16 translate-x-[-50%] translate-y-[-50%] transform" />
+            <div className="flex h-full flex-col items-center justify-center pt-2">
+              <div className="flex flex-col gap-4 text-[--color-font]">
+                <h1 className="text-center text-xl font-bold">Collaboration with Cloud Sync now available</h1>
+                <div className="flex flex-col gap-4">
                   <p>
-                    With Cloud Sync your projects will be automatically synchronized to the cloud in an encrypted way and available on every Insomnia client after logging in for ease of use and collaboration.
+                    With Cloud Sync your projects will be automatically synchronized to the cloud in an encrypted way
+                    and available on every Insomnia client after logging in for ease of use and collaboration.
                   </p>
-
                 </div>
-                <Form method='POST' className='gap-4 flex flex-col text-left'>
-                  <RadioGroup aria-label='Project type' name="type" defaultValue={'local'} className="flex flex-col gap-2">
+                <Form method="POST" className="flex flex-col gap-4 text-left">
+                  <RadioGroup
+                    aria-label="Project type"
+                    name="type"
+                    defaultValue={'local'}
+                    className="flex flex-col gap-2"
+                  >
                     <div className="flex gap-2">
                       <Radio
                         value="local"
-                        className="data-[selected]:border-[--color-surprise] flex-1 data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                        className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
                       >
-                        <div className='flex items-center gap-2'>
+                        <div className="flex items-center gap-2">
                           <Icon icon="laptop" />
                           <Heading className="text-lg font-bold">Store in Local Vault</Heading>
                         </div>
@@ -73,24 +70,26 @@ export const Migrate = () => {
                       </Radio>
                       <Radio
                         value="remote"
-                        className="data-[selected]:border-[--color-surprise] flex-1 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                        className="flex-1 rounded border border-solid border-[--hl-md] p-4 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise]"
                       >
-                        <div className='flex items-center gap-2'>
-
-                        <Icon icon="globe" />
+                        <div className="flex items-center gap-2">
+                          <Icon icon="globe" />
                           <Heading className="text-lg font-bold">Enable Cloud Sync</Heading>
                         </div>
-                        <p className='pt-2'>
+                        <p className="pt-2">
                           Encrypted and synced securely to the cloud, ideal for out of the box collaboration.
                         </p>
                       </Radio>
                     </div>
                   </RadioGroup>
-                  <div className='flex justify-end gap-2 items-center'>
+                  <div className="flex items-center justify-end gap-2">
                     <Button
                       type="submit"
                       isDisabled={state !== 'idle'}
-                      className={'hover:no-underline font-bold bg-[--color-surprise] text-sm hover:bg-opacity-90 py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm' + (state !== 'idle' ? 'animate-pulse cursor-not-allowed' : '')}
+                      className={
+                        'rounded-sm bg-[--color-surprise] px-3 py-2 text-sm font-bold text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline' +
+                        (state !== 'idle' ? 'animate-pulse cursor-not-allowed' : '')
+                      }
                     >
                       Continue
                     </Button>

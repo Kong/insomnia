@@ -25,33 +25,33 @@ const Auth = () => {
   }, []);
 
   return (
-    <div className='grid [grid-template-rows:1fr_30px] w-full h-full'>
-    <div className='relative h-full w-full text-center flex bg-[--color-bg]'>
-      <TrailLinesContainer>
-        <div className='flex flex-col justify-center items-center h-full min-h-[450px]'>
-          <div className='flex flex-col items-center justify-center gap-[--padding-sm] p-[--padding-lg] pt-[32px] min-w-[400px] max-w-lg rounded-md relative bg-[--hl-sm] m-0'>
-            <InsomniaLogo
-              width={64}
-              height={64}
-              style={{
-                transform: 'translate(-50%, -50%)',
-                position: 'absolute',
-                top: 0,
-                left: '50%',
-              }}
-            />
-            <Outlet />
+    <div className="grid h-full w-full [grid-template-rows:1fr_30px]">
+      <div className="relative flex h-full w-full bg-[--color-bg] text-center">
+        <TrailLinesContainer>
+          <div className="flex h-full min-h-[450px] flex-col items-center justify-center">
+            <div className="relative m-0 flex min-w-[400px] max-w-lg flex-col items-center justify-center gap-[--padding-sm] rounded-md bg-[--hl-sm] p-[--padding-lg] pt-[32px]">
+              <InsomniaLogo
+                width={64}
+                height={64}
+                style={{
+                  transform: 'translate(-50%, -50%)',
+                  position: 'absolute',
+                  top: 0,
+                  left: '50%',
+                }}
+              />
+              <Outlet />
+            </div>
           </div>
-        </div>
-      </TrailLinesContainer>
-    </div>
+        </TrailLinesContainer>
+      </div>
       <div className="relative flex items-center overflow-hidden">
-        <div className='flex w-full h-full items-center justify-between'>
+        <div className="flex h-full w-full items-center justify-between">
           <div className="flex h-full">
             <TooltipTrigger>
               <Button
                 data-testid="settings-button"
-                className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                 onPress={() => showSettingsModal()}
               >
                 <Icon icon="gear" /> Preferences
@@ -59,23 +59,17 @@ const Auth = () => {
               <Tooltip
                 placement="top"
                 offset={8}
-                className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
               >
                 Preferences
-                <Hotkey
-                  keyBindings={
-                    settings.hotKeyRegistry.preferences_showGeneral
-                  }
-                />
+                <Hotkey keyBindings={settings.hotKeyRegistry.preferences_showGeneral} />
               </Tooltip>
             </TooltipTrigger>
-
           </div>
-          <div className='flex items-center gap-2 divide divide-y-[--hl-sm]'>
-
+          <div className="divide flex items-center gap-2 divide-y-[--hl-sm]">
             <TooltipTrigger>
               <Button
-                className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                 onPress={() => {
                   if (settings.proxyEnabled) {
                     showSettingsModal({
@@ -87,38 +81,34 @@ const Auth = () => {
                 <Icon
                   icon="circle"
                   className={
-                    userSession
-                      ? status === 'online'
-                        ? 'text-[--color-success]'
-                        : 'text-[--color-danger]'
-                      : ''
+                    userSession ? (status === 'online' ? 'text-[--color-success]' : 'text-[--color-danger]') : ''
                   }
                 />{' '}
-                {userSession
-                  ? status.charAt(0).toUpperCase() + status.slice(1)
-                  : 'Log in to see your projects'}
+                {userSession ? status.charAt(0).toUpperCase() + status.slice(1) : 'Log in to see your projects'}
                 {settings.proxyEnabled ? ' via proxy' : ''}
               </Button>
               <Tooltip
                 placement="top"
                 offset={8}
-                className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
               >
                 {userSession
-                  ? status === 'online' ? 'You have connectivity to the Internet' + (settings.proxyEnabled ? ' via the configured proxy' : '') + '.'
+                  ? status === 'online'
+                    ? 'You have connectivity to the Internet' +
+                      (settings.proxyEnabled ? ' via the configured proxy' : '') +
+                      '.'
                     : 'You are offline. Connect to sync your data.'
                   : 'Login to Insomnia to unlock the full product experience.'}
               </Tooltip>
             </TooltipTrigger>
-            <span className='w-[1px] h-full bg-[--hl-sm]' />
+            <span className="h-full w-[1px] bg-[--hl-sm]" />
             <Link>
               <a
-                className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
+                className="flex items-center gap-1 px-[--padding-md] text-xs text-[--color-font] focus:underline focus:outline-none"
                 href="https://konghq.com/"
               >
                 Made with
-                <Icon className="text-[--color-surprise-font]" icon="heart" /> by
-                Kong
+                <Icon className="text-[--color-surprise-font]" icon="heart" /> by Kong
               </a>
             </Link>
           </div>

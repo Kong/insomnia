@@ -24,12 +24,11 @@ export interface UploadDataModalProps {
   userUploadData: UploadDataType[];
 }
 
-const rowHeaderStyle = 'sticky normal-case top-[-8px] p-2 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none';
-const rowCellStyle = 'whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none';
-const supportedFileTypes = [
-  'application/json',
-  'text/csv',
-];
+const rowHeaderStyle =
+  'sticky normal-case top-[-8px] p-2 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none';
+const rowCellStyle =
+  'whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none';
+const supportedFileTypes = ['application/json', 'text/csv'];
 
 export const genPreviewTableData = (uploadData: UploadDataType[]) => {
   // generate header and body data for preview table from upload data
@@ -74,15 +73,20 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
         }
       } else if (fileType === 'text/csv') {
         // Replace CRLF (Windows line break) and CR (Mac link break) with \n, then split into csv arrays
-        const csvRows = content.replace(/\r\n|\r/g, '\n').split('\n').map(row => row.split(','));
+        const csvRows = content
+          .replace(/\r\n|\r/g, '\n')
+          .split('\n')
+          .map(row => row.split(','));
         // at least 2 rows required for csv
         if (csvRows.length > 1) {
           const csvHeaders = csvRows[0];
           const csvContentRows = csvRows.slice(1, csvRows.length);
-          const uploadData = csvContentRows.map(contentRow => csvHeaders.reduce((acc: UploadDataType, cur, idx) => {
-            acc[cur] = contentRow[idx] ?? '';
-            return acc;
-          }, {}));
+          const uploadData = csvContentRows.map(contentRow =>
+            csvHeaders.reduce((acc: UploadDataType, cur, idx) => {
+              acc[cur] = contentRow[idx] ?? '';
+              return acc;
+            }, {}),
+          );
           setUploadDataHeaders(csvHeaders);
           setUploadData(uploadData);
         } else {
@@ -161,66 +165,53 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
       onOpenChange={isOpen => {
         !isOpen && onClose();
       }}
-      className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-start justify-center bg-black/30"
+      className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-start justify-center bg-black/30"
     >
       <Modal
-        className="max-h-[75%] overflow-auto flex flex-col w-full max-w-3xl rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] bg-[--color-bg] text-[--color-font] m-24"
+        className="m-24 flex max-h-[75%] w-full max-w-3xl flex-col overflow-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
       >
-        <Dialog
-          className="outline-none flex-1 h-full flex flex-col overflow-hidden"
-        >
+        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
           {({ close }) => (
-            <div className='flex-1 flex flex-col gap-4 overflow-hidden'>
-              <div className='flex gap-2 items-center justify-between'>
-                <Heading slot="title" className='text-2xl'>{userUploadData.length > 0 ? 'Update Data' : 'Preview Data'}</Heading>
+            <div className="flex flex-1 flex-col gap-4 overflow-hidden">
+              <div className="flex items-center justify-between gap-2">
+                <Heading slot="title" className="text-2xl">
+                  {userUploadData.length > 0 ? 'Update Data' : 'Preview Data'}
+                </Heading>
                 <Button
-                  className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                   onPress={close}
                 >
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className='rounded grow shrink-0 w-full overflow-hidden basis-12 flex flex-col gap-6 select-none overflow-y-auto'>
-                <FileTrigger
-                  allowsMultiple={false}
-                  onSelect={handleFileSelect}
-                  acceptedFileTypes={['.csv', '.json']}
-                >
-                  <Button className="flex flex-1 flex-shrink-0 border-solid border border-[--hl-sm] py-1 gap-2 items-center justify-center px-2 aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent transition-all text-base">
+              <div className="flex w-full shrink-0 grow basis-12 select-none flex-col gap-6 overflow-hidden overflow-y-auto rounded">
+                <FileTrigger allowsMultiple={false} onSelect={handleFileSelect} acceptedFileTypes={['.csv', '.json']}>
+                  <Button className="flex flex-1 flex-shrink-0 items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-sm] px-2 py-1 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]">
                     <Icon icon="upload" />
                     <span>{uploadData.length > 0 ? 'Change Data File' : 'Select Data File'}</span>
                   </Button>
                 </FileTrigger>
               </div>
-              {file && uploadData.length > 0 &&
+              {file && uploadData.length > 0 && (
                 <div>
-                  <span className='mr-4'>File Encoding</span>
-                  <EncodingPicker
-                    encoding={fileEncoding}
-                    onChange={handleEncodingChange}
-                  />
+                  <span className="mr-4">File Encoding</span>
+                  <EncodingPicker encoding={fileEncoding} onChange={handleEncodingChange} />
                 </div>
-              }
-              {invalidFileReason !== '' &&
+              )}
+              {invalidFileReason !== '' && (
                 <div className="notice error margin-top-sm">
                   <p>{invalidFileReason}</p>
                 </div>
-              }
-              {uploadData.length > 0 &&
-                <div className='overflow-auto py-2 flex-1'>
-                  <Heading className='text-xl margin-bottom-sm'>Data Preview</Heading>
-                  <Table
-                    aria-label='Data Preview Table'
-                    className="min-w-full table-auto"
-                  >
+              )}
+              {uploadData.length > 0 && (
+                <div className="flex-1 overflow-auto py-2">
+                  <Heading className="margin-bottom-sm text-xl">Data Preview</Heading>
+                  <Table aria-label="Data Preview Table" className="min-w-full table-auto">
                     <TableHeader>
-                      <Column
-                        isRowHeader
-                        className={rowHeaderStyle}
-                      >
+                      <Column isRowHeader className={rowHeaderStyle}>
                         Iteration
                       </Column>
                       {uploadDataHeaders.map((header, idx) => (
@@ -238,18 +229,18 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
                         return (
                           // eslint-disable-next-line react/no-array-index-key
                           <Row key={idx}>
-                            <Cell
-                              className={rowCellStyle}
-                            >
-                              <span className='p-2'>{idx + 1}</span>
+                            <Cell className={rowCellStyle}>
+                              <span className="p-2">{idx + 1}</span>
                             </Cell>
                             {uploadDataHeaders.map(rowKey => (
                               <Cell
-                                className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none"
+                                className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none"
                                 key={rowKey}
                               >
-                                <span className='p-2'>
-                                  {typeof rowData[rowKey] === 'string' ? rowData[rowKey] : JSON.stringify(rowData[rowKey])}
+                                <span className="p-2">
+                                  {typeof rowData[rowKey] === 'string'
+                                    ? rowData[rowKey]
+                                    : JSON.stringify(rowData[rowKey])}
                                 </span>
                               </Cell>
                             ))}
@@ -259,19 +250,19 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
                     </TableBody>
                   </Table>
                 </div>
-              }
-              <div className="flex justify-end mt-2">
-                {userUploadData.length > 0 &&
+              )}
+              <div className="mt-2 flex justify-end">
+                {userUploadData.length > 0 && (
                   <Button
-                    className="hover:no-underline flex items-center gap-2 hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--hl] transition-colors rounded-sm"
+                    className="flex items-center gap-2 rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--hl] transition-colors hover:bg-opacity-90 hover:no-underline"
                     onPress={handleClearData}
                   >
                     Remove Data
                   </Button>
-                }
+                )}
                 <Button
                   isDisabled={uploadData.length < 1}
-                  className="hover:no-underline ml-4 flex items-center gap-2 bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                  className="ml-4 flex items-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
                   onPress={handleUploadData}
                 >
                   Upload

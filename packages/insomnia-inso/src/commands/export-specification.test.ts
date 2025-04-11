@@ -47,5 +47,4 @@ paths:
           description: OK
 `);
   });
-
 });

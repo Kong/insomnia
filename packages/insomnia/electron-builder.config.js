@@ -58,9 +58,7 @@ const config = {
     },
     // If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
     notarize: true,
-    asarUnpack: [
-      'node_modules/@getinsomnia/node-libcurl',
-    ],
+    asarUnpack: ['node_modules/@getinsomnia/node-libcurl'],
   },
   dmg: {
     window: {
@@ -88,13 +86,12 @@ const config = {
     ],
     signtoolOptions: {
       sign: './customSign.js',
-      signingHashAlgorithms: ['sha256'], // avoid duplicate signing hook calls https://github.com/electron-userland/electron-builder/issues/3995#issuecomment-505725704  
+      signingHashAlgorithms: ['sha256'], // avoid duplicate signing hook calls https://github.com/electron-userland/electron-builder/issues/3995#issuecomment-505725704
     },
   },
   squirrelWindows: {
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
-    iconUrl:
-      'https://github.com/kong/insomnia/blob/develop/packages/insomnia/src/icons/icon.ico?raw=true',
+    iconUrl: 'https://github.com/kong/insomnia/blob/develop/packages/insomnia/src/icons/icon.ico?raw=true',
   },
   portable: {
     artifactName: `${BINARY_PREFIX}-\${version}-portable.\${ext}`,
@@ -111,7 +108,7 @@ const config = {
         Comment: 'Insomnia is a cross-platform REST client, built on top of Electron.',
         Categories: 'Development',
         Keywords: 'GraphQL;REST;gRPC;SOAP;openAPI;GitOps;',
-      }
+      },
     },
     target: [
       {
@@ -135,20 +132,23 @@ const config = {
     // Prevents RPM from packaging build-id metadata, some of which is the
     // same across all electron-builder applications, which causes package
     // conflicts
-    fpm: [
-      '--rpm-rpmbuild-define=_build_id_links none',
-    ],
+    fpm: ['--rpm-rpmbuild-define=_build_id_links none'],
   },
   snap: {
     base: 'core22',
   },
 };
 
-const { env: { BUILD_TARGETS }, platform } = process;
+const {
+  env: { BUILD_TARGETS },
+  platform,
+} = process;
 const targets = BUILD_TARGETS?.split(',');
 if (platform && targets) {
   console.log('overriding build targets to: ', targets);
   const PLATFORM_MAP = { darwin: 'mac', linux: 'linux', win32: 'win' };
-  config[PLATFORM_MAP[platform]].target = config[PLATFORM_MAP[platform]].target.filter(({ target }) => targets.includes(target));
+  config[PLATFORM_MAP[platform]].target = config[PLATFORM_MAP[platform]].target.filter(({ target }) =>
+    targets.includes(target),
+  );
 }
 module.exports = config;

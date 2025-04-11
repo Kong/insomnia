@@ -5,13 +5,7 @@ import type { IncomingMessage } from 'http';
 import path from 'path';
 import tls, { type KeyObject, type PxfObject } from 'tls';
 import { v4 as uuidV4 } from 'uuid';
-import {
-  type CloseEvent,
-  type ErrorEvent,
-  type Event,
-  type MessageEvent,
-  WebSocket,
-} from 'ws';
+import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSocket } from 'ws';
 
 import { AUTH_API_KEY, AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
 import { jarFromCookies } from '../../common/cookies';
@@ -68,11 +62,7 @@ export type WebSocketCloseEvent = Omit<CloseEvent, 'target'> & {
   timestamp: number;
 };
 
-export type WebSocketEvent =
-  | WebSocketOpenEvent
-  | WebSocketMessageEvent
-  | WebSocketErrorEvent
-  | WebSocketCloseEvent;
+export type WebSocketEvent = WebSocketOpenEvent | WebSocketMessageEvent | WebSocketErrorEvent | WebSocketCloseEvent;
 
 export type WebSocketEventLog = WebSocketEvent[];
 
@@ -84,7 +74,10 @@ const parseResponseAndBuildTimeline = (url: string, incomingMessage: IncomingMes
   const statusMessage = incomingMessage.statusMessage || '';
   const statusCode = incomingMessage.statusCode || 0;
   const httpVersion = incomingMessage.httpVersion;
-  const responseHeaders = Object.entries(incomingMessage.headers).map(([name, value]) => ({ name, value: value?.toString() || '' }));
+  const responseHeaders = Object.entries(incomingMessage.headers).map(([name, value]) => ({
+    name,
+    value: value?.toString() || '',
+  }));
   const headersIn = responseHeaders.map(({ name, value }) => `${name}: ${value}`).join('\n');
   const timeline = [
     { value: `Preparing request to ${url}`, name: 'Text', timestamp: Date.now() },
@@ -108,7 +101,7 @@ interface OpenWebSocketRequestOptions {
 }
 const openWebSocketConnection = async (
   _event: Electron.IpcMainInvokeEvent,
-  options: OpenWebSocketRequestOptions
+  options: OpenWebSocketRequestOptions,
 ): Promise<void> => {
   const existingConnection = WebSocketConnections.get(options.requestId);
 
@@ -117,7 +110,9 @@ const openWebSocketConnection = async (
     return;
   }
 
-  const request = options.isGraphqlSubscriptionRequest ? await models.request.getById(options.requestId) : await webSocketRequest.getById(options.requestId);
+  const request = options.isGraphqlSubscriptionRequest
+    ? await models.request.getById(options.requestId)
+    : await webSocketRequest.getById(options.requestId);
   const responseId = generateId('res');
   if (!request) {
     return;
@@ -133,15 +128,16 @@ const openWebSocketConnection = async (
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
   // fallback to base environment
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
-  const activeEnvironment = activeEnvironmentId && await models.environment.getById(activeEnvironmentId);
-  const environment = activeEnvironment || await models.environment.getOrCreateForParentId(options.workspaceId);
+  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
+  const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(options.workspaceId));
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
   const responseEnvironmentId = environment ? environment._id : null;
 
   const caCert = await models.caCertificate.findByParentId(options.workspaceId);
   const caCertficatePath = caCert?.path;
   // attempt to read CA Certificate PEM from disk, fallback to root certificates
-  const caCertificate = (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
+  const caCertificate =
+    (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
 
   try {
     if (!options.url) {
@@ -149,8 +145,10 @@ const openWebSocketConnection = async (
     }
     const readyStateChannel = `webSocket.${request._id}.readyState`;
 
-    const reduceArrayToLowerCaseKeyedDictionary = (acc: Record<string, string>, { name, value }: BaseWebSocketRequest['headers'][0]) =>
-      ({ ...acc, [name.toLowerCase() || '']: value || '' });
+    const reduceArrayToLowerCaseKeyedDictionary = (
+      acc: Record<string, string>,
+      { name, value }: BaseWebSocketRequest['headers'][0],
+    ) => ({ ...acc, [name.toLowerCase() || '']: value || '' });
     const headers = options.headers;
     let url = options.url;
     let authCookie = null;
@@ -161,7 +159,7 @@ const openWebSocketConnection = async (
         headers.push(getBasicAuthHeader(username, password, encoding));
       }
       if (options.authentication.type === AUTH_API_KEY) {
-        const { key = '', value = '', addTo } = options.authentication;  // Ensure key is not undefined
+        const { key = '', value = '', addTo } = options.authentication; // Ensure key is not undefined
         if (addTo === HEADER) {
           headers.push({ name: key, value: value });
         } else if (addTo === COOKIE) {
@@ -197,17 +195,30 @@ const openWebSocketConnection = async (
       const { passphrase, cert, key, pfx } = clientCertificate;
 
       if (cert) {
-        timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: `Adding SSL PEM certificate: ${cert}`, name: 'Text', timestamp: Date.now() }) + '\n');
+        timelineFileStreams
+          .get(options.requestId)
+          ?.write(
+            JSON.stringify({ value: `Adding SSL PEM certificate: ${cert}`, name: 'Text', timestamp: Date.now() }) +
+              '\n',
+          );
         pemCertificates.push(fs.readFileSync(cert, 'utf-8'));
       }
 
       if (key) {
-        timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: `Adding SSL KEY certificate: ${key}`, name: 'Text', timestamp: Date.now() }) + '\n');
+        timelineFileStreams
+          .get(options.requestId)
+          ?.write(
+            JSON.stringify({ value: `Adding SSL KEY certificate: ${key}`, name: 'Text', timestamp: Date.now() }) + '\n',
+          );
         pemCertificateKeys.push({ pem: fs.readFileSync(key, 'utf-8'), passphrase: passphrase ?? undefined });
       }
 
       if (pfx) {
-        timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: `Adding SSL P12 certificate: ${pfx}`, name: 'Text', timestamp: Date.now() }) + '\n');
+        timelineFileStreams
+          .get(options.requestId)
+          ?.write(
+            JSON.stringify({ value: `Adding SSL P12 certificate: ${pfx}`, name: 'Text', timestamp: Date.now() }) + '\n',
+          );
         pfxCertificates.push({ buf: fs.readFileSync(pfx, 'utf-8'), passphrase: passphrase ?? undefined });
       }
     });
@@ -221,11 +232,12 @@ const openWebSocketConnection = async (
       }
     }
 
-    const followRedirects = {
-      'off': false,
-      'on': true,
-      'global': settings.followRedirects,
-    }[request.settingFollowRedirects] ?? true;
+    const followRedirects =
+      {
+        off: false,
+        on: true,
+        global: settings.followRedirects,
+      }[request.settingFollowRedirects] ?? true;
     const protocols = lowerCasedEnabledHeaders['sec-websocket-protocol']?.split(',').map(p => p.trim());
     const ws = new WebSocket(url, protocols, {
       headers: lowerCasedEnabledHeaders,
@@ -242,7 +254,11 @@ const openWebSocketConnection = async (
     ws.on('upgrade', async incomingMessage => {
       // @ts-expect-error -- private property
       const internalRequestHeader = ws._req._header;
-      const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(url, incomingMessage, internalRequestHeader);
+      const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(
+        url,
+        incomingMessage,
+        internalRequestHeader,
+      );
       const responsePatch: Partial<WebSocketResponse> = {
         _id: responseId,
         parentId: request._id,
@@ -268,8 +284,14 @@ const openWebSocketConnection = async (
         const totalSetCookies = setCookieStrings.length;
         if (totalSetCookies) {
           const currentUrl = request.url;
-          const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({ setCookieStrings, currentUrl, cookieJar: options.cookieJar });
-          rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }));
+          const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({
+            setCookieStrings,
+            currentUrl,
+            cookieJar: options.cookieJar,
+          });
+          rejectedCookies.forEach(errorMessage =>
+            timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }),
+          );
           const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
           if (hasCookiesToPersist) {
             await models.cookieJar.update(options.cookieJar, { cookies });
@@ -282,11 +304,17 @@ const openWebSocketConnection = async (
     });
     ws.on('unexpected-response', async (clientRequest, incomingMessage) => {
       incomingMessage.on('data', chunk => {
-        timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: chunk.toString(), name: 'DataOut', timestamp: Date.now() }) + '\n');
+        timelineFileStreams
+          .get(options.requestId)
+          ?.write(JSON.stringify({ value: chunk.toString(), name: 'DataOut', timestamp: Date.now() }) + '\n');
       });
       // @ts-expect-error -- private property
       const internalRequestHeader = clientRequest._header;
-      const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(url, incomingMessage, internalRequestHeader);
+      const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(
+        url,
+        incomingMessage,
+        internalRequestHeader,
+      );
       timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
       const responsePatch: Partial<WebSocketResponse> = {
         _id: responseId,
@@ -318,7 +346,11 @@ const openWebSocketConnection = async (
       };
 
       eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
-      timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: 'WebSocket connection established', name: 'Text', timestamp: Date.now() }) + '\n');
+      timelineFileStreams
+        .get(options.requestId)
+        ?.write(
+          JSON.stringify({ value: 'WebSocket connection established', name: 'Text', timestamp: Date.now() }) + '\n',
+        );
       for (const window of BrowserWindow.getAllWindows()) {
         window.webContents.send(readyStateChannel, ws.readyState === WebSocket.OPEN);
       }
@@ -381,14 +413,26 @@ const openWebSocketConnection = async (
         window.webContents.send(readyStateChannel, ws.readyState === WebSocket.OPEN);
       }
       if (error.code) {
-        createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, message || 'Something went wrong');
+        createErrorResponse(
+          responseId,
+          request._id,
+          responseEnvironmentId,
+          timelinePath,
+          message || 'Something went wrong',
+        );
       }
     });
   } catch (e) {
     console.error('unhandled error:', e);
 
     deleteRequestMaps(request._id, e.message || 'Something went wrong');
-    createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, e.message || 'Something went wrong');
+    createErrorResponse(
+      responseId,
+      request._id,
+      responseEnvironmentId,
+      timelinePath,
+      e.message || 'Something went wrong',
+    );
   }
 };
 
@@ -419,7 +463,13 @@ const handleGraphQLWsMessage = (data: MessageEvent['data'], request: Request) =>
   }
 };
 
-const createErrorResponse = async (responseId: string, requestId: string, environmentId: string | null, timelinePath: string, message: string) => {
+const createErrorResponse = async (
+  responseId: string,
+  requestId: string,
+  environmentId: string | null,
+  timelinePath: string,
+  message: string,
+) => {
   const settings = await models.settings.get();
   const responsePatch = {
     _id: responseId,
@@ -433,21 +483,25 @@ const createErrorResponse = async (responseId: string, requestId: string, enviro
   models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
 };
 
-const deleteRequestMaps = async (requestId: string, message: string, event?: WebSocketCloseEvent | WebSocketErrorEvent) => {
+const deleteRequestMaps = async (
+  requestId: string,
+  message: string,
+  event?: WebSocketCloseEvent | WebSocketErrorEvent,
+) => {
   if (event) {
     eventLogFileStreams.get(requestId)?.write(JSON.stringify(event) + '\n');
   }
   eventLogFileStreams.get(requestId)?.end();
   eventLogFileStreams.delete(requestId);
-  timelineFileStreams.get(requestId)?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
+  timelineFileStreams
+    .get(requestId)
+    ?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
   timelineFileStreams.get(requestId)?.end();
   timelineFileStreams.delete(requestId);
   WebSocketConnections.delete(requestId);
 };
 
-const getWebSocketReadyState = async (
-  options: { requestId: string }
-): Promise<boolean> => {
+const getWebSocketReadyState = async (options: { requestId: string }): Promise<boolean> => {
   return WebSocketConnections.get(options.requestId)?.readyState === WebSocket.OPEN;
 };
 
@@ -479,9 +533,7 @@ const sendPayload = async (ws: WebSocket, options: { payload: string; requestId:
   }
 };
 
-const sendWebSocketEvent = async (
-  options: { payload: string; requestId: string }
-): Promise<void> => {
+const sendWebSocketEvent = async (options: { payload: string; requestId: string }): Promise<void> => {
   const ws = WebSocketConnections.get(options.requestId);
 
   if (!ws) {
@@ -492,9 +544,7 @@ const sendWebSocketEvent = async (
   sendPayload(ws, options);
 };
 
-const closeWebSocketConnection = (
-  options: { requestId: string }
-): void => {
+const closeWebSocketConnection = (options: { requestId: string }): void => {
   const ws = WebSocketConnections.get(options.requestId);
   if (!ws) {
     return;
@@ -504,19 +554,22 @@ const closeWebSocketConnection = (
 
 const closeAllWebSocketConnections = (): void => WebSocketConnections.forEach(ws => ws.close());
 
-const findMany = async (
-  options: { responseId: string }
-): Promise<WebSocketEvent[]> => {
+const findMany = async (options: { responseId: string }): Promise<WebSocketEvent[]> => {
   const response = await models.webSocketResponse.getById(options.responseId);
   if (!response || !response.eventLogPath) {
     return [];
   }
   const body = await fs.promises.readFile(response.eventLogPath);
-  return body.toString().split('\n').filter(e => e?.trim())
-    // Parse the message
-    .map(e => JSON.parse(e))
-    // Reverse the list of messages so that we get the latest message first
-    .reverse() || [];
+  return (
+    body
+      .toString()
+      .split('\n')
+      .filter(e => e?.trim())
+      // Parse the message
+      .map(e => JSON.parse(e))
+      // Reverse the list of messages so that we get the latest message first
+      .reverse() || []
+  );
 };
 
 export interface WebSocketBridgeAPI {
@@ -533,10 +586,16 @@ export interface WebSocketBridgeAPI {
 }
 export const registerWebSocketHandlers = () => {
   ipcMainHandle('webSocket.open', openWebSocketConnection);
-  ipcMainHandle('webSocket.event.send', (_, options: Parameters<typeof sendWebSocketEvent>[0]) => sendWebSocketEvent(options));
-  ipcMainOn('webSocket.close', (_, options: Parameters<typeof closeWebSocketConnection>[0]) => closeWebSocketConnection(options));
+  ipcMainHandle('webSocket.event.send', (_, options: Parameters<typeof sendWebSocketEvent>[0]) =>
+    sendWebSocketEvent(options),
+  );
+  ipcMainOn('webSocket.close', (_, options: Parameters<typeof closeWebSocketConnection>[0]) =>
+    closeWebSocketConnection(options),
+  );
   ipcMainOn('webSocket.closeAll', closeAllWebSocketConnections);
-  ipcMainHandle('webSocket.readyState', (_, options: Parameters<typeof getWebSocketReadyState>[0]) => getWebSocketReadyState(options));
+  ipcMainHandle('webSocket.readyState', (_, options: Parameters<typeof getWebSocketReadyState>[0]) =>
+    getWebSocketReadyState(options),
+  );
   ipcMainHandle('webSocket.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
 };
 

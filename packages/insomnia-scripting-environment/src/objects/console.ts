@@ -1,81 +1,77 @@
 type LogLevel = 'debug' | 'info' | 'log' | 'warn' | 'error';
 
 export interface Row {
-    value: string;
-    name: string;
-    timestamp: number;
+  value: string;
+  name: string;
+  timestamp: number;
 }
 
 class Console {
-    rows: Row[] = [];
+  rows: Row[] = [];
 
-    // TODO: support replacing substitution
-    printLog = (rows: Row[], level: LogLevel, ...values: any) => {
-        try {
-            const content = values.map(
-                (value: any) => {
-                    return typeof value === 'string' ? value : JSON.stringify(value, null, 2);
-                }
-            ).join(' ');
+  // TODO: support replacing substitution
+  printLog = (rows: Row[], level: LogLevel, ...values: any) => {
+    try {
+      const content = values
+        .map((value: any) => {
+          return typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+        })
+        .join(' ');
 
-            const row = {
-                value: `${level}: ${content}`,
-                name: 'Text',
-                timestamp: Date.now(),
-            };
+      const row = {
+        value: `${level}: ${content}`,
+        name: 'Text',
+        timestamp: Date.now(),
+      };
 
-            rows.push(row);
-        } catch (e) {
-            rows.push({
-                value: 'error: ' + JSON.stringify(e, null, 2),
-                name: 'Text',
-                timestamp: Date.now(),
-            });
-        }
-    };
+      rows.push(row);
+    } catch (e) {
+      rows.push({
+        value: 'error: ' + JSON.stringify(e, null, 2),
+        name: 'Text',
+        timestamp: Date.now(),
+      });
+    }
+  };
 
-    log = (...values: any[]) => {
-        this.printLog(this.rows, 'log', ...values);
-    };
+  log = (...values: any[]) => {
+    this.printLog(this.rows, 'log', ...values);
+  };
 
-    warn = (...values: any[]) => {
-        this.printLog(this.rows, 'warn', ...values);
-    };
+  warn = (...values: any[]) => {
+    this.printLog(this.rows, 'warn', ...values);
+  };
 
-    debug = (...values: any[]) => {
-        this.printLog(this.rows, 'debug', ...values);
-    };
+  debug = (...values: any[]) => {
+    this.printLog(this.rows, 'debug', ...values);
+  };
 
-    info = (...values: any[]) => {
-        this.printLog(this.rows, 'info', ...values);
-    };
+  info = (...values: any[]) => {
+    this.printLog(this.rows, 'info', ...values);
+  };
 
-    error = (...values: any[]) => {
-        this.printLog(this.rows, 'error', ...values);
-    };
+  error = (...values: any[]) => {
+    this.printLog(this.rows, 'error', ...values);
+  };
 
+  clear = (_level: LogLevel, _message?: any, ..._optionalParams: any[]) => {
+    throw Error('currently "clear" is not supported for the timeline');
+  };
 
-    clear = (_level: LogLevel, _message?: any, ..._optionalParams: any[]) => {
-        throw Error('currently "clear" is not supported for the timeline');
-    };
+  dumpLogs = () => {
+    return this.rows.map(row => JSON.stringify(row) + '\n').join('\n');
+  };
 
-    dumpLogs = () => {
-        return this.rows
-            .map(row => JSON.stringify(row) + '\n')
-            .join('\n');
-    };
-
-    dumpLogsAsArray = () => {
-        return this.rows
-            .map(row => JSON.stringify(row) + '\n');
-    };
+  dumpLogsAsArray = () => {
+    return this.rows.map(row => JSON.stringify(row) + '\n');
+  };
 }
 
 let builtInConsole = new Console();
 export function getExistingConsole() {
-    return builtInConsole;
+  return builtInConsole;
 }
 export function getNewConsole() {
-    builtInConsole = new Console();
-    return builtInConsole;
+  builtInConsole = new Console();
+  return builtInConsole;
 }

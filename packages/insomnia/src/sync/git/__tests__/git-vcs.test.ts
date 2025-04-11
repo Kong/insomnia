@@ -37,66 +37,71 @@ describe('Git-VCS', () => {
       // foo.txt and bar.txt should be in the unstaged list
       const status = await GitVCS.status();
       expect(status.staged).toEqual([]);
-      expect(status.unstaged).toEqual([{
-        'name': '',
-        'path': '.insomnia/bar.txt',
-        'status': [0, 2, 0],
-      },
-      {
-        'name': '',
-        'path': '.insomnia/foo.txt',
-        'status': [0, 2, 0],
+      expect(status.unstaged).toEqual([
+        {
+          name: '',
+          path: '.insomnia/bar.txt',
+          status: [0, 2, 0],
+        },
+        {
+          name: '',
+          path: '.insomnia/foo.txt',
+          status: [0, 2, 0],
         },
       ]);
 
       const fooStatus = status.unstaged.find(f => f.path.includes(fooTxt));
 
-      fooStatus && await GitVCS.stageChanges([fooStatus]);
+      fooStatus && (await GitVCS.stageChanges([fooStatus]));
       const status2 = await GitVCS.status();
-      expect(status2.staged).toEqual([{
-        'name': '',
-        'path': '.insomnia/foo.txt',
-        'status': [0, 2, 2],
-      }]);
+      expect(status2.staged).toEqual([
+        {
+          name: '',
+          path: '.insomnia/foo.txt',
+          status: [0, 2, 2],
+        },
+      ]);
       expect(status2.unstaged).toEqual([
         {
-          'name': '',
-          'path': '.insomnia/bar.txt',
-          'status': [0, 2, 0],
+          name: '',
+          path: '.insomnia/bar.txt',
+          status: [0, 2, 0],
         },
       ]);
 
       const barStatus = status2.unstaged.find(f => f.path.includes(barTxt));
 
-      barStatus && await GitVCS.stageChanges([barStatus]);
+      barStatus && (await GitVCS.stageChanges([barStatus]));
       const status3 = await GitVCS.status();
       expect(status3.staged).toEqual([
         {
-          'name': '',
-          'path': '.insomnia/bar.txt',
-          'status': [0, 2, 2],
+          name: '',
+          path: '.insomnia/bar.txt',
+          status: [0, 2, 2],
         },
         {
-          'name': '',
-          'path': '.insomnia/foo.txt',
-          'status': [0, 2, 2],
+          name: '',
+          path: '.insomnia/foo.txt',
+          status: [0, 2, 2],
         },
       ]);
 
       const fooStatus3 = status3.staged.find(f => f.path.includes(fooTxt));
-      fooStatus3 && await GitVCS.unstageChanges([fooStatus3]);
+      fooStatus3 && (await GitVCS.unstageChanges([fooStatus3]));
       const status4 = await GitVCS.status();
       expect(status4).toEqual({
-        staged: [{
-          'name': '',
-          'path': '.insomnia/bar.txt',
-          'status': [0, 2, 2],
-        }],
+        staged: [
+          {
+            name: '',
+            path: '.insomnia/bar.txt',
+            status: [0, 2, 2],
+          },
+        ],
         unstaged: [
           {
-          'name': '',
-          'path': '.insomnia/foo.txt',
-          'status': [0, 2, 0],
+            name: '',
+            path: '.insomnia/foo.txt',
+            status: [0, 2, 0],
           },
         ],
       });
@@ -135,24 +140,22 @@ describe('Git-VCS', () => {
 
       const status = await GitVCS.status();
       const fooStatus = status.unstaged.find(f => f.path.includes(fooTxt));
-      fooStatus && await GitVCS.stageChanges([fooStatus]);
+      fooStatus && (await GitVCS.stageChanges([fooStatus]));
 
       const status2 = await GitVCS.status();
 
-      expect(status2.staged).toEqual([{
-        'name': '',
-        'path': '.insomnia/foo.txt',
-        'status': [0, 2, 2],
-      }]);
+      expect(status2.staged).toEqual([
+        {
+          name: '',
+          path: '.insomnia/foo.txt',
+          status: [0, 2, 2],
+        },
+      ]);
       expect(status2.unstaged).toEqual([
         {
-        'name': '',
-        'path': '.insomnia/bar.txt',
-          'status': [
-            0,
-            2,
-            0,
-          ],
+          name: '',
+          path: '.insomnia/bar.txt',
+          status: [0, 2, 0],
         },
       ]);
 
@@ -163,13 +166,9 @@ describe('Git-VCS', () => {
       expect(status3.staged).toEqual([]);
       expect(status3.unstaged).toEqual([
         {
-        'name': '',
-        'path': '.insomnia/bar.txt',
-          'status': [
-            0,
-            2,
-            0,
-          ],
+          name: '',
+          path: '.insomnia/bar.txt',
+          status: [0, 2, 0],
         },
       ]);
 
@@ -220,14 +219,14 @@ First commit!
       await GitVCS.setAuthor({ name: 'Karen Brown', email: 'karen@example.com' });
       const status = await GitVCS.status();
       const fooStatus = status.unstaged.find(f => f.path.includes(fooTxt));
-      fooStatus && await GitVCS.stageChanges([fooStatus]);
+      fooStatus && (await GitVCS.stageChanges([fooStatus]));
       await GitVCS.commit('First commit!');
       expect((await GitVCS.log()).length).toBe(1);
       await GitVCS.checkout('new-branch');
       expect((await GitVCS.log()).length).toBe(1);
       const status2 = await GitVCS.status();
       const barStatus = status2.unstaged.find(f => f.path.includes(barTxt));
-      barStatus && await GitVCS.stageChanges([barStatus]);
+      barStatus && (await GitVCS.stageChanges([barStatus]));
       await GitVCS.commit('Second commit!');
       expect((await GitVCS.log()).length).toBe(2);
       await GitVCS.checkout('main');
@@ -285,12 +284,12 @@ First commit!
       const status2 = await GitVCS.status();
 
       expect(status2).toEqual({
-        'staged': [],
-        'unstaged': [
+        staged: [],
+        unstaged: [
           {
-            'name': '',
-            'path': '.insomnia/folder/bar.txt',
-            'status': [1, 2, 1],
+            name: '',
+            path: '.insomnia/folder/bar.txt',
+            status: [1, 2, 1],
           },
         ],
       });
@@ -341,12 +340,12 @@ First commit!
       await GitVCS.discardChanges(changesToUndo);
       const status3 = await GitVCS.status();
       expect(status3).toEqual({
-        'staged': [],
-        'unstaged': [
+        staged: [],
+        unstaged: [
           {
-            'name': '',
-            'path': '.insomnia/foo3.txt',
-            'status': [1, 2, 1],
+            name: '',
+            path: '.insomnia/foo3.txt',
+            status: [1, 2, 1],
           },
         ],
       });

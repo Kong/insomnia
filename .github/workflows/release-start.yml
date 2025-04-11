@@ -9,9 +9,9 @@ on:
         type: choice
         description: Channel of the release (alpha/beta/stable)
         options:
-        - alpha
-        - beta
-        - stable
+          - alpha
+          - beta
+          - stable
       version:
         required: false
         description: force version of the release (e.g. 9.0.0) if previous release was successful, this should auto increment
@@ -31,7 +31,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: ".nvmrc"
+          node-version-file: '.nvmrc'
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
@@ -57,8 +57,7 @@ jobs:
         if: github.event.inputs.channel != 'stable' && github.event.inputs.version
         run: npm --workspaces version "${{ github.event.inputs.version }}"
 
-
-    # ############################################################
+      # ############################################################
 
       - name: Get version
         shell: bash
@@ -85,8 +84,8 @@ jobs:
         with:
           username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
 
-    # ############################################################
-    # re-run the versioning steps to apply to the new branch
+      # ############################################################
+      # re-run the versioning steps to apply to the new branch
 
       - name: (Re-run) App version (stable, patch latest stable)
         if: github.event.inputs.channel == 'stable' && !github.event.inputs.version
@@ -104,7 +103,7 @@ jobs:
         if: github.event.inputs.channel != 'stable' && github.event.inputs.version
         run: npm --workspaces version "${{ github.event.inputs.version }}"
 
-    # ############################################################
+      # ############################################################
 
       - name: Git Commit
         run: git commit -am "Bump app version to ${{ env.RELEASE_VERSION }}"
@@ -122,7 +121,7 @@ jobs:
           github_token: ${{ secrets.RELEASE_GH_TOKEN }}
           source_branch: ${{ env.RELEASE_BRANCH}}
           target_branch: develop
-          title: ":rocket: ${{ env.RELEASE_VERSION}}"
+          title: ':rocket: ${{ env.RELEASE_VERSION}}'
           body: |
             **Automated pull request**
             Artifacts build in progress...

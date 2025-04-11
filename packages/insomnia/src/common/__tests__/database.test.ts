@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
-import type { ChangeBufferEvent} from '../database';
+import type { ChangeBufferEvent } from '../database';
 import { _repairDatabase, database as db } from '../database';
 
 describe('init()', () => {
@@ -19,7 +19,7 @@ describe('init()', () => {
 
 describe('onChange()', () => {
   beforeEach(async () => {
-    await db.init(models.types(), { inMemoryOnly: true }, true, () => { },);
+    await db.init(models.types(), { inMemoryOnly: true }, true, () => {});
   });
   it('handles change listeners', async () => {
     const doc = {
@@ -38,10 +38,7 @@ describe('onChange()', () => {
     const updatedDoc = await models.request.update(newDoc, {
       name: 'bar',
     });
-    expect(changesSeen).toEqual([
-      [['insert', newDoc, false, []]],
-      [['update', updatedDoc, false, [{ name: 'bar' }]]],
-    ]);
+    expect(changesSeen).toEqual([[['insert', newDoc, false, []]], [['update', updatedDoc, false, [{ name: 'bar' }]]]]);
     db.offChange(callback);
     await models.request.create(doc);
     expect(changesSeen.length).toBe(2);
@@ -49,7 +46,6 @@ describe('onChange()', () => {
 });
 
 describe('bufferChanges()', () => {
-
   it('properly buffers changes', async () => {
     const doc = {
       type: models.request.type,
@@ -142,7 +138,6 @@ describe('bufferChanges()', () => {
 });
 
 describe('bufferChangesIndefinitely()', () => {
-
   it('should not auto flush', async () => {
     const doc = {
       type: models.request.type,
@@ -176,7 +171,6 @@ describe('bufferChangesIndefinitely()', () => {
 });
 
 describe('requestCreate()', () => {
-
   it('creates a valid request', async () => {
     const now = Date.now();
     const patch = {
@@ -212,7 +206,7 @@ describe('requestCreate()', () => {
 
 describe('_repairDatabase()', async () => {
   beforeEach(async () => {
-    await db.init(models.types(), { inMemoryOnly: true }, true, () => { },);
+    await db.init(models.types(), { inMemoryOnly: true }, true, () => {});
   });
 
   it('fixes duplicate environments', async () => {
@@ -597,7 +591,6 @@ describe('_repairDatabase()', async () => {
 });
 
 describe('duplicate()', () => {
-
   afterEach(() => vi.restoreAllMocks());
 
   it('should overwrite appropriate fields on the parent when duplicating', async () => {
@@ -649,7 +642,6 @@ describe('docCreate()', () => {
 });
 
 describe('withAncestors()', () => {
-
   it('should return itself and all parents but exclude siblings', async () => {
     const spc = await models.project.create();
     const wrk = await models.workspace.create({
@@ -680,16 +672,11 @@ describe('withAncestors()', () => {
     await expect(db.withAncestors(grpReq)).resolves.toStrictEqual([grpReq, grp, wrk, spc]);
     await expect(db.withAncestors(grpGrpcReq)).resolves.toStrictEqual([grpGrpcReq, grp, wrk, spc]);
     // Group child searching for ancestors with filters
-    await expect(db.withAncestors(grpGrpcReq, [models.requestGroup.type])).resolves.toStrictEqual([
-      grpGrpcReq,
-      grp,
-    ]);
+    await expect(db.withAncestors(grpGrpcReq, [models.requestGroup.type])).resolves.toStrictEqual([grpGrpcReq, grp]);
     await expect(
       db.withAncestors(grpGrpcReq, [models.requestGroup.type, models.workspace.type]),
     ).resolves.toStrictEqual([grpGrpcReq, grp, wrk]);
     // Group child searching for ancestors but excluding groups will not find the workspace
-    await expect(db.withAncestors(grpGrpcReq, [models.workspace.type])).resolves.toStrictEqual([
-      grpGrpcReq,
-    ]);
+    await expect(db.withAncestors(grpGrpcReq, [models.workspace.type])).resolves.toStrictEqual([grpGrpcReq]);
   });
 });

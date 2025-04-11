@@ -88,10 +88,7 @@ export class MemClient {
     console.log(await next(baseDir, ''));
   }
 
-  async readFile(
-    filePath: string,
-    options: BufferEncoding | { encoding?: BufferEncoding } = {},
-  ) {
+  async readFile(filePath: string, options: BufferEncoding | { encoding?: BufferEncoding } = {}) {
     filePath = path.normalize(filePath);
 
     if (typeof options === 'string') {
@@ -109,8 +106,7 @@ export class MemClient {
     if (encoding) {
       return raw.toString(encoding);
     }
-      return raw;
-
+    return raw;
   }
 
   async writeFile(

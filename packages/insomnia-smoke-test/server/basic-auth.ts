@@ -15,8 +15,5 @@ export const basicAuthRouter = express.Router();
 basicAuthRouter.use(basicAuth({ users }));
 
 basicAuthRouter.get('/', (_, res) => {
-  res
-    .status(200)
-    .header('content-type', 'text/plain')
-    .send('basic auth received');
+  res.status(200).header('content-type', 'text/plain').send('basic auth received');
 });

@@ -122,5 +122,4 @@ describe('isUrlMatchedInNoProxyRule - noProxyRule hostname and wildcard matches'
     const url = 'https://localhost/username/repo-name';
     expect(isUrlMatchedInNoProxyRule(url, noProxyRule)).toBe(false);
   });
-
 });

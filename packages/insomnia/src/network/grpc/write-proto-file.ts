@@ -24,16 +24,20 @@ const recursiveWriteProtoDirectory = async (
   fs.mkdirSync(dirPath, { recursive: true });
   // Get and write proto files
   const files = descendants.filter(isProtoFile).filter(f => f.parentId === dir._id);
-  await Promise.all(files.map(protoFile => {
-    const fullPath = path.join(dirPath, protoFile.name);
-    if (fs.existsSync(fullPath)) {
-      return;
-    }
-    fs.promises.writeFile(fullPath, protoFile.protoText);
-  }));
+  await Promise.all(
+    files.map(protoFile => {
+      const fullPath = path.join(dirPath, protoFile.name);
+      if (fs.existsSync(fullPath)) {
+        return;
+      }
+      fs.promises.writeFile(fullPath, protoFile.protoText);
+    }),
+  );
   // Get and write subdirectories
   const createdDirs = await Promise.all(
-    descendants.filter(f => isProtoDirectory(f) && f.parentId === dir._id).map(f => recursiveWriteProtoDirectory(f, descendants, dirPath)),
+    descendants
+      .filter(f => isProtoDirectory(f) && f.parentId === dir._id)
+      .map(f => recursiveWriteProtoDirectory(f, descendants, dirPath)),
   );
   return [dirPath, ...createdDirs.flat()];
 };
@@ -57,10 +61,13 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
     if (!ancestors.find(isWorkspace) || !rootAncestorProtoDirectory) {
       // should never happen
       return {
-        filePath: path.join(...ancestorDirectories
-          .map(f => f.name)
-          .reverse()
-          .slice(1), protoFile.name),
+        filePath: path.join(
+          ...ancestorDirectories
+            .map(f => f.name)
+            .reverse()
+            .slice(1),
+          protoFile.name,
+        ),
         dirs: [],
       };
     }
@@ -76,30 +83,32 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
       ),
     );
     return {
-      filePath: path.join(...ancestorDirectories
-        .map(f => f.name)
-        .reverse()
-        .slice(1), protoFile.name),
+      filePath: path.join(
+        ...ancestorDirectories
+          .map(f => f.name)
+          .reverse()
+          .slice(1),
+        protoFile.name,
+      ),
       dirs: treeRootDirs,
     };
   }
-    // Write single file
-    // Create temp folder
-    const rootDir = path.join(os.tmpdir(), 'insomnia-grpc');
-    fs.mkdirSync(rootDir, { recursive: true });
+  // Write single file
+  // Create temp folder
+  const rootDir = path.join(os.tmpdir(), 'insomnia-grpc');
+  fs.mkdirSync(rootDir, { recursive: true });
 
-    const filePath = `${protoFile._id}.${protoFile.modified}.proto`;
-    const result = {
-      filePath,
-      dirs: [rootDir],
-    };
-    // Check if file already exists
-    const fullPath = path.join(rootDir, filePath);
-    if (fs.existsSync(fullPath)) {
-      return result;
-    }
-    // Write file
-    await fs.promises.writeFile(fullPath, protoFile.protoText);
+  const filePath = `${protoFile._id}.${protoFile.modified}.proto`;
+  const result = {
+    filePath,
+    dirs: [rootDir],
+  };
+  // Check if file already exists
+  const fullPath = path.join(rootDir, filePath);
+  if (fs.existsSync(fullPath)) {
     return result;
-
+  }
+  // Write file
+  await fs.promises.writeFile(fullPath, protoFile.protoText);
+  return result;
 };

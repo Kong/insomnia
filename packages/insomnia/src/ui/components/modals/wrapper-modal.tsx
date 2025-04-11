@@ -25,15 +25,19 @@ export const WrapperModal = forwardRef<WrapperModalHandle, ModalProps>((props, r
     wide: false,
   });
 
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: options => {
-      setState(options);
-      modalRef.current?.show();
-    },
-  }), []);
+  useImperativeHandle(
+    ref,
+    () => ({
+      hide: () => {
+        modalRef.current?.hide();
+      },
+      show: options => {
+        setState(options);
+        modalRef.current?.show();
+      },
+    }),
+    [],
+  );
 
   const { title, body, tall, skinny, wide } = state;
 
@@ -43,6 +47,5 @@ export const WrapperModal = forwardRef<WrapperModalHandle, ModalProps>((props, r
       <ModalBody>{body}</ModalBody>
     </Modal>
   );
-
 });
 WrapperModal.displayName = 'WrapperModal';

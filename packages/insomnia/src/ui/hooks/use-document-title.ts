@@ -5,11 +5,9 @@ import { getProductName } from '../../common/constants';
 import type { RequestLoaderData } from '../routes/request';
 import type { WorkspaceLoaderData } from '../routes/workspace';
 export const useDocumentTitle = () => {
-  const {
-    activeWorkspace,
-    activeEnvironment,
-    activeProject,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { activeWorkspace, activeEnvironment, activeProject } = useRouteLoaderData(
+    ':workspaceId',
+  ) as WorkspaceLoaderData;
 
   const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
 
@@ -28,5 +26,4 @@ export const useDocumentTitle = () => {
     }
     document.title = title || getProductName();
   }, [activeEnvironment, activeProject.name, activeRequest, activeWorkspace]);
-
 };

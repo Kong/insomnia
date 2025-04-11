@@ -65,111 +65,104 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
 
   return (
     <>
-      <Tabs aria-label='Request group tabs' className="flex-1 w-full h-full flex flex-col">
-        <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+      <Tabs aria-label="Request group tabs" className="flex h-full w-full flex-1 flex-col">
+        <TabList
+          className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+          aria-label="Request pane tabs"
+        >
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='auth'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="auth"
           >
             <span>Auth</span>
             {!isNoneOrInherited && (
-              <span className='p-1 min-w-6 h-6 flex items-center justify-center text-xs rounded-lg border border-solid border-[--hl]'>
-                <span className='w-2 h-2 bg-green-500 rounded-full' />
+              <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
+                <span className="h-2 w-2 rounded-full bg-green-500" />
               </span>
             )}
           </Tab>
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='headers'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="headers"
           >
             <span>Headers</span>
             {headersCount > 0 && (
-              <span className='p-1 min-w-6 h-6 flex items-center justify-center text-xs rounded-lg border border-solid border-[--hl]'>
+              <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
                 {headersCount}
               </span>
             )}
           </Tab>
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='scripts'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="scripts"
           >
             <span>Scripts</span>
             {Boolean(activeRequestGroup.preRequestScript || activeRequestGroup.afterResponseScript) && (
-              <span className='p-1 min-w-6 h-6 flex items-center justify-center text-xs rounded-lg border border-solid border-[--hl]'>
-                <span className='w-2 h-2 bg-green-500 rounded-full' />
+              <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-[--hl] p-1 text-xs">
+                <span className="h-2 w-2 rounded-full bg-green-500" />
               </span>
             )}
           </Tab>
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='environment'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="environment"
           >
             Environment
           </Tab>
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='docs'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="docs"
           >
             Docs
           </Tab>
         </TabList>
-        <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='auth'>
-          <ErrorBoundary
-            key={uniqueKey}
-            errorClassName="font-error pad text-center"
-          >
+        <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="auth">
+          <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
             <AuthWrapper authentication={activeRequestGroup.authentication} />
           </ErrorBoundary>
         </TabPanel>
-        <TabPanel className='w-full flex-1 overflow-y-auto ' id='headers'>
-          <ErrorBoundary
-            key={uniqueKey}
-            errorClassName="font-error pad text-center"
-          >
-            <RequestHeadersEditor
-              bulk={false}
-              headers={folderHeaders}
-              requestType="RequestGroup"
-            />
+        <TabPanel className="w-full flex-1 overflow-y-auto" id="headers">
+          <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
+            <RequestHeadersEditor bulk={false} headers={folderHeaders} requestType="RequestGroup" />
           </ErrorBoundary>
         </TabPanel>
-        <TabPanel className='w-full flex-1' id='scripts'>
-          <Tabs className="w-full h-full flex flex-col overflow-hidden">
-            <TabList className="w-full flex-shrink-0 overflow-x-auto border-solid border-b border-b-[--hl-md] px-2 bg-[--color-bg] flex items-center gap-2 h-[--line-height-sm]" aria-label="Request scripts tabs">
+        <TabPanel className="w-full flex-1" id="scripts">
+          <Tabs className="flex h-full w-full flex-col overflow-hidden">
+            <TabList
+              className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center gap-2 overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg] px-2"
+              aria-label="Request scripts tabs"
+            >
               <Tab
-                className="rounded-md flex-shrink-0 h-[--line-height-xxs] text-sm flex items-center justify-between cursor-pointer w-[10.5rem] outline-none select-none px-2 py-1 hover:bg-[rgba(var(--color-surprise-rgb),50%)] text-[--hl] aria-selected:text-[--color-font-surprise] hover:text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300"
+                className="flex h-[--line-height-xxs] w-[10.5rem] flex-shrink-0 cursor-pointer select-none items-center justify-between rounded-md px-2 py-1 text-sm text-[--hl] outline-none transition-colors duration-300 hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-[--color-font-surprise]"
                 id="pre-request"
               >
-                <div className='flex flex-1 items-center gap-2'>
+                <div className="flex flex-1 items-center gap-2">
                   <Icon icon="arrow-right-to-bracket" />
                   <span>Pre-request</span>
                 </div>
                 {Boolean(activeRequestGroup.preRequestScript) && (
-                  <span className="p-2 rounded-lg">
-                    <span className="flex w-2 h-2 bg-green-500 rounded-full" />
+                  <span className="rounded-lg p-2">
+                    <span className="flex h-2 w-2 rounded-full bg-green-500" />
                   </span>
                 )}
               </Tab>
               <Tab
-                className="rounded-md flex-shrink-0 h-[--line-height-xxs] text-sm flex items-center justify-between cursor-pointer w-[10.5rem] outline-none select-none px-2 py-1 hover:bg-[rgba(var(--color-surprise-rgb),50%)] text-[--hl] aria-selected:text-[--color-font-surprise] hover:text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] transition-colors duration-300"
+                className="flex h-[--line-height-xxs] w-[10.5rem] flex-shrink-0 cursor-pointer select-none items-center justify-between rounded-md px-2 py-1 text-sm text-[--hl] outline-none transition-colors duration-300 hover:bg-[rgba(var(--color-surprise-rgb),50%)] hover:text-[--color-font-surprise] aria-selected:bg-[rgba(var(--color-surprise-rgb),40%)] aria-selected:text-[--color-font-surprise]"
                 id="after-response"
               >
-                <div className='flex flex-1 items-center gap-2'>
+                <div className="flex flex-1 items-center gap-2">
                   <Icon icon="arrow-right-from-bracket" />
                   <span>After-response</span>
                 </div>
                 {Boolean(activeRequestGroup.afterResponseScript) && (
-                  <span className="p-2 rounded-lg">
-                    <span className="flex w-2 h-2 bg-green-500 rounded-full" />
+                  <span className="rounded-lg p-2">
+                    <span className="flex h-2 w-2 rounded-full bg-green-500" />
                   </span>
                 )}
               </Tab>
             </TabList>
-            <TabPanel className="w-full flex-1" id='pre-request'>
-              <ErrorBoundary
-                key={uniqueKey}
-                errorClassName="tall wide vertically-align font-error pad text-center"
-              >
+            <TabPanel className="w-full flex-1" id="pre-request">
+              <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
                 <RequestScriptEditor
                   uniquenessKey={`${activeRequestGroup._id}:pre-request-script`}
                   defaultValue={activeRequestGroup.preRequestScript || ''}
@@ -179,10 +172,7 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
               </ErrorBoundary>
             </TabPanel>
             <TabPanel className="w-full flex-1" id="after-response">
-              <ErrorBoundary
-                key={uniqueKey}
-                errorClassName="tall wide vertically-align font-error pad text-center"
-              >
+              <ErrorBoundary key={uniqueKey} errorClassName="tall wide vertically-align font-error pad text-center">
                 <RequestScriptEditor
                   uniquenessKey={`${activeRequestGroup._id}:after-response-script`}
                   defaultValue={activeRequestGroup.afterResponseScript || ''}
@@ -193,13 +183,16 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
             </TabPanel>
           </Tabs>
         </TabPanel>
-        <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='environment'>
-          <div className='flex items-center justify-between gap-2 w-full overflow-hidden'>
-            <Heading className='flex items-center gap-2 text-lg py-2 px-4 overflow-hidden h-[--line-height-sm]'>
+        <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="environment">
+          <div className="flex w-full items-center justify-between gap-2 overflow-hidden">
+            <Heading className="flex h-[--line-height-sm] items-center gap-2 overflow-hidden px-4 py-2 text-lg">
               <ToggleButton
                 onChange={isSelected => {
                   if (activeRequestGroup) {
-                    const toggleSwitchEnvironmentType = (newEnvironmentType: EnvironmentType, kvPairData: EnvironmentKvPairData[]) => {
+                    const toggleSwitchEnvironmentType = (
+                      newEnvironmentType: EnvironmentType,
+                      kvPairData: EnvironmentKvPairData[],
+                    ) => {
                       patchGroup(activeRequestGroup._id, {
                         environmentType: newEnvironmentType,
                         kvPairData: kvPairData,
@@ -207,32 +200,38 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
                     };
                     const { environment, environmentPropertyOrder, kvPairData } = activeRequestGroup;
                     const isValidJSON = !!environmentEditorRef.current?.isValid();
-                    handleToggleEnvironmentType(isSelected, { data: environment, dataPropertyOrder: environmentPropertyOrder, kvPairData }, isValidJSON, toggleSwitchEnvironmentType);
+                    handleToggleEnvironmentType(
+                      isSelected,
+                      { data: environment, dataPropertyOrder: environmentPropertyOrder, kvPairData },
+                      isValidJSON,
+                      toggleSwitchEnvironmentType,
+                    );
                   }
                 }}
                 isSelected={activeRequestGroup?.environmentType !== EnvironmentType.KVPAIR}
-                className="w-[14ch] flex flex-shrink-0 gap-2 items-center justify-start ml-2 pl-2 py-1 h-full rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-colors text-sm"
+                className="ml-2 flex h-full w-[14ch] flex-shrink-0 items-center justify-start gap-2 rounded-sm py-1 pl-2 text-sm text-[--color-font] ring-1 ring-transparent transition-colors hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
               >
                 {({ isSelected }) => (
                   <>
-                    <Icon icon={!isSelected ? 'toggle-on' : 'toggle-off'} className={`${!isSelected ? 'text-[--color-success]' : ''}`} />
+                    <Icon
+                      icon={!isSelected ? 'toggle-on' : 'toggle-off'}
+                      className={`${!isSelected ? 'text-[--color-success]' : ''}`}
+                    />
                     <span>Table View</span>
                   </>
                 )}
               </ToggleButton>
             </Heading>
           </div>
-          <ErrorBoundary
-            key={uniqueKey}
-            errorClassName="font-error pad text-center"
-          >
-            <div className='h-[calc(100%-var(--line-height-md))] flex flex-col'>
-              {activeRequestGroup && activeRequestGroup.environmentType === EnvironmentType.KVPAIR ?
+          <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
+            <div className="flex h-[calc(100%-var(--line-height-md))] flex-col">
+              {activeRequestGroup && activeRequestGroup.environmentType === EnvironmentType.KVPAIR ? (
                 <EnvironmentKVEditor
                   key={activeRequestGroup ? activeRequestGroup._id : 'n/a'}
                   data={activeRequestGroup?.kvPairData || []}
                   onChange={handleKVPairChange}
-                /> :
+                />
+              ) : (
                 <EnvironmentEditor
                   ref={environmentEditorRef}
                   key={activeRequestGroup ? activeRequestGroup._id : 'n/a'}
@@ -242,11 +241,11 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
                   }}
                   onBlur={saveChanges}
                 />
-              }
+              )}
             </div>
           </ErrorBoundary>
         </TabPanel>
-        <TabPanel className='w-full flex-1 overflow-y-auto' id='docs'>
+        <TabPanel className="w-full flex-1 overflow-y-auto" id="docs">
           <MarkdownEditor
             key={uniqueKey}
             className="margin-top"
@@ -256,14 +255,12 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
           />
         </TabPanel>
       </Tabs>
-      {
-        isRequestGroupSettingsModalOpen && (
-          <RequestGroupSettingsModal
-            requestGroup={activeRequestGroup}
-            onHide={() => setIsRequestGroupSettingsModalOpen(false)}
-          />
-        )
-      }
+      {isRequestGroupSettingsModalOpen && (
+        <RequestGroupSettingsModal
+          requestGroup={activeRequestGroup}
+          onHide={() => setIsRequestGroupSettingsModalOpen(false)}
+        />
+      )}
     </>
   );
 };

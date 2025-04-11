@@ -10,11 +10,7 @@ import { Button } from '../themed-button';
 
 type GitHubRepository = Awaited<ReturnType<typeof window.main.git.getGitHubRepositories>>['repos'][number];
 
-export const GitHubRepositorySelect = (
-  { uri, token }: {
-    uri?: string;
-    token: string;
-  }) => {
+export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: string }) => {
   const [loading, setLoading] = useState(false);
   const [repositories, setRepositories] = useState<GitHubRepository[]>([]);
   const [selectedRepository, setSelectedRepository] = useState<GitHubRepository | null>(null);
@@ -46,7 +42,7 @@ export const GitHubRepositorySelect = (
       setCannotFindRepository(false);
       return;
     }
-    if ((!selectedRepository) && token && isGitHubAppUserToken(token)) {
+    if (!selectedRepository && token && isGitHubAppUserToken(token)) {
       (async function getRepository() {
         const { repo, errors, notFound } = await window.main.git.getGitHubRepository({ uri });
         setCannotFindRepository(notFound);
@@ -57,9 +53,13 @@ export const GitHubRepositorySelect = (
 
   return (
     <div className="flex flex-col">
-      <span className="font-semibold flex gap-1 text-sm">Repository</span>
-      {uri && <div className='form-control form-control--outlined'><input className="form-control" disabled defaultValue={uri} /></div>}
-      {!uri &&
+      <span className="flex gap-1 text-sm font-semibold">Repository</span>
+      {uri && (
+        <div className="form-control form-control--outlined">
+          <input className="form-control" disabled defaultValue={uri} />
+        </div>
+      )}
+      {!uri && (
         <>
           <div className="flex flex-row items-center gap-2 py-2">
             <ComboBox
@@ -71,24 +71,37 @@ export const GitHubRepositorySelect = (
                 id: repo.clone_url,
                 name: repo.full_name,
               }))}
-              onSelectionChange={(key => setSelectedRepository(repositories.find(r => r.clone_url === key) || null))}
+              onSelectionChange={key => setSelectedRepository(repositories.find(r => r.clone_url === key) || null)}
             >
-              <div className='flex items-center gap-2 group rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors'>
-                <Input aria-label='Repository Search' placeholder={loading ? 'Fetching...' : 'Find a repository...'} className="py-1 placeholder:italic w-full pl-2 pr-7 " />
-                <ComboButton id="github_repo_select_dropdown_button" type="button" className="!border-none m-2 aspect-square gap-2 truncate flex items-center justify-center aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                  <Icon icon="caret-down" className='w-5 flex-shrink-0' />
+              <div className="group flex items-center gap-2 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] transition-colors focus:outline-none focus:ring-1 focus:ring-[--hl-md]">
+                <Input
+                  aria-label="Repository Search"
+                  placeholder={loading ? 'Fetching...' : 'Find a repository...'}
+                  className="w-full py-1 pl-2 pr-7 placeholder:italic"
+                />
+                <ComboButton
+                  id="github_repo_select_dropdown_button"
+                  type="button"
+                  className="m-2 flex aspect-square items-center justify-center gap-2 truncate rounded-sm !border-none text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                >
+                  <Icon icon="caret-down" className="w-5 flex-shrink-0" />
                 </ComboButton>
               </div>
-              <Popover className="w-[--trigger-width] min-w-max border grid grid-flow-col overflow-y-auto divide-x divide-solid divide-[--hl-md] select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] rounded-md focus:outline-none" placement='bottom start' offset={8}>
-                <ListBox<{ id: string; name: string }>
-                  className="select-none text-sm min-w-max p-2 flex flex-col focus:outline-none"
-                >
+              <Popover
+                className="grid w-[--trigger-width] min-w-max select-none grid-flow-col divide-x divide-solid divide-[--hl-md] overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-sm shadow-lg focus:outline-none"
+                placement="bottom start"
+                offset={8}
+              >
+                <ListBox<{
+                  id: string;
+                  name: string;
+                }> className="flex min-w-max select-none flex-col p-2 text-sm focus:outline-none">
                   {item => (
                     <ListBoxItem
                       textValue={item.name}
-                      className="aria-disabled:opacity-30 aria-selected:bg-[--hl-sm] rounded aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] data-[focused]:bg-[--hl-xs] focus:outline-none transition-colors"
+                      className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap rounded bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:bg-[--hl-sm] aria-selected:font-bold data-[focused]:bg-[--hl-xs]"
                     >
-                      <span className='truncate'>{item.name}</span>
+                      <span className="truncate">{item.name}</span>
                     </ListBoxItem>
                   )}
                 </ListBox>
@@ -98,7 +111,7 @@ export const GitHubRepositorySelect = (
             <Button
               type="button"
               disabled={loading}
-              className='border border-solid border-[--hl-sm] !p-0 m-2 aspect-square gap-2 truncate flex items-center justify-center aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm'
+              className="m-2 flex aspect-square items-center justify-center gap-2 truncate rounded-sm border border-solid border-[--hl-sm] !p-0 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
               aria-label="Refresh repositories"
               onClick={() => {
                 setLoading(true);
@@ -108,14 +121,30 @@ export const GitHubRepositorySelect = (
               <Icon icon="refresh" className={loading ? 'animate-spin' : ''} />
             </Button>
           </div>
-          {isGitHubAppUserToken(token) &&
+          {isGitHubAppUserToken(token) && (
             <div className={`flex gap-1 text-sm ${loading ? 'opacity-40' : ''}`}>
               Can't find a repository?
-              <a className="text-purple-500 flex items-center gap-1" href={`${getAppWebsiteBaseURL()}/oauth/github-app`}>Configure the App <i className="fa-solid fa-up-right-from-square" /></a>
-            </div>}
-        </>}
-      {cannotFindRepository && <div className="text-sm text-red-500"><Icon icon="warning" /> Repository information could not be retrieved. Please <code>Reset</code> and select a different repository.</div>}
-      {selectedRepository !== null && !selectedRepository.permissions.push && <div className="text-sm text-orange-500 mt-2"><Icon icon="warning" /> You do not have write access to this repository</div>}
+              <a
+                className="flex items-center gap-1 text-purple-500"
+                href={`${getAppWebsiteBaseURL()}/oauth/github-app`}
+              >
+                Configure the App <i className="fa-solid fa-up-right-from-square" />
+              </a>
+            </div>
+          )}
+        </>
+      )}
+      {cannotFindRepository && (
+        <div className="text-sm text-red-500">
+          <Icon icon="warning" /> Repository information could not be retrieved. Please <code>Reset</code> and select a
+          different repository.
+        </div>
+      )}
+      {selectedRepository !== null && !selectedRepository.permissions.push && (
+        <div className="mt-2 text-sm text-orange-500">
+          <Icon icon="warning" /> You do not have write access to this repository
+        </div>
+      )}
     </div>
   );
 };

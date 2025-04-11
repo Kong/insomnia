@@ -17,9 +17,7 @@ export interface BaseUnitTestSuite {
 
 export type UnitTestSuite = BaseModel & BaseUnitTestSuite;
 
-export const isUnitTestSuite = (model: Pick<BaseModel, 'type'>): model is UnitTestSuite => (
-  model.type === type
-);
+export const isUnitTestSuite = (model: Pick<BaseModel, 'type'>): model is UnitTestSuite => model.type === type;
 
 export function init() {
   return {

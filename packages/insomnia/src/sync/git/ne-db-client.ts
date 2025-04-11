@@ -28,7 +28,6 @@ export class NeDBClient {
 
     this._workspaceId = workspaceId;
     this._projectId = projectId;
-
   }
 
   static createClient(workspaceId: string, projectId: string): PromiseFsClient {
@@ -37,10 +36,7 @@ export class NeDBClient {
     };
   }
 
-  async readFile(
-    filePath: string,
-    options?: BufferEncoding | { encoding?: BufferEncoding },
-  ) {
+  async readFile(filePath: string, options?: BufferEncoding | { encoding?: BufferEncoding }) {
     filePath = path.normalize(filePath);
     options = options || {};
 
@@ -80,8 +76,7 @@ export class NeDBClient {
     if (options.encoding) {
       return raw.toString(options.encoding);
     }
-      return raw;
-
+    return raw;
   }
 
   async writeFile(filePath: string, data: Buffer | string) {
@@ -111,7 +106,10 @@ export class NeDBClient {
     }
 
     if (isWorkspace(doc)) {
-      console.log('[git] setting workspace parent to be that of the active project', { original: doc.parentId, new: this._projectId });
+      console.log('[git] setting workspace parent to be that of the active project', {
+        original: doc.parentId,
+        new: this._projectId,
+      });
       // Whenever we write a workspace into nedb we should set the parentId to be that of the current project
       // This is because the parentId (or a project) is not synced into git, so it will be cleared whenever git writes the workspace into the db, thereby removing it from the project on the client
       // In order to reproduce this bug, comment out the following line, then clone a repository into a local project, then open the workspace, you'll notice it will have moved into the default project
@@ -240,14 +238,13 @@ export class NeDBClient {
         mtimeMs: doc.modified,
       });
     }
-      return new Stat({
-        type: 'dir',
-        mode: 0o777,
-        size: 0,
-        ino: 0,
-        mtimeMs: 0,
-      });
-
+    return new Stat({
+      type: 'dir',
+      mode: 0o777,
+      size: 0,
+      ino: 0,
+      mtimeMs: 0,
+    });
   }
 
   async readlink(filePath: string, ...x: any[]) {

@@ -4,7 +4,6 @@ import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 test.describe('gRPC interactions', () => {
-
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   let statusTag: Locator;
   let responseBody: Locator;
@@ -85,5 +84,4 @@ test.describe('gRPC interactions', () => {
     await page.locator('text=Response 64').click();
     await expect(responseBody).toContainText('3 Hasta Way');
   });
-
 });

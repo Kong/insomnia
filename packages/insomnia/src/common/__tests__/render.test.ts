@@ -97,9 +97,7 @@ describe('render tests', () => {
     });
 
     it('rendered recursive should not infinite loop', async () => {
-      const ancestors = [
-        reqGroupBuilder.environment({ recursive: '{{ recursive }}/hello' }).build(),
-      ];
+      const ancestors = [reqGroupBuilder.environment({ recursive: '{{ recursive }}/hello' }).build()];
 
       const context = await renderUtils.buildRenderContext({ ancestors });
       // This is longer than 3 because it multiplies every time (1 -> 2 -> 4 -> 8)
@@ -109,25 +107,31 @@ describe('render tests', () => {
     });
 
     it('does not recursive render if itself is not used in var', async () => {
-      const root = envBuilder.data({
-        proto: 'http',
-        domain: 'base.com',
-        url: '{{ proto }}://{{ domain }}',
-      }).build();
+      const root = envBuilder
+        .data({
+          proto: 'http',
+          domain: 'base.com',
+          url: '{{ proto }}://{{ domain }}',
+        })
+        .build();
 
-      const sub = envBuilder.data({
-        proto: 'https',
-        domain: 'sub.com',
-        port: 8000,
-        url: '{{ proto }}://{{ domain }}:{{ port }}',
-      }).build();
+      const sub = envBuilder
+        .data({
+          proto: 'https',
+          domain: 'sub.com',
+          port: 8000,
+          url: '{{ proto }}://{{ domain }}:{{ port }}',
+        })
+        .build();
 
       const ancestors = [
-        reqGroupBuilder.environment({
-          proto: 'https',
-          domain: 'folder.com',
-          port: 7000,
-        }).build(),
+        reqGroupBuilder
+          .environment({
+            proto: 'https',
+            domain: 'folder.com',
+            port: 7000,
+          })
+          .build(),
       ];
       const context = await renderUtils.buildRenderContext({ ancestors, rootEnvironment: root, subEnvironment: sub });
       expect(context).toEqual({
@@ -142,10 +146,12 @@ describe('render tests', () => {
       const root = envBuilder.data({ url: 'insomnia.rest' }).build();
       const sub = envBuilder.data({ url: '{{ url }}/sub' }).build();
       const ancestors = [
-        reqGroupBuilder.environment({
-          url: '{{ url }}/{{ name }}',
-          name: 'folder',
-        }).build(),
+        reqGroupBuilder
+          .environment({
+            url: '{{ url }}/{{ name }}',
+            name: 'folder',
+          })
+          .build(),
       ];
 
       const context = await renderUtils.buildRenderContext({ ancestors, rootEnvironment: root, subEnvironment: sub });
@@ -157,13 +163,15 @@ describe('render tests', () => {
 
     it('render up to 3 recursion levels', async () => {
       const ancestors = [
-        reqGroupBuilder.environment({
-          d: '/d',
-          c: '/c{{ d }}',
-          b: '/b{{ c }}',
-          a: '/a{{ b }}',
-          test: 'http://insomnia.rest{{ a }}',
-        }).build(),
+        reqGroupBuilder
+          .environment({
+            d: '/d',
+            c: '/c{{ d }}',
+            b: '/b{{ c }}',
+            a: '/a{{ b }}',
+            test: 'http://insomnia.rest{{ a }}',
+          })
+          .build(),
       ];
       const context = await renderUtils.buildRenderContext({ ancestors });
       expect(context).toEqual({
@@ -177,10 +185,12 @@ describe('render tests', () => {
 
     it('rendered sibling environment variables', async () => {
       const ancestors = [
-        reqGroupBuilder.environment({
-          sibling: 'sibling',
-          test: '{{ sibling }}/hello',
-        }).build(),
+        reqGroupBuilder
+          .environment({
+            sibling: 'sibling',
+            test: '{{ sibling }}/hello',
+          })
+          .build(),
       ];
       const context = await renderUtils.buildRenderContext({ ancestors });
       expect(context).toEqual({
@@ -257,12 +267,8 @@ describe('render tests', () => {
           .build(),
       ];
       const context = await renderUtils.buildRenderContext({ ancestors });
-      expect(await renderUtils.render('{{ urls.admin }}/foo', context)).toBe(
-        'https://parent.com/admin/foo',
-      );
-      expect(await renderUtils.render('{{ urls.test }}/foo', context)).toBe(
-        'https://parent.com/test/foo',
-      );
+      expect(await renderUtils.render('{{ urls.admin }}/foo', context)).toBe('https://parent.com/admin/foo');
+      expect(await renderUtils.render('{{ urls.test }}/foo', context)).toBe('https://parent.com/test/foo');
     });
 
     it('renders child environment variables', async () => {
@@ -289,10 +295,7 @@ describe('render tests', () => {
 
     it('works with object arrays', async () => {
       const ancestors = [
-        reqGroupBuilder
-          .name('Parent')
-          .environment({})
-          .build(),
+        reqGroupBuilder.name('Parent').environment({}).build(),
         reqGroupBuilder
           .name('Grandparent')
           .environment({
@@ -374,7 +377,8 @@ describe('render tests', () => {
               parentA: 'pa',
               parentB: 'pb',
             },
-          }).build(),
+          })
+          .build(),
         reqGroupBuilder
           .name('Grandparent')
           .environment({
@@ -384,7 +388,8 @@ describe('render tests', () => {
               grandParentA: 'gpa',
               grandParentB: 'gpb',
             },
-          }).build(),
+          })
+          .build(),
       ];
       const context = await renderUtils.buildRenderContext({ ancestors });
       expect(context).toEqual({
@@ -416,19 +421,21 @@ describe('render tests', () => {
           })
           .build(),
       ];
-      const subEnvironment = envBuilder.data({
-        winner: 'sub',
-        sub: true,
-        base_url: 'https://insomnia.rest',
-      }).build();
-      const rootEnvironment = envBuilder.data({
-        winner: 'root',
-        root: true,
-        base_url: 'ignore this',
-      }).build();
-      const context = await renderUtils.buildRenderContext(
-        { ancestors, rootEnvironment, subEnvironment },
-      );
+      const subEnvironment = envBuilder
+        .data({
+          winner: 'sub',
+          sub: true,
+          base_url: 'https://insomnia.rest',
+        })
+        .build();
+      const rootEnvironment = envBuilder
+        .data({
+          winner: 'root',
+          root: true,
+          base_url: 'ignore this',
+        })
+        .build();
+      const context = await renderUtils.buildRenderContext({ ancestors, rootEnvironment, subEnvironment });
       expect(context).toEqual({
         base_url: 'https://insomnia.rest',
         url: 'https://insomnia.rest/resource',
@@ -568,12 +575,7 @@ describe('render tests', () => {
       const context = {
         foo: 'bar',
       };
-      const resultOnlyVars = await renderUtils.render(
-        template,
-        context,
-        null,
-        'keep',
-      );
+      const resultOnlyVars = await renderUtils.render(template, context, null, 'keep');
       expect(resultOnlyVars).toBe('{{ foo }} {% invalid "hi" %}');
 
       try {
@@ -695,7 +697,11 @@ describe('render tests', () => {
           text: '{ "prop": "{{ foo }}" }',
         },
       });
-      const request = await renderUtils.getRenderedGrpcRequest({ request: grpcRequest, environmentId: env._id, skipBody: true });
+      const request = await renderUtils.getRenderedGrpcRequest({
+        request: grpcRequest,
+        environmentId: env._id,
+        skipBody: true,
+      });
       expect(request).toEqual(
         expect.objectContaining({
           name: 'hi bar',

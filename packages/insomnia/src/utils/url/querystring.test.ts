@@ -154,7 +154,7 @@ describe('querystring', () => {
           { name: '', value: '' },
         ],
         true,
-        { strictNullHandling: true }
+        { strictNullHandling: true },
       );
 
       expect(str).toBe('foo=bar%3F%3F&foo1=&foo2&hello&hi%20there=bar%3F%3F');
@@ -182,10 +182,7 @@ describe('querystring', () => {
     });
 
     it('builds from params not strict', () => {
-      const str = deconstructQueryStringToParams(
-        'foo=bar%3F%3F&hello&hi%20there=bar%3F%3F&=&=val',
-        false,
-      );
+      const str = deconstructQueryStringToParams('foo=bar%3F%3F&hello&hi%20there=bar%3F%3F&=&=val', false);
 
       expect(str).toEqual([
         { name: 'foo', value: 'bar??' },
@@ -283,12 +280,15 @@ describe('querystring', () => {
       const urlNoEqualSign1 = smartEncodeUrl('https://google.com/terminologies?foo=bar&foo1');
       expect(urlNoEqualSign1).toBe('https://google.com/terminologies?foo=bar&foo1');
 
-      const urlEqualSign2 = smartEncodeUrl('https://google.com/terminologies?foo=bar&foo1=', true, { strictNullHandling: true });
+      const urlEqualSign2 = smartEncodeUrl('https://google.com/terminologies?foo=bar&foo1=', true, {
+        strictNullHandling: true,
+      });
       expect(urlEqualSign2).toBe('https://google.com/terminologies?foo=bar&foo1=');
 
-      const urlNoEqualSign2 = smartEncodeUrl('https://google.com/terminologies?foo=bar&foo1', true, { strictNullHandling: true });
+      const urlNoEqualSign2 = smartEncodeUrl('https://google.com/terminologies?foo=bar&foo1', true, {
+        strictNullHandling: true,
+      });
       expect(urlNoEqualSign2).toBe('https://google.com/terminologies?foo=bar&foo1');
     });
-
   });
 });

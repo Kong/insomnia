@@ -2,7 +2,7 @@
 import fs from 'node:fs/promises';
 import process from 'node:process';
 
-import type { ProcessEnvOptions} from 'child_process';
+import type { ProcessEnvOptions } from 'child_process';
 import { spawn } from 'child_process';
 import path from 'path';
 
@@ -14,24 +14,21 @@ const spawnCompressProcess = (cwd: ProcessEnvOptions['cwd']) => {
   const version = process.env.VERSION || packageJson.version;
 
   if (platform === 'darwin') {
-    return spawn('ditto', [
-      '-c',
-      '-k',
-      '../binaries/inso',
-      `inso-macos-${version}.zip`,
-    ], { cwd });
+    return spawn('ditto', ['-c', '-k', '../binaries/inso', `inso-macos-${version}.zip`], { cwd });
   }
 
   if (platform === 'win32' || platform === 'linux') {
-    return spawn('tar', [
-      '-C',
-      '../binaries',
-      platform === 'win32' ? '-a -cf' : '-cJf',
-      platform === 'win32'
-        ? `inso-windows-${version}.zip`
-        : `inso-linux-${process.arch}-${version}.tar.xz`,
-      platform === 'win32' ? 'inso.exe' : 'inso',
-    ], { cwd, shell: platform === 'win32' });
+    return spawn(
+      'tar',
+      [
+        '-C',
+        '../binaries',
+        platform === 'win32' ? '-a -cf' : '-cJf',
+        platform === 'win32' ? `inso-windows-${version}.zip` : `inso-linux-${process.arch}-${version}.tar.xz`,
+        platform === 'win32' ? 'inso.exe' : 'inso',
+      ],
+      { cwd, shell: platform === 'win32' },
+    );
   }
 
   throw new Error(`[pkg-inso-artifacts] Unsupported OS: ${platform}`);

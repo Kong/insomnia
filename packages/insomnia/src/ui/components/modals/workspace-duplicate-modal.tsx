@@ -45,26 +45,26 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
     modalRef.current?.show();
   }, []);
 
-  const isBtnDisabled = fetcher.state !== 'idle'
-    || !selectedProjectId
-    || !newWorkspaceName;
+  const isBtnDisabled = fetcher.state !== 'idle' || !selectedProjectId || !newWorkspaceName;
 
   return (
     <OverlayContainer onClick={e => e.stopPropagation()}>
       <Modal onHide={onHide} ref={modalRef}>
         <ModalHeader>Duplicate file</ModalHeader>
         <ModalBody className="wide">
-          <p className='mb-6'>You can duplicate the following file to a project:</p>
-          <div className="flex gap-2 px-[--padding-md] items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent">
-            <div className={`${scopeToBgColorMap[workspace.scope]} ${scopeToTextColorMap[workspace.scope]} px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm`}>
+          <p className="mb-6">You can duplicate the following file to a project:</p>
+          <div className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font]">
+            <div
+              className={`${scopeToBgColorMap[workspace.scope]} ${scopeToTextColorMap[workspace.scope]} flex h-[20px] w-[20px] items-center justify-center rounded-s-sm px-2`}
+            >
               <Icon icon={scopeToIconMap[workspace.scope]} />
             </div>
             <span>{workspace.name}</span>
-            <span className='text-[--hl]'>{getWorkspaceLabel(workspace).singular}</span>
+            <span className="text-[--hl]">{getWorkspaceLabel(workspace).singular}</span>
           </div>
           <fetcher.Form
             action={`/organization/${organizationId}/project/${workspace.parentId}/workspace/${workspace._id}/duplicate`}
-            method='post'
+            method="post"
             id="workspace-duplicate-form"
             className="wide pad"
           >
@@ -72,11 +72,7 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
             <div className="form-control form-control--outlined">
               <label>
                 New {getWorkspaceLabel(workspace).singular.toLowerCase()} name:
-                <input
-                  name="name"
-                  value={newWorkspaceName}
-                  onChange={e => setNewWorkspaceName(e.target.value)}
-                />
+                <input name="name" value={newWorkspaceName} onChange={e => setNewWorkspaceName(e.target.value)} />
               </label>
             </div>
             {!newWorkspaceName && (
@@ -107,7 +103,8 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
                 <select name="projectId" value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)}>
                   {projectOptions.map(project => (
                     <option key={project._id} value={project._id}>
-                      {project.name}{project._id === currentProjectId && ' (current)'}
+                      {project.name}
+                      {project._id === currentProjectId && ' (current)'}
                     </option>
                   ))}
                 </select>
@@ -123,11 +120,7 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
                 Project is required
               </p>
             )}
-            {fetcher.data?.error && (
-              <p className="notice error margin-bottom-sm mt-6">
-                {fetcher.data.error}
-              </p>
-            )}
+            {fetcher.data?.error && <p className="notice error margin-bottom-sm mt-6">{fetcher.data.error}</p>}
           </fetcher.Form>
         </ModalBody>
         <ModalFooter>
@@ -140,12 +133,8 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
             >
               Cancel
             </button>
-            <button
-              disabled={isBtnDisabled}
-              form="workspace-duplicate-form"
-              className="btn"
-            >
-              {fetcher.state !== 'idle' && <Icon icon='spinner' className='animate-spin' />} Duplicate
+            <button disabled={isBtnDisabled} form="workspace-duplicate-form" className="btn">
+              {fetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />} Duplicate
             </button>
           </div>
         </ModalFooter>

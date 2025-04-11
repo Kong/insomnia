@@ -35,20 +35,25 @@ export const ProjectModal = ({
   const title = project ? 'Update project' : 'Create a new project';
 
   return (
-    <ModalOverlay isOpen={isOpen} onOpenChange={onOpenChange} isDismissable className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30">
-      <Modal
-        className="max-w-3xl w-full rounded-md border border-solid border-[--hl-sm] max-h-[90dvh] min-h-[420px] bg-[--color-bg] text-[--color-font] flex flex-col overflow-hidden"
-      >
+    <ModalOverlay
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+      isDismissable
+      className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
+    >
+      <Modal className="flex max-h-[90dvh] min-h-[420px] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font]">
         <Dialog
-          aria-label='Create or update dialog'
-          className="outline-none flex-1 gap-4 grid [grid-template-rows:min-content_1fr_min-content] pt-10 px-10"
+          aria-label="Create or update dialog"
+          className="grid flex-1 gap-4 px-10 pt-10 outline-none [grid-template-rows:min-content_1fr_min-content]"
         >
           {({ close }) => (
             <>
-              <div className='flex gap-2 items-center justify-between'>
-                <Heading slot="title" className='text-2xl'>{title}</Heading>
+              <div className="flex items-center justify-between gap-2">
+                <Heading slot="title" className="text-2xl">
+                  {title}
+                </Heading>
                 <Button
-                  className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                   onPress={close}
                 >
                   <Icon icon="x" />

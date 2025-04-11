@@ -9,7 +9,7 @@ resources:
     created: 1636141100570
     url: http://127.0.0.1:4010/
     name: with pre request script
-    description: ""
+    description: ''
     method: GET
     body: {}
     parameters: []
@@ -28,7 +28,7 @@ resources:
     modified: 1636140994423
     created: 1636140994423
     name: Minimal Collection
-    description: ""
+    description: ''
     scope: collection
     _type: workspace
   - _id: env_9e44ac71d3a51fc6a8951b8968e45c44c5236355

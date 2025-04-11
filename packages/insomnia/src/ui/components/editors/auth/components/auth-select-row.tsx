@@ -29,16 +29,19 @@ export const AuthSelectRow: FC<Props> = ({ label, property, help, options, disab
 
   const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
   const authOrNull = getAuthObjectOrNull(authentication);
-  const selectedValue = authOrNull ? authOrNull[property as keyof RequestAuthentication] + "" : options[0].value;
+  const selectedValue = authOrNull ? authOrNull[property as keyof RequestAuthentication] + '' : options[0].value;
 
-  const onChange = useCallback((event: ChangeEvent<HTMLSelectElement>) => {
-    let updatedValue = event.currentTarget.value;
-    // Convert boolean strings to boolean values for further processing.
-    if (updatedValue === 'true' || updatedValue === 'false') {
-      updatedValue = JSON.parse(updatedValue);
-    }
-    patcher(_id, { authentication: { ...authentication, [property]: updatedValue } });
-  }, [patcher, _id, authentication, property]);
+  const onChange = useCallback(
+    (event: ChangeEvent<HTMLSelectElement>) => {
+      let updatedValue = event.currentTarget.value;
+      // Convert boolean strings to boolean values for further processing.
+      if (updatedValue === 'true' || updatedValue === 'false') {
+        updatedValue = JSON.parse(updatedValue);
+      }
+      patcher(_id, { authentication: { ...authentication, [property]: updatedValue } });
+    },
+    [patcher, _id, authentication, property],
+  );
 
   return (
     <AuthRow labelFor={toKebabCase(label)} label={label} help={help} disabled={disabled}>

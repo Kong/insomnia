@@ -1,6 +1,6 @@
 // From https://github.com/bloomrpc/bloomrpc-mock/blob/master/src/automock.ts
 // TODO simplify this and rename to generate example payload
-import type { Field, Message, OneOf, Service} from 'protobufjs';
+import type { Field, Message, OneOf, Service } from 'protobufjs';
 import { Enum, MapField, Type } from 'protobufjs';
 import { v4 } from 'uuid';
 
@@ -13,51 +13,31 @@ export type ServiceMethodsPayload = Record<string, () => MethodPayload>;
 
 const enum MethodType {
   request,
-  response
+  response,
 }
 
 /**
  * Mock method response
  */
-export function mockResponseMethods(
-  service: Service,
-  mocks?: void | {},
-) {
-  return mockMethodReturnType(
-    service,
-    MethodType.response,
-    mocks
-  );
+export function mockResponseMethods(service: Service, mocks?: void | {}) {
+  return mockMethodReturnType(service, MethodType.response, mocks);
 }
 
 /**
  * Mock methods request
  */
-export function mockRequestMethods(
-  service: Service,
-  mocks?: void | {},
-) {
-  return mockMethodReturnType(
-    service,
-    MethodType.request,
-    mocks
-  );
+export function mockRequestMethods(service: Service, mocks?: void | {}) {
+  return mockMethodReturnType(service, MethodType.request, mocks);
 }
 
-function mockMethodReturnType(
-  service: Service,
-  type: MethodType,
-  mocks?: void | {},
-): ServiceMethodsPayload {
+function mockMethodReturnType(service: Service, type: MethodType, mocks?: void | {}): ServiceMethodsPayload {
   const root = service.root;
   const serviceMethods = service.methods;
 
   return Object.keys(serviceMethods).reduce((methods: ServiceMethodsPayload, method: string) => {
     const serviceMethod = serviceMethods[method];
 
-    const methodMessageType = type === MethodType.request
-      ? serviceMethod.requestType
-      : serviceMethod.responseType;
+    const methodMessageType = type === MethodType.request ? serviceMethod.requestType : serviceMethod.responseType;
 
     const messageType = root.lookupType(methodMessageType);
 
@@ -136,8 +116,7 @@ function mockField(field: Field, stackDepth: StackDepth): any {
 
     return mockField(resolvedField, stackDepth);
   }
-    return mockPropertyValue;
-
+  return mockPropertyValue;
 }
 
 function mockMapField(field: MapField, stackDepth: StackDepth): any {
@@ -160,7 +139,6 @@ function mockMapField(field: MapField, stackDepth: StackDepth): any {
     } else if (resolvedType === null) {
       mockPropertyValue = {};
     }
-
   }
 
   return {
@@ -173,9 +151,7 @@ function isProtoType(resolvedType: Enum | Type | null): resolvedType is Type {
     return false;
   }
   const fieldsArray: keyof Type = 'fieldsArray';
-  return resolvedType instanceof Type || (
-    fieldsArray in resolvedType && Array.isArray(resolvedType[fieldsArray])
-  );
+  return resolvedType instanceof Type || (fieldsArray in resolvedType && Array.isArray(resolvedType[fieldsArray]));
 }
 
 function pickOneOf(oneofs: OneOf[], stackDepth: StackDepth) {

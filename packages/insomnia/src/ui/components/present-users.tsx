@@ -27,10 +27,7 @@ export const PresentUsers = () => {
     .map(user => {
       return {
         key: user.acct,
-        alt:
-          user.firstName || user.lastName
-            ? `${user.firstName} ${user.lastName}`
-            : user.acct,
+        alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
         src: user.avatar,
       };
     });

@@ -4,7 +4,7 @@ import * as models from '../models';
 
 export enum ChromiumVerificationResult {
   BLIND_TRUST = 0,
-  USE_CHROMIUM_RESULT = -3
+  USE_CHROMIUM_RESULT = -3,
 }
 
 export enum URLLoadErrorCodes {
@@ -14,7 +14,7 @@ export enum URLLoadErrorCodes {
    * - https://www.electronjs.org/docs/latest/api/web-contents#event-did-fail-load
    * - https://source.chromium.org/chromium/chromium/src/+/main:net/base/net_error_list.h
    */
-  ERR_ABORTED = -3
+  ERR_ABORTED = -3,
 }
 
 export function authorizeUserInWindow({
@@ -32,13 +32,7 @@ export function authorizeUserInWindow({
     let finalUrl: string | null = null;
 
     // Fetch user setting to determine whether to validate SSL certificates during auth
-    const {
-      validateAuthSSL,
-      proxyEnabled,
-      httpProxy,
-      httpsProxy,
-      noProxy,
-    } = await models.settings.get();
+    const { validateAuthSSL, proxyEnabled, httpProxy, httpsProxy, noProxy } = await models.settings.get();
 
     // Create a child window
     const child = new BrowserWindow({
@@ -51,18 +45,20 @@ export function authorizeUserInWindow({
 
     function _parseUrl(currentUrl: string, source: string) {
       if (currentUrl.match(urlSuccessRegex)) {
-        console.log(`[oauth2] ${source}: Matched success redirect to "${currentUrl}" with ${urlSuccessRegex.toString()}`,);
+        console.log(
+          `[oauth2] ${source}: Matched success redirect to "${currentUrl}" with ${urlSuccessRegex.toString()}`,
+        );
         finalUrl = currentUrl;
         child.close();
       } else if (currentUrl.match(urlFailureRegex)) {
-        console.log(`[oauth2] ${source}: Matched error redirect to "${currentUrl}" with ${urlFailureRegex.toString()}`,);
+        console.log(`[oauth2] ${source}: Matched error redirect to "${currentUrl}" with ${urlFailureRegex.toString()}`);
         finalUrl = currentUrl;
         child.close();
       } else if (currentUrl === url) {
         // It's the first one, so it's not a redirect
         console.log(`[oauth2] ${source}: Loaded "${currentUrl}"`);
       } else {
-        console.log(`[oauth2] ${source}: Ignoring URL "${currentUrl}". Didn't match ${urlSuccessRegex.toString()}`,);
+        console.log(`[oauth2] ${source}: Ignoring URL "${currentUrl}". Didn't match ${urlSuccessRegex.toString()}`);
       }
     }
 
@@ -93,23 +89,26 @@ export function authorizeUserInWindow({
       const cancelId = buttonLabels.length;
 
       // Prompt the user to select a certificate to use.
-      dialog.showMessageBox(child, {
-        type: 'none',
-        buttons: [...buttonLabels, 'Cancel'],
-        cancelId: cancelId,
-        message: `The website\n"${url}"\nrequires a client certificate.`,
-        detail: 'This website requires a certificate to validate your identity. Select the certificate to use when you connect to this website.',
-        textWidth: 300,
-      }).then(r => {
-        const selectedButtonIndex = r.response;
-        // Cancel button clicked
-        if (r.response === cancelId) {
-          child.close();
-          return;
-        }
-        const selectedCertificate = certificateList[selectedButtonIndex];
-        callback(selectedCertificate);
-      });
+      dialog
+        .showMessageBox(child, {
+          type: 'none',
+          buttons: [...buttonLabels, 'Cancel'],
+          cancelId: cancelId,
+          message: `The website\n"${url}"\nrequires a client certificate.`,
+          detail:
+            'This website requires a certificate to validate your identity. Select the certificate to use when you connect to this website.',
+          textWidth: 300,
+        })
+        .then(r => {
+          const selectedButtonIndex = r.response;
+          // Cancel button clicked
+          if (r.response === cancelId) {
+            child.close();
+            return;
+          }
+          const selectedCertificate = certificateList[selectedButtonIndex];
+          callback(selectedCertificate);
+        });
     });
 
     // Catch the redirect after login
@@ -144,9 +143,7 @@ export function authorizeUserInWindow({
     // Set proxy for browser window
     if (proxyEnabled) {
       await child.webContents.session.setProxy({
-        proxyRules:
-          (httpProxy ? `http=${httpProxy};` : '') +
-          (httpsProxy ? `https=${httpsProxy}` : ''),
+        proxyRules: (httpProxy ? `http=${httpProxy};` : '') + (httpsProxy ? `https=${httpsProxy}` : ''),
         proxyBypassRules: noProxy,
       });
       console.log('[oauth2] Proxy loaded');

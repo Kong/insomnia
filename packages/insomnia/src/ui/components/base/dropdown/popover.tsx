@@ -11,11 +11,7 @@ export const Popover: FC<Props> = (props: Props) => {
   const popoverRef = useRef<HTMLDivElement>(null);
   const { state, children, isNonModal } = props;
 
-  const { overlayProps } = useOverlayTrigger(
-    { type: 'dialog' },
-    state,
-    props.triggerRef
-  );
+  const { overlayProps } = useOverlayTrigger({ type: 'dialog' }, state, props.triggerRef);
 
   // Handle events that should cause the popup to close,
   // e.g. blur, clicking outside, or pressing the escape key.

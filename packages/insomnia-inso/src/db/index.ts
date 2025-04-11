@@ -48,10 +48,7 @@ export const emptyDb = (): Database => ({
   Settings: [],
 });
 
-export type DbAdapter = (
-  dir: string,
-  filterTypes?: (keyof Database)[],
-) => Promise<Database | null>;
+export type DbAdapter = (dir: string, filterTypes?: (keyof Database)[]) => Promise<Database | null>;
 
 interface Options {
   pathToSearch: string;
@@ -65,10 +62,7 @@ export const isFile = async (path: string) => {
     return false;
   }
 };
-export const loadDb = async ({
-  pathToSearch,
-  filterTypes,
-}: Options) => {
+export const loadDb = async ({ pathToSearch, filterTypes }: Options) => {
   // if path to file is provided try to it is an insomnia export file
   const isFilePath = await isFile(pathToSearch);
   if (isFilePath) {

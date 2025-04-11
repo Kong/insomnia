@@ -8,166 +8,170 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [core@10.0.0] - 2024-09-10
 
 ## What's Changed
-* bump: react-router by @CurryYangxx in https://github.com/Kong/insomnia/pull/7795
-* fix(Sync Staging Modal): use action to update selected items by @gatzjames in https://github.com/Kong/insomnia/pull/7794
-* Fixed copying credential In Auth: Basic were username and password input needed to copied by users by @pranavithape in https://github.com/Kong/insomnia/pull/7789
-* fix(ux): duplicate improvement by @CurryYangxx in https://github.com/Kong/insomnia/pull/7803
-* fixes lodash.set cve by @jackkav in https://github.com/Kong/insomnia/pull/7801
-* chore: rm userId from sentry [INS-4260] by @filfreire in https://github.com/Kong/insomnia/pull/7804
-* fix cves and add CI check by @jackkav in https://github.com/Kong/insomnia/pull/7806
-* Fix: Keep equal sign for empty query parameters[INS-4228] by @cwangsmv in https://github.com/Kong/insomnia/pull/7802
-* chore: hash userID on segment [INS-4260] by @filfreire in https://github.com/Kong/insomnia/pull/7805
-* Fix backslash in environment key freeze app [INS-4157] by @yaoweiprc in https://github.com/Kong/insomnia/pull/7763
-* fix(Key-Value Editor): deleting the last item on the key-value pair not showing an empty pair by @gatzjames in https://github.com/Kong/insomnia/pull/7818
-* Remove styled-components by @jackkav in https://github.com/Kong/insomnia/pull/7809
-* feat(sync): support offline commit- [INS-4226] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7811
-* :rocket: 9.3.4-beta.0 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7823
-* Import postman env in Insomnia project level [INS-4253] by @yaoweiprc in https://github.com/Kong/insomnia/pull/7821
-* feat: display uncommit&unpush change - [INS-4138] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7816
-* Preserve the original Authorization headers when importing [INS-4269] by @yaoweiprc in https://github.com/Kong/insomnia/pull/7827
-* feat: Context menu for Nunjucks tag[INS-4273] by @cwangsmv in https://github.com/Kong/insomnia/pull/7828
-* feat(Keyboard Shorcuts): update delete request shortcut by @gatzjames in https://github.com/Kong/insomnia/pull/7824
-* feat: show uncommit&unpush status for all projects-[INS-4138] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7830
-* Fix: GraphQL request export curl body issue and GraphQL payload delete issue[INS-4281] by @cwangsmv in https://github.com/Kong/insomnia/pull/7831
-* :rocket: 9.3.4-beta.1 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7836
-* Try to fix smoke test flaky by @cwangsmv in https://github.com/Kong/insomnia/pull/7840
-* fix: test-util snippet to proper status code check [no-ticket] by @filfreire in https://github.com/Kong/insomnia/pull/7844
-* feat(Project View): UI improvements by @gatzjames in https://github.com/Kong/insomnia/pull/7850
-* fix: disable failure on npm audit [no-ticket] by @filfreire in https://github.com/Kong/insomnia/pull/7862
-* chore: bump electron to 30.4 [INS-4316] by @filfreire in https://github.com/Kong/insomnia/pull/7852
-* import postman data dump [INS-3810] by @yaoweiprc in https://github.com/Kong/insomnia/pull/7834
-* support for removing default org project by @yaoweiprc in https://github.com/Kong/insomnia/pull/7854
-* fix: persist cookies from response together with ones from after-response script by @ihexxa in https://github.com/Kong/insomnia/pull/7819
-* chore: split packaging for windows builds [INS-3983] by @filfreire in https://github.com/Kong/insomnia/pull/7838
-* fix(Git Sync): fix issue when switching to Insomnia Sync by @gatzjames in https://github.com/Kong/insomnia/pull/7860
-* fix: handle login when opening org logged out [INS-4330] by @filfreire in https://github.com/Kong/insomnia/pull/7865
-* Revert "support for removing default org project" by @yaoweiprc in https://github.com/Kong/insomnia/pull/7874
-* inso cli scripting first pass by @jackkav in https://github.com/Kong/insomnia/pull/7790
-* Allow deleting default project in org and fix sync issue [INS-4342] [INS-4311] by @yaoweiprc in https://github.com/Kong/insomnia/pull/7881
-* chore(runner): cleaning up runner-pr1 and resolve conflicts by @ihexxa in https://github.com/Kong/insomnia/pull/7878
-* :rocket: 10.0.0-beta.0 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7882
-* only minify inso cli in prod by @jackkav in https://github.com/Kong/insomnia/pull/7879
-* feat: Add logic to redirect users based on their plan when creating a new organization by @pavkout in https://github.com/Kong/insomnia/pull/7856
-* tabs should rerender when changing mock by @jackkav in https://github.com/Kong/insomnia/pull/7888
-* fix: check for open curl by @jackkav in https://github.com/Kong/insomnia/pull/7889
-* Bump/electron-31 by @jackkav in https://github.com/Kong/insomnia/pull/7884
-* shell.nix -> flake.nix by @jackkav in https://github.com/Kong/insomnia/pull/7892
-* add mock method header by @jackkav in https://github.com/Kong/insomnia/pull/7872
-* use nixpkgs/unstable by @jackkav in https://github.com/Kong/insomnia/pull/7902
-* fix: file not synced after switch sync method -[INS-4347] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7897
-* fix: rename untracked projects [INS-4365] by @filfreire in https://github.com/Kong/insomnia/pull/7898
-* fix: flaky git test by @ihexxa in https://github.com/Kong/insomnia/pull/7883
-* Add ut and e2e test for data upload and pre-script in collection runner by @cwangsmv in https://github.com/Kong/insomnia/pull/7903
-* Supporting moving files from one project to another [INS-3865] by @yaoweiprc in https://github.com/Kong/insomnia/pull/7849
-* Enhance Response function to aware environment change and update description[INS-4279] by @cwangsmv in https://github.com/Kong/insomnia/pull/7896
-* chore: update AI service URL to use 'https://ai-helper.insomnia.rest' [INS-4367] by @pavkout in https://github.com/Kong/insomnia/pull/7910
-* fix(runner): some minor fixes and improvements by @ihexxa in https://github.com/Kong/insomnia/pull/7900
-* improve flakey test by @jackkav in https://github.com/Kong/insomnia/pull/7909
-* feat: sign all files on windows [INS-4362] by @filfreire in https://github.com/Kong/insomnia/pull/7913
-* Avoid encoding queryParams when request.settingEncodeUrl is set to false by @XSPGMike in https://github.com/Kong/insomnia/pull/7893
-* feat: improve EDN response by @garug in https://github.com/Kong/insomnia/pull/7777
-* fix: minor fixes in styles, linting and UT by @ihexxa in https://github.com/Kong/insomnia/pull/7916
-* preserve relationships in nunjucks tags by @jackkav in https://github.com/Kong/insomnia/pull/7915
-* :rocket: 10.0.0-beta.1 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7917
-* chore: cleanup after v10 beta.1 [no-ticket] by @filfreire in https://github.com/Kong/insomnia/pull/7918
-* feat(Onboarding): v10 by @gatzjames in https://github.com/Kong/insomnia/pull/7863
-* chore: return friendly message when sendRequest sees an error by @ihexxa in https://github.com/Kong/insomnia/pull/7911
-* chore: upgrade micromatch and add back npm audit by @ihexxa in https://github.com/Kong/insomnia/pull/7921
-* fix(runner): some minor fixes by @ihexxa in https://github.com/Kong/insomnia/pull/7923
-* add team check by @jackkav in https://github.com/Kong/insomnia/pull/7919
-* :rocket: 10.0.0-beta.2 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7924
-* Fix duplicate file cause application error in collection view UI by @cwangsmv in https://github.com/Kong/insomnia/pull/7928
-* :rocket: 10.0.0-beta.3 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7930
+
+- bump: react-router by @CurryYangxx in https://github.com/Kong/insomnia/pull/7795
+- fix(Sync Staging Modal): use action to update selected items by @gatzjames in https://github.com/Kong/insomnia/pull/7794
+- Fixed copying credential In Auth: Basic were username and password input needed to copied by users by @pranavithape in https://github.com/Kong/insomnia/pull/7789
+- fix(ux): duplicate improvement by @CurryYangxx in https://github.com/Kong/insomnia/pull/7803
+- fixes lodash.set cve by @jackkav in https://github.com/Kong/insomnia/pull/7801
+- chore: rm userId from sentry [INS-4260] by @filfreire in https://github.com/Kong/insomnia/pull/7804
+- fix cves and add CI check by @jackkav in https://github.com/Kong/insomnia/pull/7806
+- Fix: Keep equal sign for empty query parameters[INS-4228] by @cwangsmv in https://github.com/Kong/insomnia/pull/7802
+- chore: hash userID on segment [INS-4260] by @filfreire in https://github.com/Kong/insomnia/pull/7805
+- Fix backslash in environment key freeze app [INS-4157] by @yaoweiprc in https://github.com/Kong/insomnia/pull/7763
+- fix(Key-Value Editor): deleting the last item on the key-value pair not showing an empty pair by @gatzjames in https://github.com/Kong/insomnia/pull/7818
+- Remove styled-components by @jackkav in https://github.com/Kong/insomnia/pull/7809
+- feat(sync): support offline commit- [INS-4226] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7811
+- :rocket: 9.3.4-beta.0 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7823
+- Import postman env in Insomnia project level [INS-4253] by @yaoweiprc in https://github.com/Kong/insomnia/pull/7821
+- feat: display uncommit&unpush change - [INS-4138] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7816
+- Preserve the original Authorization headers when importing [INS-4269] by @yaoweiprc in https://github.com/Kong/insomnia/pull/7827
+- feat: Context menu for Nunjucks tag[INS-4273] by @cwangsmv in https://github.com/Kong/insomnia/pull/7828
+- feat(Keyboard Shorcuts): update delete request shortcut by @gatzjames in https://github.com/Kong/insomnia/pull/7824
+- feat: show uncommit&unpush status for all projects-[INS-4138] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7830
+- Fix: GraphQL request export curl body issue and GraphQL payload delete issue[INS-4281] by @cwangsmv in https://github.com/Kong/insomnia/pull/7831
+- :rocket: 9.3.4-beta.1 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7836
+- Try to fix smoke test flaky by @cwangsmv in https://github.com/Kong/insomnia/pull/7840
+- fix: test-util snippet to proper status code check [no-ticket] by @filfreire in https://github.com/Kong/insomnia/pull/7844
+- feat(Project View): UI improvements by @gatzjames in https://github.com/Kong/insomnia/pull/7850
+- fix: disable failure on npm audit [no-ticket] by @filfreire in https://github.com/Kong/insomnia/pull/7862
+- chore: bump electron to 30.4 [INS-4316] by @filfreire in https://github.com/Kong/insomnia/pull/7852
+- import postman data dump [INS-3810] by @yaoweiprc in https://github.com/Kong/insomnia/pull/7834
+- support for removing default org project by @yaoweiprc in https://github.com/Kong/insomnia/pull/7854
+- fix: persist cookies from response together with ones from after-response script by @ihexxa in https://github.com/Kong/insomnia/pull/7819
+- chore: split packaging for windows builds [INS-3983] by @filfreire in https://github.com/Kong/insomnia/pull/7838
+- fix(Git Sync): fix issue when switching to Insomnia Sync by @gatzjames in https://github.com/Kong/insomnia/pull/7860
+- fix: handle login when opening org logged out [INS-4330] by @filfreire in https://github.com/Kong/insomnia/pull/7865
+- Revert "support for removing default org project" by @yaoweiprc in https://github.com/Kong/insomnia/pull/7874
+- inso cli scripting first pass by @jackkav in https://github.com/Kong/insomnia/pull/7790
+- Allow deleting default project in org and fix sync issue [INS-4342] [INS-4311] by @yaoweiprc in https://github.com/Kong/insomnia/pull/7881
+- chore(runner): cleaning up runner-pr1 and resolve conflicts by @ihexxa in https://github.com/Kong/insomnia/pull/7878
+- :rocket: 10.0.0-beta.0 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7882
+- only minify inso cli in prod by @jackkav in https://github.com/Kong/insomnia/pull/7879
+- feat: Add logic to redirect users based on their plan when creating a new organization by @pavkout in https://github.com/Kong/insomnia/pull/7856
+- tabs should rerender when changing mock by @jackkav in https://github.com/Kong/insomnia/pull/7888
+- fix: check for open curl by @jackkav in https://github.com/Kong/insomnia/pull/7889
+- Bump/electron-31 by @jackkav in https://github.com/Kong/insomnia/pull/7884
+- shell.nix -> flake.nix by @jackkav in https://github.com/Kong/insomnia/pull/7892
+- add mock method header by @jackkav in https://github.com/Kong/insomnia/pull/7872
+- use nixpkgs/unstable by @jackkav in https://github.com/Kong/insomnia/pull/7902
+- fix: file not synced after switch sync method -[INS-4347] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7897
+- fix: rename untracked projects [INS-4365] by @filfreire in https://github.com/Kong/insomnia/pull/7898
+- fix: flaky git test by @ihexxa in https://github.com/Kong/insomnia/pull/7883
+- Add ut and e2e test for data upload and pre-script in collection runner by @cwangsmv in https://github.com/Kong/insomnia/pull/7903
+- Supporting moving files from one project to another [INS-3865] by @yaoweiprc in https://github.com/Kong/insomnia/pull/7849
+- Enhance Response function to aware environment change and update description[INS-4279] by @cwangsmv in https://github.com/Kong/insomnia/pull/7896
+- chore: update AI service URL to use 'https://ai-helper.insomnia.rest' [INS-4367] by @pavkout in https://github.com/Kong/insomnia/pull/7910
+- fix(runner): some minor fixes and improvements by @ihexxa in https://github.com/Kong/insomnia/pull/7900
+- improve flakey test by @jackkav in https://github.com/Kong/insomnia/pull/7909
+- feat: sign all files on windows [INS-4362] by @filfreire in https://github.com/Kong/insomnia/pull/7913
+- Avoid encoding queryParams when request.settingEncodeUrl is set to false by @XSPGMike in https://github.com/Kong/insomnia/pull/7893
+- feat: improve EDN response by @garug in https://github.com/Kong/insomnia/pull/7777
+- fix: minor fixes in styles, linting and UT by @ihexxa in https://github.com/Kong/insomnia/pull/7916
+- preserve relationships in nunjucks tags by @jackkav in https://github.com/Kong/insomnia/pull/7915
+- :rocket: 10.0.0-beta.1 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7917
+- chore: cleanup after v10 beta.1 [no-ticket] by @filfreire in https://github.com/Kong/insomnia/pull/7918
+- feat(Onboarding): v10 by @gatzjames in https://github.com/Kong/insomnia/pull/7863
+- chore: return friendly message when sendRequest sees an error by @ihexxa in https://github.com/Kong/insomnia/pull/7911
+- chore: upgrade micromatch and add back npm audit by @ihexxa in https://github.com/Kong/insomnia/pull/7921
+- fix(runner): some minor fixes by @ihexxa in https://github.com/Kong/insomnia/pull/7923
+- add team check by @jackkav in https://github.com/Kong/insomnia/pull/7919
+- :rocket: 10.0.0-beta.2 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7924
+- Fix duplicate file cause application error in collection view UI by @cwangsmv in https://github.com/Kong/insomnia/pull/7928
+- :rocket: 10.0.0-beta.3 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7930
 
 ## New Contributors
-* @pranavithape made their first contribution in https://github.com/Kong/insomnia/pull/7789
-* @XSPGMike made their first contribution in https://github.com/Kong/insomnia/pull/7893
-* @garug made their first contribution in https://github.com/Kong/insomnia/pull/7777
+
+- @pranavithape made their first contribution in https://github.com/Kong/insomnia/pull/7789
+- @XSPGMike made their first contribution in https://github.com/Kong/insomnia/pull/7893
+- @garug made their first contribution in https://github.com/Kong/insomnia/pull/7777
 
 **Full Changelog**: https://github.com/Kong/insomnia/compare/core@9.3.3...core@10.0.0
 
 ## [core@9.3.3] - 2024-07-31
 
 ## What's Changed
-* perf: App start improvement [INS-3957] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7492
-* :rocket: 9.3.3-beta.0 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7674
-* fix: default user-agent for oauth2 [7672] by @filfreire in https://github.com/Kong/insomnia/pull/7675
-* inso fifth pass by @jackkav in https://github.com/Kong/insomnia/pull/7601
-* feat: inso parent folder auth by @jackkav in https://github.com/Kong/insomnia/pull/7676
-* chore: duplicate / symbol for import in insomnia-scripting-environment/src/objects/(interfaces.ts, request.ts) by @Novsochetra in https://github.com/Kong/insomnia/pull/7686
-* fix: changelog [no-ticket] by @filfreire in https://github.com/Kong/insomnia/pull/7677
-* chore: enable sentry tracing by @CurryYangxx in https://github.com/Kong/insomnia/pull/7688
-* force vite to always wipe cache by @jackkav in https://github.com/Kong/insomnia/pull/7690
-* chore: make the overlay darker in displaying request timings by @ihexxa in https://github.com/Kong/insomnia/pull/7691
-* split test job into app and cli by @jackkav in https://github.com/Kong/insomnia/pull/7685
-* chore: add smoke test for git-sync [INS-4132] by @filfreire in https://github.com/Kong/insomnia/pull/7682
-* feat(Markdown Preview): always enable preview by @gatzjames in https://github.com/Kong/insomnia/pull/7694
-* fix(Delete Environment): Don't show empty view when deleting an environment by @gatzjames in https://github.com/Kong/insomnia/pull/7695
-* fix(Export): Option to export all data from the settings on the login view by @gatzjames in https://github.com/Kong/insomnia/pull/7702
-* fix: typo in style name by @ihexxa in https://github.com/Kong/insomnia/pull/7701
-* fix: ui improvement when return deferred data in loader by @CurryYangxx in https://github.com/Kong/insomnia/pull/7681
-* fix: refresh storage rule when org change by @CurryYangxx in https://github.com/Kong/insomnia/pull/7707
-* hide self host url in create/edit mock by @jackkav in https://github.com/Kong/insomnia/pull/7704
-* feat(Request pane): Add indicators for body and auth in the request pane tabs by @gatzjames in https://github.com/Kong/insomnia/pull/7697
-* Trim Bearer Authentication Strings by @SimplexShotz in https://github.com/Kong/insomnia/pull/7279
-* feat: show deprecation warnings on graphql arguments by @anujbiyani in https://github.com/Kong/insomnia/pull/7364
-* Clean up outdate jest and tsconfigs by @jackkav in https://github.com/Kong/insomnia/pull/7712
-* chore: mv prerelease tests into smoke [INS-4132] by @filfreire in https://github.com/Kong/insomnia/pull/7705
-* feat: add test utils on scripting snippets [INS-4141] by @filfreire in https://github.com/Kong/insomnia/pull/7692
-* fix: migrate loader redirect by @CurryYangxx in https://github.com/Kong/insomnia/pull/7426
-* refactor: flatten and reduce tsconfigs by @jackkav in https://github.com/Kong/insomnia/pull/7716
-* enable verbatimModuleSyntax by @jackkav in https://github.com/Kong/insomnia/pull/7718
-* perf: return deferred data in permission loader by @CurryYangxx in https://github.com/Kong/insomnia/pull/7635
-* perf: change org performance improvement [INS-3968] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7582
-* feat: add async task indicator [INS-4106] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7522
-* fix(sdk): sdk type cleanup by @ihexxa in https://github.com/Kong/insomnia/pull/7721
-* chore: bump electron 30.0 to 30.2 by @filfreire in https://github.com/Kong/insomnia/pull/7714
-* fix: Use SSE for storage control updates by @pavkout in https://github.com/Kong/insomnia/pull/7661
-* :rocket: 9.3.3-beta.1 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7723
-* Update CHANGELOG.md by @CurryYangxx in https://github.com/Kong/insomnia/pull/7725
-* feat: inso collection runner by @jackkav in https://github.com/Kong/insomnia/pull/7700
-* fix: cannot delete request by shortcut [INS-4156] by @yaoweiprc in https://github.com/Kong/insomnia/pull/7728
-* fix(Key-Value Editor): Edit mode by @gatzjames in https://github.com/Kong/insomnia/pull/7739
-* remove send-request by @jackkav in https://github.com/Kong/insomnia/pull/7731
-* feat(Generate Collection from Spec): add description to requests if it's available from the oas3 schema by @gatzjames in https://github.com/Kong/insomnia/pull/7734
-* fix: syncing status indicator ui by @CurryYangxx in https://github.com/Kong/insomnia/pull/7730
-* feat(Sidebar): interactions improvements by @gatzjames in https://github.com/Kong/insomnia/pull/7722
-* fix(Git Clone): redirect using incorrect organizationId by @gatzjames in https://github.com/Kong/insomnia/pull/7740
-* :rocket: 9.3.3-beta.2 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7741
-* handle null auth by @jackkav in https://github.com/Kong/insomnia/pull/7746
-* fix(Collection): Clean up auto-scroll and add back selected item styling by @gatzjames in https://github.com/Kong/insomnia/pull/7747
-* fixes incorrect scrollbar display issue by @Karthik7406 in https://github.com/Kong/insomnia/pull/7742
-* fix: reduce uncessary navigate when switching requests and tests by @CurryYangxx in https://github.com/Kong/insomnia/pull/7748
-* fix: lost <disabled> in header transforming and blank req body by @ihexxa in https://github.com/Kong/insomnia/pull/7738
-* chore: git sync pull push test [INS-4132] by @filfreire in https://github.com/Kong/insomnia/pull/7720
-* vitest by @jackkav in https://github.com/Kong/insomnia/pull/7754
-* feat(History): Navigate to last opened workspace on app load by @gatzjames in https://github.com/Kong/insomnia/pull/7755
-* feat(Sentry): clean up unnecessary sentry stack by @gatzjames in https://github.com/Kong/insomnia/pull/7758
-* fix(Settings): update header styles for analytics by @gatzjames in https://github.com/Kong/insomnia/pull/7759
-* fix: can't match project when last visit page is dashboard by @CurryYangxx in https://github.com/Kong/insomnia/pull/7762
-* fix(History): navigate to the project if the last visited workspace has been deleted by @gatzjames in https://github.com/Kong/insomnia/pull/7764
-* feat(Response Pane): improve tabs styles by @gatzjames in https://github.com/Kong/insomnia/pull/7765
-* :rocket: 9.3.3-beta.3 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7766
-* chore: add sentry metric [INS-4115] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7727
-* Vitest-2 app package by @jackkav in https://github.com/Kong/insomnia/pull/7757
-* fix: project switch report by @CurryYangxx in https://github.com/Kong/insomnia/pull/7771
-* :rocket: 9.3.3-beta.4 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7774
-* feat(UI): UI improvements for the app by @gatzjames in https://github.com/Kong/insomnia/pull/7773
-* chore: check analytics issue [INS-4212] by @filfreire in https://github.com/Kong/insomnia/pull/7775
-* fix(GraphQL Editor): make inputValueDeprecation optional and change variable mode to json by @gatzjames in https://github.com/Kong/insomnia/pull/7779
-* inso cli dx improvements by @jackkav in https://github.com/Kong/insomnia/pull/7776
-* fix(Git Staging Modal): close the modal on ESC by @gatzjames in https://github.com/Kong/insomnia/pull/7781
-* fix(KeyValue Editor): fix key value focus issue and handle updating params from url by @gatzjames in https://github.com/Kong/insomnia/pull/7780
-* feat(Styles): Minor style improvements by @gatzjames in https://github.com/Kong/insomnia/pull/7782
-* :rocket: 9.3.3-beta.5 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7783
-* Add type checking to sdk package by @jackkav in https://github.com/Kong/insomnia/pull/7719
+
+- perf: App start improvement [INS-3957] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7492
+- :rocket: 9.3.3-beta.0 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7674
+- fix: default user-agent for oauth2 [7672] by @filfreire in https://github.com/Kong/insomnia/pull/7675
+- inso fifth pass by @jackkav in https://github.com/Kong/insomnia/pull/7601
+- feat: inso parent folder auth by @jackkav in https://github.com/Kong/insomnia/pull/7676
+- chore: duplicate / symbol for import in insomnia-scripting-environment/src/objects/(interfaces.ts, request.ts) by @Novsochetra in https://github.com/Kong/insomnia/pull/7686
+- fix: changelog [no-ticket] by @filfreire in https://github.com/Kong/insomnia/pull/7677
+- chore: enable sentry tracing by @CurryYangxx in https://github.com/Kong/insomnia/pull/7688
+- force vite to always wipe cache by @jackkav in https://github.com/Kong/insomnia/pull/7690
+- chore: make the overlay darker in displaying request timings by @ihexxa in https://github.com/Kong/insomnia/pull/7691
+- split test job into app and cli by @jackkav in https://github.com/Kong/insomnia/pull/7685
+- chore: add smoke test for git-sync [INS-4132] by @filfreire in https://github.com/Kong/insomnia/pull/7682
+- feat(Markdown Preview): always enable preview by @gatzjames in https://github.com/Kong/insomnia/pull/7694
+- fix(Delete Environment): Don't show empty view when deleting an environment by @gatzjames in https://github.com/Kong/insomnia/pull/7695
+- fix(Export): Option to export all data from the settings on the login view by @gatzjames in https://github.com/Kong/insomnia/pull/7702
+- fix: typo in style name by @ihexxa in https://github.com/Kong/insomnia/pull/7701
+- fix: ui improvement when return deferred data in loader by @CurryYangxx in https://github.com/Kong/insomnia/pull/7681
+- fix: refresh storage rule when org change by @CurryYangxx in https://github.com/Kong/insomnia/pull/7707
+- hide self host url in create/edit mock by @jackkav in https://github.com/Kong/insomnia/pull/7704
+- feat(Request pane): Add indicators for body and auth in the request pane tabs by @gatzjames in https://github.com/Kong/insomnia/pull/7697
+- Trim Bearer Authentication Strings by @SimplexShotz in https://github.com/Kong/insomnia/pull/7279
+- feat: show deprecation warnings on graphql arguments by @anujbiyani in https://github.com/Kong/insomnia/pull/7364
+- Clean up outdate jest and tsconfigs by @jackkav in https://github.com/Kong/insomnia/pull/7712
+- chore: mv prerelease tests into smoke [INS-4132] by @filfreire in https://github.com/Kong/insomnia/pull/7705
+- feat: add test utils on scripting snippets [INS-4141] by @filfreire in https://github.com/Kong/insomnia/pull/7692
+- fix: migrate loader redirect by @CurryYangxx in https://github.com/Kong/insomnia/pull/7426
+- refactor: flatten and reduce tsconfigs by @jackkav in https://github.com/Kong/insomnia/pull/7716
+- enable verbatimModuleSyntax by @jackkav in https://github.com/Kong/insomnia/pull/7718
+- perf: return deferred data in permission loader by @CurryYangxx in https://github.com/Kong/insomnia/pull/7635
+- perf: change org performance improvement [INS-3968] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7582
+- feat: add async task indicator [INS-4106] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7522
+- fix(sdk): sdk type cleanup by @ihexxa in https://github.com/Kong/insomnia/pull/7721
+- chore: bump electron 30.0 to 30.2 by @filfreire in https://github.com/Kong/insomnia/pull/7714
+- fix: Use SSE for storage control updates by @pavkout in https://github.com/Kong/insomnia/pull/7661
+- :rocket: 9.3.3-beta.1 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7723
+- Update CHANGELOG.md by @CurryYangxx in https://github.com/Kong/insomnia/pull/7725
+- feat: inso collection runner by @jackkav in https://github.com/Kong/insomnia/pull/7700
+- fix: cannot delete request by shortcut [INS-4156] by @yaoweiprc in https://github.com/Kong/insomnia/pull/7728
+- fix(Key-Value Editor): Edit mode by @gatzjames in https://github.com/Kong/insomnia/pull/7739
+- remove send-request by @jackkav in https://github.com/Kong/insomnia/pull/7731
+- feat(Generate Collection from Spec): add description to requests if it's available from the oas3 schema by @gatzjames in https://github.com/Kong/insomnia/pull/7734
+- fix: syncing status indicator ui by @CurryYangxx in https://github.com/Kong/insomnia/pull/7730
+- feat(Sidebar): interactions improvements by @gatzjames in https://github.com/Kong/insomnia/pull/7722
+- fix(Git Clone): redirect using incorrect organizationId by @gatzjames in https://github.com/Kong/insomnia/pull/7740
+- :rocket: 9.3.3-beta.2 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7741
+- handle null auth by @jackkav in https://github.com/Kong/insomnia/pull/7746
+- fix(Collection): Clean up auto-scroll and add back selected item styling by @gatzjames in https://github.com/Kong/insomnia/pull/7747
+- fixes incorrect scrollbar display issue by @Karthik7406 in https://github.com/Kong/insomnia/pull/7742
+- fix: reduce uncessary navigate when switching requests and tests by @CurryYangxx in https://github.com/Kong/insomnia/pull/7748
+- fix: lost <disabled> in header transforming and blank req body by @ihexxa in https://github.com/Kong/insomnia/pull/7738
+- chore: git sync pull push test [INS-4132] by @filfreire in https://github.com/Kong/insomnia/pull/7720
+- vitest by @jackkav in https://github.com/Kong/insomnia/pull/7754
+- feat(History): Navigate to last opened workspace on app load by @gatzjames in https://github.com/Kong/insomnia/pull/7755
+- feat(Sentry): clean up unnecessary sentry stack by @gatzjames in https://github.com/Kong/insomnia/pull/7758
+- fix(Settings): update header styles for analytics by @gatzjames in https://github.com/Kong/insomnia/pull/7759
+- fix: can't match project when last visit page is dashboard by @CurryYangxx in https://github.com/Kong/insomnia/pull/7762
+- fix(History): navigate to the project if the last visited workspace has been deleted by @gatzjames in https://github.com/Kong/insomnia/pull/7764
+- feat(Response Pane): improve tabs styles by @gatzjames in https://github.com/Kong/insomnia/pull/7765
+- :rocket: 9.3.3-beta.3 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7766
+- chore: add sentry metric [INS-4115] by @CurryYangxx in https://github.com/Kong/insomnia/pull/7727
+- Vitest-2 app package by @jackkav in https://github.com/Kong/insomnia/pull/7757
+- fix: project switch report by @CurryYangxx in https://github.com/Kong/insomnia/pull/7771
+- :rocket: 9.3.3-beta.4 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7774
+- feat(UI): UI improvements for the app by @gatzjames in https://github.com/Kong/insomnia/pull/7773
+- chore: check analytics issue [INS-4212] by @filfreire in https://github.com/Kong/insomnia/pull/7775
+- fix(GraphQL Editor): make inputValueDeprecation optional and change variable mode to json by @gatzjames in https://github.com/Kong/insomnia/pull/7779
+- inso cli dx improvements by @jackkav in https://github.com/Kong/insomnia/pull/7776
+- fix(Git Staging Modal): close the modal on ESC by @gatzjames in https://github.com/Kong/insomnia/pull/7781
+- fix(KeyValue Editor): fix key value focus issue and handle updating params from url by @gatzjames in https://github.com/Kong/insomnia/pull/7780
+- feat(Styles): Minor style improvements by @gatzjames in https://github.com/Kong/insomnia/pull/7782
+- :rocket: 9.3.3-beta.5 by @insomnia-infra in https://github.com/Kong/insomnia/pull/7783
+- Add type checking to sdk package by @jackkav in https://github.com/Kong/insomnia/pull/7719
 
 ## New Contributors
-* @Novsochetra made their first contribution in https://github.com/Kong/insomnia/pull/7686
-* @SimplexShotz made their first contribution in https://github.com/Kong/insomnia/pull/7279
-* @anujbiyani made their first contribution in https://github.com/Kong/insomnia/pull/7364
-* @yaoweiprc made their first contribution in https://github.com/Kong/insomnia/pull/7728
-* @Karthik7406 made their first contribution in https://github.com/Kong/insomnia/pull/7742
+
+- @Novsochetra made their first contribution in https://github.com/Kong/insomnia/pull/7686
+- @SimplexShotz made their first contribution in https://github.com/Kong/insomnia/pull/7279
+- @anujbiyani made their first contribution in https://github.com/Kong/insomnia/pull/7364
+- @yaoweiprc made their first contribution in https://github.com/Kong/insomnia/pull/7728
+- @Karthik7406 made their first contribution in https://github.com/Kong/insomnia/pull/7742
 
 **Full Changelog**: https://github.com/Kong/insomnia/compare/core@9.3.2...core@9.3.3
 
@@ -252,7 +256,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix(Response Tabs): Tabs with a menu inside are not accessible - Response Panes by @gatzjames in <https://github.com/Kong/insomnia/pull/7477>
 - fix: script to parse binary digests by @saisatishkarra in <https://github.com/Kong/insomnia/pull/7493>
 - :rocket: 9.3.0-alpha.5 by @insomnia-infra in <https://github.com/Kong/insomnia/pull/7494>
-- feat: folder inheritance  scripts by @jackkav in <https://github.com/Kong/insomnia/pull/7430>
+- feat: folder inheritance scripts by @jackkav in <https://github.com/Kong/insomnia/pull/7430>
 - fix: use base64 output file for provenance for large assets by @saisatishkarra in <https://github.com/Kong/insomnia/pull/7496>
 - Bump/electron-30 by @jackkav in <https://github.com/Kong/insomnia/pull/7354>
 - chore: new analytics events [INS-3938] by @filfreire in <https://github.com/Kong/insomnia/pull/7495>
@@ -276,7 +280,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix: url preview should contain auth params by @ihexxa in <https://github.com/Kong/insomnia/pull/7509>
 - include read only in headers count by @jackkav in <https://github.com/Kong/insomnia/pull/7521>
 - remove oas 2 kong by @jackkav in <https://github.com/Kong/insomnia/pull/7503>
-- fix: windows artifact and update code signer [INS-3993][INS-3982] by @filfreire in <https://github.com/Kong/insomnia/pull/7523>
+- fix: windows artifact and update code signer [INS-3993][ins-3982] by @filfreire in <https://github.com/Kong/insomnia/pull/7523>
 - :rocket: 9.3.0-alpha.11 by @insomnia-infra in <https://github.com/Kong/insomnia/pull/7524>
 - :rocket: 9.3.0-beta.3 by @insomnia-infra in <https://github.com/Kong/insomnia/pull/7526>
 - chore(Minor UI improvements): Expand/Collapse all and file card titles by @gatzjames in <https://github.com/Kong/insomnia/pull/7528>
@@ -439,11 +443,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat(hidden-window): enable baseEnvironment in the pre-request scripting [INS-3379] by @ihexxa in <https://github.com/Kong/insomnia/pull/7102>
 - fix: release-start changelog step [no-ticket] by @filfreire in <https://github.com/Kong/insomnia/pull/7113>
 - fix: move changelog step to release-publish by @filfreire in <https://github.com/Kong/insomnia/pull/7114>
-- feat: enable globals, iterationData and variables in pre-request scripting [INS-3379]  by @ihexxa in <https://github.com/Kong/insomnia/pull/7103>
+- feat: enable globals, iterationData and variables in pre-request scripting [INS-3379] by @ihexxa in <https://github.com/Kong/insomnia/pull/7103>
 - chore: bump GH actions versions [no-ticket] by @filfreire in <https://github.com/Kong/insomnia/pull/7117>
 - feat(Insomnia Cloud Sync): Update filesystem driver for VCS sync by @gatzjames in <https://github.com/Kong/insomnia/pull/7111>
 - feat: enable property in pre-request scripting [INS-3379] by @ihexxa in <https://github.com/Kong/insomnia/pull/7120>
-- feat: enable headers in pre-request scripting [INS-3379]  by @ihexxa in <https://github.com/Kong/insomnia/pull/7121>
+- feat: enable headers in pre-request scripting [INS-3379] by @ihexxa in <https://github.com/Kong/insomnia/pull/7121>
 - feat: enable collection-variable in pre-request scripting [INS-3379] by @ihexxa in <https://github.com/Kong/insomnia/pull/7122>
 - feat: enable Url in pre-request scripting [INS-3379] by @ihexxa in <https://github.com/Kong/insomnia/pull/7123>
 - feat: enable Request and Response in pre-request scripting [INS-3379] by @ihexxa in <https://github.com/Kong/insomnia/pull/7128>
@@ -571,19 +575,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### :sparkles: New Features
 
-- [`e1e3b13`](https://github.com/Kong/insomnia/commit/e1e3b139b3bb917ab9dfcb0ce12d16079dee9c04) - **unit-tests**: Unit test reordering *(PR [#7020](https://github.com/Kong/insomnia/pull/7020) by [@gatzjames](https://github.com/gatzjames))*
-- [`2249bb7`](https://github.com/Kong/insomnia/commit/2249bb7b98c947ab1cb11955928fd80d4adec845) - **environment**: update environments icons *(PR [#7050](https://github.com/Kong/insomnia/pull/7050) by [@gatzjames](https://github.com/gatzjames))*
-- [`a09c233`](https://github.com/Kong/insomnia/commit/a09c23305c9c493105808b8df23d1911f5b59ea2) - **pane-tabs**: Consistent styles for tabs *(PR [#7062](https://github.com/Kong/insomnia/pull/7062) by [@gatzjames](https://github.com/gatzjames))*
-- [`d1c2928`](https://github.com/Kong/insomnia/commit/d1c292891cc9dd8a17d4637f643336cf1afcccfa) - **command-palette**: add button to open the command palette *(PR [#7064](https://github.com/Kong/insomnia/pull/7064) by [@gatzjames](https://github.com/gatzjames))*
+- [`e1e3b13`](https://github.com/Kong/insomnia/commit/e1e3b139b3bb917ab9dfcb0ce12d16079dee9c04) - **unit-tests**: Unit test reordering _(PR [#7020](https://github.com/Kong/insomnia/pull/7020) by [@gatzjames](https://github.com/gatzjames))_
+- [`2249bb7`](https://github.com/Kong/insomnia/commit/2249bb7b98c947ab1cb11955928fd80d4adec845) - **environment**: update environments icons _(PR [#7050](https://github.com/Kong/insomnia/pull/7050) by [@gatzjames](https://github.com/gatzjames))_
+- [`a09c233`](https://github.com/Kong/insomnia/commit/a09c23305c9c493105808b8df23d1911f5b59ea2) - **pane-tabs**: Consistent styles for tabs _(PR [#7062](https://github.com/Kong/insomnia/pull/7062) by [@gatzjames](https://github.com/gatzjames))_
+- [`d1c2928`](https://github.com/Kong/insomnia/commit/d1c292891cc9dd8a17d4637f643336cf1afcccfa) - **command-palette**: add button to open the command palette _(PR [#7064](https://github.com/Kong/insomnia/pull/7064) by [@gatzjames](https://github.com/gatzjames))_
 
 ### :bug: Bug Fixes
 
-- [`df0a791`](https://github.com/Kong/insomnia/commit/df0a79194143dc615310ecc0976381c538f695f2) - re-initialize the parameter editor state when switching between requests *(PR [#7005](https://github.com/Kong/insomnia/pull/7005) by [@gatzjames](https://github.com/gatzjames))*
-  - :arrow_lower_right: *fixes issue [#7000](undefined) opened by [@jwarner112](https://github.com/jwarner112)*
-- [`3fceccf`](https://github.com/Kong/insomnia/commit/3fceccfdf691a0f3d7592f31120030eeff92be61) - **workspace**: Add default name for when creating a workspace *(PR [#7046](https://github.com/Kong/insomnia/pull/7046) by [@gatzjames](https://github.com/gatzjames))*
+- [`df0a791`](https://github.com/Kong/insomnia/commit/df0a79194143dc615310ecc0976381c538f695f2) - re-initialize the parameter editor state when switching between requests _(PR [#7005](https://github.com/Kong/insomnia/pull/7005) by [@gatzjames](https://github.com/gatzjames))_
+  - :arrow*lower_right: \_fixes issue [#7000](undefined) opened by [@jwarner112](https://github.com/jwarner112)*
+- [`3fceccf`](https://github.com/Kong/insomnia/commit/3fceccfdf691a0f3d7592f31120030eeff92be61) - **workspace**: Add default name for when creating a workspace _(PR [#7046](https://github.com/Kong/insomnia/pull/7046) by [@gatzjames](https://github.com/gatzjames))_
 
 ### :wrench: Chores
 
-- [`353780e`](https://github.com/Kong/insomnia/commit/353780e16ab30853ce206398850c0c0f1c9bd887) - edit changelog process [INS-3456] *(PR [#7001](https://github.com/Kong/insomnia/pull/7001) by [@filfreire](https://github.com/filfreire))*
+- [`353780e`](https://github.com/Kong/insomnia/commit/353780e16ab30853ce206398850c0c0f1c9bd887) - edit changelog process [INS-3456] _(PR [#7001](https://github.com/Kong/insomnia/pull/7001) by [@filfreire](https://github.com/filfreire))_
 
 [core@8.6.1]: https://github.com/Kong/insomnia/compare/core@8.6.0...core@8.6.1

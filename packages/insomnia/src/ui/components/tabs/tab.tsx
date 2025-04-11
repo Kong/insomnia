@@ -8,7 +8,17 @@ import { Icon } from '../icon';
 import { Tooltip } from '../tooltip';
 import { TAB_CONTEXT_MENU_COMMAND } from './tab-list';
 
-export type TabType = 'request' | 'folder' | 'environment' | 'mockServer' | 'mockRoute' | 'document' | 'collection' | 'runner' | 'test' | 'testSuite';
+export type TabType =
+  | 'request'
+  | 'folder'
+  | 'environment'
+  | 'mockServer'
+  | 'mockRoute'
+  | 'document'
+  | 'collection'
+  | 'runner'
+  | 'test'
+  | 'testSuite';
 export interface BaseTab {
   type: TabType;
   name: string;
@@ -27,16 +37,16 @@ export interface BaseTab {
 }
 
 const REQUEST_METHOD_STYLE_MAP: Record<string, string> = {
-  'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
-  'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
-  'GQL': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
-  'HEAD': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
-  'OPTIONS': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
-  'DELETE': 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
-  'PUT': 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
-  'PATCH': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
-  'WS': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
-  'gRPC': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+  GET: 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
+  POST: 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
+  GQL: 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
+  HEAD: 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+  OPTIONS: 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+  DELETE: 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
+  PUT: 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
+  PATCH: 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
+  WS: 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
+  gRPC: 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
 };
 
 const WORKSPACE_TAB_UI_MAP: Partial<Record<TabType, any>> = {
@@ -63,13 +73,14 @@ const WORKSPACE_TAB_UI_MAP: Partial<Record<TabType, any>> = {
 };
 
 export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
-
   const { closeTabById, currentOrgTabs } = useInsomniaTabContext();
 
   const renderTabIcon = (type: TabType) => {
     if (WORKSPACE_TAB_UI_MAP[type]) {
       return (
-        <div className={`${WORKSPACE_TAB_UI_MAP[type].bgColor} ${WORKSPACE_TAB_UI_MAP[type].textColor} px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm`}>
+        <div
+          className={`${WORKSPACE_TAB_UI_MAP[type].bgColor} ${WORKSPACE_TAB_UI_MAP[type].textColor} flex h-[20px] w-[20px] items-center justify-center rounded-s-sm px-2`}
+        >
           <Icon icon={WORKSPACE_TAB_UI_MAP[type].icon} />
         </div>
       );
@@ -77,7 +88,12 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
 
     if (type === 'request' || type === 'mockRoute') {
       return (
-        <span aria-label='Tab Tag' className={`w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center ${REQUEST_METHOD_STYLE_MAP[tab?.method || tab?.tag || '']}`}>{tab.tag}</span>
+        <span
+          aria-label="Tab Tag"
+          className={`flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] text-[0.65rem] ${REQUEST_METHOD_STYLE_MAP[tab?.method || tab?.tag || '']}`}
+        >
+          {tab.tag}
+        </span>
       );
     }
 
@@ -124,11 +140,14 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
     });
   };
 
-  const scrollIntoView = useCallback((node: HTMLDivElement) => {
-    if (node && currentOrgTabs.activeTabId === tab.id) {
-      scrollElementIntoView(node, { behavior: 'instant' });
-    }
-  }, [currentOrgTabs.activeTabId, tab.id]);
+  const scrollIntoView = useCallback(
+    (node: HTMLDivElement) => {
+      if (node && currentOrgTabs.activeTabId === tab.id) {
+        scrollElementIntoView(node, { behavior: 'instant' });
+      }
+    },
+    [currentOrgTabs.activeTabId, tab.id],
+  );
 
   const { updateTabById } = useInsomniaTabContext();
 
@@ -142,33 +161,39 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
     <GridListItem
       textValue={`tab-${tab.name}`}
       id={tab.id}
-      className="outline-none aria-selected:text-[--color-font] aria-selected:bg-[--hl-sm] hover:bg-[--hl-xs]"
+      className="outline-none hover:bg-[--hl-xs] aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font]"
       ref={scrollIntoView}
     >
       {({ isSelected, isHovered }) => (
-        <Tooltip delay={1000} message={`${tab.projectName} / ${tab.workspaceName}`} className='h-full'>
+        <Tooltip delay={1000} message={`${tab.projectName} / ${tab.workspaceName}`} className="h-full">
           <div
             onDoubleClick={handleDoubleClick}
             onAuxClick={e => handleAuxClick(e, tab.id)}
             onContextMenu={handleContextMenu}
-            className={`relative flex items-center h-full px-[10px] flex-nowrap border-solid border-r border-[--hl-sm] hover:text-[--color-font] outline-none max-w-[200px] cursor-pointer ${(!isSelected && !isHovered) && 'opacity-[0.7]'}`}
+            className={`relative flex h-full max-w-[200px] cursor-pointer flex-nowrap items-center border-r border-solid border-[--hl-sm] px-[10px] outline-none hover:text-[--color-font] ${!isSelected && !isHovered && 'opacity-[0.7]'}`}
           >
             {renderTabIcon(tab.type)}
             <span
-              className={classNames('mx-[8px] text-nowrap overflow-hidden text-ellipsis', {
-                'italic': tab.temporary,
+              className={classNames('mx-[8px] overflow-hidden text-ellipsis text-nowrap', {
+                italic: tab.temporary,
               })}
-            >{tab.name}</span>
+            >
+              {tab.name}
+            </span>
             <Button
               aria-label="Close Tab"
               data-testid="tab-close-button"
-              className='hover:bg-[--hl-md] h-[15px] w-[15px] flex justify-center items-center'
+              className="flex h-[15px] w-[15px] items-center justify-center hover:bg-[--hl-md]"
               onPress={() => handleClose(tab.id)}
             >
               <Icon icon="close" />
             </Button>
-            <span className={`block absolute bottom-[0px] left-0 right-0 h-[1px] bg-[--color-bg] ${isSelected ? 'opacity-100' : 'opacity-0'}`} />
-            <span className={`block absolute bottom-[0px] left-0 right-0 h-[1px] bg-[--hl-sm] ${!isSelected ? 'opacity-100' : 'opacity-0'}`} />
+            <span
+              className={`absolute bottom-[0px] left-0 right-0 block h-[1px] bg-[--color-bg] ${isSelected ? 'opacity-100' : 'opacity-0'}`}
+            />
+            <span
+              className={`absolute bottom-[0px] left-0 right-0 block h-[1px] bg-[--hl-sm] ${!isSelected ? 'opacity-100' : 'opacity-0'}`}
+            />
           </div>
           <Button slot="drag" className="hidden" />
         </Tooltip>

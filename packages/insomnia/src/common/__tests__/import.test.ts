@@ -10,12 +10,9 @@ import * as importUtil from '../import';
 */
 
 describe('isApiSpecImport()', () => {
-  it.each(['swagger2', 'openapi3'])(
-    'should return true if spec id is %o',
-    (id: string) => {
-      expect(importUtil.isApiSpecImport({ id })).toBe(true);
-    }
-  );
+  it.each(['swagger2', 'openapi3'])('should return true if spec id is %o', (id: string) => {
+    expect(importUtil.isApiSpecImport({ id })).toBe(true);
+  });
 
   it('should return false if spec id is not valid', () => {
     const id = 'invalid-id';
@@ -51,16 +48,14 @@ describe('importRaw()', () => {
     });
 
     const workspacesCount = await workspace.count();
-    const projectWorkspaces = await workspace.findByParentId(
-      projectToImportTo._id
-    );
+    const projectWorkspaces = await workspace.findByParentId(projectToImportTo._id);
     const curlRequests = await request.findByParentId(projectWorkspaces[0]._id);
 
     expect(workspacesCount).toBe(1);
 
     expect(curlRequests[0]).toMatchObject({
       body: {
-        'text': '{\"email_id\": \"tem_123\"}',
+        text: '{\"email_id\": \"tem_123\"}',
       },
     });
   });
@@ -84,7 +79,7 @@ describe('importRaw()', () => {
 
     expect(curlRequests[0]).toMatchObject({
       body: {
-        'text': '{\"email_id\": \"tem_123\"}',
+        text: '{\"email_id\": \"tem_123\"}',
       },
     });
   });
@@ -102,9 +97,7 @@ describe('importRaw()', () => {
       projectId: projectToImportTo._id,
     });
 
-    const projectWorkspaces = await workspace.findByParentId(
-      projectToImportTo._id
-    );
+    const projectWorkspaces = await workspace.findByParentId(projectToImportTo._id);
 
     const requestGroups = await requestGroup.findByParentId(projectWorkspaces[0]._id);
     const requests = await request.findByParentId(requestGroups[0]._id);
@@ -146,5 +139,4 @@ describe('importRaw()', () => {
     expect(scanResult[0].type?.id).toBe('openapi3');
     expect(scanResult[0].errors.length).toBe(0);
   });
-
 });

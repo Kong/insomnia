@@ -18,7 +18,7 @@ const getMatchParams = (location: string) => {
       path: '/organization/:organizationId/project/:projectId/workspace/:workspaceId',
       end: false,
     },
-    location
+    location,
   );
 
   const projectMatch = matchPath(
@@ -26,7 +26,7 @@ const getMatchParams = (location: string) => {
       path: '/organization/:organizationId/project/:projectId',
       end: false,
     },
-    location
+    location,
   );
 
   return (workspaceMatch || projectMatch) as PathMatch<'organizationId' | 'projectId' | 'workspaceId'> | null;
@@ -35,14 +35,14 @@ const getMatchParams = (location: string) => {
 export const getInitialRouteForOrganization = async ({
   organizationId,
   navigateToWorkspace = false,
-}: { organizationId: string; navigateToWorkspace?: boolean }) => {
+}: {
+  organizationId: string;
+  navigateToWorkspace?: boolean;
+}) => {
   // 1. assuming we have history, try to redirect to the last visited project
-  const prevOrganizationLocation = localStorage.getItem(
-    `locationHistoryEntry:${organizationId}`
-  );
+  const prevOrganizationLocation = localStorage.getItem(`locationHistoryEntry:${organizationId}`);
   // Check if the last visited project exists and redirect to it
   if (prevOrganizationLocation) {
-
     const match = getMatchParams(prevOrganizationLocation);
 
     if (match && match.params.organizationId && match.params.projectId) {
@@ -87,7 +87,9 @@ export const getInitialEntry = async () => {
 
     const user = await models.userSession.getOrCreate();
     if (user.id) {
-      const organizations = JSON.parse(localStorage.getItem(`${user.accountId}:organizations`) || '[]') as Organization[];
+      const organizations = JSON.parse(
+        localStorage.getItem(`${user.accountId}:organizations`) || '[]',
+      ) as Organization[];
       const personalOrganization = findPersonalOrganization(organizations, user.accountId);
       // If the personal org is not found in local storage go fetch from org index loader
       if (!personalOrganization) {
@@ -102,7 +104,7 @@ export const getInitialEntry = async () => {
         if (lastVisitedOrganizationId && organizations.find(o => o.id === lastVisitedOrganizationId)) {
           organizationId = lastVisitedOrganizationId;
         }
-      } catch (e) { }
+      } catch (e) {}
 
       return {
         pathname: await getInitialRouteForOrganization({ organizationId, navigateToWorkspace: true }),

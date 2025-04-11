@@ -14,11 +14,19 @@ export const useEditorRefresh = (callback: () => void) => {
       return;
     }
 
-    if (previousShowVariableSourceAndValue === showVariableSourceAndValue && previousNunjucksPowerUserMode === nunjucksPowerUserMode) {
+    if (
+      previousShowVariableSourceAndValue === showVariableSourceAndValue &&
+      previousNunjucksPowerUserMode === nunjucksPowerUserMode
+    ) {
       return;
     }
 
     callback?.();
-  }, [showVariableSourceAndValue, nunjucksPowerUserMode, previousShowVariableSourceAndValue, previousNunjucksPowerUserMode, callback]);
-
+  }, [
+    showVariableSourceAndValue,
+    nunjucksPowerUserMode,
+    previousShowVariableSourceAndValue,
+    previousNunjucksPowerUserMode,
+    callback,
+  ]);
 };

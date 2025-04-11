@@ -1,7 +1,22 @@
 import clone from 'clone';
 import { isValid } from 'date-fns';
 import React, { useState } from 'react';
-import { Button, Dialog, Group, Heading, Input, ListBox, ListBoxItem, Modal, ModalOverlay, Tab, TabList, TabPanel, Tabs, TextField } from 'react-aria-components';
+import {
+  Button,
+  Dialog,
+  Group,
+  Heading,
+  Input,
+  ListBox,
+  ListBoxItem,
+  Modal,
+  ModalOverlay,
+  Tab,
+  TabList,
+  TabPanel,
+  Tabs,
+  TextField,
+} from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import { Cookie as ToughCookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
@@ -36,7 +51,11 @@ interface Props {
 export const CookiesModal = ({ setIsOpen }: Props) => {
   const { handleRender } = useNunjucks();
 
-  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+  const { organizationId, projectId, workspaceId } = useParams<{
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  }>();
   const { activeCookieJar } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const updateCookieJarFetcher = useFetcher<CookieJar>();
 
@@ -58,7 +77,7 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
     setFilter(value);
     const renderedCookies: Cookie[] = [];
 
-    for (const cookie of (activeCookieJar?.cookies || [])) {
+    for (const cookie of activeCookieJar?.cookies || []) {
       try {
         renderedCookies.push(await handleRender(cookie));
       } catch (err) {
@@ -97,16 +116,19 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
 
   const handleAddCookie = () => {
     const updatedActiveCookieJar = activeCookieJar;
-    updatedActiveCookieJar.cookies = [{
-      id: uuidv4(),
-      key: 'foo',
-      value: 'bar',
-      domain: 'domain.com',
-      expires: MAX_TIME as unknown as Date,
-      path: '/',
-      secure: false,
-      httpOnly: false,
-    }, ...activeCookieJar.cookies];
+    updatedActiveCookieJar.cookies = [
+      {
+        id: uuidv4(),
+        key: 'foo',
+        value: 'bar',
+        domain: 'domain.com',
+        expires: MAX_TIME as unknown as Date,
+        path: '/',
+        secure: false,
+        httpOnly: false,
+      },
+      ...activeCookieJar.cookies,
+    ];
 
     updateCookieJar(activeCookieJar._id, updatedActiveCookieJar);
   };
@@ -140,23 +162,21 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
       isDismissable={true}
       isOpen={true}
       onOpenChange={setIsOpen}
-      className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-[--color-bg] theme--transparent-overlay"
+      className="theme--transparent-overlay fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-[--color-bg]"
     >
-      <Modal className="fixed top-[100px] w-full max-w-[900px] rounded-md border border-solid border-[--hl-sm] p-[32px] h-fit bg-[--color-bg] text-[--color-font] theme--dialog">
-        <Dialog className="outline-none relative">
+      <Modal className="theme--dialog fixed top-[100px] h-fit w-full max-w-[900px] rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[32px] text-[--color-font]">
+        <Dialog className="relative outline-none">
           {({ close }) => (
             <>
               {activeCookieJar && (
                 <div className="flex flex-col gap-4">
-                  <Heading slot="title" className="text-[22px] leading-[34px] mb-[14px]">
+                  <Heading slot="title" className="mb-[14px] text-[22px] leading-[34px]">
                     Manage Cookies
                   </Heading>
-                  <Button onPress={close} className="fa fa-times absolute top-0 right-0 text-xl" />
+                  <Button onPress={close} className="fa fa-times absolute right-0 top-0 text-xl" />
 
-                  <div className='flex gap-4 justify-between'>
-                    <Group
-                      className="w-[50%] bg-[--hl-xs] py-[4px] px-[8px] rounded flex items-center gap-2"
-                    >
+                  <div className="flex justify-between gap-4">
+                    <Group className="flex w-[50%] items-center gap-2 rounded bg-[--hl-xs] px-[8px] py-[4px]">
                       <i className="fa fa-search" />
                       <TextField
                         value={filter}
@@ -164,69 +184,65 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
                         aria-label="Cookie search query"
                         className="flex-1"
                       >
-                        <Input
-                          className="w-full"
-                          placeholder="Search cookies"
-                        />
+                        <Input className="w-full" placeholder="Search cookies" />
                       </TextField>
                       {filter && (
                         <Button onPress={() => handleFilterChange('')}>
-                          <Icon icon="circle-xmark" className='h-4 w-4' />
+                          <Icon icon="circle-xmark" className="h-4 w-4" />
                         </Button>
                       )}
                     </Group>
-                    <div className="flex gap-4 items-end">
+                    <div className="flex items-end gap-4">
                       <Button
-                        className="flex items-center gap-2 min-w-[75px] py-1 px-2 font-semibold aria-pressed:bg-[--hl-sm] text-[--color-font] transition-all text-sm"
+                        className="flex min-w-[75px] items-center gap-2 px-2 py-1 text-sm font-semibold text-[--color-font] transition-all aria-pressed:bg-[--hl-sm]"
                         onPress={handleAddCookie}
                       >
                         <Icon icon="plus" /> Add Cookie
                       </Button>
                       <PromptButton
-                        className="flex items-center gap-2 min-w-[85px] py-1 px-2 font-semibold aria-pressed:bg-[--hl-sm] text-[--color-font] transition-all text-sm"
-                        confirmMessage='Confirm'
+                        className="flex min-w-[85px] items-center gap-2 px-2 py-1 text-sm font-semibold text-[--color-font] transition-all aria-pressed:bg-[--hl-sm]"
+                        confirmMessage="Confirm"
                         onClick={handleDeleteAll}
                       >
                         <Icon icon="trash" /> Delete All
                       </PromptButton>
                     </div>
                   </div>
-                  <hr className="border my-[14px]" />
-                  {filteredCookies.length === 0 ?
-                    (<div className='flex items-center justify-center h-[200px]'>
-                      <p className="text-[12px] text-[--color-font]">{filter ? `No cookies match your search: "${filter}"` : 'No cookies found.'}</p>
-                    </div>)
-                    : (
-                      <>
-                        <CookieList
-                          cookies={filteredCookies[page] || []}
-                          onCookieDelete={handleCookieDelete}
-                          onUpdateCookie={handleCookieUpdate}
-                        />
-                        <PaginationBar
-                          isPrevDisabled={page === 0}
-                          isNextDisabled={filteredCookies.length === 1 || page === filteredCookies.length - 1}
-                          isHidden={filteredCookies.length === 1}
-                          page={page + 1}
-                          totalPages={filteredCookies.length}
-                          onPrevPress={() => {
-                            setPage(page - 1);
-                          }}
-                          onNextPress={() => {
-                            setPage(page + 1);
-                          }}
-                        />
-                      </>
-                    )
-                  }
+                  <hr className="my-[14px] border" />
+                  {filteredCookies.length === 0 ? (
+                    <div className="flex h-[200px] items-center justify-center">
+                      <p className="text-[12px] text-[--color-font]">
+                        {filter ? `No cookies match your search: "${filter}"` : 'No cookies found.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <CookieList
+                        cookies={filteredCookies[page] || []}
+                        onCookieDelete={handleCookieDelete}
+                        onUpdateCookie={handleCookieUpdate}
+                      />
+                      <PaginationBar
+                        isPrevDisabled={page === 0}
+                        isNextDisabled={filteredCookies.length === 1 || page === filteredCookies.length - 1}
+                        isHidden={filteredCookies.length === 1}
+                        page={page + 1}
+                        totalPages={filteredCookies.length}
+                        onPrevPress={() => {
+                          setPage(page - 1);
+                        }}
+                        onNextPress={() => {
+                          setPage(page + 1);
+                        }}
+                      />
+                    </>
+                  )}
                 </div>
               )}
-              <div className='flex items-center justify-between gap-3 mt-[2rem]'>
-                <div className="italic text-[12px]">
-                  * cookies are automatically sent with relevant requests
-                </div>
+              <div className="mt-[2rem] flex items-center justify-between gap-3">
+                <div className="text-[12px] italic">* cookies are automatically sent with relevant requests</div>
                 <Button
-                  className="text-[--color-font-surprise] font-semibold border border-solid border-[--hl-md] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] px-4 py-2 h-full flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-md hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
                   onPress={close}
                 >
                   Done
@@ -251,10 +267,7 @@ const CookieList = ({ cookies, onCookieDelete, onUpdateCookie }: CookieListProps
 
   return (
     <>
-      <ListBox
-        aria-label="Cookies list"
-        className="flex flex-col w-full min-h-[200px]"
-      >
+      <ListBox aria-label="Cookies list" className="flex min-h-[200px] w-full flex-col">
         {cookies.map((cookie, index) => {
           const cookieJSON = ToughCookie.fromJSON(cookie);
           const cookieString = cookieJSON ? cookieToString(cookieJSON) : '';
@@ -269,21 +282,25 @@ const CookieList = ({ cookies, onCookieDelete, onUpdateCookie }: CookieListProps
               id={cookie.id}
               data-testid={`cookie-test-iteration-${index}`}
               textValue={cookie.domain}
-              className='flex justify-between outline-none gap-2 leading-[36px] odd:bg-[--hl-xs] px-2 py-1 rounded-sm min-h-[40px]'
+              className="flex min-h-[40px] justify-between gap-2 rounded-sm px-2 py-1 leading-[36px] outline-none odd:bg-[--hl-xs]"
             >
-              <span className='flex items-center leading-relaxed min-w-[20%] break-all'><RenderedText>{cookie.domain || ''}</RenderedText></span>
-              <span className='flex items-center leading-relaxed w-[70%] break-all'><RenderedText>{cookieString || ''}</RenderedText></span>
-              <div className='flex gap-1 min-w-[10%] items-center justify-end'>
+              <span className="flex min-w-[20%] items-center break-all leading-relaxed">
+                <RenderedText>{cookie.domain || ''}</RenderedText>
+              </span>
+              <span className="flex w-[70%] items-center break-all leading-relaxed">
+                <RenderedText>{cookieString || ''}</RenderedText>
+              </span>
+              <div className="flex min-w-[10%] items-center justify-end gap-1">
                 <Button
-                  className="flex items-center gap-2 min-w-[35px] py-1 px-2 justify-center font-semibold aria-pressed:bg-[--hl-sm] text-[--color-font] transition-all text-sm"
+                  className="flex min-w-[35px] items-center justify-center gap-2 px-2 py-1 text-sm font-semibold text-[--color-font] transition-all aria-pressed:bg-[--hl-sm]"
                   onPress={() => setCookieToEdit(cookie)}
                 >
                   Edit
                 </Button>
                 <PromptButton
-                  className="flex items-center gap-2 min-w-[15px] py-1 px-2 font-semibold aria-pressed:bg-[--hl-sm] text-[--color-font] transition-all text-sm"
+                  className="flex min-w-[15px] items-center gap-2 px-2 py-1 text-sm font-semibold text-[--color-font] transition-all aria-pressed:bg-[--hl-sm]"
                   confirmMessage=""
-                  doneMessage=''
+                  doneMessage=""
                   onClick={() => onCookieDelete(cookie.id)}
                   title="Delete cookie"
                 >
@@ -294,12 +311,14 @@ const CookieList = ({ cookies, onCookieDelete, onUpdateCookie }: CookieListProps
           );
         })}
       </ListBox>
-      {cookieToEdit && <CookieModifyModal
-        isOpen={cookieToEdit !== null}
-        cookie={cookieToEdit as Cookie}
-        setIsOpen={() => setCookieToEdit(null)}
-        onUpdateCookie={onUpdateCookie}
-      />}
+      {cookieToEdit && (
+        <CookieModifyModal
+          isOpen={cookieToEdit !== null}
+          cookie={cookieToEdit as Cookie}
+          setIsOpen={() => setCookieToEdit(null)}
+          onUpdateCookie={onUpdateCookie}
+        />
+      )}
     </>
   );
 };
@@ -314,7 +333,15 @@ interface PaginationBarProps {
   onNextPress?: () => void;
 }
 
-const PaginationBar = ({ isNextDisabled, isPrevDisabled, isHidden, page, totalPages, onPrevPress, onNextPress }: PaginationBarProps) => {
+const PaginationBar = ({
+  isNextDisabled,
+  isPrevDisabled,
+  isHidden,
+  page,
+  totalPages,
+  onPrevPress,
+  onNextPress,
+}: PaginationBarProps) => {
   if (isHidden) {
     return null;
   }
@@ -328,13 +355,19 @@ const PaginationBar = ({ isNextDisabled, isPrevDisabled, isHidden, page, totalPa
           className="flex h-[25px] items-center justify-center gap-[5px] p-1"
           onPress={onPrevPress}
         >
-          <Icon icon="arrow-left" className="h-[12px] w-[12px] text text-[--color-font] disabled:text-[#00000080]" />
-          <p className="m-0 text-[12px] font-normal capitalize leading-[15px] text-[--color-font] disabled:text-[#00000080]">Previous</p>
+          <Icon icon="arrow-left" className="text h-[12px] w-[12px] text-[--color-font] disabled:text-[#00000080]" />
+          <p className="m-0 text-[12px] font-normal capitalize leading-[15px] text-[--color-font] disabled:text-[#00000080]">
+            Previous
+          </p>
         </Button>
-        <div className="flex gap-2 items-center">
-          <p className="m-0 text-[10px] font-normal leading-[15px] text-[--color-font] disabled:text-[#00000080]">{page}</p>
+        <div className="flex items-center gap-2">
+          <p className="m-0 text-[10px] font-normal leading-[15px] text-[--color-font] disabled:text-[#00000080]">
+            {page}
+          </p>
           <p className="m-0 text-[10px] font-normal leading-[15px] text-[--color-font] disabled:text-[#00000080]">of</p>
-          <p className="m-0 text-[10px] font-normal leading-[15px] text-[--color-font] disabled:text-[#00000080]">{totalPages}</p>
+          <p className="m-0 text-[10px] font-normal leading-[15px] text-[--color-font] disabled:text-[#00000080]">
+            {totalPages}
+          </p>
         </div>
         <Button
           isDisabled={isNextDisabled}
@@ -342,7 +375,9 @@ const PaginationBar = ({ isNextDisabled, isPrevDisabled, isHidden, page, totalPa
           className="flex h-[25px] items-center justify-center gap-[5px] p-1"
           onPress={onNextPress}
         >
-          <p className="m-0 text-[12px] font-normal capitalize leading-[15px] text-[--color-font] disabled:text-[#00000080]">Next</p>
+          <p className="m-0 text-[12px] font-normal capitalize leading-[15px] text-[--color-font] disabled:text-[#00000080]">
+            Next
+          </p>
           <Icon icon="arrow-right" className="h-[12px] w-[12px] text-[--color-font] disabled:text-[#00000080]" />
         </Button>
       </div>
@@ -357,7 +392,7 @@ interface CookieModifyModalProps {
   onUpdateCookie: (cookie: Cookie) => void;
 }
 
-const CookieModifyModal = (({ cookie, isOpen, setIsOpen, onUpdateCookie }: CookieModifyModalProps) => {
+const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: CookieModifyModalProps) => {
   const [editCookie, setEditCookie] = useState<Cookie>(cookie);
 
   let localDateTime: string;
@@ -383,43 +418,46 @@ const CookieModifyModal = (({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cooki
       isDismissable={true}
       isOpen={isOpen}
       onOpenChange={setIsOpen}
-      className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-[--color-bg] theme--transparent-overlay"
+      className="theme--transparent-overlay fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-[--color-bg]"
     >
-      <Modal className="fixed top-[100px] w-full max-w-[900px] rounded-md border border-solid border-[--hl-sm] p-[32px] h-fit bg-[--color-bg] text-[--color-font] theme--dialog">
-        <Dialog className="outline-none relative">
+      <Modal className="theme--dialog fixed top-[100px] h-fit w-full max-w-[900px] rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[32px] text-[--color-font]">
+        <Dialog className="relative outline-none">
           {({ close }) => (
             <>
               {editCookie && (
                 <>
                   <div className="flex flex-col gap-4">
-                    <Heading slot="title" className="text-[22px] leading-[34px] mb-[14px]">
+                    <Heading slot="title" className="mb-[14px] text-[22px] leading-[34px]">
                       Manage Cookies
                     </Heading>
-                    <Button onPress={close} className="fa fa-times absolute top-0 right-0 text-xl" />
+                    <Button onPress={close} className="fa fa-times absolute right-0 top-0 text-xl" />
 
-                    <Tabs aria-label='Cookie modify tabs' className="flex-1 w-full h-full flex flex-col">
-                      <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+                    <Tabs aria-label="Cookie modify tabs" className="flex h-full w-full flex-1 flex-col">
+                      <TabList
+                        className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+                        aria-label="Request pane tabs"
+                      >
                         <Tab
-                          className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-                          id='friendly'
+                          className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                          id="friendly"
                         >
                           Friendly
                         </Tab>
                         <Tab
-                          className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-                          id='raw'
+                          className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                          id="raw"
                         >
                           Raw
                         </Tab>
                       </TabList>
-                      <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto pt-3' id='friendly'>
+                      <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto pt-3" id="friendly">
                         <div className="form-row">
                           <div className="form-control form-control--outlined">
                             <label data-testid="CookieKey">
                               Key
                               <OneLineEditor
                                 id="cookie-key"
-                                defaultValue={(editCookie && editCookie.key || '').toString()}
+                                defaultValue={((editCookie && editCookie.key) || '').toString()}
                                 onChange={value => setEditCookie({ ...editCookie, key: value.trim() })}
                               />
                             </label>
@@ -429,7 +467,7 @@ const CookieModifyModal = (({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cooki
                               Value
                               <OneLineEditor
                                 id="cookie-value"
-                                defaultValue={(editCookie && editCookie.value || '').toString()}
+                                defaultValue={((editCookie && editCookie.value) || '').toString()}
                                 onChange={value => setEditCookie({ ...editCookie, value: value.trim() })}
                               />
                             </label>
@@ -441,7 +479,7 @@ const CookieModifyModal = (({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cooki
                               Domain
                               <OneLineEditor
                                 id="cookie-domain"
-                                defaultValue={(editCookie && editCookie.domain || '').toString()}
+                                defaultValue={((editCookie && editCookie.domain) || '').toString()}
                                 onChange={value => setEditCookie({ ...editCookie, domain: value.trim() })}
                               />
                             </label>
@@ -451,7 +489,7 @@ const CookieModifyModal = (({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cooki
                               Path
                               <OneLineEditor
                                 id="cookie-path"
-                                defaultValue={(editCookie && editCookie.path || '').toString()}
+                                defaultValue={((editCookie && editCookie.path) || '').toString()}
                                 onChange={value => setEditCookie({ ...editCookie, path: value.trim() })}
                               />
                             </label>
@@ -463,12 +501,12 @@ const CookieModifyModal = (({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cooki
                             <input
                               type="datetime-local"
                               defaultValue={localDateTime}
-                              className='calendar-invert'
+                              className="calendar-invert"
                               onChange={event => setEditCookie({ ...editCookie, expires: event.target.value })}
                             />
                           </label>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 w-full">
+                        <div className="grid w-full grid-cols-2 gap-2">
                           <label className="flex items-center gap-1">
                             <input
                               className="space-left"
@@ -491,7 +529,7 @@ const CookieModifyModal = (({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cooki
                           </label>
                         </div>
                       </TabPanel>
-                      <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto pt-3' id='raw'>
+                      <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto pt-3" id="raw">
                         <div className="form-control form-control--outlined">
                           <label>
                             Raw Cookie String
@@ -520,9 +558,9 @@ const CookieModifyModal = (({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cooki
                   </div>
                 </>
               )}
-              <div className='flex items-center justify-end mt-[2rem]'>
+              <div className="mt-[2rem] flex items-center justify-end">
                 <Button
-                  className="text-[--color-font-surprise] font-semibold border border-solid border-[--hl-md] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] px-4 py-2 h-full flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-md hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
                   onPress={() => {
                     onUpdateCookie(editCookie as Cookie);
                     setIsOpen(false);
@@ -537,4 +575,4 @@ const CookieModifyModal = (({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cooki
       </Modal>
     </ModalOverlay>
   );
-});
+};

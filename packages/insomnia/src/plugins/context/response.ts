@@ -74,8 +74,7 @@ export function init(response?: MaybeResponse) {
         } else if (matchedHeaders.length === 1) {
           return matchedHeaders[0].value;
         }
-          return null;
-
+        return null;
       },
 
       getHeaders() {

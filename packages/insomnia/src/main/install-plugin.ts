@@ -50,7 +50,11 @@ export default async function (lookupName: string) {
       info = await _isInsomniaPlugin(lookupName);
       // Get actual module name without version suffixes and things
       const moduleName = info.name;
-      const pluginDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'plugins', moduleName);
+      const pluginDir = path.join(
+        process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'),
+        'plugins',
+        moduleName,
+      );
 
       // Make plugin directory
       await mkdir(pluginDir, { recursive: true });
@@ -275,7 +279,6 @@ function _getYarnPath() {
     return path.resolve(app.getAppPath(), './bin/yarn-standalone.js');
   }
   return path.resolve(app.getAppPath(), '../bin/yarn-standalone.js');
-
 }
 
 function escape(p: string) {
@@ -285,5 +288,4 @@ function escape(p: string) {
   }
   // Escape whitespace and parenthesis with backslashes for Unix paths
   return p.replace(/([\s()])/g, '\\$1');
-
 }

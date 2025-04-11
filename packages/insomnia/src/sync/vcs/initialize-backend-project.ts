@@ -6,16 +6,24 @@ import type { Workspace } from '../../models/workspace';
 import type { StatusCandidate } from '../types';
 import type { VCS } from './vcs';
 
-export const initializeLocalBackendProjectAndMarkForSync = async ({ vcs, workspace }: { vcs: VCS; workspace: Workspace }) => {
+export const initializeLocalBackendProjectAndMarkForSync = async ({
+  vcs,
+  workspace,
+}: {
+  vcs: VCS;
+  workspace: Workspace;
+}) => {
   // Create local project
   await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
 
   // Everything unstaged
-  const candidates = (await database.withDescendants(workspace)).filter(canSync).map((doc: BaseModel): StatusCandidate => ({
-    key: doc._id,
-    name: doc.name || '',
-    document: doc,
-  }));
+  const candidates = (await database.withDescendants(workspace)).filter(canSync).map(
+    (doc: BaseModel): StatusCandidate => ({
+      key: doc._id,
+      name: doc.name || '',
+      document: doc,
+    }),
+  );
   const status = await vcs.status(candidates);
 
   // Stage everything

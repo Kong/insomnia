@@ -26,13 +26,5 @@ export const ResponseWebView: FC<Props> = ({ webpreferences, body, url }) => {
       }
     };
   }, [body, url]);
-  return (
-    <webview
-      data-testid="ResponseWebView"
-      ref={webviewRef}
-      src="about:blank"
-       
-      webpreferences={webpreferences}
-    />
-  );
+  return <webview data-testid="ResponseWebView" ref={webviewRef} src="about:blank" webpreferences={webpreferences} />;
 };

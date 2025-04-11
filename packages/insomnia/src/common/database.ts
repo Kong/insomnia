@@ -165,11 +165,7 @@ export const database = {
   },
 
   /** find documents matching query */
-  find: async function <T extends BaseModel>(
-    type: string,
-    query: Query<T> | string = {},
-    sort: Sort = { created: 1 },
-  ) {
+  find: async function <T extends BaseModel>(type: string, query: Query<T> | string = {}, sort: Sort = { created: 1 }) {
     if (db._empty) {
       return _send<T[]>('find', ...arguments);
     }
@@ -278,7 +274,6 @@ export const database = {
       return null;
     }
     return database.getWhere<T>(type, { _id: id });
-
   },
 
   getMostRecentlyModified: async function <T extends BaseModel>(type: string, query: Query<T> = {}) {
@@ -567,7 +562,6 @@ export const database = {
       return database.update<T>(doc, fromSync);
     }
     return database.insert<T>(doc, fromSync);
-
   },
 
   /** get all ancestors of specified types of a document */
@@ -599,10 +593,7 @@ export const database = {
       }
 
       // Continue searching for children
-      docsToReturn = [
-        ...docsToReturn,
-        ...foundDocs,
-      ];
+      docsToReturn = [...docsToReturn, ...foundDocs];
       return next(foundDocs);
     }
 
@@ -622,7 +613,11 @@ export const database = {
    * @param queryTypes - An optional array of document types to query. If not provided, all types are queried.
    * @returns A promise that resolves to an array of all descendant documents.
    */
-  withDescendants: async function <T extends BaseModel>(doc: T | null, stopType: string | null = null, queryTypes: string[] = []): Promise<BaseModel[]> {
+  withDescendants: async function <T extends BaseModel>(
+    doc: T | null,
+    stopType: string | null = null,
+    queryTypes: string[] = [],
+  ): Promise<BaseModel[]> {
     if (db._empty) {
       return _send<BaseModel[]>('withDescendants', ...arguments);
     }
@@ -648,10 +643,7 @@ export const database = {
         }
 
         for (const more of await Promise.all(promises)) {
-          foundDocs = [
-            ...foundDocs,
-            ...more,
-          ];
+          foundDocs = [...foundDocs, ...more];
         }
       }
 
@@ -708,7 +700,12 @@ let changeListeners: ChangeListener[] = [];
 
 /** push changes into the buffer, so that changeListeners can get change contents when database.flushChanges is called,
  * this method should be called whenever a document change happens */
-async function notifyOfChange<T extends BaseModel>(event: ChangeType, doc: T, fromSync: boolean, patches: Patch<T>[] = []) {
+async function notifyOfChange<T extends BaseModel>(
+  event: ChangeType,
+  doc: T,
+  fromSync: boolean,
+  patches: Patch<T>[] = [],
+) {
   const updatedDoc = doc;
 
   // TODO: Use object is better than array

@@ -14,15 +14,22 @@ describe('curl', () => {
       {
         flag: '-d',
         inputs: ['first=1', 'second=2', 'third'],
-        expected: [{ name: 'first', value: '1' }, {
-          name: 'second',
-          value: '2',
-        }, { name: '', value: 'third' }],
+        expected: [
+          { name: 'first', value: '1' },
+          {
+            name: 'second',
+            value: '2',
+          },
+          { name: '', value: 'third' },
+        ],
       },
       {
         flag: '-d',
         inputs: ['first=1&second=2'],
-        expected: [{ name: 'first', value: '1' }, { name: 'second', value: '2' }],
+        expected: [
+          { name: 'first', value: '1' },
+          { name: 'second', value: '2' },
+        ],
       },
       { flag: '-d', inputs: ['%3D'], expected: [{ name: '', value: '=' }] },
       { flag: '--d', inputs: ['%3D=%3D'], expected: [{ name: '=', value: '=' }] },
@@ -34,15 +41,22 @@ describe('curl', () => {
       {
         flag: '--data',
         inputs: ['first=1', 'second=2', 'third'],
-        expected: [{ name: 'first', value: '1' }, {
-          name: 'second',
-          value: '2',
-        }, { name: '', value: 'third' }],
+        expected: [
+          { name: 'first', value: '1' },
+          {
+            name: 'second',
+            value: '2',
+          },
+          { name: '', value: 'third' },
+        ],
       },
       {
         flag: '--data',
         inputs: ['first=1&second=2'],
-        expected: [{ name: 'first', value: '1' }, { name: 'second', value: '2' }],
+        expected: [
+          { name: 'first', value: '1' },
+          { name: 'second', value: '2' },
+        ],
       },
       { flag: '--data', inputs: ['%3D'], expected: [{ name: '', value: '=' }] },
       { flag: '--data', inputs: ['%3D=%3D'], expected: [{ name: '=', value: '=' }] },
@@ -54,15 +68,22 @@ describe('curl', () => {
       {
         flag: '--data-ascii',
         inputs: ['first=1', 'second=2', 'third'],
-        expected: [{ name: 'first', value: '1' }, {
-          name: 'second',
-          value: '2',
-        }, { name: '', value: 'third' }],
+        expected: [
+          { name: 'first', value: '1' },
+          {
+            name: 'second',
+            value: '2',
+          },
+          { name: '', value: 'third' },
+        ],
       },
       {
         flag: '--data-ascii',
         inputs: ['first=1&second=2'],
-        expected: [{ name: 'first', value: '1' }, { name: 'second', value: '2' }],
+        expected: [
+          { name: 'first', value: '1' },
+          { name: 'second', value: '2' },
+        ],
       },
 
       // --data-binary
@@ -72,15 +93,22 @@ describe('curl', () => {
       {
         flag: '--data-binary',
         inputs: ['first=1', 'second=2', 'third'],
-        expected: [{ name: 'first', value: '1' }, {
-          name: 'second',
-          value: '2',
-        }, { name: '', value: 'third' }],
+        expected: [
+          { name: 'first', value: '1' },
+          {
+            name: 'second',
+            value: '2',
+          },
+          { name: '', value: 'third' },
+        ],
       },
       {
         flag: '--data-binary',
         inputs: ['first=1&second=2'],
-        expected: [{ name: 'first', value: '1' }, { name: 'second', value: '2' }],
+        expected: [
+          { name: 'first', value: '1' },
+          { name: 'second', value: '2' },
+        ],
       },
 
       // --data-raw
@@ -89,15 +117,22 @@ describe('curl', () => {
       {
         flag: '--data-raw',
         inputs: ['first=1', 'second=2', 'third'],
-        expected: [{ name: 'first', value: '1' }, {
-          name: 'second',
-          value: '2',
-        }, { name: '', value: 'third' }],
+        expected: [
+          { name: 'first', value: '1' },
+          {
+            name: 'second',
+            value: '2',
+          },
+          { name: '', value: 'third' },
+        ],
       },
       {
         flag: '--data-raw',
         inputs: ['first=1&second=2'],
-        expected: [{ name: 'first', value: '1' }, { name: 'second', value: '2' }],
+        expected: [
+          { name: 'first', value: '1' },
+          { name: 'second', value: '2' },
+        ],
       },
 
       // --data-urlencode
@@ -110,15 +145,22 @@ describe('curl', () => {
       {
         flag: '--data-urlencode',
         inputs: ['first=1', 'second=2', 'third'],
-        expected: [{ name: 'first', value: '1' }, {
-          name: 'second',
-          value: '2',
-        }, { name: '', value: 'third' }],
+        expected: [
+          { name: 'first', value: '1' },
+          {
+            name: 'second',
+            value: '2',
+          },
+          { name: '', value: 'third' },
+        ],
       },
       {
         flag: '--data-urlencode',
         inputs: ['first=1&second=2'],
-        expected: [{ name: 'first', value: '1' }, { name: 'second', value: '2' }],
+        expected: [
+          { name: 'first', value: '1' },
+          { name: 'second', value: '2' },
+        ],
       },
       { flag: '--data-urlencode', inputs: ['=value'], expected: [{ name: '', value: 'value' }] },
 
@@ -135,41 +177,55 @@ describe('curl', () => {
       { flag: '--data-urlencode', inputs: ['"'], expected: [{ name: '', value: '"' }] },
       { flag: '--data-urlencode', inputs: ['='], expected: [{ name: '', value: '' }] },
       { flag: '--data-urlencode', inputs: ['%3D'], expected: [{ name: '', value: '%3D' }] },
-    ])('handles %p correctly', async ({
-      flag,
-      inputs,
-      expected,
-    }: { flag: string; inputs: string[]; expected: Parameter[] }) => {
-      const flaggedInputs = inputs.map(input => `${flag} ${quote([input])}`).join(' ');
-      const rawData = `curl -X POST https://example.com 
+    ])(
+      'handles %p correctly',
+      async ({ flag, inputs, expected }: { flag: string; inputs: string[]; expected: Parameter[] }) => {
+        const flaggedInputs = inputs.map(input => `${flag} ${quote([input])}`).join(' ');
+        const rawData = `curl -X POST https://example.com 
       -H 'Content-Type: application/x-www-form-urlencoded'
       ${flaggedInputs}
       `;
 
-      expect(convert(rawData)).toMatchObject([{
-        body: {
-          params: expected,
-        },
-      }]);
-    });
+        expect(convert(rawData)).toMatchObject([
+          {
+            body: {
+              params: expected,
+            },
+          },
+        ]);
+      },
+    );
   });
   describe('cURL -H flags', () => {
     it.each([
       { flag: '-H', inputs: ['X-Host: example.com'], expected: [{ name: 'X-Host', value: 'example.com' }] },
       { flag: '-H', inputs: ['X-Host:example.com'], expected: [{ name: 'X-Host', value: 'example.com' }] },
-      { flag: '-H', inputs: ['Content-Type:application/x-www-form-urlencoded'], expected: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }] },
-      { flag: '   -H', inputs: ['Content-Type:application/x-www-form-urlencoded'], expected: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }] },
-      { flag: ' -H', inputs: ['Content-Type:application/x-www-form-urlencoded'], expected: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }] },
-    ])('handles %p correctly', async ({
-      flag,
-      inputs,
-      expected,
-    }: { flag: string; inputs: string[]; expected: Parameter[] }) => {
-      const flaggedInputs = inputs.map(input => `${flag} ${quote([input])}`).join(' ');
-      const rawData = `curl https://example.com ${flaggedInputs}`;
-      expect(convert(rawData)).toMatchObject([{
-        headers: expected,
-      }]);
-    });
+      {
+        flag: '-H',
+        inputs: ['Content-Type:application/x-www-form-urlencoded'],
+        expected: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }],
+      },
+      {
+        flag: '   -H',
+        inputs: ['Content-Type:application/x-www-form-urlencoded'],
+        expected: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }],
+      },
+      {
+        flag: ' -H',
+        inputs: ['Content-Type:application/x-www-form-urlencoded'],
+        expected: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }],
+      },
+    ])(
+      'handles %p correctly',
+      async ({ flag, inputs, expected }: { flag: string; inputs: string[]; expected: Parameter[] }) => {
+        const flaggedInputs = inputs.map(input => `${flag} ${quote([input])}`).join(' ');
+        const rawData = `curl https://example.com ${flaggedInputs}`;
+        expect(convert(rawData)).toMatchObject([
+          {
+            headers: expected,
+          },
+        ]);
+      },
+    );
   });
 });

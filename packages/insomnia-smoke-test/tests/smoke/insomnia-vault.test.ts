@@ -3,7 +3,8 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-const testVaultKey = 'eyJhbGciOiJBMjU2R0NNIiwiZXh0Ijp0cnVlLCJrIjoiaEoxaW03cjcwV3ltZ3puT3hXcDNTb0ZQS3RBaGMwcmFfd2VQb2Z2b2xRNCIsImtleV9vcHMiOlsiZW5jcnlwdCIsImRlY3J5cHQiXSwia3R5Ijoib2N0In0=';
+const testVaultKey =
+  'eyJhbGciOiJBMjU2R0NNIiwiZXh0Ijp0cnVlLCJrIjoiaEoxaW03cjcwV3ltZ3puT3hXcDNTb0ZQS3RBaGMwcmFfd2VQb2Z2b2xRNCIsImtleV9vcHMiOlsiZW5jcnlwdCIsImRlY3J5cHQiXSwia3R5Ijoib2N0In0=';
 const testVaultSalt = 'e619272433fc739d52ff1ba1b45debedfe55cb42685af10a46e2b1285acb7120';
 const tesSrpSecret = 'b424e8700ef89f77a6cffc648b9c6d42bb7de58914d88cd79966684ffe5b4ebe';
 
@@ -94,7 +95,7 @@ test.describe('Vault key actions', async () => {
     // fill the input with aria lable test with valid and invalid vault key
     await page.getByLabel('Vault Key Input').fill('invalidVaultKey');
     await page.getByRole('button', { name: 'Unlock' }).click();
-    await modal.getByText('M2 didn\'t Check').click();
+    await modal.getByText("M2 didn't Check").click();
   });
 });
 
@@ -154,7 +155,11 @@ test.describe('Check vault used in environment', async () => {
     await page.getByRole('menuitemradio', { name: 'Secret' }).click();
 
     // go back
-    await page.locator('[data-icon="chevron-left"]').filter({ has: page.locator(':visible') }).first().click();
+    await page
+      .locator('[data-icon="chevron-left"]')
+      .filter({ has: page.locator(':visible') })
+      .first()
+      .click();
 
     // activate global private vault environment
     await page.getByText('Vault Collection').click();
@@ -233,7 +238,7 @@ test.describe('Check vault used in environment', async () => {
     await page.getByTestId('underlay').click();
     // activate request
     await page.getByTestId('legacy-invalid-vault').getByLabel('GET legacy-invalid-vault', { exact: true }).click();
-    await page.getByRole('button', { name: 'Send' }).click();    // Expect to see error message
+    await page.getByRole('button', { name: 'Send' }).click(); // Expect to see error message
     await expect(page.getByText('Unexpected Request Failure')).toBeVisible();
     await expect(page.getByText('vault is a reserved key for insomnia vault')).toBeVisible();
   });

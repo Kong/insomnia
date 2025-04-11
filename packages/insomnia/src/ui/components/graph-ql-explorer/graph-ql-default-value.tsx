@@ -15,8 +15,7 @@ export const GraphQLDefaultValue: FC<Props> = memo(({ field }) => {
     const strDefault = ast ? print(ast) : '';
     return <span className="success">{` = ${strDefault}`}</span>;
   }
-    return null;
-
+  return null;
 });
 
 GraphQLDefaultValue.displayName = 'GraphQLDefaultValue';

@@ -152,11 +152,7 @@ export async function exportHarResponse(response: Response | null) {
   return harResponse;
 }
 
-export async function exportHarRequest(
-  requestId: string,
-  environmentId: string,
-  addContentLength = false,
-) {
+export async function exportHarRequest(requestId: string, environmentId: string, addContentLength = false) {
   const request = await models.request.getById(requestId);
 
   if (!request) {
@@ -166,17 +162,10 @@ export async function exportHarRequest(
   return exportHarWithRequest(request, environmentId, addContentLength);
 }
 
-export async function exportHarWithRequest(
-  request: Request,
-  environmentId?: string,
-  addContentLength = false,
-) {
+export async function exportHarWithRequest(request: Request, environmentId?: string, addContentLength = false) {
   try {
     const renderResult = await getRenderedRequestAndContext({ request, environment: environmentId });
-    const renderedRequest = await _applyRequestPluginHooks(
-      renderResult.request,
-      renderResult.context,
-    );
+    const renderedRequest = await _applyRequestPluginHooks(renderResult.request, renderResult.context);
     parseGraphQLReqeustBody(renderedRequest);
     return exportHarWithRenderedRequest(renderedRequest, addContentLength);
   } catch (err) {
@@ -213,15 +202,11 @@ async function _applyRequestPluginHooks(
   return newRenderedRequest;
 }
 
-export async function exportHarWithRenderedRequest(
-  renderedRequest: RenderedRequest,
-  addContentLength = false,
-) {
+export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequest, addContentLength = false) {
   const url = smartEncodeUrl(renderedRequest.url, renderedRequest.settingEncodeUrl);
 
   if (addContentLength) {
-    const hasContentLengthHeader =
-      filterHeaders(renderedRequest.headers, 'Content-Length').length > 0;
+    const hasContentLengthHeader = filterHeaders(renderedRequest.headers, 'Content-Length').length > 0;
 
     if (!hasContentLengthHeader) {
       const name = 'Content-Length';
@@ -277,23 +262,19 @@ function getRequestCookies(renderedRequest: RenderedRequest) {
 }
 
 export function getResponseCookiesFromHeaders(headers: Har.Cookie[]) {
-  return getSetCookieHeaders(headers)
-    .reduce((accumulator, harCookie) => {
-      let cookie: null | undefined | ToughCookie = null;
+  return getSetCookieHeaders(headers).reduce((accumulator, harCookie) => {
+    let cookie: null | undefined | ToughCookie = null;
 
-      try {
-        cookie = ToughCookie.parse(harCookie.value || '', { loose: true });
-      } catch (error) { }
+    try {
+      cookie = ToughCookie.parse(harCookie.value || '', { loose: true });
+    } catch (error) {}
 
-      if (cookie === null || cookie === undefined) {
-        return accumulator;
-      }
+    if (cookie === null || cookie === undefined) {
+      return accumulator;
+    }
 
-      return [
-        ...accumulator,
-        mapCookie(cookie),
-      ];
-    }, [] as Har.Cookie[]);
+    return [...accumulator, mapCookie(cookie)];
+  }, [] as Har.Cookie[]);
 }
 
 function getResponseCookies(response: Response) {
@@ -403,9 +384,7 @@ function getRequestPostData(renderedRequest: RenderedRequest): Har.PostData | un
       mimeType: body.mimeType || '',
       params: body.params.map(({ name, value, fileName, type }) => ({
         name,
-        ...(type === 'file'
-          ? { fileName }
-          : { value }),
+        ...(type === 'file' ? { fileName } : { value }),
       })),
     };
   }

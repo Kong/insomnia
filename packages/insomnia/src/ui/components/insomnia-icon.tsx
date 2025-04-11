@@ -36,14 +36,7 @@ export const InsomniaLogo = ({
       fill="url(#_Linear1)"
       transform="translate(-448 -236) translate(448.128 232.136) scale(3.99198)"
     >
-      {loading && (
-        <animate
-          attributeName="opacity"
-          values="0.4;1;0.4"
-          dur="4s"
-          repeatCount="indefinite"
-        />
-      )}
+      {loading && <animate attributeName="opacity" values="0.4;1;0.4" dur="4s" repeatCount="indefinite" />}
     </path>
     <defs>
       <linearGradient

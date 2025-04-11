@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { PluginTheme} from './misc';
+import type { PluginTheme } from './misc';
 import { containsNunjucks, validateTheme, validateThemeName } from './misc';
 
 describe('containsNunjucks', () => {
@@ -21,9 +21,10 @@ describe('validateTheme', () => {
   const nunjucksValue = '{{ nunjucks.4.lyfe }}';
   const name = 'mock-plugin';
   const displayName = 'Mock Plugin';
-  const mockMessage = (path: string[]) => `[plugin] Nunjucks values in plugin themes are no longer valid. The plugin ${displayName} (${name}) has an invalid value, "${nunjucksValue}" at the path $.theme.${path.join('.')}`;
+  const mockMessage = (path: string[]) =>
+    `[plugin] Nunjucks values in plugin themes are no longer valid. The plugin ${displayName} (${name}) has an invalid value, "${nunjucksValue}" at the path $.theme.${path.join('.')}`;
 
-  vi.spyOn(console, 'error').mockImplementation(() => { });
+  vi.spyOn(console, 'error').mockImplementation(() => {});
 
   it('will validate rawCSS in the plugin theme', () => {
     const pluginTheme: PluginTheme = {

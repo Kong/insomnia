@@ -11,7 +11,7 @@ const [startDelimiters, endDelimiters] = delimitersData.reduce(
     acc[1].push(e[1]);
     return acc;
   },
-  [[], []] as typeof delimitersData
+  [[], []] as typeof delimitersData,
 );
 
 function tokenize(edn: string) {
@@ -24,7 +24,7 @@ function tokenize(edn: string) {
   for (const c of edn) {
     if (!insideString) {
       // Ignore when
-      if (c === ',' || c === '\n' || c === '\r' || c === '\t' || (c === ' ')) {
+      if (c === ',' || c === '\n' || c === '\r' || c === '\t' || c === ' ') {
         if (symbol) {
           tokens.push(symbol);
           symbol = '';

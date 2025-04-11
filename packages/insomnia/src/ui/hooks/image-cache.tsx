@@ -24,8 +24,7 @@ class ImageCache {
       throw this.__cache[base].value;
     } else if (
       this.__cache[base] &&
-      (this.__cache[base].version === version ||
-        now - this.__cache[base].timestamp < this.ttl)
+      (this.__cache[base].version === version || now - this.__cache[base].timestamp < this.ttl)
     ) {
       // If the value is an HTMLImageElement, the version matches, and hasn't expired, return it
       return this.__cache[base].value;
@@ -86,9 +85,7 @@ class ImageCache {
     }
     return () => {
       if (this.__cache[base] && this.__cache[base].subscribers) {
-        this.__cache[base].subscribers = this.__cache[base].subscribers.filter(
-          cb => cb !== callback
-        );
+        this.__cache[base].subscribers = this.__cache[base].subscribers.filter(cb => cb !== callback);
       }
     };
   }
@@ -114,7 +111,7 @@ export function useImageCache(src: string, cache: ImageCache): string {
     (callback: () => void) => {
       return cache.subscribe(base, callback);
     },
-    [base, cache]
+    [base, cache],
   );
 
   const getSnapshot = () => {
@@ -148,11 +145,7 @@ export function useImageCache(src: string, cache: ImageCache): string {
     });
   }, [cache, base, version]);
 
-  const cacheSrc = useSyncExternalStore(
-    subscribe,
-    getSnapshot,
-    getServerSnapshot
-  );
+  const cacheSrc = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   if (typeof cacheSrc === 'string') {
     return cacheSrc;

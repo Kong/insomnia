@@ -1,7 +1,17 @@
 import type * as git from 'isomorphic-git';
 import path from 'path';
 
-type Methods = 'readFile' | 'writeFile' | 'unlink' | 'readdir' | 'mkdir' | 'rmdir' | 'stat' | 'lstat' | 'readlink' | 'symlink';
+type Methods =
+  | 'readFile'
+  | 'writeFile'
+  | 'unlink'
+  | 'readdir'
+  | 'mkdir'
+  | 'rmdir'
+  | 'stat'
+  | 'lstat'
+  | 'readlink'
+  | 'symlink';
 
 /**
  * An isometric-git FS client that can route to various client depending on what the filePath is.
@@ -21,7 +31,7 @@ export function projectRoutableFSClient(
     for (const prefix of Object.keys(otherFS)) {
       if (filePath.indexOf(path.normalize(prefix)) === 0) {
         // TODO: remove non-null assertion
-         
+
         return otherFS[prefix].promises[method]!(filePath, ...args);
       }
     }
@@ -30,7 +40,6 @@ export function projectRoutableFSClient(
     // console.log('[routablefs] Executing', method, filePath, { args });
     // Fallback to default if no prefix matched
     // TODO: remove non-null assertion
-     
 
     // We store insomnia files in the database and all other files in a folder named 'other' on disk
     // When we read a directory, we need to merge the two lists to provide the full list of files

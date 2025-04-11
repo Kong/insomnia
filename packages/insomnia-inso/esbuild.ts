@@ -22,9 +22,7 @@ const config: BuildOptions = {
             paths: [args.resolveDir],
           });
           // Call twice the replace is to solve the problem of the path in Windows
-          const pathEsm = pathUmdMay
-            .replace('/umd/', '/esm/')
-            .replace('\\umd\\', '\\esm\\');
+          const pathEsm = pathUmdMay.replace('/umd/', '/esm/').replace('\\umd\\', '\\esm\\');
           return { path: pathEsm };
         });
       },

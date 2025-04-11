@@ -9,29 +9,29 @@ import type { RequestInfoOption } from './request-info';
 import type { RequestTestResult } from './test';
 
 export interface IEnvironment {
-    id: string;
-    name: string;
-    data: object;
+  id: string;
+  name: string;
+  data: object;
 }
 export interface RequestContext {
-    request: Request;
-    timelinePath: string;
-    environment: IEnvironment;
-    baseEnvironment: IEnvironment;
-    vault?: IEnvironment;
-    collectionVariables?: object;
-    globals?: object;
-    iterationData?: Omit<IEnvironment, 'id'>;
-    timeout: number;
-    settings: Settings;
-    clientCertificates: ClientCertificate[];
-    cookieJar: InsomniaCookieJar;
-    // only for the after-response script
-    response?: sendCurlAndWriteTimelineResponse | sendCurlAndWriteTimelineError;
-    requestTestResults?: RequestTestResult[];
-    requestInfo: RequestInfoOption;
-    execution: ExecutionOption;
-    logs: string[];
-    transientVariables?: Omit<IEnvironment, 'id'>;
-    parentFolders: { id: string; name: string; environment: Record<string, any> }[];
+  request: Request;
+  timelinePath: string;
+  environment: IEnvironment;
+  baseEnvironment: IEnvironment;
+  vault?: IEnvironment;
+  collectionVariables?: object;
+  globals?: object;
+  iterationData?: Omit<IEnvironment, 'id'>;
+  timeout: number;
+  settings: Settings;
+  clientCertificates: ClientCertificate[];
+  cookieJar: InsomniaCookieJar;
+  // only for the after-response script
+  response?: sendCurlAndWriteTimelineResponse | sendCurlAndWriteTimelineError;
+  requestTestResults?: RequestTestResult[];
+  requestInfo: RequestInfoOption;
+  execution: ExecutionOption;
+  logs: string[];
+  transientVariables?: Omit<IEnvironment, 'id'>;
+  parentFolders: { id: string; name: string; environment: Record<string, any> }[];
 }

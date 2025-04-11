@@ -44,12 +44,7 @@ export const requireInterceptor = (moduleName: string): any => {
     ].includes(moduleName)
   ) {
     return require(moduleName);
-  } else if (
-    [
-      'atob',
-      'btoa',
-    ].includes(moduleName)
-  ) {
+  } else if (['atob', 'btoa'].includes(moduleName)) {
     return moduleName === 'atob' ? atob : btoa;
   } else if (
     [

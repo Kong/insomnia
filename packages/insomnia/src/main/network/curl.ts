@@ -61,11 +61,7 @@ export interface CurlCloseEvent {
   code: number;
 }
 
-export type CurlEvent =
-  | CurlOpenEvent
-  | CurlMessageEvent
-  | CurlErrorEvent
-  | CurlCloseEvent;
+export type CurlEvent = CurlOpenEvent | CurlMessageEvent | CurlErrorEvent | CurlCloseEvent;
 
 const CurlConnections = new Map<string, Curl>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
@@ -77,9 +73,7 @@ const parseHeadersAndBuildTimeline = (url: string, headersWithStatus: HeaderInfo
   const statusCode = result?.code || 0;
   const httpVersion = result?.version;
   const responseHeaders = Object.entries(headers).map(([name, value]) => ({ name, value: value?.toString() || '' }));
-  const timeline = [
-    { value: `Preparing request to ${url}`, name: 'Text', timestamp: Date.now() },
-  ];
+  const timeline = [{ value: `Preparing request to ${url}`, name: 'Text', timestamp: Date.now() }];
   return { timeline, responseHeaders, statusCode, statusMessage, httpVersion };
 };
 interface OpenCurlRequestOptions {
@@ -95,7 +89,7 @@ interface OpenCurlRequestOptions {
 }
 const openCurlConnection = async (
   _event: Electron.IpcMainInvokeEvent,
-  options: OpenCurlRequestOptions
+  options: OpenCurlRequestOptions,
 ): Promise<void> => {
   const existingConnection = CurlConnections.get(options.requestId);
 
@@ -124,7 +118,7 @@ const openCurlConnection = async (
 
   const caCert = await models.caCertificate.findByParentId(options.workspaceId);
   const caCertficatePath = caCert?.path || null;
-  const caCertificate = (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString());
+  const caCertificate = caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString();
 
   try {
     if (!options.url) {
@@ -171,7 +165,13 @@ const openCurlConnection = async (
       if (errorCode) {
         const res = await models.response.getById(responseId);
         if (!res) {
-          createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, error.message || 'Something went wrong');
+          createErrorResponse(
+            responseId,
+            request._id,
+            responseEnvironmentId,
+            timelinePath,
+            error.message || 'Something went wrong',
+          );
         }
       }
     });
@@ -204,88 +204,112 @@ const openCurlConnection = async (
       return 0;
     });
 
-    CurlConnections.get(options.requestId)?.on('stream', async (stream: Readable, _code: number, [headersWithStatus]: HeaderInfo[]) => {
-      for (const window of BrowserWindow.getAllWindows()) {
-        window.webContents.send(readyStateChannel, true);
-      }
-      const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseHeadersAndBuildTimeline(options.url, headersWithStatus);
+    CurlConnections.get(options.requestId)?.on(
+      'stream',
+      async (stream: Readable, _code: number, [headersWithStatus]: HeaderInfo[]) => {
+        for (const window of BrowserWindow.getAllWindows()) {
+          window.webContents.send(readyStateChannel, true);
+        }
+        const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseHeadersAndBuildTimeline(
+          options.url,
+          headersWithStatus,
+        );
 
-      const responsePatch: Partial<Response> = {
-        _id: responseId,
-        parentId: request._id,
-        environmentId: responseEnvironmentId,
-        headers: responseHeaders,
-        url: options.url,
-        statusCode,
-        statusMessage,
-        httpVersion,
-        elapsedTime: performance.now() - start,
-        timelinePath,
-        bodyPath: responseBodyPath,
-        settingSendCookies: request.settingSendCookies,
-        settingStoreCookies: request.settingStoreCookies,
-        bodyCompression: null,
-      };
-      const settings = await models.settings.get();
-      const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
-      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+        const responsePatch: Partial<Response> = {
+          _id: responseId,
+          parentId: request._id,
+          environmentId: responseEnvironmentId,
+          headers: responseHeaders,
+          url: options.url,
+          statusCode,
+          statusMessage,
+          httpVersion,
+          elapsedTime: performance.now() - start,
+          timelinePath,
+          bodyPath: responseBodyPath,
+          settingSendCookies: request.settingSendCookies,
+          settingStoreCookies: request.settingStoreCookies,
+          bodyCompression: null,
+        };
+        const settings = await models.settings.get();
+        const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
+        models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
 
-      if (request.settingStoreCookies) {
-        const setCookieStrings: string[] = getSetCookieHeaders(responseHeaders).map(h => h.value);
-        const totalSetCookies = setCookieStrings.length;
-        if (totalSetCookies) {
-          const currentUrl = request.url;
-          const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({ setCookieStrings, currentUrl, cookieJar: options.cookieJar });
-          rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }));
-          const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
-          if (hasCookiesToPersist) {
-            await models.cookieJar.update(options.cookieJar, { cookies });
-            timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
+        if (request.settingStoreCookies) {
+          const setCookieStrings: string[] = getSetCookieHeaders(responseHeaders).map(h => h.value);
+          const totalSetCookies = setCookieStrings.length;
+          if (totalSetCookies) {
+            const currentUrl = request.url;
+            const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({
+              setCookieStrings,
+              currentUrl,
+              cookieJar: options.cookieJar,
+            });
+            rejectedCookies.forEach(errorMessage =>
+              timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }),
+            );
+            const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
+            if (hasCookiesToPersist) {
+              await models.cookieJar.update(options.cookieJar, { cookies });
+              timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
+            }
           }
         }
-      }
-      timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
+        timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
 
-      invariant(eventLogFileStreams.get(request._id), 'writableStream should be defined');
-      for await (const chunk of stream) {
-        const messageEvent: CurlMessageEvent = {
+        invariant(eventLogFileStreams.get(request._id), 'writableStream should be defined');
+        for await (const chunk of stream) {
+          const messageEvent: CurlMessageEvent = {
+            _id: uuidV4(),
+            requestId: options.requestId,
+            data: new TextDecoder('utf-8').decode(chunk),
+            type: 'message',
+            timestamp: Date.now(),
+            direction: 'INCOMING',
+          };
+          eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
+        }
+
+        // NOTE: when stream is closed by remote server
+        const closeEvent: CurlCloseEvent = {
           _id: uuidV4(),
           requestId: options.requestId,
-          data: new TextDecoder('utf-8').decode(chunk),
-          type: 'message',
+          type: 'close',
           timestamp: Date.now(),
-          direction: 'INCOMING',
+          statusCode,
+          reason: '',
+          code: 0,
+          wasClean: true,
         };
-        eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
-      }
-
-      // NOTE: when stream is closed by remote server
-      const closeEvent: CurlCloseEvent = {
-        _id: uuidV4(),
-        requestId: options.requestId,
-        type: 'close',
-        timestamp: Date.now(),
-        statusCode,
-        reason: '',
-        code: 0,
-        wasClean: true,
-      };
-      CurlConnections.get(options.requestId)?.close();
-      deleteRequestMaps(options.requestId, 'Closing connection', closeEvent);
-      for (const window of BrowserWindow.getAllWindows()) {
-        window.webContents.send(readyStateChannel, false);
-      }
-    });
+        CurlConnections.get(options.requestId)?.close();
+        deleteRequestMaps(options.requestId, 'Closing connection', closeEvent);
+        for (const window of BrowserWindow.getAllWindows()) {
+          window.webContents.send(readyStateChannel, false);
+        }
+      },
+    );
     curl.perform();
   } catch (e) {
     console.error('unhandled error:', e);
 
     deleteRequestMaps(request._id, e.message || 'Something went wrong');
-    createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, e.message || 'Something went wrong');
+    createErrorResponse(
+      responseId,
+      request._id,
+      responseEnvironmentId,
+      timelinePath,
+      e.message || 'Something went wrong',
+    );
   }
 };
 
-const createErrorResponse = async (responseId: string, requestId: string, environmentId: string | null, timelinePath: string, message: string) => {
+const createErrorResponse = async (
+  responseId: string,
+  requestId: string,
+  environmentId: string | null,
+  timelinePath: string,
+  message: string,
+) => {
   const settings = await models.settings.get();
   const responsePatch = {
     _id: responseId,
@@ -305,22 +329,19 @@ const deleteRequestMaps = async (requestId: string, message: string, event?: Cur
   }
   eventLogFileStreams.get(requestId)?.end();
   eventLogFileStreams.delete(requestId);
-  timelineFileStreams.get(requestId)?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
+  timelineFileStreams
+    .get(requestId)
+    ?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
   timelineFileStreams.get(requestId)?.end();
   timelineFileStreams.delete(requestId);
   CurlConnections.delete(requestId);
 };
 
-const getCurlReadyState = async (
-  options: { requestId: string }
-): Promise<CurlConnection['isOpen']> => {
+const getCurlReadyState = async (options: { requestId: string }): Promise<CurlConnection['isOpen']> => {
   return CurlConnections.get(options.requestId)?.isOpen ?? false;
 };
 
-const closeCurlConnection = (
-  _event: Electron.IpcMainInvokeEvent,
-  options: { requestId: string }
-): void => {
+const closeCurlConnection = (_event: Electron.IpcMainInvokeEvent, options: { requestId: string }): void => {
   if (!CurlConnections.get(options.requestId)) {
     return;
   }
@@ -345,19 +366,22 @@ const closeCurlConnection = (
 
 const closeAllCurlConnections = (): void => CurlConnections.forEach(curl => curl.isOpen && curl.close());
 
-const findMany = async (
-  options: { responseId: string }
-): Promise<CurlEvent[]> => {
+const findMany = async (options: { responseId: string }): Promise<CurlEvent[]> => {
   const response = await models.response.getById(options.responseId);
   if (!response || !response.bodyPath) {
     return [];
   }
   const body = await fs.promises.readFile(response.bodyPath);
-  return body.toString().split('\n').filter(e => e?.trim())
-    // Parse the message
-    .map(e => JSON.parse(e))
-    // Reverse the list of messages so that we get the latest message first
-    .reverse() || [];
+  return (
+    body
+      .toString()
+      .split('\n')
+      .filter(e => e?.trim())
+      // Parse the message
+      .map(e => JSON.parse(e))
+      // Reverse the list of messages so that we get the latest message first
+      .reverse() || []
+  );
 };
 
 export interface CurlBridgeAPI {

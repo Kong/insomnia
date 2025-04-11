@@ -39,7 +39,7 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
   };
 
   return (
-    <div className="flex items-center gap-3 bg-[--hl-xs] px-2 py-1 border border-solid border-[--hl-sm] w-full">
+    <div className="flex w-full items-center gap-3 border border-solid border-[--hl-sm] bg-[--hl-xs] px-2 py-1">
       <div
         className="w-[calc(100%-50px)] truncate"
         data-testid="VaultKeyDisplayPanel"
@@ -67,7 +67,6 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
         <i className="fa-solid fa-download" />
       </Button>
     </div>
-
   );
 };
 
@@ -159,23 +158,26 @@ export const VaultKeyPanel = () => {
   return (
     <div>
       {/* Show Gen Vault button when vault salt does not exist */}
-      {!vaultSaltExists &&
+      {!vaultSaltExists && (
         <div className="form-row pad-top-sm justify-start">
           <Button
-            className={`flex items-center btn btn--outlined btn--super-compact ${isGenerating ? 'w-56' : 'w-48'}`}
+            className={`btn btn--outlined btn--super-compact flex items-center ${isGenerating ? 'w-56' : 'w-48'}`}
             onPress={generateVaultKey}
             isDisabled={isGenerating}
-            aria-label='Generate Vault Key'
+            aria-label="Generate Vault Key"
           >
-            {isGenerating && <Icon icon="spinner" className="text-[--color-font] animate-spin m-auto inline-block mr-2" />}
+            {isGenerating && (
+              <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-[--color-font]" />
+            )}
             Generate Vault Key
             <HelpTooltip className="space-left">
-              Generate an encryption key to save secrets in private environment. This ensures all secrets are securely stored and encrypted locally.
+              Generate an encryption key to save secrets in private environment. This ensures all secrets are securely
+              stored and encrypted locally.
             </HelpTooltip>
           </Button>
         </div>
-      }
-      {vaultSaltExists && vaultKeyExists && vaultKeyValue !== '' &&
+      )}
+      {vaultSaltExists && vaultKeyExists && vaultKeyValue !== '' && (
         <>
           <div className="form-row pad-top-sm flex-col">
             <div className="mb-[var(--padding-xs)]">
@@ -188,9 +190,10 @@ export const VaultKeyPanel = () => {
             <BooleanSetting
               label="Save encrypted vault key locally"
               setting="saveVaultKeyLocally"
-              confirmMessage={isChecked => isChecked ?
-                'Are you sure to save the vault key locally? The vault key will be encrypted and saved locally.' :
-                'Are you sure to remove the local vault key? You will need to input it when you login again.'
+              confirmMessage={isChecked =>
+                isChecked
+                  ? 'Are you sure to save the vault key locally? The vault key will be encrypted and saved locally.'
+                  : 'Are you sure to remove the local vault key? You will need to input it when you login again.'
               }
               confirmBeforeToggle
             />
@@ -199,28 +202,24 @@ export const VaultKeyPanel = () => {
             <BooleanSetting
               label="Enable vault in scripts"
               help="Allow pre-request and after-response script to access vault secrets."
-              setting='enableVaultInScripts'
+              setting="enableVaultInScripts"
             />
           </div>
         </>
-      }
+      )}
       {/* User has not input vault key after re-login */}
-      {vaultSaltExists && !vaultKeyExists &&
+      {vaultSaltExists && !vaultKeyExists && (
         <div className="form-row pad-top-sm justify-start">
           <Button
-            className="flex items-center w-48 btn btn--outlined btn--super-compact"
+            className="btn btn--outlined btn--super-compact flex w-48 items-center"
             onPress={() => setShowModal(true)}
           >
             Enter Vault Key
-            <HelpTooltip className="space-left">
-              Enter your vault key to unlock all local secrets.
-            </HelpTooltip>
+            <HelpTooltip className="space-left">Enter your vault key to unlock all local secrets.</HelpTooltip>
           </Button>
         </div>
-      }
-      {showInputVaultKeyModal &&
-        <InputVaultKeyModal onClose={handleModalClose} />
-      }
+      )}
+      {showInputVaultKeyModal && <InputVaultKeyModal onClose={handleModalClose} />}
     </div>
   );
 };

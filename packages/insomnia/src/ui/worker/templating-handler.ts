@@ -1,4 +1,3 @@
-
 import { extractUndefinedVariableKey, RenderError } from '../../templating/render-error';
 import type { BaseRenderContext } from '../../templating/types';
 
@@ -11,7 +10,17 @@ worker.addEventListener('error', event => {
   console.error('Error from worker:', event.message);
 });
 
-export function renderInWorker({ input, context, path, ignoreUndefinedEnvVariable }: { input: string; context: BaseRenderContext; path: string; ignoreUndefinedEnvVariable: boolean }): Promise<string> {
+export function renderInWorker({
+  input,
+  context,
+  path,
+  ignoreUndefinedEnvVariable,
+}: {
+  input: string;
+  context: BaseRenderContext;
+  path: string;
+  ignoreUndefinedEnvVariable: boolean;
+}): Promise<string> {
   const newContext = {
     ...context,
     serializedFunctions: {

@@ -1,4 +1,3 @@
-
 import { getInsomniaVaultKey } from '../common/constants';
 import { settings } from '../models';
 

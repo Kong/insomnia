@@ -44,7 +44,7 @@ describe('Test electron storage()', () => {
   });
 
   it('does handles malformed files', () => {
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const basePath = `/tmp/insomnia-electronstorage-${Math.random()}`;
     const electronStorage = new ElectronStorage(basePath);
 
@@ -61,7 +61,7 @@ describe('Test electron storage()', () => {
   });
 
   it('does handles failing to write file', () => {
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const basePath = `/tmp/insomnia-electronstorage-${Math.random()}`;
     const electronStorage = new ElectronStorage(basePath);
     fs.rmdirSync(basePath);

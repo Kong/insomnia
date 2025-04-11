@@ -2,7 +2,14 @@ import * as fs from 'node:fs';
 
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 
-import { asyncTasksAllSettled, OriginalPromise, ProxiedPromise, type RequestContext, resetAsyncTasks, stopMonitorAsyncTasks } from '../../insomnia-scripting-environment/src/objects';
+import {
+  asyncTasksAllSettled,
+  OriginalPromise,
+  ProxiedPromise,
+  type RequestContext,
+  resetAsyncTasks,
+  stopMonitorAsyncTasks,
+} from '../../insomnia-scripting-environment/src/objects';
 import type { Compression } from './models/response';
 // this will also import lots of node_modules into the preload script, consider moving this file insomnia-scripting-environment
 import { requireInterceptor } from './requireInterceptor';
@@ -11,7 +18,10 @@ export interface HiddenBrowserWindowToMainBridgeAPI {
   requireInterceptor: (module: string) => any;
   onmessage: (listener: (data: any, callback: (result: any) => void) => void) => void;
   curlRequest: (options: any) => Promise<any>;
-  readCurlResponse: (options: { bodyPath: string; bodyCompression: Compression }) => Promise<{ body: string; error: string }>;
+  readCurlResponse: (options: {
+    bodyPath: string;
+    bodyCompression: Compression;
+  }) => Promise<{ body: string; error: string }>;
   setBusy: (busy: boolean) => void;
   appendFile: (logPath: string, logContent: string) => Promise<void>;
   asyncTasksAllSettled: () => Promise<void>;

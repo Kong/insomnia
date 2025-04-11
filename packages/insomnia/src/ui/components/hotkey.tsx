@@ -47,14 +47,11 @@ export const Hotkey: FC<Props> = memo(({ keyCombination, keyBindings, className,
 
   const classes = {
     'font-normal': isMac(),
-    italic: isFallback,
+    'italic': isFallback,
   };
 
   return (
-    <kbd
-      className={classnames(className, classes)}
-      style={{ verticalAlign: 'middle' }}
-    >
+    <kbd className={classnames(className, classes)} style={{ verticalAlign: 'middle' }}>
       {display}
     </kbd>
   );

@@ -59,7 +59,9 @@ export const convert = async (rawData: string) => {
 export function dotInKeyNameInvariant(entity: object) {
   JSON.stringify(entity, (key, value) => {
     if (key.includes('.')) {
-      throw new Error(`Detected invalid key "${key}", which contains '.'. Please update it in the original tool and re-import it.`);
+      throw new Error(
+        `Detected invalid key "${key}", which contains '.'. Please update it in the original tool and re-import it.`,
+      );
     }
 
     return value;

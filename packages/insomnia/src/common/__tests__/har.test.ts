@@ -12,7 +12,7 @@ import { getRenderedRequestAndContext } from '../render';
 
 describe('export', () => {
   beforeEach(async () => {
-    await db.init(models.types(), { inMemoryOnly: true }, true, () => { },);
+    await db.init(models.types(), { inMemoryOnly: true }, true, () => {});
     await models.project.all();
     await models.settings.getOrCreate();
   });

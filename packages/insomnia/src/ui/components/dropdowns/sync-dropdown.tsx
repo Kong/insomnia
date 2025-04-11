@@ -1,6 +1,16 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, Fragment, useCallback, useEffect, useState } from 'react';
-import { Button, Collection, Menu, MenuItem, MenuTrigger, Popover, Section, Tooltip, TooltipTrigger } from 'react-aria-components';
+import {
+  Button,
+  Collection,
+  Menu,
+  MenuItem,
+  MenuTrigger,
+  Popover,
+  Section,
+  Tooltip,
+  TooltipTrigger,
+} from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
@@ -22,7 +32,11 @@ interface Props {
 const ONE_MINUTE_IN_MS = 1000 * 60;
 
 export const SyncDropdown: FC<Props> = () => {
-  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+  const { organizationId, projectId, workspaceId } = useParams<{
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  }>();
 
   const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] = useState(false);
   const [isSyncHistoryModalOpen, setIsSyncHistoryModalOpen] = useState(false);
@@ -39,16 +53,21 @@ export const SyncDropdown: FC<Props> = () => {
 
   useEffect(() => {
     if (syncDataLoaderFetcher.state === 'idle' && !syncDataLoaderFetcher.data) {
-      syncDataLoaderFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`);
+      syncDataLoaderFetcher.load(
+        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`,
+      );
     }
   }, [organizationId, projectId, syncDataLoaderFetcher, workspaceId]);
 
   const triggerSync = useCallback(() => {
     const submit = syncDataActionFetcher.submit;
-    submit({}, {
-      method: 'POST',
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`,
-    });
+    submit(
+      {},
+      {
+        method: 'POST',
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`,
+      },
+    );
   }, [organizationId, projectId, syncDataActionFetcher.submit, workspaceId]);
 
   useEffect(() => {
@@ -65,11 +84,15 @@ export const SyncDropdown: FC<Props> = () => {
     };
   }, [triggerSync]);
 
-  useInterval(() => {
-    triggerSync();
-  }, isWindowFocused ? ONE_MINUTE_IN_MS : null);
+  useInterval(
+    () => {
+      triggerSync();
+    },
+    isWindowFocused ? ONE_MINUTE_IN_MS : null,
+  );
 
-  const error = checkoutFetcher.data?.error || pullFetcher.data?.error || pushFetcher.data?.error || rollbackFetcher.data?.error;
+  const error =
+    checkoutFetcher.data?.error || pullFetcher.data?.error || pushFetcher.data?.error || rollbackFetcher.data?.error;
 
   useEffect(() => {
     if (error) {
@@ -82,7 +105,7 @@ export const SyncDropdown: FC<Props> = () => {
 
   if (syncDataLoaderFetcher.state !== 'idle' && !syncDataLoaderFetcher.data) {
     return (
-      <Button className="flex items-center h-9 gap-4 px-[--padding-md] w-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+      <Button className="flex h-9 w-full items-center gap-4 rounded-sm px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
         <Icon icon="refresh" className="animate-spin" /> Initializing
       </Button>
     );
@@ -143,12 +166,15 @@ export const SyncDropdown: FC<Props> = () => {
     icon: 'code-branch',
     isActive: branch === currentBranch,
     action: () => {
-      checkoutFetcher.submit({
-        branch,
-      }, {
-        method: 'POST',
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/checkout`,
-      });
+      checkoutFetcher.submit(
+        {
+          branch,
+        },
+        {
+          method: 'POST',
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/checkout`,
+        },
+      );
     },
   }));
 
@@ -159,103 +185,135 @@ export const SyncDropdown: FC<Props> = () => {
     isDisabled?: boolean;
     action: () => void;
   }[] = [
-      {
-        id: 'branches',
-        name: 'Branches',
-        icon: 'code-fork',
-        action: () => setIsSyncBranchesModalOpen(true),
-      },
-      {
-        id: 'history',
-        name: 'History',
-        icon: 'clock',
-        isDisabled: historyCount === 0,
-        action: () => setIsSyncHistoryModalOpen(true),
-      },
-      {
-        id: 'revert',
-        name: 'Discard all changes',
-        icon: 'undo',
-        isDisabled: historyCount === 0 || rollbackFetcher.state !== 'idle' || !canCreateSnapshot,
-        action: () => {
-          rollbackFetcher.submit({}, {
+    {
+      id: 'branches',
+      name: 'Branches',
+      icon: 'code-fork',
+      action: () => setIsSyncBranchesModalOpen(true),
+    },
+    {
+      id: 'history',
+      name: 'History',
+      icon: 'clock',
+      isDisabled: historyCount === 0,
+      action: () => setIsSyncHistoryModalOpen(true),
+    },
+    {
+      id: 'revert',
+      name: 'Discard all changes',
+      icon: 'undo',
+      isDisabled: historyCount === 0 || rollbackFetcher.state !== 'idle' || !canCreateSnapshot,
+      action: () => {
+        rollbackFetcher.submit(
+          {},
+          {
             method: 'POST',
             action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/rollback`,
-          });
-        },
+          },
+        );
       },
-      {
-        id: 'commit',
-        name: 'Commit',
-        icon: 'cube',
-        isDisabled: !canCreateSnapshot || rollbackFetcher.state !== 'idle',
-        action: () => setIsSyncStagingModalOpen(true),
-      },
-      {
-        id: 'pull',
-        name: pullFetcher.state !== 'idle' ? 'Pulling...' : behind > 0 ? `Pull ${behind || ''} Commit${behind === 1 ? '' : 's'}` : 'Pull',
-        icon: pullFetcher.state !== 'idle' ? 'refresh' : 'cloud-download',
-        isDisabled: behind === 0 || pullFetcher.state !== 'idle',
-        action: () => {
-          pullFetcher.submit({}, {
+    },
+    {
+      id: 'commit',
+      name: 'Commit',
+      icon: 'cube',
+      isDisabled: !canCreateSnapshot || rollbackFetcher.state !== 'idle',
+      action: () => setIsSyncStagingModalOpen(true),
+    },
+    {
+      id: 'pull',
+      name:
+        pullFetcher.state !== 'idle'
+          ? 'Pulling...'
+          : behind > 0
+            ? `Pull ${behind || ''} Commit${behind === 1 ? '' : 's'}`
+            : 'Pull',
+      icon: pullFetcher.state !== 'idle' ? 'refresh' : 'cloud-download',
+      isDisabled: behind === 0 || pullFetcher.state !== 'idle',
+      action: () => {
+        pullFetcher.submit(
+          {},
+          {
             method: 'POST',
             action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/pull`,
-          });
-        },
+          },
+        );
       },
-      {
-        id: 'push',
-        name: pushFetcher.state !== 'idle' ? 'Pushing...' : ahead > 0 ? `Push ${ahead || ''} Commit${ahead === 1 ? '' : 's'}` : 'Push',
-        icon: pushFetcher.state !== 'idle' ? 'refresh' : 'cloud-upload',
-        isDisabled: ahead === 0 || pushFetcher.state !== 'idle',
-        action: () => {
-          pushFetcher.submit({}, {
+    },
+    {
+      id: 'push',
+      name:
+        pushFetcher.state !== 'idle'
+          ? 'Pushing...'
+          : ahead > 0
+            ? `Push ${ahead || ''} Commit${ahead === 1 ? '' : 's'}`
+            : 'Push',
+      icon: pushFetcher.state !== 'idle' ? 'refresh' : 'cloud-upload',
+      isDisabled: ahead === 0 || pushFetcher.state !== 'idle',
+      action: () => {
+        pushFetcher.submit(
+          {},
+          {
             method: 'POST',
             action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/push`,
-          });
-        },
+          },
+        );
       },
-    ];
+    },
+  ];
 
-  const isSyncing = checkoutFetcher.state !== 'idle' || pullFetcher.state !== 'idle' || pushFetcher.state !== 'idle' || rollbackFetcher.state !== 'idle';
+  const isSyncing =
+    checkoutFetcher.state !== 'idle' ||
+    pullFetcher.state !== 'idle' ||
+    pushFetcher.state !== 'idle' ||
+    rollbackFetcher.state !== 'idle';
 
   const allSyncMenuActionList = [...localBranchesActionList, ...syncMenuActionList];
-  const syncError = syncDataLoaderFetcher.data && 'error' in syncDataLoaderFetcher.data ? syncDataLoaderFetcher.data.error : null;
+  const syncError =
+    syncDataLoaderFetcher.data && 'error' in syncDataLoaderFetcher.data ? syncDataLoaderFetcher.data.error : null;
   return (
     <Fragment>
       <MenuTrigger>
-        <div className="flex items-center h-[--line-height-sm] w-full aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+        <div className="flex h-[--line-height-sm] w-full items-center text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
           <Button
             aria-label="Insomnia Sync"
-            className="flex-1 flex h-full items-center gap-2 truncate px-[--padding-md]"
+            className="flex h-full flex-1 items-center gap-2 truncate px-[--padding-md]"
           >
             <Icon
               icon={syncError ? 'warning' : isSyncing ? 'refresh' : 'cloud'}
               className={`w-5 ${syncError ? 'text-[--color-warning]' : isSyncing ? 'animate-spin' : ''}`}
             />
-            <span className={`truncate ${syncError ? 'text-[--color-warning]' : ''}`}>{syncError ? 'Error syncing with Insomnia Cloud' : currentBranch}</span>
+            <span className={`truncate ${syncError ? 'text-[--color-warning]' : ''}`}>
+              {syncError ? 'Error syncing with Insomnia Cloud' : currentBranch}
+            </span>
           </Button>
-          <div className="flex items-center h-full">
+          <div className="flex h-full items-center">
             <TooltipTrigger>
               <Button className="h-full pl-2">
-                <Icon icon="cube" className={`transition-colors ${canCreateSnapshot ? 'text-[--color-warning]' : 'opacity-50'}`} />
+                <Icon
+                  icon="cube"
+                  className={`transition-colors ${canCreateSnapshot ? 'text-[--color-warning]' : 'opacity-50'}`}
+                />
               </Button>
               <Tooltip
                 placement="top end"
                 offset={8}
-                className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
               >
                 {snapshotToolTipMsg}
               </Tooltip>
             </TooltipTrigger>
             <TooltipTrigger>
               <Button className="h-full px-2">
-                <Icon icon="cloud-download" className={`transition-colors ${canPull ? '' : 'opacity-50'} ${pullFetcher.state !== 'idle' ? 'animate-pulse' : ''}`} />
+                <Icon
+                  icon="cloud-download"
+                  className={`transition-colors ${canPull ? '' : 'opacity-50'} ${pullFetcher.state !== 'idle' ? 'animate-pulse' : ''}`}
+                />
               </Button>
               <Tooltip
                 placement="top end"
                 offset={8}
-                className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
               >
                 {pullToolTipMsg}
               </Tooltip>
@@ -263,19 +321,22 @@ export const SyncDropdown: FC<Props> = () => {
 
             <TooltipTrigger>
               <Button className="h-full pr-[--padding-md]">
-                <Icon icon="cloud-upload" className={`transition-colors ${canPush ? '' : 'opacity-50'} ${pushFetcher.state !== 'idle' ? 'animate-pulse' : ''}`} />
+                <Icon
+                  icon="cloud-upload"
+                  className={`transition-colors ${canPush ? '' : 'opacity-50'} ${pushFetcher.state !== 'idle' ? 'animate-pulse' : ''}`}
+                />
               </Button>
               <Tooltip
                 placement="top end"
                 offset={8}
-                className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
               >
                 {pushToolTipMsg}
               </Tooltip>
             </TooltipTrigger>
           </div>
         </div>
-        <Popover className="min-w-max max-w-lg overflow-hidden" placement='top end' offset={8}>
+        <Popover className="min-w-max max-w-lg overflow-hidden" placement="top end" offset={8}>
           <Menu
             aria-label="Insomnia Sync Menu"
             selectionMode="single"
@@ -284,30 +345,32 @@ export const SyncDropdown: FC<Props> = () => {
               const item = allSyncMenuActionList.find(item => item.id === key);
               item?.action();
             }}
-            className="border max-w-lg select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+            className="max-h-[85vh] max-w-lg select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
           >
             {syncError && (
-              <Section className='border-b border-solid border-[--hl-sm]'>
+              <Section className="border-b border-solid border-[--hl-sm]">
                 <MenuItem
-                  className={'flex overflow-hidden gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] w-full text-md whitespace-nowrap bg-transparent disabled:cursor-not-allowed focus:outline-none transition-colors'}
+                  className={
+                    'text-md flex w-full items-center gap-2 overflow-hidden whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold'
+                  }
                   aria-label={syncError}
                 >
                   <Icon icon="exclamation-triangle" className="text-[--color-warning]" />
-                  <p className='whitespace-normal'>{syncError}</p>
+                  <p className="whitespace-normal">{syncError}</p>
                 </MenuItem>
               </Section>
             )}
             {!syncError && (
               <Fragment>
-                <Section className='border-b border-solid border-[--hl-sm]'>
+                <Section className="border-b border-solid border-[--hl-sm]">
                   <Collection items={localBranchesActionList}>
                     {item => (
                       <MenuItem
-                        className={`aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item.isActive ? 'font-bold' : ''}`}
+                        className={`text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold ${item.isActive ? 'font-bold' : ''}`}
                         aria-label={item.name}
                       >
                         <Icon icon={item.icon} className={item.isActive ? 'text-[--color-success]' : ''} />
-                        <span className='truncate'>{item.name}</span>
+                        <span className="truncate">{item.name}</span>
                       </MenuItem>
                     )}
                   </Collection>
@@ -316,7 +379,9 @@ export const SyncDropdown: FC<Props> = () => {
                   <Collection items={syncMenuActionList}>
                     {item => (
                       <MenuItem
-                        className={'aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors'}
+                        className={
+                          'text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
+                        }
                         aria-label={item.name}
                       >
                         <Icon icon={item.icon} />
@@ -330,11 +395,7 @@ export const SyncDropdown: FC<Props> = () => {
           </Menu>
         </Popover>
       </MenuTrigger>
-      {isGitRepoSettingsModalOpen && (
-        <GitRepositorySettingsModal
-          onHide={() => setIsGitRepoSettingsModalOpen(false)}
-        />
-      )}
+      {isGitRepoSettingsModalOpen && <GitRepositorySettingsModal onHide={() => setIsGitRepoSettingsModalOpen(false)} />}
       {isSyncBranchesModalOpen && (
         <SyncBranchesModal
           branches={localBranches}
@@ -354,10 +415,7 @@ export const SyncDropdown: FC<Props> = () => {
         />
       )}
       {isSyncHistoryModalOpen && (
-        <SyncHistoryModal
-          history={history}
-          onClose={() => setIsSyncHistoryModalOpen(false)}
-        />
+        <SyncHistoryModal history={history} onClose={() => setIsSyncHistoryModalOpen(false)} />
       )}
     </Fragment>
   );

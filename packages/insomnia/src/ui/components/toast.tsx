@@ -2,13 +2,7 @@ import classnames from 'classnames';
 import type { IpcRendererEvent } from 'electron';
 import React, { type FC, useEffect, useState } from 'react';
 
-import {
-  getAppId,
-  getAppPlatform,
-  getAppVersion,
-  getProductName,
-  updatesSupported,
-} from '../../common/constants';
+import { getAppId, getAppPlatform, getAppVersion, getProductName, updatesSupported } from '../../common/constants';
 import * as models from '../../models/index';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import imgSrcCore from '../images/insomnia-logo.svg';
@@ -38,9 +32,9 @@ export const Toast: FC = () => {
     try {
       const storedKeys = window.localStorage.getItem(INSOMNIA_NOTIFICATIONS_SEEN);
       if (storedKeys) {
-        seenNotifications = JSON.parse(storedKeys) as SeenNotifications || {};
+        seenNotifications = (JSON.parse(storedKeys) as SeenNotifications) || {};
       }
-    } catch (e) { }
+    } catch (e) {}
     console.log(`[toast] Received notification ${notification.key}`);
     if (seenNotifications[notification.key]) {
       console.log(`[toast] Not showing notification ${notification.key} because has already been seen`);
@@ -61,11 +55,7 @@ export const Toast: FC = () => {
       return;
     }
     const stats = await models.stats.get();
-    const {
-      disableUpdateNotification,
-      updateAutomatically,
-      updateChannel,
-    } = await models.settings.get();
+    const { disableUpdateNotification, updateAutomatically, updateChannel } = await models.settings.get();
     let updatedNotification: ToastNotification | null = null;
     // Try fetching user notification
     try {
@@ -96,7 +86,9 @@ export const Toast: FC = () => {
   };
 
   useEffect(() => {
-    const unsubscribe = window.main.on('show-notification', (_: IpcRendererEvent, notification: ToastNotification) => handleNotification(notification));
+    const unsubscribe = window.main.on('show-notification', (_: IpcRendererEvent, notification: ToastNotification) =>
+      handleNotification(notification),
+    );
     return () => unsubscribe();
   }, []);
 
@@ -110,11 +102,9 @@ export const Toast: FC = () => {
       <div className="m-[var(--padding-xs)] mr-[var(--padding-sm)] flex items-center justify-center">
         <img className="max-w-[5rem]" src={imgSrcCore} alt={productName} />
       </div>
-      <div className="flex items-center justify-center flex-col px-[var(--padding-xs)] max-w-[20rem]">
-
+      <div className="flex max-w-[20rem] flex-col items-center justify-center px-[var(--padding-xs)]">
         <p>{notification?.message || 'Unknown'}</p>
-        <footer className="pt-[var(--padding-sm)] flex flex-row justify-between w-full">
-
+        <footer className="flex w-full flex-row justify-between pt-[var(--padding-sm)]">
           <button
             className="btn btn--super-super-compact btn--outlined"
             onClick={() => {
@@ -132,7 +122,7 @@ export const Toast: FC = () => {
             Dismiss
           </button>
           &nbsp;&nbsp;
-          {notification.url && notification.cta &&
+          {notification.url && notification.cta && (
             <Link
               button
               className="btn btn--super-super-compact btn--outlined no-wrap"
@@ -151,7 +141,7 @@ export const Toast: FC = () => {
             >
               {notification.cta}
             </Link>
-          }
+          )}
         </footer>
       </div>
     </div>

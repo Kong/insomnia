@@ -5,10 +5,7 @@ import YAML from 'yaml';
 
 import { InsoError } from '../cli';
 
-export async function writeFileWithCliOptions(
-  outputPath: string,
-  contents: string,
-): Promise<string> {
+export async function writeFileWithCliOptions(outputPath: string, contents: string): Promise<string> {
   try {
     await mkdir(path.dirname(outputPath), { recursive: true });
     await writeFile(outputPath, contents);
@@ -19,7 +16,13 @@ export async function writeFileWithCliOptions(
   }
 }
 
-export async function exportSpecification({ specContent, skipAnnotations }: { specContent: string; skipAnnotations: boolean }) {
+export async function exportSpecification({
+  specContent,
+  skipAnnotations,
+}: {
+  specContent: string;
+  skipAnnotations: boolean;
+}) {
   if (!skipAnnotations) {
     return specContent;
   }

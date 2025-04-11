@@ -15,10 +15,8 @@ describe('util', () => {
     });
 
     it('indents multi-line blocks', () => {
-      const text = 'function greet() {\n  console.log(\'Hello World!\');\n}';
-      expect(indent(1, text)).toBe(
-        '  function greet() {\n    console.log(\'Hello World!\');\n  }',
-      );
+      const text = "function greet() {\n  console.log('Hello World!');\n}";
+      expect(indent(1, text)).toBe("  function greet() {\n    console.log('Hello World!');\n  }");
     });
   });
 

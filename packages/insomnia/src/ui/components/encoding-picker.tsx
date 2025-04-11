@@ -51,8 +51,8 @@ const BUILT_IN_ENCODINGS = [
 export const EncodingPicker = ({ encoding, onChange }: { encoding: string; onChange: (value: string) => void }) => {
   return (
     <ComboBox
-      aria-label='Encoding Selector'
-      className='inline-block'
+      aria-label="Encoding Selector"
+      className="inline-block"
       selectedKey={encoding}
       onSelectionChange={key => {
         if (key) {
@@ -61,22 +61,21 @@ export const EncodingPicker = ({ encoding, onChange }: { encoding: string; onCha
       }}
       defaultFilter={(textValue, filter) => {
         const encodingKey = BUILT_IN_ENCODINGS.find(e => e.label === textValue)?.key || '';
-        return Boolean(fuzzyMatch(
-          filter,
-          encodingKey,
-          { splitSpace: false, loose: true }
-        )?.indexes) || textValue.toLowerCase().includes(filter.toLowerCase());
+        return (
+          Boolean(fuzzyMatch(filter, encodingKey, { splitSpace: false, loose: true })?.indexes) ||
+          textValue.toLowerCase().includes(filter.toLowerCase())
+        );
       }}
     >
-      <Group className='flex border-solid border border-[--hl-sm] w-full pr-2 min-w-64'>
-        <Input className='flex-1 py-1 px-2'/>
-        <Button className="flex items-center transition-all bg-transparent">
-         <Icon icon="caret-down" />
+      <Group className="flex w-full min-w-64 border border-solid border-[--hl-sm] pr-2">
+        <Input className="flex-1 px-2 py-1" />
+        <Button className="flex items-center bg-transparent transition-all">
+          <Icon icon="caret-down" />
         </Button>
       </Group>
-      <Popover className="overflow-y-hidden flex flex-col">
+      <Popover className="flex flex-col overflow-y-hidden">
         <ListBox
-          className="border select-none text-sm max-h-80 border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-1 rounded-md overflow-y-auto focus:outline-none"
+          className="max-h-80 select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-1 text-sm shadow-lg focus:outline-none"
           items={BUILT_IN_ENCODINGS}
           aria-label="Encoding List"
           autoFocus
@@ -85,17 +84,12 @@ export const EncodingPicker = ({ encoding, onChange }: { encoding: string; onCha
             <ListBoxItem
               aria-label={item.label}
               textValue={item.label}
-              className="aria-disabled:opacity-30 rounded aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] data-[focused]:bg-[--hl-xs] focus:outline-none transition-colors"
+              className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap rounded bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold data-[focused]:bg-[--hl-xs]"
             >
               {({ isSelected }) => (
                 <>
                   <span>{item.label}</span>
-                  {isSelected && (
-                    <Icon
-                      icon="check"
-                      className="ml-1 text-[--color-success] justify-self-end"
-                    />
-                  )}
+                  {isSelected && <Icon icon="check" className="ml-1 justify-self-end text-[--color-success]" />}
                 </>
               )}
             </ListBoxItem>

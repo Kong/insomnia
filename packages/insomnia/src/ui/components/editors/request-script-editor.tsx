@@ -1,8 +1,28 @@
 import type { Snippet } from 'codemirror';
 import React, { type FC, useRef } from 'react';
-import { Button, Collection, Header, Menu, MenuItem, MenuTrigger, Popover, Section, Toolbar } from 'react-aria-components';
+import {
+  Button,
+  Collection,
+  Header,
+  Menu,
+  MenuItem,
+  MenuTrigger,
+  Popover,
+  Section,
+  Toolbar,
+} from 'react-aria-components';
 
-import { CookieObject, Environment, Execution, InsomniaObject, Request as ScriptRequest, RequestInfo, Url, Variables, Vault } from '../../../../../insomnia-scripting-environment/src/objects';
+import {
+  CookieObject,
+  Environment,
+  Execution,
+  InsomniaObject,
+  Request as ScriptRequest,
+  RequestInfo,
+  Url,
+  Variables,
+  Vault,
+} from '../../../../../insomnia-scripting-environment/src/objects';
 import { ParentFolders } from '../../../../../insomnia-scripting-environment/src/objects/folders';
 import type { Settings } from '../../../models/settings';
 import { translateHandlersInScript } from '../../../utils/importers/importers/postman';
@@ -28,8 +48,7 @@ const setCollectionVar = 'insomnia.collectionVariables.set("variable_name", "var
 const unsetEnvVar = 'insomnia.environment.unset("variable_name");';
 const unsetGlbVar = 'insomnia.globals.unset("variable_name");';
 const unsetCollectionVar = 'insomnia.collectionVariables.unset("variable_name");';
-const sendReq =
-  `const resp = await insomnia.sendRequest(
+const sendReq = `const resp = await insomnia.sendRequest(
 	'https://insomnia.rest/',
 	(err, resp) => {
 		if (err != null) {
@@ -43,14 +62,12 @@ const addHeader = "insomnia.request.addHeader({key: 'X-Header-Name', value: 'hea
 const removeHeader = "insomnia.request.removeHeader('X-Header-Name');";
 const setMethod = "insomnia.request.method = 'GET';";
 const addQueryParams = "insomnia.request.url.addQueryParams('k1=v1');";
-const updateRequestBody =
-  `insomnia.request.body.update({
+const updateRequestBody = `insomnia.request.body.update({
   mode: 'raw',
   raw: 'rawContent',
 });`;
 
-const updateRequestAuth =
-  `insomnia.request.auth.update(
+const updateRequestAuth = `insomnia.request.auth.update(
   {
       type: 'bearer',
       bearer: [
@@ -67,8 +84,7 @@ const getStatusMsg = 'const status = insomnia.response.status;';
 const getRespTime = 'const responseTime = insomnia.response.responseTime;';
 const getJsonBody = 'const jsonBody = insomnia.response.json();';
 const getTextBody = 'const textBody = insomnia.response.text();';
-const findHeader =
-  `const header = insomnia.response.headers.find(
+const findHeader = `const header = insomnia.response.headers.find(
     header => header.key === 'Content-Type',
     {},
 );`;
@@ -79,8 +95,7 @@ const activeReqPath = 'console.log(insomnia.execution.location);';
 const activeReqItem = 'console.log(insomnia.execution.location.current);';
 const activeReqInfo = 'console.log(insomnia.info);';
 
-const checkStatus200 =
-  `insomnia.test('Check if status is 200', () => {
+const checkStatus200 = `insomnia.test('Check if status is 200', () => {
     insomnia.expect(insomnia.response.code).to.eql(200);
 });`;
 
@@ -183,58 +198,61 @@ function getRequestScriptSnippets(insomniaObject: InsomniaObject, path: string):
 interface SnippetMenuItem {
   id: string;
   name: string;
-  items: ({
-    id: string;
-    name: string;
-    snippet: string;
-  } | {
-    id: string;
-    name: string;
-    items: {
-      id: string;
-      name: string;
-      snippet: string;
-    }[];
-  })[];
+  items: (
+    | {
+        id: string;
+        name: string;
+        snippet: string;
+      }
+    | {
+        id: string;
+        name: string;
+        items: {
+          id: string;
+          name: string;
+          snippet: string;
+        }[];
+      }
+  )[];
 }
 
 const variableSnippetsMenu: SnippetMenuItem = {
-  'id': 'variable-snippets',
-  'name': 'Variable Snippets',
+  id: 'variable-snippets',
+  name: 'Variable Snippets',
   items: [
     {
-      'id': 'get-values',
-      'name': 'Get values',
+      id: 'get-values',
+      name: 'Get values',
       items: [
         {
-          'id': 'get-env-var',
-          'name': 'Get an environment variable',
-          'snippet': getEnvVar,
+          id: 'get-env-var',
+          name: 'Get an environment variable',
+          snippet: getEnvVar,
         },
         {
-          'id': 'get-glb-var',
-          'name': 'Get a global variable',
-          'snippet': getGlbVar,
+          id: 'get-glb-var',
+          name: 'Get a global variable',
+          snippet: getGlbVar,
         },
         {
-          'id': 'get-var',
-          'name': 'Get a variable',
-          'snippet': getVar,
+          id: 'get-var',
+          name: 'Get a variable',
+          snippet: getVar,
         },
         {
-          'id': 'get-collection-var',
-          'name': 'Get a collection variable',
-          'snippet': getCollectionVar,
+          id: 'get-collection-var',
+          name: 'Get a collection variable',
+          snippet: getCollectionVar,
         },
         {
-          'id': 'get-folder-var',
-          'name': 'Get a folder-level variable',
-          'snippet': getFolderEnvValue,
+          id: 'get-folder-var',
+          name: 'Get a folder-level variable',
+          snippet: getFolderEnvValue,
         },
         {
-          'id': 'find-folder-var',
-          'name': 'Find a folder-level variable',
-          'snippet': findFolderEnvValue,
+          id: 'find-folder-var',
+          name: 'Find a folder-level variable',
+          snippet: findFolderEnvValue,
         },
       ],
     },
@@ -243,29 +261,29 @@ const variableSnippetsMenu: SnippetMenuItem = {
       name: 'Set values',
       items: [
         {
-          'id': 'set-env-var',
-          'name': 'Set an environment variable',
-          'snippet': setEnvVar,
+          id: 'set-env-var',
+          name: 'Set an environment variable',
+          snippet: setEnvVar,
         },
         {
-          'id': 'set-glb-var',
-          'name': 'Set a global variable',
-          'snippet': setGlbVar,
+          id: 'set-glb-var',
+          name: 'Set a global variable',
+          snippet: setGlbVar,
         },
         {
-          'id': 'set-var',
-          'name': 'Set a variable',
-          'snippet': setVar,
+          id: 'set-var',
+          name: 'Set a variable',
+          snippet: setVar,
         },
         {
-          'id': 'set-collection-var',
-          'name': 'Set a collection variable',
-          'snippet': setCollectionVar,
+          id: 'set-collection-var',
+          name: 'Set a collection variable',
+          snippet: setCollectionVar,
         },
         {
-          'id': 'set-folder-var',
-          'name': 'Set a folder-level variable',
-          'snippet': setFolderEnvValue,
+          id: 'set-folder-var',
+          name: 'Set a folder-level variable',
+          snippet: setFolderEnvValue,
         },
       ],
     },
@@ -274,19 +292,19 @@ const variableSnippetsMenu: SnippetMenuItem = {
       name: 'Clear values',
       items: [
         {
-          'id': 'unset-env-var',
-          'name': 'Clear an environment variable',
-          'snippet': unsetEnvVar,
+          id: 'unset-env-var',
+          name: 'Clear an environment variable',
+          snippet: unsetEnvVar,
         },
         {
-          'id': 'unset-glb-var',
-          'name': 'Clear a global variable',
-          'snippet': unsetGlbVar,
+          id: 'unset-glb-var',
+          name: 'Clear a global variable',
+          snippet: unsetGlbVar,
         },
         {
-          'id': 'unset-collection-var',
-          'name': 'Clear a collection variable',
-          'snippet': unsetCollectionVar,
+          id: 'unset-collection-var',
+          name: 'Clear a collection variable',
+          snippet: unsetCollectionVar,
         },
       ],
     },
@@ -298,34 +316,34 @@ const requestManipulationMenu: SnippetMenuItem = {
   name: 'Request Manipulation',
   items: [
     {
-      'id': 'add-query-param',
-      'name': 'Add query param',
-      'snippet': addQueryParams,
+      id: 'add-query-param',
+      name: 'Add query param',
+      snippet: addQueryParams,
     },
     {
-      'id': 'set-method',
-      'name': 'Set method',
-      'snippet': setMethod,
+      id: 'set-method',
+      name: 'Set method',
+      snippet: setMethod,
     },
     {
-      'id': 'add-header',
-      'name': 'Add a header',
-      'snippet': addHeader,
+      id: 'add-header',
+      name: 'Add a header',
+      snippet: addHeader,
     },
     {
-      'id': 'remove-header',
-      'name': 'Remove header',
-      'snippet': removeHeader,
+      id: 'remove-header',
+      name: 'Remove header',
+      snippet: removeHeader,
     },
     {
-      'id': 'update-body-raw',
-      'name': 'Update body as raw',
-      'snippet': updateRequestBody,
+      id: 'update-body-raw',
+      name: 'Update body as raw',
+      snippet: updateRequestBody,
     },
     {
-      'id': 'update-auth-method',
-      'name': 'Update auth method',
-      'snippet': updateRequestAuth,
+      id: 'update-auth-method',
+      name: 'Update auth method',
+      snippet: updateRequestAuth,
     },
   ],
 };
@@ -335,39 +353,39 @@ const responseHandlingMenu: SnippetMenuItem = {
   name: 'Response Handling',
   items: [
     {
-      'id': 'get-status-code',
-      'name': 'Get status code',
-      'snippet': getStatusCode,
+      id: 'get-status-code',
+      name: 'Get status code',
+      snippet: getStatusCode,
     },
     {
-      'id': 'get-status-message',
-      'name': 'Get status message',
-      'snippet': getStatusMsg,
+      id: 'get-status-message',
+      name: 'Get status message',
+      snippet: getStatusMsg,
     },
     {
-      'id': 'get-response-time',
-      'name': 'Get response time',
-      'snippet': getRespTime,
+      id: 'get-response-time',
+      name: 'Get response time',
+      snippet: getRespTime,
     },
     {
-      'id': 'get-body-json',
-      'name': 'Get body as JSON',
-      'snippet': getJsonBody,
+      id: 'get-body-json',
+      name: 'Get body as JSON',
+      snippet: getJsonBody,
     },
     {
-      'id': 'get-body-text',
-      'name': 'Get body as text',
-      'snippet': getTextBody,
+      id: 'get-body-text',
+      name: 'Get body as text',
+      snippet: getTextBody,
     },
     {
-      'id': 'find-header',
-      'name': 'Find a header by name',
-      'snippet': findHeader,
+      id: 'find-header',
+      name: 'Find a header by name',
+      snippet: findHeader,
     },
     {
-      'id': 'get-cookies',
-      'name': 'Get cookies',
-      'snippet': getCookies,
+      id: 'get-cookies',
+      name: 'Get cookies',
+      snippet: getCookies,
     },
   ],
 };
@@ -377,49 +395,49 @@ const miscMenu: SnippetMenuItem = {
   name: 'Misc',
   items: [
     {
-      'id': 'send-request',
-      'name': 'Send a request',
-      'snippet': sendReq,
+      id: 'send-request',
+      name: 'Send a request',
+      snippet: sendReq,
     },
     {
-      'id': 'print-log',
-      'name': 'Print log',
-      'snippet': logValue,
+      id: 'print-log',
+      name: 'Print log',
+      snippet: logValue,
     },
     {
-      'id': 'require-module',
-      'name': 'Require a module',
-      'snippet': requireAModule,
+      id: 'require-module',
+      name: 'Require a module',
+      snippet: requireAModule,
     },
     {
-      'id': 'delay',
-      'name': 'Delay',
-      'snippet': delay,
+      id: 'delay',
+      name: 'Delay',
+      snippet: delay,
     },
     {
-      'id': 'skip-request',
-      'name': 'Skip request',
-      'snippet': skipRequest,
+      id: 'skip-request',
+      name: 'Skip request',
+      snippet: skipRequest,
     },
     {
-      'id': 'set-next-request',
-      'name': 'Set next request (in Runner)',
-      'snippet': setNextRequest,
+      id: 'set-next-request',
+      name: 'Set next request (in Runner)',
+      snippet: setNextRequest,
     },
     {
-      'id': 'active-request-info',
-      'name': 'Active request info',
-      'snippet': activeReqInfo,
+      id: 'active-request-info',
+      name: 'Active request info',
+      snippet: activeReqInfo,
     },
     {
-      'id': 'active-request-path',
-      'name': 'Active request path',
-      'snippet': activeReqPath,
+      id: 'active-request-path',
+      name: 'Active request path',
+      snippet: activeReqPath,
     },
     {
-      'id': 'active-request-item',
-      'name': 'Active request item',
-      'snippet': activeReqItem,
+      id: 'active-request-item',
+      name: 'Active request item',
+      snippet: activeReqItem,
     },
   ],
 };
@@ -429,89 +447,89 @@ const testMenu: SnippetMenuItem = {
   name: 'Test Utils',
   items: [
     {
-      'id': 'test-examples',
-      'name': 'Test Examples',
+      id: 'test-examples',
+      name: 'Test Examples',
       items: [
         {
-          'id': 'check-status-200',
-          'name': 'Check if status is 200',
-          'snippet': checkStatus200,
+          id: 'check-status-200',
+          name: 'Check if status is 200',
+          snippet: checkStatus200,
         },
       ],
     },
     {
-      'id': 'expect-examples',
-      'name': 'Expect Examples',
+      id: 'expect-examples',
+      name: 'Expect Examples',
       items: [
         {
-          'id': 'expect-to-equal',
-          'name': 'expectToEqual',
-          'snippet': expectToEqual,
+          id: 'expect-to-equal',
+          name: 'expectToEqual',
+          snippet: expectToEqual,
         },
         {
-          'id': 'expect-to-be-a',
-          'name': 'expectToBeA',
-          'snippet': expectToBeA,
+          id: 'expect-to-be-a',
+          name: 'expectToBeA',
+          snippet: expectToBeA,
         },
         {
-          'id': 'expect-to-have-length',
-          'name': 'expectToHaveLength',
-          'snippet': expectToHaveLength,
+          id: 'expect-to-have-length',
+          name: 'expectToHaveLength',
+          snippet: expectToHaveLength,
         },
         {
-          'id': 'expect-to-include',
-          'name': 'expectToInclude',
-          'snippet': expectToInclude,
+          id: 'expect-to-include',
+          name: 'expectToInclude',
+          snippet: expectToInclude,
         },
         {
-          'id': 'expect-to-be-one-of',
-          'name': 'expectToBeOneOf',
-          'snippet': expectToBeOneOf,
+          id: 'expect-to-be-one-of',
+          name: 'expectToBeOneOf',
+          snippet: expectToBeOneOf,
         },
         {
-          'id': 'expect-to-be-below',
-          'name': 'expectToBeBelow',
-          'snippet': expectToBeBelow,
+          id: 'expect-to-be-below',
+          name: 'expectToBeBelow',
+          snippet: expectToBeBelow,
         },
         {
-          'id': 'expect-to-have-all-keys',
-          'name': 'expectToHaveAllKeys',
-          'snippet': expectToHaveAllKeys,
+          id: 'expect-to-have-all-keys',
+          name: 'expectToHaveAllKeys',
+          snippet: expectToHaveAllKeys,
         },
         {
-          'id': 'expect-to-have-any-keys',
-          'name': 'expectToHaveAnyKeys',
-          'snippet': expectToHaveAnyKeys,
+          id: 'expect-to-have-any-keys',
+          name: 'expectToHaveAnyKeys',
+          snippet: expectToHaveAnyKeys,
         },
         {
-          'id': 'expect-to-not-have-any-keys',
-          'name': 'expectToNotHaveAnyKeys',
-          'snippet': expectToNotHaveAnyKeys,
+          id: 'expect-to-not-have-any-keys',
+          name: 'expectToNotHaveAnyKeys',
+          snippet: expectToNotHaveAnyKeys,
         },
         {
-          'id': 'expect-to-have-property',
-          'name': 'expectToHaveProperty',
-          'snippet': expectToHaveProperty,
+          id: 'expect-to-have-property',
+          name: 'expectToHaveProperty',
+          snippet: expectToHaveProperty,
         },
         {
-          'id': 'expect-to-be-an-object-that-has-all-keys',
-          'name': 'expectToBeAnObjectThatHasAllKeys',
-          'snippet': expectToBeAnObjectThatHasAllKeys,
+          id: 'expect-to-be-an-object-that-has-all-keys',
+          name: 'expectToBeAnObjectThatHasAllKeys',
+          snippet: expectToBeAnObjectThatHasAllKeys,
         },
       ],
     },
   ],
 };
 
-const snippetsMenus: SnippetMenuItem[] = [variableSnippetsMenu, requestManipulationMenu, responseHandlingMenu, testMenu, miscMenu];
+const snippetsMenus: SnippetMenuItem[] = [
+  variableSnippetsMenu,
+  requestManipulationMenu,
+  responseHandlingMenu,
+  testMenu,
+  miscMenu,
+];
 
-export const RequestScriptEditor: FC<Props> = ({
-  className,
-  defaultValue,
-  onChange,
-  uniquenessKey,
-  settings,
-}) => {
+export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChange, uniquenessKey, settings }) => {
   const editorRef = useRef<CodeEditorHandle>(null);
 
   // Inserts at the line below the cursor and moves to the line beneath
@@ -520,12 +538,9 @@ export const RequestScriptEditor: FC<Props> = ({
     const nextRow = cursorRow + 1;
     const value = editorRef.current?.getValue() || '';
 
-    editorRef.current?.setValue([
-      ...value.split('\n').slice(0, nextRow),
-      snippet,
-      '\n',
-      ...value.split('\n').slice(nextRow),
-    ].join('\n'));
+    editorRef.current?.setValue(
+      [...value.split('\n').slice(0, nextRow), snippet, '\n', ...value.split('\n').slice(nextRow)].join('\n'),
+    );
 
     editorRef.current?.focus();
     editorRef.current?.setCursorLine(cursorRow + snippet.split('\n').length);
@@ -579,7 +594,7 @@ export const RequestScriptEditor: FC<Props> = ({
   );
 
   return (
-    <div className='h-full flex flex-col divide-y divide-solid divide-[--hl-md]'>
+    <div className="flex h-full flex-col divide-y divide-solid divide-[--hl-md]">
       <CodeEditor
         id={`script-editor-${uniquenessKey}`}
         key={uniquenessKey}
@@ -588,37 +603,41 @@ export const RequestScriptEditor: FC<Props> = ({
         defaultValue={defaultValue}
         className={className}
         onChange={onChange}
-        mode='text/javascript'
+        mode="text/javascript"
         placeholder="..."
         lintOptions={lintOptions}
         ref={editorRef}
         getAutocompleteSnippets={() => requestScriptSnippets}
         onPaste={translateHandlersInScript}
       />
-      <Toolbar className="flex items-center h-[--line-height-sm] flex-shrink-0 flex-row text-[var(--font-size-sm)] box-border overflow-x-auto">
+      <Toolbar className="box-border flex h-[--line-height-sm] flex-shrink-0 flex-row items-center overflow-x-auto text-[var(--font-size-sm)]">
         {snippetsMenus.map(menu => (
           <MenuTrigger key={menu.id}>
-            <Button className="flex gap-2 px-2 items-center justify-center h-full aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+            <Button className="flex h-full items-center justify-center gap-2 px-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
               <Icon icon="code" />
               {menu.name}
             </Button>
-            <Popover className="min-w-max overflow-y-hidden flex flex-col">
+            <Popover className="flex min-w-max flex-col overflow-y-hidden">
               <Menu
                 aria-label="Create a new request"
                 selectionMode="single"
-                className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
+                className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
                 items={menu.items}
               >
                 {section => {
                   if ('items' in section) {
                     return (
                       <Section>
-                        <Header className='pl-2 py-1 text-[--hl] text-xs uppercase'>
-                          {section.name}
-                        </Header>
+                        <Header className="py-1 pl-2 text-xs uppercase text-[--hl]">{section.name}</Header>
                         <Collection items={section.items}>
                           {item => (
-                            <MenuItem onAction={() => addSnippet(item.snippet)} className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors" key={item.name}>{item.name}</MenuItem>
+                            <MenuItem
+                              onAction={() => addSnippet(item.snippet)}
+                              className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                              key={item.name}
+                            >
+                              {item.name}
+                            </MenuItem>
                           )}
                         </Collection>
                       </Section>
@@ -626,14 +645,19 @@ export const RequestScriptEditor: FC<Props> = ({
                   }
 
                   return (
-                    <MenuItem onAction={() => addSnippet(section.snippet)} className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors" key={section.name}>{section.name}</MenuItem>
+                    <MenuItem
+                      onAction={() => addSnippet(section.snippet)}
+                      className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                      key={section.name}
+                    >
+                      {section.name}
+                    </MenuItem>
                   );
                 }}
               </Menu>
             </Popover>
           </MenuTrigger>
         ))}
-
       </Toolbar>
     </div>
   );

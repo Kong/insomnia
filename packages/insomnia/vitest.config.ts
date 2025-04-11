@@ -9,9 +9,7 @@ export default defineConfig({
     },
     server: {
       deps: {
-        inline: [
-          'tinykeys',
-        ],
+        inline: ['tinykeys'],
       },
     },
   },

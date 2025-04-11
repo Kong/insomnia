@@ -3,7 +3,17 @@ import React from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import { type LoaderFunction, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { CONTENT_TYPE_JSON, CONTENT_TYPE_OTHER, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML, CONTENT_TYPE_YAML, contentTypesMap, getMockServiceBinURL, getMockServiceURL, RESPONSE_CODE_REASONS } from '../../common/constants';
+import {
+  CONTENT_TYPE_JSON,
+  CONTENT_TYPE_OTHER,
+  CONTENT_TYPE_PLAINTEXT,
+  CONTENT_TYPE_XML,
+  CONTENT_TYPE_YAML,
+  contentTypesMap,
+  getMockServiceBinURL,
+  getMockServiceURL,
+  RESPONSE_CODE_REASONS,
+} from '../../common/constants';
 import { database as db } from '../../common/database';
 import { getResponseCookiesFromHeaders } from '../../common/har';
 import * as models from '../../models';
@@ -72,10 +82,23 @@ const mockContentTypes = [
   CONTENT_TYPE_YAML,
   CONTENT_TYPE_OTHER,
 ];
-export const isInMockContentTypeList = (contentType: string): boolean => Boolean(contentType && mockContentTypes.includes(contentType));
+export const isInMockContentTypeList = (contentType: string): boolean =>
+  Boolean(contentType && mockContentTypes.includes(contentType));
 
 // mockbin expect a HAR response structure
-export const mockRouteToHar = ({ statusCode, statusText, mimeType, headersArray, body }: { statusCode: number; statusText: string; mimeType: string; headersArray: RequestHeader[]; body: string }): Har.Response => {
+export const mockRouteToHar = ({
+  statusCode,
+  statusText,
+  mimeType,
+  headersArray,
+  body,
+}: {
+  statusCode: number;
+  statusText: string;
+  mimeType: string;
+  headersArray: RequestHeader[];
+  body: string;
+}): Har.Response => {
   const validHeaders = headersArray.filter(({ name }) => !!name);
   return {
     status: +statusCode,
@@ -95,7 +118,11 @@ export const mockRouteToHar = ({ statusCode, statusText, mimeType, headersArray,
   };
 };
 export const useMockRoutePatcher = () => {
-  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+  const { organizationId, projectId, workspaceId } = useParams<{
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  }>();
   const fetcher = useFetcher();
   return (id: string, patch: Partial<MockRoute>) => {
     fetcher.submit(JSON.stringify(patch), {
@@ -115,14 +142,21 @@ export const MockRouteRoute = () => {
   const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
 
   const requestFetcher = useFetcher({ key: 'mock-request-fetcher' });
-  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+  const { organizationId, projectId, workspaceId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  };
 
   const upsertBinOnRemoteFromResponse = async (compoundId: string | null): Promise<string> => {
     try {
-      const res = await insomniaFetch<string | {
-        error: string;
-        message: string;
-      }>({
+      const res = await insomniaFetch<
+        | string
+        | {
+            error: string;
+            message: string;
+          }
+      >({
         origin: mockbinUrl,
         path: `/bin/upsert/${compoundId}`,
         method: 'PUT',
@@ -156,14 +190,14 @@ export const MockRouteRoute = () => {
   };
 
   const createAndSendPrivateRequest = (patch: Partial<Request>) =>
-    requestFetcher.submit(JSON.stringify(patch),
-      {
-        encType: 'application/json',
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new-mock-send`,
-        method: 'post',
-      });
+    requestFetcher.submit(JSON.stringify(patch), {
+      encType: 'application/json',
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new-mock-send`,
+      method: 'post',
+    });
   const upsertMockbinHar = async (pathInput?: string) => {
-    const hasRouteInServer = mockRoutes.filter(m => m._id !== mockRoute._id)
+    const hasRouteInServer = mockRoutes
+      .filter(m => m._id !== mockRoute._id)
       .find(m => m.name === pathInput && m.method.toUpperCase() === mockRoute.method.toUpperCase());
     if (hasRouteInServer) {
       showModal(AlertModal, {
@@ -199,7 +233,8 @@ export const MockRouteRoute = () => {
     });
   };
   const onSend = async (pathInput: string) => {
-    const hasRouteInServer = mockRoutes.filter(m => m._id !== mockRoute._id)
+    const hasRouteInServer = mockRoutes
+      .filter(m => m._id !== mockRoute._id)
       .find(m => m.name === pathInput && m.method.toUpperCase() === mockRoute.method.toUpperCase());
     if (hasRouteInServer) {
       showModal(AlertModal, {
@@ -232,34 +267,39 @@ export const MockRouteRoute = () => {
         <MockUrlBar key={mockRoute._id + mockRoute.name} onSend={onSend} onPathUpdate={upsertMockbinHar} />
       </PaneHeader>
       <PaneBody>
-        <Tabs aria-label='Mock response config' className="flex-1 w-full h-full flex flex-col">
-          <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+        <Tabs aria-label="Mock response config" className="flex h-full w-full flex-1 flex-col">
+          <TabList
+            className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+            aria-label="Request pane tabs"
+          >
             <Tab
-              className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-              id='content-type'
+              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              id="content-type"
             >
               Mock Body
             </Tab>
             <Tab
-              className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-              id='headers'
+              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              id="headers"
             >
               Mock Headers{' '}
               {headersCount > 0 && (
-                <span className="p-2 aspect-square flex items-center color-inherit justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{headersCount}</span>
+                <span className="color-inherit shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+                  {headersCount}
+                </span>
               )}
             </Tab>
             <Tab
-              className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-              id='status'
+              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              id="status"
             >
               Mock Status
             </Tab>
           </TabList>
-          <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='content-type'>
-            <Toolbar className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
+          <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="content-type">
+            <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2">
               <Dropdown
-                aria-label='Change Body Type'
+                aria-label="Change Body Type"
                 triggerButton={
                   <Button>
                     {mockRoute.mimeType ? 'Mock ' + contentTypesMap[mockRoute.mimeType]?.[0] : 'Mock Body'}
@@ -277,8 +317,8 @@ export const MockRouteRoute = () => {
                 ))}
               </Dropdown>
             </Toolbar>
-            {mockRoute.mimeType ?
-              (<CodeEditor
+            {mockRoute.mimeType ? (
+              <CodeEditor
                 id="mock-response-body-editor"
                 key={mockRoute._id}
                 showPrettifyButton
@@ -287,25 +327,23 @@ export const MockRouteRoute = () => {
                 onBlur={onBlurTriggerUpsert}
                 mode={mockRoute.mimeType}
                 placeholder="..."
-              />) :
-              (<EmptyStatePane
+              />
+            ) : (
+              <EmptyStatePane
                 icon={<SvgIcon icon="bug" />}
                 documentationLinks={[]}
                 secondaryAction="Set up the mock body and headers you would like to return"
                 title="Choose a mock body to return as a response"
-              />)}
+              />
+            )}
           </TabPanel>
-          <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='headers'>
-            <MockResponseHeadersEditor
-              key={mockRoute._id + mockRoute.name}
-              onBlur={onBlurTriggerUpsert}
-              bulk={false}
-            />
+          <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="headers">
+            <MockResponseHeadersEditor key={mockRoute._id + mockRoute.name} onBlur={onBlurTriggerUpsert} bulk={false} />
           </TabPanel>
-          <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='status'>
-            <div className='w-full px-4'>
+          <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="status">
+            <div className="w-full px-4">
               <div className="form-row">
-                <div className='form-control form-control--outlined'>
+                <div className="form-control form-control--outlined">
                   <label htmlFor="mock-response-status-code-editor">
                     <small>Status Code</small>
                     <input
@@ -321,7 +359,7 @@ export const MockRouteRoute = () => {
                 </div>
               </div>
               <div className="form-row">
-                <div className='form-control form-control--outlined'>
+                <div className="form-control form-control--outlined">
                   <label htmlFor="mock-response-status-text-editor">
                     <small>Status Text</small>
                     <input
@@ -331,7 +369,6 @@ export const MockRouteRoute = () => {
                       defaultValue={mockRoute.statusText}
                       onChange={e => patchMockRoute(mockRoute._id, { statusText: e.currentTarget.value })}
                       onBlur={onBlurTriggerUpsert}
-
                       placeholder={RESPONSE_CODE_REASONS[mockRoute.statusCode || 200] || 'Unknown'}
                     />
                   </label>
@@ -346,7 +383,5 @@ export const MockRouteRoute = () => {
 };
 
 export const MockRouteResponse = () => {
-  return (
-    <MockResponsePane />
-  );
+  return <MockResponsePane />;
 };

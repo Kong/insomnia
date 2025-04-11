@@ -43,12 +43,7 @@ const informationalText = [
 ];
 
 CodeMirror.defineSimpleMode('curl', {
-  start: [
-    ...keyValueHeaders,
-    ...headerFields,
-    ...data,
-    ...informationalText,
-  ],
+  start: [...keyValueHeaders, ...headerFields, ...data, ...informationalText],
   comment: [],
   meta: {},
 });

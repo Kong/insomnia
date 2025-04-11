@@ -92,5 +92,4 @@ test.describe('multiple-tab feature test', () => {
     await tabLocator.click({ button: 'middle' });
     await expect(tabLocator).toBeHidden();
   });
-
 });

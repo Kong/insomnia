@@ -34,16 +34,14 @@ import { RequestTestResultPane } from './request-test-result-pane';
 interface Props {
   activeRequestId: string;
 }
-export const ResponsePane: FC<Props> = ({
-  activeRequestId,
-}) => {
-  const { activeRequest, activeRequestMeta, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
+  const { activeRequest, activeRequestMeta, activeResponse } = useRouteLoaderData(
+    'request/:requestId',
+  ) as RequestLoaderData;
   const filterHistory = activeRequestMeta.responseFilterHistory || [];
   const filter = activeRequestMeta.responseFilter || '';
   const patchRequestMeta = useRequestMetaPatcher();
-  const {
-    settings,
-  } = useRootLoaderData();
+  const { settings } = useRootLoaderData();
   const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const handleSetFilter = async (responseFilter: string) => {
     if (!activeResponse) {
@@ -66,52 +64,55 @@ export const ResponsePane: FC<Props> = ({
 
   const { isExecuting, steps } = useExecutionState({ requestId: activeRequest._id });
 
-  const handleDownloadResponseBody = useCallback(async (prettify: boolean) => {
-    if (!activeResponse || !activeRequest) {
-      console.warn('Nothing to download');
-      return;
-    }
+  const handleDownloadResponseBody = useCallback(
+    async (prettify: boolean) => {
+      if (!activeResponse || !activeRequest) {
+        console.warn('Nothing to download');
+        return;
+      }
 
-    const { contentType } = activeResponse;
-    const extension = mimeExtension(contentType) || 'unknown';
-    const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
-      title: 'Save Response Body',
-      buttonLabel: 'Save',
-      defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`,
-    });
-
-    if (canceled) {
-      return;
-    }
-
-    const readStream = models.response.getBodyStream(activeResponse);
-    const dataBuffers: any[] = [];
-
-    if (readStream && outputPath && typeof readStream !== 'string') {
-      readStream.on('data', data => {
-        dataBuffers.push(data);
+      const { contentType } = activeResponse;
+      const extension = mimeExtension(contentType) || 'unknown';
+      const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
+        title: 'Save Response Body',
+        buttonLabel: 'Save',
+        defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`,
       });
-      readStream.on('end', () => {
-        const to = fs.createWriteStream(outputPath);
-        const finalBuffer = Buffer.concat(dataBuffers);
-        to.on('error', err => {
-          showError({
-            title: 'Save Failed',
-            message: 'Failed to save response body',
-            error: err,
-          });
+
+      if (canceled) {
+        return;
+      }
+
+      const readStream = models.response.getBodyStream(activeResponse);
+      const dataBuffers: any[] = [];
+
+      if (readStream && outputPath && typeof readStream !== 'string') {
+        readStream.on('data', data => {
+          dataBuffers.push(data);
         });
+        readStream.on('end', () => {
+          const to = fs.createWriteStream(outputPath);
+          const finalBuffer = Buffer.concat(dataBuffers);
+          to.on('error', err => {
+            showError({
+              title: 'Save Failed',
+              message: 'Failed to save response body',
+              error: err,
+            });
+          });
 
-        if (prettify && contentType.includes('json')) {
-          to.write(jsonPrettify(finalBuffer.toString('utf8')));
-        } else {
-          to.write(finalBuffer);
-        }
+          if (prettify && contentType.includes('json')) {
+            to.write(jsonPrettify(finalBuffer.toString('utf8')));
+          } else {
+            to.write(finalBuffer);
+          }
 
-        to.end();
-      });
-    }
-  }, [activeRequest, activeResponse]);
+          to.end();
+        });
+      }
+    },
+    [activeRequest, activeResponse],
+  );
 
   const { passedTestCount, totalTestCount } = useMemo(() => {
     let passedTestCount = 0;
@@ -124,9 +125,8 @@ export const ResponsePane: FC<Props> = ({
     });
     return { passedTestCount, totalTestCount };
   }, [activeResponse]);
-  const testResultCountTagColor = totalTestCount > 0 ?
-    passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600' :
-    'bg-[var(--hl-sm)]';
+  const testResultCountTagColor =
+    totalTestCount > 0 ? (passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600') : 'bg-[var(--hl-sm)]';
 
   if (!activeRequest) {
     return <BlankPane type="response" />;
@@ -136,11 +136,13 @@ export const ResponsePane: FC<Props> = ({
   if (!activeResponse) {
     return (
       <PlaceholderResponsePane>
-        {isExecuting && <ResponseTimer
-          handleCancel={() => cancelRequestById(activeRequest._id)}
-          activeRequestId={activeRequestId}
-          steps={steps}
-        />}
+        {isExecuting && (
+          <ResponseTimer
+            handleCancel={() => cancelRequestById(activeRequest._id)}
+            activeRequestId={activeRequestId}
+            steps={steps}
+          />
+        )}
       </PlaceholderResponsePane>
     );
   }
@@ -157,68 +159,68 @@ export const ResponsePane: FC<Props> = ({
             <TimeTag milliseconds={activeResponse.elapsedTime} steps={steps} />
             <SizeTag bytesRead={activeResponse.bytesRead} bytesContent={activeResponse.bytesContent} />
           </div>
-          <ResponseHistoryDropdown
-            activeResponse={activeResponse}
-          />
+          <ResponseHistoryDropdown activeResponse={activeResponse} />
         </PaneHeader>
       )}
-      <Tabs aria-label='Request group tabs' className="flex-1 w-full h-full flex flex-col">
-        <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+      <Tabs aria-label="Request group tabs" className="flex h-full w-full flex-1 flex-col">
+        <TabList
+          className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+          aria-label="Request pane tabs"
+        >
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='preview'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="preview"
           >
             Preview
           </Tab>
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='headers'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="headers"
           >
             Headers
             {activeResponse.headers.length > 0 && (
-              <span className="p-2 aspect-square flex items-center justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{activeResponse.headers.length}</span>
+              <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+                {activeResponse.headers.length}
+              </span>
             )}
           </Tab>
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='cookies'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="cookies"
           >
             Cookies
             {cookieHeaders.length > 0 && (
-              <span className="p-2 aspect-square flex items-center justify-between border-solid border border-[--hl-md] overflow-hidden rounded-lg text-xs shadow-small">{cookieHeaders.length}</span>
+              <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+                {cookieHeaders.length}
+              </span>
             )}
           </Tab>
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='test-results'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="test-results"
           >
             <div>
-              <span>
-                Tests
-              </span>
-              <span
-                className={`rounded-sm ml-1 px-1 ${testResultCountTagColor}`}
-                style={{ color: 'white' }}
-              >
+              <span>Tests</span>
+              <span className={`ml-1 rounded-sm px-1 ${testResultCountTagColor}`} style={{ color: 'white' }}>
                 {`${passedTestCount} / ${totalTestCount}`}
               </span>
             </div>
           </Tab>
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='mock-response'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="mock-response"
           >
             → Mock
           </Tab>
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='timeline'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="timeline"
           >
             Console
           </Tab>
         </TabList>
-        <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='preview'>
-          <Toolbar className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
+        <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="preview">
+          <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2">
             <PreviewModeDropdown
               download={handleDownloadResponseBody}
               copyToClipboard={async () => {
@@ -248,12 +250,12 @@ export const ResponsePane: FC<Props> = ({
             url={activeResponse.url}
           />
         </TabPanel>
-        <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='headers'>
+        <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="headers">
           <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
             <ResponseHeadersViewer headers={activeResponse.headers} />
           </ErrorBoundary>
         </TabPanel>
-        <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='cookies'>
+        <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="cookies">
           <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
             <ResponseCookiesViewer
               cookiesSent={activeResponse.settingSendCookies}
@@ -262,33 +264,26 @@ export const ResponsePane: FC<Props> = ({
             />
           </ErrorBoundary>
         </TabPanel>
-        <TabPanel
-          className='w-full flex-1 flex flex-col overflow-y-auto'
-          id='test-results'
-        >
+        <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="test-results">
           <RequestTestResultPane requestTestResults={activeResponse.requestTestResults} />
         </TabPanel>
-        <TabPanel
-          className='w-full flex-1 flex flex-col overflow-y-auto'
-          id='mock-response'
-        >
+        <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="mock-response">
           <MockResponseExtractor />
         </TabPanel>
-        <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='timeline'>
+        <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="timeline">
           <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
-            <ResponseTimelineViewer
-              key={activeResponse._id}
-              timeline={timeline}
-            />
+            <ResponseTimelineViewer key={activeResponse._id} timeline={timeline} />
           </ErrorBoundary>
         </TabPanel>
       </Tabs>
       <ErrorBoundary errorClassName="font-error pad text-center">
-        {isExecuting && <ResponseTimer
-          handleCancel={() => cancelRequestById(activeRequest._id)}
-          activeRequestId={activeRequestId}
-          steps={steps}
-        />}
+        {isExecuting && (
+          <ResponseTimer
+            handleCancel={() => cancelRequestById(activeRequest._id)}
+            activeRequestId={activeRequestId}
+            steps={steps}
+          />
+        )}
       </ErrorBoundary>
     </Pane>
   );

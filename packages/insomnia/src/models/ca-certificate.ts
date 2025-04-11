@@ -30,9 +30,7 @@ export function init(): BaseCaCertificate {
   };
 }
 
-export const isCaCertificate = (model: Pick<BaseModel, 'type'>): model is CaCertificate => (
-  model.type === type
-);
+export const isCaCertificate = (model: Pick<BaseModel, 'type'>): model is CaCertificate => model.type === type;
 
 export function migrate(doc: CaCertificate) {
   return doc;
@@ -46,10 +44,7 @@ export function create(patch: Partial<CaCertificate> = {}) {
   return db.docCreate<CaCertificate>(type, patch);
 }
 
-export function update(
-  cert: CaCertificate,
-  patch: Partial<CaCertificate> = {},
-) {
+export function update(cert: CaCertificate, patch: Partial<CaCertificate> = {}) {
   return db.docUpdate<CaCertificate>(cert, patch);
 }
 

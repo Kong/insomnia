@@ -10,19 +10,23 @@ import { unthrowableParseJson } from '../utils';
 export const id = 'openapi3';
 export const name = 'OpenAPI 3.0';
 export const description = 'Importer for OpenAPI 3.0 specification (json/yaml)';
-const toCamelCase = (a: string) => a.replace(/`|'/g, '')
-  .replace(/[a-z](?=[A-Z][a-z])/g, '$& ')
-  .replace(/[\W_]*([a-z0-9]+)[\W_]*/gi, (_, b, i) => (i ? b[0].toUpperCase() : '') + b.slice(i > 0).toLowerCase());
+const toCamelCase = (a: string) =>
+  a
+    .replace(/`|'/g, '')
+    .replace(/[a-z](?=[A-Z][a-z])/g, '$& ')
+    .replace(/[\W_]*([a-z0-9]+)[\W_]*/gi, (_, b, i) => (i ? b[0].toUpperCase() : '') + b.slice(i > 0).toLowerCase());
 function isPlainObject(value: any) {
   if (typeof value !== 'object' || value === null) {
     return false;
   }
 
   const prototype = Object.getPrototypeOf(value);
-  return (prototype === null || prototype === Object.prototype || Object.getPrototypeOf(prototype) === null) && !(Symbol.toStringTag in value) && !(Symbol.iterator in value);
+  return (
+    (prototype === null || prototype === Object.prototype || Object.getPrototypeOf(prototype) === null) &&
+    !(Symbol.toStringTag in value) &&
+    !(Symbol.iterator in value)
+  );
 }
-
- 
 
 const SUPPORTED_OPENAPI_VERSION = /^3\.\d+\.\d+$/;
 
@@ -47,15 +51,8 @@ const OAUTH_FLOWS = {
   IMPLICIT: 'implicit',
   PASSWORD: 'password',
 } as const;
-const SUPPORTED_SECURITY_TYPES = [
-  SECURITY_TYPE.HTTP,
-  SECURITY_TYPE.API_KEY,
-  SECURITY_TYPE.OAUTH,
-];
-const SUPPORTED_HTTP_AUTH_SCHEMES = [
-  HTTP_AUTH_SCHEME.BASIC,
-  HTTP_AUTH_SCHEME.BEARER,
-];
+const SUPPORTED_SECURITY_TYPES = [SECURITY_TYPE.HTTP, SECURITY_TYPE.API_KEY, SECURITY_TYPE.OAUTH];
+const SUPPORTED_HTTP_AUTH_SCHEMES = [HTTP_AUTH_SCHEME.BASIC, HTTP_AUTH_SCHEME.BEARER];
 const VARIABLE_SEARCH_VALUE = /{([^}]+)}/g;
 let requestCounts: Record<string, number> = {};
 
@@ -110,8 +107,7 @@ const resolveVariables = (server: OpenAPIV3.ServerObject) => {
  */
 const parseDocument = (rawData: string): OpenAPIV3.Document | null => {
   try {
-    return (unthrowableParseJson(rawData) ||
-      YAML.parse(rawData)) as OpenAPIV3.Document;
+    return (unthrowableParseJson(rawData) || YAML.parse(rawData)) as OpenAPIV3.Document;
   } catch (err) {
     return null;
   }
@@ -146,19 +142,15 @@ const parseEnvs = (baseEnv: ImportRequest, document?: OpenAPIV3.Document | null)
     document.components?.securitySchemes as unknown as OpenAPIV3.SecuritySchemeObject,
   );
 
-  return servers
-    .map(server => {
+  return (
+    servers.map(server => {
       const currentServerUrl = getServerUrl(server);
       const protocol = currentServerUrl.protocol || '';
 
       // Base path is pulled out of the URL, and the trailing slash is removed
       const basePath = (currentServerUrl.pathname || '').replace(/\/$/, '');
 
-      const hash = crypto
-        .createHash('sha1')
-        .update(server.url)
-        .digest('hex')
-        .slice(0, 8);
+      const hash = crypto.createHash('sha1').update(server.url).digest('hex').slice(0, 8);
       const openapiEnv: ImportRequest = {
         _type: 'environment',
         _id: `env___BASE_ENVIRONMENT_ID___sub__${hash}`,
@@ -174,7 +166,8 @@ const parseEnvs = (baseEnv: ImportRequest, document?: OpenAPIV3.Document | null)
       };
 
       return openapiEnv;
-    }) || [];
+    }) || []
+  );
 };
 
 /**
@@ -206,7 +199,7 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
         .filter(([key, value]) => isPlainObject(value) && !isSpecExtension(key));
 
       return methods.map(([method]) => ({
-        ...((schemasPerMethod as Record<string, OpenAPIV3.SchemaObject>)[method]),
+        ...(schemasPerMethod as Record<string, OpenAPIV3.SchemaObject>)[method],
         path,
         method,
       }));
@@ -214,10 +207,13 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
     .flat();
 
   const folders = document.tags?.map(importFolderItem(defaultParent)) || [];
-  const folderLookup = folders.reduce((accumulator, folder) => ({
-    ...accumulator,
-    ...(folder.name ? { [folder.name]: folder._id } : {}),
-  }), {} as Record<OpenAPIV3.TagObject['name'], string | undefined>);
+  const folderLookup = folders.reduce(
+    (accumulator, folder) => ({
+      ...accumulator,
+      ...(folder.name ? { [folder.name]: folder._id } : {}),
+    }),
+    {} as Record<OpenAPIV3.TagObject['name'], string | undefined>,
+  );
 
   const requests: ImportRequest[] = [];
   endpointsSchemas.forEach(endpointSchema => {
@@ -230,52 +226,41 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
     tags.forEach(tag => {
       const parentId = folderLookup[tag] || defaultParent;
       const resolvedSecurity = (endpointSchema as unknown as OpenAPIV3.Document).security || rootSecurity;
-      requests.push(
-        importRequest(
-          endpointSchema,
-          parentId,
-          resolvedSecurity,
-          securitySchemes,
-        ),
-      );
+      requests.push(importRequest(endpointSchema, parentId, resolvedSecurity, securitySchemes));
     });
   });
 
-  return [
-    ...folders,
-    ...requests,
-  ];
+  return [...folders, ...requests];
 };
 
 /**
  * Return Insomnia folder / request group
  */
-const importFolderItem = (parentId: string) => (
-  item: OpenAPIV3.SchemaObject,
-): ImportRequest => {
-  const hash = crypto
-    .createHash('sha1')
-    // @ts-expect-error -- this is not present on the official types, yet was here in the source code
-    .update(item.name)
-    .digest('hex')
-    .slice(0, 8);
-  return {
-    parentId,
-    _id: `fld___WORKSPACE_ID__${hash}`,
-    _type: 'request_group',
-    // @ts-expect-error -- this is not present on the official types, yet was here in the source code
-    name: item.name || 'Folder {requestGroupCount}',
-    description: item.description || '',
+const importFolderItem =
+  (parentId: string) =>
+  (item: OpenAPIV3.SchemaObject): ImportRequest => {
+    const hash = crypto
+      .createHash('sha1')
+      // @ts-expect-error -- this is not present on the official types, yet was here in the source code
+      .update(item.name)
+      .digest('hex')
+      .slice(0, 8);
+    return {
+      parentId,
+      _id: `fld___WORKSPACE_ID__${hash}`,
+      _type: 'request_group',
+      // @ts-expect-error -- this is not present on the official types, yet was here in the source code
+      name: item.name || 'Folder {requestGroupCount}',
+      description: item.description || '',
+    };
   };
-};
 
 /**
  * Return path with parameters replaced by insomnia variables
  *
  * I.e. "/foo/:bar" => "/foo/{{ bar }}"
  */
-const pathWithParamsAsVariables = (path?: string) =>
-  path?.replace(VARIABLE_SEARCH_VALUE, '{{ _.$1 }}') ?? '';
+const pathWithParamsAsVariables = (path?: string) => path?.replace(VARIABLE_SEARCH_VALUE, '{{ _.$1 }}') ?? '';
 
 /**
  * Return Insomnia request
@@ -315,9 +300,10 @@ const importRequest = (
  */
 const prepareQueryParams = (endpointSchema: OpenAPIV3.PathItemObject) => {
   return convertParameters(
-    endpointSchema.parameters?.filter(parameter => (
-      (parameter as OpenAPIV3.ParameterObject).in === 'query'
-    )) as OpenAPIV3.ParameterObject[]);
+    endpointSchema.parameters?.filter(
+      parameter => (parameter as OpenAPIV3.ParameterObject).in === 'query',
+    ) as OpenAPIV3.ParameterObject[],
+  );
 };
 
 /**
@@ -325,13 +311,12 @@ const prepareQueryParams = (endpointSchema: OpenAPIV3.PathItemObject) => {
  */
 const prepareHeaders = (endpointSchema: OpenAPIV3.PathItemObject, body: any) => {
   let paramHeaders = convertParameters(
-    endpointSchema.parameters?.filter(parameter => (
-      (parameter as OpenAPIV3.ParameterObject).in === 'header'
-    )) as OpenAPIV3.ParameterObject[]);
-
-  const noContentTypeHeader = !paramHeaders?.find(
-    header => header.name === 'Content-Type',
+    endpointSchema.parameters?.filter(
+      parameter => (parameter as OpenAPIV3.ParameterObject).in === 'header',
+    ) as OpenAPIV3.ParameterObject[],
   );
+
+  const noContentTypeHeader = !paramHeaders?.find(header => header.name === 'Content-Type');
 
   if (body && body.mimeType && noContentTypeHeader) {
     paramHeaders = [
@@ -372,12 +357,8 @@ const parseSecurity = (
         };
       });
     })
-    .filter(({ schemeDetails }) => (
-      schemeDetails && SUPPORTED_SECURITY_TYPES.includes(schemeDetails.type)
-    ));
-  const apiKeySchemes = supportedSchemes.filter(scheme => (
-    scheme.schemeDetails.type === SECURITY_TYPE.API_KEY
-  ));
+    .filter(({ schemeDetails }) => schemeDetails && SUPPORTED_SECURITY_TYPES.includes(schemeDetails.type));
+  const apiKeySchemes = supportedSchemes.filter(scheme => scheme.schemeDetails.type === SECURITY_TYPE.API_KEY);
   const apiKeyHeaders = apiKeySchemes
     .filter(scheme => scheme.schemeDetails.in === 'header')
     .map(scheme => {
@@ -420,9 +401,9 @@ const parseSecurity = (
     const authScheme = supportedSchemes.find(
       scheme =>
         SUPPORTED_SECURITY_TYPES.includes(scheme.schemeDetails.type) &&
-        (scheme.schemeDetails.type === SECURITY_TYPE.OAUTH
-          || (apiKeySecuritySchemas === 1 && scheme.schemeDetails.type === SECURITY_TYPE.API_KEY)
-          || SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.schemeDetails.scheme)),
+        (scheme.schemeDetails.type === SECURITY_TYPE.OAUTH ||
+          (apiKeySecuritySchemas === 1 && scheme.schemeDetails.type === SECURITY_TYPE.API_KEY) ||
+          SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.schemeDetails.scheme)),
     );
 
     if (!authScheme) {
@@ -431,9 +412,7 @@ const parseSecurity = (
 
     switch (authScheme.schemeDetails.type) {
       case SECURITY_TYPE.HTTP:
-        return parseHttpAuth(
-          (authScheme.schemeDetails as OpenAPIV3.HttpSecurityScheme).scheme,
-        );
+        return parseHttpAuth((authScheme.schemeDetails as OpenAPIV3.HttpSecurityScheme).scheme);
 
       case SECURITY_TYPE.OAUTH:
         return parseOAuth2(authScheme.schemeDetails as OpenAPIV3.OAuth2SecurityScheme, authScheme.securityScopes);
@@ -474,16 +453,16 @@ const getSecurityEnvVariables = (securitySchemeObject?: OpenAPIV3.SecurityScheme
     variables[name] = name;
   });
 
-  const hasHttpBasicScheme = securitySchemes.some(scheme => (
-    scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'basic'
-  ));
+  const hasHttpBasicScheme = securitySchemes.some(
+    scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'basic',
+  );
   if (hasHttpBasicScheme) {
     variables.httpUsername = 'username';
     variables.httpPassword = 'password';
   }
-  const hasHttpBearerScheme = securitySchemes.some(scheme => (
-    scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'bearer'
-  ));
+  const hasHttpBearerScheme = securitySchemes.some(
+    scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'bearer',
+  );
   if (hasHttpBearerScheme) {
     variables.bearerToken = 'bearerToken';
   }
@@ -493,18 +472,11 @@ const getSecurityEnvVariables = (securitySchemeObject?: OpenAPIV3.SecurityScheme
       accumulator.oauth2ClientId = 'clientId';
       const flows = scheme.flows || {};
 
-      if (
-        flows.authorizationCode ||
-        flows.implicit
-      ) {
+      if (flows.authorizationCode || flows.implicit) {
         accumulator.oauth2RedirectUrl = 'http://localhost/';
       }
 
-      if (
-        flows.authorizationCode ||
-        flows.clientCredentials ||
-        flows.password
-      ) {
+      if (flows.authorizationCode || flows.clientCredentials || flows.password) {
         accumulator.oauth2ClientSecret = 'clientSecret';
       }
 
@@ -555,17 +527,12 @@ const prepareBody = (endpointSchema: OpenAPIV3.OperationObject): ImportRequest['
     };
   }
 
-  if (
-    mimeTypes &&
-    mimeTypes.length &&
-    mimeTypes[0] !== MIMETYPE_LITERALLY_ANYTHING
-  ) {
+  if (mimeTypes && mimeTypes.length && mimeTypes[0] !== MIMETYPE_LITERALLY_ANYTHING) {
     return {
       mimeType: mimeTypes[0] || undefined,
     };
   }
   return {};
-
 };
 
 /**
@@ -589,31 +556,29 @@ const convertParameters = (parameters: OpenAPIV3.ParameterObject[] = []) => {
 // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
 const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
   const typeExamples = {
-    string: () => 'string',
-    string_email: () => 'user@example.com',
+    'string': () => 'string',
+    'string_email': () => 'user@example.com',
     'string_date-time': () => new Date().toISOString(),
-    string_byte: () => 'ZXhhbXBsZQ==',
-    number: () => 0,
-    number_float: () => 0.0,
-    number_double: () => 0.0,
-    integer: () => 0,
-    boolean: () => true,
-    object: (schema: OpenAPIV3.SchemaObject) => {
+    'string_byte': () => 'ZXhhbXBsZQ==',
+    'number': () => 0,
+    'number_float': () => 0.0,
+    'number_double': () => 0.0,
+    'integer': () => 0,
+    'boolean': () => true,
+    'object': (schema: OpenAPIV3.SchemaObject) => {
       const example: OpenAPIV3.SchemaObject['properties'] = {};
       const { properties } = schema;
 
       if (properties) {
         for (const propertyName of Object.keys(properties)) {
-          example[propertyName] = generateParameterExample(
-            properties[propertyName] as OpenAPIV3.SchemaObject,
-          );
+          example[propertyName] = generateParameterExample(properties[propertyName] as OpenAPIV3.SchemaObject);
         }
       }
 
       return example;
     },
     // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
-    array: (schema: OpenAPIV2.ItemsObject) => {
+    'array': (schema: OpenAPIV2.ItemsObject) => {
       // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
       const value = generateParameterExample(schema.items);
 
@@ -621,7 +586,6 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
         return value;
       }
       return [value];
-
     },
   };
 
@@ -659,17 +623,11 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
 /**
  * Generates a unique and deterministic request ID based on the endpoint schema
  */
-const generateUniqueRequestId = (
-  endpointSchema: OpenAPIV3.OperationObject<{ method?: string; path?: string }>,
-) => {
+const generateUniqueRequestId = (endpointSchema: OpenAPIV3.OperationObject<{ method?: string; path?: string }>) => {
   // `operationId` is already unique to the workspace, so we can just use that, combined with the workspace id to get something globally unique
   const uniqueKey = endpointSchema.operationId || `[${endpointSchema.method}]${endpointSchema.path}`;
 
-  const hash = crypto
-    .createHash('sha1')
-    .update(uniqueKey)
-    .digest('hex')
-    .slice(0, 8);
+  const hash = crypto.createHash('sha1').update(uniqueKey).digest('hex').slice(0, 8);
 
   // Suffix the ID with a counter in case we try creating two with the same hash
   if (hash in requestCounts) {
@@ -714,7 +672,7 @@ const parseApiKeyAuth = (schemeDetails: OpenAPIV3.ApiKeySecurityScheme) => {
 
 const parseOAuth2Scopes = (
   flow: OpenAPIV3.OAuth2SecurityScheme['flows'][keyof OpenAPIV3.OAuth2SecurityScheme['flows']],
-  selectedScopes: string[]
+  selectedScopes: string[],
 ) => {
   if (!flow?.scopes) {
     return '';
@@ -724,9 +682,7 @@ const parseOAuth2Scopes = (
   return scopes.filter(scope => selectedScopes.includes(scope)).join(' ');
 };
 
-const mapOAuth2GrantType = (
-  grantType: keyof OpenAPIV3.OAuth2SecurityScheme['flows'],
-) => {
+const mapOAuth2GrantType = (grantType: keyof OpenAPIV3.OAuth2SecurityScheme['flows']) => {
   const types = {
     [OAUTH_FLOWS.AUTHORIZATION_CODE]: 'authorization_code',
     [OAUTH_FLOWS.CLIENT_CREDENTIALS]: 'client_credentials',
@@ -737,9 +693,7 @@ const mapOAuth2GrantType = (
 };
 
 const parseOAuth2 = (scheme: OpenAPIV3.OAuth2SecurityScheme, selectedScopes: string[]) => {
-  const flows = Object.keys(
-    scheme.flows,
-  ) as (keyof OpenAPIV3.OAuth2SecurityScheme['flows'])[];
+  const flows = Object.keys(scheme.flows) as (keyof OpenAPIV3.OAuth2SecurityScheme['flows'])[];
 
   if (!flows.length) {
     return {};
@@ -765,22 +719,26 @@ const parseOAuth2 = (scheme: OpenAPIV3.OAuth2SecurityScheme, selectedScopes: str
         ...base,
         clientSecret: '{{ _.oauth2ClientSecret }}',
         redirectUrl: '{{ _.oauth2RedirectUrl }}',
-        accessTokenUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.AUTHORIZATION_CODE])?.tokenUrl,
-        authorizationUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.AUTHORIZATION_CODE])?.authorizationUrl,
+        accessTokenUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.AUTHORIZATION_CODE])
+          ?.tokenUrl,
+        authorizationUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.AUTHORIZATION_CODE])
+          ?.authorizationUrl,
       };
 
     case OAUTH_FLOWS.CLIENT_CREDENTIALS:
       return {
         ...base,
         clientSecret: '{{ _.oauth2ClientSecret }}',
-        accessTokenUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.CLIENT_CREDENTIALS])?.tokenUrl,
+        accessTokenUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.CLIENT_CREDENTIALS])
+          ?.tokenUrl,
       };
 
     case OAUTH_FLOWS.IMPLICIT:
       return {
         ...base,
         redirectUrl: '{{ _.oauth2RedirectUrl }}',
-        authorizationUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.IMPLICIT])?.authorizationUrl,
+        authorizationUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.IMPLICIT])
+          ?.authorizationUrl,
       };
 
     case OAUTH_FLOWS.PASSWORD:
@@ -809,11 +767,11 @@ export const convert: Converter = async rawData => {
   }
 
   try {
-    apiDocument = await SwaggerParser.validate(apiDocument, {
+    apiDocument = (await SwaggerParser.validate(apiDocument, {
       dereference: {
         circular: 'ignore',
       },
-    }) as OpenAPIV3.Document;
+    })) as OpenAPIV3.Document;
   } catch (err) {
     console.log('[openapi-3] Import file validation failed', err);
   }
@@ -840,10 +798,5 @@ export const convert: Converter = async rawData => {
   const openapiEnvs = parseEnvs(baseEnv, apiDocument);
   const endpoints = parseEndpoints(apiDocument);
 
-  return [
-    workspace,
-    baseEnv,
-    ...openapiEnvs,
-    ...endpoints,
-  ];
+  return [workspace, baseEnv, ...openapiEnvs, ...endpoints];
 };

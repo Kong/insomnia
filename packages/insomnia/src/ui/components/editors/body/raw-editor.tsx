@@ -10,13 +10,7 @@ interface Props {
   className?: string;
 }
 
-export const RawEditor: FC<Props> = ({
-  className,
-  content,
-  contentType,
-  onChange,
-  uniquenessKey,
-}) => (
+export const RawEditor: FC<Props> = ({ className, content, contentType, onChange, uniquenessKey }) => (
   <Fragment>
     <CodeEditor
       id="raw-editor"

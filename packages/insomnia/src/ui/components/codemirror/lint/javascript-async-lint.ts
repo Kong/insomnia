@@ -40,10 +40,7 @@ function parseErrors(errors: LintError[], output: ValidationError[]) {
     if (error) {
       if (error.line <= 0) {
         if (window.console) {
-          window.console.warn(
-            'Cannot display JSHint error (invalid line ' + error.line + ')',
-            error,
-          );
+          window.console.warn('Cannot display JSHint error (invalid line ' + error.line + ')', error);
         }
 
         continue;

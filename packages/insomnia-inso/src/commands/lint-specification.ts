@@ -1,6 +1,6 @@
-import type { RulesetDefinition} from '@stoplight/spectral-core';
+import type { RulesetDefinition } from '@stoplight/spectral-core';
 import { Spectral } from '@stoplight/spectral-core';
- 
+
 const { bundleAndLoadRuleset } = require('@stoplight/spectral-ruleset-bundler/with-loader');
 import { oas } from '@stoplight/spectral-rulesets';
 import { DiagnosticSeverity } from '@stoplight/types';
@@ -22,7 +22,13 @@ export const getRuleSetFileFromFolderByFilename = async (filePath: string) => {
     throw new InsoError(`Failed to read "${filePath}"`, error);
   }
 };
-export async function lintSpecification({ specContent, rulesetFileName }: { specContent: string; rulesetFileName?: string },) {
+export async function lintSpecification({
+  specContent,
+  rulesetFileName,
+}: {
+  specContent: string;
+  rulesetFileName?: string;
+}) {
   const spectral = new Spectral();
   // Use custom ruleset if present
   let ruleset = oas;
@@ -49,7 +55,11 @@ export async function lintSpecification({ specContent, rulesetFileName }: { spec
     logger.warn(`${results.filter(r => r.severity === DiagnosticSeverity.Warning).length} lint warnings found. \n`);
   }
   results.forEach(r =>
-    logger.log(`${r.range.start.line + 1}:${r.range.start.character + 1} - ${DiagnosticSeverity[r.severity]} - ${r.code} - ${r.message} - ${r.path.join('.')}`),
+    logger.log(
+      `${r.range.start.line + 1}:${r.range.start.character + 1} - ${DiagnosticSeverity[r.severity]} - ${r.code} - ${
+        r.message
+      } - ${r.path.join('.')}`,
+    ),
   );
 
   // Fail if errors present

@@ -12,13 +12,9 @@ import type {
   AUTH_NTLM,
   AUTH_OAUTH_1,
   HAWK_ALGORITHM_SHA1,
-  HAWK_ALGORITHM_SHA256} from '../common/constants';
-import {
-  AUTH_BASIC,
-  CONTENT_TYPE_FORM_URLENCODED,
-  getContentTypeFromHeaders,
-  METHOD_GET,
+  HAWK_ALGORITHM_SHA256,
 } from '../common/constants';
+import { AUTH_BASIC, CONTENT_TYPE_FORM_URLENCODED, getContentTypeFromHeaders, METHOD_GET } from '../common/constants';
 import { database as db } from '../common/database';
 import type { OAuth1SignatureMethod } from '../network/o-auth-1/constants';
 import { getOperationType } from '../utils/graph-ql';
@@ -34,7 +30,8 @@ export const prefix = 'req';
 export const canDuplicate = true;
 
 export const canSync = true;
-export type AuthTypes = 'none'
+export type AuthTypes =
+  | 'none'
   | 'apikey'
   | 'oauth2'
   | 'oauth1'
@@ -157,7 +154,8 @@ export interface AuthTypeNone {
   type: typeof AUTH_NONE;
   disabled?: boolean;
 }
-export type RequestAuthentication = AuthTypeOAuth2
+export type RequestAuthentication =
+  | AuthTypeOAuth2
   | AuthTypeBasic
   | AuthTypeBearer
   | AuthTypeDigest
@@ -207,13 +205,20 @@ export const PATH_PARAMETER_REGEX = /\/:[^/?#:]+/g;
 
 export const getPathParametersFromUrl = (url: string): string[] => {
   // Find all path parameters in the URL. Path parameters are defined as segments of the URL that start with a colon.
-  const urlPathParameters = url.match(PATH_PARAMETER_REGEX)?.map(String).map(match => match.replace('/:', '')) || [];
+  const urlPathParameters =
+    url
+      .match(PATH_PARAMETER_REGEX)
+      ?.map(String)
+      .map(match => match.replace('/:', '')) || [];
   const uniqueUrlPathParameters = [...new Set(urlPathParameters)];
 
   return uniqueUrlPathParameters;
 };
 
-export const getCombinedPathParametersFromUrl = (url: string, pathParameters: RequestPathParameter[]): RequestPathParameter[] => {
+export const getCombinedPathParametersFromUrl = (
+  url: string,
+  pathParameters: RequestPathParameter[],
+): RequestPathParameter[] => {
   // Extract path parameters from the URL
   const urlPathParameters = getPathParametersFromUrl(url);
 
@@ -233,8 +238,9 @@ export const getCombinedPathParametersFromUrl = (url: string, pathParameters: Re
   if (urlPathParameters) {
     // Filter out the unsaved URL path parameters
     unsavedUrlPathParameters = new Set(
-      urlPathParameters.filter(p => !savedPathParameters.map(p => p.name).includes(p))
-        .map(p => ({ name: p, value: '' }))
+      urlPathParameters
+        .filter(p => !savedPathParameters.map(p => p.name).includes(p))
+        .map(p => ({ name: p, value: '' })),
     );
   }
 
@@ -274,20 +280,14 @@ export interface BaseRequest {
 
 export type Request = BaseModel & BaseRequest;
 
-export const isRequest = (model: Pick<BaseModel, 'type'>): model is Request => (
-  model.type === type
-);
+export const isRequest = (model: Pick<BaseModel, 'type'>): model is Request => model.type === type;
 
-export const isRequestId = (id?: string | null) => (
-  id?.startsWith(`${prefix}_`)
-);
+export const isRequestId = (id?: string | null) => id?.startsWith(`${prefix}_`);
 
-export const isEventStreamRequest = (model: Pick<BaseModel, 'type'>) => (
-  isRequest(model) && model.headers?.find(h => h.name === 'Accept')?.value === 'text/event-stream'
-);
-export const isGraphqlSubscriptionRequest = (model: Pick<BaseModel, 'type'>) => (
-  isRequest(model) && getOperationType(model) === OperationTypeNode.SUBSCRIPTION
-);
+export const isEventStreamRequest = (model: Pick<BaseModel, 'type'>) =>
+  isRequest(model) && model.headers?.find(h => h.name === 'Accept')?.value === 'text/event-stream';
+export const isGraphqlSubscriptionRequest = (model: Pick<BaseModel, 'type'>) =>
+  isRequest(model) && getOperationType(model) === OperationTypeNode.SUBSCRIPTION;
 
 export function init(): BaseRequest {
   return {
@@ -416,12 +416,15 @@ function migrateBody(request: Request) {
     request.body = {};
   } else {
     const rawBody: string = typeof request.body === 'string' ? request.body : '';
-    request.body = typeof contentType !== 'string' ? {
-      text: rawBody,
-    } : {
-      mimeType: contentType.split(';')[0],
-      text: rawBody,
-    };
+    request.body =
+      typeof contentType !== 'string'
+        ? {
+            text: rawBody,
+          }
+        : {
+            mimeType: contentType.split(';')[0],
+            text: rawBody,
+          };
   }
 
   return request;
