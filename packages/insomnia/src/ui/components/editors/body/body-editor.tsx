@@ -9,6 +9,7 @@ import {
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
   CONTENT_TYPE_GRAPHQL,
+  CONTENT_TYPE_JSON,
   getContentTypeFromHeaders,
 } from '../../../../common/constants';
 import { documentationLinks } from '../../../../common/documentation';
@@ -119,6 +120,8 @@ export const BodyEditor: FC<Props> = ({
       return <FileEditor key={uniqueKey} onChange={handleFileChange} path={fileName || ''} />;
     } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
       return <GraphQLEditor key={uniqueKey} uniquenessKey={uniqueKey} request={request} workspaceId={workspaceId} environmentId={environmentId} onChange={handleGraphQLChange} />;
+    } else if (mimeType === CONTENT_TYPE_JSON) {
+      return <RawEditor uniquenessKey={uniqueKey} contentType={mimeType || 'application/json'} content={request.body.text || ''} onChange={handleRawChange} />;
     } else if (!isBodyEmpty) {
       const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
       return <RawEditor uniquenessKey={uniqueKey} contentType={contentType || 'text/plain'} content={request.body.text || ''} onChange={handleRawChange} />;
