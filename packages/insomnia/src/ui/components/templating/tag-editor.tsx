@@ -85,8 +85,8 @@ export const TagEditor: FC<Props> = props => {
     for (const doc of await db.withDescendants(props.workspace, models.request.type)) {
       allDocs[doc.type].push(doc);
     }
-    // @ts-expect-error -- type unsoundness
     allDocs[models.request.type] = sortRequests(
+      // @ts-expect-error -- type unsoundness
       (allDocs[models.request.type] || []).concat(allDocs[models.requestGroup.type] || []),
       props.workspace._id,
     );
