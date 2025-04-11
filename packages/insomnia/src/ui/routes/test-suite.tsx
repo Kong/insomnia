@@ -284,7 +284,11 @@ const UnitTestItemView = ({
             const numbers = variables
               .map(x => parseInt(x.match(/(\d+)/)?.[0] || ''))
               ?.filter(x => !isNaN(x));
-            const highestNumberedConstant = Math.max(...numbers);
+            let highestNumberedConstant = Math.max(...numbers);
+            // if value is empty, highestNumberedConstant will be -Infinity, so setting it to zero
+            if (highestNumberedConstant === -Infinity) {
+              highestNumberedConstant = 0;
+            }
             const variableName = 'response' + (highestNumberedConstant + 1);
             return [
               {
