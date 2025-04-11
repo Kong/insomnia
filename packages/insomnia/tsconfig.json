@@ -12,16 +12,25 @@
     "module": "ESNext",
     "sourceMap": true,
     /* Runs in the DOM */
-    "lib": ["ES2023", "DOM.Iterable", "DOM"],
+    "lib": [
+      "ES2023",
+      "DOM.Iterable",
+      "DOM"
+    ],
     "jsx": "react",
-    /* Strictness */
+    /* Strictness https://github.com/tsconfig/bases/blob/main/bases/strictest.json */
     "strict": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    // "exactOptionalPropertyTypes": true, TODO: max strictness
+    "noFallthroughCasesInSwitch": true,
+    // "noImplicitOverride": true, TODO:  max strictness
     "noImplicitReturns": true,
+    // "noPropertyAccessFromIndexSignature": true, TODO:  max strictness
+    // "noUncheckedIndexedAccess": true, TODO:  max strictness
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "useUnknownInCatchVariables": false,
-    "verbatimModuleSyntax": true
+    "useUnknownInCatchVariables": false
   },
   "include": [
     ".eslintrc.js",

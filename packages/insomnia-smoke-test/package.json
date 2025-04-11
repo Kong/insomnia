@@ -16,7 +16,7 @@
     "test:dev": "xvfb-maybe cross-env BUNDLE=dev playwright test",
     "test:build": "xvfb-maybe cross-env BUNDLE=build playwright test",
     "test:package": "xvfb-maybe cross-env BUNDLE=package playwright test",
-    "serve": "esr server/index.ts"
+    "serve": "npx -y tsx server/index.ts"
   },
   "devDependencies": {
     "@grpc/grpc-js": "^1.12.00",
@@ -29,7 +29,6 @@
     "@types/ws": "^8.5.10",
     "cross-env": "^7.0.3",
     "depd": "^1.1.2",
-    "esbuild-runner": "2.2.2",
     "express": "^4.19.2",
     "express-basic-auth": "^1.2.1",
     "graphql": "^16.8.1",

@@ -26,5 +26,6 @@ export const ResponseWebView: FC<Props> = ({ webpreferences, body, url }) => {
       }
     };
   }, [body, url]);
+  // eslint-disable-next-line react/no-unknown-property
   return <webview data-testid="ResponseWebView" ref={webviewRef} src="about:blank" webpreferences={webpreferences} />;
 };

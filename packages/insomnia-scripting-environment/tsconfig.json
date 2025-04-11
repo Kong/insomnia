@@ -9,18 +9,32 @@
     "module": "ES2022",
     "moduleResolution": "node",
     "isolatedModules": true,
-    /* Strictness */
+    "jsx": "preserve",
+    /* If your code runs in the DOM: */
+    "lib": [
+      "es2023",
+      "dom",
+      "dom.iterable"
+    ],
+    /* Strictness https://github.com/tsconfig/bases/blob/main/bases/strictest.json */
     "strict": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    // "exactOptionalPropertyTypes": true, TODO: max strictness
+    "noFallthroughCasesInSwitch": true,
+    // "noImplicitOverride": true, TODO:  max strictness
     "noImplicitReturns": true,
+    // "noPropertyAccessFromIndexSignature": true, TODO:  max strictness
+    // "noUncheckedIndexedAccess": true, TODO:  max strictness
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "useUnknownInCatchVariables": false,
-    "verbatimModuleSyntax": true,
-    "jsx": "react",
-    /* If your code runs in the DOM: */
-    "lib": ["es2023", "dom", "dom.iterable"]
+    "useUnknownInCatchVariables": false
   },
-  "include": ["../insomnia/types"],
-  "exclude": ["**/__tests__", "node_modules"]
+  "include": [
+    "../insomnia/types"
+  ],
+  "exclude": [
+    "**/__tests__",
+    "node_modules"
+  ]
 }

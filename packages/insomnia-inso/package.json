@@ -25,19 +25,18 @@
     "test:bundle": "vitest cli.test.ts -t \"inso dev bundle\"",
     "test:binary": "vitest cli.test.ts -t \"inso packaged binary\"",
     "type-check": "tsc --noEmit --project tsconfig.json",
-    "build": "esr esbuild.ts",
-    "build:production": "cross-env NODE_ENV=production esr esbuild.ts",
-    "start": "ESBUILD_WATCH=true esr esbuild.ts",
+    "build": "npx -y tsx esbuild.ts",
+    "build:production": "cross-env NODE_ENV=production npx -y tsx esbuild.ts",
+    "start": "ESBUILD_WATCH=true npx -y tsx esbuild.ts",
     "prepackage": "npm run build:production && rm -rf binaries/inso",
     "package": "npx -y @yao-pkg/pkg@6.3.2 . --output binaries/inso --targets host",
     "postpackage": "node src/scripts/verify-pkg.js",
-    "artifacts": "esr src/scripts/artifacts.ts"
+    "artifacts": "npx -y tsx src/scripts/artifacts.ts"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
-    "esbuild": "^0.24.0",
-    "esbuild-runner": "^2.2.2",
-    "vitest": "^2.0.4",
+    "esbuild": "^0.25.2",
+    "vitest": "^3.1.1",
     "shellwords": "^1.0.1"
   },
   "dependencies": {

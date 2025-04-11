@@ -43,11 +43,10 @@
     "@types/chai": "^4.3.14",
     "@types/har-format": "^1.2.15",
     "@types/mocha": "^10.0.6",
-    "@types/node": "^22.13.10",
+    "@types/node": "^22.14.0",
     "@typescript-eslint/eslint-plugin": "^8.29.0",
     "@typescript-eslint/parser": "^8.29.0",
-    "esbuild": "^0.24.0",
-    "esbuild-runner": "^2.2.2",
+    "esbuild": "^0.25.2",
     "eslint": "^9.23.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-react": "^7.37.4",
@@ -57,9 +56,9 @@
     "prettier-plugin-tailwindcss": "^0.6.11",
     "tslib": "2.0.1",
     "type-fest": "^4.15.0",
-    "typescript": "5.6.2",
+    "typescript": "5.8.3",
     "typescript-eslint": "^8.29.0",
-    "vitest": "^2.0.4"
+    "vitest": "^3.1.1"
   },
   "dependencies": {
     "@getinsomnia/node-libcurl": "^2.35.0",
