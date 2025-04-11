@@ -1,5 +1,4 @@
 const BINARY_PREFIX = 'Insomnia.Core';
-
 // NOTE: USE_HARD_LINKS
 // https://github.com/electron-userland/electron-builder/issues/4594#issuecomment-574653870
 
@@ -58,9 +57,7 @@ const config = {
       NSRequiresAquaSystemAppearance: false,
     },
     // If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
-    notarize: {
-      teamId: 'FX44YY62GV',
-    },
+    notarize: true,
     asarUnpack: [
       'node_modules/@getinsomnia/node-libcurl',
     ],
@@ -89,8 +86,10 @@ const config = {
         target: 'squirrel',
       },
     ],
-    sign: './customSign.js',
-    signingHashAlgorithms: ['sha256'], // avoid duplicate signing hook calls https://github.com/electron-userland/electron-builder/issues/3995#issuecomment-505725704
+    signtoolOptions: {
+      sign: './customSign.js',
+      signingHashAlgorithms: ['sha256'], // avoid duplicate signing hook calls https://github.com/electron-userland/electron-builder/issues/3995#issuecomment-505725704  
+    },
   },
   squirrelWindows: {
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
@@ -107,10 +106,12 @@ const config = {
     synopsis: 'The Collaborative API Client and Design Tool',
     category: 'Development',
     desktop: {
-      Name: 'Insomnia',
-      Comment: 'Insomnia is a cross-platform REST client, built on top of Electron.',
-      Categories: 'Development',
-      Keywords: 'GraphQL;REST;gRPC;SOAP;openAPI;GitOps;',
+      entry: {
+        Name: 'Insomnia',
+        Comment: 'Insomnia is a cross-platform REST client, built on top of Electron.',
+        Categories: 'Development',
+        Keywords: 'GraphQL;REST;gRPC;SOAP;openAPI;GitOps;',
+      }
     },
     target: [
       {
