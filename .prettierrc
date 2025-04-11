@@ -1,0 +1,17 @@
+{
+  "trailingComma": "all",
+  "printWidth": 120,
+  "arrowParens": "avoid",
+  "singleQuote": true,
+  "quoteProps": "consistent",
+  "overrides": [
+    {
+      "files": "packages/insomnia/**/*",
+      "options": {
+        "plugins": [
+          "prettier-plugin-tailwindcss"
+        ]
+      }
+    }
+  ]
+}

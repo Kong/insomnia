@@ -102,8 +102,7 @@ export const repositionInArray = (allItems: string[], itemsToMove: string[], tar
 export interface RequestRow {
   id: string;
   name: string;
-  ancestorNames: string[];
-  ancestorIds: string[];
+  ancestors: { id: string; name: string }[];
   method: string;
   url: string;
   parentId: string;
@@ -421,7 +420,7 @@ export const Runner: FC<{}> = () => {
   const selectedRequestIdsForCliCommand =
     targetFolderId !== null && targetFolderId !== ''
       ? reqList
-        .filter(item => item.ancestorIds.includes(targetFolderId))
+        .filter(item => item.ancestors.map(a=>a.id).includes(targetFolderId))
         .map(item => item.id)
         .filter(id => selectedKeys === 'all' || selectedKeys.has(id))
       : reqList
@@ -568,10 +567,9 @@ export const Runner: FC<{}> = () => {
                     disabledKeys={disabledKeys}
                   >
                     {item => {
-                      const parentFolders = item.ancestorNames.map((parentFolderName: string, i: number) => {
-                        // eslint-disable-next-line react/no-array-index-key
-                        return <TooltipTrigger key={`parent-folder-${i}=${parentFolderName}`} >
-                          <Tooltip message={parentFolderName}>
+                      const parentFolders = item.ancestors.map(({id,name}) => {
+                        return <TooltipTrigger key={`parent-folder-${id}=${name}`} >
+                          <Tooltip message={name}>
                             <i className="fa fa-folder fa-1x h-4 mr-0.3 text-[--color-font]" />
                             <i className="fa fa-caret-right fa-1x h-4 mr-0.3 text-[--color-font]-50  opacity-50" />
                           </Tooltip>

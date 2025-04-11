@@ -22,7 +22,6 @@ import type { Request } from '../../../../models/request';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../../../network/network';
 import { invariant } from '../../../../utils/invariant';
 import { jsonPrettify } from '../../../../utils/prettify/json';
-import { useRootLoaderData } from '../../../routes/root';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
 import { CodeEditor, type CodeEditorHandle } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
@@ -31,6 +30,7 @@ import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
 import { TimeFromNow } from '../../time-from-now';
+import { prettifyGraphql } from './prettify-graphql.mjs';
 
 // Type guard to ensure loc is non-nullable
 const hasLocation = (def: OperationDefinitionNode): def is OperationDefinitionNode & { loc: NonNullable<OperationDefinitionNode['loc']> } => {
@@ -279,17 +279,10 @@ export const GraphQLEditor: FC<Props> = ({
       isMounted = false;
     };
   }, [automaticFetch, environmentId, includeInputValueDeprecation, request._id, request.url, workspaceId]);
-  const {
-    settings,
-  } = useRootLoaderData();
-  const { editorIndentWithTabs, editorIndentSize } = settings;
   const beautifyRequestBody = async () => {
     const { body } = state;
-    const prettyQuery = await (await import('prettier')).format(body.query, {
-      parser: 'graphql',
-      useTabs: editorIndentWithTabs,
-      tabWidth: editorIndentSize,
-    });
+
+    const prettyQuery = prettifyGraphql(body.query);
     changeQuery(prettyQuery);
     // Update editor contents
     if (editorRef.current) {
