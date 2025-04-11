@@ -1066,7 +1066,7 @@ export const Debug: FC = () => {
                   if (isRequestGroupId(id)) {
                     const item = collection.find(i => i.doc._id === id);
                     if (item) {
-                      groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
+                      groupMetaPatcher(item.doc._id, { collapsed: false });
                       navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${id}?${searchParams.toString()}`);
                       return;
                     }
@@ -1237,6 +1237,7 @@ const CollectionGridListItem = ({
   activeProject,
   item,
   organizationId,
+  groupMetaPatcher,
   patchGroup,
   patchRequest,
   projectId,
@@ -1330,12 +1331,16 @@ const CollectionGridListItem = ({
           </span>
         )}
         {isRequestGroup(item.doc) && (
-          <span>
+          <Button
+            aria-label='Collapse folder'
+            onPress={() => groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed })}
+            className="flex items-center justify-center h-8 aspect-square rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          >
             <Icon
               className="w-6 flex-shrink-0"
               icon={item.collapsed ? 'folder' : 'folder-open'}
             />
-          </span>
+          </Button>
         )}
         <EditableInput
           editable={isEditable}
