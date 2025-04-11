@@ -2,7 +2,10 @@ const BINARY_PREFIX = 'Insomnia.Core';
 // NOTE: USE_HARD_LINKS
 // https://github.com/electron-userland/electron-builder/issues/4594#issuecomment-574653870
 
-//  @type {import('electron-builder').Configuration}
+/**
+ * @type {import('electron-builder').Configuration}
+ * @see https://www.electron.build/configuration/configuration
+ */
 const config = {
   npmRebuild: false,
   appId: 'com.insomnia.app',
