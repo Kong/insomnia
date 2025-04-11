@@ -7,47 +7,55 @@ import { tokenizeTag } from '../../../../templating/utils';
 import { showModal } from '../../modals/index';
 import { NunjucksModal } from '../../modals/nunjucks-modal';
 
-CodeMirror.defineExtension('enableNunjucksTags', function (
-  this: CodeMirror.Editor,
-  handleRender: HandleRender,
-  handleGetRenderContext: (contextCacheKey?: string) => Promise<RenderContextAndKeys>,
-  showVariableSourceAndValue = false,
-  editorId = '',
-) {
-  if (!handleRender) {
-    console.warn("enableNunjucksTags wasn't passed a render function");
-    return;
-  }
-
-  const refreshFn = _highlightNunjucksTags.bind(
-    this,
-    handleRender,
-    handleGetRenderContext,
-    showVariableSourceAndValue,
-    editorId,
-  );
-
-  const debouncedRefreshFn = misc.debounce(refreshFn);
-  this.on('change', (_cm: any, change: any) => {
-    const origin = change.origin || 'unknown';
-
-    if (!origin.match(/^[+*]/)) {
-      // Refresh immediately on non-joinable events
-      // (cut, paste, autocomplete; as opposed to +input, +delete)
-      refreshFn();
-    } else {
-      // Debounce all joinable events
-      debouncedRefreshFn();
+CodeMirror.defineExtension(
+  'enableNunjucksTags',
+  function (
+    this: CodeMirror.Editor,
+    handleRender: HandleRender,
+    handleGetRenderContext: (contextCacheKey?: string) => Promise<RenderContextAndKeys>,
+    showVariableSourceAndValue = false,
+    editorId = '',
+  ) {
+    if (!handleRender) {
+      console.warn("enableNunjucksTags wasn't passed a render function");
+      return;
     }
-  });
-  this.on('cursorActivity', debouncedRefreshFn);
-  this.on('viewportChange', debouncedRefreshFn);
-  // Trigger once right away to snappy perf
-  refreshFn();
-},
+
+    const refreshFn = _highlightNunjucksTags.bind(
+      this,
+      handleRender,
+      handleGetRenderContext,
+      showVariableSourceAndValue,
+      editorId,
+    );
+
+    const debouncedRefreshFn = misc.debounce(refreshFn);
+    this.on('change', (_cm: any, change: any) => {
+      const origin = change.origin || 'unknown';
+
+      if (!origin.match(/^[+*]/)) {
+        // Refresh immediately on non-joinable events
+        // (cut, paste, autocomplete; as opposed to +input, +delete)
+        refreshFn();
+      } else {
+        // Debounce all joinable events
+        debouncedRefreshFn();
+      }
+    });
+    this.on('cursorActivity', debouncedRefreshFn);
+    this.on('viewportChange', debouncedRefreshFn);
+    // Trigger once right away to snappy perf
+    refreshFn();
+  },
 );
 
-async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRender, renderContext: (contextCacheKey?: string) => Promise<RenderContextAndKeys>, showVariableSourceAndValue: boolean, editorId: string) {
+async function _highlightNunjucksTags(
+  this: CodeMirror.Editor,
+  render: HandleRender,
+  renderContext: (contextCacheKey?: string) => Promise<RenderContextAndKeys>,
+  showVariableSourceAndValue: boolean,
+  editorId: string,
+) {
   const renderCacheKey = Math.random() + '';
 
   const renderString = (text: any) => render(text, renderCacheKey);
@@ -139,24 +147,12 @@ async function _highlightNunjucksTags(this: CodeMirror.Editor, render: HandleRen
       });
 
       (async function () {
-        await _updateElementText(
-          renderString,
-          mark,
-          tok.string,
-          renderContextWithCacheKey,
-          showVariableSourceAndValue,
-        );
+        await _updateElementText(renderString, mark, tok.string, renderContextWithCacheKey, showVariableSourceAndValue);
       })();
 
       // Update it every mouseenter because it may generate a new value every time
       el.addEventListener('mouseenter', async () => {
-        await _updateElementText(
-          renderString,
-          mark,
-          tok.string,
-          renderContextWithCacheKey,
-          showVariableSourceAndValue,
-        );
+        await _updateElementText(renderString, mark, tok.string, renderContextWithCacheKey, showVariableSourceAndValue);
       });
       activeMarks.push(mark);
       el.addEventListener('click', async () => {
@@ -270,7 +266,7 @@ async function _updateElementText(
   mark: CodeMirror.TextMarker<CodeMirror.MarkerRange>,
   text: string,
   renderContext: (contextCacheKey?: string) => Promise<RenderContextAndKeys>,
-  showVariableSourceAndValue: boolean
+  showVariableSourceAndValue: boolean,
 ) {
   const el = mark.replacedWith!;
   let innerHTML = text;
@@ -279,12 +275,7 @@ async function _updateElementText(
   let dataError = '';
   const str = text.replace(/\\/g, '');
   const tagMatch = str.match(/{% *([^ ]+) *.*%}/);
-  const cleanedStr = str
-    .replace(/^{%/, '')
-    .replace(/%}$/, '')
-    .replace(/^{{/, '')
-    .replace(/}}$/, '')
-    .trim();
+  const cleanedStr = str.replace(/^{%/, '').replace(/%}$/, '').replace(/^{{/, '').replace(/}}$/, '').trim();
 
   try {
     if (tagMatch) {

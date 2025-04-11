@@ -45,7 +45,7 @@ export async function buildMultipart(params: RequestBodyParameter[]) {
           end: false,
         });
         // TODO: remove non-null assertion
-         
+
         totalSize += size!;
       });
     }

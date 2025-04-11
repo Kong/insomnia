@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import * as models from '../index';
 
 describe('create()', () => {
-
   it('fails when missing parentId', async () => {
     expect(() =>
       models.requestMeta.create({

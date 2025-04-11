@@ -17,11 +17,10 @@ interface Props {
   copyToClipboard: () => any;
 }
 
-export const PreviewModeDropdown: FC<Props> = ({
-  download,
-  copyToClipboard,
-}) => {
-  const { activeRequest, activeRequestMeta, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) => {
+  const { activeRequest, activeRequestMeta, activeResponse } = useRouteLoaderData(
+    'request/:requestId',
+  ) as RequestLoaderData;
   const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const patchRequestMeta = useRequestMetaPatcher();
   const handleDownloadPrettify = useCallback(() => download(true), [download]);
@@ -89,7 +88,7 @@ export const PreviewModeDropdown: FC<Props> = ({
 
   return (
     <Dropdown
-      aria-label='Preview Mode Dropdown'
+      aria-label="Preview Mode Dropdown"
       triggerButton={
         <Button className="text-[--hl]">
           {getPreviewModeName(previewMode)}
@@ -97,63 +96,34 @@ export const PreviewModeDropdown: FC<Props> = ({
         </Button>
       }
     >
-      <DropdownSection
-        aria-label='Preview Mode Section'
-        title="Preview Mode"
-      >
-        {PREVIEW_MODES.map(mode =>
-          <DropdownItem
-            key={mode}
-            aria-label={getPreviewModeName(mode, true)}
-          >
+      <DropdownSection aria-label="Preview Mode Section" title="Preview Mode">
+        {PREVIEW_MODES.map(mode => (
+          <DropdownItem key={mode} aria-label={getPreviewModeName(mode, true)}>
             <ItemContent
               icon={previewMode === mode ? 'check' : 'empty'}
               label={getPreviewModeName(mode, true)}
               onClick={() => patchRequestMeta(activeRequest._id, { previewMode: mode })}
             />
           </DropdownItem>
-        )}
+        ))}
       </DropdownSection>
-      <DropdownSection
-        aria-label='Action Section'
-        title="Action"
-      >
-        <DropdownItem aria-label='Copy raw response'>
-          <ItemContent
-            icon="copy"
-            label="Copy raw response"
-            onClick={copyToClipboard}
-          />
+      <DropdownSection aria-label="Action Section" title="Action">
+        <DropdownItem aria-label="Copy raw response">
+          <ItemContent icon="copy" label="Copy raw response" onClick={copyToClipboard} />
         </DropdownItem>
-        <DropdownItem aria-label='Export raw response'>
-          <ItemContent
-            icon="save"
-            label="Export raw response"
-            onClick={handleDownloadNormal}
-          />
+        <DropdownItem aria-label="Export raw response">
+          <ItemContent icon="save" label="Export raw response" onClick={handleDownloadNormal} />
         </DropdownItem>
-        <DropdownItem aria-label='Export prettified response'>
-          {shouldPrettifyOption &&
-            <ItemContent
-              icon="save"
-              label="Export prettified response"
-              onClick={handleDownloadPrettify}
-            />
-          }
+        <DropdownItem aria-label="Export prettified response">
+          {shouldPrettifyOption && (
+            <ItemContent icon="save" label="Export prettified response" onClick={handleDownloadPrettify} />
+          )}
         </DropdownItem>
-        <DropdownItem aria-label='Export HTTP debug'>
-          <ItemContent
-            icon="bug"
-            label="Export HTTP debug"
-            onClick={exportDebugFile}
-          />
+        <DropdownItem aria-label="Export HTTP debug">
+          <ItemContent icon="bug" label="Export HTTP debug" onClick={exportDebugFile} />
         </DropdownItem>
-        <DropdownItem aria-label='Export as HAR'>
-          <ItemContent
-            icon="save"
-            label="Export as HAR"
-            onClick={exportAsHAR}
-          />
+        <DropdownItem aria-label="Export as HAR">
+          <ItemContent icon="save" label="Export as HAR" onClick={exportAsHAR} />
         </DropdownItem>
       </DropdownSection>
     </Dropdown>

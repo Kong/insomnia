@@ -52,37 +52,31 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
     hideMode: false,
     enableRender: false,
     showCopyButton: false,
-    onChange: () => { },
-    onModeChange: () => { },
+    onChange: () => {},
+    onModeChange: () => {},
   });
 
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: options => {
-      const realMode = typeof options.mode === 'string' ? options.mode : 'text/plain';
-      setState(state => ({
-        ...options,
-        mode: realMode || state.mode || 'text/plain',
-      }));
-      modalRef.current?.show();
-    },
-    setError: (error: string) => setError(error),
-  }), []);
+  useImperativeHandle(
+    ref,
+    () => ({
+      hide: () => {
+        modalRef.current?.hide();
+      },
+      show: options => {
+        const realMode = typeof options.mode === 'string' ? options.mode : 'text/plain';
+        setState(state => ({
+          ...options,
+          mode: realMode || state.mode || 'text/plain',
+        }));
+        modalRef.current?.show();
+      },
+      setError: (error: string) => setError(error),
+    }),
+    [],
+  );
 
-  const {
-    submitName,
-    title,
-    placeholder,
-    defaultValue,
-    hint,
-    mode,
-    hideMode,
-    enableRender,
-    showCopyButton,
-    onChange,
-  } = state;
+  const { submitName, title, placeholder, defaultValue, hint, mode, hideMode, enableRender, showCopyButton, onChange } =
+    state;
 
   return (
     <Modal ref={modalRef} tall>
@@ -93,13 +87,13 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
         style={
           showCopyButton
             ? {
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1fr)',
-              gridTemplateRows: 'auto minmax(0, 1fr)',
-            }
+                display: 'grid',
+                gridTemplateColumns: 'minmax(0, 1fr)',
+                gridTemplateRows: 'auto minmax(0, 1fr)',
+              }
             : {
-              minHeight: '10rem',
-            }
+                minHeight: '10rem',
+              }
         }
       >
         <NunjucksEnabledProvider disable={!enableRender}>
@@ -119,17 +113,17 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
               />
             </div>
           ) : (
-              <div className="tall bg-[--hl-xs] rounded">
-                <CodeEditor
-                  id="code-prompt-modal"
-                  hideLineNumbers
-                  showPrettifyButton
-                  defaultValue={defaultValue}
-                  placeholder={placeholder}
-                  onChange={onChange}
-                  mode={mode}
-                  enableNunjucks
-                />
+            <div className="tall rounded bg-[--hl-xs]">
+              <CodeEditor
+                id="code-prompt-modal"
+                hideLineNumbers
+                showPrettifyButton
+                defaultValue={defaultValue}
+                placeholder={placeholder}
+                onChange={onChange}
+                mode={mode}
+                enableNunjucks
+              />
             </div>
           )}
         </NunjucksEnabledProvider>
@@ -137,23 +131,17 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
       <ModalFooter>
         {!hideMode ? (
           <Dropdown
-            aria-label='Select a mode'
+            aria-label="Select a mode"
             triggerButton={
-              <Button className="!hover:no-underline !bg-transparent !hover:bg-opacity-90 !border !border-solid !border-[--hl-md] !py-2 !px-3 !text-[--color-font] !transition-colors !rounded-sm">
+              <Button className="!hover:no-underline !hover:bg-opacity-90 !rounded-sm !border !border-solid !border-[--hl-md] !bg-transparent !px-3 !py-2 !text-[--color-font] !transition-colors">
                 {MODES[mode]}
                 <i className="fa fa-caret-down space-left" />
               </Button>
             }
           >
-            <DropdownSection
-              aria-label="Editor Syntax"
-              title="Editor Syntax"
-            >
+            <DropdownSection aria-label="Editor Syntax" title="Editor Syntax">
               {Object.keys(MODES).map(mode => (
-                <DropdownItem
-                  key={mode}
-                  aria-label={MODES[mode]}
-                >
+                <DropdownItem key={mode} aria-label={MODES[mode]}>
                   <ItemContent
                     icon="code"
                     label={MODES[mode]}
@@ -167,9 +155,18 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
             </DropdownSection>
           </Dropdown>
         ) : null}
-        <div className="margin-left faint italic txt-sm">{hint ? `* ${hint}` : ''}</div>
-        {error !== '' && <p className="notice error w-full" style={{ marginTop: 0, marginBottom: 0 }}>{error}</p>}
-        <button className="btn" onClick={() => modalRef.current?.hide()} disabled={error !== ''} aria-label='Modal Submit'>
+        <div className="margin-left faint txt-sm italic">{hint ? `* ${hint}` : ''}</div>
+        {error !== '' && (
+          <p className="notice error w-full" style={{ marginTop: 0, marginBottom: 0 }}>
+            {error}
+          </p>
+        )}
+        <button
+          className="btn"
+          onClick={() => modalRef.current?.hide()}
+          disabled={error !== ''}
+          aria-label="Modal Submit"
+        >
           {submitName || 'Submit'}
         </button>
       </ModalFooter>

@@ -37,18 +37,15 @@ const InsomniaTabContext = createContext<ContextProps>({
     tabList: [],
     activeTabId: '',
   },
-  closeTabById: () => { },
-  addTab: () => { },
-  changeActiveTab: () => { },
+  closeTabById: () => {},
+  addTab: () => {},
+  changeActiveTab: () => {},
 });
 
 type InsomniaTabs = Record<string, OrganizationTabs>;
 
 export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
-  const {
-    organizationId,
-    projectId,
-  } = useParams() as {
+  const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
@@ -62,144 +59,165 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const navigate = useNavigate();
 
-  const updateInsomniaTabs = useCallback(({ organizationId, tabList, activeTabId }: UpdateInsomniaTabParams) => {
-    const newState = {
-      ...appTabsRef.current,
-      [organizationId]: {
-        tabList,
-        activeTabId,
-      },
-    };
-    appTabsRef.current = newState;
-    setAppTabs(newState);
-  }, [setAppTabs]);
+  const updateInsomniaTabs = useCallback(
+    ({ organizationId, tabList, activeTabId }: UpdateInsomniaTabParams) => {
+      const newState = {
+        ...appTabsRef.current,
+        [organizationId]: {
+          tabList,
+          activeTabId,
+        },
+      };
+      appTabsRef.current = newState;
+      setAppTabs(newState);
+    },
+    [setAppTabs],
+  );
 
-  const addTab = useCallback((tab: BaseTab) => {
-    const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
+  const addTab = useCallback(
+    (tab: BaseTab) => {
+      const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
 
-    if (tab.temporary) {
-      // If the tab is temporary, replace the existing temporary tab
-      const temporaryIndex = currentTabs.tabList.findIndex(t => t.temporary);
-      if (temporaryIndex !== -1) {
-        const newTabList = [...currentTabs.tabList];
-        newTabList.splice(temporaryIndex, 1, tab);
-        updateInsomniaTabs({
-          organizationId,
-          tabList: newTabList,
-          activeTabId: tab.id,
-        });
+      if (tab.temporary) {
+        // If the tab is temporary, replace the existing temporary tab
+        const temporaryIndex = currentTabs.tabList.findIndex(t => t.temporary);
+        if (temporaryIndex !== -1) {
+          const newTabList = [...currentTabs.tabList];
+          newTabList.splice(temporaryIndex, 1, tab);
+          updateInsomniaTabs({
+            organizationId,
+            tabList: newTabList,
+            activeTabId: tab.id,
+          });
+          return;
+        }
+      }
+      updateInsomniaTabs({
+        organizationId,
+        tabList: [...currentTabs.tabList, tab],
+        activeTabId: tab.id,
+      });
+    },
+    [organizationId, updateInsomniaTabs],
+  );
+
+  const closeTabById = useCallback(
+    (id: string) => {
+      const currentTabs = appTabsRef?.current?.[organizationId];
+      if (!currentTabs) {
         return;
       }
-    }
-    updateInsomniaTabs({
-      organizationId,
-      tabList: [...currentTabs.tabList, tab],
-      activeTabId: tab.id,
-    });
-  }, [organizationId, updateInsomniaTabs]);
 
-  const closeTabById = useCallback((id: string) => {
-    const currentTabs = appTabsRef?.current?.[organizationId];
-    if (!currentTabs) {
-      return;
-    }
+      // If the tab being deleted is the only tab and is active, navigate to the project dashboard
+      if (currentTabs.activeTabId === id && currentTabs.tabList.length === 1) {
+        if (!isScratchpadOrganizationId(organizationId)) {
+          navigate(`/organization/${organizationId}/project/${projectId}`);
+        }
+        updateInsomniaTabs({
+          organizationId,
+          tabList: [],
+          activeTabId: '',
+        });
+        uiEventBus.emit('CLOSE_TAB', organizationId, [id]);
+        return;
+      }
 
-    // If the tab being deleted is the only tab and is active, navigate to the project dashboard
-    if (currentTabs.activeTabId === id && currentTabs.tabList.length === 1) {
-      if (!isScratchpadOrganizationId(organizationId)) {
-        navigate(`/organization/${organizationId}/project/${projectId}`);
+      const index = currentTabs.tabList.findIndex(tab => tab.id === id);
+      if (index === -1) {
+        return;
+      }
+      const newTabList = currentTabs.tabList.filter(tab => tab.id !== id);
+      if (currentTabs.activeTabId === id) {
+        const url = newTabList[Math.max(index - 1, 0)]?.url;
+        navigate(url);
       }
       updateInsomniaTabs({
         organizationId,
-        tabList: [],
-        activeTabId: '',
+        tabList: newTabList,
+        activeTabId:
+          currentTabs.activeTabId === id ? newTabList[Math.max(index - 1, 0)]?.id : (currentTabs.activeTabId as string),
       });
       uiEventBus.emit('CLOSE_TAB', organizationId, [id]);
-      return;
-    }
+    },
+    [navigate, organizationId, projectId, updateInsomniaTabs],
+  );
 
-    const index = currentTabs.tabList.findIndex(tab => tab.id === id);
-    if (index === -1) {
-      return;
-    }
-    const newTabList = currentTabs.tabList.filter(tab => tab.id !== id);
-    if (currentTabs.activeTabId === id) {
-      const url = newTabList[Math.max(index - 1, 0)]?.url;
-      navigate(url);
-    }
-    updateInsomniaTabs({
-      organizationId,
-      tabList: newTabList,
-      activeTabId: currentTabs.activeTabId === id ? newTabList[Math.max(index - 1, 0)]?.id : currentTabs.activeTabId as string,
-    });
-    uiEventBus.emit('CLOSE_TAB', organizationId, [id]);
-  }, [navigate, organizationId, projectId, updateInsomniaTabs]);
-
-  const batchCloseTabs = useCallback((deleteIds: string[]) => {
-    const currentTabs = appTabsRef?.current?.[organizationId];
-    if (!currentTabs) {
-      return;
-    }
-
-    if (currentTabs.tabList.every(tab => deleteIds.includes(tab.id))) {
-      if (!isScratchpadOrganizationId(organizationId)) {
-        navigate(`/organization/${organizationId}/project/${projectId}`);
+  const batchCloseTabs = useCallback(
+    (deleteIds: string[]) => {
+      const currentTabs = appTabsRef?.current?.[organizationId];
+      if (!currentTabs) {
+        return;
       }
+
+      if (currentTabs.tabList.every(tab => deleteIds.includes(tab.id))) {
+        if (!isScratchpadOrganizationId(organizationId)) {
+          navigate(`/organization/${organizationId}/project/${projectId}`);
+        }
+        updateInsomniaTabs({
+          organizationId,
+          tabList: [],
+          activeTabId: '',
+        });
+        uiEventBus.emit('CLOSE_TAB', organizationId, 'all');
+        return;
+      }
+
+      const index = currentTabs.tabList.findIndex(tab => deleteIds.includes(tab.id));
+      const newTabList = currentTabs.tabList.filter(tab => !deleteIds.includes(tab.id));
+      if (deleteIds.includes(currentTabs.activeTabId || '')) {
+        const url = newTabList[Math.max(index - 1, 0)]?.url;
+        navigate(url);
+      }
+
       updateInsomniaTabs({
         organizationId,
-        tabList: [],
+        tabList: newTabList,
+        activeTabId: deleteIds.includes(currentTabs.activeTabId || '')
+          ? newTabList[Math.max(index - 1, 0)]?.id
+          : (currentTabs.activeTabId as string),
+      });
+      uiEventBus.emit('CLOSE_TAB', organizationId, deleteIds);
+    },
+    [navigate, organizationId, projectId, updateInsomniaTabs],
+  );
+
+  const closeAllTabsUnderWorkspace = useCallback(
+    (workspaceId: string) => {
+      const currentTabs = appTabsRef?.current?.[organizationId];
+      if (!currentTabs) {
+        return;
+      }
+      const closeIds = currentTabs.tabList.filter(tab => tab.workspaceId === workspaceId).map(tab => tab.id);
+      const newTabList = currentTabs.tabList.filter(tab => tab.workspaceId !== workspaceId);
+
+      updateInsomniaTabs({
+        organizationId,
+        tabList: newTabList,
         activeTabId: '',
       });
-      uiEventBus.emit('CLOSE_TAB', organizationId, 'all');
-      return;
-    }
+      uiEventBus.emit('CLOSE_TAB', organizationId, closeIds);
+    },
+    [organizationId, updateInsomniaTabs],
+  );
 
-    const index = currentTabs.tabList.findIndex(tab => deleteIds.includes(tab.id));
-    const newTabList = currentTabs.tabList.filter(tab => !deleteIds.includes(tab.id));
-    if (deleteIds.includes(currentTabs.activeTabId || '')) {
-      const url = newTabList[Math.max(index - 1, 0)]?.url;
-      navigate(url);
-    }
+  const closeAllTabsUnderProject = useCallback(
+    (projectId: string) => {
+      const currentTabs = appTabsRef?.current?.[organizationId];
+      if (!currentTabs) {
+        return;
+      }
+      const closeIds = currentTabs.tabList.filter(tab => tab.projectId === projectId).map(tab => tab.id);
+      const newTabList = currentTabs.tabList.filter(tab => tab.projectId !== projectId);
 
-    updateInsomniaTabs({
-      organizationId,
-      tabList: newTabList,
-      activeTabId: deleteIds.includes(currentTabs.activeTabId || '') ? newTabList[Math.max(index - 1, 0)]?.id : currentTabs.activeTabId as string,
-    });
-    uiEventBus.emit('CLOSE_TAB', organizationId, deleteIds);
-  }, [navigate, organizationId, projectId, updateInsomniaTabs]);
-
-  const closeAllTabsUnderWorkspace = useCallback((workspaceId: string) => {
-    const currentTabs = appTabsRef?.current?.[organizationId];
-    if (!currentTabs) {
-      return;
-    }
-    const closeIds = currentTabs.tabList.filter(tab => tab.workspaceId === workspaceId).map(tab => tab.id);
-    const newTabList = currentTabs.tabList.filter(tab => tab.workspaceId !== workspaceId);
-
-    updateInsomniaTabs({
-      organizationId,
-      tabList: newTabList,
-      activeTabId: '',
-    });
-    uiEventBus.emit('CLOSE_TAB', organizationId, closeIds);
-  }, [organizationId, updateInsomniaTabs]);
-
-  const closeAllTabsUnderProject = useCallback((projectId: string) => {
-    const currentTabs = appTabsRef?.current?.[organizationId];
-    if (!currentTabs) {
-      return;
-    }
-    const closeIds = currentTabs.tabList.filter(tab => tab.projectId === projectId).map(tab => tab.id);
-    const newTabList = currentTabs.tabList.filter(tab => tab.projectId !== projectId);
-
-    updateInsomniaTabs({
-      organizationId,
-      tabList: newTabList,
-      activeTabId: '',
-    });
-    uiEventBus.emit('CLOSE_TAB', organizationId, closeIds);
-  }, [organizationId, updateInsomniaTabs]);
+      updateInsomniaTabs({
+        organizationId,
+        tabList: newTabList,
+        activeTabId: '',
+      });
+      uiEventBus.emit('CLOSE_TAB', organizationId, closeIds);
+    },
+    [organizationId, updateInsomniaTabs],
+  );
 
   const closeAllTabs = useCallback(() => {
     if (!isScratchpadOrganizationId(organizationId)) {
@@ -213,171 +231,195 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     uiEventBus.emit('CLOSE_TAB', organizationId, 'all');
   }, [navigate, organizationId, projectId, updateInsomniaTabs]);
 
-  const closeOtherTabs = useCallback((id: string) => {
-    const currentTabs = appTabsRef?.current?.[organizationId];
-    if (!currentTabs) {
-      return;
-    }
-    const reservedTab = currentTabs.tabList.find(tab => tab.id === id);
-    if (!reservedTab) {
-      return;
-    }
-
-    if (currentTabs.activeTabId !== id) {
-      navigate(reservedTab.url);
-    }
-    updateInsomniaTabs({
-      organizationId,
-      tabList: [reservedTab],
-      activeTabId: id,
-    });
-    const closeIds = currentTabs.tabList.filter(tab => tab.id !== id).map(tab => tab.id);
-    uiEventBus.emit('CLOSE_TAB', organizationId, closeIds);
-  }, [navigate, organizationId, updateInsomniaTabs]);
-
-  const updateTabById = useCallback((tabId: string, patches: Partial<BaseTab>) => {
-    const currentTabs = appTabsRef?.current?.[organizationId];
-    if (!currentTabs) {
-      return;
-    }
-    const newTabList = currentTabs.tabList.map(tab => {
-      if (tab.id === tabId) {
-        return {
-          ...tab,
-          ...patches,
-        };
+  const closeOtherTabs = useCallback(
+    (id: string) => {
+      const currentTabs = appTabsRef?.current?.[organizationId];
+      if (!currentTabs) {
+        return;
       }
-      return tab;
-    });
-    updateInsomniaTabs({
-      organizationId,
-      tabList: newTabList,
-      activeTabId: currentTabs.activeTabId || '',
-    });
-  }, [organizationId, updateInsomniaTabs]);
-
-  const changeActiveTab = useCallback((id: string, options = { navigate: true }) => {
-    const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
-    if (!currentTabs) {
-      return;
-    }
-    const tab = currentTabs?.tabList.find(tab => tab.id === id);
-    if (options?.navigate && tab?.url) {
-      navigate(tab.url);
-    }
-
-    updateInsomniaTabs({
-      organizationId,
-      tabList: currentTabs.tabList,
-      activeTabId: id,
-    });
-  }, [navigate, organizationId, updateInsomniaTabs]);
-
-  const updateProjectName = useCallback((projectId: string, name: string) => {
-    const currentTabs = appTabsRef?.current?.[organizationId];
-
-    if (!currentTabs) {
-      return;
-    }
-    const newTabList = currentTabs.tabList.map(tab => {
-      if (tab.projectId === projectId) {
-        return {
-          ...tab,
-          projectName: name,
-        };
+      const reservedTab = currentTabs.tabList.find(tab => tab.id === id);
+      if (!reservedTab) {
+        return;
       }
-      return tab;
-    });
-    updateInsomniaTabs({
-      organizationId,
-      tabList: newTabList,
-      activeTabId: currentTabs.activeTabId || '',
-    });
-  }, [organizationId, updateInsomniaTabs]);
 
-  const updateWorkspaceName = useCallback((workspaceId: string, name: string) => {
-    const currentTabs = appTabsRef?.current?.[organizationId];
-    if (!currentTabs) {
-      return;
-    }
-    const newTabList = currentTabs.tabList.map(tab => {
-      if (tab.workspaceId === workspaceId) {
-        return {
-          ...tab,
-          workspaceName: name,
-          name: tab.id === workspaceId ? name : tab.name,
-        };
+      if (currentTabs.activeTabId !== id) {
+        navigate(reservedTab.url);
       }
-      return tab;
-    });
-    updateInsomniaTabs({
-      organizationId,
-      tabList: newTabList,
-      activeTabId: currentTabs.activeTabId || '',
-    });
-  }, [organizationId, updateInsomniaTabs]);
+      updateInsomniaTabs({
+        organizationId,
+        tabList: [reservedTab],
+        activeTabId: id,
+      });
+      const closeIds = currentTabs.tabList.filter(tab => tab.id !== id).map(tab => tab.id);
+      uiEventBus.emit('CLOSE_TAB', organizationId, closeIds);
+    },
+    [navigate, organizationId, updateInsomniaTabs],
+  );
 
-  const batchUpdateTabs = useCallback((updates: { id: string; fields: Partial<BaseTab> }[]) => {
-    const currentTabs = appTabsRef?.current?.[organizationId];
-    if (!currentTabs) {
-      return;
-    }
-
-    const newTabList = currentTabs.tabList.map(tab => {
-      const update = updates.find(update => update.id === tab.id);
-      if (update) {
-        return {
-          ...tab,
-          ...update.fields,
-        };
+  const updateTabById = useCallback(
+    (tabId: string, patches: Partial<BaseTab>) => {
+      const currentTabs = appTabsRef?.current?.[organizationId];
+      if (!currentTabs) {
+        return;
       }
-      return tab;
-    });
+      const newTabList = currentTabs.tabList.map(tab => {
+        if (tab.id === tabId) {
+          return {
+            ...tab,
+            ...patches,
+          };
+        }
+        return tab;
+      });
+      updateInsomniaTabs({
+        organizationId,
+        tabList: newTabList,
+        activeTabId: currentTabs.activeTabId || '',
+      });
+    },
+    [organizationId, updateInsomniaTabs],
+  );
 
-    updateInsomniaTabs({
-      organizationId,
-      tabList: newTabList,
-      activeTabId: currentTabs.activeTabId || '',
-    });
-  }, [organizationId, updateInsomniaTabs]);
+  const changeActiveTab = useCallback(
+    (id: string, options = { navigate: true }) => {
+      const currentTabs = appTabsRef?.current?.[organizationId] || { tabList: [], activeTabId: '' };
+      if (!currentTabs) {
+        return;
+      }
+      const tab = currentTabs?.tabList.find(tab => tab.id === id);
+      if (options?.navigate && tab?.url) {
+        navigate(tab.url);
+      }
 
-  const moveBefore = useCallback((targetId: string, movingId: string) => {
-    const currentTabs = appTabsRef?.current?.[organizationId];
-    if (!currentTabs || targetId === movingId) {
-      return;
-    }
+      updateInsomniaTabs({
+        organizationId,
+        tabList: currentTabs.tabList,
+        activeTabId: id,
+      });
+    },
+    [navigate, organizationId, updateInsomniaTabs],
+  );
 
-    const newTabList = [...currentTabs.tabList];
-    const movingIndex = newTabList.findIndex(tab => tab.id === movingId);
-    const [movingTab] = newTabList.splice(movingIndex, 1);
-    const targetIndex = newTabList.findIndex(tab => tab.id === targetId);
-    newTabList.splice(targetIndex, 0, movingTab);
+  const updateProjectName = useCallback(
+    (projectId: string, name: string) => {
+      const currentTabs = appTabsRef?.current?.[organizationId];
 
-    updateInsomniaTabs({
-      organizationId,
-      tabList: newTabList,
-      activeTabId: currentTabs.activeTabId || '',
-    });
-  }, [organizationId, updateInsomniaTabs]);
+      if (!currentTabs) {
+        return;
+      }
+      const newTabList = currentTabs.tabList.map(tab => {
+        if (tab.projectId === projectId) {
+          return {
+            ...tab,
+            projectName: name,
+          };
+        }
+        return tab;
+      });
+      updateInsomniaTabs({
+        organizationId,
+        tabList: newTabList,
+        activeTabId: currentTabs.activeTabId || '',
+      });
+    },
+    [organizationId, updateInsomniaTabs],
+  );
 
-  const moveAfter = useCallback((targetId: string, movingId: string) => {
-    const currentTabs = appTabsRef?.current?.[organizationId];
-    if (!currentTabs || targetId === movingId) {
-      return;
-    }
+  const updateWorkspaceName = useCallback(
+    (workspaceId: string, name: string) => {
+      const currentTabs = appTabsRef?.current?.[organizationId];
+      if (!currentTabs) {
+        return;
+      }
+      const newTabList = currentTabs.tabList.map(tab => {
+        if (tab.workspaceId === workspaceId) {
+          return {
+            ...tab,
+            workspaceName: name,
+            name: tab.id === workspaceId ? name : tab.name,
+          };
+        }
+        return tab;
+      });
+      updateInsomniaTabs({
+        organizationId,
+        tabList: newTabList,
+        activeTabId: currentTabs.activeTabId || '',
+      });
+    },
+    [organizationId, updateInsomniaTabs],
+  );
 
-    const newTabList = [...currentTabs.tabList];
-    const movingIndex = newTabList.findIndex(tab => tab.id === movingId);
-    const [movingTab] = newTabList.splice(movingIndex, 1);
-    const targetIndex = newTabList.findIndex(tab => tab.id === targetId);
-    newTabList.splice(targetIndex + 1, 0, movingTab);
+  const batchUpdateTabs = useCallback(
+    (updates: { id: string; fields: Partial<BaseTab> }[]) => {
+      const currentTabs = appTabsRef?.current?.[organizationId];
+      if (!currentTabs) {
+        return;
+      }
 
-    updateInsomniaTabs({
-      organizationId,
-      tabList: newTabList,
-      activeTabId: currentTabs.activeTabId || '',
-    });
-  }, [organizationId, updateInsomniaTabs]);
+      const newTabList = currentTabs.tabList.map(tab => {
+        const update = updates.find(update => update.id === tab.id);
+        if (update) {
+          return {
+            ...tab,
+            ...update.fields,
+          };
+        }
+        return tab;
+      });
+
+      updateInsomniaTabs({
+        organizationId,
+        tabList: newTabList,
+        activeTabId: currentTabs.activeTabId || '',
+      });
+    },
+    [organizationId, updateInsomniaTabs],
+  );
+
+  const moveBefore = useCallback(
+    (targetId: string, movingId: string) => {
+      const currentTabs = appTabsRef?.current?.[organizationId];
+      if (!currentTabs || targetId === movingId) {
+        return;
+      }
+
+      const newTabList = [...currentTabs.tabList];
+      const movingIndex = newTabList.findIndex(tab => tab.id === movingId);
+      const [movingTab] = newTabList.splice(movingIndex, 1);
+      const targetIndex = newTabList.findIndex(tab => tab.id === targetId);
+      newTabList.splice(targetIndex, 0, movingTab);
+
+      updateInsomniaTabs({
+        organizationId,
+        tabList: newTabList,
+        activeTabId: currentTabs.activeTabId || '',
+      });
+    },
+    [organizationId, updateInsomniaTabs],
+  );
+
+  const moveAfter = useCallback(
+    (targetId: string, movingId: string) => {
+      const currentTabs = appTabsRef?.current?.[organizationId];
+      if (!currentTabs || targetId === movingId) {
+        return;
+      }
+
+      const newTabList = [...currentTabs.tabList];
+      const movingIndex = newTabList.findIndex(tab => tab.id === movingId);
+      const [movingTab] = newTabList.splice(movingIndex, 1);
+      const targetIndex = newTabList.findIndex(tab => tab.id === targetId);
+      newTabList.splice(targetIndex + 1, 0, movingTab);
+
+      updateInsomniaTabs({
+        organizationId,
+        tabList: newTabList,
+        activeTabId: currentTabs.activeTabId || '',
+      });
+    },
+    [organizationId, updateInsomniaTabs],
+  );
 
   return (
     <InsomniaTabContext.Provider

@@ -86,7 +86,12 @@ import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
 import { useLoaderDeferData } from '../hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
-import { DEFAULT_STORAGE_RULES, type OrganizationLoaderData, type OrganizationStorageLoaderData, useOrganizationLoaderData } from './organization';
+import {
+  DEFAULT_STORAGE_RULES,
+  type OrganizationLoaderData,
+  type OrganizationStorageLoaderData,
+  useOrganizationLoaderData,
+} from './organization';
 import { useRootLoaderData } from './root';
 
 interface TeamProject {
@@ -115,36 +120,39 @@ async function getAllTeamProjects(organizationId: string) {
   return response.data as TeamProject[];
 }
 
-export const scopeToLabelMap: Record<WorkspaceScope | 'unsynced', 'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment'> = {
-  design: 'Document',
-  collection: 'Collection',
+export const scopeToLabelMap: Record<
+  WorkspaceScope | 'unsynced',
+  'Document' | 'Collection' | 'Mock Server' | 'Unsynced' | 'Environment'
+> = {
+  'design': 'Document',
+  'collection': 'Collection',
   'mock-server': 'Mock Server',
-  unsynced: 'Unsynced',
-  environment: 'Environment',
+  'unsynced': 'Unsynced',
+  'environment': 'Environment',
 };
 
 export const scopeToIconMap: Record<string, IconName> = {
-  design: 'file',
-  collection: 'bars',
+  'design': 'file',
+  'collection': 'bars',
   'mock-server': 'server',
-  unsynced: 'cloud-download',
-  environment: 'code',
+  'unsynced': 'cloud-download',
+  'environment': 'code',
 };
 
 export const scopeToBgColorMap: Record<string, string> = {
-  design: 'bg-[--color-info]',
-  collection: 'bg-[--color-surprise]',
+  'design': 'bg-[--color-info]',
+  'collection': 'bg-[--color-surprise]',
   'mock-server': 'bg-[--color-warning]',
-  unsynced: 'bg-[--hl-md]',
-  environment: 'bg-[--color-font]',
+  'unsynced': 'bg-[--hl-md]',
+  'environment': 'bg-[--color-font]',
 };
 
 export const scopeToTextColorMap: Record<string, string> = {
-  design: 'text-[--color-font-info]',
-  collection: 'text-[--color-font-surprise]',
+  'design': 'text-[--color-font-info]',
+  'collection': 'text-[--color-font-surprise]',
   'mock-server': 'text-[--color-font-warning]',
-  unsynced: 'text-[--color-font]',
-  environment: 'text-[--color-bg]',
+  'unsynced': 'text-[--color-font]',
+  'environment': 'text-[--color-bg]',
 };
 
 async function syncTeamProjects({
@@ -165,15 +173,15 @@ async function syncTeamProjects({
   const remoteProjectsThatNeedToBeCreated = teamProjects.filter(p => !existingRemoteProjectsRemoteIds.includes(p.id));
 
   // this will create a new project for any remote projects that don't exist in the current organization
-  await Promise.all(remoteProjectsThatNeedToBeCreated.map(async prj => {
-    await models.project.create(
-      {
+  await Promise.all(
+    remoteProjectsThatNeedToBeCreated.map(async prj => {
+      await models.project.create({
         remoteId: prj.id,
         name: prj.name,
         parentId: organizationId,
-      }
-    );
-  }));
+      });
+    }),
+  );
 
   const remoteProjectsThatNeedToBeUpdated = await database.find<Project>(models.project.type, {
     // Name is not in the list of remote projects
@@ -182,14 +190,16 @@ async function syncTeamProjects({
     remoteId: { $in: teamProjects.map(p => p.id) },
   });
 
-  await Promise.all(remoteProjectsThatNeedToBeUpdated.map(async prj => {
-    const remoteProject = teamProjects.find(p => p.id === prj.remoteId);
-    if (remoteProject) {
-      await models.project.update(prj, {
-        name: remoteProject.name,
-      });
-    }
-  }));
+  await Promise.all(
+    remoteProjectsThatNeedToBeUpdated.map(async prj => {
+      const remoteProject = teamProjects.find(p => p.id === prj.remoteId);
+      if (remoteProject) {
+        await models.project.update(prj, {
+          name: remoteProject.name,
+        });
+      }
+    }),
+  );
 
   // Turn remote projects from the current organization that are not in the list of remote projects into local projects.
   const removedRemoteProjects = await database.find<Project>(models.project.type, {
@@ -204,11 +214,13 @@ async function syncTeamProjects({
     },
   });
 
-  await Promise.all(removedRemoteProjects.map(async prj => {
-    await models.project.update(prj, {
-      remoteId: null,
-    });
-  }));
+  await Promise.all(
+    removedRemoteProjects.map(async prj => {
+      await models.project.update(prj, {
+        remoteId: null,
+      });
+    }),
+  );
 }
 
 export const syncProjects = async (organizationId: string) => {
@@ -285,11 +297,7 @@ export interface ProjectLoaderData {
   projectsSyncStatusPromise?: Promise<Record<string, boolean>>;
 }
 
-async function getAllLocalFiles({
-  projectId,
-}: {
-  projectId: string;
-}) {
+async function getAllLocalFiles({ projectId }: { projectId: string }) {
   const projectWorkspaces = await models.workspace.findByParentId(projectId);
   const [workspaceMetas, apiSpecs, mockServers] = await Promise.all([
     database.find<WorkspaceMeta>(models.workspaceMeta.type, {
@@ -342,9 +350,7 @@ async function getAllLocalFiles({
     // WorkspaceMeta is a good proxy for last modified time
     const workspaceModified = workspaceMeta?.modified || workspace.modified;
 
-    const modifiedLocally = isDesign(workspace)
-      ? apiSpec?.modified || 0
-      : workspaceModified;
+    const modifiedLocally = isDesign(workspace) ? apiSpec?.modified || 0 : workspaceModified;
 
     // Span spec, workspace and sync related timestamps for card last modified label and sort order
     const lastModifiedFrom = [
@@ -354,14 +360,12 @@ async function getAllLocalFiles({
       gitRepository?.cachedGitLastCommitTime,
     ];
 
-    const lastModifiedTimestamp = lastModifiedFrom
-      .filter(isNotNullOrUndefined)
-      .sort(descendingNumberSort)[0];
+    const lastModifiedTimestamp = lastModifiedFrom.filter(isNotNullOrUndefined).sort(descendingNumberSort)[0];
 
     const hasUnsavedChanges = Boolean(
       isDesign(workspace) &&
-      gitRepository?.cachedGitLastCommitTime &&
-      modifiedLocally > gitRepository?.cachedGitLastCommitTime
+        gitRepository?.cachedGitLastCommitTime &&
+        modifiedLocally > gitRepository?.cachedGitLastCommitTime,
     );
 
     const specVersion = spec?.info?.version ? String(spec?.info?.version) : '';
@@ -372,9 +376,11 @@ async function getAllLocalFiles({
       scope: workspace.scope,
       label: scopeToLabelMap[workspace.scope],
       created: workspace.created,
-      lastModifiedTimestamp: (hasUnsavedChanges && modifiedLocally) || gitRepository?.cachedGitLastCommitTime || lastModifiedTimestamp,
+      lastModifiedTimestamp:
+        (hasUnsavedChanges && modifiedLocally) || gitRepository?.cachedGitLastCommitTime || lastModifiedTimestamp,
       branch: lastActiveBranch || '',
-      lastCommit: hasUnsavedChanges && gitRepository?.cachedGitLastCommitTime && lastCommitAuthor ? `by ${lastCommitAuthor}` : '',
+      lastCommit:
+        hasUnsavedChanges && gitRepository?.cachedGitLastCommitTime && lastCommitAuthor ? `by ${lastCommitAuthor}` : '',
       version: specVersion ? `${specVersion?.startsWith('v') ? '' : 'v'}${specVersion}` : '',
       oasFormat: specFormat ? `${specFormat === 'openapi' ? 'OpenAPI' : 'Swagger'} ${specFormatVersion || ''}` : '',
       mockServer,
@@ -388,13 +394,7 @@ async function getAllLocalFiles({
   return files;
 }
 
-async function getAllRemoteFiles({
-  projectId,
-  organizationId,
-}: {
-  projectId: string;
-  organizationId: string;
-}) {
+async function getAllRemoteFiles({ projectId, organizationId }: { projectId: string; organizationId: string }) {
   try {
     const project = await models.project.getById(projectId);
     invariant(project, 'Project not found');
@@ -414,14 +414,17 @@ async function getAllRemoteFiles({
     // Get all workspaces that are connected to backend projects and under the current project
     const workspacesWithBackendProjects = await database.find<Workspace>(models.workspace.type, {
       _id: {
-        $in: [...allPulledBackendProjectsForRemoteId, ...allFetchedRemoteBackendProjectsForRemoteId].map(p => p.rootDocumentId),
+        $in: [...allPulledBackendProjectsForRemoteId, ...allFetchedRemoteBackendProjectsForRemoteId].map(
+          p => p.rootDocumentId,
+        ),
       },
       parentId: project._id,
     });
 
     // Get the list of remote backend projects that we need to pull
-    const backendProjectsToPull = allFetchedRemoteBackendProjectsForRemoteId
-      .filter(p => !workspacesWithBackendProjects.find(w => w._id === p.rootDocumentId));
+    const backendProjectsToPull = allFetchedRemoteBackendProjectsForRemoteId.filter(
+      p => !workspacesWithBackendProjects.find(w => w._id === p.rootDocumentId),
+    );
 
     return backendProjectsToPull.map(backendProject => {
       const file: InsomniaFile = {
@@ -456,9 +459,10 @@ export const listWorkspacesLoader: LoaderFunction = async ({ params }): Promise<
 
   const project = await models.project.getById(projectId);
   invariant(project, `Project was not found ${projectId}`);
-  const organizationProjects = await database.find<Project>(models.project.type, {
-    parentId: organizationId,
-  }) || [];
+  const organizationProjects =
+    (await database.find<Project>(models.project.type, {
+      parentId: organizationId,
+    })) || [];
 
   const projects = sortProjects(organizationProjects);
   const files = await getAllLocalFiles({ projectId });
@@ -495,7 +499,7 @@ const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
   const lastFetchedString = window.localStorage.getItem('learning-feature-last-fetch');
   const lastFetched = lastFetchedString ? parseInt(lastFetchedString, 10) : 0;
   const oneDay = 86400000;
-  const hasOneDayPassedSinceLastFetch = (Date.now() - lastFetched) > oneDay;
+  const hasOneDayPassedSinceLastFetch = Date.now() - lastFetched > oneDay;
   const wasDismissed = window.localStorage.getItem('learning-feature-dismissed');
   const wasNotDismissedAndOneDayHasPassed = !wasDismissed && hasOneDayPassedSinceLastFetch;
   if (wasNotDismissedAndOneDayHasPassed) {
@@ -560,9 +564,7 @@ async function getProjectsWithGitRepositories({
   });
 }
 
-export const loader: LoaderFunction = async ({
-  params,
-}) => {
+export const loader: LoaderFunction = async ({ params }) => {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
   const { id: sessionId } = await userSession.getOrCreate();
@@ -609,7 +611,9 @@ export const loader: LoaderFunction = async ({
 
   const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
 
-  const activeProjectGitRepository = isGitProject(project) ? await models.gitRepository.getById(project.gitRepositoryId || '') : null;
+  const activeProjectGitRepository = isGitProject(project)
+    ? await models.gitRepository.getById(project.gitRepositoryId || '')
+    : null;
 
   return defer({
     localFiles,
@@ -620,18 +624,10 @@ export const loader: LoaderFunction = async ({
     activeProject: project,
     activeProjectGitRepository,
     allFilesCount: localFiles.length,
-    environmentsCount: localFiles.filter(
-      file => file.scope === 'environment'
-    ).length,
-    documentsCount: localFiles.filter(
-      file => file.scope === 'design'
-    ).length,
-    collectionsCount: localFiles.filter(
-      file => file.scope === 'collection'
-    ).length,
-    mockServersCount: localFiles.filter(
-      file => file.scope === 'mock-server'
-    ).length,
+    environmentsCount: localFiles.filter(file => file.scope === 'environment').length,
+    documentsCount: localFiles.filter(file => file.scope === 'design').length,
+    collectionsCount: localFiles.filter(file => file.scope === 'collection').length,
+    mockServersCount: localFiles.filter(file => file.scope === 'mock-server').length,
     projectsSyncStatusPromise,
   });
 };
@@ -667,7 +663,11 @@ const ProjectRoute: FC = () => {
 
   const { userSession } = useRootLoaderData();
   const pullFileFetcher = useFetcher();
-  const loadingBackendProjects = useFetchers().filter(fetcher => fetcher.formAction === `/organization/${organizationId}/project/${projectId}/remote-collections/pull`).map(f => f.formData?.get('backendProjectId'));
+  const loadingBackendProjects = useFetchers()
+    .filter(
+      fetcher => fetcher.formAction === `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
+    )
+    .map(f => f.formData?.get('backendProjectId'));
 
   const { organizations } = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
@@ -692,12 +692,16 @@ const ProjectRoute: FC = () => {
   const [projectListFilter, setProjectListFilter] = useLocalStorage(`${organizationId}:project-list-filter`, '');
   const [workspaceListFilter, setWorkspaceListFilter] = useLocalStorage(`${projectId}:workspace-list-filter`, '');
   const [workspaceListScope, setWorkspaceListScope] = useLocalStorage(`${projectId}:workspace-list-scope`, 'all');
-  const [workspaceListSortOrder, setWorkspaceListSortOrder] = useLocalStorage(`${projectId}:workspace-list-sort-order`, 'modified-desc');
+  const [workspaceListSortOrder, setWorkspaceListSortOrder] = useLocalStorage(
+    `${projectId}:workspace-list-sort-order`,
+    'modified-desc',
+  );
   const [importModalType, setImportModalType] = useState<'file' | 'clipboard' | 'uri' | null>(null);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
   const organization = organizations.find(o => o.id === organizationId);
-  const isUserOwner = organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
+  const isUserOwner =
+    organization && userSession.accountId && isOwnerOfOrganization({ organization, accountId: userSession.accountId });
   const isPersonalOrg = organization && isPersonalOrganization(organization);
 
   const filteredFiles = allFiles
@@ -705,84 +709,90 @@ const ProjectRoute: FC = () => {
     .filter(workspace =>
       workspaceListFilter
         ? Boolean(
-          fuzzyMatchAll(
-            workspaceListFilter,
-            // Use the filter string to match against these properties
-            [
-              workspace.name,
-              workspace.scope === 'design'
-                ? 'document'
-                : 'collection',
-              workspace.branch || '',
-              workspace.oasFormat || '',
-            ],
-            { splitSpace: true, loose: true }
-          )?.indexes
-        )
-        : true
+            fuzzyMatchAll(
+              workspaceListFilter,
+              // Use the filter string to match against these properties
+              [
+                workspace.name,
+                workspace.scope === 'design' ? 'document' : 'collection',
+                workspace.branch || '',
+                workspace.oasFormat || '',
+              ],
+              { splitSpace: true, loose: true },
+            )?.indexes,
+          )
+        : true,
     )
     .sort((a, b) => sortMethodMap[workspaceListSortOrder as DashboardSortOrder](a, b));
 
-  const filesWithPresence = filteredFiles.map(file => {
-    const workspacePresence = presence
-      .filter(p => p.project === activeProject?.remoteId && p.file === file.id)
-      .filter(p => p.acct !== userSession.accountId)
-      .map(user => {
-        return {
-          key: user.acct,
-          alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
-          src: user.avatar,
-        };
-      });
-    return {
+  const filesWithPresence = filteredFiles
+    .map(file => {
+      const workspacePresence = presence
+        .filter(p => p.project === activeProject?.remoteId && p.file === file.id)
+        .filter(p => p.acct !== userSession.accountId)
+        .map(user => {
+          return {
+            key: user.acct,
+            alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+            src: user.avatar,
+          };
+        });
+      return {
+        ...file,
+        loading:
+          loadingBackendProjects.includes(file.remoteId) ||
+          (pullFileFetcher.formData?.get('backendProjectId') &&
+            pullFileFetcher.formData?.get('backendProjectId') === file.remoteId),
+        presence: workspacePresence,
+      };
+    })
+    .map(file => ({
       ...file,
-      loading: loadingBackendProjects.includes(file.remoteId) || pullFileFetcher.formData?.get('backendProjectId') && pullFileFetcher.formData?.get('backendProjectId') === file.remoteId,
-      presence: workspacePresence,
-    };
-  }).map(file => ({
-    ...file,
-    action: () => {
-      // hack to workaround gridlist not have access to workspace scope
-      if (file.scope === 'unsynced') {
-        if (activeProject?.remoteId && file.remoteId) {
-          return pullFileFetcher.submit({ backendProjectId: file.remoteId, remoteId: activeProject.remoteId }, {
-            method: 'POST',
-            action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
-          });
+      action: () => {
+        // hack to workaround gridlist not have access to workspace scope
+        if (file.scope === 'unsynced') {
+          if (activeProject?.remoteId && file.remoteId) {
+            return pullFileFetcher.submit(
+              { backendProjectId: file.remoteId, remoteId: activeProject.remoteId },
+              {
+                method: 'POST',
+                action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
+              },
+            );
+          }
+
+          return;
         }
 
-        return;
-      }
+        const activity = scopeToActivity(file.scope);
+        navigate(`/organization/${organizationId}/project/${projectId}/workspace/${file.id}/${activity}`);
+      },
+    }));
 
-      const activity = scopeToActivity(file.scope);
-      navigate(
-        `/organization/${organizationId}/project/${projectId}/workspace/${file.id}/${activity}`
-      );
-    },
-  }));
+  const projectsWithPresence = projects
+    .filter(p => (projectListFilter ? p.name?.toLowerCase().includes(projectListFilter.toLowerCase()) : true))
+    .map(project => {
+      const projectPresence = presence
+        .filter(p => p.project === project.remoteId)
+        .filter(p => p.acct !== userSession.accountId)
+        .map(user => {
+          return {
+            key: user.acct,
+            alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+            src: user.avatar,
+          };
+        });
+      return {
+        ...project,
+        presence: projectPresence,
+        hasUncommittedOrUnpushedChanges:
+          checkAllProjectSyncStatus?.[project._id] ||
+          project.gitRepository?.hasUncommittedChanges ||
+          project.gitRepository?.hasUnpushedChanges,
+      };
+    });
 
-  const projectsWithPresence = projects.filter(p =>
-    projectListFilter ? p.name?.toLowerCase().includes(projectListFilter.toLowerCase()) : true
-  ).map(project => {
-    const projectPresence = presence
-      .filter(p => p.project === project.remoteId)
-      .filter(p => p.acct !== userSession.accountId)
-      .map(user => {
-        return {
-          key: user.acct,
-          alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
-          src: user.avatar,
-        };
-      });
-    return {
-      ...project,
-      presence: projectPresence,
-      hasUncommittedOrUnpushedChanges: checkAllProjectSyncStatus?.[project._id] || project.gitRepository?.hasUncommittedChanges || project.gitRepository?.hasUnpushedChanges,
-    };
-  });
-
-  const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =
-    useState(false);
+  const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -796,7 +806,8 @@ const ProjectRoute: FC = () => {
 
   const createNewCollection = () => setNewWorkspaceModalState({ scope: 'collection', isOpen: true });
   const createNewDocument = () => setNewWorkspaceModalState({ scope: 'design', isOpen: true });
-  const createNewMockServer = () => canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true });
+  const createNewMockServer = () =>
+    canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true });
   const createNewGlobalEnvironment = () => setNewWorkspaceModalState({ scope: 'environment', isOpen: true });
 
   const createNewCollectionWithRequest = () => {
@@ -813,7 +824,7 @@ const ProjectRoute: FC = () => {
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/new?withRequest=true`,
         method: 'POST',
-      }
+      },
     );
   };
 
@@ -829,31 +840,31 @@ const ProjectRoute: FC = () => {
     icon: IconName;
     action: () => void;
   }[] = [
-      {
-        id: 'new-collection',
-        name: 'Request collection',
-        icon: 'bars',
-        action: createNewCollection,
-      },
-      {
-        id: 'new-document',
-        name: 'Design document',
-        icon: 'file',
-        action: createNewDocument,
-      },
-      {
-        id: 'new-mock-server',
-        name: 'Mock Server',
-        icon: 'server',
-        action: createNewMockServer,
-      },
-      {
-        id: 'new-environment',
-        name: 'Environment',
-        icon: 'code',
-        action: createNewGlobalEnvironment,
-      },
-    ];
+    {
+      id: 'new-collection',
+      name: 'Request collection',
+      icon: 'bars',
+      action: createNewCollection,
+    },
+    {
+      id: 'new-document',
+      name: 'Design document',
+      icon: 'file',
+      action: createNewDocument,
+    },
+    {
+      id: 'new-mock-server',
+      name: 'Mock Server',
+      icon: 'server',
+      action: createNewMockServer,
+    },
+    {
+      id: 'new-environment',
+      name: 'Environment',
+      icon: 'code',
+      action: createNewGlobalEnvironment,
+    },
+  ];
 
   const scopeActionList: {
     id: string;
@@ -865,57 +876,58 @@ const ProjectRoute: FC = () => {
       run: () => void;
     };
   }[] = [
-      {
-        id: 'all',
-        label: `All files (${allFilesCount})`,
-        icon: 'border-all',
+    {
+      id: 'all',
+      label: `All files (${allFilesCount})`,
+      icon: 'border-all',
+    },
+    {
+      id: 'design',
+      label: `Documents (${documentsCount})`,
+      icon: 'file',
+      action: {
+        icon: 'plus',
+        label: 'New design document',
+        run: createNewDocument,
       },
-      {
-        id: 'design',
-        label: `Documents (${documentsCount})`,
-        icon: 'file',
-        action: {
-          icon: 'plus',
-          label: 'New design document',
-          run: createNewDocument,
-        },
+    },
+    {
+      id: 'collection',
+      label: `Collections (${collectionsCount})`,
+      icon: 'bars',
+      action: {
+        icon: 'plus',
+        label: 'New request collection',
+        run: createNewCollection,
       },
-      {
-        id: 'collection',
-        label: `Collections (${collectionsCount})`,
-        icon: 'bars',
-        action: {
-          icon: 'plus',
-          label: 'New request collection',
-          run: createNewCollection,
-        },
+    },
+    {
+      id: 'mock-server',
+      label: `Mock (${mockServersCount})`,
+      icon: 'server',
+      action: {
+        icon: 'plus',
+        label: 'New Mock Server',
+        run: createNewMockServer,
       },
-      {
-        id: 'mock-server',
-        label: `Mock (${mockServersCount})`,
-        icon: 'server',
-        action: {
-          icon: 'plus',
-          label: 'New Mock Server',
-          run: createNewMockServer,
-        },
+    },
+    {
+      id: 'environment',
+      label: `Environments (${environmentsCount})`,
+      icon: 'code',
+      action: {
+        icon: 'plus',
+        label: 'New Environment',
+        run: createNewGlobalEnvironment,
       },
-      {
-        id: 'environment',
-        label: `Environments (${environmentsCount})`,
-        icon: 'code',
-        action: {
-          icon: 'plus',
-          label: 'New Environment',
-          run: createNewGlobalEnvironment,
-        },
-      },
-    ];
+    },
+  ];
 
   const isRemoteProjectInconsistent = activeProject && isRemoteProject(activeProject) && !storageRules.enableCloudSync;
   const isLocalProjectInconsistent = activeProject && !isRemoteProject(activeProject) && !storageRules.enableLocalVault;
   const isGitSyncProjectInconsistent = activeProject && isGitProject(activeProject) && !storageRules.enableGitSync;
-  const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent || isGitSyncProjectInconsistent;
+  const isProjectInconsistent =
+    isRemoteProjectInconsistent || isLocalProjectInconsistent || isGitSyncProjectInconsistent;
 
   useEffect(() => {
     window.main.landingPageRendered(LandingPage.ProjectDashboard);
@@ -938,10 +950,22 @@ const ProjectRoute: FC = () => {
   return (
     <ErrorBoundary>
       <Fragment>
-        <PanelGroup autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
-          <Panel id="sidebar" className='sidebar theme--sidebar' defaultSize={DEFAULT_SIDEBAR_SIZE} maxSize={40} minSize={10} collapsible>
-            <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
-              <div className="p-[--padding-sm] h-[40px]">
+        <PanelGroup
+          autoSaveId="insomnia-sidebar"
+          id="wrapper"
+          className="new-sidebar h-full w-full text-[--color-font]"
+          direction="horizontal"
+        >
+          <Panel
+            id="sidebar"
+            className="sidebar theme--sidebar"
+            defaultSize={DEFAULT_SIDEBAR_SIZE}
+            maxSize={40}
+            minSize={10}
+            collapsible
+          >
+            <div className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
+              <div className="h-[40px] p-[--padding-sm]">
                 <Select
                   aria-label="Organizations"
                   onSelectionChange={id => {
@@ -949,24 +973,24 @@ const ProjectRoute: FC = () => {
                   }}
                   selectedKey={organizationId}
                 >
-                  <Button className="px-4 py-1 font-bold flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                    <SelectValue<Organization> className="flex truncate items-center justify-center gap-2">
+                  <Button className="flex flex-1 items-center justify-center gap-2 rounded-sm px-4 py-1 text-sm font-bold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
+                    <SelectValue<Organization> className="flex items-center justify-center gap-2 truncate">
                       {({ selectedItem }) => {
                         return selectedItem?.display_name || 'Select an organization';
                       }}
                     </SelectValue>
                     <Icon icon="caret-down" />
                   </Button>
-                  <Popover className="min-w-max overflow-y-hidden flex flex-col">
+                  <Popover className="flex min-w-max flex-col overflow-y-hidden">
                     <ListBox
                       items={organizations}
-                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
+                      className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
                     >
                       {item => (
                         <ListBoxItem
                           id={item.id}
                           key={item.id}
-                          className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                          className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                           aria-label={item.display_name}
                           textValue={item.display_name}
                           value={item}
@@ -974,12 +998,7 @@ const ProjectRoute: FC = () => {
                           {({ isSelected }) => (
                             <Fragment>
                               <span>{item.display_name}</span>
-                              {isSelected && (
-                                <Icon
-                                  icon="check"
-                                  className="text-[--color-success] justify-self-end"
-                                />
-                              )}
+                              {isSelected && <Icon icon="check" className="justify-self-end text-[--color-success]" />}
                             </Fragment>
                           )}
                         </ListBoxItem>
@@ -988,10 +1007,8 @@ const ProjectRoute: FC = () => {
                   </Popover>
                 </Select>
               </div>
-              <div className="flex overflow-hidden flex-col flex-1">
-                <Heading className="p-[--padding-sm] uppercase text-xs">
-                  Projects ({projectsCount})
-                </Heading>
+              <div className="flex flex-1 flex-col overflow-hidden">
+                <Heading className="p-[--padding-sm] text-xs uppercase">Projects ({projectsCount})</Heading>
                 <div className="flex justify-between gap-1 p-[--padding-sm]">
                   <SearchField
                     aria-label="Projects filter"
@@ -1002,10 +1019,10 @@ const ProjectRoute: FC = () => {
                   >
                     <Input
                       placeholder="Filter"
-                      className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+                      className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
                     />
-                    <div className="flex items-center px-2 absolute right-0 top-0 h-full">
-                      <Button className="flex group-data-[empty]:hidden items-center justify-center aspect-square w-5 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                    <div className="absolute right-0 top-0 flex h-full items-center px-2">
+                      <Button className="flex aspect-square w-5 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] group-data-[empty]:hidden">
                         <Icon icon="close" />
                       </Button>
                     </div>
@@ -1014,7 +1031,7 @@ const ProjectRoute: FC = () => {
                     aria-label="Create new Project"
                     onPress={() => setIsNewProjectModalOpen(true)}
                     isDisabled={activeProject === undefined}
-                    className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                    className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                   >
                     <Icon icon="plus-circle" />
                   </Button>
@@ -1023,7 +1040,7 @@ const ProjectRoute: FC = () => {
                 <GridList
                   aria-label="Projects"
                   items={projectsWithPresence}
-                  className="overflow-y-auto flex-1 data-[empty]:py-0 py-[--padding-sm]"
+                  className="flex-1 overflow-y-auto py-[--padding-sm] data-[empty]:py-0"
                   disallowEmptySelection
                   selectedKeys={[activeProject?._id || '']}
                   selectionMode="single"
@@ -1045,23 +1062,23 @@ const ProjectRoute: FC = () => {
                         key={item._id}
                         id={item._id}
                         textValue={item.name}
-                        className="group outline-none select-none"
+                        className="group select-none outline-none"
                       >
-                        <div className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]">
-                          <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
+                        <div className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] group-aria-selected:text-[--color-font]">
+                          <span className="absolute left-0 top-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-[--color-surprise]" />
                           <Icon
                             icon={
-                              isRemoteProject(item) ? 'globe-americas' : isGitProject(item) ? ['fab', 'git-alt'] : 'laptop'
+                              isRemoteProject(item)
+                                ? 'globe-americas'
+                                : isGitProject(item)
+                                  ? ['fab', 'git-alt']
+                                  : 'laptop'
                             }
                           />
                           <span className={'truncate'}>{item.name}</span>
                           <span className="flex-1" />
                           {item.presence.length > 0 && (
-                            <AvatarGroup
-                              size="small"
-                              maxAvatars={3}
-                              items={item.presence}
-                            />
+                            <AvatarGroup size="small" maxAvatars={3} items={item.presence} />
                           )}
                           {item._id !== SCRATCHPAD_PROJECT_ID && (
                             <ProjectDropdown
@@ -1082,7 +1099,7 @@ const ProjectRoute: FC = () => {
                   <GridList
                     aria-label="Scope filter"
                     items={scopeActionList}
-                    className="overflow-y-auto flex-shrink-0 flex-1 data-[empty]:py-0 py-[--padding-sm]"
+                    className="flex-1 flex-shrink-0 overflow-y-auto py-[--padding-sm] data-[empty]:py-0"
                     disallowEmptySelection
                     selectedKeys={[workspaceListScope || 'all']}
                     selectionMode="single"
@@ -1096,23 +1113,19 @@ const ProjectRoute: FC = () => {
                   >
                     {item => {
                       return (
-                        <GridListItem textValue={item.label} className="group outline-none select-none">
-                          <div
-                            className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-aria-selected:bg-[--hl-sm] group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-12 w-full overflow-hidden text-[--hl]"
-                          >
-                            <span className='w-6 h-6 flex items-center justify-center'>
-                              <Icon icon={item.icon} className='w-6' />
+                        <GridListItem textValue={item.label} className="group select-none outline-none">
+                          <div className="relative flex h-12 w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] group-aria-selected:bg-[--hl-sm] group-aria-selected:text-[--color-font]">
+                            <span className="flex h-6 w-6 items-center justify-center">
+                              <Icon icon={item.icon} className="w-6" />
                             </span>
 
-                            <span className="truncate capitalize">
-                              {item.label}
-                            </span>
+                            <span className="truncate capitalize">{item.label}</span>
                             <span className="flex-1" />
                             {item.action && (
                               <Button
                                 onPress={item.action.run}
                                 aria-label={item.action.label}
-                                className="opacity-80 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                                className="flex aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] opacity-80 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
                               >
                                 <Icon icon={item.action.icon} />
                               </Button>
@@ -1131,9 +1144,9 @@ const ProjectRoute: FC = () => {
                 </>
               )}
               {!isLearningFeatureDismissed && learningFeature?.active && (
-                <div className='flex flex-shrink-0 flex-col gap-2 p-[--padding-sm]'>
-                  <div className='flex items-center justify-between gap-2'>
-                    <Heading className='text-base'>
+                <div className="flex flex-shrink-0 flex-col gap-2 p-[--padding-sm]">
+                  <div className="flex items-center justify-between gap-2">
+                    <Heading className="text-base">
                       <Icon icon="graduation-cap" />
                       <span className="ml-2">{learningFeature.title}</span>
                     </Heading>
@@ -1145,10 +1158,8 @@ const ProjectRoute: FC = () => {
                       <Icon icon="close" />
                     </Button>
                   </div>
-                  <p className='text-[--hl] text-sm'>
-                    {learningFeature.message}
-                  </p>
-                  <a href={learningFeature.url} className='flex items-center gap-2 underline text-sm'>
+                  <p className="text-sm text-[--hl]">{learningFeature.message}</p>
+                  <a href={learningFeature.url} className="flex items-center gap-2 text-sm underline">
                     {learningFeature.cta}
                     <Icon icon="arrow-up-right-from-square" />
                   </a>
@@ -1156,175 +1167,187 @@ const ProjectRoute: FC = () => {
               )}
             </div>
           </Panel>
-          <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
-          <Panel id="pane-one" className='pane-one theme--pane flex flex-col'>
+          <PanelResizeHandle className="h-full w-[1px] bg-[--hl-md]" />
+          <Panel id="pane-one" className="pane-one theme--pane flex flex-col">
             <OrganizationTabList showActiveStatus={false} />
             {activeProject ? (
-              <div className="w-full flex flex-col overflow-hidden">
-                {billing.isActive ? null : <div className='p-[--padding-md] pb-0'>
-                  <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
-                    <p className='text-base'>
-                      <Icon icon="exclamation-triangle" className='mr-2' />
-                      {isUserOwner ? `Your ${isPersonalOrg ? 'personal account' : 'organization'} has unpaid past invoices. Please enter a new payment method to continue using Insomnia.` : 'This organization has unpaid past invoices. Please ask the organization owner to enter a new payment method to continue using Insomnia.'}
-                    </p>
-                    {isUserOwner && (
-                      <a
-                        href={`${getAppWebsiteBaseURL()}/app/subscription/past-due`}
-                        className="px-4 text-[--color-bg] bg-opacity-100 bg-[rgba(var(--color-font-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              <div className="flex w-full flex-col overflow-hidden">
+                {billing.isActive ? null : (
+                  <div className="p-[--padding-md] pb-0">
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded border border-solid border-[--hl-md] bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] bg-opacity-50 p-[--padding-sm] text-[--color-font-warning]">
+                      <p className="text-base">
+                        <Icon icon="exclamation-triangle" className="mr-2" />
+                        {isUserOwner
+                          ? `Your ${isPersonalOrg ? 'personal account' : 'organization'} has unpaid past invoices. Please enter a new payment method to continue using Insomnia.`
+                          : 'This organization has unpaid past invoices. Please ask the organization owner to enter a new payment method to continue using Insomnia.'}
+                      </p>
+                      {isUserOwner && (
+                        <a
+                          href={`${getAppWebsiteBaseURL()}/app/subscription/past-due`}
+                          className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[rgba(var(--color-font-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-1 text-sm font-semibold text-[--color-bg] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                        >
+                          Update payment method
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {billing?.expirationErrorMessage || billing?.expirationWarningMessage ? (
+                  <div className="p-[--padding-md] pb-0">
+                    <div
+                      className={`flex flex-wrap items-center justify-between gap-2 rounded border border-solid border-[--hl-md] bg-opacity-50 p-[--padding-sm] text-[--color-font-warning] ${billing?.expirationWarningMessage ? 'bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))]' : 'bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))]'}`}
+                    >
+                      <p className="text-base">
+                        <Icon icon="exclamation-triangle" className="mr-2" />
+                        {billing?.expirationErrorMessage || billing?.expirationWarningMessage}
+                      </p>
+                      {isUserOwner && (
+                        <a
+                          href="https://insomnia.rest/pricing/contact"
+                          className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[rgba(var(--color-font-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-1 text-sm font-semibold text-[--color-bg] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                        >
+                          Contact sales
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ) : null}
+                {isProjectInconsistent && (
+                  <div className="p-[--padding-md] pb-0">
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded border border-solid border-[--hl-md] bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] bg-opacity-50 p-[--padding-sm] text-[--color-font-warning]">
+                      <p className="text-base">
+                        <Icon icon="exclamation-triangle" className="mr-2" />
+                        The organization owner mandates that projects must be created and stored using{' '}
+                        {getProjectStorageTypeLabel(storageRules)}.
+                      </p>
+                      <Button
+                        onPress={() => setIsUpdateProjectModalOpen(true)}
+                        className="flex items-center justify-center rounded-sm border border-solid border-white px-2 py-1"
                       >
-                        Update payment method
-                      </a>
-                    )}
-                  </div>
-                </div>}
-                {billing?.expirationErrorMessage || billing?.expirationWarningMessage ? <div className='p-[--padding-md] pb-0'>
-                  <div className={`flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50  text-[--color-font-warning] rounded ${billing?.expirationWarningMessage ? 'bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))]' : 'bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))]'}`}>
-                    <p className='text-base'>
-                      <Icon icon="exclamation-triangle" className='mr-2' />
-                      {billing?.expirationErrorMessage || billing?.expirationWarningMessage}
-                    </p>
-                    {isUserOwner && (
-                      <a
-                        href="https://insomnia.rest/pricing/contact"
-                        className="px-4 text-[--color-bg] bg-opacity-100 bg-[rgba(var(--color-font-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                      >
-                        Contact sales
-                      </a>
-                    )}
-                  </div>
-                </div> : null}
-                {isProjectInconsistent && <div className='p-[--padding-md] pb-0'>
-                  <div className='flex flex-wrap justify-between items-center gap-2 p-[--padding-sm] border border-solid border-[--hl-md] bg-opacity-50 bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] text-[--color-font-warning] rounded'>
-                    <p className='text-base'>
-                      <Icon icon="exclamation-triangle" className='mr-2' />
-                      The organization owner mandates that projects must be created and stored using {getProjectStorageTypeLabel(storageRules)}.
-                    </p>
-                    <Button onPress={() => setIsUpdateProjectModalOpen(true)} className="flex items-center justify-center border border-solid border-white px-2 py-1 rounded-sm">Update</Button>
-                  </div>
-                </div>}
-                {filesWithPresence.length > 0 && <div className="flex max-w-xl justify-between w-full gap-2 p-[--padding-md]">
-                  <SearchField
-                    aria-label="Files filter"
-                    className="group relative flex-1"
-                    value={workspaceListFilter}
-                    onChange={filter => setWorkspaceListFilter(filter)}
-                  >
-                    <Input
-                      placeholder="Filter"
-                      className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
-                    />
-                    <div className="flex items-center px-2 absolute right-0 top-0 h-full">
-                      <Button className="flex group-data-[empty]:hidden items-center justify-center aspect-square w-5 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                        <Icon icon="close" />
+                        Update
                       </Button>
                     </div>
-                  </SearchField>
-                  <Select
-                    aria-label="Sort order"
-                    className="h-full aspect-square"
-                    selectedKey={workspaceListSortOrder}
-                    onSelectionChange={order => setWorkspaceListSortOrder(order as DashboardSortOrder)}
-                  >
-                    <Button
-                      aria-label="Select sort order"
-                      className="flex flex-shrink-0 items-center justify-center aspect-square h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  </div>
+                )}
+                {filesWithPresence.length > 0 && (
+                  <div className="flex w-full max-w-xl justify-between gap-2 p-[--padding-md]">
+                    <SearchField
+                      aria-label="Files filter"
+                      className="group relative flex-1"
+                      value={workspaceListFilter}
+                      onChange={filter => setWorkspaceListFilter(filter)}
                     >
-                      <Icon icon="sort" />
-                    </Button>
-                    <Popover className="min-w-max overflow-y-hidden flex flex-col">
-                      <ListBox
-                        items={DASHBOARD_SORT_ORDERS.map(order => {
-                          return {
-                            id: order,
-                            name: dashboardSortOrderName[order],
-                          };
-                        })}
-                        className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
-                      >
-                        {item => (
-                          <ListBoxItem
-                            id={item.id}
-                            key={item.id}
-                            className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                            aria-label={item.name}
-                            textValue={item.name}
-                            value={item}
-                          >
-                            {({ isSelected }) => (
-                              <Fragment>
-                                <span>{item.name}</span>
-                                {isSelected && (
-                                  <Icon
-                                    icon="check"
-                                    className="text-[--color-success] justify-self-end"
-                                  />
-                                )}
-                              </Fragment>
-                            )}
-                          </ListBoxItem>
-                        )}
-                      </ListBox>
-                    </Popover>
-                  </Select>
-
-                  <MenuTrigger>
-                    <Button
-                      aria-label="Create in project"
-                      className="flex items-center justify-center px-4 gap-2 h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                      <Input
+                        placeholder="Filter"
+                        className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                      />
+                      <div className="absolute right-0 top-0 flex h-full items-center px-2">
+                        <Button className="flex aspect-square w-5 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] group-data-[empty]:hidden">
+                          <Icon icon="close" />
+                        </Button>
+                      </div>
+                    </SearchField>
+                    <Select
+                      aria-label="Sort order"
+                      className="aspect-square h-full"
+                      selectedKey={workspaceListSortOrder}
+                      onSelectionChange={order => setWorkspaceListSortOrder(order as DashboardSortOrder)}
                     >
-                      <Icon icon="plus-circle" /> <span className='hidden md:block'>Create</span>
-                    </Button>
-                    <Popover className="min-w-max overflow-y-hidden flex flex-col">
-                      <Menu
-                        aria-label="Create in project actions"
-                        selectionMode="single"
-                        onAction={key => {
-                          const item = createInProjectActionList.find(
-                            item => item.id === key
-                          );
-                          if (item) {
-                            item.action();
-                          }
-                        }}
-                        items={createInProjectActionList}
-                        className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
+                      <Button
+                        aria-label="Select sort order"
+                        className="flex aspect-square h-full flex-shrink-0 items-center justify-center rounded-sm bg-[--hl-xxs] text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                       >
-                        {item => (
-                          <MenuItem
-                            key={item.id}
-                            id={item.id}
-                            className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                            aria-label={item.name}
-                          >
-                            <Icon icon={item.icon} />
-                            <span>{item.name}</span>
-                          </MenuItem>
-                        )}
-                      </Menu>
-                    </Popover>
-                  </MenuTrigger>
+                        <Icon icon="sort" />
+                      </Button>
+                      <Popover className="flex min-w-max flex-col overflow-y-hidden">
+                        <ListBox
+                          items={DASHBOARD_SORT_ORDERS.map(order => {
+                            return {
+                              id: order,
+                              name: dashboardSortOrderName[order],
+                            };
+                          })}
+                          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+                        >
+                          {item => (
+                            <ListBoxItem
+                              id={item.id}
+                              key={item.id}
+                              className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                              aria-label={item.name}
+                              textValue={item.name}
+                              value={item}
+                            >
+                              {({ isSelected }) => (
+                                <Fragment>
+                                  <span>{item.name}</span>
+                                  {isSelected && (
+                                    <Icon icon="check" className="justify-self-end text-[--color-success]" />
+                                  )}
+                                </Fragment>
+                              )}
+                            </ListBoxItem>
+                          )}
+                        </ListBox>
+                      </Popover>
+                    </Select>
 
-                  <Button
-                    onPress={() => {
-                      setImportModalType('file');
-                    }}
-                    aria-label="Import"
-                    className="flex items-center justify-center px-4 gap-2 h-full bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                  >
-                    <Icon icon="file-import" /> <span className='hidden md:block'>Import</span>
-                  </Button>
+                    <MenuTrigger>
+                      <Button
+                        aria-label="Create in project"
+                        className="flex h-full items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                      >
+                        <Icon icon="plus-circle" /> <span className="hidden md:block">Create</span>
+                      </Button>
+                      <Popover className="flex min-w-max flex-col overflow-y-hidden">
+                        <Menu
+                          aria-label="Create in project actions"
+                          selectionMode="single"
+                          onAction={key => {
+                            const item = createInProjectActionList.find(item => item.id === key);
+                            if (item) {
+                              item.action();
+                            }
+                          }}
+                          items={createInProjectActionList}
+                          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+                        >
+                          {item => (
+                            <MenuItem
+                              key={item.id}
+                              id={item.id}
+                              className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
+                              aria-label={item.name}
+                            >
+                              <Icon icon={item.icon} />
+                              <span>{item.name}</span>
+                            </MenuItem>
+                          )}
+                        </Menu>
+                      </Popover>
+                    </MenuTrigger>
 
-                </div>}
+                    <Button
+                      onPress={() => {
+                        setImportModalType('file');
+                      }}
+                      aria-label="Import"
+                      className="flex h-full items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                    >
+                      <Icon icon="file-import" /> <span className="hidden md:block">Import</span>
+                    </Button>
+                  </div>
+                )}
 
-                <div className='flex-1 overflow-y-auto'>
+                <div className="flex-1 overflow-y-auto">
                   <GridList
                     aria-label="Files"
-                    className="data-[empty]:flex data-[empty]:justify-center grid [grid-template-columns:repeat(auto-fit,200px)] [grid-template-rows:repeat(auto-fit,200px)] gap-4 p-[--padding-md]"
+                    className="grid gap-4 p-[--padding-md] [grid-template-columns:repeat(auto-fit,200px)] [grid-template-rows:repeat(auto-fit,200px)] data-[empty]:flex data-[empty]:justify-center"
                     items={filesWithPresence}
                     renderEmptyState={() => {
                       if (workspaceListFilter) {
                         return (
-                          <div className="w-full h-full flex items-center justify-center">
+                          <div className="flex h-full w-full items-center justify-center">
                             <p className="notice subtle">
                               No documents found for <strong>{workspaceListFilter}</strong>
                             </p>
@@ -1333,19 +1356,17 @@ const ProjectRoute: FC = () => {
                       }
 
                       return (
-                        <div className='w-full flex flex-col items-center justify-center gap-4'>
+                        <div className="flex w-full flex-col items-center justify-center gap-4">
                           <ProjectEmptyView
                             onCreateRequestCollectionWithRequest={createNewCollectionWithRequest}
                             onCreateDesignDocument={createNewDocument}
                             onImportFrom={() => setImportModalType('file')}
                           />
                           {createNewWorkspaceFetcher.data?.error && (
-                            <div className='px-10'>
-                              <div className="flex items-center px-2 py-1 gap-2 text-sm rounded-sm text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]">
+                            <div className="px-10">
+                              <div className="flex items-center gap-2 rounded-sm bg-[rgba(var(--color-danger-rgb),0.5)] px-2 py-1 text-sm text-[--color-font-danger]">
                                 <Icon icon="triangle-exclamation" />
-                                <span>
-                                  {createNewWorkspaceFetcher.data?.error}
-                                </span>
+                                <span>{createNewWorkspaceFetcher.data?.error}</span>
                               </div>
                             </div>
                           )}
@@ -1360,22 +1381,23 @@ const ProjectRoute: FC = () => {
                           id={item.id}
                           textValue={item.name}
                           onAction={item.action}
-                          className={`flex-1 overflow-hidden flex-col outline-none p-[--padding-md] flex select-none w-full rounded-md hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all ${item.loading ? 'animate-pulse' : ''}`}
+                          className={`flex aspect-square w-full flex-1 select-none flex-col overflow-hidden rounded-md p-[--padding-md] outline-none ring-1 ring-[--hl-md] transition-all hover:bg-[--hl-xs] hover:shadow-md hover:ring-[--hl-sm] focus:bg-[--hl-sm] focus:ring-[--hl-lg] ${item.loading ? 'animate-pulse' : ''}`}
                         >
-                          <div className="flex gap-2 h-[20px]">
-                            <div className="flex pr-2 h-full flex-shrink-0 items-center rounded-sm gap-2 bg-[--hl-xs] text-[--color-font] text-sm">
-                              <div className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm`}>
-                                <Icon icon={item.loading ? 'spinner' : scopeToIconMap[item.scope]} className={item.loading ? 'animate-spin' : ''} />
+                          <div className="flex h-[20px] gap-2">
+                            <div className="flex h-full flex-shrink-0 items-center gap-2 rounded-sm bg-[--hl-xs] pr-2 text-sm text-[--color-font]">
+                              <div
+                                className={`${scopeToBgColorMap[item.scope]} ${scopeToTextColorMap[item.scope]} flex h-[20px] w-[20px] items-center justify-center rounded-s-sm px-2`}
+                              >
+                                <Icon
+                                  icon={item.loading ? 'spinner' : scopeToIconMap[item.scope]}
+                                  className={item.loading ? 'animate-spin' : ''}
+                                />
                               </div>
                               <span>{item.label}</span>
                             </div>
                             <span className="flex-1" />
                             {item.presence.length > 0 && (
-                              <AvatarGroup
-                                size="small"
-                                maxAvatars={3}
-                                items={item.presence}
-                              />
+                              <AvatarGroup size="small" maxAvatars={3} items={item.presence} />
                             )}
                             {activeProject && item.scope !== 'unsynced' && item.workspace && (
                               <WorkspaceCardDropdown
@@ -1389,68 +1411,53 @@ const ProjectRoute: FC = () => {
                             )}
                           </div>
                           <TooltipTrigger>
-                            <Link
-                              onPress={item.action}
-                              className="pt-4 text-base font-bold line-clamp-4 outline-none"
-                            >
+                            <Link onPress={item.action} className="line-clamp-4 pt-4 text-base font-bold outline-none">
                               {item.name}
                             </Link>
                             <Tooltip
                               offset={8}
-                              className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                              className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
                             >
                               <span>{item.name}</span>
                             </Tooltip>
                           </TooltipTrigger>
-                          <div className="flex-1 flex flex-col gap-2 justify-end text-sm text-[--hl]">
+                          <div className="flex flex-1 flex-col justify-end gap-2 text-sm text-[--hl]">
                             {item.gitFilePath && (
-                              <div className="text-sm flex items-center gap-2">
+                              <div className="flex items-center gap-2 text-sm">
                                 <Icon icon="file-alt" />
-                                <span className='truncate' title={item.gitFilePath}>
+                                <span className="truncate" title={item.gitFilePath}>
                                   {item.gitFilePath}
                                 </span>
                               </div>
                             )}
-                            {item.version && (
-                              <div className="flex-1 pt-2">
-                                {item.version}
-                              </div>
-                            )}
+                            {item.version && <div className="flex-1 pt-2">{item.version}</div>}
                             {item.oasFormat && (
-                              <div className="text-sm flex items-center gap-2">
+                              <div className="flex items-center gap-2 text-sm">
                                 <Icon icon="file-alt" />
-                                <span>
-                                  {item.oasFormat}
-                                </span>
+                                <span>{item.oasFormat}</span>
                               </div>
                             )}
                             {item.branch && (
-                              <div className="text-sm flex items-center gap-2">
+                              <div className="flex items-center gap-2 text-sm">
                                 <Icon icon="code-branch" />
-                                <span className="truncate">
-                                  {item.branch}
-                                </span>
+                                <span className="truncate">{item.branch}</span>
                               </div>
                             )}
                             {Boolean(item.lastModifiedTimestamp) && (
-                              <div className="text-sm flex items-center gap-2 truncate">
+                              <div className="flex items-center gap-2 truncate text-sm">
                                 <Icon icon="clock" />
                                 <TimeFromNow
-                                  title={text => `Last updated ${text}, and created on ${new Date(item.created).toLocaleDateString()}`}
-                                  timestamp={
-                                    item.lastModifiedTimestamp
+                                  title={text =>
+                                    `Last updated ${text}, and created on ${new Date(item.created).toLocaleDateString()}`
                                   }
+                                  timestamp={item.lastModifiedTimestamp}
                                 />
-                                <span className="truncate">
-                                  {item.lastCommit}
-                                </span>
+                                <span className="truncate">{item.lastCommit}</span>
                               </div>
                             )}
                             {(item.hasUncommittedChanges || item.hasUnpushedChanges) && (
-                              <div className="text-sm text-[rgba(var(--color-warning-rgb),0.8)] flex items-center gap-2">
-                                <span>
-                                  {item.hasUncommittedChanges ? 'Uncommitted changes' : 'Unpushed changes'}
-                                </span>
+                              <div className="flex items-center gap-2 text-sm text-[rgba(var(--color-warning-rgb),0.8)]">
+                                <span>{item.hasUncommittedChanges ? 'Uncommitted changes' : 'Unpushed changes'}</span>
                               </div>
                             )}
                           </div>
@@ -1461,17 +1468,12 @@ const ProjectRoute: FC = () => {
                 </div>
               </div>
             ) : (
-              <NoProjectView
-                isGitSyncEnabled={isGitSyncEnabled}
-                storageRules={storageRules}
-              />
+              <NoProjectView isGitSyncEnabled={isGitSyncEnabled} storageRules={storageRules} />
             )}
           </Panel>
         </PanelGroup>
         {isGitRepositoryCloneModalOpen && (
-          <GitRepositoryCloneModal
-            onHide={() => setIsGitRepositoryCloneModalOpen(false)}
-          />
+          <GitRepositoryCloneModal onHide={() => setIsGitRepositoryCloneModalOpen(false)} />
         )}
         {isNewProjectModalOpen && (
           <ProjectModal

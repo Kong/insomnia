@@ -1,9 +1,51 @@
 import { getExistingConsole } from './console';
 import { Property, PropertyList } from './properties';
-import type { Url} from './urls';
+import type { Url } from './urls';
 import { UrlMatchPattern, UrlMatchPatternList } from './urls';
 
 export interface ProxyConfigOptions {
+  match: string;
+  host: string;
+  port?: number;
+  tunnel: boolean;
+  disabled?: boolean;
+  authenticate: boolean;
+  username: string;
+  password: string;
+  // follows are for compatibility with Insomnia
+  bypass?: string[];
+  protocol: string;
+}
+
+export class ProxyConfig extends Property {
+  override _kind = 'ProxyConfig';
+  type: string;
+
+  host: string;
+  match: string;
+  port?: number;
+  tunnel: boolean;
+  authenticate: boolean;
+  username: string;
+  password: string;
+  bypass: string[]; // it is for compatibility with Insomnia's bypass list
+  protocol: string;
+
+  static authenticate = false;
+  static bypass: UrlMatchPatternList<UrlMatchPattern> = new UrlMatchPatternList<UrlMatchPattern>(undefined, []);
+  static host = '';
+  static match = '';
+  static password = '';
+  static port?: number = undefined;
+  static tunnel = false; // unsupported
+  static username = '';
+  static protocol = 'https:';
+
+  constructor(def: {
+    id?: string;
+    name?: string;
+    type?: string;
+
     match: string;
     host: string;
     port?: number;
@@ -12,15 +54,63 @@ export interface ProxyConfigOptions {
     authenticate: boolean;
     username: string;
     password: string;
-    // follows are for compatibility with Insomnia
     bypass?: string[];
     protocol: string;
-}
+  }) {
+    super();
 
-export class ProxyConfig extends Property {
-    override _kind = 'ProxyConfig';
-    type: string;
+    this.id = def.id ? def.id : '';
+    this.name = def.name ? def.name : '';
+    this.type = def.type ? def.type : '';
+    this.disabled = def.disabled ? def.disabled : false;
 
+    this.host = def.host;
+    this.match = def.match;
+    this.port = def.port;
+    this.tunnel = def.tunnel;
+    this.authenticate = def.authenticate;
+    this.username = def.username;
+    this.password = def.password;
+    this.bypass = def.bypass || [];
+    this.protocol = def.protocol;
+  }
+
+  static override _index = 'key';
+
+  static isProxyConfig(obj: object) {
+    return '_kind' in obj && obj._kind === 'ProxyConfig';
+  }
+
+  getProtocols(): string[] {
+    // match field example: 'http+https://example.com/*'
+    const urlMatch = new UrlMatchPattern(this.match);
+    return urlMatch.getProtocols();
+  }
+
+  getProxyUrl(): string {
+    // http://proxy_username:proxy_password@proxy.com:8080
+    const portSegment = this.port === undefined ? '' : `:${this.port}`;
+
+    if (this.authenticate) {
+      return `${this.protocol}//${this.username}:${this.password}@${this.host}${portSegment}`;
+    }
+    return `${this.protocol}//${this.host}${portSegment}`;
+  }
+
+  test(url?: string) {
+    if (!url) {
+      // TODO: it is confusing in which case url arg is optional
+      return false;
+    }
+    if (this.bypass.includes(url)) {
+      return false;
+    }
+
+    const urlMatch = new UrlMatchPattern(this.match);
+    return urlMatch.test(url);
+  }
+
+  update(options: {
     host: string;
     match: string;
     port?: number;
@@ -28,112 +118,20 @@ export class ProxyConfig extends Property {
     authenticate: boolean;
     username: string;
     password: string;
-    bypass: string[]; // it is for compatibility with Insomnia's bypass list
-    protocol: string;
+  }) {
+    this.host = options.host;
+    this.match = options.match;
+    this.port = options.port;
+    this.tunnel = options.tunnel;
+    this.authenticate = options.authenticate;
+    this.username = options.username;
+    this.password = options.password;
+  }
 
-    static authenticate = false;
-    static bypass: UrlMatchPatternList<UrlMatchPattern> = new UrlMatchPatternList<UrlMatchPattern>(undefined, []);
-    static host = '';
-    static match = '';
-    static password = '';
-    static port?: number = undefined;
-    static tunnel = false; // unsupported
-    static username = '';
-    static protocol = 'https:';
-
-    constructor(def: {
-        id?: string;
-        name?: string;
-        type?: string;
-
-        match: string;
-        host: string;
-        port?: number;
-        tunnel: boolean;
-        disabled?: boolean;
-        authenticate: boolean;
-        username: string;
-        password: string;
-        bypass?: string[];
-        protocol: string;
-    }) {
-        super();
-
-        this.id = def.id ? def.id : '';
-        this.name = def.name ? def.name : '';
-        this.type = def.type ? def.type : '';
-        this.disabled = def.disabled ? def.disabled : false;
-
-        this.host = def.host;
-        this.match = def.match;
-        this.port = def.port;
-        this.tunnel = def.tunnel;
-        this.authenticate = def.authenticate;
-        this.username = def.username;
-        this.password = def.password;
-        this.bypass = def.bypass || [];
-        this.protocol = def.protocol;
-    }
-
-    static override _index = 'key';
-
-    static isProxyConfig(obj: object) {
-        return '_kind' in obj && obj._kind === 'ProxyConfig';
-    }
-
-    getProtocols(): string[] {
-        // match field example: 'http+https://example.com/*'
-        const urlMatch = new UrlMatchPattern(this.match);
-        return urlMatch.getProtocols();
-    }
-
-    getProxyUrl(): string {
-        // http://proxy_username:proxy_password@proxy.com:8080
-        const portSegment = this.port === undefined ? '' : `:${this.port}`;
-
-        if (this.authenticate) {
-            return `${this.protocol}//${this.username}:${this.password}@${this.host}${portSegment}`;
-        }
-        return `${this.protocol}//${this.host}${portSegment}`;
-
-    }
-
-    test(url?: string) {
-        if (!url) {
-            // TODO: it is confusing in which case url arg is optional
-            return false;
-        }
-        if (this.bypass.includes(url)) {
-            return false;
-        }
-
-        const urlMatch = new UrlMatchPattern(this.match);
-        return urlMatch.test(url);
-    }
-
-    update(options: {
-        host: string;
-        match: string;
-        port?: number;
-        tunnel: boolean;
-        authenticate: boolean;
-        username: string;
-        password: string;
-    }) {
-        this.host = options.host;
-        this.match = options.match;
-        this.port = options.port;
-        this.tunnel = options.tunnel;
-        this.authenticate = options.authenticate;
-        this.username = options.username;
-        this.password = options.password;
-    }
-
-     
-    updateProtocols(_protocols: string[]) {
-        // In Insomnia there is no whitelist while there is a blacklist
-        throw Error('updateProtocols is not supported in Insomnia');
-    }
+  updateProtocols(_protocols: string[]) {
+    // In Insomnia there is no whitelist while there is a blacklist
+    throw Error('updateProtocols is not supported in Insomnia');
+  }
 }
 
 // example:
@@ -143,89 +141,81 @@ export class ProxyConfig extends Property {
 // ]);
 
 export class ProxyConfigList<T extends ProxyConfig> extends PropertyList<T> {
-    constructor(parent: PropertyList<T> | undefined, populate: T[]) {
-        super(
-            ProxyConfig,
-            undefined,
-            populate
-        );
-        this.parent = parent;
+  constructor(parent: PropertyList<T> | undefined, populate: T[]) {
+    super(ProxyConfig, undefined, populate);
+    this.parent = parent;
+  }
+
+  static isProxyConfigList(obj: any) {
+    return '_kind' in obj && obj._kind === 'ProxyConfigList';
+  }
+
+  resolve(url?: Url) {
+    if (!url) {
+      return null;
     }
 
-    static isProxyConfigList(obj: any) {
-        return '_kind' in obj && obj._kind === 'ProxyConfigList';
+    const urlStr = url.toString();
+    const matches = this.list
+      .filter((proxyConfig: ProxyConfig) => {
+        return proxyConfig.test(urlStr);
+      })
+      .map(proxyConfig => proxyConfig.toJSON());
+
+    if (matches.length > 0) {
+      return matches[0];
     }
-
-    resolve(url?: Url) {
-        if (!url) {
-            return null;
-        }
-
-        const urlStr = url.toString();
-        const matches = this.list
-            .filter((proxyConfig: ProxyConfig) => {
-                return proxyConfig.test(urlStr);
-            })
-            .map(proxyConfig => proxyConfig.toJSON());
-
-        if (matches.length > 0) {
-            return matches[0];
-        }
-        return null;
-    }
+    return null;
+  }
 }
 
 export function transformToSdkProxyOptions(
-    httpProxy: string,
-    httpsProxy: string,
-    proxyEnabled: boolean,
-    noProxy: string,
+  httpProxy: string,
+  httpsProxy: string,
+  proxyEnabled: boolean,
+  noProxy: string,
 ) {
-    const bestProxy = httpsProxy || httpProxy || '';
-    const enabledProxy = proxyEnabled && bestProxy.trim() !== '';
-    const bypassProxyList = noProxy ?
-        noProxy
-            .split(',')
-            .map(urlStr => urlStr.trim()) :
-        [];
-    const proxy: ProxyConfigOptions = {
-        disabled: !enabledProxy,
-        match: '<all_urls>',
-        bypass: bypassProxyList,
-        host: '',
-        port: undefined,
-        tunnel: false,
-        authenticate: false,
-        username: '',
-        password: '',
-        protocol: 'http',
-    };
+  const bestProxy = httpsProxy || httpProxy || '';
+  const enabledProxy = proxyEnabled && bestProxy.trim() !== '';
+  const bypassProxyList = noProxy ? noProxy.split(',').map(urlStr => urlStr.trim()) : [];
+  const proxy: ProxyConfigOptions = {
+    disabled: !enabledProxy,
+    match: '<all_urls>',
+    bypass: bypassProxyList,
+    host: '',
+    port: undefined,
+    tunnel: false,
+    authenticate: false,
+    username: '',
+    password: '',
+    protocol: 'http',
+  };
 
-    if (bestProxy !== '') {
-        let sanitizedProxy = bestProxy;
-        if (bestProxy.indexOf('://') === -1) {
-            getExistingConsole().warn(`The protocol is missing for proxy, 'https:' is enabled for: ${bestProxy}`);
-            sanitizedProxy = 'https://' + bestProxy;
-        }
-
-        try {
-            const sanitizedProxyUrlOptions = new URL(sanitizedProxy); // it should just work in node and browser
-
-            if (sanitizedProxyUrlOptions.port !== '') {
-                proxy.port = parseInt(sanitizedProxyUrlOptions.port, 10);
-            }
-
-            proxy.protocol = sanitizedProxyUrlOptions.protocol;
-            proxy.host = sanitizedProxyUrlOptions.hostname;
-            proxy.username = sanitizedProxyUrlOptions.username;
-            proxy.password = sanitizedProxyUrlOptions.password;
-            if (proxy.username || proxy.password) {
-                proxy.authenticate = true;
-            }
-        } catch (e) {
-            throw `Failed to parse proxy (${sanitizedProxy}): ${e.message}`;
-        }
+  if (bestProxy !== '') {
+    let sanitizedProxy = bestProxy;
+    if (bestProxy.indexOf('://') === -1) {
+      getExistingConsole().warn(`The protocol is missing for proxy, 'https:' is enabled for: ${bestProxy}`);
+      sanitizedProxy = 'https://' + bestProxy;
     }
 
-    return proxy;
+    try {
+      const sanitizedProxyUrlOptions = new URL(sanitizedProxy); // it should just work in node and browser
+
+      if (sanitizedProxyUrlOptions.port !== '') {
+        proxy.port = parseInt(sanitizedProxyUrlOptions.port, 10);
+      }
+
+      proxy.protocol = sanitizedProxyUrlOptions.protocol;
+      proxy.host = sanitizedProxyUrlOptions.hostname;
+      proxy.username = sanitizedProxyUrlOptions.username;
+      proxy.password = sanitizedProxyUrlOptions.password;
+      if (proxy.username || proxy.password) {
+        proxy.authenticate = true;
+      }
+    } catch (e) {
+      throw `Failed to parse proxy (${sanitizedProxy}): ${e.message}`;
+    }
+  }
+
+  return proxy;
 }

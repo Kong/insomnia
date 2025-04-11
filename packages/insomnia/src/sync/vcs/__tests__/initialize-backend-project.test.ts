@@ -6,7 +6,6 @@ import { pushSnapshotOnInitialize } from '../initialize-backend-project';
 import { VCS } from '../vcs';
 
 describe('initialize-backend-project', () => {
-
   describe('pushSnapshotOnInitialize()', () => {
     const vcs = new VCS(new MemoryDriver());
 

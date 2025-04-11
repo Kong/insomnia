@@ -6,10 +6,7 @@ import { patch } from '../patch';
 describe('patch()', () => {
   it('works on many examples', () => {
     const things = [
-      [
-        'Hello, this is a pretty long sentence about not much at all.',
-        'Hello, this is a pretty short sentence.',
-      ],
+      ['Hello, this is a pretty long sentence about not much at all.', 'Hello, this is a pretty short sentence.'],
       ['xxxxxxxxxxyyyyyyyyyyyyyyyyzzzzzzzzzzzzzzzz', 'abc'],
       ['xyz', 'xyz'],
     ];

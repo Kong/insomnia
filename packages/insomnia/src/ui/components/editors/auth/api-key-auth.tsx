@@ -15,8 +15,8 @@ export const options = [
 export const ApiKeyAuth: FC<{ disabled?: boolean }> = ({ disabled = false }) => (
   <AuthTableBody>
     <AuthToggleRow label="Enabled" property="disabled" invert disabled={disabled} />
-    <AuthInputRow label='Key' property='key' disabled={disabled} />
-    <AuthInputRow label='Value' property='value' mask disabled={disabled} />
-    <AuthSelectRow label='Add to' property='addTo' options={options} disabled={disabled} />
+    <AuthInputRow label="Key" property="key" disabled={disabled} />
+    <AuthInputRow label="Value" property="value" mask disabled={disabled} />
+    <AuthSelectRow label="Add to" property="addTo" options={options} disabled={disabled} />
   </AuthTableBody>
 );

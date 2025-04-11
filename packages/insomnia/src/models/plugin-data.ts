@@ -19,9 +19,7 @@ interface BasePluginData {
 
 export type PluginData = BaseModel & BasePluginData;
 
-export const isPluginData = (model: Pick<BaseModel, 'type'>): model is PluginData => (
-  model.type === type
-);
+export const isPluginData = (model: Pick<BaseModel, 'type'>): model is PluginData => model.type === type;
 
 export function init(): BasePluginData {
   return {
@@ -47,13 +45,13 @@ export async function upsertByKey(plugin: string, key: string, value: string) {
   const doc = await getByKey(plugin, key);
   return doc
     ? update(doc, {
-      value,
-    })
+        value,
+      })
     : create({
-      plugin,
-      key,
-      value,
-    });
+        plugin,
+        key,
+        value,
+      });
 }
 
 export async function removeByKey(plugin: string, key: string) {

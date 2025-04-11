@@ -2,11 +2,7 @@ import * as path from 'path';
 import React, { type FC, useEffect, useState } from 'react';
 import { Button, FileTrigger } from 'react-aria-components';
 
-import {
-  ACCEPTED_NODE_CA_FILE_EXTS,
-  NPM_PACKAGE_BASE,
-  PLUGIN_HUB_BASE,
-} from '../../../common/constants';
+import { ACCEPTED_NODE_CA_FILE_EXTS, NPM_PACKAGE_BASE, PLUGIN_HUB_BASE } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
 import { createPlugin } from '../../../plugins/create';
 import type { Plugin } from '../../../plugins/index';
@@ -33,9 +29,7 @@ interface State {
 }
 
 export const Plugins: FC = () => {
-  const {
-    settings,
-  } = useRootLoaderData();
+  const { settings } = useRootLoaderData();
   const [state, setState] = useState<State>({
     plugins: [],
     npmPluginValue: '',
@@ -45,14 +39,7 @@ export const Plugins: FC = () => {
     isRefreshingPlugins: false,
     pluginNodeExtraCerts: settings.pluginNodeExtraCerts,
   });
-  const {
-    plugins,
-    error,
-    installPluginErrMsg,
-    isInstallingFromNpm,
-    isRefreshingPlugins,
-    npmPluginValue,
-  } = state;
+  const { plugins, error, installPluginErrMsg, isInstallingFromNpm, isRefreshingPlugins, npmPluginValue } = state;
 
   useEffect(() => {
     refreshPlugins();
@@ -75,24 +62,21 @@ export const Plugins: FC = () => {
   return (
     <div>
       <p className="notice info no-margin-top">
-        Plugins is still an experimental feature. See{' '}
-        <Link href={docsPlugins}>Documentation</Link> for more info.
+        Plugins is still an experimental feature. See <Link href={docsPlugins}>Documentation</Link> for more info.
       </p>
 
-      <div className="notice warning text-left margin-bottom">
+      <div className="notice warning margin-bottom text-left">
         <div className="selectable force-pre-wrap">
           <p>
-            Plugins with elevated access can access anything Insomnia can. It's recommended that elevated access remain disabled.
+            Plugins with elevated access can access anything Insomnia can. It's recommended that elevated access remain
+            disabled.
           </p>
-          <BooleanSetting
-            label="Allow elevated access for plugins"
-            setting="pluginsAllowElevatedAccess"
-          />
+          <BooleanSetting label="Allow elevated access for plugins" setting="pluginsAllowElevatedAccess" />
         </div>
       </div>
 
       {plugins.length === 0 ? (
-        <div className="text-center faint italic pad">No Plugins Added</div>
+        <div className="faint pad text-center italic">No Plugins Added</div>
       ) : (
         <table className="table--fancy table--striped table--valign-middle margin-top margin-bottom">
           <thead>
@@ -105,7 +89,10 @@ export const Plugins: FC = () => {
           </thead>
           <tbody>
             {plugins.map(plugin => {
-              const link = path.join(/^insomnia-plugin-/.test(plugin.name) ? PLUGIN_HUB_BASE : NPM_PACKAGE_BASE, plugin.name);
+              const link = path.join(
+                /^insomnia-plugin-/.test(plugin.name) ? PLUGIN_HUB_BASE : NPM_PACKAGE_BASE,
+                plugin.name,
+              );
               return !plugin.directory ? null : (
                 <tr key={plugin.name}>
                   <td style={{ width: '4rem' }}>
@@ -141,30 +128,20 @@ export const Plugins: FC = () => {
                       width: '10rem',
                     }}
                   >
-                    <CopyButton
-                      size="small"
-                      variant="contained"
-                      title={plugin.directory}
-                      content={plugin.directory}
-                    >
+                    <CopyButton size="small" variant="contained" title={plugin.directory} content={plugin.directory}>
                       Copy Path
                     </CopyButton>{' '}
-                    <Button
-                      onPress={() => window.shell.showItemInFolder(plugin.directory)}
-                    >
-                      Reveal Folder
-                    </Button>
+                    <Button onPress={() => window.shell.showItemInFolder(plugin.directory)}>Reveal Folder</Button>
                   </td>
                 </tr>
               );
-            }
-            )}
+            })}
           </tbody>
         </table>
       )}
 
       {error && (
-        <div className="notice error text-left margin-bottom">
+        <div className="notice error margin-bottom text-left">
           <button className="pull-right icon" onClick={() => setState(state => ({ ...state, error: null }))}>
             <i className="fa fa-times" />
           </button>
@@ -210,7 +187,7 @@ export const Plugins: FC = () => {
       >
         <div className="form-row">
           <div className="form-control">
-            <Icon icon='info-circle' className='px-2' />
+            <Icon icon="info-circle" className="px-2" />
             <span>Enter the full name of an npm package beginning with insomnia-plugin-*</span>
           </div>
         </div>
@@ -230,7 +207,7 @@ export const Plugins: FC = () => {
           </div>
           <div className="form-control width-auto">
             <Button
-              className="m-1 px-[--padding-md] h-[--line-height-xs] py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all border border-solid border-[--hl-lg] rounded-[--radius-md]"
+              className="m-1 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
               isDisabled={isInstallingFromNpm}
               type="submit"
             >
@@ -239,59 +216,67 @@ export const Plugins: FC = () => {
             </Button>
           </div>
         </div>
-      </form >
-      <div className="w-full flex flex-row justify-center mt-2">
+      </form>
+      <div className="mt-2 flex w-full flex-row justify-center">
         <Button
-          className="m-1 px-[--padding-md] h-[--line-height-xs] py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all border border-solid border-[--hl-lg] rounded-[--radius-md]"
+          className="m-1 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
           onPress={() => window.main.openInBrowser(PLUGIN_HUB_BASE)}
         >
           Browse Plugin Hub
         </Button>
         <Button
-          className="m-1 px-[--padding-md] h-[--line-height-xs] py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all border border-solid border-[--hl-lg] rounded-[--radius-md]"
-          onPress={() => showPrompt({
-            title: 'New Plugin',
-            defaultValue: 'demo-example',
-            placeholder: 'example-name',
-            submitName: 'Generate',
-            label: 'Plugin Name',
-            selectText: true,
-            validate: name =>
-              name.match(/^[a-z][a-z-]*[a-z]$/) ? '' : 'Plugin name must be of format my-plugin-name',
-            onComplete: async name => {
-              // Remove insomnia-plugin- prefix if they accidentally typed it
-              name = name.replace(/^insomnia-plugin-/, '');
-              try {
-                await createPlugin(
-                  `insomnia-plugin-${name}`,
-                  '0.0.1',
-                  [
-                    '// For help writing plugins, visit the documentation to get started:',
-                    `//   ${docsPlugins}`,
-                    '',
-                    '// TODO: Add plugin code here...',
-                  ].join('\n'),
-                );
-              } catch (err) {
-                console.error(err);
-                showAlert({
-                  title: 'Failed to Create Plugin',
-                  message: err.message,
-                });
-              }
-              refreshPlugins();
-            },
-          })}
-        >Generate New Plugin</Button>
+          className="m-1 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          onPress={() =>
+            showPrompt({
+              title: 'New Plugin',
+              defaultValue: 'demo-example',
+              placeholder: 'example-name',
+              submitName: 'Generate',
+              label: 'Plugin Name',
+              selectText: true,
+              validate: name =>
+                name.match(/^[a-z][a-z-]*[a-z]$/) ? '' : 'Plugin name must be of format my-plugin-name',
+              onComplete: async name => {
+                // Remove insomnia-plugin- prefix if they accidentally typed it
+                name = name.replace(/^insomnia-plugin-/, '');
+                try {
+                  await createPlugin(
+                    `insomnia-plugin-${name}`,
+                    '0.0.1',
+                    [
+                      '// For help writing plugins, visit the documentation to get started:',
+                      `//   ${docsPlugins}`,
+                      '',
+                      '// TODO: Add plugin code here...',
+                    ].join('\n'),
+                  );
+                } catch (err) {
+                  console.error(err);
+                  showAlert({
+                    title: 'Failed to Create Plugin',
+                    message: err.message,
+                  });
+                }
+                refreshPlugins();
+              },
+            })
+          }
+        >
+          Generate New Plugin
+        </Button>
         <Button
-          className="m-1 px-[--padding-md] h-[--line-height-xs] py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all border border-solid border-[--hl-lg] rounded-[--radius-md]"
-          onPress={() => window.shell.showItemInFolder(path.join(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'plugins'))}
+          className="m-1 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          onPress={() =>
+            window.shell.showItemInFolder(
+              path.join(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'plugins'),
+            )
+          }
         >
           Reveal Plugins Folder
         </Button>
         <Button
           isDisabled={isRefreshingPlugins}
-          className="m-1 px-[--padding-md] h-[--line-height-xs] py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all border border-solid border-[--hl-lg] rounded-[--radius-md]"
+          className="m-1 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
           onPress={() => refreshPlugins()}
         >
           Reload Plugins
@@ -301,11 +286,21 @@ export const Plugins: FC = () => {
 
       <div className="form-row mt-6">
         <div className="form-control">
-          <span className="mr-2">Plugin Installation Trusted Certificates File ({ACCEPTED_NODE_CA_FILE_EXTS.join(', ')})</span>
+          <span className="mr-2">
+            Plugin Installation Trusted Certificates File ({ACCEPTED_NODE_CA_FILE_EXTS.join(', ')})
+          </span>
           <Tooltip
             className="cursor-pointer"
             message={
-              <span>You can bundle multiple root certificates into a single file. <a className="underline" href="https://github.com/Kong/insomnia/wiki/Combining-Multiple-Root-CAs-into-a-single-file">See instructions <i className="fa fa-external-link" /></a></span>
+              <span>
+                You can bundle multiple root certificates into a single file.{' '}
+                <a
+                  className="underline"
+                  href="https://github.com/Kong/insomnia/wiki/Combining-Multiple-Root-CAs-into-a-single-file"
+                >
+                  See instructions <i className="fa fa-external-link" />
+                </a>
+              </span>
             }
           >
             <i className="fa fa-info-circle" />
@@ -314,11 +309,7 @@ export const Plugins: FC = () => {
       </div>
       <div className="form-row">
         <div className="form-control form-control--outlined">
-          <input
-            disabled={true}
-            type="text"
-            value={state.pluginNodeExtraCerts}
-          />
+          <input disabled={true} type="text" value={state.pluginNodeExtraCerts} />
         </div>
         <div className="form-control width-auto">
           <FileTrigger
@@ -335,23 +326,23 @@ export const Plugins: FC = () => {
               patchSettings({ pluginNodeExtraCerts: window.webUtils.getPathForFile(files[0]) });
             }}
           >
-            <Button
-              className="m-1 px-[--padding-md] h-[--line-height-xs] py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all border border-solid border-[--hl-lg] rounded-[--radius-md]"
-            >
+            <Button className="m-1 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
               Browse...
             </Button>
           </FileTrigger>
         </div>
         <div className="form-control width-auto">
           <Button
-            className="m-1 px-[--padding-md] h-[--line-height-xs] py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all border border-solid border-[--hl-lg] rounded-[--radius-md]"
+            className="m-1 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
             onPress={() => {
               patchSettings({ pluginNodeExtraCerts: '' });
             }}
             isDisabled={state.pluginNodeExtraCerts === ''}
-          >Clear</Button>
+          >
+            Clear
+          </Button>
         </div>
       </div>
-    </div >
+    </div>
   );
 };

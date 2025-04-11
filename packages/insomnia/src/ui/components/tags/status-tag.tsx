@@ -15,14 +15,15 @@ export const StatusTag: FC<Props> = memo(({ statusMessage, statusCode, small, to
   let statusCodeToDisplay: string | number = statusCode;
   const firstChar = (statusCode + '')[0] || '';
 
-  const colorClass = {
-    '1': 'bg-info',
-    '2': 'bg-success',
-    '3': 'bg-surprise',
-    '4': 'bg-warning',
-    '5': 'bg-danger',
-    '0': 'bg-danger',
-  }[firstChar] || 'bg-surprise';
+  const colorClass =
+    {
+      '1': 'bg-info',
+      '2': 'bg-success',
+      '3': 'bg-surprise',
+      '4': 'bg-warning',
+      '5': 'bg-danger',
+      '0': 'bg-danger',
+    }[firstChar] || 'bg-surprise';
 
   if (firstChar === '0') {
     statusCodeToDisplay = '';
@@ -35,13 +36,9 @@ export const StatusTag: FC<Props> = memo(({ statusMessage, statusCode, small, to
     statusMessageToShow = RESPONSE_CODE_REASONS[statusCode] || statusMessage;
   }
   return (
-    <div
-      className={classnames('tag', colorClass, { 'tag--small': small })}
-      data-testid="response-status-tag"
-    >
+    <div className={classnames('tag', colorClass, { 'tag--small': small })} data-testid="response-status-tag">
       <Tooltip message={description} position="bottom" delay={tooltipDelay}>
-        <strong>{statusCodeToDisplay}</strong>{' '}
-        {statusMessageToShow}
+        <strong>{statusCodeToDisplay}</strong> {statusMessageToShow}
       </Tooltip>
     </div>
   );

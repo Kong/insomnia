@@ -13,14 +13,14 @@ let enabled = false;
  */
 export function sentryWatchAnalyticsEnabled() {
   models.settings.get().then(async settings => {
-    enabled = settings.enableAnalytics || await session.isLoggedIn();
+    enabled = settings.enableAnalytics || (await session.isLoggedIn());
   });
 
   db.onChange(async (changes: ChangeBufferEvent[]) => {
     for (const change of changes) {
       const [event, doc] = change;
       if (isSettings(doc) && event === 'update') {
-        enabled = doc.enableAnalytics || await session.isLoggedIn();
+        enabled = doc.enableAnalytics || (await session.isLoggedIn());
       }
 
       if (event === 'insert' || event === 'update') {

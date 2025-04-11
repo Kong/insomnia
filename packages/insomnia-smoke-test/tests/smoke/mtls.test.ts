@@ -1,4 +1,3 @@
-
 import path from 'node:path';
 
 import { expect } from '@playwright/test';
@@ -69,5 +68,4 @@ test('can use client certificate for mTLS', async ({ app, page }) => {
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   await expect(statusTag).toContainText('401 Unauthorized');
   await expect(responseBody).toContainText('Client certificate required');
-
 });

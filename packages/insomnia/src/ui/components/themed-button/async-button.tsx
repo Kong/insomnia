@@ -18,33 +18,26 @@ export interface AsyncButtonProps<T> extends ButtonProps {
   loadingNode?: ReactNode;
 }
 
-export const AsyncButton = <T, >({
-  onClick,
-  disabled,
-  loadingNode,
-  children,
-  ...props
-}: AsyncButtonProps<T>) => {
+export const AsyncButton = <T,>({ onClick, disabled, loadingNode, children, ...props }: AsyncButtonProps<T>) => {
   const [loading, setLoading] = useState(false);
-  const asyncHandler = useCallback(async (event: MouseEvent<HTMLButtonElement>) => {
-    const result = onClick(event);
+  const asyncHandler = useCallback(
+    async (event: MouseEvent<HTMLButtonElement>) => {
+      const result = onClick(event);
 
-    if (isPromise(result)) {
-      try {
-        setLoading(true);
-        await result;
-      } finally {
-        setLoading(false);
+      if (isPromise(result)) {
+        try {
+          setLoading(true);
+          await result;
+        } finally {
+          setLoading(false);
+        }
       }
-    }
-  }, [onClick]);
+    },
+    [onClick],
+  );
 
   return (
-    <Button
-      {...props}
-      onClick={asyncHandler}
-      disabled={loading || disabled}
-    >
+    <Button {...props} onClick={asyncHandler} disabled={loading || disabled}>
       {(loading && loadingNode) || children}
     </Button>
   );

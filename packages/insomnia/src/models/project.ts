@@ -12,9 +12,12 @@ export const canSync = false;
 export const SCRATCHPAD_PROJECT_ID = `${prefix}_scratchpad`;
 
 export const isScratchpadProject = (project: Pick<Project, '_id'>) => project._id === SCRATCHPAD_PROJECT_ID;
-export const isLocalProject = (project: Pick<Project, 'remoteId'>): project is LocalProject => project.remoteId === null;
-export const isRemoteProject = (project: Pick<Project, 'remoteId'>): project is RemoteProject => !isLocalProject(project);
-export const isGitProject = (project: Project): project is GitProject => 'gitRepositoryId' in project && project.gitRepositoryId !== null;
+export const isLocalProject = (project: Pick<Project, 'remoteId'>): project is LocalProject =>
+  project.remoteId === null;
+export const isRemoteProject = (project: Pick<Project, 'remoteId'>): project is RemoteProject =>
+  !isLocalProject(project);
+export const isGitProject = (project: Project): project is GitProject =>
+  'gitRepositoryId' in project && project.gitRepositoryId !== null;
 export const projectHasSettings = (project: Pick<Project, '_id'>) => !isScratchpadProject(project);
 
 interface CommonProject {
@@ -38,13 +41,9 @@ export interface GitProject extends BaseModel, CommonProject {
 
 export type Project = LocalProject | RemoteProject | GitProject;
 
-export const isProject = (model: Pick<BaseModel, 'type'>): model is Project => (
-  model.type === type
-);
+export const isProject = (model: Pick<BaseModel, 'type'>): model is Project => model.type === type;
 
-export const isProjectId = (id: string | null) => (
-  id?.startsWith(`${prefix}_`)
-);
+export const isProjectId = (id: string | null) => id?.startsWith(`${prefix}_`);
 
 export function init(): Partial<Project> {
   return {
@@ -93,7 +92,10 @@ export function isDefaultOrganizationProject(project: Project) {
   return project.remoteId?.startsWith('proj_team') || project.remoteId?.startsWith('proj_org');
 }
 
-export function getDefaultProjectStorageType(storageRules: StorageRules, project?: Project): 'local' | 'remote' | 'git' {
+export function getDefaultProjectStorageType(
+  storageRules: StorageRules,
+  project?: Project,
+): 'local' | 'remote' | 'git' {
   // When the project exist. That means the user open the settings modal
   if (project) {
     if (isGitProject(project)) {

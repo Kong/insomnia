@@ -1,12 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { AUTH_API_KEY, AUTH_OAUTH_1 } from '../../common/constants';
-import {
-  _buildBearerHeader,
-  getAuthHeader,
-  getAuthObjectOrNull,
-  getAuthQueryParams,
-} from '../authentication';
+import { _buildBearerHeader, getAuthHeader, getAuthObjectOrNull, getAuthQueryParams } from '../authentication';
 
 describe('OAuth 1.0', () => {
   it('Does OAuth 1.0', async () => {
@@ -165,8 +160,8 @@ describe('API Key', () => {
       };
       const header = await getAuthHeader(request, 'https://insomnia.rest/');
       expect(header).toEqual({
-        'name': 'x-api-key',
-        'value': 'test',
+        name: 'x-api-key',
+        value: 'test',
       });
     });
 
@@ -184,8 +179,8 @@ describe('API Key', () => {
       };
       const header = await getAuthHeader(request, 'https://insomnia.rest/');
       expect(header).toEqual({
-        'name': 'Cookie',
-        'value': 'x-api-key=test',
+        name: 'Cookie',
+        value: 'x-api-key=test',
       });
     });
   });
@@ -201,8 +196,8 @@ describe('API Key', () => {
 
       const header = getAuthQueryParams(authentication, 'https://insomnia.rest/');
       expect(header).toEqual({
-        'name': 'x-api-key',
-        'value': 'test',
+        name: 'x-api-key',
+        value: 'test',
       });
     });
   });

@@ -19,8 +19,7 @@ export class GraphQLExplorerSchema extends PureComponent<Props> {
 
     return (
       <Fragment>
-        <span className="success">query</span>:{' '}
-        <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
+        <span className="success">query</span>: <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
       </Fragment>
     );
   }
@@ -35,8 +34,7 @@ export class GraphQLExplorerSchema extends PureComponent<Props> {
 
     return (
       <Fragment>
-        <span className="success">mutation</span>:{' '}
-        <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
+        <span className="success">mutation</span>: <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
       </Fragment>
     );
   }

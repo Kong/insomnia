@@ -13,15 +13,15 @@ const contentTypes: {
   id: string;
   name: string;
 }[] = [
-    {
-      id: CONTENT_TYPE_JSON,
-      name: 'JSON',
-    },
-    {
-      id: CONTENT_TYPE_PLAINTEXT,
-      name: 'Raw',
-    },
-  ];
+  {
+    id: CONTENT_TYPE_JSON,
+    name: 'JSON',
+  },
+  {
+    id: CONTENT_TYPE_PLAINTEXT,
+    name: 'Raw',
+  },
+];
 
 export const WebSocketPreviewMode: FC<Props> = ({ previewMode, onSelect }) => {
   return (
@@ -33,38 +33,27 @@ export const WebSocketPreviewMode: FC<Props> = ({ previewMode, onSelect }) => {
       }}
       selectedKey={previewMode}
     >
-      <Button className="px-4 min-w-[12ch] py-1 font-bold flex flex-1 items-center justify-between gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-        <SelectValue<{ id: string; name: string }>
-          className="flex truncate items-center justify-center gap-2"
-        >
-          {({ selectedText }) => (
-            <div className='flex items-center gap-2 text-[--hl]'>
-              {selectedText}
-            </div>
-          )}
+      <Button className="flex min-w-[12ch] flex-1 items-center justify-between gap-2 rounded-sm px-4 py-1 text-sm font-bold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
+        <SelectValue<{ id: string; name: string }> className="flex items-center justify-center gap-2 truncate">
+          {({ selectedText }) => <div className="flex items-center gap-2 text-[--hl]">{selectedText}</div>}
         </SelectValue>
         <Icon icon="caret-down" />
       </Button>
-      <Popover className="min-w-max overflow-y-hidden flex flex-col">
+      <Popover className="flex min-w-max flex-col overflow-y-hidden">
         <ListBox
           items={contentTypes}
-          className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
+          className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
         >
           {item => (
             <ListBoxItem
-              className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+              className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
               aria-label={item.name}
               textValue={item.name}
             >
               {({ isSelected }) => (
                 <>
                   <span>{item.name}</span>
-                  {isSelected && (
-                    <Icon
-                      icon="check"
-                      className="text-[--color-success] justify-self-end"
-                    />
-                  )}
+                  {isSelected && <Icon icon="check" className="justify-self-end text-[--color-success]" />}
                 </>
               )}
             </ListBoxItem>

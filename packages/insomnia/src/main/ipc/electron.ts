@@ -1,4 +1,10 @@
-import type { IpcMainEvent, IpcMainInvokeEvent, MenuItemConstructorOptions, OpenDialogOptions, SaveDialogOptions } from 'electron';
+import type {
+  IpcMainEvent,
+  IpcMainInvokeEvent,
+  MenuItemConstructorOptions,
+  OpenDialogOptions,
+  SaveDialogOptions,
+} from 'electron';
 import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, shell } from 'electron';
 
 import { fnOrString } from '../../common/misc';
@@ -8,7 +14,7 @@ import { localTemplateTags } from '../../ui/components/templating/local-template
 import { invariant } from '../../utils/invariant';
 
 export type HandleChannels =
-  'authorizeUserInWindow'
+  | 'authorizeUserInWindow'
   | 'backup'
   | 'curl.event.findMany'
   | 'curl.open'
@@ -72,13 +78,10 @@ export type HandleChannels =
 
 export const ipcMainHandle = (
   channel: HandleChannels,
-  listener: (
-    event: IpcMainInvokeEvent,
-    ...args: any[]
-  ) => Promise<void> | any
+  listener: (event: IpcMainInvokeEvent, ...args: any[]) => Promise<void> | any,
 ) => ipcMain.handle(channel, listener);
 export type MainOnChannels =
-  'cancelCurlRequest'
+  | 'cancelCurlRequest'
   | 'clear'
   | 'curl.close'
   | 'curl.closeAll'
@@ -113,7 +116,7 @@ export type MainOnChannels =
   | 'startExecution';
 
 export type RendererOnChannels =
-  'clear-all-models'
+  | 'clear-all-models'
   | 'clear-model'
   | 'nunjucks-context-menu-command'
   | 'contextMenuCommand'
@@ -134,18 +137,12 @@ export type RendererOnChannels =
 
 export const ipcMainOn = (
   channel: MainOnChannels,
-  listener: (
-    event: IpcMainEvent,
-    ...args: any[]
-  ) => Promise<void> | any
+  listener: (event: IpcMainEvent, ...args: any[]) => Promise<void> | any,
 ) => ipcMain.on(channel, listener);
 export type OnceChannels = 'halfSecondAfterAppStart' | 'landingPageRendered';
 export const ipcMainOnce = (
   channel: OnceChannels,
-  listener: (
-    event: IpcMainEvent,
-    ...args: any[]
-  ) => Promise<void> | any
+  listener: (event: IpcMainEvent, ...args: any[]) => Promise<void> | any,
 ) => ipcMain.once(channel, listener);
 
 const getTemplateValue = (arg: NunjucksParsedTagArg) => {
@@ -158,97 +155,111 @@ const getTemplateValue = (arg: NunjucksParsedTagArg) => {
   return arg.defaultValue;
 };
 export function registerElectronHandlers() {
-  ipcMainOn('show-nunjucks-context-menu', (event, options: { key: string; nunjucksTag: ReturnType<typeof extractNunjucksTagFromCoords> }) => {
-    const { key, nunjucksTag } = options;
-    const sendNunjuckTagContextMsg = (type: NunjucksTagContextMenuAction) => {
-      event.sender.send('nunjucks-context-menu-command', { key, nunjucksTag: { ...nunjucksTag, type } });
-    };
-    try {
-      const baseTemplate: MenuItemConstructorOptions[] = nunjucksTag ?
-        [
-          {
-            label: 'Edit',
-            click: () => sendNunjuckTagContextMsg('edit'),
-          },
-          {
-            label: 'Copy',
-            click: () => {
-              clipboard.writeText(nunjucksTag.template);
-            },
-          },
-          {
-            label: 'Cut',
-            click: () => {
-              clipboard.writeText(nunjucksTag.template);
-              sendNunjuckTagContextMsg('delete');
-            },
-          },
-          {
-            label: 'Delete',
-            click: () => sendNunjuckTagContextMsg('delete'),
-          },
-          { type: 'separator' },
-        ] :
-        [
-          {
-            role: 'cut',
-          },
-          {
-            role: 'copy',
-          },
-          {
-            role: 'paste',
-          },
-          { type: 'separator' },
-        ];
-      const localTemplate: MenuItemConstructorOptions[] = localTemplateTags
-        // sort alphabetically
-        .sort((a, b) => fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)))
-        .map(l => {
-          const actions = l.templateTag.args?.[0];
-          const needsEnterprisePlan = l.templateTag.needsEnterprisePlan || false;
-          const additionalArgs = l.templateTag.args?.slice(1);
-          const hasSubmenu = actions?.options?.length;
-          return {
-            label: fnOrString(l.templateTag.displayName),
-            ...(!hasSubmenu ?
+  ipcMainOn(
+    'show-nunjucks-context-menu',
+    (event, options: { key: string; nunjucksTag: ReturnType<typeof extractNunjucksTagFromCoords> }) => {
+      const { key, nunjucksTag } = options;
+      const sendNunjuckTagContextMsg = (type: NunjucksTagContextMenuAction) => {
+        event.sender.send('nunjucks-context-menu-command', { key, nunjucksTag: { ...nunjucksTag, type } });
+      };
+      try {
+        const baseTemplate: MenuItemConstructorOptions[] = nunjucksTag
+          ? [
               {
+                label: 'Edit',
+                click: () => sendNunjuckTagContextMsg('edit'),
+              },
+              {
+                label: 'Copy',
                 click: () => {
-                  const tag = `{% ${l.templateTag.name} ${l.templateTag.args?.map(getTemplateValue).join(', ')} %}`;
-                  const displayName = l.templateTag.displayName;
-                  event.sender.send('nunjucks-context-menu-command', { key, tag, needsEnterprisePlan, displayName });
+                  clipboard.writeText(nunjucksTag.template);
                 },
-              } :
+              },
               {
-                submenu: actions?.options?.map(action => ({
-                  label: fnOrString(action.displayName),
-                  click: () => {
-                    const additionalTagFields = additionalArgs.length ? ', ' + additionalArgs.map(getTemplateValue).join(', ') : '';
-                    const displayName = action.displayName;
-                    const tag = `{% ${l.templateTag.name} '${action.value}'${additionalTagFields} %}`;
-                    event.sender.send('nunjucks-context-menu-command', { key, tag, needsEnterprisePlan, displayName });
-                  },
-                })),
-              }),
-          };
-        });
-      const menu = Menu.buildFromTemplate([...baseTemplate, ...localTemplate]);
-      const win = BrowserWindow.fromWebContents(event.sender);
-      invariant(win, 'expected window');
-      menu.popup({ window: win });
-    } catch (e) {
-      console.error(e);
-    }
-  });
+                label: 'Cut',
+                click: () => {
+                  clipboard.writeText(nunjucksTag.template);
+                  sendNunjuckTagContextMsg('delete');
+                },
+              },
+              {
+                label: 'Delete',
+                click: () => sendNunjuckTagContextMsg('delete'),
+              },
+              { type: 'separator' },
+            ]
+          : [
+              {
+                role: 'cut',
+              },
+              {
+                role: 'copy',
+              },
+              {
+                role: 'paste',
+              },
+              { type: 'separator' },
+            ];
+        const localTemplate: MenuItemConstructorOptions[] = localTemplateTags
+          // sort alphabetically
+          .sort((a, b) => fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)))
+          .map(l => {
+            const actions = l.templateTag.args?.[0];
+            const needsEnterprisePlan = l.templateTag.needsEnterprisePlan || false;
+            const additionalArgs = l.templateTag.args?.slice(1);
+            const hasSubmenu = actions?.options?.length;
+            return {
+              label: fnOrString(l.templateTag.displayName),
+              ...(!hasSubmenu
+                ? {
+                    click: () => {
+                      const tag = `{% ${l.templateTag.name} ${l.templateTag.args?.map(getTemplateValue).join(', ')} %}`;
+                      const displayName = l.templateTag.displayName;
+                      event.sender.send('nunjucks-context-menu-command', {
+                        key,
+                        tag,
+                        needsEnterprisePlan,
+                        displayName,
+                      });
+                    },
+                  }
+                : {
+                    submenu: actions?.options?.map(action => ({
+                      label: fnOrString(action.displayName),
+                      click: () => {
+                        const additionalTagFields = additionalArgs.length
+                          ? ', ' + additionalArgs.map(getTemplateValue).join(', ')
+                          : '';
+                        const displayName = action.displayName;
+                        const tag = `{% ${l.templateTag.name} '${action.value}'${additionalTagFields} %}`;
+                        event.sender.send('nunjucks-context-menu-command', {
+                          key,
+                          tag,
+                          needsEnterprisePlan,
+                          displayName,
+                        });
+                      },
+                    })),
+                  }),
+            };
+          });
+        const menu = Menu.buildFromTemplate([...baseTemplate, ...localTemplate]);
+        const win = BrowserWindow.fromWebContents(event.sender);
+        invariant(win, 'expected window');
+        menu.popup({ window: win });
+      } catch (e) {
+        console.error(e);
+      }
+    },
+  );
   ipcMainOn('setMenuBarVisibility', (_, visible: boolean) => {
-    BrowserWindow.getAllWindows()
-      .forEach(window => {
-        // the `setMenuBarVisibility` signature uses `visible` semantics
-        window.setMenuBarVisibility(visible);
-        // the `setAutoHideMenu` signature uses `hide` semantics
-        const hide = !visible;
-        window.setAutoHideMenuBar(hide);
-      });
+    BrowserWindow.getAllWindows().forEach(window => {
+      // the `setMenuBarVisibility` signature uses `visible` semantics
+      window.setMenuBarVisibility(visible);
+      // the `setAutoHideMenu` signature uses `hide` semantics
+      const hide = !visible;
+      window.setAutoHideMenuBar(hide);
+    });
   });
   ipcMainHandle('showOpenDialog', async (_, options: OpenDialogOptions) => {
     const { filePaths, canceled } = await dialog.showOpenDialog(options);
@@ -276,7 +287,7 @@ export function registerElectronHandlers() {
     clipboard.clear();
   });
 
-  ipcMainOn('getPath', (event, name: Parameters<typeof Electron.app['getPath']>[0]) => {
+  ipcMainOn('getPath', (event, name: Parameters<(typeof Electron.app)['getPath']>[0]) => {
     event.returnValue = app.getPath(name);
   });
 
@@ -284,16 +295,19 @@ export function registerElectronHandlers() {
     event.returnValue = app.getAppPath();
   });
 
-  ipcMainOn('showContextMenu', (event, options: { key: string; menuItems: MenuItemConstructorOptions[]; extra?: Record<string, any> }) => {
-    const menuItems = options.menuItems.map(item => {
-      return {
-        ...item,
-        click: () => {
-          event.sender.send('contextMenuCommand', { key: options.key, label: item.label, extra: options.extra });
-        },
-      };
-    });
-    const menu = Menu.buildFromTemplate(menuItems);
-    menu.popup();
-  });
+  ipcMainOn(
+    'showContextMenu',
+    (event, options: { key: string; menuItems: MenuItemConstructorOptions[]; extra?: Record<string, any> }) => {
+      const menuItems = options.menuItems.map(item => {
+        return {
+          ...item,
+          click: () => {
+            event.sender.send('contextMenuCommand', { key: options.key, label: item.label, extra: options.extra });
+          },
+        };
+      });
+      const menu = Menu.buildFromTemplate(menuItems);
+      menu.popup();
+    },
+  );
 }

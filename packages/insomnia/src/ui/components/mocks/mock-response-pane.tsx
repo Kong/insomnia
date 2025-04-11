@@ -6,7 +6,13 @@ import { useRouteLoaderData } from 'react-router-dom';
 import { useFetcher } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
-import { getMockServiceURL, getPreviewModeName, PREVIEW_MODE_FRIENDLY, PREVIEW_MODES, type PreviewMode } from '../../../common/constants';
+import {
+  getMockServiceURL,
+  getPreviewModeName,
+  PREVIEW_MODE_FRIENDLY,
+  PREVIEW_MODES,
+  type PreviewMode,
+} from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import * as models from '../../../models';
@@ -44,7 +50,7 @@ interface MockbinLogOutput {
         startedDateTime: string;
         clientIPAddress: string;
         request: Har.Request;
-      }
+      },
     ];
   };
 }
@@ -69,11 +75,13 @@ export const MockResponsePane = () => {
   if (requestFetcher.state !== 'idle') {
     return (
       <PlaceholderResponsePane>
-        {<ResponseTimer
-          handleCancel={() => activeResponse && cancelRequestById(activeResponse.parentId)}
-          activeRequestId={mockRoute._id}
-          steps={steps}
-        />}
+        {
+          <ResponseTimer
+            handleCancel={() => activeResponse && cancelRequestById(activeResponse.parentId)}
+            activeRequestId={mockRoute._id}
+            steps={steps}
+          />
+        }
       </PlaceholderResponsePane>
     );
   }
@@ -88,72 +96,74 @@ export const MockResponsePane = () => {
           </div>
         </PaneHeader>
       )}
-      <Tabs aria-label='Mock response' className="flex-1 w-full h-full flex flex-col">
-        <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+      <Tabs aria-label="Mock response" className="flex h-full w-full flex-1 flex-col">
+        <TabList
+          className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+          aria-label="Request pane tabs"
+        >
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='preview'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="preview"
           >
             Preview
           </Tab>
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='headers'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="headers"
           >
             Headers
           </Tab>
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='timeline'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="timeline"
           >
             Console
           </Tab>
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='history'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="history"
           >
             History
           </Tab>
         </TabList>
-        <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='preview'>
-          <Toolbar className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
-            {activeResponse ?
+        <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="preview">
+          <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2">
+            {activeResponse ? (
               <PreviewModeDropdown
                 activeResponse={activeResponse}
                 previewMode={previewMode}
                 setPreviewMode={setPreviewMode}
-              /> : null}
+              />
+            ) : null}
           </Toolbar>
-          {activeResponse && <ResponseViewer
-            key={activeResponse._id}
-            bytes={Math.max(activeResponse.bytesContent, activeResponse.bytesRead)}
-            contentType={activeResponse.contentType || ''}
-            disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
-            disablePreviewLinks={settings.disableResponsePreviewLinks}
-            download={() => { }}
-            editorFontSize={settings.editorFontSize}
-            error={activeResponse.error}
-            filter={''}
-            filterHistory={[]}
-            bodyBuffer={activeResponse.bodyBuffer}
-            getBody={() => models.response.getBodyBuffer(activeResponse)}
-            previewMode={previewMode}
-            responseId={activeResponse._id}
-            updateFilter={activeResponse.error ? undefined : () => { }}
-            url={activeResponse.url}
-          />}
+          {activeResponse && (
+            <ResponseViewer
+              key={activeResponse._id}
+              bytes={Math.max(activeResponse.bytesContent, activeResponse.bytesRead)}
+              contentType={activeResponse.contentType || ''}
+              disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
+              disablePreviewLinks={settings.disableResponsePreviewLinks}
+              download={() => {}}
+              editorFontSize={settings.editorFontSize}
+              error={activeResponse.error}
+              filter={''}
+              filterHistory={[]}
+              bodyBuffer={activeResponse.bodyBuffer}
+              getBody={() => models.response.getBodyBuffer(activeResponse)}
+              previewMode={previewMode}
+              responseId={activeResponse._id}
+              updateFilter={activeResponse.error ? undefined : () => {}}
+              url={activeResponse.url}
+            />
+          )}
         </TabPanel>
-        <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='headers'>
+        <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="headers">
           <ResponseHeadersViewer headers={activeResponse?.headers || []} />
         </TabPanel>
-        <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='timeline'>
-          <ResponseTimelineViewer
-            key={activeResponse?._id}
-            timeline={timeline}
-            pinToBottom={true}
-          />
+        <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="timeline">
+          <ResponseTimelineViewer key={activeResponse?._id} timeline={timeline} pinToBottom={true} />
         </TabPanel>
-        <TabPanel className='w-full flex-1 flex flex-col overflow-y-auto' id='history'>
+        <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="history">
           <HistoryViewWrapperComponentFactory mockServer={mockServer} mockRoute={mockRoute} />
         </TabPanel>
       </Tabs>
@@ -161,7 +171,13 @@ export const MockResponsePane = () => {
   );
 };
 
-const HistoryViewWrapperComponentFactory = ({ mockServer, mockRoute }: { mockServer: MockServer; mockRoute: MockRoute }) => {
+const HistoryViewWrapperComponentFactory = ({
+  mockServer,
+  mockRoute,
+}: {
+  mockServer: MockServer;
+  mockRoute: MockRoute;
+}) => {
   const [logs, setLogs] = useState<MockbinLogOutput | null>(null);
   const [logEntryId, setLogEntryId] = useState<number | null>(null);
   const { userSession } = useRootLoaderData();
@@ -188,7 +204,14 @@ const HistoryViewWrapperComponentFactory = ({ mockServer, mockRoute }: { mockSer
       // network erros will be managed by the upsert trigger, so we can ignore them here
       console.log({ mockbinUrl, e });
     }
-  }, [mockRoute.method, mockRoute.name, mockRoute.parentId, mockServer.url, mockServer.useInsomniaCloud, userSession.id]);
+  }, [
+    mockRoute.method,
+    mockRoute.name,
+    mockRoute.parentId,
+    mockServer.url,
+    mockServer.useInsomniaCloud,
+    userSession.id,
+  ]);
   // refetches logs whenever the path changes, or a response is recieved, or tenseconds elapses or history tab is click
   // chatgpt: answer my called
   useInterval(() => {
@@ -200,36 +223,54 @@ const HistoryViewWrapperComponentFactory = ({ mockServer, mockRoute }: { mockSer
   }, [fetchLogs]);
 
   return (
-    <div className="h-full w-full grid grid-rows-[repeat(auto-fit,minmax(0,1fr))]">
-      <div className="w-full flex-1 overflow-hidden box-border overflow-y-scroll">
-        <div className="grid grid-cols-[repeat(5,auto)] divide-solid divide-y divide-[--hl-sm]">
-          <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">Method</div>
-          <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">Size</div>
-          <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">Date</div>
-          <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">IP</div>
-          <div className="uppercase p-2 bg-[--hl-sm] text-left text-xs font-semibold focus:outline-none">Path</div>
-          {logs?.log.entries?.map((row, index) => (
-            <Fragment key={row.startedDateTime}>
-              <div onClick={() => setLogEntryId(index)} className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer whitespace-nowrap text-sm truncate font-medium group-last-of-type:border-none focus:outline-none`}>
-                <div className='p-2'>{row.request.method}</div>
-              </div>
-              <div onClick={() => setLogEntryId(index)} className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer whitespace-nowrap text-sm truncate font-medium group-last-of-type:border-none focus:outline-none`}>
-                <div className='p-2'>{row.request.bodySize + row.request.headersSize}</div></div>
-              <div onClick={() => setLogEntryId(index)} className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer whitespace-nowrap text-sm truncate font-medium group-last-of-type:border-none focus:outline-none`}>
-                <div className='p-2 truncate'>{getTimeFromNow(row.startedDateTime, false)}</div>
-              </div>
-              <div onClick={() => setLogEntryId(index)} className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer whitespace-nowrap text-sm truncate font-medium group-last-of-type:border-none focus:outline-none`}>
-                <div className='p-2 truncate'>{row.clientIPAddress}</div>
-              </div>
-              <div onClick={() => setLogEntryId(index)} className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer whitespace-nowrap truncate text-sm font-medium group-last-of-type:border-none focus:outline-none`}>
-                <div className='p-2 truncate'>{row.request.url}</div>
-              </div>
-            </Fragment>
-          )).reverse()}
+    <div className="grid h-full w-full grid-rows-[repeat(auto-fit,minmax(0,1fr))]">
+      <div className="box-border w-full flex-1 overflow-hidden overflow-y-scroll">
+        <div className="grid grid-cols-[repeat(5,auto)] divide-y divide-solid divide-[--hl-sm]">
+          <div className="bg-[--hl-sm] p-2 text-left text-xs font-semibold uppercase focus:outline-none">Method</div>
+          <div className="bg-[--hl-sm] p-2 text-left text-xs font-semibold uppercase focus:outline-none">Size</div>
+          <div className="bg-[--hl-sm] p-2 text-left text-xs font-semibold uppercase focus:outline-none">Date</div>
+          <div className="bg-[--hl-sm] p-2 text-left text-xs font-semibold uppercase focus:outline-none">IP</div>
+          <div className="bg-[--hl-sm] p-2 text-left text-xs font-semibold uppercase focus:outline-none">Path</div>
+          {logs?.log.entries
+            ?.map((row, index) => (
+              <Fragment key={row.startedDateTime}>
+                <div
+                  onClick={() => setLogEntryId(index)}
+                  className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-none group-last-of-type:border-none`}
+                >
+                  <div className="p-2">{row.request.method}</div>
+                </div>
+                <div
+                  onClick={() => setLogEntryId(index)}
+                  className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-none group-last-of-type:border-none`}
+                >
+                  <div className="p-2">{row.request.bodySize + row.request.headersSize}</div>
+                </div>
+                <div
+                  onClick={() => setLogEntryId(index)}
+                  className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-none group-last-of-type:border-none`}
+                >
+                  <div className="truncate p-2">{getTimeFromNow(row.startedDateTime, false)}</div>
+                </div>
+                <div
+                  onClick={() => setLogEntryId(index)}
+                  className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-none group-last-of-type:border-none`}
+                >
+                  <div className="truncate p-2">{row.clientIPAddress}</div>
+                </div>
+                <div
+                  onClick={() => setLogEntryId(index)}
+                  className={`${index % 2 === 0 ? '' : 'bg-[--hl-xs]'} cursor-pointer truncate whitespace-nowrap text-sm font-medium focus:outline-none group-last-of-type:border-none`}
+                >
+                  <div className="truncate p-2">{row.request.url}</div>
+                </div>
+              </Fragment>
+            ))
+            .reverse()}
         </div>
       </div>
       {logEntryId !== null && logs?.log.entries?.[logEntryId] && (
-        <div className='flex-1 h-full border-solid border border-[--hl-md]'>
+        <div className="h-full flex-1 border border-solid border-[--hl-md]">
           <CodeEditor
             id="log-body-preview"
             key={logEntryId + logs?.log.entries?.[logEntryId].startedDateTime}
@@ -244,10 +285,18 @@ const HistoryViewWrapperComponentFactory = ({ mockServer, mockRoute }: { mockSer
   );
 };
 
-const PreviewModeDropdown = ({ activeResponse, previewMode, setPreviewMode }: { activeResponse: Response; previewMode: PreviewMode; setPreviewMode: (mode: PreviewMode) => void }) => {
+const PreviewModeDropdown = ({
+  activeResponse,
+  previewMode,
+  setPreviewMode,
+}: {
+  activeResponse: Response;
+  previewMode: PreviewMode;
+  setPreviewMode: (mode: PreviewMode) => void;
+}) => {
   return (
     <Dropdown
-      aria-label='Preview Mode Dropdown'
+      aria-label="Preview Mode Dropdown"
       triggerButton={
         <Button className="text-[--hl]">
           {getPreviewModeName(previewMode)}
@@ -255,28 +304,19 @@ const PreviewModeDropdown = ({ activeResponse, previewMode, setPreviewMode }: { 
         </Button>
       }
     >
-      <DropdownSection
-        aria-label='Preview Mode Section'
-        title="Preview Mode"
-      >
-        {PREVIEW_MODES.map(mode =>
-          <DropdownItem
-            key={mode}
-            aria-label={getPreviewModeName(mode, true)}
-          >
+      <DropdownSection aria-label="Preview Mode Section" title="Preview Mode">
+        {PREVIEW_MODES.map(mode => (
+          <DropdownItem key={mode} aria-label={getPreviewModeName(mode, true)}>
             <ItemContent
               icon={previewMode === mode ? 'check' : 'empty'}
               label={getPreviewModeName(mode, true)}
               onClick={() => setPreviewMode(mode)}
             />
           </DropdownItem>
-        )}
+        ))}
       </DropdownSection>
-      <DropdownSection
-        aria-label='Action Section'
-        title="Action"
-      >
-        <DropdownItem aria-label='Copy raw response'>
+      <DropdownSection aria-label="Action Section" title="Action">
+        <DropdownItem aria-label="Copy raw response">
           <ItemContent
             icon="copy"
             label="Copy raw response"
@@ -286,7 +326,7 @@ const PreviewModeDropdown = ({ activeResponse, previewMode, setPreviewMode }: { 
             }}
           />
         </DropdownItem>
-        <DropdownItem aria-label='Export raw response'>
+        <DropdownItem aria-label="Export raw response">
           <ItemContent
             icon="save"
             label="Export raw response"
@@ -305,8 +345,8 @@ const PreviewModeDropdown = ({ activeResponse, previewMode, setPreviewMode }: { 
             }}
           />
         </DropdownItem>
-        <DropdownItem aria-label='Export prettified response'>
-          {activeResponse.contentType.includes('json') &&
+        <DropdownItem aria-label="Export prettified response">
+          {activeResponse.contentType.includes('json') && (
             <ItemContent
               icon="save"
               label="Export prettified response"
@@ -324,9 +364,9 @@ const PreviewModeDropdown = ({ activeResponse, previewMode, setPreviewMode }: { 
                 fs.promises.writeFile(filePath, jsonPrettify(bodyBuffer.toString('utf8')));
               }}
             />
-          }
+          )}
         </DropdownItem>
-        <DropdownItem aria-label='Export HTTP debug'>
+        <DropdownItem aria-label="Export HTTP debug">
           <ItemContent
             icon="bug"
             label="Export HTTP debug"
@@ -350,7 +390,7 @@ const PreviewModeDropdown = ({ activeResponse, previewMode, setPreviewMode }: { 
             }}
           />
         </DropdownItem>
-        <DropdownItem aria-label='Export as HAR'>
+        <DropdownItem aria-label="Export as HAR">
           <ItemContent
             icon="save"
             label="Export as HAR"

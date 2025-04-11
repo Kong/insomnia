@@ -10,9 +10,7 @@ export interface Options {
  * Allows Vite to import modules that will be resolved by Node's require() function.
  */
 export function electronNodeRequire(options: Options): Plugin {
-  const {
-    modules = [],
-  } = options;
+  const { modules = [] } = options;
 
   return {
     name: 'vite-plugin-electron-node-require',
@@ -20,10 +18,7 @@ export function electronNodeRequire(options: Options): Plugin {
       // Exclude the modules from Vite's dependency optimization (pre-bundling)
       conf.optimizeDeps = {
         ...conf.optimizeDeps,
-        exclude: [
-          ...conf.optimizeDeps?.exclude ? conf.optimizeDeps.exclude : [],
-          ...modules,
-        ],
+        exclude: [...(conf.optimizeDeps?.exclude ? conf.optimizeDeps.exclude : []), ...modules],
       };
 
       // Create aliases for the modules so that we can resolve them with this plugin
@@ -37,9 +32,7 @@ export function electronNodeRequire(options: Options): Plugin {
       conf.build ??= {};
       conf.build.commonjsOptions ??= {};
       conf.build.commonjsOptions?.ignore ?? [];
-      conf.build.commonjsOptions.ignore = [
-        ...modules,
-      ];
+      conf.build.commonjsOptions.ignore = [...modules];
 
       return conf;
     },

@@ -38,13 +38,9 @@ interface BaseGrpcRequest {
 
 export type GrpcRequest = BaseModel & BaseGrpcRequest;
 
-export const isGrpcRequest = (model: Pick<BaseModel, 'type'>): model is GrpcRequest => (
-  model.type === type
-);
+export const isGrpcRequest = (model: Pick<BaseModel, 'type'>): model is GrpcRequest => model.type === type;
 
-export const isGrpcRequestId = (id?: string | null) => (
-  id?.startsWith(`${prefix}_`)
-);
+export const isGrpcRequestId = (id?: string | null) => id?.startsWith(`${prefix}_`);
 
 export function init(): BaseGrpcRequest {
   return {

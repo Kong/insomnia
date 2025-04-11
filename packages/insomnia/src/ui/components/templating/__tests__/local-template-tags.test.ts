@@ -22,5 +22,4 @@ describe('base64 tag', () => {
       expect(() => base64EncoderTag.run({} as PluginTemplateTagContext, 'encode', 'klingon', 'hello')).toThrowError();
     });
   });
-
 });

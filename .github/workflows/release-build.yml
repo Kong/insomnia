@@ -74,7 +74,7 @@ jobs:
       - name: Package app (Linux ARM64 only)
         if: runner.os == 'Linux' && runner.arch == 'ARM64'
         shell: bash
-        run:  npm run app-package
+        run: npm run app-package
         env:
           NODE_OPTIONS: '--max_old_space_size=6144'
           BUILD_TARGETS: AppImage,tar.gz
@@ -111,7 +111,6 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: ./build-secure-wrapper.sh CI
-
 
       - name: Move .dll and .exe files to /tosign (PowerShell)
         if: runner.os == 'Windows'
@@ -158,7 +157,6 @@ jobs:
           CREDENTIAL_ID: ${{secrets.ES_CREDENTIAL_ID}}
           TOTP_SECRET: ${{secrets.ES_TOTP_SECRET}}
 
-
       - name: Package inso
         run: |
           echo "Replacing electron binary with node binary"
@@ -182,7 +180,7 @@ jobs:
           VERSION: ${{ env.INSO_VERSION }}
 
       - name: Notarize Inso CLI installer (macOS only)
-        if:  runner.os == 'macOS'
+        if: runner.os == 'macOS'
         uses: lando/notarize-action@b5c3ef16cf2fbcf2af26dc58c90255ec242abeed # v2
         with:
           product-path: ./packages/${{ env.INSO_PACKAGE_NAME }}/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
@@ -273,7 +271,7 @@ jobs:
         id: release_version
         shell: bash
         run: |
-           echo "version=${BRANCH/release\//}" >> $GITHUB_OUTPUT
+          echo "version=${BRANCH/release\//}" >> $GITHUB_OUTPUT
         env:
           BRANCH: ${{ github.ref_name }}
 

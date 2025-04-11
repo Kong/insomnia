@@ -52,17 +52,24 @@ export const TimeTag: FC<Props> = memo(({ milliseconds, small, className, toolti
       )}
     >
       <Tooltip
-        message={(
+        message={
           <div>
-            {timesandunits?.map(step =>
-            (<div key={step.stepName} className='flex justify-between'>
-              <div className='mr-5'>{step.stepName} </div><div>{step.number} {step.unit}</div>
-            </div>)
-            )}
-            <div key="total" className='flex justify-between'>
-              <div className='mr-5'>Total </div><div>{number} {unit}</div>
+            {timesandunits?.map(step => (
+              <div key={step.stepName} className="flex justify-between">
+                <div className="mr-5">{step.stepName} </div>
+                <div>
+                  {step.number} {step.unit}
+                </div>
+              </div>
+            ))}
+            <div key="total" className="flex justify-between">
+              <div className="mr-5">Total </div>
+              <div>
+                {number} {unit}
+              </div>
             </div>
-          </div>)}
+          </div>
+        }
         position="bottom"
         delay={tooltipDelay}
       >

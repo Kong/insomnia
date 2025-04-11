@@ -12,7 +12,7 @@ interface DashboardSortDropdownProps {
 export const DashboardSortDropdown: FC<DashboardSortDropdownProps> = ({ onSelect, value }) => {
   return (
     <Dropdown
-      aria-label='Dashboard Sort Dropdown'
+      aria-label="Dashboard Sort Dropdown"
       className="margin-left"
       triggerButton={
         <Button>
@@ -21,10 +21,7 @@ export const DashboardSortDropdown: FC<DashboardSortDropdownProps> = ({ onSelect
       }
     >
       {DASHBOARD_SORT_ORDERS.map(order => (
-        <DropdownItem
-          key={order}
-          aria-label={dashboardSortOrderName[order]}
-        >
+        <DropdownItem key={order} aria-label={dashboardSortOrderName[order]}>
           <ItemContent
             label={dashboardSortOrderName[order]}
             isSelected={order === value}

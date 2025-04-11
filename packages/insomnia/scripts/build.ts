@@ -20,12 +20,8 @@ if (require.main === module) {
 export const start = async () => {
   console.log('[build] Starting build');
 
-  console.log(
-    `[build] npm: ${childProcess.spawnSync('npm', ['--version']).stdout}`.trim()
-  );
-  console.log(
-    `[build] node: ${childProcess.spawnSync('node', ['--version']).stdout}`.trim()
-  );
+  console.log(`[build] npm: ${childProcess.spawnSync('npm', ['--version']).stdout}`.trim());
+  console.log(`[build] node: ${childProcess.spawnSync('node', ['--version']).stdout}`.trim());
 
   if (process.version.indexOf('v22.') !== 0) {
     console.log('[build] Node 22.x.x is required to build');

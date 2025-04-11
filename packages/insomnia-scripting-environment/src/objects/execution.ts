@@ -17,7 +17,7 @@ export class Execution {
         get: (target, prop, receiver) => {
           if (prop === 'current') {
             return target.length > 0 ? target[target.length - 1] : '';
-          };
+          }
           return Reflect.get(target, prop, receiver);
         },
       });
@@ -26,7 +26,7 @@ export class Execution {
     } else {
       throw new Error('Location input must be array of string');
     }
-  };
+  }
 
   skipRequest = () => {
     this._skipRequest = true;
@@ -43,4 +43,4 @@ export class Execution {
       nextRequestIdOrName: this._nextRequestIdOrName,
     };
   };
-};
+}

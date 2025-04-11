@@ -1,13 +1,20 @@
 import { stats } from '../models';
 import { getBodyBuffer } from '../models/response';
 import { parseGraphQLReqeustBody } from '../utils/graph-ql';
-import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from './network';
+import {
+  fetchRequestData,
+  responseTransform,
+  sendCurlAndWriteTimeline,
+  tryToInterpolateRequest,
+  tryToTransformRequestWithPlugins,
+} from './network';
 
 export function getSendRequestCallback() {
   return async function sendRequest(requestId: string) {
     stats.incrementExecutedRequests();
     // NOTE: unit tests will use the UI selected environment
-    const { request,
+    const {
+      request,
       environment,
       settings,
       clientCertificates,
@@ -28,14 +35,16 @@ export function getSendRequestCallback() {
       caCert,
       settings,
       timelinePath,
-      responseId
+      responseId,
     );
     const res = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
     const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
-    const headers = headerArray?.reduce((acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }), []);
-    const bodyBuffer = await getBodyBuffer(res) as Buffer;
+    const headers = headerArray?.reduce(
+      (acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }),
+      [],
+    );
+    const bodyBuffer = (await getBodyBuffer(res)) as Buffer;
     const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
     return { status, statusMessage, data, headers, responseTime };
-
   };
 }

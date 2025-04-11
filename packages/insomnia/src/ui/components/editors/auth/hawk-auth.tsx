@@ -1,9 +1,6 @@
 import React, { type FC } from 'react';
 
-import {
-  HAWK_ALGORITHM_SHA1,
-  HAWK_ALGORITHM_SHA256,
-} from '../../../../common/constants';
+import { HAWK_ALGORITHM_SHA1, HAWK_ALGORITHM_SHA256 } from '../../../../common/constants';
 import { AuthInputRow } from './components/auth-input-row';
 import { AuthSelectRow } from './components/auth-select-row';
 import { AuthTableBody } from './components/auth-table-body';
@@ -12,11 +9,11 @@ import { AuthToggleRow } from './components/auth-toggle-row';
 export const HawkAuth: FC = () => (
   <AuthTableBody>
     <AuthToggleRow label="Enabled" property="disabled" invert />
-    <AuthInputRow label='Auth Id' property='id' />
-    <AuthInputRow label='Auth Key' property='key' mask />
+    <AuthInputRow label="Auth Id" property="id" />
+    <AuthInputRow label="Auth Key" property="key" mask />
     <AuthSelectRow
-      label='Algorithm'
-      property='algorithm'
+      label="Algorithm"
+      property="algorithm"
       options={[
         {
           name: HAWK_ALGORITHM_SHA256,
@@ -28,7 +25,7 @@ export const HawkAuth: FC = () => (
         },
       ]}
     />
-    <AuthInputRow label='Ext' property='ext' />
-    <AuthToggleRow label='Validate Payload' property='validatePayload' />
+    <AuthInputRow label="Ext" property="ext" />
+    <AuthToggleRow label="Validate Payload" property="validatePayload" />
   </AuthTableBody>
 );

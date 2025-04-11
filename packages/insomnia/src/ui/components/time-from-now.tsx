@@ -9,13 +9,12 @@ interface Props {
   titleCase?: boolean;
   title?: (text: string) => string;
 }
-const toTitleCase = (value: string) => (
+const toTitleCase = (value: string) =>
   value
     .toLowerCase()
     .split(' ')
     .map(value => value.charAt(0).toUpperCase() + value.slice(1))
-    .join(' ')
-);
+    .join(' ');
 
 export function getTimeFromNow(timestamp: string | number | Date, titleCase: boolean): string {
   const date = new Date(timestamp);
@@ -36,28 +35,21 @@ export function getTimeFromNow(timestamp: string | number | Date, titleCase: boo
   return text;
 }
 
-function useTimeNowLabel(
-  timestamp: number | Date | string,
-  titleCase?: boolean,
-  intervalSeconds?: number
-): string {
+function useTimeNowLabel(timestamp: number | Date | string, titleCase?: boolean, intervalSeconds?: number): string {
   const [text, setText] = useState(getTimeFromNow(timestamp, Boolean(titleCase)));
 
-  useInterval(() => {
-    const newText = getTimeFromNow(timestamp, Boolean(titleCase));
-    setText(newText);
-  }, (intervalSeconds || 5) * 1000);
+  useInterval(
+    () => {
+      const newText = getTimeFromNow(timestamp, Boolean(titleCase));
+      setText(newText);
+    },
+    (intervalSeconds || 5) * 1000,
+  );
 
   return text;
 }
 
-export const TimeFromNow: FC<Props> = ({
-  className,
-  timestamp,
-  titleCase,
-  title,
-  intervalSeconds,
-}) => {
+export const TimeFromNow: FC<Props> = ({ className, timestamp, titleCase, title, intervalSeconds }) => {
   const text = useTimeNowLabel(timestamp, titleCase, intervalSeconds);
   return (
     <span title={title ? title(text) : new Date(timestamp).toLocaleString()} className={className}>

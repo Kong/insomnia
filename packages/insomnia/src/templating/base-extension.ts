@@ -20,9 +20,7 @@ export default class BaseExtension {
     this._ext = ext;
     this._plugin = plugin;
     const tag = this.getTag();
-    this.tags = [
-      ...(tag === null ? [] : [tag]),
-    ];
+    this.tags = [...(tag === null ? [] : [tag])];
   }
 
   getTag() {
@@ -42,9 +40,7 @@ export default class BaseExtension {
   }
 
   getLiveDisplayName() {
-    return (
-      this._ext?.liveDisplayName || (() => '')
-    );
+    return this._ext?.liveDisplayName || (() => '');
   }
 
   getDisablePreview() {

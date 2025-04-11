@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { getBearerAuthHeader } from '../get-header';
 
 describe('getBearerAuthHeader()', () => {
-
   it('succeed with token and prefix', () => {
     const header = getBearerAuthHeader('token', 'prefix');
     expect(header).toEqual({

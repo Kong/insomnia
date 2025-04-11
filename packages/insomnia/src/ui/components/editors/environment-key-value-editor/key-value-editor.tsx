@@ -1,8 +1,25 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Button, type ButtonProps, DropIndicator, ListBox, ListBoxItem, Menu, MenuItem, MenuTrigger, Popover, Toolbar, useDragAndDrop } from 'react-aria-components';
+import {
+  Button,
+  type ButtonProps,
+  DropIndicator,
+  ListBox,
+  ListBoxItem,
+  Menu,
+  MenuItem,
+  MenuTrigger,
+  Popover,
+  Toolbar,
+  useDragAndDrop,
+} from 'react-aria-components';
 
 import { generateId } from '../../../../common/misc';
-import { decryptSecretValue, encryptSecretValue, type EnvironmentKvPairData, EnvironmentKvPairDataType } from '../../../../models/environment';
+import {
+  decryptSecretValue,
+  encryptSecretValue,
+  type EnvironmentKvPairData,
+  EnvironmentKvPairDataType,
+} from '../../../../models/environment';
 import { base64decode } from '../../../../utils/vault';
 import { PromptButton } from '../../base/prompt-button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
@@ -46,11 +63,12 @@ const ItemButton = (props: ButtonProps & { tabIndex?: number }) => {
 
 export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate = false }: EditorProps) => {
   const kvPairs: EnvironmentKvPairData[] = useMemo(
-    () => data.length > 0 ? [...data] : [createNewPair()],
+    () => (data.length > 0 ? [...data] : [createNewPair()]),
     // Ensure same array data will not generate different kvPairs to avoid flash issue
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [JSON.stringify(data)]
-  );  const codeModalRef = useRef<CodePromptModalHandle>(null);
+    [JSON.stringify(data)],
+  );
+  const codeModalRef = useRef<CodePromptModalHandle>(null);
   const [kvPairError, setKvPairError] = useState<{ id: string; error: string }[]>([]);
   const symmetricKey = vaultKey === '' ? {} : base64decode(vaultKey, true);
 
@@ -90,7 +108,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
 
       return (
         <div
-          className='flex outline-none bg-[--color-bg] h-[--line-height-sm]'
+          className="flex h-[--line-height-sm] bg-[--color-bg] outline-none"
           style={{
             width: element?.clientWidth,
           }}
@@ -100,16 +118,15 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
       );
     },
     renderDropIndicator(target) {
-      return (
-        <DropIndicator
-          target={target}
-          className="outline-[--color-surprise] outline-1 outline !border-none"
-        />
-      );
+      return <DropIndicator target={target} className="!border-none outline outline-1 outline-[--color-surprise]" />;
     },
   });
 
-  const handleItemChange = <K extends keyof EnvironmentKvPairData>(id: string, changedPropertyName: K, newValue: EnvironmentKvPairData[K]) => {
+  const handleItemChange = <K extends keyof EnvironmentKvPairData>(
+    id: string,
+    changedPropertyName: K,
+    newValue: EnvironmentKvPairData[K],
+  ) => {
     const changedItemIdx = kvPairs.findIndex(p => p.id === id);
     if (changedItemIdx !== -1) {
       const changedItem = kvPairs[changedItemIdx];
@@ -136,7 +153,8 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
         // need confirm if user changes from secret type which will decrypt and reveal value;
         showModal(AskModal, {
           title: `Change from Secret to ${newTypeDisplayText}`,
-          message: 'This will make the value unmasked and unencrypted. Besides, none-secret item will not be wrapped with vault namespace when using as environment variable.',
+          message:
+            'This will make the value unmasked and unencrypted. Besides, none-secret item will not be wrapped with vault namespace when using as environment variable.',
           yesText: 'Change',
           noText: 'Cancel',
           onDone: async (yes: boolean) => {
@@ -182,14 +200,19 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
     const { id, name, value, type, enabled = false } = kvPair;
     const itemIndex = kvPairs.findIndex(pair => pair.id === id);
     const itemError = kvPairError.find(p => p.id === id);
-    const hasItemWithSameNameAfter = name !== '' && kvPairs.slice(itemIndex + 1).some(pair => pair.name.trim() === name.trim() && pair.enabled);
+    const hasItemWithSameNameAfter =
+      name !== '' && kvPairs.slice(itemIndex + 1).some(pair => pair.name.trim() === name.trim() && pair.enabled);
     const isValidJSONString = checkValidJSONString(value);
     return (
       <>
-        <div slot="drag" className={`${cellCommonStyle} w-6 flex flex-shrink-0 items-center justify-end border-l border-r-0`} style={{ padding: 0 }}>
-          <Icon icon="grip-vertical" className="cursor-grab mr-1" />
+        <div
+          slot="drag"
+          className={`${cellCommonStyle} flex w-6 flex-shrink-0 items-center justify-end border-l border-r-0`}
+          style={{ padding: 0 }}
+        >
+          <Icon icon="grip-vertical" className="mr-1 cursor-grab" />
         </div>
-        <div className={`${cellCommonStyle} relative h-full w-[30%] flex flex-grow pl-1`}>
+        <div className={`${cellCommonStyle} relative flex h-full w-[30%] flex-grow pl-1`}>
           <OneLineEditor
             id={`environment-kv-editor-name-${id}`}
             placeholder={'Input Name'}
@@ -200,7 +223,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
               const error = ensureKeyIsValid(newName, true);
               if (error) {
                 if (itemError) {
-                  setKvPairError(kvPairError.map(p => p.id === id ? { id, error } : p));
+                  setKvPairError(kvPairError.map(p => (p.id === id ? { id, error } : p)));
                 } else {
                   setKvPairError([...kvPairError, { id, error }]);
                 }
@@ -212,19 +235,19 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
               }
             }}
           />
-          {itemError &&
+          {itemError && (
             <Tooltip message={itemError.error} delay={200}>
               <i className="fa fa-exclamation-circle text-[--color-danger]" />
             </Tooltip>
-          }
-          {hasItemWithSameNameAfter &&
+          )}
+          {hasItemWithSameNameAfter && (
             <Tooltip message={`Duplicate name: ${name}. Only the last item with same name will be used.`} delay={200}>
               <i className="fa fa-exclamation-circle text-[--color-warning]" />
             </Tooltip>
-          }
+          )}
         </div>
-        <div className={`${cellCommonStyle} w-[50%] relative`}>
-          {type === EnvironmentKvPairDataType.STRING &&
+        <div className={`${cellCommonStyle} relative w-[50%]`}>
+          {type === EnvironmentKvPairDataType.STRING && (
             <OneLineEditor
               id={`environment-kv-editor-value-${id}`}
               placeholder={'Input Value'}
@@ -232,10 +255,10 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
               readOnly={!enabled}
               onChange={newValue => handleItemChange(id, 'value', newValue)}
             />
-          }
-          {type === EnvironmentKvPairDataType.JSON &&
+          )}
+          {type === EnvironmentKvPairDataType.JSON && (
             <ItemButton
-              className="px-2 py-1 w-full flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm overflow-hidden"
+              className="flex w-full flex-1 items-center justify-center gap-2 overflow-hidden rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
               tabIndex={-1}
               isDisabled={!enabled}
               onPress={() => {
@@ -266,31 +289,38 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
                 }
               }}
             >
-              <i className="fa fa-pencil-square-o space-right" aria-label='Edit JSON' />Click to Edit
+              <i className="fa fa-pencil-square-o space-right" aria-label="Edit JSON" />
+              Click to Edit
             </ItemButton>
-          }
-          {type === EnvironmentKvPairDataType.SECRET &&
+          )}
+          {type === EnvironmentKvPairDataType.SECRET && (
             <PasswordInput
               itemId={id}
               enabled={enabled}
-              placeholder='Input Secret'
+              placeholder="Input Secret"
               value={decryptSecretValue(value, symmetricKey)}
               onChange={newValue => {
                 const encryptedValue = encryptSecretValue(newValue, symmetricKey);
                 handleItemChange(id, 'value', encryptedValue);
               }}
             />
-          }
+          )}
         </div>
-        <div className={`${cellCommonStyle} w-32`} >
+        <div className={`${cellCommonStyle} w-32`}>
           <MenuTrigger>
-            <ItemButton className="py-1 px-[--padding-sm] w-full font-bold flex flex-1 items-center justify-between aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] text-sm" tabIndex={-1} aria-label='Type Selection'>
-              <span className="flex truncate items-center justify-center gap-2" >{kvPairItemTypes.find(t => t.id === type)?.name}</span>
+            <ItemButton
+              className="flex w-full flex-1 items-center justify-between rounded-sm px-[--padding-sm] py-1 text-sm font-bold text-[--color-font] hover:bg-[--hl-xs] aria-pressed:bg-[--hl-sm]"
+              tabIndex={-1}
+              aria-label="Type Selection"
+            >
+              <span className="flex items-center justify-center gap-2 truncate">
+                {kvPairItemTypes.find(t => t.id === type)?.name}
+              </span>
               <Icon icon="caret-down" />
             </ItemButton>
-            <Popover className='border-solid border-[--hl-sm] shadow-lg bg-[--color-bg]'>
+            <Popover className="border-solid border-[--hl-sm] bg-[--color-bg] shadow-lg">
               <Menu
-                aria-label='environment-kv-editor-type-selector'
+                aria-label="environment-kv-editor-type-selector"
                 selectionMode="single"
                 selectedKeys={[type]}
                 // Only valid json string or empty string allowed to convert to JSON type
@@ -301,20 +331,14 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
                   <MenuItem
                     key={item.id}
                     id={item.id}
-                    className="aria-disabled:text-[--hl-lg] aria-disabled:cursor-not-allowed aria-disabled:bg-transparent flex gap-2 pl-[--padding-sm] pr-[--padding-xl] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full
-                      text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none transition-colors text-sm react-aria-ListBoxItem"
+                    className="text-md react-aria-ListBoxItem flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent pl-[--padding-sm] pr-[--padding-xl] text-sm text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none aria-disabled:cursor-not-allowed aria-disabled:bg-transparent aria-disabled:text-[--hl-lg] aria-selected:font-bold"
                     aria-label={item.name}
                     onAction={() => handleItemTypeChange(id, item.id)}
                   >
                     {({ isSelected }) => (
                       <>
                         <span>{item.name}</span>
-                        {isSelected && (
-                          <Icon
-                            icon="check"
-                            className="text-[--color-success] justify-self-end"
-                          />
-                        )}
+                        {isSelected && <Icon icon="check" className="justify-self-end text-[--color-success]" />}
                       </>
                     )}
                   </MenuItem>
@@ -323,9 +347,9 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
             </Popover>
           </MenuTrigger>
         </div>
-        <div className={`${cellCommonStyle} w-20`} >
+        <div className={`${cellCommonStyle} w-20`}>
           <ItemButton
-            className="flex items-center justify-center h-7 aspect-square rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+            className="flex aspect-square h-7 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
             tabIndex={-1}
             aria-label={enabled ? 'Disable Row' : 'Enable Row'}
             onPress={() => handleItemChange(id, 'enabled', !enabled)}
@@ -333,11 +357,11 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
             <Icon icon={enabled ? 'check-square' : 'square'} />
           </ItemButton>
           <PromptButton
-            className="flex	items-center disabled:opacity-50 justify-center h-7 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+            className="flex aspect-square h-7 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:opacity-50 aria-pressed:bg-[--hl-sm]"
             fullWidth
-            confirmMessage=''
-            doneMessage=''
-            ariaLabel='Delete Row'
+            confirmMessage=""
+            doneMessage=""
+            ariaLabel="Delete Row"
             tabIndex={-1}
             onClick={() => handleDeleteItem(id)}
           >
@@ -349,11 +373,11 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
   };
 
   return (
-    <div className="min-w-max h-full overflow-hidden flex flex-col">
-      <Toolbar className="content-box z-10 bg-[var(--color-bg)] flex flex-shrink-0 h-[var(--line-height-sm)] text-[var(--font-size-sm)]">
+    <div className="flex h-full min-w-max flex-col overflow-hidden">
+      <Toolbar className="content-box z-10 flex h-[var(--line-height-sm)] flex-shrink-0 bg-[var(--color-bg)] text-[var(--font-size-sm)]">
         <Button
-          className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-          aria-label='Add Row'
+          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          aria-label="Add Row"
           onPress={() => {
             handleAddItem();
           }}
@@ -365,19 +389,19 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
           onClick={() => {
             onChange([]);
           }}
-          ariaLabel='Delete All'
-          className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+          ariaLabel="Delete All"
+          className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
         >
           <Icon icon="trash-can" />
           <span>Delete all</span>
         </PromptButton>
       </Toolbar>
       <ListBox
-        aria-label='Environment Key Value Pair'
-        selectionMode='none'
+        aria-label="Environment Key Value Pair"
+        selectionMode="none"
         dragAndDropHooks={dragAndDropHooks}
         dependencies={[kvPairError, data, symmetricKey]}
-        className="p-[--padding-sm] w-full overflow-y-auto h-full"
+        className="h-full w-full overflow-y-auto p-[--padding-sm]"
         items={kvPairs}
       >
         {kvPair => {
@@ -388,16 +412,14 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
               id={id}
               textValue={`environment-item-${name || id}`}
               style={{ opacity: enabled ? '1' : '0.4' }}
-              className={'w-full flex focus:outline-none  h-[--line-height-sm]'}
+              className={'flex h-[--line-height-sm] w-full focus:outline-none'}
             >
               {renderPairItem(kvPair)}
             </ListBoxItem>
           );
         }}
       </ListBox>
-      <CodePromptModal
-        ref={codeModalRef}
-      />
+      <CodePromptModal ref={codeModalRef} />
     </div>
   );
 };

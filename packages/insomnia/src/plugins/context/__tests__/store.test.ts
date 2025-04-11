@@ -9,24 +9,15 @@ const PLUGIN = {
 };
 
 describe('init()', () => {
-
   it('initializes correctly', async () => {
     const result = plugin.init({
       name: PLUGIN,
     });
-    expect(Object.keys(result.store).sort()).toEqual([
-      'all',
-      'clear',
-      'getItem',
-      'hasItem',
-      'removeItem',
-      'setItem',
-    ]);
+    expect(Object.keys(result.store).sort()).toEqual(['all', 'clear', 'getItem', 'hasItem', 'removeItem', 'setItem']);
   });
 });
 
 describe('store.*', () => {
-
   it('all methods work', async () => {
     const p = plugin.init(PLUGIN);
     // Null item for no result

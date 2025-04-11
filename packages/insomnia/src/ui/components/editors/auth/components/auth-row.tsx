@@ -28,7 +28,7 @@ export const AuthRow: FC<PropsWithChildren<Props>> = ({ labelFor, label, help, d
       </td>
       <td className="wide">
         <div
-          className={classnames('form-control form-control--underlined no-margin flex wide', {
+          className={classnames('form-control form-control--underlined no-margin wide flex', {
             'form-control--inactive': isDisabled,
           })}
         >

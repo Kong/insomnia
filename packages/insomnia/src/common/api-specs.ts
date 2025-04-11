@@ -7,9 +7,7 @@ export interface ParsedApiSpec {
   formatVersion: string | null;
 }
 
-export function parseApiSpec(
-  rawDocument: string,
-) {
+export function parseApiSpec(rawDocument: string) {
   const result: ParsedApiSpec = {
     contents: null,
     rawContents: rawDocument,
@@ -41,10 +39,7 @@ export function parseApiSpec(
   return result;
 }
 
-export function resolveComponentSchemaRefs(
-  spec: ParsedApiSpec,
-  methodInfo: Record<string, any>,
-) {
+export function resolveComponentSchemaRefs(spec: ParsedApiSpec, methodInfo: Record<string, any>) {
   const schemas = spec.contents?.components?.schemas;
   if (!schemas) {
     return;

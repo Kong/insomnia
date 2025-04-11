@@ -13,29 +13,25 @@ export const EditableInput = ({
 }: {
   value: string;
   ariaLabel?: string;
-    editable?: boolean;
-    onEditableChange?: (editable: boolean) => void;
+  editable?: boolean;
+  onEditableChange?: (editable: boolean) => void;
   name?: string;
-    className?: string;
-    onSubmit: (value: string) => void;
+  className?: string;
+  onSubmit: (value: string) => void;
 }) => {
   const [isEditable, setIsEditable] = useState(editable);
   const editableRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsEditable(editable);
-  }
-    , [editable]);
+  }, [editable]);
 
   useEffect(() => {
     if (!isEditable) {
       return;
     }
 
-    const keysToIgnore = [
-      'Enter',
-      'Escape',
-    ];
+    const keysToIgnore = ['Enter', 'Escape'];
 
     function lockKeyDownToInput(e: KeyboardEvent) {
       if (keysToIgnore.includes(e.key)) {
@@ -65,12 +61,7 @@ export const EditableInput = ({
     <>
       <div
         ref={editableRef}
-        className={
-          `items-center truncate justify-center data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all
-            ${isEditable ? 'hidden' : ''}
-            ${className || 'px-2'}
-          `
-        }
+        className={`items-center justify-center truncate rounded-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] data-[pressed]:bg-[--hl-sm] ${isEditable ? 'hidden' : ''} ${className || 'px-2'} `}
         onDoubleClick={onDoubleClick}
         data-editable
         aria-label={ariaLabel}

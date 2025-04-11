@@ -36,14 +36,23 @@ export enum SegmentEvent {
 }
 
 type PushPull = 'push' | 'pull';
-type VCSAction = PushPull | `force_${PushPull}` |
-  'create_branch' | 'merge_branch' | 'delete_branch' | 'checkout_branch' |
-  'commit' | 'stage_all' | 'stage' | 'unstage_all' | 'unstage' | 'rollback' | 'rollback_all' |
-  'update' | 'setup' | 'clone';
-export function vcsSegmentEventProperties(
-  type: 'git',
-  action: VCSAction,
-  error?: string
-) {
+type VCSAction =
+  | PushPull
+  | `force_${PushPull}`
+  | 'create_branch'
+  | 'merge_branch'
+  | 'delete_branch'
+  | 'checkout_branch'
+  | 'commit'
+  | 'stage_all'
+  | 'stage'
+  | 'unstage_all'
+  | 'unstage'
+  | 'rollback'
+  | 'rollback_all'
+  | 'update'
+  | 'setup'
+  | 'clone';
+export function vcsSegmentEventProperties(type: 'git', action: VCSAction, error?: string) {
   return { type, action, error };
 }

@@ -9,7 +9,7 @@ resources:
     created: 1729981763331
     url: localhost:4010/echo
     name: setNextRequest
-    description: ""
+    description: ''
     method: GET
     body: {}
     parameters: []
@@ -34,7 +34,7 @@ resources:
     modified: 1729981758905
     created: 1729981758905
     name: test next request
-    description: ""
+    description: ''
     scope: collection
     _type: workspace
   - _id: req_6a0343d51ca74de7a2c73e34211354ab
@@ -43,7 +43,7 @@ resources:
     created: 1729981846012
     url: localhost:4010/echo
     name: Failing Request
-    description: ""
+    description: ''
     method: GET
     body: {}
     parameters: []
@@ -71,7 +71,7 @@ resources:
     created: 1729981822432
     url: localhost:4010/echo
     name: Passing Request
-    description: ""
+    description: ''
     method: GET
     body: {}
     parameters: []

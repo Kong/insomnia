@@ -19,15 +19,18 @@ export const CopyButton: FC<Props> = ({
   ...buttonProps
 }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const onClick = useCallback(async (event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
+  const onClick = useCallback(
+    async (event: React.MouseEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
 
-    if (content) {
-      window.clipboard.writeText(content);
-    }
-    setShowConfirmation(true);
-  }, [content]);
+      if (content) {
+        window.clipboard.writeText(content);
+      }
+      setShowConfirmation(true);
+    },
+    [content],
+  );
 
   useInterval(() => {
     setShowConfirmation(false);
@@ -35,12 +38,8 @@ export const CopyButton: FC<Props> = ({
 
   const confirm = typeof confirmMessage === 'string' ? confirmMessage : 'Copied';
   return (
-    <Button
-      {...buttonProps}
-      title={title}
-      onClick={onClick}
-    >
-      {(showConfirmation || showConfirmationProp) ? (
+    <Button {...buttonProps} title={title} onClick={onClick}>
+      {showConfirmation || showConfirmationProp ? (
         <span>
           {confirm} <i className="fa fa-check-circle-o" />
         </span>

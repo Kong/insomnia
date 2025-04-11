@@ -63,10 +63,7 @@ function hashString(input: string) {
   return crypto.createHash('sha256').update(input).digest('hex');
 }
 
-export async function trackSegmentEvent(
-  event: SegmentEvent,
-  properties?: Record<string, any>,
-) {
+export async function trackSegmentEvent(event: SegmentEvent, properties?: Record<string, any>) {
   const settings = await models.settings.getOrCreate();
   const userSession = await models.userSession.getOrCreate();
   if (!userSession?.hashedAccountId) {
@@ -75,23 +72,26 @@ export async function trackSegmentEvent(
   const allowAnalytics = settings.enableAnalytics || userSession?.hashedAccountId;
   if (allowAnalytics) {
     try {
-      const anonymousId = await getDeviceId() ?? '';
+      const anonymousId = (await getDeviceId()) ?? '';
       const context = {
         app: { name: getProductName(), version: getAppVersion() },
         os: { name: _getOsName(), version: process.getSystemVersion() },
       };
 
-      analytics.track({
-        event,
-        properties,
-        context,
-        anonymousId,
-        userId: userSession?.hashedAccountId || '',
-      }, error => {
-        if (error) {
-          console.warn('[analytics] Error sending segment event', error);
-        }
-      });
+      analytics.track(
+        {
+          event,
+          properties,
+          context,
+          anonymousId,
+          userId: userSession?.hashedAccountId || '',
+        },
+        error => {
+          if (error) {
+            console.warn('[analytics] Error sending segment event', error);
+          }
+        },
+      );
     } catch (error: unknown) {
       console.warn('[analytics] Unexpected error while sending segment event', error);
     }
@@ -108,7 +108,7 @@ export async function trackPageView(name: string) {
   const allowAnalytics = settings.enableAnalytics || userSession?.hashedAccountId;
   if (allowAnalytics) {
     try {
-      const anonymousId = await getDeviceId() ?? '';
+      const anonymousId = (await getDeviceId()) ?? '';
       const context = {
         app: { name: getProductName(), version: getAppVersion() },
         os: { name: _getOsName(), version: process.getSystemVersion() },

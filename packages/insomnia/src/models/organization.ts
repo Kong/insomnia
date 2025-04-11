@@ -15,25 +15,18 @@ export interface Organization {
   metadata: Metadata;
 }
 export const SCRATCHPAD_ORGANIZATION_ID = 'org_scratchpad';
-export const isScratchpadOrganizationId = (organizationId: string) =>
-  organizationId === SCRATCHPAD_ORGANIZATION_ID;
+export const isScratchpadOrganizationId = (organizationId: string) => organizationId === SCRATCHPAD_ORGANIZATION_ID;
 export const isPersonalOrganization = (organization: Organization) =>
   organization.metadata.organizationType === 'personal';
 
-export const isOwnerOfOrganization = ({
-  organization,
-  accountId,
-}: {
-  organization: Organization;
-  accountId: string;
-}) =>
+export const isOwnerOfOrganization = ({ organization, accountId }: { organization: Organization; accountId: string }) =>
   organization.metadata.ownerAccountId === accountId;
 
 export const findPersonalOrganization = (organizations: Organization[], accountId: string) => {
-  return organizations.filter(isPersonalOrganization)
-    .find(organization =>
-      isOwnerOfOrganization({
-        organization,
-        accountId,
-      }));
+  return organizations.filter(isPersonalOrganization).find(organization =>
+    isOwnerOfOrganization({
+      organization,
+      accountId,
+    }),
+  );
 };

@@ -2,10 +2,7 @@ import fs from 'fs/promises';
 import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  useFetcher,
-  useRouteLoaderData,
-} from 'react-router-dom';
+import { useFetcher, useRouteLoaderData } from 'react-router-dom';
 
 import { getContentTypeName, getMimeTypeFromContentType } from '../../../common/constants';
 import type { ResponseHeader } from '../../../models/response';
@@ -26,10 +23,7 @@ export const MockResponseExtractor = () => {
   let { mockServerAndRoutes } = requestLoaderData;
 
   // file://./../../routes/workspace.tsx#workspaceLoader
-  const {
-    activeProject,
-    activeWorkspace,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { activeProject, activeWorkspace } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const isLocalProject = !activeProject?.remoteId;
   const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const isEnterprise = currentPlan?.type.includes('enterprise');
@@ -60,35 +54,33 @@ If you want to create a self-hosted mock server route from a request response in
 
   const patchMockRoute = useMockRoutePatcher();
   const navigate = useNavigate();
-  const {
-    organizationId,
-    projectId,
-    workspaceId,
-  } = useParams();
+  const { organizationId, projectId, workspaceId } = useParams();
   const fetcher = useFetcher();
   const [selectedMockServer, setSelectedMockServer] = useState(
-    canOnlyChooseExistingMockServer
-      ? mockServerAndRoutes[0]._id
-      : ''
+    canOnlyChooseExistingMockServer ? mockServerAndRoutes[0]._id : '',
   );
   const [selectedMockRoute, setSelectedMockRoute] = useState('');
   const maybeMimeType = activeResponse && getMimeTypeFromContentType(activeResponse.contentType);
   const mimeType = maybeMimeType && isInMockContentTypeList(maybeMimeType) ? maybeMimeType : 'text/plain';
   return (
-    <div className="px-32 h-full flex flex-col justify-center">
-      <div className="flex place-content-center text-9xl pb-8 text-[--hl-md]">
+    <div className="flex h-full flex-col justify-center px-32">
+      <div className="flex place-content-center pb-8 text-9xl text-[--hl-md]">
         <Icon icon="cube" />
       </div>
-      {tipPreventingUserFromCreatingMockRoute
-        ? (
-          <div className="flex place-content-center pb-2 whitespace-pre-line">
-            {tipPreventingUserFromCreatingMockRoute}
-          </div>
-        )
-        : (<>
+      {tipPreventingUserFromCreatingMockRoute ? (
+        <div className="flex place-content-center whitespace-pre-line pb-2">
+          {tipPreventingUserFromCreatingMockRoute}
+        </div>
+      ) : (
+        <>
           <div className="flex place-content-center pb-2">
             Transform this
-            {activeResponse?.contentType ? getContentTypeName(activeResponse?.contentType) === 'Other' ? '' : ` ${getContentTypeName(activeResponse?.contentType)}` : ''} response to a new mock route or overwrite an existing one.
+            {activeResponse?.contentType
+              ? getContentTypeName(activeResponse?.contentType) === 'Other'
+                ? ''
+                : ` ${getContentTypeName(activeResponse?.contentType)}`
+              : ''}{' '}
+            response to a new mock route or overwrite an existing one.
           </div>
           <form
             onSubmit={async e => {
@@ -123,7 +115,9 @@ If you want to create a self-hosted mock server route from a request response in
                     invariant(activeResponse, 'Active response must be defined');
                     const body = await fs.readFile(activeResponse.bodyPath);
                     // auth mechanism is too sensitive to allow content length checks
-                    const headersWithoutContentLength: ResponseHeader[] = activeResponse.headers.filter(h => h.name.toLowerCase() !== 'content-length');
+                    const headersWithoutContentLength: ResponseHeader[] = activeResponse.headers.filter(
+                      h => h.name.toLowerCase() !== 'content-length',
+                    );
                     // file://./../../routes/actions.tsx#createMockRouteAction
                     fetcher.submit(
                       JSON.stringify({
@@ -138,7 +132,7 @@ If you want to create a self-hosted mock server route from a request response in
                         encType: 'application/json',
                         method: 'post',
                         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/new`,
-                      }
+                      },
                     );
                   },
                 });
@@ -153,8 +147,9 @@ If you want to create a self-hosted mock server route from a request response in
                   onComplete: async name => {
                     invariant(activeResponse, 'Active response must be defined');
                     const body = await fs.readFile(activeResponse.bodyPath);
-                    const hasRouteInServer = mockServerAndRoutes.find(s => s._id === selectedMockServer)?.routes
-                      .find(r => r.name === name && r.method.toUpperCase() === 'GET');
+                    const hasRouteInServer = mockServerAndRoutes
+                      .find(s => s._id === selectedMockServer)
+                      ?.routes.find(r => r.name === name && r.method.toUpperCase() === 'GET');
                     if (hasRouteInServer) {
                       showModal(AlertModal, {
                         title: 'Error',
@@ -163,7 +158,9 @@ If you want to create a self-hosted mock server route from a request response in
                       return;
                     }
                     // auth mechanism is too sensitive to allow content length checks
-                    const headersWithoutContentLength: ResponseHeader[] = activeResponse.headers.filter(h => h.name.toLowerCase() !== 'content-length');
+                    const headersWithoutContentLength: ResponseHeader[] = activeResponse.headers.filter(
+                      h => h.name.toLowerCase() !== 'content-length',
+                    );
                     fetcher.submit(
                       JSON.stringify({
                         name: name,
@@ -177,12 +174,11 @@ If you want to create a self-hosted mock server route from a request response in
                         encType: 'application/json',
                         method: 'post',
                         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/new`,
-                      }
+                      },
                     );
                   },
                 });
               }
-
             }}
           >
             <div className="form-row">
@@ -200,16 +196,12 @@ If you want to create a self-hosted mock server route from a request response in
                       setSelectedMockRoute('');
                     }}
                   >
-                    {!canOnlyChooseExistingMockServer && (
-                      <option value="">-- Create new --</option>
-                    )}
-                    {mockServerAndRoutes
-                      .map(w => (
-                        <option key={w._id} value={w._id}>
-                          {w.name}
-                        </option>
-                      ))
-                    }
+                    {!canOnlyChooseExistingMockServer && <option value="">-- Create new --</option>}
+                    {mockServerAndRoutes.map(w => (
+                      <option key={w._id} value={w._id}>
+                        {w.name}
+                      </option>
+                    ))}
                   </select>
                 </label>
               </div>
@@ -229,21 +221,21 @@ If you want to create a self-hosted mock server route from a request response in
                     }}
                   >
                     <option value="">-- Create new --</option>
-                    {mockServerAndRoutes.find(s => s._id === selectedMockServer)?.routes
-                      .map(w => (
+                    {mockServerAndRoutes
+                      .find(s => s._id === selectedMockServer)
+                      ?.routes.map(w => (
                         <option key={w._id} value={w._id}>
                           {w.name}
                         </option>
-                      ))
-                    }
+                      ))}
                   </select>
                 </label>
               </div>
             </div>
-            <div className="flex mt-2">
+            <div className="mt-2 flex">
               <Button
                 type="submit"
-                className="mr-2 hover:no-underline bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] aria-pressed:bg-opacity-80 focus:ring-[--hl-md] transition-colors rounded-sm"
+                className="mr-2 rounded-sm border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-3 py-2 text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline focus:ring-[--hl-md] aria-pressed:bg-opacity-80"
               >
                 {selectedMockRoute ? 'Overwrite' : 'Create'}
               </Button>
@@ -251,16 +243,18 @@ If you want to create a self-hosted mock server route from a request response in
                 isDisabled={!selectedMockServer || !selectedMockRoute}
                 onPress={() => {
                   const mockWorkspaceId = mockServerAndRoutes.find(s => s._id === selectedMockServer)?.parentId;
-                  navigate(`/organization/${organizationId}/project/${projectId}/workspace/${mockWorkspaceId}/mock-server/mock-route/${selectedMockRoute}`);
+                  navigate(
+                    `/organization/${organizationId}/project/${projectId}/workspace/${mockWorkspaceId}/mock-server/mock-route/${selectedMockRoute}`,
+                  );
                 }}
-                className="flex items-center justify-center py-2 px-3 gap-2 bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                className="flex items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-3 py-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
               >
                 Go to mock
               </Button>
             </div>
           </form>
-        </>)
-      }
+        </>
+      )}
     </div>
   );
 };

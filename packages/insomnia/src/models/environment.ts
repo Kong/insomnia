@@ -21,10 +21,7 @@ export const vaultEnvironmentMaskValue = '••••••';
 export const canDuplicate = true;
 export const canSync = true;
 // for those keys do not need to add in model init method
-export const optionalKeys = [
-  'kvPairData',
-  'environmentType',
-];
+export const optionalKeys = ['kvPairData', 'environmentType'];
 
 export interface BaseEnvironment {
   name: string;
@@ -40,7 +37,7 @@ export interface BaseEnvironment {
 
 export enum EnvironmentType {
   JSON = 'json',
-  KVPAIR = 'kv'
+  KVPAIR = 'kv',
 }
 export enum EnvironmentKvPairDataType {
   JSON = 'json',
@@ -186,9 +183,7 @@ export const removeAllSecrets = async (orgnizationIds: string[]) => {
   });
 };
 
-export const isEnvironment = (model: Pick<BaseModel, 'type'>): model is Environment => (
-  model.type === type
-);
+export const isEnvironment = (model: Pick<BaseModel, 'type'>): model is Environment => model.type === type;
 
 export function init() {
   return {

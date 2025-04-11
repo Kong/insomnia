@@ -56,9 +56,7 @@ export interface BaseResponse {
 
 export type Response = BaseModel & BaseResponse;
 
-export const isResponse = (model: Pick<BaseModel, 'type'>): model is Response => (
-  model.type === type
-);
+export const isResponse = (model: Pick<BaseModel, 'type'>): model is Response => model.type === type;
 
 export function init(): BaseResponse {
   return {
@@ -147,11 +145,7 @@ export function remove(response: Response) {
   return db.remove(response);
 }
 
-async function _findRecentForRequest(
-  requestId: string,
-  environmentId: string | null,
-  limit: number,
-) {
+async function _findRecentForRequest(requestId: string, environmentId: string | null, limit: number) {
   const query: Query<Response> = {
     parentId: requestId,
   };
@@ -165,10 +159,7 @@ async function _findRecentForRequest(
   return db.findMostRecentlyModified<Response>(type, query, limit);
 }
 
-export async function getLatestForRequest(
-  requestId: string,
-  environmentId: string | null,
-) {
+export async function getLatestForRequest(requestId: string, environmentId: string | null) {
   const responses = await _findRecentForRequest(requestId, environmentId, 1);
   const response = responses[0] as Response | null | undefined;
   return response || null;
@@ -230,7 +221,6 @@ export const getBodyStream = (
     return fs.createReadStream(response?.bodyPath).pipe(zlib.createGunzip());
   }
   return fs.createReadStream(response?.bodyPath);
-
 };
 export const readCurlResponse = async (options: { bodyPath?: string; bodyCompression?: Compression }) => {
   const readFailureMsg = '[main/curlBridgeAPI] failed to read response body message';
@@ -259,7 +249,9 @@ export const getBodyBuffer = async (
   try {
     const rawBuffer = await fs.promises.readFile(response?.bodyPath);
     if (response?.bodyCompression === 'zip') {
-      return new Promise((resolve, reject) => zlib.gunzip(rawBuffer, (err, buffer) => err ? reject(err) : resolve(buffer)));
+      return new Promise((resolve, reject) =>
+        zlib.gunzip(rawBuffer, (err, buffer) => (err ? reject(err) : resolve(buffer))),
+      );
     }
 
     return rawBuffer;
@@ -281,16 +273,18 @@ export function getTimeline(response: Response, showBody?: boolean) {
     const timelineString = rawBuffer.toString();
     const isLegacyTimelineFormat = timelineString.startsWith('[');
     const timeline = isLegacyTimelineFormat
-      ? JSON.parse(timelineString) as ResponseTimelineEntry[]
+      ? (JSON.parse(timelineString) as ResponseTimelineEntry[])
       : deserializeNDJSON(timelineString);
 
-    const body: ResponseTimelineEntry[] = showBody ? [
-      {
-        name: 'DataOut',
-        timestamp: Date.now(),
-        value: fs.readFileSync(bodyPath).toString(),
-      },
-    ] : [];
+    const body: ResponseTimelineEntry[] = showBody
+      ? [
+          {
+            name: 'DataOut',
+            timestamp: Date.now(),
+            value: fs.readFileSync(bodyPath).toString(),
+          },
+        ]
+      : [];
     const output = [...timeline, ...body];
     return output;
   } catch (err) {

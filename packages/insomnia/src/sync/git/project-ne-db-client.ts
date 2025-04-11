@@ -29,10 +29,7 @@ export class GitProjectNeDBClient {
     };
   }
 
-  async readFile(
-    filePath: string,
-    options?: BufferEncoding | { encoding?: BufferEncoding },
-  ) {
+  async readFile(filePath: string, options?: BufferEncoding | { encoding?: BufferEncoding }) {
     if (!filePath.endsWith('.yaml')) {
       throw this._errMissing(filePath);
     }
@@ -59,8 +56,7 @@ export class GitProjectNeDBClient {
       if (options.encoding) {
         return raw.toString(options.encoding);
       }
-        return raw;
-
+      return raw;
     } catch (err) {
       throw this._errMissing(filePath);
     }
@@ -91,13 +87,16 @@ export class GitProjectNeDBClient {
 
     const workspace = dataToImport.find(isWorkspace) as Workspace | undefined;
 
-    const isExistingWorkspace = workspace && await models.workspace.getById(workspace._id);
+    const isExistingWorkspace = workspace && (await models.workspace.getById(workspace._id));
     // Remove the workspace if it already exists to clean up any descendants that might have been removed.
-    isExistingWorkspace && await models.workspace.remove(workspace);
+    isExistingWorkspace && (await models.workspace.remove(workspace));
 
     for (const doc of dataToImport) {
       if (isWorkspace(doc)) {
-        console.log('[git] setting workspace parent to be that of the active project', { original: doc.parentId, new: this._projectId });
+        console.log('[git] setting workspace parent to be that of the active project', {
+          original: doc.parentId,
+          new: this._projectId,
+        });
         // Whenever we write a workspace into nedb we should set the parentId to be that of the current project
         // This is because the parentId (or a project) is not synced into git, so it will be cleared whenever git writes the workspace into the db, thereby removing it from the project on the client
         // In order to reproduce this bug, comment out the following line, then clone a repository into a local project, then open the workspace, you'll notice it will have moved into the default project
@@ -139,7 +138,9 @@ export class GitProjectNeDBClient {
       },
     });
 
-    const hasDirectoryInsomniaFiles = workspaceMetas.some(({ gitFilePath }) => gitFilePath && path.dirname(gitFilePath) === filePath);
+    const hasDirectoryInsomniaFiles = workspaceMetas.some(
+      ({ gitFilePath }) => gitFilePath && path.dirname(gitFilePath) === filePath,
+    );
 
     if (hasDirectoryInsomniaFiles) {
       const workspacePaths = workspaceMetas
@@ -190,14 +191,13 @@ export class GitProjectNeDBClient {
         mtimeMs: doc?.meta?.modified || 0,
       });
     }
-      return new Stat({
-        type: 'dir',
-        mode: 0o777,
-        size: 0,
-        ino: 0,
-        mtimeMs: 0,
-      });
-
+    return new Stat({
+      type: 'dir',
+      mode: 0o777,
+      size: 0,
+      ino: 0,
+      mtimeMs: 0,
+    });
   }
 
   async readlink(filePath: string, ...x: any[]) {

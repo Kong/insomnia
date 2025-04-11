@@ -1,9 +1,4 @@
-import type {
-  Converter,
-  Header,
-  ImportRequest,
-  Parameter,
-} from '../entities';
+import type { Converter, Header, ImportRequest, Parameter } from '../entities';
 
 export const id = 'insomnia-1';
 export const name = 'Insomnia v1';
@@ -66,79 +61,77 @@ const importRequestGroupItem = (item: Item): ImportRequest => {
   };
 };
 
-const importRequestItem = (parentId?: string) => ({
-  authentication: { username, password } = {},
-  headers = [],
-  __insomnia,
-  body: itemBody,
-  name,
-  url = '',
-  method = 'GET',
-  params = [],
-}: Item): ImportRequest => {
-  let contentTypeHeader = headers.find(
-    ({ name }) => name.toLowerCase() === 'content-type',
-  );
+const importRequestItem =
+  (parentId?: string) =>
+  ({
+    authentication: { username, password } = {},
+    headers = [],
+    __insomnia,
+    body: itemBody,
+    name,
+    url = '',
+    method = 'GET',
+    params = [],
+  }: Item): ImportRequest => {
+    let contentTypeHeader = headers.find(({ name }) => name.toLowerCase() === 'content-type');
 
-  if (__insomnia?.format) {
-    const contentType = FORMAT_MAP[__insomnia.format];
+    if (__insomnia?.format) {
+      const contentType = FORMAT_MAP[__insomnia.format];
 
-    if (!contentTypeHeader) {
-      contentTypeHeader = {
-        name: 'Content-Type',
-        value: contentType,
-      };
-      headers.push(contentTypeHeader);
+      if (!contentTypeHeader) {
+        contentTypeHeader = {
+          name: 'Content-Type',
+          value: contentType,
+        };
+        headers.push(contentTypeHeader);
+      }
     }
-  }
 
-  let body = {};
+    let body = {};
 
-  const isForm =
-    contentTypeHeader &&
-    (contentTypeHeader.value.match(/^application\/x-www-form-urlencoded/i) ||
-      contentTypeHeader.value.match(/^multipart\/form-encoded/i));
+    const isForm =
+      contentTypeHeader &&
+      (contentTypeHeader.value.match(/^application\/x-www-form-urlencoded/i) ||
+        contentTypeHeader.value.match(/^multipart\/form-encoded/i));
 
-  if (isForm) {
-    const mimeType = contentTypeHeader ? contentTypeHeader.value.split(';')[0] : '';
-    const params = (typeof itemBody === 'string' ? itemBody : '')
-      .split('&')
-      .map(param => {
+    if (isForm) {
+      const mimeType = contentTypeHeader ? contentTypeHeader.value.split(';')[0] : '';
+      const params = (typeof itemBody === 'string' ? itemBody : '').split('&').map(param => {
         const [name, value] = param.split('=');
         return {
           name: decodeURIComponent(name),
           value: decodeURIComponent(value || ''),
         };
       });
-    body = {
-      mimeType,
-      params,
-    };
-  } else if (itemBody) {
-    const mimeType = __insomnia?.format ? FORMAT_MAP[__insomnia?.format] : '';
-    body = {
-      mimeType,
-      text: itemBody,
-    };
-  }
+      body = {
+        mimeType,
+        params,
+      };
+    } else if (itemBody) {
+      const mimeType = __insomnia?.format ? FORMAT_MAP[__insomnia?.format] : '';
+      body = {
+        mimeType,
+        text: itemBody,
+      };
+    }
 
-  const count = requestCount++;
-  return {
-    _type: 'request',
-    _id: `__REQ_${count}__`,
-    parentId,
-    name: name || `Imported HAR ${count}`,
-    url,
-    method,
-    body,
-    parameters: params || [],
-    headers,
-    authentication: {
-      password,
-      username,
-    },
+    const count = requestCount++;
+    return {
+      _type: 'request',
+      _id: `__REQ_${count}__`,
+      parentId,
+      name: name || `Imported HAR ${count}`,
+      url,
+      method,
+      body,
+      parameters: params || [],
+      headers,
+      authentication: {
+        password,
+        username,
+      },
+    };
   };
-};
 
 export const convert: Converter = rawData => {
   requestCount = 1;
@@ -159,10 +152,7 @@ export const convert: Converter = rawData => {
   return data.items
     .map(item => {
       const requestGroup = importRequestGroupItem(item);
-      return [
-        requestGroup,
-        ...item.requests.map(importRequestItem(requestGroup._id)),
-      ];
+      return [requestGroup, ...item.requests.map(importRequestItem(requestGroup._id))];
     })
     .flat();
 };

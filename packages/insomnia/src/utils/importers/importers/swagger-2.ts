@@ -10,38 +10,28 @@ const SUPPORTED_SWAGGER_VERSION = '2.0';
 const MIMETYPE_JSON = 'application/json';
 const MIMETYPE_URLENCODED = 'application/x-www-form-urlencoded';
 const MIMETYPE_MULTIPART = 'multipart/form-data';
-const SUPPORTED_MIME_TYPES = [
-  MIMETYPE_JSON,
-  MIMETYPE_URLENCODED,
-  MIMETYPE_MULTIPART,
-];
+const SUPPORTED_MIME_TYPES = [MIMETYPE_JSON, MIMETYPE_URLENCODED, MIMETYPE_MULTIPART];
 const WORKSPACE_ID = '__WORKSPACE_ID__';
 let requestCount = 1;
 export const id = 'swagger2';
 export const name = 'Swagger 2.0';
 export const description = 'Importer for Swagger 2.0 specification (json/yaml)';
 
- 
-
 /**
  * Return Insomnia folder / request group
  */
-const importFolderItem = (parentId: string) => (
-  item: OpenAPIV2.TagObject,
-): ImportRequest => {
-  const hash = crypto
-    .createHash('sha1')
-    .update(item.name)
-    .digest('hex')
-    .slice(0, 8);
-  return {
-    parentId,
-    _id: `fld___WORKSPACE_ID__${hash}`,
-    _type: 'request_group',
-    name: item.name || 'Folder {requestGroupCount}',
-    description: item.description || '',
+const importFolderItem =
+  (parentId: string) =>
+  (item: OpenAPIV2.TagObject): ImportRequest => {
+    const hash = crypto.createHash('sha1').update(item.name).digest('hex').slice(0, 8);
+    return {
+      parentId,
+      _id: `fld___WORKSPACE_ID__${hash}`,
+      _type: 'request_group',
+      name: item.name || 'Folder {requestGroupCount}',
+      description: item.description || '',
+    };
   };
-};
 
 /**
  * Parse string data into swagger 2.0 object (https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md#swagger-object)
@@ -60,14 +50,10 @@ const parseDocument = (rawData: string) => {
 const parseEndpoints = (document: OpenAPIV2.Document) => {
   const defaultParent = WORKSPACE_ID;
   const globalMimeTypes = document.consumes ?? [];
-  const endpointsSchemas: OpenAPIV2.OperationObject[] = Object.keys(
-    document.paths,
-  )
+  const endpointsSchemas: OpenAPIV2.OperationObject[] = Object.keys(document.paths)
     .map((path: keyof OpenAPIV2.PathsObject) => {
       const schemasPerMethod: OpenAPIV2.PathItemObject = document.paths[path];
-      const methods = Object.keys(
-        schemasPerMethod,
-      ) as (keyof OpenAPIV2.PathItemObject)[];
+      const methods = Object.keys(schemasPerMethod) as (keyof OpenAPIV2.PathItemObject)[];
       return methods
         .filter(method => method !== 'parameters' && method !== '$ref')
         .map(method => ({
@@ -93,9 +79,7 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
     .filter(tag => !tags.map(tag => tag.name).includes(tag))
     .map(name => ({ name, description: '' }));
 
-  const folders = [...tags, ...implicitTags].map(
-    importFolderItem(defaultParent),
-  );
+  const folders = [...tags, ...implicitTags].map(importFolderItem(defaultParent));
 
   const folderLookup = folders.reduce(
     (accumulator, { _id, name }) => ({
@@ -117,15 +101,7 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
         : `__REQUEST_${requestCount++}__`;
 
       const parentId = folderLookup[tag] || defaultParent;
-      requests.push(
-        importRequest(
-          document,
-          endpointSchema,
-          globalMimeTypes,
-          requestId,
-          parentId,
-        ),
-      );
+      requests.push(importRequest(document, endpointSchema, globalMimeTypes, requestId, parentId));
     });
   });
 
@@ -139,15 +115,12 @@ const importRequest = (
   requestId: string,
   parentId: string,
 ): ImportRequest => {
-  const name =
-    endpointSchema.summary || `${endpointSchema.method} ${endpointSchema.path}`;
+  const name = endpointSchema.summary || `${endpointSchema.method} ${endpointSchema.path}`;
 
   const body = prepareBody(document, endpointSchema, globalMimeTypes);
 
   let headers = prepareHeaders(endpointSchema);
-  const noContentTypeHeader = !headers?.find(
-    header => header.name === 'Content-Type',
-  );
+  const noContentTypeHeader = !headers?.find(header => header.name === 'Content-Type');
 
   if (body.mimeType && noContentTypeHeader) {
     headers = [
@@ -173,11 +146,7 @@ const importRequest = (
     parameters: prepareQueryParams(endpointSchema),
   };
 
-  return setupAuthentication(
-    document.securityDefinitions,
-    endpointSchema,
-    request,
-  );
+  return setupAuthentication(document.securityDefinitions, endpointSchema, request);
 };
 
 /**
@@ -197,10 +166,7 @@ const setupAuthentication = (
   }
 
   const usedDefinitions = endpointSchema.security.reduce(
-    (collect, requirement) => [
-      ...collect,
-      ...(Object.keys(requirement) as string[]),
-    ],
+    (collect, requirement) => [...collect, ...(Object.keys(requirement) as string[])],
     [] as string[],
   );
 
@@ -316,9 +282,7 @@ const pathWithParamsAsVariables = (path?: string) => {
 const prepareQueryParams = (endpointSchema: OpenAPIV2.OperationObject) => {
   return (
     convertParameters(
-      ((endpointSchema.parameters as unknown) as OpenAPIV2.Parameter[])?.filter(
-        parameter => parameter.in === 'query',
-      ),
+      (endpointSchema.parameters as unknown as OpenAPIV2.Parameter[])?.filter(parameter => parameter.in === 'query'),
     ) || []
   );
 };
@@ -326,24 +290,17 @@ const prepareQueryParams = (endpointSchema: OpenAPIV2.OperationObject) => {
 /**
  * Imports insomnia definitions of header parameters.
  */
-const prepareHeaders = (
-  endpointSchema: OpenAPIV2.OperationObject,
-): Header[] => {
+const prepareHeaders = (endpointSchema: OpenAPIV2.OperationObject): Header[] => {
   return (
     (convertParameters(
-      ((endpointSchema.parameters as unknown) as OpenAPIV2.Parameter[])?.filter(
-        parameter => parameter.in === 'header',
-      ),
+      (endpointSchema.parameters as unknown as OpenAPIV2.Parameter[])?.filter(parameter => parameter.in === 'header'),
     ) as Header[]) || []
   );
 };
 
 const resolve$ref = (document: OpenAPIV2.Document, $ref: string) => {
   const [, ...parts] = $ref.split('/') as (keyof OpenAPIV2.Document)[];
-  return parts.reduce(
-    (accumulator, path) => accumulator[path] as unknown as OpenAPIV2.Document,
-    document,
-  );
+  return parts.reduce((accumulator, path) => accumulator[path] as unknown as OpenAPIV2.Document, document);
 };
 
 /**
@@ -366,9 +323,7 @@ const prepareBody = (
 
   if (supportedMimeType && supportedMimeType.includes(MIMETYPE_JSON)) {
     const parameters = endpointSchema.parameters || [];
-    const bodyParameter = parameters.find(
-      parameter => (parameter as OpenAPIV2.Parameter).in === 'body',
-    );
+    const bodyParameter = parameters.find(parameter => (parameter as OpenAPIV2.Parameter).in === 'body');
 
     if (!bodyParameter) {
       return {};
@@ -396,9 +351,12 @@ const prepareBody = (
     };
   }
 
-  if (supportedMimeType && (supportedMimeType.includes(MIMETYPE_URLENCODED) || supportedMimeType.includes(MIMETYPE_MULTIPART))) {
+  if (
+    supportedMimeType &&
+    (supportedMimeType.includes(MIMETYPE_URLENCODED) || supportedMimeType.includes(MIMETYPE_MULTIPART))
+  ) {
     const parameters = endpointSchema.parameters || [];
-    const formDataParameters = ((parameters as unknown) as OpenAPIV2.Parameter[]).filter(
+    const formDataParameters = (parameters as unknown as OpenAPIV2.Parameter[]).filter(
       parameter => parameter.in === 'formData',
     );
 
@@ -417,8 +375,7 @@ const prepareBody = (
       mimeType: mimeTypes[0] || undefined,
     };
   }
-    return {};
-
+  return {};
 };
 
 type TypeExample =
@@ -442,19 +399,20 @@ const generateParameterExample = (
   parameter: OpenAPIV2.Parameter | TypeExample,
   ancestors: OpenAPIV2.Parameter[] = [],
 ) => {
-  const typeExamples: Record<TypeExample, (
-      parameter: OpenAPIV2.Parameter
-    ) => null | string | boolean | number | Record<string, unknown>> = {
-    string: () => 'string',
-    string_email: () => 'user@example.com',
+  const typeExamples: Record<
+    TypeExample,
+    (parameter: OpenAPIV2.Parameter) => null | string | boolean | number | Record<string, unknown>
+  > = {
+    'string': () => 'string',
+    'string_email': () => 'user@example.com',
     'string_date-time': () => new Date().toISOString(),
-    string_byte: () => 'ZXhhbXBsZQ==',
-    number: () => 0,
-    number_float: () => 0.0,
-    number_double: () => 0.0,
-    integer: () => 0,
-    boolean: () => true,
-    object: (parameter: OpenAPIV2.Parameter) => {
+    'string_byte': () => 'ZXhhbXBsZQ==',
+    'number': () => 0,
+    'number_float': () => 0.0,
+    'number_double': () => 0.0,
+    'integer': () => 0,
+    'boolean': () => true,
+    'object': (parameter: OpenAPIV2.Parameter) => {
       if (ancestors.indexOf(parameter) !== -1) {
         return {};
       }
@@ -466,24 +424,20 @@ const generateParameterExample = (
         ancestors.push(parameter);
         Object.keys(properties).forEach(propertyName => {
           // @ts-expect-error there's no way, so far as I'm aware, for TypeScript to know what's actually going on here.
-          example[propertyName] = generateParameterExample(
-            properties[propertyName],
-            ancestors,
-          );
+          example[propertyName] = generateParameterExample(properties[propertyName], ancestors);
         });
         ancestors.pop();
       }
 
       return example;
     },
-    array: ({ items, collectionFormat }: OpenAPIV2.Parameter) => {
+    'array': ({ items, collectionFormat }: OpenAPIV2.Parameter) => {
       const value = generateParameterExample(items, ancestors);
 
       if (collectionFormat === 'csv') {
         return value;
       }
-        return [value];
-
+      return [value];
     },
   };
 
@@ -502,9 +456,7 @@ const generateParameterExample = (
       return defaultValue;
     }
 
-    const factory =
-      typeExamples[`${type}_${format}` as TypeExample] ||
-      typeExamples[type as TypeExample];
+    const factory = typeExamples[`${type}_${format}` as TypeExample] || typeExamples[type as TypeExample];
 
     if (!factory) {
       return null;

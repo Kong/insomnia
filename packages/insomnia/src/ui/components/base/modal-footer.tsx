@@ -7,9 +7,7 @@ interface Props {
 }
 
 export const ModalFooter: FC<Props> = memo(({ children, className }) => (
-  <div className={classnames('modal__footer theme--dialog__footer', className)}>
-    {children}
-  </div>
+  <div className={classnames('modal__footer theme--dialog__footer', className)}>{children}</div>
 ));
 
 ModalFooter.displayName = 'ModalFooter';

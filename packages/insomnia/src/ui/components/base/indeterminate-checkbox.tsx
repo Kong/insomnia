@@ -15,11 +15,5 @@ export const IndeterminateCheckbox: FC<Props> = ({ checked, indeterminate, ...ot
     }
   }, [checked, indeterminate]);
 
-  return (
-    <input
-      type="checkbox"
-      ref={checkRef}
-      {...otherProps}
-    />
-  );
+  return <input type="checkbox" ref={checkRef} {...otherProps} />;
 };

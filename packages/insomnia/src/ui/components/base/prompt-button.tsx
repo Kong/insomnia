@@ -24,7 +24,7 @@ interface Props<T> {
   referToOnClickReturnValue?: boolean;
 }
 
-export const PromptButton = <T, >({
+export const PromptButton = <T,>({
   onClick,
   disabled,
   confirmMessage = 'Click to confirm',
@@ -86,13 +86,15 @@ export const PromptButton = <T, >({
       } else {
         if (retVal instanceof Promise) {
           setState('loading');
-          retVal.then(() => {
-            setState('done');
-          }).finally(() => {
-            triggerTimeout.current = global.setTimeout(() => {
-              setState('default');
-            }, 1000);
-          });
+          retVal
+            .then(() => {
+              setState('done');
+            })
+            .finally(() => {
+              triggerTimeout.current = global.setTimeout(() => {
+                setState('default');
+              }, 1000);
+            });
         } else {
           throw new Error('onClick must return a Promise when referToOnClickReturnValue is true');
         }
@@ -131,30 +133,33 @@ interface PromptMessageProps {
   loadingMessage: string;
   children: ReactNode;
 }
-const PromptMessage: FunctionComponent<PromptMessageProps> = ({ promptState, confirmMessage, doneMessage, loadingMessage, children }) => {
-
+const PromptMessage: FunctionComponent<PromptMessageProps> = ({
+  promptState,
+  confirmMessage,
+  doneMessage,
+  loadingMessage,
+  children,
+}) => {
   if (promptState === 'ask') {
     return (
-      <span className='warning' title='Click again to confirm'>
-        <i className='fa fa-exclamation-circle' />
-        {confirmMessage && (
-          <span className='space-left'>{confirmMessage}</span>
-        )}
+      <span className="warning" title="Click again to confirm">
+        <i className="fa fa-exclamation-circle" />
+        {confirmMessage && <span className="space-left">{confirmMessage}</span>}
       </span>
     );
   }
 
   if (promptState === 'loading') {
     return (
-      <span className='warning' title='loading'>
-        <i className='fa fa-spinner animate-spin' />
-        <span className='space-left'>{loadingMessage}</span>
+      <span className="warning" title="loading">
+        <i className="fa fa-spinner animate-spin" />
+        <span className="space-left">{loadingMessage}</span>
       </span>
     );
   }
 
   if (promptState === 'done' && doneMessage) {
-    return <span className='space-left'>{doneMessage}</span>;
+    return <span className="space-left">{doneMessage}</span>;
   }
 
   return <>{children}</>;

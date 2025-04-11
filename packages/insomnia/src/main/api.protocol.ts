@@ -13,19 +13,24 @@ const httpScheme = 'http';
 const templatingWorkerDatabaseInterface = 'insomnia-templating-worker-database';
 
 export async function registerInsomniaProtocols() {
-  protocol.registerSchemesAsPrivileged([{
-    scheme: insomniaStreamScheme,
-    privileges: { secure: true, standard: true, supportFetchAPI: true },
-  }, {
-    scheme: httpsScheme,
+  protocol.registerSchemesAsPrivileged([
+    {
+      scheme: insomniaStreamScheme,
       privileges: { secure: true, standard: true, supportFetchAPI: true },
-    }, {
-    scheme: httpScheme,
+    },
+    {
+      scheme: httpsScheme,
       privileges: { secure: true, standard: true, supportFetchAPI: true },
-    }, {
-    scheme: templatingWorkerDatabaseInterface,
+    },
+    {
+      scheme: httpScheme,
       privileges: { secure: true, standard: true, supportFetchAPI: true },
-  }]);
+    },
+    {
+      scheme: templatingWorkerDatabaseInterface,
+      privileges: { secure: true, standard: true, supportFetchAPI: true },
+    },
+  ]);
 
   await app.whenReady();
 

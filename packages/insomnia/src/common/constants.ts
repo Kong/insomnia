@@ -33,15 +33,17 @@ export const isLinux = () => getAppPlatform() === 'linux';
 export const isWindows = () => getAppPlatform() === 'win32';
 export const getAppEnvironment = () => process.env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
-export const getSegmentWriteKey = () => appConfig.segmentWriteKeys[(isDevelopment() || env.PLAYWRIGHT) ? 'development' : 'production'];
+export const getSegmentWriteKey = () =>
+  appConfig.segmentWriteKeys[isDevelopment() || env.PLAYWRIGHT ? 'development' : 'production'];
 export const getSentryDsn = () => appConfig.sentryDsn;
 export const getAppBuildDate = () => new Date(process.env.BUILD_DATE ?? '').toLocaleDateString();
 
-export const getBrowserUserAgent = () => encodeURIComponent(
-  String(window.navigator.userAgent)
-    .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
-    .replace(/Electron\/\d+\.\d+\.\d+ /, ''),
-).replace('%2C', ',');
+export const getBrowserUserAgent = () =>
+  encodeURIComponent(
+    String(window.navigator.userAgent)
+      .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
+      .replace(/Electron\/\d+\.\d+\.\d+ /, ''),
+  ).replace('%2C', ',');
 
 export function updatesSupported() {
   // Updates are not supported on Linux
@@ -67,7 +69,8 @@ export const CDN_INVALIDATION_TTL = 10_000; // 10 seconds
 export const STATUS_CODE_PLUGIN_ERROR = -222;
 export const LARGE_RESPONSE_MB = 5;
 export const HUGE_RESPONSE_MB = 100;
-export const FLEXIBLE_URL_REGEX = /^(http|https):\/\/[\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ\-_.]+[/\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ.\-+=:\][@%^*&!#?;$~'(),]*/;
+export const FLEXIBLE_URL_REGEX =
+  /^(http|https):\/\/[\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ\-_.]+[/\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ.\-+=:\][@%^*&!#?;$~'(),]*/;
 export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 24;
 
 export const ACCEPTED_NODE_CA_FILE_EXTS = ['.pem', '.crt', '.cer', '.p12'];
@@ -134,7 +137,6 @@ export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
   const url = new URL(baseUrl);
   url.host = mockServer._id.replace('_', '-') + '.' + url.host;
   return url.origin + path;
-
 };
 
 export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai-helper.insomnia.rest';
@@ -163,11 +165,7 @@ export const MAX_EDITOR_FONT_SIZE = 24;
 export const DEFAULT_SIDEBAR_SIZE = 25;
 
 // Activities
-export type GlobalActivity =
-  | 'spec'
-  | 'debug'
-  | 'unittest'
-  | 'home';
+export type GlobalActivity = 'spec' | 'debug' | 'unittest' | 'home';
 export const ACTIVITY_SPEC: GlobalActivity = 'spec';
 export const ACTIVITY_DEBUG: GlobalActivity = 'debug';
 export const ACTIVITY_UNIT_TEST: GlobalActivity = 'unittest';
@@ -348,12 +346,7 @@ export const sortOrderName: Record<SortOrder, string> = {
   [SORT_TYPE_ASC]: 'Requests First',
 };
 
-export type DashboardSortOrder =
-  | 'name-asc'
-  | 'name-desc'
-  | 'created-asc'
-  | 'created-desc'
-  | 'modified-desc';
+export type DashboardSortOrder = 'name-asc' | 'name-desc' | 'created-asc' | 'created-desc' | 'modified-desc';
 
 export const DASHBOARD_SORT_ORDERS: DashboardSortOrder[] = [
   SORT_MODIFIED_DESC,
@@ -378,7 +371,6 @@ export function getPreviewModeName(previewMode: PreviewMode, useLong = false) {
     return useLong ? previewModeMap[previewMode][1] : previewModeMap[previewMode][0];
   }
   return '';
-
 }
 export function getMimeTypeFromContentType(contentType: string) {
   // Check if the Content-Type header is provided
@@ -412,7 +404,6 @@ export function getAuthTypeName(authType?: string, useLong = false) {
     return useLong ? authTypesMap[authType][1] : authTypesMap[authType][0];
   }
   return 'Auth';
-
 }
 
 export function getContentTypeFromHeaders(headers: any[], defaultValue: string | null = null) {
@@ -427,8 +418,7 @@ export function getContentTypeFromHeaders(headers: any[], defaultValue: string |
 // Sourced from https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
 export const RESPONSE_CODE_DESCRIPTIONS: Record<number, string> = {
   // Special
-  [STATUS_CODE_PLUGIN_ERROR]:
-    'An Insomnia plugin threw an error which prevented the request from sending',
+  [STATUS_CODE_PLUGIN_ERROR]: 'An Insomnia plugin threw an error which prevented the request from sending',
   // 100s
   100: 'This interim response indicates that everything so far is OK and that the client should continue with the request or ignore it if it is already finished.',
   101: 'This code is sent in response to an Upgrade: request header by the client and indicates the protocol the server is switching to.',

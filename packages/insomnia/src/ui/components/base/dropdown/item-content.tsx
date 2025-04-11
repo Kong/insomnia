@@ -24,11 +24,12 @@ export const ItemContent: FC<ItemContentProps> = (props: ItemContentProps) => {
 
   const content = (
     <>
-      <div className='flex items-center w-full'>
-        {icon && typeof icon === 'string' ? <i
-          className={`fa fa-${icon} flex items-center px-[--padding-xs]`}
-          style={iconStyle}
-        /> : icon}
+      <div className="flex w-full items-center">
+        {icon && typeof icon === 'string' ? (
+          <i className={`fa fa-${icon} flex items-center px-[--padding-xs]`} style={iconStyle} />
+        ) : (
+          icon
+        )}
         {children || label}
       </div>
       {hint && <DropdownHint keyBindings={hint} />}
@@ -40,7 +41,7 @@ export const ItemContent: FC<ItemContentProps> = (props: ItemContentProps) => {
     return (
       <PromptButton
         fullWidth
-        className={`w-full h-full flex items-center justify-between pl-1 pr-2 ${className || ''}`}
+        className={`flex h-full w-full items-center justify-between pl-1 pr-2 ${className || ''}`}
         onClick={onClick}
       >
         {content}
@@ -50,8 +51,8 @@ export const ItemContent: FC<ItemContentProps> = (props: ItemContentProps) => {
 
   return (
     <div
-      role='button'
-      className={`w-full h-full flex items-center justify-between pl-[--padding-sm] pr-[--padding-md] ${className || ''} ${isSelected ? 'bg-[--hl-xs] font-bold' : ''}`}
+      role="button"
+      className={`flex h-full w-full items-center justify-between pl-[--padding-sm] pr-[--padding-md] ${className || ''} ${isSelected ? 'bg-[--hl-xs] font-bold' : ''}`}
       style={style}
     >
       {content}

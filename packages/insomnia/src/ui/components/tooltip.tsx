@@ -1,15 +1,6 @@
 import classnames from 'classnames';
-import React, {
-  type CSSProperties,
-  type ReactNode,
-} from 'react';
-import {
-  mergeProps,
-  OverlayContainer,
-  useOverlayPosition,
-  useTooltip,
-  useTooltipTrigger,
-} from 'react-aria';
+import React, { type CSSProperties, type ReactNode } from 'react';
+import { mergeProps, OverlayContainer, useOverlayPosition, useTooltip, useTooltipTrigger } from 'react-aria';
 import { useTooltipTriggerState } from 'react-stately';
 
 interface Props {

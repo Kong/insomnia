@@ -52,10 +52,7 @@ import type { ApiSpec } from '../../models/api-spec';
 import * as models from '../../models/index';
 import { isGitProject } from '../../models/project';
 import { invariant } from '../../utils/invariant';
-import {
-  CodeEditor,
-  type CodeEditorHandle,
-} from '../components/codemirror/code-editor';
+import { CodeEditor, type CodeEditorHandle } from '../components/codemirror/code-editor';
 import { DesignEmptyState } from '../components/design-empty-state';
 import { DocumentTab } from '../components/document-tab';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
@@ -72,10 +69,7 @@ import { formatMethodName } from '../components/tags/method-tag';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useAIContext } from '../context/app/ai-context';
 import { useInsomniaTab } from '../hooks/use-insomnia-tab';
-import {
-  useActiveApiSpecSyncVCSVersion,
-  useGitVCSVersion,
-} from '../hooks/use-vcs-version';
+import { useActiveApiSpecSyncVCSVersion, useGitVCSVersion } from '../hooks/use-vcs-version';
 import { SpectralRunner } from '../worker/spectral-handler';
 import { useRootLoaderData } from './root';
 import type { WorkspaceLoaderData } from './workspace';
@@ -86,9 +80,7 @@ interface LoaderData {
   parsedSpec?: OpenAPIV3.Document;
 }
 
-export const loader: LoaderFunction = async ({
-  params,
-}): Promise<LoaderData> => {
+export const loader: LoaderFunction = async ({ params }): Promise<LoaderData> => {
   const { projectId, workspaceId } = params;
   invariant(projectId, 'Project ID is required');
   invariant(workspaceId, 'Workspace ID is required');
@@ -111,7 +103,7 @@ export const loader: LoaderFunction = async ({
 
     const spectralRulesetPath = path.join(
       process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-      `version-control/git/${gitRepositoryId}/other/.spectral.yaml`
+      `version-control/git/${gitRepositoryId}/other/.spectral.yaml`,
     );
 
     if ((await stat(spectralRulesetPath)).isFile()) {
@@ -124,7 +116,7 @@ export const loader: LoaderFunction = async ({
 
   try {
     parsedSpec = YAML.parse(apiSpec.contents) as OpenAPIV3.Document;
-  } catch { }
+  } catch {}
 
   return {
     apiSpec,
@@ -138,7 +130,7 @@ const SwaggerUIDiv = ({ text }: { text: string }) => {
     let spec = {};
     try {
       spec = parseApiSpec(text).contents || {};
-    } catch (err) { }
+    } catch (err) {}
     SwaggerUIBundle({ spec, dom_id: '#swagger-ui' });
   }, [text]);
   return (
@@ -168,21 +160,12 @@ interface SpecActionItem {
   action: () => void;
 }
 
-const getMethodsFromOpenApiPathItem = (
-  pathItem: OpenAPIV3.PathItemObject
-): string[] => {
-  const methods = [
-    'get',
-    'put',
-    'post',
-    'delete',
-    'options',
-    'head',
-    'patch',
-    'trace',
-  ].filter(method =>
-    // @ts-expect-error -- shrug I don't care what pathItem has in it
-    pathItem[method]);
+const getMethodsFromOpenApiPathItem = (pathItem: OpenAPIV3.PathItemObject): string[] => {
+  const methods = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'].filter(
+    method =>
+      // @ts-expect-error -- shrug I don't care what pathItem has in it
+      pathItem[method],
+  );
 
   return methods;
 };
@@ -197,13 +180,9 @@ const Design: FC = () => {
     projectId: string;
     workspaceId: string;
   };
-  const {
-    activeProject,
-    activeCookieJar,
-    caCertificate,
-    clientCertificates,
-    activeWorkspace,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { activeProject, activeCookieJar, caCertificate, clientCertificates, activeWorkspace } = useRouteLoaderData(
+    ':workspaceId',
+  ) as WorkspaceLoaderData;
   const { settings } = useRootLoaderData();
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
@@ -222,19 +201,10 @@ const Design: FC = () => {
   const [isSpecPaneOpen, setIsSpecPaneOpen] = useState(true);
 
   const { components, info, servers, paths } = parsedSpec || {};
-  const {
-    requestBodies,
-    responses,
-    parameters,
-    headers,
-    schemas,
-    securitySchemes,
-  } = components || {};
+  const { requestBodies, responses, parameters, headers, schemas, securitySchemes } = components || {};
 
   const lintErrors = lintMessages.filter(message => message.type === 'error');
-  const lintWarnings = lintMessages.filter(
-    message => message.type === 'warning'
-  );
+  const lintWarnings = lintMessages.filter(message => message.type === 'warning');
 
   const spectralRunnerRef = useRef<SpectralRunner>();
 
@@ -251,10 +221,7 @@ const Design: FC = () => {
         const diagnostics = await runner.runDiagnostics({ contents, rulesetPath });
         const lintResult = diagnostics.map(({ severity, code, message, range }) => {
           return {
-            from: CodeMirror.Pos(
-              range.start.line,
-              range.start.character
-            ),
+            from: CodeMirror.Pos(range.start.line, range.start.character),
             to: CodeMirror.Pos(range.end.line, range.end.character),
             message: `${code} ${message}`,
             severity: ['error', 'warning'][severity] ?? 'info',
@@ -293,7 +260,7 @@ const Design: FC = () => {
         {
           action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${ACTIVITY_SPEC}/update`,
           method: 'post',
-        }
+        },
       );
     };
 
@@ -307,7 +274,7 @@ const Design: FC = () => {
       }
       editor.current.scrollToSelection(chStart, chEnd, lineStart, lineEnd);
     },
-    [editor]
+    [editor],
   );
 
   const handleScrollToLintMessage = useCallback(
@@ -319,14 +286,9 @@ const Design: FC = () => {
         return;
       }
       const { start, end } = notice.range;
-      editor.current.scrollToSelection(
-        start.character,
-        end.character,
-        start.line,
-        end.line
-      );
+      editor.current.scrollToSelection(start.character, end.character, start.line, end.line);
     },
-    [editor]
+    [editor],
   );
 
   const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
@@ -342,13 +304,13 @@ const Design: FC = () => {
       JSON.parse(apiSpec.contents);
       // Account for JSON (as string) line number shift
       scrollPosition.start.line = 1;
-    } catch { }
+    } catch {}
 
     const sourceMap = new YAMLSourceMap();
     const specMap = sourceMap.index(
       YAML.parseDocument(apiSpec.contents, {
         keepCstNodes: true,
-      })
+      }),
     );
     const itemMappedPosition = sourceMap.lookup(pathSegments, specMap);
     if (itemMappedPosition) {
@@ -366,7 +328,7 @@ const Design: FC = () => {
       scrollPosition.start.col - 1,
       scrollPosition.end.col - 1,
       scrollPosition.start.line - 1,
-      scrollPosition.end.line - 1
+      scrollPosition.end.line - 1,
     );
   };
 
@@ -407,46 +369,43 @@ const Design: FC = () => {
       name: 'Generate tests',
       action: generateTestsFromSpec,
       isDisabled: !access.enabled || generating,
-      icon: <InsomniaAI className='w-3' />,
+      icon: <InsomniaAI className="w-3" />,
     },
     {
       id: 'generate-request-collection',
       name: 'Generate collection',
-      icon: <Icon className='w-3' icon="file-code" />,
-      isDisabled:
-        !apiSpec.contents ||
-        lintErrors.length > 0 ||
-        generateRequestCollectionFetcher.state !== 'idle',
+      icon: <Icon className="w-3" icon="file-code" />,
+      isDisabled: !apiSpec.contents || lintErrors.length > 0 || generateRequestCollectionFetcher.state !== 'idle',
       action: () =>
         generateRequestCollectionFetcher.submit(
           {},
           {
             action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${ACTIVITY_SPEC}/generate-request-collection`,
             method: 'POST',
-          }
+          },
         ),
     },
     {
       id: 'toggle-preview',
       name: 'Toggle preview',
-      icon: <Icon className='w-3' icon={isSpecPaneOpen ? 'eye' : 'eye-slash'} />,
+      icon: <Icon className="w-3" icon={isSpecPaneOpen ? 'eye' : 'eye-slash'} />,
       action: () => setIsSpecPaneOpen(!isSpecPaneOpen),
     },
   ];
 
-  const disabledKeys = specActionList
-    .filter(item => item.isDisabled)
-    .map(item => item.id);
+  const disabledKeys = specActionList.filter(item => item.isDisabled).map(item => item.id);
 
   const gitVersion = useGitVCSVersion();
   const syncVersion = useActiveApiSpecSyncVCSVersion();
   const uniquenessKey = `${apiSpec?._id}::${apiSpec?.created}::${gitVersion}::${syncVersion}`;
 
-  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
+  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
+    settings.forceVerticalLayout ? 'vertical' : 'horizontal',
+  );
   useLayoutEffect(() => {
     if (settings.forceVerticalLayout) {
       setDirection('vertical');
-      return () => { };
+      return () => {};
     }
     // Listen on media query changes
     const mediaQuery = window.matchMedia('(max-width: 880px)');
@@ -461,7 +420,6 @@ const Design: FC = () => {
     return () => {
       mediaQuery.removeEventListener('change', handleChange);
     };
-
   }, [settings.forceVerticalLayout, direction]);
 
   useInsomniaTab({
@@ -473,21 +431,36 @@ const Design: FC = () => {
   });
 
   return (
-    <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
-      <Panel id="sidebar" className='sidebar theme--sidebar' defaultSize={DEFAULT_SIDEBAR_SIZE} maxSize={40} minSize={10} collapsible>
-        <div className='flex h-full flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden'>
-          <Breadcrumbs className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] px-[--padding-sm] list-none items-center m-0 gap-2 font-bold w-full`}>
-            <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
+    <PanelGroup
+      ref={sidebarPanelRef}
+      autoSaveId="insomnia-sidebar"
+      id="wrapper"
+      className="new-sidebar h-full w-full text-[--color-font]"
+      direction="horizontal"
+    >
+      <Panel
+        id="sidebar"
+        className="sidebar theme--sidebar"
+        defaultSize={DEFAULT_SIDEBAR_SIZE}
+        maxSize={40}
+        minSize={10}
+        collapsible
+      >
+        <div className="flex h-full flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
+          <Breadcrumbs
+            className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] m-0 w-full list-none items-center gap-2 px-[--padding-sm] font-bold`}
+          >
+            <Breadcrumb className="flex h-full select-none items-center gap-2 text-[--color-font] outline-none data-[focused]:outline-none">
               <NavLink
                 data-testid="project"
-                className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                className="flex aspect-square h-7 flex-shrink-0 items-center justify-center gap-2 rounded-sm px-1 py-1 text-sm text-[--color-font] outline-none ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] data-[focused]:outline-none"
                 to={`/organization/${organizationId}/project/${activeProject._id}`}
               >
-                <Icon className='text-xs' icon="chevron-left" />
+                <Icon className="text-xs" icon="chevron-left" />
               </NavLink>
-              <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
+              <span aria-hidden role="separator" className="h-4 text-[--hl-lg] outline outline-1" />
             </Breadcrumb>
-            <Breadcrumb className="flex truncate select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
+            <Breadcrumb className="flex h-full select-none items-center gap-2 truncate text-[--color-font] outline-none data-[focused]:outline-none">
               <WorkspaceDropdown />
             </Breadcrumb>
           </Breadcrumbs>
@@ -495,10 +468,10 @@ const Design: FC = () => {
             organizationId={organizationId}
             projectId={projectId}
             workspaceId={workspaceId}
-            className='border-solid border-b border-[--hl-sm]'
+            className="border-b border-solid border-[--hl-sm]"
           />
-          <div className='flex flex-col items-start gap-2 p-[--padding-sm] w-full'>
-            <div className="flex w-full items-center gap-2 justify-between">
+          <div className="flex w-full flex-col items-start gap-2 p-[--padding-sm]">
+            <div className="flex w-full items-center justify-between gap-2">
               <EnvironmentPicker
                 isOpen={isEnvironmentPickerOpen}
                 onOpenChange={setIsEnvironmentPickerOpen}
@@ -507,26 +480,35 @@ const Design: FC = () => {
             </div>
             <Button
               onPress={() => setIsCookieModalOpen(true)}
-              className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
             >
-              <Icon icon="cookie-bite" className='w-5 flex-shrink-0' />
-              <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies {activeCookieJar.cookies.length > 0 ? `(${activeCookieJar.cookies.length})` : ''}</span>
+              <Icon icon="cookie-bite" className="w-5 flex-shrink-0" />
+              <span className="truncate">
+                {activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies{' '}
+                {activeCookieJar.cookies.length > 0 ? `(${activeCookieJar.cookies.length})` : ''}
+              </span>
             </Button>
             <Button
               onPress={() => setCertificatesModalOpen(true)}
-              className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
             >
-              <Icon icon="file-contract" className='w-5 flex-shrink-0' />
-              <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length > 0 ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})` : ''}</span>
+              <Icon icon="file-contract" className="w-5 flex-shrink-0" />
+              <span className="truncate">
+                {clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates{' '}
+                {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined)
+                  .length > 0
+                  ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})`
+                  : ''}
+              </span>
             </Button>
           </div>
           <div className="flex flex-shrink-0 items-center gap-2 p-[--padding-sm]">
-            <Heading className="text-[--hl] uppercase">Spec</Heading>
+            <Heading className="uppercase text-[--hl]">Spec</Heading>
             <span className="flex-1" />
             <ToggleButton
               aria-label="Toggle preview"
               isSelected={isSpecPaneOpen}
-              className="flex items-center justify-center gap-2 px-2 h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              className="flex h-full items-center justify-center gap-2 rounded-sm px-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
               onChange={setIsSpecPaneOpen}
             >
               {({ isSelected }) => (
@@ -539,29 +521,27 @@ const Design: FC = () => {
             <MenuTrigger>
               <Button
                 aria-label="Spec actions"
-                className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
               >
                 <Icon icon="gear" />
               </Button>
-              <Popover className="min-w-max overflow-y-hidden flex flex-col">
+              <Popover className="flex min-w-max flex-col overflow-y-hidden">
                 <Menu
                   aria-label="Spec actions menu"
                   selectionMode="single"
                   disabledKeys={disabledKeys}
                   onAction={key => {
-                    const item = specActionList.find(
-                      item => item.id === key
-                    );
+                    const item = specActionList.find(item => item.id === key);
                     if (item) {
                       item.action();
                     }
                   }}
                   items={specActionList}
-                  className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
+                  className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
                 >
                   {item => (
                     <MenuItem
-                      className="flex gap-2 aria-disabled:text-[--hl-md] aria-disabled:cursor-not-allowed px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                      className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:text-[--hl-md] aria-selected:font-bold"
                       aria-label={item.name}
                     >
                       {item.icon}
@@ -572,56 +552,47 @@ const Design: FC = () => {
               </Popover>
             </MenuTrigger>
           </div>
-          <div className="flex-1 flex flex-col divide-y divide-solid divide-[--hl-md] overflow-y-auto">
+          <div className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-md] overflow-y-auto">
             {/* Info */}
             {info && (
-              <div className='divide-y divide-solid divide-[--hl-md]'>
+              <div className="divide-y divide-solid divide-[--hl-md]">
                 <Button
-                  className="text-[--hl] text-sm uppercase w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
+                  className="flex w-full select-none items-center justify-between gap-2 p-[--padding-sm] text-sm uppercase text-[--hl] hover:bg-[--hl-sm] focus:bg-[--hl-sm]"
                   onPress={() => {
                     expandedKeys.includes('info')
-                      ? setExpandedKeys(
-                        expandedKeys.filter(key => key !== 'info')
-                      )
+                      ? setExpandedKeys(expandedKeys.filter(key => key !== 'info'))
                       : setExpandedKeys([...expandedKeys, 'info']);
                   }}
                 >
-                  <span className='truncate'>Info</span>
-                  <Icon
-                    icon={expandedKeys.includes('info') ? 'minus' : 'plus'}
-                    className='text-xs'
-                  />
+                  <span className="truncate">Info</span>
+                  <Icon icon={expandedKeys.includes('info') ? 'minus' : 'plus'} className="text-xs" />
                 </Button>
                 {/* Info */}
                 {expandedKeys.includes('info') && (
                   <ListBox onAction={key => navigateToPath(key.toString())}>
                     <ListBoxItem
-                      className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                      className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
                       id="info.title"
                     >
                       <span className="truncate">Title: {info.title}</span>
                     </ListBoxItem>
                     <ListBoxItem
-                      className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                      className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
                       id="info.description"
                     >
-                      <span className="truncate">
-                        Description: {info.description}
-                      </span>
+                      <span className="truncate">Description: {info.description}</span>
                     </ListBoxItem>
                     <ListBoxItem
-                      className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                      className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
                       id="info.version"
                     >
                       <span className="truncate">Version: {info.version}</span>
                     </ListBoxItem>
                     <ListBoxItem
-                      className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                      className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
                       id="info.license"
                     >
-                      <span className="truncate">
-                        License: {info.license?.name}
-                      </span>
+                      <span className="truncate">License: {info.license?.name}</span>
                     </ListBoxItem>
                   </ListBox>
                 )}
@@ -629,23 +600,18 @@ const Design: FC = () => {
             )}
             {/* Servers */}
             {servers && (
-              <div className='divide-y divide-solid divide-[--hl-md]'>
+              <div className="divide-y divide-solid divide-[--hl-md]">
                 <div>
                   <Button
-                    className="text-[--hl] text-sm uppercase w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
+                    className="flex w-full select-none items-center justify-between gap-2 p-[--padding-sm] text-sm uppercase text-[--hl] hover:bg-[--hl-sm] focus:bg-[--hl-sm]"
                     onPress={() => {
                       expandedKeys.includes('servers')
-                        ? setExpandedKeys(
-                          expandedKeys.filter(key => key !== 'servers')
-                        )
+                        ? setExpandedKeys(expandedKeys.filter(key => key !== 'servers'))
                         : setExpandedKeys([...expandedKeys, 'servers']);
                     }}
                   >
-                    <span className='truncate'>Servers</span>
-                    <Icon
-                      icon={expandedKeys.includes('servers') ? 'minus' : 'plus'}
-                      className='text-xs'
-                    />
+                    <span className="truncate">Servers</span>
+                    <Icon icon={expandedKeys.includes('servers') ? 'minus' : 'plus'} className="text-xs" />
                   </Button>
                 </div>
                 {expandedKeys.includes('servers') && (
@@ -658,7 +624,7 @@ const Design: FC = () => {
                   >
                     {item => (
                       <ListBoxItem
-                        className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                        className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
                         id={`servers.${item.path}`}
                       >
                         {item.url}
@@ -670,23 +636,18 @@ const Design: FC = () => {
             )}
             {/* Paths */}
             {paths && (
-              <div className='divide-y divide-solid divide-[--hl-md]'>
+              <div className="divide-y divide-solid divide-[--hl-md]">
                 <div>
                   <Button
-                    className="text-[--hl] text-sm uppercase w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
+                    className="flex w-full select-none items-center justify-between gap-2 p-[--padding-sm] text-sm uppercase text-[--hl] hover:bg-[--hl-sm] focus:bg-[--hl-sm]"
                     onPress={() => {
                       expandedKeys.includes('paths')
-                        ? setExpandedKeys(
-                          expandedKeys.filter(key => key !== 'paths')
-                        )
+                        ? setExpandedKeys(expandedKeys.filter(key => key !== 'paths'))
                         : setExpandedKeys([...expandedKeys, 'paths']);
                     }}
                   >
-                    <span className='truncate'>Paths</span>
-                    <Icon
-                      icon={expandedKeys.includes('paths') ? 'minus' : 'plus'}
-                      className='text-xs'
-                    />
+                    <span className="truncate">Paths</span>
+                    <Icon icon={expandedKeys.includes('paths') ? 'minus' : 'plus'} className="text-xs" />
                   </Button>
                 </div>
                 {expandedKeys.includes('paths') && (
@@ -699,20 +660,15 @@ const Design: FC = () => {
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
-                      <GridListItem
-                        className="group outline-none select-none"
-                        id={`paths.${item.path}`}
-                      >
-                        <div className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]">
+                      <GridListItem className="group select-none outline-none" id={`paths.${item.path}`}>
+                        <div className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] group-aria-selected:text-[--color-font]">
                           <span className="truncate">{item.path}</span>
                           <span className="flex-1" />
                           {getMethodsFromOpenApiPathItem(item).map(method => (
                             <Button
                               key={method}
-                              onPress={() =>
-                                navigateToPath(`paths.${item.path}.${method}`)
-                              }
-                              className={`w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center http-method-${method.toUpperCase()}`}
+                              onPress={() => navigateToPath(`paths.${item.path}.${method}`)}
+                              className={`flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] text-[0.65rem] http-method-${method.toUpperCase()}`}
                             >
                               {formatMethodName(method.toUpperCase())}
                             </Button>
@@ -726,41 +682,32 @@ const Design: FC = () => {
             )}
             {/* RequestBodies */}
             {requestBodies && (
-              <div className='divide-y divide-solid divide-[--hl-md]'>
+              <div className="divide-y divide-solid divide-[--hl-md]">
                 <div>
                   <Button
-                    className="text-[--hl] text-sm uppercase w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
+                    className="flex w-full select-none items-center justify-between gap-2 p-[--padding-sm] text-sm uppercase text-[--hl] hover:bg-[--hl-sm] focus:bg-[--hl-sm]"
                     onPress={() => {
                       expandedKeys.includes('requestBodies')
-                        ? setExpandedKeys(
-                          expandedKeys.filter(
-                            key => key !== 'requestBodies'
-                          )
-                        )
+                        ? setExpandedKeys(expandedKeys.filter(key => key !== 'requestBodies'))
                         : setExpandedKeys([...expandedKeys, 'requestBodies']);
                     }}
                   >
-                    <span className='truncate'>Request bodies</span>
-                    <Icon
-                      icon={expandedKeys.includes('requestBodies') ? 'minus' : 'plus'}
-                      className='text-xs'
-                    />
+                    <span className="truncate">Request bodies</span>
+                    <Icon icon={expandedKeys.includes('requestBodies') ? 'minus' : 'plus'} className="text-xs" />
                   </Button>
                 </div>
                 {expandedKeys.includes('requestBodies') && (
                   <ListBox
-                    items={Object.entries(requestBodies).map(
-                      ([path, item]) => ({
-                        ...item,
-                        id: path,
-                        path,
-                      })
-                    )}
+                    items={Object.entries(requestBodies).map(([path, item]) => ({
+                      ...item,
+                      id: path,
+                      path,
+                    }))}
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
                       <ListBoxItem
-                        className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                        className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
                         id={`components.requestBodies.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
@@ -772,25 +719,18 @@ const Design: FC = () => {
             )}
             {/* Responses */}
             {responses && (
-              <div className='divide-y divide-solid divide-[--hl-md]'>
+              <div className="divide-y divide-solid divide-[--hl-md]">
                 <div>
                   <Button
-                    className="text-[--hl] text-sm uppercase w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
+                    className="flex w-full select-none items-center justify-between gap-2 p-[--padding-sm] text-sm uppercase text-[--hl] hover:bg-[--hl-sm] focus:bg-[--hl-sm]"
                     onPress={() => {
                       expandedKeys.includes('responses')
-                        ? setExpandedKeys(
-                          expandedKeys.filter(key => key !== 'responses')
-                        )
+                        ? setExpandedKeys(expandedKeys.filter(key => key !== 'responses'))
                         : setExpandedKeys([...expandedKeys, 'responses']);
                     }}
                   >
-                    <span className='truncate'>
-                      Responses
-                    </span>
-                    <Icon
-                      icon={expandedKeys.includes('responses') ? 'minus' : 'plus'}
-                      className='text-xs'
-                    />
+                    <span className="truncate">Responses</span>
+                    <Icon icon={expandedKeys.includes('responses') ? 'minus' : 'plus'} className="text-xs" />
                   </Button>
                 </div>
                 {expandedKeys.includes('responses') && (
@@ -804,7 +744,7 @@ const Design: FC = () => {
                   >
                     {item => (
                       <ListBoxItem
-                        className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                        className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
                         id={`components.responses.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
@@ -816,25 +756,18 @@ const Design: FC = () => {
             )}
             {/* Parameters */}
             {parameters && (
-              <div className='divide-y divide-solid divide-[--hl-md]'>
+              <div className="divide-y divide-solid divide-[--hl-md]">
                 <div>
                   <Button
-                    className="text-[--hl] text-sm uppercase w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
+                    className="flex w-full select-none items-center justify-between gap-2 p-[--padding-sm] text-sm uppercase text-[--hl] hover:bg-[--hl-sm] focus:bg-[--hl-sm]"
                     onPress={() => {
                       expandedKeys.includes('parameters')
-                        ? setExpandedKeys(
-                          expandedKeys.filter(key => key !== 'parameters')
-                        )
+                        ? setExpandedKeys(expandedKeys.filter(key => key !== 'parameters'))
                         : setExpandedKeys([...expandedKeys, 'parameters']);
                     }}
                   >
-                    <span className='truncate'>
-                      Parameters
-                    </span>
-                    <Icon
-                      icon={expandedKeys.includes('parameters') ? 'minus' : 'plus'}
-                      className='text-xs'
-                    />
+                    <span className="truncate">Parameters</span>
+                    <Icon icon={expandedKeys.includes('parameters') ? 'minus' : 'plus'} className="text-xs" />
                   </Button>
                 </div>
                 {expandedKeys.includes('parameters') && (
@@ -848,7 +781,7 @@ const Design: FC = () => {
                   >
                     {item => (
                       <ListBoxItem
-                        className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                        className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
                         id={`components.parameters.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
@@ -860,25 +793,18 @@ const Design: FC = () => {
             )}
             {/* Headers */}
             {headers && (
-              <div className='divide-y divide-solid divide-[--hl-md]'>
+              <div className="divide-y divide-solid divide-[--hl-md]">
                 <div>
                   <Button
-                    className="text-[--hl] text-sm uppercase w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
+                    className="flex w-full select-none items-center justify-between gap-2 p-[--padding-sm] text-sm uppercase text-[--hl] hover:bg-[--hl-sm] focus:bg-[--hl-sm]"
                     onPress={() => {
                       expandedKeys.includes('headers')
-                        ? setExpandedKeys(
-                          expandedKeys.filter(key => key !== 'headers')
-                        )
+                        ? setExpandedKeys(expandedKeys.filter(key => key !== 'headers'))
                         : setExpandedKeys([...expandedKeys, 'headers']);
                     }}
                   >
-                    <span className='truncate'>
-                      Headers
-                    </span>
-                    <Icon
-                      icon={expandedKeys.includes('headers') ? 'minus' : 'plus'}
-                      className='text-xs'
-                    />
+                    <span className="truncate">Headers</span>
+                    <Icon icon={expandedKeys.includes('headers') ? 'minus' : 'plus'} className="text-xs" />
                   </Button>
                 </div>
                 {expandedKeys.includes('headers') && (
@@ -892,7 +818,7 @@ const Design: FC = () => {
                   >
                     {item => (
                       <ListBoxItem
-                        className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                        className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
                         id={`components.headers.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
@@ -904,25 +830,18 @@ const Design: FC = () => {
             )}
             {/* Schemas */}
             {schemas && (
-              <div className='divide-y divide-solid divide-[--hl-md]'>
+              <div className="divide-y divide-solid divide-[--hl-md]">
                 <div>
                   <Button
-                    className="text-[--hl] text-sm uppercase w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
+                    className="flex w-full select-none items-center justify-between gap-2 p-[--padding-sm] text-sm uppercase text-[--hl] hover:bg-[--hl-sm] focus:bg-[--hl-sm]"
                     onPress={() => {
                       expandedKeys.includes('schemas')
-                        ? setExpandedKeys(
-                          expandedKeys.filter(key => key !== 'schemas')
-                        )
+                        ? setExpandedKeys(expandedKeys.filter(key => key !== 'schemas'))
                         : setExpandedKeys([...expandedKeys, 'schemas']);
                     }}
                   >
-                    <span className='truncate'>
-                      Schemas
-                    </span>
-                    <Icon
-                      icon={expandedKeys.includes('schemas') ? 'minus' : 'plus'}
-                      className='text-xs'
-                    />
+                    <span className="truncate">Schemas</span>
+                    <Icon icon={expandedKeys.includes('schemas') ? 'minus' : 'plus'} className="text-xs" />
                   </Button>
                 </div>
                 {expandedKeys.includes('schemas') && (
@@ -936,7 +855,7 @@ const Design: FC = () => {
                   >
                     {item => (
                       <ListBoxItem
-                        className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                        className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
                         id={`components.schemas.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
@@ -948,41 +867,32 @@ const Design: FC = () => {
             )}
             {/* Security */}
             {securitySchemes && (
-              <div className='divide-y divide-solid divide-[--hl-md]'>
+              <div className="divide-y divide-solid divide-[--hl-md]">
                 <div>
                   <Button
-                    className="text-[--hl] text-sm uppercase w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
+                    className="flex w-full select-none items-center justify-between gap-2 p-[--padding-sm] text-sm uppercase text-[--hl] hover:bg-[--hl-sm] focus:bg-[--hl-sm]"
                     onPress={() => {
                       expandedKeys.includes('security')
-                        ? setExpandedKeys(
-                          expandedKeys.filter(key => key !== 'security')
-                        )
+                        ? setExpandedKeys(expandedKeys.filter(key => key !== 'security'))
                         : setExpandedKeys([...expandedKeys, 'security']);
                     }}
                   >
-                    <span className='truncate'>
-                      Security
-                    </span>
-                    <Icon
-                      icon={expandedKeys.includes('security') ? 'minus' : 'plus'}
-                      className='text-xs'
-                    />
+                    <span className="truncate">Security</span>
+                    <Icon icon={expandedKeys.includes('security') ? 'minus' : 'plus'} className="text-xs" />
                   </Button>
                 </div>
                 {expandedKeys.includes('security') && (
                   <ListBox
-                    items={Object.entries(securitySchemes).map(
-                      ([path, item]) => ({
-                        ...item,
-                        id: path,
-                        path,
-                      })
-                    )}
+                    items={Object.entries(securitySchemes).map(([path, item]) => ({
+                      ...item,
+                      id: path,
+                      path,
+                    }))}
                     onAction={key => navigateToPath(key.toString())}
                   >
                     {item => (
                       <ListBoxItem
-                        className="flex select-none outline-none relative hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                        className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm]"
                         id={`components.securitySchemes.${item.path}`}
                       >
                         <span className="truncate">{item.path}</span>
@@ -994,26 +904,18 @@ const Design: FC = () => {
             )}
           </div>
           <WorkspaceSyncDropdown />
-          {isEnvironmentModalOpen && (
-            <WorkspaceEnvironmentsEditModal
-              onClose={() => setEnvironmentModalOpen(false)}
-            />
-          )}
-          {isCookieModalOpen && (
-            <CookiesModal setIsOpen={setIsCookieModalOpen} />
-          )}
-          {isCertificatesModalOpen && (
-            <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />
-          )}
+          {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
+          {isCookieModalOpen && <CookiesModal setIsOpen={setIsCookieModalOpen} />}
+          {isCertificatesModalOpen && <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />}
         </div>
       </Panel>
-      <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
-      <Panel className='flex flex-col'>
+      <PanelResizeHandle className="h-full w-[1px] bg-[--hl-md]" />
+      <Panel className="flex flex-col">
         <OrganizationTabList />
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
-          <Panel id="pane-one" minSize={10} className='pane-one theme--pane'>
-            <div className="flex flex-col h-full w-full overflow-hidden divide-y divide-solid divide-[--hl-md]">
-              <div className="relative overflow-hidden flex-shrink-0 flex flex-1 basis-1/2">
+          <Panel id="pane-one" minSize={10} className="pane-one theme--pane">
+            <div className="flex h-full w-full flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
+              <div className="relative flex flex-1 flex-shrink-0 basis-1/2 overflow-hidden">
                 <CodeEditor
                   id="spec-editor"
                   key={uniquenessKey}
@@ -1036,27 +938,25 @@ const Design: FC = () => {
                         {
                           action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${ACTIVITY_SPEC}/update`,
                           method: 'post',
-                        }
+                        },
                       );
                     }}
                   />
                 )}
               </div>
-              <div className={`flex ${isLintPaneOpen ? '' : 'h-[--line-height-sm]'} box-border flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden`}>
-                <div className="flex gap-2 items-center p-[--padding-sm]">
+              <div
+                className={`flex ${isLintPaneOpen ? '' : 'h-[--line-height-sm]'} box-border flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden`}
+              >
+                <div className="flex items-center gap-2 p-[--padding-sm]">
                   <TooltipTrigger>
-                    <Button className="flex items-center gap-2 cursor-pointer select-none">
-                      <Icon
-                        icon={
-                          rulesetPath ? 'file-circle-check' : 'file-circle-xmark'
-                        }
-                      />
+                    <Button className="flex cursor-pointer select-none items-center gap-2">
+                      <Icon icon={rulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
                       Ruleset
                     </Button>
                     <Tooltip
                       placement="top end"
                       offset={8}
-                      className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                      className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
                     >
                       <div>
                         {rulesetPath ? (
@@ -1068,9 +968,8 @@ const Design: FC = () => {
                           <Fragment>
                             <p>Using default OAS ruleset.</p>
                             <p>
-                              To use a custom ruleset add a{' '}
-                              <code className="p-0">.spectral.yaml</code> file to
-                              the root of your git repository
+                              To use a custom ruleset add a <code className="p-0">.spectral.yaml</code> file to the root
+                              of your git repository
                             </p>
                           </Fragment>
                         )}
@@ -1078,39 +977,33 @@ const Design: FC = () => {
                     </Tooltip>
                   </TooltipTrigger>
                   {lintErrors.length > 0 && (
-                    <div className="flex gap-2 items-center select-none">
+                    <div className="flex select-none items-center gap-2">
                       <Icon icon="circle-xmark" className="text-[--color-danger]" />
                       {lintErrors.length}
                     </div>
                   )}
                   {lintWarnings.length > 0 && (
-                    <div className="flex gap-2 items-center select-none">
-                      <Icon
-                        icon="triangle-exclamation"
-                        className="text-[--color-warning]"
-                      />
+                    <div className="flex select-none items-center gap-2">
+                      <Icon icon="triangle-exclamation" className="text-[--color-warning]" />
                       {lintWarnings.length}
                     </div>
                   )}
                   {lintMessages.length === 0 && apiSpec.contents && (
-                    <div className="flex gap-2 items-center select-none">
-                      <Icon
-                        icon="check-square"
-                        className="text-[--color-success]"
-                      />
+                    <div className="flex select-none items-center gap-2">
+                      <Icon icon="check-square" className="text-[--color-success]" />
                       No lint problems
                     </div>
                   )}
                   <span className="flex-1" />
                   {lintMessages.length > 0 && (
-                    <Button aria-label='Toggle lint panel' onPress={() => setIsLintPaneOpen(!isLintPaneOpen)}>
+                    <Button aria-label="Toggle lint panel" onPress={() => setIsLintPaneOpen(!isLintPaneOpen)}>
                       <Icon icon={isLintPaneOpen ? 'chevron-down' : 'chevron-up'} />
                     </Button>
                   )}
                 </div>
                 {isLintPaneOpen && (
                   <ListBox
-                    className="overflow-y-auto flex-1 select-none"
+                    className="flex-1 select-none overflow-y-auto"
                     onAction={index => {
                       const listIndex = parseInt(index.toString(), 10);
                       const lintMessage = lintMessages[listIndex];
@@ -1123,23 +1016,13 @@ const Design: FC = () => {
                     }))}
                   >
                     {item => (
-                      <ListBoxItem className="even:bg-[--hl-xs] p-[--padding-sm] focus-within:bg-[--hl-md] data-[focused]:bg-[--hl-md] outline-none flex items-center gap-2 text-xs transition-colors">
+                      <ListBoxItem className="flex items-center gap-2 p-[--padding-sm] text-xs outline-none transition-colors even:bg-[--hl-xs] focus-within:bg-[--hl-md] data-[focused]:bg-[--hl-md]">
                         <Icon
-                          className={
-                            item.type === 'error'
-                              ? 'text-[--color-danger]'
-                              : 'text-[--color-warning]'
-                          }
-                          icon={
-                            item.type === 'error'
-                              ? 'circle-xmark'
-                              : 'triangle-exclamation'
-                          }
+                          className={item.type === 'error' ? 'text-[--color-danger]' : 'text-[--color-warning]'}
+                          icon={item.type === 'error' ? 'circle-xmark' : 'triangle-exclamation'}
                         />
                         <span className="truncate">{item.message}</span>
-                        <span className="flex-shrink-0 text-[--hl-lg]">
-                          [Ln {item.line}]
-                        </span>
+                        <span className="flex-shrink-0 text-[--hl-lg]">[Ln {item.line}]</span>
                       </ListBoxItem>
                     )}
                   </ListBox>
@@ -1149,8 +1032,10 @@ const Design: FC = () => {
           </Panel>
           {isSpecPaneOpen && (
             <>
-              <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
-              <Panel id="pane-two" minSize={10} className='pane-two theme--pane'>
+              <PanelResizeHandle
+                className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'h-[1px] w-full bg-[--hl-md]'}
+              />
+              <Panel id="pane-two" minSize={10} className="pane-two theme--pane">
                 <SwaggerUIDiv text={apiSpec.contents} />
               </Panel>
             </>

@@ -12,14 +12,7 @@ interface Props {
   tooltipDelay?: number;
 }
 
-export const URLTag: FC<Props> = memo(({
-  url,
-  small,
-  className,
-  maxLength,
-  method,
-  tooltipDelay,
-}) => {
+export const URLTag: FC<Props> = memo(({ url, small, className, maxLength, method, tooltipDelay }) => {
   const max = maxLength || 30;
   let shortUrl = url;
 

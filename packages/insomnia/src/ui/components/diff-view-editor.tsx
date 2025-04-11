@@ -5,19 +5,11 @@ import { parseColor } from 'react-aria-components';
 
 import { useRootLoaderData } from '../routes/root';
 
-export const DiffEditor = ({
-  original,
-  modified,
-}: {
-  original: string;
-  modified: string;
-}) => {
+export const DiffEditor = ({ original, modified }: { original: string; modified: string }) => {
   const monacoEl = useRef(null);
   const monacoEditorRef = useRef<monaco.editor.IStandaloneDiffEditor | null>(null);
 
-  const {
-    settings,
-  } = useRootLoaderData();
+  const { settings } = useRootLoaderData();
 
   useEffect(() => {
     const computedStyles = window.getComputedStyle(document.body);
@@ -94,8 +86,8 @@ export const DiffEditor = ({
       return () => diffEditor?.dispose();
     }
 
-    return () => { };
+    return () => {};
   }, [modified, original]);
 
-  return <div className='w-full h-full' ref={monacoEl} />;
+  return <div className="h-full w-full" ref={monacoEl} />;
 };

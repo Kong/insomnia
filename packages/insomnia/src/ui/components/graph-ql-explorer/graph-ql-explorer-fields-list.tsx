@@ -47,9 +47,5 @@ export const GraphQLExplorerFieldsList: FC<Props> = ({ fields, onNavigateType, o
     );
   });
 
-  return (
-    <ul className="graphql-explorer__defs">
-      {fieldsList}
-    </ul>
-  );
+  return <ul className="graphql-explorer__defs">{fieldsList}</ul>;
 };

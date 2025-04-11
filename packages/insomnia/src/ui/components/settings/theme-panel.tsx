@@ -9,7 +9,7 @@ import { Icon } from '../icon';
 const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme: { name: themeName } }) => (
   <svg
     // @ts-expect-error -- something about themes
-     
+
     theme={themeName}
     className="theme-preview"
     width="100%"
@@ -26,7 +26,7 @@ const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme: { name: themeName } }
 
     <g
       // @ts-expect-error -- something about themes
-       
+
       subtheme={themeName}
     >
       {/* App Header */}
@@ -77,49 +77,53 @@ const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme: { name: themeName } }
 );
 
 export const ThemePanel: FC = () => {
-  const {
-    themes,
-    activate,
-    changeAutoDetect,
-    isActive,
-    isActiveDark,
-    isActiveLight,
-    autoDetectColorScheme,
-  } = useThemes();
+  const { themes, activate, changeAutoDetect, isActive, isActiveDark, isActiveLight, autoDetectColorScheme } =
+    useThemes();
 
   return (
-    <div className='flex flex-col gap-2'>
+    <div className="flex flex-col gap-2">
       <Label className="flex items-center gap-2">
-        <Checkbox slot={null} isSelected={autoDetectColorScheme} onChange={isSelected => changeAutoDetect(isSelected)} className="group p-0 flex items-center h-full">
-          <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
-            <Icon icon={'check'} className='opacity-0 group-data-[selected]:opacity-100 group-data-[indeterminate]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
+        <Checkbox
+          slot={null}
+          isSelected={autoDetectColorScheme}
+          onChange={isSelected => changeAutoDetect(isSelected)}
+          className="group flex h-full items-center p-0"
+        >
+          <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
+            <Icon
+              icon={'check'}
+              className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
+            />
           </div>
         </Checkbox>
         Use OS color scheme
         <HelpTooltip className="space-left">
-          Select different themes for when you’re using light versus dark color schemes on your OS. Check this box, then hover over a theme and select either light (sun) or dark (moon).
+          Select different themes for when you’re using light versus dark color schemes on your OS. Check this box, then
+          hover over a theme and select either light (sun) or dark (moon).
         </HelpTooltip>
       </Label>
 
-      <ul className='grid grid-flow-row grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-5'>
+      <ul className="grid grid-flow-row grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-5">
         {themes.map(theme => (
-          <div key={theme.name} className='flex flex-col gap-1'>
-            <div className='text-center text-sm truncate select-none'>{theme.displayName}</div>
+          <div key={theme.name} className="flex flex-col gap-1">
+            <div className="select-none truncate text-center text-sm">{theme.displayName}</div>
             <div
               data-active-dark-theme={isActiveDark(theme) || undefined}
               data-active-light-theme={isActiveLight(theme) || undefined}
               data-active-theme={isActive(theme) || undefined}
-              className='group flex relative rounded overflow-hidden shadow-md transition-colors data-[active-theme]:ring-2 data-[active-theme]:ring-[--color-surprise]'
+              className="group relative flex overflow-hidden rounded shadow-md transition-colors data-[active-theme]:ring-2 data-[active-theme]:ring-[--color-surprise]"
             >
               {autoDetectColorScheme && (
-                <div className='group-hover:grid group-focus:grid group-data-[active-theme]:grid absolute top-0 left-0 w-full h-full hidden grid-cols-2'>
+                <div className="absolute left-0 top-0 hidden h-full w-full grid-cols-2 group-hover:grid group-focus:grid group-data-[active-theme]:grid">
                   <Button
                     onPress={() => {
                       activate(theme.name, 'light');
                     }}
-                    style={{
-                      '--color-surprise': theme.theme.background?.surprise,
-                    } as React.CSSProperties}
+                    style={
+                      {
+                        '--color-surprise': theme.theme.background?.surprise,
+                      } as React.CSSProperties
+                    }
                     className="flex items-center justify-center hover:bg-[--hl-md] focus:bg-[--hl-md] group-data-[active-light-theme]:bg-[--hl-lg] group-data-[active-light-theme]:text-[--color-surprise]"
                   >
                     <Icon icon="sun" />
@@ -128,9 +132,11 @@ export const ThemePanel: FC = () => {
                     onPress={() => {
                       activate(theme.name, 'dark');
                     }}
-                    style={{
-                      '--color-surprise': theme.theme.background?.surprise,
-                    } as React.CSSProperties}
+                    style={
+                      {
+                        '--color-surprise': theme.theme.background?.surprise,
+                      } as React.CSSProperties
+                    }
                     className="flex items-center justify-center hover:bg-[--hl-md] focus:bg-[--hl-md] group-data-[active-dark-theme]:bg-[--hl-md] group-data-[active-dark-theme]:text-[--color-surprise]"
                   >
                     <Icon icon="moon" />

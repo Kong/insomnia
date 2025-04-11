@@ -1,10 +1,6 @@
 import type { RequestHeader } from '../../models/request';
 
-export function getBasicAuthHeader(
-  username?: string | null,
-  password?: string | null,
-  encoding = 'utf8',
-) {
+export function getBasicAuthHeader(username?: string | null, password?: string | null, encoding = 'utf8') {
   const name = 'Authorization';
   const header = `${username || ''}:${password || ''}`;
   // @ts-expect-error -- TSCONVERSION appears to be a genuine error

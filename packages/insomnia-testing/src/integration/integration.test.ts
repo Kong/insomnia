@@ -1,4 +1,3 @@
-
 import { describe, expect, it } from 'vitest';
 import { vi } from 'vitest';
 
@@ -14,8 +13,7 @@ describe('integration', () => {
         tests: [
           {
             name: 'should return -1 when the value is not present',
-            code:
-              'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.equal(true);',
+            code: 'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.equal(true);',
             defaultRequestId: null,
           },
           {
@@ -43,8 +41,7 @@ describe('integration', () => {
         tests: [
           {
             name: 'should return -1 when the value is not present',
-            code:
-              'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.be.true;',
+            code: 'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.be.true;',
             defaultRequestId: null,
           },
           {
@@ -95,9 +92,9 @@ describe('integration', () => {
             name: 'Tests referencing request by ID',
             defaultRequestId: null,
             code: [
-              'const resp = await insomnia.send(\'foo\');',
+              "const resp = await insomnia.send('foo');",
               'expect(resp.status).to.equal(200);',
-              'expect(resp.statusMessage).to.equal(\'abc\');',
+              "expect(resp.statusMessage).to.equal('abc');",
             ].join('\n'),
           },
           {
@@ -106,7 +103,7 @@ describe('integration', () => {
             code: [
               'const resp = await insomnia.send();',
               'expect(resp.status).to.equal(301);',
-              'expect(resp.statusMessage).to.equal(\'def\');',
+              "expect(resp.statusMessage).to.equal('def');",
             ].join('\n'),
           },
         ],

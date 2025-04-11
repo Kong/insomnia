@@ -18,9 +18,7 @@ interface BaseProtoDirectory {
 
 export type ProtoDirectory = BaseModel & BaseProtoDirectory;
 
-export const isProtoDirectory = (model: Pick<BaseModel, 'type'>): model is ProtoDirectory => (
-  model.type === type
-);
+export const isProtoDirectory = (model: Pick<BaseModel, 'type'>): model is ProtoDirectory => model.type === type;
 
 export function init(): BaseProtoDirectory {
   return {

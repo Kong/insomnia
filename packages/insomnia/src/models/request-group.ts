@@ -13,10 +13,7 @@ export const canDuplicate = true;
 
 export const canSync = true;
 // for those keys do not need to add in model init method
-export const optionalKeys = [
-  'kvPairData',
-  'environmentType',
-];
+export const optionalKeys = ['kvPairData', 'environmentType'];
 interface BaseRequestGroup {
   name: string;
   description: string;
@@ -33,9 +30,7 @@ interface BaseRequestGroup {
 
 export type RequestGroup = BaseModel & BaseRequestGroup;
 
-export const isRequestGroup = (model: Pick<BaseModel, 'type'>): model is RequestGroup => (
-  model.type === type
-);
+export const isRequestGroup = (model: Pick<BaseModel, 'type'>): model is RequestGroup => model.type === type;
 
 export function init(): BaseRequestGroup {
   return {
@@ -99,9 +94,7 @@ export async function duplicate(requestGroup: RequestGroup, patch: Partial<Reque
     metaSortKey: 1,
   });
 
-  const nextSortKey = nextRequestGroup
-    ? nextRequestGroup.metaSortKey
-    : requestGroup.metaSortKey + 100;
+  const nextSortKey = nextRequestGroup ? nextRequestGroup.metaSortKey : requestGroup.metaSortKey + 100;
 
   // Calculate new sort key
   const sortKeyIncrement = (nextSortKey - requestGroup.metaSortKey) / 2;

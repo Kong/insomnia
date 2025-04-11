@@ -7,7 +7,16 @@ import path from 'path';
 import { v4 } from 'uuid';
 import YAML, { parse } from 'yaml';
 
-import { getApiBaseURL, getAppWebsiteBaseURL, getGitHubGraphQLApiURL, getGitHubRestApiUrl, INSOMNIA_GITLAB_API_URL, INSOMNIA_GITLAB_CLIENT_ID, INSOMNIA_GITLAB_REDIRECT_URI, PLAYWRIGHT } from '../common/constants';
+import {
+  getApiBaseURL,
+  getAppWebsiteBaseURL,
+  getGitHubGraphQLApiURL,
+  getGitHubRestApiUrl,
+  INSOMNIA_GITLAB_API_URL,
+  INSOMNIA_GITLAB_CLIENT_ID,
+  INSOMNIA_GITLAB_REDIRECT_URI,
+  PLAYWRIGHT,
+} from '../common/constants';
 import { database } from '../common/database';
 import { insomniaFileSchema } from '../common/import-v5-parser';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
@@ -15,7 +24,13 @@ import * as models from '../models';
 import type { GitRepository } from '../models/git-repository';
 import { type WorkspaceScope, WorkspaceScopeKeys } from '../models/workspace';
 import { fsClient } from '../sync/git/fs-client';
-import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME, GIT_INTERNAL_DIR, MergeConflictError } from '../sync/git/git-vcs';
+import GitVCS, {
+  GIT_CLONE_DIR,
+  GIT_INSOMNIA_DIR,
+  GIT_INSOMNIA_DIR_NAME,
+  GIT_INTERNAL_DIR,
+  MergeConflictError,
+} from '../sync/git/git-vcs';
 import { MemClient } from '../sync/git/mem-client';
 import { NeDBClient } from '../sync/git/ne-db-client';
 import { GitProjectNeDBClient } from '../sync/git/project-ne-db-client';
@@ -29,16 +44,25 @@ import { SegmentEvent, trackSegmentEvent } from './analytics';
 import { ipcMainHandle } from './ipc/electron';
 
 type PushPull = 'push' | 'pull';
-type VCSAction = PushPull | `force_${PushPull}` |
-  'create_branch' | 'merge_branch' | 'delete_branch' | 'checkout_branch' |
-  'commit' | 'stage_all' | 'stage' | 'unstage_all' | 'unstage' | 'rollback' | 'rollback_all' |
-  'update' | 'setup' | 'clone';
+type VCSAction =
+  | PushPull
+  | `force_${PushPull}`
+  | 'create_branch'
+  | 'merge_branch'
+  | 'delete_branch'
+  | 'checkout_branch'
+  | 'commit'
+  | 'stage_all'
+  | 'stage'
+  | 'unstage_all'
+  | 'unstage'
+  | 'rollback'
+  | 'rollback_all'
+  | 'update'
+  | 'setup'
+  | 'clone';
 
-export function vcsSegmentEventProperties(
-  type: 'git',
-  action: VCSAction,
-  error?: string
-) {
+export function vcsSegmentEventProperties(type: 'git', action: VCSAction, error?: string) {
   return { type, action, error };
 }
 
@@ -73,9 +97,7 @@ async function getGitRepository({ projectId, workspaceId }: { projectId: string;
       throw new Error('Workspace is not linked to a git repository');
     }
 
-    const gitRepository = await models.gitRepository.getById(
-      workspaceMeta.gitRepositoryId
-    );
+    const gitRepository = await models.gitRepository.getById(workspaceMeta.gitRepositoryId);
     invariant(gitRepository, 'Git Repository not found');
 
     return gitRepository;
@@ -85,9 +107,7 @@ async function getGitRepository({ projectId, workspaceId }: { projectId: string;
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
   invariant(project.gitRepositoryId, 'Project is not linked to a git repository');
-  const gitRepository = await models.gitRepository.getById(
-    project.gitRepositoryId
-  );
+  const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
   invariant(gitRepository, 'Git Repository not found');
   return gitRepository;
 }
@@ -103,7 +123,7 @@ async function getGitFSClient({
 }) {
   const baseDir = path.join(
     process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData'),
-    `version-control/git/${gitRepositoryId}`
+    `version-control/git/${gitRepositoryId}`,
   );
 
   // Workspace FS Client
@@ -144,13 +164,7 @@ async function getGitFSClient({
   return routableFS;
 }
 
-export async function loadGitRepository({
-  projectId,
-  workspaceId,
-}: {
-  projectId: string;
-  workspaceId?: string;
-}) {
+export async function loadGitRepository({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) {
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
 
@@ -201,8 +215,7 @@ export async function loadGitRepository({
       gitRepository,
     };
   } catch (e) {
-    const errorMessage =
-      e instanceof Error ? e.message : 'Error while fetching git repository.';
+    const errorMessage = e instanceof Error ? e.message : 'Error while fetching git repository.';
     return {
       errors: [errorMessage],
     };
@@ -211,14 +224,17 @@ export async function loadGitRepository({
 
 export type GitBranchesLoaderData =
   | {
-    branches: string[];
-    remoteBranches: string[];
-  }
+      branches: string[];
+      remoteBranches: string[];
+    }
   | {
-    errors: string[];
-  };
+      errors: string[];
+    };
 
-export const getGitBranches = async ({ projectId, workspaceId }: {
+export const getGitBranches = async ({
+  projectId,
+  workspaceId,
+}: {
   projectId: string;
   workspaceId?: string;
 }): Promise<GitBranchesLoaderData> => {
@@ -239,10 +255,7 @@ export const getGitBranches = async ({ projectId, workspaceId }: {
   }
 };
 
-export const gitFetchAction = async ({ projectId, workspaceId }: {
-  projectId: string;
-  workspaceId?: string;
-}) => {
+export const gitFetchAction = async ({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) => {
   try {
     const gitRepository = await getGitRepository({ projectId, workspaceId });
     await GitVCS.fetch({
@@ -262,10 +275,7 @@ export const gitFetchAction = async ({ projectId, workspaceId }: {
   }
 };
 
-export const gitLogLoader = async ({ projectId, workspaceId }: {
-  projectId: string;
-  workspaceId?: string;
-}) => {
+export const gitLogLoader = async ({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) => {
   try {
     await getGitRepository({ projectId, workspaceId });
     const log = await GitVCS.log({ depth: 35 });
@@ -334,7 +344,10 @@ export interface GitCanPushLoaderData {
   canPush: boolean;
 }
 
-export const canPushLoader = async ({ projectId, workspaceId }: {
+export const canPushLoader = async ({
+  projectId,
+  workspaceId,
+}: {
   projectId: string;
   workspaceId?: string;
 }): Promise<GitCanPushLoaderData> => {
@@ -364,7 +377,11 @@ async function isInsomniaFile(fullPath: string, fsClient: PromiseFsClient) {
 
 // Recursively finds all .yaml files in a repository that are Insomnia files and returns their paths relative to the repo root.
 // Insomnia files are defined as files that contain the string 'insomnia.rest' in the first line.
-const recursivelyFindInsomniaFiles = async (fsClient: PromiseFsClient, dir: string, files: string[] = []): Promise<string[]> => {
+const recursivelyFindInsomniaFiles = async (
+  fsClient: PromiseFsClient,
+  dir: string,
+  files: string[] = [],
+): Promise<string[]> => {
   const dirFiles = await fsClient.promises.readdir(dir);
   for (const file of dirFiles) {
     const repoRelativePath = path.join(dir, file);
@@ -374,7 +391,7 @@ const recursivelyFindInsomniaFiles = async (fsClient: PromiseFsClient, dir: stri
       await recursivelyFindInsomniaFiles(fsClient, repoRelativePath, files);
     }
 
-    if (!isDirectory && await isInsomniaFile(repoRelativePath, fsClient)) {
+    if (!isDirectory && (await isInsomniaFile(repoRelativePath, fsClient))) {
       files.push(repoRelativePath);
     }
   }
@@ -398,15 +415,18 @@ export const initGitRepoCloneAction = async ({
   token: string;
   username: string;
   oauth2format?: string;
-}): Promise<{
-  files: {
-    scope: WorkspaceScope;
-    name: string;
-    path: string;
-  }[];
-} | {
-  errors: string[];
-}> => {
+}): Promise<
+  | {
+      files: {
+        scope: WorkspaceScope;
+        name: string;
+        path: string;
+      }[];
+    }
+  | {
+      errors: string[];
+    }
+> => {
   const repoSettingsPatch: Partial<GitRepository> = {};
   repoSettingsPatch.uri = parseGitToHttpsURL(uri);
   repoSettingsPatch.author = {
@@ -416,10 +436,7 @@ export const initGitRepoCloneAction = async ({
 
   // Git Credentials
   if (oauth2format) {
-    invariant(
-      oauth2format === 'gitlab' || oauth2format === 'github',
-      'OAuth2 format is required'
-    );
+    invariant(oauth2format === 'gitlab' || oauth2format === 'github', 'OAuth2 format is required');
 
     repoSettingsPatch.credentials = {
       username,
@@ -472,7 +489,7 @@ export const initGitRepoCloneAction = async ({
         name: insomniaFile.name || 'Untitled',
         path: file,
       };
-    })
+    }),
   );
 
   return { files };
@@ -512,10 +529,7 @@ export const cloneGitRepoAction = async ({
 
       // Git Credentials
       if (oauth2format) {
-        invariant(
-          oauth2format === 'gitlab' || oauth2format === 'github',
-          'OAuth2 format is required'
-        );
+        invariant(oauth2format === 'gitlab' || oauth2format === 'github', 'OAuth2 format is required');
 
         repoSettingsPatch.credentials = {
           username,
@@ -532,10 +546,7 @@ export const cloneGitRepoAction = async ({
         };
       }
 
-      trackSegmentEvent(
-        SegmentEvent.vcsSyncStart,
-        vcsSegmentEventProperties('git', 'clone'),
-      );
+      trackSegmentEvent(SegmentEvent.vcsSyncStart, vcsSegmentEventProperties('git', 'clone'));
       repoSettingsPatch.needsFullClone = true;
 
       const inMemoryFsClient = MemClient.createClient();
@@ -659,10 +670,7 @@ export const cloneGitRepoAction = async ({
 
     // Git Credentials
     if (oauth2format) {
-      invariant(
-        oauth2format === 'gitlab' || oauth2format === 'github',
-        'OAuth2 format is required'
-      );
+      invariant(oauth2format === 'gitlab' || oauth2format === 'github', 'OAuth2 format is required');
 
       repoSettingsPatch.credentials = {
         username,
@@ -679,10 +687,7 @@ export const cloneGitRepoAction = async ({
       };
     }
 
-    trackSegmentEvent(
-      SegmentEvent.vcsSyncStart,
-      vcsSegmentEventProperties('git', 'clone'),
-    );
+    trackSegmentEvent(SegmentEvent.vcsSyncStart, vcsSegmentEventProperties('git', 'clone'));
     repoSettingsPatch.needsFullClone = true;
 
     const inMemoryFsClient = MemClient.createClient();
@@ -707,23 +712,17 @@ export const cloneGitRepoAction = async ({
       };
     }
 
-    const containsInsomniaDir = async (
-      fsClient: Record<string, any>
-    ): Promise<boolean> => {
+    const containsInsomniaDir = async (fsClient: Record<string, any>): Promise<boolean> => {
       const rootDirs: string[] = await fsClient.promises.readdir(GIT_CLONE_DIR);
       return rootDirs.includes(GIT_INSOMNIA_DIR_NAME);
     };
 
-    const containsInsomniaWorkspaceDir = async (
-      fsClient: Record<string, any>
-    ): Promise<boolean> => {
+    const containsInsomniaWorkspaceDir = async (fsClient: Record<string, any>): Promise<boolean> => {
       if (!(await containsInsomniaDir(fsClient))) {
         return false;
       }
 
-      const rootDirs: string[] = await fsClient.promises.readdir(
-        GIT_INSOMNIA_DIR
-      );
+      const rootDirs: string[] = await fsClient.promises.readdir(GIT_INSOMNIA_DIR);
       return rootDirs.includes(models.workspace.type);
     };
 
@@ -743,13 +742,10 @@ export const cloneGitRepoAction = async ({
       });
       await models.apiSpec.getOrCreateForParentId(workspace._id);
 
-      trackSegmentEvent(
-        SegmentEvent.vcsSyncComplete,
-        {
-          ...vcsSegmentEventProperties('git', 'clone', 'no directory found'),
-          providerName,
-        },
-      );
+      trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
+        ...vcsSegmentEventProperties('git', 'clone', 'no directory found'),
+        providerName,
+      });
 
       workspaceId = workspace._id;
 
@@ -764,12 +760,10 @@ export const cloneGitRepoAction = async ({
       const workspaces = await inMemoryFsClient.promises.readdir(workspaceBase);
 
       if (workspaces.length === 0) {
-        trackSegmentEvent(
-          SegmentEvent.vcsSyncComplete, {
+        trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
           ...vcsSegmentEventProperties('git', 'clone', 'no workspaces found'),
           providerName,
-        },
-        );
+        });
 
         return {
           errors: ['No workspaces found in repository'],
@@ -777,17 +771,10 @@ export const cloneGitRepoAction = async ({
       }
 
       if (workspaces.length > 1) {
-        trackSegmentEvent(
-          SegmentEvent.vcsSyncComplete,
-          {
-            ...vcsSegmentEventProperties(
-              'git',
-              'clone',
-              'multiple workspaces found'
-            ),
-            providerName,
-          },
-        );
+        trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
+          ...vcsSegmentEventProperties('git', 'clone', 'multiple workspaces found'),
+          providerName,
+        });
 
         return {
           errors: ['Multiple workspaces found in repository. Expected one.'],
@@ -799,7 +786,8 @@ export const cloneGitRepoAction = async ({
       const workspaceJson = await inMemoryFsClient.promises.readFile(workspacePath);
       const workspace = YAML.parse(workspaceJson.toString());
       workspaceId = workspace._id;
-      scope = (workspace.scope === WorkspaceScopeKeys.collection) ? WorkspaceScopeKeys.collection : WorkspaceScopeKeys.design;
+      scope =
+        workspace.scope === WorkspaceScopeKeys.collection ? WorkspaceScopeKeys.collection : WorkspaceScopeKeys.design;
       // Check if the workspace already exists
       const existingWorkspace = await models.workspace.getById(workspace._id);
 
@@ -807,7 +795,9 @@ export const cloneGitRepoAction = async ({
         const project = await models.project.getById(existingWorkspace.parentId);
         if (!project) {
           return {
-            errors: ['It seems that the repository being cloned is connected to an orphaned workspace. Please move that workspace to a project and try again.'],
+            errors: [
+              'It seems that the repository being cloned is connected to an orphaned workspace. Please move that workspace to a project and try again.',
+            ],
           };
         }
 
@@ -905,7 +895,6 @@ export const updateGitRepoAction = async ({
   token: string;
 }) => {
   try {
-
     let gitRepositoryId: string | null | undefined = null;
 
     if (workspaceId) {
@@ -933,10 +922,7 @@ export const updateGitRepoAction = async ({
 
     // Git Credentials
     if (oauth2format) {
-      invariant(
-        oauth2format === 'gitlab' || oauth2format === 'github',
-        'OAuth2 format is required'
-      );
+      invariant(oauth2format === 'gitlab' || oauth2format === 'github', 'OAuth2 format is required');
 
       repoSettingsPatch.credentials = {
         username,
@@ -1008,10 +994,7 @@ export const updateGitRepoAction = async ({
   }
 };
 
-export const resetGitRepoAction = async ({ projectId, workspaceId }: {
-  projectId: string;
-  workspaceId?: string;
-}) => {
+export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) => {
   const repo = await getGitRepository({ projectId, workspaceId });
 
   invariant(repo, 'Git Repository not found');
@@ -1068,8 +1051,7 @@ export const commitToGitRepoAction = async ({
       hasUnpushedChanges,
     });
   } catch (e) {
-    const message =
-      e instanceof Error ? e.message : 'Error while committing changes';
+    const message = e instanceof Error ? e.message : 'Error while committing changes';
     return { errors: [message] };
   }
 
@@ -1093,14 +1075,12 @@ export const commitAndPushToGitRepoAction = async ({
 
     const providerName = getOauth2FormatName(repo?.credentials);
 
-    trackSegmentEvent(
-      SegmentEvent.vcsAction, {
+    trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'commit'),
       providerName,
     });
   } catch (e) {
-    const message =
-      e instanceof Error ? e.message : 'Error while committing changes';
+    const message = e instanceof Error ? e.message : 'Error while committing changes';
     return { errors: [message] };
   }
 
@@ -1142,13 +1122,17 @@ export const commitAndPushToGitRepoAction = async ({
   } catch (err: unknown) {
     if (err instanceof Errors.PushRejectedError && err.data.reason === 'not-fast-forward') {
       return {
-        errors: ['Push Rejected. It seems that the remote repository has changes that you do not have locally. Please pull the changes and try again.'],
+        errors: [
+          'Push Rejected. It seems that the remote repository has changes that you do not have locally. Please pull the changes and try again.',
+        ],
       };
     }
 
     if (err instanceof Errors.PushRejectedError && err.data.reason === 'tag-exists') {
       return {
-        errors: ['Push Rejected. It seems that the tag you are trying to push already exists in the remote repository.'],
+        errors: [
+          'Push Rejected. It seems that the tag you are trying to push already exists in the remote repository.',
+        ],
       };
     }
 
@@ -1213,10 +1197,7 @@ export const createNewGitBranchAction = async ({
         errors: [`${err.message}, ${err.data.response}`],
       };
     }
-    const errorMessage =
-      err instanceof Error
-        ? err.message
-        : 'Something went wrong while creating a new branch';
+    const errorMessage = err instanceof Error ? err.message : 'Something went wrong while creating a new branch';
     return {
       errors: [errorMessage],
     };
@@ -1320,10 +1301,7 @@ export const mergeGitBranch = async ({
       errorMessage = `${err.message}, ${err.data.response}`;
     }
 
-    trackSegmentEvent(
-      SegmentEvent.vcsAction,
-      vcsSegmentEventProperties('git', 'merge_branch', errorMessage),
-    );
+    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'merge_branch', errorMessage));
 
     return {
       errors: [errorMessage],
@@ -1416,14 +1394,18 @@ export const pushToGitRemoteAction = async ({
   } catch (err: unknown) {
     if (err instanceof Errors.PushRejectedError && err.data.reason === 'not-fast-forward') {
       return {
-        errors: ['Push Rejected. It seems that the remote repository has changes that you do not have locally. Please pull the changes and try again.'],
+        errors: [
+          'Push Rejected. It seems that the remote repository has changes that you do not have locally. Please pull the changes and try again.',
+        ],
         gitRepository,
       };
     }
 
     if (err instanceof Errors.PushRejectedError && err.data.reason === 'tag-exists') {
       return {
-        errors: ['Push Rejected. It seems that the tag you are trying to push already exists in the remote repository.'],
+        errors: [
+          'Push Rejected. It seems that the tag you are trying to push already exists in the remote repository.',
+        ],
       };
     }
 
@@ -1449,13 +1431,7 @@ export const pushToGitRemoteAction = async ({
   return {};
 };
 
-export async function pullFromGitRemote({
-  projectId,
-  workspaceId,
-}: {
-  projectId: string;
-  workspaceId?: string;
-}) {
+export async function pullFromGitRemote({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) {
   try {
     const gitRepository = await getGitRepository({ projectId, workspaceId });
     const providerName = getOauth2FormatName(gitRepository.credentials);
@@ -1478,10 +1454,7 @@ export async function pullFromGitRemote({
     if (err instanceof Errors.HttpError) {
       errorMessage = `${err.message}, ${err.data.response}`;
     }
-    trackSegmentEvent(
-      SegmentEvent.vcsAction,
-      vcsSegmentEventProperties('git', 'pull', errorMessage),
-    );
+    trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'pull', errorMessage));
 
     return {
       errors: [errorMessage],
@@ -1489,21 +1462,19 @@ export async function pullFromGitRemote({
   }
 }
 
-export const continueMerge = async (
-  {
-    projectId,
-    workspaceId,
-    handledMergeConflicts,
-    commitMessage,
-    commitParent,
-  }: {
-    projectId: string;
-    workspaceId?: string;
-    handledMergeConflicts: MergeConflict[];
-    commitMessage: string;
-    commitParent: string[];
-  }
-) => {
+export const continueMerge = async ({
+  projectId,
+  workspaceId,
+  handledMergeConflicts,
+  commitMessage,
+  commitParent,
+}: {
+  projectId: string;
+  workspaceId?: string;
+  handledMergeConflicts: MergeConflict[];
+  commitMessage: string;
+  commitParent: string[];
+}) => {
   try {
     await getGitRepository({ workspaceId, projectId });
     const bufferId = await database.bufferChanges();
@@ -1557,14 +1528,12 @@ export const discardChangesAction = async ({
     await getGitRepository({ workspaceId, projectId });
     const { changes } = await getGitChanges(GitVCS);
 
-    const files = changes.unstaged
-      .filter(change => paths.includes(change.path));
+    const files = changes.unstaged.filter(change => paths.includes(change.path));
 
     await GitVCS.discardChanges(files);
     return {};
   } catch (e) {
-    const errorMessage =
-      e instanceof Error ? e.message : 'Error while rolling back changes';
+    const errorMessage = e instanceof Error ? e.message : 'Error while rolling back changes';
     return {
       errors: [errorMessage],
     };
@@ -1623,14 +1592,12 @@ export const stageChangesAction = async ({
     await getGitRepository({ workspaceId, projectId });
     const { changes } = await getGitChanges(GitVCS);
 
-    const files = changes.unstaged
-      .filter(change => paths.includes(change.path));
+    const files = changes.unstaged.filter(change => paths.includes(change.path));
 
     await GitVCS.stageChanges(files);
     return {};
   } catch (e) {
-    const errorMessage =
-      e instanceof Error ? e.message : 'Error while staging changes';
+    const errorMessage = e instanceof Error ? e.message : 'Error while staging changes';
     return {
       errors: [errorMessage],
     };
@@ -1652,32 +1619,26 @@ export const unstageChangesAction = async ({
     await getGitRepository({ workspaceId, projectId });
     const { changes } = await getGitChanges(GitVCS);
 
-    const files = changes.staged
-      .filter(change => paths.includes(change.path));
+    const files = changes.staged.filter(change => paths.includes(change.path));
 
     await GitVCS.unstageChanges(files);
     return {};
   } catch (e) {
-    const errorMessage =
-      e instanceof Error ? e.message : 'Error while unstaging changes';
+    const errorMessage = e instanceof Error ? e.message : 'Error while unstaging changes';
     return {
       errors: [errorMessage],
     };
   }
-
 };
 
-function getPreviewItemName(previewDiffItem: {
-  before: string;
-  after: string;
-}) {
+function getPreviewItemName(previewDiffItem: { before: string; after: string }) {
   let prevName = '';
   let nextName = '';
 
   try {
     const prev = parse(previewDiffItem.before);
 
-    if (prev && 'fileName' in prev || 'name' in prev) {
+    if ((prev && 'fileName' in prev) || 'name' in prev) {
       prevName = prev.fileName || prev.name;
     }
   } catch (e) {
@@ -1686,7 +1647,7 @@ function getPreviewItemName(previewDiffItem: {
 
   try {
     const next = parse(previewDiffItem.after);
-    if (next && 'fileName' in next || 'name' in next) {
+    if ((next && 'fileName' in next) || 'name' in next) {
       nextName = next.fileName || next.name;
     }
   } catch (e) {
@@ -1696,15 +1657,17 @@ function getPreviewItemName(previewDiffItem: {
   return nextName || prevName;
 }
 
-export type GitDiffResult = {
-  name: string;
-  diff?: {
-    before: string;
-    after: string;
-  };
-} | {
-  errors: string[];
-};
+export type GitDiffResult =
+  | {
+      name: string;
+      diff?: {
+        before: string;
+        after: string;
+      };
+    }
+  | {
+      errors: string[];
+    };
 
 export const diffFileLoader = async ({
   projectId,
@@ -1721,21 +1684,22 @@ export const diffFileLoader = async ({
     await getGitRepository({ workspaceId, projectId });
     const fileStatus = await GitVCS.fileStatus(filepath);
 
-    const diff = staged ? {
-      before: fileStatus.head,
-      after: fileStatus.stage,
-    } : {
-      before: fileStatus.stage || fileStatus.head,
-      after: fileStatus.workdir,
-    };
+    const diff = staged
+      ? {
+          before: fileStatus.head,
+          after: fileStatus.stage,
+        }
+      : {
+          before: fileStatus.stage || fileStatus.head,
+          after: fileStatus.workdir,
+        };
 
     return {
       name: getPreviewItemName(diff) || filepath,
       diff,
     };
   } catch (e) {
-    const errorMessage =
-      e instanceof Error ? e.message : 'Error while unstaging changes';
+    const errorMessage = e instanceof Error ? e.message : 'Error while unstaging changes';
     return {
       errors: [errorMessage],
     };
@@ -1755,14 +1719,21 @@ interface GitRepoDirectory {
   children: (GitRepoDirectory | GitRepoFile)[];
 }
 
-type FileTree = {
-  id: string;
-  name: string;
-  type: 'root';
-  children: (GitRepoDirectory | GitRepoFile)[];
-} | GitRepoDirectory | GitRepoFile;
+type FileTree =
+  | {
+      id: string;
+      name: string;
+      type: 'root';
+      children: (GitRepoDirectory | GitRepoFile)[];
+    }
+  | GitRepoDirectory
+  | GitRepoFile;
 
-const getRepositoryDirectoryTree = async ({ projectId }: { projectId: string }): Promise<{
+const getRepositoryDirectoryTree = async ({
+  projectId,
+}: {
+  projectId: string;
+}): Promise<{
   repositoryTree: FileTree;
   folderList: Record<string, string[]>;
 }> => {
@@ -1843,17 +1814,9 @@ interface GitHubUserApiResponse {
   url: string;
 }
 
-async function completeSignInToGitHub({
-  code,
-  state,
-}: {
-  code: string;
-  state: string;
-}) {
+async function completeSignInToGitHub({ code, state }: { code: string; state: string }) {
   if (!PLAYWRIGHT && !statesCache.has(state)) {
-    throw new Error(
-      'Invalid state parameter. It looks like the authorization flow was not initiated by the app.'
-    );
+    throw new Error('Invalid state parameter. It looks like the authorization flow was not initiated by the app.');
   }
 
   const response = await net.fetch(getApiBaseURL() + '/v1/oauth/github-app', {
@@ -1866,7 +1829,7 @@ async function completeSignInToGitHub({
     },
   });
 
-  const data = await response.json() as { access_token: string };
+  const data = (await response.json()) as { access_token: string };
   statesCache.delete(state);
   const existingGitHubCredentials = await models.gitCredentials.getByProvider('github');
 
@@ -1886,10 +1849,7 @@ async function completeSignInToGitHub({
     },
   }).then(response => response.json() as Promise<GitHubUserApiResponse>);
 
-  const [emails, user] = await Promise.all([
-    emailsPromise,
-    userPromise,
-  ]);
+  const [emails, user] = await Promise.all([emailsPromise, userPromise]);
 
   const userProfileEmail = user.email ?? '';
   const email = emails.find(e => e.primary)?.email ?? userProfileEmail ?? '';
@@ -1939,10 +1899,13 @@ type GitHubRepositoriesApiResponse = GitHubRepositoryApiResponse[];
 
 const GITHUB_USER_REPOS_URL = `${getGitHubRestApiUrl()}/user/repos`;
 
-async function getGitHubRepositories(
-  { url = `${GITHUB_USER_REPOS_URL}?per_page=100`, repos = [] }:
-    { url?: string; repos?: GitHubRepositoriesApiResponse }
-) {
+async function getGitHubRepositories({
+  url = `${GITHUB_USER_REPOS_URL}?per_page=100`,
+  repos = [],
+}: {
+  url?: string;
+  repos?: GitHubRepositoriesApiResponse;
+}) {
   const credentials = await models.gitCredentials.getByProvider('github');
   const opts = {
     headers: {
@@ -1954,7 +1917,6 @@ async function getGitHubRepositories(
   if (!response.ok) {
     const raw = await response.text();
     if (response.status === 401) {
-
       return {
         errors: [`User token not authorized to fetch repositories, please sign out and back in.\nResponse: ${raw}`],
         repos: [],
@@ -1979,7 +1941,11 @@ async function getGitHubRepositories(
       const lastPage = lastUrl.searchParams.get('page');
       if (lastPage) {
         const pages = Number(lastPage);
-        const pageList = await Promise.all(Array.from({ length: pages - 1 }, (_, i) => fetch(`${GITHUB_USER_REPOS_URL}?per_page=100&page=${i + 2}`, opts)));
+        const pageList = await Promise.all(
+          Array.from({ length: pages - 1 }, (_, i) =>
+            fetch(`${GITHUB_USER_REPOS_URL}?per_page=100&page=${i + 2}`, opts),
+          ),
+        );
         for (const page of pageList) {
           const pageData = await page.json();
           pullableRepos = pageData.filter((repo: GitHubRepositoryApiResponse) => repo.permissions.pull);
@@ -2017,7 +1983,7 @@ async function getGitHubRepository({ uri }: { uri: string }) {
     };
   }
 
-  return { repo: await response.json() as GitHubRepositoryApiResponse, errors: [], notFound: false };
+  return { repo: (await response.json()) as GitHubRepositoryApiResponse, errors: [], notFound: false };
 }
 
 /**
@@ -2047,7 +2013,10 @@ const getGitLabConfig = async () => {
     method: 'GET',
   });
 
-  const { applicationId: clientId, redirectUri } = await configResponse.json() as { applicationId: string; redirectUri: string };
+  const { applicationId: clientId, redirectUri } = (await configResponse.json()) as {
+    applicationId: string;
+    redirectUri: string;
+  };
 
   return {
     clientId,
@@ -2056,11 +2025,7 @@ const getGitLabConfig = async () => {
 };
 
 function base64URLEncode(buffer: Buffer) {
-  return buffer
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
+  return buffer.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
 export const getGitLabOauthApiURL = () => INSOMNIA_GITLAB_API_URL || 'https://gitlab.com';
@@ -2101,22 +2066,14 @@ async function initSignInToGitLab() {
   await shell.openExternal(gitlabURL.toString());
 }
 
-async function completeSignInToGitLab({
-  code,
-  state,
-}: {
-  code: string;
-  state: string;
-}) {
+async function completeSignInToGitLab({ code, state }: { code: string; state: string }) {
   let verifier = gitLabStatesCache.get(state);
 
   if (PLAYWRIGHT) {
     verifier = 'test-verifier';
   }
   if (!verifier) {
-    throw new Error(
-      'Invalid state parameter. It looks like the authorization flow was not initiated by the app.'
-    );
+    throw new Error('Invalid state parameter. It looks like the authorization flow was not initiated by the app.');
   }
   const { clientId, redirectUri } = await getGitLabConfig();
   const url = new URL(`${getGitLabOauthApiURL()}/oauth/token`);
@@ -2133,10 +2090,10 @@ async function completeSignInToGitLab({
     method: 'POST',
   });
 
-  const {
-    access_token,
-    refresh_token,
-  } = await gitLabResponse.json() as { access_token: string; refresh_token: string };
+  const { access_token, refresh_token } = (await gitLabResponse.json()) as {
+    access_token: string;
+    refresh_token: string;
+  };
 
   gitLabStatesCache.delete(state);
   const existingGitLabCredentials = await models.gitCredentials.getByProvider('gitlab');
@@ -2147,7 +2104,7 @@ async function completeSignInToGitLab({
     },
   });
 
-  const user = await gitLabUserResponse.json() as {
+  const user = (await gitLabUserResponse.json()) as {
     id: number;
     username: string;
     name: string;
@@ -2230,39 +2187,81 @@ export interface GitServiceAPI {
 }
 
 export const registerGitServiceAPI = () => {
-  ipcMainHandle('git.loadGitRepository', (_, options: Parameters<typeof loadGitRepository>[0]) => loadGitRepository(options));
+  ipcMainHandle('git.loadGitRepository', (_, options: Parameters<typeof loadGitRepository>[0]) =>
+    loadGitRepository(options),
+  );
   ipcMainHandle('git.getGitBranches', (_, options: Parameters<typeof getGitBranches>[0]) => getGitBranches(options));
   ipcMainHandle('git.gitFetchAction', (_, options: Parameters<typeof gitFetchAction>[0]) => gitFetchAction(options));
   ipcMainHandle('git.gitLogLoader', (_, options: Parameters<typeof gitLogLoader>[0]) => gitLogLoader(options));
-  ipcMainHandle('git.gitChangesLoader', (_, options: Parameters<typeof gitChangesLoader>[0]) => gitChangesLoader(options));
+  ipcMainHandle('git.gitChangesLoader', (_, options: Parameters<typeof gitChangesLoader>[0]) =>
+    gitChangesLoader(options),
+  );
   ipcMainHandle('git.canPushLoader', (_, options: Parameters<typeof canPushLoader>[0]) => canPushLoader(options));
-  ipcMainHandle('git.cloneGitRepo', (_, options: Parameters<typeof cloneGitRepoAction>[0]) => cloneGitRepoAction(options));
-  ipcMainHandle('git.initGitRepoClone', (_, options: Parameters<typeof initGitRepoCloneAction>[0]) => initGitRepoCloneAction(options));
-  ipcMainHandle('git.updateGitRepo', (_, options: Parameters<typeof updateGitRepoAction>[0]) => updateGitRepoAction(options));
-  ipcMainHandle('git.resetGitRepo', (_, options: Parameters<typeof resetGitRepoAction>[0]) => resetGitRepoAction(options));
-  ipcMainHandle('git.commitToGitRepo', (_, options: Parameters<typeof commitToGitRepoAction>[0]) => commitToGitRepoAction(options));
-  ipcMainHandle('git.commitAndPushToGitRepo', (_, options: Parameters<typeof commitAndPushToGitRepoAction>[0]) => commitAndPushToGitRepoAction(options));
-  ipcMainHandle('git.createNewGitBranch', (_, options: Parameters<typeof createNewGitBranchAction>[0]) => createNewGitBranchAction(options));
-  ipcMainHandle('git.checkoutGitBranch', (_, options: Parameters<typeof checkoutGitBranchAction>[0]) => checkoutGitBranchAction(options));
+  ipcMainHandle('git.cloneGitRepo', (_, options: Parameters<typeof cloneGitRepoAction>[0]) =>
+    cloneGitRepoAction(options),
+  );
+  ipcMainHandle('git.initGitRepoClone', (_, options: Parameters<typeof initGitRepoCloneAction>[0]) =>
+    initGitRepoCloneAction(options),
+  );
+  ipcMainHandle('git.updateGitRepo', (_, options: Parameters<typeof updateGitRepoAction>[0]) =>
+    updateGitRepoAction(options),
+  );
+  ipcMainHandle('git.resetGitRepo', (_, options: Parameters<typeof resetGitRepoAction>[0]) =>
+    resetGitRepoAction(options),
+  );
+  ipcMainHandle('git.commitToGitRepo', (_, options: Parameters<typeof commitToGitRepoAction>[0]) =>
+    commitToGitRepoAction(options),
+  );
+  ipcMainHandle('git.commitAndPushToGitRepo', (_, options: Parameters<typeof commitAndPushToGitRepoAction>[0]) =>
+    commitAndPushToGitRepoAction(options),
+  );
+  ipcMainHandle('git.createNewGitBranch', (_, options: Parameters<typeof createNewGitBranchAction>[0]) =>
+    createNewGitBranchAction(options),
+  );
+  ipcMainHandle('git.checkoutGitBranch', (_, options: Parameters<typeof checkoutGitBranchAction>[0]) =>
+    checkoutGitBranchAction(options),
+  );
   ipcMainHandle('git.mergeGitBranch', (_, options: Parameters<typeof mergeGitBranch>[0]) => mergeGitBranch(options));
-  ipcMainHandle('git.deleteGitBranch', (_, options: Parameters<typeof deleteGitBranchAction>[0]) => deleteGitBranchAction(options));
-  ipcMainHandle('git.pushToGitRemote', (_, options: Parameters<typeof pushToGitRemoteAction>[0]) => pushToGitRemoteAction(options));
-  ipcMainHandle('git.pullFromGitRemote', (_, options: Parameters<typeof pullFromGitRemote>[0]) => pullFromGitRemote(options));
+  ipcMainHandle('git.deleteGitBranch', (_, options: Parameters<typeof deleteGitBranchAction>[0]) =>
+    deleteGitBranchAction(options),
+  );
+  ipcMainHandle('git.pushToGitRemote', (_, options: Parameters<typeof pushToGitRemoteAction>[0]) =>
+    pushToGitRemoteAction(options),
+  );
+  ipcMainHandle('git.pullFromGitRemote', (_, options: Parameters<typeof pullFromGitRemote>[0]) =>
+    pullFromGitRemote(options),
+  );
   ipcMainHandle('git.continueMerge', (_, options: Parameters<typeof continueMerge>[0]) => continueMerge(options));
-  ipcMainHandle('git.discardChanges', (_, options: Parameters<typeof discardChangesAction>[0]) => discardChangesAction(options));
+  ipcMainHandle('git.discardChanges', (_, options: Parameters<typeof discardChangesAction>[0]) =>
+    discardChangesAction(options),
+  );
   ipcMainHandle('git.gitStatus', (_, options: Parameters<typeof gitStatusAction>[0]) => gitStatusAction(options));
-  ipcMainHandle('git.stageChanges', (_, options: Parameters<typeof stageChangesAction>[0]) => stageChangesAction(options));
-  ipcMainHandle('git.unstageChanges', (_, options: Parameters<typeof unstageChangesAction>[0]) => unstageChangesAction(options));
+  ipcMainHandle('git.stageChanges', (_, options: Parameters<typeof stageChangesAction>[0]) =>
+    stageChangesAction(options),
+  );
+  ipcMainHandle('git.unstageChanges', (_, options: Parameters<typeof unstageChangesAction>[0]) =>
+    unstageChangesAction(options),
+  );
   ipcMainHandle('git.diffFileLoader', (_, options: Parameters<typeof diffFileLoader>[0]) => diffFileLoader(options));
-  ipcMainHandle('git.getRepositoryDirectoryTree', (_, options: Parameters<typeof getRepositoryDirectoryTree>[0]) => getRepositoryDirectoryTree(options));
+  ipcMainHandle('git.getRepositoryDirectoryTree', (_, options: Parameters<typeof getRepositoryDirectoryTree>[0]) =>
+    getRepositoryDirectoryTree(options),
+  );
 
   ipcMainHandle('git.initSignInToGitHub', () => initSignInToGitHub());
-  ipcMainHandle('git.completeSignInToGitHub', (_, options: Parameters<typeof completeSignInToGitHub>[0]) => completeSignInToGitHub(options));
+  ipcMainHandle('git.completeSignInToGitHub', (_, options: Parameters<typeof completeSignInToGitHub>[0]) =>
+    completeSignInToGitHub(options),
+  );
   ipcMainHandle('git.signOutOfGitHub', () => signOutOfGitHub());
-  ipcMainHandle('git.getGitHubRepositories', (_, options: Parameters<typeof getGitHubRepositories>[0]) => getGitHubRepositories(options));
-  ipcMainHandle('git.getGitHubRepository', (_, options: Parameters<typeof getGitHubRepository>[0]) => getGitHubRepository(options));
+  ipcMainHandle('git.getGitHubRepositories', (_, options: Parameters<typeof getGitHubRepositories>[0]) =>
+    getGitHubRepositories(options),
+  );
+  ipcMainHandle('git.getGitHubRepository', (_, options: Parameters<typeof getGitHubRepository>[0]) =>
+    getGitHubRepository(options),
+  );
 
   ipcMainHandle('git.initSignInToGitLab', () => initSignInToGitLab());
-  ipcMainHandle('git.completeSignInToGitLab', (_, options: Parameters<typeof completeSignInToGitLab>[0]) => completeSignInToGitLab(options));
+  ipcMainHandle('git.completeSignInToGitLab', (_, options: Parameters<typeof completeSignInToGitLab>[0]) =>
+    completeSignInToGitLab(options),
+  );
   ipcMainHandle('git.signOutOfGitLab', () => signOutOfGitLab());
 };

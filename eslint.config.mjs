@@ -1,5 +1,5 @@
 import eslint from '@eslint/js';
-import eslintConfigPrettier from "eslint-config-prettier/flat";
+import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort';
@@ -27,10 +27,10 @@ export default tseslint.config(
       'eqeqeq': ['error', 'smart'],
       'no-async-promise-executor': 'off',
       'no-else-return': 'error',
-      'no-empty': ["error", { "allowEmptyCatch": true }],
+      'no-empty': ['error', { allowEmptyCatch: true }],
       'no-var': 'error',
       'no-trailing-spaces': 'error',
-      'no-multiple-empty-lines': ['error', { 'max': 1, 'maxEOF': 0 }],
+      'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0 }],
       'no-inner-declarations': 'off',
       'no-useless-escape': 'off', // TODO: Enable this rule
       'object-curly-spacing': ['error', 'always'],
@@ -43,26 +43,33 @@ export default tseslint.config(
       'react/jsx-uses-vars': 'error',
       'react/jsx-indent-props': ['error', 2],
       'react/prop-types': 'off',
-      'react/function-component-definition': ['error', {
-        'namedComponents': 'arrow-function',
-        'unnamedComponents': 'arrow-function',
-      }],
+      'react/function-component-definition': [
+        'error',
+        {
+          namedComponents: 'arrow-function',
+          unnamedComponents: 'arrow-function',
+        },
+      ],
       'react/jsx-closing-bracket-location': ['error', 'line-aligned'],
       'react/prefer-stateless-function': 'error',
-      'react/jsx-key': ['error', { 'checkFragmentShorthand': true }],
+      'react/jsx-key': ['error', { checkFragmentShorthand: true }],
       'react/no-array-index-key': 'error',
       'react/self-closing-comp': 'error',
 
-      'react-hooks/exhaustive-deps': ['error', {
-        // From react-use https://github.com/streamich/react-use/issues/1703#issuecomment-770972824
-        'additionalHooks': '^use(Async|AsyncFn|AsyncRetry|Debounce|UpdateEffect|IsomorphicLayoutEffect|DeepCompareEffect|ShallowCompareEffect)$',
-      }],
+      'react-hooks/exhaustive-deps': [
+        'error',
+        {
+          // From react-use https://github.com/streamich/react-use/issues/1703#issuecomment-770972824
+          additionalHooks:
+            '^use(Async|AsyncFn|AsyncRetry|Debounce|UpdateEffect|IsomorphicLayoutEffect|DeepCompareEffect|ShallowCompareEffect)$',
+        },
+      ],
       'react-hooks/rules-of-hooks': 'error',
 
       '@typescript-eslint/array-type': ['error', { default: 'array', readonly: 'array' }],
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
       '@typescript-eslint/consistent-type-imports': 'error',
-      '@typescript-eslint/no-empty-interface': ['error', { 'allowSingleExtends': true }],
+      '@typescript-eslint/no-empty-interface': ['error', { allowSingleExtends: true }],
       '@typescript-eslint/no-empty-object-type': 'off', // TODO: Enable this rule
       '@typescript-eslint/no-empty-function': 'off',
       '@typescript-eslint/no-namespace': ['error', { allowDeclarations: true }],
@@ -77,7 +84,7 @@ export default tseslint.config(
       '@typescript-eslint/no-dynamic-delete': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-invalid-void-type': 'off',
-    }
+    },
   },
   eslintConfigPrettier,
   {
@@ -106,6 +113,6 @@ export default tseslint.config(
       '**/traces/*',
       '**/verify-pkg.js',
       '**/__mocks__/*',
-    ]
-  }
+    ],
+  },
 );

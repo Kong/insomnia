@@ -8,8 +8,7 @@ export function setupDateMocks() {
       if (!arg) {
         return new Date(ts++);
       }
-        super(arg);
-
+      super(arg);
     }
 
     getTimezoneOffset() {

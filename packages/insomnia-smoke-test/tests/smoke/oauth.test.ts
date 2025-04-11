@@ -31,10 +31,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await projectView.getByLabel('Request Collection').getByTestId('No PKCE').press('Enter');
   await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
 
-  const [authorizationCodePage] = await Promise.all([
-    app.waitForEvent('window'),
-    sendButton.click(),
-  ]);
+  const [authorizationCodePage] = await Promise.all([app.waitForEvent('window'), sendButton.click()]);
 
   await authorizationCodePage.waitForLoadState();
   await authorizationCodePage.waitForFunction("document.cookie !== ''");
@@ -112,10 +109,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/id-token');
   await expect(page.locator('#Grant-Type')).toHaveValue('implicit');
 
-  const [implicitPage] = await Promise.all([
-    app.waitForEvent('window'),
-    sendButton.click(),
-  ]);
+  const [implicitPage] = await Promise.all([app.waitForEvent('window'), sendButton.click()]);
   await implicitPage.waitForLoadState();
   await implicitPage.waitForFunction("document.cookie !== ''");
   await implicitPage.locator('[name="login"]').fill('admin');

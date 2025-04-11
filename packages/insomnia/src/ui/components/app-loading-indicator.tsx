@@ -16,13 +16,7 @@ export const AppLoadingIndicator = () => (
         position: 'relative',
       }}
     >
-      <svg
-        viewBox="0 0 378 378"
-        xmlns="http://www.w3.org/2000/svg"
-        fillRule="evenodd"
-        clipRule="evenodd"
-        width={100}
-      >
+      <svg viewBox="0 0 378 378" xmlns="http://www.w3.org/2000/svg" fillRule="evenodd" clipRule="evenodd" width={100}>
         <circle
           cx={36}
           cy={36}
@@ -45,7 +39,7 @@ export const AppLoadingIndicator = () => (
           transform="translate(-323 -111) translate(359.016 147.016) scale(4.24956)"
         >
           <animateTransform
-            additive='sum'
+            additive="sum"
             attributeName="transform"
             type="rotate"
             from="0 36 36"

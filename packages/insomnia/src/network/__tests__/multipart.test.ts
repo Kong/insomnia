@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest';
 import { buildMultipart, DEFAULT_BOUNDARY } from '../../main/network/multipart';
 
 describe('buildMultipart()', () => {
-
   it('builds a simple request', async () => {
     const { filePath, boundary, contentLength } = await buildMultipart([
       {

@@ -72,11 +72,11 @@ export const GitHubStarsButton = () => {
   const shouldShowCount = !error;
 
   return (
-    <div className="flex select-none rounded-lg divide-x divide-[--hl-md] divide-solid border border-solid border-[--hl-md]">
+    <div className="flex select-none divide-x divide-solid divide-[--hl-md] rounded-lg border border-solid border-[--hl-md]">
       <Link onPress={starClick}>
         <a
           href="https://github.com/Kong/insomnia"
-          className="px-4 py-1 rounded-l-lg last-of-type:rounded-r-lg outline-none flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className="flex items-center justify-center gap-2 rounded-l-lg px-4 py-1 text-sm text-[--color-font] outline-none ring-transparent transition-all last-of-type:rounded-r-lg hover:bg-[--hl-xs] focus:ring-1 focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
         >
           <Icon icon={['fab', 'github']} />
           Star
@@ -86,7 +86,7 @@ export const GitHubStarsButton = () => {
         <Link onPress={counterClick}>
           <a
             href="https://github.com/Kong/insomnia/stargazers"
-            className="px-4 py-1 rounded-r-lg outline-none flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+            className="flex items-center justify-center gap-2 rounded-r-lg px-4 py-1 text-sm text-[--color-font] outline-none ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-1 focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
           >
             {starCount.toLocaleString()}
           </a>

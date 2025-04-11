@@ -8,9 +8,7 @@
     {
       "files": "packages/insomnia/**/*",
       "options": {
-        "plugins": [
-          "prettier-plugin-tailwindcss"
-        ]
+        "plugins": ["prettier-plugin-tailwindcss"]
       }
     }
   ]

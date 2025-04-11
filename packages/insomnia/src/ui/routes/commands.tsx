@@ -2,7 +2,16 @@ import type { LoaderFunction } from 'react-router-dom';
 
 import { database } from '../../common/database';
 import { fuzzyMatch } from '../../common/misc';
-import { environment, grpcRequest, project, request, requestGroup, userSession, webSocketRequest, workspace } from '../../models';
+import {
+  environment,
+  grpcRequest,
+  project,
+  request,
+  requestGroup,
+  userSession,
+  webSocketRequest,
+  workspace,
+} from '../../models';
 import type { Environment } from '../../models/environment';
 import type { GrpcRequest } from '../../models/grpc-request';
 import { isScratchpadOrganizationId, type Organization } from '../../models/organization';
@@ -26,12 +35,12 @@ export interface CommandItem<TItem> {
 
 export interface LoaderResult {
   current: {
-    requests: CommandItem<(Request | GrpcRequest | WebSocketRequest)>[];
+    requests: CommandItem<Request | GrpcRequest | WebSocketRequest>[];
     files: CommandItem<Workspace & { teamProjectId: string }>[];
     environments: Environment[];
   };
   other: {
-    requests: CommandItem<(Request | GrpcRequest | WebSocketRequest)>[];
+    requests: CommandItem<Request | GrpcRequest | WebSocketRequest>[];
     files: CommandItem<Workspace & { teamProjectId: string }>[];
   };
 }
@@ -48,18 +57,21 @@ export const loader: LoaderFunction = async args => {
     if (!filter) {
       return true;
     }
-    return Boolean(fuzzyMatch(
-      filter || '',
-      [request.name, request.url, request.description].join(' '),
-      { splitSpace: false, loose: true }
-    )?.indexes);
+    return Boolean(
+      fuzzyMatch(filter || '', [request.name, request.url, request.description].join(' '), {
+        splitSpace: false,
+        loose: true,
+      })?.indexes,
+    );
   };
 
   const { accountId } = await userSession.getOrCreate();
 
   const allOrganizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
 
-  const allOrganizationsIds = isScratchpadOrganizationId(organizationId) ? [organizationId] : allOrganizations.map(org => org.id);
+  const allOrganizationsIds = isScratchpadOrganizationId(organizationId)
+    ? [organizationId]
+    : allOrganizations.map(org => org.id);
 
   const allProjects = await database.find<Project>(project.type, {
     parentId: { $in: allOrganizationsIds },
@@ -73,12 +85,15 @@ export const loader: LoaderFunction = async args => {
 
   const workspaceIds = allOrganizationWorkspaces.map(workspace => workspace._id);
 
-  const parentReferences = new Map<string, {
-    type: 'Project' | 'Workspace' | 'RequestGroup' | 'Request' | 'GrpcRequest' | 'WebSocketRequest';
-    organizationId: string;
-    projectId?: string;
-    workspaceId?: string;
-  }>();
+  const parentReferences = new Map<
+    string,
+    {
+      type: 'Project' | 'Workspace' | 'RequestGroup' | 'Request' | 'GrpcRequest' | 'WebSocketRequest';
+      organizationId: string;
+      projectId?: string;
+      workspaceId?: string;
+    }
+  >();
 
   allProjects.forEach(project => {
     parentReferences.set(project._id, {
@@ -115,9 +130,12 @@ export const loader: LoaderFunction = async args => {
 
     const requestGroupIds = requestGroups.map(requestGroup => requestGroup._id);
 
-    const childRequestGroups = requestGroupIds.length > 0 ? await getRequestGroups({
-      $in: requestGroupIds,
-    }) : [];
+    const childRequestGroups =
+      requestGroupIds.length > 0
+        ? await getRequestGroups({
+            $in: requestGroupIds,
+          })
+        : [];
 
     for (const requestGroup of childRequestGroups) {
       parentReferences.set(requestGroup._id, {
@@ -128,10 +146,7 @@ export const loader: LoaderFunction = async args => {
       });
     }
 
-    return [
-      ...requestGroups,
-      ...childRequestGroups,
-    ];
+    return [...requestGroups, ...childRequestGroups];
   };
 
   const allRequestGroups = await getRequestGroups({
@@ -140,10 +155,7 @@ export const loader: LoaderFunction = async args => {
 
   const requests = await database.find<Request>(request.type, {
     parentId: {
-      $in: [
-        ...workspaceIds,
-        ...allRequestGroups.map(requestGroup => requestGroup._id),
-      ],
+      $in: [...workspaceIds, ...allRequestGroups.map(requestGroup => requestGroup._id)],
     },
   });
 
@@ -158,10 +170,7 @@ export const loader: LoaderFunction = async args => {
 
   const grpcRequests = await database.find<GrpcRequest>(grpcRequest.type, {
     parentId: {
-      $in: [
-        ...workspaceIds,
-        ...allRequestGroups.map(requestGroup => requestGroup._id),
-      ],
+      $in: [...workspaceIds, ...allRequestGroups.map(requestGroup => requestGroup._id)],
     },
   });
 
@@ -176,10 +185,7 @@ export const loader: LoaderFunction = async args => {
 
   const webSocketRequests = await database.find<WebSocketRequest>(webSocketRequest.type, {
     parentId: {
-      $in: [
-        ...workspaceIds,
-        ...allRequestGroups.map(requestGroup => requestGroup._id),
-      ],
+      $in: [...workspaceIds, ...allRequestGroups.map(requestGroup => requestGroup._id)],
     },
   });
 
@@ -202,10 +208,7 @@ export const loader: LoaderFunction = async args => {
     parentId: baseEnvironment?._id,
   });
 
-  const environments = baseEnvironment ? [
-    baseEnvironment,
-    ...subEnvironments,
-  ] : [];
+  const environments = baseEnvironment ? [baseEnvironment, ...subEnvironments] : [];
 
   const currentRequests = allRequests.filter(request => {
     return parentReferences.get(request.parentId)!.workspaceId === workspaceId;
@@ -225,48 +228,80 @@ export const loader: LoaderFunction = async args => {
 
   return {
     current: {
-      requests: currentRequests.filter(requestFilter).slice(0, 100).map(item => ({
-        id: item._id,
-        url: `/organization/${parentReferences.get(item.parentId)?.organizationId}/project/${parentReferences.get(item.parentId)!.projectId}/workspace/${parentReferences.get(item.parentId)?.workspaceId}/debug/request/${item._id}`,
-        name: item.name,
-        item,
-        organizationName: allOrganizations.find(org => org.id === parentReferences.get(item.parentId)?.organizationId)?.display_name || '',
-        projectName: allProjects.find(project => project._id === parentReferences.get(item.parentId)?.projectId)?.name || '',
-        workspaceName: allOrganizationWorkspaces.find(workspace => workspace._id === parentReferences.get(item.parentId)?.workspaceId)?.name || '',
-      })),
+      requests: currentRequests
+        .filter(requestFilter)
+        .slice(0, 100)
+        .map(item => ({
+          id: item._id,
+          url: `/organization/${parentReferences.get(item.parentId)?.organizationId}/project/${parentReferences.get(item.parentId)!.projectId}/workspace/${parentReferences.get(item.parentId)?.workspaceId}/debug/request/${item._id}`,
+          name: item.name,
+          item,
+          organizationName:
+            allOrganizations.find(org => org.id === parentReferences.get(item.parentId)?.organizationId)
+              ?.display_name || '',
+          projectName:
+            allProjects.find(project => project._id === parentReferences.get(item.parentId)?.projectId)?.name || '',
+          workspaceName:
+            allOrganizationWorkspaces.find(
+              workspace => workspace._id === parentReferences.get(item.parentId)?.workspaceId,
+            )?.name || '',
+        })),
       files: currentFiles.map(workspace => {
         const parentProject = allProjects.find(project => project._id === workspace.parentId);
-        return ({
+        return {
           id: workspace._id,
           url: `/organization/${parentReferences.get(workspace.parentId)?.organizationId}/project/${parentReferences.get(workspace.parentId)?.projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
           name: workspace.name,
-          item: { ...workspace, teamProjectId: parentProject && isRemoteProject(parentProject) ? parentProject.remoteId : '' },
-          organizationName: allOrganizations.find(org => org.id === parentReferences.get(workspace.parentId)?.organizationId)?.display_name || '',
-          projectName: allProjects.find(project => project._id === parentReferences.get(workspace.parentId)?.projectId)?.name || '',
-        });
+          item: {
+            ...workspace,
+            teamProjectId: parentProject && isRemoteProject(parentProject) ? parentProject.remoteId : '',
+          },
+          organizationName:
+            allOrganizations.find(org => org.id === parentReferences.get(workspace.parentId)?.organizationId)
+              ?.display_name || '',
+          projectName:
+            allProjects.find(project => project._id === parentReferences.get(workspace.parentId)?.projectId)?.name ||
+            '',
+        };
       }),
       environments,
     },
     other: {
-      requests: otherRequests.filter(requestFilter).slice(0, 100).map(item => ({
-        id: item._id,
-        url: `/organization/${parentReferences.get(item.parentId)?.organizationId}/project/${parentReferences.get(item.parentId)?.projectId}/workspace/${parentReferences.get(item.parentId)!.workspaceId}/debug/request/${item._id}`,
-        name: item.name,
-        item,
-        organizationName: allOrganizations.find(org => org.id === parentReferences.get(item.parentId)?.organizationId)?.display_name || '',
-        projectName: allProjects.find(project => project._id === parentReferences.get(item.parentId)?.projectId)?.name || '',
-        workspaceName: allOrganizationWorkspaces.find(workspace => workspace._id === parentReferences.get(item.parentId)?.workspaceId)?.name || '',
-      })),
+      requests: otherRequests
+        .filter(requestFilter)
+        .slice(0, 100)
+        .map(item => ({
+          id: item._id,
+          url: `/organization/${parentReferences.get(item.parentId)?.organizationId}/project/${parentReferences.get(item.parentId)?.projectId}/workspace/${parentReferences.get(item.parentId)!.workspaceId}/debug/request/${item._id}`,
+          name: item.name,
+          item,
+          organizationName:
+            allOrganizations.find(org => org.id === parentReferences.get(item.parentId)?.organizationId)
+              ?.display_name || '',
+          projectName:
+            allProjects.find(project => project._id === parentReferences.get(item.parentId)?.projectId)?.name || '',
+          workspaceName:
+            allOrganizationWorkspaces.find(
+              workspace => workspace._id === parentReferences.get(item.parentId)?.workspaceId,
+            )?.name || '',
+        })),
       files: otherFiles.map(workspace => {
         const parentProject = allProjects.find(project => project._id === workspace.parentId);
-        return ({
+        return {
           id: workspace._id,
           url: `/organization/${parentReferences.get(workspace.parentId)?.organizationId}/project/${parentReferences.get(workspace.parentId)?.projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`,
           name: workspace.name,
-          item: { ...workspace, teamProjectId: parentProject && isRemoteProject(parentProject) ? parentProject.remoteId : '' },
-          organizationName: allOrganizations.find(org => org.id === parentReferences.get(workspace.parentId)?.organizationId)?.display_name || '',
-          projectName: allProjects.find(project => project._id === parentReferences.get(workspace.parentId)?.projectId)?.name || '',
-        });
+          item: {
+            ...workspace,
+            teamProjectId: parentProject && isRemoteProject(parentProject) ? parentProject.remoteId : '',
+          },
+          organizationName:
+            allOrganizations.find(org => org.id === parentReferences.get(workspace.parentId)?.organizationId)
+              ?.display_name || '',
+          projectName:
+            allProjects.find(project => project._id === parentReferences.get(workspace.parentId)?.projectId)?.name ||
+            '',
+        };
       }),
     },
   };
@@ -329,7 +364,9 @@ export const remoteFilesLoader: LoaderFunction = async (): Promise<RemoteFilesLo
       return {
         id: file.id,
         url: `/organization/${file.organizationId}`,
-        pullUrl: parentProject ? `/organization/${file.organizationId}/project/${file.teamProjectId}/remote-collections/pull` : '',
+        pullUrl: parentProject
+          ? `/organization/${file.organizationId}/project/${file.teamProjectId}/remote-collections/pull`
+          : '',
         name: file.name,
         item: { ...file, teamProjectLocalId: parentProject?._id || '', scope: 'unsynced' as const },
         organizationName: organizations.find(org => org.id === file.organizationId)?.display_name || '',

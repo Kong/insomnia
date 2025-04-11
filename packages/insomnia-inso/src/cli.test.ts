@@ -82,7 +82,8 @@ describe('inso dev bundle', () => {
   });
   describe('response and timeline has scripting effects', () => {
     it('console log appears in timeline', async () => {
-      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/minimal.yml wrk_5b5ab6 --verbose';
+      const input =
+        '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/minimal.yml wrk_5b5ab6 --verbose';
       const result = await runCliFromRoot(input);
       if (result.code !== 0) {
         console.log(result);
@@ -93,7 +94,8 @@ describe('inso dev bundle', () => {
     });
 
     it('insomnia.request.addHeader works', async () => {
-      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/script-add-header.yml wrk_5b5ab6 --verbose';
+      const input =
+        '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/script-add-header.yml wrk_5b5ab6 --verbose';
       const result = await runCliFromRoot(input);
       if (result.code !== 0) {
         console.log(result);
@@ -104,7 +106,8 @@ describe('inso dev bundle', () => {
     });
 
     it('require("insomnia-collection") works', async () => {
-      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/script-require.yml wrk_5b5ab6 --verbose';
+      const input =
+        '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/script-require.yml wrk_5b5ab6 --verbose';
       const result = await runCliFromRoot(input);
       if (result.code !== 0) {
         console.log(result);
@@ -114,7 +117,8 @@ describe('inso dev bundle', () => {
     });
 
     it('insomnia.sendRequest works', async () => {
-      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/script-send-request.yml wrk_cfacae --verbose';
+      const input =
+        '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/script-send-request.yml wrk_cfacae --verbose';
       const result = await runCliFromRoot(input);
       if (result.code !== 0) {
         console.log(result);
@@ -123,7 +127,8 @@ describe('inso dev bundle', () => {
     });
 
     it('iterationData and iterationCount args work', async () => {
-      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -d packages/insomnia-smoke-test/fixtures/files/runner-data.json -w packages/insomnia-inso/src/examples/three-requests.yml -n 2 -i req_3fd28aabbb18447abab1f45e6ee4bdc1 -e env_86e135 wrk_c992d40 --verbose';
+      const input =
+        '$PWD/packages/insomnia-inso/bin/inso run collection -d packages/insomnia-smoke-test/fixtures/files/runner-data.json -w packages/insomnia-inso/src/examples/three-requests.yml -n 2 -i req_3fd28aabbb18447abab1f45e6ee4bdc1 -e env_86e135 wrk_c992d40 --verbose';
       const result = await runCliFromRoot(input);
       if (result.code !== 0) {
         console.log(result);
@@ -133,7 +138,8 @@ describe('inso dev bundle', () => {
     });
 
     it('send request with client cert and key', async () => {
-      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withCertAndCA" --verbose "Insomnia Designer" wrk_0b96eff';
+      const input =
+        '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withCertAndCA" --verbose "Insomnia Designer" wrk_0b96eff';
       const result = await runCliFromRoot(input);
       if (result.code !== 0) {
         console.log(result);
@@ -143,13 +149,15 @@ describe('inso dev bundle', () => {
     });
 
     it('send request with settings enabled (by testing followRedirects)', async () => {
-      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withSettings" --verbose "Insomnia Designer" wrk_0b96eff';
+      const input =
+        '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withSettings" --verbose "Insomnia Designer" wrk_0b96eff';
       const result = await runCliFromRoot(input);
       expect(result.stdout).not.toContain("Issue another request to this URL: 'https://insomnia.rest/'");
     });
 
     it('run collection: run requests in specified order', async () => {
-      const input = '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/three-requests.yml -i req_6063adcdab5b409e9b4f00f47322df4a -i req_3fd28aabbb18447abab1f45e6ee4bdc1 -e env_86e135 wrk_c992d40 --verbose';
+      const input =
+        '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/three-requests.yml -i req_6063adcdab5b409e9b4f00f47322df4a -i req_3fd28aabbb18447abab1f45e6ee4bdc1 -e env_86e135 wrk_c992d40 --verbose';
       const result = await runCliFromRoot(input);
 
       expect(result.code).toBe(0);
@@ -164,8 +172,12 @@ describe('inso dev bundle', () => {
   });
 });
 
-const packagedSuccessCodes = shouldReturnSuccessCode.map(x => x.replace('$PWD/packages/insomnia-inso/bin/inso', '$PWD/packages/insomnia-inso/binaries/inso'));
-const packagedErrorCodes = shouldReturnErrorCode.map(x => x.replace('$PWD/packages/insomnia-inso/bin/inso', '$PWD/packages/insomnia-inso/binaries/inso'));
+const packagedSuccessCodes = shouldReturnSuccessCode.map(x =>
+  x.replace('$PWD/packages/insomnia-inso/bin/inso', '$PWD/packages/insomnia-inso/binaries/inso'),
+);
+const packagedErrorCodes = shouldReturnErrorCode.map(x =>
+  x.replace('$PWD/packages/insomnia-inso/bin/inso', '$PWD/packages/insomnia-inso/binaries/inso'),
+);
 
 describe('inso packaged binary', () => {
   describe('exit codes are consistent', () => {
@@ -206,7 +218,12 @@ describe('Snapshot for', () => {
 });
 
 // Execute the command in the root directory of the project
-export const runCliFromRoot = (input: string): Promise<{ code: number; error: ExecException | null; stdout: string; stderr: string }> => {
-  return new Promise(resolve => exec(input, { cwd: path.resolve(__dirname, '../../..') },
-    (error, stdout, stderr) => resolve({ code: error?.code || 0, error, stdout, stderr })));
+export const runCliFromRoot = (
+  input: string,
+): Promise<{ code: number; error: ExecException | null; stdout: string; stderr: string }> => {
+  return new Promise(resolve =>
+    exec(input, { cwd: path.resolve(__dirname, '../../..') }, (error, stdout, stderr) =>
+      resolve({ code: error?.code || 0, error, stdout, stderr }),
+    ),
+  );
 };

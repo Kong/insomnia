@@ -7,7 +7,7 @@ describe('diff()', () => {
     const result = __internal.getBlockMap('Hello World!!', 3);
 
     expect(result).toEqual({
-      dbc2d1fed0dc37a70aea0f376958c802eddc0559: [
+      'dbc2d1fed0dc37a70aea0f376958c802eddc0559': [
         {
           start: 0,
           len: 3,
@@ -28,7 +28,7 @@ describe('diff()', () => {
           hash: '3603dd999f7dd952041d3bdb27f74e511cfd6b2a',
         },
       ],
-      c20d168802bbae1c84f90b9b0495e0d918da3aea: [
+      'c20d168802bbae1c84f90b9b0495e0d918da3aea': [
         {
           start: 9,
           len: 3,

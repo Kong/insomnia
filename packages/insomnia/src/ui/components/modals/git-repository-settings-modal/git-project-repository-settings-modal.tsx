@@ -30,10 +30,17 @@ function getDefaultOAuthProvider(credentials?: GitCredentials | null): OauthProv
   return 'custom';
 }
 
-export const GitProjectRepositorySettingsModal = ({ gitRepository, ...modalProps }: ModalProps & {
+export const GitProjectRepositorySettingsModal = ({
+  gitRepository,
+  ...modalProps
+}: ModalProps & {
   gitRepository?: GitRepository;
 }) => {
-  const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+  const { organizationId, projectId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  };
   const modalRef = useRef<ModalHandle>(null);
   const updateGitRepositoryFetcher = useFetcher();
   const deleteGitRepositoryFetcher = useFetcher();
@@ -45,16 +52,8 @@ export const GitProjectRepositorySettingsModal = ({ gitRepository, ...modalProps
   }, []);
 
   const onSubmit = (gitRepositoryPatch: Partial<GitRepository>) => {
-    const {
-      author,
-      credentials,
-      created,
-      modified,
-      isPrivate,
-      needsFullClone,
-      uriNeedsMigration,
-      ...repoPatch
-    } = gitRepositoryPatch;
+    const { author, credentials, created, modified, isPrivate, needsFullClone, uriNeedsMigration, ...repoPatch } =
+      gitRepositoryPatch;
 
     updateGitRepositoryFetcher.submit(
       {
@@ -66,7 +65,7 @@ export const GitProjectRepositorySettingsModal = ({ gitRepository, ...modalProps
       {
         action: `/organization/${organizationId}/project/${projectId}/git/update`,
         method: 'post',
-      }
+      },
     );
   };
 
@@ -76,7 +75,7 @@ export const GitProjectRepositorySettingsModal = ({ gitRepository, ...modalProps
 
   useEffect(() => {
     if (errors && errors.length) {
-      const errorMessage = errors.map(e => e instanceof Error ? e.message : typeof e === 'string' && e).join(', ');
+      const errorMessage = errors.map(e => (e instanceof Error ? e.message : typeof e === 'string' && e)).join(', ');
 
       showAlert({
         title: 'Error Cloning Repository',
@@ -104,46 +103,46 @@ export const GitProjectRepositorySettingsModal = ({ gitRepository, ...modalProps
               onSelectionChange={key => {
                 setTab(key as OauthProviderName);
               }}
-              aria-label='Git repository settings tabs'
-              className="flex-1 w-full h-full flex flex-col"
+              aria-label="Git repository settings tabs"
+              className="flex h-full w-full flex-1 flex-col"
             >
-              <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+              <TabList
+                className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+                aria-label="Request pane tabs"
+              >
                 <Tab
-                  className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-                  id='github'
+                  className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                  id="github"
                 >
-                  <div className="flex gap-2 items-center"><i className="fa fa-github" /> GitHub</div>
+                  <div className="flex items-center gap-2">
+                    <i className="fa fa-github" /> GitHub
+                  </div>
                 </Tab>
                 <Tab
-                  className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-                  id='gitlab'
+                  className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                  id="gitlab"
                 >
-                  <div className="flex gap-2 items-center"><i className="fa fa-gitlab" /> GitLab</div>
+                  <div className="flex items-center gap-2">
+                    <i className="fa fa-gitlab" /> GitLab
+                  </div>
                 </Tab>
                 <Tab
-                  className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-                  id='custom'
+                  className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                  id="custom"
                 >
-                  <div className="flex gap-2 items-center"><i className="fa fa-code-fork" /> Git</div>
+                  <div className="flex items-center gap-2">
+                    <i className="fa fa-code-fork" /> Git
+                  </div>
                 </Tab>
               </TabList>
-              <TabPanel className='w-full h-full overflow-y-auto py-2' id='github'>
-                <GitHubRepositorySetupFormGroup
-                  uri={gitRepository?.uri}
-                  onSubmit={onSubmit}
-                />
+              <TabPanel className="h-full w-full overflow-y-auto py-2" id="github">
+                <GitHubRepositorySetupFormGroup uri={gitRepository?.uri} onSubmit={onSubmit} />
               </TabPanel>
-              <TabPanel className='w-full h-full overflow-y-auto py-2' id='gitlab'>
-                <GitLabRepositorySetupFormGroup
-                  uri={gitRepository?.uri}
-                  onSubmit={onSubmit}
-                />
+              <TabPanel className="h-full w-full overflow-y-auto py-2" id="gitlab">
+                <GitLabRepositorySetupFormGroup uri={gitRepository?.uri} onSubmit={onSubmit} />
               </TabPanel>
-              <TabPanel className='w-full h-full overflow-y-auto py-2' id='custom'>
-                <CustomRepositorySettingsFormGroup
-                  gitRepository={gitRepository}
-                  onSubmit={onSubmit}
-                />
+              <TabPanel className="h-full w-full overflow-y-auto py-2" id="custom">
+                <CustomRepositorySettingsFormGroup gitRepository={gitRepository} onSubmit={onSubmit} />
               </TabPanel>
             </Tabs>
           </ErrorBoundary>
@@ -159,10 +158,13 @@ export const GitProjectRepositorySettingsModal = ({ gitRepository, ...modalProps
               className="btn"
               disabled={!hasGitRepository}
               onClick={() => {
-                deleteGitRepositoryFetcher.submit({}, {
-                  action: `/organization/${organizationId}/project/${projectId}/git/reset`,
-                  method: 'post',
-                });
+                deleteGitRepositoryFetcher.submit(
+                  {},
+                  {
+                    action: `/organization/${organizationId}/project/${projectId}/git/reset`,
+                    method: 'post',
+                  },
+                );
               }}
             >
               Reset

@@ -1,8 +1,32 @@
 import porderedJSON from 'json-order';
 import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Checkbox, DropIndicator, GridList, GridListItem, type GridListItemProps, Heading, type Key, Tab, TabList, TabPanel, Tabs, Toolbar, TooltipTrigger, useDragAndDrop } from 'react-aria-components';
+import {
+  Button,
+  Checkbox,
+  DropIndicator,
+  GridList,
+  GridListItem,
+  type GridListItemProps,
+  Heading,
+  type Key,
+  Tab,
+  TabList,
+  TabPanel,
+  Tabs,
+  Toolbar,
+  TooltipTrigger,
+  useDragAndDrop,
+} from 'react-aria-components';
 import { Panel, PanelResizeHandle } from 'react-resizable-panels';
-import { type ActionFunction, type LoaderFunction, useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router-dom';
+import {
+  type ActionFunction,
+  type LoaderFunction,
+  useNavigate,
+  useParams,
+  useRouteLoaderData,
+  useSearchParams,
+  useSubmit,
+} from 'react-router-dom';
 import { useInterval } from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -34,11 +58,18 @@ import { ResponseTimelineViewer } from '../components/viewers/response-timeline-
 import { useRunnerContext } from '../context/app/runner-context';
 import { useRunnerRequestList } from '../hooks/use-runner-request-list';
 import type { OrganizationLoaderData } from './organization';
-import { type CollectionRunnerContext, defaultSendActionRuntime, type RunnerSource, sendActionImplementation } from './request';
+import {
+  type CollectionRunnerContext,
+  defaultSendActionRuntime,
+  type RunnerSource,
+  sendActionImplementation,
+} from './request';
 import { useRootLoaderData } from './root';
 
-const inputStyle = 'placeholder:italic py-0.5 mr-1.5 px-1 w-24 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
-const iterationInputStyle = 'placeholder:italic py-0.5 mr-1.5 px-1 w-16 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
+const inputStyle =
+  'placeholder:italic py-0.5 mr-1.5 px-1 w-24 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
+const iterationInputStyle =
+  'placeholder:italic py-0.5 mr-1.5 px-1 w-16 rounded-sm border-2 border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors';
 
 // TODO: improve the performance for a lot of logs
 async function aggregateAllTimelines(errorMsg: string | null, testResult: RunnerTestResult) {
@@ -134,10 +165,20 @@ export const Runner: FC<{}> = () => {
   const { settings } = useRootLoaderData();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showCLIModal, setShowCLIModal] = useState(false);
-  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
+  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
+    settings.forceVerticalLayout ? 'vertical' : 'horizontal',
+  );
 
   const { runnerStateMap, updateRunnerState } = useRunnerContext();
-  const { iterationCount = 1, delay = 0, selectedKeys = new Set<Key>(), advancedConfig = defaultAdvancedConfig, uploadData = [], file, filePath } = runnerStateMap?.[organizationId]?.[runnerId] || {};
+  const {
+    iterationCount = 1,
+    delay = 0,
+    selectedKeys = new Set<Key>(),
+    advancedConfig = defaultAdvancedConfig,
+    uploadData = [],
+    file,
+    filePath,
+  } = runnerStateMap?.[organizationId]?.[runnerId] || {};
   invariant(iterationCount, 'iterationCount should not be null');
 
   const { reqList, requestRows, entityMap } = useRunnerRequestList(organizationId, targetFolderId, runnerId);
@@ -145,7 +186,7 @@ export const Runner: FC<{}> = () => {
   useEffect(() => {
     if (settings.forceVerticalLayout) {
       setDirection('vertical');
-      return () => { };
+      return () => {};
     }
     // Listen on media query changes
     const mediaQuery = window.matchMedia('(max-width: 880px)');
@@ -160,7 +201,6 @@ export const Runner: FC<{}> = () => {
     return () => {
       mediaQuery.removeEventListener('change', handleChange);
     };
-
   }, [settings.forceVerticalLayout, direction]);
 
   const isConsistencyChanged = useMemo(() => {
@@ -194,8 +234,12 @@ export const Runner: FC<{}> = () => {
     },
     renderDragPreview(items) {
       return (
-        <div className="bg-slate-800 px-2 py-0.5 rounded" >
-          <mark className="text-lg px-2 text-extrabold bg-green-400 rounded dark:bg-green-400" style={{ color: 'black' }}>{` ${items.length}`}</mark> item(s)
+        <div className="rounded bg-slate-800 px-2 py-0.5">
+          <mark
+            className="text-extrabold rounded bg-green-400 px-2 text-lg dark:bg-green-400"
+            style={{ color: 'black' }}
+          >{` ${items.length}`}</mark>{' '}
+          item(s)
         </div>
       );
     },
@@ -224,11 +268,12 @@ export const Runner: FC<{}> = () => {
     }
     setIsRunning(true);
 
-    window.main.trackSegmentEvent({ event: SegmentEvent.collectionRunExecute, properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterationCount } });
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.collectionRunExecute,
+      properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterationCount },
+    });
 
-    const requests = selectedKeys === 'all'
-      ? reqList
-      : reqList.filter(item => (selectedKeys as Set<Key>).has(item.id));
+    const requests = selectedKeys === 'all' ? reqList : reqList.filter(item => (selectedKeys as Set<Key>).has(item.id));
 
     // convert uploadData to environment data
     const userUploadEnvs = uploadData.map(data => {
@@ -252,20 +297,19 @@ export const Runner: FC<{}> = () => {
       keepLog: advancedConfig?.keepLog,
       targetFolderId: targetFolderId || '',
     };
-    submit(
-      JSON.stringify(actionInput),
-      {
-        method: 'post',
-        encType: 'application/json',
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner/run`,
-        navigate: false,
-      }
-    );
+    submit(JSON.stringify(actionInput), {
+      method: 'post',
+      encType: 'application/json',
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner/run`,
+      navigate: false,
+    });
   };
 
   const navigate = useNavigate();
   const goToRequest = (requestId: string) => {
-    navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}`);
+    navigate(
+      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}`,
+    );
   };
   const onToggleSelection = () => {
     if (selectedKeys === 'all' || Array.from(selectedKeys).length === Array.from(reqList).length) {
@@ -281,7 +325,7 @@ export const Runner: FC<{}> = () => {
   const [testHistory, setTestHistory] = useState<RunnerTestResult[]>([]);
   useEffect(() => {
     const readResults = async () => {
-      const results = await models.runnerTestResult.findByParentId(runnerId) || [];
+      const results = (await models.runnerTestResult.findByParentId(runnerId)) || [];
       setTestHistory(results.reverse());
     };
     readResults();
@@ -295,12 +339,15 @@ export const Runner: FC<{}> = () => {
 
   const [executionResult, setExecutionResult] = useState<RunnerTestResult | null>(null);
   const [timelines, setTimelines] = useState<ResponseTimelineEntry[]>([]);
-  const gotoExecutionResult = useCallback(async (executionId: string) => {
-    const result = await models.runnerTestResult.getById(executionId);
-    if (result) {
-      setExecutionResult(result);
-    }
-  }, [setExecutionResult]);
+  const gotoExecutionResult = useCallback(
+    async (executionId: string) => {
+      const result = await models.runnerTestResult.getById(executionId);
+      if (result) {
+        setExecutionResult(result);
+      }
+    },
+    [setExecutionResult],
+  );
 
   useEffect(() => {
     const refreshTimeline = async () => {
@@ -346,7 +393,7 @@ export const Runner: FC<{}> = () => {
         unit: durationUnit,
       });
     } else {
-      const results = await models.runnerTestResult.findByParentId(runnerId) || [];
+      const results = (await models.runnerTestResult.findByParentId(runnerId)) || [];
       // show execution result
       if (results.length > 0) {
         setTestHistory(results.reverse());
@@ -366,9 +413,12 @@ export const Runner: FC<{}> = () => {
     }
   }, [runnerId]);
 
-  useInterval(() => {
-    refreshPanes();
-  }, isRunning ? 1000 : null);
+  useInterval(
+    () => {
+      refreshPanes();
+    },
+    isRunning ? 1000 : null,
+  );
 
   useEffect(() => {
     refreshPanes();
@@ -393,9 +443,8 @@ export const Runner: FC<{}> = () => {
       }
     }
 
-    const testResultCountTagColor = totalTestCount > 0 ?
-      passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600' :
-      'bg-[var(--hl-sm)]';
+    const testResultCountTagColor =
+      totalTestCount > 0 ? (passedTestCount === totalTestCount ? 'bg-lime-600' : 'bg-red-600') : 'bg-[var(--hl-sm)]';
 
     return { passedTestCount, totalTestCount, testResultCountTagColor };
   }, [executionResult, isRunning]);
@@ -420,36 +469,35 @@ export const Runner: FC<{}> = () => {
   const selectedRequestIdsForCliCommand =
     targetFolderId !== null && targetFolderId !== ''
       ? reqList
-        .filter(item => item.ancestors.map(a=>a.id).includes(targetFolderId))
-        .map(item => item.id)
-        .filter(id => selectedKeys === 'all' || selectedKeys.has(id))
-      : reqList
-        .map(item => item.id)
-        .filter(id => selectedKeys === 'all' || selectedKeys.has(id));
+          .filter(item => item.ancestors.map(a => a.id).includes(targetFolderId))
+          .map(item => item.id)
+          .filter(id => selectedKeys === 'all' || selectedKeys.has(id))
+      : reqList.map(item => item.id).filter(id => selectedKeys === 'all' || selectedKeys.has(id));
 
   return (
     <>
-      <Panel id="pane-one" className='pane-one theme--pane' minSize={35} maxSize={90}>
+      <Panel id="pane-one" className="pane-one theme--pane" minSize={35} maxSize={90}>
         <ErrorBoundary showAlert>
-
           <Pane type="request">
             <PaneHeader>
-              <Heading className="flex items-center w-full h-[--line-height-sm] pl-[--padding-md]">
-                <div className="w-full h-full text-left overflow-hidden">
+              <Heading className="flex h-[--line-height-sm] w-full items-center pl-[--padding-md]">
+                <div className="h-full w-full overflow-hidden text-left">
                   <div className="h-full min-w-[500px]">
                     <span className="mr-6 text-sm">
                       <input
                         value={iterationCount}
-                        name='Iterations'
+                        name="Iterations"
                         disabled={isRunning}
                         onChange={e => {
                           try {
                             if (parseInt(e.target.value, 10) > 0) {
-                              updateRunnerState(organizationId, runnerId, { iterationCount: parseInt(e.target.value, 10) });
+                              updateRunnerState(organizationId, runnerId, {
+                                iterationCount: parseInt(e.target.value, 10),
+                              });
                             }
-                          } catch (ex) { }
+                          } catch (ex) {}
                         }}
-                        type='number'
+                        type="number"
                         className={iterationInputStyle}
                       />
                       <span className="border">Iterations</span>
@@ -458,33 +506,33 @@ export const Runner: FC<{}> = () => {
                       <input
                         value={delay}
                         disabled={isRunning}
-                        name='Delay'
+                        name="Delay"
                         onChange={e => {
                           try {
                             const delay = parseInt(e.target.value, 10);
                             if (delay >= 0) {
                               updateRunnerState(organizationId, runnerId, { delay }); // also update the temp settings
                             }
-                          } catch (ex) { }
+                          } catch (ex) {}
                         }}
-                        type='number'
+                        type="number"
                         className={inputStyle}
                       />
                       <span className="mr-1 border">Delay (ms)</span>
                     </span>
                     <Button
                       onPress={() => setShowUploadModal(true)}
-                      className="py-0.5 px-1 border-[--hl-sm] h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ring-1 ring-transparent transition-all text-sm mr-6"
+                      className="mr-6 h-full rounded-sm border-[--hl-sm] px-1 py-0.5 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] aria-pressed:bg-[--hl-sm]"
                       isDisabled={isRunning}
                     >
                       <Icon icon={file ? 'eye' : 'upload'} /> {file ? 'View Data' : 'Upload Data'}
                     </Button>
                   </div>
                 </div>
-                <div className='flex p-1 self-stretch'>
+                <div className="flex self-stretch p-1">
                   <Button
                     isDisabled={isDisabled}
-                    className="px-5 ml-1 text-[--color-font-surprise] bg-[--color-surprise] hover:bg-opacity-90 focus:bg-opacity-90 rounded-l-sm"
+                    className="ml-1 rounded-l-sm bg-[--color-surprise] px-5 text-[--color-font-surprise] hover:bg-opacity-90 focus:bg-opacity-90"
                     onPress={onRun}
                   >
                     Run
@@ -498,7 +546,7 @@ export const Runner: FC<{}> = () => {
                     triggerButton={
                       <Button
                         isDisabled={isDisabled}
-                        className="px-1 bg-[--color-surprise] text-[--color-font-surprise] rounded-r-sm"
+                        className="rounded-r-sm bg-[--color-surprise] px-1 text-[--color-font-surprise]"
                         style={{
                           borderTopRightRadius: '0.125rem',
                           borderBottomRightRadius: '0.125rem',
@@ -508,51 +556,57 @@ export const Runner: FC<{}> = () => {
                       </Button>
                     }
                   >
-
                     <DropdownItem aria-label="send-now">
                       <ItemContent icon="arrow-circle-o-right" label="Run" onClick={onRun} />
                     </DropdownItem>
-                    <DropdownItem aria-label='Run via CLI'>
-                      <ItemContent
-                        icon="code"
-                        label="Run via CLI"
-                        onClick={() => setShowCLIModal(true)}
-                      />
+                    <DropdownItem aria-label="Run via CLI">
+                      <ItemContent icon="code" label="Run via CLI" onClick={() => setShowCLIModal(true)} />
                     </DropdownItem>
                   </Dropdown>
                 </div>
               </Heading>
             </PaneHeader>
-            <Tabs aria-label='Request group tabs' className="flex-1 w-full h-full flex flex-col">
-              <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+            <Tabs aria-label="Request group tabs" className="flex h-full w-full flex-1 flex-col">
+              <TabList
+                className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+                aria-label="Request pane tabs"
+              >
                 <Tab
-                  className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-                  id='request-order'
+                  className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                  id="request-order"
                 >
-                  <i className="fa fa-sort fa-1x h-4 mr-2" />
+                  <i className="fa fa-sort fa-1x mr-2 h-4" />
                   Request Order
                 </Tab>
                 <Tab
-                  className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-                  id='advanced'
+                  className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                  id="advanced"
                 >
-                  <i className="fa fa-gear fa-1x h-4 mr-2" />
+                  <i className="fa fa-gear fa-1x mr-2 h-4" />
                   Advanced
                 </Tab>
               </TabList>
-              <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='request-order'>
-                <Toolbar className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
+              <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="request-order">
+                <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2">
                   <span className="mr-2">
-                    {
-                      (selectedKeys === 'all' || Array.from(selectedKeys).length === Array.from(reqList).length) ?
-                        <span onClick={onToggleSelection}><i style={{ color: 'rgb(74 222 128)' }} className="fa fa-square-check fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Unselect All</span></span> :
-                        Array.from(selectedKeys).length === 0 ?
-                          <span onClick={onToggleSelection}><i className="fa fa-square fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Select All</span></span> :
-                          <span onClick={onToggleSelection}><i style={{ color: 'rgb(74 222 128)' }} className="fa fa-square-minus fa-1x h-4 mr-2" /> <span className="cursor-pointer" >Select All</span></span>
-                    }
+                    {selectedKeys === 'all' || Array.from(selectedKeys).length === Array.from(reqList).length ? (
+                      <span onClick={onToggleSelection}>
+                        <i style={{ color: 'rgb(74 222 128)' }} className="fa fa-square-check fa-1x mr-2 h-4" />{' '}
+                        <span className="cursor-pointer">Unselect All</span>
+                      </span>
+                    ) : Array.from(selectedKeys).length === 0 ? (
+                      <span onClick={onToggleSelection}>
+                        <i className="fa fa-square fa-1x mr-2 h-4" /> <span className="cursor-pointer">Select All</span>
+                      </span>
+                    ) : (
+                      <span onClick={onToggleSelection}>
+                        <i style={{ color: 'rgb(74 222 128)' }} className="fa fa-square-minus fa-1x mr-2 h-4" />{' '}
+                        <span className="cursor-pointer">Select All</span>
+                      </span>
+                    )}
                   </span>
                 </Toolbar>
-                <PaneBody placeholder className='p-0'>
+                <PaneBody placeholder className="p-0">
                   <GridList
                     id="runner-request-list"
                     items={reqList}
@@ -563,49 +617,58 @@ export const Runner: FC<{}> = () => {
                     }}
                     aria-label="Request Collection"
                     dragAndDropHooks={requestsDnD}
-                    className="w-full h-full leading-8 text-base overflow-auto"
+                    className="h-full w-full overflow-auto text-base leading-8"
                     disabledKeys={disabledKeys}
                   >
                     {item => {
-                      const parentFolders = item.ancestors.map(({id,name}) => {
-                        return <TooltipTrigger key={`parent-folder-${id}=${name}`} >
-                          <Tooltip message={name}>
-                            <i className="fa fa-folder fa-1x h-4 mr-0.3 text-[--color-font]" />
-                            <i className="fa fa-caret-right fa-1x h-4 mr-0.3 text-[--color-font]-50  opacity-50" />
-                          </Tooltip>
-                        </TooltipTrigger>;
+                      const parentFolders = item.ancestors.map(({ id, name }) => {
+                        return (
+                          <TooltipTrigger key={`parent-folder-${id}=${name}`}>
+                            <Tooltip message={name}>
+                              <i className="fa fa-folder fa-1x mr-0.3 h-4 text-[--color-font]" />
+                              <i className="fa fa-caret-right fa-1x mr-0.3 text-[--color-font]-50 h-4 opacity-50" />
+                            </Tooltip>
+                          </TooltipTrigger>
+                        );
                       });
-                      const parentFolderContainer = parentFolders.length > 0 ? <span className="ml-2">{parentFolders}</span> : null;
+                      const parentFolderContainer =
+                        parentFolders.length > 0 ? <span className="ml-2">{parentFolders}</span> : null;
 
                       return (
-                        <RequestItem textValue={item.name} className={`runner-request-list-${item.name} text-[--color-font] border border-solid border-transparent`} style={{ 'outline': 'none' }}>
+                        <RequestItem
+                          textValue={item.name}
+                          className={`runner-request-list-${item.name} border border-solid border-transparent text-[--color-font]`}
+                          style={{ outline: 'none' }}
+                        >
                           {parentFolderContainer}
-                          <span className={`ml-2 uppercase text-xs http-method-${item.method}`}>{item.method}</span>
-                          <span className="ml-2 hover:underline cursor-pointer text-[--hl]" onClick={() => goToRequest(item.id)}>{item.name}</span>
+                          <span className={`ml-2 text-xs uppercase http-method-${item.method}`}>{item.method}</span>
+                          <span
+                            className="ml-2 cursor-pointer text-[--hl] hover:underline"
+                            onClick={() => goToRequest(item.id)}
+                          >
+                            {item.name}
+                          </span>
                         </RequestItem>
                       );
                     }}
                   </GridList>
                 </PaneBody>
               </TabPanel>
-              <TabPanel className='w-full flex-1 flex align-center overflow-y-auto' id='advanced'>
-                <div className="p-4 w-full">
+              <TabPanel className="align-center flex w-full flex-1 overflow-y-auto" id="advanced">
+                <div className="w-full p-4">
                   <div>
                     <label className="flex items-center gap-2">
-                      <input
-                        name='persist-response'
-                        onChange={() => { }}
-                        type="checkbox"
-                        disabled={true}
-                      />
+                      <input name="persist-response" onChange={() => {}} type="checkbox" disabled={true} />
                       Persist responses for a session
-                      <HelpTooltip className="space-left">Enabling this will impact performance while responses are saved for other purposes.</HelpTooltip>
+                      <HelpTooltip className="space-left">
+                        Enabling this will impact performance while responses are saved for other purposes.
+                      </HelpTooltip>
                     </label>
                   </div>
                   <div>
                     <label className="flex items-center gap-2">
                       <input
-                        name='enable-log'
+                        name="enable-log"
                         onChange={() => {
                           updateRunnerState(organizationId, runnerId, {
                             advancedConfig: {
@@ -619,13 +682,15 @@ export const Runner: FC<{}> = () => {
                         checked={advancedConfig?.keepLog}
                       />
                       Keep logs after run
-                      <HelpTooltip className="space-left">Disabling this will improve the performance while logs are not saved.</HelpTooltip>
+                      <HelpTooltip className="space-left">
+                        Disabling this will improve the performance while logs are not saved.
+                      </HelpTooltip>
                     </label>
                   </div>
                   <div>
                     <label className="flex items-center gap-2">
                       <input
-                        name='bail'
+                        name="bail"
                         onChange={() => {
                           updateRunnerState(organizationId, runnerId, {
                             advancedConfig: {
@@ -674,31 +739,39 @@ export const Runner: FC<{}> = () => {
           </Pane>
         </ErrorBoundary>
       </Panel>
-      <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
-      <Panel id="pane-two" className='pane-two theme--pane'>
+      <PanelResizeHandle
+        className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'h-[1px] w-full bg-[--hl-md]'}
+      />
+      <Panel id="pane-two" className="pane-two theme--pane">
         <PaneHeader className="row-spaced">
-          <Heading className="flex items-center w-full h-[--line-height-sm] pl-3 border-solid border-b border-b-[--hl-md]">
-            {
-              executionResult?.duration ?
-                <div className="bg-info tag" >
-                  <strong>{`${totalTime.duration} ${totalTime.unit}`}</strong>
-                </div> :
-                <span className="font-bold">Collection Runner</span>
-            }
+          <Heading className="flex h-[--line-height-sm] w-full items-center border-b border-solid border-b-[--hl-md] pl-3">
+            {executionResult?.duration ? (
+              <div className="bg-info tag">
+                <strong>{`${totalTime.duration} ${totalTime.unit}`}</strong>
+              </div>
+            ) : (
+              <span className="font-bold">Collection Runner</span>
+            )}
           </Heading>
         </PaneHeader>
-        <Tabs selectedKey={selectedTab} onSelectionChange={setSelectedTab} aria-label='Request group tabs' className="flex-1 w-full h-full flex flex-col">
-          <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+        <Tabs
+          selectedKey={selectedTab}
+          onSelectionChange={setSelectedTab}
+          aria-label="Request group tabs"
+          className="flex h-full w-full flex-1 flex-col"
+        >
+          <TabList
+            className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+            aria-label="Request pane tabs"
+          >
             <Tab
-              className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-              id='test-results'
+              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              id="test-results"
             >
               <div>
-                <span>
-                  Tests
-                </span>
+                <span>Tests</span>
                 <span
-                  className={`test-result-count rounded-sm ml-1 px-1 ${testResultCountTagColor}`}
+                  className={`test-result-count ml-1 rounded-sm px-1 ${testResultCountTagColor}`}
                   style={{ color: 'white' }}
                 >
                   {`${passedTestCount} / ${totalTestCount}`}
@@ -706,25 +779,22 @@ export const Runner: FC<{}> = () => {
               </div>
             </Tab>
             <Tab
-              className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-              id='history'
+              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              id="history"
             >
               History
             </Tab>
             <Tab
-              className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-              id='console'
+              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              id="console"
             >
               Console
             </Tab>
           </TabList>
-          <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='console'>
-            <ResponseTimelineViewer
-              key={runnerId}
-              timeline={timelines}
-            />
+          <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="console">
+            <ResponseTimelineViewer key={runnerId} timeline={timelines} />
           </TabPanel>
-          <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='history'>
+          <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="history">
             <RunnerResultHistoryPane
               history={testHistory.filter(item => !deletedItems.includes(item._id))}
               gotoExecutionResult={gotoExecutionResult}
@@ -732,23 +802,23 @@ export const Runner: FC<{}> = () => {
               deleteHistoryItem={deleteHistoryItem}
             />
           </TabPanel>
-          <TabPanel
-            className='w-full flex-1 flex flex-col overflow-y-auto'
-            id='test-results'
-          >
-            {isRunning &&
-              <div className="h-full w-full text-md flex items-center">
+          <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="test-results">
+            {isRunning && (
+              <div className="text-md flex h-full w-full items-center">
                 <ResponseTimer
                   handleCancel={() => cancelExecution(runnerId)}
                   activeRequestId={runnerId}
                   steps={timingSteps}
                 />
               </div>
-            }
-            {!isRunning && <ErrorBoundary showAlert><RunnerTestResultPane result={executionResult} /></ErrorBoundary>}
+            )}
+            {!isRunning && (
+              <ErrorBoundary showAlert>
+                <RunnerTestResultPane result={executionResult} />
+              </ErrorBoundary>
+            )}
           </TabPanel>
         </Tabs>
-
       </Panel>
     </>
   );
@@ -756,25 +826,25 @@ export const Runner: FC<{}> = () => {
 
 export default Runner;
 
-const RequestItem = (
-  { children, ...props }: GridListItemProps
-) => {
-
+const RequestItem = ({ children, ...props }: GridListItemProps) => {
   return (
     <GridListItem {...props}>
       {() => (
         <>
           <Button slot="drag" className="hover:cursor-grab">
-            <Icon icon="grip-vertical" className='w-2 text-[--hl] mr-2' />
+            <Icon icon="grip-vertical" className="mr-2 w-2 text-[--hl]" />
           </Button>
           <Checkbox slot="selection">
             {({ isSelected }) => {
-              return <>
-                {isSelected ?
-                  <i className="fa fa-square-check fa-1x h-4 mr-2" style={{ color: 'rgb(74 222 128)' }} /> :
-                  <i className="fa fa-square fa-1x h-4 mr-2" />
-                }
-              </>;
+              return (
+                <>
+                  {isSelected ? (
+                    <i className="fa fa-square-check fa-1x mr-2 h-4" style={{ color: 'rgb(74 222 128)' }} />
+                  ) : (
+                    <i className="fa fa-square fa-1x mr-2 h-4" />
+                  )}
+                </>
+              );
             }}
           </Checkbox>
           {children}
@@ -817,7 +887,10 @@ function cancelExecution(workspaceId: string) {
     window.main.completeExecutionStep({ requestId: workspaceId });
   }
 }
-const wrapAroundIterationOverIterationData = (list?: UserUploadEnvironment[], currentIteration?: number): UserUploadEnvironment | undefined => {
+const wrapAroundIterationOverIterationData = (
+  list?: UserUploadEnvironment[],
+  currentIteration?: number,
+): UserUploadEnvironment | undefined => {
   if (currentIteration === undefined || !Array.isArray(list) || list.length === 0) {
     return undefined;
   }
@@ -843,7 +916,8 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
   invariant(projectId, 'Project id is required');
   invariant(workspaceId, 'Workspace id is required');
 
-  const { requests, iterationCount, delay, userUploadEnvs, bail, targetFolderId, keepLog } = await request.json() as runCollectionActionParams;
+  const { requests, iterationCount, delay, userUploadEnvs, bail, targetFolderId, keepLog } =
+    (await request.json()) as runCollectionActionParams;
   const source: RunnerSource = 'runner';
   const runnerId = targetFolderId ? targetFolderId : workspaceId;
 
@@ -878,8 +952,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
   startExecution(runnerId);
 
   const noLogRuntime = {
-
-    appendTimeline: async (_timelinePath: string, _logs: string[]) => { }, // no op
+    appendTimeline: async (_timelinePath: string, _logs: string[]) => {}, // no op
   };
 
   try {
@@ -937,15 +1010,14 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
             stepName: `Iteration ${i + 1} - Executing ${j + 1} of ${requests.length} requests - "${targetRequest.name}"`,
           });
 
-          const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(
-            targetRequest.id,
-            { lastActive: Date.now() },
-          );
+          const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(targetRequest.id, {
+            lastActive: Date.now(),
+          });
           invariant(activeRequestMeta, 'Request meta not found');
 
           await new Promise(resolve => setTimeout(resolve, delay));
 
-          const mutatedContext = await sendActionImplementation({
+          const mutatedContext = (await sendActionImplementation({
             requestId: targetRequest.id,
             iteration: i + 1,
             iterationCount,
@@ -955,7 +1027,7 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
             testResultCollector: resultCollector,
             runtime,
             transientVariables: testCtx.transientVariables,
-          }) as RequestContext | null;
+          })) as RequestContext | null;
           if (mutatedContext?.execution?.nextRequestIdOrName) {
             nextRequestIdOrName = mutatedContext.execution.nextRequestIdOrName || '';
           }
@@ -980,7 +1052,6 @@ export const runCollectionAction: ActionFunction = async ({ request, params }) =
               },
             ],
           };
-
         } catch (e) {
           const requestResults: RunnerResultPerRequest = {
             requestName: targetRequest.name,

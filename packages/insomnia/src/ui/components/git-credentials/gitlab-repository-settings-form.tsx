@@ -28,13 +28,7 @@ export const GitLabRepositorySetupFormGroup = (props: Props) => {
     return <GitLabSignInForm />;
   }
 
-  return (
-    <GitLabRepositoryForm
-      uri={uri}
-      onSubmit={onSubmit}
-      credentials={credentials}
-    />
-  );
+  return <GitLabRepositoryForm uri={uri} onSubmit={onSubmit} credentials={credentials} />;
 };
 
 const Avatar = ({ src }: { src: string }) => {
@@ -62,11 +56,7 @@ const Avatar = ({ src }: { src: string }) => {
     };
   }, [src]);
 
-  return imageSrc ? (
-    <img src={imageSrc} className="rounded-full w-10 h-10" />
-  ) : (
-    <i className="fas fa-user-circle" />
-  );
+  return imageSrc ? <img src={imageSrc} className="h-10 w-10 rounded-full" /> : <i className="fas fa-user-circle" />;
 };
 
 interface GitLabRepositoryFormProps {
@@ -75,11 +65,7 @@ interface GitLabRepositoryFormProps {
   credentials: GitCredentials;
 }
 
-const GitLabRepositoryForm = ({
-  uri,
-  credentials,
-  onSubmit,
-}: GitLabRepositoryFormProps) => {
+const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFormProps) => {
   const [error, setError] = useState('');
 
   const signOutFetcher = useFetcher();
@@ -104,16 +90,12 @@ const GitLabRepositoryForm = ({
         });
       }}
     >
-      <div className='flex items-center justify-between border border-solid border-[--hl-sm] rounded-sm py-1 px-3'>
-        <div className="flex gap-3 items-center">
+      <div className="flex items-center justify-between rounded-sm border border-solid border-[--hl-sm] px-3 py-1">
+        <div className="flex items-center gap-3">
           <Avatar src={credentials.author.avatarUrl ?? ''} />
-          <div className='flex flex-col items-start'>
-            <span className='font-semibold'>
-              {credentials.author.name}
-            </span>
-            <span className='text-sm text-[--hl]'>
-              {credentials.author.email || 'Signed in'}
-            </span>
+          <div className="flex flex-col items-start">
+            <span className="font-semibold">{credentials.author.name}</span>
+            <span className="text-sm text-[--hl]">{credentials.author.email || 'Signed in'}</span>
           </div>
         </div>
         <Button
@@ -133,14 +115,14 @@ const GitLabRepositoryForm = ({
           Sign out
         </Button>
       </div>
-      <TextField autoFocus name="uri" className="flex flex-col w-full gap-1 px-0.5" isRequired>
-        <Label className='text-start text-sm font-semibold'>Git URI (https, including .git suffix)</Label>
+      <TextField autoFocus name="uri" className="flex w-full flex-col gap-1 px-0.5" isRequired>
+        <Label className="text-start text-sm font-semibold">Git URI (https, including .git suffix)</Label>
         <Input
           type="url"
           defaultValue={uri}
           disabled={Boolean(uri)}
           placeholder="https://github.com/org/repo.git"
-          className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors placeholder:text-sm"
+          className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
         />
       </TextField>
       {error && (
@@ -162,9 +144,7 @@ const GitLabSignInForm = () => {
   const completeSignInFetcher = useFetcher();
 
   return (
-    <div
-      className='flex items-center justify-center flex-col border border-solid border-[--hl-sm] p-4'
-    >
+    <div className="flex flex-col items-center justify-center border border-solid border-[--hl-sm] p-4">
       <Button
         className="flex items-center gap-2 disabled:opacity-100"
         type="button"
@@ -202,18 +182,24 @@ const GitLabSignInForm = () => {
                 return;
               }
 
-              completeSignInFetcher.submit({ code, state }, { action: '/git-credentials/gitlab/complete-sign-in', method: 'POST', encType: 'application/json' });
+              completeSignInFetcher.submit(
+                { code, state },
+                { action: '/git-credentials/gitlab/complete-sign-in', method: 'POST', encType: 'application/json' },
+              );
             }
           }}
         >
           <label className="form-control form-control--outlined">
-            <div>
-              If you aren't redirected to the app you can manually paste your
-              code here:
-            </div>
+            <div>If you aren't redirected to the app you can manually paste your code here:</div>
             <div className="form-row">
               <input name="link" />
-              <Button type="submit" name="add-token" className="w-[10ch] text-[--color-font-surprise] font-semibold border border-solid border-[--hl-md] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] px-4 py-2 h-full flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-md hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">Authenticate</Button>
+              <Button
+                type="submit"
+                name="add-token"
+                className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+              >
+                Authenticate
+              </Button>
             </div>
           </label>
           {error && (

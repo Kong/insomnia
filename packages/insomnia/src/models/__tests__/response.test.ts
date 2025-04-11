@@ -7,7 +7,6 @@ import zlib from 'zlib';
 import * as models from '../../models';
 
 describe('migrate()', () => {
-
   it('does it', async () => {
     const bodyPath = path.join(tmpdir(), 'foo.zip');
     fs.writeFileSync(bodyPath, zlib.gzipSync('Hello World!'));

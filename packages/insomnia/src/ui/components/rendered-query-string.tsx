@@ -3,7 +3,12 @@ import React, { type FC, useEffect, useState } from 'react';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
-import { PATH_PARAMETER_REGEX, type Request, type RequestAuthentication, type RequestParameter } from '../../models/request';
+import {
+  PATH_PARAMETER_REGEX,
+  type Request,
+  type RequestAuthentication,
+  type RequestParameter,
+} from '../../models/request';
 import { isRequestGroup, type RequestGroup } from '../../models/request-group';
 import type { WebSocketRequest } from '../../models/websocket-request';
 import { getAuthObjectOrNull, isAuthEnabled } from '../../network/authentication';
@@ -20,8 +25,9 @@ const defaultPreview = '...';
 
 const addApiKeyToParams = (requestAuth: RequestAuthentication) => {
   const shouldAddAuthParamsToQuery = requestAuth.type === 'apikey' && requestAuth.addTo === 'queryParams';
-  return shouldAddAuthParamsToQuery && requestAuth.key && requestAuth.value ?
-    [{ name: requestAuth.key, value: requestAuth.value }] : [];
+  return shouldAddAuthParamsToQuery && requestAuth.key && requestAuth.value
+    ? [{ name: requestAuth.key, value: requestAuth.value }]
+    : [];
 };
 
 async function getQueryParamsFromAuth(request: Request | WebSocketRequest): Promise<RequestParameter[]> {
@@ -93,13 +99,20 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
       }
     };
     fn();
-
-  }, [request.parameters, request.url, request.pathParameters, request.settingEncodeUrl, handleRender, request.authentication, request]);
+  }, [
+    request.parameters,
+    request.url,
+    request.pathParameters,
+    request.settingEncodeUrl,
+    handleRender,
+    request.authentication,
+    request,
+  ]);
 
   const className = previewString === defaultPreview ? 'super-duper-faint' : 'selectable force-wrap';
 
   return (
-    <div className="flex justify-between overflow-auto relative h-full gap-[var(--padding-sm)] w-full">
+    <div className="relative flex h-full w-full justify-between gap-[var(--padding-sm)] overflow-auto">
       <span className={classNames('my-auto', className)}>{previewString}</span>
 
       <CopyButton
@@ -108,7 +121,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         disabled={previewString === defaultPreview}
         title="Copy URL"
         confirmMessage=""
-        className='self-start sticky top-0'
+        className="sticky top-0 self-start"
       >
         <i className="fa fa-copy" />
       </CopyButton>

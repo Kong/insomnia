@@ -38,19 +38,24 @@ const pathLookup: Record<string, string | Record<string, string>> = {
 };
 
 let binaryPath: string;
-const platformPath = pathLookup[process.platform]
+const platformPath = pathLookup[process.platform];
 if (typeof platformPath === 'string') {
-  binaryPath = platformPath
+  binaryPath = platformPath;
 } else if (process.arch in platformPath) {
-  binaryPath = platformPath[process.arch]
+  binaryPath = platformPath[process.arch];
 } else {
-  throw new Error(`Cannot find binary path for ${process.platform} ${process.arch}`)
+  throw new Error(`Cannot find binary path for ${process.platform} ${process.arch}`);
 }
 
 export const cwd = path.resolve(__dirname, '..', '..', 'insomnia');
 const repoRoot = path.resolve(__dirname, '..', '..', '..');
 const insomniaBinary = path.join(cwd, 'dist', binaryPath);
-const electronBinary = path.join(repoRoot, 'node_modules', '.bin', process.platform === 'win32' ? 'electron.cmd' : 'electron');
+const electronBinary = path.join(
+  repoRoot,
+  'node_modules',
+  '.bin',
+  process.platform === 'win32' ? 'electron.cmd' : 'electron',
+);
 
 export const executablePath = bundleType() === 'package' ? insomniaBinary : electronBinary;
 

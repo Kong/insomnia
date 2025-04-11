@@ -1,4 +1,3 @@
-
 import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
 
 import type { SpectralResponse } from './spectral-worker';

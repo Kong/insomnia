@@ -89,8 +89,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
         value: oAuth1Token.Authorization,
       };
     }
-      return;
-
+    return;
   }
 
   if (authentication.type === AUTH_HAWK) {
@@ -131,9 +130,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
 
     if (parsedAdditionalClaims) {
       if (typeof parsedAdditionalClaims !== 'object') {
-        throw new Error(
-          `additional-claims must be an object received: '${typeof parsedAdditionalClaims}' instead`,
-        );
+        throw new Error(`additional-claims must be an object received: '${typeof parsedAdditionalClaims}' instead`);
       }
     }
     const generator = (await import('httplease-asap')).createAuthHeaderGenerator({
@@ -189,6 +186,7 @@ export const _buildBearerHeader = (accessToken: string, prefix?: string) => {
 
   return header;
 };
-export const isAuthEnabled = (auth?: RequestAuthentication | {}) => (auth && 'disabled' in auth) ? auth.disabled !== true : true;
+export const isAuthEnabled = (auth?: RequestAuthentication | {}) =>
+  auth && 'disabled' in auth ? auth.disabled !== true : true;
 export const getAuthObjectOrNull = (auth?: RequestAuthentication | {} | null): RequestAuthentication | null =>
-  (!auth || Object.keys(auth).length === 0 || !('type' in auth)) ? null : auth;
+  !auth || Object.keys(auth).length === 0 || !('type' in auth) ? null : auth;

@@ -13,39 +13,38 @@ interface Props {
   onBlur?: (e: FocusEvent) => void;
 }
 
-export const MockResponseHeadersEditor: FC<Props> = ({
-  bulk,
-  isDisabled,
-  onBlur,
-}) => {
+export const MockResponseHeadersEditor: FC<Props> = ({ bulk, isDisabled, onBlur }) => {
   const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const patchMockRoute = useMockRoutePatcher();
 
   const { mockRouteId } = useParams() as { mockRouteId: string };
 
-  const handleBulkUpdate = useCallback((headersString: string) => {
-    const headers: {
-      name: string;
-      value: string;
-    }[] = [];
+  const handleBulkUpdate = useCallback(
+    (headersString: string) => {
+      const headers: {
+        name: string;
+        value: string;
+      }[] = [];
 
-    const rows = headersString.split(/\n+/);
-    for (const row of rows) {
-      const [rawName, rawValue] = row.split(/:(.*)$/);
-      const name = (rawName || '').trim();
-      const value = (rawValue || '').trim();
+      const rows = headersString.split(/\n+/);
+      for (const row of rows) {
+        const [rawName, rawValue] = row.split(/:(.*)$/);
+        const name = (rawName || '').trim();
+        const value = (rawValue || '').trim();
 
-      if (!name && !value) {
-        continue;
+        if (!name && !value) {
+          continue;
+        }
+
+        headers.push({
+          name,
+          value,
+        });
       }
-
-      headers.push({
-        name,
-        value,
-      });
-    }
-    patchMockRoute(mockRouteId, { headers });
-  }, [patchMockRoute, mockRouteId]);
+      patchMockRoute(mockRouteId, { headers });
+    },
+    [patchMockRoute, mockRouteId],
+  );
 
   let headersString = '';
   for (const header of mockRoute.headers) {
@@ -61,9 +60,12 @@ export const MockResponseHeadersEditor: FC<Props> = ({
     headersString += `${header.name}: ${header.value}\n`;
   }
 
-  const onChangeHeaders = useCallback((headers: RequestHeader[]) => {
-    patchMockRoute(mockRouteId, { headers });
-  }, [patchMockRoute, mockRouteId]);
+  const onChangeHeaders = useCallback(
+    (headers: RequestHeader[]) => {
+      patchMockRoute(mockRouteId, { headers });
+    },
+    [patchMockRoute, mockRouteId],
+  );
 
   if (bulk) {
     return (

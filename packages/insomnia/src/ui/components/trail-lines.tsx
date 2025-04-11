@@ -58,7 +58,7 @@ function renderPaths({
               clipPath={`url(#${id}-clip-path-${i})`}
               x={`-${internals.TRIAL_SIZE_PERCENTAGE}`}
             />
-            { }
+            {}
             <g id="${id}-circles-${i}" className="dot" style={{ opacity: 0 }}>
               <circle r={internals.LINE_WIDTH * 20} fill={`url(#${id}-rgradient-dot-back)`} />
               <circle r={internals.LINE_WIDTH * 10} fill={`url(#${id}-rgradient-dot-front)`} />
@@ -95,7 +95,7 @@ const TrailLines = forwardRef<TrailsLineHandle, Props>(
           setShowPaths(show);
         },
       }),
-      []
+      [],
     );
 
     useEffect(() => {
@@ -114,7 +114,7 @@ const TrailLines = forwardRef<TrailsLineHandle, Props>(
     return (
       <svg
         ref={refRoot}
-        className={`pointer-events-none ${reverse ? 'transform scale-x-[-1]' : ''}`}
+        className={`pointer-events-none ${reverse ? 'scale-x-[-1] transform' : ''}`}
         viewBox={`0 0 ${width} ${height}`}
         width={width}
         height={height}
@@ -165,7 +165,7 @@ const TrailLines = forwardRef<TrailsLineHandle, Props>(
         {showPaths && renderPaths({ id, width, height, totalLines })}
       </svg>
     );
-  }
+  },
 );
 
 TrailLines.displayName = 'TrailLines';

@@ -33,8 +33,7 @@ $PWD/packages/insomnia-inso/bin/inso -w packages/insomnia-inso/src/db/fixtures/g
 
 ### node-libcurl
 
-`Error: The module '.../insomnia/node_modules/@getinsomnia/node-libcurl/lib/binding/node_libcurl.node'
-was compiled against a different Node.js version using`
+`Error: The module '.../insomnia/node_modules/@getinsomnia/node-libcurl/lib/binding/node_libcurl.node' was compiled against a different Node.js version using`
 
 node-libcurl builds for 3 operating systems and two versions of nodejs. insomnia-inso uses the nodejs build and insomnia app uses the electron build. you can switch between them using the following two commands
 

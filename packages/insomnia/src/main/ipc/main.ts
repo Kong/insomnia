@@ -5,11 +5,11 @@ import { app, BrowserWindow, type IpcRendererEvent, type MenuItemConstructorOpti
 import fs from 'fs';
 import iconv from 'iconv-lite';
 
-import type { LandingPage} from '../../common/sentry';
+import type { LandingPage } from '../../common/sentry';
 import { APP_START_TIME, SentryMetrics } from '../../common/sentry';
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
 import * as models from '../../models';
-import type { SegmentEvent} from '../analytics';
+import type { SegmentEvent } from '../analytics';
 import { trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { backup, restoreBackup } from '../backup';
@@ -17,7 +17,14 @@ import type { GitServiceAPI } from '../git-service';
 import installPlugin from '../install-plugin';
 import type { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
-import { addExecutionStep, completeExecutionStep, getExecution, startExecution, type TimingStep, updateLatestStepName } from '../network/request-timing';
+import {
+  addExecutionStep,
+  completeExecutionStep,
+  getExecution,
+  startExecution,
+  type TimingStep,
+  updateLatestStepName,
+} from '../network/request-timing';
 import type { WebSocketBridgeAPI } from '../network/websocket';
 import { ipcMainHandle, ipcMainOn, ipcMainOnce, type RendererOnChannels } from './electron';
 import extractPostmanDataDumpHandler from './extractPostmanDataDump';
@@ -48,7 +55,11 @@ export interface RendererToMainBridgeAPI {
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   showNunjucksContextMenu: (options: { key: string; nunjucksTag?: { template: string; range: MarkerRange } }) => void;
-  showContextMenu: (options: { key: string; menuItems: MenuItemConstructorOptions[]; extra?: Record<string, any> }) => void;
+  showContextMenu: (options: {
+    key: string;
+    menuItems: MenuItemConstructorOptions[];
+    extra?: Record<string, any>;
+  }) => void;
 
   database: {
     caCertificate: {
@@ -166,16 +177,19 @@ export function registerMainHandlers() {
     }
   });
 
-  ipcMainOnce('landingPageRendered', (_, { landingPage, tags = {} }: { landingPage: LandingPage; tags?: Record<string, string> }) => {
-    const duration = performance.now() - APP_START_TIME;
-    Sentry.metrics.distribution(SentryMetrics.APP_START_DURATION, duration, {
-      tags: {
-        landingPage,
-        ...tags,
-      },
-      unit: 'millisecond',
-    });
-  });
+  ipcMainOnce(
+    'landingPageRendered',
+    (_, { landingPage, tags = {} }: { landingPage: LandingPage; tags?: Record<string, string> }) => {
+      const duration = performance.now() - APP_START_TIME;
+      Sentry.metrics.distribution(SentryMetrics.APP_START_DURATION, duration, {
+        tags: {
+          landingPage,
+          ...tags,
+        },
+        unit: 'millisecond',
+      });
+    },
+  );
 
   ipcMainHandle('extractJsonFileFromPostmanDataDumpArchive', extractPostmanDataDumpHandler);
 }

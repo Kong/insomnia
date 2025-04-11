@@ -18,10 +18,15 @@ interface Props extends Pick<ComponentProps<typeof OneLineEditor>, 'getAutocompl
   disabled?: boolean;
 }
 
-export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, property, mask, help, disabled = false }) => {
-  const {
-    settings,
-  } = useRootLoaderData();
+export const AuthInputRow: FC<Props> = ({
+  label,
+  getAutocompleteConstants,
+  property,
+  mask,
+  help,
+  disabled = false,
+}) => {
+  const { settings } = useRootLoaderData();
   const { showPasswords } = settings;
   const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const groupData = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
@@ -33,8 +38,10 @@ export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, prope
   const canBeMasked = !showPasswords && mask;
   const isMasked = canBeMasked && masked;
 
-  const onChange = useCallback((value: string) => patcher(_id, { authentication: { ...authentication, [property]: value } }),
-    [patcher, _id, authentication, property]);
+  const onChange = useCallback(
+    (value: string) => patcher(_id, { authentication: { ...authentication, [property]: value } }),
+    [patcher, _id, authentication, property],
+  );
 
   const id = toKebabCase(label);
 
@@ -50,12 +57,12 @@ export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, prope
         getAutocompleteConstants={getAutocompleteConstants}
       />
       {canBeMasked ? (
-        <button
-          className="btn btn--super-super-compact pointer"
-          onClick={toggleMask}
-          disabled={disabled}
-        >
-          {isMasked ? <i className="fa fa-eye" data-testid="reveal-password-icon" /> : <i className="fa fa-eye-slash" data-testid="mask-password-icon" />}
+        <button className="btn btn--super-super-compact pointer" onClick={toggleMask} disabled={disabled}>
+          {isMasked ? (
+            <i className="fa fa-eye" data-testid="reveal-password-icon" />
+          ) : (
+            <i className="fa fa-eye-slash" data-testid="mask-password-icon" />
+          )}
         </button>
       ) : null}
     </AuthRow>

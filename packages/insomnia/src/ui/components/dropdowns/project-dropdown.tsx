@@ -1,23 +1,10 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
-import {
-  Button,
-  Menu,
-  MenuItem,
-  MenuTrigger,
-  Popover,
-  Tooltip,
-  TooltipTrigger,
-} from 'react-aria-components';
+import { Button, Menu, MenuItem, MenuTrigger, Popover, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useFetcher } from 'react-router-dom';
 
 import type { GitRepository } from '../../../models/git-repository';
-import {
-  getProjectStorageTypeLabel,
-  isGitProject,
-  isRemoteProject,
-  type Project,
-} from '../../../models/project';
+import { getProjectStorageTypeLabel, isGitProject, isRemoteProject, type Project } from '../../../models/project';
 import { type StorageRules } from '../../routes/organization';
 import { Icon } from '../icon';
 import { showAlert, showModal } from '../modals';
@@ -39,8 +26,7 @@ interface ProjectActionItem {
 }
 
 export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRules, isGitSyncEnabled }) => {
-  const [isProjectSettingsModalOpen, setIsProjectSettingsModalOpen] =
-    useState(false);
+  const [isProjectSettingsModalOpen, setIsProjectSettingsModalOpen] = useState(false);
   const deleteProjectFetcher = useFetcher();
   const updateProjectFetcher = useFetcher();
 
@@ -80,7 +66,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
                 {
                   method: 'post',
                   action: `/organization/${organizationId}/project/${projectId}/delete`,
-                }
+                },
               );
             }
           },
@@ -109,39 +95,36 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
 
   return (
     <Fragment>
-      {isProjectInconsistent &&
+      {isProjectInconsistent && (
         <TooltipTrigger>
           <Button
             onPress={() => setIsProjectSettingsModalOpen(true)}
-            className="opacity-80 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+            className="flex aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] opacity-80 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
           >
-            <Icon
-              icon='triangle-exclamation'
-              color="var(--color-warning)"
-            />
+            <Icon icon="triangle-exclamation" color="var(--color-warning)" />
           </Button>
           <Tooltip
             placement="top"
             offset={4}
-            className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+            className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
           >
             {`This project type is not allowed by the organization owner. You can manually convert it to use ${getProjectStorageTypeLabel(storageRules)}.`}
           </Tooltip>
         </TooltipTrigger>
-      }
+      )}
       {project.hasUncommittedOrUnpushedChanges && (
-        <div className='group-focus:hidden group-hover:hidden aspect-square h-6 flex items-center justify-center'>
-          <Icon icon="circle" className='w-2 h-2' color="var(--color-warning)" />
+        <div className="flex aspect-square h-6 items-center justify-center group-hover:hidden group-focus:hidden">
+          <Icon icon="circle" className="h-2 w-2" color="var(--color-warning)" />
         </div>
       )}
       <MenuTrigger>
         <Button
           aria-label="Project Actions"
-          className="opacity-0 hidden items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 data-[pressed]:flex group-focus:flex group-hover:flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className="hidden aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-hover:flex group-hover:opacity-100 group-focus:flex group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:flex data-[pressed]:opacity-100"
         >
           <Icon icon="caret-down" />
         </Button>
-        <Popover className="min-w-max overflow-y-hidden flex flex-col">
+        <Popover className="flex min-w-max flex-col overflow-y-hidden">
           <Menu
             aria-label="Project Actions Menu"
             selectionMode="single"
@@ -149,13 +132,13 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
               projectActionList.find(({ id }) => key === id)?.action(project._id, project.name);
             }}
             items={projectActionList}
-            className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
+            className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
           >
             {item => (
               <MenuItem
                 key={item.id}
                 id={item.id}
-                className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                 aria-label={item.name}
               >
                 <Icon icon={item.icon} />

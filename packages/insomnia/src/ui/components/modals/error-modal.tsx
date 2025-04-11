@@ -24,15 +24,19 @@ export const ErrorModal = forwardRef<ErrorModalHandle, ModalProps>((_, ref) => {
     addCancel: false,
   });
 
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: options => {
-      setState(options);
-      modalRef.current?.show();
-    },
-  }), []);
+  useImperativeHandle(
+    ref,
+    () => ({
+      hide: () => {
+        modalRef.current?.hide();
+      },
+      show: options => {
+        setState(options);
+        modalRef.current?.show();
+      },
+    }),
+    [],
+  );
   const { error, title, addCancel } = state;
   const message = state.message || error?.message;
   return (

@@ -5,33 +5,17 @@ import { logger } from '../../cli';
 import type { Database } from '../index';
 import { loadApiSpec } from './api-spec';
 import type { UnitTestSuite } from './types';
-import {
-  ensureSingleOrNone,
-  generateIdIsh,
-  getDbChoice,
-  matchIdIsh,
-} from './util';
+import { ensureSingleOrNone, generateIdIsh, getDbChoice, matchIdIsh } from './util';
 import { loadWorkspace } from './workspace';
 
-export const loadUnitTestSuite = (
-  db: Database,
-  identifier: string,
-): UnitTestSuite | null | undefined => {
+export const loadUnitTestSuite = (db: Database, identifier: string): UnitTestSuite | null | undefined => {
   // Identifier is for one specific suite; find it
-  logger.trace(
-    'Load unit test suite with identifier `%s` from data store',
-    identifier,
-  );
-  const items = db.UnitTestSuite.filter(
-    suite => matchIdIsh(suite, identifier) || suite.name === identifier,
-  );
+  logger.trace('Load unit test suite with identifier `%s` from data store', identifier);
+  const items = db.UnitTestSuite.filter(suite => matchIdIsh(suite, identifier) || suite.name === identifier);
   logger.trace('Found %d.', items.length);
   return ensureSingleOrNone(items, 'unit test suite');
 };
-export const loadTestSuites = (
-  db: Database,
-  identifier: string,
-): UnitTestSuite[] => {
+export const loadTestSuites = (db: Database, identifier: string): UnitTestSuite[] => {
   const apiSpec = loadApiSpec(db, identifier);
   const workspace = loadWorkspace(db, apiSpec?.parentId || identifier); // if identifier is for an apiSpec or a workspace, return all suites for that workspace
 
@@ -42,19 +26,14 @@ export const loadTestSuites = (
   const result = loadUnitTestSuite(db, identifier);
   return result ? [result] : [];
 };
-export const promptTestSuites = async (
-  db: Database,
-  ci: boolean,
-): Promise<UnitTestSuite[]> => {
+export const promptTestSuites = async (db: Database, ci: boolean): Promise<UnitTestSuite[]> => {
   if (ci) {
     return [];
   }
 
   const choices = db.ApiSpec.map(spec => [
     getDbChoice(generateIdIsh(spec), spec.fileName),
-    ...db.UnitTestSuite.filter(
-      suite => suite.parentId === spec.parentId,
-    ).map(suite =>
+    ...db.UnitTestSuite.filter(suite => suite.parentId === spec.parentId).map(suite =>
       getDbChoice(generateIdIsh(suite), suite.name, {
         indent: 1,
       }),

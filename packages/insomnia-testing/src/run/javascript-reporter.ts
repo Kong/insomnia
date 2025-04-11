@@ -3,8 +3,8 @@
  *
  * https://github.com/mochajs/mocha/blob/9d4a8ec2d22ee154aecb1f8eeb25af8e6309faa8/lib/reporters/json.js
  */
-import type { Runnable, Runner, Test } from 'mocha';
-import Mocha, { type MochaOptions, reporters } from 'mocha';
+import type { MochaOptions, Runnable, Runner, Test } from 'mocha';
+import Mocha, { reporters } from 'mocha';
 
 import type { TestResult, TestResults } from './entities';
 

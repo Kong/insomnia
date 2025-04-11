@@ -21,7 +21,11 @@ test.describe('Dashboard', async () => {
 
       // Rename Project
       await page.getByRole('row', { name: 'My Project' }).first().focus();
-      await page.getByRole('row', { name: 'My Project' }).first().getByRole('button', { name: 'Project Actions' }).click();
+      await page
+        .getByRole('row', { name: 'My Project' })
+        .first()
+        .getByRole('button', { name: 'Project Actions' })
+        .click();
       await page.getByRole('menuitemradio', { name: 'Settings' }).click();
       await page.getByPlaceholder('My Project').click();
       await page.getByPlaceholder('My Project').fill('My Project123');
@@ -36,7 +40,11 @@ test.describe('Dashboard', async () => {
 
       // Delete project
       await page.getByRole('row', { name: 'My Project' }).first().focus();
-      await page.getByRole('row', { name: 'My Project' }).first().getByRole('button', { name: 'Project Actions' }).click();
+      await page
+        .getByRole('row', { name: 'My Project' })
+        .first()
+        .getByRole('button', { name: 'Project Actions' })
+        .click();
       await page.getByRole('menuitemradio', { name: 'Delete' }).click();
       await page.getByRole('button', { name: 'Delete' }).click();
 
@@ -48,7 +56,8 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
     });
   });
-  test.describe('Interactions', async () => { // Not sure about the name here
+  test.describe('Interactions', async () => {
+    // Not sure about the name here
 
     test('Can create, rename and delete a document', async ({ page }) => {
       await page.getByLabel('All Files (0)').click();

@@ -1,4 +1,3 @@
-
 import { useEffect, useRef } from 'react';
 // https://github.com/imbhargav5/rooks/blob/main/src/hooks/useTimeoutWhen.ts
 /**
@@ -9,11 +8,7 @@ import { useEffect, useRef } from 'react';
  * @param timeoutDelayMs Amount of time in ms after which to invoke
  * @param when The condition which when true, sets the timeout
  */
-function useTimeoutWhen(
-  callback_: () => void,
-  timeoutDelayMs = 0,
-  when = true
-): void {
+function useTimeoutWhen(callback_: () => void, timeoutDelayMs = 0, when = true): void {
   const savedRefCallback = useRef<() => any>();
 
   useEffect(() => {
@@ -33,8 +28,7 @@ function useTimeoutWhen(
           window.clearTimeout(timeout);
         };
       }
-        console.warn('useTimeoutWhen: window is undefined.');
-
+      console.warn('useTimeoutWhen: window is undefined.');
     }
     return;
   }, [timeoutDelayMs, when]);

@@ -12,36 +12,36 @@ interface Props {
   disabled?: boolean;
 }
 
-export const RequestParametersEditor: FC<Props> = ({
-  bulk,
-  disabled = false,
-}) => {
+export const RequestParametersEditor: FC<Props> = ({ bulk, disabled = false }) => {
   const { requestId } = useParams() as { requestId: string };
   const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData | WebSocketRequestLoaderData;
   const patchRequest = useRequestPatcher();
-  const handleBulkUpdate = useCallback((paramsString: string) => {
-    const parameters: {
-      name: string;
-      value: string;
-    }[] = [];
+  const handleBulkUpdate = useCallback(
+    (paramsString: string) => {
+      const parameters: {
+        name: string;
+        value: string;
+      }[] = [];
 
-    const rows = paramsString.split(/\n+/);
-    for (const row of rows) {
-      const [rawName, rawValue] = row.split(/:(.*)$/);
-      const name = (rawName || '').trim();
-      const value = (rawValue || '').trim();
+      const rows = paramsString.split(/\n+/);
+      for (const row of rows) {
+        const [rawName, rawValue] = row.split(/:(.*)$/);
+        const name = (rawName || '').trim();
+        const value = (rawValue || '').trim();
 
-      if (!name && !value) {
-        continue;
+        if (!name && !value) {
+          continue;
+        }
+
+        parameters.push({
+          name,
+          value,
+        });
       }
-
-      parameters.push({
-        name,
-        value,
-      });
-    }
-    patchRequest(requestId, { parameters });
-  }, [patchRequest, requestId]);
+      patchRequest(requestId, { parameters });
+    },
+    [patchRequest, requestId],
+  );
 
   let paramsString = '';
   for (const param of activeRequest.parameters) {
@@ -57,15 +57,18 @@ export const RequestParametersEditor: FC<Props> = ({
     paramsString += `${param.name}: ${param.value}\n`;
   }
 
-  const onChangeParameter = useCallback((parameters: RequestParameter[]) => {
-    patchRequest(requestId, { parameters });
-  }, [patchRequest, requestId]);
+  const onChangeParameter = useCallback(
+    (parameters: RequestParameter[]) => {
+      patchRequest(requestId, { parameters });
+    },
+    [patchRequest, requestId],
+  );
 
   if (bulk) {
     return (
       <CodeEditor
         id="request-parameters-editor"
-        className='flex-1'
+        className="flex-1"
         onChange={handleBulkUpdate}
         defaultValue={paramsString}
         enableNunjucks

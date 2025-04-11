@@ -1,5 +1,19 @@
 import React, { type FC, useEffect } from 'react';
-import { Button, Cell, Column, Dialog, Heading, Modal, ModalOverlay, Row, Table, TableBody, TableHeader, Tooltip, TooltipTrigger } from 'react-aria-components';
+import {
+  Button,
+  Cell,
+  Column,
+  Dialog,
+  Heading,
+  Modal,
+  ModalOverlay,
+  Row,
+  Table,
+  TableBody,
+  TableHeader,
+  Tooltip,
+  TooltipTrigger,
+} from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import type { GitLogLoaderData } from '../../routes/git-project-actions';
@@ -37,78 +51,73 @@ export const GitProjectLogModal: FC<Props> = ({ onClose }) => {
         !isOpen && onClose();
       }}
       isDismissable
-      className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
+      className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
     >
       <Modal
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
-        className="flex flex-col max-w-4xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]"
+        className="flex max-h-full w-full max-w-4xl flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
       >
-        <Dialog
-          className="outline-none flex-1 h-full flex flex-col overflow-hidden"
-        >
+        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
           {({ close }) => (
-            <div className='flex-1 flex flex-col gap-4 overflow-hidden'>
-              <div className='flex gap-2 items-center justify-between'>
-                <Heading className='text-2xl'>History</Heading>
+            <div className="flex flex-1 flex-col gap-4 overflow-hidden">
+              <div className="flex items-center justify-between gap-2">
+                <Heading className="text-2xl">History</Heading>
                 <Button
-                  className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                   onPress={close}
                 >
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className='rounded w-full border border-solid border-[--hl-sm] select-none overflow-y-auto max-h-96'>
+              <div className="max-h-96 w-full select-none overflow-y-auto rounded border border-solid border-[--hl-sm]">
                 <Table
-                  selectionMode='multiple'
+                  selectionMode="multiple"
                   defaultSelectedKeys="all"
-                  aria-label='Modified objects'
-                  className="border-separate border-spacing-0 w-full"
+                  aria-label="Modified objects"
+                  className="w-full border-separate border-spacing-0"
                 >
                   <TableHeader>
-                    <Column isRowHeader className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                    <Column
+                      isRowHeader
+                      className="sticky top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] px-2 py-2 text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none"
+                    >
                       Message
                     </Column>
-                    <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                    <Column className="sticky top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] px-2 py-2 text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
                       When
                     </Column>
-                    <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                    <Column className="sticky top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] px-2 py-2 text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
                       Author
                     </Column>
                   </TableHeader>
                   <TableBody
                     renderEmptyState={() => (
-                      <div className='p-2 text-center'>
-                        {isLoading ? 'Loading...' : 'No history available'}
-                      </div>
+                      <div className="p-2 text-center">{isLoading ? 'Loading...' : 'No history available'}</div>
                     )}
-                    className="divide divide-[--hl-sm] divide-solid"
+                    className="divide divide-solid divide-[--hl-sm]"
                     items={log.filter(l => !!l).map(logEntry => ({ id: logEntry.oid, ...logEntry }))}
                   >
                     {item => (
-                      <Row className="group focus:outline-none focus-within:bg-[--hl-xxs] transition-colors">
-                        <Cell className="whitespace-nowrap p-2 text-wrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
-                          <span>
-                            {item.commit.message}
-                          </span>
+                      <Row className="group transition-colors focus-within:bg-[--hl-xxs] focus:outline-none">
+                        <Cell className="whitespace-nowrap text-wrap border-b border-solid border-[--hl-sm] p-2 text-sm font-medium focus:outline-none group-last-of-type:border-none">
+                          <span>{item.commit.message}</span>
                         </Cell>
-                        <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                        <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
                           <TimeFromNow
                             className="no-wrap p-2"
                             timestamp={item.commit.author.timestamp * 1000}
                             intervalSeconds={30}
                           />
                         </Cell>
-                        <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                        <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
                           <TooltipTrigger>
-                            <Button className="p-2 h-full">
-                              {item.commit.author.name}
-                            </Button>
+                            <Button className="h-full p-2">{item.commit.author.name}</Button>
                             <Tooltip
                               placement="top end"
                               offset={8}
-                              className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                              className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
                             >
                               {item.commit.author.email}
                             </Tooltip>

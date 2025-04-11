@@ -106,24 +106,19 @@ interface MethodDefs {
   example?: Record<string, any>;
 }
 
-const getMethodsFromReflectionServer = async (
-  reflectionApi: GrpcRequest['reflectionApi']
-): Promise<MethodDefs[]> => {
+const getMethodsFromReflectionServer = async (reflectionApi: GrpcRequest['reflectionApi']): Promise<MethodDefs[]> => {
   const { url, module, apiKey } = reflectionApi;
-  const GetFileDescriptorSetRequest = proto3.makeMessageType(
-    'buf.reflect.v1beta1.GetFileDescriptorSetRequest',
-    () => [
-      { no: 1, name: 'module', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-      { no: 2, name: 'version', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-      {
-        no: 3,
-        name: 'symbols',
-        kind: 'scalar',
-        T: 9 /* ScalarType.STRING */,
-        repeated: true,
-      },
-    ]
-  );
+  const GetFileDescriptorSetRequest = proto3.makeMessageType('buf.reflect.v1beta1.GetFileDescriptorSetRequest', () => [
+    { no: 1, name: 'module', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: 'version', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
+    {
+      no: 3,
+      name: 'symbols',
+      kind: 'scalar',
+      T: 9 /* ScalarType.STRING */,
+      repeated: true,
+    },
+  ]);
   const GetFileDescriptorSetResponse = proto3.makeMessageType(
     'buf.reflect.v1beta1.GetFileDescriptorSetResponse',
     () => [
@@ -134,7 +129,7 @@ const getMethodsFromReflectionServer = async (
         T: ProtobufEsFileDescriptorSet,
       },
       { no: 2, name: 'version', kind: 'scalar', T: 9 /* ScalarType.STRING */ },
-    ]
+    ],
   );
   const FileDescriptorSetService = {
     typeName: 'buf.reflect.v1beta1.FileDescriptorSetService',
@@ -164,15 +159,13 @@ const getMethodsFromReflectionServer = async (
       },
       {
         headers,
-      }
+      },
     );
     const methodDefs: MethodDefs[] = [];
     if (res.fileDescriptorSet === undefined) {
       return [];
     }
-    const packageDefinition = protoLoader.loadFileDescriptorSetFromBuffer(
-      new Buffer(res.fileDescriptorSet.toBinary())
-    );
+    const packageDefinition = protoLoader.loadFileDescriptorSetFromBuffer(new Buffer(res.fileDescriptorSet.toBinary()));
     for (const definition of Object.values(packageDefinition)) {
       const serviceDefinition = asServiceDefinition(definition);
       if (serviceDefinition === null) {
@@ -189,7 +182,7 @@ const getMethodsFromReflectionServer = async (
         throw new Error('Invalid reflection server api key');
       case Code.NotFound:
         throw new Error(
-          "The reflection server api key doesn't have access to the module or the module does not exists"
+          "The reflection server api key doesn't have access to the module or the module does not exists",
         );
       default:
         throw error;
@@ -214,7 +207,7 @@ const getMethodsFromReflection = async (
     getChannelCredentials({ url: host, caCertificate, clientCert, clientKey, rejectUnauthorized }),
     grpcOptions,
     filterDisabledOrInvalidMetaData(metadata),
-    path
+    path,
   );
   const services = await client.listServices();
   const methodsPromises = services.map(async service => {
@@ -222,25 +215,15 @@ const getMethodsFromReflection = async (
     const fullService = fileContainingSymbol.lookupService(service);
     const mockedRequestMethods = mockRequestMethods(fullService);
     const descriptorMessage = fileContainingSymbol.toDescriptor('proto3');
-    const packageDefinition = protoLoader.loadFileDescriptorSetFromObject(
-      descriptorMessage,
-      {}
-    );
+    const packageDefinition = protoLoader.loadFileDescriptorSetFromObject(descriptorMessage, {});
     const tryToGetMethods = () => {
       try {
         console.log('[grpc] loading service from reflection:', service);
-        const serviceDefinition = asServiceDefinition(
-          packageDefinition[service]
-        );
-        invariant(
-          serviceDefinition,
-          `'${service}' was not a valid ServiceDefinition`
-        );
+        const serviceDefinition = asServiceDefinition(packageDefinition[service]);
+        invariant(serviceDefinition, `'${service}' was not a valid ServiceDefinition`);
         const serviceMethods = Object.values(serviceDefinition);
         return serviceMethods.map(m => {
-          const methodName = Object.keys(mockedRequestMethods).find(name =>
-            m.path.endsWith(`/${name}`)
-          );
+          const methodName = Object.keys(mockedRequestMethods).find(name => m.path.endsWith(`/${name}`));
           if (!methodName) {
             return m;
           }
@@ -291,10 +274,7 @@ export interface GrpcMethodInfo {
   example?: Record<string, any>;
 }
 
-export const getMethodType = ({
-  requestStream,
-  responseStream,
-}: any): GrpcMethodType => {
+export const getMethodType = ({ requestStream, responseStream }: any): GrpcMethodType => {
   if (requestStream && responseStream) {
     return 'bidi';
   }
@@ -313,10 +293,7 @@ export const getSelectedMethod = async (
 ): Promise<MethodDefs | undefined> => {
   if (request.protoFileId) {
     const protoFile = await models.protoFile.getById(request.protoFileId);
-    invariant(
-      protoFile?.protoText,
-      `No proto file found for gRPC request ${request._id}`
-    );
+    invariant(protoFile?.protoText, `No proto file found for gRPC request ${request._id}`);
     const { filePath, dirs } = await writeProtoFile(protoFile);
     const methods = await loadMethodsFromFilePath(filePath, dirs);
     invariant(methods, 'No methods found');
@@ -336,9 +313,7 @@ export const getSelectedMethod = async (
   return methods.find(c => c.path === request.protoMethodName);
 };
 export const getMethodsFromPackageDefinition = (packageDefinition: PackageDefinition): MethodDefs[] => {
-  return Object.values(packageDefinition)
-    .filter(isServiceDefinition)
-    .flatMap(Object.values);
+  return Object.values(packageDefinition).filter(isServiceDefinition).flatMap(Object.values);
 };
 
 const isServiceDefinition = (definition: AnyDefinition): definition is ServiceDefinition => {
@@ -357,13 +332,32 @@ const isEnumDefinition = (definition: AnyDefinition): definition is EnumTypeDefi
   return (definition as EnumTypeDefinition).format === 'Protocol Buffer 3 EnumDescriptorProto';
 };
 
-const getChannelCredentials = ({ url, rejectUnauthorized, clientCert, clientKey, caCertificate }: { url: string; rejectUnauthorized: boolean; clientCert?: string; clientKey?: string; caCertificate?: string }): ChannelCredentials => {
+const getChannelCredentials = ({
+  url,
+  rejectUnauthorized,
+  clientCert,
+  clientKey,
+  caCertificate,
+}: {
+  url: string;
+  rejectUnauthorized: boolean;
+  clientCert?: string;
+  clientKey?: string;
+  caCertificate?: string;
+}): ChannelCredentials => {
   if (url.toLowerCase().startsWith('grpcs:')) {
     if (caCertificate && clientKey && clientCert) {
-      return ChannelCredentials.createSsl(Buffer.from(caCertificate, 'utf8'), Buffer.from(clientKey, 'utf8'), Buffer.from(clientCert, 'utf8'), { rejectUnauthorized });
+      return ChannelCredentials.createSsl(
+        Buffer.from(caCertificate, 'utf8'),
+        Buffer.from(clientKey, 'utf8'),
+        Buffer.from(clientCert, 'utf8'),
+        { rejectUnauthorized },
+      );
     }
     if (clientKey && clientCert) {
-      return ChannelCredentials.createSsl(null, Buffer.from(clientKey, 'utf8'), Buffer.from(clientCert, 'utf8'), { rejectUnauthorized });
+      return ChannelCredentials.createSsl(null, Buffer.from(clientKey, 'utf8'), Buffer.from(clientCert, 'utf8'), {
+        rejectUnauthorized,
+      });
     }
     if (caCertificate) {
       return ChannelCredentials.createSsl(Buffer.from(caCertificate, 'utf8'), null, null, { rejectUnauthorized });
@@ -373,95 +367,102 @@ const getChannelCredentials = ({ url, rejectUnauthorized, clientCert, clientKey,
   return ChannelCredentials.createInsecure();
 };
 
-export const start = (
-  event: IpcMainEvent,
-  ipcParams: GrpcIpcRequestParams,
-) => {
+export const start = (event: IpcMainEvent, ipcParams: GrpcIpcRequestParams) => {
   const { request, rejectUnauthorized, clientCert, clientKey, caCertificate } = ipcParams;
-  getSelectedMethod(request, ipcParams)?.then(method => {
-    if (!method) {
-      event.reply('grpc.error', request._id, new Error(`The gRPC method ${request.protoMethodName} could not be found`));
-      return;
-    }
-    const methodType = getMethodType(method);
-    // Create client
-    const { url, path } = parseGrpcUrl(request.url);
-
-    if (!url) {
-      event.reply('grpc.error', request._id, new Error('URL not specified'));
-      return undefined;
-    }
-    // @ts-expect-error -- TSCONVERSION second argument should be provided, send an empty string? Needs testing
-    const Client = makeGenericClientConstructor({});
-    const creds = getChannelCredentials({ url: request.url, rejectUnauthorized, clientCert, clientKey, caCertificate });
-    const client = new Client(url, creds);
-    if (!client) {
-      return;
-    }
-
-    try {
-      const messageBody = JSON.parse(request.body.text || '');
-      const requestPath = path + method.path;
-      if (methodType === 'unary') {
-        const unaryCall = client.makeUnaryRequest(
-          requestPath,
-          method.requestSerialize,
-          method.responseDeserialize,
-          messageBody,
-          filterDisabledOrInvalidMetaData(request.metadata),
-          onUnaryResponse(event, request._id),
+  getSelectedMethod(request, ipcParams)
+    ?.then(method => {
+      if (!method) {
+        event.reply(
+          'grpc.error',
+          request._id,
+          new Error(`The gRPC method ${request.protoMethodName} could not be found`),
         );
-        unaryCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
-        grpcCalls.set(request._id, unaryCall);
-      } else if (methodType === 'client') {
-        const clientCall = client.makeClientStreamRequest(
-          requestPath,
-          method.requestSerialize,
-          method.responseDeserialize,
-          filterDisabledOrInvalidMetaData(request.metadata),
-          onUnaryResponse(event, request._id));
-        clientCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
-        grpcCalls.set(request._id, clientCall);
-      } else if (methodType === 'server') {
-        const serverCall = client.makeServerStreamRequest(
-          requestPath,
-          method.requestSerialize,
-          method.responseDeserialize,
-          messageBody,
-          filterDisabledOrInvalidMetaData(request.metadata),
-        );
-        onStreamingResponse(event, serverCall, request._id);
-        grpcCalls.set(request._id, serverCall);
-      } else if (methodType === 'bidi') {
-        const bidiCall = client.makeBidiStreamRequest(
-          requestPath,
-          method.requestSerialize,
-          method.responseDeserialize,
-          filterDisabledOrInvalidMetaData(request.metadata));
-        onStreamingResponse(event, bidiCall, request._id);
-        grpcCalls.set(request._id, bidiCall);
-      } else {
-        throw new Error(`Unsupported method type: ${methodType}`);
+        return;
       }
-      // Update request stats
-      models.stats.incrementExecutedRequests();
-      event.reply('grpc.start', request._id);
+      const methodType = getMethodType(method);
+      // Create client
+      const { url, path } = parseGrpcUrl(request.url);
 
-    } catch (error) {
-      // TODO: How do we want to handle this case, where the message cannot be parsed?
-      //  Currently an error will be shown, but the stream will not be cancelled.
+      if (!url) {
+        event.reply('grpc.error', request._id, new Error('URL not specified'));
+        return undefined;
+      }
+      // @ts-expect-error -- TSCONVERSION second argument should be provided, send an empty string? Needs testing
+      const Client = makeGenericClientConstructor({});
+      const creds = getChannelCredentials({
+        url: request.url,
+        rejectUnauthorized,
+        clientCert,
+        clientKey,
+        caCertificate,
+      });
+      const client = new Client(url, creds);
+      if (!client) {
+        return;
+      }
+
+      try {
+        const messageBody = JSON.parse(request.body.text || '');
+        const requestPath = path + method.path;
+        if (methodType === 'unary') {
+          const unaryCall = client.makeUnaryRequest(
+            requestPath,
+            method.requestSerialize,
+            method.responseDeserialize,
+            messageBody,
+            filterDisabledOrInvalidMetaData(request.metadata),
+            onUnaryResponse(event, request._id),
+          );
+          unaryCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
+          grpcCalls.set(request._id, unaryCall);
+        } else if (methodType === 'client') {
+          const clientCall = client.makeClientStreamRequest(
+            requestPath,
+            method.requestSerialize,
+            method.responseDeserialize,
+            filterDisabledOrInvalidMetaData(request.metadata),
+            onUnaryResponse(event, request._id),
+          );
+          clientCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
+          grpcCalls.set(request._id, clientCall);
+        } else if (methodType === 'server') {
+          const serverCall = client.makeServerStreamRequest(
+            requestPath,
+            method.requestSerialize,
+            method.responseDeserialize,
+            messageBody,
+            filterDisabledOrInvalidMetaData(request.metadata),
+          );
+          onStreamingResponse(event, serverCall, request._id);
+          grpcCalls.set(request._id, serverCall);
+        } else if (methodType === 'bidi') {
+          const bidiCall = client.makeBidiStreamRequest(
+            requestPath,
+            method.requestSerialize,
+            method.responseDeserialize,
+            filterDisabledOrInvalidMetaData(request.metadata),
+          );
+          onStreamingResponse(event, bidiCall, request._id);
+          grpcCalls.set(request._id, bidiCall);
+        } else {
+          throw new Error(`Unsupported method type: ${methodType}`);
+        }
+        // Update request stats
+        models.stats.incrementExecutedRequests();
+        event.reply('grpc.start', request._id);
+      } catch (error) {
+        // TODO: How do we want to handle this case, where the message cannot be parsed?
+        //  Currently an error will be shown, but the stream will not be cancelled.
+        event.reply('grpc.error', request._id, error);
+      }
+      return;
+    })
+    .catch(error => {
       event.reply('grpc.error', request._id, error);
-    }
-    return;
-  }).catch(error => {
-    event.reply('grpc.error', request._id, error);
-  });
+    });
 };
 
-export const sendMessage = (
-  event: IpcMainEvent,
-  { body, requestId }: GrpcIpcMessageParams,
-) => {
+export const sendMessage = (event: IpcMainEvent, { body, requestId }: GrpcIpcMessageParams) => {
   try {
     const messageBody = JSON.parse(body.text || '');
     // HACK BUT DO NOT REMOVE
@@ -484,7 +485,11 @@ export const sendMessage = (
 export const commit = (requestId: string): void => grpcCalls.get(requestId)?.end();
 export const cancel = (requestId: string): void => grpcCalls.get(requestId)?.cancel();
 
-const onStreamingResponse = (event: IpcMainEvent, call: ClientReadableStream<any> | ClientDuplexStream<any, any>, requestId: string) => {
+const onStreamingResponse = (
+  event: IpcMainEvent,
+  call: ClientReadableStream<any> | ClientDuplexStream<any, any>,
+  requestId: string,
+) => {
   call.on('status', (status: StatusObject) => event.reply('grpc.status', requestId, status));
   call.on('data', data => event.reply('grpc.data', requestId, data));
   call.on('error', (error: ServiceError) => {
@@ -510,23 +515,24 @@ const onStreamingResponse = (event: IpcMainEvent, call: ClientReadableStream<any
   });
 };
 
-const onUnaryResponse = (event: IpcMainEvent, requestId: string) => (err: ServiceError | null, value?: Record<string, any>) => {
-  if (!err) {
-    event.reply('grpc.data', requestId, value);
-  }
-  if (err && err.code !== status.CANCELLED) {
-    event.reply('grpc.error', requestId, err);
-  }
-  event.reply('grpc.end', requestId);
-  // @ts-expect-error -- TSCONVERSION channel not found in call
-  const channel = grpcCalls.get(requestId)?.call?.call.channel;
-  if (channel) {
-    channel.close();
-  } else {
-    console.log(`[gRPC] failed to close channel for req=${requestId} because it was not found`);
-  }
-  grpcCalls.delete(requestId);
-};
+const onUnaryResponse =
+  (event: IpcMainEvent, requestId: string) => (err: ServiceError | null, value?: Record<string, any>) => {
+    if (!err) {
+      event.reply('grpc.data', requestId, value);
+    }
+    if (err && err.code !== status.CANCELLED) {
+      event.reply('grpc.error', requestId, err);
+    }
+    event.reply('grpc.end', requestId);
+    // @ts-expect-error -- TSCONVERSION channel not found in call
+    const channel = grpcCalls.get(requestId)?.call?.call.channel;
+    if (channel) {
+      channel.close();
+    } else {
+      console.log(`[gRPC] failed to close channel for req=${requestId} because it was not found`);
+    }
+    grpcCalls.delete(requestId);
+  };
 
 const filterDisabledOrInvalidMetaData = (metadata: GrpcRequestHeader[]): Metadata => {
   const grpcMetadata = new Metadata();

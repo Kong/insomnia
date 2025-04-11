@@ -43,7 +43,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: ".nvmrc"
+          node-version-file: '.nvmrc'
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
@@ -69,7 +69,7 @@ jobs:
             type=raw,value=latest,enable=${{ env.IS_PRERELEASE == 'false' }}
             type=raw,value=alpha,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'alpha') }}
             type=raw,value=beta,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'beta') }}
-          sep-tags: ","
+          sep-tags: ','
 
       # Setup regctl to parse platform specific image digest from image manifest
       - name: Install regctl
@@ -100,11 +100,11 @@ jobs:
 
       - name: Verify Inso Container Image Provenance produced on insomnia-ee
         run: |
-         slsa-verifier verify-image \
-         kong/inso:${{env.RELEASE_VERSION}}@${{steps.image_manifest_metadata.outputs.inso_image_sha}} \
-         --print-provenance \
-         --provenance-repository ${{env.NOTARY_REPOSITORY}} \
-         --source-uri 'github.com/Kong/insomnia-ee'
+          slsa-verifier verify-image \
+          kong/inso:${{env.RELEASE_VERSION}}@${{steps.image_manifest_metadata.outputs.inso_image_sha}} \
+          --print-provenance \
+          --provenance-repository ${{env.NOTARY_REPOSITORY}} \
+          --source-uri 'github.com/Kong/insomnia-ee'
 
       - name: Verify Inso Binary Provenance for artifacts produced on insomnia-ee
         run: |
@@ -127,7 +127,7 @@ jobs:
         id: core_tag_and_release
         with:
           tag: ${{ env.RELEASE_CORE_TAG }}
-          name: "${{ env.RELEASE_VERSION }} 📦"
+          name: '${{ env.RELEASE_VERSION }} 📦'
           generateReleaseNotes: true
           commit: ${{ env.RELEASE_BRANCH }}
           prerelease: ${{ env.IS_PRERELEASE }}
@@ -142,7 +142,7 @@ jobs:
         with:
           release_id: ${{ steps.core_tag_and_release.outputs.id }}
           tag_name: ${{ env.RELEASE_CORE_TAG }}
-          file: "./artifacts/*"
+          file: './artifacts/*'
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
 

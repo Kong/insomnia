@@ -96,9 +96,7 @@ const convertWsdlToPostman = async (input: string) => {
 export const convert: Converter = async rawData => {
   try {
     if (rawData.indexOf('wsdl:definition') !== -1) {
-      const postmanData = await convertWsdlToPostman(
-        `<?xml version="1.0" encoding="UTF-8" ?>${rawData}`,
-      );
+      const postmanData = await convertWsdlToPostman(`<?xml version="1.0" encoding="UTF-8" ?>${rawData}`);
       postmanData.info.schema += 'collection.json';
       const postmanJson = JSON.stringify(postmanData);
       return postman.convert(postmanJson);

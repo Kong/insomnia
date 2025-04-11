@@ -4,7 +4,6 @@ import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 test.describe('Environment Editor', async () => {
-
   test.beforeEach(async ({ app, page }) => {
     const text = await loadFixture('environments.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
@@ -111,7 +110,6 @@ test.describe('Environment Editor', async () => {
 
     // NOTE - Test fails due to actual bug - the variables are not being added to the request body when the request is sent
     // await page.locator('pre').filter({ hasText: '| Gandalf' }).click();
-
   });
 
   test('Switch to table view and edit environment', async ({ page }) => {
@@ -168,5 +166,4 @@ test.describe('Environment Editor', async () => {
     await page.getByText('kvAnotherStr').click();
     await page.getByText('12345').click();
   });
-
 });

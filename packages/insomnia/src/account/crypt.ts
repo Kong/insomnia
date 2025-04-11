@@ -56,8 +56,16 @@ export function encryptRSAWithJWK(publicKeyJWK: JsonWebKey, plaintext: string) {
 }
 
 export function decryptRSAWithJWK(privateJWK: JsonWebKey, encryptedBlob: string) {
-  if (!privateJWK.n || !privateJWK.e || !privateJWK.d || !privateJWK.p ||
-    !privateJWK.q || !privateJWK.dp || !privateJWK.dq || !privateJWK.qi) {
+  if (
+    !privateJWK.n ||
+    !privateJWK.e ||
+    !privateJWK.d ||
+    !privateJWK.p ||
+    !privateJWK.q ||
+    !privateJWK.dp ||
+    !privateJWK.dq ||
+    !privateJWK.qi
+  ) {
     throw new Error('Private key is missing parameters');
   }
 
@@ -171,7 +179,6 @@ export function decryptAES(jwkOrKey: string | JsonWebKey, encryptedResult: AESMe
     return decodeURIComponent(decipher.output.toString());
   }
   throw new Error('Failed to decrypt data');
-
 }
 
 /**
@@ -202,7 +209,6 @@ export function decryptAESToBuffer(jwkOrKey: string | JsonWebKey, encryptedResul
     return Buffer.from(forge.util.bytesToHex(decipher.output), 'hex');
   }
   throw new Error('Failed to decrypt data');
-
 }
 
 /**
@@ -234,7 +240,6 @@ export async function generateAES256Key() {
     key_ops: ['encrypt', 'decrypt'],
     k: _hexToB64Url(key),
   };
-
 }
 
 /**
@@ -296,7 +301,6 @@ export async function generateKeyPairJWK() {
     privateKey,
     publicKey,
   };
-
 }
 
 // ~~~~~~~~~~~~~~~~ //
@@ -381,5 +385,4 @@ async function _pbkdf2Passphrase(passphrase: string, salt: string) {
     forge.md.sha256.create(),
   );
   return forge.util.bytesToHex(derivedKeyRaw);
-
 }

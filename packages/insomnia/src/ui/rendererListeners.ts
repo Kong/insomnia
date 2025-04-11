@@ -1,4 +1,3 @@
-
 import { isDevelopment } from '../common/constants';
 import { database } from '../common/database';
 import * as models from '../models';
@@ -50,7 +49,8 @@ if (isDevelopment()) {
           const promises = models
             .types()
             .filter(t => t !== models.settings.type) // don't clear settings
-            .reverse().map(async type => {
+            .reverse()
+            .map(async type => {
               console.log(`[developer] clearing all "${type}" entities`);
               const allEntities = await database.all(type);
               await database.batchModifyDocs({ remove: allEntities });

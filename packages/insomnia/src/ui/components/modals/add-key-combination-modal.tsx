@@ -28,15 +28,19 @@ export const AddKeyCombinationModal = forwardRef<AddKeyCombinationModalHandle, M
     pressedKeyCombination: null,
   });
 
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: options => {
-      setState(options);
-      modalRef.current?.show();
-    },
-  }), []);
+  useImperativeHandle(
+    ref,
+    () => ({
+      hide: () => {
+        modalRef.current?.hide();
+      },
+      show: options => {
+        setState(options);
+        modalRef.current?.show();
+      },
+    }),
+    [],
+  );
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     event.preventDefault();
@@ -101,17 +105,21 @@ export const AddKeyCombinationModal = forwardRef<AddKeyCombinationModalHandle, M
     hidden: !isDuplicate,
   });
   return (
-    <Modal
-      ref={modalRef}
-      className="shortcuts add-key-comb-modal"
-    >
+    <Modal ref={modalRef} className="shortcuts add-key-comb-modal">
       <ModalHeader>Add Keyboard Shortcut</ModalHeader>
       <ModalBody noScroll>
         <div className="pad-left pad-right pad-top pad-bottom-sm">
           <div className="form-control form-control--outlined">
             <label>
               Press desired key combination and then press ENTER.
-              <input onKeyDown={handleKeyDown} autoFocus type="text" className="key-comb" value={keyCombDisplay} readOnly />
+              <input
+                onKeyDown={handleKeyDown}
+                autoFocus
+                type="text"
+                className="key-comb"
+                value={keyCombDisplay}
+                readOnly
+              />
             </label>
           </div>
         </div>

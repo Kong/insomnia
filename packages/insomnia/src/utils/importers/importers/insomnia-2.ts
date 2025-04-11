@@ -31,9 +31,7 @@ export const convert: Converter = rawData => {
     }
 
     // Convert old String request bodies to new (HAR) schema
-    const contentTypeHeader = resource.headers?.find(
-      ({ name }) => name.toLowerCase() === 'content-type',
-    );
+    const contentTypeHeader = resource.headers?.find(({ name }) => name.toLowerCase() === 'content-type');
 
     const mimeType = contentTypeHeader?.value.split(';')[0] ?? '';
     resource.body = {

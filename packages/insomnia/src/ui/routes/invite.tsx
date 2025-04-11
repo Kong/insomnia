@@ -34,11 +34,16 @@ export interface Collaborator {
   metadata: CollaboratorMetadata;
 }
 
-export type CollaboratorsListLoaderResult = PaginatedList & {
-  collaborators: Collaborator[];
-} | Error;
+export type CollaboratorsListLoaderResult =
+  | (PaginatedList & {
+      collaborators: Collaborator[];
+    })
+  | Error;
 
-export const collaboratorsListLoader: LoaderFunction = async ({ params, request }): Promise<CollaboratorsListLoaderResult> => {
+export const collaboratorsListLoader: LoaderFunction = async ({
+  params,
+  request,
+}): Promise<CollaboratorsListLoaderResult> => {
   const { id: sessionId } = await userSession.get();
 
   const { organizationId } = params;
@@ -80,7 +85,10 @@ export interface CollaboratorSearchResultItem {
 
 export type CollaboratorSearchLoaderResult = CollaboratorSearchResultItem[];
 
-export const collaboratorSearchLoader: LoaderFunction = async ({ params, request }): Promise<CollaboratorSearchLoaderResult> => {
+export const collaboratorSearchLoader: LoaderFunction = async ({
+  params,
+  request,
+}): Promise<CollaboratorSearchLoaderResult> => {
   const { id: sessionId } = await userSession.get();
 
   const { organizationId } = params;

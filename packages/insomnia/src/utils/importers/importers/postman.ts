@@ -151,10 +151,7 @@ export class ImportPostman {
     return variable;
   };
 
-  importItems = (
-    items: PostmanCollection['item'],
-    parentId = '__WORKSPACE_ID__',
-  ): ImportRequest[] => {
+  importItems = (items: PostmanCollection['item'], parentId = '__WORKSPACE_ID__'): ImportRequest[] => {
     // @ts-expect-error this is because there are devergent behaviors for how the function treats this collection.  This is handled appropriately in the function itself in different branches.
     return items.reduce((accumulator: ImportRequest[], item: Item | Folder) => {
       if (Object.prototype.hasOwnProperty.call(item, 'request')) {
@@ -165,10 +162,7 @@ export class ImportPostman {
       return [
         ...accumulator,
         requestGroup,
-        ...this.importItems(
-          item.item as PostmanCollection['item'],
-          requestGroup._id,
-        ),
+        ...this.importItems(item.item as PostmanCollection['item'], requestGroup._id),
       ];
     }, []);
   };
@@ -178,18 +172,19 @@ export class ImportPostman {
       return '';
     }
 
-    const preRequestEvent = events.find(
-      event => event.listen === 'prerequest'
-    );
+    const preRequestEvent = events.find(event => event.listen === 'prerequest');
 
     const scriptOrRows = preRequestEvent != null ? preRequestEvent.script : '';
     if (scriptOrRows == null || scriptOrRows === '') {
       return '';
     }
 
-    const scriptContent = scriptOrRows.exec != null ?
-      (Array.isArray(scriptOrRows.exec) ? scriptOrRows.exec.join('\n') : scriptOrRows.exec) :
-      '';
+    const scriptContent =
+      scriptOrRows.exec != null
+        ? Array.isArray(scriptOrRows.exec)
+          ? scriptOrRows.exec.join('\n')
+          : scriptOrRows.exec
+        : '';
 
     return translateHandlersInScript(scriptContent);
   };
@@ -199,26 +194,23 @@ export class ImportPostman {
       return '';
     }
 
-    const afterResponseEvent = events.find(
-      event => event.listen === 'test'
-    );
+    const afterResponseEvent = events.find(event => event.listen === 'test');
 
     const scriptOrRows = afterResponseEvent ? afterResponseEvent.script : '';
     if (!scriptOrRows) {
       return '';
     }
 
-    const scriptContent = scriptOrRows.exec ?
-      (Array.isArray(scriptOrRows.exec) ? scriptOrRows.exec.join('\n') : scriptOrRows.exec) :
-      '';
+    const scriptContent = scriptOrRows.exec
+      ? Array.isArray(scriptOrRows.exec)
+        ? scriptOrRows.exec.join('\n')
+        : scriptOrRows.exec
+      : '';
 
     return translateHandlersInScript(scriptContent);
   };
 
-  importRequestItem = (
-    { request, name = '', event }: Item,
-    parentId: string,
-  ): ImportRequest => {
+  importRequestItem = ({ request, name = '', event }: Item, parentId: string): ImportRequest => {
     if (typeof request === 'string') {
       return {};
     }
@@ -274,11 +266,14 @@ export class ImportPostman {
     if (!parameters || parameters?.length === 0) {
       return [];
     }
-    return parameters.map(({ key, value, disabled }) => ({
-      name: transformPostmanToNunjucksString(key),
-      value: transformPostmanToNunjucksString(value),
-      disabled: disabled || false,
-    }) as Parameter);
+    return parameters.map(
+      ({ key, value, disabled }) =>
+        ({
+          name: transformPostmanToNunjucksString(key),
+          value: transformPostmanToNunjucksString(value),
+          disabled: disabled || false,
+        }) as Parameter,
+    );
   };
 
   importFolderItem = ({ name, description, event, auth }: Folder, parentId: string) => {
@@ -363,7 +358,7 @@ export class ImportPostman {
       return this.importBodyFormUrlEncoded(body.urlencoded);
     }
     if (body.mode === 'raw') {
-      const rawOptions = body.options?.raw as { language: string }
+      const rawOptions = body.options?.raw as { language: string };
       return this.importBodyRaw(body.raw, rawOptions?.language || '');
     }
     return {};
@@ -372,30 +367,28 @@ export class ImportPostman {
   importBodyFormdata = (formdata?: FormParameter[]) => {
     const { schema } = this.collection.info;
 
-    const params = formdata?.map(
-      ({ key, value, type, enabled, disabled, src }) => {
-        const item: Parameter = {
-          type,
-          name: transformPostmanToNunjucksString(key),
-        };
+    const params = formdata?.map(({ key, value, type, enabled, disabled, src }) => {
+      const item: Parameter = {
+        type,
+        name: transformPostmanToNunjucksString(key),
+      };
 
-        if (POSTMAN_SCHEMA_URLS_V2_0.includes(schema)) {
-          item.disabled = !enabled;
-        } else if (POSTMAN_SCHEMA_URLS_V2_1.includes(schema)) {
-          item.disabled = !!disabled;
-        }
+      if (POSTMAN_SCHEMA_URLS_V2_0.includes(schema)) {
+        item.disabled = !enabled;
+      } else if (POSTMAN_SCHEMA_URLS_V2_1.includes(schema)) {
+        item.disabled = !!disabled;
+      }
 
-        if (type === 'file') {
-          item.fileName = src as string;
-        } else if (typeof value === 'string') {
-          item.value = transformPostmanToNunjucksString(value);
-        } else {
-          item.value = value as string;
-        }
+      if (type === 'file') {
+        item.fileName = src as string;
+      } else if (typeof value === 'string') {
+        item.value = transformPostmanToNunjucksString(value);
+      } else {
+        item.value = value as string;
+      }
 
-        return item;
-      },
-    );
+      return item;
+    });
 
     return {
       params,
@@ -403,9 +396,7 @@ export class ImportPostman {
     };
   };
 
-  importBodyFormUrlEncoded = (
-    urlEncoded?: UrlEncodedParameter[],
-  ): ImportRequest['body'] => {
+  importBodyFormUrlEncoded = (urlEncoded?: UrlEncodedParameter[]): ImportRequest['body'] => {
     const { schema } = this.collection.info;
 
     const params = urlEncoded?.map(({ key, value, enabled, disabled }) => {
@@ -477,7 +468,6 @@ export class ImportPostman {
     if (!authentication) {
       if (authorizationHeader) {
         switch (authorizationHeader?.substring(0, authorizationHeader.indexOf(' '))) {
-
           case 'Bearer': // will work for OAuth2 as well
             return {
               authentication: this.importBearerAuthenticationFromHeader(authorizationHeader),
@@ -619,7 +609,9 @@ export class ImportPostman {
     }
     const isAMZSecurityTokenHeader = ({ key }: Header) => key === 'X-Amz-Security-Token';
     const sessionToken = headers?.find(isAMZSecurityTokenHeader)?.value;
-    const credentials = RegExp(/(?<=Credential=).*/).exec(authHeader)?.[0].split('/');
+    const credentials = RegExp(/(?<=Credential=).*/)
+      .exec(authHeader)?.[0]
+      .split('/');
 
     return {
       authentication: {
@@ -702,10 +694,7 @@ export class ImportPostman {
     }
 
     if (POSTMAN_SCHEMA_URLS_V2_1.includes(schema)) {
-      item.token = this.findValueByKey(
-        auth.bearer as V210Auth['bearer'],
-        'token',
-      );
+      item.token = this.findValueByKey(auth.bearer as V210Auth['bearer'], 'token');
     }
     item.token = transformPostmanToNunjucksString(item.token);
     return item;
@@ -820,7 +809,6 @@ export class ImportPostman {
 
   // Example: OAuth realm="Realm",oauth_consumer_key="Consumer%20Key",oauth_token="Access%20Token",oauth_signature_method="HMAC-SHA1",oauth_timestamp="Timestamp",oauth_nonce="Nonce",oauth_version="Version",oauth_callback="Callback%20URL",oauth_verifier="Verifier",oauth_signature="TwJvZVasVWTL6X%2Bz3lmuiyvaX2Q%3D"
   importOauth1AuthenticationFromHeader = (authHeader: string) => {
-
     const item = {
       type: 'oauth1',
       disabled: false,
@@ -839,7 +827,6 @@ export class ImportPostman {
     };
 
     return item;
-
   };
 
   importApiKeyAuthentication = (auth: Authentication) => {
@@ -911,10 +898,7 @@ export class ImportPostman {
     return item;
   };
 
-  findValueByKey = <T extends { key: string; value?: unknown }>(
-    array?: T[],
-    key?: keyof T,
-  ) => {
+  findValueByKey = <T extends { key: string; value?: unknown }>(array?: T[], key?: keyof T) => {
     if (!array) {
       return '';
     }

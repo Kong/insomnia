@@ -20,9 +20,7 @@ testWithLegacyDatabase('Run data migration to version 8', async ({ page, userCon
   // Migration takes a while, adding this to avoid test timeout before it ends
   test.slow();
 
-  await page.getByLabel('Continue with Google').click(),
-
-  await page.locator('input[name="code"]').click();
+  await page.getByLabel('Continue with Google').click(), await page.locator('input[name="code"]').click();
   await page.locator('input[name="code"]').fill(userConfig.code);
 
   await page.getByRole('button', { name: 'Log in' }).click();

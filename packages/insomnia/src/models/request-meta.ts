@@ -25,9 +25,7 @@ export interface BaseRequestMeta {
 
 export type RequestMeta = BaseModel & BaseRequestMeta;
 
-export const isRequestMeta = (model: Pick<BaseModel, 'type'>): model is RequestMeta => (
-  model.type === type
-);
+export const isRequestMeta = (model: Pick<BaseModel, 'type'>): model is RequestMeta => model.type === type;
 
 export function init() {
   return {
@@ -83,14 +81,13 @@ export async function updateOrCreateByParentId(parentId: string, patch: Partial<
   if (requestMeta) {
     return update(requestMeta, patch);
   }
-    const newPatch = Object.assign(
-      {
-        parentId,
-      },
-      patch,
-    );
-    return create(newPatch);
-
+  const newPatch = Object.assign(
+    {
+      parentId,
+    },
+    patch,
+  );
+  return create(newPatch);
 }
 
 export function all() {

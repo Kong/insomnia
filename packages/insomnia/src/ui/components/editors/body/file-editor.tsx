@@ -15,9 +15,12 @@ export const FileEditor: FC<Props> = ({ onChange, path }) => {
     onChange('');
   }, [onChange]);
 
-  const _handleChooseFile = useCallback((path: string) => {
-    onChange(path);
-  }, [onChange]);
+  const _handleChooseFile = useCallback(
+    (path: string) => {
+      onChange(path);
+    },
+    [onChange],
+  );
 
   // Replace home path with ~/ to make the path shorter
   const homeDirectory = window.app.getPath('home');
@@ -35,18 +38,22 @@ export const FileEditor: FC<Props> = ({ onChange, path }) => {
     <div className="text-center">
       <div className="pad text-left">
         <label className="label--small">Selected File</label>
-        {path ? <code className="block txt-sm">
-          <span className="force-wrap selectable" title={path}>
-            {pathDescription}
-          </span>{' '}
-          <span className="no-wrap">({sizeDescription})</span>
-        </code> : <code className="super-faint block txt-sm">No file selected</code>}
+        {path ? (
+          <code className="txt-sm block">
+            <span className="force-wrap selectable" title={path}>
+              {pathDescription}
+            </span>{' '}
+            <span className="no-wrap">({sizeDescription})</span>
+          </code>
+        ) : (
+          <code className="super-faint txt-sm block">No file selected</code>
+        )}
       </div>
       <div>
         <PromptButton className="btn btn--super-compact" disabled={!path} onClick={_handleResetFile}>
           Reset File
         </PromptButton>
-          &nbsp;&nbsp;
+        &nbsp;&nbsp;
         <FileInputButton path={path} className="btn btn--clicky" onChange={_handleChooseFile} />
       </div>
     </div>

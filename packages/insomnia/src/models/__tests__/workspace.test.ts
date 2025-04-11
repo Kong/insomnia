@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import * as models from '../index';
 import { WorkspaceScopeKeys } from '../workspace';
 describe('migrate()', () => {
-
   it('migrates client certificates properly', async () => {
     const workspace = await models.workspace.create({
       name: 'My Workspace',

@@ -28,7 +28,8 @@ describe('Example', () => {
 `;
 
 describe('run', () => {
-  const getMockedSendRequest = () => vi.fn<SendRequestCallback<{ status: number }>>().mockResolvedValue({ status: 200 });
+  const getMockedSendRequest = () =>
+    vi.fn<SendRequestCallback<{ status: number }>>().mockResolvedValue({ status: 200 });
 
   it('runs a mocha suite', async () => {
     const { stats } = await runTests(exampleTest, { sendRequest: getMockedSendRequest() });
@@ -54,10 +55,7 @@ describe('run', () => {
   it('calls sendRequest() callback', async () => {
     const sendRequest = getMockedSendRequest();
 
-    const { stats } = await runTests(
-      exampleTestWithRequest,
-      { sendRequest },
-    );
+    const { stats } = await runTests(exampleTestWithRequest, { sendRequest });
 
     expect(sendRequest).toHaveBeenCalledWith('req_123');
     expect(stats.passes).toBe(1);

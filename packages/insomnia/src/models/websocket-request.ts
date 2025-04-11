@@ -29,13 +29,9 @@ export interface BaseWebSocketRequest {
 
 export type WebSocketRequest = BaseModel & BaseWebSocketRequest & { type: typeof type };
 
-export const isWebSocketRequest = (model: Pick<BaseModel, 'type'>): model is WebSocketRequest => (
-  model.type === type
-);
+export const isWebSocketRequest = (model: Pick<BaseModel, 'type'>): model is WebSocketRequest => model.type === type;
 
-export const isWebSocketRequestId = (id?: string | null) => (
-  id?.startsWith(`${prefix}_`)
-);
+export const isWebSocketRequestId = (id?: string | null) => id?.startsWith(`${prefix}_`);
 
 export const init = (): BaseWebSocketRequest => ({
   name: 'New WebSocket Request',
@@ -64,10 +60,7 @@ export const create = (patch: Partial<WebSocketRequest> = {}) => {
 
 export const remove = (obj: WebSocketRequest) => database.remove(obj);
 
-export const update = (
-  obj: WebSocketRequest,
-  patch: Partial<WebSocketRequest> = {}
-) => database.docUpdate(obj, patch);
+export const update = (obj: WebSocketRequest, patch: Partial<WebSocketRequest> = {}) => database.docUpdate(obj, patch);
 
 // This is duplicated (lol) from models/request.js
 export async function duplicate(request: WebSocketRequest, patch: Partial<WebSocketRequest> = {}) {

@@ -20,9 +20,7 @@ export const EnumSetting = <T extends string | number>({
   setting,
   values,
 }: PropsWithChildren<Props<T>>) => {
-  const {
-    settings,
-  } = useRootLoaderData();
+  const { settings } = useRootLoaderData();
 
   const patchSettings = useSettingsPatcher();
 
@@ -35,7 +33,6 @@ export const EnumSetting = <T extends string | number>({
           value={String(settings[setting]) || '__NULL__'}
           name={setting}
           onChange={event => patchSettings({ [setting]: event.currentTarget.value })}
-
         >
           {values.map(({ name, value }) => (
             <option key={value} value={value}>

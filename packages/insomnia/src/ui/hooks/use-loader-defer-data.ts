@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 
-export const useLoaderDeferData = <T>(deferedDataPromise?: Promise<T>, keepStaleDataKey?: string): [T | undefined, boolean, any] => {
+export const useLoaderDeferData = <T>(
+  deferedDataPromise?: Promise<T>,
+  keepStaleDataKey?: string,
+): [T | undefined, boolean, any] => {
   const [data, setData] = useState<T>();
   const [error, setError] = useState();
   const [isPending, setIsPending] = useState(true);

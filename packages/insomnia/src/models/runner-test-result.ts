@@ -40,9 +40,7 @@ export interface BaseRunnerTestResult {
 
 export type RunnerTestResult = BaseModel & BaseRunnerTestResult;
 
-export const isRunnerTestResult = (model: Pick<BaseModel, 'type'>): model is RunnerTestResult => (
-  model.type === type
-);
+export const isRunnerTestResult = (model: Pick<BaseModel, 'type'>): model is RunnerTestResult => model.type === type;
 
 export function init() {
   return {

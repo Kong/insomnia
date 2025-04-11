@@ -11,7 +11,7 @@
       "options": {
         "cwd": "${workspaceFolder}/packages/insomnia",
         "env": {
-          "NODE_ENV": "development",
+          "NODE_ENV": "development"
         }
       },
       "command": "${workspaceRoot}/node_modules/.bin/esr esbuild.main.ts"
@@ -24,7 +24,7 @@
       "options": {
         "cwd": "${workspaceFolder}/packages/insomnia",
         "env": {
-          "NODE_ENV": "development",
+          "NODE_ENV": "development"
         }
       },
       "isBackground": true,
@@ -57,10 +57,7 @@
     {
       "label": "Insomnia: Compile (Watch)",
       "detail": "Compile Renderer (Watch) | Compile Main",
-      "dependsOn": [
-        "Insomnia: Compile Renderer (Watch)",
-        "Insomnia: Compile Main"
-      ]
+      "dependsOn": ["Insomnia: Compile Renderer (Watch)", "Insomnia: Compile Main"]
     },
     {
       "label": "Inso: Compile (Watch)",

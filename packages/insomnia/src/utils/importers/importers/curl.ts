@@ -92,11 +92,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
   let url = '';
 
   try {
-    const urlValue = getPairValue(
-      pairsByName,
-      (singletons[0] as string) || '',
-      ['url'],
-    );
+    const urlValue = getPairValue(pairsByName, (singletons[0] as string) || '', ['url']);
     const { searchParams, href, search } = new URL(urlValue);
     parameters = Array.from(searchParams.entries()).map(([name, value]) => ({
       name,
@@ -108,16 +104,13 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
   } catch (error) {}
 
   /// /////// Authentication //////////
-  const [username, password] = getPairValue(pairsByName, '', [
-    'u',
-    'user',
-  ]).split(/:(.*)$/);
+  const [username, password] = getPairValue(pairsByName, '', ['u', 'user']).split(/:(.*)$/);
 
   const authentication = username
     ? {
-      username: username.trim(),
-      password: password.trim(),
-    }
+        username: username.trim(),
+        password: password.trim(),
+      }
     : {};
 
   /// /////// Headers //////////
@@ -152,9 +145,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     .join('; ');
 
   // Convert cookie value to header
-  const existingCookieHeader = headers.find(
-    header => header.name.toLowerCase() === 'cookie',
-  );
+  const existingCookieHeader = headers.find(header => header.name.toLowerCase() === 'cookie');
 
   if (cookieHeaderValue && existingCookieHeader) {
     // Has existing cookie header, so let's update it
@@ -169,12 +160,8 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
 
   /// /////// Body (Text or Blob) //////////
   const dataParameters = pairsToDataParameters(pairsByName);
-  const contentTypeHeader = headers.find(
-    header => header.name.toLowerCase() === 'content-type',
-  );
-  const mimeType = contentTypeHeader
-    ? contentTypeHeader.value.split(';')[0]
-    : null;
+  const contentTypeHeader = headers.find(header => header.name.toLowerCase() === 'content-type');
+  const mimeType = contentTypeHeader ? contentTypeHeader.value.split(';')[0] : null;
 
   /// /////// Body (Multipart Form Data) //////////
   const formDataParams = [
@@ -212,7 +199,6 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
         value: decodeURIComponent(parameter.value || ''),
       })),
     };
-
   } else if (dataParameters.length !== 0) {
     body = {
       text: dataParameters.map(parameter => `${parameter.name}${parameter.value}`).join('&'),
@@ -226,13 +212,10 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
   }
 
   /// /////// Method //////////
-  let method = getPairValue(pairsByName, '__UNSET__', [
-    'X',
-    'request',
-  ]).toUpperCase();
+  let method = getPairValue(pairsByName, '__UNSET__', ['X', 'request']).toUpperCase();
 
   if (method === '__UNSET__' && body) {
-    method = ('text' in body || 'params' in body) ? 'POST' : 'GET';
+    method = 'text' in body || 'params' in body ? 'POST' : 'GET';
   }
 
   const count = requestCount++;
@@ -307,17 +290,20 @@ const pairsToDataParameters = (keyedPairs: PairsByName): Parameter[] => {
         dataParameters = dataParameters.concat(pairs.flatMap(pair => pairToParameters(pair)));
         break;
       case 'data-urlencode':
-        dataParameters = dataParameters.concat(pairs.flatMap(pair => pairToParameters(pair, true))
-          .map(parameter => {
-            if (parameter.type === 'file') {
-              return parameter;
-            }
+        dataParameters = dataParameters.concat(
+          pairs
+            .flatMap(pair => pairToParameters(pair, true))
+            .map(parameter => {
+              if (parameter.type === 'file') {
+                return parameter;
+              }
 
-            return {
-              ...parameter,
-              value: encodeURIComponent(parameter.value ?? ''),
-            };
-          }));
+              return {
+                ...parameter,
+                value: encodeURIComponent(parameter.value ?? ''),
+              };
+            }),
+        );
         break;
       default:
         throw new Error(`unhandled data flag ${flagName}`);
@@ -354,11 +340,7 @@ const pairToParameters = (pair: Pair, allowFiles = false): Parameter[] => {
   });
 };
 
-const getPairValue = <T extends string | boolean>(
-  parisByName: PairsByName,
-  defaultValue: T,
-  names: string[],
-) => {
+const getPairValue = <T extends string | boolean>(parisByName: PairsByName, defaultValue: T, names: string[]) => {
   for (const name of names) {
     if (parisByName[name] && parisByName[name].length) {
       return parisByName[name][0] as T;
@@ -399,9 +381,7 @@ export const convert: Converter = rawData => {
       continue;
     }
 
-    const { op } = parseEntry as
-      | { op: 'glob'; pattern: string }
-      | { op: ControlOperator };
+    const { op } = parseEntry as { op: 'glob'; pattern: string } | { op: ControlOperator };
 
     // `;` separates commands
     if (op === ';') {
@@ -419,9 +399,7 @@ export const convert: Converter = rawData => {
     }
 
     if (op === 'glob') {
-      currentCommand.push(
-        (parseEntry as { op: 'glob'; pattern: string }).pattern,
-      );
+      currentCommand.push((parseEntry as { op: 'glob'; pattern: string }).pattern);
       continue;
     }
 
@@ -431,9 +409,7 @@ export const convert: Converter = rawData => {
   // Push the last unfinished command
   commands.push(currentCommand);
 
-  const requests: ImportRequest[] = commands
-    .filter(command => command[0] === 'curl')
-    .map(importCommand);
+  const requests: ImportRequest[] = commands.filter(command => command[0] === 'curl').map(importCommand);
 
   return requests;
 };

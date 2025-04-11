@@ -21,7 +21,9 @@ export const GraphQLExplorerEnum: FC<Props> = ({ type }) => {
             <span className="selectable bold">{value.name}</span>
             <div className="graphql-explorer__defs__description">
               <MarkdownPreview
-                markdown={value.description || `This is a long paragraph that is a description for the enum value ${value.name}`}
+                markdown={
+                  value.description || `This is a long paragraph that is a description for the enum value ${value.name}`
+                }
               />
             </div>
           </li>

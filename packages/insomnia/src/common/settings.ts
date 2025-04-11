@@ -82,9 +82,11 @@ export enum UpdateChannel {
 }
 
 /** Gets a subset of Settings where the values match a condition */
-export type SettingsOfType<MatchType> = NonNullable<{
-  [Key in keyof Settings]: Settings[Key] extends MatchType ? Key : never;
-}[keyof Settings]>;
+export type SettingsOfType<MatchType> = NonNullable<
+  {
+    [Key in keyof Settings]: Settings[Key] extends MatchType ? Key : never;
+  }[keyof Settings]
+>;
 
 export interface PluginConfig {
   disabled: boolean;

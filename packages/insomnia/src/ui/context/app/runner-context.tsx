@@ -27,51 +27,56 @@ interface ContextProps {
 }
 const RunnerContext = createContext<ContextProps>({
   runnerStateMap: {},
-  updateRunnerState: () => { },
+  updateRunnerState: () => {},
 });
 
 export const RunnerProvider: FC<PropsWithChildren> = ({ children }) => {
-
   const [runnerState, setRunnerState, runnerStateRef] = useStateRef<RunnerStateMap>({});
 
-  const updateRunnerState = useCallback((organizationId: string, runnerId: string, patch: Partial<RunnerState>) => {
-    setRunnerState(prevState => {
-      const newState = {
-        ...prevState,
-        [organizationId]: {
-          ...prevState[organizationId],
-          [runnerId]: { ...prevState[organizationId]?.[runnerId], ...patch },
-        },
-      };
-      return newState;
-    });
-  }, [setRunnerState]);
-
-  const handleTabClose = useCallback((organizationId: string, ids: 'all' | string[]) => {
-    if (ids === 'all') {
+  const updateRunnerState = useCallback(
+    (organizationId: string, runnerId: string, patch: Partial<RunnerState>) => {
       setRunnerState(prevState => {
-        const newState = { ...prevState };
-        delete newState[organizationId];
+        const newState = {
+          ...prevState,
+          [organizationId]: {
+            ...prevState[organizationId],
+            [runnerId]: { ...prevState[organizationId]?.[runnerId], ...patch },
+          },
+        };
         return newState;
       });
-      return;
-    }
+    },
+    [setRunnerState],
+  );
 
-    setRunnerState(prevState => {
-      const newOrgState = { ...prevState?.[organizationId] };
-      ids.forEach(id => {
-        // runner tab id starts with 'runner' prefix, but the runnerId in this context doesn't have the prefix, so we need to remove it
-        if (id.startsWith('runner')) {
-          const runnerId = id.replace('runner_', '');
-          delete newOrgState[runnerId];
-        }
+  const handleTabClose = useCallback(
+    (organizationId: string, ids: 'all' | string[]) => {
+      if (ids === 'all') {
+        setRunnerState(prevState => {
+          const newState = { ...prevState };
+          delete newState[organizationId];
+          return newState;
+        });
+        return;
+      }
+
+      setRunnerState(prevState => {
+        const newOrgState = { ...prevState?.[organizationId] };
+        ids.forEach(id => {
+          // runner tab id starts with 'runner' prefix, but the runnerId in this context doesn't have the prefix, so we need to remove it
+          if (id.startsWith('runner')) {
+            const runnerId = id.replace('runner_', '');
+            delete newOrgState[runnerId];
+          }
+        });
+        return {
+          ...prevState,
+          [organizationId]: newOrgState,
+        };
       });
-      return {
-        ...prevState,
-        [organizationId]: newOrgState,
-      };
-    });
-  }, [setRunnerState]);
+    },
+    [setRunnerState],
+  );
 
   useEffect(() => {
     uiEventBus.on('CLOSE_TAB', handleTabClose);

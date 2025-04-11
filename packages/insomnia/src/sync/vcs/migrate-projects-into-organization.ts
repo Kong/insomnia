@@ -33,8 +33,8 @@ export const shouldMigrateProjectUnderOrganization = async () => {
 export const migrateProjectsIntoOrganization = async ({
   personalOrganizationId,
 }: {
-    personalOrganizationId: string;
-  }) => {
+  personalOrganizationId: string;
+}) => {
   // Legacy remote projects without organizations
   // Local projects without organizations except scratchpad
   const [legacyRemoteProjects, localProjects] = await Promise.all([
@@ -56,7 +56,7 @@ export const migrateProjectsIntoOrganization = async ({
       models.project.update(remoteProject, {
         parentId: remoteProject.remoteId,
         remoteId: remoteProject._id,
-      })
+      }),
     );
   }
 
@@ -65,7 +65,7 @@ export const migrateProjectsIntoOrganization = async ({
     updatePromises.push(
       models.project.update(localProject, {
         parentId: personalOrganizationId,
-      })
+      }),
     );
   }
 

@@ -11,13 +11,9 @@ interface Props<T> {
   closeOnSelect?: boolean;
 }
 
-export const MenuSection = <T extends object>({
-  section,
-  state,
-  closeOnSelect = true,
-}: Props<T>) => {
+export const MenuSection = <T extends object>({ section, state, closeOnSelect = true }: Props<T>) => {
   const { itemProps, headingProps, groupProps } = useMenuSection({
-    heading: section.rendered,
+    'heading': section.rendered,
     'aria-label': section['aria-label'],
   });
 
@@ -27,28 +23,19 @@ export const MenuSection = <T extends object>({
 
   return (
     <li {...itemProps}>
-      <div className="flex items-center mx-10">
+      <div className="mx-10 flex items-center">
         {section.rendered && (
-          <span
-            className="whitespace-nowrap pr-4 text-[--hl] bg-[--color-bg] text-xs uppercase my-2"
-            {...headingProps}
-          >
+          <span className="my-2 whitespace-nowrap bg-[--color-bg] pr-4 text-xs uppercase text-[--hl]" {...headingProps}>
             {section.rendered}
           </span>
         )}
         {shouldDisplayDivider && <hr className="my-1" {...separatorProps} />}
       </div>
-      <ul {...groupProps} className="p-0 list-none">
-        {[...section.childNodes].map((node: Node<T>) => (
-          node.rendered && (
-            <MenuItem
-              key={node.key}
-              item={node}
-              state={state}
-              closeOnSelect={closeOnSelect}
-            />
-          )
-        ))}
+      <ul {...groupProps} className="list-none p-0">
+        {[...section.childNodes].map(
+          (node: Node<T>) =>
+            node.rendered && <MenuItem key={node.key} item={node} state={state} closeOnSelect={closeOnSelect} />,
+        )}
       </ul>
     </li>
   );

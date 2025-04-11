@@ -54,15 +54,9 @@ export const GrpcMethodTypeName = {
   bidi: 'Bi-directional Streaming',
 } as const;
 
-export const GrpcRequestPane: FunctionComponent<Props> = ({
-  grpcState,
-  setGrpcState,
-  reloadRequests,
-}) => {
+export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcState, reloadRequests }) => {
   const { activeRequest } = useRouteLoaderData('request/:requestId') as GrpcRequestLoaderData;
-  const {
-    activeEnvironment,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { activeEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const environmentId = activeEnvironment._id;
   const { settings } = useRootLoaderData();
   const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
@@ -73,21 +67,24 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
       const methods = await window.main.grpc.loadMethods(activeRequest.protoFileId);
       setGrpcState({ ...grpcState, methods });
     } else if (activeRequest.url && activeRequest.reflectionApi) {
-      const requestGroups = (await db.withAncestors<GrpcRequest | RequestGroup>(activeRequest, [models.requestGroup.type])).filter(isRequestGroup);
-      const rendered =
-        await tryToInterpolateRequestOrShowRenderErrorModal({
-          request: activeRequest,
-          environmentId,
-          payload: {
-            url: activeRequest.url,
-            metadata: getOrInheritHeaders({ request: { headers: activeRequest.metadata }, requestGroups }),
-            reflectionApi: activeRequest.reflectionApi,
-          },
-        });
+      const requestGroups = (
+        await db.withAncestors<GrpcRequest | RequestGroup>(activeRequest, [models.requestGroup.type])
+      ).filter(isRequestGroup);
+      const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
+        request: activeRequest,
+        environmentId,
+        payload: {
+          url: activeRequest.url,
+          metadata: getOrInheritHeaders({ request: { headers: activeRequest.metadata }, requestGroups }),
+          reflectionApi: activeRequest.reflectionApi,
+        },
+      });
 
       const workspaceClientCertificates = await models.clientCertificate.findByParentId(workspaceId);
-      const clientCertificate = workspaceClientCertificates.find(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), rendered.url, false));
-      const caCertificate = (await models.caCertificate.findByParentId(workspaceId));
+      const clientCertificate = workspaceClientCertificates.find(
+        c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), rendered.url, false),
+      );
+      const caCertificate = await models.caCertificate.findByParentId(workspaceId);
       const caCertificatePath = caCertificate && !caCertificate.disabled ? caCertificate.path : undefined;
       const clientCert = clientCertificate?.cert ? await readFile(clientCertificate?.cert, 'utf8') : undefined;
       const clientKey = clientCertificate?.key ? await readFile(clientCertificate?.key, 'utf8') : undefined;
@@ -95,11 +92,13 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
       const renderedWithCertificates = {
         ...rendered,
         rejectUnauthorized: settings.validateSSL,
-        ...(activeRequest.url.toLowerCase().startsWith('grpcs:') ? {
-          clientCert,
-          clientKey,
-          caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
-        } : {}),
+        ...(activeRequest.url.toLowerCase().startsWith('grpcs:')
+          ? {
+              clientCert,
+              clientKey,
+              caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
+            }
+          : {}),
       };
       const methods = await window.main.grpc.loadMethodsFromReflection(renderedWithCertificates);
       setGrpcState({ ...grpcState, methods });
@@ -120,17 +119,24 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   const handleRequestSend = async () => {
     if (method && !running) {
       try {
-        const requestGroups = (await db.withAncestors<GrpcRequest | RequestGroup>(activeRequest, [models.requestGroup.type])).filter(isRequestGroup);
+        const requestGroups = (
+          await db.withAncestors<GrpcRequest | RequestGroup>(activeRequest, [models.requestGroup.type])
+        ).filter(isRequestGroup);
         const request = await getRenderedGrpcRequest({
           // split off the metadata from the request
-          request: { ...activeRequest, metadata: getOrInheritHeaders({ request: { headers: activeRequest.metadata }, requestGroups }) },
+          request: {
+            ...activeRequest,
+            metadata: getOrInheritHeaders({ request: { headers: activeRequest.metadata }, requestGroups }),
+          },
           environment: environmentId,
           purpose: 'send',
           skipBody: canClientStream(methodType),
         });
         const workspaceClientCertificates = await models.clientCertificate.findByParentId(workspaceId);
-        const clientCertificate = workspaceClientCertificates.find(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), request.url, false));
-        const caCertificate = (await models.caCertificate.findByParentId(workspaceId));
+        const clientCertificate = workspaceClientCertificates.find(
+          c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), request.url, false),
+        );
+        const caCertificate = await models.caCertificate.findByParentId(workspaceId);
         const caCertificatePath = caCertificate && !caCertificate.disabled ? caCertificate.path : undefined;
 
         updateTabById?.(requestId, { temporary: false });
@@ -138,11 +144,13 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
         window.main.grpc.start({
           request,
           rejectUnauthorized: settings.validateSSL,
-          ...(request.url.toLowerCase().startsWith('grpcs:') ? {
-            clientCert: clientCertificate?.cert ? await readFile(clientCertificate?.cert || '', 'utf8') : undefined,
-            clientKey: clientCertificate?.key ? await readFile(clientCertificate?.key || '', 'utf8') : undefined,
-            caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
-          } : {}),
+          ...(request.url.toLowerCase().startsWith('grpcs:')
+            ? {
+                clientCert: clientCertificate?.cert ? await readFile(clientCertificate?.cert || '', 'utf8') : undefined,
+                clientKey: clientCertificate?.key ? await readFile(clientCertificate?.key || '', 'utf8') : undefined,
+                caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
+              }
+            : {}),
         });
         setGrpcState({
           ...grpcState,
@@ -171,7 +179,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
           });
         }
       }
-
     }
   };
 
@@ -179,15 +186,20 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
     request_send: handleRequestSend,
   });
 
-  const messageTabs = [{ id: 'body', name: 'Body', text: activeRequest.body.text }, ...requestMessages.sort((a, b) => a.created - b.created).map((msg, index) => ({ ...msg, name: `Stream ${index + 1}` }))];
+  const messageTabs = [
+    { id: 'body', name: 'Body', text: activeRequest.body.text },
+    ...requestMessages
+      .sort((a, b) => a.created - b.created)
+      .map((msg, index) => ({ ...msg, name: `Stream ${index + 1}` })),
+  ];
 
   return (
     <>
       <Pane type="request">
         <PaneHeader>
-          <div className="w-full h-full flex flex-row justify-between items-stretch">
+          <div className="flex h-full w-full flex-row items-stretch justify-between">
             <div className="method-grpc pad-right pad-left vertically-center">gRPC</div>
-            <div className='flex-1' title={activeRequest.url}>
+            <div className="flex-1" title={activeRequest.url}>
               <OneLineEditor
                 id="grpc-url"
                 key={uniquenessKey}
@@ -198,7 +210,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, requestId)}
               />
             </div>
-            <div className="flex-1 flex items-center pr-[--padding-sm] gap-[--padding-xs]">
+            <div className="flex flex-1 items-center gap-[--padding-xs] pr-[--padding-sm]">
               <GrpcMethodDropdown
                 disabled={running}
                 methods={methods}
@@ -234,31 +246,40 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 disabled={!activeRequest.url}
                 onClick={async () => {
                   try {
-                    const requestGroups = (await db.withAncestors<GrpcRequest | RequestGroup>(activeRequest, [models.requestGroup.type])).filter(isRequestGroup);
-                    let rendered =
-                      await tryToInterpolateRequestOrShowRenderErrorModal({
-                        request: activeRequest,
-                        environmentId,
-                        payload: {
-                          url: activeRequest.url,
-                          metadata: getOrInheritHeaders({ request: { headers: activeRequest.metadata }, requestGroups }),
-                          reflectionApi: activeRequest.reflectionApi,
-                        },
-                      });
+                    const requestGroups = (
+                      await db.withAncestors<GrpcRequest | RequestGroup>(activeRequest, [models.requestGroup.type])
+                    ).filter(isRequestGroup);
+                    let rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
+                      request: activeRequest,
+                      environmentId,
+                      payload: {
+                        url: activeRequest.url,
+                        metadata: getOrInheritHeaders({ request: { headers: activeRequest.metadata }, requestGroups }),
+                        reflectionApi: activeRequest.reflectionApi,
+                      },
+                    });
                     const workspaceClientCertificates = await models.clientCertificate.findByParentId(workspaceId);
-                    const clientCertificate = workspaceClientCertificates.find(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), rendered.url, false));
-                    const caCertificate = (await models.caCertificate.findByParentId(workspaceId));
+                    const clientCertificate = workspaceClientCertificates.find(
+                      c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'grpc:'), rendered.url, false),
+                    );
+                    const caCertificate = await models.caCertificate.findByParentId(workspaceId);
                     const caCertificatePath = caCertificate && !caCertificate.disabled ? caCertificate.path : undefined;
-                    const clientCert = clientCertificate?.cert ? await readFile(clientCertificate?.cert, 'utf8') : undefined;
-                    const clientKey = clientCertificate?.key ? await readFile(clientCertificate?.key, 'utf8') : undefined;
+                    const clientCert = clientCertificate?.cert
+                      ? await readFile(clientCertificate?.cert, 'utf8')
+                      : undefined;
+                    const clientKey = clientCertificate?.key
+                      ? await readFile(clientCertificate?.key, 'utf8')
+                      : undefined;
                     rendered = {
                       ...rendered,
                       rejectUnauthorized: settings.validateSSL,
-                      ...(activeRequest.url.toLowerCase().startsWith('grpcs:') ? {
-                        clientCert,
-                        clientKey,
-                        caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
-                      } : {}),
+                      ...(activeRequest.url.toLowerCase().startsWith('grpcs:')
+                        ? {
+                            clientCert,
+                            clientKey,
+                            caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
+                          }
+                        : {}),
                     };
                     const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
                     setGrpcState({ ...grpcState, methods });
@@ -272,17 +293,13 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                   <i className="fa fa-refresh" />
                 </Tooltip>
               </Button>
-              <Button
-                data-testid="button-proto-file"
-                variant="text"
-                onClick={() => setIsProtoModalOpen(true)}
-              >
+              <Button data-testid="button-proto-file" variant="text" onClick={() => setIsProtoModalOpen(true)}>
                 <Tooltip message="Click to change proto file" position="bottom" delay={500}>
                   <i className="fa fa-file-code-o" />
                 </Tooltip>
               </Button>
             </div>
-            <div className='flex p-1'>
+            <div className="flex p-1">
               <GrpcSendButton
                 running={running}
                 methodType={methodType}
@@ -293,27 +310,33 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
           </div>
         </PaneHeader>
         <PaneBody>
-          <Tabs aria-label='Grpc request pane tabs' className="flex-1 w-full h-full flex flex-col">
-            <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+          <Tabs aria-label="Grpc request pane tabs" className="flex h-full w-full flex-1 flex-col">
+            <TabList
+              className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+              aria-label="Request pane tabs"
+            >
               {methodType && (
                 <Tab
-                  className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-                  id='method-type'
+                  className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                  id="method-type"
                 >
                   {GrpcMethodTypeName[methodType]}
                 </Tab>
               )}
-              <Tab className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300' id='headers'>
+              <Tab
+                className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                id="headers"
+              >
                 Headers
               </Tab>
             </TabList>
             {methodType && (
-              <TabPanel className={'w-full h-full overflow-y-auto'} id='method-type'>
+              <TabPanel className={'h-full w-full overflow-y-auto'} id="method-type">
                 <>
                   {running && canClientStream(methodType) && (
-                    <div className="flex flex-row justify-end box-border h-[var(--line-height-sm)] border-b border-[var(--hl-lg)] p-1">
+                    <div className="box-border flex h-[var(--line-height-sm)] flex-row justify-end border-b border-[var(--hl-lg)] p-1">
                       <button
-                        className='btn btn--compact btn--clicky-small margin-left-sm bg-default'
+                        className="btn btn--compact btn--clicky-small margin-left-sm bg-default"
                         onClick={async () => {
                           const requestBody = await getRenderedGrpcRequestMessage({
                             request: activeRequest,
@@ -326,36 +349,47 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                           };
                           window.main.grpc.sendMessage(preparedMessage);
                           setGrpcState({
-                            ...grpcState, requestMessages: [...requestMessages, {
-                              id: generateId(),
-                              text: preparedMessage.body.text || '',
-                              created: Date.now(),
-                            }],
+                            ...grpcState,
+                            requestMessages: [
+                              ...requestMessages,
+                              {
+                                id: generateId(),
+                                text: preparedMessage.body.text || '',
+                                created: Date.now(),
+                              },
+                            ],
                           });
                         }}
                       >
-                        Stream <i className='fa fa-plus' />
+                        Stream <i className="fa fa-plus" />
                       </button>
                       <button
-                        className='btn btn--compact btn--clicky-small margin-left-sm bg-surprise'
+                        className="btn btn--compact btn--clicky-small margin-left-sm bg-surprise"
                         onClick={() => window.main.grpc.commit(requestId)}
                       >
-                        Commit <i className='fa fa-arrow-right' />
+                        Commit <i className="fa fa-arrow-right" />
                       </button>
                     </div>
                   )}
-                  <Tabs key={uniquenessKey} aria-label="Grpc tabbed messages tabs" className="flex-1 w-full h-full flex flex-col">
-                    <TabList items={messageTabs} className='w-full flex-shrink-0 overflow-x-auto border-solid border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]'>
+                  <Tabs
+                    key={uniquenessKey}
+                    aria-label="Grpc tabbed messages tabs"
+                    className="flex h-full w-full flex-1 flex-col"
+                  >
+                    <TabList
+                      items={messageTabs}
+                      className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+                    >
                       {item => (
                         <Tab
-                          className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
+                          className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
                           id={item.id}
                         >
                           {item.name}
                         </Tab>
                       )}
                     </TabList>
-                    <TabPanel id="body" className='w-full h-full overflow-y-auto'>
+                    <TabPanel id="body" className="h-full w-full overflow-y-auto">
                       <CodeEditor
                         id="grpc-request-editor"
                         ref={editorRef}
@@ -366,23 +400,25 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                         showPrettifyButton={true}
                       />
                     </TabPanel>
-                    {messageTabs.filter(msg => msg.id !== 'body').map(m => (
-                      <TabPanel key={m.id} id={m.id} className='w-full h-full overflow-y-auto'>
-                        <CodeEditor
-                          id={'grpc-request-editor-tab' + m.id}
-                          defaultValue={m.text}
-                          mode="application/json"
-                          enableNunjucks
-                          readOnly
-                          autoPrettify
-                        />
-                      </TabPanel>
-                    ))}
+                    {messageTabs
+                      .filter(msg => msg.id !== 'body')
+                      .map(m => (
+                        <TabPanel key={m.id} id={m.id} className="h-full w-full overflow-y-auto">
+                          <CodeEditor
+                            id={'grpc-request-editor-tab' + m.id}
+                            defaultValue={m.text}
+                            mode="application/json"
+                            enableNunjucks
+                            readOnly
+                            autoPrettify
+                          />
+                        </TabPanel>
+                      ))}
                   </Tabs>
                 </>
               </TabPanel>
             )}
-            <TabPanel className={'w-full h-full overflow-y-auto'} id='headers'>
+            <TabPanel className={'h-full w-full overflow-y-auto'} id="headers">
               <ErrorBoundary key={uniquenessKey} errorClassName="font-error pad text-center">
                 <KeyValueEditor
                   namePlaceholder="header"
@@ -399,31 +435,33 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
           </Tabs>
         </PaneBody>
       </Pane>
-      {isProtoModalOpen && <ProtoFilesModal
-        reloadRequests={reloadRequests}
-        defaultId={activeRequest.protoFileId}
-        onHide={() => setIsProtoModalOpen(false)}
-        onSave={async (protoFileId: string) => {
-          if (!protoFileId) {
-            patchRequest(requestId, { protoFileId: '', protoMethodName: '' });
-            setGrpcState({ ...grpcState, methods: [] });
-            setIsProtoModalOpen(false);
-          } else {
-            try {
-              const methods = await window.main.grpc.loadMethods(protoFileId);
-              patchRequest(requestId, { protoFileId, protoMethodName: '' });
-              setGrpcState({ ...grpcState, methods });
+      {isProtoModalOpen && (
+        <ProtoFilesModal
+          reloadRequests={reloadRequests}
+          defaultId={activeRequest.protoFileId}
+          onHide={() => setIsProtoModalOpen(false)}
+          onSave={async (protoFileId: string) => {
+            if (!protoFileId) {
+              patchRequest(requestId, { protoFileId: '', protoMethodName: '' });
+              setGrpcState({ ...grpcState, methods: [] });
               setIsProtoModalOpen(false);
-            } catch (error) {
-              showError({
-                title: 'Invalid Proto File',
-                message: 'The proto file could not be parsed',
-                error,
-              });
+            } else {
+              try {
+                const methods = await window.main.grpc.loadMethods(protoFileId);
+                patchRequest(requestId, { protoFileId, protoMethodName: '' });
+                setGrpcState({ ...grpcState, methods });
+                setIsProtoModalOpen(false);
+              } catch (error) {
+                showError({
+                  title: 'Invalid Proto File',
+                  message: 'The proto file could not be parsed',
+                  error,
+                });
+              }
             }
-          }
-        }}
-      />}
+          }}
+        />
+      )}
     </>
   );
 };

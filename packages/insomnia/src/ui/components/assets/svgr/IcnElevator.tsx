@@ -10,11 +10,6 @@ export const SvgIcnElevator = memo<SVGProps<SVGSVGElement>>(props => (
     {...props}
   >
     <path fill="none" d="M0 0h14v14H0z" />
-    <path
-      fillRule="evenodd"
-      clipRule="evenodd"
-      d="m2 6 5-5 5 5H2ZM12 8l-5 5-5-5h10Z"
-      fill=""
-    />
+    <path fillRule="evenodd" clipRule="evenodd" d="m2 6 5-5 5 5H2ZM12 8l-5 5-5-5h10Z" fill="" />
   </svg>
 ));

@@ -9,7 +9,7 @@ resources:
     modified: 1728298565335
     created: 1728298565335
     name: GlobalEnv
-    description: ""
+    description: ''
     scope: environment
     _type: workspace
   - _id: env_dcf0363e684fae59a4ac57c09c208674caa8a64a
@@ -25,7 +25,7 @@ resources:
       firstkey: first
       secondkey: second
     dataPropertyOrder:
-      "&":
+      '&':
         - apiKey
         - newkey
         - base_path

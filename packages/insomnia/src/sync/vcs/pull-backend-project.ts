@@ -28,22 +28,24 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
   // @TODO Revisit the UX for this. What should happen if there are other branches?
   // The default branch does not exist, so we create it and the workspace locally
   if (defaultBranchMissing) {
-    const workspace = await models.initModel<Workspace>(
-      models.workspace.type,
-      {
-        _id: backendProject.rootDocumentId,
-        name: backendProject.name,
-        parentId: remoteProject._id,
-        scope: 'collection',
-      },
-    );
+    const workspace = await models.initModel<Workspace>(models.workspace.type, {
+      _id: backendProject.rootDocumentId,
+      name: backendProject.name,
+      parentId: remoteProject._id,
+      scope: 'collection',
+    });
 
     await database.upsert(workspace);
 
     return { project: remoteProject, workspaceId: workspace._id };
   }
 
-  await vcs.pull({ candidates: [], teamId: remoteProject.parentId, teamProjectId: remoteProject._id, projectId: remoteProject._id }); // There won't be any existing docs since it's a new pull
+  await vcs.pull({
+    candidates: [],
+    teamId: remoteProject.parentId,
+    teamProjectId: remoteProject._id,
+    projectId: remoteProject._id,
+  }); // There won't be any existing docs since it's a new pull
 
   const flushId = await database.bufferChanges();
   let workspaceId;
@@ -60,5 +62,4 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
 
   await database.flushChanges(flushId);
   return { project: remoteProject, workspaceId };
-
 };

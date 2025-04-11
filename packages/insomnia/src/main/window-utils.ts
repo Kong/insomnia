@@ -451,12 +451,13 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
         role: 'minimize',
       },
       // @ts-expect-error -- TSCONVERSION missing in official electron types
-      ...(isMac() ? [
-        {
-          label: `${MNEMONIC_SYM}Close`,
-          role: 'close',
-        },
-      ]
+      ...(isMac()
+        ? [
+            {
+              label: `${MNEMONIC_SYM}Close`,
+              role: 'close',
+            },
+          ]
         : []),
     ],
   };
@@ -581,7 +582,7 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
       {
         label: `${MNEMONIC_SYM}About`,
         click: aboutMenuClickHandler,
-      }
+      },
     );
   }
 

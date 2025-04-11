@@ -68,36 +68,32 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
   const handleSubmit = async (event: React.SyntheticEvent<HTMLFormElement | HTMLButtonElement>) => {
     event.preventDefault();
     if (inputRef.current) {
-      const result = inputRef.current.type === 'checkbox' ? inputRef.current.checked.toString() : inputRef.current.value;
+      const result =
+        inputRef.current.type === 'checkbox' ? inputRef.current.checked.toString() : inputRef.current.value;
       if (result || inputRef.current?.type === 'text') {
         state.onComplete?.(state.upperCase ? result?.toUpperCase() : result);
       }
       modalRef.current?.hide();
     }
   };
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: options => {
-      setState({
-        ...options,
-        loading: false,
-      });
-      modalRef.current?.show();
-    },
-  }), []);
+  useImperativeHandle(
+    ref,
+    () => ({
+      hide: () => {
+        modalRef.current?.hide();
+      },
+      show: options => {
+        setState({
+          ...options,
+          loading: false,
+        });
+        modalRef.current?.show();
+      },
+    }),
+    [],
+  );
 
-  const {
-    submitName,
-    title,
-    hint,
-    inputType,
-    placeholder,
-    label,
-    upperCase,
-    hints,
-  } = state;
+  const { submitName, title, hint, inputType, placeholder, label, upperCase, hints } = state;
   const input = (
     <input
       ref={inputRef}
@@ -122,8 +118,8 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
   let sanitizedHints: ReactNode[] = [];
 
   if (Array.isArray(hints)) {
-    sanitizedHints = hints.slice(0, 15).map(hint =>
-    (<div key={hint} className="btn btn--outlined btn--super-super-compact margin-right-sm margin-top-sm inline-block">
+    sanitizedHints = hints.slice(0, 15).map(hint => (
+      <div key={hint} className="btn btn--outlined btn--super-super-compact margin-right-sm margin-top-sm inline-block">
         <button
           className="tall"
           onClick={() => {
@@ -149,7 +145,8 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
         >
           <i className="fa fa-close faint" />
         </PromptButton>
-      </div>));
+      </div>
+    ));
   }
 
   let field = input;
@@ -169,10 +166,7 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
     'form-control--outlined': inputType !== 'checkbox',
   });
   return (
-    <Modal
-      ref={modalRef}
-      onHide={state.onHide}
-    >
+    <Modal ref={modalRef} onHide={state.onHide}>
       <ModalHeader>{title}</ModalHeader>
       <ModalBody className="wide">
         <form onSubmit={handleSubmit} className="wide pad">
@@ -181,7 +175,7 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
         </form>
       </ModalBody>
       <ModalFooter>
-        <div className="margin-left faint italic txt-sm">{hint ? `* ${hint}` : ''}</div>
+        <div className="margin-left faint txt-sm italic">{hint ? `* ${hint}` : ''}</div>
         <button className="btn" onClick={handleSubmit}>
           {submitName || 'Submit'}
         </button>

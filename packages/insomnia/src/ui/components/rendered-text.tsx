@@ -60,8 +60,7 @@ class RenderedTextInternal extends PureComponent<Props, State> {
         </span>
       );
     }
-      return this.state.renderedText || '';
-
+    return this.state.renderedText || '';
   }
 }
 
