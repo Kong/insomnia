@@ -278,7 +278,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
         />
       </header>
       <Tabs aria-label='Websocket request pane tabs' className="flex-1 w-full h-full flex flex-col">
-        <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+        <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid  border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
           <Tab
             className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
             id='params'
@@ -391,44 +391,44 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             <Panel minSize={20}>
               <div className='h-full flex flex-col'>
                 <Heading className='text-xs font-bold uppercase text-[--hl] p-4'>Path parameters</Heading>
-              {pathParameters.length > 0 && (
+                {pathParameters.length > 0 && (
                   <div className="pr-[72.73px] w-full overflow-y-auto pl-4">
-                  <div className='grid gap-x-[20.8px] grid-cols-2 flex-shrink-0 w-full rounded-sm overflow-hidden'>
-                    {pathParameters.map(pathParameter => (
-                      <Fragment key={pathParameter.name}>
-                        <span className='p-2 select-none border-b border-solid border-[--hl-md] truncate flex items-center justify-end rounded-sm'>
-                          {pathParameter.name}
-                        </span>
-                        <div className='px-2 flex items-center h-full border-b border-solid border-[--hl-md]'>
-                          <OneLineEditor
-                            readOnly={disabled}
-                            key={activeRequest._id}
-                            id={'key-value-editor__name' + pathParameter.name}
-                            placeholder="Parameter value"
-                            defaultValue={pathParameter.value || ''}
-                            onChange={name => {
-                              onPathParameterChange(pathParameters.map(p => p.name === pathParameter.name ? { ...p, value: name } : p));
-                            }}
-                          />
-                        </div>
-                      </Fragment>
-                    ))}
+                    <div className='grid gap-x-[20.8px] grid-cols-2 flex-shrink-0 w-full rounded-sm overflow-hidden'>
+                      {pathParameters.map(pathParameter => (
+                        <Fragment key={pathParameter.name}>
+                          <span className='p-2 select-none border-b border-solid border-[--hl-md] truncate flex items-center justify-end rounded-sm'>
+                            {pathParameter.name}
+                          </span>
+                          <div className='px-2 flex items-center h-full border-b border-solid border-[--hl-md]'>
+                            <OneLineEditor
+                              readOnly={disabled}
+                              key={activeRequest._id}
+                              id={'key-value-editor__name' + pathParameter.name}
+                              placeholder="Parameter value"
+                              defaultValue={pathParameter.value || ''}
+                              onChange={name => {
+                                onPathParameterChange(pathParameters.map(p => p.name === pathParameter.name ? { ...p, value: name } : p));
+                              }}
+                            />
+                          </div>
+                        </Fragment>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-              {pathParameters.length === 0 && !dismissPathParameterTip && (
-                <div className='text-sm text-[--hl] rounded-sm border border-solid border-[--hl-md] p-2 flex items-center gap-2'>
-                  <Icon icon='info-circle' />
-                  <span>Path parameters are url path segments that start with a colon ':' e.g. ':id' </span>
-                  <Button
-                    className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ml-auto"
-                    onPress={() => setDismissPathParameterTip('true')}
-                  >
-                    <Icon icon='close' />
-                  </Button>
-                </div>
-              )}
-            </div>
+                )}
+                {pathParameters.length === 0 && !dismissPathParameterTip && (
+                  <div className='text-sm text-[--hl] rounded-sm border border-solid border-[--hl-md] p-2 flex items-center gap-2'>
+                    <Icon icon='info-circle' />
+                    <span>Path parameters are url path segments that start with a colon ':' e.g. ':id' </span>
+                    <Button
+                      className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] ml-auto"
+                      onPress={() => setDismissPathParameterTip('true')}
+                    >
+                      <Icon icon='close' />
+                    </Button>
+                  </div>
+                )}
+              </div>
             </Panel>
           </PanelGroup>
         </TabPanel>

@@ -29,6 +29,10 @@ test.describe('Global Environments', async () => {
         await page.locator('pre').filter({ hasText: '| 55555' }).click();
     });
     test('create a new global environment', async ({ page }) => {
+        // Create new document
+        await page.getByRole('button', { name: 'Create document', exact: true }).click();
+        await page.getByRole('button', { name: 'Create', exact: true }).click();
+        await page.getByTestId('project').click();
         await page.getByLabel('Create in project').click();
         await page.getByLabel('Create', { exact: true }).getByText('Environment').click();
         await page.getByRole('button', { name: 'Create', exact: true }).click();

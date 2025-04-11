@@ -2,7 +2,7 @@ import { test } from '../../playwright/test';
 
 test.describe('design document operations', async () => {
     test('can name design documents', async ({ page }) => {
-        await page.getByRole('button', { name: 'New Document' }).click();
+        await page.getByRole('button', { name: 'Create document' }).click();
         await page.locator('body').click();
         await page.getByPlaceholder('Enter a name for your Design Document').fill('jurassic park');
         await page.getByPlaceholder('Enter a name for your Design Document').press('Enter');
@@ -11,7 +11,7 @@ test.describe('design document operations', async () => {
     });
 
     test('can delete a test suite with confirmation modal', async ({ page }) => {
-        await page.getByRole('button', { name: 'New Document' }).click();
+        await page.getByRole('button', { name: 'Create document' }).click();
         await page.getByPlaceholder('Enter a name for your Design Document').fill('jurassic park');
         await page.getByPlaceholder('Enter a name for your Design Document').press('Enter');
         await page.getByTestId('workspace-test').click();

@@ -79,7 +79,8 @@ import { GitRepositoryCloneModal } from '../components/modals/git-repository-set
 import { ImportModal } from '../components/modals/import-modal';
 import { NewWorkspaceModal } from '../components/modals/new-workspace-modal';
 import { ProjectModal } from '../components/modals/project-modal';
-import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
+import { NoProjectView } from '../components/panes/no-project-view';
+import { ProjectEmptyView } from '../components/project/project-empty-view';
 import { OrganizationTabList } from '../components/tabs/tab-list';
 import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
@@ -671,7 +672,7 @@ const ProjectRoute: FC = () => {
   const { organizations } = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
   const storageRuleFetcher = useFetcher<OrganizationStorageLoaderData>({ key: `storage-rule:${organizationId}` });
-
+  const createNewWorkspaceFetcher = useFetcher<{ error?: string }>();
   const { billing, features } = useOrganizationPermissions();
 
   useEffect(() => {
@@ -797,6 +798,24 @@ const ProjectRoute: FC = () => {
   const createNewDocument = () => setNewWorkspaceModalState({ scope: 'design', isOpen: true });
   const createNewMockServer = () => canCreateMockServer && setNewWorkspaceModalState({ scope: 'mock-server', isOpen: true });
   const createNewGlobalEnvironment = () => setNewWorkspaceModalState({ scope: 'environment', isOpen: true });
+
+  const createNewCollectionWithRequest = () => {
+    if (!activeProject) {
+      return;
+    }
+
+    createNewWorkspaceFetcher.submit(
+      {
+        name: 'My first collection',
+        scope: 'collection',
+        parentId: activeProject._id,
+      },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/new?withRequest=true`,
+        method: 'POST',
+      }
+    );
+  };
 
   const isEnterprise = currentPlan?.type.includes('enterprise');
   const isCloudProjectOrEnterprisePlan = activeProject?.remoteId || isEnterprise;
@@ -977,6 +996,7 @@ const ProjectRoute: FC = () => {
                   <SearchField
                     aria-label="Projects filter"
                     className="group relative flex-1"
+                    isDisabled={activeProject === undefined}
                     value={projectListFilter}
                     onChange={setProjectListFilter}
                   >
@@ -993,6 +1013,7 @@ const ProjectRoute: FC = () => {
                   <Button
                     aria-label="Create new Project"
                     onPress={() => setIsNewProjectModalOpen(true)}
+                    isDisabled={activeProject === undefined}
                     className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                   >
                     <Icon icon="plus-circle" />
@@ -1181,7 +1202,7 @@ const ProjectRoute: FC = () => {
                     <Button onPress={() => setIsUpdateProjectModalOpen(true)} className="flex items-center justify-center border border-solid border-white px-2 py-1 rounded-sm">Update</Button>
                   </div>
                 </div>}
-                <div className="flex max-w-xl justify-between w-full gap-2 p-[--padding-md]">
+                {filesWithPresence.length > 0 && <div className="flex max-w-xl justify-between w-full gap-2 p-[--padding-md]">
                   <SearchField
                     aria-label="Files filter"
                     className="group relative flex-1"
@@ -1293,7 +1314,7 @@ const ProjectRoute: FC = () => {
                     <Icon icon="file-import" /> <span className='hidden md:block'>Import</span>
                   </Button>
 
-                </div>
+                </div>}
 
                 <div className='flex-1 overflow-y-auto'>
                   <GridList
@@ -1312,13 +1333,23 @@ const ProjectRoute: FC = () => {
                       }
 
                       return (
-                        <EmptyStatePane
-                          createRequestCollection={createNewCollection}
-                          createDesignDocument={createNewDocument}
-                          createMockServer={createNewMockServer}
-                          createEnvironment={createNewGlobalEnvironment}
-                          importFrom={() => setImportModalType('file')}
-                        />
+                        <div className='w-full flex flex-col items-center justify-center gap-4'>
+                          <ProjectEmptyView
+                            onCreateRequestCollectionWithRequest={createNewCollectionWithRequest}
+                            onCreateDesignDocument={createNewDocument}
+                            onImportFrom={() => setImportModalType('file')}
+                          />
+                          {createNewWorkspaceFetcher.data?.error && (
+                            <div className='px-10'>
+                              <div className="flex items-center px-2 py-1 gap-2 text-sm rounded-sm text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]">
+                                <Icon icon="triangle-exclamation" />
+                                <span>
+                                  {createNewWorkspaceFetcher.data?.error}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       );
                     }}
                   >
@@ -1430,18 +1461,10 @@ const ProjectRoute: FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="w-full h-full flex flex-col gap-2 items-center justify-center overflow-hidden">
-                <p className='text-lg px-8 mb-4 text-center'>
-                  This is an empty organization. Create a project to get started.
-                </p>
-                <Button
-                  aria-label="Create Project"
-                  onPress={() => setIsNewProjectModalOpen(true)}
-                  className="flex items-center justify-center px-4 gap-2 py-2 bg-[--hl-xxs] aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                >
-                  <Icon icon="plus-circle" /> Create Project
-                </Button>
-              </div>
+              <NoProjectView
+                isGitSyncEnabled={isGitSyncEnabled}
+                storageRules={storageRules}
+              />
             )}
           </Panel>
         </PanelGroup>

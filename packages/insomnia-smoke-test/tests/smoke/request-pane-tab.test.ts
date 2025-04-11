@@ -1,8 +1,8 @@
 import { test } from '../../playwright/test';
 
 test('Request tabs', async ({ page }) => {
-  await page.getByRole('button', { name: 'New Collection' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
+  // Create new collection
+  await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
 
   await page.getByLabel('Create in collection').click();
   await page.getByRole('menuitemradio', { name: 'HTTP Request' }).press('Enter');
@@ -20,8 +20,8 @@ test('Request tabs', async ({ page }) => {
 });
 
 test('WS tabs', async ({ page }) => {
-  await page.getByRole('button', { name: 'New Collection' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
+  // Create new collection
+  await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
 
   await page.getByLabel('Create in collection').click();
   await page.getByRole('menuitemradio', { name: 'WebSocket Request' }).click();

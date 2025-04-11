@@ -93,6 +93,7 @@ export function getLoginUrl() {
 
   url.pathname = '/app/auth-app/';
   url.searchParams.set('loginKey', encodeURIComponent(publicKey));
+  url.searchParams.set('source_origin', 'desktop_app');
 
   return url.toString();
 }

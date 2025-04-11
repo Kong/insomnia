@@ -8,9 +8,7 @@ test.describe('multiple-tab feature test', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   test.beforeEach(async ({ page }) => {
-    await page.getByLabel('Create in project').click();
-    await page.getByLabel('Request collection', { exact: true }).click();
-    await page.getByRole('button', { name: 'Create', exact: true }).click();
+    await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
   });
 
   test('add tab & close tab', async ({ page }) => {
@@ -58,11 +56,11 @@ test.describe('multiple-tab feature test', () => {
     await page.getByLabel('Create in collection').click();
     await page.getByLabel('HTTP Request').click();
     await page.waitForTimeout(1000);
-    expect(await page.getByLabel('Insomnia Tabs').getByLabel('Tab Tag').innerText()).toEqual('GET');
+    expect(await page.getByLabel('Insomnia Tabs').getByLabel('Tab Tag').first().innerText()).toEqual('GET');
+    await page.getByTestId('tab-close-button').first().click();
     await page.getByLabel('Request Method').click();
     await page.getByRole('button', { name: 'POST' }).click();
-    await page.waitForTimeout(1000);
-    expect(await page.getByLabel('Insomnia Tabs').getByLabel('Tab Tag').innerText()).toEqual('POST');
+    expect(await page.getByLabel('Insomnia Tabs').getByLabel('Tab Tag').first().innerText()).toEqual('POST');
   });
 
   test('click + button to add a new request', async ({ page }) => {
@@ -79,10 +77,10 @@ test.describe('multiple-tab feature test', () => {
     await page.waitForTimeout(1000);
     await page.getByLabel('Tab Plus').click();
     await page.getByRole('menuitem', { name: 'add request to other' }).click();
-    await page.getByLabel('Select Workspace').selectOption({ label: 'My Collection' });
+    await page.getByLabel('Select Workspace').selectOption({ label: 'My first collection' });
     await page.getByRole('dialog').getByRole('button', { name: 'Add' }).click();
     await page.waitForTimeout(1000);
-    expect(await page.getByTestId('workspace-context-dropdown').innerText()).toEqual('My Collection');
+    expect(await page.getByTestId('workspace-context-dropdown').innerText()).toEqual('My first collection');
     await page.getByTestId(DEFAULT_REQUEST_NAME).click();
   });
 

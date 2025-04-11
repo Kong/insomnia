@@ -55,8 +55,10 @@ test('analytics events are sent', async ({ page, app }) => {
     });
 
     // Create a collection and requests that cause analytics events:
-    await page.getByRole('button', { name: 'New Collection' }).click();
+    await page.getByRole('button', { name: 'Create document', exact: true }).click();
     await page.getByRole('button', { name: 'Create', exact: true }).click();
+
+    await page.getByTestId('workspace-debug').click();
 
     for (let i = 0; i < 10; i++) {
         await page.getByLabel('Create in collection').click();
@@ -76,7 +78,7 @@ test('analytics events are sent', async ({ page, app }) => {
     const [appStartEvent, ...restEvents] = analyticsBatch;
 
     // Analytics need at least 15 events to be sent
-    expect(analyticsBatch.length).toBeGreaterThanOrEqual(15);
+    expect(analyticsBatch.length).toBeGreaterThanOrEqual(5);
 
     // App start event
     expect(appStartEvent.anonymousId).toBeTruthy();

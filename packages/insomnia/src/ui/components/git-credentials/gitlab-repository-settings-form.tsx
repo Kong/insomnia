@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Button } from 'react-aria-components';
+import { Button, Input, Label, TextField } from 'react-aria-components';
 import { useFetcher } from 'react-router-dom';
 
-import type { GitCredentials } from '../../../../models/git-credentials';
-import type { GitRepository } from '../../../../models/git-repository';
-import { Icon } from '../../icon';
-import { showAlert } from '..';
+import type { GitCredentials } from '../../../models/git-credentials';
+import type { GitRepository } from '../../../models/git-repository';
+import { Icon } from '../icon';
+import { showAlert } from '../modals';
 
 interface Props {
   uri?: string;
@@ -63,7 +63,7 @@ const Avatar = ({ src }: { src: string }) => {
   }, [src]);
 
   return imageSrc ? (
-    <img src={imageSrc} className="rounded-md w-8 h-8" />
+    <img src={imageSrc} className="rounded-full w-10 h-10" />
   ) : (
     <i className="fas fa-user-circle" />
   );
@@ -87,7 +87,7 @@ const GitLabRepositoryForm = ({
   return (
     <form
       id="gitlab"
-      className="flex flex-col gap-4"
+      className="flex flex-col gap-6"
       onSubmit={event => {
         event.preventDefault();
         onSubmit({
@@ -104,24 +104,14 @@ const GitLabRepositoryForm = ({
         });
       }}
     >
-      <div
-        className='flex justify-between items-center border border-solid border-[--hl-sm] rounded-md p-2'
-      >
-        <div className="flex gap-2 items-center">
+      <div className='flex items-center justify-between border border-solid border-[--hl-sm] rounded-sm py-1 px-3'>
+        <div className="flex gap-3 items-center">
           <Avatar src={credentials.author.avatarUrl ?? ''} />
-          <div className='flex flex-col'>
-            <span
-              style={{
-                fontSize: 'var(--font-size-lg)',
-              }}
-            >
+          <div className='flex flex-col items-start'>
+            <span className='font-semibold'>
               {credentials.author.name}
             </span>
-            <span
-              style={{
-                fontSize: 'var(--font-size-md)',
-              }}
-            >
+            <span className='text-sm text-[--hl]'>
               {credentials.author.email || 'Signed in'}
             </span>
           </div>
@@ -143,21 +133,16 @@ const GitLabRepositoryForm = ({
           Sign out
         </Button>
       </div>
-      <div className="form-control form-control--outlined">
-        <label>
-          GitLab URI (https, including .git suffix)
-          <input
-            className="form-control"
-            defaultValue={uri}
-            type="url"
-            name="uri"
-            autoFocus
-            disabled={Boolean(uri)}
-            required
-            placeholder="https://gitlab.com/org/repo.git"
-          />
-        </label>
-      </div>
+      <TextField autoFocus name="uri" className="flex flex-col w-full gap-1 px-0.5" isRequired>
+        <Label className='text-start text-sm font-semibold'>Git URI (https, including .git suffix)</Label>
+        <Input
+          type="url"
+          defaultValue={uri}
+          disabled={Boolean(uri)}
+          placeholder="https://github.com/org/repo.git"
+          className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors placeholder:text-sm"
+        />
+      </TextField>
       {error && (
         <p className="notice error margin-bottom-sm">
           <button className="pull-right icon" onClick={() => setError('')}>
@@ -181,6 +166,9 @@ const GitLabSignInForm = () => {
       className='flex items-center justify-center flex-col border border-solid border-[--hl-sm] p-4'
     >
       <Button
+        className="flex items-center gap-2 disabled:opacity-100"
+        type="button"
+        isDisabled={isAuthenticating}
         onPress={() => {
           setIsAuthenticating(true);
           initSignInFetcher.submit({}, { action: '/git-credentials/gitlab/init-sign-in', method: 'POST' });
@@ -225,7 +213,7 @@ const GitLabSignInForm = () => {
             </div>
             <div className="form-row">
               <input name="link" />
-              <Button type="submit" name="add-token">Authenticate</Button>
+              <Button type="submit" name="add-token" className="w-[10ch] text-[--color-font-surprise] font-semibold border border-solid border-[--hl-md] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] px-4 py-2 h-full flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-md hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">Authenticate</Button>
             </div>
           </label>
           {error && (

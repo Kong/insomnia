@@ -160,6 +160,8 @@ export const InsomniaTab = ({ tab }: { tab: BaseTab }) => {
               })}
             >{tab.name}</span>
             <Button
+              aria-label="Close Tab"
+              data-testid="tab-close-button"
               className='hover:bg-[--hl-md] h-[15px] w-[15px] flex justify-center items-center'
               onPress={() => handleClose(tab.id)}
             >

@@ -16,7 +16,8 @@ test.describe('Dashboard', async () => {
       await page.getByRole('button', { name: 'Create', exact: true }).click();
 
       // Check empty project
-      await expect(page.locator('.app')).toContainText('This is an empty project, to get started create your first resource:');
+      await expect(page.locator('.app')).toContainText('Welcome to your project!');
+      await expect(page.locator('.app')).toContainText('Start fresh or bring in existing work');
 
       // Rename Project
       await page.getByRole('row', { name: 'My Project' }).first().focus();
@@ -42,7 +43,7 @@ test.describe('Dashboard', async () => {
       // After deleting project, return to default Insomnia Dashboard
       await expect(page.locator('.app')).toContainText('Personal Workspace');
       await expect(page.locator('.app')).not.toContainText('My Project123');
-      await expect(page.locator('.app')).toContainText('New Document');
+      await expect(page.locator('.app')).toContainText('Create document');
       await page.getByLabel('All Files (0)').click();
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
     });
@@ -55,8 +56,7 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
       // Create new document
-      await page.getByRole('button', { name: 'Create in project' }).click();
-      await page.getByRole('menuitemradio', { name: 'Design Document' }).click();
+      await page.getByRole('button', { name: 'Create document', exact: true }).click();
       await page.getByRole('button', { name: 'Create', exact: true }).click();
 
       await page.getByTestId('project').click();
@@ -90,14 +90,12 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
       // Create new collection
-      await page.getByRole('button', { name: 'Create in project' }).click();
-      await page.getByRole('menuitemradio', { name: 'Request Collection' }).click();
-      await page.getByRole('button', { name: 'Create', exact: true }).click();
+      await page.getByRole('button', { name: 'Create request collection', exact: true }).click();
 
       await page.getByTestId('project').click();
 
       // Rename collection
-      await page.click('text=CollectionMy Collectionjust now >> button');
+      await page.click('text=CollectionMy first collectionjust now >> button');
       await page.getByRole('menuitem', { name: 'Rename' }).click();
       await page.locator('text=Rename CollectionName Rename >> input[type="text"]').fill('test123');
       await page.click('#root button:has-text("Rename")');
