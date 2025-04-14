@@ -43,7 +43,6 @@ import {
 import { useUnmount } from 'react-use';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
 import YAML from 'yaml';
-import YAMLSourceMap from 'yaml-source-map';
 
 import { parseApiSpec } from '../../common/api-specs';
 import { ACTIVITY_SPEC, DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
@@ -306,15 +305,12 @@ const Design: FC = () => {
       scrollPosition.start.line = 1;
     } catch {}
 
-    const sourceMap = new YAMLSourceMap();
-    const specMap = sourceMap.index(
-      YAML.parseDocument(apiSpec.contents, {
-        keepCstNodes: true,
-      }),
-    );
-    const itemMappedPosition = sourceMap.lookup(pathSegments, specMap);
-    if (itemMappedPosition) {
-      scrollPosition.start.line += itemMappedPosition.start.line;
+    const lineCounter = new YAML.LineCounter();
+    const doc = YAML.parseDocument(apiSpec.contents, { lineCounter });
+    const astNode = doc.getIn(pathSegments, true) as YAML.Node;
+    const nodePosition = astNode.range && lineCounter.linePos(astNode.range[0]);
+    if (nodePosition) {
+      scrollPosition.start.line += nodePosition.line;
     }
     const isServersSection = pathSegments[0] === 'servers';
     if (!isServersSection) {
