@@ -229,14 +229,14 @@ export class ImportPostman {
     // Add Content-Type header for raw body because we don't add it automatically when sending the request
     const body = this.importBody(request.body);
     if (
-      request.body?.mode === 'raw' &&
       !headers.find(({ key }) => key.toLowerCase() === 'content-type') &&
       typeof body === 'object' &&
       body?.mimeType
     ) {
+      const contentType = body.mimeType === 'application/graphql' ? 'application/json' : body.mimeType;
       headers.push({
         key: 'Content-Type',
-        value: body.mimeType,
+        value: contentType,
       });
     }
 

@@ -1,0 +1,61 @@
+{
+	"info": {
+		"_postman_id": "78f11383-5621-4803-b690-c7a03f821903",
+		"name": "New Collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "16985262"
+	},
+	"item": [
+		{
+			"name": "New Request",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "client_id",
+							"value": "commerce-testing",
+							"type": "text"
+						},
+						{
+							"key": "client_secret",
+							"value": "",
+							"type": "text"
+						},
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "text"
+						},
+						{
+							"key": "scope",
+							"value": "openid",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://keycloak.quality.richemont.com/auth/realms/apim-ww-test/protocol/openid-connect/token",
+					"protocol": "https",
+					"host": [
+						"keycloak",
+						"quality",
+						"richemont",
+						"com"
+					],
+					"path": [
+						"auth",
+						"realms",
+						"apim-ww-test",
+						"protocol",
+						"openid-connect",
+						"token"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
