@@ -16,6 +16,7 @@ export default tseslint.config(
     rules: {
       ...playwright.configs['flat/recommended'].rules,
       'playwright/expect-expect': 'off',
+      'playwright/valid-title': 'off', //TODO: avoid using looping e2e tests
     }
   },
   {
