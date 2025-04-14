@@ -1,6 +1,6 @@
 import eslint from '@eslint/js';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
-// import playwright from 'eslint-plugin-playwright'
+import playwright from 'eslint-plugin-playwright'
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort';
@@ -10,7 +10,14 @@ export default tseslint.config(
   eslint.configs.recommended,
   tseslint.configs.strict,
   tseslint.configs.stylistic,
-  // playwright.configs['flat/recommended'],
+  {
+    files: ['packages/insomnia-smoke-test/tests/**/*.ts'],
+    plugins: { 'playwright': playwright },
+    rules: {
+      ...playwright.configs['flat/recommended'].rules,
+      'playwright/expect-expect': 'off',
+    }
+  },
   {
     files: ['packages/insomnia/src/**/*.{ts,tsx}'],
     plugins: { 'react-hooks': reactHooksPlugin },
