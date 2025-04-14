@@ -37,13 +37,15 @@ window.bridge.onmessage(async (data, callback) => {
     const result = await window.bridge.Promise.race([timeoutPromise, runScript(data)]);
     callback(result);
   } catch (err) {
-    const errMessage = err.message ? `message: ${err.message}; stack: ${err.stack}` : err;
+    const errMessage = err.message ? `Error: ${err.message};` : err;
+    const errStack = err.stack ? `Stack: ${err.stack};` : '';
+    const fullErrMessage = `${errMessage}\n${errStack}`
     Sentry.captureException(errMessage, {
       tags: {
         source: 'hidden-window',
       },
     });
-    callback({ error: errMessage });
+    callback({ error: fullErrMessage });
   } finally {
     window.bridge.setBusy(false);
   }

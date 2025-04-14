@@ -554,7 +554,8 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     );
 
     const requestId = request._id;
-    const errMessage = err.stack ? `message: ${err.messsage}; stack: ${err.stack}` : err.message;
+    // stack trace is ignored as it is always from preload
+    const errMessage = err.message ? err.message : err;
     const responsePatch = {
       _id: responseId,
       parentId: requestId,
