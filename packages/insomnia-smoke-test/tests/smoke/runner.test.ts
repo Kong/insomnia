@@ -24,7 +24,7 @@ test.describe('runner features tests', async () => {
     expectedSkipped: number,
     expectedTotal: number,
     expectedTestOrder: string[],
-    iteration: number = 1,
+    iteration = 1,
   ) => {
     let passedResultCount = 0;
     let failedResultCount = 0;

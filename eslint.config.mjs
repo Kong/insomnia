@@ -1,5 +1,6 @@
 import eslint from '@eslint/js';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
+// import playwright from 'eslint-plugin-playwright'
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort';
@@ -9,6 +10,19 @@ export default tseslint.config(
   eslint.configs.recommended,
   tseslint.configs.strict,
   tseslint.configs.stylistic,
+  // playwright.configs['flat/recommended'],
+  {
+    files: ['packages/insomnia/src/**/*.{ts,tsx}'],
+    plugins: { 'react-hooks': reactHooksPlugin },
+    rules: {
+      'react-hooks/exhaustive-deps': ['error', {
+        // From react-use https://github.com/streamich/react-use/issues/1703#issuecomment-770972824
+        additionalHooks:
+          '^use(Async|AsyncFn|AsyncRetry|Debounce|UpdateEffect|IsomorphicLayoutEffect|DeepCompareEffect|ShallowCompareEffect)$',
+      }],
+      'react-hooks/rules-of-hooks': 'error',
+    }
+  },
   {
     settings: {
       react: {
@@ -17,7 +31,6 @@ export default tseslint.config(
     },
     plugins: {
       'react': reactPlugin,
-      'react-hooks': reactHooksPlugin,
       'simple-import-sort': simpleImportSortPlugin,
     },
     rules: {
@@ -56,15 +69,6 @@ export default tseslint.config(
       'react/no-array-index-key': 'error',
       'react/self-closing-comp': 'error',
 
-      'react-hooks/exhaustive-deps': [
-        'error',
-        {
-          // From react-use https://github.com/streamich/react-use/issues/1703#issuecomment-770972824
-          additionalHooks:
-            '^use(Async|AsyncFn|AsyncRetry|Debounce|UpdateEffect|IsomorphicLayoutEffect|DeepCompareEffect|ShallowCompareEffect)$',
-        },
-      ],
-      'react-hooks/rules-of-hooks': 'error',
 
       '@typescript-eslint/array-type': ['error', { default: 'array', readonly: 'array' }],
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],

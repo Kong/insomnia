@@ -1,5 +1,6 @@
 // Read more about creating fixtures https://playwright.dev/docs/test-fixtures
-import { ElectronApplication, test as baseTest, TraceMode } from '@playwright/test';
+import type { ElectronApplication, TraceMode } from '@playwright/test';
+import { test as baseTest } from '@playwright/test';
 import path from 'path';
 
 import { bundleType, cwd, executablePath, mainPath, randomDataPath } from './paths';
@@ -155,12 +156,12 @@ export const test = baseTest.extend<{
 
     await use(page);
   },
-  dataPath: async ({}, use) => {
+  dataPath: async (_, use) => {
     const insomniaDataPath = randomDataPath();
 
     await use(insomniaDataPath);
   },
-  userConfig: async ({}, use) => {
+  userConfig: async (_, use) => {
     await use({
       skipOnboarding: true,
       publicKey: 'txb/w8DASTpPQqeHE/hpI3ABKzit+pv5n2We5dbtYRo=',

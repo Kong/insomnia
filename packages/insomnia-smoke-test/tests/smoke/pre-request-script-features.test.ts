@@ -203,9 +203,7 @@ test.describe('pre-request features tests', async () => {
     },
   ];
 
-  for (let i = 0; i < testCases.length; i++) {
-    const tc = testCases[i];
-
+  for (const tc of testCases) {
     test(tc.name, async ({ page }) => {
       const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
       const responseBody = page.getByTestId('response-pane').getByTestId('CodeEditor').locator('.CodeMirror-line');
@@ -582,9 +580,7 @@ test.describe('unhappy paths', async () => {
     },
   ];
 
-  for (let i = 0; i < testCases.length; i++) {
-    const tc = testCases[i];
-
+  for (const tc of testCases) {
     test(tc.name, async ({ page }) => {
       const responsePane = page.getByTestId('response-pane');
 
