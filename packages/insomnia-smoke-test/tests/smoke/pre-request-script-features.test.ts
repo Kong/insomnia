@@ -6,7 +6,7 @@ import { Buffer } from 'buffer';
 import { getFixturePath, loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test.describe('pre-request features tests', async () => {
+test.describe('pre-request features tests', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   test.beforeEach(async ({ app, page }) => {
@@ -538,7 +538,7 @@ test.describe('pre-request features tests', async () => {
   });
 });
 
-test.describe('unhappy paths', async () => {
+test.describe('unhappy paths', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   test.beforeEach(async ({ app, page }) => {

@@ -28,9 +28,9 @@ test('Check vault key generation', async ({ page }) => {
   // activate created private environment
   await page.getByRole('grid', { name: 'Environments' }).getByText('New Environment').click();
 
-  const kvTable = await page.getByRole('listbox', { name: 'Environment Key Value Pair' });
+  const kvTable = page.getByRole('listbox', { name: 'Environment Key Value Pair' });
   // add first secret environment
-  const firstRow = await kvTable.getByRole('option').first();
+  const firstRow = kvTable.getByRole('option').first();
   await firstRow.getByTestId('OneLineEditor').first().click();
   await page.keyboard.type('foo');
   await firstRow.getByTestId('OneLineEditor').nth(1).click();
@@ -44,7 +44,7 @@ test('Check vault key generation', async ({ page }) => {
   await expect(firstRow.getByTestId('OneLineEditor').nth(1)).toContainText('bar');
 });
 
-test.describe('Vault key actions', async () => {
+test.describe('Vault key actions', () => {
   test.use({
     userConfig: async ({ userConfig }, use) => {
       await use({
@@ -61,13 +61,13 @@ test.describe('Vault key actions', async () => {
     await page.getByRole('button', { name: 'Enter Vault Key' }).click();
     await page.getByText('Reset Vault Key').click();
     await page.getByText('Yes').click();
-    const modal = await page.getByTestId('input-vault-key-modal');
-    expect(modal).toBeVisible();
+    const modal = page.getByTestId('input-vault-key-modal');
+    await expect(modal).toBeVisible();
     const vaultKeyValueInModal = await modal.getByTestId('VaultKeyDisplayPanel').innerText();
     expect(vaultKeyValueInModal.length).toBeGreaterThan(0);
     await page.getByText('OK').click();
-    const vaultKeyValue = await page.getByTestId('VaultKeyDisplayPanel').innerText();
-    expect(vaultKeyValue).toEqual(vaultKeyValueInModal);
+    const vaultKeyValue = page.getByTestId('VaultKeyDisplayPanel');
+    await expect(vaultKeyValue).toHaveText(vaultKeyValueInModal);
   });
 
   test('check reset vault key in private environment', async ({ page, app }) => {
@@ -90,8 +90,8 @@ test.describe('Vault key actions', async () => {
     await page.locator('text=Insomnia Preferences').first().click();
     // validate vault key
     await page.getByRole('button', { name: 'Enter Vault Key' }).click();
-    const modal = await page.getByTestId('input-vault-key-modal');
-    expect(modal).toBeVisible();
+    const modal = page.getByTestId('input-vault-key-modal');
+    await expect(modal).toBeVisible();
     // fill the input with aria lable test with valid and invalid vault key
     await page.getByLabel('Vault Key Input').fill('invalidVaultKey');
     await page.getByRole('button', { name: 'Unlock' }).click();
@@ -99,7 +99,7 @@ test.describe('Vault key actions', async () => {
   });
 });
 
-test.describe('Check vault used in environment', async () => {
+test.describe('Check vault used in environment', () => {
   test.use({
     userConfig: async ({ userConfig }, use) => {
       await use({
@@ -128,9 +128,9 @@ test.describe('Check vault used in environment', async () => {
     // activate created private environment
     await page.getByRole('grid', { name: 'Environments' }).getByText('New Environment').click();
 
-    const kvTable = await page.getByRole('listbox', { name: 'Environment Key Value Pair' });
+    const kvTable = page.getByRole('listbox', { name: 'Environment Key Value Pair' });
     // add first secret environment
-    const firstRow = await kvTable.getByRole('option').first();
+    const firstRow = kvTable.getByRole('option').first();
     await firstRow.getByTestId('OneLineEditor').first().click();
     await page.keyboard.type('foo');
     await firstRow.getByTestId('OneLineEditor').nth(1).click();
@@ -145,7 +145,7 @@ test.describe('Check vault used in environment', async () => {
 
     // add second secret environment
     await page.getByRole('button', { name: 'Add Row' }).click();
-    const secondRow = await kvTable.getByRole('option').nth(1);
+    const secondRow = kvTable.getByRole('option').nth(1);
     await secondRow.getByTestId('OneLineEditor').first().click();
     await page.keyboard.type('hello');
     await secondRow.getByTestId('OneLineEditor').nth(1).click();
@@ -177,7 +177,7 @@ test.describe('Check vault used in environment', async () => {
     await page.getByText('world').click();
   });
 
-  test('test vault environment to be applied', async ({ app, page }) => {
+  test('vault environment to be applied', async ({ app, page }) => {
     // import global environment
     const vaultEnvText = await loadFixture('vault-environment.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), vaultEnvText);

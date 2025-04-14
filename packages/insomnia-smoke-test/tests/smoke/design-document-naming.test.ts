@@ -1,6 +1,6 @@
 import { test } from '../../playwright/test';
 
-test.describe('design document operations', async () => {
+test.describe('design document operations', () => {
   test('can name design documents', async ({ page }) => {
     await page.getByRole('button', { name: 'Create document' }).click();
     await page.locator('body').click();

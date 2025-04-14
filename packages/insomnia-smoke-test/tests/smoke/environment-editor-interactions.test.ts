@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test.describe('Environment Editor', async () => {
+test.describe('Environment Editor', () => {
   test.beforeEach(async ({ app, page }) => {
     const text = await loadFixture('environments.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
@@ -117,18 +117,18 @@ test.describe('Environment Editor', async () => {
     await page.getByRole('button', { name: 'Manage collection environments' }).click();
     // switch table view
     await page.getByRole('button', { name: 'Table Edit' }).click();
-    const kvTable = await page.getByRole('listbox', { name: 'Environment Key Value Pair' });
+    const kvTable = page.getByRole('listbox', { name: 'Environment Key Value Pair' });
     // disable row
     await page.getByRole('button', { name: 'Disable Row' }).first().click();
-    let firstRow = await kvTable.getByRole('option').first();
+    let firstRow = kvTable.getByRole('option').first();
     // check row has been disabled
     await expect(firstRow).toHaveCSS('opacity', '0.4');
     // delete all items
     await page.getByRole('button', { name: 'Delete All' }).dblclick();
     // check items have been deleted
-    await expect(kvTable.getByRole('option').nth(2)).not.toBeVisible();
+    await expect(kvTable.getByRole('option').nth(2)).toBeHidden();
 
-    firstRow = await kvTable.getByRole('option').first();
+    firstRow = kvTable.getByRole('option').first();
     await firstRow.getByTestId('OneLineEditor').first().click();
     await page.keyboard.type('exampleString');
     await firstRow.getByTestId('OneLineEditor').nth(1).click();
@@ -137,7 +137,7 @@ test.describe('Environment Editor', async () => {
     await page.waitForTimeout(1000);
     // add one more row
     await page.getByRole('button', { name: 'Add Row' }).click();
-    const secondRow = await kvTable.getByRole('option').nth(1);
+    const secondRow = kvTable.getByRole('option').nth(1);
     await secondRow.getByTestId('OneLineEditor').first().click();
     await page.keyboard.type('exampleObject');
     // change type to json
@@ -146,7 +146,7 @@ test.describe('Environment Editor', async () => {
     await secondRow.getByRole('button', { name: 'Edit JSON' }).click();
     // wait for modal to show
     await page.waitForTimeout(500);
-    const bodyEditor = await page.getByTestId('CodeEditor').getByRole('textbox');
+    const bodyEditor = page.getByTestId('CodeEditor').getByRole('textbox');
     // move cursor right and input json string
     await bodyEditor.focus();
     await bodyEditor.press('ArrowRight');

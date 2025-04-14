@@ -1,6 +1,6 @@
 import { test } from '../../playwright/test';
 
-test.describe('Plugins', async () => {
+test.describe('Plugins', () => {
   test('Open plugins menu and generate plugin', async ({ page }) => {
     // Opening settings
     await page.locator('[data-testid="settings-button"]').click();

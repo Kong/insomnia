@@ -14,9 +14,9 @@ test.describe('multiple-tab feature test', () => {
   test('add tab & close tab', async ({ page }) => {
     await page.getByLabel('Create in collection').click();
     await page.getByLabel('HTTP Request').click();
-    const tab = await page.getByLabel('Insomnia Tabs').getByLabel(`tab-${DEFAULT_REQUEST_NAME}`, { exact: true });
-    expect(tab).toBeVisible();
-    expect(await tab.getAttribute('data-selected')).toBe('true');
+    const tab = page.getByLabel('Insomnia Tabs').getByLabel(`tab-${DEFAULT_REQUEST_NAME}`, { exact: true });
+    await expect(tab).toBeVisible();
+    await expect(tab).toHaveAttribute('data-selected', 'true');
     await tab.getByRole('button').click();
     await expect(tab).toBeHidden();
   });
@@ -32,19 +32,19 @@ test.describe('multiple-tab feature test', () => {
     await page.getByRole('textbox', { name: 'GET New Request' }).fill('New Request B');
     await page.getByTestId('New Request A').click();
     await page.waitForTimeout(1000);
-    const tabA = await page.getByLabel('Insomnia Tabs').getByLabel('tab-New Request A', { exact: true });
-    expect(await tabA.getAttribute('data-selected')).toBe('true');
+    const tabA = page.getByLabel('Insomnia Tabs').getByLabel('tab-New Request A', { exact: true });
+    await expect(tabA).toHaveAttribute('data-selected', 'true');
     await page.getByTestId('New Request B').click();
     await page.waitForTimeout(1000);
-    const tabB = await page.getByLabel('Insomnia Tabs').getByLabel('tab-New Request B', { exact: true });
-    expect(await tabB.getAttribute('data-selected')).toBe('true');
+    const tabB = page.getByLabel('Insomnia Tabs').getByLabel('tab-New Request B', { exact: true });
+    await expect(tabB).toHaveAttribute('data-selected', 'true');
   });
 
   test('close tab after delete a request', async ({ page }) => {
     await page.getByLabel('Create in collection').click();
     await page.getByLabel('HTTP Request').click();
-    const tab = await page.getByLabel('Insomnia Tabs').getByLabel(`tab-${DEFAULT_REQUEST_NAME}`, { exact: true });
-    expect(tab).toBeVisible();
+    const tab = page.getByLabel('Insomnia Tabs').getByLabel(`tab-${DEFAULT_REQUEST_NAME}`, { exact: true });
+    await expect(tab).toBeVisible();
     await page.getByTestId('New Request').click();
     await page.getByTestId('Dropdown-New-Request').click();
     await page.getByLabel('Delete').click();
@@ -56,11 +56,11 @@ test.describe('multiple-tab feature test', () => {
     await page.getByLabel('Create in collection').click();
     await page.getByLabel('HTTP Request').click();
     await page.waitForTimeout(1000);
-    expect(await page.getByLabel('Insomnia Tabs').getByLabel('Tab Tag').first().innerText()).toEqual('GET');
+    await expect(page.getByLabel('Insomnia Tabs').getByLabel('Tab Tag').first()).toHaveText('GET');
     await page.getByTestId('tab-close-button').first().click();
     await page.getByLabel('Request Method').click();
     await page.getByRole('button', { name: 'POST' }).click();
-    expect(await page.getByLabel('Insomnia Tabs').getByLabel('Tab Tag').first().innerText()).toEqual('POST');
+    await expect(page.getByLabel('Insomnia Tabs').getByLabel('Tab Tag').first()).toHaveText('POST');
   });
 
   test('click + button to add a new request', async ({ page }) => {
@@ -80,7 +80,7 @@ test.describe('multiple-tab feature test', () => {
     await page.getByLabel('Select Workspace').selectOption({ label: 'My first collection' });
     await page.getByRole('dialog').getByRole('button', { name: 'Add' }).click();
     await page.waitForTimeout(1000);
-    expect(await page.getByTestId('workspace-context-dropdown').innerText()).toEqual('My first collection');
+    await expect(page.getByTestId('workspace-context-dropdown')).toHaveText('My first collection');
     await page.getByTestId(DEFAULT_REQUEST_NAME).click();
   });
 
