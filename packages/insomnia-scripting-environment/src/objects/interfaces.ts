@@ -47,7 +47,7 @@ export interface MinorScriptError extends BaseScriptError {
   name: 'MinorScriptError';
 }
 
-// toMinorScriptError wraps an exception as an error
+// toMinorScriptError wraps an normal error as a MinorScriptError
 export function toMinorScriptError(originalError: Error): MinorScriptError {
   return {
     name: 'MinorScriptError',
