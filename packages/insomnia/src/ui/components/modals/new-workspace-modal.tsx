@@ -14,9 +14,9 @@ import {
   Radio,
   RadioGroup,
   TextField,
-  UNSTABLE_Tree as Tree,
-  UNSTABLE_TreeItem as TreeItem,
-  UNSTABLE_TreeItemContent as TreeItemContent,
+  Tree,
+  TreeItem,
+  TreeItemContent,
 } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
