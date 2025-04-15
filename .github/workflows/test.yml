@@ -49,11 +49,3 @@ jobs:
         run: |
           npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
 
-      # This step should always run even when previous steps fail
-      - name: Upload smoke test traces
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          if-no-files-found: ignore
-          name: ubuntu-smoke-test-traces-${{ github.run_number }}
-          path: packages/insomnia-smoke-test/traces
