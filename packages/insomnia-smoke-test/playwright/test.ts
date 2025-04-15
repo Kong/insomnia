@@ -1,3 +1,4 @@
+/* eslint-disable no-empty-pattern */
 // Read more about creating fixtures https://playwright.dev/docs/test-fixtures
 import type { ElectronApplication, TraceMode } from '@playwright/test';
 import { test as baseTest } from '@playwright/test';
@@ -156,12 +157,12 @@ export const test = baseTest.extend<{
 
     await use(page);
   },
-  dataPath: async (_, use) => {
+  dataPath: async ({}, use) => {
     const insomniaDataPath = randomDataPath();
 
     await use(insomniaDataPath);
   },
-  userConfig: async (_, use) => {
+  userConfig: async ({}, use) => {
     await use({
       skipOnboarding: true,
       publicKey: 'txb/w8DASTpPQqeHE/hpI3ABKzit+pv5n2We5dbtYRo=',
