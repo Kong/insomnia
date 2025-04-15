@@ -93,19 +93,6 @@ test('can send requests', async ({ app, page }) => {
   await expect.soft(statusTag).toContainText('200 OK');
   await page.getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responseBody).toContainText('Set-Cookie: insomnia-test-cookie=value123');
-});
-
-// This feature is unsafe to place beside other tests, cancelling a request can cause network code to block
-// related to https://linear.app/insomnia/issue/INS-973
-test('can cancel requests', async ({ app, page }) => {
-  const text = await loadFixture('smoke-test-collection.yaml');
-  await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-
-  await page.getByLabel('Import').click();
-  await page.locator('[data-test-id="import-from-clipboard"]').click();
-  await page.getByRole('button', { name: 'Scan' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-  await page.getByLabel('Smoke tests').click();
 
   await page.getByLabel('Request Collection').getByTestId('delayed request').press('Enter');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
