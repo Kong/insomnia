@@ -9,7 +9,9 @@ const entity = 'api specification';
 
 export const loadApiSpec = (db: Database, identifier: string): ApiSpec | null | undefined => {
   logger.trace('Load %s with identifier `%s` from data store', entity, identifier);
-  const items = db.ApiSpec.filter(spec => matchIdIsh(spec, identifier) || spec.fileName === identifier);
+  const items = db.ApiSpec.filter(
+    spec => matchIdIsh(spec, identifier) || spec.fileName === identifier || spec.name === identifier,
+  );
   logger.trace('Found %d.', items.length);
   return ensureSingleOrNone(items, entity);
 };
