@@ -34,7 +34,7 @@ const config: PlaywrightTestConfig = {
       sources: true,
     },
   },
-  reporter: process.env.CI ? [['html'], ['line']] : [['list']],
+  reporter: process.env.CI ? [['github'], ['line']] : [['list']],
   timeout: process.env.CI ? 60 * 1000 : 20 * 1000,
   forbidOnly: !!process.env.CI,
   outputDir: 'traces',

@@ -41,10 +41,3 @@ jobs:
 
       - name: Unit Tests
         run: npm test
-
-      - name: Build app for smoke tests
-        run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
-
-      - name: Smoke test electron app
-        run: |
-          npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke

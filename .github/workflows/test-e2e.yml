@@ -37,10 +37,9 @@ jobs:
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
 
       - name: Smoke test electron app
-        run: |
-          npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
+        run: npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
          
-      - name: Upload smoke test html
+      - name: Upload smoke test
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
