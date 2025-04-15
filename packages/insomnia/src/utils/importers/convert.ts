@@ -1,4 +1,4 @@
-import type { ImportRequest } from './entities';
+import type { ImportEntry, ImportRequest } from './entities';
 import { setDefaults } from './utils';
 
 export interface InsomniaImporter {
@@ -18,10 +18,17 @@ export interface ConvertResult {
   };
 }
 
-export const convert = async (rawData: string) => {
+export const convert = async (importEntry: ImportEntry) => {
   const importers = (await import('./importers')).importers;
   for (const importer of importers) {
-    const resources = await importer.convert(rawData);
+    let resources;
+    if (importer.acceptFilePath === true) {
+      // FileImporter
+      resources = await importer.convert(importEntry);
+    } else {
+      // ContentStrImporter
+      resources = await importer.convert(importEntry.contentStr);
+    }
 
     if (!resources) {
       continue;

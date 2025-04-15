@@ -16,6 +16,7 @@ import { isWebSocketRequest, type WebSocketRequest } from '../models/websocket-r
 import { isWorkspace, type Workspace } from '../models/workspace';
 import type { CurrentPlan } from '../ui/routes/organization';
 import { convert, type InsomniaImporter } from '../utils/importers/convert';
+import type { ImportEntry } from '../utils/importers/entities';
 import { id as postmanEnvImporterId } from '../utils/importers/importers/postman-env';
 import { invariant } from '../utils/invariant';
 import { database as db } from './database';
@@ -67,14 +68,9 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
   return content;
 }
 
-export interface ImportFileDetail {
-  contentStr: string;
-  oriFileName: string;
-}
-
 export interface PostmanDataDumpRawData {
-  collectionList: ImportFileDetail[];
-  envList: ImportFileDetail[];
+  collectionList: ImportEntry[];
+  envList: ImportEntry[];
 }
 
 export async function getFilesFromPostmanExportedDataDump(filePath: string): Promise<PostmanDataDumpRawData> {
@@ -115,12 +111,12 @@ interface ResourceCacheType {
 
 let resourceCacheList: ResourceCacheType[] = [];
 
-export async function scanResources(contentList: string[] | ImportFileDetail[]): Promise<ScanResult[]> {
+export async function scanResources(importEntries: ImportEntry[]): Promise<ScanResult[]> {
   resourceCacheList = [];
   const results = await Promise.allSettled(
-    contentList.map(async content => {
-      const contentStr = typeof content === 'string' ? content : content.contentStr;
-      const oriFileName = typeof content === 'string' ? '' : content.oriFileName;
+    importEntries.map(async importEntry => {
+      const contentStr = importEntry.contentStr;
+      const oriFileName = importEntry.oriFileName || '';
 
       let result: ConvertResult | null = null;
 
@@ -139,7 +135,7 @@ export async function scanResources(contentList: string[] | ImportFileDetail[]):
             },
           };
         } else {
-          result = (await convert(contentStr)) as unknown as ConvertResult;
+          result = (await convert(importEntry)) as unknown as ConvertResult;
         }
       } catch (err: unknown) {
         if (err instanceof Error) {

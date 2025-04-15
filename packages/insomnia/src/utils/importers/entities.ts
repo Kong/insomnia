@@ -83,9 +83,30 @@ export type Converter<T extends {} = {}> = (
   rawData: string,
 ) => ImportRequest<T>[] | Promise<ImportRequest<T>[] | null> | null;
 
-export interface Importer {
+export type FilePathConverter<T extends {} = {}> = (
+  importEntry: ImportEntry,
+) => ImportRequest<T>[] | Promise<ImportRequest<T>[] | null> | null;
+
+interface BaseImporter {
   id: string;
   name: string;
   description: string;
+}
+
+interface ContentStrImporter extends BaseImporter {
+  acceptFilePath?: false;
   convert: Converter;
+}
+
+interface FileImporter extends BaseImporter {
+  acceptFilePath: true;
+  convert: FilePathConverter;
+}
+
+export type Importer = ContentStrImporter | FileImporter;
+
+export interface ImportEntry {
+  contentStr: string;
+  oriFileName?: string;
+  oriFilePath?: string;
 }

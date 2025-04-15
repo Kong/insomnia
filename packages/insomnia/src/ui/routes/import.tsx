@@ -6,7 +6,6 @@ import type { PostmanDataDumpRawData } from '../../common/import';
 import {
   fetchImportContentFromURI,
   getFilesFromPostmanExportedDataDump,
-  type ImportFileDetail,
   importResourcesToProject,
   importResourcesToWorkspace,
   scanResources,
@@ -20,6 +19,7 @@ import {
   pushSnapshotOnInitialize,
 } from '../../sync/vcs/initialize-backend-project';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
+import type { ImportEntry } from '../../utils/importers/entities';
 import { invariant } from '../../utils/invariant';
 import { fetchAndCacheOrganizationStorageRule } from './organization';
 
@@ -31,7 +31,7 @@ export const scanForResourcesAction: ActionFunction = async ({ request }): Promi
     invariant(typeof source === 'string', 'Source is required.');
     invariant(['file', 'uri', 'clipboard'].includes(source), 'Unsupported import type');
 
-    const contentList: ImportFileDetail[] = [];
+    const contentList: ImportEntry[] = [];
     if (source === 'uri') {
       const uri = formData.get('uri');
       if (typeof uri !== 'string' || uri === '') {
@@ -81,7 +81,7 @@ export const scanForResourcesAction: ActionFunction = async ({ request }): Promi
           ];
         }
 
-        function trans({ contentStr, oriFileName }: ImportFileDetail): ImportFileDetail {
+        function trans({ contentStr, oriFileName }: ImportEntry): ImportEntry {
           return {
             contentStr,
             oriFileName: `${oriFileName} in ${path.basename(zipFilePath)}`,
@@ -99,6 +99,7 @@ export const scanForResourcesAction: ActionFunction = async ({ request }): Promi
         contentList.push({
           contentStr: await fetchImportContentFromURI({ uri }),
           oriFileName: path.basename(filePath),
+          oriFilePath: filePath,
         });
       }
     } else {
