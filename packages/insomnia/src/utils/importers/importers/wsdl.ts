@@ -101,10 +101,16 @@ const convertWsdlToPostman = async (input: string) => {
 
 export const convert: FilePathConverter = async importEntry => {
   const rawData = importEntry.contentStr;
+
   try {
     if (!verifyWsdl(rawData)) {
       return null;
     }
+  } catch (error) {
+    return null;
+  }
+
+  try {
     let input;
     if (importEntry.oriFilePath) {
       // here we prioritize using the original file path because the apiconnect-wsdl library can recognize 'import', 'include' tags in a wsdl file and find the referenced xsd files automatically.
@@ -112,18 +118,16 @@ export const convert: FilePathConverter = async importEntry => {
     } else {
       input = `<?xml version="1.0" encoding="UTF-8" ?>${rawData}`;
     }
-    const postmanData = await convertWsdlToPostman(
-      input,
-    );
+    const postmanData = await convertWsdlToPostman(input);
     postmanData.info.schema += 'collection.json';
     const postmanJson = JSON.stringify(postmanData);
     return postman.convert(postmanJson);
   } catch (error) {
     console.error(error);
-    // Nothing
+    return {
+      convertErrorMessage: error.message,
+    };
   }
-
-  return null;
 };
 
 const wsdlNamespaceUri = 'http://schemas.xmlsoap.org/wsdl/';
@@ -131,8 +135,10 @@ const wsdlNamespaceUri = 'http://schemas.xmlsoap.org/wsdl/';
 function verifyWsdl(fileContent: string) {
   try {
     const mainWsdlDocument = new DOMParser().parseFromString(fileContent, 'text/xml');
-    return mainWsdlDocument.documentElement.namespaceURI === wsdlNamespaceUri &&
-      mainWsdlDocument.documentElement.localName === 'definitions';
+    return (
+      mainWsdlDocument.documentElement.namespaceURI === wsdlNamespaceUri &&
+      mainWsdlDocument.documentElement.localName === 'definitions'
+    );
   } catch (error) {
     return false;
   }

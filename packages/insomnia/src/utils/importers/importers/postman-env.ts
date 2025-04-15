@@ -16,8 +16,6 @@ interface Environment {
   _postman_variable_scope: 'environment' | string;
 }
 
-type Data = Record<EnvVar['key'], EnvVar['value']>;
-
 export enum POSTMAN_ENV_TYPE {
   GLOBAL = 'globals',
   ENVIRONMENT = 'environment',
@@ -25,7 +23,7 @@ export enum POSTMAN_ENV_TYPE {
 
 const validPostmanEnvTypeList = Object.values(POSTMAN_ENV_TYPE) as string[];
 
-export const convert: Converter<Data> = rawData => {
+export const convert: Converter = rawData => {
   try {
     const { _postman_variable_scope, name, values } = JSON.parse(rawData) as Environment;
 
