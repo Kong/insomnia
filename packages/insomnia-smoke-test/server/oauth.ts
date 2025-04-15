@@ -12,7 +12,6 @@ export const oauthRoutes = async (port: number) => {
 
   const clientRedirectUri = `http://127.0.0.1:${port}/callback`;
 
-  /* eslint-disable camelcase */
   const oidcConfig = {
     interactions: {
       url: (_, interaction) => {
@@ -118,7 +117,7 @@ export const oauthRoutes = async (port: number) => {
       return grant;
     },
   };
-  /* eslint-enable camelcase */
+
   const provider = (await import('oidc-provider')).default;
   const oidc = new provider(`http://127.0.0.1:${port}`, oidcConfig);
 
@@ -282,14 +281,12 @@ function registerROPC(oidc: Provider) {
 
       const accessToken = await at.save();
 
-      /* eslint-disable camelcase */
       ctx.body = {
         access_token: accessToken,
         expires_in: at.expiration,
         scope: at.scope,
         token_type: at.tokenType,
       };
-      /* eslint-enable camelcase */
 
       await next();
     },

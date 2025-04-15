@@ -3,7 +3,7 @@ import { expect, type Page } from '@playwright/test';
 import { getFixturePath, loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test.describe('runner features tests', async () => {
+test.describe('runner features tests', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   test.beforeEach(async ({ app, page }) => {
@@ -24,7 +24,7 @@ test.describe('runner features tests', async () => {
     expectedSkipped: number,
     expectedTotal: number,
     expectedTestOrder: string[],
-    iteration: number = 1,
+    iteration = 1,
   ) => {
     let passedResultCount = 0;
     let failedResultCount = 0;
@@ -109,7 +109,7 @@ test.describe('runner features tests', async () => {
     await fileChooser.setFiles(uploadDataPath);
     await page.getByRole('dialog').getByText('Upload').click();
     // check iteration number match json data length
-    expect(await page.locator('input[name="Iterations"]').inputValue()).toBe('2');
+    await expect(page.locator('input[name="Iterations"]')).toHaveValue('2');
 
     // select requests to test
     await page.locator('.runner-request-list-req1').click();
@@ -126,9 +126,9 @@ test.describe('runner features tests', async () => {
       const testId = `runner-test-result-iteration-${i}`;
       const iterationTestResultElement = page.getByTestId(testId);
       await iterationTestResultElement.click();
-      expect(iterationTestResultElement).toBeVisible();
+      await expect(iterationTestResultElement).toBeVisible();
       // req2 should be skipped from pre-request script
-      expect(iterationTestResultElement).not.toContainText('req2');
+      await expect(iterationTestResultElement).not.toContainText('req2');
     }
 
     await verifyResultRows(page, 4, 1, 6, [

@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test.describe('Global Environments', async () => {
+test.describe('Global Environments', () => {
   test('import and use a global environment from a collection', async ({ app, page }) => {
     await loadFixtureFile('collection-for-global-environments.yaml', app, page);
     await loadFixtureFile('global-environment.yaml', app, page);

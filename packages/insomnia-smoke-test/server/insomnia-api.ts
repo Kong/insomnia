@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 import type { Application } from 'express';
 import { json } from 'express';
 
-import { Collaborator, CollaboratorType } from '../../insomnia/src/ui/routes/invite';
+import type { Collaborator, CollaboratorType } from '../../insomnia/src/ui/routes/invite';
 import { getRandomId, getTeamName, getUserEmail } from '../tests/smoke/test-utils';
 
 const currentPlan = {

@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable camelcase */
 // inspiration: https://github.com/grpc/grpc/blob/master/examples/node/dynamic_codegen/route_guide/route_guide_server.js
 import * as grpc from '@grpc/grpc-js';
-import { HandleCall } from '@grpc/grpc-js/build/src/server-call';
+import type { HandleCall } from '@grpc/grpc-js/build/src/server-call';
 import * as protoLoader from '@grpc/proto-loader';
 import { addReflection } from '@ravanallc/grpc-server-reflection';
 import fs from 'fs';
@@ -19,7 +17,6 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 
 const routeguide = grpc.loadPackageDefinition(packageDefinition).routeguide;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let featureList: any[] = [];
 
 const COORD_FACTOR = 1e7;
@@ -30,28 +27,25 @@ const COORD_FACTOR = 1e7;
  * @return {feature} The feature object at the point. Note that an empty name
  *     indicates no feature
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 function checkFeature(point: { latitude: any; longitude: any }) {
-  let feature;
   // Check if there is already a feature object for the given point
-  for (let i = 0; i < featureList.length; i++) {
-    feature = featureList[i];
+  for (const feature of featureList) {
     if (feature.location.latitude === point.latitude && feature.location.longitude === point.longitude) {
       return feature;
     }
   }
   const name = '';
-  feature = {
+  return {
     name: name,
     location: point,
   };
-  return feature;
 }
 
 /**
  * getFeature request handler.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const getFeature: HandleCall<any, any> = (call: any, callback: any) => {
   callback(null, checkFeature(call.request));
 };
@@ -59,7 +53,7 @@ const getFeature: HandleCall<any, any> = (call: any, callback: any) => {
 /**
  * listFeatures request handler.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const listFeatures: HandleCall<any, any> = (call: any) => {
   const lo = call.request.lo;
   const hi = call.request.hi;
@@ -165,7 +159,7 @@ const routeChat: HandleCall<any, any> = (call: any) => {
     const key = pointKey(note.location);
     /* For each note sent, respond with all previous notes that correspond to
      * the same point */
-    if (routeNotes.hasOwnProperty(key)) {
+    if (key in routeNotes) {
       routeNotes[key].forEach(function (note: any) {
         call.write(note);
       });

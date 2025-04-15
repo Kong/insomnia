@@ -6,7 +6,7 @@ import { Buffer } from 'buffer';
 import { getFixturePath, loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test.describe('pre-request features tests', async () => {
+test.describe('pre-request features tests', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   test.beforeEach(async ({ app, page }) => {
@@ -203,9 +203,7 @@ test.describe('pre-request features tests', async () => {
     },
   ];
 
-  for (let i = 0; i < testCases.length; i++) {
-    const tc = testCases[i];
-
+  for (const tc of testCases) {
     test(tc.name, async ({ page }) => {
       const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
       const responseBody = page.getByTestId('response-pane').getByTestId('CodeEditor').locator('.CodeMirror-line');
@@ -540,7 +538,7 @@ test.describe('pre-request features tests', async () => {
   });
 });
 
-test.describe('unhappy paths', async () => {
+test.describe('unhappy paths', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   test.beforeEach(async ({ app, page }) => {
@@ -582,9 +580,7 @@ test.describe('unhappy paths', async () => {
     },
   ];
 
-  for (let i = 0; i < testCases.length; i++) {
-    const tc = testCases[i];
-
+  for (const tc of testCases) {
     test(tc.name, async ({ page }) => {
       const responsePane = page.getByTestId('response-pane');
 

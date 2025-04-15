@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test.describe('Debug-Sidebar', async () => {
+test.describe('Debug-Sidebar', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   test.beforeEach(async ({ app, page }) => {
     const text = await loadFixture('simple.yaml');
@@ -15,7 +15,7 @@ test.describe('Debug-Sidebar', async () => {
     await page.getByLabel('simple').click();
   });
 
-  test.describe('Interact with sidebar', async () => {
+  test.describe('Interact with sidebar', () => {
     test('Open Properties in Request Sidebar', async ({ page }) => {
       const requestLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'example http' });
       await requestLocator.click();
@@ -100,7 +100,7 @@ test.describe('Debug-Sidebar', async () => {
       await page.getByRole('menuitemradio', { name: 'Delete' }).click();
       await page.locator('.modal__content').getByRole('button', { name: 'Delete' }).click();
 
-      expect(page.getByLabel('Request Collection').getByRole('row')).toHaveCount(numberOfRequests - 1);
+      await expect(page.getByLabel('Request Collection').getByRole('row')).toHaveCount(numberOfRequests - 1);
     });
 
     test('Rename a request', async ({ page }) => {

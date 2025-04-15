@@ -3,9 +3,9 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test.describe('Dashboard', async () => {
+test.describe('Dashboard', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
-  test.describe('Projects', async () => {
+  test.describe('Projects', () => {
     test('Can create, rename and delete new project', async ({ page }) => {
       await page.getByLabel('All Files (0)').click();
       await expect(page.locator('.app')).not.toContainText('Git Sync');
@@ -56,7 +56,7 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
     });
   });
-  test.describe('Interactions', async () => {
+  test.describe('Interactions', () => {
     // Not sure about the name here
 
     test('Can create, rename and delete a document', async ({ page }) => {

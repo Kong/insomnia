@@ -1,5 +1,6 @@
 import eslint from '@eslint/js';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
+import playwright from 'eslint-plugin-playwright'
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort';
@@ -10,6 +11,27 @@ export default tseslint.config(
   tseslint.configs.strict,
   tseslint.configs.stylistic,
   {
+    files: ['packages/insomnia-smoke-test/tests/**/*.ts'],
+    plugins: { 'playwright': playwright },
+    rules: {
+      ...playwright.configs['flat/recommended'].rules,
+      'playwright/expect-expect': 'off',
+      'playwright/valid-title': 'off', //TODO: avoid using looping e2e tests
+    }
+  },
+  {
+    files: ['packages/insomnia/src/**/*.{ts,tsx}'],
+    plugins: { 'react-hooks': reactHooksPlugin },
+    rules: {
+      'react-hooks/exhaustive-deps': ['error', {
+        // From react-use https://github.com/streamich/react-use/issues/1703#issuecomment-770972824
+        additionalHooks:
+          '^use(Async|AsyncFn|AsyncRetry|Debounce|UpdateEffect|IsomorphicLayoutEffect|DeepCompareEffect|ShallowCompareEffect)$',
+      }],
+      'react-hooks/rules-of-hooks': 'error',
+    }
+  },
+  {
     settings: {
       react: {
         version: 'detect',
@@ -17,7 +39,6 @@ export default tseslint.config(
     },
     plugins: {
       'react': reactPlugin,
-      'react-hooks': reactHooksPlugin,
       'simple-import-sort': simpleImportSortPlugin,
     },
     rules: {
@@ -56,15 +77,6 @@ export default tseslint.config(
       'react/no-array-index-key': 'error',
       'react/self-closing-comp': 'error',
 
-      'react-hooks/exhaustive-deps': [
-        'error',
-        {
-          // From react-use https://github.com/streamich/react-use/issues/1703#issuecomment-770972824
-          additionalHooks:
-            '^use(Async|AsyncFn|AsyncRetry|Debounce|UpdateEffect|IsomorphicLayoutEffect|DeepCompareEffect|ShallowCompareEffect)$',
-        },
-      ],
-      'react-hooks/rules-of-hooks': 'error',
 
       '@typescript-eslint/array-type': ['error', { default: 'array', readonly: 'array' }],
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],

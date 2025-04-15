@@ -37,7 +37,7 @@ test('can use node-libcurl, httpsnippet, hidden browser window', async ({ app, p
   await page.getByRole('tab', { name: 'Console' }).click();
 });
 
-test('can use external modules in scripts ', async ({ app, page }) => {
+test('can use external modules in scripts', async ({ app, page }) => {
   const text = await loadFixture('pre-request-collection.yaml');
 
   // import collection
