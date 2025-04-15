@@ -13,6 +13,8 @@ import { reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
 import { setTheme } from '../../plugins/misc';
 import { getLoginUrl } from '../auth-session-provider';
+import { CopyButton } from '../components/base/copy-button';
+import { Link } from '../components/base/link';
 import { ErrorBoundary } from '../components/error-boundary';
 import { showError, showModal } from '../components/modals';
 import { AlertModal } from '../components/modals/alert-modal';
@@ -185,8 +187,8 @@ const Root = () => {
         );
       }
         if (urlWithoutParams === 'insomnia://oauth/azure/authenticate') {
-          const { code } = params;
-          if (typeof code === 'string') {
+          const { code, ...restParams } = params;
+          if (code && typeof code === 'string') {
             const authResult = await window.main.cloudService.exchangeCode('azure', { code });
             const { success, result, error } = authResult;
             if (success) {
@@ -208,11 +210,53 @@ const Root = () => {
               showModal(SettingsModal, { tab: TAB_CLOUD_CREDENTIAL });
             } else {
               showError({
-                title: 'Error authorizing Azure',
+                title: 'Azure Authorization Failed',
                 message: error?.errorMessage,
               });
             }
-          }
+          } else {
+            const errorDetailKeys = Object.keys(restParams);
+            const { error, error_description, error_uri } = restParams;
+            if (error && error_description) {
+              showError({
+                title: 'Azure Authorization Failed',
+                message: (
+                  <div className="flex flex-col gap-1 text-left">
+                    <span className='font-bold text-lg'>{error}</span>
+                    <span className='whitespace-normal'>{error_description}</span>
+                    {error_uri &&
+                      <div className='flex items-center justify-center mt-2'>
+                        <Link button className="btn btn--clicky w-80 " href={error_uri}>
+                          View Document <i className="fa fa-external-link" />
+                        </Link>
+                      </div>
+                    }
+                    <CopyButton
+                      size="small"
+                      className='absolute right-[--padding-sm] top-[--padding-sm]'
+                      content={error_description}
+                      title="Copy Description"
+                      style={{ borderWidth: 0 }}
+                    >
+                      <i className="fa fa-copy" />
+                    </CopyButton>
+                  </div>
+                )
+              });
+            } else {
+              showError({
+                title: 'Azure Authorization Failed',
+                message: (
+                  <div className="flex flex-col gap-1 text-left">
+                    {errorDetailKeys.length > 0 ?
+                      errorDetailKeys.map(k => <span key={k} className='whitespace-normal'>{k}: {restParams[k]}</span>) :
+                      'Unknown error'
+                    }
+                  </div>
+                )
+              });
+            }
+          };
         }
       if (urlWithoutParams === 'insomnia://app/auth/finish') {
         return actionFetcher.submit(

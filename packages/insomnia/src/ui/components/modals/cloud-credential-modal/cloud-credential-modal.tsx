@@ -52,7 +52,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
       setError('');
       const parsedURL = new URL(manulInputUrl);
       const code = parsedURL.searchParams.get('code');
-      if (typeof code === 'string') {
+      if (code && typeof code === 'string') {
         const authResult = await window.main.cloudService.exchangeCode('azure', { code });
         const { success, result, error } = authResult;
         if (success) {
@@ -67,6 +67,9 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
         } else {
           setError(error!.errorMessage);
         }
+      } else {
+        const errorDetail = Object.fromEntries(parsedURL.searchParams.entries());
+        setError(`Error authorizing Azure ${JSON.stringify(errorDetail) || 'Unknown error'}`);
       }
     } catch (error) {
       setError(error.toString());
