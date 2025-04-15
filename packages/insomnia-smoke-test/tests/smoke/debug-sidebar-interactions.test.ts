@@ -103,7 +103,6 @@ test.describe('Debug-Sidebar', () => {
 
     await page.getByRole('textbox', { name: 'GET example http' }).fill('example http1');
     await page.getByLabel('Request Collection').getByRole('row', { name: 'example http' }).click();
-    await page.getByLabel('Request Collection').getByRole('row', { name: 'example http1' }).click();
 
     // Update a request folder via settings
     await folderLocator.click();
