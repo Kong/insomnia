@@ -122,11 +122,11 @@ test.describe('Environment Editor', () => {
     await page.getByRole('button', { name: 'Disable Row' }).first().click();
     let firstRow = kvTable.getByRole('option').first();
     // check row has been disabled
-    await expect(firstRow).toHaveCSS('opacity', '0.4');
+    await expect.soft(firstRow).toHaveCSS('opacity', '0.4');
     // delete all items
     await page.getByRole('button', { name: 'Delete All' }).dblclick();
     // check items have been deleted
-    await expect(kvTable.getByRole('option').nth(2)).toBeHidden();
+    await expect.soft(kvTable.getByRole('option').nth(2)).toBeHidden();
 
     firstRow = kvTable.getByRole('option').first();
     await firstRow.getByTestId('OneLineEditor').first().click();

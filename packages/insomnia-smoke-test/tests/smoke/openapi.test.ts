@@ -8,7 +8,7 @@ test('can render Spectral OpenAPI lint errors', async ({ page }) => {
   await page.click('text=start from an example');
 
   const codeEditor = page.locator('.pane-one');
-  await expect(codeEditor).toContainText('openapi: 3.0.0');
+  await expect.soft(codeEditor).toContainText('openapi: 3.0.0');
 
   // Cause a lint error
   await page.locator('[data-testid="CodeEditor"] >> text=info').click();

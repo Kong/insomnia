@@ -92,17 +92,6 @@ test.describe('Debug-Sidebar', () => {
       await requestLocator.click();
     });
 
-    test.skip('Delete Request', async ({ page }) => {
-      const requestLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'example http' });
-      await requestLocator.click();
-      const numberOfRequests = await page.getByLabel('Request Collection').getByRole('row').count();
-      await requestLocator.getByLabel('Request Actions').click();
-      await page.getByRole('menuitemradio', { name: 'Delete' }).click();
-      await page.locator('.modal__content').getByRole('button', { name: 'Delete' }).click();
-
-      await expect(page.getByLabel('Request Collection').getByRole('row')).toHaveCount(numberOfRequests - 1);
-    });
-
     test('Rename a request', async ({ page }) => {
       const requestLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'example http' });
       await requestLocator.click();
@@ -128,7 +117,7 @@ test.describe('Debug-Sidebar', () => {
       await page.getByTestId('example http').getByLabel('GET example http', { exact: true }).dblclick();
       await page.getByRole('textbox', { name: 'GET example http' }).fill('new name');
       await page.getByLabel('Request Collection').click();
-      await expect(page.getByTestId('new name').getByLabel('GET new name', { exact: true })).toContainText('new name');
+      await expect.soft(page.getByTestId('new name').getByLabel('GET new name', { exact: true })).toContainText('new name');
     });
 
     test('Create a new HTTP request', async ({ page }) => {

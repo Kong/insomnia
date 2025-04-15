@@ -34,8 +34,8 @@ test.describe('gRPC interactions', () => {
 
     // Check for the single Unary response
     await page.click('text=Response 1');
-    await expect(statusTag).toContainText('0 OK');
-    await expect(responseBody).toContainText('Berkshire Valley Management Area Trail');
+    await expect.soft(statusTag).toContainText('0 OK');
+    await expect.soft(responseBody).toContainText('Berkshire Valley Management Area Trail');
   });
 
   test('can send bidirectional requests', async ({ page }) => {
@@ -54,7 +54,7 @@ test.describe('gRPC interactions', () => {
 
     // Finish the stream
     await page.locator('text=Commit').click();
-    await expect(statusTag).toContainText('0 OK');
+    await expect.soft(statusTag).toContainText('0 OK');
   });
 
   test('can send client stream requests', async ({ page }) => {
@@ -71,8 +71,8 @@ test.describe('gRPC interactions', () => {
     await page.locator('text=Commit').click();
     await page.locator('text=Stream 3').click();
     await page.locator('text=Response 1').click();
-    await expect(statusTag).toContainText('0 OK');
-    await expect(responseBody).toContainText('point_count": 3');
+    await expect.soft(statusTag).toContainText('0 OK');
+    await expect.soft(responseBody).toContainText('point_count": 3');
   });
 
   test('can send server stream requests', async ({ page }) => {
@@ -81,8 +81,8 @@ test.describe('gRPC interactions', () => {
     await page.click('text=Start');
 
     // Check response
-    await expect(statusTag).toContainText('0 OK');
+    await expect.soft(statusTag).toContainText('0 OK');
     await page.locator('text=Response 64').click();
-    await expect(responseBody).toContainText('3 Hasta Way');
+    await expect.soft(responseBody).toContainText('3 Hasta Way');
   });
 });

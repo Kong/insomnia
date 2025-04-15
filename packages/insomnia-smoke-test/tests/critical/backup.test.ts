@@ -24,5 +24,5 @@ test('can backup data on new version available', async ({ app, page }) => {
     }
   }
 
-  expect(foundBackups).toBe(true);
+  expect.soft(foundBackups).toBe(true);
 });

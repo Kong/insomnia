@@ -28,16 +28,16 @@ test.describe('after-response script features tests', () => {
     await page.getByRole('tab', { name: 'Tests' }).click();
 
     const responsePane = page.getByTestId('response-pane');
-    await expect(responsePane).toContainText('PASS');
-    await expect(responsePane).toContainText(
+    await expect.soft(responsePane).toContainText('PASS');
+    await expect.soft(responsePane).toContainText(
       'FAILunhappy tests | error: AssertionError: expected 199 to deeply equal 200 | ACTUAL: 199 | EXPECTED: 200',
     );
-    await expect(responsePane).toContainText('PASShappyTestInFunc');
-    await expect(responsePane).toContainText(
+    await expect.soft(responsePane).toContainText('PASShappyTestInFunc');
+    await expect.soft(responsePane).toContainText(
       'FAILsadTestInFunc | error: AssertionError: expected 199 to deeply equal 200 | ACTUAL: 199 | EXPECTED: 200',
     );
-    await expect(responsePane).toContainText('PASSasyncHappyTestInFunc');
-    await expect(responsePane).toContainText(
+    await expect.soft(responsePane).toContainText('PASSasyncHappyTestInFunc');
+    await expect.soft(responsePane).toContainText(
       'FAILasyncSadTestInFunc | error: AssertionError: expected 199 to deeply equal 200 | ACTUAL: 199 | EXPECTED: 200',
     );
   });
@@ -51,7 +51,7 @@ test.describe('after-response script features tests', () => {
 
     // verify response
     await page.waitForSelector('[data-testid="response-status-tag"]:visible');
-    await expect(statusTag).toContainText('200 OK');
+    await expect.soft(statusTag).toContainText('200 OK');
 
     // verify persisted environment
     await page.getByRole('button', { name: 'Manage Environments' }).click();
@@ -60,7 +60,7 @@ test.describe('after-response script features tests', () => {
     const rows = await responseBody.allInnerTexts();
     const bodyJson = JSON.parse(rows.join(' '));
 
-    expect(bodyJson).toEqual({
+    expect.soft(bodyJson).toEqual({
       // no environment is selected so the environment value will be persisted to the base environment
       __fromAfterScript1: 'baseEnvironment',
       __fromAfterScript2: 'collection',
@@ -78,12 +78,12 @@ test.describe('after-response script features tests', () => {
 
     // verify response
     await page.waitForSelector('[data-testid="response-status-tag"]:visible');
-    await expect(statusTag).toContainText('200 OK');
+    await expect.soft(statusTag).toContainText('200 OK');
 
     // verify
     await page.getByRole('tab', { name: 'Tests' }).click();
 
     const rows = page.getByTestId('test-result-row');
-    await expect(rows.first()).toContainText('PASS');
+    await expect.soft(rows.first()).toContainText('PASS');
   });
 });

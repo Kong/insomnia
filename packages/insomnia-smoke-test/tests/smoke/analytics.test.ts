@@ -80,17 +80,17 @@ test('analytics events are sent', async ({ page, app }) => {
   const [appStartEvent, ...restEvents] = analyticsBatch;
 
   // Analytics need at least 15 events to be sent
-  expect(analyticsBatch.length).toBeGreaterThanOrEqual(5);
+  expect.soft(analyticsBatch.length).toBeGreaterThanOrEqual(5);
 
   // App start event
-  expect(appStartEvent.anonymousId).toBeTruthy();
-  expect(appStartEvent.event).toBe('App Started');
+  expect.soft(appStartEvent.anonymousId).toBeTruthy();
+  expect.soft(appStartEvent.event).toBe('App Started');
 
   // First event should have userId and anonymousId
-  expect(restEvents[0].anonymousId).toBeTruthy();
-  expect(restEvents[0].userId).toBeTruthy();
+  expect.soft(restEvents[0].anonymousId).toBeTruthy();
+  expect.soft(restEvents[0].userId).toBeTruthy();
 
   // Last event should have userId and anonymousId
-  expect(restEvents.at(-1)?.anonymousId).toBeTruthy();
-  expect(restEvents.at(-1)?.userId).toBeTruthy();
+  expect.soft(restEvents.at(-1)?.anonymousId).toBeTruthy();
+  expect.soft(restEvents.at(-1)?.userId).toBeTruthy();
 });

@@ -60,26 +60,26 @@ test.describe('pre-request features tests', () => {
     {
       name: 'insomnia.request manipulation',
       customVerify: (bodyJson: any) => {
-        expect(bodyJson.method).toEqual('GET');
-        expect(bodyJson.headers['x-hello']).toEqual('hello');
-        expect(bodyJson.data).toEqual('rawContent');
+        expect.soft(bodyJson.method).toBe('GET');
+        expect.soft(bodyJson.headers['x-hello']).toBe('hello');
+        expect.soft(bodyJson.data).toBe('rawContent');
       },
     },
     {
       name: 'insomnia.request auth manipulation (bearer)',
       customVerify: (bodyJson: any) => {
         const authzHeader = bodyJson.headers['authorization'];
-        expect(authzHeader != null).toBeTruthy();
-        expect(bodyJson.headers['authorization']).toEqual('CustomTokenPrefix tokenValue');
+        expect.soft(authzHeader != null).toBeTruthy();
+        expect.soft(bodyJson.headers['authorization']).toBe('CustomTokenPrefix tokenValue');
       },
     },
     {
       name: 'insomnia.request auth manipulation (basic)',
       customVerify: (bodyJson: any) => {
         const authzHeader = bodyJson.headers['authorization'];
-        expect(authzHeader != null).toBeTruthy();
+        expect.soft(authzHeader != null).toBeTruthy();
         const expectedEncCred = Buffer.from('myName:myPwd', 'utf-8').toString('base64');
-        expect(bodyJson.headers['authorization']).toEqual(`Basic ${expectedEncCred}`);
+        expect.soft(bodyJson.headers['authorization']).toBe(`Basic ${expectedEncCred}`);
       },
     },
     {
@@ -92,7 +92,7 @@ test.describe('pre-request features tests', () => {
       name: 'require the url module',
       customVerify: (bodyJson: any) => {
         const reqBodyJsons = JSON.parse(bodyJson.data);
-        expect(reqBodyJsons).toEqual({
+        expect.soft(reqBodyJsons).toEqual({
           hash: '#hashcontent',
           host: 'insomnia.com:6666',
           hostname: 'insomnia.com',
@@ -128,8 +128,8 @@ test.describe('pre-request features tests', () => {
       name: 'get sendRequest response through await or callback',
       customVerify: (bodyJson: any) => {
         const requestBody = JSON.parse(bodyJson.data);
-        expect(requestBody.bodyFromAwait.method).toEqual('GET');
-        expect(requestBody.bodyFromCallback.method).toEqual('GET');
+        expect.soft(requestBody.bodyFromAwait.method).toBe('GET');
+        expect.soft(requestBody.bodyFromCallback.method).toBe('GET');
       },
     },
     {
@@ -216,14 +216,14 @@ test.describe('pre-request features tests', () => {
       // verify
       await page.waitForSelector('[data-testid="response-status-tag"]:visible');
 
-      await expect(statusTag).toContainText('200 OK');
+      await expect.soft(statusTag).toContainText('200 OK');
 
       const rows = await responseBody.allInnerTexts();
-      expect(rows.length).toBeGreaterThan(0);
+      expect.soft(rows.length).toBeGreaterThan(0);
 
       const bodyJson = JSON.parse(rows.join(' '));
       if (tc.expectedBody) {
-        expect(JSON.parse(bodyJson.data)).toEqual(tc.expectedBody);
+        expect.soft(JSON.parse(bodyJson.data)).toEqual(tc.expectedBody);
       }
       if (tc.customVerify) {
         tc.customVerify(bodyJson);
@@ -351,23 +351,23 @@ test.describe('pre-request features tests', () => {
     // verify
     await page.waitForSelector('[data-testid="response-status-tag"]:visible');
 
-    await expect(statusTag).toContainText('200 OK');
+    await expect.soft(statusTag).toContainText('200 OK');
 
     const rows = await responseBody.allInnerTexts();
-    expect(rows.length).toBeGreaterThan(0);
+    expect.soft(rows.length).toBeGreaterThan(0);
 
     const bodyJson = JSON.parse(rows.join(' '));
 
     const reqBodyJsons = JSON.parse(bodyJson.data);
-    expect(reqBodyJsons.rawBody.data).toEqual('rawContent');
-    expect(reqBodyJsons.urlencodedBody.data).toEqual('k1=v1&k2=v2');
-    expect(JSON.parse(reqBodyJsons.gqlBody.data)).toEqual({
+    expect.soft(reqBodyJsons.rawBody.data).toBe('rawContent');
+    expect.soft(reqBodyJsons.urlencodedBody.data).toBe('k1=v1&k2=v2');
+    expect.soft(JSON.parse(reqBodyJsons.gqlBody.data)).toEqual({
       query: 'query',
       operationName: 'operation',
       variables: 'var',
     });
-    expect(reqBodyJsons.fileBody.data).toEqual('raw file content');
-    expect(reqBodyJsons.formdataBody.data).toEqual(
+    expect.soft(reqBodyJsons.fileBody.data).toBe('raw file content');
+    expect.soft(reqBodyJsons.formdataBody.data).toBe(
       '--X-INSOMNIA-BOUNDARY\r\nContent-Disposition: form-data; name="k1"\r\n\r\nv1\r\n--X-INSOMNIA-BOUNDARY\r\nContent-Disposition: form-data; name="k2"; filename="rawfile.txt"\r\nContent-Type: text/plain\r\n\r\nraw file content\r\n--X-INSOMNIA-BOUNDARY--\r\n',
     );
   });
@@ -376,7 +376,7 @@ test.describe('pre-request features tests', () => {
     const responsePane = page.getByTestId('response-pane');
 
     // update proxy configuration
-    await page.locator('[data-testid="settings-button"]').click();
+    await page.getByTestId("settings-button").click();
     await page.locator('text=Insomnia Preferences').first().click();
     await page.getByRole('tab', { name: 'Proxy' }).click();
     await page.locator('text=Enable proxy').click();
@@ -394,8 +394,8 @@ test.describe('pre-request features tests', () => {
 
     // verify
     await page.getByRole('tab', { name: 'Console' }).click();
-    await expect(responsePane).toContainText('localhost:2222'); // original proxy
-    await expect(responsePane).toContainText('Trying 127.0.0.1:8888'); // updated proxy
+    await expect.soft(responsePane).toContainText('localhost:2222'); // original proxy
+    await expect.soft(responsePane).toContainText('Trying 127.0.0.1:8888'); // updated proxy
   });
 
   test('update clientCertificate if request url contains tag', async ({ page }) => {
@@ -424,8 +424,8 @@ test.describe('pre-request features tests', () => {
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
     // verify
     await page.getByRole('tab', { name: 'Console' }).click();
-    await expect(responsePane).toContainText('* Adding SSL PEM certificate');
-    await expect(responsePane).toContainText('Adding SSL KEY certificate');
+    await expect.soft(responsePane).toContainText('* Adding SSL PEM certificate');
+    await expect.soft(responsePane).toContainText('Adding SSL KEY certificate');
   });
 
   test('insomnia.request / update clientCertificate', async ({ page }) => {
@@ -436,8 +436,8 @@ test.describe('pre-request features tests', () => {
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
     // verify
     await page.getByRole('tab', { name: 'Console' }).click();
-    await expect(responsePane).toContainText('Adding SSL PEM certificate');
-    await expect(responsePane).toContainText('Adding SSL KEY certificate');
+    await expect.soft(responsePane).toContainText('Adding SSL PEM certificate');
+    await expect.soft(responsePane).toContainText('Adding SSL KEY certificate');
   });
 
   test('pre: insomnia.test and insomnia.expect can work together', async ({ page }) => {
@@ -450,10 +450,10 @@ test.describe('pre-request features tests', () => {
     await page.getByRole('tab', { name: 'Tests' }).click();
 
     const responsePane = page.getByTestId('response-pane');
-    await expect(responsePane).toContainText(
+    await expect.soft(responsePane).toContainText(
       'FAILunhappy tests | error: AssertionError: expected 199 to deeply equal 200 | ACTUAL: 199 | EXPECTED: 200Pre-request Test',
     );
-    await expect(responsePane).toContainText('PASShappy tests');
+    await expect.soft(responsePane).toContainText('PASShappy tests');
   });
 
   test('environment and baseEnvironment can be persisted', async ({ page }) => {
@@ -465,7 +465,7 @@ test.describe('pre-request features tests', () => {
 
     // verify response
     await page.waitForSelector('[data-testid="response-status-tag"]:visible');
-    await expect(statusTag).toContainText('200 OK');
+    await expect.soft(statusTag).toContainText('200 OK');
 
     // verify persisted environment
     await page.getByRole('button', { name: 'Manage Environments' }).click();
@@ -474,7 +474,7 @@ test.describe('pre-request features tests', () => {
     const rows = await responseBody.allInnerTexts();
     const bodyJson = JSON.parse(rows.join(' '));
 
-    expect(bodyJson).toEqual({
+    expect.soft(bodyJson).toEqual({
       // no environment is selected so the environment value will be persisted to the base environment
       fromUrlValue: 'fromUrlValue',
       fromEditorValue: 'fromEditorValue',
@@ -507,7 +507,7 @@ test.describe('pre-request features tests', () => {
 
     // verify response
     await page.waitForSelector('[data-testid="response-status-tag"]:visible');
-    await expect(statusTag).toContainText('200 OK');
+    await expect.soft(statusTag).toContainText('200 OK');
 
     // verify table environments have been updated
     await page.getByRole('button', { name: 'Manage Environments' }).click();
@@ -526,15 +526,15 @@ test.describe('pre-request features tests', () => {
     // verify response
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     await page.waitForSelector('[data-testid="response-status-tag"]:visible');
-    await expect(statusTag).toContainText('200 OK');
+    await expect.soft(statusTag).toContainText('200 OK');
 
     const responsePane = page.getByTestId('response-pane');
     await page.getByRole('tab', { name: 'Console' }).click();
 
-    await expect(responsePane).toContainText('key=fromUrl');
-    await expect(responsePane).toContainText('key=fromUrlValue');
-    await expect(responsePane).toContainText('key=fromEditorValue');
-    await expect(responsePane).toContainText('key=%2F');
+    await expect.soft(responsePane).toContainText('key=fromUrl');
+    await expect.soft(responsePane).toContainText('key=fromUrlValue');
+    await expect.soft(responsePane).toContainText('key=fromEditorValue');
+    await expect.soft(responsePane).toContainText('key=%2F');
   });
 });
 
@@ -605,7 +605,7 @@ test.describe('unhappy paths', () => {
 
       // verify
       await page.waitForSelector('[data-testid="response-status-tag"]:visible');
-      await expect(responsePane).toContainText(tc.expectedResult.message);
+      await expect.soft(responsePane).toContainText(tc.expectedResult.message);
     });
   }
 });

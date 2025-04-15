@@ -36,8 +36,8 @@ test('can use client certificate for mTLS', async ({ app, page }) => {
   await page.getByRole('button', { name: 'Done' }).click();
   await page.getByRole('button', { name: 'Send', exact: true }).click();
 
-  await expect(statusTag).toContainText('401 Unauthorized');
-  await expect(responseBody).toContainText('Client certificate required');
+  await expect.soft(statusTag).toContainText('401 Unauthorized');
+  await expect.soft(responseBody).toContainText('Client certificate required');
 
   await page.getByRole('button', { name: 'Add Certificates' }).click();
   await page.getByRole('button', { name: 'Add client certificate' }).click();
@@ -56,8 +56,8 @@ test('can use client certificate for mTLS', async ({ app, page }) => {
 
   await page.getByRole('button', { name: 'Send', exact: true }).click();
 
-  await expect(statusTag).toContainText('200 OK');
-  await expect(responseBody).toContainText('"id": "2"');
+  await expect.soft(statusTag).toContainText('200 OK');
+  await expect.soft(responseBody).toContainText('"id": "2"');
 
   // ensure disabling the cert actually disables it
   await page.getByRole('button', { name: 'Add Certificates' }).click();
@@ -66,6 +66,6 @@ test('can use client certificate for mTLS', async ({ app, page }) => {
   await page.getByLabel('Request Collection').getByTestId('pet 2').press('Enter');
 
   await page.getByRole('button', { name: 'Send', exact: true }).click();
-  await expect(statusTag).toContainText('401 Unauthorized');
-  await expect(responseBody).toContainText('Client certificate required');
+  await expect.soft(statusTag).toContainText('401 Unauthorized');
+  await expect.soft(responseBody).toContainText('Client certificate required');
 });

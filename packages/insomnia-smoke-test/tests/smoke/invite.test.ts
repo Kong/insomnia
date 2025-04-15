@@ -23,7 +23,7 @@ test('Can invite users in app', async ({ page }) => {
   await page.getByRole('button', { name: 'Invite', exact: true }).click();
 
   // Check that the new member is in the list
-  await expect(page.getByLabel('Invitation list').getByRole('option')).toHaveCount(15);
+  await expect.soft(page.getByLabel('Invitation list').getByRole('option')).toHaveCount(15);
 
   // Change the role
   await page.getByTestId('collaborator-test-iteration-2').getByLabel('Menu').click();

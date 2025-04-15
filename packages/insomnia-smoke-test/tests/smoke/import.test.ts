@@ -11,6 +11,6 @@ test('can import multiple workspaces from single file', async ({ app, page }) =>
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   // Have two collections in current project
-  await expect(page.getByLabel('Collection 1')).toBeAttached();
-  await expect(page.getByLabel('Collection 2')).toBeAttached();
+  await expect.soft(page.getByLabel('Collection 1')).toBeAttached();
+  await expect.soft(page.getByLabel('Collection 2')).toBeAttached();
 });
