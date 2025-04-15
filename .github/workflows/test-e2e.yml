@@ -1,4 +1,4 @@
-name: Test App
+name: e2e App Tests
 
 on:
   merge_group:
@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   Test:
-    timeout-minutes: 5
+    timeout-minutes: 15
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout branch
@@ -33,11 +33,16 @@ jobs:
       - name: Install packages
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
+      - name: Build app for smoke tests
+        run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
 
-      - name: Type checks
-        run: npm run type-check
-
-      - name: Unit Tests
-        run: npm test
+      - name: Smoke test electron app
+        run: |
+          npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
+         
+      - name: Upload smoke test html
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: ignore
+          name: ubuntu-smoke-test-traces-${{ github.run_number }}
+          path: packages/insomnia-smoke-test/traces
