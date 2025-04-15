@@ -6,7 +6,6 @@ import {
   DropIndicator,
   GridList,
   GridListItem,
-  type GridListItemProps,
   Heading,
   type Key,
   Tab,
@@ -635,11 +634,28 @@ export const Runner: FC<{}> = () => {
                         parentFolders.length > 0 ? <span className="ml-2">{parentFolders}</span> : null;
 
                       return (
-                        <RequestItem
+                        <GridListItem
                           textValue={item.name}
                           className={`runner-request-list-${item.name} border border-solid border-transparent text-[--color-font]`}
                           style={{ outline: 'none' }}
                         >
+                          <Button slot="drag" className="hover:cursor-grab">
+                            <Icon icon="grip-vertical" className="mr-2 w-2 text-[--hl]" />
+                          </Button>
+                          <Checkbox slot="selection">
+                            {({ isSelected }) => (
+                              <>
+                                {isSelected ? (
+                                  <i
+                                    className="fa fa-square-check fa-1x mr-2 h-4"
+                                    style={{ color: 'rgb(74 222 128)' }}
+                                  />
+                                ) : (
+                                  <i className="fa fa-square fa-1x mr-2 h-4" />
+                                )}
+                              </>
+                            )}
+                          </Checkbox>
                           {parentFolderContainer}
                           <span className={`ml-2 text-xs uppercase http-method-${item.method}`}>{item.method}</span>
                           <span
@@ -648,7 +664,7 @@ export const Runner: FC<{}> = () => {
                           >
                             {item.name}
                           </span>
-                        </RequestItem>
+                        </GridListItem>
                       );
                     }}
                   </GridList>
@@ -825,34 +841,6 @@ export const Runner: FC<{}> = () => {
 };
 
 export default Runner;
-
-const RequestItem = ({ children, ...props }: GridListItemProps) => {
-  return (
-    <GridListItem {...props}>
-      {() => (
-        <>
-          <Button slot="drag" className="hover:cursor-grab">
-            <Icon icon="grip-vertical" className="mr-2 w-2 text-[--hl]" />
-          </Button>
-          <Checkbox slot="selection">
-            {({ isSelected }) => {
-              return (
-                <>
-                  {isSelected ? (
-                    <i className="fa fa-square-check fa-1x mr-2 h-4" style={{ color: 'rgb(74 222 128)' }} />
-                  ) : (
-                    <i className="fa fa-square fa-1x mr-2 h-4" />
-                  )}
-                </>
-              );
-            }}
-          </Checkbox>
-          {children}
-        </>
-      )}
-    </GridListItem>
-  );
-};
 
 // This is required for tracking the active request for one runner execution
 // Then in runner cancellation, both the active request and the runner execution will be canceled
