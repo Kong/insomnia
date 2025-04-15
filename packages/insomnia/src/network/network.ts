@@ -65,7 +65,10 @@ export const getOrInheritAuthentication = ({
 }): RequestAuthentication | {} => {
   const hasValidAuth = getAuthObjectOrNull(request.authentication) && isAuthEnabled(request.authentication);
   if (hasValidAuth) {
-    return request.authentication;
+    return {
+      ...request.authentication,
+      parentId: request._id,
+    };
   }
   const hasParentFolders = requestGroups.length > 0;
   const closestParentFolderWithAuth = requestGroups.find(
@@ -75,7 +78,10 @@ export const getOrInheritAuthentication = ({
   const shouldCheckFolderAuth = hasParentFolders && closestAuth;
   if (shouldCheckFolderAuth) {
     // override auth with closest parent folder that has one set
-    return closestAuth;
+    return {
+      ...closestAuth,
+      parentId: closestParentFolderWithAuth?._id,
+    };
   }
   // if no auth is specified on request or folders, default to none
   return { type: 'none' };
@@ -742,7 +748,6 @@ export async function sendCurlAndWriteTimeline(
   const requestId = renderedRequest._id;
   const timeline: ResponseTimelineEntry[] = [];
   const authentication = renderedRequest.authentication as RequestAuthentication;
-
   const { finalUrl, socketPath } = transformUrl(
     renderedRequest.url,
     renderedRequest.parameters,

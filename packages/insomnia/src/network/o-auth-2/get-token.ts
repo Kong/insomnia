@@ -51,6 +51,7 @@ export const getOAuth2Token = async (
   if (oAuth2Token) {
     return oAuth2Token;
   }
+  const tokenParentId = authentication.parentId ?? requestId;
   const validGrantType = ['implicit', 'authorization_code', 'password', 'client_credentials'].includes(
     authentication.grantType,
   );
@@ -87,13 +88,13 @@ export const getOAuth2Token = async (
     const responseUrl = new URL(redirectedTo);
     if (responseUrl.searchParams.has('error')) {
       const params = Object.fromEntries(responseUrl.searchParams);
-      const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+      const old = await models.oAuth2Token.getOrCreateByParentId(tokenParentId);
       return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(params));
     }
     const hash = responseUrl.hash.slice(1);
     invariant(hash, 'No hash found in response URL from OAuth2 provider');
     const data = Object.fromEntries(new URLSearchParams(hash));
-    const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+    const old = await models.oAuth2Token.getOrCreateByParentId(tokenParentId);
     return models.oAuth2Token.update(
       old,
       transformNewAccessTokenToOauthModel({
@@ -184,7 +185,7 @@ export const getOAuth2Token = async (
   }
 
   const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
-  const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+  const old = await models.oAuth2Token.getOrCreateByParentId(tokenParentId);
   return models.oAuth2Token.update(
     old,
     transformNewAccessTokenToOauthModel(await oauthResponseToAccessToken(authentication.accessTokenUrl, response)),
@@ -199,7 +200,8 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   authentication: AuthTypeOAuth2,
   forceRefresh: boolean,
 ): Promise<OAuth2Token | null> {
-  const token: OAuth2Token | null = await models.oAuth2Token.getByParentId(requestId);
+  const tokenParentId = authentication.parentId ?? requestId;
+  const token: OAuth2Token | null = await models.oAuth2Token.getByParentId(tokenParentId);
   if (!token) {
     return null;
   }
@@ -236,7 +238,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
     // If the refresh token was rejected due an unauthorized request, we will
     // return a null access_token to trigger an authentication request to fetch
     // brand new refresh and access tokens.
-    const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+    const old = await models.oAuth2Token.getOrCreateByParentId(tokenParentId);
     models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
     return null;
   }
@@ -250,7 +252,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
       // brand new refresh and access tokens.
       if (body?.error === 'invalid_grant') {
         console.log(`[oauth2] Refresh token rejected due to invalid_grant error: ${body.error_description}`);
-        const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+        const old = await models.oAuth2Token.getOrCreateByParentId(tokenParentId);
         models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
         return null;
       }
@@ -263,7 +265,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   if (!data) {
     return null;
   }
-  const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+  const old = await models.oAuth2Token.getOrCreateByParentId(tokenParentId);
   return models.oAuth2Token.update(
     old,
     transformNewAccessTokenToOauthModel({
