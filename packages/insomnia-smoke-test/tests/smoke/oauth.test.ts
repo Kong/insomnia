@@ -6,7 +6,7 @@ import { test } from '../../playwright/test';
 test('can make oauth2 requests', async ({ app, page }) => {
   const sendButton = page.locator('[data-testid="request-pane"] button:has-text("Send")');
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-  const responseBody = page.locator('response-body');
+  const responseBody = page.locator('#json-response-viewer + div');
 
   const projectView = page.locator('#wrapper');
 
