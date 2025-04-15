@@ -12,7 +12,7 @@ test.describe('Global Environments', () => {
     await page.getByTestId('New Request').getByLabel('GET New Request', { exact: true }).click();
     // check if it has error message
     await page.getByText('Body', { exact: true }).click();
-    await expect(page.getByTitle("Failed to render environment variables: _['global-base']")).toHaveText(
+    await expect.soft(page.getByTitle("Failed to render environment variables: _['global-base']")).toHaveText(
       "_['global-base']",
     );
     // check if it appears as a custom message when sending the request

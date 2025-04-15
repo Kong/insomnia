@@ -3,7 +3,7 @@ import { test } from '../../playwright/test';
 test.describe('Plugins', () => {
   test('Open plugins menu and generate plugin', async ({ page }) => {
     // Opening settings
-    await page.locator('[data-testid="settings-button"]').click();
+    await page.getByTestId("settings-button").click();
     // Switching to Plugins tab
     await page.locator('div[role="tab"]:has-text("Plugins")').click();
 

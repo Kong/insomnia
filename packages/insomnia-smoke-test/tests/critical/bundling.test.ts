@@ -20,11 +20,11 @@ test('can use node-libcurl, httpsnippet, hidden browser window', async ({ app, p
 
   await page.getByLabel('Request Collection').getByTestId('send JSON request').press('Enter');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
-  await expect(statusTag).toContainText('200 OK');
-  await expect(responseBody).toContainText('"id": "1"');
+  await expect.soft(statusTag).toContainText('200 OK');
+  await expect.soft(responseBody).toContainText('"id": "1"');
   await page.getByRole('button', { name: 'Preview' }).click();
   await page.getByRole('menuitem', { name: 'Raw Data' }).click();
-  await expect(responseBody).toContainText('{"id":"1"}');
+  await expect.soft(responseBody).toContainText('{"id":"1"}');
   await page.getByLabel('Request Collection').getByTestId('send JSON request').press('Enter');
   await page.getByLabel('Request Collection').getByTestId('send JSON request').getByLabel('Request Actions').click();
   await page.getByRole('menuitemradio', { name: 'Generate Code' }).click();
@@ -33,7 +33,7 @@ test('can use node-libcurl, httpsnippet, hidden browser window', async ({ app, p
 
   await page.getByLabel('Request Collection').getByTestId('sends request with pre-request script').press('Enter');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
-  await expect(statusTag).toContainText('200 OK');
+  await expect.soft(statusTag).toContainText('200 OK');
   await page.getByRole('tab', { name: 'Console' }).click();
 });
 
@@ -56,5 +56,5 @@ test('can use external modules in scripts', async ({ app, page }) => {
 
   // verify
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-  await expect(statusTag).toContainText('200 OK');
+  await expect.soft(statusTag).toContainText('200 OK');
 });

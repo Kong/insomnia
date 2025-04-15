@@ -17,5 +17,5 @@ test('can chain multiple requests', async ({ app, page }) => {
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
   // third request will call second request which will call first request
-  await expect(page.getByTestId('response-pane')).toContainText('first and second and third');
+  await expect.soft(page.getByTestId('response-pane')).toContainText('first and second and third');
 });

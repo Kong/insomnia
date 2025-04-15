@@ -24,10 +24,10 @@ test('can requests that contain templated header keys and values', async ({ app,
 
   await page.getByRole('button', { name: 'Send' }).click();
 
-  await expect(statusTag).toContainText('200 OK');
+  await expect.soft(statusTag).toContainText('200 OK');
   await page.getByRole('button', { name: 'Preview' }).click();
   await page.getByRole('menuitem', { name: 'Raw Data' }).click();
-  await expect(responsePaneContents).toContainText('{"id":"2"}');
+  await expect.soft(responsePaneContents).toContainText('{"id":"2"}');
   await page.getByRole('tab', { name: 'Console' }).click();
-  await expect(responsePaneContents).toContainText('X-Foo-Bar: baz');
+  await expect.soft(responsePaneContents).toContainText('X-Foo-Bar: baz');
 });

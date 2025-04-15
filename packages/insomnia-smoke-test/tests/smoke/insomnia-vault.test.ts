@@ -14,7 +14,7 @@ test('Check vault key generation', async ({ page }) => {
   // generate vault key
   await page.getByRole('button', { name: 'Generate Vault Key' }).click();
   const vaultKeyValue = await page.getByTestId('VaultKeyDisplayPanel').innerText();
-  expect(vaultKeyValue.length).toBeGreaterThan(0);
+  expect.soft(vaultKeyValue.length).toBeGreaterThan(0);
   await page.locator('.app').press('Escape');
   // check secret vault environment could be created
   await page.getByRole('button', { name: 'Create document', exact: true }).click();
@@ -38,10 +38,10 @@ test('Check vault key generation', async ({ page }) => {
   await page.waitForTimeout(500);
   await firstRow.getByRole('button', { name: 'Type Selection' }).click();
   await page.getByRole('menuitemradio', { name: 'Secret' }).click();
-  await expect(firstRow.locator('.fa-eye-slash')).toBeVisible();
+  await expect.soft(firstRow.locator('.fa-eye-slash')).toBeVisible();
   await firstRow.locator('.fa-eye-slash').click();
   // test decrypt secret in UI
-  await expect(firstRow.getByTestId('OneLineEditor').nth(1)).toContainText('bar');
+  await expect.soft(firstRow.getByTestId('OneLineEditor').nth(1)).toContainText('bar');
 });
 
 test.describe('Vault key actions', () => {
@@ -62,12 +62,12 @@ test.describe('Vault key actions', () => {
     await page.getByText('Reset Vault Key').click();
     await page.getByText('Yes').click();
     const modal = page.getByTestId('input-vault-key-modal');
-    await expect(modal).toBeVisible();
+    await expect.soft(modal).toBeVisible();
     const vaultKeyValueInModal = await modal.getByTestId('VaultKeyDisplayPanel').innerText();
-    expect(vaultKeyValueInModal.length).toBeGreaterThan(0);
+    expect.soft(vaultKeyValueInModal.length).toBeGreaterThan(0);
     await page.getByText('OK').click();
     const vaultKeyValue = page.getByTestId('VaultKeyDisplayPanel');
-    await expect(vaultKeyValue).toHaveText(vaultKeyValueInModal);
+    await expect.soft(vaultKeyValue).toHaveText(vaultKeyValueInModal);
   });
 
   test('check reset vault key in private environment', async ({ page, app }) => {
@@ -82,7 +82,7 @@ test.describe('Vault key actions', () => {
     await page.getByText('Reset Vault Key').click();
     await page.getByText('Yes').click();
     const vaultKeyValueInModal = await page.getByTestId('VaultKeyDisplayPanel').innerText();
-    expect(vaultKeyValueInModal.length).toBeGreaterThan(0);
+    expect.soft(vaultKeyValueInModal.length).toBeGreaterThan(0);
   });
 
   test('check vault key validation', async ({ page }) => {
@@ -91,7 +91,7 @@ test.describe('Vault key actions', () => {
     // validate vault key
     await page.getByRole('button', { name: 'Enter Vault Key' }).click();
     const modal = page.getByTestId('input-vault-key-modal');
-    await expect(modal).toBeVisible();
+    await expect.soft(modal).toBeVisible();
     // fill the input with aria lable test with valid and invalid vault key
     await page.getByLabel('Vault Key Input').fill('invalidVaultKey');
     await page.getByRole('button', { name: 'Unlock' }).click();
@@ -138,10 +138,10 @@ test.describe('Check vault used in environment', () => {
     await page.waitForTimeout(500);
     await firstRow.getByRole('button', { name: 'Type Selection' }).click();
     await page.getByRole('menuitemradio', { name: 'Secret' }).click();
-    await expect(firstRow.locator('.fa-eye-slash')).toBeVisible();
+    await expect.soft(firstRow.locator('.fa-eye-slash')).toBeVisible();
     await firstRow.locator('.fa-eye-slash').click();
     // test decrypt secret in UI
-    await expect(firstRow.getByTestId('OneLineEditor').nth(1)).toContainText('bar');
+    await expect.soft(firstRow.getByTestId('OneLineEditor').nth(1)).toContainText('bar');
 
     // add second secret environment
     await page.getByRole('button', { name: 'Add Row' }).click();
@@ -239,7 +239,7 @@ test.describe('Check vault used in environment', () => {
     // activate request
     await page.getByTestId('legacy-invalid-vault').getByLabel('GET legacy-invalid-vault', { exact: true }).click();
     await page.getByRole('button', { name: 'Send' }).click(); // Expect to see error message
-    await expect(page.getByText('Unexpected Request Failure')).toBeVisible();
-    await expect(page.getByText('vault is a reserved key for insomnia vault')).toBeVisible();
+    await expect.soft(page.getByText('Unexpected Request Failure')).toBeVisible();
+    await expect.soft(page.getByText('vault is a reserved key for insomnia vault')).toBeVisible();
   });
 });

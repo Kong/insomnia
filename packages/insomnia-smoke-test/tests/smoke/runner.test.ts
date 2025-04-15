@@ -33,7 +33,7 @@ test.describe('runner features tests', () => {
     const testResults = page.getByTestId(`runner-test-result-iteration-${iteration}`).getByTestId('test-result-row');
     const testResultCount = await testResults.count();
 
-    expect(expectedTestOrder.length).toEqual(testResultCount);
+    expect.soft(expectedTestOrder.length).toEqual(testResultCount);
 
     for (let i = 0; i < testResultCount; i++) {
       const resultMsg = await testResults.nth(i).textContent();
@@ -48,11 +48,11 @@ test.describe('runner features tests', () => {
       }
 
       const expectedResultText = expectedTestOrder[i];
-      expect(resultMsg).toContain(expectedResultText);
+      expect.soft(resultMsg).toContain(expectedResultText);
     }
-    expect(passedResultCount).toEqual(expectedPassed);
-    expect(skippedResultCount).toEqual(expectedSkipped);
-    expect(passedResultCount + failedResultCount + skippedResultCount).toEqual(expectedTotal);
+    expect.soft(passedResultCount).toEqual(expectedPassed);
+    expect.soft(skippedResultCount).toEqual(expectedSkipped);
+    expect.soft(passedResultCount + failedResultCount + skippedResultCount).toEqual(expectedTotal);
   };
 
   test('run collection runner', async ({ page }) => {
@@ -70,15 +70,15 @@ test.describe('runner features tests', () => {
       await page.getByText('Req2-Pre-Check').click();
 
       const testResultCounts = await page.locator('.test-result-count').allInnerTexts();
-      expect(testResultCounts.length).toBe(1);
+      expect.soft(testResultCounts.length).toBe(1);
 
       const countParts = testResultCounts[0].split('/');
-      expect(countParts.length).toBe(2);
+      expect.soft(countParts.length).toBe(2);
 
       const summarizedPassedCount = parseInt(countParts[0], 10);
       const summarizedTotalCount = parseInt(countParts[1], 10);
-      expect(summarizedPassedCount).toEqual(expectedPassed);
-      expect(summarizedTotalCount).toEqual(expectedTotal);
+      expect.soft(summarizedPassedCount).toEqual(expectedPassed);
+      expect.soft(summarizedTotalCount).toEqual(expectedTotal);
     };
     await page.getByText('6 / 8').click();
     await verifyTestCounts(6, 8);
@@ -109,7 +109,7 @@ test.describe('runner features tests', () => {
     await fileChooser.setFiles(uploadDataPath);
     await page.getByRole('dialog').getByText('Upload').click();
     // check iteration number match json data length
-    await expect(page.locator('input[name="Iterations"]')).toHaveValue('2');
+    await expect.soft(page.locator('input[name="Iterations"]')).toHaveValue('2');
 
     // select requests to test
     await page.locator('.runner-request-list-req1').click();
@@ -126,9 +126,9 @@ test.describe('runner features tests', () => {
       const testId = `runner-test-result-iteration-${i}`;
       const iterationTestResultElement = page.getByTestId(testId);
       await iterationTestResultElement.click();
-      await expect(iterationTestResultElement).toBeVisible();
+      await expect.soft(iterationTestResultElement).toBeVisible();
       // req2 should be skipped from pre-request script
-      await expect(iterationTestResultElement).not.toContainText('req2');
+      await expect.soft(iterationTestResultElement).not.toContainText('req2');
     }
 
     await verifyResultRows(page, 4, 1, 6, [
@@ -248,27 +248,27 @@ test.describe('runner features tests', () => {
     await page.getByTestId('run-collection-btn-quick').click();
 
     await page.locator('.runner-request-list-printLogs').click();
+    await page.getByRole('tab', { name: 'advanced' }).click();
+    await page.locator('input[name="enable-log"]').click();
 
-    const expectToHaveLogs = [false, true];
+    // send
+    await page.getByRole('button', { name: 'Run', exact: true }).click();
 
-    for (const expectToHaveLog of expectToHaveLogs) {
-      // configure
-      await page.getByRole('tab', { name: 'advanced' }).click();
-      await page.locator('input[name="enable-log"]').click();
+    // verify there's no log
+    await page.getByText('1 / 1').first().click();
+    await page.getByRole('tab', { name: 'Console' }).click();
+    await expect.soft(page.locator('.pane-two')).not.toContainText("it won't print");
 
-      // send
-      await page.getByRole('button', { name: 'Run', exact: true }).click();
+    await page.getByRole('tab', { name: 'advanced' }).click();
+    await page.locator('input[name="enable-log"]').click();
 
-      // verify there's no log
-      await page.getByText('1 / 1').first().click();
-      await page.getByRole('tab', { name: 'Console' }).click();
+    // send
+    await page.getByRole('button', { name: 'Run', exact: true }).click();
 
-      const consoleTabContent = page.locator('.pane-two');
-      if (expectToHaveLog) {
-        await expect(consoleTabContent).toContainText("it won't print");
-      } else {
-        await expect(consoleTabContent).not.toContainText("it won't print");
-      }
-    }
+    // verify there's a log
+    await page.getByText('1 / 1').first().click();
+    await page.getByRole('tab', { name: 'Console' }).click();
+
+    await expect.soft(page.locator('.pane-two')).toContainText("it won't print");
   });
 });
