@@ -1,0 +1,49 @@
+name: e2e App Tests
+
+on:
+  merge_group:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  Test:
+    timeout-minutes: 15
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install packages
+        run: npm ci
+
+      - name: Build app for smoke tests
+        run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
+
+      - name: Smoke test electron app
+        run: |
+          npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
+         
+      - name: Upload smoke test html
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          if-no-files-found: ignore
+          name: ubuntu-smoke-test-traces-${{ github.run_number }}
+          path: packages/insomnia-smoke-test/traces

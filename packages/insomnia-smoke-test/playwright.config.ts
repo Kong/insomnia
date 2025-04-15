@@ -1,4 +1,3 @@
-/* eslint-disable filenames/match-exported */
 import type { PlaywrightTestConfig } from '@playwright/test';
 const config: PlaywrightTestConfig = {
   projects: [
