@@ -26,5 +26,5 @@ test('Can generate content-type header from imported postman file', async ({ app
   await page.getByRole('link', { name: 'New Collection' }).click();
   await page.getByTestId('New Request').click();
   await page.locator('[data-key="headers"]').click();
-  await expect(page.getByText('application/x-www-form-urlencoded')).toBeAttached();
+  await expect.soft(page.getByText('application/x-www-form-urlencoded')).toBeAttached();
 });
