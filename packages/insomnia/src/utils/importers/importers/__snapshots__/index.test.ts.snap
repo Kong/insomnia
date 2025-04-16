@@ -4782,6 +4782,10 @@ exports[`Fixtures > Import postman > complex-v2_0-input.json 1`] = `
           "name": "Authorization",
           "value": "Basic dXNlcm5hbWU6cGFzc3dvcmQ=",
         },
+        {
+          "name": "Content-Type",
+          "value": "multipart/form-data",
+        },
       ],
       "metaSortKey": -1622117983998,
       "method": "POST",
@@ -4817,6 +4821,10 @@ exports[`Fixtures > Import postman > complex-v2_0-input.json 1`] = `
           "description": "",
           "name": "Authorization",
           "value": "Basic dXNlcm5hbWU6cGFzc3dvcmQ=",
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/x-www-form-urlencoded",
         },
       ],
       "metaSortKey": -1622117983997,
@@ -4893,7 +4901,12 @@ exports[`Fixtures > Import postman > complex-v2_0-input.json 1`] = `
         "text": "{"query":"mutation loginUser($username: String!, $password: String!) {\\n  login(username: $username, password: $password) {\\n    token\\n    status {\\n      success\\n    }\\n  }\\n}\\n","variables":"{\\n    \\"password\\": \\"{{password}}\\",\\n    \\"username\\": \\"{{username}}\\"\\n}"}",
       },
       "description": "Request with graphql body",
-      "headers": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+        },
+      ],
       "metaSortKey": -1622117983993,
       "method": "POST",
       "name": "Test Request GraphQL Body",
@@ -4976,6 +4989,10 @@ exports[`Fixtures > Import postman > complex-v2_1-input.json 1`] = `
           "name": "Authorization",
           "value": "Basic dXNlcm5hbWU6cGFzc3dvcmQ=",
         },
+        {
+          "name": "Content-Type",
+          "value": "multipart/form-data",
+        },
       ],
       "metaSortKey": -1622117983998,
       "method": "POST",
@@ -5010,6 +5027,10 @@ exports[`Fixtures > Import postman > complex-v2_1-input.json 1`] = `
         {
           "name": "Authorization",
           "value": "Basic dXNlcm5hbWU6cGFzc3dvcmQ=",
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/x-www-form-urlencoded",
         },
       ],
       "metaSortKey": -1622117983997,
@@ -5086,7 +5107,12 @@ exports[`Fixtures > Import postman > complex-v2_1-input.json 1`] = `
         "text": "{"query":"mutation loginUser($username: String!, $password: String!) {\\n  login(username: $username, password: $password) {\\n    token\\n    status {\\n      success\\n    }\\n  }\\n}\\n","variables":"{\\n    \\"password\\": \\"{{password}}\\",\\n    \\"username\\": \\"{{username}}\\"\\n}"}",
       },
       "description": "Request with graphql body",
-      "headers": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+        },
+      ],
       "metaSortKey": -1622117983993,
       "method": "POST",
       "name": "Test Request GraphQL Body",
