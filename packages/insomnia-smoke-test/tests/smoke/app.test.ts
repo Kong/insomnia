@@ -91,6 +91,7 @@ test('can send requests', async ({ app, page }) => {
     .press('Enter');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
+  await page.getByRole('tab', { name: 'Console' }).scrollIntoViewIfNeeded();
   await page.getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responseBody).toContainText('Set-Cookie: insomnia-test-cookie=value123');
 
