@@ -15,6 +15,9 @@ export type ThemeSettings = Pick<Settings, 'autoDetectColorScheme' | 'lightTheme
 
 export const isSettings = (model: Pick<BaseModel, 'type'>): model is Settings => model.type === type;
 
+// force vertical layout for playwright tests to avoid horizontal scrolling issues
+const forceVerticalLayout = process.env.PLAYWRIGHT ? true : false;
+
 export function init(): BaseSettings {
   return {
     autoDetectColorScheme: false,
@@ -41,7 +44,7 @@ export function init(): BaseSettings {
     fontMonospace: null,
     fontSize: 13,
     fontVariantLigatures: false,
-    forceVerticalLayout: false,
+    forceVerticalLayout,
     hotKeyRegistry: hotkeys.newDefaultRegistry(),
     httpProxy: '',
     httpsProxy: '',

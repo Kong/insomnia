@@ -173,7 +173,6 @@ test.describe('Check vault used in environment', () => {
     await page.getByTestId('normal').getByLabel('GET normal', { exact: true }).click();
     await page.getByRole('button', { name: 'Send' }).click();
 
-    await page.getByRole('tab', { name: 'Console' }).scrollIntoViewIfNeeded();
     await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();
     await page.getByText('bar').click();
     await page.getByText('world').click();
@@ -229,7 +228,6 @@ test.describe('Check vault used in environment', () => {
     await page.getByTestId('legacy-object-vault').getByLabel('GET legacy-object-vault', { exact: true }).click();
     await page.getByRole('button', { name: 'Send' }).click();
 
-    await page.getByRole('tab', { name: 'Console' }).scrollIntoViewIfNeeded();
     await page.getByRole('tab', { name: 'Console' }).click();
     await page.getByText('secv2').click();
     await page.getByText('password').click();

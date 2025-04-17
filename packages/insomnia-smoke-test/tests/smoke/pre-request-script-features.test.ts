@@ -395,7 +395,6 @@ test.describe('pre-request features tests', () => {
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
     // verify
-    await page.getByRole('tab', { name: 'Console' }).scrollIntoViewIfNeeded();
     await page.getByRole('tab', { name: 'Console' }).click();
     await expect.soft(responsePane).toContainText('localhost:2222'); // original proxy
     await expect.soft(responsePane).toContainText('Trying 127.0.0.1:8888'); // updated proxy

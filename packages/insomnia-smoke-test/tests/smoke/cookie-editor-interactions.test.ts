@@ -46,7 +46,6 @@ test.describe('Cookie editor', () => {
 
     // Check in the timeline that the cookie was sent
 
-    await page.getByRole('tab', { name: 'Console' }).scrollIntoViewIfNeeded();
     await page.getByRole('tab', { name: 'Console' }).click();
     await expect.soft(page.getByText('foo2=bar2')).toBeVisible();
 

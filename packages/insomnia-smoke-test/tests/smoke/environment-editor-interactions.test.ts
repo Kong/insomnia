@@ -28,7 +28,6 @@ test.describe('Environment Editor', () => {
     await page.getByLabel('Request Collection').getByTestId('New Request').press('Enter');
     await page.getByRole('button', { name: 'Send' }).click();
 
-    await page.getByRole('tab', { name: 'Console' }).scrollIntoViewIfNeeded();
     await page.getByRole('tab', { name: 'Console' }).click();
     await page.getByText('baseenv0').click();
     await page.getByText('baseenv1').click();
@@ -55,7 +54,6 @@ test.describe('Environment Editor', () => {
     // await page.waitForTimeout(60000);
     await page.getByRole('button', { name: 'Send' }).click();
 
-    await page.getByRole('tab', { name: 'Console' }).scrollIntoViewIfNeeded();
     await page.getByRole('tab', { name: 'Console' }).click();
     await page.getByText('subenvB0').click();
     await page.getByText('subenvB1').click();
@@ -126,7 +124,6 @@ test.describe('Environment Editor', () => {
     await page.getByLabel('Request Collection').getByTestId('New Request').press('Enter');
     await page.getByRole('button', { name: 'Send' }).click();
 
-    await page.getByRole('tab', { name: 'Console' }).scrollIntoViewIfNeeded();
     await page.getByRole('tab', { name: 'Console' }).click();
     // check new environment value
     await page.getByText('kvstring').click();

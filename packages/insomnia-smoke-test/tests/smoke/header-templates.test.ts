@@ -28,7 +28,6 @@ test('can requests that contain templated header keys and values', async ({ app,
   await page.getByRole('button', { name: 'Preview' }).click();
   await page.getByRole('menuitem', { name: 'Raw Data' }).click();
   await expect.soft(responsePaneContents).toContainText('{"id":"2"}');
-  await page.getByRole('tab', { name: 'Console' }).scrollIntoViewIfNeeded();
   await page.getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responsePaneContents).toContainText('X-Foo-Bar: baz');
 });

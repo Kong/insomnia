@@ -26,7 +26,6 @@ test.describe('Global Environments', () => {
     await page.getByTestId('underlay').click();
     await page.getByRole('button', { name: 'Send' }).click();
 
-    await page.getByRole('tab', { name: 'Console' }).scrollIntoViewIfNeeded();
     await page.getByRole('tab', { name: 'Console' }).click();
     await page.locator('pre').filter({ hasText: '| 4444' }).click();
     await page.locator('pre').filter({ hasText: '| 55555' }).click();
