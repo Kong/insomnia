@@ -1,5 +1,5 @@
-
 /**
+ *
  * This module exports various types and interfaces related to the Insomnia scripting environment.
  *
  * - `RequestAuth`: Represents authentication details for a request.
@@ -12,7 +12,16 @@
  * - `Response`: Represents an HTTP response.
  * - `QueryParam`, `Url`, `UrlMatchPattern`, `UrlMatchPatternList`: Represents query parameters, URLs, URL match patterns, and a list of URL match patterns.
  * - `Variable`, `VariableList`: Represents variables and a list of variables.
- * ```*/
+ *
+ * @example
+ * ```javascript
+ * const uuid = require('uuid');
+ * insomnia.environment.set('user_id', uuid.v4());
+ * console.log(insomnia.environment.get('user_id'));
+ * ```
+ * @module
+ **/
+
 export { RequestAuth } from './auth';
 export { Certificate } from './certificates';
 export { Cookie, CookieList } from './cookies';
