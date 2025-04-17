@@ -45,6 +45,7 @@ test.describe('Cookie editor', () => {
     await page.click('[data-testid="request-pane"] button:has-text("Send")');
 
     // Check in the timeline that the cookie was sent
+
     await page.getByRole('tab', { name: 'Console' }).click();
     await expect.soft(page.getByText('foo2=bar2')).toBeVisible();
 

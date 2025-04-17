@@ -76,7 +76,6 @@ test('can send requests', async ({ app, page }) => {
     .press('Enter');
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
-  // TODO(filipe): re-add a check for the preview that is less flaky
   await page.getByRole('tab', { name: 'Console' }).click();
   await page.locator('pre').filter({ hasText: '< Content-Type: application/pdf' }).click();
 

@@ -55,6 +55,5 @@ test('can use external modules in scripts', async ({ app, page }) => {
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
   // verify
-  const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-  await expect.soft(statusTag).toContainText('200 OK');
+  await expect.soft(page.getByTestId('response-status-tag')).toContainText('200 OK');
 });

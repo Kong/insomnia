@@ -12,9 +12,9 @@ test.describe('Global Environments', () => {
     await page.getByTestId('New Request').getByLabel('GET New Request', { exact: true }).click();
     // check if it has error message
     await page.getByText('Body', { exact: true }).click();
-    await expect.soft(page.getByTitle("Failed to render environment variables: _['global-base']")).toHaveText(
-      "_['global-base']",
-    );
+    await expect
+      .soft(page.getByTitle("Failed to render environment variables: _['global-base']"))
+      .toHaveText("_['global-base']");
     // check if it appears as a custom message when sending the request
     await page.getByRole('button', { name: 'Send' }).click();
     await page.getByRole('heading', { name: '2 environment variables are' }).click();
@@ -25,6 +25,7 @@ test.describe('Global Environments', () => {
     await page.getByText('New Environment').click();
     await page.getByTestId('underlay').click();
     await page.getByRole('button', { name: 'Send' }).click();
+
     await page.getByRole('tab', { name: 'Console' }).click();
     await page.locator('pre').filter({ hasText: '| 4444' }).click();
     await page.locator('pre').filter({ hasText: '| 55555' }).click();

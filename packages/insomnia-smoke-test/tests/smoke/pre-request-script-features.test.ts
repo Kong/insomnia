@@ -367,16 +367,18 @@ test.describe('pre-request features tests', () => {
       variables: 'var',
     });
     expect.soft(reqBodyJsons.fileBody.data).toBe('raw file content');
-    expect.soft(reqBodyJsons.formdataBody.data).toBe(
-      '--X-INSOMNIA-BOUNDARY\r\nContent-Disposition: form-data; name="k1"\r\n\r\nv1\r\n--X-INSOMNIA-BOUNDARY\r\nContent-Disposition: form-data; name="k2"; filename="rawfile.txt"\r\nContent-Type: text/plain\r\n\r\nraw file content\r\n--X-INSOMNIA-BOUNDARY--\r\n',
-    );
+    expect
+      .soft(reqBodyJsons.formdataBody.data)
+      .toBe(
+        '--X-INSOMNIA-BOUNDARY\r\nContent-Disposition: form-data; name="k1"\r\n\r\nv1\r\n--X-INSOMNIA-BOUNDARY\r\nContent-Disposition: form-data; name="k2"; filename="rawfile.txt"\r\nContent-Type: text/plain\r\n\r\nraw file content\r\n--X-INSOMNIA-BOUNDARY--\r\n',
+      );
   });
 
   test('insomnia.request / update proxy configuration', async ({ page }) => {
     const responsePane = page.getByTestId('response-pane');
 
     // update proxy configuration
-    await page.getByTestId("settings-button").click();
+    await page.getByTestId('settings-button').click();
     await page.locator('text=Insomnia Preferences').first().click();
     await page.getByRole('tab', { name: 'Proxy' }).click();
     await page.locator('text=Enable proxy').click();
@@ -450,9 +452,11 @@ test.describe('pre-request features tests', () => {
     await page.getByRole('tab', { name: 'Tests' }).click();
 
     const responsePane = page.getByTestId('response-pane');
-    await expect.soft(responsePane).toContainText(
-      'FAILunhappy tests | error: AssertionError: expected 199 to deeply equal 200 | ACTUAL: 199 | EXPECTED: 200Pre-request Test',
-    );
+    await expect
+      .soft(responsePane)
+      .toContainText(
+        'FAILunhappy tests | error: AssertionError: expected 199 to deeply equal 200 | ACTUAL: 199 | EXPECTED: 200Pre-request Test',
+      );
     await expect.soft(responsePane).toContainText('PASShappy tests');
   });
 
