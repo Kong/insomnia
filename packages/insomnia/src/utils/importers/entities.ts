@@ -100,12 +100,12 @@ interface ContentStrImporter extends BaseImporter {
   convert: Converter;
 }
 
-interface FileImporter extends BaseImporter {
+interface FilePathImporter extends BaseImporter {
   acceptFilePath: true;
   convert: FilePathConverter;
 }
 
-export type Importer = ContentStrImporter | FileImporter;
+export type Importer = ContentStrImporter | FilePathImporter;
 
 export interface ImportEntry {
   contentStr: string;

@@ -24,7 +24,7 @@ export const convert = async (importEntry: ImportEntry) => {
   for (const importer of importers) {
     let resources;
     if (importer.acceptFilePath === true) {
-      // FileImporter
+      // FilePathImporter
       resources = await importer.convert(importEntry);
     } else {
       // ContentStrImporter
