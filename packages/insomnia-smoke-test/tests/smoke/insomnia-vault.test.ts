@@ -15,33 +15,6 @@ test('Check vault key generation', async ({ page }) => {
   await page.getByRole('button', { name: 'Generate Vault Key' }).click();
   const vaultKeyValue = await page.getByTestId('VaultKeyDisplayPanel').innerText();
   expect.soft(vaultKeyValue.length).toBeGreaterThan(0);
-  await page.locator('.app').press('Escape');
-  // check secret vault environment could be created
-  await page.getByRole('button', { name: 'Create document', exact: true }).click();
-  await page.getByRole('button', { name: 'Create', exact: true }).click();
-  await page.getByTestId('project').click();
-  await page.getByLabel('Create in project').click();
-  await page.getByLabel('Create', { exact: true }).getByText('Environment').click();
-  await page.getByRole('button', { name: 'Create', exact: true }).click();
-  await page.getByTestId('CreateEnvironmentDropdown').click();
-  await page.getByText('Private environment').click();
-  // activate created private environment
-  await page.getByRole('grid', { name: 'Environments' }).getByText('New Environment').click();
-
-  const kvTable = page.getByRole('listbox', { name: 'Environment Key Value Pair' });
-  // add first secret environment
-  const firstRow = kvTable.getByRole('option').first();
-  await firstRow.getByTestId('OneLineEditor').first().click();
-  await page.keyboard.type('foo');
-  await firstRow.getByTestId('OneLineEditor').nth(1).click();
-  await page.keyboard.type('bar');
-  await page.waitForTimeout(500);
-  await firstRow.getByRole('button', { name: 'Type Selection' }).click();
-  await page.getByRole('menuitemradio', { name: 'Secret' }).click();
-  await expect.soft(firstRow.locator('.fa-eye-slash')).toBeVisible();
-  await firstRow.locator('.fa-eye-slash').click();
-  // test decrypt secret in UI
-  await expect.soft(firstRow.getByTestId('OneLineEditor').nth(1)).toContainText('bar');
 });
 
 test.describe('Vault key actions', () => {
@@ -55,13 +28,21 @@ test.describe('Vault key actions', () => {
     },
   });
 
-  test('check reset vault key', async ({ page }) => {
+  test('check reset and validate vault key', async ({ page }) => {
+    // check vault key validation
     await page.getByTestId('settings-button').click();
     await page.locator('text=Insomnia Preferences').first().click();
+    // validate vault key
     await page.getByRole('button', { name: 'Enter Vault Key' }).click();
+    const modal = page.getByTestId('input-vault-key-modal');
+    await expect.soft(modal).toBeVisible();
+    // fill the input with aria label test with valid and invalid vault key
+    await page.getByLabel('Vault Key Input').fill('invalidVaultKey');
+    await page.getByRole('button', { name: 'Unlock' }).click();
+    await modal.getByText("M2 didn't Check").click();
+    // test reset vault key
     await page.getByText('Reset Vault Key').click();
     await page.getByText('Yes').click();
-    const modal = page.getByTestId('input-vault-key-modal');
     await expect.soft(modal).toBeVisible();
     const vaultKeyValueInModal = await modal.getByTestId('VaultKeyDisplayPanel').innerText();
     expect.soft(vaultKeyValueInModal.length).toBeGreaterThan(0);
@@ -84,19 +65,6 @@ test.describe('Vault key actions', () => {
     const vaultKeyValueInModal = await page.getByTestId('VaultKeyDisplayPanel').innerText();
     expect.soft(vaultKeyValueInModal.length).toBeGreaterThan(0);
   });
-
-  test('check vault key validation', async ({ page }) => {
-    await page.getByTestId('settings-button').click();
-    await page.locator('text=Insomnia Preferences').first().click();
-    // validate vault key
-    await page.getByRole('button', { name: 'Enter Vault Key' }).click();
-    const modal = page.getByTestId('input-vault-key-modal');
-    await expect.soft(modal).toBeVisible();
-    // fill the input with aria lable test with valid and invalid vault key
-    await page.getByLabel('Vault Key Input').fill('invalidVaultKey');
-    await page.getByRole('button', { name: 'Unlock' }).click();
-    await modal.getByText("M2 didn't Check").click();
-  });
 });
 
 test.describe('Check vault used in environment', () => {
@@ -110,15 +78,23 @@ test.describe('Check vault used in environment', () => {
     },
   });
 
-  test('create global private sub environment to store vaults', async ({ page, app }) => {
-    // import request
+  test('test global private sub environment to store vaults', async ({ page, app }) => {
+    // import requests
     const requestColText = await loadFixture('vault-collection.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), requestColText);
     await page.getByLabel('Import').click();
     await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    // create global private environment
+    // import global environment
+    const vaultEnvText = await loadFixture('vault-environment.yaml');
+    await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), vaultEnvText);
+    await page.getByLabel('Import').click();
+    await page.locator('[data-test-id="import-from-clipboard"]').click();
+    await page.getByRole('button', { name: 'Scan' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+
+    // create new global private environment
     await page.getByLabel('Create in project').click();
     await page.getByLabel('Create', { exact: true }).getByText('Environment').click();
     await page.getByPlaceholder('Enter a name for your Environment').fill('New Global Vault Environment');
@@ -129,6 +105,7 @@ test.describe('Check vault used in environment', () => {
     await page.getByRole('grid', { name: 'Environments' }).getByText('New Environment').click();
 
     const kvTable = page.getByRole('listbox', { name: 'Environment Key Value Pair' });
+
     // add first secret environment
     const firstRow = kvTable.getByRole('option').first();
     await firstRow.getByTestId('OneLineEditor').first().click();
@@ -161,7 +138,7 @@ test.describe('Check vault used in environment', () => {
       .first()
       .click();
 
-    // activate global private vault environment
+    // activate existing global private vault environment from import
     await page.getByText('Vault Collection').click();
     await page.getByLabel('Manage Environments').click();
     await page.getByPlaceholder('Choose a global environment').click();
@@ -169,44 +146,28 @@ test.describe('Check vault used in environment', () => {
     await page.getByRole('option', { name: 'New Environment' }).click();
     await page.getByText('Base Environment1').click();
     await page.getByTestId('underlay').click();
-    // activate request
+
+    // activate request and validate newly created vault env has been applied
     await page.getByTestId('normal').getByLabel('GET normal', { exact: true }).click();
     await page.getByRole('button', { name: 'Send' }).click();
 
     await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();
     await page.getByText('bar').click();
     await page.getByText('world').click();
-  });
-
-  test('vault environment to be applied', async ({ app, page }) => {
-    // import global environment
-    const vaultEnvText = await loadFixture('vault-environment.yaml');
-    await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), vaultEnvText);
-    await page.getByLabel('Import').click();
-    await page.locator('[data-test-id="import-from-clipboard"]').click();
-    await page.getByRole('button', { name: 'Scan' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    // import request
-    const requestColText = await loadFixture('vault-collection.yaml');
-    await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), requestColText);
-    await page.getByLabel('Import').click();
-    await page.locator('[data-test-id="import-from-clipboard"]').click();
-    await page.getByRole('button', { name: 'Scan' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-    await page.getByText('Vault Collection').click();
 
     // allow vault to be accessed by the request
     await page.getByTestId('settings-button').click();
     await page.locator('text=Insomnia Preferences').first().click();
     await page.locator('text=Enable vault in scripts').click();
     await page.locator('.app').press('Escape');
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(500);
 
-    // activate global private vault environment
+    // activate global private vault environment from import
     await page.getByLabel('Manage Environments').click();
     await page.getByPlaceholder('Choose a global environment').click();
     await page.getByRole('option', { name: 'Global env with secret vault' }).click();
-    await page.getByText('vault env').click();
+    await page.getByText('global vault env with secret').click();
+
     // activate legacy array vault environment
     await page.getByText('legacy vault value array').click();
     await page.getByTestId('underlay').click();
