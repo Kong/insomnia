@@ -132,7 +132,7 @@
     "@types/uuid": "^9.0.8",
     "@types/vkbeautify": "^0.99.4",
     "@types/ws": "^8.18.1",
-    "@vitejs/plugin-react": "^4.4.0",
+    "@vitejs/plugin-react": "4.3.4",
     "@xmldom/xmldom": "^0.9.8",
     "autoprefixer": "^10.4.21",
     "buffer": "^6.0.3",
