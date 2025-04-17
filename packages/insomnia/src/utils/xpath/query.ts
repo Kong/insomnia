@@ -5,11 +5,11 @@ import xpath from 'xpath';
  * Query an XML blob with XPath
  */
 export const queryXPath = (xml: string, query?: string) => {
-  const dom = new DOMParser().parseFromString(xml);
+  const document = new DOMParser().parseFromString(xml, 'text/xml');
   if (query === undefined) {
     throw new Error('Must pass an XPath query.');
   }
-  const selectedValues = xpath.select(query, dom);
+  const selectedValues = xpath.select(query, document as unknown as Node); // https://github.com/xmldom/xmldom/issues/724
   // Functions return plain strings
   if (typeof selectedValues === 'string') {
     return [{ outer: selectedValues, inner: selectedValues }];

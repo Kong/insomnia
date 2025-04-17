@@ -749,12 +749,12 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             return results[0];
           }
           const DOMParser = (await import('@xmldom/xmldom')).DOMParser;
-          const dom = new DOMParser().parseFromString(body);
+          const document = new DOMParser().parseFromString(body, 'text/xml');
           if (sanitizedFilter === undefined) {
             throw new Error('Must pass an XPath query.');
           }
           try {
-            const selectedValues = (await import('xpath')).select(sanitizedFilter, dom);
+            const selectedValues = (await import('xpath')).select(sanitizedFilter, document as unknown as Node); // https://github.com/xmldom/xmldom/issues/724
 
             let results: { outer: string; inner: string | null }[] = [];
 

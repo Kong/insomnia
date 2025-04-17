@@ -136,7 +136,7 @@ function verifyWsdl(fileContent: string) {
   try {
     const mainWsdlDocument = new DOMParser().parseFromString(fileContent, 'text/xml');
     return (
-      mainWsdlDocument.documentElement.namespaceURI === wsdlNamespaceUri &&
+      mainWsdlDocument.documentElement?.namespaceURI === wsdlNamespaceUri &&
       mainWsdlDocument.documentElement.localName === 'definitions'
     );
   } catch (error) {
