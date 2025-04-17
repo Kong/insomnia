@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import React from 'react';
 import { Button } from 'react-aria-components';
-import { isRouteErrorResponse, useFetcher, useNavigate, useNavigation, useRouteError } from 'react-router-dom';
+import { isRouteErrorResponse, useFetcher, useNavigate, useNavigation, useRouteError } from 'react-router';
 
 import { Icon } from '../components/icon';
 

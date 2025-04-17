@@ -1,6 +1,6 @@
 import classnames from 'classnames';
 import React, { type FC, type PropsWithChildren, type ReactNode } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router';
 
 import type { RequestLoaderData } from '../../../../routes/request';
 import type { RequestGroupLoaderData } from '../../../../routes/request-group';

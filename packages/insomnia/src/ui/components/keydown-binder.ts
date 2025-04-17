@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router';
 import {
   createKeybindingsHandler as _createKeybindingsHandler,
   type KeyBindingHandlerOptions,

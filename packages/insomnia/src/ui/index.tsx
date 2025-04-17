@@ -2,7 +2,7 @@ import './rendererListeners';
 
 import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
-import { createMemoryRouter, matchPath, Outlet, RouterProvider } from 'react-router-dom';
+import { createMemoryRouter, matchPath, Outlet, RouterProvider } from 'react-router';
 
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from '../account/session';
 import {
@@ -116,7 +116,7 @@ async function renderApp() {
         errorElement: <ErrorRoute />,
         children: [
           {
-            path: 'onboarding/*',
+            path: 'onboarding',
             element: <Onboarding />,
             errorElement: <ErrorRoute />,
           },
@@ -630,7 +630,7 @@ async function renderApp() {
                                 ],
                               },
                               {
-                                path: 'mock-server/*',
+                                path: 'mock-server',
                                 id: 'mock-server',
                                 loader: async (...args) => (await import('./routes/mock-server')).loader(...args),
                                 element: (
@@ -768,7 +768,7 @@ async function renderApp() {
                                 ],
                               },
                               {
-                                path: 'test/*',
+                                path: 'test',
                                 loader: async (...args) => (await import('./routes/unit-test')).loader(...args),
                                 element: (
                                   <Suspense fallback={<AppLoadingIndicator />}>

@@ -1,7 +1,7 @@
 import type * as Har from 'har-format';
 import React from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
-import { type LoaderFunction, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { type LoaderFunction, useFetcher, useParams, useRouteLoaderData } from 'react-router';
 
 import {
   CONTENT_TYPE_JSON,

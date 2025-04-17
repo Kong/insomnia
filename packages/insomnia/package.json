@@ -167,7 +167,7 @@
     "react-aria-components": "^1.8.0",
     "react-dom": "^18.3.1",
     "react-resizable-panels": "^2.1.7",
-    "react-router-dom": "^6.30.0",
+    "react-router": "^7.5.1",
     "react-stately": "3.37.0",
     "react-use": "^17.6.0",
     "tailwindcss": "^3.4.17",

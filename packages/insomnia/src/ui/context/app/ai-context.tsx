@@ -1,5 +1,5 @@
 import React, { createContext, type FC, type PropsWithChildren, useContext, useEffect, useRef } from 'react';
-import { useFetcher, useFetchers, useParams } from 'react-router-dom';
+import { useFetcher, useFetchers, useParams } from 'react-router';
 
 import { useRootLoaderData } from '../../routes/root';
 

@@ -11,7 +11,7 @@ import {
   Select,
   SelectValue,
 } from 'react-aria-components';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 
 import { HAWK_ALGORITHM_SHA256 } from '../../../common/constants';
 import type {

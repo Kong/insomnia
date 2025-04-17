@@ -1,6 +1,6 @@
 import { type FC } from 'react';
 import React from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router';
 
 import { isGitProject, isRemoteProject } from '../../../models/project';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';

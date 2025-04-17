@@ -12,7 +12,7 @@ import {
   TableBody,
   TableHeader,
 } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router';
 
 import type { Snapshot } from '../../../sync/types';
 import { useRootLoaderData } from '../../routes/root';

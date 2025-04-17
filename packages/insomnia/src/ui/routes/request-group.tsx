@@ -1,4 +1,4 @@
-import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
+import { type ActionFunction, type LoaderFunction, redirect } from 'react-router';
 
 import * as models from '../../models';
 import { EnvironmentType } from '../../models/environment';

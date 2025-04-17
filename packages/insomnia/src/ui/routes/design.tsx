@@ -32,14 +32,7 @@ import {
   TooltipTrigger,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import {
-  type LoaderFunction,
-  NavLink,
-  useFetcher,
-  useLoaderData,
-  useParams,
-  useRouteLoaderData,
-} from 'react-router-dom';
+import { type LoaderFunction, NavLink, useFetcher, useLoaderData, useParams, useRouteLoaderData } from 'react-router';
 import { useUnmount } from 'react-use';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
 import YAML from 'yaml';

@@ -1,5 +1,5 @@
 import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router';
 
 import type { AUTH_OAUTH_2 } from '../../../../common/constants';
 import { toKebabCase } from '../../../../common/misc';

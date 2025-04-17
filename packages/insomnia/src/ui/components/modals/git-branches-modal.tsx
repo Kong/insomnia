@@ -11,7 +11,7 @@ import {
   ModalOverlay,
   TextField,
 } from 'react-aria-components';
-import { useFetcher, useParams, useRevalidator } from 'react-router-dom';
+import { useFetcher, useParams, useRevalidator } from 'react-router';
 
 import type { MergeConflict } from '../../../sync/types';
 import {

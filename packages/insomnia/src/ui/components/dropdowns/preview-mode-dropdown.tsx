@@ -1,7 +1,7 @@
 import fs from 'fs';
 import React, { type FC, useCallback } from 'react';
 import { Button } from 'react-aria-components';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router';
 
 import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';

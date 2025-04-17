@@ -1,5 +1,5 @@
 import React, { type FC, useCallback } from 'react';
-import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router';
 
 import type { RequestParameter } from '../../../models/request';
 import { useRequestPatcher } from '../../hooks/use-request';
