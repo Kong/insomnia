@@ -36,7 +36,8 @@
     "test:smoke:dev": "npm run test:dev -w insomnia-smoke-test -- --project=Smoke",
     "test:smoke:build": "npm run test:build -w insomnia-smoke-test -- --project=Smoke",
     "test:smoke:package": "npm run test:package -w insomnia-smoke-test -- --project=Smoke",
-    "test:crit:package": "npm run test:package -w insomnia-smoke-test -- --project=Critical"
+    "test:crit:package": "npm run test:package -w insomnia-smoke-test -- --project=Critical",
+    "postinstall": "patch-package"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",
@@ -54,6 +55,7 @@
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
+    "patch-package": "^8.0.0",
     "prettier": "3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "tslib": "2.0.1",

@@ -53,7 +53,7 @@ export interface QueryString extends Comment {
 
 export type ImportRequestType = 'environment' | 'request' | 'request_group' | 'workspace';
 
-export interface ImportRequest<T extends {} = {}> extends Comment {
+export interface ImportRequest extends Comment {
   _id?: string;
   // @TODO Fix me
   _type?: string;
@@ -65,7 +65,7 @@ export interface ImportRequest<T extends {} = {}> extends Comment {
   httpVersion?: string;
   method?: string;
   name?: string;
-  data?: T;
+  data?: object;
   description?: string;
   parameters?: Parameter[];
   parentId?: string | null;
@@ -79,13 +79,36 @@ export interface ImportRequest<T extends {} = {}> extends Comment {
   scope?: string;
 }
 
-export type Converter<T extends {} = {}> = (
-  rawData: string,
-) => ImportRequest<T>[] | Promise<ImportRequest<T>[] | null> | null;
+interface ConvertErrorResult {
+  convertErrorMessage: string;
+}
 
-export interface Importer {
+type ConvertResult = ImportRequest[] | ConvertErrorResult | null;
+
+export type Converter = (rawData: string) => ConvertResult | Promise<ConvertResult>;
+
+export type FilePathConverter = (importEntry: ImportEntry) => ConvertResult | Promise<ConvertResult>;
+
+interface BaseImporter {
   id: string;
   name: string;
   description: string;
+}
+
+interface ContentStrImporter extends BaseImporter {
+  acceptFilePath?: false;
   convert: Converter;
+}
+
+interface FilePathImporter extends BaseImporter {
+  acceptFilePath: true;
+  convert: FilePathConverter;
+}
+
+export type Importer = ContentStrImporter | FilePathImporter;
+
+export interface ImportEntry {
+  contentStr: string;
+  oriFileName?: string;
+  oriFilePath?: string;
 }

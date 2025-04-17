@@ -34,7 +34,9 @@ export const init = (activeProjectId?: string) => ({
           uri,
         });
 
-        await scanResources([content]);
+        await scanResources([{
+          contentStr: content,
+        }]);
 
         await importResourcesToProject({
           projectId: activeProjectId,
@@ -44,7 +46,9 @@ export const init = (activeProjectId?: string) => ({
         if (!activeProjectId) {
           return;
         }
-        await scanResources([content]);
+        await scanResources([{
+          contentStr: content,
+        }]);
 
         await importResourcesToProject({
           projectId: activeProjectId,

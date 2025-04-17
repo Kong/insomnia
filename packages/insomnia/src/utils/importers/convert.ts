@@ -1,4 +1,4 @@
-import type { ImportRequest } from './entities';
+import type { ImportEntry, ImportRequest } from './entities';
 import { setDefaults } from './utils';
 
 export interface InsomniaImporter {
@@ -18,14 +18,29 @@ export interface ConvertResult {
   };
 }
 
-export const convert = async (rawData: string) => {
+export const convert = async (importEntry: ImportEntry) => {
   const importers = (await import('./importers')).importers;
+  const errMsgList: string[] = [];
   for (const importer of importers) {
-    const resources = await importer.convert(rawData);
+    let resources;
+    if (importer.acceptFilePath === true) {
+      // FilePathImporter
+      resources = await importer.convert(importEntry);
+    } else {
+      // ContentStrImporter
+      resources = await importer.convert(importEntry.contentStr);
+    }
 
     if (!resources) {
       continue;
     }
+
+    if ('convertErrorMessage' in resources) {
+      // ConvertErrorResult
+      errMsgList.push(`Error in importer ${importer.name}: ${resources.convertErrorMessage}`);
+      continue;
+    }
+
     dotInKeyNameInvariant(resources);
 
     // Each postman's collection has its variable, we map it to request group's environment in Insomnia
@@ -52,7 +67,7 @@ export const convert = async (rawData: string) => {
     return convertedResult;
   }
 
-  throw new Error('No importers found for file');
+  throw new Error(errMsgList.length > 0 ? errMsgList.join('\n') : 'No importers found for file');
 };
 
 // this checks invalid keys ahead, or nedb would return an error in importing.

@@ -30,7 +30,9 @@ describe('Fixtures', () => {
         const inputContents = fs.readFileSync(path.join(dir, input), 'utf8');
         expect(typeof inputContents).toBe('string');
 
-        const results = await convert(inputContents);
+        const results = await convert({
+          contentStr: inputContents,
+        });
         results.data.__export_date = '';
         expect(results.data).toMatchSnapshot();
 

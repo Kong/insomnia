@@ -1,3 +1,7 @@
+import { DOMParser } from '@xmldom/xmldom';
+// Since there are restrictions that let it not generate full sample request, it's hard-coded in apiconnect-wsdl, so we use patch-package to patch the files in apiconnect-wsdl to remove the restrictions
+// The version of apiconnect-wsdl is locked to 2.0.36. If you need to use a newer version in the future, make sure to update the patch file; otherwise, the program may break.
+// https://www.npmjs.com/package/patch-package
 import {
   findWSDLForServiceName,
   getJsonForWSDL,
@@ -6,12 +10,13 @@ import {
   type Swagger,
 } from 'apiconnect-wsdl';
 
-import type { Converter } from '../entities';
+import type { FilePathConverter } from '../entities';
 import * as postman from './postman';
 
 export const id = 'wsdl';
 export const name = 'WSDL';
 export const description = 'Importer for WSDL files';
+export const acceptFilePath = true;
 
 const pathToSwagger = (swagger: any, path: string[]) => {
   return path.reduce((acc, v: string) => {
@@ -81,6 +86,7 @@ const convertToPostman = (items: Swagger[]) => {
   };
 };
 
+// input can be a file path or a file content string
 const convertWsdlToPostman = async (input: string) => {
   const wsdls = await getJsonForWSDL(input);
   const { services } = getWSDLServices(wsdls);
@@ -93,18 +99,47 @@ const convertWsdlToPostman = async (input: string) => {
   return convertToPostman(items);
 };
 
-export const convert: Converter = async rawData => {
+export const convert: FilePathConverter = async importEntry => {
+  const rawData = importEntry.contentStr;
+
   try {
-    if (rawData.indexOf('wsdl:definition') !== -1) {
-      const postmanData = await convertWsdlToPostman(`<?xml version="1.0" encoding="UTF-8" ?>${rawData}`);
-      postmanData.info.schema += 'collection.json';
-      const postmanJson = JSON.stringify(postmanData);
-      return postman.convert(postmanJson);
+    if (!verifyWsdl(rawData)) {
+      return null;
     }
   } catch (error) {
-    console.error(error);
-    // Nothing
+    return null;
   }
 
-  return null;
+  try {
+    let input;
+    if (importEntry.oriFilePath) {
+      // here we prioritize using the original file path because the apiconnect-wsdl library can recognize 'import', 'include' tags in a wsdl file and find the referenced xsd files automatically.
+      input = importEntry.oriFilePath;
+    } else {
+      input = `<?xml version="1.0" encoding="UTF-8" ?>${rawData}`;
+    }
+    const postmanData = await convertWsdlToPostman(input);
+    postmanData.info.schema += 'collection.json';
+    const postmanJson = JSON.stringify(postmanData);
+    return postman.convert(postmanJson);
+  } catch (error) {
+    console.error(error);
+    return {
+      convertErrorMessage: error.message,
+    };
+  }
 };
+
+const wsdlNamespaceUri = 'http://schemas.xmlsoap.org/wsdl/';
+
+function verifyWsdl(fileContent: string) {
+  try {
+    const mainWsdlDocument = new DOMParser().parseFromString(fileContent, 'text/xml');
+    return (
+      mainWsdlDocument.documentElement.namespaceURI === wsdlNamespaceUri &&
+      mainWsdlDocument.documentElement.localName === 'definitions'
+    );
+  } catch (error) {
+    return false;
+  }
+}
