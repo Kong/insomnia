@@ -1,7 +1,7 @@
 import electron, { BrowserWindow } from 'electron';
 import fs from 'fs';
 import { MessageType, parseMessage } from 'graphql-ws';
-import { get, type IncomingMessage } from 'http';
+import { type IncomingMessage } from 'http';
 import { HttpProxyAgent } from 'http-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import path from 'path';
