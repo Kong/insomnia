@@ -37,7 +37,6 @@
     "cross-env": "^7.0.3",
     "esbuild": "^0.25.2",
     "esbuild-runner": "^2.2.2",
-    "vitest": "^2.1.9",
     "shellwords": "^1.0.1"
   },
   "dependencies": {

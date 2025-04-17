@@ -81,6 +81,7 @@
     "swagger-ui-dist": "^5.21.0",
     "tough-cookie": "^4.1.4",
     "uuid": "^9.0.1",
+    "vite": "^6.3.1",
     "yaml": "^2.7.1",
     "zod": "^3.24.2"
   },
@@ -174,7 +175,6 @@
     "tinykeys": "^2.1.0",
     "type-fest": "^4.40.0",
     "typescript": "^5.8.3",
-    "vite": "^5.4.18",
     "vkbeautify": "^0.99.3",
     "ws": "^8.18.1",
     "xpath": "0.0.34"

@@ -203,7 +203,6 @@ export const startGRPCServer = (port: number) => {
         }
         featureList = JSON.parse(data.toString());
         console.log(`Listening at grpc://localhost:${port} for route_guide.proto`);
-        server.start();
         resolve();
       });
     });
@@ -246,7 +245,6 @@ export const startGRPCServer = (port: number) => {
         }
         featureList = JSON.parse(data.toString());
         console.log('Listening at grpcs://localhost:50052 for route_guide.proto');
-        serverWithTLS.start();
         resolve();
       });
     });
