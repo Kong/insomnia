@@ -42,7 +42,7 @@ resources:
     parentId: env_214ce88837cd0a36c40a0ea6a84c7c6177663206
     modified: 1737618683837
     created: 1735021423365
-    name: vault env
+    name: global vault env with secret
     data:
       __insomnia_vault:
         secret: eyJpdiI6ImY2NTAzYmVjMDIyYTE2YzNlNTNkMWY5MiIsInQiOiI3YzgwMGVkZGVhZGZmN2MxMjVmNmVmNzlkODY2NGM0YyIsImFkIjoiIiwiZCI6IjU2YzdlODU0NDA3MjdmOTQifQ==
