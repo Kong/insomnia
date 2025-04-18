@@ -42,6 +42,7 @@ const socketIO: SocketIOBridgeAPI = {
   close: options => ipcRenderer.send('socketIO.close', options),
   closeAll: () => ipcRenderer.send('socketIO.closeAll'),
   event: {
+    findMany: options => ipcRenderer.invoke('socketIO.event.findMany', options),
     send: options => ipcRenderer.invoke('socketIO.event.send', options),
     on: options => ipcRenderer.send('socketIO.event.on', options),
     off: options => ipcRenderer.send('socketIO.event.off', options),

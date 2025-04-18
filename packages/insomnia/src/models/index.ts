@@ -44,6 +44,7 @@ import * as _runnerTestResult from './runner-test-result';
 import * as _settings from './settings';
 import * as _socketIOPayload from './socket-io-payload';
 import * as _socketIORequest from './socket-io-request';
+import * as _socketIoResponse from './socket-io-response';
 import * as _stats from './stats';
 import * as _unitTest from './unit-test';
 import * as _unitTestResult from './unit-test-result';
@@ -101,6 +102,7 @@ export const webSocketPayload = _webSocketPayload;
 export const webSocketRequest = _webSocketRequest;
 export const socketIORequest = _socketIORequest;
 export const socketIOPayload = _socketIOPayload;
+export const socketIOResponse = _socketIoResponse;
 export const webSocketResponse = _webSocketResponse;
 export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
@@ -148,6 +150,7 @@ export function all() {
     userSession,
     socketIORequest,
     socketIOPayload,
+    socketIOResponse,
   ] as const;
 }
 
