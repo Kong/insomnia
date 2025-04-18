@@ -94,9 +94,9 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniqueKey = `${environment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta.activeResponseId}`;
 
-  // TODO: Implement readyState and disabled
-  const disabled = false;
   const readyState = useReadyState({ requestId: activeRequest._id, protocol: 'socketIO' });
+  const disabled = readyState;
+  // TODO: count the number of events
   const eventsCount = 1;
 
   return (

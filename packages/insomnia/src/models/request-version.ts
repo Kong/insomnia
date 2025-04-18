@@ -6,7 +6,7 @@ import * as requestOperations from '../models/helpers/request-operations';
 import type { GrpcRequest } from './grpc-request';
 import type { BaseModel } from './index';
 import { isRequest, type Request } from './request';
-import type { SocketIORequest } from './socket-io-request';
+import { isSocketIORequest, type SocketIORequest } from './socket-io-request';
 import { isWebSocketRequest, type WebSocketRequest } from './websocket-request';
 
 export const name = 'Request Version';
@@ -57,7 +57,7 @@ export function findByParentId(parentId: string) {
 }
 
 export async function create(request: Request | WebSocketRequest | GrpcRequest | SocketIORequest) {
-  if (!isRequest(request) && !isWebSocketRequest(request)) {
+  if (!isRequest(request) && !isWebSocketRequest(request) && !isSocketIORequest(request)) {
     throw new Error(`New ${type} was not given a valid ${request.type} instance`);
   }
 
@@ -114,7 +114,7 @@ export async function restore(requestVersionId: string) {
 
   return requestOperations.update(originalRequest, requestPatch);
 }
-function _diffRequests(rOld: Request | WebSocketRequest | null, rNew: Request | WebSocketRequest) {
+function _diffRequests(rOld: Request | WebSocketRequest | null, rNew: Request | WebSocketRequest | SocketIORequest) {
   if (!rOld) {
     return true;
   }

@@ -37,6 +37,7 @@ export type HandleChannels =
   | 'socketIO.open'
   | 'socketIO.readyState'
   | 'socketIO.event.send'
+  | 'socketIO.event.findMany'
   | 'writeFile'
   | 'readFile'
   | 'extractJsonFileFromPostmanDataDumpArchive'

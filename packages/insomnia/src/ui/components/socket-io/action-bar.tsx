@@ -5,7 +5,6 @@ import { useFetcher, useParams } from 'react-router-dom';
 import * as models from '../../../models';
 import type { SocketIORequest } from '../../../models/socket-io-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
-import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import type { ConnectActionParams } from '../../routes/request';
 import { OneLineEditor, type OneLineEditorHandle } from '../codemirror/one-line-editor';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';

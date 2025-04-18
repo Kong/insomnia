@@ -32,11 +32,9 @@ export const SocketIOBodyTabPane = ({
   request,
   requestPayload,
 }: Props) => {
-  const editorsRef = useRef(new Map());
 
   const [selectedArg, setSelectedArg] = useState<Key>('');
   const requestPayloadPatcher = useRequestPayloadPatcher();
-  // console.log('args', args);
 
   const handleAddArg = async () => {
     const args = requestPayload?.args || [];
@@ -56,16 +54,6 @@ export const SocketIOBodyTabPane = ({
       requestPayloadPatcher(request._id, { args: newArgs });
     }
   };
-
-  const tabs = useMemo(() => {
-    const args = requestPayload?.args || [];
-    return args.map((item, index) => {
-      return {
-        title: `Arg ${index + 1}`,
-        ...item,
-      };
-    });
-  }, [requestPayload]);
 
   const contentType = useMemo(() => {
     const args = requestPayload?.args || [];
@@ -94,7 +82,7 @@ export const SocketIOBodyTabPane = ({
   };
 
   const handleSend = () => {
-    // TODO handle JSON
+    // TODO handle JSON format
     window.main.socketIO.event.send({
       requestId: request._id,
       eventName: requestPayload?.eventName || 'message',
@@ -179,8 +167,47 @@ export const SocketIOBodyTabPane = ({
           <Button onPress={handleSend} className='text-center bg-[--color-surprise] text-[--color-font-surprise] rounded px-[--padding-md]'>Send</Button>
         </div>
       </Toolbar>
+      <SocketIOBodyContent
+        args={requestPayload?.args || []}
+        readonly={false}
+        handleDelete={handleDelete}
+        handleChange={handleChange}
+        selectedArg={selectedArg}
+        setSelectedArg={setSelectedArg}
+      />
+    </>
+  );
+};
+
+interface BodyContentProps {
+  args: SocketIOPayload['args'];
+  readonly: boolean;
+  handleDelete?: (id: string) => void;
+  handleChange?: (id: string, value: string) => void;
+  selectedArg?: Key;
+  setSelectedArg?: (key: Key) => void;
+}
+export const SocketIOBodyContent = ({
+  args,
+  readonly,
+  handleDelete,
+  handleChange,
+  selectedArg,
+  setSelectedArg,
+}: BodyContentProps) => {
+  const editorsRef = useRef(new Map());
+  const tabs = useMemo(() => {
+    return args.map((item, index) => {
+      return {
+        title: `Arg ${index + 1}`,
+        ...item,
+      };
+    });
+  }, [args]);
+  return (
+    <div className='h-full'>
       {tabs.length > 1 ? (
-        <Tabs selectedKey={selectedArg} onSelectionChange={setSelectedArg} orientation='vertical' className="flex flex-1" >
+        <Tabs selectedKey={selectedArg} onSelectionChange={setSelectedArg} orientation='vertical' className="flex flex-1 h-full" >
           <TabList className="overflow-x-auto border-solid border-r border-r-[--hl-md] bg-[--color-bg] " aria-label="Dynamic tabs" items={tabs}>
             {arg => (
               <Tab
@@ -189,12 +216,14 @@ export const SocketIOBodyTabPane = ({
               >
                 {({ isHovered }) => (
                   <>
-                    <Button
-                      onPress={() => handleDelete(arg.id)}
-                      className={`w-4 h-4 absolute right-0 top-0 hover:bg-[--hl-lg] ${!isHovered && 'hidden'}`}
-                    >
-                      <Icon icon="close" className='w-4 h-4 align-top' />
-                    </Button>
+                    {!readonly && (
+                      <Button
+                        onPress={() => handleDelete?.(arg.id)}
+                        className={`w-4 h-4 absolute right-0 top-0 hover:bg-[--hl-lg] ${!isHovered && 'hidden'}`}
+                      >
+                        <Icon icon="close" className='w-4 h-4 align-top' />
+                      </Button>
+                    )}
                     {arg.title}
                   </>
                 )}
@@ -206,12 +235,13 @@ export const SocketIOBodyTabPane = ({
               <TabPanel className="flex-1" id={arg.id}>
                 <CodeEditor
                   id="socket-io-message-editor"
-                  showPrettifyButton
+                  showPrettifyButton={!readonly}
                   // TODO: Add uniqueness key
                   uniquenessKey={''}
-                  mode={contentType}
+                  mode={arg.mode}
+                  readOnly={readonly}
                   ref={ref => editorsRef.current?.set(arg.id, ref)}
-                  onChange={value => handleChange(arg.id, value)}
+                  onChange={value => handleChange?.(arg.id, value)}
                   enableNunjucks
                   className="w-full"
                   defaultValue={arg.value}
@@ -223,17 +253,18 @@ export const SocketIOBodyTabPane = ({
       ) : (
         <CodeEditor
           id="socket-io-message-editor"
-          showPrettifyButton
+          showPrettifyButton={!readonly}
           // TODO: Add uniqueness key
           uniquenessKey={''}
-          mode={contentType}
+          mode={tabs[0].mode}
+          readOnly={readonly}
           ref={ref => editorsRef.current?.set(tabs[0].id, ref)}
-          onChange={value => handleChange(tabs[0].id, value)}
+          onChange={value => handleChange?.(tabs[0].id, value)}
           enableNunjucks
           className="w-full"
           defaultValue={tabs[0]?.value}
         />
       )}
-    </>
+    </div>
   );
 };
