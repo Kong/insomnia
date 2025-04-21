@@ -62,12 +62,12 @@ export const getOrInheritAuthentication = ({
 }: {
   request: Request | WebSocketRequest;
   requestGroups: RequestGroup[];
-}): RequestAuthentication | {} => {
+}): { authentication: RequestAuthentication | {}, authParentId: string } => {
   const hasValidAuth = getAuthObjectOrNull(request.authentication) && isAuthEnabled(request.authentication);
   if (hasValidAuth) {
     return {
-      ...request.authentication,
-      parentId: request._id,
+      authentication:request.authentication,
+      authParentId: request._id,
     };
   }
   const hasParentFolders = requestGroups.length > 0;
@@ -79,12 +79,12 @@ export const getOrInheritAuthentication = ({
   if (shouldCheckFolderAuth) {
     // override auth with closest parent folder that has one set
     return {
-      ...closestAuth,
-      parentId: closestParentFolderWithAuth?._id,
+      authentication: closestAuth,
+      authParentId: closestParentFolderWithAuth!._id,
     };
   }
   // if no auth is specified on request or folders, default to none
-  return { type: 'none' };
+  return { authentication: { type: 'none' }, authParentId: request._id };
 };
 export function getOrInheritHeaders({
   request,
@@ -748,6 +748,7 @@ export async function sendCurlAndWriteTimeline(
   const requestId = renderedRequest._id;
   const timeline: ResponseTimelineEntry[] = [];
   const authentication = renderedRequest.authentication as RequestAuthentication;
+
   const { finalUrl, socketPath } = transformUrl(
     renderedRequest.url,
     renderedRequest.parameters,

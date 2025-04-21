@@ -156,7 +156,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
             const ancestors = await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type]);
             // check for authentication overrides in parent folders
             const requestGroups = ancestors.filter(isRequestGroup) as RequestGroup[];
-            activeRequest.authentication = getOrInheritAuthentication({ request: activeRequest, requestGroups });
+            const { authentication } = getOrInheritAuthentication({ request: activeRequest, requestGroups });
+            activeRequest.authentication = authentication;
             activeRequest.headers = getOrInheritHeaders({ request: activeRequest, requestGroups });
             const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
               request: activeRequest,

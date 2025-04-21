@@ -46,12 +46,13 @@ export const getOAuth2Token = async (
   requestId: string,
   authentication: AuthTypeOAuth2,
   forceRefresh = false,
+  authParentId?: string,
 ): Promise<OAuth2Token | null> => {
-  const oAuth2Token = await getExistingAccessTokenAndRefreshIfExpired(requestId, authentication, forceRefresh);
+  const oAuth2Token = await getExistingAccessTokenAndRefreshIfExpired(requestId, authentication, forceRefresh, authParentId);
   if (oAuth2Token) {
     return oAuth2Token;
   }
-  const tokenParentId = authentication.parentId ?? requestId;
+  const tokenParentId = authParentId ?? requestId;
   const validGrantType = ['implicit', 'authorization_code', 'password', 'client_credentials'].includes(
     authentication.grantType,
   );
@@ -199,8 +200,9 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   requestId: string,
   authentication: AuthTypeOAuth2,
   forceRefresh: boolean,
+  authParentId?: string,
 ): Promise<OAuth2Token | null> {
-  const tokenParentId = authentication.parentId ?? requestId;
+  const tokenParentId = authParentId ?? requestId;
   const token: OAuth2Token | null = await models.oAuth2Token.getByParentId(tokenParentId);
   if (!token) {
     return null;

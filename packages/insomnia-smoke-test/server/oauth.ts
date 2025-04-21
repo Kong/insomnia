@@ -1,6 +1,6 @@
 import express, { urlencoded } from 'express';
 import type Provider from 'oidc-provider';
-import type { ClientAuthMethod, PKCEMethods, ResponseType } from 'oidc-provider';
+
 export const oauthRoutes = async (port: number) => {
   const clientIDAuthorizationCode = 'authorization_code';
   const clientIDAuthorizationCodePKCE = 'authorization_code_pkce';
@@ -61,9 +61,9 @@ export const oauthRoutes = async (port: number) => {
         client_secret: clientSecret,
         redirect_uris: [clientRedirectUri],
 
-        token_endpoint_auth_method: 'none' as ClientAuthMethod,
+        token_endpoint_auth_method: 'none',
         grant_types: ['implicit'],
-        response_types: ['id_token', 'id_token token'] as ResponseType[],
+        response_types: ['id_token', 'id_token token'],
       },
       {
         client_id: clientIDClientCreds,
@@ -79,13 +79,13 @@ export const oauthRoutes = async (port: number) => {
       },
     ],
     pkce: {
-      methods: ['S256', 'plain'] as PKCEMethods[],
+      methods: ['S256', 'plain'],
       required: (_, client) => {
         // Require PKCE for the PKCE client id
         return client.clientId === clientIDAuthorizationCodePKCE;
       },
     },
-    responseTypes: ['code', 'id_token', 'id_token token', 'none'] as ResponseType[],
+    responseTypes: ['code', 'id_token', 'id_token token', 'none'],
     issueRefreshToken: () => {
       return false;
     },
