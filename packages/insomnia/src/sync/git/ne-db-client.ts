@@ -165,6 +165,8 @@ export class NeDBClient {
         models.webSocketPayload.type,
         models.mockRoute.type,
         models.mockServer.type,
+        models.socketIOPayload.type,
+        models.socketIORequest.type,
       ];
     } else if (type !== null && id === null) {
       const workspace = await db.get(models.workspace.type, this._workspaceId);
@@ -189,6 +191,10 @@ export class NeDBClient {
 
       if (type === models.webSocketPayload.type) {
         typeFilter = [models.webSocketRequest.type, type];
+      }
+
+      if (type === models.socketIOPayload.type) {
+        typeFilter = [models.socketIORequest.type, type];
       }
 
       const children = await db.withDescendants(workspace, null, typeFilter);
