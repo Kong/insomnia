@@ -33,16 +33,16 @@ jobs:
       - name: Install packages
         run: npm ci
 
-      - name: Build app for smoke tests
+      - name: Build app for E2E tests
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run app-build
 
-      - name: Smoke test electron app
-        run: npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
+      - name: E2E test electron app
+        run: npm run test:build -w packages/insomnia-smoke-test -- --project=Workflow
         
-      - name: Upload smoke test
+      - name: Upload E2E test
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: ignore
-          name: ubuntu-smoke-test-traces-${{ github.run_number }}
+          name: ubuntu-E2E-test-traces-${{ github.run_number }}
           path: packages/insomnia-smoke-test/traces

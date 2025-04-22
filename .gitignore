@@ -30,6 +30,7 @@ graphql.config.json
 .graphqlconfig
 schema.graphql
 packages/insomnia-smoke-test/traces
+packages/insomnia-smoke-test/playwright-report
 *.tsbuildinfo
 dist
 .history
