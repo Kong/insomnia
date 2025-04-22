@@ -40,7 +40,7 @@ jobs:
         run: npm run test:build -w packages/insomnia-smoke-test -- --project=Workflow
       
       - name: Generate test result
-        run: npx playwright show-report
+        run: npm run test:report -w packages/insomnia-smoke-test
 
       - name: Upload E2E test
         uses: actions/upload-artifact@v4
