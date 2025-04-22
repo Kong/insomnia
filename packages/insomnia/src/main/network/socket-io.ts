@@ -47,11 +47,29 @@ export interface SocketIOCloseEvent {
   reason: string;
 };
 
+export interface SocketIOListenEvent {
+  _id: string;
+  requestId: string;
+  type: 'addEvent' | 'removeEvent';
+  timestamp: number;
+  eventName: string;
+}
+
+export interface SocketIOInfoEvent {
+  _id: string;
+  requestId: string;
+  type: 'info';
+  timestamp: number;
+  message: string;
+}
+
 export type SocketIOEvent =
   | SocketIOpenEvent
   | SocketIOMessageEvent
   | SocketIOErrorEvent
-  | SocketIOCloseEvent;
+  | SocketIOCloseEvent
+  | SocketIOListenEvent
+  | SocketIOInfoEvent;
 
 export type SocketIOEventLog = SocketIOEvent[];
 
@@ -123,6 +141,7 @@ const openSocketIOConnection = async (
       query: options.query,
     });
     SocketIOConnections.set(options.requestId, socket);
+    const openedEvents = request.eventListeners.filter(event => event.isOpen && event.eventName);
 
     socket.on('connect', async () => {
       for (const window of BrowserWindow.getAllWindows()) {
@@ -137,6 +156,17 @@ const openSocketIOConnection = async (
       };
 
       eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
+
+      if (!openedEvents.length) {
+        const infoEvent: SocketIOInfoEvent = {
+          _id: uuidV4(),
+          requestId: options.requestId,
+          type: 'info',
+          message: 'Add event listeners to receive messages',
+          timestamp: Date.now(),
+        };
+        eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(infoEvent) + '\n');
+      }
 
       const timeline = buildTimeline(url);
       timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
@@ -183,14 +213,33 @@ const openSocketIOConnection = async (
     socket.on('connect_error', error => {
       console.log('connect_error', error.message);
       socket.close();
-      deleteRequestMaps(request._id, error.message);
+      const errorEvent: SocketIOErrorEvent = {
+        _id: uuidV4(),
+        requestId: options.requestId,
+        type: 'error',
+        message: error.message,
+        error,
+        timestamp: Date.now(),
+      };
+      deleteRequestMaps(request._id, error.message, errorEvent);
     });
 
-    // TODO: listen to all opened events
+    // listen to all open events when the connection is opened
+    openedEvents.forEach(event => {
+      addSocketIOListener({ eventName: event.eventName, requestId: request._id });
+    });
 
   } catch (e) {
     console.error('unhandled error:', e);
-    deleteRequestMaps(request._id, e.message);
+    const errorEvent: SocketIOErrorEvent = {
+      _id: uuidV4(),
+      requestId: options.requestId,
+      type: 'error',
+      message: e.message,
+      error: e,
+      timestamp: Date.now(),
+    };
+    deleteRequestMaps(request._id, e.message, errorEvent);
   }
 };
 
@@ -279,6 +328,15 @@ const addSocketIOListener = (options: { eventName: string; requestId: string }) 
     return;
   }
 
+  const onEvent: SocketIOListenEvent = {
+    _id: uuidV4(),
+    requestId: options.requestId,
+    type: 'addEvent',
+    timestamp: Date.now(),
+    eventName: options.eventName,
+  };
+  eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(onEvent) + '\n');
+
   socket.on(options.eventName, (...message: any[]) => {
     console.log('received message', message);
     const messageEvent: SocketIOMessageEvent = {
@@ -303,6 +361,14 @@ const removeSocketIOListener = (options: { eventName: string; requestId: string 
     console.warn('No socket found for requestId: ' + options.requestId);
     return;
   }
+  const offEvent: SocketIOListenEvent = {
+    _id: uuidV4(),
+    requestId: options.requestId,
+    type: 'removeEvent',
+    timestamp: Date.now(),
+    eventName: options.eventName,
+  };
+  eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(offEvent) + '\n');
 
   socket.off(options.eventName);
 };

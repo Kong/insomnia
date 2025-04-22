@@ -10,14 +10,18 @@ interface Props<T> {
 
 export const MessageEventView: FC<Props<SocketIOMessageEvent>> = ({ event }) => {
   const stringify = (raw: any) => {
-    return JSON.stringify(raw, null, '\t');
+    try {
+      const parsed = JSON.parse(raw);
+      return JSON.stringify(parsed, null, '\t');
+    } catch (err) {
+      return raw;
+    }
   };
   const args = event.data.map((item, index) => ({
     id: index.toString(),
     value: stringify(item),
     mode: CONTENT_TYPE_JSON,
   }));
-  console.log(args);
 
   return (
     <SocketIOBodyContent

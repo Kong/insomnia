@@ -477,7 +477,6 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
     });
   }
   if (isSocketIORequest(req)) {
-    // TODO: implement socket.io connection
     window.main.socketIO.open({
       requestId,
       workspaceId,
