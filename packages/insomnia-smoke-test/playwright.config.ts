@@ -40,7 +40,7 @@ const config: PlaywrightTestConfig = {
       sources: true,
     },
   },
-  reporter: process.env.CI ? [['github'], ['line']] : [['list'], ['html']],
+  reporter: process.env.CI ? [['github'], ['line'], ['junit', { outputFile: 'results.xml' }]] : [['list'], ['html']],
   timeout: process.env.CI ? 60 * 1000 : 20 * 1000,
   forbidOnly: !!process.env.CI,
   outputDir: 'traces',

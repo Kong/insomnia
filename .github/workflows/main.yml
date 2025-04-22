@@ -39,13 +39,10 @@ jobs:
       - name: E2E test electron app
         run: npm run test:build -w packages/insomnia-smoke-test -- --project=Workflow
       
-      - name: Generate test result
-        run: npm run test:report -w packages/insomnia-smoke-test
-
       - name: Upload E2E test
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           if-no-files-found: ignore
           name: ubuntu-E2E-test-report-${{ github.run_number }}
-          path: packages/insomnia-smoke-test/playwright-report
+          path: packages/insomnia-smoke-test/results.xml
