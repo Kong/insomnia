@@ -7,9 +7,9 @@ on:
       version:
         required: true
         description: Release version (e.g. 2022.1.0 or 2022.1.0-beta.0)
-      run-id:
-        required: true
-        description: Artifacts run id
+      # run-id:
+      #   required: true
+      #   description: Artifacts run id
 
 env:
   RELEASE_VERSION: ${{ github.event.inputs.version }}
@@ -20,7 +20,7 @@ env:
   INSO_DOCKER_IMAGE: kong/inso # By default, registry is docker.io
   NOTARY_REPOSITORY: "kong/notary" # All signatures will be pushed to public notary repository
   ARTIFACTS_REPOSITORY: ${{  vars.ARTIFACTS_REPOSITORY }}
-  ARTIFACTS_RUN_ID: ${{ github.event.inputs.run-id }}
+  # ARTIFACTS_RUN_ID: ${{ github.event.inputs.run-id }}
 
 jobs:
   publish:
@@ -63,19 +63,25 @@ jobs:
       #     token: ${{ secrets.GITHUB_TOKEN }}
       #     out-file-path: ${{ env.ARTIFACTS_DOWNLOAD_PATH }}
 
+      # - name: Download Artifacts
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     repository: ${{ env.ARTIFACTS_REPOSITORY }}
+      #     path: ${{ env.ARTIFACTS_DOWNLOAD_PATH }}
+      #     merge-multiple: true
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     run-id: ${{ env.ARTIFACTS_RUN_ID }}
+      #     pattern: "*"
+
       - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          repository: ${{ env.ARTIFACTS_REPOSITORY }}
-          path: ${{ env.ARTIFACTS_DOWNLOAD_PATH }}
-          merge-multiple: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ env.ARTIFACTS_RUN_ID }}
-          # pattern: "*"
+        run: |
+          gh release download core@${{ env.RELEASE_VERSION }} --repo ${{ env.ARTIFACTS_REPOSITORY }} --output ${{ env.ARTIFACTS_DOWNLOAD_PATH }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Debug downloads
         run: |
-          echo "Artifacts downloaded to ${{ env.ARTIFACTS_DOWNLOAD_PATH }}"
+          echo "Artifacts downloaded..."
           ls -al ${{ env.ARTIFACTS_DOWNLOAD_PATH }}
 
       # - name: Docker meta for Inso CLI Docker Image
