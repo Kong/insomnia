@@ -23,12 +23,7 @@ export const MessageEventView: FC<Props<SocketIOMessageEvent>> = ({ event }) => 
     mode: CONTENT_TYPE_JSON,
   }));
 
-  return (
-    <SocketIOBodyContent
-      args={args}
-      readonly
-    />
-  );
+  return <SocketIOBodyContent args={args} readonly />;
 };
 
 export const SocketIOEventView: FC<Props<SocketIOEvent>> = ({ event }) => {

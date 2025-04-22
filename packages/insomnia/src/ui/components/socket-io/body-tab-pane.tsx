@@ -1,5 +1,22 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { Button, Checkbox, Collection, Input, type Key, ListBox, ListBoxItem, Popover, Select, SelectValue, Tab, TabList, TabPanel, Tabs, TextField, Toolbar } from 'react-aria-components';
+import {
+  Button,
+  Checkbox,
+  Collection,
+  Input,
+  type Key,
+  ListBox,
+  ListBoxItem,
+  Popover,
+  Select,
+  SelectValue,
+  Tab,
+  TabList,
+  TabPanel,
+  Tabs,
+  TextField,
+  Toolbar,
+} from 'react-aria-components';
 import { v4 as uuidv4 } from 'uuid';
 
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT } from '../../../common/constants';
@@ -13,26 +30,22 @@ const contentTypes: {
   id: string;
   name: string;
 }[] = [
-    {
-      id: CONTENT_TYPE_JSON,
-      name: 'JSON',
-    },
-    {
-      id: CONTENT_TYPE_PLAINTEXT,
-      name: 'Text',
-    },
-  ];
+  {
+    id: CONTENT_TYPE_JSON,
+    name: 'JSON',
+  },
+  {
+    id: CONTENT_TYPE_PLAINTEXT,
+    name: 'Text',
+  },
+];
 
 interface Props {
   request: SocketIORequest;
   requestPayload: SocketIOPayload;
 }
 
-export const SocketIOBodyTabPane = ({
-  request,
-  requestPayload,
-}: Props) => {
-
+export const SocketIOBodyTabPane = ({ request, requestPayload }: Props) => {
   const [selectedArg, setSelectedArg] = useState<Key>('');
   const requestPayloadPatcher = useRequestPayloadPatcher();
 
@@ -61,7 +74,6 @@ export const SocketIOBodyTabPane = ({
     }
     const item = args.find(arg => arg.id === selectedArg);
     return item?.mode || CONTENT_TYPE_JSON;
-
   }, [requestPayload?.args, selectedArg]);
 
   const handleContentTypeChange = (value: string) => {
@@ -92,47 +104,41 @@ export const SocketIOBodyTabPane = ({
 
   return (
     <>
-      <Toolbar className="w-full flex-shrink-0 px-2 border-b border-solid border-[--hl-md] py-2 h-[--line-height-sm] flex items-center gap-2 justify-between">
-        <div className='flex items-center justify-between gap-2'>
-          <Button onPress={handleAddArg} className="p-1 hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all">+ Arg</Button>
+      <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center justify-between gap-2 border-b border-solid border-[--hl-md] px-2 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <Button
+            onPress={handleAddArg}
+            className="p-1 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
+          >
+            + Arg
+          </Button>
           <Select
             aria-label="Change Body Type"
             name="body-type"
             onSelectionChange={value => handleContentTypeChange(value.toString())}
             selectedKey={contentType}
           >
-            <Button className="px-4 min-w-[12ch] py-1 font-bold flex flex-1 items-center justify-between gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-              <SelectValue<{ id: string; name: string }>
-                className="flex truncate items-center justify-center gap-2"
-              >
-                {({ selectedText }) => (
-                  <div className='flex items-center gap-2 text-[--hl]'>
-                    {selectedText}
-                  </div>
-                )}
+            <Button className="flex min-w-[12ch] flex-1 items-center justify-between gap-2 rounded-sm px-4 py-1 text-sm font-bold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
+              <SelectValue<{ id: string; name: string }> className="flex items-center justify-center gap-2 truncate">
+                {({ selectedText }) => <div className="flex items-center gap-2 text-[--hl]">{selectedText}</div>}
               </SelectValue>
               <Icon icon="caret-down" />
             </Button>
-            <Popover className="min-w-max overflow-y-hidden flex flex-col">
+            <Popover className="flex min-w-max flex-col overflow-y-hidden">
               <ListBox
                 items={contentTypes}
-                className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
+                className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
               >
                 {item => (
                   <ListBoxItem
-                    className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                    className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                     aria-label={item.name}
                     textValue={item.name}
                   >
                     {({ isSelected }) => (
                       <>
                         <span>{item.name}</span>
-                        {isSelected && (
-                          <Icon
-                            icon="check"
-                            className="text-[--color-success] justify-self-end"
-                          />
-                        )}
+                        {isSelected && <Icon icon="check" className="justify-self-end text-[--color-success]" />}
                       </>
                     )}
                   </ListBoxItem>
@@ -141,29 +147,34 @@ export const SocketIOBodyTabPane = ({
             </Popover>
           </Select>
         </div>
-        <div className='flex items-center justify-between gap-2'>
+        <div className="flex items-center justify-between gap-2">
           <Checkbox
             isSelected={requestPayload?.ack}
             onChange={value => requestPayloadPatcher(request._id, { ack: value })}
-            className="cursor-pointer group p-0 flex items-center h-full"
+            className="group flex h-full cursor-pointer items-center p-0"
           >
-            <div className="mr-2 w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
-              <Icon icon={'check'} className='opacity-0 group-data-[selected]:opacity-100 group-data-[indeterminate]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
+            <div className="mr-2 flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
+              <Icon
+                icon={'check'}
+                className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
+              />
             </div>
             Ack
           </Checkbox>
           <TextField
-            aria-label='Event Name'
+            aria-label="Event Name"
             value={requestPayload?.eventName || ''}
             onChange={value => requestPayloadPatcher(request._id, { eventName: value })}
-            className='py-1 h-8 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors flex-1 placeholder:italic placeholder:opacity-60 col-span-3'
+            className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
           >
-            <Input
-              type="text"
-              placeholder="event name"
-            />
+            <Input type="text" placeholder="event name" />
           </TextField>
-          <Button onPress={handleSend} className='text-center bg-[--color-surprise] text-[--color-font-surprise] rounded px-[--padding-md]'>Send</Button>
+          <Button
+            onPress={handleSend}
+            className="rounded bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise]"
+          >
+            Send
+          </Button>
         </div>
       </Toolbar>
       <SocketIOBodyContent
@@ -204,13 +215,22 @@ export const SocketIOBodyContent = ({
     });
   }, [args]);
   return (
-    <div className='h-full'>
+    <div className="h-full">
       {tabs.length > 1 ? (
-        <Tabs selectedKey={selectedArg} onSelectionChange={setSelectedArg} orientation='vertical' className="flex flex-1 h-full" >
-          <TabList className="overflow-x-auto border-solid border-r border-r-[--hl-md] bg-[--color-bg] " aria-label="Dynamic tabs" items={tabs}>
+        <Tabs
+          selectedKey={selectedArg}
+          onSelectionChange={setSelectedArg}
+          orientation="vertical"
+          className="flex h-full flex-1"
+        >
+          <TabList
+            className="overflow-x-auto border-r border-solid border-r-[--hl-md] bg-[--color-bg]"
+            aria-label="Dynamic tabs"
+            items={tabs}
+          >
             {arg => (
               <Tab
-                className="relative flex-shrink-0 flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-6 py-2 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300"
+                className="relative flex flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-6 py-2 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
                 id={arg.id}
               >
                 {({ isHovered }) => (
@@ -220,9 +240,9 @@ export const SocketIOBodyContent = ({
                         onPress={() => {
                           handleDelete?.(arg.id);
                         }}
-                        className={`w-4 h-4 absolute right-0 top-0 hover:bg-[--hl-lg] ${!isHovered && 'hidden'}`}
+                        className={`absolute right-0 top-0 h-4 w-4 hover:bg-[--hl-lg] ${!isHovered && 'hidden'}`}
                       >
-                        <Icon icon="close" className='w-4 h-4 align-top' />
+                        <Icon icon="close" className="h-4 w-4 align-top" />
                       </Button>
                     )}
                     {arg.title}

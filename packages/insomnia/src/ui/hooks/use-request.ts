@@ -22,7 +22,10 @@ export const useRequestPatcher = () => {
   }>();
   const { updateTabById } = useInsomniaTabContext();
   const fetcher = useFetcher();
-  return (requestId: string, patch: Partial<GrpcRequest> | Partial<Request> | Partial<WebSocketRequest> | Partial<SocketIORequest>) => {
+  return (
+    requestId: string,
+    patch: Partial<GrpcRequest> | Partial<Request> | Partial<WebSocketRequest> | Partial<SocketIORequest>,
+  ) => {
     updateTabById?.(requestId, { temporary: false });
     fetcher.submit(JSON.stringify(patch), {
       action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
@@ -110,7 +113,11 @@ export const useWorkspaceMetaPatcher = () => {
 };
 
 export const useRequestPayloadPatcher = () => {
-  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+  const { organizationId, projectId, workspaceId } = useParams<{
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  }>();
   const fetcher = useFetcherWithPromise();
   return async (requestId: string, patch: Partial<SocketIOPayload>) => {
     await fetcher.submit(JSON.stringify(patch), {

@@ -601,9 +601,7 @@ async function renderApp() {
                                       {
                                         path: 'update-payload',
                                         action: async (...args) =>
-                                          (
-                                            await import('./routes/request')
-                                          ).updatePayloadAction(...args),
+                                          (await import('./routes/request')).updatePayloadAction(...args),
                                       },
                                     ],
                                   },

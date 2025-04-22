@@ -18,7 +18,7 @@ export interface SocketIOArg {
   id: string;
   value: string;
   mode: string;
-};
+}
 
 export interface BaseSocketIOPayload {
   args: SocketIOArg[];
@@ -28,13 +28,9 @@ export interface BaseSocketIOPayload {
 
 export type SocketIOPayload = BaseModel & BaseSocketIOPayload & { type: typeof type };
 
-export const isSocketIOPayload = (model: Pick<BaseModel, 'type'>): model is SocketIOPayload => (
-  model.type === type
-);
+export const isSocketIOPayload = (model: Pick<BaseModel, 'type'>): model is SocketIOPayload => model.type === type;
 
-export const isSocketIOPayloadId = (id: string | null) => (
-  id?.startsWith(`${prefix}_`)
-);
+export const isSocketIOPayloadId = (id: string | null) => id?.startsWith(`${prefix}_`);
 
 export const init = (): BaseSocketIOPayload => {
   return {
@@ -56,10 +52,7 @@ export const create = (patch: Partial<SocketIOPayload> = {}) => {
 
 export const remove = (obj: SocketIOPayload) => database.remove(obj);
 
-export const update = (
-  obj: SocketIOPayload,
-  patch: Partial<SocketIOPayload> = {}
-) => database.docUpdate(obj, patch);
+export const update = (obj: SocketIOPayload, patch: Partial<SocketIOPayload> = {}) => database.docUpdate(obj, patch);
 
 export async function duplicate(request: SocketIOPayload, patch: Partial<SocketIOPayload> = {}) {
   // Only set name and "(Copy)" if the patch does
@@ -84,7 +77,7 @@ export async function updateOrCreateByParentId(parentId: string, patch: Partial<
 
   if (requestPayload) {
     return update(requestPayload, patch);
-  };
+  }
   const newPatch = Object.assign(
     {
       parentId,

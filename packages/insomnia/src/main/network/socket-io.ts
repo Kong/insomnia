@@ -18,7 +18,7 @@ export interface SocketIOpenEvent {
   requestId: string;
   type: 'open';
   timestamp: number;
-};
+}
 
 export interface SocketIOMessageEvent {
   _id: string;
@@ -28,7 +28,7 @@ export interface SocketIOMessageEvent {
   timestamp: number;
   data: any[];
   eventName: string;
-};
+}
 
 export interface SocketIOErrorEvent {
   _id: string;
@@ -37,7 +37,7 @@ export interface SocketIOErrorEvent {
   timestamp: number;
   message: string;
   error: any;
-};
+}
 
 export interface SocketIOCloseEvent {
   _id: string;
@@ -45,7 +45,7 @@ export interface SocketIOCloseEvent {
   type: 'close';
   timestamp: number;
   reason: string;
-};
+}
 
 export interface SocketIOListenEvent {
   _id: string;
@@ -96,7 +96,7 @@ interface OpenSocketIORequestOptions {
 }
 const openSocketIOConnection = async (
   _event: Electron.IpcMainInvokeEvent,
-  options: OpenSocketIORequestOptions
+  options: OpenSocketIORequestOptions,
 ): Promise<void> => {
   const start = performance.now();
   console.log('open socket io connection', options);
@@ -127,8 +127,10 @@ const openSocketIOConnection = async (
     }
     const readyStateChannel = `socketIO.${request._id}.readyState`;
 
-    const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: BaseSocketIORequest['headers'][0]) =>
-      ({ ...acc, [name.toLowerCase() || '']: value || '' });
+    const reduceArrayToLowerCaseKeyedDictionary = (
+      acc: { [key: string]: string },
+      { name, value }: BaseSocketIORequest['headers'][0],
+    ) => ({ ...acc, [name.toLowerCase() || '']: value || '' });
     const headers = options.headers;
     const url = options.url;
 
@@ -188,7 +190,11 @@ const openSocketIOConnection = async (
     const engine = socket.io.engine;
     engine.once('upgrade', transport => {
       console.log('upgrade', transport);
-      timelineFileStreams.get(request._id)?.write(JSON.stringify({ value: `Upgraded to ${engine.transport.name}`, name: 'Text', timestamp: Date.now() }) + '\n');
+      timelineFileStreams
+        .get(request._id)
+        ?.write(
+          JSON.stringify({ value: `Upgraded to ${engine.transport.name}`, name: 'Text', timestamp: Date.now() }) + '\n',
+        );
     });
 
     socket.on('disconnect', async (reason, details) => {
@@ -228,7 +234,6 @@ const openSocketIOConnection = async (
     openedEvents.forEach(event => {
       addSocketIOListener({ eventName: event.eventName, requestId: request._id });
     });
-
   } catch (e) {
     console.error('unhandled error:', e);
     const errorEvent: SocketIOErrorEvent = {
@@ -243,25 +248,32 @@ const openSocketIOConnection = async (
   }
 };
 
-const deleteRequestMaps = async (requestId: string, message: string, event?: SocketIOCloseEvent | SocketIOErrorEvent) => {
+const deleteRequestMaps = async (
+  requestId: string,
+  message: string,
+  event?: SocketIOCloseEvent | SocketIOErrorEvent,
+) => {
   if (event) {
     eventLogFileStreams.get(requestId)?.write(JSON.stringify(event) + '\n');
   }
   eventLogFileStreams.get(requestId)?.end();
   eventLogFileStreams.delete(requestId);
-  timelineFileStreams.get(requestId)?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
+  timelineFileStreams
+    .get(requestId)
+    ?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
   timelineFileStreams.get(requestId)?.end();
   timelineFileStreams.delete(requestId);
   SocketIOConnections.delete(requestId);
 };
 
-const getSocketIOReadyState = async (
-  options: { requestId: string }
-): Promise<boolean> => {
+const getSocketIOReadyState = async (options: { requestId: string }): Promise<boolean> => {
   return Boolean(SocketIOConnections.get(options.requestId)?.connected);
 };
 
-const sendPayload = async (socket: Socket, options: { requestId: string; eventName: string; args: any[]; ack?: boolean }): Promise<void> => {
+const sendPayload = async (
+  socket: Socket,
+  options: { requestId: string; eventName: string; args: any[]; ack?: boolean },
+): Promise<void> => {
   const { eventName = 'message', args, ack } = options;
   if (!ack) {
     socket.emit(eventName, ...args);
@@ -294,9 +306,12 @@ const sendPayload = async (socket: Socket, options: { requestId: string; eventNa
   eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(lastMessage) + '\n');
 };
 
-const sendWebSocketEvent = async (
-  options: { requestId: string; eventName: string; args: any[]; ack?: boolean }
-): Promise<void> => {
+const sendWebSocketEvent = async (options: {
+  requestId: string;
+  eventName: string;
+  args: any[];
+  ack?: boolean;
+}): Promise<void> => {
   const socket = SocketIOConnections.get(options.requestId);
 
   if (!socket) {
@@ -307,9 +322,7 @@ const sendWebSocketEvent = async (
   sendPayload(socket, options);
 };
 
-const closeSocketIOConnection = (
-  options: { requestId: string }
-): void => {
+const closeSocketIOConnection = (options: { requestId: string }): void => {
   const socket = SocketIOConnections.get(options.requestId);
   if (!socket) {
     return;
@@ -373,19 +386,22 @@ const removeSocketIOListener = (options: { eventName: string; requestId: string 
   socket.off(options.eventName);
 };
 
-const findMany = async (
-  options: { responseId: string }
-): Promise<SocketIOEvent[]> => {
+const findMany = async (options: { responseId: string }): Promise<SocketIOEvent[]> => {
   const response = await models.socketIOResponse.getById(options.responseId);
   if (!response || !response.eventLogPath) {
     return [];
   }
   const body = await fs.promises.readFile(response.eventLogPath);
-  return body.toString().split('\n').filter(e => e?.trim())
-    // Parse the message
-    .map(e => JSON.parse(e))
-    // Reverse the list of messages so that we get the latest message first
-    .reverse() || [];
+  return (
+    body
+      .toString()
+      .split('\n')
+      .filter(e => e?.trim())
+      // Parse the message
+      .map(e => JSON.parse(e))
+      // Reverse the list of messages so that we get the latest message first
+      .reverse() || []
+  );
 };
 
 export interface SocketIOBridgeAPI {
@@ -404,12 +420,22 @@ export interface SocketIOBridgeAPI {
 }
 export const registerSocketIOHandlers = () => {
   ipcMainHandle('socketIO.open', openSocketIOConnection);
-  ipcMainHandle('socketIO.event.send', (_, options: Parameters<typeof sendWebSocketEvent>[0]) => sendWebSocketEvent(options));
-  ipcMainHandle('socketIO.readyState', (_, options: Parameters<typeof getSocketIOReadyState>[0]) => getSocketIOReadyState(options));
-  ipcMainOn('socketIO.close', (_, options: Parameters<typeof closeSocketIOConnection>[0]) => closeSocketIOConnection(options));
+  ipcMainHandle('socketIO.event.send', (_, options: Parameters<typeof sendWebSocketEvent>[0]) =>
+    sendWebSocketEvent(options),
+  );
+  ipcMainHandle('socketIO.readyState', (_, options: Parameters<typeof getSocketIOReadyState>[0]) =>
+    getSocketIOReadyState(options),
+  );
+  ipcMainOn('socketIO.close', (_, options: Parameters<typeof closeSocketIOConnection>[0]) =>
+    closeSocketIOConnection(options),
+  );
   ipcMainOn('socketIO.closeAll', closeAllSocketIOConnections);
-  ipcMainOn('socketIO.event.on', (_, options: Parameters<typeof addSocketIOListener>[0]) => addSocketIOListener(options));
-  ipcMainOn('socketIO.event.off', (_, options: Parameters<typeof removeSocketIOListener>[0]) => removeSocketIOListener(options));
+  ipcMainOn('socketIO.event.on', (_, options: Parameters<typeof addSocketIOListener>[0]) =>
+    addSocketIOListener(options),
+  );
+  ipcMainOn('socketIO.event.off', (_, options: Parameters<typeof removeSocketIOListener>[0]) =>
+    removeSocketIOListener(options),
+  );
   ipcMainHandle('socketIO.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
 };
 

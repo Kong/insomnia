@@ -26,9 +26,7 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
   const requestPatcher = useRequestPatcher();
 
   const rows = useMemo(() => {
-    return eventListeners?.length > 0
-      ? eventListeners
-      : [createEmptyListener()];
+    return eventListeners?.length > 0 ? eventListeners : [createEmptyListener()];
   }, [eventListeners]);
 
   const handleDeleteEvent = (deleteItem: SocketIOEventListener) => {
@@ -95,60 +93,62 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
   };
 
   return (
-    <div className='p-4'>
-      <div className='grid grid-cols-[30px_1fr_80px_1px_1fr_50px] items-center gap-2 border-solid border border-[--hl-md] h-[25px]'>
+    <div className="p-4">
+      <div className="grid h-[25px] grid-cols-[30px_1fr_80px_1px_1fr_50px] items-center gap-2 border border-solid border-[--hl-md]">
         <div />
-        <div className='flex items-center'>
+        <div className="flex items-center">
           EVENTS
-          <Button className="w-[25px] h-[25px] hover:bg-[--hl-xs] flex items-center justify-center ml-1" onPress={handleAddEvent}>
-            <Icon icon="plus" className='cursor-pointer' />
+          <Button
+            className="ml-1 flex h-[25px] w-[25px] items-center justify-center hover:bg-[--hl-xs]"
+            onPress={handleAddEvent}
+          >
+            <Icon icon="plus" className="cursor-pointer" />
           </Button>
         </div>
         <div>LISTEN</div>
-        <span className='h-full bg-[--hl-md]' />
+        <span className="h-full bg-[--hl-md]" />
         <div>DESCRIPTION</div>
         <div />
       </div>
-      <GridList
-        onSelectionChange={() => { }}
-        aria-label='SocketIO Events'
-        items={rows}
-      >
+      <GridList onSelectionChange={() => {}} aria-label="SocketIO Events" items={rows}>
         {item => (
           <GridListItem
-            className="group h-[30px] grid grid-cols-[30px_1fr_80px_1px_1fr_50px] items-center gap-2 border-solid border-b border-x border-[--hl-md] [&:hover_.deleteBtn]:flex transition-all"
-            textValue='event item'
+            className="group grid h-[30px] grid-cols-[30px_1fr_80px_1px_1fr_50px] items-center gap-2 border-x border-b border-solid border-[--hl-md] transition-all [&:hover_.deleteBtn]:flex"
+            textValue="event item"
           >
             <div />
             <OneLineEditor
               defaultValue={item.eventName}
               id={`socketIO-event-listener-${item.id}`}
-              placeholder='Add event'
+              placeholder="Add event"
               onChange={eventName => {
                 handleChange({ ...item, eventName }, 'eventName');
               }}
             />
-            <div className='text-left'>
+            <div className="text-left">
               <Switch
                 isSelected={item.isOpen}
                 onChange={isOpen => {
                   handleChange({ ...item, isOpen }, 'isOpen');
                 }}
-                className="cursor-pointer p-0 h-full flex items-center"
+                className="flex h-full cursor-pointer items-center p-0"
               >
                 {({ isSelected }) => {
                   return (
                     <div
-                      className={classNames("w-[30px] h-4.5 border-solid border-[1px] border-[--hl] bg-[--color-bg] rounded-full transition-all duration-200 before:content-[''] before:block before:m-0.5 before:w-3.5 before:h-3.5 before:rounded-full before:transition-all before:duration-200", {
-                        'bg-[--color-surprise] before:bg-[--color-bg] before:translate-x-[100%]': isSelected,
-                        'before:bg-[--color-surprise]': !isSelected,
-                      })}
+                      className={classNames(
+                        "h-4.5 w-[30px] rounded-full border-[1px] border-solid border-[--hl] bg-[--color-bg] transition-all duration-200 before:m-0.5 before:block before:h-3.5 before:w-3.5 before:rounded-full before:transition-all before:duration-200 before:content-['']",
+                        {
+                          'bg-[--color-surprise] before:translate-x-[100%] before:bg-[--color-bg]': isSelected,
+                          'before:bg-[--color-surprise]': !isSelected,
+                        },
+                      )}
                     />
                   );
                 }}
               </Switch>
             </div>
-            <span className='h-full bg-[--hl-md]' />
+            <span className="h-full bg-[--hl-md]" />
             <OneLineEditor
               defaultValue={item.desc}
               id={`socketIO-event-listener-desc-${item.id}`}
@@ -157,13 +157,16 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
               }}
             />
             <div>
-              <Button className="hidden deleteBtn w-[25px] h-[25px] hover:bg-[--hl-xs] flex items-center justify-center" onPress={() => handleDeleteEvent(item)}>
-                <Icon icon="trash" className='cursor-pointer' />
+              <Button
+                className="deleteBtn flex hidden h-[25px] w-[25px] items-center justify-center hover:bg-[--hl-xs]"
+                onPress={() => handleDeleteEvent(item)}
+              >
+                <Icon icon="trash" className="cursor-pointer" />
               </Button>
             </div>
-          </GridListItem >
+          </GridListItem>
         )}
-      </GridList >
-    </div >
+      </GridList>
+    </div>
   );
 };

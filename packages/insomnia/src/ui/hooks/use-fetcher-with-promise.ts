@@ -7,9 +7,7 @@ type FetcherWithPromise<TData> = FetcherWithComponents<TData> & {
   load: (href: string) => Promise<TData>;
 };
 
-export function useFetcherWithPromise<TData>(
-  opts?: Parameters<typeof useFetcher>[0]
-): FetcherWithPromise<TData> {
+export function useFetcherWithPromise<TData>(opts?: Parameters<typeof useFetcher>[0]): FetcherWithPromise<TData> {
   const fetcher = useFetcher<TData>(opts);
   const resolverRef = useRef<ResolveFn<TData> | null>(null);
 
@@ -21,15 +19,18 @@ export function useFetcherWithPromise<TData>(
         fetcher.submit(...args);
       });
     },
-    [fetcher]
+    [fetcher],
   );
 
-  const load = useCallback((href: string) => {
-    return new Promise<TData>(resolve => {
-      resolverRef.current = resolve;
-      fetcher.load(href);
-    });
-  }, [fetcher]);
+  const load = useCallback(
+    (href: string) => {
+      return new Promise<TData>(resolve => {
+        resolverRef.current = resolve;
+        fetcher.load(href);
+      });
+    },
+    [fetcher],
+  );
 
   useEffect(() => {
     if (fetcher.state === 'idle' && fetcher.data !== undefined) {

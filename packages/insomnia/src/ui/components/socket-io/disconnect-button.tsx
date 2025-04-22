@@ -40,7 +40,7 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
         }}
         key="dropdown"
         data-testid="DisconnectDropdown__Dropdown"
-        aria-label='Disconnect Dropdown'
+        aria-label="Disconnect Dropdown"
         triggerButton={
           <Button
             style={{
@@ -53,26 +53,22 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
           </Button>
         }
       >
-        <DropdownItem aria-label='Disconnect this request'>
+        <DropdownItem aria-label="Disconnect this request">
           <ItemContent onClick={handleCloseThisRequest}>
-            <div className="flex justify-evenly w-[25px]">
-              <div className='rounded-[50%] w-[10px] h-[10px] bg-success' />
+            <div className="flex w-[25px] justify-evenly">
+              <div className="bg-success h-[10px] w-[10px] rounded-[50%]" />
             </div>
-            <div className="text-left w-full pl-[--padding-xs]">
-              Disconnect this request
-            </div>
+            <div className="w-full pl-[--padding-xs] text-left">Disconnect this request</div>
           </ItemContent>
         </DropdownItem>
-        <DropdownItem aria-label='Disconnect all requests'>
+        <DropdownItem aria-label="Disconnect all requests">
           <ItemContent onClick={handleCloseAllRequests}>
-            <div className="flex justify-evenly w-[25px]">
-              <div className='rounded-[50%] w-[5px] h-[5px] bg-success' />
-              <div className='rounded-[50%] w-[5px] h-[5px] bg-success' />
-              <div className='rounded-[50%] w-[5px] h-[5px] bg-success' />
+            <div className="flex w-[25px] justify-evenly">
+              <div className="bg-success h-[5px] w-[5px] rounded-[50%]" />
+              <div className="bg-success h-[5px] w-[5px] rounded-[50%]" />
+              <div className="bg-success h-[5px] w-[5px] rounded-[50%]" />
             </div>
-            <div className="text-left w-full pl-[--padding-xs]">
-              Disconnect all requests
-            </div>
+            <div className="w-full pl-[--padding-xs] text-left">Disconnect all requests</div>
           </ItemContent>
         </DropdownItem>
       </OriginalDropdown>
