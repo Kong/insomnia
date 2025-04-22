@@ -68,10 +68,10 @@ jobs:
         with:
           repository: ${{ env.ARTIFACTS_REPOSITORY }}
           path: ${{ env.ARTIFACTS_DOWNLOAD_PATH }}
-          pattern: "*-artifacts"
           merge-multiple: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ env.ARTIFACTS_RUN_ID }}
+          # pattern: "*"
 
       - name: Debug downloads
         run: |
