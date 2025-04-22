@@ -47,6 +47,13 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
   };
 
   const handleChange = (newItem: SocketIOEventListener, changeKey: 'isOpen' | 'eventName' | 'desc') => {
+    if (changeKey === 'isOpen' && newItem.eventName?.trim() === '') {
+      // Socketio todo: focus input element
+      return;
+    }
+    if (changeKey === 'eventName' && newItem.isOpen && newItem.eventName?.trim() === '') {
+      newItem.isOpen = false;
+    }
     const newListeners = rows.map(item => {
       if (item.id === newItem.id) {
         return newItem;

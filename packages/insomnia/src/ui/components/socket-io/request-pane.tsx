@@ -96,8 +96,7 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
 
   const readyState = useReadyState({ requestId: activeRequest._id, protocol: 'socketIO' });
   const disabled = readyState;
-  // TODO: count the number of events
-  const eventsCount = 1;
+  const eventsCount = activeRequest?.eventListeners?.length || 0;
 
   return (
     <Pane type="request">

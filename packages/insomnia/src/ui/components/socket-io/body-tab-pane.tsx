@@ -39,9 +39,8 @@ export const SocketIOBodyTabPane = ({
   const handleAddArg = async () => {
     const args = requestPayload?.args || [];
     const newId = uuidv4();
-    console.log('newId', newId);
     const newArgs = [...args, { id: newId, value: '', mode: CONTENT_TYPE_PLAINTEXT }];
-    requestPayloadPatcher(request._id, { args: newArgs });
+    await requestPayloadPatcher(request._id, { args: newArgs });
     setSelectedArg(newId);
   };
 
@@ -76,13 +75,13 @@ export const SocketIOBodyTabPane = ({
     requestPayloadPatcher(request._id, { args: newArgs });
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     const newArgs = requestPayload?.args?.filter(arg => arg.id !== id);
-    requestPayloadPatcher(request._id, { args: newArgs });
+    await requestPayloadPatcher(request._id, { args: newArgs });
+    setSelectedArg(newArgs?.[newArgs.length - 1]?.id);
   };
 
   const handleSend = () => {
-    // TODO handle JSON format
     window.main.socketIO.event.send({
       requestId: request._id,
       eventName: requestPayload?.eventName || 'message',
@@ -218,7 +217,9 @@ export const SocketIOBodyContent = ({
                   <>
                     {!readonly && (
                       <Button
-                        onPress={() => handleDelete?.(arg.id)}
+                        onPress={() => {
+                          handleDelete?.(arg.id);
+                        }}
                         className={`w-4 h-4 absolute right-0 top-0 hover:bg-[--hl-lg] ${!isHovered && 'hidden'}`}
                       >
                         <Icon icon="close" className='w-4 h-4 align-top' />
@@ -236,8 +237,7 @@ export const SocketIOBodyContent = ({
                 <CodeEditor
                   id="socket-io-message-editor"
                   showPrettifyButton={!readonly}
-                  // TODO: Add uniqueness key
-                  uniquenessKey={''}
+                  uniquenessKey={`${arg.id}:socket-io-payload`}
                   mode={arg.mode}
                   readOnly={readonly}
                   ref={ref => editorsRef.current?.set(arg.id, ref)}
@@ -254,8 +254,7 @@ export const SocketIOBodyContent = ({
         <CodeEditor
           id="socket-io-message-editor"
           showPrettifyButton={!readonly}
-          // TODO: Add uniqueness key
-          uniquenessKey={''}
+          uniquenessKey={`${tabs[0].id}:socket-io-payload`}
           mode={tabs[0].mode}
           readOnly={readonly}
           ref={ref => editorsRef.current?.set(tabs[0].id, ref)}

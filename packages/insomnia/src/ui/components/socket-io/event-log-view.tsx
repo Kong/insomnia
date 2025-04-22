@@ -35,6 +35,15 @@ function getIcon(event: SocketIOEvent): IconId {
     case 'error': {
       return 'error';
     }
+    case 'addEvent': {
+      return 'info';
+    }
+    case 'removeEvent': {
+      return 'info';
+    }
+    case 'info': {
+      return 'info';
+    }
     default: {
       return 'bug';
     }
@@ -59,6 +68,15 @@ const getMessage = (event: SocketIOEvent): string | JSX.Element => {
       return 'Disconnected';
     }
     case 'error': {
+      return event.message;
+    }
+    case 'addEvent': {
+      return `Listening to event: ${event.eventName}`;
+    }
+    case 'removeEvent': {
+      return `Stopped listening to event: ${event.eventName}`;
+    }
+    case 'info': {
       return event.message;
     }
     default: {

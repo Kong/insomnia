@@ -8,7 +8,7 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
     window.main.socketIO.close({ requestId });
   };
   const handleCloseAllRequests = () => {
-    // TODO
+    window.main.socketIO.closeAll();
   };
   return (
     <div
