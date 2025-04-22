@@ -1,0 +1,25 @@
+name: Download Artifacts
+
+on:
+  workflow_run:
+    workflows: ["Release Build Insomnia Artifacts"]
+    types:
+      - completed
+
+env:
+  ARTIFACTS_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts
+
+jobs:
+  download:
+    permissions:
+      contents: write
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*-artifacts"
+          path: ${{ env.ARTIFACTS_DOWNLOAD_PATH }}
+          merge-multiple: true
+      - name: List downloaded files
+        run: ls -al ${{ env.ARTIFACTS_DOWNLOAD_PATH }}
