@@ -169,6 +169,12 @@ describe('inso dev bundle', () => {
 
       expect(secondReqLogPosition).toBeGreaterThan(firstReqLogPosition);
     });
+
+    it('read and write folder environments', async () => {
+      const input = '$PWD/packages/insomnia-inso/bin/inso run collection wrk_cfacae2b022e49c8851c2376674cc890 -w packages/insomnia-inso/src/examples/script-folder-environments.yml --requestNamePattern "updateFolderValue" --verbose';
+      const result = await runCliFromRoot(input);
+      expect(result.stdout).toContain('updated value from folder: 666');
+    });
   });
 });
 

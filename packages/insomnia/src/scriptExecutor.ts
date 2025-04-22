@@ -98,6 +98,7 @@ export const runScript = async ({
     globals: mutatedContextObject.globals,
     requestTestResults: mutatedContextObject.requestTestResults,
     execution: mutatedContextObject.execution,
+    parentFolders: mutatedContextObject.parentFolders,
   };
 };
 
