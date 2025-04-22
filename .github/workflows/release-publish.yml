@@ -7,6 +7,9 @@ on:
       version:
         required: true
         description: Release version (e.g. 2022.1.0 or 2022.1.0-beta.0)
+      run-id:
+        required: true
+        description: Artifacts run id
 
 env:
   RELEASE_VERSION: ${{ github.event.inputs.version }}
@@ -17,6 +20,7 @@ env:
   INSO_DOCKER_IMAGE: kong/inso # By default, registry is docker.io
   NOTARY_REPOSITORY: "kong/notary" # All signatures will be pushed to public notary repository
   ARTIFACTS_REPOSITORY: ${{  vars.ARTIFACTS_REPOSITORY }}
+  ARTIFACTS_RUN_ID: ${{ github.event.inputs.run-id }}
 
 jobs:
   publish:
@@ -50,14 +54,24 @@ jobs:
       - name: Install packages
         run: npm ci
 
-      - name: Download release artifacts from insomnia-ee
-        uses: robinraju/release-downloader@daf26c55d821e836577a15f77d86ddc078948b05 # v1
+      # - name: Download release artifacts from insomnia-ee
+      #   uses: robinraju/release-downloader@daf26c55d821e836577a15f77d86ddc078948b05 # v1
+      #   with:
+      #     repository: ${{ env.ARTIFACTS_REPOSITORY }}
+      #     tag: core@${{ env.RELEASE_VERSION }}
+      #     fileName: "*"
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     out-file-path: ${{ env.ARTIFACTS_DOWNLOAD_PATH }}
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
         with:
           repository: ${{ env.ARTIFACTS_REPOSITORY }}
-          tag: core@${{ env.RELEASE_VERSION }}
-          fileName: "*"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          out-file-path: ${{ env.ARTIFACTS_DOWNLOAD_PATH }}
+          path: ${{ env.ARTIFACTS_DOWNLOAD_PATH }}
+          pattern: "*-artifacts"
+          merge-multiple: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ env.ARTIFACTS_RUN_ID }}
 
       - name: Debug downloads
         run: |
