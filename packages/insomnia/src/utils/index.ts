@@ -74,3 +74,7 @@ export const moveAfter = (list: any[], key: Key, keys: Iterable<Key>) => {
   const indices = keyArray.map(key => list.findIndex(item => item.id === key)).sort((a, b) => a - b);
   return move(list, indices, toIndex + 1);
 };
+
+export const typedKeys = <T extends object>(obj: T) => {
+  return Object.keys(obj) as (keyof T)[];
+};

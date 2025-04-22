@@ -482,7 +482,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     if ('error' in originalOutput) {
       return { error: `Script executor returns error: ${originalOutput.error}` };
     }
-    const output = originalOutput as RequestContext;
+    const output = originalOutput;
 
     const envPropertyOrder = orderedJSON.parse(
       JSON.stringify(output.environment.data),
