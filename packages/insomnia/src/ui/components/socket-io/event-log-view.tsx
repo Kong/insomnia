@@ -12,7 +12,7 @@ const Timestamp: FC<{ time: Date | number }> = ({ time }) => {
 };
 
 interface Props {
-  events: (SocketIOEvent)[];
+  events: SocketIOEvent[];
   selectionId?: string;
   onSelect: (event: SocketIOEvent) => void;
 }
@@ -24,7 +24,6 @@ function getIcon(event: SocketIOEvent): IconId {
         return 'sent';
       }
       return 'receive';
-
     }
     case 'open': {
       return 'checkmark-circle';
@@ -54,10 +53,14 @@ const getMessage = (event: SocketIOEvent): string | JSX.Element => {
   switch (event.type) {
     case 'message': {
       return (
-        <div className='flex items-center'>
-          <span className='mr-2 bg-success py-1 px-2 rounded-sm'>{event.eventName}</span>
-          <span className='flex-shrink'>{event?.data?.[0]?.toString()}</span>
-          {event?.data?.length > 1 && <span className='bg-info ml-2 py-1 px-2 rounded-md'>+{event.data.length - 1} {event.data.length - 1 > 1 ? 'Args' : 'Arg'}</span>}
+        <div className="flex items-center">
+          <span className="bg-success mr-2 rounded-sm px-2 py-1">{event.eventName}</span>
+          <span className="flex-shrink">{event?.data?.[0]?.toString()}</span>
+          {event?.data?.length > 1 && (
+            <span className="bg-info ml-2 rounded-md px-2 py-1">
+              +{event.data.length - 1} {event.data.length - 1 > 1 ? 'Args' : 'Arg'}
+            </span>
+          )}
         </div>
       );
     }
@@ -97,11 +100,11 @@ export const EventLogView: FC<Props> = ({ events, onSelect, selectionId }) => {
 
   return (
     <>
-      <div className='w-full flex-1 overflow-hidden border border-solid border-[--hl-sm] select-none overflow-y-auto max-h-96'>
+      <div className="max-h-96 w-full flex-1 select-none overflow-hidden overflow-y-auto border border-solid border-[--hl-sm]">
         <Table
-          selectionMode='single'
+          selectionMode="single"
           selectedKeys={selectionId ? [selectionId] : []}
-          selectionBehavior='replace'
+          selectionBehavior="replace"
           onSelectionChange={keys => {
             if (keys !== 'all') {
               const key = keys.values().next().value;
@@ -113,37 +116,33 @@ export const EventLogView: FC<Props> = ({ events, onSelect, selectionId }) => {
               }
             }
           }}
-          aria-label='Modified objects'
-          className="border-separate border-spacing-0 w-full"
+          aria-label="Modified objects"
+          className="w-full border-separate border-spacing-0"
         >
-          <TableHeader className='sticky top-0 z-10 backdrop-blur backdrop-filter bg-[--hl-xs]'>
-            <Column isRowHeader className="p-3 text-left text-xs font-semibold  focus:outline-none">
+          <TableHeader className="sticky top-0 z-10 bg-[--hl-xs] backdrop-blur backdrop-filter">
+            <Column isRowHeader className="p-3 text-left text-xs font-semibold focus:outline-none">
               <span />
             </Column>
-            <Column className="p-3 text-left text-xs font-semibold focus:outline-none">
-              Data
-            </Column>
-            <Column className="p-3 text-left text-xs font-semibold focus:outline-none">
-              Time
-            </Column>
+            <Column className="p-3 text-left text-xs font-semibold focus:outline-none">Data</Column>
+            <Column className="p-3 text-left text-xs font-semibold focus:outline-none">Time</Column>
           </TableHeader>
           <TableBody
             style={{ height: virtualizer.getTotalSize() }}
             ref={parentRef}
-            className="divide divide-[--hl-sm] divide-solid"
+            className="divide divide-solid divide-[--hl-sm]"
             items={virtualizer.getVirtualItems()}
           >
             {item => {
               const event = events[item.index];
               return (
-                <Row className="group focus:outline-none focus-within:bg-[--hl-sm] transition-colors">
-                  <Cell className="p-2 whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                <Row className="group transition-colors focus-within:bg-[--hl-sm] focus:outline-none">
+                  <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] p-2 text-sm font-medium focus:outline-none group-last-of-type:border-none">
                     <SvgIcon icon={getIcon(event)} />
                   </Cell>
-                  <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                  <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
                     {getMessage(event)}
                   </Cell>
-                  <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                  <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
                     <Timestamp time={event.timestamp} />
                   </Cell>
                 </Row>

@@ -37,13 +37,9 @@ export interface BaseSocketIORequest {
 
 export type SocketIORequest = BaseModel & BaseSocketIORequest & { type: typeof type };
 
-export const isSocketIORequest = (model: Pick<BaseModel, 'type'>): model is SocketIORequest => (
-  model.type === type
-);
+export const isSocketIORequest = (model: Pick<BaseModel, 'type'>): model is SocketIORequest => model.type === type;
 
-export const isSocketIORequestId = (id?: string | null) => (
-  id?.startsWith(`${prefix}_`)
-);
+export const isSocketIORequestId = (id?: string | null) => id?.startsWith(`${prefix}_`);
 
 export const init = (): BaseSocketIORequest => ({
   name: 'New Socket.IO Request',

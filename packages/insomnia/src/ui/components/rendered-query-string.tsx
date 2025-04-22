@@ -31,7 +31,9 @@ const addApiKeyToParams = (requestAuth: RequestAuthentication) => {
     : [];
 };
 
-async function getQueryParamsFromAuth(request: Request | WebSocketRequest | SocketIORequest): Promise<RequestParameter[]> {
+async function getQueryParamsFromAuth(
+  request: Request | WebSocketRequest | SocketIORequest,
+): Promise<RequestParameter[]> {
   const requestAuth = getAuthObjectOrNull(request.authentication);
   const hasAuthSetOnRequest = requestAuth !== null && isAuthEnabled(request.authentication);
   if (hasAuthSetOnRequest) {

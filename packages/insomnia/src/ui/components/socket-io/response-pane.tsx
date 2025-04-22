@@ -26,7 +26,7 @@ export const SocketIOResponsePane: FC<{ requestId: string }> = () => {
   if (!activeResponse) {
     return (
       <Pane type="response">
-        <PaneHeader className='!justify-normal' />
+        <PaneHeader className="!justify-normal" />
         <PlaceholderResponsePane />
       </Pane>
     );
@@ -34,9 +34,7 @@ export const SocketIOResponsePane: FC<{ requestId: string }> = () => {
   return <SocketIOActiveResponsePane response={activeResponse} />;
 };
 
-const SocketIOActiveResponsePane: FC<{ response: SocketIOResponse }> = ({
-  response,
-}) => {
+const SocketIOActiveResponsePane: FC<{ response: SocketIOResponse }> = ({ response }) => {
   const [selectedEvent, setSelectedEvent] = useState<SocketIOEvent | null>(null);
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const [clearEventsBefore, setClearEventsBefore] = useState<number | null>(null);
@@ -47,7 +45,7 @@ const SocketIOActiveResponsePane: FC<{ response: SocketIOResponse }> = ({
   const connected = response?.connected;
 
   const handleSelection = (event: SocketIOEvent) => {
-    setSelectedEvent((selected: SocketIOEvent | null) => selected?._id === event._id ? null : event);
+    setSelectedEvent((selected: SocketIOEvent | null) => (selected?._id === event._id ? null : event));
   };
 
   const events = allEvents.filter(event => {
@@ -114,32 +112,37 @@ const SocketIOActiveResponsePane: FC<{ response: SocketIOResponse }> = ({
     <Pane type="response">
       <PaneHeader className="row-spaced">
         <div className="no-wrap scrollable scrollable--no-bars pad-left">
-          <div className={`${connected ? 'bg-success' : 'bg-danger'} py-1 px-2`}>{connected ? 'Connected' : 'Disconnected'}</div>
+          <div className={`${connected ? 'bg-success' : 'bg-danger'} px-2 py-1`}>
+            {connected ? 'Connected' : 'Disconnected'}
+          </div>
         </div>
-        <ResponseHistoryDropdown
-          activeResponse={response}
-        />
+        <ResponseHistoryDropdown activeResponse={response} />
       </PaneHeader>
-      <Tabs aria-label='Request group tabs' className="flex-1 w-full h-full flex flex-col">
-        <TabList className='w-full flex-shrink-0  overflow-x-auto border-solid scro border-b border-b-[--hl-md] bg-[--color-bg] flex items-center h-[--line-height-sm]' aria-label='Request pane tabs'>
+      <Tabs aria-label="Request group tabs" className="flex h-full w-full flex-1 flex-col">
+        <TabList
+          className="scro flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+          aria-label="Request pane tabs"
+        >
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='events'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="events"
           >
             Events
           </Tab>
           <Tab
-            className='flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300'
-            id='timeline'
+            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+            id="timeline"
           >
             Console
           </Tab>
         </TabList>
-        <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='events'>
-          <PanelGroup direction='vertical' className='h-full w-full grid grid-rows-[repeat(auto-fit,minmax(0,1fr))]'>
-            {response.error ? <ResponseErrorViewer url={response.url} error={response.error} />
-              : <>
-                <Panel minSize={10} defaultSize={50} className="w-full flex flex-col overflow-hidden box-border flex-1">
+        <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="events">
+          <PanelGroup direction="vertical" className="grid h-full w-full grid-rows-[repeat(auto-fit,minmax(0,1fr))]">
+            {response.error ? (
+              <ResponseErrorViewer url={response.url} error={response.error} />
+            ) : (
+              <>
+                <Panel minSize={10} defaultSize={50} className="box-border flex w-full flex-1 flex-col overflow-hidden">
                   <div
                     style={{
                       display: 'flex',
@@ -158,7 +161,7 @@ const SocketIOActiveResponsePane: FC<{ response: SocketIOResponse }> = ({
 
                     <SearchField
                       aria-label="Events filter"
-                      className="group relative flex-1 w-full"
+                      className="group relative w-full flex-1"
                       defaultValue={searchQuery}
                       onChange={query => {
                         setSearchQuery(query);
@@ -166,58 +169,48 @@ const SocketIOActiveResponsePane: FC<{ response: SocketIOResponse }> = ({
                     >
                       <Input
                         placeholder="Search"
-                        className="py-1 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+                        className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
                       />
-                      <div className="flex items-center px-2 absolute right-0 top-0 h-full">
-                        <Button className="flex group-data-[empty]:hidden items-center justify-center aspect-square w-5 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                      <div className="absolute right-0 top-0 flex h-full items-center px-2">
+                        <Button className="flex aspect-square w-5 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] group-data-[empty]:hidden">
                           <Icon icon="close" />
                         </Button>
                       </div>
                     </SearchField>
                     <Button
                       aria-label="Create in collection"
-                      className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                      className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                       onPress={() => {
                         const lastEvent = events[0];
                         setClearEventsBefore(lastEvent.timestamp);
                       }}
                     >
-                      <SvgIcon icon='prohibited' />
+                      <SvgIcon icon="prohibited" />
                     </Button>
                   </div>
 
                   {Boolean(events?.length) && (
-                    <EventLogView
-                      events={events}
-                      onSelect={handleSelection}
-                      selectionId={selectedEvent?._id}
-                    />
+                    <EventLogView events={events} onSelect={handleSelection} selectionId={selectedEvent?._id} />
                   )}
                 </Panel>
                 {selectedEvent && (
                   <>
-                    <PanelResizeHandle className={'w-full h-[1px] bg-[--hl-md]'} />
+                    <PanelResizeHandle className={'h-[1px] w-full bg-[--hl-md]'} />
                     <Panel minSize={10} defaultSize={50}>
-                      <div className="flex-1 border-t border-[var(--hl-md)] h-full">
-                        <SocketIOEventView
-                          key={selectedEvent._id}
-                          event={selectedEvent}
-                        />
+                      <div className="h-full flex-1 border-t border-[var(--hl-md)]">
+                        <SocketIOEventView key={selectedEvent._id} event={selectedEvent} />
                       </div>
                     </Panel>
                   </>
                 )}
-              </>}
+              </>
+            )}
           </PanelGroup>
         </TabPanel>
-        <TabPanel className='w-full flex-1 flex flex-col overflow-hidden' id='timeline'>
-          <ResponseTimelineViewer
-            key={response._id}
-            timeline={timeline}
-            pinToBottom={true}
-          />
+        <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="timeline">
+          <ResponseTimelineViewer key={response._id} timeline={timeline} pinToBottom={true} />
         </TabPanel>
       </Tabs>
-    </ Pane>
+    </Pane>
   );
 };

@@ -30,9 +30,7 @@ export interface BaseSocketIOResponse {
 
 export type SocketIOResponse = BaseModel & BaseSocketIOResponse;
 
-export const isSocketIOResponse = (model: Pick<BaseModel, 'type'>): model is SocketIOResponse => (
-  model.type === type
-);
+export const isSocketIOResponse = (model: Pick<BaseModel, 'type'>): model is SocketIOResponse => model.type === type;
 
 export function init(): BaseSocketIOResponse {
   return {
@@ -118,10 +116,7 @@ export async function create(patch: Partial<SocketIOResponse> = {}, maxResponses
     parentId,
   };
 
-  if (
-    (await models.settings.get()).filterResponsesByEnv &&
-    patch.hasOwnProperty('environmentId')
-  ) {
+  if ((await models.settings.get()).filterResponsesByEnv && patch.hasOwnProperty('environmentId')) {
     query.environmentId = patch.environmentId;
   }
 
@@ -139,11 +134,7 @@ export async function create(patch: Partial<SocketIOResponse> = {}, maxResponses
   return db.docCreate(type, patch);
 }
 
-async function _findRecentForRequest(
-  requestId: string,
-  environmentId: string | null,
-  limit: number,
-) {
+async function _findRecentForRequest(requestId: string, environmentId: string | null, limit: number) {
   const query: Query<SocketIOResponse> = {
     parentId: requestId,
   };
@@ -156,10 +147,7 @@ async function _findRecentForRequest(
   return db.findMostRecentlyModified<SocketIOResponse>(type, query, limit);
 }
 
-export async function getLatestForRequest(
-  requestId: string,
-  environmentId: string | null,
-) {
+export async function getLatestForRequest(requestId: string, environmentId: string | null) {
   const responses = await _findRecentForRequest(requestId, environmentId, 1);
   const response = responses[0] as SocketIOResponse | null | undefined;
   return response || null;
