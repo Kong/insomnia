@@ -4,7 +4,6 @@ import { Button, FileTrigger } from 'react-aria-components';
 
 import { ACCEPTED_NODE_CA_FILE_EXTS, NPM_PACKAGE_BASE, PLUGIN_HUB_BASE } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
-import { createPlugin } from '../../../plugins/create';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
 import { reload } from '../../../templating/index';
@@ -14,10 +13,10 @@ import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
-import { showAlert, showPrompt } from '../modals';
 import { Tooltip } from '../tooltip';
 import { BooleanSetting } from './boolean-setting';
-// import { BooleanSetting } from './boolean-setting';
+import { CreatePluginModal } from './create-plugin-modal';
+
 interface State {
   plugins: Plugin[];
   npmPluginValue: string;
@@ -29,7 +28,10 @@ interface State {
 }
 
 export const Plugins: FC = () => {
-  const { settings } = useRootLoaderData();
+  const {
+    settings,
+  } = useRootLoaderData();
+  const [showCreatePluginModal, setShowCreatePluginModal] = useState(false);
   const [state, setState] = useState<State>({
     plugins: [],
     npmPluginValue: '',
@@ -225,42 +227,8 @@ export const Plugins: FC = () => {
           Browse Plugin Hub
         </Button>
         <Button
-          className="m-1 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-          onPress={() =>
-            showPrompt({
-              title: 'New Plugin',
-              defaultValue: 'demo-example',
-              placeholder: 'example-name',
-              submitName: 'Generate',
-              label: 'Plugin Name',
-              selectText: true,
-              validate: name =>
-                name.match(/^[a-z][a-z-]*[a-z]$/) ? '' : 'Plugin name must be of format my-plugin-name',
-              onComplete: async name => {
-                // Remove insomnia-plugin- prefix if they accidentally typed it
-                name = name.replace(/^insomnia-plugin-/, '');
-                try {
-                  await createPlugin(
-                    `insomnia-plugin-${name}`,
-                    '0.0.1',
-                    [
-                      '// For help writing plugins, visit the documentation to get started:',
-                      `//   ${docsPlugins}`,
-                      '',
-                      '// TODO: Add plugin code here...',
-                    ].join('\n'),
-                  );
-                } catch (err) {
-                  console.error(err);
-                  showAlert({
-                    title: 'Failed to Create Plugin',
-                    message: err.message,
-                  });
-                }
-                refreshPlugins();
-              },
-            })
-          }
+          className="m-1 px-[--padding-md] h-[--line-height-xs] py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all border border-solid border-[--hl-lg] rounded-[--radius-md]"
+          onPress={() => setShowCreatePluginModal(true)}
         >
           Generate New Plugin
         </Button>
@@ -282,6 +250,15 @@ export const Plugins: FC = () => {
           Reload Plugins
           {isRefreshingPlugins && <i className="fa fa-refresh fa-spin space-left" />}
         </Button>
+        {showCreatePluginModal &&
+          <CreatePluginModal
+            onClose={() => setShowCreatePluginModal(false)}
+            onComplete={() => {
+              setShowCreatePluginModal(false)
+              refreshPlugins()
+            }}
+          />
+        }
       </div>
 
       <div className="form-row mt-6">
