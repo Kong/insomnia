@@ -1,5 +1,4 @@
 import { getExistingConsole } from './console';
-import { toMinorScriptError } from './interfaces';
 import { getInterpolator } from './interpolator';
 
 export class Environment {
@@ -156,13 +155,13 @@ export class Vault extends Environment {
       // throw error on get or set method call if enableVaultInScripts is false
       get: (target, prop, receiver) => {
         if (!enableVaultInScripts) {
-          throw toMinorScriptError(new Error('Vault is disabled in script'));
+          throw 'Vault is disabled in script';
         }
         return Reflect.get(target, prop, receiver);
       },
       set: (target, prop, value, receiver) => {
         if (!enableVaultInScripts) {
-          throw toMinorScriptError(new Error('Vault is disabled in script'));
+          throw 'Vault is disabled in script';
         }
         return Reflect.set(target, prop, value, receiver);
       },
@@ -170,14 +169,14 @@ export class Vault extends Environment {
   }
 
   unset = () => {
-    throw toMinorScriptError(new Error('Vault can not be unset in script'));
+    throw 'Vault can not be unset in script';
   };
 
   clear = () => {
-    throw toMinorScriptError(new Error('Vault can not be cleared in script'));
+    throw 'Vault can not be cleared in script';
   };
 
   set = () => {
-    throw toMinorScriptError(new Error('Vault can not be set in script'));
+    throw 'Vault can not be set in script';
   };
 }

@@ -35,22 +35,3 @@ export interface RequestContext {
   transientVariables?: Omit<IEnvironment, 'id'>;
   parentFolders: { id: string; name: string; environment: Record<string, any> }[];
 }
-
-export interface BaseScriptError {
-  name: string;
-  message: string;
-  stack?: string;
-}
-
-// MinorScriptError is an error that only displays a message on UI, without stacktrace
-export interface MinorScriptError extends BaseScriptError {
-  name: 'MinorScriptError';
-}
-
-// toMinorScriptError wraps an normal error as a MinorScriptError
-export function toMinorScriptError(originalError: Error): MinorScriptError {
-  return {
-    name: 'MinorScriptError',
-    message: `${originalError.message}`,
-  };
-}
