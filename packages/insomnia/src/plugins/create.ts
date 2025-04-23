@@ -10,7 +10,8 @@ export function getSafePluginDir(moduleName: string): string {
   }
 
   // 2. Sanitize moduleName to remove any unexpected characters or sequences
-  const sanitizedModuleName = moduleName.replace(/\.\.(\/|\\)/g, ''); // Remove '../' or path traversal attempts
+  // Remove '../' or path traversal attempts
+  const sanitizedModuleName = moduleName.replace(/\.\.(\/|\\)/g, ''); 
 
   // 3. Get base directory
   const baseDir = path.resolve(
@@ -45,7 +46,7 @@ export function getSafePluginDir(moduleName: string): string {
 
 export async function createPlugin(moduleName: string, version: string, mainJs: string) {
   const pluginDir = getSafePluginDir(moduleName);
-  
+
   try {
     const packagePath = path.join(pluginDir, 'package.json');
     const mainJsPath = path.join(pluginDir, 'main.js');
