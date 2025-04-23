@@ -23,7 +23,6 @@ export type RenderedRequest = Request & {
   }[];
   cookieJar: CookieJar;
   suppressUserAgent: boolean;
-  _authParentId?: string;
 };
 
 export interface RenderContextAndKeys {

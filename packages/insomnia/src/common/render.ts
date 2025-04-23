@@ -584,8 +584,7 @@ export async function getRenderedRequestAndContext({
   request.description = '';
 
   request.headers = getOrInheritHeaders({ request, requestGroups });
-  const { authentication, authParentId } = getOrInheritAuthentication({ request, requestGroups });
-  request.authentication = authentication;
+  request.authentication = getOrInheritAuthentication({ request, requestGroups });
   // Render all request properties
   const renderResult = await render(
     {
@@ -653,7 +652,6 @@ export async function getRenderedRequestAndContext({
       cookies: [],
       isPrivate: false,
       _id: renderedRequest._id,
-      _authParentId: authParentId,
       authentication: renderedRequest.authentication,
       pathParameters: renderedRequest.pathParameters,
       body: renderedRequest.body,

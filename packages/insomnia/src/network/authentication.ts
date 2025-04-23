@@ -66,7 +66,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
     // the same tokens are used for schema fetching. See issue #835 on GitHub.
     try {
       const tokenId = requestId.match(/\.graphql$/) ? requestId.replace(/\.graphql$/, '') : requestId;
-      const oAuth2Token = await getOAuth2Token(tokenId, authentication as AuthTypeOAuth2, false, renderedRequest._authParentId);
+      const oAuth2Token = await getOAuth2Token(tokenId, authentication as AuthTypeOAuth2);
 
       if (oAuth2Token) {
         const token = oAuth2Token.accessToken;

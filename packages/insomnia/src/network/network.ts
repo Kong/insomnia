@@ -62,13 +62,10 @@ export const getOrInheritAuthentication = ({
 }: {
   request: Request | WebSocketRequest;
   requestGroups: RequestGroup[];
-}): { authentication: RequestAuthentication | {}, authParentId: string } => {
+}): RequestAuthentication | {} => {
   const hasValidAuth = getAuthObjectOrNull(request.authentication) && isAuthEnabled(request.authentication);
   if (hasValidAuth) {
-    return {
-      authentication:request.authentication,
-      authParentId: request._id,
-    };
+    return request.authentication;
   }
   const hasParentFolders = requestGroups.length > 0;
   const closestParentFolderWithAuth = requestGroups.find(
@@ -78,13 +75,10 @@ export const getOrInheritAuthentication = ({
   const shouldCheckFolderAuth = hasParentFolders && closestAuth;
   if (shouldCheckFolderAuth) {
     // override auth with closest parent folder that has one set
-    return {
-      authentication: closestAuth,
-      authParentId: closestParentFolderWithAuth!._id,
-    };
+    return closestAuth;
   }
   // if no auth is specified on request or folders, default to none
-  return { authentication: { type: 'none' }, authParentId: request._id };
+  return { type: 'none' };
 };
 export function getOrInheritHeaders({
   request,

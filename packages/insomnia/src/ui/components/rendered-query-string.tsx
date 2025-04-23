@@ -41,8 +41,8 @@ async function getQueryParamsFromAuth(request: Request | WebSocketRequest): Prom
     models.requestGroup.type,
   ]);
   const requestGroups = ancestors.filter(isRequestGroup);
-  const { authentication } = getOrInheritAuthentication({ request, requestGroups });
-  const closestAuth = getAuthObjectOrNull(authentication);
+  const auth = getOrInheritAuthentication({ request, requestGroups });
+  const closestAuth = getAuthObjectOrNull(auth);
   if (!closestAuth) {
     return [];
   }
