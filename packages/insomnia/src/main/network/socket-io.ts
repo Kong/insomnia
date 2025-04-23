@@ -1,9 +1,11 @@
 import electron, { BrowserWindow } from 'electron';
 import fs from 'fs';
 import path from 'path';
-import { io as SocketIOClient, type Socket } from 'socket.io-client';
+import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOptions } from 'socket.io-client';
+import tls from 'tls';
 import { v4 as uuidV4 } from 'uuid';
 
+import { jarFromCookies } from '../../common/cookies';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import { socketIORequest } from '../../models';
@@ -11,6 +13,7 @@ import type { CookieJar } from '../../models/cookie-jar';
 import { type RequestHeader } from '../../models/request';
 import type { BaseSocketIORequest } from '../../models/socket-io-request';
 import type { SocketIOResponse } from '../../models/socket-io-response.ts';
+import { filterClientCertificates } from '../../network/certificate';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 
 export interface SocketIOpenEvent {
@@ -94,12 +97,74 @@ interface OpenSocketIORequestOptions {
   cookieJar: CookieJar;
   initialPayload?: string;
 }
+
+const getCertificates = async ({
+  workspaceId,
+  url,
+  requestId,
+}: {
+  workspaceId: string;
+  url: string;
+  requestId: string;
+}) => {
+  // attach certificates to the request
+  const caCert = await models.caCertificate.findByParentId(workspaceId);
+  const caCertficatePath = caCert?.path;
+  // attempt to read CA Certificate PEM from disk, fallback to root certificates
+  const caCertificate =
+    (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
+
+  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+  const filteredClientCertificates = filterClientCertificates(clientCertificates, url, 'wss:');
+  const pemCertificates: string[] = [];
+  const pemCertificateKeys: string[] = [];
+  const pfxCertificates: string[] = [];
+
+  filteredClientCertificates.forEach(clientCertificate => {
+    const { cert, key, pfx } = clientCertificate;
+
+    if (cert) {
+      timelineFileStreams
+        .get(requestId)
+        ?.write(
+          JSON.stringify({ value: `Adding SSL PEM certificate: ${cert}`, name: 'Text', timestamp: Date.now() }) + '\n',
+        );
+      pemCertificates.push(fs.readFileSync(cert, 'utf-8'));
+    }
+
+    if (key) {
+      timelineFileStreams
+        .get(requestId)
+        ?.write(
+          JSON.stringify({ value: `Adding SSL KEY certificate: ${key}`, name: 'Text', timestamp: Date.now() }) + '\n',
+        );
+      pemCertificateKeys.push(fs.readFileSync(key, 'utf-8'));
+    }
+
+    if (pfx) {
+      timelineFileStreams
+        .get(requestId)
+        ?.write(
+          JSON.stringify({ value: `Adding SSL P12 certificate: ${pfx}`, name: 'Text', timestamp: Date.now() }) + '\n',
+        );
+      pfxCertificates.push(fs.readFileSync(pfx, 'utf-8'));
+    }
+  });
+
+  return {
+    caCertificate,
+    pemCertificates,
+    pemCertificateKeys,
+    pfxCertificates,
+    passphrase: filteredClientCertificates[0]?.passphrase || '',
+  };
+};
+
 const openSocketIOConnection = async (
   _event: Electron.IpcMainInvokeEvent,
   options: OpenSocketIORequestOptions,
 ): Promise<void> => {
   const start = performance.now();
-  console.log('open socket io connection', options);
   const existingConnection = SocketIOConnections.get(options.requestId);
 
   if (existingConnection) {
@@ -109,7 +174,6 @@ const openSocketIOConnection = async (
 
   const request = await socketIORequest.getById(options.requestId);
   const responseId = generateId('res');
-  console.log('responseId', responseId);
   if (!request) {
     return;
   }
@@ -128,7 +192,7 @@ const openSocketIOConnection = async (
     const readyStateChannel = `socketIO.${request._id}.readyState`;
 
     const reduceArrayToLowerCaseKeyedDictionary = (
-      acc: { [key: string]: string },
+      acc: Record<string, string>,
       { name, value }: BaseSocketIORequest['headers'][0],
     ) => ({ ...acc, [name.toLowerCase() || '']: value || '' });
     const headers = options.headers;
@@ -138,10 +202,34 @@ const openSocketIOConnection = async (
       .filter(({ name, disabled }) => Boolean(name) && !disabled)
       .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
 
-    const socket = SocketIOClient(url, {
+    // attach cookies to the request
+    if (request.settingSendCookies && options.cookieJar.cookies.length) {
+      const jar = jarFromCookies(options.cookieJar.cookies);
+      const cookieHeader = jar.getCookieStringSync(options.url);
+      lowerCasedEnabledHeaders['cookie'] = cookieHeader;
+    }
+
+    const { caCertificate, pemCertificates, pemCertificateKeys, pfxCertificates, passphrase } = await getCertificates({
+      workspaceId: options.workspaceId,
+      url: options.url,
+      requestId: options.requestId,
+    });
+
+    const socketIOoptions: Partial<ManagerOptions & SocketOptions> = {
       extraHeaders: lowerCasedEnabledHeaders,
       query: options.query,
-    });
+      ca: caCertificate,
+      passphrase,
+    };
+
+    if (pfxCertificates.length) {
+      socketIOoptions.pfx = pfxCertificates.join('\n');
+    } else {
+      socketIOoptions.cert = pemCertificates.join('\n');
+      socketIOoptions.key = pemCertificateKeys.join('\n');
+    }
+
+    const socket = SocketIOClient(url, socketIOoptions);
     SocketIOConnections.set(options.requestId, socket);
     const openedEvents = request.eventListeners.filter(event => event.isOpen && event.eventName);
 
@@ -189,7 +277,6 @@ const openSocketIOConnection = async (
 
     const engine = socket.io.engine;
     engine.once('upgrade', transport => {
-      console.log('upgrade', transport);
       timelineFileStreams
         .get(request._id)
         ?.write(
