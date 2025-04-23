@@ -1,5 +1,5 @@
-import { test } from '../../playwright/test';
 import { expect } from '@playwright/test';
+import { test } from '../../playwright/test';
 
 test('Plugins', async ({ page }) => {
   // Opening settings
