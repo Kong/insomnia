@@ -11,25 +11,25 @@ interface Props {
 }
 
 function validatePluginName(name: string) {
-  // Validate name
-  if (!name.match(/^[a-z0-9]+(-[a-z0-9]+)*$/)) {
-    return 'Plugin name must be of format my-plugin-name';
+  if (name.trim() === '-') {
+    return 'Plugin name must not be a single dash';
+  }
+
+  if (name.startsWith('-')) {
+    return 'Plugin name must not start with a dash';
+  }
+
+  if (name.endsWith('-')) {
+    return 'Plugin name must not end with a dash';
   }
 
   if (name.match(/--/)) {
     return 'Plugin name must not contain consecutive dashes';
   }
 
-  if (name.match(/^[a-z]-/)) {
-    return 'Plugin name must not start with a dash';
-  }
-
-  if (name.match(/-$/)) {
-    return 'Plugin name must not end with a dash';
-  }
-
-  if (name.match(/^-$/)) {
-    return 'Plugin name must not be a single dash';
+  // Validate name
+  if (!name.match(/^[a-z0-9]+(-[a-z0-9]+)*$/)) {
+    return 'Plugin name must be of format my-plugin-name';
   }
 
   return null;
@@ -115,6 +115,7 @@ export const CreatePluginModal = ({ onClose, onComplete }: Props) => {
                 <Button
                   className="m-1 px-[--padding-md] h-[--line-height-xs] py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all border border-solid border-[--hl-lg] rounded-[--radius-md]"
                   type='button'
+                  data-testid="generate-plugin-button"
                   isDisabled={!name}
                   onPress={async () => {
                     // Remove insomnia-plugin- prefix if they accidentally typed it
