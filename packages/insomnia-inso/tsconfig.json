@@ -27,7 +27,7 @@
     "noFallthroughCasesInSwitch": true,
     "useUnknownInCatchVariables": false
   },
-  "include": [".eslintrc.js", "esbuild.ts", "jest.config.js", "package.json", "src", "../insomnia/types"],
+  "include": [".eslintrc.js", "esbuild.ts", "package.json", "src", "../insomnia/types"],
   "exclude": [
     "**/*.test.ts",
     "**/__mocks__/*",
@@ -35,7 +35,6 @@
     "assets",
     "bin",
     "dist",
-    "jest.config.js",
     "node_modules",
     "scripts",
     "src/vitest"

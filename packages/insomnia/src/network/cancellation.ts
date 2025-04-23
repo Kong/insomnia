@@ -1,7 +1,5 @@
 import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
-import type { CurlRequestOptions, CurlRequestOutput } from '../main/network/libcurl-promise';
-import type { CookieJar } from '../models/cookie-jar';
-import type { Request } from '../models/request';
+import type { CurlRequestOptions } from '../main/network/libcurl-promise';
 import { runScript as nodejsRunScript } from '../scriptExecutor';
 
 const cancelRequestFunctionMap = new Map<string, () => void>();
@@ -54,12 +52,7 @@ export const cancellableRunScript = async (options: { script: string; context: R
       fn: process.type === 'renderer' ? window.main.hiddenBrowserWindow.runScript(options) : nodejsRunScript(options),
     });
 
-    return result as {
-      request: Request;
-      environment: object;
-      baseEnvironment: object;
-      cookieJar: CookieJar;
-    };
+    return result;
   } catch (err) {
     if (err.name === 'AbortError') {
       throw new Error('Request was cancelled');
@@ -81,7 +74,7 @@ export const cancellableCurlRequest = async (requestOptions: CurlRequestOptions)
   cancelRequestFunctionMap.set(requestId, cancelRequest);
   try {
     const result = await cancellablePromise({ signal: controller.signal, fn: window.main.curlRequest(requestOptions) });
-    return result as CurlRequestOutput;
+    return result;
   } catch (err) {
     cancelRequestFunctionMap.delete(requestId);
     if (err.name === 'AbortError') {
@@ -92,11 +85,11 @@ export const cancellableCurlRequest = async (requestOptions: CurlRequestOptions)
   }
 };
 
-export const cancellablePromise = ({ signal, fn }: { signal: AbortSignal; fn: Promise<any> }) => {
+export const cancellablePromise = <T = any>({ signal, fn }: { signal: AbortSignal; fn: Promise<T> }) => {
   if (signal?.aborted) {
     return Promise.reject(new DOMException('Aborted', 'AbortError'));
   }
-  return new Promise((resolve, reject) => {
+  return new Promise<T>((resolve, reject) => {
     const abortHandler = () => {
       reject(new DOMException('Aborted', 'AbortError'));
     };

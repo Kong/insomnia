@@ -435,7 +435,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
 
   try {
     const fn = process.type === 'renderer' ? runScriptConcurrently : cancellableRunScript;
-    const originalOutput = await fn({
+    const output = await fn({
       script,
       context: {
         request,
@@ -479,10 +479,9 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         parentFolders,
       },
     });
-    if ('error' in originalOutput) {
-      return { error: `Script executor returns error: ${originalOutput.error}` };
+    if ('error' in output) {
+      return { error: `Script executor returns error: ${output.error}` };
     }
-    const output = originalOutput as RequestContext;
 
     const envPropertyOrder = orderedJSON.parse(
       JSON.stringify(output.environment.data),

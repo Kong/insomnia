@@ -30,7 +30,7 @@ Insomnia Inso CLI is built using a series of steps
 1. `packages/insomnia-inso/bin/inso` is shell script which points at `packages/insomnia-inso/dist/index.js` and is used for local development
 1. `packages/insomnia-inso/binaries/inso` is an executable made with `pkg`
 
-`getSendRequestCallbackMemDb` exposes some behaviour from the insomnia renderer.
+`getSendRequestCallbackMemDb` exposes some behavior from the insomnia renderer.
 
 - database: to fetch needed models
 - nunjucks templates: to interpolate the fields containing tags
@@ -46,7 +46,7 @@ Problems
 
 Unexplored ideas in this area.
 
-- create a database package with nunjucks templating and have both insomnia and inso use it with project references, use node-libcurl directly, that way we don't need to stub electorn and only import the code we use.
+- create a database package with nunjucks templating and have both insomnia and inso use it with project references, use node-libcurl directly, that way we don't need to stub electron and only import the code we use.
 - use an adapter pattern in inso to replace node-libcurl with fetch in order to avoid the bundling issues NaN modules present.
 - remove plugin support from inso and reimplement later with a fixed and supported API.
 

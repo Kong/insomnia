@@ -31,7 +31,6 @@ export function electronNodeRequire(options: Options): Plugin {
       // Ignore the modules from Rollup's commonjs plugin so that we can resolve them with this plugin
       conf.build ??= {};
       conf.build.commonjsOptions ??= {};
-      conf.build.commonjsOptions?.ignore ?? [];
       conf.build.commonjsOptions.ignore = [...modules];
 
       return conf;
