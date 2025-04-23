@@ -7,6 +7,7 @@ import path from 'path';
 
 import { isDevelopment, isWindows } from '../common/constants';
 import * as models from '../models';
+import { invariant } from '../utils/invariant';
 
 const YARN_DEPRECATED_WARN = /(?<keyword>warning)(?<dependencies>[^>:].+[>:])(?<issue>.+)/;
 
@@ -97,6 +98,14 @@ export default async function (lookupName: string) {
 }
 
 async function _isInsomniaPlugin(lookupName: string) {
+  // inspiration: https://github.com/npm/validate-npm-package-name/blob/main/lib/index.js
+  invariant(lookupName.match(/^\./), 'lookupName cannot start with a period');
+  invariant(lookupName.match(/^[^/]+/), 'lookupName cannot start with a slash');
+  invariant(lookupName.match(/^_/), 'lookupName cannot start with a underscore');
+  const hasSpecialCharacters = /[~'!()*]/.test(lookupName.split('/').slice(-1)[0])
+  invariant(!hasSpecialCharacters, 'lookupName cannot contain special characters');
+  const matchesEncodedValue = encodeURIComponent(lookupName) !== lookupName
+  invariant(!matchesEncodedValue, 'lookupName invalid');
   return new Promise<InsomniaPlugin>(async (resolve, reject) => {
     console.log('[plugins] Fetching module info from npm');
     childProcess.execFile(
