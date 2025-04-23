@@ -2,17 +2,27 @@ import electron from 'electron';
 import fs from 'fs';
 import path from 'path';
 
-export async function createPlugin(moduleName: string, version: string, mainJs: string) {
-  // Use path.resolve to normalize the full plugin path and verify that it’s a subdirectory of your intended base directory
+// Helper function to validate and sanitize plugin name
+export function getSafePluginDir(moduleName: string): string {
+  // 1. Validate that moduleName follows allowed pattern (no '../' allowed)
+  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(moduleName)) {
+    throw new Error('Invalid plugin name: must be lowercase, alphanumeric, and dash-separated');
+  }
+
+  // 2. Sanitize moduleName to remove any unexpected characters or sequences
+  const sanitizedModuleName = moduleName.replace(/\.\.(\/|\\)/g, ''); // Remove '../' or path traversal attempts
+
+  // 3. Get base directory
   const baseDir = path.resolve(
     process.env['INSOMNIA_DATA_PATH'] ||
     (process.type === 'renderer' ? window : electron).app.getPath('userData'),
     'plugins'
   );
 
-  const pluginDir = path.resolve(path.join(baseDir, moduleName));
+  // 4. Join and resolve the plugin path
+  const pluginDir = path.resolve(path.join(baseDir, sanitizedModuleName));
 
-  // Ensure pluginDir is within baseDir
+  // 5. Ensure the resolved path is within baseDir (no directory traversal)
   if (!pluginDir.startsWith(baseDir + path.sep)) {
     throw new Error('Invalid plugin name: path traversal detected');
   }
@@ -30,6 +40,12 @@ export async function createPlugin(moduleName: string, version: string, mainJs: 
     throw new Error('Plugin already exists');
   }
 
+  return pluginDir;
+}
+
+export async function createPlugin(moduleName: string, version: string, mainJs: string) {
+  const pluginDir = getSafePluginDir(moduleName);
+  
   try {
     const packagePath = path.join(pluginDir, 'package.json');
     const mainJsPath = path.join(pluginDir, 'main.js');
