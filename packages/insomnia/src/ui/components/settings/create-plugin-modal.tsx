@@ -1,10 +1,9 @@
-import React from 'react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button, Dialog, Heading, Input, Label, Modal, ModalOverlay, TextField } from 'react-aria-components';
 
-import { Icon } from '../icon';
-import { createPlugin } from '../../../plugins/create';
 import { docsPlugins } from '../../../common/documentation';
+import { createPlugin } from '../../../plugins/create';
+import { Icon } from '../icon';
 
 interface Props {
   onClose: () => void;
@@ -47,34 +46,34 @@ export const CreatePluginModal = ({ onClose, onComplete }: Props) => {
       onOpenChange={isOpen => {
         !isOpen && onClose();
       }}
-      className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
+      className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
     >
       <Modal
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
-        className="flex flex-col w-full max-w-3xl h-max max-h-[calc(100%-var(--padding-xl))] rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] bg-[--color-bg] text-[--color-font]"
+        className="flex h-max max-h-[calc(100%-var(--padding-xl))] w-full max-w-3xl flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
       >
-        <Dialog
-          className="outline-none flex-1 h-full flex flex-col overflow-hidden"
-        >
+        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
           {({ close }) => (
-            <div className='flex-1 flex flex-col gap-4 overflow-hidden h-full'>
-              <div className='flex gap-2 items-center justify-between'>
-                <Heading slot="title" className='text-2xl flex items-center gap-2'>New Plugin</Heading>
+            <div className="flex h-full flex-1 flex-col gap-4 overflow-hidden">
+              <div className="flex items-center justify-between gap-2">
+                <Heading slot="title" className="flex items-center gap-2 text-2xl">
+                  New Plugin
+                </Heading>
                 <Button
-                  className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                   onPress={close}
                 >
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className='rounded flex-1 w-full overflow-hidden basis-28§ flex flex-col gap-2 select-none overflow-y-auto'>
+              <div className="basis-28§ flex w-full flex-1 select-none flex-col gap-2 overflow-hidden overflow-y-auto rounded">
                 <TextField
                   name="name"
                   isRequired
-                  defaultValue='demo-example'
-                  className="group relative flex-shrink-0 flex flex-col gap-2 overflow-hidden max-w-full"
+                  defaultValue="demo-example"
+                  className="group relative flex max-w-full flex-shrink-0 flex-col gap-2 overflow-hidden"
                   onBlur={() => {
                     // Remove insomnia-plugin- prefix if they accidentally typed it
                     const nameWithoutPrefix = name.replace(/^insomnia-plugin-/, '');
@@ -87,35 +86,40 @@ export const CreatePluginModal = ({ onClose, onComplete }: Props) => {
 
                     setError(null);
                   }}
-                  onChange={(value) => {
+                  onChange={value => {
                     setName(value);
                     setError(null);
                   }}
                 >
-                  <Label className={`text-sm text-[--hl] p-0 ${error && name ? 'text-[rgba(var(--color-danger-rgb),0.5)]' : ''}`} slot='label'>
+                  <Label
+                    className={`p-0 text-sm text-[--hl] ${error && name ? 'text-[rgba(var(--color-danger-rgb),0.5)]' : ''}`}
+                    slot="label"
+                  >
                     Plugin Name
                   </Label>
-                  <div className={`flex items-center rounded-sm border border-solid border-[--hl-sm] ${error && name ? 'border-[rgba(var(--color-danger-rgb),0.5)]' : ''}`}>
-                    <div className={`flex-shrink-0 p-3 flex items-center justify-center bg-[--hl-sm] ${error && name ? 'bg-[rgba(var(--color-danger-rgb),0.5)]' : ''}`}>
-                      <p className="italic text-sm text-[--color-font] h-full flex items-center">
-                        insomnia-plugin-
-                      </p>
+                  <div
+                    className={`flex items-center rounded-sm border border-solid border-[--hl-sm] ${error && name ? 'border-[rgba(var(--color-danger-rgb),0.5)]' : ''}`}
+                  >
+                    <div
+                      className={`flex flex-shrink-0 items-center justify-center bg-[--hl-sm] p-3 ${error && name ? 'bg-[rgba(var(--color-danger-rgb),0.5)]' : ''}`}
+                    >
+                      <p className="flex h-full items-center text-sm italic text-[--color-font]">insomnia-plugin-</p>
                     </div>
                     <Input
-                      placeholder='example-name'
+                      placeholder="example-name"
                       autoFocus
-                      className='p-2 w-full bg-[--color-bg] text-[--color-font]'
+                      className="w-full bg-[--color-bg] p-2 text-[--color-font]"
                     />
                   </div>
-                  <Label slot='description' className='text-sm text-[--hl] p-0'>
+                  <Label slot="description" className="p-0 text-sm text-[--hl]">
                     {error ?? 'Plugin name must be of format my-plugin-name'}
                   </Label>
                 </TextField>
               </div>
-              <div className='flex items-center justify-end'>
+              <div className="flex items-center justify-end">
                 <Button
-                  className="m-1 px-[--padding-md] h-[--line-height-xs] py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all border border-solid border-[--hl-lg] rounded-[--radius-md]"
-                  type='button'
+                  className="m-1 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  type="button"
                   data-testid="generate-plugin-button"
                   isDisabled={!name}
                   onPress={async () => {
