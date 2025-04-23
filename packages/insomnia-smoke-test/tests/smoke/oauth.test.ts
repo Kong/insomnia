@@ -19,6 +19,37 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   await page.getByLabel('OAuth Testing').click();
 
+ // Test Folder Level Auth propagates to heirs
+
+  // select the folder (collapses heirs
+  await page.getByTestId('Folder Level Auth Code').click();
+
+  await page.getByRole('tab', { name: 'Auth' }).click();
+  await page.getByRole('button', { name: 'Clear' }).click();
+
+  // expand the folder to see the heirs again
+  await page.getByTestId('Folder Level Auth Code').click();
+  await page.getByLabel('Request Collection').getByTestId('Request with Inherited Auth').press('Enter');
+  await expect.soft(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
+  const [initialLoginPage] = await Promise.all([app.waitForEvent('window'), sendButton.click()]);
+  await initialLoginPage.waitForLoadState();
+  await initialLoginPage.waitForFunction("document.cookie !== ''");
+  await initialLoginPage.locator('[name="login"]').fill('folder');
+  await initialLoginPage.locator('[name="password"]').fill('folder');
+  await initialLoginPage.locator('button:has-text("Sign-in")').click();
+  await expect.soft(statusTag).toContainText('200 OK');
+  await expect.soft(responseBody).toContainText('"sub": "folder"');
+
+  // go back to the folder's auth tab
+  await page.getByTestId('Folder Level Auth Code').click();
+  await page.getByRole('tab', { name: 'Auth' }).click();
+
+  // clear the session (but keep the token!)
+  await page.getByRole('button', { name: 'Clear OAuth 2 session', exact: true }).click();
+
+  // reset ui state
+  await page.getByTestId('Folder Level Auth Code').click();
+
   // No PKCE
   await projectView.getByLabel('Request Collection').getByTestId('No PKCE').press('Enter');
   await expect.soft(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
@@ -85,7 +116,32 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await expect.soft(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
   await sendButton.click();
   await expect.soft(statusTag).toContainText('200 OK');
-  await expect.soft(responseBody).toContainText('"sub": "admin"');
+  // this is the original token from the first login
+  await expect.soft(responseBody).toContainText('"sub": "folder"');
+
+  // test to ensure that the token does not persist after clearing the folder's auth
+  await page.getByTestId('Folder Level Auth Code').click();
+  await page.getByRole('tab', { name: 'Auth' }).click();
+  await page.getByRole('button', { name: 'Clear', exact: true }).click();
+
+  // clear the session, too (so we can get a fresh one)
+  await page.getByRole('button', { name: 'Clear OAuth 2 session', exact: true }).click();
+  await page.getByTestId('Folder Level Auth Code').click(); // re-expand
+
+  // try the request again, note that it attempts to re-authenticate
+  // instead of re-using the original token (the real fix)
+  await page.getByLabel('Request Collection').getByTestId('Request with Inherited Auth').press('Enter');
+  await expect.soft(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
+
+  const [secondLoginPage] = await Promise.all([app.waitForEvent('window'), sendButton.click()]);
+  await secondLoginPage.waitForLoadState();
+  await secondLoginPage.waitForFunction("document.cookie !== ''");
+  await secondLoginPage.locator('[name="login"]').fill('fresh');
+  await secondLoginPage.locator('[name="password"]').fill('fresh');
+  await secondLoginPage.locator('button:has-text("Sign-in")').click();
+
+  await expect.soft(statusTag).toContainText('200 OK');
+  await expect.soft(responseBody).toContainText('"sub": "fresh"');
 
   // Reset the OAuth 2 session from Preferences
   if (process.platform === 'darwin') {
@@ -99,6 +155,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   // ID Token
   await page.getByLabel('Request Collection').getByTestId('ID Token').press('Enter');
   await expect.soft(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/id-token');
+  await page.getByRole('tab', { name: 'Auth' }).click();
   await expect.soft(page.locator('#Grant-Type')).toHaveValue('implicit');
 
   const [implicitPage] = await Promise.all([app.waitForEvent('window'), sendButton.click()]);
