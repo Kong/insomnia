@@ -31,8 +31,16 @@ export async function createPlugin(moduleName: string, version: string, mainJs: 
   }
 
   try {
+    const packagePath = path.join(pluginDir, 'package.json');
+    const mainJsPath = path.join(pluginDir, 'main.js');
+
+    if (fs.existsSync(packagePath) || fs.existsSync(mainJsPath)) {
+      throw new Error('Plugin files already exist');
+    }
+
     fs.mkdirSync(pluginDir, { recursive: true });
-    fs.writeFileSync(path.join(pluginDir, 'package.json'), JSON.stringify(
+    // 'wx' to write only if not exists
+    fs.writeFileSync(packagePath, JSON.stringify(
       {
         name: moduleName,
         version,
@@ -45,10 +53,11 @@ export async function createPlugin(moduleName: string, version: string, mainJs: 
       },
       null,
       2,
-    ),);
-    fs.writeFileSync(path.join(pluginDir, 'main.js'), mainJs);
-  } catch (err) {
-    console.error('Failed to create plugin:', err);
-    throw new Error('Failed to create plugin');
+    ), { flag: 'wx' }); 
+    // 'wx' to write only if not exists
+    fs.writeFileSync(mainJsPath, mainJs, { flag: 'wx' });
+  } catch (err: any) {
+    console.error('Failed to create plugin files:', err);
+    throw new Error('Plugin creation failed. Please try again.');
   }
 }
