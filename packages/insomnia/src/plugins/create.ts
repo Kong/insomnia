@@ -10,10 +10,10 @@ export async function createPlugin(moduleName: string, version: string, mainJs: 
     'plugins'
   );
 
-  const pluginDir = path.resolve(baseDir, moduleName);
+  const pluginDir = path.resolve(path.join(baseDir, moduleName));
 
-  // Ensure pluginDir is within baseDir (prevents path traversal)
-  if (!pluginDir.startsWith(baseDir)) {
+  // Ensure pluginDir is within baseDir
+  if (!pluginDir.startsWith(baseDir + path.sep)) {
     throw new Error('Invalid plugin name: path traversal detected');
   }
 
