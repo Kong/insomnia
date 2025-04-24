@@ -74,6 +74,13 @@ export function getSafePluginDir(pluginName: string): string {
   const pluginDir = path.resolve(path.join(baseDir, sanitizedModuleName));
 
   // Ensure the resolved path is within baseDir (no directory traversal)
+  const relativePath = path.relative(baseDir, pluginDir);
+
+  if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+    throw new Error('Invalid plugin name: path traversal detected');
+  }
+
+  // Ensure the resolved path is within baseDir (no directory traversal)
   if (!pluginDir.startsWith(baseDir + path.sep)) {
     throw new Error('Invalid plugin name: path traversal detected');
   }
