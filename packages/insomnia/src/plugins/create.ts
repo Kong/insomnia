@@ -2,11 +2,28 @@ import electron from 'electron';
 import fs from 'fs';
 import path from 'path';
 
-// Helper function to validate and sanitize plugin name
+// Validates a user-provided filename to prevent OS command injection.
 export function getSafePluginDir(pluginName: string): string {
   const pluginNameWithoutPrefix = pluginName.replace(/^insomnia-plugin-/, '');
 
-  // 1. Validate that moduleName follows allowed pattern (no '../' allowed)
+  // Allow only safe characters (alphanumeric, dashes, underscores, dots)
+  // Disallow any path traversal (../), shell metacharacters, etc.
+  const safePattern = /^[a-zA-Z0-9_\-\.]+$/;
+
+  // Reject empty or overly long input
+  if (!pluginNameWithoutPrefix || pluginNameWithoutPrefix.length > 255) {
+    throw new Error('Plugin name must not be empty or too long');
+  }
+
+  // Prevent path traversal
+  if (
+    pluginNameWithoutPrefix.includes('..') ||
+    pluginNameWithoutPrefix.includes('/') ||
+    pluginNameWithoutPrefix.includes('\\')
+  ) {
+    throw new Error('Plugin name must not contain path traversal characters');
+  }
+
   if (pluginNameWithoutPrefix.trim() === '-') {
     throw new Error('Plugin name must not be a single dash');
   }
@@ -39,24 +56,24 @@ export function getSafePluginDir(pluginName: string): string {
     throw new Error('Plugin name must be lowercase, alphanumeric, and dash-separated');
   }
 
-  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(pluginNameWithoutPrefix)) {
+  if (!safePattern.test(pluginNameWithoutPrefix)) {
     throw new Error('Plugin name must be lowercase, alphanumeric, and dash-separated');
   }
 
-  // 2. Sanitize moduleName to remove any unexpected characters or sequences
+  // Sanitize moduleName to remove any unexpected characters or sequences
   // Remove '../' or path traversal attempts
   const sanitizedModuleName = pluginName.replace(/\.\.(\/|\\)/g, '');
 
-  // 3. Get base directory
+  // Get base directory
   const baseDir = path.resolve(
     process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'),
     'plugins',
   );
 
-  // 4. Join and resolve the plugin path
+  // Join and resolve the plugin path
   const pluginDir = path.resolve(path.join(baseDir, sanitizedModuleName));
 
-  // 5. Ensure the resolved path is within baseDir (no directory traversal)
+  // Ensure the resolved path is within baseDir (no directory traversal)
   if (!pluginDir.startsWith(baseDir + path.sep)) {
     throw new Error('Invalid plugin name: path traversal detected');
   }
@@ -65,7 +82,7 @@ export function getSafePluginDir(pluginName: string): string {
   // Reject plugin names like "con", "prn", "aux", "nul" and ".."
   const reserved = ['con', 'prn', 'aux', 'nul'];
 
-  if (reserved.includes(pluginName.toLowerCase()) || pluginName.includes('..')) {
+  if (reserved.includes(pluginName.toLowerCase())) {
     throw new Error('Plugin name is not allowed');
   }
 
