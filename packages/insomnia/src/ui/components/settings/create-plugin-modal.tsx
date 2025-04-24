@@ -10,31 +10,6 @@ interface Props {
   onComplete: () => void;
 }
 
-function validatePluginName(name: string) {
-  if (name.trim() === '-') {
-    return 'Plugin name must not be a single dash';
-  }
-
-  if (name.startsWith('-')) {
-    return 'Plugin name must not start with a dash';
-  }
-
-  if (name.endsWith('-')) {
-    return 'Plugin name must not end with a dash';
-  }
-
-  if (name.match(/--/)) {
-    return 'Plugin name must not contain consecutive dashes';
-  }
-
-  // Validate name
-  if (!name.match(/^[a-z0-9]+(-[a-z0-9]+)*$/)) {
-    return 'Plugin name must be of format my-plugin-name';
-  }
-
-  return null;
-}
-
 export const CreatePluginModal = ({ onClose, onComplete }: Props) => {
   const [name, setName] = useState('demo-example');
   const [error, setError] = useState<string | null>(null);
@@ -74,18 +49,6 @@ export const CreatePluginModal = ({ onClose, onComplete }: Props) => {
                   isRequired
                   defaultValue="demo-example"
                   className="group relative flex max-w-full flex-shrink-0 flex-col gap-2 overflow-hidden"
-                  onBlur={() => {
-                    // Remove insomnia-plugin- prefix if they accidentally typed it
-                    const nameWithoutPrefix = name.replace(/^insomnia-plugin-/, '');
-
-                    const errorMessage = validatePluginName(nameWithoutPrefix);
-                    if (errorMessage) {
-                      setError(errorMessage);
-                      return;
-                    }
-
-                    setError(null);
-                  }}
                   onChange={value => {
                     setName(value);
                     setError(null);
@@ -126,17 +89,9 @@ export const CreatePluginModal = ({ onClose, onComplete }: Props) => {
                     // Remove insomnia-plugin- prefix if they accidentally typed it
                     const nameWithoutPrefix = name.replace(/^insomnia-plugin-/, '');
 
-                    const errorMessage = validatePluginName(nameWithoutPrefix);
-
-                    if (errorMessage) {
-                      setError(errorMessage);
-                      return;
-                    }
-
                     try {
                       await createPlugin(
                         `insomnia-plugin-${nameWithoutPrefix}`,
-                        '0.0.1',
                         [
                           '// For help writing plugins, visit the documentation to get started:',
                           `// ${docsPlugins}`,
