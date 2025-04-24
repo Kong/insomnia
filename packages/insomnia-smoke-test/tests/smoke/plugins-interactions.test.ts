@@ -18,7 +18,7 @@ test('Plugins', async ({ page }) => {
   await page.locator('text=Generate New Plugin').click();
   await page.getByLabel('Plugin name').fill('My-Plugin');
   await page.getByTestId('generate-plugin-button').click();
-  await expect.soft(page.locator('text=Plugin name must be of format my-plugin-name')).toBeVisible();
+  await expect.soft(page.locator('text=Plugin name must be lowercase, alphanumeric, and dash-separated')).toBeVisible();
 
   // Reject plugin name with consecutive dashes
   await page.getByLabel('Plugin name').fill('my--plugin');
@@ -35,10 +35,30 @@ test('Plugins', async ({ page }) => {
   await page.getByTestId('generate-plugin-button').click();
   await expect.soft(page.locator('text=Plugin name must not end with a dash')).toBeVisible();
 
-  //  Reject plugin name that is a single dash
+  // Reject plugin name that is a single dash
   await page.getByLabel('Plugin name').fill('-');
   await page.getByTestId('generate-plugin-button').click();
   await expect.soft(page.locator('text=Plugin name must not be a single dash')).toBeVisible();
+
+  // Reject plugin name starting with a period
+  await page.getByLabel('Plugin name').fill('.plugin');
+  await page.getByTestId('generate-plugin-button').click();
+  await expect.soft(page.locator('text=Plugin name cannot start with a period')).toBeVisible();
+
+  // Reject plugin name starting with an underscore
+  await page.getByLabel('Plugin name').fill('_plugin');
+  await page.getByTestId('generate-plugin-button').click();
+  await expect.soft(page.locator('text=Plugin name cannot start with an underscore')).toBeVisible();
+
+  // Reject plugin name with leading or trailing spaces
+  await page.getByLabel('Plugin name').fill(' plugin ');
+  await page.getByTestId('generate-plugin-button').click();
+  await expect.soft(page.locator('text=Plugin name cannot contain leading or trailing spaces')).toBeVisible();
+
+  // Reject plugin name with invalid characters
+  await page.getByLabel('Plugin name').fill('plugin@name');
+  await page.getByTestId('generate-plugin-button').click();
+  await expect.soft(page.locator('text=Plugin name must be lowercase, alphanumeric, and dash-separated')).toBeVisible();
 
   // Prevent creating a plugin with a name that already exists
   const pluginName = 'duplicate-plugin';
@@ -50,5 +70,5 @@ test('Plugins', async ({ page }) => {
   await page.locator('text=Generate New Plugin').click();
   await page.getByLabel('Plugin name').fill(pluginName);
   await page.getByTestId('generate-plugin-button').click();
-  await expect.soft(page.locator('text=Plugin already exists')).toBeVisible(); // this assumes your backend returns that
+  await expect.soft(page.locator('text=Plugin already exists')).toBeVisible();
 });
