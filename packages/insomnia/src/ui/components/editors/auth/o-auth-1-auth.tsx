@@ -18,22 +18,24 @@ import { AuthTableBody } from './components/auth-table-body';
 import { AuthToggleRow } from './components/auth-toggle-row';
 
 const blankForDefault = 'Leave blank for default';
-export const signatureMethodOptions: { name: OAuth1SignatureMethod; value: OAuth1SignatureMethod }[] = [{
-  name: 'HMAC-SHA1',
-  value: SIGNATURE_METHOD_HMAC_SHA1,
-},
-{
-  name: 'HMAC-SHA256',
-  value: SIGNATURE_METHOD_HMAC_SHA256,
-},
-{
-  name: 'RSA-SHA1',
-  value: SIGNATURE_METHOD_RSA_SHA1,
-},
-{
-  name: 'PLAINTEXT',
-  value: SIGNATURE_METHOD_PLAINTEXT,
-}];
+export const signatureMethodOptions: { name: OAuth1SignatureMethod; value: OAuth1SignatureMethod }[] = [
+  {
+    name: 'HMAC-SHA1',
+    value: SIGNATURE_METHOD_HMAC_SHA1,
+  },
+  {
+    name: 'HMAC-SHA256',
+    value: SIGNATURE_METHOD_HMAC_SHA256,
+  },
+  {
+    name: 'RSA-SHA1',
+    value: SIGNATURE_METHOD_RSA_SHA1,
+  },
+  {
+    name: 'PLAINTEXT',
+    value: SIGNATURE_METHOD_PLAINTEXT,
+  },
+];
 
 export const OAuth1Auth: FC = () => {
   const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
@@ -44,22 +46,22 @@ export const OAuth1Auth: FC = () => {
   return (
     <AuthTableBody>
       <AuthToggleRow label="Enabled" property="disabled" invert />
-      <AuthInputRow label='Consumer Key' property='consumerKey' />
-      <AuthInputRow label='Consumer Secret' property='consumerSecret' mask />
-      <AuthInputRow label='Token Key' property='tokenKey' />
-      <AuthInputRow label='Token Secret' property='tokenSecret' mask />
-      <AuthSelectRow label='Signature Method' property='signatureMethod' options={signatureMethodOptions} />
-      {signatureMethod === SIGNATURE_METHOD_RSA_SHA1 && <AuthPrivateKeyRow label='Private Key' property='privateKey' />}
-      <AuthInputRow label='Callback URL' property='callback' />
-      <AuthInputRow label='Version' property='version' />
-      <AuthInputRow label='Timestamp' property='timestamp' help={blankForDefault} />
-      <AuthInputRow label='Realm' property='realm' help={blankForDefault} />
-      <AuthInputRow label='Nonce' property='nonce' help={blankForDefault} />
-      <AuthInputRow label='Verifier' property='verifier' help={blankForDefault} />
+      <AuthInputRow label="Consumer Key" property="consumerKey" />
+      <AuthInputRow label="Consumer Secret" property="consumerSecret" mask />
+      <AuthInputRow label="Token Key" property="tokenKey" />
+      <AuthInputRow label="Token Secret" property="tokenSecret" mask />
+      <AuthSelectRow label="Signature Method" property="signatureMethod" options={signatureMethodOptions} />
+      {signatureMethod === SIGNATURE_METHOD_RSA_SHA1 && <AuthPrivateKeyRow label="Private Key" property="privateKey" />}
+      <AuthInputRow label="Callback URL" property="callback" />
+      <AuthInputRow label="Version" property="version" />
+      <AuthInputRow label="Timestamp" property="timestamp" help={blankForDefault} />
+      <AuthInputRow label="Realm" property="realm" help={blankForDefault} />
+      <AuthInputRow label="Nonce" property="nonce" help={blankForDefault} />
+      <AuthInputRow label="Verifier" property="verifier" help={blankForDefault} />
       <AuthToggleRow
-        label='Hash Body'
-        property='includeBodyHash'
-        help='If a application/x-www-form-urlencoded body is present, also generate a oauth_body_hash property'
+        label="Hash Body"
+        property="includeBodyHash"
+        help="If a application/x-www-form-urlencoded body is present, also generate a oauth_body_hash property"
       />
     </AuthTableBody>
   );

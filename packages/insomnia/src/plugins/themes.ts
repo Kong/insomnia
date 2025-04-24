@@ -1,4 +1,3 @@
-
 import r from './themes/colorblind-dark';
 import a from './themes/default';
 import k from './themes/gruvbox';

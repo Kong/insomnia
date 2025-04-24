@@ -22,9 +22,7 @@ import type { Request } from '../../models/request';
 import { isRequestGroup, type RequestGroup } from '../../models/request-group';
 import type { RequestGroupMeta } from '../../models/request-group-meta';
 import type { RequestMeta } from '../../models/request-meta';
-import type {
-  WebSocketRequest,
-} from '../../models/websocket-request';
+import type { WebSocketRequest } from '../../models/websocket-request';
 import type { Workspace } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
 import { pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-project';
@@ -65,10 +63,7 @@ export interface Child {
   ancestors?: string[];
 }
 
-export const workspaceLoader: LoaderFunction = async ({
-  request,
-  params,
-}): Promise<WorkspaceLoaderData> => {
+export const workspaceLoader: LoaderFunction = async ({ request, params }): Promise<WorkspaceLoaderData> => {
   const { organizationId, projectId, workspaceId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
@@ -85,21 +80,19 @@ export const workspaceLoader: LoaderFunction = async ({
   const activeProject = await models.project.getById(projectId);
   invariant(activeProject, 'Project not found');
 
-  const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(
-    workspaceId,
-  );
+  const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
   invariant(activeWorkspaceMeta, 'Workspace meta not found');
-  const gitRepositoryId = isGitProject(activeProject) ? activeProject.gitRepositoryId : activeWorkspaceMeta.gitRepositoryId;
-  const gitRepository = await models.gitRepository.getById(
-    gitRepositoryId || '',
-  );
+  const gitRepositoryId = isGitProject(activeProject)
+    ? activeProject.gitRepositoryId
+    : activeWorkspaceMeta.gitRepositoryId;
+  const gitRepository = await models.gitRepository.getById(gitRepositoryId || '');
 
   const baseEnvironment = await models.environment.getByParentId(workspaceId);
   invariant(baseEnvironment, 'Base environment not found');
 
-  const subEnvironments = (
-    await models.environment.findByParentId(baseEnvironment._id)
-  ).sort((e1, e2) => e1.metaSortKey - e2.metaSortKey);
+  const subEnvironments = (await models.environment.findByParentId(baseEnvironment._id)).sort(
+    (e1, e2) => e1.metaSortKey - e2.metaSortKey,
+  );
 
   const globalEnvironmentWorkspaces = await database.find<Workspace>(models.workspace.type, {
     parentId: projectId,
@@ -126,28 +119,26 @@ export const workspaceLoader: LoaderFunction = async ({
     };
   });
 
-  const activeEnvironment = (await database.getWhere<Environment>(models.environment.type, {
-    _id: activeWorkspaceMeta.activeEnvironmentId,
-  })) || baseEnvironment;
+  const activeEnvironment =
+    (await database.getWhere<Environment>(models.environment.type, {
+      _id: activeWorkspaceMeta.activeEnvironmentId,
+    })) || baseEnvironment;
 
-  const activeGlobalEnvironment = (await database.getWhere<Environment>(models.environment.type, {
+  const activeGlobalEnvironment = await database.getWhere<Environment>(models.environment.type, {
     _id: activeWorkspaceMeta.activeGlobalEnvironmentId,
-  }));
+  });
 
-  const activeCookieJar = await models.cookieJar.getOrCreateForParentId(
-    workspaceId,
-  );
+  const activeCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
   invariant(activeCookieJar, 'Cookie jar not found');
 
   const activeApiSpec = await models.apiSpec.getByParentId(workspaceId);
   const activeMockServer = await models.mockServer.getByParentId(workspaceId);
-  const clientCertificates = await models.clientCertificate.findByParentId(
-    workspaceId,
-  );
+  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
 
-  const organizationProjects = await database.find<Project>(models.project.type, {
-    parentId: organizationId,
-  }) || [];
+  const organizationProjects =
+    (await database.find<Project>(models.project.type, {
+      parentId: organizationId,
+    })) || [];
 
   const projects = sortProjects(organizationProjects);
 
@@ -169,14 +160,25 @@ export const workspaceLoader: LoaderFunction = async ({
 
   const reqs = await database.find(models.request.type, { parentId: { $in: listOfParentIds } });
   const reqGroups = await database.find(models.requestGroup.type, { parentId: { $in: listOfParentIds } });
-  const grpcReqs = await database.find(models.grpcRequest.type, { parentId: { $in: listOfParentIds } }) as GrpcRequest[];
+  const grpcReqs = (await database.find(models.grpcRequest.type, {
+    parentId: { $in: listOfParentIds },
+  })) as GrpcRequest[];
   const wsReqs = await database.find(models.webSocketRequest.type, { parentId: { $in: listOfParentIds } });
-  const allRequests = [...reqs, ...reqGroups, ...grpcReqs, ...wsReqs] as (Request | RequestGroup | GrpcRequest | WebSocketRequest)[];
+  const allRequests = [...reqs, ...reqGroups, ...grpcReqs, ...wsReqs] as (
+    | Request
+    | RequestGroup
+    | GrpcRequest
+    | WebSocketRequest
+  )[];
 
   const requestMetas = await database.find(models.requestMeta.type, { parentId: { $in: reqs.map(r => r._id) } });
-  const grpcRequestMetas = await database.find(models.grpcRequestMeta.type, { parentId: { $in: grpcReqs.map(r => r._id) } });
+  const grpcRequestMetas = await database.find(models.grpcRequestMeta.type, {
+    parentId: { $in: grpcReqs.map(r => r._id) },
+  });
   const grpcAndRequestMetas = [...requestMetas, ...grpcRequestMetas] as (RequestMeta | GrpcRequestMeta)[];
-  const requestGroupMetas = await database.find(models.requestGroupMeta.type, { parentId: { $in: listOfParentIds } }) as RequestGroupMeta[];
+  const requestGroupMetas = (await database.find(models.requestGroupMeta.type, {
+    parentId: { $in: listOfParentIds },
+  })) as RequestGroupMeta[];
   // second recursion to build the tree
   const getCollectionTree = async ({
     parentId,
@@ -184,52 +186,49 @@ export const workspaceLoader: LoaderFunction = async ({
     parentIsCollapsed,
     ancestors,
   }: {
-      parentId: string; level: number; parentIsCollapsed: boolean; ancestors: string[];
+    parentId: string;
+    level: number;
+    parentIsCollapsed: boolean;
+    ancestors: string[];
   }): Promise<Child[]> => {
     const levelReqs = allRequests.filter(r => r.parentId === parentId);
 
-    const childrenWithChildren: Child[] = await Promise.all(levelReqs
-        .sort(sortFunction)
-        .map(async (doc): Promise<Child> => {
-          const isMatched = (filter: string): boolean =>
-            Boolean(fuzzyMatchAll(
-              filter,
-              [
-                doc.name,
-                doc.description,
-                ...(isRequestGroup(doc) ? [] : [doc.url]),
-              ],
-              { splitSpace: false, loose: true }
-            )?.indexes);
-          const shouldHide = Boolean(filter && !isMatched(filter));
-          const hidden = parentIsCollapsed || shouldHide;
+    const childrenWithChildren: Child[] = await Promise.all(
+      levelReqs.sort(sortFunction).map(async (doc): Promise<Child> => {
+        const isMatched = (filter: string): boolean =>
+          Boolean(
+            fuzzyMatchAll(filter, [doc.name, doc.description, ...(isRequestGroup(doc) ? [] : [doc.url])], {
+              splitSpace: false,
+              loose: true,
+            })?.indexes,
+          );
+        const shouldHide = Boolean(filter && !isMatched(filter));
+        const hidden = parentIsCollapsed || shouldHide;
 
-          const pinned =
-            !isRequestGroup(doc) && grpcAndRequestMetas.find(m => m.parentId === doc._id)?.pinned || false;
-          const collapsed = filter
-            ? false
-            : parentIsCollapsed ||
-              (isRequestGroup(doc) &&
-              requestGroupMetas.find(m => m.parentId === doc._id)?.collapsed) ||
-              false;
+        const pinned = (!isRequestGroup(doc) && grpcAndRequestMetas.find(m => m.parentId === doc._id)?.pinned) || false;
+        const collapsed = filter
+          ? false
+          : parentIsCollapsed ||
+            (isRequestGroup(doc) && requestGroupMetas.find(m => m.parentId === doc._id)?.collapsed) ||
+            false;
 
-          const docAncestors = [...ancestors, parentId];
+        const docAncestors = [...ancestors, parentId];
 
-          return {
-            doc,
-            pinned,
-            collapsed,
-            hidden,
-            level,
+        return {
+          doc,
+          pinned,
+          collapsed,
+          hidden,
+          level,
+          ancestors: docAncestors,
+          children: await getCollectionTree({
+            parentId: doc._id,
+            level: level + 1,
+            parentIsCollapsed: collapsed,
             ancestors: docAncestors,
-            children: await getCollectionTree({
-              parentId: doc._id,
-              level: level + 1,
-              parentIsCollapsed: collapsed,
-              ancestors: docAncestors,
-            }),
-          };
-        }),
+          }),
+        };
+      }),
     );
 
     return childrenWithChildren;
@@ -325,7 +324,10 @@ export const revalidateWorkspaceActiveRequest = async (requestId: string, worksp
 };
 
 export const revalidateWorkspaceActiveRequestByFolder = async (requestGroup: RequestGroup, workspaceId: string) => {
-  const docs = await database.withDescendants(requestGroup, models.request.type, [models.request.type, models.requestGroup.type]);
+  const docs = await database.withDescendants(requestGroup, models.request.type, [
+    models.request.type,
+    models.requestGroup.type,
+  ]);
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
   for (const doc of docs) {
     if (workspaceMeta?.activeRequestId === doc._id) {

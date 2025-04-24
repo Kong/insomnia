@@ -4,9 +4,9 @@ import path from 'path';
 import YAML from 'yaml';
 
 import { InsoError } from '../../cli';
-import { DbAdapter } from '../index';
+import type { DbAdapter } from '../index';
 import { emptyDb } from '../index';
-import { BaseModel } from '../models/types';
+import type { BaseModel } from '../models/types';
 
 /**
  * When exporting from Insomnia, the `models.[kind].type` is converted from PascalCase to snake_case.
@@ -29,7 +29,8 @@ import { BaseModel } from '../models/types';
  * @see packages/insomnia/src/common/import.js
  */
 
-type RawTypeKey = 'api_spec'
+type RawTypeKey =
+  | 'api_spec'
   | 'environment'
   | 'request'
   | 'request_group'
@@ -37,7 +38,6 @@ type RawTypeKey = 'api_spec'
   | 'unit_test_suite'
   | 'unit_test';
 
-/* eslint-disable camelcase */
 const rawTypeToParsedTypeMap: Record<RawTypeKey, BaseModel['type']> = {
   api_spec: 'ApiSpec',
   environment: 'Environment',
@@ -47,7 +47,6 @@ const rawTypeToParsedTypeMap: Record<RawTypeKey, BaseModel['type']> = {
   unit_test_suite: 'UnitTestSuite',
   unit_test: 'UnitTest',
 };
-/* eslint-enable camelcase */
 
 type ExtraProperties = Record<string, unknown>;
 
@@ -79,10 +78,12 @@ const insomniaAdapter: DbAdapter = async (filePath, filterTypes) => {
 
   // Now, reading and parsing
   const content = await fs.promises.readFile(filePath, { encoding: 'utf-8' });
-  let parsed: {
-    __export_format: number;
-    resources: RawTypeModel[];
-  } | undefined;
+  let parsed:
+    | {
+        __export_format: number;
+        resources: RawTypeModel[];
+      }
+    | undefined;
 
   try {
     parsed = YAML.parse(content);
@@ -108,7 +109,9 @@ const insomniaAdapter: DbAdapter = async (filePath, filterTypes) => {
   } else if (!parsed.__export_format) {
     throw new InsoError(`Expected an Insomnia v4 export file; unexpected data found in ${fileName}.`);
   } else if (parsed.__export_format !== 4 && parsed.__export_format !== 5) {
-    throw new InsoError(`Expected an Insomnia v4 export file; found an Insomnia v${parsed.__export_format} export file in ${fileName}.`);
+    throw new InsoError(
+      `Expected an Insomnia v4 export file; found an Insomnia v${parsed.__export_format} export file in ${fileName}.`,
+    );
   }
 
   // Transform filter to a set for faster search

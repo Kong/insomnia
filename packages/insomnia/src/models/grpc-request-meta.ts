@@ -19,9 +19,7 @@ interface BaseGrpcRequestMeta {
 
 export type GrpcRequestMeta = BaseModel & BaseGrpcRequestMeta;
 
-export const isGrpcRequestMeta = (model: Pick<BaseModel, 'type'>): model is GrpcRequestMeta => (
-  model.type === type
-);
+export const isGrpcRequestMeta = (model: Pick<BaseModel, 'type'>): model is GrpcRequestMeta => model.type === type;
 
 export function init() {
   return {
@@ -69,14 +67,13 @@ export async function updateOrCreateByParentId(parentId: string, patch: Partial<
   if (requestMeta) {
     return update(requestMeta, patch);
   }
-    const newPatch = Object.assign(
-      {
-        parentId,
-      },
-      patch,
-    );
-    return create(newPatch);
-
+  const newPatch = Object.assign(
+    {
+      parentId,
+    },
+    patch,
+  );
+  return create(newPatch);
 }
 
 export function all() {

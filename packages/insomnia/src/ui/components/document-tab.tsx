@@ -11,7 +11,7 @@ interface Props {
 
 export const DocumentTab = ({ organizationId, projectId, workspaceId, className }: Props) => {
   return (
-    <nav className={`flex w-full h-[40px] items-center ${className} px-1 justify-around`}>
+    <nav className={`flex h-[40px] w-full items-center ${className} justify-around px-1`}>
       {[
         { id: 'spec', name: 'Spec' },
         { id: 'debug', name: 'Collection' },
@@ -20,10 +20,12 @@ export const DocumentTab = ({ organizationId, projectId, workspaceId, className 
         <NavLink
           key={item.id}
           to={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${item.id}`}
-          className={({ isActive, isPending }) => classnames('text-center rounded-full px-2', {
-            'text-[--color-font-surprise] bg-[--color-surprise]': isActive,
-            'animate-pulse': isPending,
-          })}
+          className={({ isActive, isPending }) =>
+            classnames('rounded-full px-2 text-center', {
+              'bg-[--color-surprise] text-[--color-font-surprise]': isActive,
+              'animate-pulse': isPending,
+            })
+          }
           data-testid={`workspace-${item.id}`}
         >
           {item.name}

@@ -46,7 +46,7 @@ async function echoHandler(req: any, res: any) {
     data: req.body.toString(),
     cookies: req.cookies,
   });
-};
+}
 
 app.get('/echo', rawParser, echoHandler);
 app.post('/echo', rawParser, echoHandler);
@@ -123,20 +123,27 @@ app.post('/send-event', (request, response) => {
   response.json({ success: true });
 });
 
-startWebSocketServer(app.listen(port, () => {
-  console.log(`Listening at http://localhost:${port}`);
-  console.log(`Listening at ws://localhost:${port}`);
-}));
+startWebSocketServer(
+  app.listen(port, () => {
+    console.log(`Listening at http://localhost:${port}`);
+    console.log(`Listening at ws://localhost:${port}`);
+  }),
+);
 
-startWebSocketServer(createServer({
-  cert: readFileSync(join(__dirname, '../fixtures/certificates/localhost.pem')),
-  key: readFileSync(join(__dirname, '../fixtures/certificates/localhost-key.pem')),
-  ca: readFileSync(join(__dirname, '../fixtures/certificates/rootCA.pem')),
-  requestCert: true,
-  rejectUnauthorized: false,
-}, app).listen(httpsPort, () => {
-  console.log(`Listening at https://localhost:${httpsPort}`);
-  console.log(`Listening at wss://localhost:${httpsPort}`);
-}));
+startWebSocketServer(
+  createServer(
+    {
+      cert: readFileSync(join(__dirname, '../fixtures/certificates/localhost.pem')),
+      key: readFileSync(join(__dirname, '../fixtures/certificates/localhost-key.pem')),
+      ca: readFileSync(join(__dirname, '../fixtures/certificates/rootCA.pem')),
+      requestCert: true,
+      rejectUnauthorized: false,
+    },
+    app,
+  ).listen(httpsPort, () => {
+    console.log(`Listening at https://localhost:${httpsPort}`);
+    console.log(`Listening at wss://localhost:${httpsPort}`);
+  }),
+);
 
 startGRPCServer(grpcPort);

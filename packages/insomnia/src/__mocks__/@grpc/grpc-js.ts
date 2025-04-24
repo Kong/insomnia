@@ -82,7 +82,6 @@ class MockGrpcClient {
     makeMockCall();
     return getMockCall();
   }
-
 }
 
 export function makeGenericClientConstructor() {

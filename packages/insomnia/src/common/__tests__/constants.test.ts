@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { MockServer } from '../../models/mock-server';
+import type { MockServer } from '../../models/mock-server';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
@@ -91,19 +91,25 @@ describe('getContentTypeName', () => {
 
 describe('getMockSeviceBinUrl', () => {
   it('should return correct mock url', () => {
-    expect(getMockServiceBinURL({
-      useInsomniaCloud: true,
-      _id: 'mock_617eac05d9a94e38a1187f9b4400039b',
-      url: '',
-    } as MockServer, '/my-route')).toBe(
-      'https://mock-617eac05d9a94e38a1187f9b4400039b.mock.insomnia.rest/my-route'
-    );
-    expect(getMockServiceBinURL({
-      useInsomniaCloud: false,
-      _id: 'mock_617eac05d9a94e38a1187f9b4400039b',
-      url: 'http://localhost:8080',
-    } as MockServer, '/my-route')).toBe(
-      'http://localhost:8080/bin/mock_617eac05d9a94e38a1187f9b4400039b/my-route'
-    );
+    expect(
+      getMockServiceBinURL(
+        {
+          useInsomniaCloud: true,
+          _id: 'mock_617eac05d9a94e38a1187f9b4400039b',
+          url: '',
+        } as MockServer,
+        '/my-route',
+      ),
+    ).toBe('https://mock-617eac05d9a94e38a1187f9b4400039b.mock.insomnia.rest/my-route');
+    expect(
+      getMockServiceBinURL(
+        {
+          useInsomniaCloud: false,
+          _id: 'mock_617eac05d9a94e38a1187f9b4400039b',
+          url: 'http://localhost:8080',
+        } as MockServer,
+        '/my-route',
+      ),
+    ).toBe('http://localhost:8080/bin/mock_617eac05d9a94e38a1187f9b4400039b/my-route');
   });
 });

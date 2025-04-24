@@ -1,0 +1,36 @@
+diff --git a/node_modules/apiconnect-wsdl/lib/generateExamples.js b/node_modules/apiconnect-wsdl/lib/generateExamples.js
+index a4cbc96..56d5c82 100644
+--- a/node_modules/apiconnect-wsdl/lib/generateExamples.js
++++ b/node_modules/apiconnect-wsdl/lib/generateExamples.js
+@@ -50,7 +50,7 @@ function generateExamples(swagger, req) {
+             totalLength += swagger.definitions[nsName].example.length;
+         }
+     }
+-    if (totalLength > 1000000) {
++    if (totalLength > Number.MAX_SAFE_INTEGER) {
+         for (let nsName in swagger.definitions) {
+             if (swagger.definitions[nsName].example) {
+                 delete swagger.definitions[nsName].example;
+@@ -66,8 +66,8 @@ function exampleXMLForType(nsName, definitions, detailMap, req) {
+     let context = {
+         nesting: 0,
+         propertyCount: 0,
+-        nestingLimit: 10,
+-        breadthLimit: 50,
++        nestingLimit: Number.MAX_SAFE_INTEGER,
++        breadthLimit: Number.MAX_SAFE_INTEGER,
+         detailMap: detailMap
+     };
+     if (xso) {
+@@ -150,9 +150,9 @@ function generateElement(name, xso, definitions, nsStack, context, inOneOf, req)
+         pop(nsStack);
+         context.nesting--;
+         context.propertyCount++;
+-        if (context.propertyCount > 200) {
++        /* if (context.propertyCount > 200) {
+             context.breadthLimit = 5;
+-        }
++        } */
+ 
+         // If this is a polymorphic type, then add an xsi:type and comment
+         let xsiType = '';

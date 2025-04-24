@@ -19,7 +19,13 @@ interface ActionBarProps {
   onChange: (value: string) => void;
 }
 
-export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId, defaultValue, onChange, readyState }) => {
+export const WebSocketActionBar: FC<ActionBarProps> = ({
+  request,
+  environmentId,
+  defaultValue,
+  onChange,
+  readyState,
+}) => {
   const isOpen = readyState;
   const oneLineEditorRef = useRef<OneLineEditorHandle>(null);
   useLayoutEffect(() => {
@@ -27,17 +33,25 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId,
   }, []);
 
   const fetcher = useFetcher();
-  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+    requestId: string;
+  };
 
   const { updateTabById } = useInsomniaTabContext();
 
-  const connect = useCallback((connectParams: ConnectActionParams) => {
-    fetcher.submit(JSON.stringify(connectParams), {
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/connect`,
-      method: 'post',
-      encType: 'application/json',
-    });
-  }, [fetcher, organizationId, projectId, requestId, workspaceId]);
+  const connect = useCallback(
+    (connectParams: ConnectActionParams) => {
+      fetcher.submit(JSON.stringify(connectParams), {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/connect`,
+        method: 'post',
+        encType: 'application/json',
+      });
+    },
+    [fetcher, organizationId, projectId, requestId, workspaceId],
+  );
 
   const handleSubmit = useCallback(async () => {
     updateTabById?.(request._id, { temporary: false });
@@ -60,13 +74,14 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId,
         workspaceCookieJar,
       },
     });
-    rendered && connect({
-      url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
-      headers: rendered.headers,
-      authentication: rendered.authentication,
-      cookieJar: rendered.workspaceCookieJar,
-      suppressUserAgent: rendered.suppressUserAgent,
-    });
+    rendered &&
+      connect({
+        url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
+        headers: rendered.headers,
+        authentication: rendered.authentication,
+        cookieJar: rendered.workspaceCookieJar,
+        suppressUserAgent: rendered.suppressUserAgent,
+      });
   }, [connect, environmentId, isOpen, request, updateTabById, workspaceId]);
 
   useEffect(() => {
@@ -75,9 +90,13 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId,
         handleSubmit();
       }
     };
-    document.getElementById('sidebar-request-gridlist')?.addEventListener('keydown', sendOnMetaEnter, { capture: true });
+    document
+      .getElementById('sidebar-request-gridlist')
+      ?.addEventListener('keydown', sendOnMetaEnter, { capture: true });
     return () => {
-      document.getElementById('sidebar-request-gridlist')?.removeEventListener('keydown', sendOnMetaEnter, { capture: true });
+      document
+        .getElementById('sidebar-request-gridlist')
+        ?.removeEventListener('keydown', sendOnMetaEnter, { capture: true });
     };
   }, [handleSubmit]);
 
@@ -91,24 +110,22 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId,
   const isConnectingOrClosed = !readyState;
   return (
     <>
-      {!isOpen && (
-        <span className="text-[--color-notice] flex items-center pl-[--padding-md]">WS</span>
-      )}
+      {!isOpen && <span className="flex items-center pl-[--padding-md] text-[--color-notice]">WS</span>}
       {isOpen && (
         <span className="text-success flex items-center pl-[--padding-md]">
-          <span className="bg-[--color-success] mr-[--padding-sm] w-2.5 h-2.5 rounded-[50%]" />
+          <span className="mr-[--padding-sm] h-2.5 w-2.5 rounded-[50%] bg-[--color-success]" />
           CONNECTED
         </span>
       )}
       <form
-        className="flex-1 flex"
+        className="flex flex-1"
         aria-disabled={isOpen}
         onSubmit={event => {
           event.preventDefault();
           handleSubmit();
         }}
       >
-        <div className="box-border w-full h-full px-[--padding-md]">
+        <div className="box-border h-full w-full px-[--padding-md]">
           <OneLineEditor
             id="websocket-url-bar"
             ref={oneLineEditorRef}
@@ -125,7 +142,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId,
         <div className="flex p-1">
           {isConnectingOrClosed ? (
             <button
-              className="hover:brightness-75 rounded-sm px-[--padding-md] text-center bg-[--color-surprise] text-[--color-font-surprise]"
+              className="rounded-sm bg-[--color-surprise] px-[--padding-md] text-center text-[--color-font-surprise] hover:brightness-75"
               type="submit"
             >
               Connect

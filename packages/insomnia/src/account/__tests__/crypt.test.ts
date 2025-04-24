@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import * as crypt from '../crypt';
 /**
-* @vitest-environment jsdom
-*/
+ * @vitest-environment jsdom
+ */
 
 describe('crypt', () => {
   describe('deriveKey()', () => {

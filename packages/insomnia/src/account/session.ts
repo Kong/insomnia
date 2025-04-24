@@ -46,15 +46,7 @@ export function onLoginLogout(loginCallback: LoginCallback) {
 /** Creates a session from a sessionId and derived symmetric key. */
 export async function absorbKey(sessionId: string, key: string) {
   // Get and store some extra info (salts and keys)
-  const {
-    publicKey,
-    encPrivateKey,
-    encSymmetricKey,
-    email,
-    accountId,
-    firstName,
-    lastName,
-  } = await _whoami(sessionId);
+  const { publicKey, encPrivateKey, encSymmetricKey, email, accountId, firstName, lastName } = await _whoami(sessionId);
   const symmetricKeyStr = crypt.decryptAES(key, JSON.parse(encSymmetricKey));
 
   // Store the information for later
@@ -170,7 +162,7 @@ async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse>
   const response = await insomniaFetch<WhoamiResponse | string>({
     method: 'GET',
     path: '/auth/whoami',
-    sessionId: sessionId || await getCurrentSessionId(),
+    sessionId: sessionId || (await getCurrentSessionId()),
   });
   if (typeof response === 'string') {
     throw new Error('Unexpected plaintext response: ' + response);

@@ -1,7 +1,7 @@
 import CodeMirror from 'codemirror';
 
 export function isNunjucksMode(
-  mode: CodeMirror.ModeSpec<unknown>
+  mode: CodeMirror.ModeSpec<unknown>,
 ): mode is CodeMirror.ModeSpec<{ baseMode: 'string' }> {
   return 'baseMode' in mode;
 }

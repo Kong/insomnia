@@ -30,33 +30,18 @@ const Modals: FC = () => {
       <ErrorBoundary showAlert>
         <AlertModal ref={instance => registerModal(instance, 'AlertModal')} />
         <ErrorModal ref={instance => registerModal(instance, 'ErrorModal')} />
-        <PromptModal
-          ref={instance => registerModal(instance, 'PromptModal')}
-        />
-        <WrapperModal
-          ref={instance => registerModal(instance, 'WrapperModal')}
-        />
+        <PromptModal ref={instance => registerModal(instance, 'PromptModal')} />
+        <WrapperModal ref={instance => registerModal(instance, 'WrapperModal')} />
         <AskModal ref={instance => registerModal(instance, 'AskModal')} />
-        <SelectModal
-          ref={instance => registerModal(instance, 'SelectModal')}
-        />
-        <FilterHelpModal
-          ref={instance => registerModal(instance, 'FilterHelpModal')}
-        />
-        <RequestRenderErrorModal
-          ref={instance => registerModal(instance, 'RequestRenderErrorModal')}
-        />
+        <SelectModal ref={instance => registerModal(instance, 'SelectModal')} />
+        <FilterHelpModal ref={instance => registerModal(instance, 'FilterHelpModal')} />
+        <RequestRenderErrorModal ref={instance => registerModal(instance, 'RequestRenderErrorModal')} />
 
-        <CodePromptModal
-          ref={instance => registerModal(instance, 'CodePromptModal')}
-        />
+        <CodePromptModal ref={instance => registerModal(instance, 'CodePromptModal')} />
 
         {activeWorkspace ? (
           <>
-            <NunjucksModal
-              ref={instance => registerModal(instance, 'NunjucksModal')}
-              workspace={activeWorkspace}
-            />
+            <NunjucksModal ref={instance => registerModal(instance, 'NunjucksModal')} workspace={activeWorkspace} />
           </>
         ) : null}
 
@@ -65,26 +50,15 @@ const Modals: FC = () => {
           environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
         />
 
-        <SettingsModal
-          ref={instance => registerModal(instance, 'SettingsModal')}
-        />
+        <SettingsModal ref={instance => registerModal(instance, 'SettingsModal')} />
 
-        <ResponseDebugModal
-          ref={instance => registerModal(instance, 'ResponseDebugModal')}
-        />
+        <ResponseDebugModal ref={instance => registerModal(instance, 'ResponseDebugModal')} />
 
-        <AddKeyCombinationModal
-          ref={instance => registerModal(instance, 'AddKeyCombinationModal')}
-        />
+        <AddKeyCombinationModal ref={instance => registerModal(instance, 'AddKeyCombinationModal')} />
 
-        <SyncMergeModal
-          ref={instance => registerModal(instance, 'SyncMergeModal')}
-        />
+        <SyncMergeModal ref={instance => registerModal(instance, 'SyncMergeModal')} />
 
-        <UpgradeModal
-          ref={instance => registerModal(instance, 'UpgradeModal')}
-        />
-
+        <UpgradeModal ref={instance => registerModal(instance, 'UpgradeModal')} />
       </ErrorBoundary>
     </div>
   );

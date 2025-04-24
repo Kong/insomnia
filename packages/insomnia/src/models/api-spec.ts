@@ -20,9 +20,7 @@ export interface BaseApiSpec {
 
 export type ApiSpec = BaseModel & BaseApiSpec;
 
-export const isApiSpec = (model: Pick<BaseModel, 'type'>): model is ApiSpec => (
-  model.type === type
-);
+export const isApiSpec = (model: Pick<BaseModel, 'type'>): model is ApiSpec => model.type === type;
 
 export function init(): BaseApiSpec {
   return {
@@ -40,10 +38,7 @@ export function getByParentId(workspaceId: string) {
   return db.getWhere<ApiSpec>(type, { parentId: workspaceId });
 }
 
-export async function getOrCreateForParentId(
-  workspaceId: string,
-  patch: Partial<ApiSpec> = {},
-) {
+export async function getOrCreateForParentId(workspaceId: string, patch: Partial<ApiSpec> = {}) {
   const spec = await db.getWhere<ApiSpec>(type, {
     parentId: workspaceId,
   });
@@ -55,10 +50,7 @@ export async function getOrCreateForParentId(
   return spec;
 }
 
-export async function updateOrCreateForParentId(
-  workspaceId: string,
-  patch: Partial<ApiSpec> = {},
-) {
+export async function updateOrCreateForParentId(workspaceId: string, patch: Partial<ApiSpec> = {}) {
   const spec = await getOrCreateForParentId(workspaceId);
   return db.docUpdate(spec, patch);
 }

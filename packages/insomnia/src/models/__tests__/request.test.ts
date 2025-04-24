@@ -5,7 +5,6 @@ import { newBodyGraphQL, updateMimeType } from '../../ui/components/dropdowns/co
 import * as models from '../index';
 
 describe('init()', () => {
-
   it('contains all required fields', async () => {
     Date.now = vi.fn().mockReturnValue(1478795580200);
     expect(models.request.init()).toEqual({
@@ -33,7 +32,6 @@ describe('init()', () => {
 });
 
 describe('create()', () => {
-
   it('creates a valid request', async () => {
     Date.now = vi.fn().mockReturnValue(1478795580200);
     const request = await models.request.create({
@@ -82,7 +80,6 @@ describe('create()', () => {
 });
 
 describe('updateMimeType()', () => {
-
   it('adds header when does not exist', async () => {
     const request = await models.request.create({
       name: 'My Request',
@@ -175,7 +172,6 @@ describe('updateMimeType()', () => {
 });
 
 describe('migrate()', () => {
-
   it('migrates basic case', () => {
     const original = {
       headers: [],
@@ -297,7 +293,7 @@ describe('migrate()', () => {
     const contentToMimeMap = {
       'application/json; charset=utf-8': 'application/json',
       'text/plain': 'text/plain',
-      malformed: 'malformed',
+      'malformed': 'malformed',
     };
 
     for (const contentType of Object.keys(contentToMimeMap)) {
@@ -411,8 +407,7 @@ describe('migrate()', () => {
 
 describe('newBodyGraphQL()', () => {
   it('strips \\\\n characters', () => {
-    const input =
-      '{"query": "query getCustomer() {\\\\n id\\\\n name\\\\n email\\\\n __typename\\\\n }\\\\n"}';
+    const input = '{"query": "query getCustomer() {\\\\n id\\\\n name\\\\n email\\\\n __typename\\\\n }\\\\n"}';
     const expectedTextOutput = '{"query": "query getCustomer() { id name email __typename }"}';
     const actualOutput = newBodyGraphQL(input);
     expect(actualOutput).toEqual({

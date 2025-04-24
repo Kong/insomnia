@@ -1,6 +1,6 @@
 import { safeStorage } from 'electron';
 
-import ElectronStorage from '../electron-storage';
+import type ElectronStorage from '../electron-storage';
 import { initElectronStorage } from '../window-utils';
 import { ipcMainHandle } from './electron';
 

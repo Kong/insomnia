@@ -92,9 +92,7 @@ export const validateThemeName = (name: string) => {
   return validName;
 };
 
-export const containsNunjucks = (data: string) => (
-  data.includes('{{') && data.includes('}}')
-);
+export const containsNunjucks = (data: string) => data.includes('{{') && data.includes('}}');
 const getChildValue = (theme: any, path: string[]) => {
   return path.reduce((acc, v: string) => {
     try {
@@ -116,7 +114,9 @@ export const validateTheme = (pluginTheme: PluginTheme) => {
     }
 
     if (typeof data === 'string' && containsNunjucks(data)) {
-      console.error(`[plugin] Nunjucks values in plugin themes are no longer valid. The plugin ${pluginTheme.displayName} (${pluginTheme.name}) has an invalid value, "${data}" at the path $.theme.${keyPath.join('.')}`);
+      console.error(
+        `[plugin] Nunjucks values in plugin themes are no longer valid. The plugin ${pluginTheme.displayName} (${pluginTheme.name}) has an invalid value, "${data}" at the path $.theme.${keyPath.join('.')}`,
+      );
     }
 
     if (typeof data === 'object') {
@@ -130,18 +130,13 @@ export const validateTheme = (pluginTheme: PluginTheme) => {
 
   check(['rawCss']);
 
-  [
-    'background',
-    'foreground',
-    'highlight',
-  ].forEach(rootPath => {
+  ['background', 'foreground', 'highlight'].forEach(rootPath => {
     check([rootPath]);
 
     Object.keys(pluginTheme.theme.styles ?? {}).forEach(style => {
       check(['styles', style, rootPath]);
     });
   });
-
 };
 
 export const generateThemeCSS = (pluginTheme: PluginTheme) => {
@@ -165,19 +160,11 @@ export const generateThemeCSS = (pluginTheme: PluginTheme) => {
   if (theme.styles) {
     const styles = theme.styles;
     // Dropdown Menus
-    css += wrapStyles(
-      name,
-      '.theme--dropdown__menu',
-      getThemeBlockCSS(styles.dropdown || styles.dialog),
-    );
+    css += wrapStyles(name, '.theme--dropdown__menu', getThemeBlockCSS(styles.dropdown || styles.dialog));
     // Tooltips
     css += wrapStyles(name, '.theme--tooltip', getThemeBlockCSS(styles.tooltip || styles.dialog));
     // Overlay
-    css += wrapStyles(
-      name,
-      '.theme--transparent-overlay',
-      getThemeBlockCSS(styles.transparentOverlay),
-    );
+    css += wrapStyles(name, '.theme--transparent-overlay', getThemeBlockCSS(styles.transparentOverlay));
     // Dialogs
     css += wrapStyles(name, '.theme--dialog', getThemeBlockCSS(styles.dialog));
     css += wrapStyles(name, '.theme--dialog__header', getThemeBlockCSS(styles.dialogHeader));

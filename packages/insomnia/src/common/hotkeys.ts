@@ -8,34 +8,34 @@ import { strings } from './strings';
  * @IMPORTANT Not using dot, because NeDB prohibits field names to contain dots.
  */
 export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
-  'workspace_showSettings': `Show ${strings.document.singular} / ${strings.collection.singular} Settings`,
-  'request_showSettings': 'Show Request Settings',
-  'preferences_showKeyboardShortcuts': 'Show Keyboard Shortcuts',
-  'preferences_showGeneral': 'Show App Preferences',
-  'request_quickSwitch': 'Quick search',
-  'plugin_reload': 'Reload Plugins',
-  'showAutocomplete': 'Show Autocomplete',
-  'request_send': 'Send Request',
-  'request_showOptions': 'Send Request (Options)',
-  'environment_showEditor': 'Show Environment Editor',
-  'environment_showSwitchMenu': 'Switch Environments',
-  'request_toggleHttpMethodMenu': 'Change HTTP Method',
-  'request_toggleHistory': 'Show Request History',
-  'request_focusUrl': 'Focus URL',
-  'request_showGenerateCodeEditor': 'Generate Code',
-  'sidebar_focusFilter': 'Filter Sidebar',
-  'sidebar_toggle': 'Toggle Sidebar',
-  'response_focus': 'Focus Response',
-  'showCookiesEditor': 'Edit Cookies',
-  'request_createHTTP': 'Create HTTP Request',
-  'request_showDelete': 'Delete Request',
-  'request_showCreateFolder': 'Create Folder',
-  'request_showDuplicate': 'Duplicate Request',
-  'request_togglePin': 'Pin/Unpin Request',
-  'environment_showVariableSourceAndValue': 'Show variable source and value',
-  'beautifyRequestBody': 'Beautify Active Code Editors',
-  'graphql_explorer_focus_filter': 'Focus GraphQL Explorer Filter',
-  'close_tab': 'Close Tab',
+  workspace_showSettings: `Show ${strings.document.singular} / ${strings.collection.singular} Settings`,
+  request_showSettings: 'Show Request Settings',
+  preferences_showKeyboardShortcuts: 'Show Keyboard Shortcuts',
+  preferences_showGeneral: 'Show App Preferences',
+  request_quickSwitch: 'Quick search',
+  plugin_reload: 'Reload Plugins',
+  showAutocomplete: 'Show Autocomplete',
+  request_send: 'Send Request',
+  request_showOptions: 'Send Request (Options)',
+  environment_showEditor: 'Show Environment Editor',
+  environment_showSwitchMenu: 'Switch Environments',
+  request_toggleHttpMethodMenu: 'Change HTTP Method',
+  request_toggleHistory: 'Show Request History',
+  request_focusUrl: 'Focus URL',
+  request_showGenerateCodeEditor: 'Generate Code',
+  sidebar_focusFilter: 'Filter Sidebar',
+  sidebar_toggle: 'Toggle Sidebar',
+  response_focus: 'Focus Response',
+  showCookiesEditor: 'Edit Cookies',
+  request_createHTTP: 'Create HTTP Request',
+  request_showDelete: 'Delete Request',
+  request_showCreateFolder: 'Create Folder',
+  request_showDuplicate: 'Duplicate Request',
+  request_togglePin: 'Pin/Unpin Request',
+  environment_showVariableSourceAndValue: 'Show variable source and value',
+  beautifyRequestBody: 'Beautify Active Code Editors',
+  graphql_explorer_focus_filter: 'Focus GraphQL Explorer Filter',
+  close_tab: 'Close Tab',
 };
 
 /**
@@ -191,10 +191,7 @@ export function getPlatformKeyCombinations(bindings: PlatformKeyCombinations): K
 /**
  * Determine whether two key combinations are the same by comparing each of their keys.
  */
-export function areSameKeyCombinations(
-  keyComb1: KeyCombination,
-  keyComb2: KeyCombination,
-) {
+export function areSameKeyCombinations(keyComb1: KeyCombination, keyComb2: KeyCombination) {
   return (
     keyComb1.keyCode === keyComb2.keyCode &&
     Boolean(keyComb1.alt) === Boolean(keyComb2.alt) &&
@@ -236,7 +233,6 @@ export function isModifierKeyCode(keyCode: number): boolean {
     keyCode === keyboardKeys.alt.keyCode ||
     keyCode === keyboardKeys.shift.keyCode ||
     keyCode === keyboardKeys.ctrl.keyCode ||
-
     // Meta keys.
     keyCode === keyboardKeys.leftwindowkey.keyCode ||
     keyCode === keyboardKeys.rightwindowkey.keyCode ||
@@ -253,10 +249,7 @@ export function isModifierKeyCode(keyCode: number): boolean {
  * @returns the constructed string, if keyCode is null and the characters are joined with " + ",
  * it will have a dangling "+" as the last character, e.g., "Alt + Ctrl +".
  */
-export function constructKeyCombinationDisplay(
-  keyComb: KeyCombination,
-  mustUsePlus: boolean,
-) {
+export function constructKeyCombinationDisplay(keyComb: KeyCombination, mustUsePlus: boolean) {
   const { keyCode } = keyComb;
   const chars: string[] = [];
 

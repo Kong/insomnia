@@ -11,8 +11,7 @@ describe('tryToReadInsoConfigFile()', () => {
   it('should load .insorc-test.yaml config file in fixtures dir', async () => {
     const result = await tryToReadInsoConfigFile(path.join(fixturesDir, '.insorc-test.yaml'));
     expect(result).toEqual({
-      options: {
-      },
+      options: {},
       scripts: {
         exportSpec: 'inso export spec',
         lintSpec: 'inso lint spec',
@@ -23,8 +22,8 @@ describe('tryToReadInsoConfigFile()', () => {
   });
 
   it('should return empty object and report error if specified config file not found', async () => {
-    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const result = await tryToReadInsoConfigFile('not-found.yaml');
     expect(result).toEqual({});
     expect(consoleLogSpy).toHaveBeenCalledWith('Could not find config file at not-found.yaml.');

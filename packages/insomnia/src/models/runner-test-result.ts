@@ -1,5 +1,4 @@
-import type { RequestTestResult } from 'insomnia-sdk';
-
+import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import { database as db } from '../common/database';
 import type { RunnerSource } from '../ui/routes/request';
 import type { BaseModel } from './index';
@@ -41,9 +40,7 @@ export interface BaseRunnerTestResult {
 
 export type RunnerTestResult = BaseModel & BaseRunnerTestResult;
 
-export const isRunnerTestResult = (model: Pick<BaseModel, 'type'>): model is RunnerTestResult => (
-  model.type === type
-);
+export const isRunnerTestResult = (model: Pick<BaseModel, 'type'>): model is RunnerTestResult => model.type === type;
 
 export function init() {
   return {

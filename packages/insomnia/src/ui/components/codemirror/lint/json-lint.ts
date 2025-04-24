@@ -22,7 +22,7 @@ async function validator(text: string): Promise<ValidationError[]> {
 
   // Override jsonlint's parseError function so we pull the errors into our collection of ValidationErrors
   jsonlint.parser.parseError = (str: string, hash: jsonlint.ParseErrorHash) => {
-    if (hash.line && !(hash.loc)) {
+    if (hash.line && !hash.loc) {
       found.push({
         from: CodeMirror.Pos(hash.line),
         to: CodeMirror.Pos(hash.line),

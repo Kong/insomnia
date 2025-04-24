@@ -10,9 +10,8 @@ export const CheckForUpdatesButton = () => {
   const [status, setStatus] = useState<UpdateStatus>('Check Now');
 
   useEffect(() => {
-    const unsubscribe = window.main.on('updaterStatus',
-      (_e: Electron.IpcRendererEvent, status: UpdateStatus) => {
-        setStatus(status);
+    const unsubscribe = window.main.on('updaterStatus', (_e: Electron.IpcRendererEvent, status: UpdateStatus) => {
+      setStatus(status);
     });
     return () => {
       unsubscribe();
@@ -29,7 +28,7 @@ export const CheckForUpdatesButton = () => {
 
   return (
     <button
-      className="flex items-center gap-2 btn btn--outlined btn--super-compact"
+      className="btn btn--outlined btn--super-compact flex items-center gap-2"
       disabled={disabled}
       onClick={() => {
         window.main.manualUpdateCheck();

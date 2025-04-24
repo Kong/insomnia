@@ -1,4 +1,5 @@
-import express, { NextFunction, Response } from 'express';
+import type { NextFunction, Response } from 'express';
+import express from 'express';
 
 export const mtlsRouter = express.Router();
 

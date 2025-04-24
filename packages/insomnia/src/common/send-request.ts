@@ -24,7 +24,10 @@ import { generateId } from './misc';
 // The network layer uses settings from the settings model
 // We want to give consumers the ability to override certain settings
 type SettingsOverride = Pick<Settings, 'validateSSL'>;
-const wrapAroundIterationOverIterationData = (list?: UserUploadEnvironment[], currentIteration?: number): UserUploadEnvironment | undefined => {
+const wrapAroundIterationOverIterationData = (
+  list?: UserUploadEnvironment[],
+  currentIteration?: number,
+): UserUploadEnvironment | undefined => {
   if (currentIteration === undefined || !Array.isArray(list) || list.length === 0) {
     return undefined;
   }
@@ -34,7 +37,14 @@ const wrapAroundIterationOverIterationData = (list?: UserUploadEnvironment[], cu
   return list[(currentIteration + 1) % list.length];
 };
 
-export async function getSendRequestCallbackMemDb(environmentId: string, memDB: any, transientVariables: Environment, settingsOverrides?: SettingsOverride, iterationData?: UserUploadEnvironment[], iterationCount?: number) {
+export async function getSendRequestCallbackMemDb(
+  environmentId: string,
+  memDB: any,
+  transientVariables: Environment,
+  settingsOverrides?: SettingsOverride,
+  iterationData?: UserUploadEnvironment[],
+  iterationCount?: number,
+) {
   // Initialize the DB in-memory and fill it with data if we're given one
   await database.init(
     modelTypes(),
@@ -42,7 +52,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       inMemoryOnly: true,
     },
     true,
-    () => { },
+    () => {},
   );
   const docs: BaseModel[] = [];
 
@@ -89,11 +99,16 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
     let activeGlobalEnvironment: Environment | undefined = undefined;
     if (workspaceMeta?.activeGlobalEnvironmentId) {
-      activeGlobalEnvironment = await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId) || undefined;
+      activeGlobalEnvironment =
+        (await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId)) || undefined;
     }
 
     const responseId = generateId('res');
-    const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'), 'responses');
+    const responsesDir = path.join(
+      process.env['INSOMNIA_DATA_PATH'] ||
+        (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
+      'responses',
+    );
     const timelinePath = path.join(responsesDir, responseId + '.timeline');
 
     return {
@@ -119,7 +134,13 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     const getCurrentRowOfIterationData = wrapAroundIterationOverIterationData(iterationData, iteration);
     await fs.mkdir(path.dirname(requestData.timelinePath), { recursive: true });
 
-    const mutatedContext = await tryToExecutePreRequestScript(requestData, transientVariables, getCurrentRowOfIterationData, iteration, iterationCount);
+    const mutatedContext = await tryToExecutePreRequestScript(
+      requestData,
+      transientVariables,
+      getCurrentRowOfIterationData,
+      iteration,
+      iterationCount,
+    );
     if (mutatedContext === null) {
       console.error('Time out while executing pre-request script');
       return null;
@@ -144,7 +165,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       requestData.caCert,
       mutatedContext.settings,
       requestData.timelinePath,
-      requestData.responseId
+      requestData.responseId,
     );
     const res = await responseTransform(response, environmentId, renderedRequest, renderedResult.context);
     const postMutatedContext = await tryToExecuteAfterResponseScript({
@@ -156,19 +177,33 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     });
     // TODO: figure out how to handle this error
     if ('error' in postMutatedContext) {
-      console.error('[network] An error occurred while running after-response script for request named:', renderedRequest.name);
+      console.error(
+        '[network] An error occurred while running after-response script for request named:',
+        renderedRequest.name,
+      );
       throw {
         error: postMutatedContext.error,
-        response: await responseTransform(response, requestData.activeEnvironmentId, renderedRequest, renderedResult.context),
+        response: await responseTransform(
+          response,
+          requestData.activeEnvironmentId,
+          renderedRequest,
+          renderedResult.context,
+        ),
       };
     }
     const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
 
-    const headers = headerArray?.reduce((acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }), []);
-    const bodyBuffer = await getBodyBuffer(res) as Buffer;
+    const headers = headerArray?.reduce(
+      (acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }),
+      [],
+    );
+    const bodyBuffer = (await getBodyBuffer(res)) as Buffer;
     const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
 
-    const testResults = [...(mutatedContext.requestTestResults || []), ...(postMutatedContext.requestTestResults || [])];
+    const testResults = [
+      ...(mutatedContext.requestTestResults || []),
+      ...(postMutatedContext.requestTestResults || []),
+    ];
     return {
       status,
       statusMessage,

@@ -30,7 +30,7 @@ export const createRequestGroupAction: ActionFunction = async ({ request, params
   const name = formData.get('name') as string;
   const parentId = formData.get('parentId') as string;
   // New folder environment to be key-value pair by default;
-  const environmentType = formData.get('environmentType') as EnvironmentType || EnvironmentType.KVPAIR;
+  const environmentType = (formData.get('environmentType') as EnvironmentType) || EnvironmentType.KVPAIR;
   const requestGroup = await models.requestGroup.create({ parentId: parentId || workspaceId, name, environmentType });
   await models.requestGroupMeta.create({ parentId: requestGroup._id, collapsed: false });
   return null;
@@ -40,7 +40,7 @@ export const updateRequestGroupAction: ActionFunction = async ({ request, params
   invariant(typeof requestGroupId === 'string', 'Request Group ID is required');
   const reqGroup = await models.requestGroup.getById(requestGroupId);
   invariant(reqGroup, 'Request Group not found');
-  const patch = await request.json() as RequestGroup;
+  const patch = (await request.json()) as RequestGroup;
   await models.requestGroup.update(reqGroup, patch);
   return null;
 };
@@ -55,7 +55,7 @@ export const deleteRequestGroupAction: ActionFunction = async ({ request }) => {
 };
 
 export const duplicateRequestGroupAction: ActionFunction = async ({ request }) => {
-  const patch = await request.json() as Partial<RequestGroup>;
+  const patch = (await request.json()) as Partial<RequestGroup>;
   invariant(patch._id, 'Request group id not found');
   const requestGroup = await models.requestGroup.getById(patch._id);
   invariant(requestGroup, 'Request group not found');
@@ -64,7 +64,11 @@ export const duplicateRequestGroupAction: ActionFunction = async ({ request }) =
     invariant(workspace, 'Workspace is required');
     // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
     // Move to top of sort order
-    const newRequestGroup = await models.requestGroup.duplicate(requestGroup, { name: patch.name, parentId: patch.parentId, metaSortKey: -1e9 });
+    const newRequestGroup = await models.requestGroup.duplicate(requestGroup, {
+      name: patch.name,
+      parentId: patch.parentId,
+      metaSortKey: -1e9,
+    });
     models.stats.incrementCreatedRequestsForDescendents(newRequestGroup);
     return null;
   }
@@ -76,7 +80,7 @@ export const duplicateRequestGroupAction: ActionFunction = async ({ request }) =
 export const updateRequestGroupMetaAction: ActionFunction = async ({ request, params }) => {
   const { requestGroupId } = params;
   invariant(typeof requestGroupId === 'string', 'Request Group ID is required');
-  const patch = await request.json() as Partial<RequestGroupMeta>;
+  const patch = (await request.json()) as Partial<RequestGroupMeta>;
   const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroupId);
   if (requestGroupMeta) {
     await models.requestGroupMeta.update(requestGroupMeta, patch);

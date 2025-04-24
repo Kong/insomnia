@@ -28,17 +28,18 @@ export const PasswordInput = (props: PasswordInputProps) => {
   };
 
   return (
-    <div className={`h-full w-full flex items-center justify-between ${className}`}>
-      <div className='flex-1 w-full h-full'>
-        {isHidden ?
+    <div className={`flex h-full w-full items-center justify-between ${className}`}>
+      <div className="h-full w-full flex-1">
+        {isHidden ? (
           <input
             value={value}
-            className='placeholder-[--hl-lg] w-full h-full'
+            className="h-full w-full placeholder-[--hl-lg]"
             onChange={event => onChange(event.target.value)}
             placeholder={placeholder}
             readOnly={!enabled}
             type={'password'}
-          /> :
+          />
+        ) : (
           <OneLineEditor
             id={`environment-kv-editor-value-${itemId}`}
             placeholder={placeholder}
@@ -46,12 +47,9 @@ export const PasswordInput = (props: PasswordInputProps) => {
             readOnly={!enabled}
             onChange={newValue => onChange(newValue)}
           />
-        }
+        )}
       </div>
-      <button
-        className='m-0 px-1 h-full items-center'
-        onClick={handleShowHidePassword}
-      >
+      <button className="m-0 h-full items-center px-1" onClick={handleShowHidePassword}>
         {isHidden ? <i className="fa fa-eye-slash" /> : <i className="fa fa-eye" />}
       </button>
     </div>

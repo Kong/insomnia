@@ -4,7 +4,6 @@ import { urlMatchesCertHost } from '../url-matches-cert-host';
 
 describe('urlMatchesCertHost', () => {
   describe('when the certificate host has no wildcard', () => {
-
     it('should return false if the requested host does not match the certificate host', () => {
       const requestUrl = 'https://www.example.org';
       const certificateHost = 'https://www.example.com';

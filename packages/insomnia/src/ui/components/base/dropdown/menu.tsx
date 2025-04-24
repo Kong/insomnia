@@ -42,26 +42,12 @@ export const Menu = <T extends object>(props: Props<T>) => {
         // If the item is a section and the section has items, render a MenuSection
         // @ts-expect-error -- early deprecation
         if (item.type === 'section' && getItemCount(item.childNodes) !== 0) {
-          return (
-            <MenuSection
-              key={item.key}
-              section={item}
-              state={state}
-              closeOnSelect={props.closeOnSelect}
-            />
-          );
+          return <MenuSection key={item.key} section={item} state={state} closeOnSelect={props.closeOnSelect} />;
         }
 
         // If the item is a dropdown item and has content, render a MenuItem
         if (item.type === 'item' && item.rendered) {
-          return (
-            <MenuItem
-              key={item.key}
-              item={item}
-              state={state}
-              closeOnSelect={props.closeOnSelect}
-            />
-          );
+          return <MenuItem key={item.key} item={item} state={state} closeOnSelect={props.closeOnSelect} />;
         }
 
         return null;

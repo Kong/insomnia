@@ -12,7 +12,8 @@ export function useActiveRequestSyncVCSVersion() {
   const { requestId } = useParams() as { requestId: string };
 
   useEffect(() => {
-    const isRequestUpdatedFromSync = (changes: ChangeBufferEvent<BaseModel>[]) => changes.find(([, doc, fromSync]) => requestId === doc._id && fromSync);
+    const isRequestUpdatedFromSync = (changes: ChangeBufferEvent<BaseModel>[]) =>
+      changes.find(([, doc, fromSync]) => requestId === doc._id && fromSync);
     database.onChange(changes => isRequestUpdatedFromSync(changes) && setVersion(v => v + 1));
   }, [requestId]);
 
@@ -23,11 +24,10 @@ export function useActiveRequestSyncVCSVersion() {
 // For example, by pulling a new version from the remote, switching branches, etc.
 export function useActiveApiSpecSyncVCSVersion() {
   const [version, setVersion] = useState(0);
-  const {
-    activeApiSpec,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { activeApiSpec } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   useEffect(() => {
-    const isRequestUpdatedFromSync = (changes: ChangeBufferEvent<BaseModel>[]) => changes.find(([, doc, fromSync]) => activeApiSpec?._id === doc._id && fromSync);
+    const isRequestUpdatedFromSync = (changes: ChangeBufferEvent<BaseModel>[]) =>
+      changes.find(([, doc, fromSync]) => activeApiSpec?._id === doc._id && fromSync);
     database.onChange(changes => isRequestUpdatedFromSync(changes) && setVersion(v => v + 1));
   }, [activeApiSpec?._id]);
 
@@ -37,8 +37,6 @@ export function useActiveApiSpecSyncVCSVersion() {
 // We use this hook to determine if the active workspace has been updated from the Git VCS
 // For example, by pulling a new version from the remote, switching branches, etc.
 export function useGitVCSVersion() {
-  const {
-    gitRepository,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  return ((gitRepository?.cachedGitLastCommitTime + '') + gitRepository?.cachedGitRepositoryBranch) + '';
+  const { gitRepository } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  return gitRepository?.cachedGitLastCommitTime + '' + gitRepository?.cachedGitRepositoryBranch + '';
 }

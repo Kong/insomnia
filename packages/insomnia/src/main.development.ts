@@ -32,7 +32,9 @@ import type { ToastNotification } from './ui/components/toast';
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage
 // ensure userData dir change is made before configure sentry SDK (https://docs.sentry.io/platforms/javascript/guides/electron/#app-userdata-directory)
-const dataPath = process.env.INSOMNIA_DATA_PATH || path.join(app.getPath('userData'), '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
+const dataPath =
+  process.env.INSOMNIA_DATA_PATH ||
+  path.join(app.getPath('userData'), '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
 app.setPath('userData', dataPath);
 
 initializeLogging();
@@ -72,15 +74,13 @@ app.on('ready', async () => {
   registerSecretStorageHandlers();
 
   /**
- * There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.
- * see: https://github.com/electron/electron/issues/22995
- * On macOS the OS spellchecker is used and therefore we do not download any dictionary files.
- * This API is a no-op on macOS.
- */
+   * There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.
+   * see: https://github.com/electron/electron/issues/22995
+   * On macOS the OS spellchecker is used and therefore we do not download any dictionary files.
+   * This API is a no-op on macOS.
+   */
   const disableSpellcheckerDownload = () => {
-    electron.session.defaultSession.setSpellCheckerDictionaryDownloadURL(
-      'https://00.00/'
-    );
+    electron.session.defaultSession.setSpellCheckerDictionaryDownloadURL('https://00.00/');
   };
   disableSpellcheckerDownload();
 
@@ -119,15 +119,21 @@ if (defaultProtocolSuccessful) {
   console.error(`[electron client protocol] FAILED to set default protocol '${fullDefaultProtocol}'`);
   const isDefaultAlready = app.isDefaultProtocolClient(defaultProtocol);
   if (isDefaultAlready) {
-    console.log(`[electron client protocol] the current executable is the default protocol for '${fullDefaultProtocol}'`);
+    console.log(
+      `[electron client protocol] the current executable is the default protocol for '${fullDefaultProtocol}'`,
+    );
   } else {
-    console.log(`[electron client protocol] the current executable is not the default protocol for '${fullDefaultProtocol}'`);
+    console.log(
+      `[electron client protocol] the current executable is not the default protocol for '${fullDefaultProtocol}'`,
+    );
   }
 
   // Note: `getApplicationInfoForProtocol` is not available on Linux, so we use `getApplicationNameForProtocol` instead
   const applicationName = app.getApplicationNameForProtocol(fullDefaultProtocol);
   if (applicationName) {
-    console.log(`[electron client protocol] the default application set for '${fullDefaultProtocol}' is '${applicationName}'`);
+    console.log(
+      `[electron client protocol] the default application set for '${fullDefaultProtocol}' is '${applicationName}'`,
+    );
   } else {
     console.error(`[electron client protocol] the default application set for '${fullDefaultProtocol}' was not found`);
   }
@@ -237,12 +243,22 @@ async function _createModelInstances() {
     const scratchPad = await models.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
     if (!scratchpadProject) {
       console.log('[main] Initializing Scratch Pad Project');
-      await models.project.create({ _id: models.project.SCRATCHPAD_PROJECT_ID, name: getProductName(), remoteId: null, parentId: models.organization.SCRATCHPAD_ORGANIZATION_ID });
+      await models.project.create({
+        _id: models.project.SCRATCHPAD_PROJECT_ID,
+        name: getProductName(),
+        remoteId: null,
+        parentId: models.organization.SCRATCHPAD_ORGANIZATION_ID,
+      });
     }
 
     if (!scratchPad) {
       console.log('[main] Initializing Scratch Pad');
-      await models.workspace.create({ _id: models.workspace.SCRATCHPAD_WORKSPACE_ID, name: 'Scratch Pad', parentId: models.project.SCRATCHPAD_PROJECT_ID, scope: 'collection' });
+      await models.workspace.create({
+        _id: models.workspace.SCRATCHPAD_WORKSPACE_ID,
+        name: 'Scratch Pad',
+        parentId: models.project.SCRATCHPAD_PROJECT_ID,
+        scope: 'collection',
+      });
     }
   } catch (err) {
     console.warn('[main] Failed to create default project. It probably already exists', err);

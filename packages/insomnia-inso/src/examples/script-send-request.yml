@@ -9,7 +9,7 @@ resources:
     created: 1722852503814
     url: localhost:4010/echo
     name: sendRequest
-    description: ""
+    description: ''
     method: GET
     body: {}
     parameters: []
@@ -18,7 +18,7 @@ resources:
         value: insomnia/9.3.3
     authentication: {}
     preRequestScript: |-
-      
+
       const resp = await new Promise((resolve, reject) => {
         insomnia.sendRequest(
           'http://localhost:4010/echo',
@@ -44,7 +44,7 @@ resources:
     modified: 1722852498102
     created: 1722852498102
     name: send request script
-    description: ""
+    description: ''
     scope: collection
     _type: workspace
   - _id: env_fa53fdd70393dd67a77da3c45c26f2b75ecbc1f2

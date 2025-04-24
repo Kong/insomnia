@@ -8,7 +8,7 @@ export const usePlanData = () => {
   const { organizationId } = useParams<{ organizationId: string }>();
   const { currentPlan, organizations } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const { userSession } = useRootLoaderData();
-  const currentOrg = organizations.find(organization => (organization.id === organizationId));
+  const currentOrg = organizations.find(organization => organization.id === organizationId);
   const accountId = userSession.accountId;
   let isOwner = false;
   if (currentOrg && accountId) {

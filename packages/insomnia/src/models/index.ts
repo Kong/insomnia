@@ -17,6 +17,7 @@ import {
   EXPORT_TYPE_WORKSPACE,
 } from '../common/constants';
 import { generateId } from '../common/misc';
+import { typedKeys } from '../utils';
 import * as _apiSpec from './api-spec';
 import * as _caCertificate from './ca-certificate';
 import * as _clientCertificate from './client-certificate';
@@ -217,15 +218,13 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
   // If we put those keys in init method, all related models will show as modified in git sync.
   const modelOptionalKeys: string[] = 'optionalKeys' in model ? model.optionalKeys || [] : [];
   // Prune extra keys from doc
-  for (const key of Object.keys(migratedDoc)) {
+  for (const key of typedKeys(migratedDoc)) {
     if (!(key in objectDefaults) && !modelOptionalKeys.includes(key)) {
-      // @ts-expect-error -- mapping unsoundness
       delete migratedDoc[key];
     }
   }
 
-  // @ts-expect-error -- TSCONVERSION not sure why this error is occurring
-  return migratedDoc;
+  return migratedDoc as T;
 }
 
 export const MODELS_BY_EXPORT_TYPE: Record<string, any> = {

@@ -27,7 +27,6 @@ describe('normalizeToDotAndBracketNotation()', () => {
   });
 });
 describe('getKeys()', () => {
-
   it('flattens complex object', () => {
     const obj = {
       foo: 'bar',
@@ -111,7 +110,6 @@ describe('getKeys()', () => {
 });
 
 describe('tokenizeTag()', () => {
-
   it('tokenizes complex tag', () => {
     const actual = utils.tokenizeTag('{% name bar, "baz \\"qux\\""   , 1 + 5 | default("foo") %}');
     const expected = {
@@ -245,7 +243,6 @@ describe('tokenizeTag()', () => {
 });
 
 describe('unTokenizeTag()', () => {
-
   it('handles the default case', () => {
     const tagStr = '{% name bar, "baz \\"qux\\""   , 1 + 5, \'hi\' %}';
     const tagData = utils.tokenizeTag(tagStr);
@@ -292,9 +289,7 @@ describe('unTokenizeTag()', () => {
       ],
     };
     const result = utils.unTokenizeTag(tagData);
-    expect(result).toEqual(
-      "{% name true, 'foo', foo.length, 'foo/bar/baz', 'id_123', 10, 'foo', var %}",
-    );
+    expect(result).toEqual("{% name true, 'foo', foo.length, 'foo/bar/baz', 'id_123', 10, 'foo', var %}");
   });
 
   it('fixes missing quotedBy attribute', () => {
@@ -317,7 +312,6 @@ describe('unTokenizeTag()', () => {
 });
 
 describe('encodeEncoding()', () => {
-
   it('encodes things', () => {
     expect(utils.encodeEncoding('hello', 'base64')).toBe('b64::aGVsbG8=::46b');
     expect(utils.encodeEncoding(null, 'base64')).toBe(null);
@@ -327,7 +321,6 @@ describe('encodeEncoding()', () => {
 });
 
 describe('decodeEncoding()', () => {
-
   it('encodes things', () => {
     expect(utils.decodeEncoding('b64::aGVsbG8=::46b')).toBe('hello');
     expect(utils.decodeEncoding('aGVsbG8=')).toBe('aGVsbG8=');
@@ -338,7 +331,6 @@ describe('decodeEncoding()', () => {
 });
 
 describe('extractUndefinedVariableKey()', () => {
-
   it('extract nunjucks variable key', () => {
     expect(extractUndefinedVariableKey('{{name}}', {})).toEqual(['name']);
     expect(extractUndefinedVariableKey('{{name}}', { name: '' })).toEqual([]);

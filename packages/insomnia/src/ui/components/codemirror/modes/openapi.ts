@@ -105,10 +105,7 @@ CodeMirror.defineMode('openapi', function () {
       }
 
       /* pairs (associative arrays) -> key */
-      if (
-        !state.pair &&
-        stream.match(/^\s*(?:[,[\]{}&*!|>'"%@`][^\s'":]|[^,[\]{}#&*!|>'"%@`])[^#]*?(?=\s*:($|\s))/)
-      ) {
+      if (!state.pair && stream.match(/^\s*(?:[,[\]{}&*!|>'"%@`][^\s'":]|[^,[\]{}#&*!|>'"%@`])[^#]*?(?=\s*:($|\s))/)) {
         state.pair = true;
         state.keyCol = stream.indentation();
         return 'atom';

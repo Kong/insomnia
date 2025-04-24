@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test.describe('test hidden window handling', async () => {
+test.describe('test hidden window handling', () => {
   test('can cancel pre-request script', async ({ app, page }) => {
     test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
@@ -76,7 +76,7 @@ test.describe('test hidden window handling', async () => {
     // it should still work
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     await page.waitForSelector('[data-testid="response-status-tag"]:visible');
-    await expect(statusTag).toContainText('200 OK');
+    await expect.soft(statusTag).toContainText('200 OK');
   });
 
   test('window should be restarted if it hangs', async ({ app, page }) => {
@@ -111,6 +111,6 @@ test.describe('test hidden window handling', async () => {
     // it should still work
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     await page.waitForSelector('[data-testid="response-status-tag"]:visible');
-    await expect(statusTag).toContainText('200 OK');
+    await expect.soft(statusTag).toContainText('200 OK');
   });
 });

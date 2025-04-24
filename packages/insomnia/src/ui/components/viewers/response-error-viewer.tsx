@@ -11,9 +11,7 @@ interface Props {
 }
 export const ResponseErrorViewer: FC<Props> = memo(({ error }) => {
   let msg: React.ReactNode = null;
-  const {
-    settings,
-  } = useRootLoaderData();
+  const { settings } = useRootLoaderData();
   const { editorFontSize } = settings;
 
   if (error?.toLowerCase().indexOf('certificate') !== -1) {
@@ -47,15 +45,11 @@ export const ResponseErrorViewer: FC<Props> = memo(({ error }) => {
         {error}
       </pre>
       <hr />
-      <div className="text-center pad">
+      <div className="pad text-center">
         <p className="faint pad-left pad-right">Here are some additional things that may help.</p>
         {msg}
-          &nbsp;&nbsp;
-        <Link
-          button
-          className="btn btn--clicky margin-top-sm"
-          href="https://insomnia.rest/support"
-        >
+        &nbsp;&nbsp;
+        <Link button className="btn btn--clicky margin-top-sm" href="https://insomnia.rest/support">
           Contact Support
         </Link>
       </div>

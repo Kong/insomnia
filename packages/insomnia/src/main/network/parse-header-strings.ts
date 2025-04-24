@@ -2,12 +2,7 @@ import aws4 from 'aws4';
 import clone from 'clone';
 import { parse as urlParse } from 'url';
 
-import {
-  AUTH_AWS_IAM,
-  AUTH_DIGEST,
-  AUTH_NTLM,
-  CONTENT_TYPE_FORM_DATA,
-} from '../../common/constants';
+import { AUTH_AWS_IAM, AUTH_DIGEST, AUTH_NTLM, CONTENT_TYPE_FORM_DATA } from '../../common/constants';
 import {
   getContentTypeHeader,
   getHostHeader,
@@ -46,7 +41,8 @@ export const parseHeaderStrings = ({ req, finalUrl, requestBody, requestBodyPath
   const isDigest = authentication.type === AUTH_DIGEST;
   const isNTLM = authentication.type === AUTH_NTLM;
   const isAWSIAM = authentication.type === AUTH_AWS_IAM;
-  const hasNoAuthorisationAndNotDisabledAWSBasicOrDigest = !hasAuthHeader(headers) && !authentication.disabled && !isAWSIAM && !isDigest && !isNTLM;
+  const hasNoAuthorisationAndNotDisabledAWSBasicOrDigest =
+    !hasAuthHeader(headers) && !authentication.disabled && !isAWSIAM && !isDigest && !isNTLM;
   if (hasNoAuthorisationAndNotDisabledAWSBasicOrDigest && authHeader) {
     headers.push(authHeader);
   }
@@ -86,11 +82,15 @@ export const parseHeaderStrings = ({ req, finalUrl, requestBody, requestBodyPath
     headers.push({ name: 'content-type', value: DISABLE_HEADER_VALUE });
   }
 
-  return headers.filter((h: any) => h.name)
+  return headers
+    .filter((h: any) => h.name)
     .map(({ name, value }: any) =>
-      value === '' ? `${name};` // Curl needs a semicolon suffix to send empty header values
-        : value === DISABLE_HEADER_VALUE ? `${name}:` // Tell Curl NOT to send the header if value is null
-          : `${name}: ${value}`);
+      value === ''
+        ? `${name};` // Curl needs a semicolon suffix to send empty header values
+        : value === DISABLE_HEADER_VALUE
+          ? `${name}:` // Tell Curl NOT to send the header if value is null
+          : `${name}: ${value}`,
+    );
 };
 
 interface AWSOptions {
@@ -107,20 +107,30 @@ interface AWSOptions {
   contentTypeHeader?: string;
   body?: string;
 }
-export function _getAwsAuthHeaders({ authentication, url, method, hostHeader, contentTypeHeader, body }: AWSOptions): { name: string; value: any }[] {
+export function _getAwsAuthHeaders({
+  authentication,
+  url,
+  method,
+  hostHeader,
+  contentTypeHeader,
+  body,
+}: AWSOptions): { name: string; value: any }[] {
   const { path, host } = urlParse(url);
   const onlyContentTypeHeader = contentTypeHeader ? { 'content-type': contentTypeHeader } : {};
   const { service, region, accessKeyId, secretAccessKey, sessionToken } = authentication;
-  const signature = aws4.sign({
-    service,
-    region,
-    body,
-    method,
-    headers: onlyContentTypeHeader,
-    path: path || undefined,
-    // AWS uses host header for signing so prioritize that if the user set it manually
-    host: hostHeader || host || undefined,
-  }, { accessKeyId, secretAccessKey, sessionToken });
+  const signature = aws4.sign(
+    {
+      service,
+      region,
+      body,
+      method,
+      headers: onlyContentTypeHeader,
+      path: path || undefined,
+      // AWS uses host header for signing so prioritize that if the user set it manually
+      host: hostHeader || host || undefined,
+    },
+    { accessKeyId, secretAccessKey, sessionToken },
+  );
   if (!signature.headers) {
     return [];
   }

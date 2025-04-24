@@ -13,10 +13,7 @@ interface Props {
 export const GrpcSendButton: FunctionComponent<Props> = ({ running, methodType, handleStart, handleCancel }) => {
   if (!methodType) {
     return (
-      <Button
-        className='px-5 rounded-l-sm'
-        isDisabled
-      >
+      <Button className="rounded-l-sm px-5" isDisabled>
         Send
       </Button>
     );
@@ -24,7 +21,7 @@ export const GrpcSendButton: FunctionComponent<Props> = ({ running, methodType, 
 
   return (
     <Button
-      className='px-5 ml-1 text-[--color-font-surprise] bg-[--color-surprise] hover:brightness-75 focus:brightness-75 rounded-l-sm'
+      className="ml-1 rounded-l-sm bg-[--color-surprise] px-5 text-[--color-font-surprise] hover:brightness-75 focus:brightness-75"
       onPress={running ? handleCancel : handleStart}
     >
       {running ? 'Cancel' : methodType === 'unary' ? 'Send' : 'Start'}

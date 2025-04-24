@@ -17,7 +17,7 @@ const CONTEXT = {
 
 describe('init()', () => {
   beforeEach(async () => {
-    await db.init(models.types(), { inMemoryOnly: true }, true, () => { },);
+    await db.init(models.types(), { inMemoryOnly: true }, true, () => {});
 
     await models.workspace.create({
       _id: 'wrk_1',
@@ -98,7 +98,7 @@ describe('init()', () => {
 
 describe('request.*', () => {
   beforeEach(async () => {
-    await db.init(models.types(), { inMemoryOnly: true }, true, () => { },);
+    await db.init(models.types(), { inMemoryOnly: true }, true, () => {});
 
     await models.workspace.create({
       _id: 'wrk_1',
@@ -138,16 +138,14 @@ describe('request.*', () => {
   });
 
   it('works for basic getters', async () => {
-    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
+    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const result = plugin.init(await models.request.getById('req_1'), CONTEXT);
     expect(result.request.getId()).toBe('req_1');
     expect(result.request.getName()).toBe('My Request');
     expect(result.request.getUrl()).toBe('');
     expect(result.request.getMethod()).toBe('GET');
     expect(result.request.getBodyText()).toBe('body');
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      'request.getBodyText() is deprecated. Use request.getBody() instead.',
-    );
+    expect(consoleWarnSpy).toHaveBeenCalledWith('request.getBodyText() is deprecated. Use request.getBody() instead.');
     expect(result.request.getAuthentication()).toEqual({
       type: 'oauth2',
     });

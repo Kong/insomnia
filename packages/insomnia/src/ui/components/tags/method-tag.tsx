@@ -75,9 +75,7 @@ export const MethodTag: FC<Props> = memo(({ method, override, fullNames }) => {
           <span>{methodName}</span>
         </div>
       )}
-      <div
-        className={'tag tag--no-bg tag--small http-method-' + (overrideName ? override : method)}
-      >
+      <div className={'tag tag--no-bg tag--small http-method-' + (overrideName ? override : method)}>
         <span className="tag__inner">{overrideName || methodName}</span>
       </div>
     </div>

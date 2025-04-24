@@ -60,9 +60,7 @@ interface LoaderData {
   unitTestSuites: UnitTestSuite[];
 }
 
-export const loader: LoaderFunction = async ({
-  params,
-}): Promise<LoaderData> => {
+export const loader: LoaderFunction = async ({ params }): Promise<LoaderData> => {
   const { workspaceId } = params;
 
   invariant(workspaceId, 'Workspace ID is required');
@@ -74,7 +72,7 @@ export const loader: LoaderFunction = async ({
     },
     {
       metaSortKey: 1,
-    }
+    },
   );
 
   invariant(unitTestSuites, 'Unit test suites not found');
@@ -87,25 +85,18 @@ export const loader: LoaderFunction = async ({
 const TestRoute: FC = () => {
   const { unitTestSuites } = useLoaderData() as LoaderData;
   const { settings } = useRootLoaderData();
-  const { organizationId, projectId, workspaceId, testSuiteId } =
-    useParams() as {
-      organizationId: string;
-      projectId: string;
-      workspaceId: string;
-      testSuiteId: string;
-    };
+  const { organizationId, projectId, workspaceId, testSuiteId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+    testSuiteId: string;
+  };
 
-  const {
-    activeProject,
-    activeWorkspace,
-    activeCookieJar,
-    caCertificate,
-    clientCertificates,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { activeProject, activeWorkspace, activeCookieJar, caCertificate, clientCertificates } = useRouteLoaderData(
+    ':workspaceId',
+  ) as WorkspaceLoaderData;
 
-  const { unitTestSuite } = useRouteLoaderData(
-    ':testSuiteId'
-  ) as { unitTestSuite: UnitTestSuite } || {};
+  const { unitTestSuite } = (useRouteLoaderData(':testSuiteId') as { unitTestSuite: UnitTestSuite }) || {};
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
@@ -117,11 +108,7 @@ const TestRoute: FC = () => {
   const updateTestSuiteFetcher = useFetcher();
   const runAllTestsFetcher = useFetcher();
   const runningTests = useFetchers()
-    .filter(
-      fetcher =>
-        fetcher.formAction?.includes('run-all-tests') ||
-        fetcher.formAction?.includes('run')
-    )
+    .filter(fetcher => fetcher.formAction?.includes('run-all-tests') || fetcher.formAction?.includes('run'))
     .some(({ state }) => state !== 'idle');
 
   const navigate = useNavigate();
@@ -172,55 +159,56 @@ const TestRoute: FC = () => {
           {
             method: 'POST',
             action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/run-all-tests`,
-          }
+          },
         );
       },
     },
     {
-        id: 'rename',
-        name: 'Rename',
-        icon: 'edit',
-        action: suiteId => {
-          showPrompt({
-            title: 'Rename test suite',
-            defaultValue: unitTestSuites.find(s => s._id === suiteId)?.name,
-            submitName: 'Rename',
-            onComplete: name => {
-              name && updateTestSuiteFetcher.submit(
+      id: 'rename',
+      name: 'Rename',
+      icon: 'edit',
+      action: suiteId => {
+        showPrompt({
+          title: 'Rename test suite',
+          defaultValue: unitTestSuites.find(s => s._id === suiteId)?.name,
+          submitName: 'Rename',
+          onComplete: name => {
+            name &&
+              updateTestSuiteFetcher.submit(
                 { name },
                 {
                   action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/update`,
                   method: 'POST',
                   encType: 'application/json',
-                }
+                },
               );
-            },
-          });
-        },
+          },
+        });
       },
-      {
+    },
+    {
       id: 'delete-suite',
       name: 'Delete suite',
       icon: 'trash',
-        action: (suiteId, suiteName) => {
-          showModal(AskModal, {
-            title: 'Delete suite',
-            message: `Do you really want to delete "${suiteName}"?`,
-            yesText: 'Delete',
-            noText: 'Cancel',
-            color: 'danger',
-            onDone: async (isYes: boolean) => {
-              if (isYes) {
-                deleteUnitTestSuiteFetcher.submit(
-                  {},
-                  {
-                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/delete`,
-                    method: 'POST',
-                  }
-                );
-              }
-            },
-          });
+      action: (suiteId, suiteName) => {
+        showModal(AskModal, {
+          title: 'Delete suite',
+          message: `Do you really want to delete "${suiteName}"?`,
+          yesText: 'Delete',
+          noText: 'Cancel',
+          color: 'danger',
+          onDone: async (isYes: boolean) => {
+            if (isYes) {
+              deleteUnitTestSuiteFetcher.submit(
+                {},
+                {
+                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/delete`,
+                  method: 'POST',
+                },
+              );
+            }
+          },
+        });
       },
     },
   ];
@@ -254,42 +242,41 @@ const TestRoute: FC = () => {
         }
       }
 
-      updateTestSuiteFetcher.submit({ metaSortKey: sourceTestSuite.metaSortKey }, {
-        method: 'post',
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${sourceTestSuite._id}/update`,
-        encType: 'application/json',
-      });
+      updateTestSuiteFetcher.submit(
+        { metaSortKey: sourceTestSuite.metaSortKey },
+        {
+          method: 'post',
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${sourceTestSuite._id}/update`,
+          encType: 'application/json',
+        },
+      );
     },
     renderDropIndicator(target) {
-      return (
-        <DropIndicator
-          target={target}
-          className="outline-[--color-surprise] outline-1 outline"
-        />
-      );
+      return <DropIndicator target={target} className="outline outline-1 outline-[--color-surprise]" />;
     },
   });
 
-  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(settings.forceVerticalLayout ? 'vertical' : 'horizontal');
+  const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
+    settings.forceVerticalLayout ? 'vertical' : 'horizontal',
+  );
   useLayoutEffect(() => {
     if (settings.forceVerticalLayout) {
       setDirection('vertical');
-      return () => { };
+      return () => {};
     }
-      // Listen on media query changes
-      const mediaQuery = window.matchMedia('(max-width: 880px)');
-      setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
+    // Listen on media query changes
+    const mediaQuery = window.matchMedia('(max-width: 880px)');
+    setDirection(mediaQuery.matches ? 'vertical' : 'horizontal');
 
-      const handleChange = (e: MediaQueryListEvent) => {
-        setDirection(e.matches ? 'vertical' : 'horizontal');
-      };
+    const handleChange = (e: MediaQueryListEvent) => {
+      setDirection(e.matches ? 'vertical' : 'horizontal');
+    };
 
-      mediaQuery.addEventListener('change', handleChange);
+    mediaQuery.addEventListener('change', handleChange);
 
-      return () => {
-        mediaQuery.removeEventListener('change', handleChange);
-      };
-
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
   }, [settings.forceVerticalLayout, direction]);
 
   useInsomniaTab({
@@ -302,33 +289,44 @@ const TestRoute: FC = () => {
   });
 
   return (
-    <PanelGroup ref={sidebarPanelRef} autoSaveId="insomnia-sidebar" id="wrapper" className='new-sidebar w-full h-full text-[--color-font]' direction='horizontal'>
-      <Panel id="sidebar" className='sidebar theme--sidebar divide-solid divide-y divide-[--hl-md]' defaultSize={DEFAULT_SIDEBAR_SIZE} maxSize={40} minSize={10} collapsible>
+    <PanelGroup
+      ref={sidebarPanelRef}
+      autoSaveId="insomnia-sidebar"
+      id="wrapper"
+      className="new-sidebar h-full w-full text-[--color-font]"
+      direction="horizontal"
+    >
+      <Panel
+        id="sidebar"
+        className="sidebar theme--sidebar divide-y divide-solid divide-[--hl-md]"
+        defaultSize={DEFAULT_SIDEBAR_SIZE}
+        maxSize={40}
+        minSize={10}
+        collapsible
+      >
         <ErrorBoundary showAlert>
-          <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
-            <div className="flex flex-col items-start divide-solid divide-y divide-[--hl-md]">
-              <Breadcrumbs className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] list-none items-center m-0 gap-2 px-[--padding-sm] font-bold w-full`}>
-                <Breadcrumb className="flex select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
+          <div className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden">
+            <div className="flex flex-col items-start divide-y divide-solid divide-[--hl-md]">
+              <Breadcrumbs
+                className={`flex h-[${INSOMNIA_TAB_HEIGHT}px] m-0 w-full list-none items-center gap-2 px-[--padding-sm] font-bold`}
+              >
+                <Breadcrumb className="flex h-full select-none items-center gap-2 text-[--color-font] outline-none data-[focused]:outline-none">
                   <NavLink
                     data-testid="project"
-                    className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                    className="flex aspect-square h-7 flex-shrink-0 items-center justify-center gap-2 rounded-sm px-1 py-1 text-sm text-[--color-font] outline-none ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] data-[focused]:outline-none"
                     to={`/organization/${organizationId}/project/${activeProject._id}`}
                   >
-                    <Icon className='text-xs' icon="chevron-left" />
+                    <Icon className="text-xs" icon="chevron-left" />
                   </NavLink>
-                  <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
+                  <span aria-hidden role="separator" className="h-4 text-[--hl-lg] outline outline-1" />
                 </Breadcrumb>
-                <Breadcrumb className="flex truncate select-none items-center gap-2 text-[--color-font] h-full outline-none data-[focused]:outline-none">
+                <Breadcrumb className="flex h-full select-none items-center gap-2 truncate text-[--color-font] outline-none data-[focused]:outline-none">
                   <WorkspaceDropdown />
                 </Breadcrumb>
               </Breadcrumbs>
-              <DocumentTab
-                organizationId={organizationId}
-                projectId={projectId}
-                workspaceId={workspaceId}
-              />
-              <div className='flex flex-col items-start gap-2 p-[--padding-sm] w-full'>
-                <div className="flex w-full items-center gap-2 justify-between">
+              <DocumentTab organizationId={organizationId} projectId={projectId} workspaceId={workspaceId} />
+              <div className="flex w-full flex-col items-start gap-2 p-[--padding-sm]">
+                <div className="flex w-full items-center justify-between gap-2">
                   <EnvironmentPicker
                     isOpen={isEnvironmentPickerOpen}
                     onOpenChange={setIsEnvironmentPickerOpen}
@@ -337,23 +335,32 @@ const TestRoute: FC = () => {
                 </div>
                 <Button
                   onPress={() => setIsCookieModalOpen(true)}
-                  className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                 >
-                  <Icon icon="cookie-bite" className='w-5 flex-shrink-0' />
-                  <span className='truncate'>{activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies {activeCookieJar.cookies.length > 0 ? `(${activeCookieJar.cookies.length})` : ''}</span>
+                  <Icon icon="cookie-bite" className="w-5 flex-shrink-0" />
+                  <span className="truncate">
+                    {activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies{' '}
+                    {activeCookieJar.cookies.length > 0 ? `(${activeCookieJar.cookies.length})` : ''}
+                  </span>
                 </Button>
                 <Button
                   onPress={() => setCertificatesModalOpen(true)}
-                  className="px-4 py-1 max-w-full truncate flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  className="flex max-w-full flex-1 items-center justify-center gap-2 truncate rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                 >
-                  <Icon icon="file-contract" className='w-5 flex-shrink-0' />
-                  <span className='truncate'>{clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length > 0 ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})` : ''}</span>
+                  <Icon icon="file-contract" className="w-5 flex-shrink-0" />
+                  <span className="truncate">
+                    {clientCertificates.length === 0 || caCertificate ? 'Add' : 'Manage'} Certificates{' '}
+                    {[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined)
+                      .length > 0
+                      ? `(${[...clientCertificates, caCertificate].filter(cert => !cert?.disabled).filter(isNotNullOrUndefined).length})`
+                      : ''}
+                  </span>
                 </Button>
               </div>
             </div>
             <div className="p-[--padding-sm]">
               <Button
-                className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                className="flex items-center justify-center gap-2 rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                 onPress={() => {
                   createUnitTestSuiteFetcher.submit(
                     {
@@ -362,7 +369,7 @@ const TestRoute: FC = () => {
                     {
                       method: 'post',
                       action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/new`,
-                    }
+                    },
                   );
                 }}
               >
@@ -378,7 +385,7 @@ const TestRoute: FC = () => {
                 ...suite,
               }))}
               dragAndDropHooks={testSuitesDragAndDrop.dragAndDropHooks}
-              className="overflow-y-auto flex-1 data-[empty]:py-0 py-[--padding-sm]"
+              className="flex-1 overflow-y-auto py-[--padding-sm] data-[empty]:py-0"
               disallowEmptySelection
               selectedKeys={[testSuiteId]}
               selectionMode="single"
@@ -397,51 +404,53 @@ const TestRoute: FC = () => {
                     key={item._id}
                     id={item._id}
                     textValue={item.name}
-                    className="group outline-none select-none w-full"
+                    className="group w-full select-none outline-none"
                   >
-                    <div className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]" title={item.name}>
-                      <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
+                    <div
+                      className="relative flex h-[--line-height-xs] w-full select-none items-center gap-2 overflow-hidden px-4 text-[--hl] outline-none transition-colors group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] group-aria-selected:text-[--color-font]"
+                      title={item.name}
+                    >
+                      <span className="absolute left-0 top-0 h-full w-[2px] bg-transparent transition-colors group-aria-selected:bg-[--color-surprise]" />
                       <Button slot="drag" className="hidden" />
                       <EditableInput
                         value={item.name}
                         name="name"
                         ariaLabel="Test suite name"
-                        className='flex-1 px-1 hover:!bg-transparent'
+                        className="flex-1 px-1 hover:!bg-transparent"
                         onSubmit={name => {
-                          name && updateTestSuiteFetcher.submit(
-                            { name },
-                            {
-                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${item._id}/update`,
-                              method: 'POST',
-                              encType: 'application/json',
-                            }
-                          );
+                          name &&
+                            updateTestSuiteFetcher.submit(
+                              { name },
+                              {
+                                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${item._id}/update`,
+                                method: 'POST',
+                                encType: 'application/json',
+                              },
+                            );
                         }}
                       />
                       <MenuTrigger>
                         <Button
                           aria-label="Unit Test Actions"
-                          className="opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                          className="flex aspect-square h-6 items-center justify-center rounded-sm text-sm text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] group-hover:opacity-100 group-focus:opacity-100 data-[pressed]:bg-[--hl-sm] data-[pressed]:opacity-100"
                         >
                           <Icon icon="caret-down" />
                         </Button>
-                        <Popover className="min-w-max overflow-y-hidden flex flex-col">
+                        <Popover className="flex min-w-max flex-col overflow-y-hidden">
                           <Menu
                             aria-label="Unit Test Actions Menu"
                             selectionMode="single"
                             onAction={key => {
-                              testSuiteActionList
-                                .find(({ id }) => key === id)
-                                ?.action(item._id, item.name);
+                              testSuiteActionList.find(({ id }) => key === id)?.action(item._id, item.name);
                             }}
                             items={testSuiteActionList}
-                            className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
+                            className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
                           >
                             {item => (
                               <MenuItem
                                 key={item.id}
                                 id={item.id}
-                                className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                                className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                                 aria-label={item.name}
                               >
                                 <Icon icon={item.icon} />
@@ -458,24 +467,16 @@ const TestRoute: FC = () => {
             </GridList>
           </div>
           <WorkspaceSyncDropdown />
-          {isEnvironmentModalOpen && (
-            <WorkspaceEnvironmentsEditModal
-              onClose={() => setEnvironmentModalOpen(false)}
-            />
-          )}
-          {isCookieModalOpen && (
-            <CookiesModal setIsOpen={setIsCookieModalOpen} />
-          )}
-          {isCertificatesModalOpen && (
-            <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />
-          )}
+          {isEnvironmentModalOpen && <WorkspaceEnvironmentsEditModal onClose={() => setEnvironmentModalOpen(false)} />}
+          {isCookieModalOpen && <CookiesModal setIsOpen={setIsCookieModalOpen} />}
+          {isCertificatesModalOpen && <CertificatesModal onClose={() => setCertificatesModalOpen(false)} />}
         </ErrorBoundary>
       </Panel>
-      <PanelResizeHandle className='h-full w-[1px] bg-[--hl-md]' />
-      <Panel className='flex flex-col'>
+      <PanelResizeHandle className="h-full w-[1px] bg-[--hl-md]" />
+      <Panel className="flex flex-col">
         <OrganizationTabList />
         <PanelGroup autoSaveId="insomnia-panels" direction={direction}>
-          <Panel id="pane-one" minSize={10} className='pane-one theme--pane relative overflow-hidden'>
+          <Panel id="pane-one" minSize={10} className="pane-one theme--pane relative overflow-hidden">
             <Routes>
               <Route
                 path={'test-suite/:testSuiteId/*'}
@@ -485,23 +486,24 @@ const TestRoute: FC = () => {
                   </Suspense>
                 }
               />
-              <Route
-                path="*"
-                element={
-                  <div className="p-[--padding-md]">No test suite selected</div>
-                }
-              />
+              <Route path="*" element={<div className="p-[--padding-md]">No test suite selected</div>} />
             </Routes>
           </Panel>
-          <PanelResizeHandle className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'w-full h-[1px] bg-[--hl-md]'} />
-          <Panel id="pane-two" minSize={10} className='pane-two theme--pane divide-y divide-solid divide-[--hl-md] overflow-hidden relative'>
+          <PanelResizeHandle
+            className={direction === 'horizontal' ? 'h-full w-[1px] bg-[--hl-md]' : 'h-[1px] w-full bg-[--hl-md]'}
+          />
+          <Panel
+            id="pane-two"
+            minSize={10}
+            className="pane-two theme--pane relative divide-y divide-solid divide-[--hl-md] overflow-hidden"
+          >
             <Routes>
               <Route
                 path="test-suite/:testSuiteId/test-result/:testResultId"
                 element={
                   runningTests ? (
                     <>
-                      <Heading className="text-lg flex-shrink-0 flex items-center gap-2 w-full h-[--line-height-sm] px-[--padding-md]">
+                      <Heading className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center gap-2 px-[--padding-md] text-lg">
                         <Icon icon="spinner" className="fa-pulse" /> Running tests...
                       </Heading>
                       <div />
@@ -515,11 +517,10 @@ const TestRoute: FC = () => {
                 path="*"
                 element={
                   <>
-                    <Heading className="text-lg flex-shrink-0 flex items-center gap-2 w-full h-[--line-height-sm] px-[--padding-md]">
+                    <Heading className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center gap-2 px-[--padding-md] text-lg">
                       {runningTests ? (
                         <>
-                          <Icon icon="spinner" className="fa-pulse" /> Running
-                          tests...
+                          <Icon icon="spinner" className="fa-pulse" /> Running tests...
                         </>
                       ) : (
                         'No test results'

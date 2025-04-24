@@ -87,7 +87,6 @@ export function generateId(prefix?: string) {
     return `${prefix}_${id}`;
   }
   return id;
-
 }
 
 export function delay(milliseconds: number = DEBOUNCE_MILLIS) {
@@ -98,15 +97,15 @@ export const debounce = <F extends (...args: Parameters<F>) => ReturnType<F>>(
   func: F,
   waitFor: number = DEBOUNCE_MILLIS,
 ) => {
-  let timeout: NodeJS.Timeout
+  let timeout: NodeJS.Timeout;
 
   const debounced = (...args: Parameters<F>) => {
-    clearTimeout(timeout)
-    timeout = setTimeout(() => func(...args), waitFor)
-  }
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), waitFor);
+  };
 
-  return debounced
-}
+  return debounced;
+};
 
 export function describeByteSize(bytes: number, long = false) {
   bytes = Math.round(bytes * 10) / 10;
@@ -138,7 +137,6 @@ export function fnOrString(v: string | ((...args: any[]) => any), ...args: any[]
     return v;
   }
   return v(...args);
-
 }
 
 export function compressObject(obj: any) {
@@ -180,11 +178,7 @@ export function fuzzyMatch(
   return fuzzyMatchAll(searchString, [text], options);
 }
 
-export function fuzzyMatchAll(
-  searchString: string,
-  allText: string[],
-  options: FuzzyMatchOptions = {},
-) {
+export function fuzzyMatchAll(searchString: string, allText: string[], options: FuzzyMatchOptions = {}) {
   if (!searchString || !searchString.trim()) {
     return null;
   }
@@ -239,9 +233,7 @@ export function fuzzyMatchAll(
   };
 }
 
-export function isNotNullOrUndefined<ValueType>(
-  value: ValueType | null | undefined
-): value is ValueType {
+export function isNotNullOrUndefined<ValueType>(value: ValueType | null | undefined): value is ValueType {
   if (value === null || value === undefined) {
     return false;
   }

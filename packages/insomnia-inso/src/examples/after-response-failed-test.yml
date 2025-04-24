@@ -9,7 +9,7 @@ resources:
     created: 1725888487017
     url: localhost:4010/echo
     name: New Request
-    description: ""
+    description: ''
     method: GET
     body: {}
     parameters: []
@@ -45,7 +45,7 @@ resources:
     modified: 1725888480476
     created: 1725888480476
     name: after response test
-    description: ""
+    description: ''
     scope: collection
     _type: workspace
   - _id: env_af8d61e3630269b8a124b18968608f85797d57fc

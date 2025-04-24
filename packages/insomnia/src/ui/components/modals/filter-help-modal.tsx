@@ -15,7 +15,9 @@ const HelpExamples: FC<{ helpExamples: HelpExample[] }> = ({ helpExamples }) => 
     <tbody>
       {helpExamples.map(({ code, description }) => (
         <tr key={code}>
-          <td><code className="selectable">{code}</code></td>
+          <td>
+            <code className="selectable">{code}</code>
+          </td>
           {description}
         </tr>
       ))}
@@ -26,7 +28,8 @@ const HelpExamples: FC<{ helpExamples: HelpExample[] }> = ({ helpExamples }) => 
 const JSONPathHelp: FC = () => (
   <ModalBody className="pad">
     <p>
-      Use <Link href="http://goessner.net/articles/JsonPath/">JSONPath</Link> to filter the response body. Here are some examples that you might use on a book store API:
+      Use <Link href="http://goessner.net/articles/JsonPath/">JSONPath</Link> to filter the response body. Here are some
+      examples that you might use on a book store API:
     </p>
     <HelpExamples
       helpExamples={[
@@ -34,11 +37,15 @@ const JSONPathHelp: FC = () => (
         { code: '$.store.books[?(@.price < 10)].title', description: 'Get books costing less than $10' },
         { code: '$.store.books[-1:]', description: 'Get the last book in the store' },
         { code: '$.store.books.length', description: 'Get the number of books in the store' },
-        { code: '$.store.books[?(@.title.match(/lord.*rings/i))]', description: 'Get book by title regular expression' },
+        {
+          code: '$.store.books[?(@.title.match(/lord.*rings/i))]',
+          description: 'Get book by title regular expression',
+        },
       ]}
     />
     <p className="notice info">
-      Note that there's <Link href="https://cburgmer.github.io/json-path-comparison/">no standard</Link> for JSONPath. Insomnia uses <Link href="https://www.npmjs.com/package/jsonpath-plus">jsonpath-plus</Link>.
+      Note that there's <Link href="https://cburgmer.github.io/json-path-comparison/">no standard</Link> for JSONPath.
+      Insomnia uses <Link href="https://www.npmjs.com/package/jsonpath-plus">jsonpath-plus</Link>.
     </p>
   </ModalBody>
 );
@@ -46,8 +53,8 @@ const JSONPathHelp: FC = () => (
 const XPathHelp: FC = () => (
   <ModalBody className="pad">
     <p>
-      Use <Link href="https://www.w3.org/TR/xpath/">XPath</Link> to filter the response body. Here are some examples that you might use on a
-      book store API:
+      Use <Link href="https://www.w3.org/TR/xpath/">XPath</Link> to filter the response body. Here are some examples
+      that you might use on a book store API:
     </p>
     <HelpExamples
       helpExamples={[
@@ -73,16 +80,20 @@ export const FilterHelpModal = forwardRef<FilterHelpModalHandle, ModalProps>((_,
     isJSON: true,
   });
 
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: options => {
-      const { isJSON } = options;
-      setState({ isJSON });
-      modalRef.current?.show();
-    },
-  }), []);
+  useImperativeHandle(
+    ref,
+    () => ({
+      hide: () => {
+        modalRef.current?.hide();
+      },
+      show: options => {
+        const { isJSON } = options;
+        setState({ isJSON });
+        modalRef.current?.show();
+      },
+    }),
+    [],
+  );
   const { isJSON } = state;
   const isXPath = !isJSON;
   return (

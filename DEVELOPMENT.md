@@ -25,12 +25,12 @@ Insomnia uses [`npm workspaces`](https://docs.npmjs.com/cli/v9/using-npm/workspa
 
 Insomnia Inso CLI is built using a series of steps
 
-1. `insomnia-inso` uses monorepo references to import `insomnia` and `insomnia-testing` to expose  `getSendRequestCallbackMemDb` and `generate`, `runTests`, `runTestsCli` respectively
+1. `insomnia-inso` uses monorepo references to import `insomnia` and `insomnia-testing` to expose `getSendRequestCallbackMemDb` and `generate`, `runTests`, `runTestsCli` respectively
 1. `packages/insomnia-inso/dist/index.js` is transpiled with esbuild to commonjs
 1. `packages/insomnia-inso/bin/inso` is shell script which points at `packages/insomnia-inso/dist/index.js` and is used for local development
 1. `packages/insomnia-inso/binaries/inso` is an executable made with `pkg`
 
-`getSendRequestCallbackMemDb` exposes some behaviour from the insomnia renderer.
+`getSendRequestCallbackMemDb` exposes some behavior from the insomnia renderer.
 
 - database: to fetch needed models
 - nunjucks templates: to interpolate the fields containing tags
@@ -46,7 +46,7 @@ Problems
 
 Unexplored ideas in this area.
 
-- create a database package with nunjucks templating and have both insomnia and inso use it with project references, use node-libcurl directly, that way we don't need to stub electorn and only import the code we use.
+- create a database package with nunjucks templating and have both insomnia and inso use it with project references, use node-libcurl directly, that way we don't need to stub electron and only import the code we use.
 - use an adapter pattern in inso to replace node-libcurl with fetch in order to avoid the bundling issues NaN modules present.
 - remove plugin support from inso and reimplement later with a fixed and supported API.
 
@@ -93,6 +93,7 @@ The structure for smoke tests is explained in the smoke testing package: [`packa
 
 This is just a brief summary of Insomnia's current technical debt.
 
+- We use npm engines feature to improve the dx of node upgrades. However one of our deps `node_modules/apiconnect-wsdl` has an overly restrictive engine max, so each time we refresh the package lock we are running `npm install --force` then manually editing the lock file to extend this engine config from `<21` to `<23`
 - Loading large responses (~20 MB) can crash the app on weaker hardware.
 - Bundling `libcurl` (native module) has caused many weeks of headaches trying to get builds working across Windows, Mac, and Linux. More expertise here is definitely needed.
 - All input fields that support features like templating or code completion are actually [CodeMirror](https://codemirror.net/6/) instances. This isn't really debt, but may affect things going forward.
@@ -128,3 +129,6 @@ bump the following node and electron versions
 - `.nvmrc`
 - `packages/insomnia/package.json` electron and node-libcurl
 - `shell.nix`
+
+
+

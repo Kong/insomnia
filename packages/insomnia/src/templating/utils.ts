@@ -12,10 +12,7 @@ import objectPath from './third_party/objectPath';
  * @param {String} [prefix] - base path to prefix to all paths
  * @returns {Array} - list of paths
  */
-export function getKeys(
-  obj: any,
-  prefix = '',
-): { name: string; value: any }[] {
+export function getKeys(obj: any, prefix = ''): { name: string; value: any }[] {
   let allKeys: { name: string; value: any }[] = [];
   const typeOfObj = Object.prototype.toString.call(obj);
 
@@ -237,18 +234,18 @@ export function decodeEncoding<T>(value: T) {
 
 export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: any, renderPurpose?: RenderPurpose) {
   /**
-    * Decrypt secrets when renderPurpose is one of the following:
-    * - preview: render the template in variable editor to do the live preview
-    * - send: render the template when sending requests
-    * - script: render the template in pre-request or after-response script
-  */
+   * Decrypt secrets when renderPurpose is one of the following:
+   * - preview: render the template in variable editor to do the live preview
+   * - send: render the template when sending requests
+   * - script: render the template in pre-request or after-response script
+   */
   const shouldDecrypt = renderPurpose === 'preview' || renderPurpose === 'send' || renderPurpose === 'script';
   if (typeof vaultEnvironmentData === 'object') {
     if (shouldDecrypt) {
       const { vaultKey, vaultSalt } = await userSession.getOrCreate();
       const isVaultEnabled = !!vaultSalt;
       if (isVaultEnabled && vaultKey) {
-        const symmetricKey = await decryptVaultKeyFromSession(vaultKey, true) as JsonWebKey;
+        const symmetricKey = (await decryptVaultKeyFromSession(vaultKey, true)) as JsonWebKey;
         // decrypt all secert values under vaultEnvironmentPath property in context
         Object.keys(vaultEnvironmentData).forEach(vaultContextKey => {
           const encryptedValue = vaultEnvironmentData[vaultContextKey];
@@ -270,7 +267,7 @@ export async function maskOrDecryptVaultDataIfNecessary(vaultEnvironmentData: an
 
 export function extractNunjucksTagFromCoords(
   coordinates: { left: number; top: number },
-  cm: React.MutableRefObject<EditorFromTextArea | null>
+  cm: React.MutableRefObject<EditorFromTextArea | null>,
 ): { range: MarkerRange; template: string } | void {
   if (cm && cm.current) {
     const { left, top } = coordinates;

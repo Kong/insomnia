@@ -3,16 +3,16 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
-import { Cookie } from '../../models/cookie-jar';
-import { Request } from '../../models/request';
-import { Response } from '../../models/response';
+import type { Cookie } from '../../models/cookie-jar';
+import type { Request } from '../../models/request';
+import type { Response } from '../../models/response';
 import { AUTH_BASIC } from '../constants';
 import { exportHar, exportHarResponse, exportHarWithRequest } from '../har';
 import { getRenderedRequestAndContext } from '../render';
 
 describe('export', () => {
   beforeEach(async () => {
-    await db.init(models.types(), { inMemoryOnly: true }, true, () => { },);
+    await db.init(models.types(), { inMemoryOnly: true }, true, () => {});
     await models.project.all();
     await models.settings.getOrCreate();
   });

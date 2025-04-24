@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test.describe('Design interactions', async () => {
+test.describe('Design interactions', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   test('Unit Test interactions', async ({ app, page }) => {
@@ -20,9 +20,9 @@ test.describe('Design interactions', async () => {
 
     // Run tests and check results
     await page.getByLabel('Run all tests').click();
-    await expect(page.locator('.app')).toContainText('Request A is found');
-    await expect(page.locator('.app')).toContainText('Request B is not found');
-    await expect(page.locator('.app')).toContainText('Tests passed');
+    await expect.soft(page.locator('.app')).toContainText('Request A is found');
+    await expect.soft(page.locator('.app')).toContainText('Request B is not found');
+    await expect.soft(page.locator('.app')).toContainText('Tests passed');
 
     // Create a new test suite
     await page.click('text=New test suite');

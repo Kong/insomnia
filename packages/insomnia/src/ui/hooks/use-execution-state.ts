@@ -27,10 +27,9 @@ export function useExecutionState({ requestId }: { requestId?: string }) {
   useEffect(() => {
     let isMounted = true;
     // @ts-expect-error -- we use a dynamic channel here
-    const unsubscribe = window.main.on(`syncTimers.${requestId}`,
-      (_, { executions }: { executions: TimingStep[] }) => {
-        isMounted && setSteps(executions);
-      });
+    const unsubscribe = window.main.on(`syncTimers.${requestId}`, (_, { executions }: { executions: TimingStep[] }) => {
+      isMounted && setSteps(executions);
+    });
     return () => {
       isMounted = false;
       unsubscribe();

@@ -72,9 +72,11 @@ export const Row: FC<Props> = ({
   });
 
   const isFileOrMultiline = allowMultiline || allowFile;
-  const hiddenButtons = isFileOrMultiline ? (<button>
-    <i className="fa fa-empty" />
-  </button>) : null;
+  const hiddenButtons = isFileOrMultiline ? (
+    <button>
+      <i className="fa fa-empty" />
+    </button>
+  ) : null;
 
   const isFile = pair.type === 'file';
   const isMultiline = pair.type === 'text' && pair.multiline;
@@ -114,15 +116,17 @@ export const Row: FC<Props> = ({
           ) : isMultiline ? (
             <button
               className="btn btn--outlined btn--super-super-compact wide ellipsis"
-              onClick={() => showModal(CodePromptModal, {
-                submitName: 'Done',
-                title: `Edit ${pair.name}`,
-                defaultValue: pair.value,
-                onChange: (value: string) => onChange({ ...pair, value }),
-                enableRender: enabled,
-                mode: pair.multiline && typeof pair.multiline === 'string' ? pair.multiline : 'text/plain',
-                onModeChange: (mode: string) => onChange({ ...pair, multiline: mode }),
-              })}
+              onClick={() =>
+                showModal(CodePromptModal, {
+                  submitName: 'Done',
+                  title: `Edit ${pair.name}`,
+                  defaultValue: pair.value,
+                  onChange: (value: string) => onChange({ ...pair, value }),
+                  enableRender: enabled,
+                  mode: pair.multiline && typeof pair.multiline === 'string' ? pair.multiline : 'text/plain',
+                  onModeChange: (mode: string) => onChange({ ...pair, multiline: mode }),
+                })
+              }
             >
               <i className="fa fa-pencil-square-o space-right" />
               {bytes > 0 ? describeByteSize(bytes, true) : 'Click to Edit'}
@@ -138,15 +142,13 @@ export const Row: FC<Props> = ({
               onChange={value => onChange({ ...pair, value })}
               getAutocompleteConstants={() => handleGetAutocompleteValueConstants?.(pair) || []}
             />
-          )
-          }
+          )}
         </div>
         {showDescription ? (
           <div
-            className={classnames(
-              'form-control form-control--underlined form-control--wide no-min-width',
-              { 'form-control--inactive': pair.disabled },
-            )}
+            className={classnames('form-control form-control--underlined form-control--wide no-min-width', {
+              'form-control--inactive': pair.disabled,
+            })}
           >
             <OneLineEditor
               id={'key-value-editor__description' + pair.id}
@@ -158,22 +160,21 @@ export const Row: FC<Props> = ({
           </div>
         ) : null}
 
-        {hideButtons ? hiddenButtons : isFileOrMultiline ? (
+        {hideButtons ? (
+          hiddenButtons
+        ) : isFileOrMultiline ? (
           <Dropdown
-            aria-label='Select type Dropdown'
+            aria-label="Select type Dropdown"
             triggerButton={
               <Button>
                 <i className="fa fa-caret-down" />
               </Button>
             }
           >
-            <DropdownItem aria-label='Text'>
-              <ItemContent
-                label="Text"
-                onClick={() => onChange({ ...pair, type: 'text', multiline: false })}
-              />
+            <DropdownItem aria-label="Text">
+              <ItemContent label="Text" onClick={() => onChange({ ...pair, type: 'text', multiline: false })} />
             </DropdownItem>
-            <DropdownItem aria-label='Text (Multi-line)'>
+            <DropdownItem aria-label="Text (Multi-line)">
               {allowMultiline && (
                 <ItemContent
                   label="Text (Multi-line)"
@@ -181,13 +182,8 @@ export const Row: FC<Props> = ({
                 />
               )}
             </DropdownItem>
-            <DropdownItem aria-label='File'>
-              {allowFile && (
-                <ItemContent
-                  label="File"
-                  onClick={() => onChange({ ...pair, type: 'file' })}
-                />
-              )}
+            <DropdownItem aria-label="File">
+              {allowFile && <ItemContent label="File" onClick={() => onChange({ ...pair, type: 'file' })} />}
             </DropdownItem>
           </Dropdown>
         ) : null}
@@ -197,11 +193,7 @@ export const Row: FC<Props> = ({
             onClick={() => onChange({ ...pair, disabled: !pair.disabled })}
             title={pair.disabled ? 'Enable item' : 'Disable item'}
           >
-            {pair.disabled ? (
-              <i className="fa fa-square-o" />
-            ) : (
-              <i className="fa fa-check-square-o" />
-            )}
+            {pair.disabled ? <i className="fa fa-square-o" /> : <i className="fa fa-check-square-o" />}
           </button>
         ) : (
           <button>
@@ -210,12 +202,7 @@ export const Row: FC<Props> = ({
         )}
 
         {!hideButtons ? (
-          <PromptButton
-            tabIndex={-1}
-            confirmMessage=""
-            onClick={() => onDelete?.(pair)}
-            title="Delete item"
-          >
+          <PromptButton tabIndex={-1} confirmMessage="" onClick={() => onDelete?.(pair)} title="Delete item">
             <i className="fa fa-trash-o" />
           </PromptButton>
         ) : (

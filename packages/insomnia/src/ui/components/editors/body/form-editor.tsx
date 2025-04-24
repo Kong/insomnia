@@ -3,12 +3,14 @@ import React, { type FC } from 'react';
 import { KeyValueEditor } from '../../key-value-editor/key-value-editor';
 
 interface Props {
-  onChange: (c: {
-    name: string;
-    value: string;
-    description?: string;
-    disabled?: boolean;
-  }[]) => void;
+  onChange: (
+    c: {
+      name: string;
+      value: string;
+      description?: string;
+      disabled?: boolean;
+    }[],
+  ) => void;
   parameters: any[];
 }
 

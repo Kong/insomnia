@@ -19,13 +19,9 @@ export interface BaseWebSocketPayload {
 
 export type WebSocketPayload = BaseModel & BaseWebSocketPayload & { type: typeof type };
 
-export const isWebSocketPayload = (model: Pick<BaseModel, 'type'>): model is WebSocketPayload => (
-  model.type === type
-);
+export const isWebSocketPayload = (model: Pick<BaseModel, 'type'>): model is WebSocketPayload => model.type === type;
 
-export const isWebSocketPayloadId = (id: string | null) => (
-  id?.startsWith(`${prefix}_`)
-);
+export const isWebSocketPayloadId = (id: string | null) => id?.startsWith(`${prefix}_`);
 
 export const init = (): BaseWebSocketPayload => ({
   name: 'New Payload',
@@ -45,10 +41,7 @@ export const create = (patch: Partial<WebSocketPayload> = {}) => {
 
 export const remove = (obj: WebSocketPayload) => database.remove(obj);
 
-export const update = (
-  obj: WebSocketPayload,
-  patch: Partial<WebSocketPayload> = {}
-) => database.docUpdate(obj, patch);
+export const update = (obj: WebSocketPayload, patch: Partial<WebSocketPayload> = {}) => database.docUpdate(obj, patch);
 
 export async function duplicate(request: WebSocketPayload, patch: Partial<WebSocketPayload> = {}) {
   // Only set name and "(Copy)" if the patch does

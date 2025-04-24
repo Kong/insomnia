@@ -21,7 +21,8 @@ import * as models from '../../models';
 import * as networkUtils from '../network';
 import { getSetCookiesFromResponseHeaders } from '../network';
 
-const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) => (await getRenderedRequestAndContext(args)).request;
+const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) =>
+  (await getRenderedRequestAndContext(args)).request;
 
 describe('sendCurlAndWriteTimeline()', () => {
   beforeEach(async () => {
@@ -101,7 +102,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       null,
       settings,
       '/tmp/res_id',
-      'res_id'
+      'res_id',
     );
     const bodyBuffer = await models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -180,7 +181,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       null,
       settings,
       '/tmp/res_id',
-      'res_id'
+      'res_id',
     );
     const bodyBuffer = await models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -284,7 +285,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       null,
       settings,
       '/tmp/res_id',
-      'res_id'
+      'res_id',
     );
     const bodyBuffer = await models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -348,7 +349,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       null,
       settings,
       '/tmp/res_id',
-      'res_id'
+      'res_id',
     );
     const bodyBuffer = await models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -432,7 +433,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       null,
       settings,
       '/tmp/res_id',
-      'res_id'
+      'res_id',
     );
     const bodyBuffer = await models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -497,7 +498,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       null,
       settings,
       '/tmp/res_id',
-      'res_id'
+      'res_id',
     );
     const bodyBuffer = await models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -541,7 +542,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       null,
       settings,
       '/tmp/res_id',
-      'res_id'
+      'res_id',
     );
     const bodyBuffer = await models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -584,7 +585,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       null,
       settings,
       '/tmp/res_id',
-      'res_id'
+      'res_id',
     );
     const bodyBuffer = await models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -628,7 +629,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       null,
       settings,
       '/tmp/res_id',
-      'res_id'
+      'res_id',
     );
     const bodyBuffer = await models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -733,7 +734,7 @@ describe('sendCurlAndWriteTimeline()', () => {
       null,
       { ...settings, validateSSL: false },
       '/tmp/res_id',
-      'res_id'
+      'res_id',
     );
     const bodyBuffer = await models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
@@ -783,12 +784,16 @@ describe('sendCurlAndWriteTimeline()', () => {
       parentId: workspace._id,
     });
     const renderedRequest = await getRenderedRequest({ request });
-    const responseV1 = await networkUtils.sendCurlAndWriteTimeline(renderedRequest, [], null, {
-      ...settings,
-      preferredHttpVersion: HttpVersions.V1_0,
-    },
+    const responseV1 = await networkUtils.sendCurlAndWriteTimeline(
+      renderedRequest,
+      [],
+      null,
+      {
+        ...settings,
+        preferredHttpVersion: HttpVersions.V1_0,
+      },
       '/tmp/res_id',
-      'res_id'
+      'res_id',
     );
     expect(JSON.parse(String(await models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
     expect(getHttpVersion(HttpVersions.V1_0).curlHttpVersion).toBe(CurlHttpVersion.V1_0);
@@ -1030,7 +1035,10 @@ describe('getSetCookiesFromResponseHeaders', () => {
     expect(getSetCookiesFromResponseHeaders(headers)).toEqual(['monster']);
   });
   it('gets two case-insenstive set-cookies', () => {
-    const headers = [{ name: 'Set-Cookie', value: 'monster' }, { name: 'set-cookie', value: 'mash' }];
+    const headers = [
+      { name: 'Set-Cookie', value: 'monster' },
+      { name: 'set-cookie', value: 'mash' },
+    ];
     expect(getSetCookiesFromResponseHeaders(headers)).toEqual(['monster', 'mash']);
   });
 });
@@ -1046,7 +1054,10 @@ describe('getCurrentUrl for tough-cookie', () => {
     expect(networkUtils.getCurrentUrl({ headerResults, finalUrl })).toEqual(finalUrl + '/cookies');
   });
   it('appends only last location to finalUrl', () => {
-    const headerResults = [{ headers: [{ name: 'Location', value: '/cookies' }] }, { headers: [{ name: 'location', value: '/biscuit' }] }];
+    const headerResults = [
+      { headers: [{ name: 'Location', value: '/cookies' }] },
+      { headers: [{ name: 'location', value: '/biscuit' }] },
+    ];
     const finalUrl = 'http://mergemyshit.dev';
     expect(networkUtils.getCurrentUrl({ headerResults, finalUrl })).toEqual(finalUrl + '/biscuit');
   });
@@ -1055,23 +1066,59 @@ describe('getCurrentUrl for tough-cookie', () => {
 describe('getOrInheritHeaders', () => {
   it('should combine headers', () => {
     const requestGroups = [{ headers: [{ name: 'foo', value: 'bar' }] }, { headers: [{ name: 'baz', value: 'qux' }] }];
-    const request = { headers: [{ name: 'foo', value: 'bar' }, { name: 'baz', value: 'qux' }] };
-    expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([{ name: 'baz', value: 'qux, qux' }, { name: 'foo', value: 'bar, bar' }]);
+    const request = {
+      headers: [
+        { name: 'foo', value: 'bar' },
+        { name: 'baz', value: 'qux' },
+      ],
+    };
+    expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([
+      { name: 'baz', value: 'qux, qux' },
+      { name: 'foo', value: 'bar, bar' },
+    ]);
   });
   it('should use last header casing', () => {
     const requestGroups = [{ headers: [{ name: 'x-foo', value: 'bar' }] }];
     const request = { headers: [{ name: 'X-Foo', value: 'baz' }] };
-    expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([{ name: 'X-Foo', value: 'bar, baz' }]);
+    expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([
+      { name: 'X-Foo', value: 'bar, baz' },
+    ]);
   });
   it('should not combine special headers', () => {
-    const requestGroups = [{ headers: [{ name: 'content-type', value: 'application/json' }, { name: 'Connection', value: 'close' }] }];
-    const request = { headers: [{ name: 'Content-Type', value: 'text/plain' }, { name: 'connection', value: 'keep-alive' }] };
-    expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([{ name: 'connection', value: 'keep-alive' }, { name: 'Content-Type', value: 'text/plain' }]);
+    const requestGroups = [
+      {
+        headers: [
+          { name: 'content-type', value: 'application/json' },
+          { name: 'Connection', value: 'close' },
+        ],
+      },
+    ];
+    const request = {
+      headers: [
+        { name: 'Content-Type', value: 'text/plain' },
+        { name: 'connection', value: 'keep-alive' },
+      ],
+    };
+    expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([
+      { name: 'connection', value: 'keep-alive' },
+      { name: 'Content-Type', value: 'text/plain' },
+    ]);
   });
   it('should not allow an empty header name', () => {
-    const requestGroups = [{ headers: [{ name: '', value: 'bar' }, { name: ' ', value: 'foo' }] }];
-    const request = { headers: [{ name: '', value: 'baz' }, { name: '     ', value: 'qux' }] };
+    const requestGroups = [
+      {
+        headers: [
+          { name: '', value: 'bar' },
+          { name: ' ', value: 'foo' },
+        ],
+      },
+    ];
+    const request = {
+      headers: [
+        { name: '', value: 'baz' },
+        { name: '     ', value: 'qux' },
+      ],
+    };
     expect(networkUtils.getOrInheritHeaders({ request, requestGroups })).toEqual([]);
   });
-
 });

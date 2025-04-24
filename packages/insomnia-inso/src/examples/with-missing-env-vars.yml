@@ -8,8 +8,8 @@ resources:
     modified: 1726666263873
     created: 1726658232232
     url: localhost:4010/echo
-    name: "1"
-    description: ""
+    name: '1'
+    description: ''
     method: GET
     body:
       mimeType: text/plain
@@ -45,7 +45,7 @@ resources:
     modified: 1726658198059
     created: 1726658198059
     name: Collection with 3 requests
-    description: ""
+    description: ''
     scope: collection
     _type: workspace
   - _id: env_86e1354fb9909cdb109ccadf83c3353f3bb9bd09
@@ -55,7 +55,7 @@ resources:
     name: Base Environment
     data: {}
     dataPropertyOrder:
-      "&":
+      '&':
         - value
     color: null
     isPrivate: false

@@ -44,39 +44,43 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
     }
   }, [workspace.scope]);
 
-  const handleClick = useCallback(async (p: DocumentAction) => {
-    startLoading(p.label);
+  const handleClick = useCallback(
+    async (p: DocumentAction) => {
+      startLoading(p.label);
 
-    try {
-      const context = {
-        ...pluginContexts.app.init('no-render'),
-        ...pluginContexts.data.init(project._id),
-        ...pluginContexts.store.init(p.plugin),
-      };
-      await p.action(context, parseApiSpec(apiSpec?.contents || ''));
-    } catch (err) {
-      showError({
-        title: 'Document Action Failed',
-        error: err,
-      });
-    } finally {
-      stopLoading(p.label);
-    }
-  }, [apiSpec?.contents, project._id, startLoading, stopLoading]);
+      try {
+        const context = {
+          ...pluginContexts.app.init('no-render'),
+          ...pluginContexts.data.init(project._id),
+          ...pluginContexts.store.init(p.plugin),
+        };
+        await p.action(context, parseApiSpec(apiSpec?.contents || ''));
+      } catch (err) {
+        showError({
+          title: 'Document Action Failed',
+          error: err,
+        });
+      } finally {
+        stopLoading(p.label);
+      }
+    },
+    [apiSpec?.contents, project._id, startLoading, stopLoading],
+  );
 
-  const renderPluginDropdownItems: any = useCallback(() => actionPlugins.map(p => (
-    <DropdownItem
-      key={`${p.plugin.name}:${p.label}`}
-      aria-label={p.label}
-    >
-      <ItemContent
-        icon={isLoading(p.label) ? 'refresh fa-spin' : undefined}
-        label={p.label}
-        stayOpenAfterClick={!p.hideAfterClick}
-        onClick={() => handleClick(p)}
-      />
-    </DropdownItem>
-  )), [actionPlugins, handleClick, isLoading]);
+  const renderPluginDropdownItems: any = useCallback(
+    () =>
+      actionPlugins.map(p => (
+        <DropdownItem key={`${p.plugin.name}:${p.label}`} aria-label={p.label}>
+          <ItemContent
+            icon={isLoading(p.label) ? 'refresh fa-spin' : undefined}
+            label={p.label}
+            stayOpenAfterClick={!p.hideAfterClick}
+            onClick={() => handleClick(p)}
+          />
+        </DropdownItem>
+      )),
+    [actionPlugins, handleClick, isLoading],
+  );
 
   return { renderPluginDropdownItems, refresh };
 };
@@ -89,10 +93,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isDeleteRemoteWorkspaceModalOpen, setIsDeleteRemoteWorkspaceModalOpen] = useState(false);
-  const {
-    organizationId,
-    projectId,
-  } = useParams() as { organizationId: string; projectId: string };
+  const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string };
 
   const deleteWorkspaceFetcher = useFetcher();
 
@@ -102,22 +103,21 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
   return (
     <Fragment>
       <Dropdown
-        aria-label='Workspace Actions Dropdown'
+        aria-label="Workspace Actions Dropdown"
         onOpen={refresh}
         triggerButton={
-          <Button aria-label='Workspace actions menu button' className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+          <Button
+            aria-label="Workspace actions menu button"
+            className="flex flex-1 items-center justify-center gap-2 rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          >
             <SvgIcon icon="ellipsis" />
           </Button>
         }
       >
-        <DropdownItem aria-label='Duplicate / Move'>
-          <ItemContent
-            label="Duplicate / Move"
-            icon="copy"
-            onClick={() => setIsDuplicateModalOpen(true)}
-          />
+        <DropdownItem aria-label="Duplicate / Move">
+          <ItemContent label="Duplicate / Move" icon="copy" onClick={() => setIsDuplicateModalOpen(true)} />
         </DropdownItem>
-        <DropdownItem aria-label='Rename'>
+        <DropdownItem aria-label="Rename">
           <ItemContent
             label="Rename"
             icon="pen-to-square"
@@ -135,21 +135,17 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                       action: `/organization/${organizationId}/project/${workspace.parentId}/workspace/update`,
                       method: 'post',
                       encType: 'application/json',
-                    }
+                    },
                   ),
               });
             }}
           />
         </DropdownItem>
-        <DropdownSection aria-label='Meta section'>
-          <DropdownItem aria-label='Import'>
-            <ItemContent
-              label="Import"
-              icon="file-import"
-              onClick={() => setIsImportModalOpen(true)}
-            />
+        <DropdownSection aria-label="Meta section">
+          <DropdownItem aria-label="Import">
+            <ItemContent label="Import" icon="file-import" onClick={() => setIsImportModalOpen(true)} />
           </DropdownItem>
-          <DropdownItem aria-label='Export'>
+          <DropdownItem aria-label="Export">
             <ItemContent
               label="Export"
               icon="file-export"
@@ -164,18 +160,14 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
               }}
             />
           </DropdownItem>
-          <DropdownItem aria-label='Settings'>
-            <ItemContent
-              label="Settings"
-              icon="gear"
-              onClick={() => setIsSettingsModalOpen(true)}
-            />
+          <DropdownItem aria-label="Settings">
+            <ItemContent label="Settings" icon="gear" onClick={() => setIsSettingsModalOpen(true)} />
           </DropdownItem>
         </DropdownSection>
         {renderPluginDropdownItems()}
 
-        <DropdownSection aria-label='Delete section'>
-          <DropdownItem aria-label='Delete'>
+        <DropdownSection aria-label="Delete section">
+          <DropdownItem aria-label="Delete">
             <ItemContent
               label="Delete"
               icon="trash-o"
@@ -188,10 +180,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
         </DropdownSection>
       </Dropdown>
       {isDuplicateModalOpen && (
-        <WorkspaceDuplicateModal
-          onHide={() => setIsDuplicateModalOpen(false)}
-          workspace={workspace}
-        />
+        <WorkspaceDuplicateModal onHide={() => setIsDuplicateModalOpen(false)} workspace={workspace} />
       )}
       {isImportModalOpen && (
         <ImportModal
@@ -205,10 +194,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
         />
       )}
       {isExportModalOpen && (
-        <ExportRequestsModal
-          workspaceIdToExport={workspace._id}
-          onClose={() => setIsExportModalOpen(false)}
-        />
+        <ExportRequestsModal workspaceIdToExport={workspace._id} onClose={() => setIsExportModalOpen(false)} />
       )}
       {isSettingsModalOpen && (
         <WorkspaceSettingsModal
@@ -226,23 +212,21 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
             setIsDeleteRemoteWorkspaceModalOpen(false);
           }}
           isDismissable
-          className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
+          className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
         >
           <Modal
             onOpenChange={() => {
               setIsDeleteRemoteWorkspaceModalOpen(false);
             }}
-            className="max-w-2xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]"
+            className="max-h-full w-full max-w-2xl rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
           >
-            <Dialog
-              className="outline-none"
-            >
+            <Dialog className="outline-none">
               {({ close }) => (
-                <div className='flex flex-col gap-4'>
-                  <div className='flex gap-2 items-center justify-between'>
-                    <Heading className='text-2xl'>Delete {getWorkspaceLabel(workspace).singular}</Heading>
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <Heading className="text-2xl">Delete {getWorkspaceLabel(workspace).singular}</Heading>
                     <Button
-                      className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                      className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                       onPress={close}
                     >
                       <Icon icon="x" />
@@ -251,22 +235,21 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                   <deleteWorkspaceFetcher.Form
                     action={`/organization/${organizationId}/project/${workspace.parentId}/workspace/delete`}
                     method="POST"
-                    className='flex flex-col gap-4'
+                    className="flex flex-col gap-4"
                   >
                     <input type="hidden" name="workspaceId" value={workspace._id} />
                     <p>
-                      This will permanently delete the {<strong style={{ whiteSpace: 'pre-wrap' }}>{workspace?.name}</strong>}{' '}
+                      This will permanently delete the{' '}
+                      {<strong style={{ whiteSpace: 'pre-wrap' }}>{workspace?.name}</strong>}{' '}
                       {getWorkspaceLabel(workspace).singular} {isRemoteProject(project) ? 'remotely' : ''}.
                     </p>
                     {deleteWorkspaceFetcher.data && deleteWorkspaceFetcher.data.error && (
-                      <p className="notice error margin-bottom-sm no-margin-top">
-                        {deleteWorkspaceFetcher.data.error}
-                      </p>
+                      <p className="notice error margin-bottom-sm no-margin-top">{deleteWorkspaceFetcher.data.error}</p>
                     )}
                     <div className="flex justify-end">
                       <Button
                         type="submit"
-                        className="hover:no-underline bg-[--color-danger] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-danger] transition-colors rounded-sm"
+                        className="rounded-sm border border-solid border-[--hl-md] bg-[--color-danger] px-3 py-2 text-[--color-font-danger] transition-colors hover:bg-opacity-90 hover:no-underline"
                       >
                         Delete
                       </Button>
@@ -278,7 +261,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
           </Modal>
         </ModalOverlay>
       )}
-      { }
+      {}
     </Fragment>
   );
 };

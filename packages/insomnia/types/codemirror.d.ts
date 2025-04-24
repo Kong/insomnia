@@ -25,8 +25,8 @@ interface InsomniaExtensions {
 declare module 'codemirror' {
   type CodeMirrorLinkClickCallback = LinkClickCallback;
 
-  interface Editor extends InsomniaExtensions { }
-  interface EditorFromTextEditor extends InsomniaExtensions { }
+  interface Editor extends InsomniaExtensions {}
+  interface EditorFromTextEditor extends InsomniaExtensions {}
   interface TextMarker {
     // This flag is being used internally by codemirror and the fold extension
     __isFold: boolean;
@@ -101,7 +101,6 @@ declare module 'codemirror' {
     cut: (instance: Editor, e: ClipboardEvent) => void;
     copy: (instance: Editor, e: ClipboardEvent) => void;
     paste: (instance: Editor, e: ClipboardEvent) => void;
-
   }
 
   const keyNames: Record<number, string>;

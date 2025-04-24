@@ -48,9 +48,10 @@ export interface BaseRenderContextOptions {
 }
 export type RenderContextAncestor = Request | GrpcRequest | WebSocketRequest | RequestGroup | Workspace | Project;
 
-export type RenderContextOptions = BaseRenderContextOptions
-  & Partial<BaseRenderContextOptions & { request: Request | GrpcRequest | WebSocketRequest }>
-  & { ancestors?: RenderContextAncestor[] };
+export type RenderContextOptions = BaseRenderContextOptions &
+  Partial<BaseRenderContextOptions & { request: Request | GrpcRequest | WebSocketRequest }> & {
+    ancestors?: RenderContextAncestor[];
+  };
 
 export type NunjucksTagContextMenuAction = 'edit' | 'delete';
 
@@ -164,8 +165,15 @@ export interface BaseRenderContext {
 }
 export interface AppContext {
   alert: (title: string, message?: string) => void;
-  dialog: (title: string, body: HTMLElement, options?: { onHide?: () => void; tall?: boolean; skinny?: boolean; wide?: boolean }) => void;
-  prompt: (title: string, options?: Pick<PromptModalOptions, 'label' | 'defaultValue' | 'submitName' | 'inputType'>) => Promise<string>;
+  dialog: (
+    title: string,
+    body: HTMLElement,
+    options?: { onHide?: () => void; tall?: boolean; skinny?: boolean; wide?: boolean },
+  ) => void;
+  prompt: (
+    title: string,
+    options?: Pick<PromptModalOptions, 'label' | 'defaultValue' | 'submitName' | 'inputType'>,
+  ) => Promise<string>;
   getPath: (name: string) => string;
   getInfo: () => { version: string; platform: NodeJS.Platform };
   showSaveDialog: (options?: { defaultPath?: string }) => Promise<string | null>;

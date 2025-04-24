@@ -7,25 +7,14 @@ import { AuthToggleRow } from './components/auth-toggle-row';
 export const AWSAuth: FC = () => (
   <AuthTableBody>
     <AuthToggleRow label="Enabled" property="disabled" invert />
-    <AuthInputRow
-      label="Access Key ID"
-      property="accessKeyId"
-    />
-    <AuthInputRow
-      label="Secret Access Key"
-      property="secretAccessKey"
-      mask={true}
-    />
+    <AuthInputRow label="Access Key ID" property="accessKeyId" />
+    <AuthInputRow label="Secret Access Key" property="secretAccessKey" mask={true} />
     <AuthInputRow
       label="Region"
       property="region"
       help="Will be calculated from hostname or host or use 'us-east-1' if not given"
     />
-    <AuthInputRow
-      label="Service"
-      property="service"
-      help="Will be calculated from hostname or host if not given"
-    />
+    <AuthInputRow label="Service" property="service" help="Will be calculated from hostname or host if not given" />
     <AuthInputRow
       label="Session Token"
       property="sessionToken"

@@ -36,7 +36,6 @@ export async function decodeBase64(base64: string): Promise<Uint8Array> {
     const res = await fetch(uri);
     const buffer = await res.arrayBuffer();
     return new Uint8Array(buffer);
-
   } catch (error) {
     console.error(error);
     throw new Error('Failed to decode base64');
@@ -93,6 +92,7 @@ export function getLoginUrl() {
 
   url.pathname = '/app/auth-app/';
   url.searchParams.set('loginKey', encodeURIComponent(publicKey));
+  url.searchParams.set('source_origin', 'desktop_app');
 
   return url.toString();
 }

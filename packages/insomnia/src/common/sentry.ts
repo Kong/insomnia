@@ -1,4 +1,4 @@
-import type { ClientOptions } from '@sentry/types';
+import type { ClientOptions } from '@sentry/core';
 
 import { getAppEnvironment, getAppVersion, getSentryDsn } from './constants';
 

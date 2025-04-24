@@ -11,9 +11,9 @@ import { EventEmitter } from 'events';
 import fs from 'fs';
 
 class Curl extends EventEmitter {
-  _options: { [key: string]: any } = {};
-  _meta: { [key: string]: any } = {};
-  _features: { [key: string]: any } = {};
+  _options: Record<string, any> = {};
+  _meta: Record<string, any> = {};
+  _features: Record<string, any> = {};
 
   static info = {
     COOKIELIST: 'COOKIELIST',
@@ -155,12 +155,7 @@ class Curl extends EventEmitter {
           'end',
           'NOT_USED',
           'NOT_USED',
-          [
-            'HTTP/1.1 200 OK',
-            `Content-Length: ${data.length}`,
-            'Content-Type: application/json',
-            '',
-          ].join('\n'),
+          ['HTTP/1.1 200 OK', `Content-Length: ${data.length}`, 'Content-Type: application/json', ''].join('\n'),
         );
       });
     });

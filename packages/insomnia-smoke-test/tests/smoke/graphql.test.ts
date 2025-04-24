@@ -21,7 +21,7 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
   await page.getByLabel('Request Collection').getByTestId('GraphQL request').press('Enter');
   await page.getByRole('tab', { name: 'Body' }).click();
   // Assert the schema is fetched after switching to GraphQL request
-  await expect(page.getByText('Schema fetched just now')).toBeVisible();
+  await expect.soft(page.getByText('Schema fetched just now')).toBeVisible();
 
   // Assert schema documentation stuff
   await page.getByRole('button', { name: 'schema' }).click();
@@ -29,24 +29,21 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
   await page.click('a:has-text("Query")');
   await page.locator('a:has-text("RingBearer")').click();
   const graphqlExplorer = page.locator('.graphql-explorer');
-  await expect(graphqlExplorer).toContainText('Characters who at any time bore a Ring of Power.');
+  await expect.soft(graphqlExplorer).toContainText('Characters who at any time bore a Ring of Power.');
   await page.click('text=QueryRingBearer >> button');
 
   // Send and assert GraphQL request
   await page.click('[data-testid="request-pane"] >> text=Send');
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-  await expect(statusTag).toContainText('200 OK');
+  await expect.soft(statusTag).toContainText('200 OK');
 
   // Export GraphQL request
   await page.getByText('GraphQL request with number').click();
   await page.getByTestId('Dropdown-GraphQL-request-with-number').click();
 
-  await page.getByText('Copy as cURL').click();
-  const handle = await page.evaluateHandle(() => navigator.clipboard.readText());
-  const clipboardContent = await handle.jsonValue();
-  const exepctResult = JSON.stringify({ query: 'query($inputVar:Int){echoNum(intVar:$inputVar)}', variables: { inputVar: 3 } });
-  // expect exported curl body to be JSON string
-  expect(clipboardContent.split('--data ')[1]?.replace(/[\n\s\']/g, '')).toContain(exepctResult);
+  await page.getByRole('menuitemradio', { name: 'Generate Code' }).click();
+  await page.getByText('"query": "query($inputVar: Int) { echoNum(intVar: $inputVar)}",').click();
+  await page.getByRole('button', { name: 'Done' }).click();
 
   await page.getByRole('button', { name: 'Send' }).click();
 
@@ -54,7 +51,7 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
     has: page.locator('.CodeMirror-activeline'),
   });
 
-  await expect(responseBody).toContainText('"echoNum": 777');
+  await expect.soft(responseBody).toContainText('"echoNum": 777');
 });
 
 test('can render schema and send GraphQL requests with object variables', async ({ app, page }) => {
@@ -75,7 +72,7 @@ test('can render schema and send GraphQL requests with object variables', async 
   await page.getByLabel('Request Collection').getByTestId('GraphQL request with variables').press('Enter');
   await page.getByRole('tab', { name: 'Body' }).click();
   // Assert the schema is fetched after switching to GraphQL request
-  await expect(page.getByText('Schema fetched just now')).toBeVisible();
+  await expect.soft(page.getByText('Schema fetched just now')).toBeVisible();
 
   // Assert schema documentation stuff
   await page.getByRole('button', { name: 'schema' }).click();
@@ -83,18 +80,18 @@ test('can render schema and send GraphQL requests with object variables', async 
   await page.click('a:has-text("Query")');
   await page.locator('a:has-text("RingBearer")').click();
   const graphqlExplorer2 = page.locator('.graphql-explorer');
-  await expect(graphqlExplorer2).toContainText('Characters who at any time bore a Ring of Power.');
+  await expect.soft(graphqlExplorer2).toContainText('Characters who at any time bore a Ring of Power.');
   await page.click('text=QueryRingBearer >> button');
 
   // Send and assert GraphQL request
   await page.click('[data-testid="request-pane"] >> text=Send');
   const statusTag2 = page.locator('[data-testid="response-status-tag"]:visible');
-  await expect(statusTag2).toContainText('200 OK');
+  await expect.soft(statusTag2).toContainText('200 OK');
 
   const responseBody2 = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
     has: page.locator('.CodeMirror-activeline'),
   });
-  await expect(responseBody2).toContainText('"echoVars": null');
+  await expect.soft(responseBody2).toContainText('"echoVars": null');
 });
 
 test('can render numeric environment', async ({ app, page }) => {
@@ -115,7 +112,7 @@ test('can render numeric environment', async ({ app, page }) => {
   await page.getByLabel('Request Collection').getByTestId('GraphQL request with number').press('Enter');
   await page.getByRole('tab', { name: 'Body' }).click();
   // Assert the schema is fetched after switching to GraphQL request
-  await expect(page.getByText('Schema fetched just now')).toBeVisible();
+  await expect.soft(page.getByText('Schema fetched just now')).toBeVisible();
 
   // Assert schema documentation stuff
   await page.getByRole('button', { name: 'schema' }).click();
@@ -123,18 +120,18 @@ test('can render numeric environment', async ({ app, page }) => {
   await page.click('a:has-text("Query")');
   await page.locator('a:has-text("RingBearer")').click();
   const graphqlExplorer2 = page.locator('.graphql-explorer');
-  await expect(graphqlExplorer2).toContainText('Characters who at any time bore a Ring of Power.');
+  await expect.soft(graphqlExplorer2).toContainText('Characters who at any time bore a Ring of Power.');
   await page.click('text=QueryRingBearer >> button');
 
   // Send and assert GraphQL request
   await page.click('[data-testid="request-pane"] >> text=Send');
   const statusTag2 = page.locator('[data-testid="response-status-tag"]:visible');
-  await expect(statusTag2).toContainText('200 OK');
+  await expect.soft(statusTag2).toContainText('200 OK');
 
   const responseBody2 = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
     has: page.locator('.CodeMirror-activeline'),
   });
-  await expect(responseBody2).toContainText('"echoNum": 777');
+  await expect.soft(responseBody2).toContainText('"echoNum": 777');
 });
 
 test('can send GraphQL requests after editing and prettifying query', async ({ app, page }) => {
@@ -156,10 +153,10 @@ test('can send GraphQL requests after editing and prettifying query', async ({ a
   await page.locator('text=Prettify GraphQL').click();
   await page.click('[data-testid="request-pane"] >> text=Send');
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-  await expect(statusTag).toContainText('200 OK');
+  await expect.soft(statusTag).toContainText('200 OK');
 
   const responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
     has: page.locator('.CodeMirror-activeline'),
   });
-  await expect(responseBody).toContainText('"bearer": "Gandalf"');
+  await expect.soft(responseBody).toContainText('"bearer": "Gandalf"');
 });

@@ -1,4 +1,11 @@
-import { GraphQLEnumType, GraphQLInputObjectType, GraphQLInt, GraphQLObjectType, GraphQLSchema, GraphQLString } from 'graphql';
+import {
+  GraphQLEnumType,
+  GraphQLInputObjectType,
+  GraphQLInt,
+  GraphQLObjectType,
+  GraphQLSchema,
+  GraphQLString,
+} from 'graphql';
 
 const TypeVars = new GraphQLObjectType({
   name: 'Vars',
@@ -47,14 +54,14 @@ export const schema = new GraphQLSchema({
       echoNum: {
         type: GraphQLInt,
         args: {
-          'intVar': { type: GraphQLInt },
+          intVar: { type: GraphQLInt },
         },
         resolve: () => 777,
       },
       echoVars: {
         type: TypeVars,
         args: {
-          'vars': { type: InputVars },
+          vars: { type: InputVars },
         },
         resolve: vars => vars,
       },

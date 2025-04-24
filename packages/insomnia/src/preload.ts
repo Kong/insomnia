@@ -129,29 +129,32 @@ const main: Window['main'] = {
     },
   },
   hiddenBrowserWindow: {
-    runScript: options => new Promise(async (resolve, reject) => {
-      const isPortAlive = ports.get('hiddenWindowPort') !== undefined;
-      await ipcRenderer.invoke('open-channel-to-hidden-browser-window', isPortAlive);
+    runScript: options =>
+      new Promise(async (resolve, reject) => {
+        const isPortAlive = ports.get('hiddenWindowPort') !== undefined;
+        await ipcRenderer.invoke('open-channel-to-hidden-browser-window', isPortAlive);
 
-      const port = ports.get('hiddenWindowPort');
-      invariant(port, 'hiddenWindowPort is undefined');
+        const port = ports.get('hiddenWindowPort');
+        invariant(port, 'hiddenWindowPort is undefined');
 
-      port.onmessage = event => {
-        console.log('[preload] received result:', event.data);
-        if (event.data.error) {
-          reject(new Error(event.data.error));
-        }
-        resolve(event.data);
-      };
+        port.onmessage = event => {
+          console.log('[preload] received result:', event.data);
+          if (event.data.error) {
+            reject(new Error(event.data.error));
+          }
+          resolve(event.data);
+        };
 
-      port.postMessage({ ...options, type: 'runPreRequestScript' });
-    }),
+        port.postMessage({ ...options, type: 'runPreRequestScript' });
+      }),
   },
-  landingPageRendered: (landingPage, tags) => ipcRenderer.send('landingPageRendered', {
-    landingPage,
-    tags,
-  }),
-  extractJsonFileFromPostmanDataDumpArchive: archivePath => ipcRenderer.invoke('extractJsonFileFromPostmanDataDumpArchive', archivePath),
+  landingPageRendered: (landingPage, tags) =>
+    ipcRenderer.send('landingPageRendered', {
+      landingPage,
+      tags,
+    }),
+  extractJsonFileFromPostmanDataDumpArchive: archivePath =>
+    ipcRenderer.invoke('extractJsonFileFromPostmanDataDumpArchive', archivePath),
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {

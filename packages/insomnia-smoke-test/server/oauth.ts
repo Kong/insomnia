@@ -12,7 +12,6 @@ export const oauthRoutes = async (port: number) => {
 
   const clientRedirectUri = `http://127.0.0.1:${port}/callback`;
 
-  /* eslint-disable camelcase */
   const oidcConfig = {
     interactions: {
       url: (_, interaction) => {
@@ -80,26 +79,19 @@ export const oauthRoutes = async (port: number) => {
       },
     ],
     pkce: {
-      methods: [
-        'S256',
-        'plain',
-      ],
+      methods: ['S256', 'plain'],
       required: (_, client) => {
         // Require PKCE for the PKCE client id
         return client.clientId === clientIDAuthorizationCodePKCE;
       },
     },
-    responseTypes: [
-      'code',
-      'id_token', 'id_token token',
-      'none',
-    ],
+    responseTypes: ['code', 'id_token', 'id_token token', 'none'],
     issueRefreshToken: () => {
       return false;
     },
     // https://github.com/panva/node-oidc-provider/blob/main/recipes/skip_consent.md
     loadExistingGrant: async ctx => {
-      const grantId = (ctx.oidc.result?.consent?.grantId) || (ctx.oidc.session!.grantIdFor(ctx.oidc.client!.clientId));
+      const grantId = ctx.oidc.result?.consent?.grantId || ctx.oidc.session!.grantIdFor(ctx.oidc.client!.clientId);
 
       if (grantId) {
         const grant = await ctx.oidc.provider.Grant.find(grantId);
@@ -125,7 +117,7 @@ export const oauthRoutes = async (port: number) => {
       return grant;
     },
   };
-  /* eslint-enable camelcase */
+
   const provider = (await import('oidc-provider')).default;
   const oidc = new provider(`http://127.0.0.1:${port}`, oidcConfig);
 
@@ -138,32 +130,21 @@ export const oauthRoutes = async (port: number) => {
   oauthRouter.get('/id-token', async (req, res) => {
     const client = await oidc.Client.find(clientIDImplicit);
     if (!client) {
-      res
-        .status(500)
-        .header('Content-Type', 'text/plain')
-        .send('Client not found');
+      res.status(500).header('Content-Type', 'text/plain').send('Client not found');
       return;
     }
 
     const authorizationHeader = req.header('Authorization');
     if (!authorizationHeader) {
-      res
-        .status(400)
-        .header('Content-Type', 'text/plain')
-        .send('Missing Authorization header');
+      res.status(400).header('Content-Type', 'text/plain').send('Missing Authorization header');
       return;
     }
 
     try {
       const validated = await oidc.IdToken.validate(extractToken(authorizationHeader), client);
-      res
-        .status(200)
-        .json(validated);
+      res.status(200).json(validated);
     } catch (err) {
-      res
-        .status(500)
-        .header('Content-Type', 'text/plain')
-        .send('Invalid authorization header');
+      res.status(500).header('Content-Type', 'text/plain').send('Invalid authorization header');
     }
   });
 
@@ -171,32 +152,22 @@ export const oauthRoutes = async (port: number) => {
   oauthRouter.get('/client-credential', async (req, res) => {
     const authorizationHeader = req.header('Authorization');
     if (!authorizationHeader) {
-      res
-        .status(400)
-        .header('Content-Type', 'text/plain')
-        .send('Missing Authorization header');
+      res.status(400).header('Content-Type', 'text/plain').send('Missing Authorization header');
       return;
     }
 
     const clientCredentials = await oidc.ClientCredentials.find(extractToken(authorizationHeader));
     if (!clientCredentials) {
-      res
-        .status(400)
-        .header('Content-Type', 'text/plain')
-        .send('Invalid client credentials');
+      res.status(400).header('Content-Type', 'text/plain').send('Invalid client credentials');
       return;
     }
 
-    res
-      .status(200)
-      .json(clientCredentials);
+    res.status(200).json(clientCredentials);
   });
 
   oauthRouter.get('/interaction/:uid', async (req, res, next) => {
     try {
-      const {
-        uid, prompt,
-      } = await oidc.interactionDetails(req, res);
+      const { uid, prompt } = await oidc.interactionDetails(req, res);
 
       switch (prompt.name) {
         case 'login': {
@@ -227,10 +198,7 @@ export const oauthRoutes = async (port: number) => {
     try {
       await oidc.interactionDetails(req, res);
 
-      const account = await (oidc.Account as any).findAccount(
-        null,
-        req.body.login,
-      );
+      const account = await (oidc.Account as any).findAccount(null, req.body.login);
 
       const result = {
         login: {
@@ -267,64 +235,63 @@ function allowLocalhostImplicit(oidc: Provider) {
 // https://github.com/panva/node-oidc-provider/tree/main/docs#password-grant-type-ropc
 const parameters = ['username', 'password', 'scope'];
 function registerROPC(oidc: Provider) {
-  oidc.registerGrantType('password', async (ctx, next) => {
-    const params = ctx.oidc.params;
+  oidc.registerGrantType(
+    'password',
+    async (ctx, next) => {
+      const params = ctx.oidc.params;
 
-    if (!params) {
-      throw new Error('invalid params provided');
-    }
+      if (!params) {
+        throw new Error('invalid params provided');
+      }
 
-    if (!ctx.oidc.client) {
-      throw new Error('invalid client provided');
-    }
+      if (!ctx.oidc.client) {
+        throw new Error('invalid client provided');
+      }
 
-    if (typeof params.username !== 'string' || typeof params.password !== 'string') {
-      throw new Error('invalid credentials provided');
-    }
+      if (typeof params.username !== 'string' || typeof params.password !== 'string') {
+        throw new Error('invalid credentials provided');
+      }
 
-    const account = await ctx.oidc.provider.Account.findAccount(
-      ctx,
-      params.username
-    );
-    if (!account) {
-      throw new Error('invalid account');
-    }
+      const account = await ctx.oidc.provider.Account.findAccount(ctx, params.username);
+      if (!account) {
+        throw new Error('invalid account');
+      }
 
-    const grant = new ctx.oidc.provider.Grant({
-      clientId: ctx.oidc.client.clientId,
-      accountId: account.accountId,
-    });
-    await grant.save();
+      const grant = new ctx.oidc.provider.Grant({
+        clientId: ctx.oidc.client.clientId,
+        accountId: account.accountId,
+      });
+      await grant.save();
 
-    const { AccessToken } = ctx.oidc.provider;
-    const at = new AccessToken({
-      accountId: account.accountId,
-      client: ctx.oidc.client,
-      grantId: grant.jti,
-      gty: 'password',
-      scope: typeof params.scope === 'string' ? params.scope : '',
-      claims: {
-        userinfo: {
-          sub: {
-            value: account.accountId,
+      const { AccessToken } = ctx.oidc.provider;
+      const at = new AccessToken({
+        accountId: account.accountId,
+        client: ctx.oidc.client,
+        grantId: grant.jti,
+        gty: 'password',
+        scope: typeof params.scope === 'string' ? params.scope : '',
+        claims: {
+          userinfo: {
+            sub: {
+              value: account.accountId,
+            },
           },
         },
-      },
-    });
+      });
 
-    const accessToken = await at.save();
+      const accessToken = await at.save();
 
-    /* eslint-disable camelcase */
-    ctx.body = {
-      access_token: accessToken,
-      expires_in: at.expiration,
-      scope: at.scope,
-      token_type: at.tokenType,
-    };
-    /* eslint-enable camelcase */
+      ctx.body = {
+        access_token: accessToken,
+        expires_in: at.expiration,
+        scope: at.scope,
+        token_type: at.tokenType,
+      };
 
-    await next();
-  }, parameters);
+      await next();
+    },
+    parameters,
+  );
 }
 
 function extractToken(authorizationHeader: string) {

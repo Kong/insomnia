@@ -32,32 +32,36 @@ export const AskModal = forwardRef<AskModalHandle, ModalProps>((_, ref) => {
     yesText: 'Yes',
     noText: 'No',
     color: 'surprise',
-    onDone: async () => { },
+    onDone: async () => {},
   });
 
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: ({ title, message, onDone, yesText, noText, color }) => {
-      setState({
-        title: title || 'Confirm',
-        message: message || 'No message provided',
-        yesText: yesText || 'Yes',
-        noText: noText || 'No',
-        color: color || 'surprise',
-        onDone,
-      });
-      modalRef.current?.show();
-    },
-  }), []);
+  useImperativeHandle(
+    ref,
+    () => ({
+      hide: () => {
+        modalRef.current?.hide();
+      },
+      show: ({ title, message, onDone, yesText, noText, color }) => {
+        setState({
+          title: title || 'Confirm',
+          message: message || 'No message provided',
+          yesText: yesText || 'Yes',
+          noText: noText || 'No',
+          color: color || 'surprise',
+          onDone,
+        });
+        modalRef.current?.show();
+      },
+    }),
+    [],
+  );
   const { message, title, yesText, noText, color, onDone } = state;
   return (
     <Modal ref={modalRef}>
       <ModalHeader>{title || 'Confirm?'}</ModalHeader>
       <ModalBody className="wide pad">{message}</ModalBody>
       <ModalFooter>
-        <div className='flex items-center gap-4'>
+        <div className="flex items-center gap-4">
           <button
             className="btn"
             onClick={() => {

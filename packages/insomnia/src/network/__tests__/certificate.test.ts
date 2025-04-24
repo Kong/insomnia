@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { ClientCertificate } from '../../models/client-certificate';
+import type { ClientCertificate } from '../../models/client-certificate';
 import { filterClientCertificates } from '../certificate';
 
 describe('filterClientCertificates', () => {
-
   const requestUrl = 'https://www.example.com:1234';
   const clientCertificatesWithMatchPort: ClientCertificate[] = [
     {

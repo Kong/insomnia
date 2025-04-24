@@ -30,15 +30,19 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
     value: null,
   });
 
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: options => {
-      setState(options);
-      modalRef.current?.show();
-    },
-  }), []);
+  useImperativeHandle(
+    ref,
+    () => ({
+      hide: () => {
+        modalRef.current?.hide();
+      },
+      show: options => {
+        setState(options);
+        modalRef.current?.show();
+      },
+    }),
+    [],
+  );
   const { message, title, options, value, onDone } = state;
 
   return (
@@ -47,7 +51,10 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
       <ModalBody className="wide pad">
         <p>{message}</p>
         <div className="form-control form-control--outlined">
-          <select onChange={event => setState(state => ({ ...state, value: event.target.value }))} value={value ?? undefined}>
+          <select
+            onChange={event => setState(state => ({ ...state, value: event.target.value }))}
+            value={value ?? undefined}
+          >
             {options.map(({ name, value }) => (
               <option key={value} value={value}>
                 {name}

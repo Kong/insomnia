@@ -3,8 +3,7 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test.describe('Cookie editor', async () => {
-
+test.describe('Cookie editor', () => {
   test.beforeEach(async ({ app, page }) => {
     const text = await loadFixture('simple.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
@@ -16,7 +15,6 @@ test.describe('Cookie editor', async () => {
   });
 
   test('create and send a cookie', async ({ page }) => {
-
     // Open cookie editor
     await page.click('button:has-text("Cookies")');
 
@@ -34,7 +32,9 @@ test.describe('Cookie editor', async () => {
 
     // Try to replace text in Raw view
     await page.getByRole('tab', { name: 'Raw' }).click();
-    await page.locator('text=Raw Cookie String >> input[type="text"]').fill('foo2=bar2; Expires=Tue, 19 Jan 2038 03:14:07 GMT; Domain=localhost; Path=/');
+    await page
+      .locator('text=Raw Cookie String >> input[type="text"]')
+      .fill('foo2=bar2; Expires=Tue, 19 Jan 2038 03:14:07 GMT; Domain=localhost; Path=/');
     await page.locator('text=Done').nth(1).click();
     await page.getByTestId('cookie-test-iteration-0').click();
 
@@ -45,8 +45,9 @@ test.describe('Cookie editor', async () => {
     await page.click('[data-testid="request-pane"] button:has-text("Send")');
 
     // Check in the timeline that the cookie was sent
+
     await page.getByRole('tab', { name: 'Console' }).click();
-    await expect(page.getByText('foo2=bar2')).toBeVisible();
+    await expect.soft(page.getByText('foo2=bar2')).toBeVisible();
 
     // Send ws request
     await page.getByLabel('Request Collection').getByTestId('example websocket').press('Enter');
@@ -55,6 +56,6 @@ test.describe('Cookie editor', async () => {
 
     // Check in the timeline that the cookie was sent
     await page.getByRole('tab', { name: 'Console' }).click();
-    await expect(page.getByText('foo2=bar2')).toBeVisible();
+    await expect.soft(page.getByText('foo2=bar2')).toBeVisible();
   });
 });

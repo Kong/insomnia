@@ -19,7 +19,7 @@ describe('NeDBClient', () => {
   beforeEach(async () => {
     workspaceBuilder.reset();
     setupDateMocks();
-    await db.init(models.types(), { inMemoryOnly: true }, true, () => { },);
+    await db.init(models.types(), { inMemoryOnly: true }, true, () => {});
     // Create some sample models
     await models.project.create({
       _id: 'proj_1',
@@ -194,9 +194,7 @@ describe('NeDBClient', () => {
       // Act
       const promiseResult = neDbClient.writeFile(filePath, YAML.stringify(env));
       // Assert
-      await expect(promiseResult).rejects.toThrowError(
-        'Doc _id does not match file path [env_1 != env_2]',
-      );
+      await expect(promiseResult).rejects.toThrowError('Doc _id does not match file path [env_1 != env_2]');
     });
 
     it('should throw error if type does not match', async () => {
@@ -212,9 +210,7 @@ describe('NeDBClient', () => {
       // Act
       const promiseResult = neDbClient.writeFile(filePath, YAML.stringify(env));
       // Assert
-      await expect(promiseResult).rejects.toThrowError(
-        'Doc type does not match file path [Environment != Request]',
-      );
+      await expect(promiseResult).rejects.toThrowError('Doc type does not match file path [Environment != Request]');
     });
   });
 

@@ -88,10 +88,7 @@ export class MemClient {
     console.log(await next(baseDir, ''));
   }
 
-  async readFile(
-    filePath: string,
-    options: BufferEncoding | { encoding?: BufferEncoding } = {},
-  ) {
+  async readFile(filePath: string, options: BufferEncoding | { encoding?: BufferEncoding } = {}) {
     filePath = path.normalize(filePath);
 
     if (typeof options === 'string') {
@@ -109,8 +106,7 @@ export class MemClient {
     if (encoding) {
       return raw.toString(encoding);
     }
-      return raw;
-
+    return raw;
   }
 
   async writeFile(
@@ -153,14 +149,13 @@ export class MemClient {
       dirEntry.children.push(file);
     }
 
-    const dataBuff: Buffer = data instanceof Buffer ? data : Buffer.from(data, encoding);
     let newContents = Buffer.alloc(0);
 
     if (flag[0] === 'w') {
-      newContents = dataBuff;
+      newContents = typeof data === 'string' ? Buffer.from(data, encoding) : data;
     } else if (flag[0] === 'a') {
       const contentsBuff: Buffer = Buffer.from(file.contents, 'base64');
-      newContents = Buffer.concat([contentsBuff, dataBuff]);
+      newContents = Buffer.concat([contentsBuff, typeof data === 'string' ? Buffer.from(data, encoding) : data]);
     } else {
       throw new SystemError({
         code: 'EBADF',

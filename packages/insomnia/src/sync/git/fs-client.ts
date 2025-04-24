@@ -18,19 +18,23 @@ export const fsClient = (basePath: string) => {
   console.log(`[fsClient] Created in ${basePath}`);
   fs.mkdirSync(basePath, { recursive: true });
 
-  const wrap = (fn: FSWraps) => async (filePath: string, ...args: any[]) => {
-    const modifiedPath = path.join(basePath, path.normalize(filePath));
+  const wrap =
+    (fn: FSWraps) =>
+    async (filePath: string, ...args: any[]) => {
+      const modifiedPath = path.join(basePath, path.normalize(filePath));
 
-    // @ts-expect-error -- TSCONVERSION
-    return fn(modifiedPath, ...args);
-  };
+      // @ts-expect-error -- TSCONVERSION
+      return fn(modifiedPath, ...args);
+    };
 
-  const wrapSymlink = (fn: typeof fs.promises.symlink) => async (filePath: string, target: string, ...args: any[]) => {
-    const modifiedPath = path.join(basePath, path.normalize(filePath));
-    const modifiedTarget = path.join(basePath, path.normalize(target));
+  const wrapSymlink =
+    (fn: typeof fs.promises.symlink) =>
+    async (filePath: string, target: string, ...args: any[]) => {
+      const modifiedPath = path.join(basePath, path.normalize(filePath));
+      const modifiedTarget = path.join(basePath, path.normalize(target));
 
-    return fn(modifiedPath, modifiedTarget, ...args);
-  };
+      return fn(modifiedPath, modifiedTarget, ...args);
+    };
 
   return {
     promises: {

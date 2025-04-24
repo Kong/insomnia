@@ -1,4 +1,5 @@
-import { GraphQLInterfaceType, GraphQLObjectType, GraphQLSchema, type GraphQLType, GraphQLUnionType } from 'graphql';
+import type { GraphQLSchema } from 'graphql';
+import { GraphQLInterfaceType, GraphQLObjectType, type GraphQLType, GraphQLUnionType } from 'graphql';
 import React, { type FC, Fragment } from 'react';
 
 import { ascendingNameSort } from '../../../common/sorting';
@@ -37,7 +38,7 @@ export const GraphQLExplorerType: FC<Props> = ({ schema, type, onNavigateType, o
     return [];
   };
 
-  const markdown = ('description' in type) ? (type.description || '') : '*no description*';
+  const markdown = 'description' in type ? type.description || '' : '*no description*';
 
   const types = getTypes();
   const hasSchemaAndTypes = schema && types.length;
@@ -49,7 +50,7 @@ export const GraphQLExplorerType: FC<Props> = ({ schema, type, onNavigateType, o
   return (
     <div className="graphql-explorer__type">
       <MarkdownPreview markdown={markdown} />
-      {hasSchemaAndTypes ?
+      {hasSchemaAndTypes ? (
         <Fragment>
           <h2 className="graphql-explorer__subheading">{title}</h2>
           <ul className="graphql-explorer__defs">
@@ -60,17 +61,17 @@ export const GraphQLExplorerType: FC<Props> = ({ schema, type, onNavigateType, o
             ))}
           </ul>
         </Fragment>
-        : null}
-      {sortedFields.length
-        ? (<Fragment>
+      ) : null}
+      {sortedFields.length ? (
+        <Fragment>
           <h2 className="graphql-explorer__subheading">Fields</h2>
           <GraphQLExplorerFieldsList
             fields={sortedFields}
             onNavigateType={onNavigateType}
             onNavigateField={onNavigateField}
           />
-        </Fragment>)
-        : null}
+        </Fragment>
+      ) : null}
     </div>
   );
 };

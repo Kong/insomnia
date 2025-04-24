@@ -3,12 +3,23 @@ import path from 'node:path';
 import type { ActionFunction } from 'react-router-dom';
 
 import type { PostmanDataDumpRawData } from '../../common/import';
-import { fetchImportContentFromURI, getFilesFromPostmanExportedDataDump, type ImportFileDetail, importResourcesToProject, importResourcesToWorkspace, scanResources, type ScanResult } from '../../common/import';
+import {
+  fetchImportContentFromURI,
+  getFilesFromPostmanExportedDataDump,
+  importResourcesToProject,
+  importResourcesToWorkspace,
+  scanResources,
+  type ScanResult,
+} from '../../common/import';
 import * as models from '../../models';
-import { isRemoteProject, ORG_STORAGE_RULE } from '../../models/project';
+import { isRemoteProject } from '../../models/project';
 import type { Workspace } from '../../models/workspace';
-import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-project';
+import {
+  initializeLocalBackendProjectAndMarkForSync,
+  pushSnapshotOnInitialize,
+} from '../../sync/vcs/initialize-backend-project';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
+import type { ImportEntry } from '../../utils/importers/entities';
 import { invariant } from '../../utils/invariant';
 import { fetchAndCacheOrganizationStorageRule } from './organization';
 
@@ -20,13 +31,15 @@ export const scanForResourcesAction: ActionFunction = async ({ request }): Promi
     invariant(typeof source === 'string', 'Source is required.');
     invariant(['file', 'uri', 'clipboard'].includes(source), 'Unsupported import type');
 
-    const contentList: ImportFileDetail[] = [];
+    const contentList: ImportEntry[] = [];
     if (source === 'uri') {
       const uri = formData.get('uri');
       if (typeof uri !== 'string' || uri === '') {
-        return [{
-          errors: ['URI is required'],
-        }];
+        return [
+          {
+            errors: ['URI is required'],
+          },
+        ];
       }
 
       contentList.push({
@@ -45,9 +58,11 @@ export const scanForResourcesAction: ActionFunction = async ({ request }): Promi
           throw new Error();
         }
       } catch (err) {
-        return [{
-          errors: ['File is required'],
-        }];
+        return [
+          {
+            errors: ['File is required'],
+          },
+        ];
       }
 
       const zipFilePaths = filePaths.filter(filePath => path.extname(filePath) === '.zip');
@@ -59,15 +74,14 @@ export const scanForResourcesAction: ActionFunction = async ({ request }): Promi
         try {
           postmanDataDumpRawData = await getFilesFromPostmanExportedDataDump(zipFilePath);
         } catch (err) {
-          return [{
-            errors: [err.message],
-          }];
+          return [
+            {
+              errors: [err.message],
+            },
+          ];
         }
 
-        function trans({
-          contentStr,
-          oriFileName,
-        }: ImportFileDetail): ImportFileDetail {
+        function trans({ contentStr, oriFileName }: ImportEntry): ImportEntry {
           return {
             contentStr,
             oriFileName: `${oriFileName} in ${path.basename(zipFilePath)}`,
@@ -76,7 +90,7 @@ export const scanForResourcesAction: ActionFunction = async ({ request }): Promi
 
         contentList.push(
           ...postmanDataDumpRawData.collectionList.map(trans),
-          ...postmanDataDumpRawData.envList.map(trans)
+          ...postmanDataDumpRawData.envList.map(trans),
         );
       }
 
@@ -85,6 +99,7 @@ export const scanForResourcesAction: ActionFunction = async ({ request }): Promi
         contentList.push({
           contentStr: await fetchImportContentFromURI({ uri }),
           oriFileName: path.basename(filePath),
+          oriFilePath: filePath,
         });
       }
     } else {
@@ -96,18 +111,22 @@ export const scanForResourcesAction: ActionFunction = async ({ request }): Promi
     }
 
     if (contentList.length === 0) {
-      return [{
-        errors: ['No content to import'],
-      }];
+      return [
+        {
+          errors: ['No content to import'],
+        },
+      ];
     }
 
     const result = await scanResources(contentList);
 
     return result;
   } catch (err) {
-    return [{
-      errors: [err.message],
-    }];
+    return [
+      {
+        errors: [err.message],
+      },
+    ];
   }
 };
 
@@ -149,24 +168,32 @@ async function syncNewWorkspaceIfNeeded(newWorkspace: Workspace) {
   const project = await models.project.getById(newWorkspace.parentId);
   invariant(project, 'Project not found');
   const userSession = await models.userSession.getOrCreate();
-  if (userSession.id && isRemoteProject(project) && [ORG_STORAGE_RULE.CLOUD_ONLY, ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL].includes(await fetchAndCacheOrganizationStorageRule(project.parentId))) {
-    // Create default env, cookie jar, and meta
-    await models.environment.getOrCreateForParentId(newWorkspace._id);
-    await models.cookieJar.getOrCreateForParentId(newWorkspace._id);
-    await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
-    try {
-      const vcs = VCSInstance().newInstance();
-      await initializeLocalBackendProjectAndMarkForSync({
-        vcs,
-        workspace: newWorkspace,
-      });
-      await pushSnapshotOnInitialize({
-        vcs,
-        workspace: newWorkspace,
-        project,
-      });
-    } catch (e) {
-      console.warn(`Failed to initialize sync to insomnia cloud for workspace ${newWorkspace._id}. This will be retried when the workspace is opened on the app. ${e.message}`);
+
+  if (userSession.id && isRemoteProject(project)) {
+    const storageRules = await fetchAndCacheOrganizationStorageRule(project.parentId);
+    invariant(storageRules, 'Storage rules not found');
+
+    if (storageRules.enableCloudSync) {
+      // Create default env, cookie jar, and meta
+      await models.environment.getOrCreateForParentId(newWorkspace._id);
+      await models.cookieJar.getOrCreateForParentId(newWorkspace._id);
+      await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
+      try {
+        const vcs = VCSInstance().newInstance();
+        await initializeLocalBackendProjectAndMarkForSync({
+          vcs,
+          workspace: newWorkspace,
+        });
+        await pushSnapshotOnInitialize({
+          vcs,
+          workspace: newWorkspace,
+          project,
+        });
+      } catch (e) {
+        console.warn(
+          `Failed to initialize sync to insomnia cloud for workspace ${newWorkspace._id}. This will be retried when the workspace is opened on the app. ${e.message}`,
+        );
+      }
     }
   }
 }

@@ -3,22 +3,27 @@ import querystring from 'querystring';
 import { v4 as uuidv4 } from 'uuid';
 
 import { version } from '../../../package.json';
+import { database as db } from '../../common/database';
 import { escapeRegex } from '../../common/misc';
 import * as models from '../../models';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
 import type { AuthTypeOAuth2, OAuth2ResponseType, RequestHeader, RequestParameter } from '../../models/request';
 import type { Request } from '../../models/request';
-import { isRequestGroupId } from '../../models/request-group';
+import { isRequestGroup, isRequestGroupId, type RequestGroup } from '../../models/request-group';
 import type { Response } from '../../models/response';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
+import { getAuthObjectOrNull, isAuthEnabled } from '../authentication';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
-import { fetchRequestData, fetchRequestGroupData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../network';
 import {
-  type AuthKeys,
-  GRANT_TYPE_AUTHORIZATION_CODE,
-  PKCE_CHALLENGE_S256,
-} from './constants';
+  fetchRequestData,
+  fetchRequestGroupData,
+  responseTransform,
+  sendCurlAndWriteTimeline,
+  tryToInterpolateRequest,
+  tryToTransformRequestWithPlugins,
+} from '../network';
+import { type AuthKeys, GRANT_TYPE_AUTHORIZATION_CODE, PKCE_CHALLENGE_S256 } from './constants';
 
 const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
 
@@ -44,11 +49,13 @@ export const getOAuth2Token = async (
   authentication: AuthTypeOAuth2,
   forceRefresh = false,
 ): Promise<OAuth2Token | null> => {
-  const oAuth2Token = await getExistingAccessTokenAndRefreshIfExpired(requestId, authentication, forceRefresh);
+  const {oAuth2Token, closestAuthId} = await getExistingAccessTokenAndRefreshIfExpired(requestId, authentication, forceRefresh);
   if (oAuth2Token) {
     return oAuth2Token;
   }
-  const validGrantType = ['implicit', 'authorization_code', 'password', 'client_credentials'].includes(authentication.grantType);
+  const validGrantType = ['implicit', 'authorization_code', 'password', 'client_credentials'].includes(
+    authentication.grantType,
+  );
   invariant(validGrantType, `Invalid grant type ${authentication.grantType}`);
   if (authentication.grantType === 'implicit') {
     invariant(authentication.authorizationUrl, 'Missing authorization URL');
@@ -62,9 +69,14 @@ export const getOAuth2Token = async (
       ...insertAuthKeyIf('scope', authentication.scope),
       ...insertAuthKeyIf('state', authentication.state),
       ...insertAuthKeyIf('audience', authentication.audience),
-      ...(hasNonce ? [{
-        name: 'nonce', value: Math.floor(Math.random() * 9999999999999) + 1 + '',
-      }] : []),
+      ...(hasNonce
+        ? [
+            {
+              name: 'nonce',
+              value: Math.floor(Math.random() * 9999999999999) + 1 + '',
+            },
+          ]
+        : []),
     ].forEach(p => p.value && implicitUrl.searchParams.append(p.name, p.value));
     const redirectedTo = await window.main.authorizeUserInWindow({
       url: implicitUrl.toString(),
@@ -77,17 +89,20 @@ export const getOAuth2Token = async (
     const responseUrl = new URL(redirectedTo);
     if (responseUrl.searchParams.has('error')) {
       const params = Object.fromEntries(responseUrl.searchParams);
-      const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+      const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
       return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(params));
     }
     const hash = responseUrl.hash.slice(1);
     invariant(hash, 'No hash found in response URL from OAuth2 provider');
     const data = Object.fromEntries(new URLSearchParams(hash));
-    const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
-    return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({
-      ...data,
-      access_token: data.access_token || data.id_token,
-    }));
+    const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
+    return models.oAuth2Token.update(
+      old,
+      transformNewAccessTokenToOauthModel({
+        ...data,
+        access_token: data.access_token || data.id_token,
+      }),
+    );
   }
   invariant(authentication.accessTokenUrl, 'Missing access token URL');
   let params: RequestHeader[] = [];
@@ -96,7 +111,9 @@ export const getOAuth2Token = async (
 
     const codeVerifier = authentication.usePkce ? encodePKCE(crypto.randomBytes(32)) : '';
     const usePkceAnd256 = authentication.usePkce && authentication.pkceMethod === PKCE_CHALLENGE_S256;
-    const codeChallenge = usePkceAnd256 ? encodePKCE(crypto.createHash('sha256').update(codeVerifier).digest()) : codeVerifier;
+    const codeChallenge = usePkceAnd256
+      ? encodePKCE(crypto.createHash('sha256').update(codeVerifier).digest())
+      : codeVerifier;
     const authCodeUrl = new URL(authentication.authorizationUrl);
     const responseType: OAuth2ResponseType = 'code';
     [
@@ -107,17 +124,21 @@ export const getOAuth2Token = async (
       ...insertAuthKeyIf('state', authentication.state),
       ...insertAuthKeyIf('audience', authentication.audience),
       ...insertAuthKeyIf('resource', authentication.resource),
-      ...(codeChallenge ? [
-        { name: 'code_challenge', value: codeChallenge },
-        { name: 'code_challenge_method', value: authentication.pkceMethod },
-      ] : []),
+      ...(codeChallenge
+        ? [
+            { name: 'code_challenge', value: codeChallenge },
+            { name: 'code_challenge_method', value: authentication.pkceMethod },
+          ]
+        : []),
     ].forEach(p => p.value && authCodeUrl.searchParams.append(p.name, p.value));
     const redirectedTo = await window.main.authorizeUserInWindow({
       url: authCodeUrl.toString(),
-      urlSuccessRegex: authentication.redirectUrl ?
-        new RegExp(`${escapeRegex(authentication.redirectUrl)}.*([?&]code=)`, 'i') : /([?&]code=)/i,
-      urlFailureRegex: authentication.redirectUrl ?
-        new RegExp(`${escapeRegex(authentication.redirectUrl)}.*([?&]error=)`, 'i') : /([?&]error=)/i,
+      urlSuccessRegex: authentication.redirectUrl
+        ? new RegExp(`${escapeRegex(authentication.redirectUrl)}.*([?&]code=)`, 'i')
+        : /([?&]code=)/i,
+      urlFailureRegex: authentication.redirectUrl
+        ? new RegExp(`${escapeRegex(authentication.redirectUrl)}.*([?&]error=)`, 'i')
+        : /([?&]error=)/i,
       sessionId: getOAuthSession(),
     });
     console.log('[oauth2] Detected redirect ' + redirectedTo);
@@ -165,10 +186,11 @@ export const getOAuth2Token = async (
   }
 
   const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
-  const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
-  return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(
-    await oauthResponseToAccessToken(authentication.accessTokenUrl, response)
-  ));
+  const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
+  return models.oAuth2Token.update(
+    old,
+    transformNewAccessTokenToOauthModel(await oauthResponseToAccessToken(authentication.accessTokenUrl, response)),
+  );
 };
 // 1. get token from db and return if valid
 // 2. if expired, and no refresh token return null
@@ -178,18 +200,22 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   requestId: string,
   authentication: AuthTypeOAuth2,
   forceRefresh: boolean,
-): Promise<OAuth2Token | null> {
-  const token: OAuth2Token | null = await models.oAuth2Token.getByParentId(requestId);
+): Promise<{oAuth2Token: OAuth2Token | null, closestAuthId: string}> {
+  const activeRequest = await models.request.getById(requestId);
+  const requestGroups = (await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type])).filter(isRequestGroup) as RequestGroup[];
+  const closestAuth = requestGroups.find(({authentication}) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
+  const closestAuthId = closestAuth?._id || requestId;
+  const token: OAuth2Token | null = await models.oAuth2Token.getByParentId(closestAuthId);
   if (!token) {
-    return null;
+    return {oAuth2Token: null, closestAuthId};
   }
   const expiresAt = token.expiresAt || Infinity;
   const isExpired = Date.now() > expiresAt;
   if (!isExpired && !forceRefresh) {
-    return token;
+    return {oAuth2Token: token, closestAuthId};
   }
   if (!token.refreshToken) {
-    return null;
+    return {oAuth2Token: null, closestAuthId};
   }
 
   let params = [
@@ -216,9 +242,9 @@ async function getExistingAccessTokenAndRefreshIfExpired(
     // If the refresh token was rejected due an unauthorized request, we will
     // return a null access_token to trigger an authentication request to fetch
     // brand new refresh and access tokens.
-    const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+    const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
     models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
-    return null;
+    return {oAuth2Token: null, closestAuthId};
   }
   const isSuccessful = statusCode >= 200 && statusCode < 300;
   const hasBodyAndIsError = bodyBuffer && statusCode === 400;
@@ -230,9 +256,9 @@ async function getExistingAccessTokenAndRefreshIfExpired(
       // brand new refresh and access tokens.
       if (body?.error === 'invalid_grant') {
         console.log(`[oauth2] Refresh token rejected due to invalid_grant error: ${body.error_description}`);
-        const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
-        models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
-        return null;
+        const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
+        const token = await models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
+        return {oAuth2Token: token, closestAuthId};
       }
     }
 
@@ -241,13 +267,17 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   invariant(bodyBuffer, `[oauth2] No body returned from ${authentication.accessTokenUrl}`);
   const data = tryToParse(bodyBuffer.toString());
   if (!data) {
-    return null;
+    return {oAuth2Token: null, closestAuthId};
   }
-  const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
-  return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({
-    ...data,
-    refresh_token: data.refresh_token || token.refreshToken,
-  }));
+  const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
+  const oAuth2Token = await models.oAuth2Token.update(
+    old,
+    transformNewAccessTokenToOauthModel({
+      ...data,
+      refresh_token: data.refresh_token || token.refreshToken,
+    }),
+  );
+  return {oAuth2Token, closestAuthId};
 }
 
 export const oauthResponseToAccessToken = async (accessTokenUrl: string, response: Response) => {
@@ -272,7 +302,9 @@ export const oauthResponseToAccessToken = async (accessTokenUrl: string, respons
   };
 };
 
-const transformNewAccessTokenToOauthModel = (accessToken: Partial<Record<AuthKeys, string | null>>): Partial<OAuth2Token> => {
+const transformNewAccessTokenToOauthModel = (
+  accessToken: Partial<Record<AuthKeys, string | null>>,
+): Partial<OAuth2Token> => {
   const expiry = accessToken.expires_in ? +accessToken.expires_in : 0;
   return {
     // Calculate expiry date
@@ -291,21 +323,21 @@ const transformNewAccessTokenToOauthModel = (accessToken: Partial<Record<AuthKey
 };
 
 // This can be sent from a folder
-const sendAccessTokenRequest = async (requestOrGroupId: string, authentication: AuthTypeOAuth2, params: RequestParameter[], headers: RequestHeader[]) => {
+const sendAccessTokenRequest = async (
+  requestOrGroupId: string,
+  authentication: AuthTypeOAuth2,
+  params: RequestParameter[],
+  headers: RequestHeader[],
+) => {
   invariant(authentication.accessTokenUrl, 'Missing access token URL');
   console.log(`[network] Sending with settings req=${requestOrGroupId}`);
   // @TODO unpack oauth into regular timeline and remove oauth timeine dialog
-  const initializedData = isRequestGroupId(requestOrGroupId) ? await fetchRequestGroupData(requestOrGroupId) : await fetchRequestData(requestOrGroupId);
+  const initializedData = isRequestGroupId(requestOrGroupId)
+    ? await fetchRequestGroupData(requestOrGroupId)
+    : await fetchRequestData(requestOrGroupId);
 
-  const {
-    environment,
-    settings,
-    clientCertificates,
-    caCert,
-    activeEnvironmentId,
-    timelinePath,
-    responseId,
-  } = initializedData;
+  const { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId } =
+    initializedData;
 
   const defaultUserAgentHeader: RequestHeader = { name: 'User-Agent', value: `insomnia/${version}` };
   const defaultHeaders: RequestHeader[] = [
@@ -316,21 +348,22 @@ const sendAccessTokenRequest = async (requestOrGroupId: string, authentication: 
   if (!settings.disableAppVersionUserAgent) {
     defaultHeaders.push(defaultUserAgentHeader);
   }
-  const newRequest: Request = await models.initModel(models.request.type, {
-    headers: [
-      ...defaultHeaders,
-      ...headers,
-    ],
-    url: setDefaultProtocol(authentication.accessTokenUrl),
-    method: 'POST',
-    body: {
-      mimeType: 'application/x-www-form-urlencoded',
-      params,
+  const newRequest: Request = await models.initModel(
+    models.request.type,
+    {
+      headers: [...defaultHeaders, ...headers],
+      url: setDefaultProtocol(authentication.accessTokenUrl),
+      method: 'POST',
+      body: {
+        mimeType: 'application/x-www-form-urlencoded',
+        params,
+      },
     },
-  }, {
-    _id: requestOrGroupId + '.other',
-    parentId: requestOrGroupId,
-  });
+    {
+      _id: requestOrGroupId + '.other',
+      parentId: requestOrGroupId,
+    },
+  );
 
   const renderResult = await tryToInterpolateRequest({ request: newRequest, environment: environment._id });
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
@@ -348,25 +381,28 @@ const sendAccessTokenRequest = async (requestOrGroupId: string, authentication: 
   return await models.response.create(responsePatch);
 };
 export const encodePKCE = (buffer: Buffer) => {
-  return buffer.toString('base64')
-    // The characters + / = are reserved for PKCE as per the RFC,
-    // so we replace them with unreserved characters
-    // Docs: https://tools.ietf.org/html/rfc7636#section-4.2
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
+  return (
+    buffer
+      .toString('base64')
+      // The characters + / = are reserved for PKCE as per the RFC,
+      // so we replace them with unreserved characters
+      // Docs: https://tools.ietf.org/html/rfc7636#section-4.2
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '')
+  );
 };
 const tryToParse = (body: string): Record<string, any> | null => {
   try {
     return JSON.parse(body);
-  } catch (err) { }
+  } catch (err) {}
 
   try {
     // NOTE: parse does not return a JS Object, so
     //   we cannot use hasOwnProperty on it
     return querystring.parse(body);
-  } catch (err) { }
+  } catch (err) {}
   return null;
 };
 
-const insertAuthKeyIf = (name: AuthKeys, value?: string) => value ? [{ name, value }] : [];
+const insertAuthKeyIf = (name: AuthKeys, value?: string) => (value ? [{ name, value }] : []);

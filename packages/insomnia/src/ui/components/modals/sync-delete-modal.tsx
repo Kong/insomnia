@@ -4,7 +4,7 @@ import { useRouteLoaderData } from 'react-router-dom';
 
 import { strings } from '../../../common/strings';
 import { interceptAccessError } from '../../../sync/vcs/util';
-import { VCS } from '../../../sync/vcs/vcs';
+import type { VCS } from '../../../sync/vcs/vcs';
 import { Button } from '../../components/themed-button';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
@@ -25,9 +25,7 @@ export const SyncDeleteModal = ({ vcs, onHide }: Props) => {
     error: '',
     workspaceName: '',
   });
-  const {
-    activeWorkspace,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { activeWorkspace } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
 
   useEffect(() => {
     modalRef.current?.show();
@@ -59,10 +57,13 @@ export const SyncDeleteModal = ({ vcs, onHide }: Props) => {
         <ModalBody className="wide pad-left pad-right text-center" noScroll>
           {error && <p className="notice error margin-bottom-sm no-margin-top">{error}</p>}
           <p className="selectable">
-            This will permanently delete the {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>}{' '}
+            This will permanently delete the{' '}
+            {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>}{' '}
             {strings.collection.singular.toLowerCase()} remotely.
           </p>
-          <p className="selectable">Please type {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>} to confirm.</p>
+          <p className="selectable">
+            Please type {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>} to confirm.
+          </p>
           <form onSubmit={onSubmit}>
             <div className="form-control form-control--outlined">
               <input

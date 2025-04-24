@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { queryXPath } from './query';
 /**
-* @vitest-environment jsdom
-*/
+ * @vitest-environment jsdom
+ */
 describe('queryXPath()', () => {
   it('handles missing query', () => {
     expect(() => {
@@ -25,16 +25,17 @@ describe('queryXPath()', () => {
   });
 
   it('handles string query', () => {
-    expect(queryXPath('<x><y>foo</y><y>bar</y></x>', 'substring(//y[1], 2)')).toEqual([
-      { inner: 'oo', outer: 'oo' },
-    ]);
+    expect(queryXPath('<x><y>foo</y><y>bar</y></x>', 'substring(//y[1], 2)')).toEqual([{ inner: 'oo', outer: 'oo' }]);
   });
 
   it('handles text() query', () => {
-    expect(queryXPath('<book><title>Harry</title><title>Potter</title></book>', 'local-name(/book)'))
-      .toEqual([{ 'inner': 'book', 'outer': 'book' }]);
-    expect(queryXPath('<book><title>Harry</title><title>Potter</title></book>', '//title/text()'))
-      .toEqual([{ 'inner': 'Harry', 'outer': 'Harry' }, { 'inner': 'Potter', 'outer': 'Potter' }]);
+    expect(queryXPath('<book><title>Harry</title><title>Potter</title></book>', 'local-name(/book)')).toEqual([
+      { inner: 'book', outer: 'book' },
+    ]);
+    expect(queryXPath('<book><title>Harry</title><title>Potter</title></book>', '//title/text()')).toEqual([
+      { inner: 'Harry', outer: 'Harry' },
+      { inner: 'Potter', outer: 'Potter' },
+    ]);
   });
 
   it('handles invalid query', () => {

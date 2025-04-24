@@ -24,33 +24,22 @@ const getNameInitials = (name: string) => {
 
 const Avatar = ({ src, alt }: { src: string; alt: string }) => {
   const imageUrl = useAvatarImageCache(src);
-  return (
-    <img
-      alt={alt}
-      src={imageUrl}
-      className="h-full w-full aspect-square object-cover"
-      aria-label={alt}
-    />
-  );
+  return <img alt={alt} src={imageUrl} className="aspect-square h-full w-full object-cover" aria-label={alt} />;
 };
 
-export const OrganizationAvatar = ({
-  src,
-  alt,
-}: {
-  src: string;
-  alt: string;
-}) => {
+export const OrganizationAvatar = ({ src, alt }: { src: string; alt: string }) => {
   if (!src) {
     return (
-      <div className="flex items-center justify-center w-full h-full p-[--padding-md]">
-        {getNameInitials(alt)}
-      </div>
+      <div className="flex h-full w-full items-center justify-center p-[--padding-md]">{getNameInitials(alt)}</div>
     );
   }
 
   return (
-    <Suspense fallback={<div className='flex items-center justify-center w-full h-full p-[--padding-md]'>{getNameInitials(alt)}</div>}>
+    <Suspense
+      fallback={
+        <div className="flex h-full w-full items-center justify-center p-[--padding-md]">{getNameInitials(alt)}</div>
+      }
+    >
       <Avatar src={src} alt={alt} />
     </Suspense>
   );

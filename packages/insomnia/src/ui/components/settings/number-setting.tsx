@@ -24,31 +24,21 @@ export function snapNumberToLimits(value: number, min?: number, max?: number) {
   }
   return value;
 }
-export const NumberSetting: FC<Props> = ({
-  help,
-  label,
-  max,
-  min,
-  setting,
-  step = 1,
-}) => {
-  const {
-    settings,
-  } = useRootLoaderData();
+export const NumberSetting: FC<Props> = ({ help, label, max, min, setting, step = 1 }) => {
+  const { settings } = useRootLoaderData();
 
   if (!Object.prototype.hasOwnProperty.call(settings, setting)) {
     throw new Error(`Invalid setting name ${setting}`);
   }
   const patchSettings = useSettingsPatcher();
 
-  const handleOnChange = useCallback<ChangeEventHandler<HTMLInputElement>>(async ({ currentTarget: { value, min, max } }) => {
-    const updatedValue = snapNumberToLimits(
-      parseInt(value, 10) || 0,
-      parseInt(min, 10),
-      parseInt(max, 10),
-    );
-    patchSettings({ [setting]: updatedValue });
-  }, [patchSettings, setting]);
+  const handleOnChange = useCallback<ChangeEventHandler<HTMLInputElement>>(
+    async ({ currentTarget: { value, min, max } }) => {
+      const updatedValue = snapNumberToLimits(parseInt(value, 10) || 0, parseInt(min, 10), parseInt(max, 10));
+      patchSettings({ [setting]: updatedValue });
+    },
+    [patchSettings, setting],
+  );
 
   let defaultValue: string | number = settings[setting];
   if (typeof defaultValue !== 'number') {

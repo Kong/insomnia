@@ -24,13 +24,7 @@ export class SystemError extends Error {
   path: SystemErrorConstructor['path'];
   syscall: SystemErrorConstructor['syscall'];
 
-  constructor({
-    code,
-    errno,
-    message,
-    path,
-    syscall,
-  }: SystemErrorConstructor) {
+  constructor({ code, errno, message, path, syscall }: SystemErrorConstructor) {
     super(message);
 
     const error = new Error(message);

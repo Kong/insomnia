@@ -1,15 +1,26 @@
 import { appendFile } from 'node:fs/promises';
 
-import { initInsomniaObject, InsomniaObject } from 'insomnia-sdk';
-import { getNewConsole, mergeClientCertificates, mergeCookieJar, mergeRequests, mergeSettings, type RequestContext } from 'insomnia-sdk';
 import * as _ from 'lodash';
 
+import { initInsomniaObject, InsomniaObject } from '../../insomnia-scripting-environment/src/objects';
+import {
+  getNewConsole,
+  mergeClientCertificates,
+  mergeCookieJar,
+  mergeRequests,
+  mergeSettings,
+  type RequestContext,
+} from '../../insomnia-scripting-environment/src/objects';
 import { invariant } from '../src/utils/invariant';
 import { requireInterceptor } from './requireInterceptor';
 
-export const runScript = async (
-  { script, context }: { script: string; context: RequestContext },
-): Promise<RequestContext> => {
+export const runScript = async ({
+  script,
+  context,
+}: {
+  script: string;
+  context: RequestContext;
+}): Promise<RequestContext> => {
   // console.log(script);
   const scriptConsole = getNewConsole();
 
@@ -21,7 +32,7 @@ export const runScript = async (
     return result;
   };
 
-  const AsyncFunction = (async () => { }).constructor;
+  const AsyncFunction = (async () => {}).constructor;
   const executeScript = AsyncFunction(
     'insomnia',
     'require',
@@ -36,7 +47,7 @@ export const runScript = async (
     `
       const $ = insomnia;
       ${script};
-      return insomnia;`
+      return insomnia;`,
   );
 
   const mutatedInsomniaObject = await executeScript(
@@ -87,25 +98,20 @@ export const runScript = async (
     globals: mutatedContextObject.globals,
     requestTestResults: mutatedContextObject.requestTestResults,
     execution: mutatedContextObject.execution,
+    parentFolders: mutatedContextObject.parentFolders,
   };
 };
 
 // proxiedSetTimeout has to be here as callback could be an async task
-function proxiedSetTimeout(
-  callback: () => void,
-  ms?: number | undefined,
-) {
+function proxiedSetTimeout(callback: () => void, ms?: number | undefined) {
   let resolveHdl: (value: unknown) => void;
 
   new Promise(resolve => {
     resolveHdl = resolve;
   });
 
-  return setTimeout(
-    () => {
-      callback();
-      resolveHdl(null);
-    },
-    ms,
-  );
+  return setTimeout(() => {
+    callback();
+    resolveHdl(null);
+  }, ms);
 }

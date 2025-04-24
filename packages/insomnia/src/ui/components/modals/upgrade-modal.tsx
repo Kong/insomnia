@@ -17,45 +17,52 @@ export interface UpgradeModalHandle {
 }
 export const UpgradeModal = forwardRef<UpgradeModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<AskModalHandle>(null);
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: (options: UpgradeModalOptions) => {
-      const {
-        newPlan,
-        featureName,
-        title = 'Upgrade Plan',
-        yesText = 'Upgrade',
-        noText = 'Cancel',
-        color = 'surpirse',
-        isOwner,
-      } = options;
-      const planDetail = newPlan === 'team' ? 'Pro plan or above' : 'Enterprise plan';
-      const upgradeDetail = isOwner ? 'please upgrade your plan.' : 'please contact the organization owner to upgrade the plan.';
-      const message = `${featureName} is only enbaled for ${planDetail}, ${upgradeDetail}`;
-      const onDone = async (isYes: boolean) => {
-        if (isYes) {
-          window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
+  useImperativeHandle(
+    ref,
+    () => ({
+      hide: () => {
+        modalRef.current?.hide();
+      },
+      show: (options: UpgradeModalOptions) => {
+        const {
+          newPlan,
+          featureName,
+          title = 'Upgrade Plan',
+          yesText = 'Upgrade',
+          noText = 'Cancel',
+          color = 'surpirse',
+          isOwner,
+        } = options;
+        const planDetail = newPlan === 'team' ? 'Pro plan or above' : 'Enterprise plan';
+        const upgradeDetail = isOwner
+          ? 'please upgrade your plan.'
+          : 'please contact the organization owner to upgrade the plan.';
+        const message = `${featureName} is only enbaled for ${planDetail}, ${upgradeDetail}`;
+        const onDone = async (isYes: boolean) => {
+          if (isYes) {
+            window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
+          }
+        };
+        if (isOwner) {
+          modalRef.current?.show({
+            title,
+            message,
+            yesText,
+            noText,
+            color,
+            ...(isOwner && { onDone }),
+          });
+        } else {
+          modalRef.current?.show({
+            title,
+            message,
+          });
         }
-      };
-      if (isOwner) {
-        modalRef.current?.show({
-          title, message, yesText, noText, color,
-          ...(isOwner && { onDone }),
-        });
-      } else {
-        modalRef.current?.show({
-          title, message,
-        });
-      }
-    },
-  }), []);
-
-  return (
-    <AskModal
-      ref={modalRef}
-    />
+      },
+    }),
+    [],
   );
+
+  return <AskModal ref={modalRef} />;
 });
 UpgradeModal.displayName = 'UpgradeModal';

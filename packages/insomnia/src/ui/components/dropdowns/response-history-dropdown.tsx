@@ -21,19 +21,14 @@ import { TimeTag } from '../tags/time-tag';
 import { URLTag } from '../tags/url-tag';
 import { TimeFromNow } from '../time-from-now';
 
-export const ResponseHistoryDropdown = ({
-  activeResponse,
-}: { activeResponse: Response | WebSocketResponse }) => {
+export const ResponseHistoryDropdown = ({ activeResponse }: { activeResponse: Response | WebSocketResponse }) => {
   const { requestId } = useParams() as { requestId: string };
   const dropdownRef = useRef<DropdownHandle>(null);
   const patchRequestMeta = useRequestMetaPatcher();
-  const {
-    activeEnvironment,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const {
-    responses,
-    requestVersions,
-  } = useRouteLoaderData('request/:requestId') as RequestLoaderData | WebSocketRequestLoaderData;
+  const { activeEnvironment } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { responses, requestVersions } = useRouteLoaderData('request/:requestId') as
+    | RequestLoaderData
+    | WebSocketRequestLoaderData;
   const now = new Date();
   const categories: Record<string, (Response | WebSocketResponse)[]> = {
     minutes: [],
@@ -43,30 +38,40 @@ export const ResponseHistoryDropdown = ({
     other: [],
   };
 
-  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+  const { organizationId, projectId, workspaceId } = useParams<{
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  }>();
   const fetcher = useFetcher();
 
-  const handleSetActiveResponse = useCallback(async (requestId: string, activeResponse: Response | WebSocketResponse) => {
-    if (isWebSocketResponse(activeResponse)) {
-      window.main.webSocket.close({ requestId });
-    }
+  const handleSetActiveResponse = useCallback(
+    async (requestId: string, activeResponse: Response | WebSocketResponse) => {
+      if (isWebSocketResponse(activeResponse)) {
+        window.main.webSocket.close({ requestId });
+      }
 
-    if (activeResponse.requestVersionId) {
-      await models.requestVersion.restore(activeResponse.requestVersionId);
-    }
+      if (activeResponse.requestVersionId) {
+        await models.requestVersion.restore(activeResponse.requestVersionId);
+      }
 
-    await patchRequestMeta(requestId, { activeResponseId: activeResponse._id });
-  }, [patchRequestMeta]);
+      await patchRequestMeta(requestId, { activeResponseId: activeResponse._id });
+    },
+    [patchRequestMeta],
+  );
 
   const handleDeleteResponses = useCallback(async () => {
     if (isWebSocketResponse(activeResponse)) {
       window.main.webSocket.close({ requestId });
     }
-    fetcher.submit({}, {
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/response/delete-all`,
-      method: 'post',
-      encType: 'application/json',
-    });
+    fetcher.submit(
+      {},
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/response/delete-all`,
+        method: 'post',
+        encType: 'application/json',
+      },
+    );
   }, [activeResponse, fetcher, organizationId, projectId, requestId, workspaceId]);
 
   const handleDeleteResponse = useCallback(async () => {
@@ -75,22 +80,26 @@ export const ResponseHistoryDropdown = ({
         window.main.webSocket.close({ requestId });
       }
     }
-    fetcher.submit({ responseId: activeResponse._id }, {
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/response/delete`,
-      method: 'post',
-      encType: 'application/json',
-    });
+    fetcher.submit(
+      { responseId: activeResponse._id },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/response/delete`,
+        method: 'post',
+        encType: 'application/json',
+      },
+    );
   }, [activeResponse, fetcher, requestId, organizationId, projectId, workspaceId]);
 
   responses.forEach((response: Response | WebSocketResponse) => {
     const responseTime = new Date(response.created);
-    const match = Object.entries({
-      'minutes': differenceInMinutes(now, responseTime) < 5,
-      'hours': differenceInHours(now, responseTime) < 2,
-      'today': isToday(responseTime),
-      'week': isThisWeek(responseTime),
-      'other': true,
-    }).find(([, value]) => value === true)?.[0] || 'other';
+    const match =
+      Object.entries({
+        minutes: differenceInMinutes(now, responseTime) < 5,
+        hours: differenceInHours(now, responseTime) < 2,
+        today: isToday(responseTime),
+        week: isThisWeek(responseTime),
+        other: true,
+      }).find(([, value]) => value === true)?.[0] || 'other';
     categories[match].push(response);
   });
 
@@ -98,19 +107,18 @@ export const ResponseHistoryDropdown = ({
     const activeResponseId = activeResponse ? activeResponse._id : 'n/a';
     const active = response._id === activeResponseId;
     const requestVersion = requestVersions.find(({ _id }) => _id === response.requestVersionId);
-    const request = requestVersion ? decompressObject<Request | WebSocketRequest>(requestVersion.compressedRequest) : null;
+    const request = requestVersion
+      ? decompressObject<Request | WebSocketRequest>(requestVersion.compressedRequest)
+      : null;
 
     return (
-      <DropdownItem
-        key={response._id}
-        aria-label={response._id}
-      >
+      <DropdownItem key={response._id} aria-label={response._id}>
         <ItemContent
           isDisabled={active}
           icon={active ? 'thumb-track' : 'empty'}
           onClick={() => handleSetActiveResponse(requestId, response)}
           label={
-            <div className='leading-10'>
+            <div className="leading-10">
               <StatusTag
                 small
                 statusCode={response.statusCode}
@@ -132,12 +140,14 @@ export const ResponseHistoryDropdown = ({
                   tooltipDelay={1000}
                 />
               )}
-              {!response.requestVersionId ?
+              {!response.requestVersionId ? (
                 <i
                   className="icon fa fa-info-circle"
-                  title={'Request will not be restored with this response because it was created before this ability was added'}
+                  title={
+                    'Request will not be restored with this response because it was created before this ability was added'
+                  }
                 />
-                : null}
+              ) : null}
             </div>
           }
         />
@@ -171,56 +181,37 @@ export const ResponseHistoryDropdown = ({
     >
       <DropdownSection
         aria-label={`${environmentName} Responses`}
-        title={<span><strong>{environmentName}</strong> Responses</span>}
+        title={
+          <span>
+            <strong>{environmentName}</strong> Responses
+          </span>
+        }
       >
-        <DropdownItem aria-label='Delete Current Response'>
-          <ItemContent
-            icon="trash-o"
-            label="Delete Current Response"
-            onClick={handleDeleteResponse}
-          />
+        <DropdownItem aria-label="Delete Current Response">
+          <ItemContent icon="trash-o" label="Delete Current Response" onClick={handleDeleteResponse} />
         </DropdownItem>
-        <DropdownItem aria-label='Clear History'>
-          <ItemContent
-            icon="trash-o"
-            label="Clear History"
-            onClick={handleDeleteResponses}
-          />
+        <DropdownItem aria-label="Clear History">
+          <ItemContent icon="trash-o" label="Clear History" onClick={handleDeleteResponses} />
         </DropdownItem>
       </DropdownSection>
 
-      <DropdownSection
-        aria-label='Minutes Section'
-        title="Just Now"
-      >
+      <DropdownSection aria-label="Minutes Section" title="Just Now">
         {categories.minutes.map(renderResponseRow)}
       </DropdownSection>
 
-      <DropdownSection
-        aria-label='Hours Section'
-        title="Less Than Two Hours Ago"
-      >
+      <DropdownSection aria-label="Hours Section" title="Less Than Two Hours Ago">
         {categories.hours.map(renderResponseRow)}
       </DropdownSection>
 
-      <DropdownSection
-        aria-label='Today Section'
-        title="Today"
-      >
+      <DropdownSection aria-label="Today Section" title="Today">
         {categories.today.map(renderResponseRow)}
       </DropdownSection>
 
-      <DropdownSection
-        aria-label='Week Section'
-        title="This Week"
-      >
+      <DropdownSection aria-label="Week Section" title="This Week">
         {categories.week.map(renderResponseRow)}
       </DropdownSection>
 
-      <DropdownSection
-        aria-label='Other Section'
-        title="Older Than This Week"
-      >
+      <DropdownSection aria-label="Other Section" title="Older Than This Week">
         {categories.other.map(renderResponseRow)}
       </DropdownSection>
     </Dropdown>

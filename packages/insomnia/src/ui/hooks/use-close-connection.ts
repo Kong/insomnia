@@ -9,7 +9,6 @@ import uiEventBus from '../eventBus';
 
 // this hook is use for control when to close connections(websocket & SSE & grpc stream & graphql subscription)
 export const useCloseConnection = ({ organizationId }: { organizationId: string }) => {
-
   const closeConnectionById = async (id: string) => {
     if (isGrpcRequestId(id)) {
       window.main.grpc.cancel(id);
@@ -41,14 +40,17 @@ export const useCloseConnection = ({ organizationId }: { organizationId: string 
 
   const { currentOrgTabs } = useInsomniaTabContext();
 
-  const handleActiveEnvironmentChange = useCallback((workspaceId: string) => {
-    const { tabList } = currentOrgTabs;
-    const tabs = tabList.filter(tab => tab.workspaceId === workspaceId);
-    tabs.forEach(async tab => {
-      const id = tab.id;
-      await closeConnectionById(id);
-    });
-  }, [currentOrgTabs]);
+  const handleActiveEnvironmentChange = useCallback(
+    (workspaceId: string) => {
+      const { tabList } = currentOrgTabs;
+      const tabs = tabList.filter(tab => tab.workspaceId === workspaceId);
+      tabs.forEach(async tab => {
+        const id = tab.id;
+        await closeConnectionById(id);
+      });
+    },
+    [currentOrgTabs],
+  );
 
   useEffect(() => {
     uiEventBus.on('CLOSE_TAB', handleTabClose);

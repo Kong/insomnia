@@ -12,13 +12,7 @@ import {
   SelectValue,
   useDragAndDrop,
 } from 'react-aria-components';
-import {
-  type LoaderFunction,
-  redirect,
-  useFetcher,
-  useParams,
-  useRouteLoaderData,
-} from 'react-router-dom';
+import { type LoaderFunction, redirect, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { database } from '../../common/database';
 import { documentationLinks } from '../../common/documentation';
@@ -29,31 +23,21 @@ import type { UnitTest } from '../../models/unit-test';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { isWebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
-import {
-  CodeEditor,
-  type CodeEditorHandle,
-} from '../components/codemirror/code-editor';
+import { CodeEditor, type CodeEditorHandle } from '../components/codemirror/code-editor';
 import { EditableInput } from '../components/editable-input';
 import { Icon } from '../components/icon';
 import { showModal } from '../components/modals';
 import { AskModal } from '../components/modals/ask-modal';
 import { getMethodShortHand } from '../components/tags/method-tag';
 
-const UnitTestItemView = ({
-  unitTest,
-}: {
-  unitTest: UnitTest;
-  testsRunning: boolean;
-}) => {
+const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: boolean }) => {
   const editorRef = useRef<CodeEditorHandle>(null);
   const { projectId, workspaceId, organizationId } = useParams() as {
     workspaceId: string;
     projectId: string;
     organizationId: string;
   };
-  const { unitTestSuite, requests } = useRouteLoaderData(
-    ':testSuiteId'
-  ) as LoaderData;
+  const { unitTestSuite, requests } = useRouteLoaderData(':testSuiteId') as LoaderData;
 
   const deleteUnitTestFetcher = useFetcher();
   const runTestFetcher = useFetcher();
@@ -79,17 +63,17 @@ const UnitTestItemView = ({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="p-[--padding-sm] flex-shrink-0 overflow-hidden">
-      <div className="flex items-center gap-2 w-full" title={unitTest.name}>
+    <div className="flex-shrink-0 overflow-hidden p-[--padding-sm]">
+      <div className="flex w-full items-center gap-2" title={unitTest.name}>
         <Button
-          className="flex flex-shrink-0 flex-nowrap items-center justify-center aspect-square h-8 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className="flex aspect-square h-8 flex-shrink-0 flex-nowrap items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
           onPress={() => setIsOpen(!isOpen)}
         >
           <Icon icon={isOpen ? 'chevron-down' : 'chevron-right'} />
         </Button>
         <Heading className="flex-1 truncate">
           <EditableInput
-            className='w-full px-1'
+            className="w-full px-1"
             onSubmit={name => {
               if (name) {
                 updateUnitTestFetcher.submit(
@@ -100,7 +84,7 @@ const UnitTestItemView = ({
                     action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
                     method: 'POST',
                     encType: 'application/json',
-                  }
+                  },
                 );
               }
             }}
@@ -119,13 +103,16 @@ const UnitTestItemView = ({
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
                 method: 'post',
                 encType: 'application/json',
-              }
+              },
             );
           }}
           selectedKey={unitTest.requestId}
         >
-          <Button aria-label='Select a request' className="px-4 py-1 flex flex-1 h-8 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-            <SelectValue<Request> className="flex truncate items-center justify-center gap-2">
+          <Button
+            aria-label="Select a request"
+            className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          >
+            <SelectValue<Request> className="flex items-center justify-center gap-2 truncate">
               {({ isPlaceholder, selectedItem: request }) => {
                 if (isPlaceholder || !request) {
                   return <span>Select a request</span>;
@@ -135,29 +122,28 @@ const UnitTestItemView = ({
                   <Fragment>
                     {isRequest(request) && (
                       <span
-                        className={
-                          `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
-                              ${{
-                            'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
-                            'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
-                            'HEAD': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
-                            'OPTIONS': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
-                            'DELETE': 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
-                            'PUT': 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
-                            'PATCH': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
-                          }[request.method] || 'text-[--color-font] bg-[--hl-md]'}`
-                        }
+                        className={`flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] text-[0.65rem] ${
+                          {
+                            GET: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-[--color-font-surprise]',
+                            POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-[--color-font-success]',
+                            HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-[--color-font-info]',
+                            OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-[--color-font-info]',
+                            DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-[--color-font-danger]',
+                            PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-[--color-font-warning]',
+                            PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-[--color-font-notice]',
+                          }[request.method] || 'bg-[--hl-md] text-[--color-font]'
+                        }`}
                       >
                         {getMethodShortHand(request)}
                       </span>
                     )}
                     {isWebSocketRequest(request) && (
-                      <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+                      <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-[--color-font-notice]">
                         WS
                       </span>
                     )}
                     {isGrpcRequest(request) && (
-                      <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
+                      <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-[--color-font-info]">
                         gRPC
                       </span>
                     )}
@@ -168,18 +154,18 @@ const UnitTestItemView = ({
             </SelectValue>
             <Icon icon="caret-down" />
           </Button>
-          <Popover className="min-w-max overflow-y-hidden flex flex-col">
+          <Popover className="flex min-w-max flex-col overflow-y-hidden">
             <ListBox
               items={requests.map(request => ({
                 ...request,
                 id: request._id,
                 key: request._id,
               }))}
-              className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto focus:outline-none"
+              className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
             >
               {request => (
                 <ListBoxItem
-                  className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                  className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold"
                   aria-label={request.name}
                   textValue={request.name}
                   value={request}
@@ -188,39 +174,33 @@ const UnitTestItemView = ({
                     <Fragment>
                       {isRequest(request) && (
                         <span
-                          className={
-                            `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
-                            ${{
-                              'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
-                              'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
-                              'HEAD': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
-                              'OPTIONS': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
-                              'DELETE': 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
-                              'PUT': 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
-                              'PATCH': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
-                            }[request.method] || 'text-[--color-font] bg-[--hl-md]'}`
-                          }
+                          className={`flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] text-[0.65rem] ${
+                            {
+                              GET: 'bg-[rgba(var(--color-surprise-rgb),0.5)] text-[--color-font-surprise]',
+                              POST: 'bg-[rgba(var(--color-success-rgb),0.5)] text-[--color-font-success]',
+                              HEAD: 'bg-[rgba(var(--color-info-rgb),0.5)] text-[--color-font-info]',
+                              OPTIONS: 'bg-[rgba(var(--color-info-rgb),0.5)] text-[--color-font-info]',
+                              DELETE: 'bg-[rgba(var(--color-danger-rgb),0.5)] text-[--color-font-danger]',
+                              PUT: 'bg-[rgba(var(--color-warning-rgb),0.5)] text-[--color-font-warning]',
+                              PATCH: 'bg-[rgba(var(--color-notice-rgb),0.5)] text-[--color-font-notice]',
+                            }[request.method] || 'bg-[--hl-md] text-[--color-font]'
+                          }`}
                         >
                           {getMethodShortHand(request)}
                         </span>
                       )}
                       {isWebSocketRequest(request) && (
-                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+                        <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-[--color-font-notice]">
                           WS
                         </span>
                       )}
                       {isGrpcRequest(request) && (
-                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
+                        <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-info-rgb),0.5)] text-[0.65rem] text-[--color-font-info]">
                           gRPC
                         </span>
                       )}
                       <span>{request.name || request.url || 'Untitled request'}</span>
-                      {isSelected && (
-                        <Icon
-                          icon="check"
-                          className="text-[--color-success] justify-self-end"
-                        />
-                      )}
+                      {isSelected && <Icon icon="check" className="justify-self-end text-[--color-success]" />}
                     </Fragment>
                   )}
                 </ListBoxItem>
@@ -229,7 +209,7 @@ const UnitTestItemView = ({
           </Popover>
         </Select>
         <Button
-          className="flex flex-shrink-0 items-center justify-center aspect-square h-8 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className="flex aspect-square h-8 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
           onPress={() => {
             showModal(AskModal, {
               title: 'Delete Test',
@@ -244,7 +224,7 @@ const UnitTestItemView = ({
                     {
                       action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/delete`,
                       method: 'POST',
-                    }
+                    },
                   );
                 }
               },
@@ -254,14 +234,14 @@ const UnitTestItemView = ({
           <Icon icon="trash" />
         </Button>
         <Button
-          className="flex flex-shrink-0 items-center justify-center aspect-square h-8 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className="flex aspect-square h-8 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
           onPress={() => {
             runTestFetcher.submit(
               {},
               {
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/run`,
                 method: 'post',
-              }
+              },
             );
           }}
         >
@@ -281,9 +261,7 @@ const UnitTestItemView = ({
               .split('const ')
               .filter(x => x)
               .map(x => x.split(' ')[0]);
-            const numbers = variables
-              .map(x => parseInt(x.match(/(\d+)/)?.[0] || ''))
-              ?.filter(x => !isNaN(x));
+            const numbers = variables.map(x => parseInt(x.match(/(\d+)/)?.[0] || ''))?.filter(x => !isNaN(x));
             const highestNumberedConstant = Math.max(...numbers);
             const variableName = 'response' + (highestNumberedConstant + 1);
             return [
@@ -291,8 +269,7 @@ const UnitTestItemView = ({
                 name: 'Send: Current request',
                 displayValue: '',
                 value:
-                  `const ${variableName} = await insomnia.send();\n` +
-                  `expect(${variableName}.status).to.equal(200);`,
+                  `const ${variableName} = await insomnia.send();\n` + `expect(${variableName}.status).to.equal(200);`,
               },
               ...requests.map(({ name, _id }) => ({
                 name: `Send: ${name}`,
@@ -313,7 +290,7 @@ const UnitTestItemView = ({
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
                 method: 'post',
                 encType: 'application/json',
-              }
+              },
             )
           }
           mode="javascript"
@@ -332,13 +309,11 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
 
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
   if (workspaceMeta?.activeUnitTestSuiteId) {
-    const unitTestSuite = await models.unitTestSuite.getById(
-      workspaceMeta.activeUnitTestSuiteId
-    );
+    const unitTestSuite = await models.unitTestSuite.getById(workspaceMeta.activeUnitTestSuiteId);
 
     if (unitTestSuite) {
       return redirect(
-        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}`
+        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}`,
       );
     }
   }
@@ -346,7 +321,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
   const unitTestSuites = await models.unitTestSuite.findByParentId(workspaceId);
   if (unitTestSuites.length > 0) {
     return redirect(
-      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuites[0]._id}`
+      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuites[0]._id}`,
     );
   }
   return null;
@@ -357,9 +332,7 @@ interface LoaderData {
   unitTestSuite: UnitTestSuite;
   requests: Request[];
 }
-export const loader: LoaderFunction = async ({
-  params,
-}): Promise<LoaderData> => {
+export const loader: LoaderFunction = async ({ params }): Promise<LoaderData> => {
   const { workspaceId, testSuiteId } = params;
 
   invariant(workspaceId, 'Workspace ID is required');
@@ -367,7 +340,10 @@ export const loader: LoaderFunction = async ({
 
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
-  const workspaceEntities = await database.withDescendants(workspace, models.request.type, [models.request.type, models.requestGroup.type]);
+  const workspaceEntities = await database.withDescendants(workspace, models.request.type, [
+    models.request.type,
+    models.requestGroup.type,
+  ]);
   const requests: Request[] = workspaceEntities.filter(isRequest);
 
   const unitTestSuite = await database.getWhere<UnitTestSuite>(models.unitTestSuite.type, {
@@ -391,7 +367,7 @@ export const loader: LoaderFunction = async ({
     },
     {
       metaSortKey: 1,
-    }
+    },
   );
 
   return {
@@ -408,9 +384,7 @@ const TestSuiteRoute = () => {
     workspaceId: string;
     testSuiteId: string;
   };
-  const { unitTestSuite, unitTests } = useRouteLoaderData(
-    ':testSuiteId'
-  ) as LoaderData;
+  const { unitTestSuite, unitTests } = useRouteLoaderData(':testSuiteId') as LoaderData;
 
   const createUnitTestFetcher = useFetcher();
   const runAllTestsFetcher = useFetcher();
@@ -419,12 +393,13 @@ const TestSuiteRoute = () => {
 
   const testsRunning = runAllTestsFetcher.state === 'submitting';
 
-  const optimisticUpdateTestSuiteName = updateTestSuiteFetcher.json && typeof updateTestSuiteFetcher.json === 'object' &&
-    'name' in updateTestSuiteFetcher.json && updateTestSuiteFetcher.json?.name?.toString();
+  const optimisticUpdateTestSuiteName =
+    updateTestSuiteFetcher.json &&
+    typeof updateTestSuiteFetcher.json === 'object' &&
+    'name' in updateTestSuiteFetcher.json &&
+    updateTestSuiteFetcher.json?.name?.toString();
 
-  const testSuiteName =
-    optimisticUpdateTestSuiteName ||
-    unitTestSuite.name;
+  const testSuiteName = optimisticUpdateTestSuiteName || unitTestSuite.name;
 
   const unitTestsDragAndDrop = useDragAndDrop({
     getItems: keys => [...keys].map(key => ({ 'text/plain': key.toString() })),
@@ -462,25 +437,23 @@ const TestSuiteRoute = () => {
           action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${sourceTest._id}/update`,
           method: 'POST',
           encType: 'application/json',
-        }
+        },
       );
     },
     renderDropIndicator(target) {
-      return (
-        <DropIndicator
-          target={target}
-          className="outline-[--color-surprise] outline-1 outline !border-none"
-        />
-      );
+      return <DropIndicator target={target} className="!border-none outline outline-1 outline-[--color-surprise]" />;
     },
   });
 
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden divide-solid divide-y divide-[--hl-md]" title={testSuiteName}>
-      <div className="flex h-[--line-height-sm] flex-shrink-0 gap-2 items-center px-[--padding-md]">
-        <Heading className="text-lg flex-shrink-0 flex items-center gap-2 w-full truncate flex-1">
+    <div
+      className="flex h-full w-full flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden"
+      title={testSuiteName}
+    >
+      <div className="flex h-[--line-height-sm] flex-shrink-0 items-center gap-2 px-[--padding-md]">
+        <Heading className="flex w-full flex-1 flex-shrink-0 items-center gap-2 truncate text-lg">
           <EditableInput
-            className='w-full px-1'
+            className="w-full px-1"
             onSubmit={name =>
               name &&
               updateTestSuiteFetcher.submit(
@@ -489,7 +462,7 @@ const TestSuiteRoute = () => {
                   action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/update`,
                   method: 'POST',
                   encType: 'application/json',
-                }
+                },
               )
             }
             value={testSuiteName}
@@ -497,7 +470,7 @@ const TestSuiteRoute = () => {
         </Heading>
         <Button
           aria-label="New test"
-          className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className="flex items-center justify-center gap-2 rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
           onPress={() =>
             createUnitTestFetcher.submit(
               {
@@ -506,7 +479,7 @@ const TestSuiteRoute = () => {
               {
                 method: 'POST',
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/new`,
-              }
+              },
             )
           }
         >
@@ -515,14 +488,14 @@ const TestSuiteRoute = () => {
         </Button>
         <Button
           aria-label="Run all tests"
-          className={`px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm ${testsRunning ? 'animate-pulse' : ''}`}
+          className={`flex items-center justify-center gap-2 rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] ${testsRunning ? 'animate-pulse' : ''}`}
           onPress={() => {
             runAllTestsFetcher.submit(
               {},
               {
                 method: 'POST',
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/run-all-tests`,
-              }
+              },
             );
           }}
         >
@@ -531,22 +504,20 @@ const TestSuiteRoute = () => {
         </Button>
       </div>
       {unitTests.length === 0 && (
-        <div className="h-full w-full flex-1 overflow-y-auto divide-solid divide-y divide-[--hl-md] p-[--padding-md] flex flex-col items-center gap-2 overflow-hidden text-[--hl-lg]">
-          <Heading className="text-lg p-[--padding-sm] font-bold flex-1 flex items-center flex-col gap-2">
-            <Icon icon="vial" className="flex-1 w-28" />
+        <div className="flex h-full w-full flex-1 flex-col items-center gap-2 divide-y divide-solid divide-[--hl-md] overflow-hidden overflow-y-auto p-[--padding-md] text-[--hl-lg]">
+          <Heading className="flex flex-1 flex-col items-center gap-2 p-[--padding-sm] text-lg font-bold">
+            <Icon icon="vial" className="w-28 flex-1" />
             <span>Add unit tests to verify your API</span>
           </Heading>
-          <div className="flex-1 w-full flex flex-col justify-evenly items-center gap-2 p-[--padding-sm]">
+          <div className="flex w-full flex-1 flex-col items-center justify-evenly gap-2 p-[--padding-sm]">
             <p className="flex items-center gap-2">
               <Icon icon="lightbulb" />
-              <span className="truncate">
-                You can run these tests in CI with Inso CLI
-              </span>
+              <span className="truncate">You can run these tests in CI with Inso CLI</span>
             </p>
             <ul className="flex flex-col gap-2">
               <li>
                 <a
-                  className="font-bold flex items-center gap-2 text-sm hover:text-[--hl] focus:text-[--hl] transition-colors"
+                  className="flex items-center gap-2 text-sm font-bold transition-colors hover:text-[--hl] focus:text-[--hl]"
                   href={documentationLinks.unitTesting.url}
                 >
                   <span className="truncate">Unit testing in Insomnia</span>
@@ -555,7 +526,7 @@ const TestSuiteRoute = () => {
               </li>
               <li>
                 <a
-                  className="font-bold flex items-center gap-2 text-sm hover:text-[--hl] focus:text-[--hl] transition-colors"
+                  className="flex items-center gap-2 text-sm font-bold transition-colors hover:text-[--hl] focus:text-[--hl]"
                   href={documentationLinks.introductionToInsoCLI.url}
                 >
                   <span className="truncate">Introduction to Inso CLI</span>
@@ -568,22 +539,19 @@ const TestSuiteRoute = () => {
       )}
       {unitTests.length > 0 && (
         <GridList
-          aria-label='Unit tests'
+          aria-label="Unit tests"
           dragAndDropHooks={unitTestsDragAndDrop.dragAndDropHooks}
           items={unitTests.map(unitTest => ({
             ...unitTest,
             id: unitTest._id,
             key: unitTest._id,
           }))}
-          className="flex-1 flex flex-col divide-y divide-solid divide-[--hl-md] overflow-y-auto"
+          className="flex flex-1 flex-col divide-y divide-solid divide-[--hl-md] overflow-y-auto"
         >
           {unitTest => (
             <GridListItem textValue={unitTest.name} className="outline-none">
               <Button slot="drag" className="hidden" />
-              <UnitTestItemView
-                unitTest={unitTest}
-                testsRunning={testsRunning}
-              />
+              <UnitTestItemView unitTest={unitTest} testsRunning={testsRunning} />
             </GridListItem>
           )}
         </GridList>

@@ -29,9 +29,7 @@ export default class BaseExtension {
     this._ext = ext;
     this._plugin = plugin;
     const tag = this.getTag();
-    this.tags = [
-      ...(tag === null ? [] : [tag]),
-    ];
+    this.tags = [...(tag === null ? [] : [tag])];
   }
 
   getTag() {
@@ -51,10 +49,7 @@ export default class BaseExtension {
   }
 
   getLiveDisplayName() {
-    return (
-      this._ext?.liveDisplayName ||
-      (() => '')
-    );
+    return this._ext?.liveDisplayName || (() => '');
   }
 
   getDisablePreview() {
@@ -264,8 +259,10 @@ export default class BaseExtension {
               const latest = await resp.json();
               return latest;
             },
-            getBodyBuffer: async (response?: { bodyPath?: string; bodyCompression?: 'zip' | null | '__NEEDS_MIGRATION__' | undefined },
-              readFailureValue?: string) => {
+            getBodyBuffer: async (
+              response?: { bodyPath?: string; bodyCompression?: 'zip' | null | '__NEEDS_MIGRATION__' | undefined },
+              readFailureValue?: string,
+            ) => {
               const resp = await fetch('insomnia-templating-worker-database://response.getBodyBuffer', {
                 method: 'post',
                 body: JSON.stringify({ response, readFailureValue }),

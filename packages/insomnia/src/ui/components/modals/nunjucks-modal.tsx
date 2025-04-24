@@ -34,24 +34,28 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
   const [state, setState] = useState<State>({
     isTag: false,
     template: '',
-    onDone: () => { },
+    onDone: () => {},
     editorId: '',
   });
 
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: ({ onDone, template, editorId }) => {
-      setState({
-        isTag: template.indexOf('{%') === 0,
-        template,
-        onDone,
-        editorId,
-      });
-      modalRef.current?.show();
-    },
-  }), []);
+  useImperativeHandle(
+    ref,
+    () => ({
+      hide: () => {
+        modalRef.current?.hide();
+      },
+      show: ({ onDone, template, editorId }) => {
+        setState({
+          isTag: template.indexOf('{%') === 0,
+          template,
+          onDone,
+          editorId,
+        });
+        modalRef.current?.show();
+      },
+    }),
+    [],
+  );
 
   const handleTemplateChange = (template: string) => {
     setState(state => ({
@@ -65,7 +69,14 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
   const title = isTag ? 'Tag' : 'Variable';
   let editor: JSX.Element | null = null;
   if (isTag) {
-    editor = <TagEditor onChange={handleTemplateChange} defaultValue={template} workspace={workspace} editorId={state.editorId} />;
+    editor = (
+      <TagEditor
+        onChange={handleTemplateChange}
+        defaultValue={template}
+        workspace={workspace}
+        editorId={state.editorId}
+      />
+    );
   } else {
     editor = <VariableEditor onChange={handleTemplateChange} defaultValue={template} />;
   }
@@ -88,7 +99,9 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
             event.preventDefault();
             modalRef.current?.hide();
           }}
-        >{editor}</form>
+        >
+          {editor}
+        </form>
       </ModalBody>
       <ModalFooter>
         <button className="btn" onClick={() => modalRef.current?.hide()}>

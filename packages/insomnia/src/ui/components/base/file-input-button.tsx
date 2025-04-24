@@ -18,7 +18,7 @@ export const FileInputButton = (props: Props) => {
   const { showFileName, showFileIcon, path, name, onChange, itemtypes, extensions, disabled, ...extraProps } = props;
   // NOTE: Basename fails if path is not a string, so let's make sure it is
   const fileName = typeof path === 'string' ? pathBasename(path) : null;
-  const _handleChooseFile =  useCallback(async () => {
+  const _handleChooseFile = useCallback(async () => {
     const { canceled, filePath } = await selectFileOrFolder({
       itemTypes: itemtypes,
       extensions,
@@ -32,13 +32,7 @@ export const FileInputButton = (props: Props) => {
     onChange(filePath);
   }, [extensions, itemtypes, onChange]);
   return (
-    <button
-      type="button"
-      onClick={_handleChooseFile}
-      title={path}
-      disabled={disabled}
-      {...extraProps}
-    >
+    <button type="button" onClick={_handleChooseFile} title={path} disabled={disabled} {...extraProps}>
       {showFileIcon && <i className="fa fa-file-o space-right" />}
       {showFileName && fileName ? `${fileName}` : `Choose ${name || 'File'}`}
     </button>

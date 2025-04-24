@@ -1180,7 +1180,7 @@ button {
   color: var(--color-notice) !important;
 }
 .method-grpc {
-  color: #2FA3A3 !important;
+  color: #2fa3a3 !important;
 }
 .warning,
 .http-method-PUT {
@@ -1307,10 +1307,10 @@ html {
   font-size: var(--font-size-xxl) !important;
 }
 html {
-  --font-monospace: Menlo, Monaco, Consolas, 'Droid Sans Mono', 'Courier New', monospace,
-    'Droid Sans Fallback';
-  --font-default: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', 'HelveticaNeue-Light',
-    'Ubuntu', 'Droid Sans', sans-serif;
+  --font-monospace: Menlo, Monaco, Consolas, 'Droid Sans Mono', 'Courier New', monospace, 'Droid Sans Fallback';
+  --font-default:
+    -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', 'HelveticaNeue-Light', 'Ubuntu', 'Droid Sans',
+    sans-serif;
   --font-ligatures: normal;
 }
 /* Components */
@@ -1487,7 +1487,7 @@ html {
 
 /* Get the child div element that is inside .Codemirror-scroll, between the elements with class .CodeMirror-sizer and CodeMirror-gutters */
 .editor.editor--single-line .CodeMirror-scroll > div:has(+ .CodeMirror-gutters, + .CodeMirror-sizer) {
-  height: 0!important;
+  height: 0 !important;
 }
 
 .editor.editor--single-line .nunjucks-tag {
@@ -1500,7 +1500,7 @@ html {
 }
 
 .editor.editor--environment-inline .editor--environment-inline-focus {
-  position: absolute!important;
+  position: absolute !important;
   top: 0.25rem;
   background: var(--color-bg);
   z-index: 50;
@@ -1687,7 +1687,7 @@ html {
   border-left: 1px solid var(--color-font);
 }
 
-[theme="default"] .editor .CodeMirror-foldmarker {
+[theme='default'] .editor .CodeMirror-foldmarker {
   color: var(--color-font-surprise);
 }
 .editor .CodeMirror-foldmarker {
@@ -1708,12 +1708,12 @@ html {
 .editor .cm-qualifier {
   color: var(--color-font);
 }
-[theme="default"] .editor .cm-atom,
-[theme="default"] .editor .cm-number,
-[theme="default"] .editor .cm-keyword,
-[theme="default"] .editor .cm-variable-3,
-[theme="default"] .editor .cm-link,
-[theme="default"] .editor .cm-header {
+[theme='default'] .editor .cm-atom,
+[theme='default'] .editor .cm-number,
+[theme='default'] .editor .cm-keyword,
+[theme='default'] .editor .cm-variable-3,
+[theme='default'] .editor .cm-link,
+[theme='default'] .editor .cm-header {
   color: var(--color-font-surprise);
 }
 .editor .cm-atom {
@@ -1902,7 +1902,9 @@ html {
   display: grid;
   height: 100%;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: minmax(0%, min-content) minmax(50%, 1fr) min-content min-content min-content minmax(0%, min-content) min-content;
+  grid-template-rows:
+    minmax(0%, min-content) minmax(50%, 1fr) min-content min-content min-content minmax(0%, min-content)
+    min-content;
 }
 .graphql-editor > h2 {
   color: var(--hl);
@@ -1971,8 +1973,8 @@ html {
   margin: var(--padding-xs) 0 var(--padding-sm) 0;
 }
 
-[theme="default"] .CodeMirror-info .type-name,
-[theme="default"] .CodeMirror-info .arg-name {
+[theme='default'] .CodeMirror-info .type-name,
+[theme='default'] .CodeMirror-info .arg-name {
   color: var(--color-font-surprise);
 }
 
@@ -2377,13 +2379,13 @@ input.editable {
 .markdown-preview__content .hljs .hljs-tag .hljs-attr {
   color: var(--color-surprise);
 }
-[theme="default"] .markdown-preview__content .hljs .hljs-literal,
-[theme="default"] .markdown-preview__content .hljs .hljs-template-variable,
-[theme="default"] .markdown-preview__content .hljs .hljs-built_in,
-[theme="default"] .markdown-preview__content .hljs .hljs-keyword,
-[theme="default"] .markdown-preview__content .hljs .hljs-builtin-name,
-[theme="default"] .markdown-preview__content .hljs .hljs-type,
-[theme="default"] .markdown-preview__content .hljs .hljs-tag .hljs-attr {
+[theme='default'] .markdown-preview__content .hljs .hljs-literal,
+[theme='default'] .markdown-preview__content .hljs .hljs-template-variable,
+[theme='default'] .markdown-preview__content .hljs .hljs-built_in,
+[theme='default'] .markdown-preview__content .hljs .hljs-keyword,
+[theme='default'] .markdown-preview__content .hljs .hljs-builtin-name,
+[theme='default'] .markdown-preview__content .hljs .hljs-type,
+[theme='default'] .markdown-preview__content .hljs .hljs-tag .hljs-attr {
   color: var(--color-surprise);
 }
 .markdown-preview__content .hljs .hljs-symbol,
@@ -3178,7 +3180,15 @@ input.editable {
 .sidebar .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
   padding-left: calc(var(--padding-sm) + var(--padding-md) * 5);
 }
-.sidebar .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__list .sidebar__clickable {
+.sidebar
+  .sidebar__list
+  .sidebar__list
+  .sidebar__list
+  .sidebar__list
+  .sidebar__list
+  .sidebar__list
+  .sidebar__list
+  .sidebar__clickable {
   padding-left: calc(var(--padding-sm) + var(--padding-md) * 6);
 }
 .sidebar .sidebar__expand {
@@ -3359,7 +3369,11 @@ input.editable {
   display: grid;
   grid-template-columns: auto auto;
   grid-template-rows: auto;
-  transition: opacity 200ms, right 300ms, bottom 300ms, transform 200ms ease-out;
+  transition:
+    opacity 200ms,
+    right 300ms,
+    bottom 300ms,
+    transform 200ms ease-out;
   padding: var(--padding-sm);
   transform: scale(0.8);
   border-radius: var(--radius-md);

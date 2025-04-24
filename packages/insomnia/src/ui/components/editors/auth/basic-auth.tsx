@@ -12,7 +12,7 @@ export const BasicAuth: FC<{ disabled?: boolean }> = ({ disabled = false }) => (
     <AuthToggleRow
       label="Use ISO 8859-1"
       help="Check this to use ISO-8859-1 encoding instead of default UTF-8"
-      property='useISO88591'
+      property="useISO88591"
       disabled={disabled}
     />
   </AuthTableBody>

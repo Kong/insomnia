@@ -31,7 +31,9 @@ const AvatarImage = ({ src, alt, size }: { src: string; alt: string; size: 'smal
       src={imageUrl}
       width={size === 'small' ? 20 : 24}
       height={size === 'small' ? 20 : 24}
-      className={'border-2 bounce-in border-solid border-[--color-bg] box-border outline-none rounded-full object-cover object-center bg-[--hl]'}
+      className={
+        'bounce-in box-border rounded-full border-2 border-solid border-[--color-bg] bg-[--hl] object-cover object-center outline-none'
+      }
     />
   );
 };
@@ -39,7 +41,7 @@ const AvatarImage = ({ src, alt, size }: { src: string; alt: string; size: 'smal
 const AvatarPlaceholder = ({ size, children }: { size: 'small' | 'medium'; children: ReactNode }) => {
   return (
     <div
-      className={`border-2 border-solid border-[--color-bg] box-border outline-none rounded-full object-cover object-center bg-cover bg-center m-0 bg-[--color-surprise] text-[--color-font-surprise] ${size === 'small' ? 'w-[20px] h-[20px]' : 'w-[24px] h-[24px]'} flex items-center justify-center font-bold text-xs`}
+      className={`m-0 box-border rounded-full border-2 border-solid border-[--color-bg] bg-[--color-surprise] bg-cover bg-center object-cover object-center text-[--color-font-surprise] outline-none ${size === 'small' ? 'h-[20px] w-[20px]' : 'h-[24px] w-[24px]'} flex items-center justify-center text-xs font-bold`}
     >
       {children}
     </div>
@@ -49,27 +51,29 @@ const AvatarPlaceholder = ({ size, children }: { size: 'small' | 'medium'; child
 export const Avatar = ({ src, alt, size = 'medium' }: { src: string; alt: string; size?: 'small' | 'medium' }) => {
   return src ? (
     <Suspense fallback={<AvatarPlaceholder size={size}>{getNameInitials(alt)}</AvatarPlaceholder>}>
-      <AvatarImage
-        src={src}
-        alt={alt}
-        size={size}
-      />
+      <AvatarImage src={src} alt={alt} size={size} />
     </Suspense>
   ) : (
-    <AvatarPlaceholder size={size}>
-      {getNameInitials(alt)}
-    </AvatarPlaceholder>
+    <AvatarPlaceholder size={size}>{getNameInitials(alt)}</AvatarPlaceholder>
   );
 };
 
-export const AvatarGroup = ({ items, maxAvatars = 3, size = 'medium' }: { items: { key: string; src: string; alt: string }[]; maxAvatars?: number; size: 'small' | 'medium' }) => {
+export const AvatarGroup = ({
+  items,
+  maxAvatars = 3,
+  size = 'medium',
+}: {
+  items: { key: string; src: string; alt: string }[];
+  maxAvatars?: number;
+  size: 'small' | 'medium';
+}) => {
   const avatars = items.slice(0, maxAvatars);
   const overflow = items.length - maxAvatars;
 
   return (
     <Suspense fallback={<div />}>
       <div
-        className='flex items-center flex-shrink-0 -space-x-2'
+        className="flex flex-shrink-0 items-center -space-x-2"
         style={{
           paddingLeft: size === 'small' ? '5px' : '6px',
         }}
@@ -77,15 +81,11 @@ export const AvatarGroup = ({ items, maxAvatars = 3, size = 'medium' }: { items:
         {avatars.map(avatar => (
           <TooltipTrigger key={avatar.key}>
             <Button className="cursor-default">
-              <Avatar
-                size={size}
-                src={avatar.src}
-                alt={avatar.alt}
-              />
+              <Avatar size={size} src={avatar.src} alt={avatar.alt} />
             </Button>
             <Tooltip
               offset={8}
-              className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+              className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
             >
               {avatar.alt}
             </Tooltip>
@@ -98,7 +98,7 @@ export const AvatarGroup = ({ items, maxAvatars = 3, size = 'medium' }: { items:
             </Button>
             <Tooltip
               offset={8}
-              className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+              className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
             >
               {items.slice(maxAvatars).map(avatar => (
                 <div key={avatar.key}>{avatar.alt}</div>

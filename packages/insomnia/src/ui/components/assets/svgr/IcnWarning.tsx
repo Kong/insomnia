@@ -1,13 +1,6 @@
 import React, { memo, type SVGProps } from 'react';
 export const SvgIcnWarning = memo<SVGProps<SVGSVGElement>>(props => (
-  <svg
-    width="1em"
-    height="1em"
-    viewBox="0 0 12 12"
-    xmlns="http://www.w3.org/2000/svg"
-    role="img"
-    {...props}
-  >
+  <svg width="1em" height="1em" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" role="img" {...props}>
     <path d="M.096 10.546c-.212.482-.061 1.08.337 1.338.119.076.251.116.385.116h10.364c.452 0 .818-.443.818-.989 0-.162-.033-.322-.096-.465L7.27.916C6.829 0 5.903-.274 5.2.302c-.19.157-.351.367-.47.616L.095 10.546Z" />
     <path
       className="icn-warning_svg__fill-notice-fg"

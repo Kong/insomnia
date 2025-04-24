@@ -27,12 +27,7 @@ export const readOnlyHttpPairs = [
   { name: 'Host', value: '<calculated at runtime>' },
 ].map(pair => ({ ...pair, id: generateId('pair') }));
 
-export const RequestHeadersEditor: FC<Props> = ({
-  headers,
-  bulk,
-  isDisabled,
-  requestType,
-}) => {
+export const RequestHeadersEditor: FC<Props> = ({ headers, bulk, isDisabled, requestType }) => {
   const patchRequest = useRequestPatcher();
   const patchRequestGroup = useRequestGroupPatcher();
   const patcher = requestType === 'RequestGroup' ? patchRequestGroup : patchRequest;
@@ -40,29 +35,32 @@ export const RequestHeadersEditor: FC<Props> = ({
   const { requestId, requestGroupId } = useParams() as { requestId?: string; requestGroupId?: string };
   const id = requestType === 'RequestGroup' ? requestGroupId : requestId;
   invariant(id, 'Request or RequestGroup ID is required');
-  const handleBulkUpdate = useCallback((headersString: string) => {
-    const headersArray: {
-      name: string;
-      value: string;
-    }[] = [];
+  const handleBulkUpdate = useCallback(
+    (headersString: string) => {
+      const headersArray: {
+        name: string;
+        value: string;
+      }[] = [];
 
-    const rows = headersString.split(/\n+/);
-    for (const row of rows) {
-      const [rawName, rawValue] = row.split(/:(.*)$/);
-      const name = (rawName || '').trim();
-      const value = (rawValue || '').trim();
+      const rows = headersString.split(/\n+/);
+      for (const row of rows) {
+        const [rawName, rawValue] = row.split(/:(.*)$/);
+        const name = (rawName || '').trim();
+        const value = (rawValue || '').trim();
 
-      if (!name && !value) {
-        continue;
+        if (!name && !value) {
+          continue;
+        }
+
+        headersArray.push({
+          name,
+          value,
+        });
       }
-
-      headersArray.push({
-        name,
-        value,
-      });
-    }
-    patcher(id, { headers: headersArray });
-  }, [patcher, id]);
+      patcher(id, { headers: headersArray });
+    },
+    [patcher, id],
+  );
 
   let headersString = '';
   for (const header of headers) {

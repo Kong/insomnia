@@ -20,7 +20,7 @@ test('can send gRPC requests with reflection', async ({ app, page }) => {
   await page.getByLabel('PreRelease gRPC').click();
 
   await page.getByLabel('Request Collection').getByTestId('UnaryWithOutProtoFile').press('Enter');
-  await expect(page.getByRole('button', { name: 'Select Method' })).toBeDisabled();
+  await expect.soft(page.getByRole('button', { name: 'Select Method' })).toBeDisabled();
   await page.getByTestId('button-server-reflection').click();
 
   await page.getByRole('button', { name: 'Select Method' }).click();
@@ -31,6 +31,6 @@ test('can send gRPC requests with reflection', async ({ app, page }) => {
 
   // Check for the single Unary response
   await page.getByRole('tab', { name: 'Response 1' }).click();
-  await expect(statusTag).toContainText('0 OK');
-  await expect(responseBody).toContainText('Berkshire Valley Management Area Trail');
+  await expect.soft(statusTag).toContainText('0 OK');
+  await expect.soft(responseBody).toContainText('Berkshire Valley Management Area Trail');
 });

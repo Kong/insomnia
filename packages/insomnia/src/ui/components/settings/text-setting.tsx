@@ -11,25 +11,20 @@ export const TextSetting: FC<{
   label: string;
   placeholder?: InputHTMLAttributes<HTMLInputElement>['placeholder'];
   setting: SettingsOfType<string | null>;
-}> = ({
-  disabled,
-  help,
-  label,
-  placeholder,
-  setting,
-}) => {
-  const {
-    settings,
-  } = useRootLoaderData();
+}> = ({ disabled, help, label, placeholder, setting }) => {
+  const { settings } = useRootLoaderData();
   if (!Object.prototype.hasOwnProperty.call(settings, setting)) {
     throw new Error(`Invalid setting name ${setting}`);
   }
   const patchSettings = useSettingsPatcher();
 
-  const handleOnChange = useCallback<ChangeEventHandler<HTMLInputElement>>(async ({ currentTarget: { value } }) => {
-    const updatedValue = value === null ? '__NULL__' : value;
-    patchSettings({ [setting]: updatedValue });
-  }, [patchSettings, setting]);
+  const handleOnChange = useCallback<ChangeEventHandler<HTMLInputElement>>(
+    async ({ currentTarget: { value } }) => {
+      const updatedValue = value === null ? '__NULL__' : value;
+      patchSettings({ [setting]: updatedValue });
+    },
+    [patchSettings, setting],
+  );
 
   let defaultValue = settings[setting];
   if (typeof defaultValue !== 'string') {

@@ -43,25 +43,27 @@ export default async function extractPostmanDataDumpHandler(_event: unknown, dat
 
   // get collections and environments listed in archive.json
   try {
-    files.filter(file => file !== archiveJsonFile).forEach(file => {
-      const id = path.basename(file.path, '.json');
-      const oriFileName = path.basename(file.path);
-      if (id in archiveJsonData.collection) {
-        collectionList.push({
-          contentStr: file.data.toString(),
-          oriFileName,
-        });
-      } else if (id in archiveJsonData.environment) {
-        const fileContentStr = file.data.toString();
-        const fileJson = JSON.parse(fileContentStr);
-        // Set the scope to environment, because it's not set in the file
-        fileJson._postman_variable_scope = 'environment';
-        envList.push({
-          contentStr: JSON.stringify(fileJson),
-          oriFileName,
-        });
-      }
-    });
+    files
+      .filter(file => file !== archiveJsonFile)
+      .forEach(file => {
+        const id = path.basename(file.path, '.json');
+        const oriFileName = path.basename(file.path);
+        if (id in archiveJsonData.collection) {
+          collectionList.push({
+            contentStr: file.data.toString(),
+            oriFileName,
+          });
+        } else if (id in archiveJsonData.environment) {
+          const fileContentStr = file.data.toString();
+          const fileJson = JSON.parse(fileContentStr);
+          // Set the scope to environment, because it's not set in the file
+          fileJson._postman_variable_scope = 'environment';
+          envList.push({
+            contentStr: JSON.stringify(fileJson),
+            oriFileName,
+          });
+        }
+      });
   } catch (err) {
     return {
       err: 'Failed to parse collection or environment files',

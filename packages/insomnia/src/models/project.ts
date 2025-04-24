@@ -1,5 +1,6 @@
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
+import type { StorageRules } from '../ui/routes/organization';
 import { type BaseModel } from './index';
 
 export const name = 'Project';
@@ -11,9 +12,12 @@ export const canSync = false;
 export const SCRATCHPAD_PROJECT_ID = `${prefix}_scratchpad`;
 
 export const isScratchpadProject = (project: Pick<Project, '_id'>) => project._id === SCRATCHPAD_PROJECT_ID;
-export const isLocalProject = (project: Pick<Project, 'remoteId'>): project is LocalProject => project.remoteId === null;
-export const isRemoteProject = (project: Pick<Project, 'remoteId'>): project is RemoteProject => !isLocalProject(project);
-export const isGitProject = (project: Project): project is GitProject => 'gitRepositoryId' in project && project.gitRepositoryId !== null;
+export const isLocalProject = (project: Pick<Project, 'remoteId'>): project is LocalProject =>
+  project.remoteId === null;
+export const isRemoteProject = (project: Pick<Project, 'remoteId'>): project is RemoteProject =>
+  !isLocalProject(project);
+export const isGitProject = (project: Project): project is GitProject =>
+  'gitRepositoryId' in project && project.gitRepositoryId !== null;
 export const projectHasSettings = (project: Pick<Project, '_id'>) => !isScratchpadProject(project);
 
 interface CommonProject {
@@ -37,13 +41,9 @@ export interface GitProject extends BaseModel, CommonProject {
 
 export type Project = LocalProject | RemoteProject | GitProject;
 
-export const isProject = (model: Pick<BaseModel, 'type'>): model is Project => (
-  model.type === type
-);
+export const isProject = (model: Pick<BaseModel, 'type'>): model is Project => model.type === type;
 
-export const isProjectId = (id: string | null) => (
-  id?.startsWith(`${prefix}_`)
-);
+export const isProjectId = (id: string | null) => id?.startsWith(`${prefix}_`);
 
 export function init(): Partial<Project> {
   return {
@@ -92,32 +92,88 @@ export function isDefaultOrganizationProject(project: Project) {
   return project.remoteId?.startsWith('proj_team') || project.remoteId?.startsWith('proj_org');
 }
 
-export enum ORG_STORAGE_RULE {
-  CLOUD_PLUS_LOCAL = 'cloud_plus_local',
-  CLOUD_ONLY = 'cloud_only',
-  LOCAL_ONLY = 'local_only',
-}
-
-export function getDefaultProjectStorageType(storage: ORG_STORAGE_RULE, project?: Project): 'local' | 'remote' | 'git' {
-  if (storage === ORG_STORAGE_RULE.CLOUD_ONLY) {
-    return 'remote';
-  }
-
-  if (storage === ORG_STORAGE_RULE.CLOUD_PLUS_LOCAL) {
-    if (project && isGitProject(project)) {
-      return 'git';
-    }
-
-    if (project && isRemoteProject(project)) {
+export function getDefaultProjectStorageType(
+  storageRules: StorageRules,
+  project?: Project,
+): 'local' | 'remote' | 'git' {
+  // When the project exist. That means the user open the settings modal
+  if (project) {
+    if (isGitProject(project)) {
+      if (storageRules.enableGitSync) {
+        return 'git';
+      }
+      if (storageRules.enableLocalVault) {
+        return 'local';
+      }
       return 'remote';
     }
 
+    if (isRemoteProject(project)) {
+      if (storageRules.enableCloudSync) {
+        return 'remote';
+      }
+      if (storageRules.enableLocalVault) {
+        return 'local';
+      }
+      return 'git';
+    }
+
+    if (storageRules.enableLocalVault) {
+      return 'local';
+    }
+
+    if (storageRules.enableCloudSync) {
+      return 'remote';
+    }
+
+    return 'git';
+  }
+
+  // When the project doesn't exist. That means the user create a new project
+  if (storageRules.enableLocalVault) {
     return 'local';
   }
 
-  if (project && isGitProject(project)) {
+  if (storageRules.enableCloudSync) {
+    return 'remote';
+  }
+
+  if (storageRules.enableGitSync) {
     return 'git';
   }
 
   return 'local';
+}
+
+export function isSwitchingStorageType(project: Project, storageType: 'local' | 'remote' | 'git') {
+  if (storageType === 'git' && !isGitProject(project)) {
+    return true;
+  }
+
+  if (storageType === 'local' && (isRemoteProject(project) || isGitProject(project))) {
+    return true;
+  }
+
+  if (storageType === 'remote' && !isRemoteProject(project)) {
+    return true;
+  }
+
+  return false;
+}
+
+export function getProjectStorageTypeLabel(storageRules: StorageRules): string {
+  const storageTypes = {
+    'Cloud Sync': storageRules.enableCloudSync,
+    'Local Vault': storageRules.enableLocalVault,
+    'Git Sync': storageRules.enableGitSync,
+  };
+
+  const allowedStorageTypes = Object.entries(storageTypes)
+    .filter(([, enabled]) => enabled)
+    .map(([label]) => label);
+
+  // Join with ", " but use "and" before the last item
+  return allowedStorageTypes.length
+    ? allowedStorageTypes.join(', ').replace(/, ([^,]+)$/, ' and $1')
+    : 'No storage types selected';
 }

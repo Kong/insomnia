@@ -12,8 +12,7 @@ type StringId =
   | 'defaultProject'
   | 'localProject'
   | 'remoteProject'
-  | 'environment'
-  ;
+  | 'environment';
 
 export const strings: Record<StringId, StringInfo> = {
   collection: {

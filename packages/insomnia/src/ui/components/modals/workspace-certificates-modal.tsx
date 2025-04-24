@@ -1,5 +1,21 @@
 import React, { Fragment, useEffect, useId, useState } from 'react';
-import { Button, Dialog, FileTrigger, GridList, GridListItem, Heading, Input, Label, Modal, ModalOverlay, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
+import {
+  Button,
+  Dialog,
+  FileTrigger,
+  GridList,
+  GridListItem,
+  Heading,
+  Input,
+  Label,
+  Modal,
+  ModalOverlay,
+  Tab,
+  TabList,
+  TabPanel,
+  Tabs,
+  ToggleButton,
+} from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import type { ClientCertificate } from '../../../models/client-certificate';
@@ -8,7 +24,11 @@ import { Icon } from '../icon';
 import { PasswordViewer } from '../viewers/password-viewer';
 
 const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
-  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+  const { organizationId, projectId, workspaceId } = useParams<{
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  }>();
 
   const createClientCertificateFetcher = useFetcher();
   const formId = useId();
@@ -29,73 +49,80 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
       onOpenChange={isOpen => {
         !isOpen && onClose();
       }}
-      className="w-full h-[--visual-viewport-height] fixed z-20 top-0 left-0 flex items-center justify-center bg-black/30"
+      className="fixed left-0 top-0 z-20 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
     >
       <Modal
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
-        className="flex flex-col w-full max-w-lg rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] bg-[--color-bg] text-[--color-font]"
+        className="flex w-full max-w-lg flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
       >
-        <Dialog
-          className="outline-none flex-1 h-full flex flex-col overflow-y-hidden"
-        >
+        <Dialog className="flex h-full flex-1 flex-col overflow-y-hidden outline-none">
           {({ close }) => (
-            <div className='flex-1 flex flex-col gap-4 overflow-y-hidden h-full'>
-              <div className='flex gap-2 items-center justify-between'>
-                <Heading slot="title" className='text-2xl'>Add Client Certificate</Heading>
+            <div className="flex h-full flex-1 flex-col gap-4 overflow-y-hidden">
+              <div className="flex items-center justify-between gap-2">
+                <Heading slot="title" className="text-2xl">
+                  Add Client Certificate
+                </Heading>
                 <Button
-                  className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                   onPress={close}
                 >
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className='rounded flex-1 w-full basis-96 flex flex-col gap-2 select-none px-2 overflow-y-auto'>
+              <div className="flex w-full flex-1 basis-96 select-none flex-col gap-2 overflow-y-auto rounded px-2">
                 <form
                   id={formId}
-                  className='flex flex-col gap-2'
+                  className="flex flex-col gap-2"
                   onSubmit={e => {
                     e.preventDefault();
                     const formData = new FormData(e.currentTarget);
 
                     const certificate = Object.fromEntries(formData.entries());
 
-                    createClientCertificateFetcher.submit({
-                      ...certificate,
-                      isPrivate: certificate.isPrivate === 'on',
-                    }, {
-                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/clientcert/new`,
-                      method: 'post',
-                      encType: 'application/json',
-                    });
+                    createClientCertificateFetcher.submit(
+                      {
+                        ...certificate,
+                        isPrivate: certificate.isPrivate === 'on',
+                      },
+                      {
+                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/clientcert/new`,
+                        method: 'post',
+                        encType: 'application/json',
+                      },
+                    );
                   }}
                 >
-                  <Input
-                    name='parentId'
-                    type='text'
-                    value={workspaceId}
-                    readOnly
-                    className='hidden'
-                  />
-                  <Label className='flex flex-col gap-1' aria-label='Host'>
-                    <span className='text-sm'>Host</span>
+                  <Input name="parentId" type="text" value={workspaceId} readOnly className="hidden" />
+                  <Label className="flex flex-col gap-1" aria-label="Host">
+                    <span className="text-sm">Host</span>
                     <Input
-                      name='host'
-                      type='text'
+                      name="host"
+                      type="text"
                       required
-                      placeholder='example.com'
-                      className='py-1 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors'
+                      placeholder="example.com"
+                      className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
                     />
                   </Label>
                   <Tabs className="rounded-sm border border-solid border-[--hl-md]">
                     <TabList className="flex items-center border-b border-solid border-[--hl-md]">
-                      <Tab className="hover:no-underline aria-selected:bg-[--hl-md] hover:bg-[--hl-sm] outline-none gap-2 flex items-center hover:bg-opacity-90 py-1 px-2 text-[--color-font] transition-colors" id="certificate">Certificate</Tab>
-                      <Tab className="hover:no-underline aria-selected:bg-[--hl-md] hover:bg-[--hl-sm] outline-none gap-2 flex items-center hover:bg-opacity-90 py-1 px-2 text-[--color-font] transition-colors" id="pfx">PFX or PKCS12</Tab>
+                      <Tab
+                        className="flex items-center gap-2 px-2 py-1 text-[--color-font] outline-none transition-colors hover:bg-[--hl-sm] hover:bg-opacity-90 hover:no-underline aria-selected:bg-[--hl-md]"
+                        id="certificate"
+                      >
+                        Certificate
+                      </Tab>
+                      <Tab
+                        className="flex items-center gap-2 px-2 py-1 text-[--color-font] outline-none transition-colors hover:bg-[--hl-sm] hover:bg-opacity-90 hover:no-underline aria-selected:bg-[--hl-md]"
+                        id="pfx"
+                      >
+                        PFX or PKCS12
+                      </Tab>
                     </TabList>
                     <TabPanel className="p-2" id="pfx">
-                      <Label className='flex flex-col gap-1' aria-label='Host'>
-                        <span className='text-sm'>PFX or PKCS12 file</span>
+                      <Label className="flex flex-col gap-1" aria-label="Host">
+                        <span className="text-sm">PFX or PKCS12 file</span>
                         <FileTrigger
                           allowsMultiple={false}
                           onSelect={fileList => {
@@ -108,23 +135,19 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                             setPfxPath(window.webUtils.getPathForFile(file));
                           }}
                         >
-                          <Button className="flex flex-shrink-0 border-solid border border-[--hl-sm] py-1 gap-2 items-center justify-center px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base">
+                          <Button className="flex h-full flex-shrink-0 items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-sm] px-2 py-1 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]">
                             {!pfxPath && <Icon icon="plus" />}
-                            <span className='truncate' title={pfxPath}>{pfxPath ? pfxPath : 'Add PFX or PKCS12 file'}</span>
+                            <span className="truncate" title={pfxPath}>
+                              {pfxPath ? pfxPath : 'Add PFX or PKCS12 file'}
+                            </span>
                           </Button>
                         </FileTrigger>
-                        <Input
-                          name='pfx'
-                          type='text'
-                          value={pfxPath}
-                          readOnly
-                          className='hidden'
-                        />
+                        <Input name="pfx" type="text" value={pfxPath} readOnly className="hidden" />
                       </Label>
                     </TabPanel>
-                    <TabPanel className="flex flex-col overflow-hidden w-full gap-2 p-2" id="certificate">
-                      <Label className='flex-1 flex flex-col gap-1' aria-label='Certificate'>
-                        <span className='text-sm'>Certificate</span>
+                    <TabPanel className="flex w-full flex-col gap-2 overflow-hidden p-2" id="certificate">
+                      <Label className="flex flex-1 flex-col gap-1" aria-label="Certificate">
+                        <span className="text-sm">Certificate</span>
                         <FileTrigger
                           allowsMultiple={false}
                           onSelect={fileList => {
@@ -137,21 +160,20 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                             setCertificatePath(window.webUtils.getPathForFile(file));
                           }}
                         >
-                          <Button data-test-id='add-client-certificate-file-chooser' className="flex flex-shrink-0 border-solid border border-[--hl-sm] py-1 gap-2 items-center justify-center px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base">
+                          <Button
+                            data-test-id="add-client-certificate-file-chooser"
+                            className="flex h-full flex-shrink-0 items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-sm] px-2 py-1 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]"
+                          >
                             {!certificatePath && <Icon icon="plus" />}
-                            <span className='truncate' title={certificatePath}>{certificatePath ? certificatePath : 'Add certificate file'}</span>
+                            <span className="truncate" title={certificatePath}>
+                              {certificatePath ? certificatePath : 'Add certificate file'}
+                            </span>
                           </Button>
                         </FileTrigger>
-                        <Input
-                          name='cert'
-                          type='text'
-                          value={certificatePath}
-                          readOnly
-                          className='hidden'
-                        />
+                        <Input name="cert" type="text" value={certificatePath} readOnly className="hidden" />
                       </Label>
-                      <Label className='flex-1 flex flex-col gap-1' aria-label='Key'>
-                        <span className='text-sm'>Key</span>
+                      <Label className="flex flex-1 flex-col gap-1" aria-label="Key">
+                        <span className="text-sm">Key</span>
                         <FileTrigger
                           allowsMultiple={false}
                           onSelect={fileList => {
@@ -164,40 +186,43 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                             setKeyPath(window.webUtils.getPathForFile(file));
                           }}
                         >
-                          <Button data-test-id='add-client-certificate-key-file-chooser' className="flex flex-shrink-0 border-solid border border-[--hl-sm] py-1 gap-2 items-center justify-center px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base">
+                          <Button
+                            data-test-id="add-client-certificate-key-file-chooser"
+                            className="flex h-full flex-shrink-0 items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-sm] px-2 py-1 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]"
+                          >
                             {!keyPath && <Icon icon="plus" />}
-                            <span className='truncate' title={keyPath}>{keyPath ? keyPath : 'Add key file'}</span>
+                            <span className="truncate" title={keyPath}>
+                              {keyPath ? keyPath : 'Add key file'}
+                            </span>
                           </Button>
                         </FileTrigger>
-                        <Input
-                          name='key'
-                          type='text'
-                          value={keyPath}
-                          readOnly
-                          className='hidden'
-                        />
+                        <Input name="key" type="text" value={keyPath} readOnly className="hidden" />
                       </Label>
                     </TabPanel>
                   </Tabs>
 
-                  <Label className='flex flex-col gap-1' aria-label='Passphrase'>
-                    <span className='text-sm'>Passphrase</span>
+                  <Label className="flex flex-col gap-1" aria-label="Passphrase">
+                    <span className="text-sm">Passphrase</span>
                     <Input
-                      name='passphrase'
-                      type='password'
-                      className='py-1 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors'
+                      name="passphrase"
+                      type="password"
+                      className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
                     />
                   </Label>
                 </form>
               </div>
-              <div className='flex items-center gap-2 justify-end'>
+              <div className="flex items-center justify-end gap-2">
                 <Button
                   onPress={close}
-                  className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] hover:border-[--hl-sm] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
+                  className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:border-[--hl-sm] hover:bg-opacity-90 hover:no-underline"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" form={formId} className="hover:no-underline gap-2 flex items-center bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] text-[--color-font-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] hover:border-[--hl-sm] py-2 px-3 transition-colors rounded-sm">
+                <Button
+                  type="submit"
+                  form={formId}
+                  className="flex items-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-3 py-2 text-[--color-font-surprise] transition-colors hover:border-[--hl-sm] hover:bg-opacity-90 hover:no-underline"
+                >
                   <Icon icon="plus" />
                   <span>Add certificate</span>
                 </Button>
@@ -210,46 +235,54 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
   );
 };
 
-const ClientCertificateGridListItem = ({ certificate }: {
-  certificate: ClientCertificate;
-}) => {
-  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+const ClientCertificateGridListItem = ({ certificate }: { certificate: ClientCertificate }) => {
+  const { organizationId, projectId, workspaceId } = useParams<{
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  }>();
   const updateClientCertificateFetcher = useFetcher();
   const deleteClientCertificateFetcher = useFetcher();
 
   return (
-    <GridListItem className="outline-none flex flex-col gap-2 items-center justify-between p-4 ring-inset focus:ring-1 focus:ring-[--hl-md]">
-      <div className='flex items-center gap-2 w-full'>
-        {Boolean(certificate.pfx || certificate.cert) && <Icon icon="file-contract" className='w-4' title={certificate.pfx || certificate.cert || ''} />}
+    <GridListItem className="flex flex-col items-center justify-between gap-2 p-4 outline-none ring-inset focus:ring-1 focus:ring-[--hl-md]">
+      <div className="flex w-full items-center gap-2">
+        {Boolean(certificate.pfx || certificate.cert) && (
+          <Icon icon="file-contract" className="w-4" title={certificate.pfx || certificate.cert || ''} />
+        )}
         {certificate.key && <Icon icon="key" title={certificate.key} />}
-        <div className='flex-1 text-sm text-[--color-font] truncate'>{certificate.host}</div>
+        <div className="flex-1 truncate text-sm text-[--color-font]">{certificate.host}</div>
         {certificate.passphrase && (
-          <div className='flex items-center gap-2 truncate'>
-            <span className='text-sm'>{'Password:'}</span>
-            <div className='truncate text-sm'>
+          <div className="flex items-center gap-2 truncate">
+            <span className="text-sm">{'Password:'}</span>
+            <div className="truncate text-sm">
               <PasswordViewer text={certificate.passphrase} />
             </div>
           </div>
         )}
-        <div className='flex items-center gap-2 h-6'>
+        <div className="flex h-6 items-center gap-2">
           <ToggleButton
             data-test-id="client-certificate-toggle"
             onChange={isSelected => {
-              updateClientCertificateFetcher.submit({ ...certificate, disabled: !isSelected }, {
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/clientcert/update`,
-                method: 'post',
-                encType: 'application/json',
-              });
+              updateClientCertificateFetcher.submit(
+                { ...certificate, disabled: !isSelected },
+                {
+                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/clientcert/update`,
+                  method: 'post',
+                  encType: 'application/json',
+                },
+              );
             }}
             isSelected={!certificate.disabled}
-            className="w-[12ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 h-full rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+            className="flex h-full w-[12ch] flex-shrink-0 items-center justify-start gap-2 rounded-sm px-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
           >
             {({ isSelected }) => (
               <Fragment>
-                <Icon icon={isSelected ? 'toggle-on' : 'toggle-off'} className={`${isSelected ? 'text-[--color-success]' : ''}`} />
-                <span>{
-                  isSelected ? 'Enabled' : 'Disabled'
-                }</span>
+                <Icon
+                  icon={isSelected ? 'toggle-on' : 'toggle-off'}
+                  className={`${isSelected ? 'text-[--color-success]' : ''}`}
+                />
+                <span>{isSelected ? 'Enabled' : 'Disabled'}</span>
               </Fragment>
             )}
           </ToggleButton>
@@ -262,7 +295,7 @@ const ClientCertificateGridListItem = ({ certificate }: {
                 encType: 'application/json',
               });
             }}
-            className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+            className="flex aspect-square h-full flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
           >
             <Icon icon="trash" />
           </Button>
@@ -272,14 +305,14 @@ const ClientCertificateGridListItem = ({ certificate }: {
   );
 };
 
-export const CertificatesModal = ({ onClose }: {
-  onClose: () => void;
-}) => {
-  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+export const CertificatesModal = ({ onClose }: { onClose: () => void }) => {
+  const { organizationId, projectId, workspaceId } = useParams<{
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  }>();
 
-  const routeData = useRouteLoaderData(
-    ':workspaceId'
-  ) as WorkspaceLoaderData;
+  const routeData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
 
   const [isAddClientCertificateModalOpen, setIsAddClientCertificateModalOpen] = useState(false);
 
@@ -287,10 +320,7 @@ export const CertificatesModal = ({ onClose }: {
   const deleteCertificateFetcher = useFetcher();
   const updateCertificateFetcher = useFetcher();
 
-  const {
-    caCertificate,
-    clientCertificates,
-  } = routeData;
+  const { caCertificate, clientCertificates } = routeData;
 
   if (!workspaceId) {
     return null;
@@ -303,72 +333,81 @@ export const CertificatesModal = ({ onClose }: {
       onOpenChange={isOpen => {
         !isOpen && onClose();
       }}
-      className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
+      className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
     >
       <Modal
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
-        className="flex flex-col w-full max-w-3xl h-[calc(100%-var(--padding-xl))] rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] bg-[--color-bg] text-[--color-font]"
+        className="flex h-[calc(100%-var(--padding-xl))] w-full max-w-3xl flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
       >
-        <Dialog
-          className="outline-none flex-1 h-full flex flex-col overflow-hidden"
-        >
+        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
           {({ close }) => (
-            <div className='flex-1 flex flex-col gap-4 overflow-hidden h-full'>
-              <div className='flex gap-2 items-center justify-between'>
-                <Heading slot="title" className='text-2xl flex items-center gap-2'>Manage Certificates</Heading>
+            <div className="flex h-full flex-1 flex-col gap-4 overflow-hidden">
+              <div className="flex items-center justify-between gap-2">
+                <Heading slot="title" className="flex items-center gap-2 text-2xl">
+                  Manage Certificates
+                </Heading>
                 <Button
-                  className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                   onPress={close}
                 >
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className='rounded flex-1 w-full overflow-hidden basis-96 flex flex-col gap-6 select-none overflow-y-auto'>
-                <Heading className='text-xl'>CA Certificate</Heading>
-                <div className='flex flex-col gap-2'>
+              <div className="flex w-full flex-1 basis-96 select-none flex-col gap-6 overflow-hidden overflow-y-auto rounded">
+                <Heading className="text-xl">CA Certificate</Heading>
+                <div className="flex flex-col gap-2">
                   {caCertificate ? (
-                    <div className='flex gap-2 items-center justify-between rounded-sm border border-solid border-[--hl-sm] p-4'>
-                      <Icon icon="file-contract" className='w-4' />
-                      <div className='flex-1 text-sm text-[--color-font] truncate' title={caCertificate.path || ''}>{caCertificate?.path?.split('\\')?.pop()?.split('/')?.pop()}</div>
-                      <div className='flex items-center gap-2 h-6'>
+                    <div className="flex items-center justify-between gap-2 rounded-sm border border-solid border-[--hl-sm] p-4">
+                      <Icon icon="file-contract" className="w-4" />
+                      <div className="flex-1 truncate text-sm text-[--color-font]" title={caCertificate.path || ''}>
+                        {caCertificate?.path?.split('\\')?.pop()?.split('/')?.pop()}
+                      </div>
+                      <div className="flex h-6 items-center gap-2">
                         <ToggleButton
                           onChange={isSelected => {
-                            updateCertificateFetcher.submit({ _id: caCertificate._id, disabled: !isSelected }, {
-                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cacert/update`,
-                              method: 'post',
-                              encType: 'application/json',
-                            });
+                            updateCertificateFetcher.submit(
+                              { _id: caCertificate._id, disabled: !isSelected },
+                              {
+                                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cacert/update`,
+                                method: 'post',
+                                encType: 'application/json',
+                              },
+                            );
                           }}
                           isSelected={!caCertificate.disabled}
-                          className="w-[12ch] flex flex-shrink-0 gap-2 items-center justify-start px-2 h-full rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                          className="flex h-full w-[12ch] flex-shrink-0 items-center justify-start gap-2 rounded-sm px-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
                         >
                           {({ isSelected }) => (
                             <Fragment>
-                              <Icon icon={isSelected ? 'toggle-on' : 'toggle-off'} className={`${isSelected ? 'text-[--color-success]' : ''}`} />
-                              <span>{
-                                isSelected ? 'Enabled' : 'Disabled'
-                              }</span>
+                              <Icon
+                                icon={isSelected ? 'toggle-on' : 'toggle-off'}
+                                className={`${isSelected ? 'text-[--color-success]' : ''}`}
+                              />
+                              <span>{isSelected ? 'Enabled' : 'Disabled'}</span>
                             </Fragment>
                           )}
                         </ToggleButton>
                         <Button
                           isDisabled={deleteCertificateFetcher.state !== 'idle'}
                           onPress={() => {
-                            deleteCertificateFetcher.submit({}, {
-                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cacert/delete`,
-                              method: 'delete',
-                            });
+                            deleteCertificateFetcher.submit(
+                              {},
+                              {
+                                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cacert/delete`,
+                                method: 'delete',
+                              },
+                            );
                           }}
-                          className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                          className="flex aspect-square h-full flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                         >
                           <Icon icon="trash" />
                         </Button>
                       </div>
                     </div>
                   ) : (
-                    <div className='flex gap-2 items-center justify-between'>
+                    <div className="flex items-center justify-between gap-2">
                       <FileTrigger
                         acceptedFileTypes={['.pem']}
                         allowsMultiple={false}
@@ -379,33 +418,36 @@ export const CertificatesModal = ({ onClose }: {
                           const files = Array.from(fileList);
                           const file = files[0];
 
-                          createCertificateFetcher.submit({ parentId: workspaceId, path: window.webUtils.getPathForFile(file) }, {
-                            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cacert/new`,
-                            method: 'post',
-                            encType: 'application/json',
-                          });
+                          createCertificateFetcher.submit(
+                            { parentId: workspaceId, path: window.webUtils.getPathForFile(file) },
+                            {
+                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cacert/new`,
+                              method: 'post',
+                              encType: 'application/json',
+                            },
+                          );
                         }}
                       >
-                        <Button className="flex flex-1 flex-shrink-0 border-solid border border-[--hl-sm] py-1 gap-2 items-center justify-center px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base">
+                        <Button className="flex h-full flex-1 flex-shrink-0 items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-sm] px-2 py-1 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]">
                           <Icon icon="plus" />
                           <span>Add CA Certificate</span>
                         </Button>
                       </FileTrigger>
                     </div>
                   )}
-                  <p className="text-sm text-[--hl] italic max-w-[80ch]">
-                    <Icon icon='info-circle' className='pr-2' />
-                    One or more PEM format certificates in a single file to pass to curl. Overrides the root CA certificate.
-                    On MacOS please upload your local Keychain certificates here.
+                  <p className="max-w-[80ch] text-sm italic text-[--hl]">
+                    <Icon icon="info-circle" className="pr-2" />
+                    One or more PEM format certificates in a single file to pass to curl. Overrides the root CA
+                    certificate. On MacOS please upload your local Keychain certificates here.
                   </p>
                 </div>
-                <div className='flex items-center gap-2 justify-between'>
-                  <Heading className='text-xl'>Client Certificates</Heading>
+                <div className="flex items-center justify-between gap-2">
+                  <Heading className="text-xl">Client Certificates</Heading>
                   <Button
                     onPress={() => {
                       setIsAddClientCertificateModalOpen(true);
                     }}
-                    className="flex flex-shrink-0 gap-2 items-center justify-center px-2 h-full aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
+                    className="flex h-full flex-shrink-0 items-center justify-center gap-2 rounded-sm px-2 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]"
                   >
                     <Icon icon="plus" />
                     <span>Add client certificate</span>
@@ -419,7 +461,7 @@ export const CertificatesModal = ({ onClose }: {
                   />
                 )}
                 <GridList
-                  className="border border-solid border-[--hl-md] rounded-sm divide-y divide-solid divide-[--hl-md] overflow-y-auto"
+                  className="divide-y divide-solid divide-[--hl-md] overflow-y-auto rounded-sm border border-solid border-[--hl-md]"
                   items={clientCertificates.map(cert => ({
                     cert,
                     id: cert._id,
@@ -429,10 +471,10 @@ export const CertificatesModal = ({ onClose }: {
                   {item => <ClientCertificateGridListItem certificate={item.cert} />}
                 </GridList>
               </div>
-              <div className='flex items-center gap-2 justify-end'>
+              <div className="flex items-center justify-end gap-2">
                 <Button
                   onPress={close}
-                  className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
+                  className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
                 >
                   Done
                 </Button>

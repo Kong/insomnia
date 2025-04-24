@@ -13,11 +13,7 @@ import {
 } from '../../../../common/constants';
 import { documentationLinks } from '../../../../common/documentation';
 import { getContentTypeHeader } from '../../../../common/misc';
-import {
-  isEventStreamRequest,
-  type Request,
-  type RequestBodyParameter,
-} from '../../../../models/request';
+import { isEventStreamRequest, type Request, type RequestBodyParameter } from '../../../../models/request';
 import { NunjucksEnabledProvider } from '../../../context/nunjucks/nunjucks-enabled-context';
 import { useRequestPatcher } from '../../../hooks/use-request';
 import { ContentTypeDropdown } from '../../dropdowns/content-type-dropdown';
@@ -36,35 +32,46 @@ interface Props {
   environmentId: string;
 }
 
-export const BodyEditor: FC<Props> = ({
-  request,
-  environmentId,
-}) => {
+export const BodyEditor: FC<Props> = ({ request, environmentId }) => {
   const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
   const patchRequest = useRequestPatcher();
-  const handleRawChange = useCallback((rawValue: string) => {
-    const body = typeof request.body.mimeType !== 'string'
-      ? { text: rawValue }
-      : { mimeType: request.body.mimeType.split(';')[0], text: rawValue };
-    patchRequest(requestId, { body });
-  }, [patchRequest, request.body.mimeType, requestId]);
+  const handleRawChange = useCallback(
+    (rawValue: string) => {
+      const body =
+        typeof request.body.mimeType !== 'string'
+          ? { text: rawValue }
+          : { mimeType: request.body.mimeType.split(';')[0], text: rawValue };
+      patchRequest(requestId, { body });
+    },
+    [patchRequest, request.body.mimeType, requestId],
+  );
 
-  const handleGraphQLChange = useCallback((content: string) => {
-    const body = typeof CONTENT_TYPE_GRAPHQL !== 'string'
-      ? { text: content }
-      : { mimeType: CONTENT_TYPE_GRAPHQL.split(';')[0], text: content };
-    patchRequest(requestId, { body });
-  }, [patchRequest, requestId]);
+  const handleGraphQLChange = useCallback(
+    (content: string) => {
+      const body =
+        typeof CONTENT_TYPE_GRAPHQL !== 'string'
+          ? { text: content }
+          : { mimeType: CONTENT_TYPE_GRAPHQL.split(';')[0], text: content };
+      patchRequest(requestId, { body });
+    },
+    [patchRequest, requestId],
+  );
 
-  const handleFormUrlEncodedChange = useCallback((params: RequestBodyParameter[]) => {
-    const body = { mimeType: CONTENT_TYPE_FORM_URLENCODED, params };
-    patchRequest(requestId, { body });
-  }, [patchRequest, requestId]);
+  const handleFormUrlEncodedChange = useCallback(
+    (params: RequestBodyParameter[]) => {
+      const body = { mimeType: CONTENT_TYPE_FORM_URLENCODED, params };
+      patchRequest(requestId, { body });
+    },
+    [patchRequest, requestId],
+  );
 
-  const handleFormChange = useCallback((parameters: RequestBodyParameter[]) => {
-    const body = { mimeType: CONTENT_TYPE_FORM_DATA, params: parameters || [] };
-    patchRequest(requestId, { body });
-  }, [patchRequest, requestId]);
+  const handleFormChange = useCallback(
+    (parameters: RequestBodyParameter[]) => {
+      const body = { mimeType: CONTENT_TYPE_FORM_DATA, params: parameters || [] };
+      patchRequest(requestId, { body });
+    },
+    [patchRequest, requestId],
+  );
 
   const handleFileChange = async (path: string) => {
     const headers = clone(request.headers);
@@ -91,10 +98,12 @@ export const BodyEditor: FC<Props> = ({
       contentTypeHeader.value = newContentType;
       showModal(AskModal, {
         title: 'Change Content-Type',
-        message: <p>
-          Do you want set the <span className="monospace">Content-Type</span> header to{' '}
-          <span className="monospace">{newContentType}</span>?
-        </p>,
+        message: (
+          <p>
+            Do you want set the <span className="monospace">Content-Type</span> header to{' '}
+            <span className="monospace">{newContentType}</span>?
+          </p>
+        ),
         onDone: async (saidYes: boolean) => {
           if (saidYes) {
             patchRequest(requestId, { headers });
@@ -112,16 +121,38 @@ export const BodyEditor: FC<Props> = ({
 
   function renderBodyEditor() {
     if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-      return <UrlEncodedEditor key={uniqueKey} onChange={handleFormUrlEncodedChange} parameters={request.body.params || []} />;
+      return (
+        <UrlEncodedEditor
+          key={uniqueKey}
+          onChange={handleFormUrlEncodedChange}
+          parameters={request.body.params || []}
+        />
+      );
     } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
       return <FormEditor key={uniqueKey} onChange={handleFormChange} parameters={request.body.params || []} />;
     } else if (mimeType === CONTENT_TYPE_FILE) {
       return <FileEditor key={uniqueKey} onChange={handleFileChange} path={fileName || ''} />;
     } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
-      return <GraphQLEditor key={uniqueKey} uniquenessKey={uniqueKey} request={request} workspaceId={workspaceId} environmentId={environmentId} onChange={handleGraphQLChange} />;
+      return (
+        <GraphQLEditor
+          key={uniqueKey}
+          uniquenessKey={uniqueKey}
+          request={request}
+          workspaceId={workspaceId}
+          environmentId={environmentId}
+          onChange={handleGraphQLChange}
+        />
+      );
     } else if (!isBodyEmpty) {
       const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
-      return <RawEditor uniquenessKey={uniqueKey} contentType={contentType || 'text/plain'} content={request.body.text || ''} onChange={handleRawChange} />;
+      return (
+        <RawEditor
+          uniquenessKey={uniqueKey}
+          contentType={contentType || 'text/plain'}
+          content={request.body.text || ''}
+          onChange={handleRawChange}
+        />
+      );
     } else if (isEventStreamRequest(request)) {
       return (
         <EmptyStatePane
@@ -131,20 +162,19 @@ export const BodyEditor: FC<Props> = ({
         />
       );
     }
-      return (
-        <EmptyStatePane
-          icon={<SvgIcon icon="bug" />}
-          documentationLinks={[documentationLinks.introductionToInsomnia]}
-          secondaryAction="Select a body type from above to send data in the body of a request"
-          title="Enter a URL and send to get a response"
-        />
-      );
-
+    return (
+      <EmptyStatePane
+        icon={<SvgIcon icon="bug" />}
+        documentationLinks={[documentationLinks.introductionToInsomnia]}
+        secondaryAction="Select a body type from above to send data in the body of a request"
+        title="Enter a URL and send to get a response"
+      />
+    );
   }
 
   return (
     <NunjucksEnabledProvider disable={noRender}>
-      <Toolbar className="w-full flex-shrink-0 h-[--line-height-sm] border-b border-solid border-[--hl-md] flex items-center px-2">
+      <Toolbar className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center border-b border-solid border-[--hl-md] px-2">
         <ContentTypeDropdown />
       </Toolbar>
       {renderBodyEditor()}

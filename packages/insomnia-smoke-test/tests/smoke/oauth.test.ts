@@ -4,17 +4,9 @@ import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 test('can make oauth2 requests', async ({ app, page }) => {
-  if (process.platform === 'darwin') {
-    test.setTimeout(6 * 60 * 1000);
-  } else {
-    test.slow();
-  }
-
   const sendButton = page.locator('[data-testid="request-pane"] button:has-text("Send")');
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-  const responseBody = page.locator('[data-testid="CodeEditor"]:visible', {
-    has: page.locator('.CodeMirror-activeline'),
-  });
+  const responseBody = page.locator('#json-response-viewer + div');
 
   const projectView = page.locator('#wrapper');
 
@@ -27,14 +19,42 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   await page.getByLabel('OAuth Testing').click();
 
+ // Test Folder Level Auth propagates to heirs
+
+  // select the folder (collapses heirs
+  await page.getByTestId('Folder Level Auth Code').click();
+
+  await page.getByRole('tab', { name: 'Auth' }).click();
+  await page.getByRole('button', { name: 'Clear' }).click();
+
+  // expand the folder to see the heirs again
+  await page.getByTestId('Folder Level Auth Code').click();
+  await page.getByLabel('Request Collection').getByTestId('Request with Inherited Auth').press('Enter');
+  await expect.soft(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
+  const [initialLoginPage] = await Promise.all([app.waitForEvent('window'), sendButton.click()]);
+  await initialLoginPage.waitForLoadState();
+  await initialLoginPage.waitForFunction("document.cookie !== ''");
+  await initialLoginPage.locator('[name="login"]').fill('folder');
+  await initialLoginPage.locator('[name="password"]').fill('folder');
+  await initialLoginPage.locator('button:has-text("Sign-in")').click();
+  await expect.soft(statusTag).toContainText('200 OK');
+  await expect.soft(responseBody).toContainText('"sub": "folder"');
+
+  // go back to the folder's auth tab
+  await page.getByTestId('Folder Level Auth Code').click();
+  await page.getByRole('tab', { name: 'Auth' }).click();
+
+  // clear the session (but keep the token!)
+  await page.getByRole('button', { name: 'Clear OAuth 2 session', exact: true }).click();
+
+  // reset ui state
+  await page.getByTestId('Folder Level Auth Code').click();
+
   // No PKCE
   await projectView.getByLabel('Request Collection').getByTestId('No PKCE').press('Enter');
-  await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
+  await expect.soft(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
 
-  const [authorizationCodePage] = await Promise.all([
-    app.waitForEvent('window'),
-    sendButton.click(),
-  ]);
+  const [authorizationCodePage] = await Promise.all([app.waitForEvent('window'), sendButton.click()]);
 
   await authorizationCodePage.waitForLoadState();
   await authorizationCodePage.waitForFunction("document.cookie !== ''");
@@ -42,17 +62,17 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await authorizationCodePage.locator('[name="password"]').fill('admin');
   await authorizationCodePage.locator('button:has-text("Sign-in")').click();
 
-  await expect(statusTag).toContainText('200 OK');
-  await expect(responseBody).toContainText('"sub": "admin"');
+  await expect.soft(statusTag).toContainText('200 OK');
+  await expect.soft(responseBody).toContainText('"sub": "admin"');
 
   // Navigate to the OAuth2 Tab and refresh the token from there
   await page.getByRole('tab', { name: 'Auth' }).click();
-  await expect(page.getByRole('button', { name: 'OAuth 2.0' })).toBeVisible();
+  await expect.soft(page.getByRole('button', { name: 'OAuth 2.0' })).toBeVisible();
 
   const tokenInput = page.locator('[for="Access-Token"] > input');
   const prevToken = await tokenInput.inputValue();
   await page.locator('button:has-text("Refresh Token")').click();
-  await expect(tokenInput).not.toHaveValue(prevToken);
+  await expect.soft(tokenInput).not.toHaveValue(prevToken);
 
   // Clear the session and tokens and fetch a token manually
   await page.locator('text=Advanced Options').click();
@@ -71,32 +91,57 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await refreshPage.locator('[name="password"]').fill('admin');
   await refreshPage.locator('button:has-text("Sign-in")').click();
 
-  await expect(tokenInput).not.toHaveValue('');
+  await expect.soft(tokenInput).not.toHaveValue('');
 
   // PKCE SHA256
   await page.getByLabel('Request Collection').getByTestId('PKCE SHA256').press('Enter');
-  await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
-  await expect(page.locator('#Grant-Type')).toHaveValue('authorization_code');
-  await expect(page.locator('#Code-Challenge-Method')).toHaveValue('S256');
+  await expect.soft(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
+  await expect.soft(page.locator('#Grant-Type')).toHaveValue('authorization_code');
+  await expect.soft(page.locator('#Code-Challenge-Method')).toHaveValue('S256');
   await sendButton.click();
-  await expect(statusTag).toContainText('200 OK');
-  await expect(responseBody).toContainText('"sub": "admin"');
+  await expect.soft(statusTag).toContainText('200 OK');
+  await expect.soft(responseBody).toContainText('"sub": "admin"');
 
   // PKCE Plain
   await page.getByLabel('Request Collection').getByTestId('PKCE Plain').press('Enter');
-  await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
-  await expect(page.locator('#Grant-Type')).toHaveValue('authorization_code');
-  await expect(page.locator('#Code-Challenge-Method')).toHaveValue('plain');
+  await expect.soft(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
+  await expect.soft(page.locator('#Grant-Type')).toHaveValue('authorization_code');
+  await expect.soft(page.locator('#Code-Challenge-Method')).toHaveValue('plain');
   await sendButton.click();
-  await expect(statusTag).toContainText('200 OK');
-  await expect(responseBody).toContainText('"sub": "admin"');
+  await expect.soft(statusTag).toContainText('200 OK');
+  await expect.soft(responseBody).toContainText('"sub": "admin"');
 
   // Inherited Auth from folder
   await page.getByLabel('Request Collection').getByTestId('Request with Inherited Auth').press('Enter');
-  await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
+  await expect.soft(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
   await sendButton.click();
-  await expect(statusTag).toContainText('200 OK');
-  await expect(responseBody).toContainText('"sub": "admin"');
+  await expect.soft(statusTag).toContainText('200 OK');
+  // this is the original token from the first login
+  await expect.soft(responseBody).toContainText('"sub": "folder"');
+
+  // test to ensure that the token does not persist after clearing the folder's auth
+  await page.getByTestId('Folder Level Auth Code').click();
+  await page.getByRole('tab', { name: 'Auth' }).click();
+  await page.getByRole('button', { name: 'Clear', exact: true }).click();
+
+  // clear the session, too (so we can get a fresh one)
+  await page.getByRole('button', { name: 'Clear OAuth 2 session', exact: true }).click();
+  await page.getByTestId('Folder Level Auth Code').click(); // re-expand
+
+  // try the request again, note that it attempts to re-authenticate
+  // instead of re-using the original token (the real fix)
+  await page.getByLabel('Request Collection').getByTestId('Request with Inherited Auth').press('Enter');
+  await expect.soft(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
+
+  const [secondLoginPage] = await Promise.all([app.waitForEvent('window'), sendButton.click()]);
+  await secondLoginPage.waitForLoadState();
+  await secondLoginPage.waitForFunction("document.cookie !== ''");
+  await secondLoginPage.locator('[name="login"]').fill('fresh');
+  await secondLoginPage.locator('[name="password"]').fill('fresh');
+  await secondLoginPage.locator('button:has-text("Sign-in")').click();
+
+  await expect.soft(statusTag).toContainText('200 OK');
+  await expect.soft(responseBody).toContainText('"sub": "fresh"');
 
   // Reset the OAuth 2 session from Preferences
   if (process.platform === 'darwin') {
@@ -109,29 +154,27 @@ test('can make oauth2 requests', async ({ app, page }) => {
 
   // ID Token
   await page.getByLabel('Request Collection').getByTestId('ID Token').press('Enter');
-  await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/id-token');
-  await expect(page.locator('#Grant-Type')).toHaveValue('implicit');
+  await expect.soft(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/id-token');
+  await page.getByRole('tab', { name: 'Auth' }).click();
+  await expect.soft(page.locator('#Grant-Type')).toHaveValue('implicit');
 
-  const [implicitPage] = await Promise.all([
-    app.waitForEvent('window'),
-    sendButton.click(),
-  ]);
+  const [implicitPage] = await Promise.all([app.waitForEvent('window'), sendButton.click()]);
   await implicitPage.waitForLoadState();
   await implicitPage.waitForFunction("document.cookie !== ''");
   await implicitPage.locator('[name="login"]').fill('admin');
   await implicitPage.locator('[name="password"]').fill('admin');
   await implicitPage.locator('button:has-text("Sign-in")').click();
 
-  await expect(statusTag).toContainText('200 OK');
-  await expect(responseBody).toContainText('"sub": "admin"');
+  await expect.soft(statusTag).toContainText('200 OK');
+  await expect.soft(responseBody).toContainText('"sub": "admin"');
 
   // ID and Access Token
   await page.getByLabel('Request Collection').getByTestId('ID and Access Token').press('Enter');
-  await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
-  await expect(page.locator('#Grant-Type')).toHaveValue('implicit');
+  await expect.soft(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
+  await expect.soft(page.locator('#Grant-Type')).toHaveValue('implicit');
   await sendButton.click();
-  await expect(statusTag).toContainText('200 OK');
-  await expect(responseBody).toContainText('"sub": "admin"');
+  await expect.soft(statusTag).toContainText('200 OK');
+  await expect.soft(responseBody).toContainText('"sub": "admin"');
 
   // Reset the OAuth 2 session from Preferences
   if (process.platform === 'darwin') {
@@ -144,11 +187,11 @@ test('can make oauth2 requests', async ({ app, page }) => {
 
   // Client Credentials
   await page.getByLabel('Request Collection').getByTestId('Client Credentials').press('Enter');
-  await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/client-credential');
-  await expect(page.locator('#Grant-Type')).toHaveValue('client_credentials');
+  await expect.soft(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/client-credential');
+  await expect.soft(page.locator('#Grant-Type')).toHaveValue('client_credentials');
   await sendButton.click();
-  await expect(statusTag).toContainText('200 OK');
-  await expect(responseBody).toContainText('"clientId": "client_credentials"');
+  await expect.soft(statusTag).toContainText('200 OK');
+  await expect.soft(responseBody).toContainText('"clientId": "client_credentials"');
 
   // Reset the OAuth 2 session from Preferences
   if (process.platform === 'darwin') {
@@ -161,9 +204,9 @@ test('can make oauth2 requests', async ({ app, page }) => {
 
   // Resource Owner Password Credentials
   await page.getByLabel('Request Collection').getByTestId('Resource Owner Password Credentials').press('Enter');
-  await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
-  await expect(page.locator('#Grant-Type')).toHaveValue('password');
+  await expect.soft(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
+  await expect.soft(page.locator('#Grant-Type')).toHaveValue('password');
   await sendButton.click();
-  await expect(statusTag).toContainText('200 OK');
-  await expect(responseBody).toContainText('"sub": "foo"');
+  await expect.soft(statusTag).toContainText('200 OK');
+  await expect.soft(responseBody).toContainText('"sub": "foo"');
 });

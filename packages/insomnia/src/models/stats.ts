@@ -30,9 +30,7 @@ export interface BaseStats {
 
 export type Stats = BaseModel & BaseStats;
 
-export const isStats = (model: Pick<BaseModel, 'type'>): model is Stats => (
-  model.type === type
-);
+export const isStats = (model: Pick<BaseModel, 'type'>): model is Stats => model.type === type;
 
 export function init(): BaseStats {
   return {
@@ -61,24 +59,19 @@ export async function update(patch: Partial<Stats>) {
 }
 
 export async function get() {
-  const results = await db.all<Stats>(type) || [];
+  const results = (await db.all<Stats>(type)) || [];
 
   if (results.length === 0) {
     return create();
   }
-    return results[0];
-
+  return results[0];
 }
 
 export function all() {
   return db.all<Stats>(type) || [];
 }
 
-export async function incrementRequestStats({
-  createdRequests,
-  deletedRequests,
-  executedRequests,
-}: Partial<Stats>) {
+export async function incrementRequestStats({ createdRequests, deletedRequests, executedRequests }: Partial<Stats>) {
   const stats = await get();
   await update({
     ...(createdRequests && {

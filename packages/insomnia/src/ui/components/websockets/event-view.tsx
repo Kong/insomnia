@@ -69,8 +69,8 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
   const { activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex flex-row box-border h-8 border-b border-gray-300 p-2">
+    <div className="flex h-full flex-col">
+      <div className="box-border flex h-8 flex-row border-b border-gray-300 p-2">
         <WebSocketPreviewModeDropdown
           download={handleDownloadResponseBody}
           copyToClipboard={handleCopyResponseToClipboard}

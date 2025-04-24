@@ -49,7 +49,11 @@ export async function watchProxySettings() {
       const [event, doc] = change;
       const isSettingsUpdate = isSettings(doc) && event === 'update';
       if (isSettingsUpdate) {
-        const hasProxyChanged = old.proxyEnabled !== doc.proxyEnabled || old.httpProxy !== doc.httpProxy || old.httpsProxy !== doc.httpsProxy || old.noProxy !== doc.noProxy;
+        const hasProxyChanged =
+          old.proxyEnabled !== doc.proxyEnabled ||
+          old.httpProxy !== doc.httpProxy ||
+          old.httpsProxy !== doc.httpsProxy ||
+          old.noProxy !== doc.noProxy;
         if (hasProxyChanged) {
           updateProxy();
           old = doc;

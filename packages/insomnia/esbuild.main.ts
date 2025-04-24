@@ -13,27 +13,21 @@ export default async function build(options: Options) {
   const __DEV__ = mode !== 'production';
   const PORT = pkg.dev['dev-server-port'];
 
-  const outdir = __DEV__
-    ? path.join(__dirname, 'src')
-    : path.join(__dirname, 'build');
+  const outdir = __DEV__ ? path.join(__dirname, 'src') : path.join(__dirname, 'build');
 
   const env: Record<string, string> = __DEV__
     ? {
-      'process.env.APP_RENDER_URL': JSON.stringify(
-        `http://localhost:${PORT}/index.html`
-      ),
-      'process.env.HIDDEN_BROWSER_WINDOW_URL': JSON.stringify(
-        `http://localhost:${PORT}/hidden-window.html`
-      ),
-      'process.env.NODE_ENV': JSON.stringify('development'),
-      'process.env.INSOMNIA_ENV': JSON.stringify('development'),
-      'process.env.BUILD_DATE': JSON.stringify(new Date()),
-    }
+        'process.env.APP_RENDER_URL': JSON.stringify(`http://localhost:${PORT}/index.html`),
+        'process.env.HIDDEN_BROWSER_WINDOW_URL': JSON.stringify(`http://localhost:${PORT}/hidden-window.html`),
+        'process.env.NODE_ENV': JSON.stringify('development'),
+        'process.env.INSOMNIA_ENV': JSON.stringify('development'),
+        'process.env.BUILD_DATE': JSON.stringify(new Date()),
+      }
     : {
-      'process.env.NODE_ENV': JSON.stringify('production'),
-      'process.env.INSOMNIA_ENV': JSON.stringify('production'),
-      'process.env.BUILD_DATE': JSON.stringify(new Date()),
-    };
+        'process.env.NODE_ENV': JSON.stringify('production'),
+        'process.env.INSOMNIA_ENV': JSON.stringify('production'),
+        'process.env.BUILD_DATE': JSON.stringify(new Date()),
+      };
   const preload = esbuild.build({
     entryPoints: ['./src/preload.ts'],
     outfile: path.join(outdir, 'preload.js'),
@@ -76,18 +70,13 @@ export default async function build(options: Options) {
     ],
   });
 
-  return Promise.all([
-    main,
-    preload,
-    hiddenBrowserWindowPreload,
-  ]);
+  return Promise.all([main, preload, hiddenBrowserWindowPreload]);
 }
 
 // Build if ran as a cli script
 const isMain = require.main === module;
 
 if (isMain) {
-  const mode =
-    process.env.NODE_ENV === 'development' ? 'development' : 'production';
+  const mode = process.env.NODE_ENV === 'development' ? 'development' : 'production';
   build({ mode });
 }

@@ -1,5 +1,6 @@
 import { type SchemaReference } from 'codemirror-graphql/utils/SchemaReference';
-import { GraphQLEnumType, type GraphQLField, type GraphQLNamedType, GraphQLSchema, type GraphQLType, isNamedType } from 'graphql';
+import type { GraphQLSchema } from 'graphql';
+import { GraphQLEnumType, type GraphQLField, type GraphQLNamedType, type GraphQLType, isNamedType } from 'graphql';
 import React, { type FC, useCallback, useEffect, useRef, useState } from 'react';
 
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -11,7 +12,7 @@ import { GraphQLExplorerType } from './graph-ql-explorer-type';
 import type { ActiveReference, GraphQLFieldWithParentName } from './graph-ql-types';
 
 function getReferenceInfo(reference: SchemaReference) {
-  let field: GraphQLField<any, any, { [key: string]: any }> | undefined;
+  let field: GraphQLField<any, any, Record<string, any>> | undefined;
   if ('field' in reference) {
     field = reference.field;
   }
@@ -28,13 +29,16 @@ function isSameFieldAndType(
   currentType?: GraphQLType | null,
   type?: GraphQLType | null,
   currentField?: GraphQLFieldWithParentName,
-  field?: GraphQLField<any, any, { [key: string]: any }>
+  field?: GraphQLField<any, any, Record<string, any>>,
 ) {
   // @TODO Simplify this function since it's hard to follow along
   const compare = <
     T extends GraphQLNamedType | GraphQLFieldWithParentName,
-    U extends GraphQLNamedType | GraphQLFieldWithParentName
-  >(a?: T, b?: U) => (!a && !b) || (a && b && a.name === b.name);
+    U extends GraphQLNamedType | GraphQLFieldWithParentName,
+  >(
+    a?: T,
+    b?: U,
+  ) => (!a && !b) || (a && b && a.name === b.name);
 
   if (!isNamedType(currentType)) {
     currentType = undefined;
@@ -68,7 +72,7 @@ interface State extends HistoryItem {
 }
 
 export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, reference }) => {
-  const [{ currentType, currentField, history, filter }, setState] = useState<State>({ history:[], filter: '' });
+  const [{ currentType, currentField, history, filter }, setState] = useState<State>({ history: [], filter: '' });
   const inputRef = useRef<HTMLInputElement>(null);
 
   const addToHistory = useCallback(({ currentType, currentField, history }: State) => {
@@ -90,12 +94,12 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
         return state;
       }
 
-      return ({
+      return {
         ...state,
         history: addToHistory(state),
         currentType: type,
         currentField: field,
-      });
+      };
     });
   }, [addToHistory, reference]);
 
@@ -120,12 +124,12 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
   const handlePopHistory = () => {
     setState(state => {
       const last = state.history[state.history.length - 1] || null;
-      return ({
+      return {
         ...state,
         history: state.history.slice(0, state.history.length - 1),
         currentType: last ? last.currentType : undefined,
         currentField: last ? last.currentField : undefined,
-      });
+      };
     });
   };
 
@@ -151,9 +155,7 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
   let child: JSX.Element | null = null;
 
   if (currentField) {
-    child = (
-      <GraphQLExplorerField onNavigateType={handleNavigateType} field={currentField} />
-    );
+    child = <GraphQLExplorerField onNavigateType={handleNavigateType} field={currentField} />;
   } else if (currentType && currentType instanceof GraphQLEnumType) {
     child = <GraphQLExplorerEnum type={currentType} />;
   } else if (currentType) {
@@ -182,7 +184,7 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
                 onClick={() => {
                   if (inputRef.current) {
                     inputRef.current.value = '';
-                    setState(state => ({ ...state, filter:'' }));
+                    setState(state => ({ ...state, filter: '' }));
                   }
                 }}
               >
@@ -199,10 +201,7 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
             onNavigateField={handleNavigateField}
           />
         ) : (
-          <GraphQLExplorerSchema
-            onNavigateType={handleNavigateType}
-            schema={schema}
-          />
+          <GraphQLExplorerSchema onNavigateType={handleNavigateType} schema={schema} />
         )}
       </>
     );
@@ -226,8 +225,8 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
   return (
     <div className="graphql-explorer theme--dialog">
       <div className="graphql-explorer__header">
-        {history.length ?
-          (<a
+        {history.length ? (
+          <a
             href="#"
             className="graphql-explorer__header__back-btn"
             onClick={event => {
@@ -236,24 +235,21 @@ export const GraphQLExplorer: FC<Props> = ({ schema, handleClose, visible, refer
             }}
           >
             <i className="fa--skinny fa fa-angle-left" /> {name}
-          </a>)
-          : typeOrField ?
-            (<a
-              href="#"
-              className="graphql-explorer__header__back-btn"
-              onClick={event => {
-                event.preventDefault();
-                handlePopHistory();
-              }}
-            >
-              <i className="fa--skinny fa fa-angle-left" /> Schema
-            </a>)
-            : null}
+          </a>
+        ) : typeOrField ? (
+          <a
+            href="#"
+            className="graphql-explorer__header__back-btn"
+            onClick={event => {
+              event.preventDefault();
+              handlePopHistory();
+            }}
+          >
+            <i className="fa--skinny fa fa-angle-left" /> Schema
+          </a>
+        ) : null}
         <h1>{fieldName || typeName || schemaName || 'Unknown'}</h1>
-        <button
-          className="btn btn--compact graphql-explorer__header__close-btn"
-          onClick={handleClose}
-        >
+        <button className="btn btn--compact graphql-explorer__header__close-btn" onClick={handleClose}>
           <i className="fa fa-close" />
         </button>
       </div>

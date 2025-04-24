@@ -30,10 +30,7 @@ export const generate = (suites: TestSuite[]) => {
   return lines.join('\n');
 };
 
-export const generateToFile = async (
-  filepath: string,
-  suites: TestSuite[],
-) => {
+export const generateToFile = async (filepath: string, suites: TestSuite[]) => {
   return new Promise<void>((resolve, reject) => {
     const js = generate(suites);
     return writeFile(filepath, js, err => {
@@ -46,10 +43,7 @@ export const generateToFile = async (
   });
 };
 
-const generateSuiteLines = (
-  n: number,
-  suite?: TestSuite | null,
-) => {
+const generateSuiteLines = (n: number, suite?: TestSuite | null) => {
   if (!suite) {
     return [];
   }
@@ -98,9 +92,7 @@ const generateTestLines = (num: number, test?: Test | null) => {
 
   if (typeof defaultRequestId === 'string') {
     lines.push(indent(num, '// Set active request on global insomnia object'));
-    lines.push(
-      indent(num, `insomnia.setActiveRequestId('${defaultRequestId}');`),
-    );
+    lines.push(indent(num, `insomnia.setActiveRequestId('${defaultRequestId}');`));
   }
 
   // Add user-defined test source

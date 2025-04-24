@@ -1,4 +1,3 @@
-
 import type { Environment } from 'nunjucks';
 import nunjucks from 'nunjucks/browser/nunjucks';
 
@@ -69,9 +68,7 @@ export function render(
       const location = err.message.match(/\[Line (\d+), Column (\d+)*]/);
       const line = location ? parseInt(location[1]) : 1;
       const column = location ? parseInt(location[2]) : 1;
-      const reason = err.message.includes('attempted to output null or undefined value')
-        ? 'undefined'
-        : 'error';
+      const reason = err.message.includes('attempted to output null or undefined value') ? 'undefined' : 'error';
       const newError = new RenderError(sanitizedMsg);
       newError.path = path || '';
       newError.message = sanitizedMsg;
@@ -174,9 +171,7 @@ async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: bool
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   const nunjucksEnvironment = nunjucks.configure(config) as NunjucksEnvironment;
 
-  const allExtensions = [
-    ...localTemplateTags,
-  ];
+  const allExtensions = [...localTemplateTags];
 
   for (const extension of allExtensions) {
     const { templateTag, plugin } = extension;

@@ -104,11 +104,7 @@ export async function init() {
   await reloadPlugins();
 }
 
-async function _traversePluginPath(
-  pluginMap: Record<string, Plugin>,
-  allPaths: string[],
-  allConfigs: PluginConfigMap,
-) {
+async function _traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: string[], allConfigs: PluginConfigMap) {
   for (const p of allPaths) {
     if (!fs.existsSync(p)) {
       continue;
@@ -157,15 +153,16 @@ async function _traversePluginPath(
           description: pluginJson.description || pluginJson.insomnia.description || '',
           version: pluginJson.version || 'unknown',
           directory: modulePath || '',
-          config: (pluginJson.name in allConfigs)
-            ? allConfigs[pluginJson.name]
-            : { disabled: false },
+          config: pluginJson.name in allConfigs ? allConfigs[pluginJson.name] : { disabled: false },
           module: module,
         };
       } catch (err) {
         showError({
           title: 'Plugin Error',
-          message: 'Failed to load plugin ' + filename + '. Please contact the plugin author sharing the below stack trace to help them to ensure compatibility with the latest Insomnia.',
+          message:
+            'Failed to load plugin ' +
+            filename +
+            '. Please contact the plugin author sharing the below stack trace to help them to ensure compatibility with the latest Insomnia.',
           error: err,
         });
       }
@@ -189,10 +186,12 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
           return path.join(process.env['HOME'] || '/', p.slice(1));
         }
         return p;
-
       });
     // Make sure the default directories exist
-    const pluginPath = path.join(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'), 'plugins');
+    const pluginPath = path.join(
+      process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'),
+      'plugins',
+    );
     fs.mkdirSync(pluginPath, { recursive: true });
     // Also look in node_modules folder in each directory
     const basePaths = [pluginPath, ...extraPaths];
@@ -306,38 +305,40 @@ export async function getTemplateTags(): Promise<TemplateTag[]> {
 }
 
 export async function getRequestHooks(): Promise<RequestHook[]> {
-  let functions: RequestHook[] = [{
-    plugin: {
-      name: 'default-headers',
-      description: 'Set default headers for all requests',
-      version: '0.0.0',
-      directory: '',
-      config: {
-        disabled: false,
+  let functions: RequestHook[] = [
+    {
+      plugin: {
+        name: 'default-headers',
+        description: 'Set default headers for all requests',
+        version: '0.0.0',
+        directory: '',
+        config: {
+          disabled: false,
+        },
+        module: {},
       },
-      module: {},
-    },
-    hook: context => {
-      const headers = context.request.getEnvironmentVariable('DEFAULT_HEADERS');
-      if (!headers) {
-        return;
-      }
-      for (const name of Object.keys(headers)) {
-        const value = headers[name];
-        if (context.request.hasHeader(name)) {
-          console.log(`[header] Skip setting default header ${name}. Already set to ${value}`);
-          continue;
+      hook: context => {
+        const headers = context.request.getEnvironmentVariable('DEFAULT_HEADERS');
+        if (!headers) {
+          return;
         }
-        if (value === 'null') {
-          context.request.removeHeader(name);
-          console.log(`[header] Remove default header ${name}`);
-        } else {
-          context.request.setHeader(name, value);
-          console.log(`[header] Set default header ${name}: ${value}`);
+        for (const name of Object.keys(headers)) {
+          const value = headers[name];
+          if (context.request.hasHeader(name)) {
+            console.log(`[header] Skip setting default header ${name}. Already set to ${value}`);
+            continue;
+          }
+          if (value === 'null') {
+            context.request.removeHeader(name);
+            console.log(`[header] Remove default header ${name}`);
+          } else {
+            context.request.setHeader(name, value);
+            console.log(`[header] Set default header ${name}: ${value}`);
+          }
         }
-      }
+      },
     },
-  }];
+  ];
 
   for (const plugin of await getActivePlugins()) {
     const moreFunctions = plugin.module.requestHooks || [];

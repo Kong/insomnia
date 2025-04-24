@@ -29,9 +29,7 @@ export function init(): BaseMockServer {
   };
 }
 
-export const isMockServer = (model: Pick<BaseModel, 'type'>): model is MockServer => (
-  model.type === type
-);
+export const isMockServer = (model: Pick<BaseModel, 'type'>): model is MockServer => model.type === type;
 
 export function migrate(doc: MockServer) {
   return doc;
@@ -44,10 +42,7 @@ export function create(patch: Partial<MockServer> = {}) {
 
   return db.docCreate<MockServer>(type, patch);
 }
-export async function getOrCreateForParentId(
-  workspaceId: string,
-  patch: Partial<MockServer> = {},
-) {
+export async function getOrCreateForParentId(workspaceId: string, patch: Partial<MockServer> = {}) {
   const mockServer = await db.getWhere<MockServer>(type, {
     parentId: workspaceId,
   });
@@ -58,10 +53,7 @@ export async function getOrCreateForParentId(
 
   return mockServer;
 }
-export function update(
-  mockServer: MockServer,
-  patch: Partial<MockServer> = {},
-) {
+export function update(mockServer: MockServer, patch: Partial<MockServer> = {}) {
   return db.docUpdate<MockServer>(mockServer, patch);
 }
 

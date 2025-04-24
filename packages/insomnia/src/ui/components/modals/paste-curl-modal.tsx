@@ -9,7 +9,11 @@ import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { CodeEditor } from '../codemirror/code-editor';
 
-export const PasteCurlModal = ({ onHide, onImport, defaultValue }: ModalProps & { onImport: (req: Partial<Request>) => void; defaultValue?: string }) => {
+export const PasteCurlModal = ({
+  onHide,
+  onImport,
+  defaultValue,
+}: ModalProps & { onImport: (req: Partial<Request>) => void; defaultValue?: string }) => {
   const modalRef = useRef<ModalHandle>(null);
   const [isValid, setIsValid] = useState<boolean>(true);
   const [req, setReq] = useState<any>({});
@@ -17,12 +21,13 @@ export const PasteCurlModal = ({ onHide, onImport, defaultValue }: ModalProps & 
   useEffect(() => {
     async function parseCurlToRequest() {
       try {
-        const { data } = await convert(defaultValue || '');
+        const { data } = await convert({
+          contentStr: defaultValue || '',
+        });
         const { resources } = data;
         const importedRequest = resources[0];
         setIsValid(true);
         setReq(importedRequest);
-
       } catch (error) {
         console.log('[importer] error', error);
         setIsValid(false);
@@ -32,7 +37,6 @@ export const PasteCurlModal = ({ onHide, onImport, defaultValue }: ModalProps & 
       }
     }
     parseCurlToRequest();
-
   }, [defaultValue]);
 
   return (
@@ -43,7 +47,7 @@ export const PasteCurlModal = ({ onHide, onImport, defaultValue }: ModalProps & 
           <CodeEditor
             id="paste-curl-content"
             placeholder="Paste curl request here"
-            className=" border-top"
+            className="border-top"
             mode="text"
             dynamicHeight
             defaultValue={defaultValue}
@@ -52,12 +56,13 @@ export const PasteCurlModal = ({ onHide, onImport, defaultValue }: ModalProps & 
                 return;
               }
               try {
-                const { data } = await convert(value);
+                const { data } = await convert({
+                  contentStr: value,
+                });
                 const { resources } = data;
                 const importedRequest = resources[0];
                 setIsValid(true);
                 setReq(importedRequest);
-
               } catch (error) {
                 console.log('[importer] error', error);
                 setIsValid(false);
@@ -67,7 +72,7 @@ export const PasteCurlModal = ({ onHide, onImport, defaultValue }: ModalProps & 
           />
         </ModalBody>
         <ModalFooter>
-          <div className="margin-left italic txt-sm truncate">
+          <div className="margin-left txt-sm truncate italic">
             {isValid ? `Detected ${req.method} request to ${req.url}` : 'Invalid input'}
           </div>
           <div>

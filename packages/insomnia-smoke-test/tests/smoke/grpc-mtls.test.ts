@@ -22,7 +22,7 @@ test('can send gRPC requests using mTLS requests (with reflection)', async ({ ap
   await page.getByLabel('grpc').click();
 
   await page.getByLabel('Request Collection').getByTestId('grpcs').press('Enter');
-  await expect(page.getByRole('button', { name: 'Select Method' })).toBeDisabled();
+  await expect.soft(page.getByRole('button', { name: 'Select Method' })).toBeDisabled();
 
   // add root CA and client certificate
   const fixturePath = getFixturePath('certificates');
@@ -57,6 +57,6 @@ test('can send gRPC requests using mTLS requests (with reflection)', async ({ ap
 
   // Check for the single Unary response
   await page.getByRole('tab', { name: 'Response 1' }).click();
-  await expect(statusTag).toContainText('0 OK');
-  await expect(responseBody).toContainText('Berkshire Valley Management Area Trail');
+  await expect.soft(statusTag).toContainText('0 OK');
+  await expect.soft(responseBody).toContainText('Berkshire Valley Management Area Trail');
 });
