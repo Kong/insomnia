@@ -14,7 +14,7 @@ test.describe('Import from URL', () => {
     await page.getByLabel('simple').click();
   });
 
-  test('Should work as expect in HTTP request', async ({ page }) => {
+  test('Should work as expected in HTTP request', async ({ page }) => {
     const requestUrl = 'http://localhost:4010/echo?foo=bar&baz=qux';
     const codeMirror = page.getByTestId('OneLineEditor').first().locator('.CodeMirror');
 
@@ -40,7 +40,7 @@ test.describe('Import from URL', () => {
     await expect.soft(responsePane).toContainText(requestUrl);
   });
 
-  test('Should work as expect in Websocket request', async ({ page }) => {
+  test('Should work as expected in Websocket request', async ({ page }) => {
     const requestUrl = 'ws://localhost:4010?foo=bar&baz=qux';
     const codeMirror = page.getByTestId('OneLineEditor').first().locator('.CodeMirror');
 

@@ -67,7 +67,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
        * Currently the OneLineEditor is a uncontrolled component, and the value is asynchronously, if we change the component to controlled, users need to wait for the value to be updated when inputting, that's not a good experience.
        * So as a workaround, we need to manually update the url bar value.
        */
-      requestUrlBarRef.current?.updateUrl(url);
+      requestUrlBarRef.current?.setUrl(url);
     }
   };
   const gitVersion = useGitVCSVersion();

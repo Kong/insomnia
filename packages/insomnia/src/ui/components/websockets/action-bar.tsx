@@ -20,7 +20,7 @@ interface ActionBarProps {
 }
 
 export interface WebSocketActionBarHandle {
-  updateUrl: (url: string) => void;
+  setUrl: (url: string) => void;
 }
 
 export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBarProps>(
@@ -83,7 +83,7 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
         });
     }, [connect, environmentId, isOpen, request, updateTabById, workspaceId]);
 
-    const updateUrl = useCallback(
+    const setUrl = useCallback(
       (url: string) => {
         if (oneLineEditorRef.current) {
           oneLineEditorRef.current.setValue(url);
@@ -92,7 +92,7 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
       [oneLineEditorRef],
     );
 
-    useImperativeHandle(ref, () => ({ updateUrl }), [updateUrl]);
+    useImperativeHandle(ref, () => ({ setUrl }), [setUrl]);
 
     useEffect(() => {
       const sendOnMetaEnter = (event: KeyboardEvent) => {
