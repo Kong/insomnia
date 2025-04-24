@@ -55,16 +55,16 @@ export const CreatePluginModal = ({ onClose, onComplete }: Props) => {
                   }}
                 >
                   <Label
-                    className={`p-0 text-sm text-[--hl] ${error && name ? 'text-[rgba(var(--color-danger-rgb),0.5)]' : ''}`}
+                    className={`p-0 text-sm text-[--hl] ${error ? 'text-[rgba(var(--color-danger-rgb),0.5)]' : ''}`}
                     slot="label"
                   >
                     Plugin Name
                   </Label>
                   <div
-                    className={`flex items-center rounded-sm border border-solid border-[--hl-sm] ${error && name ? 'border-[rgba(var(--color-danger-rgb),0.5)]' : ''}`}
+                    className={`flex items-center rounded-sm border border-solid border-[--hl-sm] ${error ? 'border-[rgba(var(--color-danger-rgb),0.5)]' : ''}`}
                   >
                     <div
-                      className={`flex flex-shrink-0 items-center justify-center bg-[--hl-sm] p-3 ${error && name ? 'bg-[rgba(var(--color-danger-rgb),0.5)]' : ''}`}
+                      className={`flex flex-shrink-0 items-center justify-center bg-[--hl-sm] p-3 ${error ? 'bg-[rgba(var(--color-danger-rgb),0.5)]' : ''}`}
                     >
                       <p className="flex h-full items-center text-sm italic text-[--color-font]">insomnia-plugin-</p>
                     </div>
@@ -84,7 +84,6 @@ export const CreatePluginModal = ({ onClose, onComplete }: Props) => {
                   className="m-1 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                   type="button"
                   data-testid="generate-plugin-button"
-                  isDisabled={!name}
                   onPress={async () => {
                     // Remove insomnia-plugin- prefix if they accidentally typed it
                     const nameWithoutPrefix = name.replace(/^insomnia-plugin-/, '');
