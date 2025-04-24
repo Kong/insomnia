@@ -132,7 +132,7 @@ const Root = () => {
           onDone: async (isYes: boolean) => {
             if (isYes) {
               const mainJsContent = `module.exports.themes = [${JSON.stringify(parsedTheme, null, 2)}];`;
-              await createPlugin(`theme-${parsedTheme.name}`, '0.0.1', mainJsContent);
+              await createPlugin(`theme-${parsedTheme.name}`, mainJsContent);
               const settings = await models.settings.get();
               await models.settings.update(settings, {
                 theme: parsedTheme.name,
