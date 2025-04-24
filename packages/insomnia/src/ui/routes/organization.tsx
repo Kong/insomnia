@@ -412,7 +412,7 @@ export async function fetchAndCacheOrganizationStorageRule(
     return {
       enableCloudSync: false,
       enableLocalVault: true,
-      enableGitSync: false,
+      enableGitSync: true,
       isOverridden: false,
     };
   }
