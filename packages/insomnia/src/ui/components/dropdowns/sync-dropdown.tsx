@@ -5,9 +5,9 @@ import {
   Collection,
   Menu,
   MenuItem,
+  MenuSection,
   MenuTrigger,
   Popover,
-  Section,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
@@ -348,7 +348,7 @@ export const SyncDropdown: FC<Props> = () => {
             className="max-h-[85vh] max-w-lg select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
           >
             {syncError && (
-              <Section className="border-b border-solid border-[--hl-sm]">
+              <MenuSection className="border-b border-solid border-[--hl-sm]">
                 <MenuItem
                   className={
                     'text-md flex w-full items-center gap-2 overflow-hidden whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold'
@@ -358,11 +358,11 @@ export const SyncDropdown: FC<Props> = () => {
                   <Icon icon="exclamation-triangle" className="text-[--color-warning]" />
                   <p className="whitespace-normal">{syncError}</p>
                 </MenuItem>
-              </Section>
+              </MenuSection>
             )}
             {!syncError && (
               <Fragment>
-                <Section className="border-b border-solid border-[--hl-sm]">
+                <MenuSection className="border-b border-solid border-[--hl-sm]">
                   <Collection items={localBranchesActionList}>
                     {item => (
                       <MenuItem
@@ -374,8 +374,8 @@ export const SyncDropdown: FC<Props> = () => {
                       </MenuItem>
                     )}
                   </Collection>
-                </Section>
-                <Section>
+                </MenuSection>
+                <MenuSection>
                   <Collection items={syncMenuActionList}>
                     {item => (
                       <MenuItem
@@ -389,7 +389,7 @@ export const SyncDropdown: FC<Props> = () => {
                       </MenuItem>
                     )}
                   </Collection>
-                </Section>
+                </MenuSection>
               </Fragment>
             )}
           </Menu>

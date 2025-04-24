@@ -1,6 +1,6 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useRef, useState } from 'react';
-import { Button, Collection, Header, Menu, MenuItem, MenuTrigger, Popover, Section } from 'react-aria-components';
+import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
 import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { toKebabCase } from '../../../common/misc';
@@ -338,7 +338,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
             className="h-full min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
           >
             {section => (
-              <Section className="flex flex-1 flex-col">
+              <MenuSection className="flex flex-1 flex-col">
                 <Header className="flex items-center gap-2 py-1 pl-2 text-xs uppercase text-[--hl]">
                   <Icon icon={section.icon} /> <span>{section.name}</span>
                 </Header>
@@ -356,7 +356,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
                     </MenuItem>
                   )}
                 </Collection>
-              </Section>
+              </MenuSection>
             )}
           </Menu>
         </Popover>

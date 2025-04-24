@@ -8,11 +8,11 @@ import {
   Heading,
   Menu,
   MenuItem,
+  MenuSection,
   MenuTrigger,
   Modal,
   ModalOverlay,
   Popover,
-  Section,
 } from 'react-aria-components';
 import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
@@ -318,7 +318,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
             className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
           >
             {section => (
-              <Section className="flex flex-1 flex-col">
+              <MenuSection className="flex flex-1 flex-col">
                 <Header className="flex items-center gap-2 py-1 pl-2 text-xs uppercase text-[--hl]">
                   <Icon icon={section.icon} /> <span>{section.name}</span>
                 </Header>
@@ -336,7 +336,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
                     </MenuItem>
                   )}
                 </Collection>
-              </Section>
+              </MenuSection>
             )}
           </Menu>
         </Popover>

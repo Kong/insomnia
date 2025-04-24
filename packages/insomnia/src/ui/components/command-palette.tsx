@@ -12,10 +12,10 @@ import {
   Label,
   ListBox,
   ListBoxItem,
+  ListBoxSection,
   Modal,
   ModalOverlay,
   Popover,
-  Section,
   Text,
 } from 'react-aria-components';
 import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
@@ -512,7 +512,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                 items={comboboxSections}
               >
                 {section => (
-                  <Section className="flex flex-1 flex-col">
+                  <ListBoxSection className="flex flex-1 flex-col">
                     <Header className="select-none p-2 text-xs uppercase text-[--hl]">{section.name}</Header>
                     <Collection items={section.children}>
                       {item => (
@@ -536,7 +536,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
                         </ListBoxItem>
                       )}
                     </Collection>
-                  </Section>
+                  </ListBoxSection>
                 )}
               </ListBox>
             </Popover>

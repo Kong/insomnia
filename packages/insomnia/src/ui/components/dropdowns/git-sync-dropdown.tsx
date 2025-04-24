@@ -5,9 +5,9 @@ import {
   Collection,
   Menu,
   MenuItem,
+  MenuSection,
   MenuTrigger,
   Popover,
-  Section,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
@@ -450,7 +450,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
             }}
             className="max-h-[85vh] max-w-lg select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
           >
-            <Section className="border-b border-solid border-[--hl-sm] pb-2 empty:border-none empty:pb-0">
+            <MenuSection className="border-b border-solid border-[--hl-sm] pb-2 empty:border-none empty:pb-0">
               <Collection items={switchToInsomniaSyncList}>
                 {item => (
                   <MenuItem
@@ -467,8 +467,8 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                   </MenuItem>
                 )}
               </Collection>
-            </Section>
-            <Section className="border-b border-solid border-[--hl-sm] pb-2 empty:border-none empty:pb-0">
+            </MenuSection>
+            <MenuSection className="border-b border-solid border-[--hl-sm] pb-2 empty:border-none empty:pb-0">
               <Collection items={gitSyncActions}>
                 {item => (
                   <MenuItem
@@ -482,8 +482,8 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                   </MenuItem>
                 )}
               </Collection>
-            </Section>
-            <Section className="border-b border-solid border-[--hl-sm] pb-2 empty:border-none empty:pb-0">
+            </MenuSection>
+            <MenuSection className="border-b border-solid border-[--hl-sm] pb-2 empty:border-none empty:pb-0">
               <Collection items={branchesActionList}>
                 {item => (
                   <MenuItem
@@ -495,8 +495,8 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                   </MenuItem>
                 )}
               </Collection>
-            </Section>
-            <Section>
+            </MenuSection>
+            <MenuSection>
               <Collection items={currentBranchActions}>
                 {item => (
                   <MenuItem
@@ -510,7 +510,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                   </MenuItem>
                 )}
               </Collection>
-            </Section>
+            </MenuSection>
           </Menu>
         </Popover>
       </MenuTrigger>
