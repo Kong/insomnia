@@ -3,21 +3,54 @@ import fs from 'fs';
 import path from 'path';
 
 // Helper function to validate and sanitize plugin name
-export function getSafePluginDir(moduleName: string): string {
+export function getSafePluginDir(pluginName: string): string {
+  const pluginNameWithoutPrefix = pluginName.replace(/^insomnia-plugin-/, '');
+
   // 1. Validate that moduleName follows allowed pattern (no '../' allowed)
-  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(moduleName)) {
-    throw new Error('Invalid plugin name: must be lowercase, alphanumeric, and dash-separated');
+  if (pluginNameWithoutPrefix.trim() === '-') {
+    throw new Error('Plugin name must not be a single dash');
+  }
+
+  if (pluginNameWithoutPrefix.startsWith('-')) {
+    throw new Error('Plugin name must not start with a dash');
+  }
+
+  if (pluginNameWithoutPrefix.endsWith('-')) {
+    throw new Error('Plugin name must not end with a dash');
+  }
+
+  if (pluginNameWithoutPrefix.match(/--/)) {
+    throw new Error('Plugin name must not contain consecutive dashes');
+  }
+
+  if (pluginNameWithoutPrefix.match(/^\./)) {
+    throw new Error('Plugin name cannot start with a period');
+  }
+
+  if (pluginNameWithoutPrefix.match(/^_/)) {
+    throw new Error('Plugin name cannot start with an underscore');
+  }
+
+  if (pluginNameWithoutPrefix.trim() !== pluginNameWithoutPrefix) {
+    throw new Error('Plugin name cannot contain leading or trailing spaces');
+  }
+
+  if (encodeURIComponent(pluginNameWithoutPrefix) !== pluginNameWithoutPrefix) {
+    throw new Error('Plugin name must be lowercase, alphanumeric, and dash-separated');
+  }
+
+  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(pluginNameWithoutPrefix)) {
+    throw new Error('Plugin name must be lowercase, alphanumeric, and dash-separated');
   }
 
   // 2. Sanitize moduleName to remove any unexpected characters or sequences
   // Remove '../' or path traversal attempts
-  const sanitizedModuleName = moduleName.replace(/\.\.(\/|\\)/g, ''); 
+  const sanitizedModuleName = pluginName.replace(/\.\.(\/|\\)/g, '');
 
   // 3. Get base directory
   const baseDir = path.resolve(
-    process.env['INSOMNIA_DATA_PATH'] ||
-    (process.type === 'renderer' ? window : electron).app.getPath('userData'),
-    'plugins'
+    process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'),
+    'plugins',
   );
 
   // 4. Join and resolve the plugin path
@@ -32,7 +65,7 @@ export function getSafePluginDir(moduleName: string): string {
   // Reject plugin names like "con", "prn", "aux", "nul" and ".."
   const reserved = ['con', 'prn', 'aux', 'nul'];
 
-  if (reserved.includes(moduleName.toLowerCase()) || moduleName.includes('..')) {
+  if (reserved.includes(pluginName.toLowerCase()) || pluginName.includes('..')) {
     throw new Error('Plugin name is not allowed');
   }
 
@@ -44,7 +77,7 @@ export function getSafePluginDir(moduleName: string): string {
   return pluginDir;
 }
 
-export async function createPlugin(moduleName: string, version: string, mainJs: string) {
+export async function createPlugin(moduleName: string, mainJs: string) {
   const pluginDir = getSafePluginDir(moduleName);
 
   try {
@@ -57,20 +90,24 @@ export async function createPlugin(moduleName: string, version: string, mainJs: 
 
     fs.mkdirSync(pluginDir, { recursive: true });
     // 'wx' to write only if not exists
-    fs.writeFileSync(packagePath, JSON.stringify(
-      {
-        name: moduleName,
-        version,
-        private: true,
-        insomnia: {
-          name: moduleName.replace(/^insomnia-plugin-/, ''),
-          description: '',
+    fs.writeFileSync(
+      packagePath,
+      JSON.stringify(
+        {
+          name: moduleName,
+          version: '0.0.1',
+          private: true,
+          insomnia: {
+            name: moduleName.replace(/^insomnia-plugin-/, ''),
+            description: '',
+          },
+          main: 'main.js',
         },
-        main: 'main.js',
-      },
-      null,
-      2,
-    ), { flag: 'wx' }); 
+        null,
+        2,
+      ),
+      { flag: 'wx' },
+    );
     // 'wx' to write only if not exists
     fs.writeFileSync(mainJsPath, mainJs, { flag: 'wx' });
   } catch (err: any) {
