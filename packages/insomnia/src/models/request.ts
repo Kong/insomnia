@@ -190,7 +190,7 @@ export interface RequestBodyParameter {
   value: string;
   description?: string;
   disabled?: boolean;
-  multiline?: string;
+  multiline?: boolean;
   id?: string;
   fileName?: string;
   type?: string;
