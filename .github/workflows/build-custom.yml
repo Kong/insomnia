@@ -6,7 +6,7 @@ on:
       platform:
         description: 'Platform to build'
         required: true
-        default: 'all'
+        default: 'mac'
         type: choice
         options:
           - all
