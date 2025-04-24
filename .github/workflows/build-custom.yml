@@ -1,0 +1,62 @@
+name: Build Custom Insomnia
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to build'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - mac
+          - win
+          - linux
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            platform: mac
+          - os: windows-latest
+            platform: win
+          - os: ubuntu-latest
+            platform: linux
+    
+    runs-on: ${{ matrix.os }}
+    if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.14.0'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Build application
+        run: npm run app-build
+      
+      - name: Package application
+        run: npm run app-package
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: insomnia-${{ matrix.platform }}
+          path: |
+            packages/insomnia/dist/*.dmg
+            packages/insomnia/dist/*.exe
+            packages/insomnia/dist/*.AppImage
+            packages/insomnia/dist/*.snap
+            packages/insomnia/dist/*.deb
+            packages/insomnia/dist/*.rpm
+          retention-days: 7
