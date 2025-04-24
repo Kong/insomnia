@@ -6,8 +6,8 @@ import {
   Header,
   ListBox,
   ListBoxItem,
+  ListBoxSection,
   Popover,
-  Section,
   Select,
   SelectValue,
 } from 'react-aria-components';
@@ -279,7 +279,7 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
           className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
         >
           {section => (
-            <Section>
+            <ListBoxSection>
               <Header className="flex items-center gap-2 py-1 pl-2 text-xs uppercase text-[--hl]">
                 <Icon icon={section.icon} /> <span>{section.name}</span>
               </Header>
@@ -299,7 +299,7 @@ export const AuthDropdown: FC<Props> = ({ authentication, authTypes = defaultTyp
                   </ListBoxItem>
                 )}
               </Collection>
-            </Section>
+            </ListBoxSection>
           )}
         </ListBox>
       </Popover>

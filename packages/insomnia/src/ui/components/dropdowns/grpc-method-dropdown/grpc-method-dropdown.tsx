@@ -1,5 +1,5 @@
 import React, { Fragment, type FunctionComponent } from 'react';
-import { Button, Header, ListBox, ListBoxItem, Popover, Section, Select, SelectValue } from 'react-aria-components';
+import { Button, Header, ListBox, ListBoxItem, ListBoxSection, Popover, Select, SelectValue } from 'react-aria-components';
 
 import type { GrpcMethodInfo, GrpcMethodType } from '../../../../main/ipc/grpc';
 import { Icon } from '../../icon';
@@ -104,7 +104,7 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({ disabled, methods
           className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
         >
           {section => (
-            <Section key={section.id}>
+            <ListBoxSection key={section.id}>
               <Header className="flex items-center gap-2 px-[--padding-md] text-[--hl-md]">
                 <span>{section.display_name}</span>
                 <span className="h-[1px] flex-1 bg-[--hl-md]" />
@@ -127,7 +127,7 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({ disabled, methods
                   )}
                 </ListBoxItem>
               ))}
-            </Section>
+            </ListBoxSection>
           )}
         </ListBox>
       </Popover>

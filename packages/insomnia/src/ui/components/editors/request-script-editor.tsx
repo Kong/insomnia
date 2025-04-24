@@ -6,9 +6,9 @@ import {
   Header,
   Menu,
   MenuItem,
+  MenuSection,
   MenuTrigger,
   Popover,
-  Section,
   Toolbar,
 } from 'react-aria-components';
 
@@ -627,7 +627,7 @@ export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChan
                 {section => {
                   if ('items' in section) {
                     return (
-                      <Section>
+                      <MenuSection>
                         <Header className="py-1 pl-2 text-xs uppercase text-[--hl]">{section.name}</Header>
                         <Collection items={section.items}>
                           {item => (
@@ -640,7 +640,7 @@ export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChan
                             </MenuItem>
                           )}
                         </Collection>
-                      </Section>
+                      </MenuSection>
                     );
                   }
 
