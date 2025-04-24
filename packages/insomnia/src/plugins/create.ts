@@ -94,8 +94,8 @@ export function getSafePluginDir(pluginName: string): string {
   return pluginDir;
 }
 
-export async function createPlugin(moduleName: string, mainJs: string) {
-  const pluginDir = getSafePluginDir(moduleName);
+export async function createPlugin(pluginName: string, mainJs: string) {
+  const pluginDir = getSafePluginDir(pluginName);
 
   try {
     const packagePath = path.join(pluginDir, 'package.json');
@@ -111,11 +111,11 @@ export async function createPlugin(moduleName: string, mainJs: string) {
       packagePath,
       JSON.stringify(
         {
-          name: moduleName,
+          name: pluginName,
           version: '0.0.1',
           private: true,
           insomnia: {
-            name: moduleName.replace(/^insomnia-plugin-/, ''),
+            name: pluginName.replace(/^insomnia-plugin-/, ''),
             description: '',
           },
           main: 'main.js',
