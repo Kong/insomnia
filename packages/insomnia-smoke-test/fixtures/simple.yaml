@@ -103,6 +103,49 @@ collection:
       cookies:
         send: true
         store: true
+  - name: New Request
+    meta:
+      id: req_845c9ad3b2934f2098cb77a5dce8b0f5
+      created: 1745481338217
+      modified: 1745481802746
+      isPrivate: false
+      sortKey: -1745481338217
+    method: GET
+    body:
+      mimeType: multipart/form-data
+      params:
+        - name: test
+          value: |-
+            {
+            	"a": 1
+            }
+          disabled: false
+          multiline: true
+          id: pair_473715d5390a427fa70284c0222bcffc
+          type: text
+    parameters:
+      - id: pair_eee575c573bd4c7da4fa6c7a2cf131d4
+        name: test
+        value: |-
+          {
+          	"A": 1
+          }
+        disabled: false
+        type: text
+        multiline: application/json
+    headers:
+      - name: Content-Type
+        value: multipart/form-data
+      - name: User-Agent
+        value: insomnia/11.1.0-beta.1
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
 cookieJar:
   name: Default Jar
   meta:
