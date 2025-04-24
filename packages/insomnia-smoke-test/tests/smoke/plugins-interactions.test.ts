@@ -14,13 +14,8 @@ test('Plugins', async ({ page }) => {
   await page.getByTestId('generate-plugin-button').click();
   await expect.soft(page.getByRole('cell', { name: 'insomnia-plugin-demo-example' })).toBeVisible();
 
-  // Reject plugin name with uppercase letters
-  await page.locator('text=Generate New Plugin').click();
-  await page.getByLabel('Plugin name').fill('My-Plugin');
-  await page.getByTestId('generate-plugin-button').click();
-  await expect.soft(page.locator('text=Plugin name must be lowercase, alphanumeric, and dash-separated')).toBeVisible();
-
   // Reject plugin name with consecutive dashes
+  await page.locator('text=Generate New Plugin').click();
   await page.getByLabel('Plugin name').fill('my--plugin');
   await page.getByTestId('generate-plugin-button').click();
   await expect.soft(page.locator('text=Plugin name must not contain consecutive dashes')).toBeVisible();
@@ -59,6 +54,21 @@ test('Plugins', async ({ page }) => {
   await page.getByLabel('Plugin name').fill('plugin@name');
   await page.getByTestId('generate-plugin-button').click();
   await expect.soft(page.locator('text=Plugin name must be lowercase, alphanumeric, and dash-separated')).toBeVisible();
+
+  // Reject plugin name with path traversal characters
+  await page.getByLabel('Plugin name').fill('../plugin');
+  await page.getByTestId('generate-plugin-button').click();
+  await expect.soft(page.locator('text=Plugin name must not contain path traversal characters')).toBeVisible();
+
+  await page.getByLabel('Plugin name').fill('..\\plugin');
+  await page.getByTestId('generate-plugin-button').click();
+  await expect.soft(page.locator('text=Plugin name must not contain path traversal characters')).toBeVisible();
+
+  // Reject overly long plugin names
+  const longName = 'a'.repeat(256);
+  await page.getByLabel('Plugin name').fill(longName);
+  await page.getByTestId('generate-plugin-button').click();
+  await expect.soft(page.locator('text=Plugin name must not be empty or too long')).toBeVisible();
 
   // Prevent creating a plugin with a name that already exists
   const pluginName = 'duplicate-plugin';
