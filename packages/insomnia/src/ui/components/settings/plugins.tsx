@@ -28,9 +28,7 @@ interface State {
 }
 
 export const Plugins: FC = () => {
-  const {
-    settings,
-  } = useRootLoaderData();
+  const { settings } = useRootLoaderData();
   const [showCreatePluginModal, setShowCreatePluginModal] = useState(false);
   const [state, setState] = useState<State>({
     plugins: [],
@@ -227,7 +225,7 @@ export const Plugins: FC = () => {
           Browse Plugin Hub
         </Button>
         <Button
-          className="m-1 px-[--padding-md] h-[--line-height-xs] py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all border border-solid border-[--hl-lg] rounded-[--radius-md]"
+          className="m-1 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
           onPress={() => setShowCreatePluginModal(true)}
         >
           Generate New Plugin
@@ -250,15 +248,15 @@ export const Plugins: FC = () => {
           Reload Plugins
           {isRefreshingPlugins && <i className="fa fa-refresh fa-spin space-left" />}
         </Button>
-        {showCreatePluginModal &&
+        {showCreatePluginModal && (
           <CreatePluginModal
             onClose={() => setShowCreatePluginModal(false)}
             onComplete={() => {
-              setShowCreatePluginModal(false)
-              refreshPlugins()
+              setShowCreatePluginModal(false);
+              refreshPlugins();
             }}
           />
-        }
+        )}
       </div>
 
       <div className="form-row mt-6">
