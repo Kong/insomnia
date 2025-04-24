@@ -51,7 +51,6 @@ import {
 } from '../../common/constants';
 import { type ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId, isNotNullOrUndefined } from '../../common/misc';
-import { LandingPage } from '../../common/sentry';
 import type { PlatformKeyCombinations } from '../../common/settings';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
@@ -70,7 +69,7 @@ import { isRequestGroup, isRequestGroupId, type RequestGroup } from '../../model
 import type { RequestGroupMeta } from '../../models/request-group-meta';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '../../models/websocket-request';
-import { isDesign, isScratchpad } from '../../models/workspace';
+import { isDesign } from '../../models/workspace';
 import { scrollElementIntoView } from '../../utils';
 import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '../../utils/grpc';
 import { invariant } from '../../utils/invariant';
@@ -751,13 +750,6 @@ export const Debug: FC = () => {
       mediaQuery.removeEventListener('change', handleChange);
     };
   }, [settings.forceVerticalLayout, direction]);
-
-  useEffect(() => {
-    if (isScratchpad(activeWorkspace)) {
-      window.main.landingPageRendered(LandingPage.Scratchpad);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useInsomniaTab({
     organizationId,

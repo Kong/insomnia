@@ -1,6 +1,5 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import * as Sentry from '@sentry/electron/renderer';
-import React, { type FC, Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type FC, Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
   GridList,
@@ -46,7 +45,6 @@ import {
 } from '../../common/constants';
 import { database } from '../../common/database';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
-import { LandingPage, SentryMetrics } from '../../common/sentry';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { userSession } from '../../models';
@@ -929,24 +927,6 @@ const ProjectRoute: FC = () => {
   const isProjectInconsistent =
     isRemoteProjectInconsistent || isLocalProjectInconsistent || isGitSyncProjectInconsistent;
 
-  useEffect(() => {
-    window.main.landingPageRendered(LandingPage.ProjectDashboard);
-  }, []);
-
-  const nextProjectId = useRef<string>();
-  const startSwitchProjectTime = useRef<number>();
-
-  useEffect(() => {
-    if (nextProjectId.current && startSwitchProjectTime.current && nextProjectId.current === projectId) {
-      const duration = performance.now() - startSwitchProjectTime.current;
-      Sentry.metrics.distribution(SentryMetrics.PROJECT_SWITCH_DURATION, duration, {
-        unit: 'millisecond',
-      });
-      nextProjectId.current = undefined;
-      startSwitchProjectTime.current = undefined;
-    }
-  }, [projectId]);
-
   return (
     <ErrorBoundary>
       <Fragment>
@@ -1047,8 +1027,6 @@ const ProjectRoute: FC = () => {
                   onSelectionChange={keys => {
                     if (keys !== 'all') {
                       const [value] = keys.values();
-                      nextProjectId.current = value.toString();
-                      startSwitchProjectTime.current = performance.now();
 
                       navigate({
                         pathname: `/organization/${organizationId}/project/${value}`,
