@@ -362,11 +362,11 @@ export const RequestSchema = z.object({
       params: z
         .array(
           z.object({
-            name: z.string(),
+            name: z.string().default(''),
             value: z.string().optional().default(''),
             description: z.string().optional(),
             disabled: z.boolean().optional(),
-            multiline: z.string().optional(),
+            multiline: z.boolean().optional(),
             id: z.string().optional(),
             fileName: z.string().optional(),
             type: z.string().optional(),
