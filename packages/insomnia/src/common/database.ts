@@ -857,7 +857,7 @@ async function _fixMultipleCookieJars(workspace: Workspace) {
   console.log(`[fix] Merged ${cookieJars.length} cookie jars under ${workspace.name}`);
 }
 
-// Append .git to old git URIs to mimic previous isomorphic-git behaviour
+// Append .git to old git URIs to mimic previous isomorphic-git behavior
 async function _fixOldGitURIs(doc: GitRepository) {
   if (!doc.uriNeedsMigration) {
     return;
