@@ -1,4 +1,5 @@
 name: Build Custom Insomnia
+# Custom workflow to build Insomnia with Git Sync enabled
 
 on:
   workflow_dispatch:
