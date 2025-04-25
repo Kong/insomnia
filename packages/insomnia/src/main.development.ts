@@ -195,7 +195,7 @@ const _launchApp = async () => {
         console.log('[main] Open Deep Link URL sent from second instance', lastArg);
         window.webContents.send('shell:open', lastArg);
       });
-      window = windowUtils.createWindowsAndReturnMain({ firstLaunch: true });
+      window = windowUtils.createWindowsAndReturnMain();
       const openDeepLinkUrl = (url: string) => {
         console.log('[main] Open Deep Link URL', url);
         window = windowUtils.createWindowsAndReturnMain();

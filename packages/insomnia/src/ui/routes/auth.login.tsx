@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { type ActionFunction, redirect, useFetcher, useNavigate } from 'react-router-dom';
 
-import { LandingPage } from '../../common/sentry';
 import { SegmentEvent } from '../analytics';
 import { getLoginUrl } from '../auth-session-provider';
 import { Icon } from '../components/icon';
@@ -60,10 +59,6 @@ const Login = () => {
       },
     );
   };
-
-  useEffect(() => {
-    window.main.landingPageRendered(LandingPage.Login);
-  }, []);
 
   const logoutMessage = window.localStorage.getItem('logoutMessage');
   useEffect(() => {

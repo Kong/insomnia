@@ -148,11 +148,6 @@ const main: Window['main'] = {
         port.postMessage({ ...options, type: 'runPreRequestScript' });
       }),
   },
-  landingPageRendered: (landingPage, tags) =>
-    ipcRenderer.send('landingPageRendered', {
-      landingPage,
-      tags,
-    }),
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     ipcRenderer.invoke('extractJsonFileFromPostmanDataDumpArchive', archivePath),
 };

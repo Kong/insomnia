@@ -1,9 +1,7 @@
-import * as Sentry from '@sentry/electron/renderer';
 import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
 
 import { database, type Operation } from '../../common/database';
 import { isNotNullOrUndefined } from '../../common/misc';
-import { SentryMetrics } from '../../common/sentry';
 import * as models from '../../models';
 import { canSync } from '../../models';
 import type { ApiSpec } from '../../models/api-spec';
@@ -443,7 +441,6 @@ export const deleteBranchAction: ActionFunction = async ({ params, request }) =>
 };
 
 export const pullFromRemoteAction: ActionFunction = async ({ params }) => {
-  const startPullActionTime = performance.now();
   const { organizationId, projectId, workspaceId } = params;
   invariant(typeof projectId === 'string', 'Project Id is required');
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
@@ -462,12 +459,6 @@ export const pullFromRemoteAction: ActionFunction = async ({ params }) => {
 
     await database.batchModifyDocs(delta);
     delete remoteCompareCache[workspaceId];
-
-    const duration = performance.now() - startPullActionTime;
-    Sentry.metrics.distribution(SentryMetrics.CLOUD_SYNC_DURATION, duration, {
-      unit: 'millisecond',
-      tags: { action: 'pull' },
-    });
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while pulling from remote.';
     return {
@@ -514,7 +505,6 @@ export const fetchRemoteBranchAction: ActionFunction = async ({ request, params 
 };
 
 export const pushToRemoteAction: ActionFunction = async ({ params }) => {
-  const startPushActionTime = performance.now();
   const { projectId, workspaceId } = params;
   invariant(typeof projectId === 'string', 'Project Id is required');
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
@@ -530,12 +520,6 @@ export const pushToRemoteAction: ActionFunction = async ({ params }) => {
       teamProjectId: project.remoteId,
     });
     delete remoteCompareCache[workspaceId];
-
-    const duration = performance.now() - startPushActionTime;
-    Sentry.metrics.distribution(SentryMetrics.CLOUD_SYNC_DURATION, duration, {
-      unit: 'millisecond',
-      tags: { action: 'push' },
-    });
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while pushing to remote.';
     return {

@@ -16,10 +16,10 @@ import {
   ListBoxItem,
   Menu,
   MenuItem,
+  MenuSection,
   MenuTrigger,
   Popover,
   SearchField,
-  Section,
   Select,
   ToggleButton,
   Tooltip,
@@ -51,7 +51,6 @@ import {
 } from '../../common/constants';
 import { type ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId, isNotNullOrUndefined } from '../../common/misc';
-import { LandingPage } from '../../common/sentry';
 import type { PlatformKeyCombinations } from '../../common/settings';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
@@ -70,7 +69,7 @@ import { isRequestGroup, isRequestGroupId, type RequestGroup } from '../../model
 import type { RequestGroupMeta } from '../../models/request-group-meta';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '../../models/websocket-request';
-import { isDesign, isScratchpad } from '../../models/workspace';
+import { isDesign } from '../../models/workspace';
 import { scrollElementIntoView } from '../../utils';
 import { getGrpcConnectionErrorDetails, isGrpcConnectionError } from '../../utils/grpc';
 import { invariant } from '../../utils/invariant';
@@ -752,13 +751,6 @@ export const Debug: FC = () => {
     };
   }, [settings.forceVerticalLayout, direction]);
 
-  useEffect(() => {
-    if (isScratchpad(activeWorkspace)) {
-      window.main.landingPageRendered(LandingPage.Scratchpad);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   useInsomniaTab({
     organizationId,
     projectId,
@@ -969,7 +961,7 @@ export const Debug: FC = () => {
                     className="min-w-max select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
                   >
                     {section => (
-                      <Section className="flex flex-1 flex-col">
+                      <MenuSection className="flex flex-1 flex-col">
                         <Header className="flex items-center gap-2 py-1 pl-2 text-xs uppercase text-[--hl]">
                           <Icon icon={section.icon} /> <span>{section.name}</span>
                         </Header>
@@ -987,7 +979,7 @@ export const Debug: FC = () => {
                             </MenuItem>
                           )}
                         </Collection>
-                      </Section>
+                      </MenuSection>
                     )}
                   </Menu>
                 </Popover>
