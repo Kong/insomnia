@@ -5,7 +5,7 @@ import type { BaseModel } from './index';
 
 export type CloudProviderName = 'aws' | 'azure' | 'gcp' | 'hashicorp';
 export enum AWSCredentialType {
-  temp = 'temporary'
+  temp = 'temporary',
 }
 export interface AWSTemporaryCredential {
   type: AWSCredentialType.temp;
@@ -33,7 +33,7 @@ export interface HashiCorpBaseCredential {
 export enum HashiCorpCredentialType {
   cloud = 'cloud',
   onPrem = 'onPrem',
-};
+}
 export enum HashiCorpVaultAuthMethod {
   token = 'token',
   appRole = 'appRole',
@@ -42,7 +42,7 @@ export interface HCPCredential extends HashiCorpBaseCredential {
   client_id: string;
   client_secret: string;
   type: HashiCorpCredentialType.cloud;
-};
+}
 export interface VaultAppRoleCredential extends HashiCorpBaseCredential {
   role_id: string;
   secret_id: string;
@@ -74,18 +74,19 @@ export const prefix = 'cloudCred';
 export const canDuplicate = false;
 export const canSync = false;
 
-export const isCloudCredential = (model: Pick<BaseModel, 'type'>): model is CloudProviderCredential => (
-  model.type === type
-);
+export const isCloudCredential = (model: Pick<BaseModel, 'type'>): model is CloudProviderCredential =>
+  model.type === type;
 
 export function getProviderDisplayName(provider: CloudProviderName) {
-  return {
-    aws: 'AWS',
-    azure: 'Azure',
-    gcp: 'GCP',
-    hashicorp: 'HashiCorp',
-  }[provider] || '';
-};
+  return (
+    {
+      aws: 'AWS',
+      azure: 'Azure',
+      gcp: 'GCP',
+      hashicorp: 'HashiCorp',
+    }[provider] || ''
+  );
+}
 
 export function init(): Partial<BaseCloudCredential> {
   return {
@@ -95,7 +96,7 @@ export function init(): Partial<BaseCloudCredential> {
   };
 }
 
-export function migrate(doc: BaseCloudCredential) {
+export function migrate(doc: CloudProviderCredential) {
   return doc;
 }
 
