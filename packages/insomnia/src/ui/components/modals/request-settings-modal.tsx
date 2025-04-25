@@ -129,6 +129,17 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                         />
                       </label>
                     </div>
+                    <div className="form-control form-control--thin">
+                      <label>
+                        Use proxy from preferences settings
+                        <input
+                          type="checkbox"
+                          name="settingUseProxy"
+                          checked={request.settingUseProxy}
+                          onChange={toggleCheckBox}
+                        />
+                      </label>
+                    </div>
                   </div>
                   <div className="form-control form-control--outlined">
                     <label>

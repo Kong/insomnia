@@ -25,6 +25,7 @@ export interface BaseWebSocketRequest {
   settingStoreCookies: boolean;
   settingSendCookies: boolean;
   settingFollowRedirects: 'global' | 'on' | 'off';
+  settingUseProxy?: boolean;
 }
 
 export type WebSocketRequest = BaseModel & BaseWebSocketRequest & { type: typeof type };
@@ -32,6 +33,9 @@ export type WebSocketRequest = BaseModel & BaseWebSocketRequest & { type: typeof
 export const isWebSocketRequest = (model: Pick<BaseModel, 'type'>): model is WebSocketRequest => model.type === type;
 
 export const isWebSocketRequestId = (id?: string | null) => id?.startsWith(`${prefix}_`);
+
+// for those keys do not need to add in model init method but can update
+export const optionalKeys = ['settingUseProxy'];
 
 export const init = (): BaseWebSocketRequest => ({
   name: 'New WebSocket Request',
