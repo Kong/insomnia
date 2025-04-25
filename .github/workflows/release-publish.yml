@@ -50,14 +50,22 @@ jobs:
       - name: Install packages
         run: npm ci
 
-      - name: Download release artifacts from insomnia-ee
-        uses: robinraju/release-downloader@daf26c55d821e836577a15f77d86ddc078948b05 # v1
-        with:
-          repository: ${{ env.ARTIFACTS_REPOSITORY }}
-          tag: core@${{ env.RELEASE_VERSION }}
-          fileName: "*"
-          token: ${{ secrets.EE_DOWNLOAD_TOKEN }}
-          out-file-path: ${{ env.ARTIFACTS_DOWNLOAD_PATH }}
+      - name: Check if Release Exists
+        id: check_release
+        run: |
+          release_id=$(gh release view core@${{ env.RELEASE_VERSION }} --json id --jq ".id" 2>/dev/null)
+          if [ -z "$release_id" ]; then
+            echo "Release core@${{ env.RELEASE_VERSION }} does not exist. Aborting workflow."
+            exit 1
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download release assets
+        run: |
+          gh release download core@${{ env.RELEASE_VERSION }} --dir=${{ env.ARTIFACTS_DOWNLOAD_PATH }} --skip-existing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Docker meta for Inso CLI Docker Image
         id: inso_docker_meta
@@ -122,29 +130,15 @@ jobs:
           --source-uri 'github.com/Kong/insomnia-ee' \
           ${{env.ARTIFACTS_DOWNLOAD_PATH}}/Insomnia.Core-${{env.RELEASE_VERSION}}.{snap,tar.gz,zip,rpm,dmg,deb,AppImage,exe}
 
-      - name: Create Tag and Release
-        uses: ncipollo/release-action@440c8c1cb0ed28b9f43e4d1d670870f059653174 # v1
-        id: core_tag_and_release
-        with:
-          tag: ${{ env.RELEASE_CORE_TAG }}
-          name: "${{ env.RELEASE_VERSION }} 📦"
-          generateReleaseNotes: true
-          commit: ${{ env.RELEASE_BRANCH }}
-          prerelease: ${{ env.IS_PRERELEASE }}
-          draft: false
+      - name: Publish release
+        run: |
+          gh release edit core@${{ env.RELEASE_VERSION }} \
+          --tag=${{ env.RELEASE_CORE_TAG }} \
+          --target=${{ env.RELEASE_BRANCH }} \
+          --prerelease=${{ env.IS_PRERELEASE }} \
+          --draft=false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload artifacts to release
-        uses: xresloader/upload-to-github-release@d29300fdff9f0fcd7c3eb960c490b2a6640fbf50 # v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          release_id: ${{ steps.core_tag_and_release.outputs.id }}
-          tag_name: ${{ env.RELEASE_CORE_TAG }}
-          file: "./artifacts/*"
-          prerelease: ${{ env.IS_PRERELEASE }}
-          draft: false
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish beta/stable of Insomnia to Insomnia API
         if: ${{ !contains(github.event.inputs.version, 'alpha') }}
@@ -179,19 +173,6 @@ jobs:
           RELEASE_APP: com.insomnia.inso
           RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
           RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
-
-      - name: Upload sourcemaps to Sentry
-        env:
-          SENTRY_AUTH_TOKEN: "${{ secrets.SENTRY_AUTH_TOKEN }}"
-          SENTRY_ORG: "${{ secrets.SENTRY_ORG }}"
-          SENTRY_PROJECT: "${{ secrets.SENTRY_PROJECT }}"
-        run: |
-          curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION="2.2.0" bash
-
-          sentry-cli releases new ${{ env.RELEASE_VERSION }}
-          sentry-cli releases set-commits ${{ env.RELEASE_VERSION }} --commit 'Kong/insomnia@${{ env.RELEASE_BRANCH }}'
-
-          sentry-cli sourcemaps upload -r ${{ env.RELEASE_VERSION }} ./artifacts/*-latest-sentry
 
       - name: Upload x64 Linux snap to snapcraft (beta and stable only)
         if: ${{ !contains(github.event.inputs.version, 'alpha') }}
