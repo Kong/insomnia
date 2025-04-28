@@ -333,7 +333,7 @@ async function getYarnPath() {
 /**
  * Checks if the Yarn stderr output only contains deprecation warnings.
  */
-function containsOnlyDeprecationWarnings(output: string): boolean {
+export function containsOnlyDeprecationWarnings(output: string): boolean {
   const MAX_LINES = 20;
   const MAX_LINE_LENGTH = 300;
 
