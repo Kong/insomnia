@@ -104,38 +104,37 @@ export const Plugins: FC = () => {
       )}
 
       <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            slot={null}
+            isSelected={Boolean(settings.pluginsAllowElevatedAccess)}
+            onChange={isSelected => {
+              patchSettings({ pluginsAllowElevatedAccess: isSelected });
+            }}
+            className="group flex h-full items-center gap-2 p-0"
+          >
+            <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
+              <Icon
+                icon="check"
+                className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
+              />
+            </div>
+            <span className="text-sm font-semibold">Allow elevated access for plugins</span>
+          </Checkbox>
+          <Tooltip
+            className="cursor-pointer"
+            message="Plugins with elevated access can access anything Insomnia can. It's recommended that elevated access remain
+              disabled."
+          >
+            <i className="fa fa-info-circle" />
+          </Tooltip>
+        </div>
         <div className="flex w-full flex-col">
           <Label className="text-lg font-bold" slot="label">
             Install Plugin
           </Label>
 
           <div className="mt-2 flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                slot={null}
-                isSelected={Boolean(settings.pluginsAllowElevatedAccess)}
-                onChange={isSelected => {
-                  patchSettings({ pluginsAllowElevatedAccess: isSelected });
-                }}
-                className="group flex h-full items-center gap-2 p-0"
-              >
-                <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
-                  <Icon
-                    icon="check"
-                    className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
-                  />
-                </div>
-                <span className="text-sm font-semibold">Allow elevated access for plugins</span>
-              </Checkbox>
-              <Tooltip
-                className="cursor-pointer"
-                message="Plugins with elevated access can access anything Insomnia can. It's recommended that elevated access remain
-              disabled."
-              >
-                <i className="fa fa-info-circle" />
-              </Tooltip>
-            </div>
-
             <div className="flex gap-2">
               <div className="flex w-full gap-2">
                 <TextField
@@ -206,13 +205,106 @@ export const Plugins: FC = () => {
           </div>
         </div>
         <div className="flex w-full flex-col">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <Label className="text-lg font-bold" slot="label">
+                Certification
+              </Label>
+
+              <Tooltip
+                className="cursor-pointer pt-2"
+                message={
+                  <span>
+                    You can bundle multiple root certificates into a single file.{' '}
+                    <a
+                      className="underline"
+                      href="https://github.com/Kong/insomnia/wiki/Combining-Multiple-Root-CAs-into-a-single-file"
+                    >
+                      See instructions <i className="fa fa-external-link" />
+                    </a>
+                  </span>
+                }
+              >
+                <i className="fa fa-info-circle" />
+              </Tooltip>
+            </div>
+            <Label className="p-0 text-sm font-semibold" slot="description">
+              <span className="text-[--hl]">Plugin installation trusted certificates file</span>
+            </Label>
+          </div>
+
+          {state.pluginNodeExtraCerts === '' && (
+            <div className="mt-2 flex flex-col gap-2">
+              <div className="flex w-full items-center justify-center">
+                <label
+                  htmlFor="dropzone-file"
+                  className="flex h-20 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-[--hl-md] bg-[--hl-xxs] hover:bg-transparent focus:border-[--hl-lg]"
+                >
+                  <FileTrigger
+                    allowsMultiple={false}
+                    acceptedFileTypes={ACCEPTED_NODE_CA_FILE_EXTS}
+                    onSelect={fileList => {
+                      if (!fileList) {
+                        return;
+                      }
+                      const files = Array.from(fileList);
+                      if (files.length === 0) {
+                        return;
+                      }
+                      patchSettings({ pluginNodeExtraCerts: window.webUtils.getPathForFile(files[0]) });
+                    }}
+                  >
+                    <Button>
+                      <div className="pointer-events-none flex flex-col items-center justify-center p-8 text-[--hl-xl]">
+                        <Icon icon="upload" className="mb-2 h-5 w-5" />
+                        <p className="text pointer-events-none mb-2 text-sm">
+                          <span className="font-bold">Click to upload</span> or drag and drop
+                        </p>
+                      </div>
+                    </Button>
+                  </FileTrigger>
+                </label>
+              </div>
+              <Label slot="description" className="p-0 text-sm text-[--hl]">
+                Supported Formats: ({ACCEPTED_NODE_CA_FILE_EXTS.join(', ')})
+              </Label>
+            </div>
+          )}
+
+          {state.pluginNodeExtraCerts !== '' && (
+            <div className="mt-4 flex flex-col justify-between gap-2">
+              <div className="flex h-20 w-full gap-2">
+                <TextField
+                  name="name"
+                  isRequired
+                  className="group relative flex max-w-full flex-shrink-0 flex-grow flex-col gap-2 overflow-hidden"
+                >
+                  <Input
+                    value={state.pluginNodeExtraCerts}
+                    className="flex h-[--line-height-xs] w-full items-center rounded-[--radius-md] border border-solid border-[--hl-md] bg-[--hl-xxs] p-[--padding-sm] text-[--color-font] focus:border-[--hl-lg] focus:bg-transparent"
+                  />
+                </TextField>
+                <Button
+                  className="flex h-[--line-height-xs] items-center justify-center rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  onPress={() => {
+                    patchSettings({ pluginNodeExtraCerts: '' });
+                  }}
+                >
+                  Clear
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+        <Separator className="my-4" />
+        <div className="flex w-full flex-col">
           <div className="flex items-center justify-between gap-2">
             <Label className="text-lg font-bold" slot="label">
               Plugins ({plugins.length})
             </Label>
 
-            <div className="flex flex-1 items-center justify-end gap-2">
-              {plugins.length > 0 && (
+            {plugins.length > 0 && (
+              <div className="flex flex-1 items-center justify-end gap-2">
                 <Button
                   className="flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                   isDisabled={isRefreshingPlugins}
@@ -222,15 +314,16 @@ export const Plugins: FC = () => {
                 >
                   Reload
                 </Button>
-              )}
-              <Button
-                className="flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                onPress={() => setShowCreatePluginModal(true)}
-                isDisabled={isRefreshingPlugins}
-              >
-                New Plugin
-              </Button>
-            </div>
+
+                <Button
+                  className="flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  onPress={() => setShowCreatePluginModal(true)}
+                  isDisabled={isRefreshingPlugins}
+                >
+                  New Plugin
+                </Button>
+              </div>
+            )}
           </div>
           <div className="mt-4 flex flex-col">
             {plugins.length > 0 && (
@@ -266,15 +359,15 @@ export const Plugins: FC = () => {
               items={plugins}
               className="flex flex-col"
               renderEmptyState={() => (
-                <div className="flex h-20 flex-col items-center gap-2">
-                  <Separator className="m-0" />
-                  <span className="mt-4 font-semibold text-[--hl-xl]">Your plugin list is empty.</span>
+                <div className="flex h-36 flex-col items-center">
+                  <h3 className="mt-2 font-semibold text-[--hl-xl]">No plugins</h3>
+                  <p className="mt-1 text-sm text-[--hl-xl]">Get started by creating a new project.</p>
                   <Button
-                    className="flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                    onPress={() => window.main.openInBrowser(PLUGIN_HUB_BASE)}
+                    className="mt-4 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                    onPress={() => setShowCreatePluginModal(true)}
                     isDisabled={isRefreshingPlugins}
                   >
-                    Browse Plugin Hub
+                    New Plugin
                   </Button>
                 </div>
               )}
@@ -350,93 +443,6 @@ export const Plugins: FC = () => {
               }}
             </GridList>
           </div>
-        </div>
-
-        <div className="flex w-full flex-col">
-          <div className="flex items-center gap-2">
-            <Label className="text-lg font-bold" slot="label">
-              Certification
-            </Label>
-            <Tooltip
-              className="cursor-pointer pt-2"
-              message={
-                <span>
-                  You can bundle multiple root certificates into a single file.{' '}
-                  <a
-                    className="underline"
-                    href="https://github.com/Kong/insomnia/wiki/Combining-Multiple-Root-CAs-into-a-single-file"
-                  >
-                    See instructions <i className="fa fa-external-link" />
-                  </a>
-                </span>
-              }
-            >
-              <i className="fa fa-info-circle" />
-            </Tooltip>
-          </div>
-
-          {state.pluginNodeExtraCerts === '' && (
-            <div className="mt-4 flex flex-col gap-2">
-              <div className="flex w-full items-center justify-center">
-                <label
-                  htmlFor="dropzone-file"
-                  className="flex h-20 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-[--hl-md] bg-[--hl-xxs] hover:bg-transparent focus:border-[--hl-lg]"
-                >
-                  <FileTrigger
-                    allowsMultiple={false}
-                    acceptedFileTypes={ACCEPTED_NODE_CA_FILE_EXTS}
-                    onSelect={fileList => {
-                      if (!fileList) {
-                        return;
-                      }
-                      const files = Array.from(fileList);
-                      if (files.length === 0) {
-                        return;
-                      }
-                      patchSettings({ pluginNodeExtraCerts: window.webUtils.getPathForFile(files[0]) });
-                    }}
-                  >
-                    <Button>
-                      <div className="pointer-events-none flex flex-col items-center justify-center p-8 text-[--hl-xl]">
-                        <Icon icon="upload" className="mb-2 h-5 w-5" />
-                        <p className="text pointer-events-none mb-2 text-sm">
-                          <span className="font-bold">Click to upload</span> or drag and drop
-                        </p>
-                      </div>
-                    </Button>
-                  </FileTrigger>
-                </label>
-              </div>
-              <Label slot="description" className="p-0 text-sm text-[--hl]">
-                Supported Formats: ({ACCEPTED_NODE_CA_FILE_EXTS.join(', ')})
-              </Label>
-            </div>
-          )}
-
-          {state.pluginNodeExtraCerts !== '' && (
-            <div className="mt-4 flex flex-col justify-between gap-2">
-              <div className="flex h-20 w-full gap-2">
-                <TextField
-                  name="name"
-                  isRequired
-                  className="group relative flex max-w-full flex-shrink-0 flex-grow flex-col gap-2 overflow-hidden"
-                >
-                  <Input
-                    value={state.pluginNodeExtraCerts}
-                    className="flex h-[--line-height-xs] w-full items-center rounded-[--radius-md] border border-solid border-[--hl-md] bg-[--hl-xxs] p-[--padding-sm] text-[--color-font] focus:border-[--hl-lg] focus:bg-transparent"
-                  />
-                </TextField>
-                <Button
-                  className="flex h-[--line-height-xs] items-center justify-center rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                  onPress={() => {
-                    patchSettings({ pluginNodeExtraCerts: '' });
-                  }}
-                >
-                  Clear
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="mt-2 flex w-full">
