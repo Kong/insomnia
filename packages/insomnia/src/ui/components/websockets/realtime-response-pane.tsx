@@ -54,7 +54,10 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
   const [searchQuery, setSearchQuery] = useState('');
   const [eventType, setEventType] = useState<CurlEvent['type']>();
   const protocol = response.type === 'WebSocketResponse' ? 'webSocket' : 'curl';
-  const allEvents = useRealtimeConnectionEvents({ responseId: response._id, protocol });
+  const allEvents = useRealtimeConnectionEvents({ responseId: response._id, protocol }) as (
+    | CurlEvent
+    | WebSocketEvent
+  )[];
   const handleSelection = (event: CurlEvent | WebSocketEvent) => {
     setSelectedEvent((selected: CurlEvent | WebSocketEvent | null) => (selected?._id === event._id ? null : event));
   };

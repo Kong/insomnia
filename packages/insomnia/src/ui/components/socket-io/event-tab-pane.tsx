@@ -1,17 +1,44 @@
 import classNames from 'classnames';
 import React, { useMemo } from 'react';
-import { Button, GridList, GridListItem, Switch } from 'react-aria-components';
+import { Button, GridList, GridListItem, Input, Switch } from 'react-aria-components';
 
 import { generateId } from '../../../common/misc';
 import type { SocketIOEventListener, SocketIORequest } from '../../../models/socket-io-request';
 import { useRequestPatcher } from '../../hooks/use-request';
-import { OneLineEditor } from '../codemirror/one-line-editor';
 import { Icon } from '../icon';
+import { Tooltip } from '../tooltip';
 
 interface Props {
   request: SocketIORequest;
   eventListeners: SocketIOEventListener[];
 }
+
+interface InputProps {
+  value?: string;
+  defaultValue?: string;
+  onChange: (value: string) => void;
+  warning?: string;
+  className?: string;
+  placeholder?: string;
+}
+const InputComponent = ({ value, defaultValue, onChange, warning, className, ...props }: InputProps) => {
+  return (
+    <div className={`${className} flex w-full`}>
+      <Input
+        className="w-full"
+        value={value}
+        defaultValue={defaultValue}
+        onChange={e => onChange(e?.target?.value)}
+        {...props}
+      />
+      {warning && (
+        <Tooltip message={warning} position="bottom" delay={500}>
+          <Icon icon="warning" className="text-[--color-warning]" />
+        </Tooltip>
+      )}
+    </div>
+  );
+};
 
 const createEmptyListener = () => {
   return {
@@ -22,12 +49,32 @@ const createEmptyListener = () => {
   };
 };
 
+interface UIEventListener extends SocketIOEventListener {
+  disabled?: boolean;
+  warning?: string;
+}
+
 export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
   const requestPatcher = useRequestPatcher();
 
   const rows = useMemo(() => {
-    return eventListeners?.length > 0 ? eventListeners : [createEmptyListener()];
+    const listeners: UIEventListener[] = eventListeners?.length > 0 ? eventListeners : [createEmptyListener()];
+    const map = new Map<string, number>();
+    listeners.forEach(item => {
+      const count = map.get(item.eventName) || 0;
+      if (count !== 0) {
+        item.disabled = true;
+        item.warning = 'eventname must be unique';
+      } else {
+        item.disabled = false;
+        item.warning = '';
+        map.set(item.eventName, 1);
+      }
+    });
+    return listeners;
   }, [eventListeners]);
+
+  console.log('rows', rows);
 
   const handleDeleteEvent = (deleteItem: SocketIOEventListener) => {
     const newListeners = eventListeners.filter(item => item.id !== deleteItem.id);
@@ -49,9 +96,18 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
       // Socketio todo: focus input element
       return;
     }
-    if (changeKey === 'eventName' && newItem.isOpen && newItem.eventName?.trim() === '') {
+    // off event when edit eventName
+    if (changeKey === 'eventName' && newItem.isOpen) {
       newItem.isOpen = false;
+      const originListener = rows.find(item => item.id === newItem.id);
+      if (originListener?.eventName) {
+        window.main.socketIO.event.off({
+          requestId: request._id,
+          eventName: originListener.eventName,
+        });
+      }
     }
+
     const newListeners = rows.map(item => {
       if (item.id === newItem.id) {
         return newItem;
@@ -68,23 +124,6 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
         });
       } else {
         window.main.socketIO.event.off({
-          requestId: request._id,
-          eventName: newItem.eventName,
-        });
-      }
-      return;
-    }
-
-    if (changeKey === 'eventName' && newItem.isOpen) {
-      const originListener = rows.find(item => item.id === newItem.id);
-      if (originListener) {
-        window.main.socketIO.event.off({
-          requestId: request._id,
-          eventName: originListener.eventName,
-        });
-      }
-      if (newItem.eventName !== '') {
-        window.main.socketIO.event.on({
           requestId: request._id,
           eventName: newItem.eventName,
         });
@@ -117,13 +156,14 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
             textValue="event item"
           >
             <div />
-            <OneLineEditor
+            <InputComponent
+              className="w-full"
               defaultValue={item.eventName}
-              id={`socketIO-event-listener-${item.id}`}
               placeholder="Add event"
-              onChange={eventName => {
-                handleChange({ ...item, eventName }, 'eventName');
+              onChange={value => {
+                handleChange({ ...item, eventName: value }, 'eventName');
               }}
+              warning={item.warning}
             />
             <div className="text-left">
               <Switch
@@ -131,9 +171,10 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
                 onChange={isOpen => {
                   handleChange({ ...item, isOpen }, 'isOpen');
                 }}
+                isDisabled={item.eventName?.trim() === '' || item.disabled}
                 className="flex h-full cursor-pointer items-center p-0"
               >
-                {({ isSelected }) => {
+                {({ isSelected, isDisabled }) => {
                   return (
                     <div
                       className={classNames(
@@ -141,6 +182,7 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
                         {
                           'bg-[--color-surprise] before:translate-x-[100%] before:bg-[--color-bg]': isSelected,
                           'before:bg-[--color-surprise]': !isSelected,
+                          'cursor-not-allowed border-[--hl] before:bg-[--hl]': isDisabled,
                         },
                       )}
                     />
@@ -149,11 +191,12 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
               </Switch>
             </div>
             <span className="h-full bg-[--hl-md]" />
-            <OneLineEditor
+            <input
+              className="w-full"
               defaultValue={item.desc}
-              id={`socketIO-event-listener-desc-${item.id}`}
-              onChange={desc => {
-                handleChange({ ...item, desc }, 'desc');
+              placeholder="Description"
+              onChange={e => {
+                handleChange({ ...item, eventName: e.target.value }, 'desc');
               }}
             />
             <div>

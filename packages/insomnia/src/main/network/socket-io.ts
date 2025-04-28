@@ -14,6 +14,7 @@ import { type RequestHeader } from '../../models/request';
 import type { BaseSocketIORequest } from '../../models/socket-io-request';
 import type { SocketIOResponse } from '../../models/socket-io-response.ts';
 import { filterClientCertificates } from '../../network/certificate';
+import { invariant } from '../../utils/invariant';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 
 export interface SocketIOpenEvent {
@@ -109,7 +110,7 @@ const getCertificates = async ({
 }) => {
   // attach certificates to the request
   const caCert = await models.caCertificate.findByParentId(workspaceId);
-  const caCertficatePath = caCert?.path;
+  const caCertficatePath = !caCert?.disabled ? caCert?.path : '';
   // attempt to read CA Certificate PEM from disk, fallback to root certificates
   const caCertificate =
     (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
@@ -160,6 +161,26 @@ const getCertificates = async ({
   };
 };
 
+const createErrorResponse = async (
+  responseId: string,
+  requestId: string,
+  environmentId: string | null,
+  timelinePath: string,
+  message: string,
+) => {
+  const settings = await models.settings.get();
+  const responsePatch = {
+    _id: responseId,
+    parentId: requestId,
+    environmentId: environmentId,
+    timelinePath,
+    statusMessage: 'Error',
+    error: message,
+  };
+  const res = await models.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
+  models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+};
+
 const openSocketIOConnection = async (
   _event: Electron.IpcMainInvokeEvent,
   options: OpenSocketIORequestOptions,
@@ -184,6 +205,14 @@ const openSocketIOConnection = async (
   eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
   const timelinePath = path.join(responsesDir, responseId + '.timeline');
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
+
+  // fallback to base environment
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
+  const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
+  const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
+  const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(options.workspaceId));
+  invariant(environment, 'failed to find environment ' + activeEnvironmentId);
+  const responseEnvironmentId = environment ? environment._id : null;
 
   try {
     if (!options.url) {
@@ -263,7 +292,7 @@ const openSocketIOConnection = async (
       const responsePatch: Partial<SocketIOResponse> = {
         _id: responseId,
         parentId: request._id,
-        environmentId: '',
+        environmentId: responseEnvironmentId,
         timelinePath,
         eventLogPath: responseBodyPath,
         elapsedTime: performance.now() - start,
@@ -276,7 +305,7 @@ const openSocketIOConnection = async (
     });
 
     const engine = socket.io.engine;
-    engine.once('upgrade', transport => {
+    engine.once('upgrade', () => {
       timelineFileStreams
         .get(request._id)
         ?.write(
@@ -315,6 +344,13 @@ const openSocketIOConnection = async (
         timestamp: Date.now(),
       };
       deleteRequestMaps(request._id, error.message, errorEvent);
+      createErrorResponse(
+        responseId,
+        request._id,
+        responseEnvironmentId,
+        timelinePath,
+        error.message || 'Something went wrong',
+      );
     });
 
     // listen to all open events when the connection is opened
@@ -332,6 +368,13 @@ const openSocketIOConnection = async (
       timestamp: Date.now(),
     };
     deleteRequestMaps(request._id, e.message, errorEvent);
+    createErrorResponse(
+      responseId,
+      request._id,
+      responseEnvironmentId,
+      timelinePath,
+      e.message || 'Something went wrong',
+    );
   }
 };
 

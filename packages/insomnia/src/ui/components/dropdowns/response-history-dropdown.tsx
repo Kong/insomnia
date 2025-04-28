@@ -59,6 +59,10 @@ export const ResponseHistoryDropdown = ({
         window.main.webSocket.close({ requestId });
       }
 
+      if (isSocketIOResponse(activeResponse)) {
+        window.main.socketIO.close({ requestId });
+      }
+
       if (activeResponse.requestVersionId) {
         await models.requestVersion.restore(activeResponse.requestVersionId);
       }
