@@ -31,8 +31,8 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+          node-version-file: ".nvmrc"
+          cache: "npm"
           cache-dependency-path: package-lock.json
 
       - name: Install packages
@@ -113,4 +113,14 @@ jobs:
           remote_repo="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git push "${remote_repo}" --follow-tags
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
+
+      - name: Create Pull Request
+        run: |
+          gh pr create \
+            --base develop \
+            --head ${{ env.RELEASE_BRANCH }} \
+            --title ":rocket: ${{ env.RELEASE_VERSION}}" \
+            --body "**Automated pull request**\nArtifacts build in progress..."
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}

@@ -144,6 +144,19 @@ jobs:
         env:
           IMAGE_TAGS: ${{ steps.inso_docker_meta.outputs.tags }}
 
+      - name: Upload sourcemaps to Sentry
+        env:
+          SENTRY_AUTH_TOKEN: "${{ secrets.SENTRY_AUTH_TOKEN }}"
+          SENTRY_ORG: "${{ secrets.SENTRY_ORG }}"
+          SENTRY_PROJECT: "${{ secrets.SENTRY_PROJECT }}"
+        run: |
+          curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION="2.2.0" bash
+
+          sentry-cli releases new ${{ env.RELEASE_VERSION }}
+          sentry-cli releases set-commits ${{ env.RELEASE_VERSION }} --commit 'Kong/insomnia@${{ env.RELEASE_BRANCH }}'
+
+          sentry-cli sourcemaps upload -r ${{ env.RELEASE_VERSION }} ./artifacts/*-latest-sentry
+
       # Setup regctl to parse platform specific image digest from image manifest
       - name: Install regctl
         uses: regclient/actions/regctl-installer@ce5fd131e371ffcdd7508b478cb223b3511a9183 # main
@@ -230,3 +243,37 @@ jobs:
       registry-password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
       provenance-registry-username: ${{ secrets.DOCKER_REGISTRY_USER }}
       provenance-registry-password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+
+  create-draft-release:
+    timeout-minutes: 10
+    runs-on: ubuntu-22.04
+    needs: [artifact-provenance] # Wait for the artifact provenance to be generated
+    permissions:
+      actions: read # For getting workflow run info for keyless signing of docker image
+      contents: write # Required to upload assets
+      packages: write
+    steps:
+      - name: Checkout branch # Check out the develop branch
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Download release assets
+        run: |
+          gh release download core@${{ env.RELEASE_VERSION }} \
+          --dir=${{ env.ARTIFACTS_DOWNLOAD_PATH }} \
+          --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Create a draft release in the kong/insomnia repository
+      - name: Create draft release
+        run: |
+          gh release create core@${{ env.RELEASE_VERSION }} \
+          ${{ env.ARTIFACTS_DOWNLOAD_PATH }}/* \
+          --title="${{ env.RELEASE_VERSION }} 📦" \
+          --repo=kong/insomnia \
+          --prerelease=${{ env.IS_PRERELEASE }} \
+          --generate-notes --draft
+        env:
+          GH_TOKEN: ${{ secrets.CE_WRITE_TOKEN }}
