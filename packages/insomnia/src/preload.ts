@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils as _webUtils } from 'electron';
 
 import type { GitServiceAPI } from './main/git-service';
-import type { cloudServiceBridgeAPI } from './main/ipc/cloud-service-integration/cloud-service';
+import type { cloudServiceBridgeAPI } from './main/ipc/cloud-service-integration/cloud-service-register';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
 import type { CurlBridgeAPI } from './main/network/curl';

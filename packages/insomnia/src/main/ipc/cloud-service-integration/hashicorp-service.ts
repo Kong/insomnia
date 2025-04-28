@@ -1,8 +1,7 @@
 import crypto from 'crypto';
-import { net } from 'electron';
 
-import { INSOMNIA_FETCH_TIME_OUT } from '../../../common/constants';
 import { type CloudProviderName, type HashiCorpCredentials, HashiCorpCredentialType, HashiCorpVaultAuthMethod, type HCPCredential } from '../../../models/cloud-credential';
+import { nodeCurlRequest, type NodeCurlResponseType } from './request';
 import type { CloudServiceResult, HashiCorpSecretConfig, HashiCorpVaultKVV1SecretConfig, HashiCorpVaultKVV2SecretConfig, HCPSecretConfig, ICloudService } from './types';
 
 export interface AuthenticateResult {
@@ -58,11 +57,16 @@ export class HashiCorpService implements ICloudService {
     this._credential = credential;
   }
 
-  async _parseResponseError(response: Response) {
+  async _parseResponseError(response: NodeCurlResponseType) {
     const { type } = this._credential;
-    const errorDetial = { errorMessage: '', errorCode: '' };
+    const errorDetail = { errorMessage: '', errorCode: '' };
+    let errorBody;
     try {
-      const errorBody = await response.json();
+      errorBody = response.json();
+    } catch (error) {
+      errorBody = response.body;
+    }
+    try {
       if (typeof errorBody === 'object') {
         if (type === HashiCorpCredentialType.cloud) {
           const { message, details, error_description } = errorBody;
@@ -73,25 +77,25 @@ export class HashiCorpService implements ICloudService {
           if (error_description) {
             errorMessage = error_description;
           }
-          errorDetial.errorMessage = errorMessage || JSON.stringify(errorBody);
+          errorDetail.errorMessage = errorMessage || JSON.stringify(errorBody);
         } else {
           const { errors } = errorBody;
           if (errors && Array.isArray(errors)) {
-            errorDetial.errorMessage = errors.length > 0 ? errors.join(',') : response.statusText;
+            errorDetail.errorMessage = errors.length > 0 ? errors.join(',') : response.status;
           } else {
-            errorDetial.errorMessage = JSON.stringify(errorBody);
+            errorDetail.errorMessage = JSON.stringify(errorBody);
           }
         }
       } else {
-        errorDetial.errorMessage = errorBody.toString();
+        errorDetail.errorMessage = errorBody.toString();
       }
     } catch (error) {
-      errorDetial.errorMessage = error.toString() || response.statusText;
+      errorDetail.errorMessage = error.toString() || response.status;
     };
     return {
       success: false,
       result: null,
-      error: errorDetial,
+      error: errorDetail,
     };
   }
 
@@ -101,20 +105,43 @@ export class HashiCorpService implements ICloudService {
     try {
       if (type === HashiCorpCredentialType.cloud) {
         const { client_id, client_secret } = this._credential as HCPCredential;
-        const formData = new FormData();
-        formData.set('client_id', client_id);
-        formData.set('client_secret', client_secret);
-        formData.set('grant_type', 'client_credentials');
-        formData.set('audience', hcp_api_url);
-        const requestConfig: RequestInit = {
-          method: 'POST',
-          body: formData,
-          signal: AbortSignal.timeout(INSOMNIA_FETCH_TIME_OUT),
-        };
+        const formData = [
+          {
+            key: 'client_id',
+            value: client_id,
+          },
+          {
+            key: 'client_secret',
+            value: client_secret,
+          },
+          {
+            key: 'grant_type',
+            value: 'client_credentials',
+          },
+          {
+            key: 'audience',
+            value: hcp_api_url,
+          },
+        ];
         // authenticate to HashiCorp Cloud Platform
-        const authResponse = await net.fetch(`${hcp_auth_url}/oauth2/token`, requestConfig);
+        const authResponse = await nodeCurlRequest({
+          request: {
+            url: `${hcp_auth_url}/oauth2/token`,
+            method: 'POST',
+            headers: [
+              {
+                'name': "Content-Type",
+                'value': 'application/x-www-form-urlencoded',
+              }
+            ],
+            body: {
+              mimeType: 'application/x-www-form-urlencoded',
+              params: formData.map(param => ({ name: param.key, value: param.value })),
+            }
+          }
+        });
         if (authResponse.ok) {
-          const authResponseBody = await authResponse.json() as HCPAccessTokenResponse;
+          const authResponseBody = authResponse.json() as HCPAccessTokenResponse;
           const { access_token, expires_in } = authResponseBody;
           return {
             success: true,
@@ -126,26 +153,34 @@ export class HashiCorpService implements ICloudService {
         }
         const errorResult = await this._parseResponseError(authResponse);
         return errorResult;
-
       }
       const { authMethod, serverAddress } = this._credential;
       const finalUrl = serverAddress.endsWith('/') ? serverAddress.substring(0, serverAddress.length - 1) : serverAddress;
       if (authMethod === HashiCorpVaultAuthMethod.appRole) {
         const { role_id, secret_id } = this._credential;
-        const requestConfig: RequestInit = {
-          method: 'POST',
-          body: JSON.stringify({
-            role_id, secret_id,
-          }),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          signal: AbortSignal.timeout(INSOMNIA_FETCH_TIME_OUT),
-        };
+
         // authenticate to on-prem deployement with app role
-        const authResponse = await net.fetch(`${finalUrl}/v1/auth/approle/login`, requestConfig);
+        const authResponse = await nodeCurlRequest({
+          request: {
+            url: `${finalUrl}/v1/auth/approle/login`,
+            method: 'POST',
+            headers: [
+              {
+                'name': "Content-Type",
+                'value': 'application/json',
+              }
+            ],
+            body: {
+              mimeType: 'text/plain',
+              text: JSON.stringify({
+                role_id,
+                secret_id,
+              }),
+            },
+          }
+        });
         if (authResponse.ok) {
-          const authResponseBody = await authResponse.json() as HashiCorpOnPremTokenReponse;
+          const authResponseBody = authResponse.json() as HashiCorpOnPremTokenReponse;
           const { auth } = authResponseBody;
           const { client_token, lease_duration } = auth;
           return {
@@ -158,18 +193,22 @@ export class HashiCorpService implements ICloudService {
         }
         const errorResult = await this._parseResponseError(authResponse);
         return errorResult;
-
       } else if (authMethod === HashiCorpVaultAuthMethod.token) {
         const { access_token } = this._credential;
-        const requestConfig: RequestInit = {
-          method: 'GET',
-          headers: {
-            'X-Vault-Token': access_token,
-          },
-          signal: AbortSignal.timeout(INSOMNIA_FETCH_TIME_OUT),
-        };
-        // authenticate to on-prem deployement with token
-        const authResponse = await net.fetch(`${finalUrl}/v1/auth/token/lookup-self`, requestConfig);
+
+        // authenticate to on-prem deployment with token
+        const authResponse = await nodeCurlRequest({
+          request: {
+            url: `${finalUrl}/v1/auth/token/lookup-self`,
+            method: 'GET',
+            headers: [
+              {
+                'name': 'X-Vault-Token',
+                'value': access_token,
+              }
+            ],
+          }
+        });
         if (authResponse.ok) {
           const authResponseBody = await authResponse.json();
           const { data } = authResponseBody as { data: { ttl: number } };
@@ -185,7 +224,6 @@ export class HashiCorpService implements ICloudService {
         }
         const errorResult = await this._parseResponseError(authResponse);
         return errorResult;
-
       }
       return {
         success: false,
@@ -226,9 +264,8 @@ export class HashiCorpService implements ICloudService {
         const uniqueKeyHashV2 = crypto.createHash('md5').update(uniqueKeyV2).digest('hex');
         return uniqueKeyHashV2;
       }
-      default: {
+      default:
         return defaultUniqueKeyHash;
-      }
     }
   };
 
@@ -241,14 +278,18 @@ export class HashiCorpService implements ICloudService {
         const finalUrl = serverAddress.endsWith('/') ? serverAddress.substring(0, serverAddress.length - 1) : serverAddress;
         const { kvVersion, secretEnginePath } = config as HashiCorpVaultKVV1SecretConfig | HashiCorpVaultKVV2SecretConfig;
         if (kvVersion === 'v1') {
-          const requestConfig: RequestInit = {
-            method: 'GET',
-            headers: {
-              'X-Vault-Token': access_token!,
+          const secretResponse = await nodeCurlRequest({
+            request: {
+              url: `${finalUrl}/v1/${secretEnginePath}/metadata/${secretName}`,
+              method: 'GET',
+              headers: [
+                {
+                  'name': 'X-Vault-Token',
+                  'value': access_token!,
+                }
+              ]
             },
-            signal: AbortSignal.timeout(INSOMNIA_FETCH_TIME_OUT),
-          };
-          const secretResponse = await net.fetch(`${finalUrl}/v1/${secretEnginePath}/${secretName}`, requestConfig);
+          });
           if (secretResponse.ok) {
             const secretResponseBody = await secretResponse.json() as HashiCorpVaultKVV1SecretValue;
             return {
@@ -258,7 +299,6 @@ export class HashiCorpService implements ICloudService {
           }
           const errorResult = await this._parseResponseError(secretResponse);
           return errorResult;
-
         }
         // kv version v2
         const { version } = config as HashiCorpVaultKVV2SecretConfig;
@@ -269,14 +309,18 @@ export class HashiCorpService implements ICloudService {
           urlObj.searchParams.append('version', version.toString());
           v2Url = urlObj.toString();
         }
-        const requestConfig: RequestInit = {
-          method: 'GET',
-          headers: {
-            'X-Vault-Token': access_token!,
-          },
-          signal: AbortSignal.timeout(INSOMNIA_FETCH_TIME_OUT),
-        };
-        const secretResponse = await net.fetch(v2Url, requestConfig);
+        const secretResponse = await nodeCurlRequest({
+          request: {
+            url: v2Url,
+            method: 'GET',
+            headers: [
+              {
+                'name': 'X-Vault-Token',
+                'value': access_token!,
+              }
+            ]
+          }
+        });
         if (secretResponse.ok) {
           const secretResponseBody = await secretResponse.json() as HashiCorpVaultKVV2SecretValue;
           return {
@@ -286,20 +330,23 @@ export class HashiCorpService implements ICloudService {
         }
         const errorResult = await this._parseResponseError(secretResponse);
         return errorResult;
-
       }
       // cloud vault
       const { organizationId, projectId, appName, version } = config as HCPSecretConfig;
       const secretRequestBaseUrl = `${hcp_api_url}/secrets/${hcp_api_version}/organizations/${organizationId}/projects/${projectId}/apps/${appName}/secrets/${secretName}`;
       const secretRequestUrl = version ? `${secretRequestBaseUrl}/versions/${version}:open` : `${secretRequestBaseUrl}:open`;
-      const requestConfig: RequestInit = {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${access_token}`,
-        },
-        signal: AbortSignal.timeout(INSOMNIA_FETCH_TIME_OUT),
-      };
-      const secretResponse = await net.fetch(secretRequestUrl, requestConfig);
+      const secretResponse = await nodeCurlRequest({
+        request: {
+          url: secretRequestUrl,
+          method: 'GET',
+          headers: [
+            {
+              'name': 'Authorization',
+              'value': `Bearer ${access_token}`,
+            }
+          ],
+        }
+      });
       if (secretResponse.ok) {
         const secretResponseBody = await secretResponse.json();
         let secretResult: HCPStaticSecretValue;
@@ -317,7 +364,6 @@ export class HashiCorpService implements ICloudService {
       }
       const errorResult = await this._parseResponseError(secretResponse);
       return errorResult;
-
     } catch (error) {
       return {
         success: false,

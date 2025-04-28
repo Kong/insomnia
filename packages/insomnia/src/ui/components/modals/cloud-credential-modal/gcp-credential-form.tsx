@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
 
-import { type BaseCloudCredential, type CloudProviderCredential, type CloudProviderName } from '../../../../models/cloud-credential';
+import {
+  type BaseCloudCredential,
+  type CloudProviderCredential,
+  type CloudProviderName,
+  type GCPCloudCredential,
+} from '../../../../models/cloud-credential';
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 
@@ -18,7 +23,12 @@ export const providerType: CloudProviderName = 'gcp';
 
 export const GCPCredentialForm = (props: GCPCredentialFormProps) => {
   const { data, onSubmit, isLoading, errorMessage } = props;
-  const [inputKeyPath, setInputKeyPath] = useState(data?.credentials as string);
+  const [inputKeyPath, setInputKeyPath] = useState(
+    // for backward compatibility, gcp credential used to be a string of service account key file path
+    typeof data?.credentials === 'string'
+      ? data?.credentials
+      : (data as GCPCloudCredential)?.credentials?.serviceAccountKeyFilePath || '',
+  );
   const isEdit = !!data;
   const { name } = data || initialFormValue;
 
@@ -27,9 +37,7 @@ export const GCPCredentialForm = (props: GCPCredentialFormProps) => {
       title: 'Select Service Account Key File',
       buttonLabel: 'Select',
       properties: ['openFile'],
-      filters: [
-        { name: 'JSON File', extensions: ['json'] },
-      ],
+      filters: [{ name: 'JSON File', extensions: ['json'] }],
     });
     if (canceled) {
       return;
@@ -40,7 +48,7 @@ export const GCPCredentialForm = (props: GCPCredentialFormProps) => {
 
   return (
     <form
-      className='flex flex-col gap-2 flex-shrink-0'
+      className="flex flex-shrink-0 flex-col gap-2"
       onSubmit={e => {
         e.preventDefault();
         e.stopPropagation();
@@ -49,22 +57,19 @@ export const GCPCredentialForm = (props: GCPCredentialFormProps) => {
         const newData = {
           name,
           provider: providerType,
-          credentials: inputKeyPath!,
+          credentials: {
+            serviceAccountKeyFilePath: inputKeyPath!,
+          },
         };
         onSubmit(newData);
       }}
     >
-      <div className='flex flex-col gap-2'>
-        <TextField
-          className="flex flex-col gap-2"
-          defaultValue={name}
-        >
-          <Label className='col-span-4'>
-            Credential Name:
-          </Label>
+      <div className="flex flex-col gap-2">
+        <TextField className="flex flex-col gap-2" defaultValue={name}>
+          <Label className="col-span-4">Credential Name:</Label>
           <Input
             required
-            className='py-1 h-8 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors flex-1 placeholder:italic placeholder:opacity-60 col-span-3'
+            className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
             type="text"
             name="name"
             placeholder="Credential name"
@@ -73,39 +78,39 @@ export const GCPCredentialForm = (props: GCPCredentialFormProps) => {
         <div>
           <label>
             Service Account Key File Path:
-            <HelpTooltip className='ml-2 sapce-left'>Enter the path of your service account key file which is generated in GCP console</HelpTooltip>
+            <HelpTooltip className="space-left ml-2">
+              Enter the path of your service account key file which is generated in GCP console
+            </HelpTooltip>
           </label>
         </div>
-        <div className='mt-2 flex gap-3'>
+        <div className="mt-2 flex gap-3">
           <Input
-            className='py-1 w-4/5 pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors flex-1 placeholder:italic placeholder:opacity-60 col-span-3'
+            className="col-span-3 w-4/5 flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
             placeholder="Service account key path"
-            aria-label='Input Serice Account Key Path'
+            aria-label="Input Service Account Key Path"
             value={inputKeyPath}
             onChange={e => setInputKeyPath(e.target.value)}
           />
           <Button
-            className="flex-shrink-0 border-solid border border-[--hl-`sm] py-1 items-center justify-center px-4 aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent transition-all text-base"
+            className="border-[--hl-`sm] flex-shrink-0 items-center justify-center rounded-sm border border-solid px-4 py-1 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]"
             onPress={handleSelectFile}
           >
-            <Icon icon="file" className='mr-2' />
+            <Icon icon="file" className="mr-2" />
             <span>Select File</span>
           </Button>
         </div>
-        {(errorMessage) &&
-          <p className="notice error margin-top-sm no-margin-bottom">{errorMessage}</p>
-        }
-        <div className='w-full flex flex-row items-center justify-end gap-[--padding-md] pt-[--padding-md]'>
+        {errorMessage && <p className="notice error margin-top-sm no-margin-bottom">{errorMessage}</p>}
+        <div className="flex w-full flex-row items-center justify-end gap-[--padding-md] pt-[--padding-md]">
           <Button
-            className="hover:no-underline text-right bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
-            type='submit'
+            className="rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-right text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
+            type="submit"
             isDisabled={isLoading || !inputKeyPath}
           >
-            {isLoading && <Icon icon="spinner" className="text-[--color-font] animate-spin m-auto inline-block mr-2" />}
+            {isLoading && <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-[--color-font]" />}
             {isEdit ? 'Update' : 'Create'}
           </Button>
         </div>
       </div>
-    </form >
+    </form>
   );
 };

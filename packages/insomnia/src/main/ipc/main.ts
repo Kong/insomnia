@@ -23,7 +23,7 @@ import {
   updateLatestStepName,
 } from '../network/request-timing';
 import type { WebSocketBridgeAPI } from '../network/websocket';
-import type { cloudServiceBridgeAPI } from './cloud-service-integration/cloud-service';
+import type { cloudServiceBridgeAPI } from './cloud-service-integration/cloud-service-register';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import extractPostmanDataDumpHandler from './extractPostmanDataDump';
 import type { gRPCBridgeAPI } from './grpc';

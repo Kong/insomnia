@@ -1,11 +1,16 @@
 import type { AuthenticationResult as AzureOAuthCredential } from '@azure/msal-node';
 
 import * as models from '../../../models';
-import type { AWSTemporaryCredential, BaseCloudCredential, CloudProviderName, HashiCorpCredentials } from '../../../models/cloud-credential';
+import type {
+  AWSTemporaryCredential,
+  BaseCloudCredential,
+  CloudProviderName,
+  GCPCredentials,
+  HashiCorpCredentials,
+} from '../../../models/cloud-credential';
 import { AzureService } from '../cloud-service-integration/azure-service';
-import { ipcMainHandle, ipcMainOn } from '../electron';
 import { type AWSGetSecretConfig, AWSService } from './aws-service';
-import { type GCPGetSecretConfig, GCPService } from './gcp-servcie';
+import { type GCPGetSecretConfig, GCPService } from './gcp-service';
 import { HashiCorpService } from './hashicorp-service';
 import type { HashiCorpSecretConfig } from './types';
 import { type MaxAgeUnit, VaultCache } from './vault-cache';
@@ -13,38 +18,21 @@ import { type MaxAgeUnit, VaultCache } from './vault-cache';
 // in-memory cache for fetched vault secrets
 const vaultCache = new VaultCache();
 
-export interface cloudServiceBridgeAPI {
-  authenticate: typeof cloudServiceProviderAuthentication;
-  getSecret: typeof getSecret;
-  clearCache: typeof clearVaultCache;
-  setCacheMaxAge: typeof setCacheMaxAge;
-  openAuthUrl: typeof openAuthUrl;
-  exchangeCode: typeof exchangeCode;
-}
 export interface CloudServiceAuthOption {
   provider: CloudProviderName;
   credentials: BaseCloudCredential['credentials'];
 }
 interface CloudServiceGetSecretConfigMapping {
-  'aws': AWSGetSecretConfig;
-  'gcp': GCPGetSecretConfig;
-  'hashicorp': HashiCorpSecretConfig;
-  'azure': never;
-};
+  aws: AWSGetSecretConfig;
+  gcp: GCPGetSecretConfig;
+  hashicorp: HashiCorpSecretConfig;
+  azure: never;
+}
 export interface CloudServiceSecretOption extends CloudServiceAuthOption {
   secretId: string;
   config: CloudServiceGetSecretConfigMapping[this['provider']];
 }
 export type CloudServiceGetSecretConfig = AWSGetSecretConfig | GCPGetSecretConfig;
-
-export function registerCloudServiceHandlers() {
-  ipcMainHandle('cloudService.authenticate', (_event, options) => cloudServiceProviderAuthentication(options));
-  ipcMainHandle('cloudService.getSecret', (_event, options) => getSecret(options));
-  ipcMainHandle('cloudService.exchangeCode', (_event, type, data) => exchangeCode(type, data));
-  ipcMainOn('cloudService.openAuthUrl', (_event, type) => openAuthUrl(type));
-  ipcMainOn('cloudService.clearCache', () => clearVaultCache());
-  ipcMainOn('cloudService.setCacheMaxAge', (_event, { maxAge, unit }) => setCacheMaxAge(maxAge, unit));
-}
 
 // factory pattern to create cloud service class based on its provider name
 function createCloudService(name: CloudProviderName, credential: BaseCloudCredential['credentials']) {
@@ -52,7 +40,10 @@ function createCloudService(name: CloudProviderName, credential: BaseCloudCreden
     case 'aws':
       return new AWSService(credential as AWSTemporaryCredential);
     case 'gcp':
-      return new GCPService(credential as string);
+      return new GCPService(
+        // for backward compatibility, gcp credential used to be a string of service account key file path
+        typeof credential === 'string' ? credential : (credential as GCPCredentials).serviceAccountKeyFilePath,
+      );
     case 'hashicorp':
       return new HashiCorpService(credential as HashiCorpCredentials);
     case 'azure':
@@ -60,15 +51,7 @@ function createCloudService(name: CloudProviderName, credential: BaseCloudCreden
     default:
       throw new Error('Invalid cloud service provider name');
   }
-};
-
-const clearVaultCache = () => {
-  return vaultCache.clear();
-};
-
-const setCacheMaxAge = (newAge: number, unit: MaxAgeUnit = 'min') => {
-  return vaultCache.setMaxAge(newAge, unit);
-};
+}
 
 // authenticate with cloud service provider
 export const cloudServiceProviderAuthentication = (options: CloudServiceAuthOption) => {
@@ -77,7 +60,7 @@ export const cloudServiceProviderAuthentication = (options: CloudServiceAuthOpti
   return cloudService.authenticate();
 };
 
-const openAuthUrl = (type: 'azure') => {
+export const openAuthUrl = (type: 'azure') => {
   switch (type) {
     case 'azure':
       AzureService.openAuthUrl();
@@ -87,7 +70,7 @@ const openAuthUrl = (type: 'azure') => {
   }
 };
 
-const exchangeCode = async (type: 'azure', data: any) => {
+export const exchangeCode = async (type: 'azure', data: any) => {
   // eslint-disable-next-line default-case
   switch (type) {
     case 'azure':
@@ -111,4 +94,12 @@ export const getSecret = async (options: CloudServiceSecretOption) => {
     vaultCache.setItem(uniqueSecretKey, secretResult, { maxAge });
   }
   return secretResult;
+};
+
+export const clearVaultCache = () => {
+  return vaultCache.clear();
+};
+
+export const setCacheMaxAge = (newAge: number, unit: MaxAgeUnit = 'min') => {
+  return vaultCache.setMaxAge(newAge, unit);
 };

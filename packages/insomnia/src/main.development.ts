@@ -13,7 +13,7 @@ import { SegmentEvent, trackSegmentEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
 import { registerGitServiceAPI } from './main/git-service';
-import { registerCloudServiceHandlers } from './main/ipc/cloud-service-integration/cloud-service';
+import { registerCloudServiceHandlers } from './main/ipc/cloud-service-integration/cloud-service-register';
 import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';

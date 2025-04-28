@@ -1,9 +1,10 @@
 import { type AuthenticationResult, AuthError, CryptoProvider, PublicClientApplication } from '@azure/msal-node';
 import crypto from 'crypto';
-import { net, shell } from 'electron';
+import { shell } from 'electron';
 
-import { INSOMNIA_AZURE_CLIENT_ID, INSOMNIA_AZURE_REDIRECT_URI, INSOMNIA_FETCH_TIME_OUT } from '../../../common/constants';
+import { INSOMNIA_AZURE_CLIENT_ID, INSOMNIA_AZURE_REDIRECT_URI } from '../../../common/constants';
 import { insomniaFetch } from '../../../ui/insomniaFetch';
+import { nodeCurlRequest } from './request';
 import { type CloudServiceResult, type ICloudService, OAuthCloudService } from './types';
 
 interface AzureSecretAttributes {
@@ -154,14 +155,19 @@ export class AzureService extends OAuthCloudService implements ICloudService {
         'api-version': apiVersion,
       });
       const secretUrl = `${identifier}?${params.toString()}`;
-      const requestConfig: RequestInit = {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
+      const secretResponse = await nodeCurlRequest({
+        request: {
+          url: secretUrl,
+          method: 'GET',
+          headers: [
+            {
+              name: 'Authorization',
+              value: `Bearer ${accessToken}`,
+            },
+          ],
         },
-        signal: AbortSignal.timeout(INSOMNIA_FETCH_TIME_OUT),
-      };
-      const secretResponse = await net.fetch(secretUrl, requestConfig);
+
+      });
       if (secretResponse.ok) {
         const secretBody = await secretResponse.json() as AzureSecretResponse;
         return {
@@ -169,12 +175,18 @@ export class AzureService extends OAuthCloudService implements ICloudService {
           result: secretBody,
         };
       };
-      const errorBody = await secretResponse.json() as { error?: { code: string; message: string } };
-      const errorMessage = errorBody.error?.message || secretResponse.statusText || 'Unknown error, failed to get secret';
+      let errorBody;
+      const contentType = secretResponse.headers.find(h => h.name.toLocaleLowerCase() === 'content-type')?.value;
+      if (contentType?.toLowerCase().includes('application/json')) {
+        errorBody = secretResponse.json() as { error?: { code: string; message: string } };
+      } else {
+        errorBody = secretResponse.body;
+      }
+      const errorMessage = typeof errorBody === 'object' && errorBody.error?.message || secretResponse.status || 'Unknown error, failed to get secret';
       return {
         success: false,
         result: null,
-        error: { errorMessage, errorCode: errorBody.error?.code || secretResponse.status.toString() },
+        error: { errorMessage, errorCode: secretResponse.status },
       };
     } catch (error) {
       return {

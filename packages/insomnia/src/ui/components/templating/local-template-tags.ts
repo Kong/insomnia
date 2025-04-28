@@ -7,14 +7,12 @@ import os from 'os';
 import { CookieJar } from 'tough-cookie';
 import * as uuid from 'uuid';
 
-import type { ExternalVaultConfig } from '../../../main/ipc/cloud-service-integration/types';
 import type { CloudProviderCredential, CloudProviderName } from '../../../models/cloud-credential';
 import type { RequestParameter } from '../../../models/request';
 import type { TemplateTag } from '../../../plugins';
 import type { PluginTemplateTag, RenderPurpose } from '../../../templating/types';
 import { invariant } from '../../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../../utils/url/querystring';
-import { getExternalVault } from './external-vault';
 import { fakerFunctions } from './faker-functions';
 
 const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
@@ -58,10 +56,41 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         }
         if (!credentialId) {
           throw new Error('Get secret from external vault failed: Credential is required');
-        };
-        const providerCredential = await context.util.models.cloudCredential.getById(credentialId);
+        }
+        let providerCredential = await context.util.models.cloudCredential.getById(credentialId);
         if (!providerCredential) {
-          throw new Error('Get secret from external vault failed: No Cloud Credential found');
+          if (process.type === 'renderer' || process.type === 'worker') {
+            // executed in Insomnia app
+            throw new Error('Get secret from external vault failed: No Cloud Credential found');
+          } else {
+            const environmentPrefix = `INSOMNIA_${provider.toUpperCase()}_`;
+            // executed in Inso, try to get credential from environment variable with pattern INSOMNIA_<PROVIDER>_<CREDENTIAL_KEY>
+            const matchingEnvironments = Object.keys(process.env).filter(key => key.startsWith(environmentPrefix));
+            if (matchingEnvironments.length > 0) {
+              const matchingCredentials = matchingEnvironments.reduce(
+                (acc, key) => {
+                  const keyWithoutPrefix = key.replace(environmentPrefix, '');
+                  acc[keyWithoutPrefix] = process.env[key];
+                  return acc;
+                },
+                {} as Record<string, any>,
+              );
+              providerCredential = {
+                _id: credentialId,
+                credentials: new Proxy(matchingCredentials, {
+                  get(target, prop: string) {
+                    // When transfer credential object to env variable, we make the key uppercase
+                    // override the get method, try to get value from uppercase key if not found in original key
+                    return prop in target ? target[prop] : target[prop.toUpperCase()];
+                  },
+                }),
+              };
+            } else {
+              throw new Error(
+                'Get secret from external vault failed: No external cloud credential file or credential environment variables have been found',
+              );
+            }
+          }
         }
         const renderContext = context.renderPurpose as RenderPurpose;
         // Get secret from external vaults when send request or in tag-preview, otherwise return defautl mask value
@@ -72,7 +101,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           } catch (error) {
             throw new Error('Get secret from external vault failed: Invalid vault secret config');
           }
-          return getExternalVault(context, provider, providerCredential, secretConfig as ExternalVaultConfig);
+          return context.util.cloudService.getExternalVault({ provider, providerCredential, secretConfig });
         }
         return '••••••';
       },

@@ -22,9 +22,12 @@ export interface AWSCloudCredential extends IBaseCloudCredential {
   provider: 'aws';
   credentials: AWSTemporaryCredential;
 }
+export interface GCPCredentials {
+  serviceAccountKeyFilePath: string;
+}
 export interface GCPCloudCredential extends IBaseCloudCredential {
   provider: 'gcp';
-  credentials: string;
+  credentials: GCPCredentials;
 }
 export interface HashiCorpBaseCredential {
   access_token?: string;

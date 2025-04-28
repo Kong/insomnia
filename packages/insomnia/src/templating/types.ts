@@ -195,6 +195,9 @@ export interface PluginTemplateTagContext {
   util: {
     [x: string]: any;
     render: (str: string) => string | Promise<string | null>;
+    cloudService: {
+      getExternalVault: (options: any) => Promise<string>;
+    };
     models: {
       [x: string]: any;
       request: {

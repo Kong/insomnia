@@ -195,24 +195,15 @@ export default class BaseExtension {
           templating.render(str, {
             context: renderContext,
           }),
-        externalVault: {
-          getSecret: async (options: any) => {
-            const resp = await fetch('insomnia-templating-worker-database://cloudService.getSecret', {
+        cloudService: {
+          getExternalVault: async (options: any) => {
+            const resp = await fetch('insomnia-templating-worker-database://cloudService.getExternalVault', {
               method: 'post',
-              body: JSON.stringify({ options }),
+              body: JSON.stringify({ ...options }),
             });
 
-            const req = await resp.json();
-            return req;
-          },
-          authenticate: async (options: any) => {
-            const resp = await fetch('insomnia-templating-worker-database://cloudService.authenticate', {
-              method: 'post',
-              body: JSON.stringify({ options }),
-            });
-
-            const req = await resp.json();
-            return req;
+            const result = await resp.json();
+            return result;
           },
         },
         models: {

@@ -5,6 +5,7 @@ import type { RequestGroup } from '../models/request-group';
 import type { Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context';
 import type { Plugin } from '../plugins/index';
+import { getExternalVault } from '../ui/components/templating/external-vault';
 import * as templating from './index';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
 import { decodeEncoding } from './utils';
@@ -103,6 +104,18 @@ export default class BaseExtension {
           templating.render(str, {
             context: renderContext,
           }),
+        cloudService: {
+          getExternalVault: (options: any) => {
+            const { provider, providerCredential, secretConfig } = options;
+            const cloudServiceContext = {
+              models: {
+                getById: models.cloudCredential.getById,
+                update: models.cloudCredential.update,
+              },
+            }
+            return getExternalVault({ cloudServiceContext, provider, providerCredential, secretConfig });
+          }
+        },
         models: {
           request: {
             getById: models.request.getById,

@@ -4,6 +4,7 @@ import type { Request as DBRequest } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Workspace } from '../models/workspace';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
+import { getExternalVault } from '../ui/components/templating/external-vault';
 import { cloudServiceProviderAuthentication, getSecret } from './ipc/cloud-service-integration/cloud-service';
 
 export const resolveDbByKey = async (request: Request) => {
@@ -28,11 +29,17 @@ export const resolveDbByKey = async (request: Request) => {
     if (url.host === 'cloudCredential.update'.toLowerCase()) {
         result = await models.cloudCredential.update(body.originCredential, body.patch);
     }
-    if (url.host === 'cloudService.authenticate'.toLowerCase()) {
-        result = await cloudServiceProviderAuthentication(body.options);
-    }
-    if (url.host === 'cloudService.getSecret'.toLowerCase()) {
-        result = await getSecret(body.options);
+    if (url.host === 'cloudService.getExternalVault'.toLowerCase()) {
+        const { provider, providerCredential, secretConfig } = body;
+        const cloudServiceContext = {
+            getSecret: getSecret,
+            authenticate: cloudServiceProviderAuthentication,
+            models: {
+                getById: models.cloudCredential.getById,
+                update: models.cloudCredential.update,
+            },
+        }
+        result = await getExternalVault({ cloudServiceContext, provider, providerCredential, secretConfig });
     }
   if (url.host === 'cookieJar.getOrCreateForWorkspace'.toLowerCase()) {
     result = await models.cookieJar.getOrCreateForParentId(body.id);
