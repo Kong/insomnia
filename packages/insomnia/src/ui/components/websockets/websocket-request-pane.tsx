@@ -37,7 +37,7 @@ import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { Pane } from '../panes/pane';
 import { RenderedQueryString } from '../rendered-query-string';
-import { WebSocketActionBar } from './action-bar';
+import { WebSocketActionBar, type WebSocketActionBarHandle } from './action-bar';
 
 const supportedAuthTypes: AuthTypes[] = ['apikey', 'basic', 'bearer'];
 
@@ -193,6 +193,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
 
   const [previewMode, setPreviewMode] = useState(CONTENT_TYPE_JSON);
 
+  const webSocketActionBarRef = useRef<WebSocketActionBarHandle>(null);
   const [dismissPathParameterTip, setDismissPathParameterTip] = useLocalStorage('dismissPathParameterTip', '');
 
   useEffect(() => {
@@ -256,6 +257,8 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
     // Only update if url changed
     if (url !== activeRequest.url) {
       patchRequest(requestId, { url, parameters });
+      // Please refer to the comment in the request-pane
+      webSocketActionBarRef.current?.setUrl(url);
     }
   };
 
@@ -278,6 +281,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
           defaultValue={activeRequest.url}
           readyState={readyState}
           onChange={url => patchRequest(requestId, { url })}
+          ref={webSocketActionBarRef}
         />
       </header>
       <Tabs aria-label="Websocket request pane tabs" className="flex h-full w-full flex-1 flex-col">

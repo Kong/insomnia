@@ -39,6 +39,7 @@ interface Props {
 
 export interface RequestUrlBarHandle {
   focusInput: () => void;
+  setUrl: (url: string) => void;
 }
 
 export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
@@ -94,7 +95,16 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
       }
     }, [inputRef]);
 
-    useImperativeHandle(ref, () => ({ focusInput }), [focusInput]);
+    const setUrl = useCallback(
+      (url: string) => {
+        if (inputRef.current) {
+          inputRef.current.setValue(url);
+        }
+      },
+      [inputRef],
+    );
+
+    useImperativeHandle(ref, () => ({ focusInput, setUrl }), [focusInput, setUrl]);
 
     const [currentInterval, setCurrentInterval] = useState<number | null>(null);
     const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);

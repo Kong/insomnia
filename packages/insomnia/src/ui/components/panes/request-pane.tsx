@@ -1,4 +1,4 @@
-import React, { type FC, Fragment, useState } from 'react';
+import React, { type FC, Fragment, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
@@ -26,7 +26,7 @@ import { Icon } from '../icon';
 import { MarkdownEditor } from '../markdown-editor';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { RenderedQueryString } from '../rendered-query-string';
-import { RequestUrlBar } from '../request-url-bar';
+import { RequestUrlBar, type RequestUrlBarHandle } from '../request-url-bar';
 import { Pane, PaneHeader } from './pane';
 import { PlaceholderRequestPane } from './placeholder-request-pane';
 
@@ -44,6 +44,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
   const patchRequest = useRequestPatcher();
 
+  const requestUrlBarRef = useRef<RequestUrlBarHandle>(null);
   const [dismissPathParameterTip, setDismissPathParameterTip] = useLocalStorage('dismissPathParameterTip', '');
   const handleImportQueryFromUrl = () => {
     let query;
@@ -62,6 +63,11 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
     // Only update if url changed
     if (url !== activeRequest.url) {
       patchRequest(requestId, { url, parameters });
+      /**
+       * Currently the OneLineEditor is a uncontrolled component, and the value is asynchronously, if we change the component to controlled, users need to wait for the value to be updated when inputting, that's not a good experience.
+       * So as a workaround, we need to manually update the url bar value.
+       */
+      requestUrlBarRef.current?.setUrl(url);
     }
   };
   const gitVersion = useGitVCSVersion();
@@ -98,6 +104,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
             handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             onPaste={onPaste}
+            ref={requestUrlBarRef}
           />
         </ErrorBoundary>
       </PaneHeader>

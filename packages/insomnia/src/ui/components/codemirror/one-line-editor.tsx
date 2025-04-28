@@ -41,6 +41,7 @@ export interface EditorEventListener<T extends keyof EditorEventMap> {
 export interface OneLineEditorHandle {
   selectAll: () => void;
   focusEnd: () => void;
+  setValue: (value: string) => void;
 }
 export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>(
   (
@@ -351,6 +352,13 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
             codeMirror.current.focus();
           }
           codeMirror.current?.getDoc()?.setCursor(codeMirror.current.getDoc().lineCount(), 0);
+        },
+        setValue: (value: string) => {
+          if (codeMirror.current) {
+            const cursor = codeMirror.current.getCursor();
+            codeMirror.current.setValue(value);
+            codeMirror.current.setCursor(cursor);
+          }
         },
       }),
       [],
