@@ -2,6 +2,45 @@ import { expect } from '@playwright/test';
 
 import { test } from '../../playwright/test';
 
+const invalidNames = [
+  { name: '', expectedError: 'Plugin name must not be empty or too long' },
+  { name: 'foo bar', expectedError: 'Plugin name must be lowercase, alphanumeric, and dash-separated' },
+  { name: 'foo;rm -rf /', expectedError: 'Plugin name must not contain path traversal characters' },
+  { name: 'foo&&ls', expectedError: 'Plugin name must not contain shell metacharacters' },
+  { name: '$(echo hi)', expectedError: 'Plugin name must not contain shell metacharacters' },
+  { name: '`ls`', expectedError: 'Plugin name must not contain shell metacharacters' },
+  { name: '| ls', expectedError: 'Plugin name must not contain shell metacharacters' },
+  { name: '../foo', expectedError: 'Plugin name must not contain path traversal characters' },
+  { name: '/etc/passwd', expectedError: 'Plugin name must not contain path traversal characters' },
+  { name: 'foo/../../bar', expectedError: 'Plugin name must not contain path traversal characters' },
+  { name: '@scope//foo', expectedError: 'Scoped packages are not allowed in this context' },
+  { name: '@scope foo', expectedError: 'Scoped packages are not allowed in this context' },
+  { name: '@scope/foo/bar', expectedError: 'Scoped packages are not allowed in this context' },
+  { name: 'foo\\bar', expectedError: 'Plugin name must not contain path traversal characters' },
+  { name: 'foo\nbar', expectedError: 'Plugin name must be lowercase, alphanumeric, and dash-separated' },
+  { name: '\u0000foo', expectedError: 'Plugin name must be lowercase, alphanumeric, and dash-separated' },
+  { name: 'foo🚀bar', expectedError: 'Plugin name must be lowercase, alphanumeric, and dash-separated' },
+  { name: 'my--plugin', expectedError: 'Plugin name must not contain consecutive dashes' },
+  { name: '-plugin', expectedError: 'Plugin name must not start with a dash' },
+  { name: 'plugin-', expectedError: 'Plugin name must not end with a dash' },
+  { name: '-', expectedError: 'Plugin name must not be a single dash' },
+  { name: '.plugin', expectedError: 'Plugin name cannot start with a period' },
+  { name: '_plugin', expectedError: 'Plugin name cannot start with an underscore' },
+  { name: ' plugin ', expectedError: 'Plugin name cannot contain leading or trailing spaces' },
+  { name: 'plugin@name', expectedError: 'Plugin name must be lowercase, alphanumeric, and dash-separated' },
+  { name: '..\\plugin', expectedError: 'Plugin name must not contain path traversal characters' },
+  { name: 'plugin..', expectedError: 'Plugin name must not contain path traversal characters' },
+  { name: 'plugin..foo', expectedError: 'Plugin name must not contain path traversal characters' },
+  { name: 'plugin..foo..bar', expectedError: 'Plugin name must not contain path traversal characters' },
+  { name: 'plugin..foo/bar', expectedError: 'Plugin name must not contain path traversal characters' },
+  { name: 'plugin..foo\\bar', expectedError: 'Plugin name must not contain path traversal characters' },
+  { name: 'plugin..foo/bar/baz', expectedError: 'Plugin name must not contain path traversal characters' },
+  {
+    name: 'insomnia-plugin-demo-example | bash -s 192.168.0.101 4242 |',
+    expectedError: 'Plugin name must not contain shell metacharacters',
+  },
+];
+
 test('Plugins', async ({ page }) => {
   // Opening settings
   await page.getByTestId('settings-button').click();
@@ -9,76 +48,42 @@ test('Plugins', async ({ page }) => {
   await page.locator('div[role="tab"]:has-text("Plugins")').click();
 
   // Generate a new valid plugin
-  await page.locator('text=Generate New Plugin').click();
-  await page.getByLabel('Plugin name').fill('demo-example');
+  await page.locator('text=New Plugin').click();
+
+  const demoPluginName = 'demo-example';
+  await page.getByTestId('plugin-name-input').fill(demoPluginName);
   await page.getByTestId('generate-plugin-button').click();
-  await expect.soft(page.getByRole('cell', { name: 'insomnia-plugin-demo-example' })).toBeVisible();
+  await expect.soft(page.getByTestId(`insomnia-plugin-${demoPluginName}`)).toBeVisible();
 
   // Reject plugin name with consecutive dashes
-  await page.locator('text=Generate New Plugin').click();
-  await page.getByLabel('Plugin name').fill('my--plugin');
-  await page.getByTestId('generate-plugin-button').click();
-  await expect.soft(page.locator('text=Plugin name must not contain consecutive dashes')).toBeVisible();
+  await page.locator('text=New Plugin').click();
 
-  // Reject plugin name starting with dash
-  await page.getByLabel('Plugin name').fill('-plugin');
-  await page.getByTestId('generate-plugin-button').click();
-  await expect.soft(page.locator('text=Plugin name must not start with a dash')).toBeVisible();
+  for (const { name, expectedError } of invalidNames) {
+    await page.getByTestId('plugin-name-input').fill(name);
+    await page.getByTestId('generate-plugin-button').click();
 
-  // Reject plugin name ending with dash
-  await page.getByLabel('Plugin name').fill('plugin-');
-  await page.getByTestId('generate-plugin-button').click();
-  await expect.soft(page.locator('text=Plugin name must not end with a dash')).toBeVisible();
-
-  // Reject plugin name that is a single dash
-  await page.getByLabel('Plugin name').fill('-');
-  await page.getByTestId('generate-plugin-button').click();
-  await expect.soft(page.locator('text=Plugin name must not be a single dash')).toBeVisible();
-
-  // Reject plugin name starting with a period
-  await page.getByLabel('Plugin name').fill('.plugin');
-  await page.getByTestId('generate-plugin-button').click();
-  await expect.soft(page.locator('text=Plugin name cannot start with a period')).toBeVisible();
-
-  // Reject plugin name starting with an underscore
-  await page.getByLabel('Plugin name').fill('_plugin');
-  await page.getByTestId('generate-plugin-button').click();
-  await expect.soft(page.locator('text=Plugin name cannot start with an underscore')).toBeVisible();
-
-  // Reject plugin name with leading or trailing spaces
-  await page.getByLabel('Plugin name').fill(' plugin ');
-  await page.getByTestId('generate-plugin-button').click();
-  await expect.soft(page.locator('text=Plugin name cannot contain leading or trailing spaces')).toBeVisible();
-
-  // Reject plugin name with invalid characters
-  await page.getByLabel('Plugin name').fill('plugin@name');
-  await page.getByTestId('generate-plugin-button').click();
-  await expect.soft(page.locator('text=Plugin name must be lowercase, alphanumeric, and dash-separated')).toBeVisible();
-
-  // Reject plugin name with path traversal characters
-  await page.getByLabel('Plugin name').fill('../plugin');
-  await page.getByTestId('generate-plugin-button').click();
-  await expect.soft(page.locator('text=Plugin name must not contain path traversal characters')).toBeVisible();
-
-  await page.getByLabel('Plugin name').fill('..\\plugin');
-  await page.getByTestId('generate-plugin-button').click();
-  await expect.soft(page.locator('text=Plugin name must not contain path traversal characters')).toBeVisible();
+    await expect.soft(page.getByTestId('plugin-name-error')).toBeVisible();
+    await expect.soft(page.getByTestId('plugin-name-error')).toHaveText(expectedError);
+  }
 
   // Reject overly long plugin names
   const longName = 'a'.repeat(256);
-  await page.getByLabel('Plugin name').fill(longName);
+  await page.getByTestId('plugin-name-input').fill(longName);
   await page.getByTestId('generate-plugin-button').click();
-  await expect.soft(page.locator('text=Plugin name must not be empty or too long')).toBeVisible();
+  await expect.soft(page.getByTestId('plugin-name-error')).toBeVisible();
+  await expect.soft(page.getByTestId('plugin-name-error')).toHaveText('Plugin name must not be empty or too long');
 
   // Prevent creating a plugin with a name that already exists
   const pluginName = 'duplicate-plugin';
-  await page.getByLabel('Plugin name').fill(pluginName);
+  await page.getByTestId('plugin-name-input').fill(pluginName);
   await page.getByTestId('generate-plugin-button').click();
-  await expect.soft(page.getByRole('cell', { name: `insomnia-plugin-${pluginName}` })).toBeVisible();
+  await expect.soft(page.getByTestId(`insomnia-plugin-${pluginName}`)).toBeVisible();
 
   // Try to generate the same plugin again
-  await page.locator('text=Generate New Plugin').click();
-  await page.getByLabel('Plugin name').fill(pluginName);
+  await page.locator('text=New Plugin').click();
+  await page.getByTestId('plugin-name-input').fill(pluginName);
   await page.getByTestId('generate-plugin-button').click();
-  await expect.soft(page.locator('text=Plugin already exists')).toBeVisible();
+
+  await expect.soft(page.getByTestId('plugin-name-error')).toBeVisible();
+  await expect.soft(page.getByTestId('plugin-name-error')).toHaveText('Plugin already exists');
 });
