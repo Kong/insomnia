@@ -1,7 +1,6 @@
 import { getAppPlatform, getAppVersion } from '../common/constants';
 import type { Request } from '../models/request';
 import type { Response } from '../models/response';
-import type { Workspace } from '../models/workspace';
 import type { Plugin } from '../plugins/index';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
 import * as templating from './worker';
