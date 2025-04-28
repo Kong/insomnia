@@ -77,6 +77,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
               );
               providerCredential = {
                 _id: credentialId,
+                // @ts-expect-error transfer credentials from environment variable
                 credentials: new Proxy(matchingCredentials, {
                   get(target, prop: string) {
                     // When transfer credential object to env variable, we make the key uppercase
@@ -93,7 +94,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           }
         }
         const renderContext = context.renderPurpose as RenderPurpose;
-        // Get secret from external vaults when send request or in tag-preview, otherwise return defautl mask value
+        // Get secret from external vaults when send request or in tag-preview, otherwise return default mask value
         if (renderContext === 'preview' || renderContext === 'send') {
           let secretConfig = {};
           try {

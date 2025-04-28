@@ -1,4 +1,5 @@
 import { getAppPlatform, getAppVersion } from '../common/constants';
+import type { CloudProviderCredential } from '../models/cloud-credential';
 import type { Request } from '../models/request';
 import type { Response } from '../models/response';
 import type { Workspace } from '../models/workspace';
@@ -248,7 +249,7 @@ export default class BaseExtension {
               const cloudCredential = await resp.json();
               return cloudCredential;
             },
-            update: async (originCredential: any, patch: any) => {
+            update: async (originCredential: CloudProviderCredential, patch: Partial<CloudProviderCredential>) => {
               const resp = await fetch('insomnia-templating-worker-database://cloudCredential.update', {
                 method: 'post',
                 body: JSON.stringify({ originCredential, patch }),
