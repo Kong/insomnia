@@ -164,7 +164,7 @@ export default async function installPlugin(pluginName: string): Promise<void> {
  * Executes a Yarn command safely inside the app.
  * Handles environment setup, timeout, and stderr validation.
  */
-async function runYarnCommand(args: string[], cwd?: string) {
+export async function runYarnCommand(args: string[], cwd?: string) {
   const yarnPath = await getYarnPath();
 
   const { stdout, stderr } = await execFilePromise(process.execPath, ['--no-deprecation', yarnPath, ...args], {
@@ -294,7 +294,7 @@ export async function installPluginToTmpDir(lookupName: string) {
  * Resolves and validates the path to the standalone Yarn binary.
  * Ensures no symlinks and the path is within the app folder.
  */
-async function getYarnPath() {
+export async function getYarnPath() {
   const SAFE_APP_BASE = path.resolve(__dirname, '..');
 
   const appPath = app.getAppPath();
@@ -370,7 +370,7 @@ export function containsOnlyDeprecationWarnings(output: string): boolean {
  * Checks for unexpected binary characters in a string output.
  * Only printable ASCII characters, tabs, CR, and LF are allowed.
  */
-function hasUnexpectedBinaryData(output: string): boolean {
+export function hasUnexpectedBinaryData(output: string): boolean {
   for (let i = 0; i < output.length; i++) {
     const code = output.charCodeAt(i);
     if (!(code === 0x09 || code === 0x0a || code === 0x0d || (code >= 0x20 && code <= 0x7e))) {
@@ -384,7 +384,7 @@ function hasUnexpectedBinaryData(output: string): boolean {
  * Trims a string safely.
  * Returns undefined if input is not a string or becomes empty after trimming.
  */
-function safeTrim(value: unknown): string | undefined {
+export function safeTrim(value: unknown): string | undefined {
   if (typeof value === 'string') {
     const trimmed = value.trim();
     return trimmed.length > 0 ? trimmed : undefined;
@@ -396,7 +396,7 @@ function safeTrim(value: unknown): string | undefined {
  * Constructs the environment variables needed for running Yarn.
  * Pulls settings from the application models.
  */
-async function getYarnEnvValues(): Promise<Record<string, string>> {
+export async function getYarnEnvValues(): Promise<Record<string, string>> {
   const settings = await models.settings.get();
 
   const yarnEnv: Record<string, string> = {
@@ -421,7 +421,7 @@ async function getYarnEnvValues(): Promise<Record<string, string>> {
 /**
  * Builds proxy-related environment variables from settings.
  */
-function buildProxyEnv(settings: any): Record<string, string> {
+export function buildProxyEnv(settings: any): Record<string, string> {
   const proxyEnv: Record<string, string> = {};
 
   const httpProxy = safeTrim(settings.httpProxy);
@@ -445,7 +445,7 @@ function buildProxyEnv(settings: any): Record<string, string> {
 /**
  * Validates that a given string is a well-formed URL.
  */
-function isValidProxyUrl(url: string): boolean {
+export function isValidProxyUrl(url: string): boolean {
   try {
     new URL(url);
     return true;
