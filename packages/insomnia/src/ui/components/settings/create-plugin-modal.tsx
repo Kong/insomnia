@@ -45,7 +45,6 @@ export const CreatePluginModal = ({ onClose, onComplete }: Props) => {
               </div>
               <div className="basis-28§ flex w-full flex-1 select-none flex-col gap-2 overflow-hidden overflow-y-auto rounded">
                 <TextField
-                  name="name"
                   isRequired
                   defaultValue="demo-example"
                   className="group relative flex max-w-full flex-shrink-0 flex-col gap-2 overflow-hidden"
@@ -69,12 +68,14 @@ export const CreatePluginModal = ({ onClose, onComplete }: Props) => {
                       <p className="flex h-full items-center text-sm italic text-[--color-font]">insomnia-plugin-</p>
                     </div>
                     <Input
+                      aria-label="Plugin name"
+                      data-testid="plugin-name-input"
                       placeholder="example-name"
                       autoFocus
                       className="w-full bg-[--color-bg] p-2 text-[--color-font]"
                     />
                   </div>
-                  <Label slot="description" className="p-0 text-sm text-[--hl]">
+                  <Label slot="description" className="p-0 text-sm text-[--hl]" data-testid="plugin-name-error">
                     {error ?? 'Plugin name must be of format my-plugin-name'}
                   </Label>
                 </TextField>
