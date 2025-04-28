@@ -346,7 +346,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           throw new Error(`Workspace not found for ${meta.workspaceId}`);
         }
 
-        const cookieJar = await context.util.models.cookieJar.getOrCreateForWorkspace(workspace);
+        const cookieJar = await context.util.models.cookieJar.getOrCreateForParentId(workspace._id);
 
         return new Promise((resolve, reject) => {
           let jar;
@@ -920,7 +920,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             throw new Error('No cookie specified');
           }
 
-          const cookieJar = await context.util.models.cookieJar.getOrCreateForWorkspace(workspace);
+          const cookieJar = await context.util.models.cookieJar.getOrCreateForParentId(workspace._id);
           for (const p of request.parameters) {
             params.push({
               name: (await context.util.render(p.name)) || '',

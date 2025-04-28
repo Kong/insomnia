@@ -239,10 +239,10 @@ export default class BaseExtension {
             },
           },
           cookieJar: {
-            getOrCreateForWorkspace: async (workspace: Workspace) => {
+            getOrCreateForParentId: async (parentId: string) => {
               const resp = await fetch('insomnia-templating-worker-database://cookieJar.getOrCreateForParentId', {
                 method: 'post',
-                body: JSON.stringify({ parentId: workspace._id }),
+                body: JSON.stringify({ parentId }),
               });
 
               const cookieJar = await resp.json();

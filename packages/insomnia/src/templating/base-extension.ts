@@ -121,8 +121,8 @@ export default class BaseExtension {
             getByRequestId: models.oAuth2Token.getByParentId,
           },
           cookieJar: {
-            getOrCreateForWorkspace: (workspace: Workspace) => {
-              return models.cookieJar.getOrCreateForParentId(workspace._id);
+            getOrCreateForParentId: (parentId: string) => {
+              return models.cookieJar.getOrCreateForParentId(parentId);
             },
           },
           response: {

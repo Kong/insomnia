@@ -21,8 +21,8 @@ export const resolveDbByKey = async (request: Request) => {
   if (url.host === 'oAuth2Token.getByRequestId'.toLowerCase()) {
     result = await models.oAuth2Token.getByParentId(body.parentId);
   }
-  if (url.host === 'cookieJar.getOrCreateForWorkspace'.toLowerCase()) {
-    result = await models.cookieJar.getOrCreateForParentId(body.id);
+  if (url.host === 'cookieJar.getOrCreateForParentId'.toLowerCase()) {
+    result = await models.cookieJar.getOrCreateForParentId(body.parentId);
   }
   if (url.host === 'response.getLatestForRequestId'.toLowerCase()) {
     result = await models.response.getLatestForRequest(body.requestId, body.environmentId);
