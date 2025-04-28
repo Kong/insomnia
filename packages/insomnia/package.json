@@ -36,8 +36,9 @@
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.3.6",
     "@apidevtools/swagger-parser": "10.1.1",
-    "@aws-sdk/client-secrets-manager": "^3.686.0",
-    "@aws-sdk/client-sts": "^3.686.0",
+    "@aws-sdk/client-secrets-manager": "^3.787.0",
+    "@aws-sdk/client-sts": "^3.787.0",
+    "@aws-sdk/credential-providers": "^3.787.0",
     "@bufbuild/protobuf": "^1.10.0",
     "@connectrpc/connect": "^1.6.1",
     "@connectrpc/connect-node": "^1.6.1",

@@ -6,21 +6,39 @@ import type { BaseModel } from './index';
 export type CloudProviderName = 'aws' | 'azure' | 'gcp' | 'hashicorp';
 export enum AWSCredentialType {
   temp = 'temporary',
+  file = 'file',
+  sso = 'sso',
 }
-export interface AWSTemporaryCredential {
+export interface AWSBaseCredential {
+  region: string;
+}
+export interface AWSTemporaryCredential extends AWSBaseCredential {
   type: AWSCredentialType.temp;
   accessKeyId: string;
   secretAccessKey: string;
   sessionToken: string;
-  region: string;
 }
+export interface AWSFileCredential extends AWSBaseCredential {
+  type: AWSCredentialType.file;
+  section: string;
+  filePath?: string;
+  enableCache?: boolean;
+}
+export interface AWSSSOCredential extends AWSBaseCredential {
+  type: AWSCredentialType.sso;
+  section: string;
+  filePath?: string;
+  configFilePath?: string;
+  enableCache?: boolean;
+}
+export type AWSServiceCredential = AWSTemporaryCredential | AWSFileCredential | AWSSSOCredential;
 export interface IBaseCloudCredential {
   name: string;
   provider: CloudProviderName;
 }
 export interface AWSCloudCredential extends IBaseCloudCredential {
   provider: 'aws';
-  credentials: AWSTemporaryCredential;
+  credentials: AWSServiceCredential;
 }
 export interface GCPCredentials {
   serviceAccountKeyFilePath: string;

@@ -1,26 +1,73 @@
-import { DecryptionFailure, GetSecretValueCommand, type GetSecretValueCommandOutput, InternalServiceError, InvalidParameterException, InvalidRequestException, ResourceNotFoundException, SecretsManagerClient, SecretsManagerServiceException } from '@aws-sdk/client-secrets-manager';
-import { GetCallerIdentityCommand, type GetCallerIdentityCommandOutput, STSClient, STSServiceException } from '@aws-sdk/client-sts';
+import {
+  DecryptionFailure,
+  GetSecretValueCommand,
+  type GetSecretValueCommandOutput,
+  InternalServiceError,
+  InvalidParameterException,
+  InvalidRequestException,
+  ResourceNotFoundException,
+  SecretsManagerClient,
+  SecretsManagerServiceException,
+} from '@aws-sdk/client-secrets-manager';
+import {
+  GetCallerIdentityCommand,
+  type GetCallerIdentityCommandOutput,
+  STSClient,
+  STSServiceException,
+} from '@aws-sdk/client-sts';
+import { fromIni, fromSSO } from '@aws-sdk/credential-providers';
 import crypto from 'crypto';
 
-import type { AWSTemporaryCredential, CloudProviderName } from '../../../models/cloud-credential';
+import { AWSCredentialType, type AWSServiceCredential, type CloudProviderName } from '../../../models/cloud-credential';
 import type { AWSSecretConfig, CloudServiceResult, ICloudService } from './types';
 
 export type AWSGetSecretConfig = Omit<AWSSecretConfig, 'SecretId' | 'SecretType' | 'SecretKey'>;
 export const providerName: CloudProviderName = 'aws';
 export class AWSService implements ICloudService {
-  private _credential: AWSTemporaryCredential;
+  private _credential: AWSServiceCredential;
 
-  constructor(credential: AWSTemporaryCredential) {
+  constructor(credential: AWSServiceCredential) {
     this._credential = credential;
   }
 
+  _getAWSCredentials(enableCache: boolean) {
+    const { type } = this._credential;
+
+    switch (type) {
+      case AWSCredentialType.temp:
+        return {
+          accessKeyId: this._credential.accessKeyId,
+          secretAccessKey: this._credential.secretAccessKey,
+          sessionToken: this._credential.sessionToken,
+        };
+
+      case AWSCredentialType.file: {
+        return fromIni({
+          profile: this._credential.section,
+          ...(this._credential.filePath && { filepath: this._credential.filePath }),
+          ignoreCache: !enableCache,
+        });
+      }
+
+      case AWSCredentialType.sso: {
+        return fromSSO({
+          profile: this._credential.section,
+          ...(this._credential.filePath && { filepath: this._credential.filePath }),
+          ...(this._credential.configFilePath && { configFilePath: this._credential.configFilePath }),
+          ignoreCache: !enableCache,
+        });
+      }
+
+      default:
+        throw new Error(`Unsupported credential type: ${type}`);
+    }
+  }
+
   async authenticate(): Promise<CloudServiceResult<GetCallerIdentityCommandOutput>> {
-    const { region, accessKeyId, secretAccessKey, sessionToken } = this._credential;
+    const { region } = this._credential;
     const stsClient = new STSClient({
       region,
-      credentials: {
-        accessKeyId, secretAccessKey, sessionToken,
-      },
+      credentials: this._getAWSCredentials(false),
     });
 
     try {
@@ -47,23 +94,22 @@ export class AWSService implements ICloudService {
   }
 
   getUniqueCacheKey(secretName: string, config?: AWSGetSecretConfig) {
-    const {
-      VersionId = '',
-      VersionStage = '',
-    } = config || {};
+    const { VersionId = '', VersionStage = '' } = config || {};
     const uniqueKey = `${providerName}:${secretName}:${VersionId}:${VersionStage}`;
     const uniqueKeyHash = crypto.createHash('md5').update(uniqueKey).digest('hex');
     return uniqueKeyHash;
   }
 
-  async getSecret(secretNameOrARN: string, config: AWSGetSecretConfig = {}): Promise<CloudServiceResult<GetSecretValueCommandOutput>> {
-    const { region, accessKeyId, secretAccessKey, sessionToken } = this._credential;
+  async getSecret(
+    secretNameOrARN: string,
+    config: AWSGetSecretConfig = {},
+  ): Promise<CloudServiceResult<GetSecretValueCommandOutput>> {
+    const { region } = this._credential;
     const { VersionId, VersionStage } = config;
+    const enableCache = 'enableCache' in this._credential ? Boolean(this._credential.enableCache) : false;
     const secretClient = new SecretsManagerClient({
       region,
-      credentials: {
-        accessKeyId, secretAccessKey, sessionToken,
-      },
+      credentials: this._getAWSCredentials(enableCache),
     });
     try {
       const input = {
@@ -71,9 +117,7 @@ export class AWSService implements ICloudService {
         ...(VersionId && { VersionId }),
         ...(VersionStage && { VersionStage }),
       };
-      const response = await secretClient.send(
-        new GetSecretValueCommand(input)
-      );
+      const response = await secretClient.send(new GetSecretValueCommand(input));
       return {
         success: true,
         result: response,
@@ -94,8 +138,8 @@ export class AWSService implements ICloudService {
           errorMessage = 'The request is invalid for the current state of the resource.';
         } else if (error instanceof ResourceNotFoundException) {
           errorMessage = "Secrets Manager can't find the specified resource.";
-        };
-      };
+        }
+      }
       return {
         success: false,
         result: null,
@@ -103,4 +147,4 @@ export class AWSService implements ICloudService {
       };
     }
   }
-};
+}
