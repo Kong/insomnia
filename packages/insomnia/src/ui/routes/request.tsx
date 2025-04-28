@@ -146,6 +146,7 @@ export const loader: LoaderFunction = async ({
   const isGraphqlWsRequest = isGraphqlSubscriptionRequest(activeRequest);
 
   const responseModelName = getResponseModelName(activeRequest);
+
   const activeResponse = activeRequestMeta.activeResponseId
     ? await models[responseModelName].getById(activeRequestMeta.activeResponseId)
     : await models[responseModelName].getLatestForRequest(requestId, activeWorkspaceMeta.activeEnvironmentId);

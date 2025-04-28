@@ -22,6 +22,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT } from '../../../common/constants';
 import type { SocketIOPayload } from '../../../models/socket-io-payload';
 import type { SocketIORequest } from '../../../models/socket-io-request';
+import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { useRequestPayloadPatcher } from '../../hooks/use-request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { Icon } from '../icon';
@@ -43,9 +44,10 @@ const contentTypes: {
 interface Props {
   request: SocketIORequest;
   requestPayload: SocketIOPayload;
+  environmentId: string;
 }
 
-export const SocketIOBodyTabPane = ({ request, requestPayload }: Props) => {
+export const SocketIOBodyTabPane = ({ request, requestPayload, environmentId }: Props) => {
   const [selectedArg, setSelectedArg] = useState<Key>('');
   const requestPayloadPatcher = useRequestPayloadPatcher();
 
@@ -93,12 +95,18 @@ export const SocketIOBodyTabPane = ({ request, requestPayload }: Props) => {
     setSelectedArg(newArgs?.[newArgs.length - 1]?.id);
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
+    const renderedArgs = await tryToInterpolateRequestOrShowRenderErrorModal({
+      request,
+      environmentId,
+      payload: requestPayload?.args.map(item => item.value),
+    });
+
     window.main.socketIO.event.send({
       requestId: request._id,
       eventName: requestPayload?.eventName || 'message',
       ack: requestPayload?.ack,
-      args: requestPayload?.args.map(item => item.value),
+      args: renderedArgs,
     });
   };
 
@@ -163,7 +171,7 @@ export const SocketIOBodyTabPane = ({ request, requestPayload }: Props) => {
           </Checkbox>
           <TextField
             aria-label="Event Name"
-            value={requestPayload?.eventName || ''}
+            defaultValue={requestPayload?.eventName || ''}
             onChange={value => requestPayloadPatcher(request._id, { eventName: value })}
             className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
           >

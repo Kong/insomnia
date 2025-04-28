@@ -8,6 +8,7 @@ import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promis
 import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { SocketIOResponse } from '../../../models/socket-io-response';
 import { deserializeNDJSON } from '../../../utils/ndjson';
+import { useReadyState } from '../../hooks/use-ready-state';
 import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
 import type { SocketIORequestLoaderData } from '../../routes/request';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
@@ -20,7 +21,7 @@ import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { EventLogView } from './event-log-view';
 import { SocketIOEventView } from './event-view';
 
-export const SocketIOResponsePane: FC<{ requestId: string }> = () => {
+export const SocketIOResponsePane: FC<{ requestId: string }> = ({ requestId }) => {
   const { activeResponse } = useRouteLoaderData('request/:requestId') as SocketIORequestLoaderData;
 
   if (!activeResponse) {
@@ -31,10 +32,10 @@ export const SocketIOResponsePane: FC<{ requestId: string }> = () => {
       </Pane>
     );
   }
-  return <SocketIOActiveResponsePane response={activeResponse} />;
+  return <SocketIOActiveResponsePane response={activeResponse} requestId={requestId} />;
 };
 
-const SocketIOActiveResponsePane: FC<{ response: SocketIOResponse }> = ({ response }) => {
+const SocketIOActiveResponsePane: FC<{ response: SocketIOResponse; requestId: string }> = ({ response, requestId }) => {
   const [selectedEvent, setSelectedEvent] = useState<SocketIOEvent | null>(null);
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const [clearEventsBefore, setClearEventsBefore] = useState<number | null>(null);
@@ -42,7 +43,8 @@ const SocketIOActiveResponsePane: FC<{ response: SocketIOResponse }> = ({ respon
   const [eventType, setEventType] = useState<SocketIOEvent['type']>();
   const protocol = 'socketIO';
   const allEvents = useRealtimeConnectionEvents({ responseId: response._id, protocol }) as SocketIOEvent[];
-  const connected = response?.connected;
+  const readyState = useReadyState({ requestId: requestId, protocol: 'socketIO' });
+  const connected = readyState ? response?.connected : false;
 
   const handleSelection = (event: SocketIOEvent) => {
     setSelectedEvent((selected: SocketIOEvent | null) => (selected?._id === event._id ? null : event));

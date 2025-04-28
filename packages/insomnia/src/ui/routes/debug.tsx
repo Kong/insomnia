@@ -123,8 +123,8 @@ import {
 import type {
   GrpcRequestLoaderData,
   RequestLoaderData,
-  WebSocketRequestLoaderData,
   SocketIORequestLoaderData,
+  WebSocketRequestLoaderData,
 } from './request';
 import type { RequestGroupLoaderData } from './request-group';
 import { useRootLoaderData } from './root';
@@ -186,6 +186,16 @@ const WebSocketSpinner = ({ requestId }: { requestId: string }) => {
     <div
       className="mr-[--padding-sm] h-2.5 w-2.5 flex-shrink-0 rounded-full bg-[--color-success]"
       data-testid="WebSocketSpinner__Connected"
+    />
+  ) : null;
+};
+
+const SocketIOSpinner = ({ requestId }: { requestId: string }) => {
+  const readyState = useReadyState({ requestId, protocol: 'socketIO' });
+  return readyState ? (
+    <div
+      className="mr-[--padding-sm] h-2.5 w-2.5 flex-shrink-0 rounded-full bg-[--color-success]"
+      data-testid="SocketIOSpinner__Connected"
     />
   ) : null;
 };
@@ -1413,7 +1423,7 @@ const CollectionGridListItem = ({
           }}
         />
         {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
-        {/* {isSocketIORequest(item.doc) && <SocketIOSpinner requestId={item.doc._id} />} */}
+        {isSocketIORequest(item.doc) && <SocketIOSpinner requestId={item.doc._id} />}
         {isGraphqlSubscriptionRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
         {isRequest(item.doc) && <RequestTiming requestId={item.doc._id} />}
         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
