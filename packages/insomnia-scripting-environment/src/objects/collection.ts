@@ -32,3 +32,4 @@ export { FormParam, Request, RequestBody } from './request';
 export { Response } from './response';
 export { QueryParam, Url, UrlMatchPattern, UrlMatchPatternList } from './urls';
 export { Variable, VariableList } from './variables';
+export { Folder } from './folders';
