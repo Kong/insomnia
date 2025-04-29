@@ -434,7 +434,11 @@ const OAuth2Tokens: FC = () => {
     };
     fn();
   }, [_id]);
-  const { handleRender } = useNunjucks();
+  const { handleRender } = useNunjucks({
+    renderContext: {
+      purpose: 'send',
+    },
+  });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
