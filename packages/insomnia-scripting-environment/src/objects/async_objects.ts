@@ -1,8 +1,10 @@
 let monitoring = true;
 let scriptPromises = new Array<Promise<any>>();
 
+/** @ignore */
 export const OriginalPromise = Promise;
 
+/** @ignore */
 export class ProxiedPromise<T> extends Promise<T> {
   constructor(executor: (resolve: (value: T | PromiseLike<T>) => void, reject: (reason?: any) => void) => void) {
     super(executor);
@@ -61,15 +63,18 @@ export class ProxiedPromise<T> extends Promise<T> {
   }
 }
 
+/** @ignore */
 export const asyncTasksAllSettled = async () => {
   await Promise.allSettled(scriptPromises);
   scriptPromises = [];
 };
 
+/** @ignore */
 export const stopMonitorAsyncTasks = () => {
   monitoring = false;
 };
 
+/** @ignore */
 export const resetAsyncTasks = async () => {
   scriptPromises = [];
   monitoring = true;
