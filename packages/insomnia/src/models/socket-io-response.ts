@@ -116,7 +116,7 @@ export async function create(patch: Partial<SocketIOResponse> = {}, maxResponses
     parentId,
   };
 
-  if ((await models.settings.get()).filterResponsesByEnv && patch.hasOwnProperty('environmentId')) {
+  if ((await models.settings.get()).filterResponsesByEnv && 'environmentId' in patch) {
     query.environmentId = patch.environmentId;
   }
 
