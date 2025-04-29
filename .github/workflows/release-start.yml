@@ -114,3 +114,13 @@ jobs:
           git push "${remote_repo}" --follow-tags
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Draft Release
+        run: |
+          gh release create core@${{ env.RELEASE_VERSION }} \
+          --title="${{ env.RELEASE_VERSION }} 📦" \
+          --target=${{ env.RELEASE_BRANCH }} \
+          --generate-notes \
+          --draft
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
