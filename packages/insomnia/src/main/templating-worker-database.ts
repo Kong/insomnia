@@ -23,26 +23,26 @@ export const resolveDbByKey = async (request: Request) => {
   if (url.host === 'oAuth2Token.getByRequestId'.toLowerCase()) {
     result = await models.oAuth2Token.getByParentId(body.parentId);
   }
-    if (url.host === 'cloudCredential.getById'.toLowerCase()) {
-        result = await models.cloudCredential.getById(body.id);
-    }
-    if (url.host === 'cloudCredential.update'.toLowerCase()) {
-        result = await models.cloudCredential.update(body.originCredential, body.patch);
-    }
-    if (url.host === 'cloudService.getExternalVault'.toLowerCase()) {
-        const { provider, providerCredential, secretConfig } = body;
-        const cloudServiceContext = {
-            getSecret: getSecret,
-            authenticate: cloudServiceProviderAuthentication,
-            models: {
-                getById: models.cloudCredential.getById,
-                update: models.cloudCredential.update,
-            },
-        }
-        result = await getExternalVault({ cloudServiceContext, provider, providerCredential, secretConfig });
-    }
-  if (url.host === 'cookieJar.getOrCreateForWorkspace'.toLowerCase()) {
-    result = await models.cookieJar.getOrCreateForParentId(body.id);
+  if (url.host === 'cloudCredential.getById'.toLowerCase()) {
+      result = await models.cloudCredential.getById(body.id);
+  }
+  if (url.host === 'cloudCredential.update'.toLowerCase()) {
+      result = await models.cloudCredential.update(body.originCredential, body.patch);
+  }
+  if (url.host === 'cloudService.getExternalVault'.toLowerCase()) {
+      const { provider, providerCredential, secretConfig } = body;
+      const cloudServiceContext = {
+          getSecret: getSecret,
+          authenticate: cloudServiceProviderAuthentication,
+          models: {
+              getById: models.cloudCredential.getById,
+              update: models.cloudCredential.update,
+          },
+      }
+      result = await getExternalVault({ cloudServiceContext, provider, providerCredential, secretConfig });
+  }
+  if (url.host === 'cookieJar.getOrCreateForParentId'.toLowerCase()) {
+    result = await models.cookieJar.getOrCreateForParentId(body.parentId);
   }
   if (url.host === 'response.getLatestForRequestId'.toLowerCase()) {
     result = await models.response.getLatestForRequest(body.requestId, body.environmentId);
