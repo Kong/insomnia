@@ -434,7 +434,12 @@ const OAuth2Tokens: FC = () => {
     };
     fn();
   }, [_id]);
-  const { handleRender } = useNunjucks();
+  const { handleRender } = useNunjucks({
+    renderContext: {
+      // add purpose here so that secret values(secret variable & external vault) will be revealed in manual OAuth request
+      purpose: 'send',
+    },
+  });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
