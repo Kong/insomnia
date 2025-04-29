@@ -436,7 +436,7 @@ const OAuth2Tokens: FC = () => {
   }, [_id]);
   const { handleRender } = useNunjucks({
     renderContext: {
-      // add send purpose here so that secret values(secret variable & external vault) will be revealed in OAuth request
+      // add purpose here so that secret values(secret variable & external vault) will be revealed in manual OAuth request
       purpose: 'send',
     },
   });
