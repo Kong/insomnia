@@ -2461,7 +2461,7 @@ input.editable {
   align-items: center;
 }
 .modal.modal--fixed-height .modal__content {
-  height: auto;
+  height: 100%;
 }
 .modal.modal--wide .modal__content__wrapper {
   width: var(--modal-width);
