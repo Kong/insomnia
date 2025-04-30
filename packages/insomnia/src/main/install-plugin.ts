@@ -91,6 +91,10 @@ export default async function installPlugin(pluginName: string): Promise<void> {
     // Step 2: Create the plugin directory if it doesn't exist
     await mkdir(pluginDir, { recursive: true });
 
+    if (!info.dist?.tarball) {
+      throw new Error('Invalid plugin metadata: missing tarball URL');
+    }
+
     // Step 3: Ensure the plugin tarball can be fetched
     try {
       // After fetching info, check the info.dist.tarball. This prevents downloading from weird hosts.
