@@ -28,6 +28,8 @@ test.describe('multiple-tab feature test', () => {
     await page.getByRole('textbox', { name: 'GET New Request' }).fill('foo');
     await page.getByLabel('Create in collection').click();
     await page.getByLabel('HTTP Request').click();
+    // check new request created
+    await page.getByTestId('New Request').isVisible();
     await page.getByTestId('New Request').dblclick();
     await page.getByRole('textbox', { name: 'GET New Request' }).fill('bar');
     await page.getByTestId('foo').click();

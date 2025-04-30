@@ -69,6 +69,8 @@ test.describe('Debug-Sidebar', () => {
     await page.getByLabel('Request filter').fill('test folder');
     await page.getByLabel('Request filter').press('Enter');
     await page.getByLabel('Request Collection').getByRole('row', { name: 'test folder' }).click();
+    // Wait for tab appear
+    await page.getByLabel('Insomnia Tabs').getByLabel('tab-test folder', { exact: true }).click();
     await page.getByLabel('Clear search').click();
 
     // Open Generate code

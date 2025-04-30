@@ -25,6 +25,8 @@ test('WS tabs', async ({ page }) => {
 
   await page.getByLabel('Create in collection').click();
   await page.getByRole('menuitemradio', { name: 'WebSocket Request' }).click();
+  // ensure that the websocket request is created
+  await page.getByLabel('Insomnia Tabs').getByText('New WebSocket Request').click();
   await page.getByRole('tab', { name: 'Body' }).click();
   await page.getByRole('button', { name: 'JSON' }).click();
   await page.getByRole('option', { name: 'JSON' }).click();
