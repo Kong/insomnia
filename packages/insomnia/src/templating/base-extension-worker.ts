@@ -201,8 +201,10 @@ export default class BaseExtension {
               method: 'post',
               body: JSON.stringify({ ...options }),
             });
-
             const result = await resp.json();
+            if (!resp.ok) {
+              throw new Error(result?.error || 'Unknown error');
+            }
             return result;
           },
         },

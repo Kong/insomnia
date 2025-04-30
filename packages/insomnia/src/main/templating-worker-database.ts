@@ -24,22 +24,26 @@ export const resolveDbByKey = async (request: Request) => {
     result = await models.oAuth2Token.getByParentId(body.parentId);
   }
   if (url.host === 'cloudCredential.getById'.toLowerCase()) {
-      result = await models.cloudCredential.getById(body.id);
+    result = await models.cloudCredential.getById(body.id);
   }
   if (url.host === 'cloudCredential.update'.toLowerCase()) {
-      result = await models.cloudCredential.update(body.originCredential, body.patch);
+    result = await models.cloudCredential.update(body.originCredential, body.patch);
   }
   if (url.host === 'cloudService.getExternalVault'.toLowerCase()) {
-      const { provider, providerCredential, secretConfig } = body;
-      const cloudServiceContext = {
-          getSecret: getSecret,
-          authenticate: cloudServiceProviderAuthentication,
-          models: {
-              getById: models.cloudCredential.getById,
-              update: models.cloudCredential.update,
-          },
-      }
+    const { provider, providerCredential, secretConfig } = body;
+    const cloudServiceContext = {
+      getSecret: getSecret,
+      authenticate: cloudServiceProviderAuthentication,
+      models: {
+        getById: models.cloudCredential.getById,
+        update: models.cloudCredential.update,
+      },
+    };
+    try {
       result = await getExternalVault({ cloudServiceContext, provider, providerCredential, secretConfig });
+    } catch (err) {
+      return new Response(JSON.stringify({ error: err?.message }), { status: 500 });
+    }
   }
   if (url.host === 'cookieJar.getOrCreateForParentId'.toLowerCase()) {
     result = await models.cookieJar.getOrCreateForParentId(body.parentId);
