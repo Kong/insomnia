@@ -121,6 +121,6 @@ jobs:
             --base develop \
             --head ${{ env.RELEASE_BRANCH }} \
             --title ":rocket: ${{ env.RELEASE_VERSION}}" \
-            --body "**Automated pull request**\nArtifacts build in progress..."
+            --body "**Automated pull request**"
         env:
           GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}

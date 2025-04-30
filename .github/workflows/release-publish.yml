@@ -266,14 +266,20 @@ jobs:
           --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # Create a draft release in the kong/insomnia repository
-      - name: Create draft release
+      - name: Upload release assets
         run: |
-          gh release create core@${{ env.RELEASE_VERSION }} \
+          gh release upload core@${{ env.RELEASE_VERSION }} \
           ${{ env.ARTIFACTS_DOWNLOAD_PATH }}/* \
-          --title="${{ env.RELEASE_VERSION }} 📦" \
-          --repo=kong/insomnia \
-          --prerelease=${{ env.IS_PRERELEASE }} \
-          --generate-notes --draft
+          --repo=kong/insomnia
         env:
-          GH_TOKEN: ${{ secrets.CE_WRITE_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
+      - name: Create the release pull request
+        run: |
+          gh pr create \
+          --base develop \
+          --head ${{ env.RELEASE_BRANCH }} \
+          --title ":rocket: ${{ env.RELEASE_VERSION}}" \
+          --body "**Automated pull request**" \
+          --repo=kong/insomnia
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
