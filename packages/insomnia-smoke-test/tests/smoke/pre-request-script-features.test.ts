@@ -53,7 +53,6 @@ test.describe('pre-request features tests', () => {
           value: 'headerValue',
           id: '',
           name: '',
-          type: '',
         },
       },
     },
