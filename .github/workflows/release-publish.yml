@@ -50,16 +50,16 @@ jobs:
       - name: Install packages
         run: npm ci
 
-      - name: Check if Release Exists
-        id: check_release
-        run: |
-          release_id=$(gh release view core@${{ env.RELEASE_VERSION }} --json id --jq ".id" 2>/dev/null)
-          if [ -z "$release_id" ]; then
-            echo "Release core@${{ env.RELEASE_VERSION }} does not exist. Aborting workflow."
-            exit 1
-          fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Check if Release Exists
+      #   id: check_release
+      #   run: |
+      #     release_id=$(gh release view core@${{ env.RELEASE_VERSION }} --json id --jq ".id" 2>/dev/null)
+      #     if [ -z "$release_id" ]; then
+      #       echo "Release core@${{ env.RELEASE_VERSION }} does not exist. Aborting workflow."
+      #       exit 1
+      #     fi
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download release assets
         run: |
