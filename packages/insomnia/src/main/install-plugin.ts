@@ -11,7 +11,7 @@ import * as models from '../models';
 import { validatePluginName } from '../utils/plugin';
 
 // Promisified version of execFile to use async/await
-const execFilePromise = promisify(execFile);
+export const execFilePromise = promisify(execFile);
 
 // Allowed tarball hostnames for security
 // This is a security measure to prevent downloading from untrusted sources
@@ -68,7 +68,7 @@ export default async function installPlugin(pluginName: string): Promise<void> {
 
   try {
     // Step 1: Validate the plugin and fetch its npm metadata
-    const info: InsomniaPlugin = await isInsomniaPlugin(pluginName);
+    const info: InsomniaPlugin = await getPluginInfo(pluginName);
 
     // Get the normalized module name (without version suffixes)
     const moduleName = info.name;
@@ -136,13 +136,18 @@ export default async function installPlugin(pluginName: string): Promise<void> {
     // Filter out the main plugin directory and non-directories
     // and copy each directory to the plugin's node_modules directory
     // Use Promise.all to copy all directories in parallel
+    const filtered = await Promise.all(
+      tmpFiles.map(async filename => {
+        const fullPath = path.resolve(tmpDir, filename);
+        const fileStat = await stat(fullPath);
+        return { filename, include: filename !== moduleName && fileStat.isDirectory() };
+      }),
+    );
+
     await Promise.all(
-      tmpFiles
-        .filter(async filename => {
-          const file = await stat(path.resolve(tmpDir, filename));
-          return filename !== moduleName && file.isDirectory();
-        })
-        .map(async filename => {
+      filtered
+        .filter(f => f.include)
+        .map(async ({ filename }) => {
           const src = path.resolve(tmpDir, filename);
           const dest = path.resolve(pluginModulesDir, filename);
           await cp(src, dest, { recursive: true, verbatimSymlinks: true });
@@ -189,7 +194,7 @@ export async function runYarnCommand(args: string[], cwd?: string) {
  * Checks if the given npm package is an Insomnia plugin.
  * Verifies that the package contains an "insomnia" attribute.
  */
-export async function isInsomniaPlugin(lookupName: string) {
+export async function getPluginInfo(lookupName: string) {
   const validationError = validatePluginName(lookupName);
 
   if (validationError) {
