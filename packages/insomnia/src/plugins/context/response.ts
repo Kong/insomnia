@@ -1,8 +1,10 @@
 import fs from 'fs';
+import zlib from 'zlib';
 
 import * as models from '../../models/index';
 import type { ResponseHeader } from '../../models/response';
 
+export type Compression = 'zip' | null | '__NEEDS_MIGRATION__' | undefined;
 interface MaybeResponse {
   parentId?: string;
   statusCode?: number;
@@ -12,6 +14,7 @@ interface MaybeResponse {
   bodyPath?: string;
   elapsedTime?: number;
   headers?: ResponseHeader[];
+  bodyCompression?: Compression;
 }
 
 export function init(response?: MaybeResponse) {
@@ -47,8 +50,22 @@ export function init(response?: MaybeResponse) {
         return response.elapsedTime || 0;
       },
 
-      getBody() {
-        return models.response.getBodyBuffer(response);
+      getBody(readFailureValue?: string): Buffer | string | null {
+        if (!response?.bodyPath) {
+          // No body, so return empty Buffer
+          return Buffer.alloc(0);
+        }
+        try {
+          const rawBuffer = fs.readFileSync(response.bodyPath);
+          if (response.bodyCompression === 'zip') {
+            return zlib.gunzipSync(rawBuffer);
+          } else {
+            return rawBuffer;
+          }
+        } catch (err) {
+          console.warn('Failed to read response body', err.message);
+          return readFailureValue === undefined ? null : readFailureValue;
+        }
       },
 
       getBodyStream() {
