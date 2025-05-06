@@ -69,7 +69,7 @@ export default async function installPlugin(pluginName: string, allowScopedPacka
 
   try {
     // Step 1: Validate the plugin and fetch its npm metadata
-    const info: InsomniaPlugin = await getPluginInfo(pluginName);
+    const info: InsomniaPlugin = await getPluginInfo(pluginName, allowScopedPackageNames);
 
     // Get the normalized module name (without version suffixes)
     const moduleName = info.name;
