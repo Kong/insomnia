@@ -6,28 +6,43 @@ import path from 'path';
 // Disallow any path traversal (../), shell metacharacters, etc.
 const safePattern = /^[a-zA-Z0-9_\-\.]+$/;
 
+// TODO (pavkout): Remove this when we stop supporting scoped package names
+// For scoped names
+const scopedSafePattern = /^@[a-zA-Z0-9_\-\.]+\/[a-zA-Z0-9_\-\.]+$/;
 // Pattern for common shell metacharacters
 const unsafeShellPattern = /[|;&$`\\]/;
 
-export function validatePluginName(pluginName: string): string | null {
+export function validatePluginName(pluginName: string, allowScopedPackageNames = false): string | null {
   const pluginNameWithoutPrefix = pluginName.replace(/^insomnia-plugin-/, '');
 
-  if (pluginNameWithoutPrefix.startsWith('@')) {
-    return 'Scoped packages are not allowed in this context';
-  }
-
-  // Reject empty or overly long input
-  if (!pluginNameWithoutPrefix || pluginNameWithoutPrefix.length > 255) {
+  // Check the length of the plugin name
+  // Plugin name must be less than 250 characters
+  if (pluginNameWithoutPrefix.trim().length === 0 || pluginNameWithoutPrefix.length > 250) {
     return 'Plugin name must not be empty or too long';
   }
 
+  if (pluginNameWithoutPrefix.startsWith('@') && !allowScopedPackageNames) {
+    return 'Scoped packages are not permitted in this context. To install scoped packages, please use the Plugin Host instead.';
+  }
+
   // Prevent path traversal
-  if (
-    pluginNameWithoutPrefix.includes('..') ||
-    pluginNameWithoutPrefix.includes('/') ||
-    pluginNameWithoutPrefix.includes('\\')
-  ) {
-    return 'Plugin name must not contain path traversal characters';
+  if (allowScopedPackageNames) {
+    // Allow scoped package names to contain slashes
+    if (
+      (pluginNameWithoutPrefix.startsWith('@') && pluginNameWithoutPrefix.split('/').length > 2) ||
+      pluginNameWithoutPrefix.includes('..') ||
+      pluginNameWithoutPrefix.includes('\\')
+    ) {
+      return 'Plugin name must not contain path traversal characters';
+    }
+  } else {
+    if (
+      pluginNameWithoutPrefix.includes('..') ||
+      pluginNameWithoutPrefix.includes('/') ||
+      pluginNameWithoutPrefix.includes('\\')
+    ) {
+      return 'Plugin name must not contain path traversal characters';
+    }
   }
 
   if (unsafeShellPattern.test(pluginNameWithoutPrefix)) {
@@ -62,12 +77,20 @@ export function validatePluginName(pluginName: string): string | null {
     return 'Plugin name cannot contain leading or trailing spaces';
   }
 
-  if (encodeURIComponent(pluginNameWithoutPrefix) !== pluginNameWithoutPrefix) {
+  if (encodeURIComponent(pluginNameWithoutPrefix) !== pluginNameWithoutPrefix && !allowScopedPackageNames) {
     return 'Plugin name must be lowercase, alphanumeric, and dash-separated';
   }
 
-  if (!safePattern.test(pluginNameWithoutPrefix)) {
-    return 'Plugin name must be lowercase, alphanumeric, and dash-separated';
+  // Check if scoped package names are allowed
+  // TODO (pavkout): Remove this when we stop supporting scoped package names
+  if (allowScopedPackageNames) {
+    if (!scopedSafePattern.test(pluginNameWithoutPrefix) && !safePattern.test(pluginNameWithoutPrefix)) {
+      return 'Plugin name must be lowercase, alphanumeric, and dash-separated. Scoped names must follow the @scope/package format.';
+    }
+  } else {
+    if (!safePattern.test(pluginNameWithoutPrefix)) {
+      return 'Plugin name must be lowercase, alphanumeric, and dash-separated.';
+    }
   }
 
   // Check for reserved or dangerous filenames
@@ -78,7 +101,7 @@ export function validatePluginName(pluginName: string): string | null {
     return 'Plugin name is not allowed';
   }
 
-  if (!pluginName.startsWith('insomnia-plugin-')) {
+  if (!pluginName.startsWith('insomnia-plugin-') && !allowScopedPackageNames) {
     return 'Plugin name must not start with "insomnia-plugin-"';
   }
 
