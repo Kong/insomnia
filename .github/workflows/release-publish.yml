@@ -273,13 +273,3 @@ jobs:
           --repo=kong/insomnia
         env:
           GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
-      - name: Create the release pull request
-        run: |
-          gh pr create \
-          --base develop \
-          --head ${{ env.RELEASE_BRANCH }} \
-          --title ":rocket: ${{ env.RELEASE_VERSION}}" \
-          --body "**Automated pull request**" \
-          --repo=kong/insomnia
-        env:
-          GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}

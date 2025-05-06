@@ -3,7 +3,7 @@ name: Release Build
 on:
   push:
     branches:
-      - 'release/**'
+      - "release/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -45,11 +45,11 @@ jobs:
             csc_link_secret: DESIGNER_MAC_CSC_LINK
             csc_key_password_secret: DESIGNER_MAC_CSC_KEY_PASSWORD
           - os: windows-latest
-            csc_link_secret: ''
-            csc_key_password_secret: ''
+            csc_link_secret: ""
+            csc_key_password_secret: ""
           - os: ubuntu-22.04
-            csc_link_secret: ''
-            csc_key_password_secret: ''
+            csc_link_secret: ""
+            csc_key_password_secret: ""
           # - os: ubuntu-22.04-arm
           #   csc_link_secret: ''
           #   csc_key_password_secret: ''
@@ -60,8 +60,8 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+          node-version-file: ".nvmrc"
+          cache: "npm"
           cache-dependency-path: package-lock.json
 
       - name: Install packages
@@ -76,7 +76,7 @@ jobs:
         shell: bash
         run: npm run app-package
         env:
-          NODE_OPTIONS: '--max_old_space_size=6144'
+          NODE_OPTIONS: "--max_old_space_size=6144"
           BUILD_TARGETS: AppImage,tar.gz
 
       - name: Package app (Linux X64 only)
@@ -84,7 +84,7 @@ jobs:
         shell: bash
         run: npm run app-package
         env:
-          NODE_OPTIONS: '--max_old_space_size=6144'
+          NODE_OPTIONS: "--max_old_space_size=6144"
 
       # If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
       - name: Package app (MacOS only)
@@ -92,7 +92,7 @@ jobs:
         shell: bash
         run: npm run app-package
         env:
-          NODE_OPTIONS: '--max_old_space_size=6144'
+          NODE_OPTIONS: "--max_old_space_size=6144"
           APPLE_ID: ${{ runner.os == 'macOS' && secrets.DESIGNER_APPLE_ID || '' }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ runner.os == 'macOS' && secrets.DESIGNER_APPLE_ID_PASSWORD || '' }}
           APPLE_TEAM_ID: FX44YY62GV
@@ -313,7 +313,7 @@ jobs:
             Run locally:
 
             ```bash
-            # Make sure git remote is Kong/insomnia...
+            # Make sure git remote is Kong/insomnia-ee...
 
             git checkout develop
             git merge --no-ff release/<replaced with version>
