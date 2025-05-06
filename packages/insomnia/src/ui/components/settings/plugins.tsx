@@ -104,30 +104,29 @@ export const Plugins: FC = () => {
       )}
 
       <div className="flex flex-col gap-6">
-        <div className="flex items-center gap-2">
-          <Checkbox
-            slot={null}
-            isSelected={Boolean(settings.pluginsAllowElevatedAccess)}
-            onChange={isSelected => {
-              patchSettings({ pluginsAllowElevatedAccess: isSelected });
-            }}
-            className="group flex h-full items-center gap-2 p-0"
-          >
-            <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
-              <Icon
-                icon="check"
-                className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
-              />
-            </div>
-            <span className="text-sm font-semibold">Allow elevated access for plugins</span>
-          </Checkbox>
-          <Tooltip
-            className="cursor-pointer"
-            message="Plugins with elevated access can access anything Insomnia can. It's recommended that elevated access remain
-              disabled."
-          >
-            <i className="fa fa-info-circle" />
-          </Tooltip>
+        <div className="notice warning margin-bottom text-left">
+          <div className="selectable force-pre-wrap flex flex-col gap-2">
+            <p>
+              Plugins with elevated access can access anything Insomnia can. It's recommended that elevated access
+              remain disabled.
+            </p>
+            <Checkbox
+              slot={null}
+              isSelected={Boolean(settings.pluginsAllowElevatedAccess)}
+              onChange={isSelected => {
+                patchSettings({ pluginsAllowElevatedAccess: isSelected });
+              }}
+              className="group flex h-full items-center gap-2 p-0"
+            >
+              <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
+                <Icon
+                  icon="check"
+                  className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
+                />
+              </div>
+              <span className="text-sm font-semibold">Allow elevated access for plugins</span>
+            </Checkbox>
+          </div>
         </div>
         <div className="flex w-full flex-col">
           <Label className="text-lg font-bold" slot="label">
