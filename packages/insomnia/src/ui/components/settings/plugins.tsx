@@ -79,55 +79,55 @@ export const Plugins: FC = () => {
         Plugins is still an experimental feature. See <Link href={docsPlugins}>Documentation</Link> for more info.
       </p>
 
-      {(error || installPluginErrMsg) && (
-        <div className="notice error margin-bottom text-left">
-          <Button
-            className="pull-right icon"
-            onPress={() => setState(state => ({ ...state, error: null, installPluginErrMsg: '' }))}
+      <div className="notice warning margin-bottom text-left">
+        <div className="selectable force-pre-wrap flex flex-col gap-2">
+          <p>
+            Plugins with elevated access can access anything Insomnia can. It's recommended that elevated access remain
+            disabled.
+          </p>
+          <Checkbox
+            slot={null}
+            isSelected={Boolean(settings.pluginsAllowElevatedAccess)}
+            onChange={isSelected => {
+              patchSettings({ pluginsAllowElevatedAccess: isSelected });
+            }}
+            className="group flex h-full items-center gap-2 p-0"
           >
-            <i className="fa fa-times" />
-          </Button>
-          <div className="selectable force-pre-wrap">
-            <b>{installPluginErrMsg}</b>
-            <br />
-            Try using the install button on <a href={PLUGIN_HUB_BASE}>Plugin Hub.</a>
-            {error && (error.stack || error.message) && (
-              <details>
-                <summary>Additional Information</summary>
-                <pre className="pad-top-sm force-wrap selectable">
-                  <code>{error.stack || error.message}</code>
-                </pre>
-              </details>
-            )}
-          </div>
+            <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
+              <Icon
+                icon="check"
+                className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
+              />
+            </div>
+            <span className="text-sm font-semibold">Allow elevated access for plugins</span>
+          </Checkbox>
         </div>
-      )}
+      </div>
 
       <div className="flex flex-col gap-6">
-        <div className="notice warning margin-bottom text-left">
-          <div className="selectable force-pre-wrap flex flex-col gap-2">
-            <p>
-              Plugins with elevated access can access anything Insomnia can. It's recommended that elevated access
-              remain disabled.
-            </p>
-            <Checkbox
-              slot={null}
-              isSelected={Boolean(settings.pluginsAllowElevatedAccess)}
-              onChange={isSelected => {
-                patchSettings({ pluginsAllowElevatedAccess: isSelected });
-              }}
-              className="group flex h-full items-center gap-2 p-0"
+        {(error || installPluginErrMsg) && (
+          <div className="notice error margin-bottom text-left">
+            <Button
+              className="pull-right icon"
+              onPress={() => setState(state => ({ ...state, error: null, installPluginErrMsg: '' }))}
             >
-              <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
-                <Icon
-                  icon="check"
-                  className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
-                />
-              </div>
-              <span className="text-sm font-semibold">Allow elevated access for plugins</span>
-            </Checkbox>
+              <i className="fa fa-times" />
+            </Button>
+            <div className="selectable force-pre-wrap">
+              <b>{installPluginErrMsg}</b>
+              <br />
+              Try using the install button on <a href={PLUGIN_HUB_BASE}>Plugin Hub.</a>
+              {error && (error.stack || error.message) && (
+                <details>
+                  <summary>Additional Information</summary>
+                  <pre className="pad-top-sm force-wrap selectable">
+                    <code>{error.stack || error.message}</code>
+                  </pre>
+                </details>
+              )}
+            </div>
           </div>
-        </div>
+        )}
         <div className="flex w-full flex-col">
           <Label className="text-lg font-bold" slot="label">
             Install Plugin
@@ -444,7 +444,7 @@ export const Plugins: FC = () => {
           </div>
         </div>
 
-        <div className="mt-2 flex w-full">
+        <div className="mt-2 flex w-full justify-center">
           <span className="text-sm text-[--hl]">
             Need more plugins?{' '}
             <Button
