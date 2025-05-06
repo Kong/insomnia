@@ -59,9 +59,8 @@ export function init(response?: MaybeResponse) {
           const rawBuffer = fs.readFileSync(response.bodyPath);
           if (response.bodyCompression === 'zip') {
             return zlib.gunzipSync(rawBuffer);
-          } else {
-            return rawBuffer;
           }
+            return rawBuffer;
         } catch (err) {
           console.warn('Failed to read response body', err.message);
           return readFailureValue === undefined ? null : readFailureValue;
