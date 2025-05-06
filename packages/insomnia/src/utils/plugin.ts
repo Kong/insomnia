@@ -9,6 +9,7 @@ const safePattern = /^[a-zA-Z0-9_\-\.]+$/;
 // TODO (pavkout): Remove this when we stop supporting scoped package names
 // For scoped names
 const scopedSafePattern = /^@[a-zA-Z0-9_\-\.]+\/[a-zA-Z0-9_\-\.]+$/;
+
 // Pattern for common shell metacharacters
 const unsafeShellPattern = /[|;&$`\\]/;
 
