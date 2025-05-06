@@ -54,11 +54,12 @@ interface InsomniaPlugin {
 
 /**
  * Install an Insomnia plugin by name.
- *
+ * allowScopedPackageNames - If true, allows scoped package names (e.g., @scope/plugin).
+ * This is something we might want to support in the future, but for now, we don't.
  * @param pluginName - The npm package name of the plugin to install
  */
-export default async function installPlugin(pluginName: string): Promise<void> {
-  const validationError = validatePluginName(pluginName);
+export default async function installPlugin(pluginName: string, allowScopedPackageNames = false): Promise<void> {
+  const validationError = validatePluginName(pluginName, allowScopedPackageNames);
 
   if (validationError) {
     throw new Error(validationError);
@@ -76,7 +77,7 @@ export default async function installPlugin(pluginName: string): Promise<void> {
     // Check the module name for any invalid characters
     // This is a basic validation to ensure the module name is safe
     // and doesn't contain any unexpected characters.
-    const validationError = validatePluginName(moduleName);
+    const validationError = validatePluginName(moduleName, allowScopedPackageNames);
 
     if (validationError) {
       throw new Error(validationError);
@@ -116,7 +117,7 @@ export default async function installPlugin(pluginName: string): Promise<void> {
     }
 
     // Step 4: Install the plugin into a temporary directory
-    tmpDir = await installPluginToTmpDir(pluginName);
+    tmpDir = await installPluginToTmpDir(pluginName, allowScopedPackageNames);
     console.log(`[plugins] Moving plugin from temp directory ${tmpDir} to final plugin directory ${pluginDir}`);
 
     // Step 5: Move the main plugin folder into the plugin directory
@@ -194,8 +195,8 @@ export async function runYarnCommand(args: string[], cwd?: string) {
  * Checks if the given npm package is an Insomnia plugin.
  * Verifies that the package contains an "insomnia" attribute.
  */
-export async function getPluginInfo(lookupName: string) {
-  const validationError = validatePluginName(lookupName);
+export async function getPluginInfo(lookupName: string, allowScopedPackageNames = false) {
+  const validationError = validatePluginName(lookupName, allowScopedPackageNames);
 
   if (validationError) {
     throw new Error(validationError);
@@ -236,8 +237,8 @@ export async function getPluginInfo(lookupName: string) {
  * Installs a plugin into a temporary directory using Yarn.
  * Creates a minimal package.json and downloads the dependency.
  */
-export async function installPluginToTmpDir(lookupName: string) {
-  const validationError = validatePluginName(lookupName);
+export async function installPluginToTmpDir(lookupName: string, allowScopedPackageNames = false) {
+  const validationError = validatePluginName(lookupName, allowScopedPackageNames);
 
   if (validationError) {
     throw new Error(validationError);
