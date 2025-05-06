@@ -389,7 +389,7 @@ export const KeyValueEditor: FC<Props> = ({
                   showFileName
                   showFileIcon
                   disabled={pair.disabled || isDisabled}
-                  className="fle w-full flex-1 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex h-full w-full flex-1 flex-shrink-0 items-center justify-center gap-2 overflow-hidden rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                   path={pair.fileName || ''}
                   onChange={fileName => upsertPair(pairsListItems, { ...pair, fileName })}
                 />
@@ -400,7 +400,7 @@ export const KeyValueEditor: FC<Props> = ({
               valueEditor = (
                 <Button
                   isDisabled={pair.disabled || isDisabled}
-                  className="flex w-full flex-1 items-center justify-center gap-2 overflow-hidden rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  className="flex h-full w-full flex-1 items-center justify-center gap-2 overflow-hidden rounded-sm px-2 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                   onPress={() =>
                     showModal(CodePromptModal, {
                       submitName: 'Done',
