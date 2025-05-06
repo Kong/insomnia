@@ -13,9 +13,21 @@ const invalidNames = [
   { name: '../foo', expectedError: 'Plugin name must not contain path traversal characters' },
   { name: '/etc/passwd', expectedError: 'Plugin name must not contain path traversal characters' },
   { name: 'foo/../../bar', expectedError: 'Plugin name must not contain path traversal characters' },
-  { name: '@scope//foo', expectedError: 'Scoped packages are not allowed in this context' },
-  { name: '@scope foo', expectedError: 'Scoped packages are not allowed in this context' },
-  { name: '@scope/foo/bar', expectedError: 'Scoped packages are not allowed in this context' },
+  {
+    name: '@scope//foo',
+    expectedError:
+      'Scoped packages are not permitted in this context. To install scoped packages, please use the Plugin Host instead.',
+  },
+  {
+    name: '@scope foo',
+    expectedError:
+      'Scoped packages are not permitted in this context. To install scoped packages, please use the Plugin Host instead.',
+  },
+  {
+    name: '@scope/foo/bar',
+    expectedError:
+      'Scoped packages are not permitted in this context. To install scoped packages, please use the Plugin Host instead.',
+  },
   { name: 'foo\\bar', expectedError: 'Plugin name must not contain path traversal characters' },
   { name: 'foo\nbar', expectedError: 'Plugin name must be lowercase, alphanumeric, and dash-separated' },
   { name: '\u0000foo', expectedError: 'Plugin name must be lowercase, alphanumeric, and dash-separated' },
