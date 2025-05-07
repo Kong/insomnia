@@ -32,7 +32,7 @@ export interface Row {
  * console.info('Informational message');
  * ```
  */
-class Console {
+export class Console {
   rows: Row[] = [];
 
   // TODO: support replacing substitution
