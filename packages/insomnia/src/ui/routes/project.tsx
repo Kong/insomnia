@@ -1207,7 +1207,8 @@ const ProjectRoute: FC = () => {
                     </div>
                   </div>
                 )}
-                {filesWithPresence.length > 0 && (
+                {/* Show filter UI if there are files with presence or if the user has entered any filter input(even no match) */}
+                {(filesWithPresence.length > 0 || workspaceListFilter) && (
                   <div className="flex w-full max-w-xl justify-between gap-2 p-[--padding-md]">
                     <SearchField
                       aria-label="Files filter"
