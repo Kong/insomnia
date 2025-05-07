@@ -58,4 +58,31 @@ test.describe('Cookie editor', () => {
     await page.getByRole('tab', { name: 'Console' }).click();
     await expect.soft(page.getByText('foo2=bar2')).toBeVisible();
   });
+
+  test('cookie list should update when cookie is updated', async ({ page }) => {
+    // Open cookie editor
+    await page.click('button:has-text("Cookies")');
+
+    // Set domain to empty
+    await page.getByRole('button', { name: 'Edit' }).first().click();
+    await page.getByRole('tab', { name: 'Raw' }).click();
+    await page
+      .locator('text=Raw Cookie String >> input[type="text"]')
+      .fill('foo2=bar2; Expires=Tue, 19 Jan 2038 03:14:07 GMT; Path=/');
+    await page.locator('text=Done').nth(1).click();
+
+    await expect.soft(page.getByTestId('cookie-test-iteration-0').getByTestId('cookie-domain')).toBeEmpty();
+
+    // Set domain to example.com
+    await page.getByRole('button', { name: 'Edit' }).first().click();
+    await page.getByRole('tab', { name: 'Raw' }).click();
+    await page
+      .locator('text=Raw Cookie String >> input[type="text"]')
+      .fill('foo2=bar2; Expires=Tue, 19 Jan 2038 03:14:07 GMT; Path=/; Domain=example.com');
+    await page.locator('text=Done').nth(1).click();
+
+    await expect
+      .soft(page.getByTestId('cookie-test-iteration-0').getByTestId('cookie-domain'))
+      .toHaveText('example.com');
+  });
 });
