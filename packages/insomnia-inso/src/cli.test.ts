@@ -14,6 +14,8 @@ const shouldReturnSuccessCode = [
   '$PWD/packages/insomnia-inso/bin/inso lint spec packages/insomnia-inso/src/commands/fixtures/openapi-spec.yaml',
   // as identifier filepath with spectral.yaml
   '$PWD/packages/insomnia-inso/bin/inso lint spec packages/insomnia-inso/src/commands/fixtures/with-ruleset/path-plugin.yaml',
+  // as identifier filepath with spectral.yaml and with custom rules
+  '$PWD/packages/insomnia-inso/bin/inso lint spec packages/insomnia-inso/src/commands/fixtures/with-custom-ruleset/blog.yaml',
   // as working directory and identifier filename
   '$PWD/packages/insomnia-inso/bin/inso lint spec -w packages/insomnia-inso/src/commands/fixtures/with-ruleset path-plugin.yaml',
   // as working directory containing nedb
@@ -172,7 +174,8 @@ describe('inso dev bundle', () => {
     });
 
     it('read and write folder environments', async () => {
-      const input = '$PWD/packages/insomnia-inso/bin/inso run collection wrk_cfacae2b022e49c8851c2376674cc890 -w packages/insomnia-inso/src/examples/script-folder-environments.yml --requestNamePattern "updateFolderValue" --verbose';
+      const input =
+        '$PWD/packages/insomnia-inso/bin/inso run collection wrk_cfacae2b022e49c8851c2376674cc890 -w packages/insomnia-inso/src/examples/script-folder-environments.yml --requestNamePattern "updateFolderValue" --verbose';
       const result = await runCliFromRoot(input);
       expect(result.stdout).toContain('updated value from folder: 666');
     });
