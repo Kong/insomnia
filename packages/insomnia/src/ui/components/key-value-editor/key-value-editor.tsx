@@ -357,7 +357,7 @@ export const KeyValueEditor: FC<Props> = ({
           }}
         </ListBox>
       )}
-      <div onKeyDownCapture={onKeyDownOuter} className="relative w-full">
+      <div onKeyDownCapture={onKeyDownOuter} className="relative w-full overflow-hidden flex flex-col">
         <ListBox
           aria-label="Key-value pairs"
           selectionMode="none"
