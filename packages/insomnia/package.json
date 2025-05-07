@@ -184,9 +184,6 @@
   "dev": {
     "dev-server-port": 3334
   },
-  "overrides": {
-    "protobufjs": "7.2.4"
-  },
   "bin": {
     "insomnia": "bin/yarn-standalone.js"
   }
