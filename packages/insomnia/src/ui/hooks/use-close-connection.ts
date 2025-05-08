@@ -3,6 +3,7 @@ import { useCallback, useEffect } from 'react';
 import * as models from '../../models';
 import { isGrpcRequestId } from '../../models/grpc-request';
 import { isEventStreamRequest, isGraphqlSubscriptionRequest, isRequestId } from '../../models/request';
+import { isSocketIORequestId } from '../../models/socket-io-request';
 import { isWebSocketRequestId } from '../../models/websocket-request';
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 import uiEventBus from '../eventBus';
@@ -14,6 +15,8 @@ export const useCloseConnection = ({ organizationId }: { organizationId: string 
       window.main.grpc.cancel(id);
     } else if (isWebSocketRequestId(id)) {
       window.main.webSocket.close({ requestId: id });
+    } else if (isSocketIORequestId(id)) {
+      window.main.socketIO.close({ requestId: id });
     } else if (isRequestId(id)) {
       const request = await models.request.getById(id);
       if (request && isEventStreamRequest(request)) {
@@ -68,6 +71,7 @@ export const useCloseConnection = ({ organizationId }: { organizationId: string 
       window.main.webSocket.closeAll();
       window.main.grpc.closeAll();
       window.main.curl.closeAll();
+      window.main.socketIO.closeAll();
     };
   }, [organizationId]);
 };
