@@ -45,7 +45,7 @@ export function renderInWorker({
         worker.removeEventListener('message', messageHandler);
         const workerError = event.data.err;
         if (workerError) {
-          const error = new RenderError(workerError);
+          const error = new RenderError(workerError.message);
           if (error instanceof RenderError) {
             error.path = workerError.path || '';
             error.location = workerError.location;
