@@ -1,5 +1,7 @@
 import electron, { BrowserWindow } from 'electron';
 import fs from 'fs';
+import { HttpProxyAgent } from 'http-proxy-agent';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 import path from 'path';
 import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOptions } from 'socket.io-client';
 import tls from 'tls';
@@ -15,6 +17,7 @@ import type { BaseSocketIORequest } from '../../models/socket-io-request';
 import type { SocketIOResponse } from '../../models/socket-io-response.ts';
 import { filterClientCertificates } from '../../network/certificate';
 import { invariant } from '../../utils/invariant';
+import { setDefaultProtocol } from '../../utils/url/protocol';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 
 export interface SocketIOpenEvent {
@@ -161,6 +164,13 @@ const getCertificates = async ({
   };
 };
 
+const getProxyAgent = (url: string, httpProxy: string, httpsProxy: string) => {
+  const useHttpsProxy = url.startsWith('wss:') || url.startsWith('https:');
+  return useHttpsProxy
+    ? new HttpsProxyAgent(setDefaultProtocol(httpsProxy))
+    : new HttpProxyAgent(setDefaultProtocol(httpProxy));
+};
+
 const createErrorResponse = async (
   responseId: string,
   requestId: string,
@@ -243,12 +253,15 @@ const openSocketIOConnection = async (
       url: options.url,
       requestId: options.requestId,
     });
+    const settings = await models.settings.get();
 
     const socketIOoptions: Partial<ManagerOptions & SocketOptions> = {
       extraHeaders: lowerCasedEnabledHeaders,
       query: options.query,
       ca: caCertificate,
       passphrase,
+      // @ts-expect-error: Type mismatch for agent field
+      agent: getProxyAgent(url, settings.httpProxy, settings.httpsProxy),
     };
 
     if (pfxCertificates.length) {
@@ -299,7 +312,7 @@ const openSocketIOConnection = async (
         url: url,
         connected: true,
       };
-      const settings = await models.settings.get();
+
       const res = await models.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
       models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
     });
