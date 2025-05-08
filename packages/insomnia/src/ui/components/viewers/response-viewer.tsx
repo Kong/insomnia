@@ -7,6 +7,7 @@ import {
   PREVIEW_MODE_FRIENDLY,
   PREVIEW_MODE_RAW,
 } from '../../../common/constants';
+import { unescapeForwardSlash } from '../../../common/misc';
 import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { ResponseCSVViewer } from './response-csv-viewer';
@@ -217,10 +218,11 @@ export const ResponseViewer = ({
     // Although there is a prettifier for json inside the CodeEditor, but it is to prettify json strings that is being edited which may have syntax errors.
     // There are some cases that the prettifier inside the CodeEditor can not handle.
     // See https://github.com/Kong/insomnia/issues/1556
+    // The user wants the forward slash in the json string to be unescaped when previewing JSON response.
     // Here the CodeEditor is readonly and the bodyStr is supposed to be a valid json string.
-    // So we try to use the native JSON.stringify to prettify the json string better. The native way can handle the issue.
+    // So we try to unescape the forward slashes before passing it to the CodeEditor.
     try {
-      bodyStr = JSON.stringify(JSON.parse(bodyStr));
+      bodyStr = unescapeForwardSlash(bodyStr);
     } catch (err) {}
     return (
       <CodeEditor

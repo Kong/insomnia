@@ -242,3 +242,18 @@ export function isNotNullOrUndefined<ValueType>(value: ValueType | null | undefi
 }
 
 export const toKebabCase = (value: string) => value.replace(/ /g, '-');
+
+// unescape forward slashes in a string if needed
+export function unescapeForwardSlash(str: string): string {
+  // Use a regular expression to find runs of one or more backslashes (bs) followed by a slash
+  return str.replace(/(\\+)\//g, (match, bs) => {
+    // Determine if the number of backslashes is odd or even
+    // Odd count: the last backslash escapes the slash; we remove that one
+    if (bs.length % 2 === 1) {
+      // Keep all but the last backslash, then append the unescaped forward slash
+      return bs.slice(0, bs.length - 1) + '/';
+    }
+    // Even count: all backslashes are literal escapes; leave the sequence unchanged
+    return match;
+  });
+}
