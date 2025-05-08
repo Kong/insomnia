@@ -64,7 +64,7 @@ export async function create(request: Request | WebSocketRequest | GrpcRequest |
   const parentId = request._id;
   const latestRequestVersion: RequestVersion | null = await getLatestByParentId(parentId);
   const latestRequest = latestRequestVersion
-    ? decompressObject<Request | WebSocketRequest>(latestRequestVersion.compressedRequest)
+    ? decompressObject<Request | WebSocketRequest | SocketIORequest>(latestRequestVersion.compressedRequest)
     : null;
 
   const hasChanged = _diffRequests(latestRequest, request);
@@ -114,7 +114,10 @@ export async function restore(requestVersionId: string) {
 
   return requestOperations.update(originalRequest, requestPatch);
 }
-function _diffRequests(rOld: Request | WebSocketRequest | null, rNew: Request | WebSocketRequest | SocketIORequest) {
+function _diffRequests(
+  rOld: Request | WebSocketRequest | SocketIORequest | null,
+  rNew: Request | WebSocketRequest | SocketIORequest,
+) {
   if (!rOld) {
     return true;
   }
