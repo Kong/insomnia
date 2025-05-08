@@ -31,7 +31,6 @@ export interface BaseSocketIORequest {
   settingEncodeUrl: boolean;
   settingStoreCookies: boolean;
   settingSendCookies: boolean;
-  settingFollowRedirects: 'global' | 'on' | 'off';
   eventListeners: SocketIOEventListener[];
 }
 
@@ -52,7 +51,6 @@ export const init = (): BaseSocketIORequest => ({
   settingEncodeUrl: true,
   settingStoreCookies: true,
   settingSendCookies: true,
-  settingFollowRedirects: 'global',
   description: '',
   eventListeners: [],
 });
