@@ -284,7 +284,7 @@ const CookieList = ({ cookies, onCookieDelete, onUpdateCookie }: CookieListProps
               textValue={cookie.domain}
               className="flex min-h-[40px] justify-between gap-2 rounded-sm px-2 py-1 leading-[36px] outline-none odd:bg-[--hl-xs]"
             >
-              <span className="flex min-w-[20%] items-center break-all leading-relaxed">
+              <span className="flex min-w-[20%] items-center break-all leading-relaxed" data-testid="cookie-domain">
                 <RenderedText>{cookie.domain || ''}</RenderedText>
               </span>
               <span className="flex w-[70%] items-center break-all leading-relaxed">
