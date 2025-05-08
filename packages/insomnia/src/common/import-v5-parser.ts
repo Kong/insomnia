@@ -323,6 +323,14 @@ export const WebSocketRequestSettingsSchema = z.object({
   followRedirects: z.enum(['global', 'on', 'off']).optional().default('global'),
 });
 
+export const SocketIORequestSettingsSchema = z.object({
+  encodeUrl: z.boolean().optional().default(true),
+  cookies: z.object({
+    store: z.boolean().optional().default(true),
+    send: z.boolean().optional().default(true),
+  }),
+});
+
 export const RequestParametersSchema = z.array(
   z.object({
     name: z.string().optional().default(''),
@@ -440,11 +448,31 @@ export const WebsocketRequestSchema = z.object({
   }).optional(),
 });
 
+export const SocketIORequestSchema = z.object({
+  name: z.string().optional().default(''),
+  url: z.string().optional().default(''),
+  headers: RequestHeadersSchema.optional(),
+  authentication: AuthenticationSchema.optional(),
+  parameters: RequestParametersSchema.optional(),
+  pathParameters: RequestParametersSchema.optional(),
+  settings: SocketIORequestSettingsSchema.optional().default({
+    encodeUrl: true,
+    cookies: {
+      send: true,
+      store: true,
+    },
+  }),
+  meta: MetaSchema.extend({
+    sortKey: z.number().optional(),
+  }).optional(),
+});
+
 type Request = z.infer<typeof RequestSchema>;
 type GRPCRequest = z.infer<typeof GRPCRequestSchema>;
 type WebsocketRequest = z.infer<typeof WebsocketRequestSchema>;
+type SocketIORequest = z.infer<typeof SocketIORequestSchema>;
 type RequestGroup = z.input<typeof RequestGroupSchema> & {
-  children?: (Request | GRPCRequest | WebsocketRequest | RequestGroup)[];
+  children?: (Request | GRPCRequest | WebsocketRequest | RequestGroup | SocketIORequest)[];
 };
 
 const RequestGroupWithChildrenSchema: z.ZodType<RequestGroup> = RequestGroupSchema.extend({
@@ -468,6 +496,11 @@ const RequestCollectionSchema = z
       children: z.undefined(),
     }),
     WebsocketRequestSchema.extend({
+      // These undefined properties are added to differentiate between the different types of children in the union
+      children: z.undefined(),
+      method: z.undefined(),
+    }),
+    SocketIORequestSchema.extend({
       // These undefined properties are added to differentiate between the different types of children in the union
       children: z.undefined(),
       method: z.undefined(),
@@ -564,3 +597,4 @@ export type Z_GRPCRequest = z.infer<typeof GRPCRequestSchema>;
 export type Z_RequestGroup = z.infer<typeof RequestGroupWithChildrenSchema>;
 export type Z_Request = z.infer<typeof RequestSchema>;
 export type Z_WebsocketRequest = z.infer<typeof WebsocketRequestSchema>;
+export type Z_SocketIORequest = z.infer<typeof SocketIORequestSchema>;
