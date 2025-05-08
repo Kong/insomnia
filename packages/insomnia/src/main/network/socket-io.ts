@@ -261,7 +261,7 @@ const openSocketIOConnection = async (
       ca: caCertificate,
       passphrase,
       // @ts-expect-error: Type mismatch for agent field
-      // agent: getProxyAgent(url, settings.httpProxy, settings.httpsProxy),
+      agent: settings.proxyEnabled ? getProxyAgent(url, settings.httpProxy, settings.httpsProxy) : false,
     };
 
     if (pfxCertificates.length) {
