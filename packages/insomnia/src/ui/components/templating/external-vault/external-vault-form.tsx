@@ -2,7 +2,13 @@ import React, { useMemo, useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import { debounce } from '../../../../common/misc';
-import type { AWSSecretConfig, AzureSecretConfig, ExternalVaultConfig, GCPSecretConfig, HashiCorpSecretConfig } from '../../../../main/ipc/cloud-service-integration/types';
+import type {
+  AWSSecretConfig,
+  AzureSecretConfig,
+  ExternalVaultConfig,
+  GCPSecretConfig,
+  HashiCorpSecretConfig,
+} from '../../../../main/ipc/cloud-service-integration/types';
 import { type CloudProviderCredential, type CloudProviderName, type } from '../../../../models/cloud-credential';
 import { Icon } from '../../icon';
 import { CloudCredentialModal } from '../../modals/cloud-credential-modal/cloud-credential-modal';
@@ -20,7 +26,7 @@ export const ExternalVaultForm = (props: ArgConfigFormProps) => {
     return JSON.parse(configValue) as ExternalVaultConfig;
   }, [configValue]);
   const selectedCredentialId = activeTagData.args[1].value;
-  const cloudCredentialDocs = docs[type] as CloudProviderCredential[] || [];
+  const cloudCredentialDocs = (docs[type] as CloudProviderCredential[]) || [];
   const selectedCredentialDoc = cloudCredentialDocs.find(d => d._id === selectedCredentialId);
 
   const handleFormChange = debounce((newConfig: ExternalVaultConfig) => {
@@ -68,28 +74,28 @@ export const ExternalVaultForm = (props: ArgConfigFormProps) => {
       break;
     default:
       SubForm = null;
-  };
+  }
 
   return (
     <>
-      {selectedCredentialDoc && provider !== 'azure' &&
+      {selectedCredentialDoc && provider !== 'azure' && (
         <Button
-          className="px-2 py-1 mb-[--padding-sm] h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-info] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+          className="mb-[--padding-sm] flex h-full items-center justify-center gap-2 px-2 py-1 text-xs text-[--color-info] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
           style={{ marginTop: 'calc(var(--padding-sm) * -1)' }}
           onPress={() => setShowModal(true)}
         >
           <Icon icon="edit" /> Edit Credential
         </Button>
-      }
+      )}
       {SubForm}
-      {showModal &&
+      {showModal && (
         <CloudCredentialModal
           provider={provider}
           providerCredential={selectedCredentialDoc}
           onClose={() => setShowModal(false)}
           onComplete={() => onChange(configValue)}
         />
-      }
+      )}
     </>
   );
 };

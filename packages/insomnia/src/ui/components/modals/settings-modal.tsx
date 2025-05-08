@@ -108,7 +108,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
               Plugins
             </Tab>
             <Tab
-              className="flex-shrink-0 h-full flex items-center justify-between cursor-pointer gap-2 outline-none select-none px-3 py-1 text-[--hl] aria-selected:text-[--color-font]  hover:bg-[--hl-sm] hover:text-[--color-font] aria-selected:bg-[--hl-xs] aria-selected:focus:bg-[--hl-sm] aria-selected:hover:bg-[--hl-sm] focus:bg-[--hl-sm] transition-colors duration-300"
+              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
               id="cloudCred"
             >
               Cloud Credentials
@@ -168,7 +168,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           <TabPanel className="h-full w-full overflow-y-auto p-4" id="plugins">
             <Plugins />
           </TabPanel>
-          <TabPanel className="w-full h-full overflow-y-auto p-4" id="cloudCred">
+          <TabPanel className="h-full w-full overflow-y-auto p-4" id="cloudCred">
             <CloudServiceCredentialList />
           </TabPanel>
           <TabPanel className="h-full w-full overflow-y-auto p-4" id="ai">

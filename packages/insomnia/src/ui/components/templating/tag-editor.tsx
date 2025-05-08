@@ -388,28 +388,26 @@ export const TagEditor: FC<Props> = props => {
             ) : (
               <select value={typeof strValue === 'string' ? strValue : 'unknown'} onChange={handleChange}>
                 <option value="n/a">-- Select Item --</option>
-                  {targetDoc.map(
-                  (doc: any) => {
-                    let namePrefix: string | null = null;
-                    // Show parent folder with name if it's a request
-                    if (isRequest(doc)) {
-                      const requests = state.allDocs[models.request.type] || [];
-                      const request = requests.find(r => r._id === doc._id) as Request;
-                      const method = request && typeof request.method === 'string' ? request.method : 'GET';
-                      const parentId = request ? request.parentId : 'n/a';
-                      const allRequestGroups = state.allDocs[models.requestGroup.type] || [];
-                      const reqGroup = allRequestGroups.find(rg => rg._id === parentId) as RequestGroup | undefined;
-                      const folderName = reqGroup ? `[${typeof reqGroup.name === 'string' ? reqGroup.name : ''}] ` : '';
-                      namePrefix = `${folderName + method} `;
-                    }
-                    return (
-                      <option key={doc._id} value={doc._id}>
-                        {namePrefix}
-                        {typeof doc.name === 'string' ? doc.name : 'Unknown Request'}
-                      </option>
-                    );
-                  },
-                )}
+                {targetDoc.map((doc: any) => {
+                  let namePrefix: string | null = null;
+                  // Show parent folder with name if it's a request
+                  if (isRequest(doc)) {
+                    const requests = state.allDocs[models.request.type] || [];
+                    const request = requests.find(r => r._id === doc._id) as Request;
+                    const method = request && typeof request.method === 'string' ? request.method : 'GET';
+                    const parentId = request ? request.parentId : 'n/a';
+                    const allRequestGroups = state.allDocs[models.requestGroup.type] || [];
+                    const reqGroup = allRequestGroups.find(rg => rg._id === parentId) as RequestGroup | undefined;
+                    const folderName = reqGroup ? `[${typeof reqGroup.name === 'string' ? reqGroup.name : ''}] ` : '';
+                    namePrefix = `${folderName + method} `;
+                  }
+                  return (
+                    <option key={doc._id} value={doc._id}>
+                      {namePrefix}
+                      {typeof doc.name === 'string' ? doc.name : 'Unknown Request'}
+                    </option>
+                  );
+                })}
               </select>
             );
           } else if (argDefinition.type === 'boolean') {

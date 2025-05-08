@@ -138,7 +138,6 @@ export class AzureService extends OAuthCloudService implements ICloudService {
     // This method is not implemented as Azure utilizes OAuth authentication flow.
   }
 
-
   getUniqueCacheKey(identifier: string, _config?: any) {
     const uniqueKey = identifier;
     const uniqueKeyHash = crypto.createHash('md5').update(uniqueKey).digest('hex');
@@ -166,15 +165,14 @@ export class AzureService extends OAuthCloudService implements ICloudService {
             },
           ],
         },
-
       });
       if (secretResponse.ok) {
-        const secretBody = await secretResponse.json() as AzureSecretResponse;
+        const secretBody = (await secretResponse.json()) as AzureSecretResponse;
         return {
           success: true,
           result: secretBody,
         };
-      };
+      }
       let errorBody;
       const contentType = secretResponse.headers.find(h => h.name.toLocaleLowerCase() === 'content-type')?.value;
       if (contentType?.toLowerCase().includes('application/json')) {
@@ -182,7 +180,10 @@ export class AzureService extends OAuthCloudService implements ICloudService {
       } else {
         errorBody = secretResponse.body;
       }
-      const errorMessage = typeof errorBody === 'object' && errorBody.error?.message || secretResponse.status || 'Unknown error, failed to get secret';
+      const errorMessage =
+        (typeof errorBody === 'object' && errorBody.error?.message) ||
+        secretResponse.status ||
+        'Unknown error, failed to get secret';
       return {
         success: false,
         result: null,

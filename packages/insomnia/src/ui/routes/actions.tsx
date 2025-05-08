@@ -1186,9 +1186,11 @@ export const generateCollectionFromApiSpecAction: ActionFunction = async ({ para
     throw new Error('Error Generating Configuration');
   }
 
-  await scanResources([{
-    contentStr: apiSpec.contents,
-  }]);
+  await scanResources([
+    {
+      contentStr: apiSpec.contents,
+    },
+  ]);
 
   await importResourcesToWorkspace({
     workspaceId,
@@ -1230,9 +1232,11 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
     throw new Error('Error Generating Configuration');
   }
 
-  const resources = await scanResources([{
-    contentStr: apiSpec.contents,
-  }]);
+  const resources = await scanResources([
+    {
+      contentStr: apiSpec.contents,
+    },
+  ]);
 
   const allRequestsFromResources = resources.reduce(
     (accumulator, scanResult) => accumulator.concat(scanResult.requests ?? []),
@@ -1799,23 +1803,22 @@ export const createCloudCredentialAction: ActionFunction = async ({ request }) =
       }
       return credentials;
     }
-      const authenciateResponse = await window.main.cloudService.authenticate({ provider, credentials });
-      const { success, error, result } = authenciateResponse!;
-      if (success) {
-        if (provider === 'hashicorp') {
-          // update access token and expires_at
-          const { access_token, expires_at } = result as { access_token: string; expires_at: number };
-          patch.credentials['access_token'] = access_token;
-          patch.credentials['expires_at'] = expires_at;
-        };
-        await models.cloudCredential.create(patch);
-      } else {
-        return {
-          error: error?.errorMessage,
-        };
+    const authenciateResponse = await window.main.cloudService.authenticate({ provider, credentials });
+    const { success, error, result } = authenciateResponse!;
+    if (success) {
+      if (provider === 'hashicorp') {
+        // update access token and expires_at
+        const { access_token, expires_at } = result as { access_token: string; expires_at: number };
+        patch.credentials['access_token'] = access_token;
+        patch.credentials['expires_at'] = expires_at;
       }
-      return result;
-
+      await models.cloudCredential.create(patch);
+    } else {
+      return {
+        error: error?.errorMessage,
+      };
+    }
+    return result;
   }
   return { error: 'Invalid paramters for creating cloud credential' };
 };
@@ -1838,7 +1841,7 @@ export const updateCloudCredentialAction: ActionFunction = async ({ request, par
         const { access_token, expires_at } = result as { access_token: string; expires_at: number };
         patch.credentials['access_token'] = access_token;
         patch.credentials['expires_at'] = expires_at;
-      };
+      }
       await models.cloudCredential.update(originCredential, patch);
     } else {
       return {

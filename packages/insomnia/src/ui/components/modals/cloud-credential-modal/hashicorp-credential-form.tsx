@@ -1,7 +1,17 @@
 import React, { useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
 
-import { type BaseCloudCredential, type CloudProviderCredential, type CloudProviderName, type HashiCorpCredentials, HashiCorpCredentialType, HashiCorpVaultAuthMethod, type HCPCredential, type VaultAppRoleCredential, type VaultTokenCredential } from '../../../../models/cloud-credential';
+import {
+  type BaseCloudCredential,
+  type CloudProviderCredential,
+  type CloudProviderName,
+  type HashiCorpCredentials,
+  HashiCorpCredentialType,
+  HashiCorpVaultAuthMethod,
+  type HCPCredential,
+  type VaultAppRoleCredential,
+  type VaultTokenCredential,
+} from '../../../../models/cloud-credential';
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 import { ToggleBtn } from './toggle-btn';
@@ -30,7 +40,9 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
   const [isValidUrl, setIsValidUrl] = useState(true);
   const { type } = credentials as HashiCorpCredentials;
   const [credentialType, setCredentialType] = useState<HashiCorpCredentialType>(type);
-  const [credentialAuthMethod, setAuthMethod] = useState<HashiCorpVaultAuthMethod>((credentials as VaultTokenCredential | VaultAppRoleCredential).authMethod);
+  const [credentialAuthMethod, setAuthMethod] = useState<HashiCorpVaultAuthMethod>(
+    (credentials as VaultTokenCredential | VaultAppRoleCredential).authMethod,
+  );
   const [hideValueItemNames, setHideValueItemNames] = useState(['client_secret', 'secret_id', 'access_token']);
 
   const showOrHideItemValue = (name: string) => {
@@ -47,23 +59,29 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
       new URL(address);
     } catch (error) {
       isValid = false;
-    };
+    }
     setIsValidUrl(isValid);
   };
 
   return (
     <form
-      className='flex flex-col gap-2 flex-shrink-0'
+      className="flex flex-shrink-0 flex-col gap-2"
       onSubmit={e => {
         e.preventDefault();
         e.stopPropagation();
         const formData = new FormData(e.currentTarget);
         const {
-          name, type,
+          name,
+          type,
           // cloud system credentials
-          client_id, client_secret,
+          client_id,
+          client_secret,
           // on-prem system credential
-          authMethod, serverAddress, access_token, role_id, secret_id,
+          authMethod,
+          serverAddress,
+          access_token,
+          role_id,
+          secret_id,
         } = Object.fromEntries(formData.entries()) as Record<string, string>;
         const commonData = {
           name,
@@ -75,7 +93,8 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
             ...commonData,
             credentials: {
               type: type as HashiCorpCredentialType.cloud,
-              client_id, client_secret,
+              client_id,
+              client_secret,
             },
           };
         } else {
@@ -89,115 +108,116 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
               ...(authMethod === HashiCorpVaultAuthMethod.appRole && { role_id, secret_id }),
             },
           };
-        };
+        }
         onSubmit(newData as BaseCloudCredential);
       }}
     >
-      <TextField
-        className="flex flex-col gap-2"
-        defaultValue={name}
-      >
-        <Label className='col-span-4'>
-          Credential Name:
-        </Label>
+      <TextField className="flex flex-col gap-2" defaultValue={name}>
+        <Label className="col-span-4">Credential Name:</Label>
         <Input
           required
-          className='py-1 h-8 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors flex-1 placeholder:italic placeholder:opacity-60 col-span-3'
+          className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
           type="text"
           name="name"
           placeholder="Credential name"
         />
       </TextField>
       <div>
-        <label>
-          System Type:
-        </label>
-        <div className='mt-2 flex flex-row'>
+        <label>System Type:</label>
+        <div className="mt-2 flex flex-row">
           <input
             type="radio"
             id="hashiCorpEnvironmentTypeChoice-onPrem"
             name="type"
-            className='mr-2'
+            className="mr-2"
             value={HashiCorpCredentialType.onPrem}
             checked={credentialType === HashiCorpCredentialType.onPrem}
             onChange={() => setCredentialType(HashiCorpCredentialType.onPrem)}
           />
-          <label className="pt-0 mr-8 w-32" htmlFor="hashiCorpEnvironmentTypeChoice-onPrem">On-Premises</label>
+          <label className="mr-8 w-32 pt-0" htmlFor="hashiCorpEnvironmentTypeChoice-onPrem">
+            On-Premises
+          </label>
 
           <input
             type="radio"
             id="hashiCorpEnvironmentTypeChoice-cloud"
             name="type"
-            className='mr-2'
+            className="mr-2"
             value={HashiCorpCredentialType.cloud}
             checked={credentialType === HashiCorpCredentialType.cloud}
             onChange={() => setCredentialType(HashiCorpCredentialType.cloud)}
           />
-          <label className="pt-0" htmlFor="hashiCorpEnvironmentTypeChoice-cloud">Cloud</label>
+          <label className="pt-0" htmlFor="hashiCorpEnvironmentTypeChoice-cloud">
+            Cloud
+          </label>
         </div>
       </div>
-      {credentialType === HashiCorpCredentialType.onPrem &&
+      {credentialType === HashiCorpCredentialType.onPrem && (
         <>
           <div>
-            <label>
-              Auth Method:
-            </label>
-            <div className='mt-2 flex flex-row'>
+            <label>Auth Method:</label>
+            <div className="mt-2 flex flex-row">
               <input
                 type="radio"
                 id="authMethodChoice-appRole"
                 name="authMethod"
-                className='mr-2'
+                className="mr-2"
                 value={HashiCorpVaultAuthMethod.appRole}
                 checked={credentialAuthMethod === HashiCorpVaultAuthMethod.appRole}
                 onChange={() => setAuthMethod(HashiCorpVaultAuthMethod.appRole)}
               />
-              <label className="pt-0 mr-8 w-32" htmlFor="authMethodChoice-appRole">AppRole</label>
+              <label className="mr-8 w-32 pt-0" htmlFor="authMethodChoice-appRole">
+                AppRole
+              </label>
 
               <input
                 type="radio"
                 id="authMethodChoice-token"
                 name="authMethod"
-                className='mr-2'
+                className="mr-2"
                 value={HashiCorpVaultAuthMethod.token}
                 checked={credentialAuthMethod === HashiCorpVaultAuthMethod.token}
                 onChange={() => setAuthMethod(HashiCorpVaultAuthMethod.token)}
               />
-              <label className="pt-0" htmlFor="authMethodChoice-token">Token</label>
+              <label className="pt-0" htmlFor="authMethodChoice-token">
+                Token
+              </label>
             </div>
           </div>
           <TextField
             className="flex flex-col gap-2"
             defaultValue={(credentials as HashiCorpOnPremCredential).serverAddress}
           >
-            <Label className='col-span-4'>
+            <Label className="col-span-4">
               Server Address:
-              <HelpTooltip className='ml-2 sapce-left'>HashiCorp on-prem server address like https://localhost:8200</HelpTooltip>
+              <HelpTooltip className="sapce-left ml-2">
+                HashiCorp on-prem server address like https://localhost:8200
+              </HelpTooltip>
             </Label>
             <Input
               required
-              className='py-1 h-8 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors flex-1 placeholder:italic placeholder:opacity-60 col-span-3'
+              className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
               type="text"
               name="serverAddress"
               onChange={e => validateServerAddress(e.target.value)}
               placeholder="Server Address"
             />
           </TextField>
-          {!isValidUrl &&
-            <p className="notice error margin-top-sm no-margin-bottom">Invalid server address, please check and input again</p>
-          }
-          {credentialAuthMethod === HashiCorpVaultAuthMethod.token &&
+          {!isValidUrl && (
+            <p className="notice error margin-top-sm no-margin-bottom">
+              Invalid server address, please check and input again
+            </p>
+          )}
+          {credentialAuthMethod === HashiCorpVaultAuthMethod.token && (
             <TextField
               className="flex flex-col gap-2"
               defaultValue={(credentials as VaultTokenCredential).access_token}
             >
-              <Label className='col-span-4'>
-                Authentication Token:
-              </Label>
-              <div className='flex items-center gap-2'>
+              <Label className="col-span-4">Authentication Token:</Label>
+              <div className="flex items-center gap-2">
                 <Input
                   required
-                  className='py-1 h-8 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors flex-1 placeholder:italic placeholder:opacity-60 col-span-3'
+                  className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
                   type={hideValueItemNames.includes('access_token') ? 'password' : 'text'}
                   name="access_token"
                   placeholder="Authentication Token"
@@ -208,20 +228,15 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
                 />
               </div>
             </TextField>
-          }
-          {credentialAuthMethod === HashiCorpVaultAuthMethod.appRole &&
+          )}
+          {credentialAuthMethod === HashiCorpVaultAuthMethod.appRole && (
             <>
-              <TextField
-                className="flex flex-col gap-2"
-                defaultValue={(credentials as VaultAppRoleCredential).role_id}
-              >
-                <Label className='col-span-4'>
-                  Role Id:
-                </Label>
+              <TextField className="flex flex-col gap-2" defaultValue={(credentials as VaultAppRoleCredential).role_id}>
+                <Label className="col-span-4">Role Id:</Label>
                 <Input
                   required
-                  className='py-1 h-8 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors flex-1 placeholder:italic placeholder:opacity-60 col-span-3'
-                  type='text'
+                  className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
+                  type="text"
                   name="role_id"
                   placeholder="Role Id"
                 />
@@ -230,13 +245,11 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
                 className="flex flex-col gap-2"
                 defaultValue={(credentials as VaultAppRoleCredential).secret_id}
               >
-                <Label className='col-span-4'>
-                  Secret Id:
-                </Label>
-                <div className='flex items-center gap-2'>
+                <Label className="col-span-4">Secret Id:</Label>
+                <div className="flex items-center gap-2">
                   <Input
                     required
-                    className='py-1 h-8 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors flex-1 placeholder:italic placeholder:opacity-60 col-span-3'
+                    className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
                     type={hideValueItemNames.includes('secret_id') ? 'password' : 'text'}
                     name="secret_id"
                     placeholder="Secret Id"
@@ -248,37 +261,27 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
                 </div>
               </TextField>
             </>
-          }
+          )}
         </>
-      }
-      {credentialType === HashiCorpCredentialType.cloud &&
+      )}
+      {credentialType === HashiCorpCredentialType.cloud && (
         <>
-          <TextField
-            className="flex flex-col gap-2"
-            defaultValue={(credentials as HCPCredential).client_id}
-          >
-            <Label className='col-span-4'>
-              Client Id:
-            </Label>
+          <TextField className="flex flex-col gap-2" defaultValue={(credentials as HCPCredential).client_id}>
+            <Label className="col-span-4">Client Id:</Label>
             <Input
               required
-              className='py-1 h-8 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors flex-1 placeholder:italic placeholder:opacity-60 col-span-3'
+              className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
               type="text"
               name="client_id"
               placeholder="Client Id"
             />
           </TextField>
-          <TextField
-            className="flex flex-col gap-2"
-            defaultValue={(credentials as HCPCredential).client_secret}
-          >
-            <Label className='col-span-4'>
-              Client Secret:
-            </Label>
-            <div className='flex items-center gap-2'>
+          <TextField className="flex flex-col gap-2" defaultValue={(credentials as HCPCredential).client_secret}>
+            <Label className="col-span-4">Client Secret:</Label>
+            <div className="flex items-center gap-2">
               <Input
                 required
-                className='py-1 h-8 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors flex-1 placeholder:italic placeholder:opacity-60 col-span-3'
+                className="col-span-3 h-8 w-full flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
                 type={hideValueItemNames.includes('client_secret') ? 'password' : 'text'}
                 name="client_secret"
                 placeholder="Client Secret"
@@ -290,17 +293,15 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
             </div>
           </TextField>
         </>
-      }
-      {errorMessage &&
-        <p className="notice error margin-top-sm no-margin-bottom">{errorMessage}</p>
-      }
-      <div className='w-full flex flex-row items-center justify-end gap-[--padding-md] pt-[--padding-md]'>
+      )}
+      {errorMessage && <p className="notice error margin-top-sm no-margin-bottom">{errorMessage}</p>}
+      <div className="flex w-full flex-row items-center justify-end gap-[--padding-md] pt-[--padding-md]">
         <Button
-          className="hover:no-underline text-right bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
-          type='submit'
+          className="rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-right text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
+          type="submit"
           isDisabled={isLoading || !isValidUrl}
         >
-          {isLoading && <Icon icon="spinner" className="text-[--color-font] animate-spin m-auto inline-block mr-2" />}
+          {isLoading && <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-[--color-font]" />}
           {isEdit ? 'Update' : 'Create'}
         </Button>
       </div>

@@ -6,9 +6,10 @@ import * as models from '../../../models';
 import type { Request } from '../../../models/request';
 import { readCurlResponse, type ResponseHeader } from '../../../models/response';
 
-type NodeCurlRequestType = Pick<Request, 'url' | 'method' | 'headers'> & Partial<Pick<Request, 'body' | 'authentication'>>;
+type NodeCurlRequestType = Pick<Request, 'url' | 'method' | 'headers'> &
+  Partial<Pick<Request, 'body' | 'authentication'>>;
 interface NodeCurlRequestOptions {
-  request: NodeCurlRequestType,
+  request: NodeCurlRequestType;
   caCertficatePath?: string;
 }
 export interface NodeCurlResponseType {
@@ -50,14 +51,14 @@ export const nodeCurlRequest = async (options: NodeCurlRequestOptions): Promise<
   const { headerResults, patch, responseBodyPath } = response;
   if (patch.error) {
     throw new Error(patch.error);
-  };
+  }
   if (headerResults.length === 0) {
     throw Error('Error in response: no header result is found');
-  };
+  }
   const lastRedirect = headerResults[headerResults.length - 1];
   if (!lastRedirect) {
     throw Error('Error in response: the lastRedirect is not defined');
-  };
+  }
   const bodyResult = await readCurlResponse({
     bodyPath: responseBodyPath,
     bodyCompression: patch.bodyCompression,
@@ -78,6 +79,5 @@ export const nodeCurlRequest = async (options: NodeCurlRequestOptions): Promise<
         throw new Error(`Error parsing JSON response: ${error}`);
       }
     },
-  }
-
+  };
 };

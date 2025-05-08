@@ -11,7 +11,7 @@ export interface FilePickerProps {
   placeholder: string;
   filePickerOptions: OpenDialogOptions;
   onSelectFile: (filePath: string) => void;
-};
+}
 
 export const FilePicker = (props: FilePickerProps) => {
   const { name, value, placeholder, ariaLabel, filePickerOptions, onSelectFile } = props;
@@ -28,7 +28,7 @@ export const FilePicker = (props: FilePickerProps) => {
   return (
     <>
       <Input
-        className='py-1 w-4/5 pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors flex-1 placeholder:italic placeholder:opacity-60 col-span-3'
+        className="col-span-3 w-4/5 flex-1 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:italic placeholder:opacity-60 focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
         placeholder={placeholder}
         aria-label={ariaLabel}
         name={name}
@@ -36,10 +36,10 @@ export const FilePicker = (props: FilePickerProps) => {
         onChange={e => onSelectFile(e.target.value)}
       />
       <Button
-        className="flex-shrink-0 border-solid border border-[--hl-`sm] py-1 items-center justify-center px-4 aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent transition-all text-base"
+        className="border-[--hl-`sm] flex-shrink-0 items-center justify-center rounded-sm border border-solid px-4 py-1 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]"
         onPress={handleSelectFile}
       >
-        <Icon icon="file" className='mr-2' />
+        <Icon icon="file" className="mr-2" />
         <span>Select File</span>
       </Button>
     </>

@@ -2,7 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useFetcher } from 'react-router-dom';
 
-import { type BaseCloudCredential, type CloudProviderCredential, type CloudProviderName, getProviderDisplayName } from '../../../../models/cloud-credential';
+import {
+  type BaseCloudCredential,
+  type CloudProviderCredential,
+  type CloudProviderName,
+  getProviderDisplayName,
+} from '../../../../models/cloud-credential';
 import { Icon } from '../../icon';
 import { showModal } from '..';
 import { SettingsModal, TAB_CLOUD_CREDENTIAL } from '../settings-modal';
@@ -15,7 +20,7 @@ export interface CloudCredentialModalProps {
   providerCredential?: CloudProviderCredential;
   onClose: (data?: any) => void;
   onComplete?: (data?: any) => void;
-};
+}
 
 export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
   const { provider, providerCredential, onClose, onComplete } = props;
@@ -27,8 +32,15 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
   const isEditing = !!providerCredential;
 
   const fetchErrorMessage = useMemo(() => {
-    if (cloudCredentialFetcher.data && 'error' in cloudCredentialFetcher.data && cloudCredentialFetcher.data.error && cloudCredentialFetcher.state === 'idle') {
-      const errorMessage: string = cloudCredentialFetcher.data.error || `An unexpected error occurred while authenticating with ${getProviderDisplayName(provider)}.`;
+    if (
+      cloudCredentialFetcher.data &&
+      'error' in cloudCredentialFetcher.data &&
+      cloudCredentialFetcher.data.error &&
+      cloudCredentialFetcher.state === 'idle'
+    ) {
+      const errorMessage: string =
+        cloudCredentialFetcher.data.error ||
+        `An unexpected error occurred while authenticating with ${getProviderDisplayName(provider)}.`;
       return errorMessage;
     }
     return undefined;
@@ -37,14 +49,11 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
   const handleFormSubmit = (data: BaseCloudCredential & { isAuthenticated?: boolean }) => {
     const { name, credentials, isAuthenticated = false } = data;
     const formAction = isEditing ? `/cloud-credential/${providerCredential._id}/update` : '/cloud-credential/new';
-    cloudCredentialFetcher.submit(
-      JSON.stringify({ name, credentials, provider, isAuthenticated }),
-      {
-        action: formAction,
-        method: 'post',
-        encType: 'application/json',
-      }
-    );
+    cloudCredentialFetcher.submit(JSON.stringify({ name, credentials, provider, isAuthenticated }), {
+      action: formAction,
+      method: 'post',
+      encType: 'application/json',
+    });
   };
 
   const exchangeAzureCode = async () => {
@@ -82,7 +91,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
       const newCredentialData = cloudCredentialFetcher.data;
       onClose(newCredentialData);
       onComplete && onComplete(newCredentialData);
-    };
+    }
   }, [cloudCredentialFetcher.data, cloudCredentialFetcher.state, onClose, onComplete]);
 
   return (
@@ -92,57 +101,59 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
       onOpenChange={isOpen => {
         !isOpen && onClose();
       }}
-      className="w-full h-[--visual-viewport-height] fixed z-[9999] top-0 left-0 flex items-start justify-center bg-black/30"
+      className="fixed left-0 top-0 z-[9999] flex h-[--visual-viewport-height] w-full items-start justify-center bg-black/30"
     >
       <Modal
         onOpenChange={isOpen => {
           !isOpen && onClose();
         }}
-        className="max-h-[75%] overflow-auto flex flex-col w-full max-w-3xl rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] bg-[--color-bg] text-[--color-font] m-24"
+        className="m-24 flex max-h-[75%] w-full max-w-3xl flex-col overflow-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
       >
-        <Dialog
-          className="outline-none flex-1 h-full flex flex-col overflow-hidden"
-        >
+        <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
           {({ close }) => (
-            <div className='flex-1 flex flex-col gap-4 overflow-hidden'>
-              <div className='flex gap-2 items-center justify-between'>
-                <Heading slot="title" className='text-2xl'>{providerCredential ? `Edit ${providerDisplayName} credential` : `Authenticate With ${providerDisplayName}`}</Heading>
+            <div className="flex flex-1 flex-col gap-4 overflow-hidden">
+              <div className="flex items-center justify-between gap-2">
+                <Heading slot="title" className="text-2xl">
+                  {providerCredential
+                    ? `Edit ${providerDisplayName} credential`
+                    : `Authenticate With ${providerDisplayName}`}
+                </Heading>
                 <Button
-                  className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                   id="close-add-cloud-crendeital-modal"
                   onPress={close}
                 >
                   <Icon icon="x" />
                 </Button>
               </div>
-              {provider === 'aws' &&
+              {provider === 'aws' && (
                 <AWSCredentialForm
                   data={providerCredential}
                   isLoading={cloudCredentialFetcher.state !== 'idle'}
                   onSubmit={handleFormSubmit}
                   errorMessage={fetchErrorMessage}
                 />
-              }
-              {provider === 'gcp' &&
+              )}
+              {provider === 'gcp' && (
                 <GCPCredentialForm
                   data={providerCredential}
                   isLoading={cloudCredentialFetcher.state !== 'idle'}
                   onSubmit={handleFormSubmit}
                   errorMessage={fetchErrorMessage}
                 />
-              }
-              {provider === 'hashicorp' &&
+              )}
+              {provider === 'hashicorp' && (
                 <HashiCorpCredentialForm
                   data={providerCredential}
                   isLoading={cloudCredentialFetcher.state !== 'idle'}
                   onSubmit={handleFormSubmit}
                   errorMessage={fetchErrorMessage}
                 />
-              }
-              {provider === 'azure' &&
-                <div className='flex flex-col place-content-center place-items-center p-[--padding-sm] border border-solid border-[--hl-sm] rounded-[--radius-md]'>
+              )}
+              {provider === 'azure' && (
+                <div className="flex flex-col place-content-center place-items-center rounded-[--radius-md] border border-solid border-[--hl-sm] p-[--padding-sm]">
                   <a
-                    className='cursor-pointer'
+                    className="cursor-pointer"
                     onClick={() => {
                       setIsAuthenticating(true);
                       window.main.cloudService.openAuthUrl('azure');
@@ -150,29 +161,25 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
                   >
                     {isAuthenticating ? 'Authenticating' : 'Click to authenticate'} with Azure
                   </a>
-                  {isAuthenticating &&
+                  {isAuthenticating && (
                     <label className="form-control form-control--outlined">
                       <div className="form-row">
                         <input
-                          placeholder='Manually paste the authentication url if you are not redirected'
+                          placeholder="Manually paste the authentication url if you are not redirected"
                           onChange={e => setManualInputUrl(e.target.value)}
                         />
                         <Button
-                          className='px-[--padding-md] h-[--line-height-xs] border border-solid border-[--hl-sm]'
+                          className="h-[--line-height-xs] border border-solid border-[--hl-sm] px-[--padding-md]"
                           onPress={() => exchangeAzureCode()}
                         >
                           Authenticate
                         </Button>
                       </div>
                     </label>
-                  }
-                  {error && (
-                    <p className="notice error margin-bottom-sm w-full">
-                      {error}
-                    </p>
                   )}
+                  {error && <p className="notice error margin-bottom-sm w-full">{error}</p>}
                 </div>
-              }
+              )}
             </div>
           )}
         </Dialog>

@@ -186,78 +186,81 @@ const Root = () => {
           },
         );
       }
-        if (urlWithoutParams === 'insomnia://oauth/azure/authenticate') {
-          const { code, ...restParams } = params;
-          if (code && typeof code === 'string') {
-            const authResult = await window.main.cloudService.exchangeCode('azure', { code });
-            const { success, result, error } = authResult;
-            if (success) {
-              const { account, uniqueId } = result!;
-              const name = account?.username || uniqueId;
-              actionFetcher.submit(
-                JSON.stringify({
-                  name,
-                  credentials: result,
-                  provider: 'azure',
-                  isAuthenticated: true,
-                }),
-                {
-                  action: '/cloud-credential/new',
-                  method: 'post',
-                  encType: 'application/json',
-                }
-              );
-              showModal(SettingsModal, { tab: TAB_CLOUD_CREDENTIAL });
-            } else {
-              showError({
-                title: 'Azure Authorization Failed',
-                message: error?.errorMessage,
-              });
-            }
+      if (urlWithoutParams === 'insomnia://oauth/azure/authenticate') {
+        const { code, ...restParams } = params;
+        if (code && typeof code === 'string') {
+          const authResult = await window.main.cloudService.exchangeCode('azure', { code });
+          const { success, result, error } = authResult;
+          if (success) {
+            const { account, uniqueId } = result!;
+            const name = account?.username || uniqueId;
+            actionFetcher.submit(
+              JSON.stringify({
+                name,
+                credentials: result,
+                provider: 'azure',
+                isAuthenticated: true,
+              }),
+              {
+                action: '/cloud-credential/new',
+                method: 'post',
+                encType: 'application/json',
+              },
+            );
+            showModal(SettingsModal, { tab: TAB_CLOUD_CREDENTIAL });
           } else {
-            const errorDetailKeys = Object.keys(restParams);
-            const { error, error_description, error_uri } = restParams;
-            if (error && error_description) {
-              showError({
-                title: 'Azure Authorization Failed',
-                message: (
-                  <div className="flex flex-col gap-1 text-left">
-                    <span className='font-bold text-lg'>{error}</span>
-                    <span className='whitespace-normal'>{error_description}</span>
-                    {error_uri &&
-                      <div className='flex items-center justify-center mt-2'>
-                        <Link button className="btn btn--clicky w-80 " href={error_uri}>
-                          View Document <i className="fa fa-external-link" />
-                        </Link>
-                      </div>
-                    }
-                    <CopyButton
-                      size="small"
-                      className='absolute right-[--padding-sm] top-[--padding-sm]'
-                      content={error_description}
-                      title="Copy Description"
-                      style={{ borderWidth: 0 }}
-                    >
-                      <i className="fa fa-copy" />
-                    </CopyButton>
-                  </div>
-                )
-              });
-            } else {
-              showError({
-                title: 'Azure Authorization Failed',
-                message: (
-                  <div className="flex flex-col gap-1 text-left">
-                    {errorDetailKeys.length > 0 ?
-                      errorDetailKeys.map(k => <span key={k} className='whitespace-normal'>{k}: {restParams[k]}</span>) :
-                      'Unknown error'
-                    }
-                  </div>
-                )
-              });
-            }
-          };
+            showError({
+              title: 'Azure Authorization Failed',
+              message: error?.errorMessage,
+            });
+          }
+        } else {
+          const errorDetailKeys = Object.keys(restParams);
+          const { error, error_description, error_uri } = restParams;
+          if (error && error_description) {
+            showError({
+              title: 'Azure Authorization Failed',
+              message: (
+                <div className="flex flex-col gap-1 text-left">
+                  <span className="text-lg font-bold">{error}</span>
+                  <span className="whitespace-normal">{error_description}</span>
+                  {error_uri && (
+                    <div className="mt-2 flex items-center justify-center">
+                      <Link button className="btn btn--clicky w-80" href={error_uri}>
+                        View Document <i className="fa fa-external-link" />
+                      </Link>
+                    </div>
+                  )}
+                  <CopyButton
+                    size="small"
+                    className="absolute right-[--padding-sm] top-[--padding-sm]"
+                    content={error_description}
+                    title="Copy Description"
+                    style={{ borderWidth: 0 }}
+                  >
+                    <i className="fa fa-copy" />
+                  </CopyButton>
+                </div>
+              ),
+            });
+          } else {
+            showError({
+              title: 'Azure Authorization Failed',
+              message: (
+                <div className="flex flex-col gap-1 text-left">
+                  {errorDetailKeys.length > 0
+                    ? errorDetailKeys.map(k => (
+                        <span key={k} className="whitespace-normal">
+                          {k}: {restParams[k]}
+                        </span>
+                      ))
+                    : 'Unknown error'}
+                </div>
+              ),
+            });
+          }
         }
+      }
       if (urlWithoutParams === 'insomnia://app/auth/finish') {
         return actionFetcher.submit(
           {

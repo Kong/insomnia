@@ -1,5 +1,12 @@
 import { ipcMainHandle, ipcMainOn } from '../electron';
-import { clearVaultCache, cloudServiceProviderAuthentication, exchangeCode, getSecret, openAuthUrl, setCacheMaxAge } from './cloud-service';
+import {
+  clearVaultCache,
+  cloudServiceProviderAuthentication,
+  exchangeCode,
+  getSecret,
+  openAuthUrl,
+  setCacheMaxAge,
+} from './cloud-service';
 
 export interface cloudServiceBridgeAPI {
   authenticate: typeof cloudServiceProviderAuthentication;

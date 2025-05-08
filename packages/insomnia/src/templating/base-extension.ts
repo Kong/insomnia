@@ -112,9 +112,9 @@ export default class BaseExtension {
                 getById: models.cloudCredential.getById,
                 update: models.cloudCredential.update,
               },
-            }
+            };
             return getExternalVault({ cloudServiceContext, provider, providerCredential, secretConfig });
-          }
+          },
         },
         models: {
           request: {

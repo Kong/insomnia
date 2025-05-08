@@ -36,7 +36,7 @@ export const AzureKeyVaultForm = (props: AzureKeyVaultFormProps) => {
               The secret identifier is the URI of the secret in Azure Key Vault. You can get it from your Azure portal.
             </HelpTooltip>
             <input
-              name='secretIdentifier'
+              name="secretIdentifier"
               defaultValue={secretIdentifier}
               onChange={e => {
                 const identifier = e.target.value;
@@ -48,11 +48,11 @@ export const AzureKeyVaultForm = (props: AzureKeyVaultFormProps) => {
                 }
               }}
             />
-            {!isValidIdentifier &&
-              <p className="notice error w-full mt-[--padding-md]" style={{ marginBottom: 0 }}>
+            {!isValidIdentifier && (
+              <p className="notice error mt-[--padding-md] w-full" style={{ marginBottom: 0 }}>
                 Invalid Secret Identifier, please check and input again.
               </p>
-            }
+            )}
           </label>
         </div>
       </div>

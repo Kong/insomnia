@@ -198,24 +198,15 @@ async function renderApp() {
             children: [
               {
                 path: 'new',
-                action: async (...args) =>
-                  (
-                    await import('./routes/actions')
-                  ).createCloudCredentialAction(...args),
+                action: async (...args) => (await import('./routes/actions')).createCloudCredentialAction(...args),
               },
               {
                 path: ':cloudCredentialId/update',
-                action: async (...args) =>
-                  (
-                    await import('./routes/actions')
-                  ).updateCloudCredentialAction(...args),
+                action: async (...args) => (await import('./routes/actions')).updateCloudCredentialAction(...args),
               },
               {
                 path: ':cloudCredentialId/delete',
-                action: async (...args) =>
-                  (
-                    await import('./routes/actions')
-                  ).deleteCloudCredentialAction(...args),
+                action: async (...args) => (await import('./routes/actions')).deleteCloudCredentialAction(...args),
               },
             ],
           },

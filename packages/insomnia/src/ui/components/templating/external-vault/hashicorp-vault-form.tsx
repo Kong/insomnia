@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react';
 
-import { type HashiCorpSecretConfig, type HashiCorpVaultKVV1SecretConfig, type HashiCorpVaultKVV2SecretConfig, type HCPSecretConfig } from '../../../../main/ipc/cloud-service-integration/types';
+import {
+  type HashiCorpSecretConfig,
+  type HashiCorpVaultKVV1SecretConfig,
+  type HashiCorpVaultKVV2SecretConfig,
+  type HCPSecretConfig,
+} from '../../../../main/ipc/cloud-service-integration/types';
 import * as models from '../../../../models';
 import { type HashiCorpCredentials, HashiCorpCredentialType } from '../../../../models/cloud-credential';
 import type { NunjucksParsedTag } from '../../../../templating/types';
@@ -15,11 +20,13 @@ type KeysOfUnion<T> = T extends T ? keyof T : never;
 
 export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
   const { formData, onChange, activeTagData } = props;
-  const {
-    secretName,
-  } = formData;
+  const { secretName } = formData;
   // onPrem secret config
-  const { kvVersion = 'v1', secretEnginePath, secretKey } = formData as HashiCorpVaultKVV1SecretConfig | HashiCorpVaultKVV2SecretConfig;
+  const {
+    kvVersion = 'v1',
+    secretEnginePath,
+    secretKey,
+  } = formData as HashiCorpVaultKVV1SecretConfig | HashiCorpVaultKVV2SecretConfig;
   // cloud secret config
   const { organizationId, projectId, appName, version: cloudSecretVersion } = formData as HCPSecretConfig;
   const credentialId = activeTagData.args[1].value as string;
@@ -52,42 +59,44 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
           <label>
             Secret Name:
             <input
-              name='secretName'
+              name="secretName"
               defaultValue={secretName}
               onChange={e => handleOnChange('secretName', e.target.value)}
             />
           </label>
         </div>
       </div>
-      {credentialType === HashiCorpCredentialType.onPrem &&
+      {credentialType === HashiCorpCredentialType.onPrem && (
         <>
           <div className="form-row">
             <div className="form-control">
-              <label>
-                KV Secret Engine Version:
-              </label>
-              <div className='mt-2 flex flex-row'>
+              <label>KV Secret Engine Version:</label>
+              <div className="mt-2 flex flex-row">
                 <input
                   type="radio"
                   id="kvVersionChoice-v1"
                   name="kvVersion"
-                  className='mr-2'
-                  value='v1'
+                  className="mr-2"
+                  value="v1"
                   checked={kvVersion === 'v1'}
                   onChange={() => handleOnChange('kvVersion', 'v1')}
                 />
-                <label className="pt-0 mr-8" htmlFor="hashiCorpEnvironmentTypeChoice-onPrem">V1</label>
+                <label className="mr-8 pt-0" htmlFor="hashiCorpEnvironmentTypeChoice-onPrem">
+                  V1
+                </label>
 
                 <input
                   type="radio"
                   id="kvVersionChoice-v2"
                   name="kvVersion"
-                  className='mr-2'
-                  value='v2'
+                  className="mr-2"
+                  value="v2"
                   checked={kvVersion === 'v2'}
                   onChange={() => handleOnChange('kvVersion', 'v2')}
                 />
-                <label className="pt-0" htmlFor="hashiCorpEnvironmentTypeChoice-cloud">V2</label>
+                <label className="pt-0" htmlFor="hashiCorpEnvironmentTypeChoice-cloud">
+                  V2
+                </label>
               </div>
             </div>
           </div>
@@ -96,14 +105,14 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
               <label>
                 Secret Engine Path:
                 <input
-                  name='secretEnginePath'
+                  name="secretEnginePath"
                   defaultValue={secretEnginePath}
                   onChange={e => handleOnChange('secretEnginePath', e.target.value)}
                 />
               </label>
             </div>
           </div>
-          {kvVersion === 'v2' &&
+          {kvVersion === 'v2' && (
             <div className="form-row">
               <div className="form-control">
                 <label>
@@ -112,23 +121,21 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
                     Optional version of the secret to retrieve, leave it blank to get latest version
                   </HelpTooltip>
                   <input
-                    name='version'
+                    name="version"
                     defaultValue={(formData as HashiCorpVaultKVV2SecretConfig).version}
                     onChange={e => handleOnChange('version', e.target.value)}
                   />
                 </label>
               </div>
             </div>
-          }
+          )}
           <div className="form-row">
             <div className="form-control">
               <label>
                 Secret Key:
-                <HelpTooltip className="space-left">
-                  The secret key of the retrived key-value secrets.
-                </HelpTooltip>
+                <HelpTooltip className="space-left">The secret key of the retrived key-value secrets.</HelpTooltip>
                 <input
-                  name='secretKey'
+                  name="secretKey"
                   defaultValue={secretKey}
                   onChange={e => handleOnChange('secretKey', e.target.value)}
                 />
@@ -136,15 +143,15 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
             </div>
           </div>
         </>
-      }
-      {credentialType === HashiCorpCredentialType.cloud &&
+      )}
+      {credentialType === HashiCorpCredentialType.cloud && (
         <>
           <div className="form-row">
             <div className="form-control">
               <label>
                 Organization Id:
                 <input
-                  name='organizationId'
+                  name="organizationId"
                   defaultValue={organizationId}
                   onChange={e => handleOnChange('organizationId', e.target.value)}
                 />
@@ -156,7 +163,7 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
               <label>
                 Project Id:
                 <input
-                  name='projectId'
+                  name="projectId"
                   defaultValue={projectId}
                   onChange={e => handleOnChange('projectId', e.target.value)}
                 />
@@ -168,7 +175,7 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
               <label>
                 App Name:
                 <input
-                  name='appName'
+                  name="appName"
                   defaultValue={appName}
                   onChange={e => handleOnChange('appName', e.target.value)}
                 />
@@ -183,7 +190,7 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
                   Optional version of the secret to retrieve, leave it blank to get latest version
                 </HelpTooltip>
                 <input
-                  name='version'
+                  name="version"
                   defaultValue={cloudSecretVersion}
                   onChange={e => handleOnChange('version', e.target.value)}
                 />
@@ -191,7 +198,7 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
             </div>
           </div>
         </>
-      }
+      )}
     </>
   );
 };

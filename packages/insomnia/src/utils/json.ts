@@ -1,4 +1,4 @@
-export const isValidJSONString = (input: string): boolean =>  {
+export const isValidJSONString = (input: string): boolean => {
   try {
     JSON.parse(input);
     return true;

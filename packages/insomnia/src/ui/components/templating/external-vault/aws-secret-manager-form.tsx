@@ -22,13 +22,7 @@ const secretTypeOptions = [
 
 export const AWSSecretManagerForm = (props: AWSSecretManagerFormProps) => {
   const { formData, onChange } = props;
-  const {
-    SecretId,
-    SecretType,
-    VersionId = '',
-    VersionStage = '',
-    SecretKey = '',
-  } = formData;
+  const { SecretId, SecretType, VersionId = '', VersionStage = '', SecretKey = '' } = formData;
   const [showSecretKeyInput, setShowSecretKeyInput] = useState(SecretType === 'kv');
   const handleOnChange = (name: keyof AWSSecretConfig, newValue: string) => {
     const newConfig = {
@@ -40,7 +34,7 @@ export const AWSSecretManagerForm = (props: AWSSecretManagerFormProps) => {
       if (newValue === 'plaintext') {
         newConfig['SecretKey'] = '';
       }
-    };
+    }
     onChange(newConfig as unknown as AWSSecretConfig);
   };
   return (
@@ -52,11 +46,7 @@ export const AWSSecretManagerForm = (props: AWSSecretManagerFormProps) => {
             <HelpTooltip className="space-left">
               The ARN or name of the secret to retrieve. To retrieve a secret from another account, you must use an ARN.
             </HelpTooltip>
-            <input
-              name='SecretId'
-              defaultValue={SecretId}
-              onChange={e => handleOnChange('SecretId', e.target.value)}
-            />
+            <input name="SecretId" defaultValue={SecretId} onChange={e => handleOnChange('SecretId', e.target.value)} />
           </label>
         </div>
       </div>
@@ -68,7 +58,7 @@ export const AWSSecretManagerForm = (props: AWSSecretManagerFormProps) => {
               Optional unique identifier of the version of the secret to retrieve.
             </HelpTooltip>
             <input
-              name='VersionId'
+              name="VersionId"
               defaultValue={VersionId}
               onChange={e => handleOnChange('VersionId', e.target.value)}
             />
@@ -83,7 +73,7 @@ export const AWSSecretManagerForm = (props: AWSSecretManagerFormProps) => {
               Optional staging label of the version of the secret to retrieve.
             </HelpTooltip>
             <input
-              name='VersionStage'
+              name="VersionStage"
               defaultValue={VersionStage}
               onChange={e => handleOnChange('VersionStage', e.target.value)}
             />
@@ -95,7 +85,7 @@ export const AWSSecretManagerForm = (props: AWSSecretManagerFormProps) => {
           <label>
             Secret Type
             <select
-              name='SecretType'
+              name="SecretType"
               defaultValue={SecretType || 'plaintext'}
               onChange={e => handleOnChange('SecretType', e.target.value)}
             >
@@ -108,23 +98,21 @@ export const AWSSecretManagerForm = (props: AWSSecretManagerFormProps) => {
           </label>
         </div>
       </div>
-      {showSecretKeyInput &&
+      {showSecretKeyInput && (
         <div className="form-row">
           <div className="form-control">
             <label>
               Secret Key
-              <HelpTooltip className="space-left">
-                The secret key of the retrived key-value secrets.
-              </HelpTooltip>
+              <HelpTooltip className="space-left">The secret key of the retrived key-value secrets.</HelpTooltip>
               <input
-                name='SecretKey'
+                name="SecretKey"
                 defaultValue={SecretKey}
                 onChange={e => handleOnChange('SecretKey', e.target.value)}
               />
             </label>
           </div>
         </div>
-      }
+      )}
     </>
   );
 };

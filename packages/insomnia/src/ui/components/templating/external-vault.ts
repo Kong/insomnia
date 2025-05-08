@@ -1,8 +1,28 @@
 import type { CloudServiceSecretOption } from '../../../main/ipc/cloud-service-integration/cloud-service';
-import type { cloudServiceProviderAuthentication, getSecret } from '../../../main/ipc/cloud-service-integration/cloud-service';
-import type { HashiCorpVaultKVV1SecretValue, HashiCorpVaultKVV2SecretValue, HCPStaticSecretValue } from '../../../main/ipc/cloud-service-integration/hashicorp-service';
-import type { AWSSecretConfig, AzureSecretConfig, ExternalVaultConfig, GCPSecretConfig, HashiCorpSecretConfig, HashiCorpVaultKVV1SecretConfig, HashiCorpVaultKVV2SecretConfig, HCPSecretConfig } from '../../../main/ipc/cloud-service-integration/types';
-import type { CloudProviderCredential, CloudProviderName, HashiCorpCredentials } from '../../../models/cloud-credential';
+import type {
+  cloudServiceProviderAuthentication,
+  getSecret,
+} from '../../../main/ipc/cloud-service-integration/cloud-service';
+import type {
+  HashiCorpVaultKVV1SecretValue,
+  HashiCorpVaultKVV2SecretValue,
+  HCPStaticSecretValue,
+} from '../../../main/ipc/cloud-service-integration/hashicorp-service';
+import type {
+  AWSSecretConfig,
+  AzureSecretConfig,
+  ExternalVaultConfig,
+  GCPSecretConfig,
+  HashiCorpSecretConfig,
+  HashiCorpVaultKVV1SecretConfig,
+  HashiCorpVaultKVV2SecretConfig,
+  HCPSecretConfig,
+} from '../../../main/ipc/cloud-service-integration/types';
+import type {
+  CloudProviderCredential,
+  CloudProviderName,
+  HashiCorpCredentials,
+} from '../../../models/cloud-credential';
 import { invariant } from '../../../utils/invariant';
 export interface getExternalVaultOptions {
   provider: CloudProviderName;
@@ -13,9 +33,12 @@ export interface getExternalVaultOptions {
     authenticate?: typeof cloudServiceProviderAuthentication;
     models: {
       getById: (id: string) => Promise<CloudProviderCredential | null>;
-      update: (credential: CloudProviderCredential, patch: Partial<CloudProviderCredential>) => Promise<CloudProviderCredential>;
-    }
-  },
+      update: (
+        credential: CloudProviderCredential,
+        patch: Partial<CloudProviderCredential>,
+      ) => Promise<CloudProviderCredential>;
+    };
+  };
 }
 export const getExternalVault = async (options: getExternalVaultOptions) => {
   switch (options.provider) {
@@ -32,23 +55,25 @@ export const getExternalVault = async (options: getExternalVaultOptions) => {
   }
 };
 
-const handleCloudServiceRequest = async (cloudServiceContext: getExternalVaultOptions["cloudServiceContext"], name: 'authenticate' | 'getSecret', options: any) => {
+const handleCloudServiceRequest = async (
+  cloudServiceContext: getExternalVaultOptions['cloudServiceContext'],
+  name: 'authenticate' | 'getSecret',
+  options: any,
+) => {
   if (process.type === 'worker') {
     return await cloudServiceContext[name]!(options);
   } else if (process.type === 'renderer') {
     return await window.main.cloudService[name](options);
   }
   // running in inso or main
-  return (await import('insomnia/src/main/ipc/cloud-service-integration/cloud-service'))[name === 'authenticate' ? 'cloudServiceProviderAuthentication' : 'getSecret'](options);
-
+  return (await import('insomnia/src/main/ipc/cloud-service-integration/cloud-service'))[
+    name === 'authenticate' ? 'cloudServiceProviderAuthentication' : 'getSecret'
+  ](options);
 };
 
 export const getAWSSecret = async (options: getExternalVaultOptions) => {
   const { secretConfig, providerCredential, cloudServiceContext } = options;
-  const {
-    SecretId, VersionId, VersionStage, SecretKey,
-    SecretType = 'plaintext',
-  } = secretConfig as AWSSecretConfig;
+  const { SecretId, VersionId, VersionStage, SecretKey, SecretType = 'plaintext' } = secretConfig as AWSSecretConfig;
   if (!SecretId) {
     throw new Error('Get secret from AWS failed: Secret Name or ARN is required');
   }
@@ -56,7 +81,8 @@ export const getAWSSecret = async (options: getExternalVaultOptions) => {
     provider: 'aws',
     secretId: SecretId,
     config: {
-      VersionId, VersionStage,
+      VersionId,
+      VersionStage,
     },
     credentials: providerCredential.credentials,
   };
@@ -71,13 +97,12 @@ export const getAWSSecret = async (options: getExternalVaultOptions) => {
     try {
       parsedJSON = JSON.parse(SecretString || '{}');
     } catch (error) {
-      throw (`Get secret from AWS failed: Secret value ${SecretString} can not parsed to key/value pair, please change Secret Type to plaintext`);
+      throw `Get secret from AWS failed: Secret value ${SecretString} can not parsed to key/value pair, please change Secret Type to plaintext`;
     }
     if (SecretKey in parsedJSON) {
       return parsedJSON[SecretKey];
     }
-    throw (`Get secret from AWS failed: Secret key ${SecretKey} does not exist in key/value secret ${SecretString}`);
-
+    throw `Get secret from AWS failed: Secret key ${SecretKey} does not exist in key/value secret ${SecretString}`;
   } else {
     throw new Error(`Get secret from AWS failed: ${error?.errorMessage}`);
   }
@@ -101,7 +126,6 @@ export const getGCPSecret = async (options: getExternalVaultOptions) => {
     return result.value;
   }
   throw new Error(`Get secret from GCP failed: ${error?.errorMessage}`);
-
 };
 
 export const getAzureSecret = async (options: getExternalVaultOptions) => {
@@ -120,7 +144,7 @@ export const getAzureSecret = async (options: getExternalVaultOptions) => {
   const { success, error, result } = secretResult;
   if (success && result) {
     return result.value;
-  };
+  }
   throw new Error(`Get secret from Azure failed: ${error?.errorMessage}`);
 };
 
@@ -143,7 +167,7 @@ export const getHashiCorpSecret = async (options: getExternalVaultOptions) => {
     if (!secretEnginePath) {
       throw new Error('Secret Engine Path is required');
     }
-  };
+  }
   const getSecretOption: CloudServiceSecretOption = {
     provider: providerName,
     secretId: (secretConfig as HashiCorpSecretConfig).secretName,
@@ -153,7 +177,10 @@ export const getHashiCorpSecret = async (options: getExternalVaultOptions) => {
   // Check if the token is expired. 0 means the token never expires like root token
   const { expires_at } = credentials as HashiCorpCredentials;
   if (typeof expires_at === 'number' && expires_at !== 0 && expires_at < Date.now()) {
-    const authResponse = await handleCloudServiceRequest(cloudServiceContext, 'authenticate', { provider: providerName, credentials });
+    const authResponse = await handleCloudServiceRequest(cloudServiceContext, 'authenticate', {
+      provider: providerName,
+      credentials,
+    });
     const { success, result, error } = authResponse!;
     if (success && result) {
       const { access_token, expires_at } = result as { access_token: string; expires_at: number };
@@ -164,7 +191,8 @@ export const getHashiCorpSecret = async (options: getExternalVaultOptions) => {
       const patch = {
         credentials: {
           ...originHashiCorpCredential,
-          access_token, expires_at,
+          access_token,
+          expires_at,
         },
       } as { credentials: HashiCorpCredentials };
       await cloudServiceContext.models.update(originCredential, patch);
@@ -172,8 +200,8 @@ export const getHashiCorpSecret = async (options: getExternalVaultOptions) => {
     } else {
       // failed to get new token
       throw new Error(error?.errorMessage);
-    };
-  };
+    }
+  }
   const secretResult = await handleCloudServiceRequest(cloudServiceContext, 'getSecret', getSecretOption);
   const { success, error, result } = secretResult;
   if (success && result) {
@@ -187,7 +215,10 @@ export const getHashiCorpSecret = async (options: getExternalVaultOptions) => {
       // onPrem kv v1 secret value
       const { data } = result as HashiCorpVaultKVV1SecretValue;
       if (secretKey) {
-        invariant(secretKey in data, `Secret key ${secretKey} does not exist in kv secret data ${JSON.stringify(data)}`)
+        invariant(
+          secretKey in data,
+          `Secret key ${secretKey} does not exist in kv secret data ${JSON.stringify(data)}`,
+        );
         return data[secretKey];
       }
       return JSON.stringify(data);
@@ -196,11 +227,14 @@ export const getHashiCorpSecret = async (options: getExternalVaultOptions) => {
       const { data } = result as HashiCorpVaultKVV2SecretValue;
       const { data: secretV2Data } = data;
       if (secretKey) {
-        invariant(secretKey in secretV2Data, `Secret key ${secretKey} does not exist in kv secret data ${JSON.stringify(secretV2Data)}`)
+        invariant(
+          secretKey in secretV2Data,
+          `Secret key ${secretKey} does not exist in kv secret data ${JSON.stringify(secretV2Data)}`,
+        );
         return secretV2Data[secretKey];
       }
       return JSON.stringify(secretV2Data);
-    };
+    }
     return result.toString();
   }
   throw new Error(error?.errorMessage);

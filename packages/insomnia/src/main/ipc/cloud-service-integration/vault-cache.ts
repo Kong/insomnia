@@ -93,5 +93,4 @@ export class VaultCache<K = string, T = any> {
   getSize() {
     return this._cache.size;
   }
-
-};
+}

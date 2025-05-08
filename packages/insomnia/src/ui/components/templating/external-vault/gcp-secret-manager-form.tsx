@@ -12,17 +12,13 @@ export interface GCPSecretManagerFormProps {
 
 export const GCPSecretManagerForm = (props: GCPSecretManagerFormProps) => {
   const { formData, onChange } = props;
-  const {
-    secretName,
-    version = 'latest',
-  } = formData;
+  const { secretName, version = 'latest' } = formData;
   const handleOnChange = (name: keyof GCPSecretConfig, newValue: string) => {
     const newConfig = {
       ...formData,
       [name]: newValue,
     };
     onChange(newConfig as unknown as GCPSecretConfig);
-
   };
   return (
     <>
@@ -31,7 +27,7 @@ export const GCPSecretManagerForm = (props: GCPSecretManagerFormProps) => {
           <label>
             Secret Name
             <input
-              name='secretName'
+              name="secretName"
               defaultValue={secretName}
               onChange={e => handleOnChange('secretName', e.target.value)}
             />
@@ -45,11 +41,7 @@ export const GCPSecretManagerForm = (props: GCPSecretManagerFormProps) => {
             <HelpTooltip className="space-left">
               Optional version of the secret to retrieve, by default as latest.
             </HelpTooltip>
-            <input
-              name='version'
-              defaultValue={version}
-              onChange={e => handleOnChange('version', e.target.value)}
-            />
+            <input name="version" defaultValue={version} onChange={e => handleOnChange('version', e.target.value)} />
           </label>
         </div>
       </div>

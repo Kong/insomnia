@@ -42,11 +42,11 @@ export class GCPService implements ICloudService {
       } else {
         isValid = false;
         errorMessage = `Invalid JSON in file ${keyPath}`;
-      };
+      }
     } catch (error) {
       isValid = false;
       errorMessage = error.message || error.toString();
-    };
+    }
     return { isValid, errorMessage };
   }
 
@@ -101,7 +101,8 @@ export class GCPService implements ICloudService {
         credentials,
       });
       const fullPathSecretNamePattern = /^projects\/[a-z0-9-]+\/secrets\/[a-zA-Z0-9_-]+$/;
-      const fullPathSecretNameWithVersionPattern = /^projects\/[a-z0-9-]+\/secrets\/[a-zA-Z0-9_-]+\/versions\/[a-zA-Z0-9_-]+$/;
+      const fullPathSecretNameWithVersionPattern =
+        /^projects\/[a-z0-9-]+\/secrets\/[a-zA-Z0-9_-]+\/versions\/[a-zA-Z0-9_-]+$/;
       let finalSecretName: string;
       if (fullPathSecretNamePattern.test(secretName)) {
         // if secret name in pattern /projects/<project_id>/secrets/<secret_name> which is copied from gcp
@@ -135,4 +136,4 @@ export class GCPService implements ICloudService {
       };
     }
   }
-};
+}

@@ -13,14 +13,14 @@ export interface ArgConfigFormProps {
   docs: Record<string, BaseModel[]>;
 }
 const formTagNameMapping = {
-  'vault': ExternalVaultForm,
+  vault: ExternalVaultForm,
 };
 const isValidJSONObjectString = (input: string) => {
   if (isValidJSONString(input)) {
     const parsedContent = JSON.parse(input);
     // Check if the parsed JSON is an real object.
     return typeof parsedContent === 'object' && parsedContent !== null && !Array.isArray(parsedContent);
-  };
+  }
   return false;
 };
 export const couldRenderForm = (name: string) => name in formTagNameMapping;
