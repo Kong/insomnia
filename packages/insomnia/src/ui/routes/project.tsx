@@ -22,7 +22,6 @@ import {
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
   type ActionFunction,
-  defer,
   type LoaderFunction,
   redirect,
   useFetcher,
@@ -613,7 +612,7 @@ export const loader: LoaderFunction = async ({ params }) => {
     ? await models.gitRepository.getById(project.gitRepositoryId || '')
     : null;
 
-  return defer({
+  return {
     localFiles,
     learningFeaturePromise,
     remoteFilesPromise,
@@ -627,7 +626,7 @@ export const loader: LoaderFunction = async ({ params }) => {
     collectionsCount: localFiles.filter(file => file.scope === 'collection').length,
     mockServersCount: localFiles.filter(file => file.scope === 'mock-server').length,
     projectsSyncStatusPromise,
-  });
+  };
 };
 
 const ProjectRoute: FC = () => {
