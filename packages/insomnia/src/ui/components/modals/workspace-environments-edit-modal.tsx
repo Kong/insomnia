@@ -21,7 +21,6 @@ import {
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
 
 import { docsAfterResponseScript, docsTemplateTags } from '../../../common/documentation';
-import { debounce } from '../../../common/misc';
 import {
   type Environment,
   type EnvironmentKvPairData,
@@ -168,7 +167,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
     },
   ];
 
-  const debouncedHandleChange = debounce((value: EnvironmentInfo) => {
+  const handleEnvironmentChange = (value: EnvironmentInfo) => {
     if (environmentEditorRef.current?.isValid() && selectedEnvironment) {
       const { object, propertyOrder } = value;
 
@@ -187,7 +186,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
         },
       );
     }
-  }, 500);
+  };
 
   const handleKVPairChange = (kvPairData: EnvironmentKvPairData[]) => {
     if (selectedEnvironment) {
@@ -552,7 +551,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                       <EnvironmentEditor
                         ref={environmentEditorRef}
                         key={selectedEnvironment._id}
-                        onChange={debouncedHandleChange}
+                        onChange={handleEnvironmentChange}
                         environmentInfo={{
                           object: selectedEnvironment.data,
                           propertyOrder: selectedEnvironment.dataPropertyOrder,
