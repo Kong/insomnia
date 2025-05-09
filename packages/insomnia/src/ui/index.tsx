@@ -1185,6 +1185,9 @@ async function renderApp() {
     ],
     {
       initialEntries: [initialEntry],
+      future: {
+        v7_relativeSplatPath: true,
+      }
     },
   );
 
