@@ -1215,7 +1215,12 @@ async function renderApp() {
     match?.params.organizationId && localStorage.setItem('lastVisitedOrganizationId', match.params.organizationId);
   });
 
-  ReactDOM.createRoot(root).render(<RouterProvider router={router} />);
+  ReactDOM.createRoot(root).render(
+    <RouterProvider
+      future={{ v7_startTransition: true }}
+      router={router} 
+    />
+  );
 }
 
 renderApp();
