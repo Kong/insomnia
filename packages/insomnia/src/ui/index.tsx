@@ -1185,13 +1185,6 @@ async function renderApp() {
     ],
     {
       initialEntries: [initialEntry],
-      future: {
-        v7_relativeSplatPath: true,
-        v7_fetcherPersist: true,
-        v7_normalizeFormMethod: true,
-        v7_partialHydration: true,
-        v7_skipActionErrorRevalidation: true,
-      }
     },
   );
 
@@ -1221,7 +1214,6 @@ async function renderApp() {
 
   ReactDOM.createRoot(root).render(
     <RouterProvider
-      future={{ v7_startTransition: true }}
       router={router} 
     />
   );
