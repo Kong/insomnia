@@ -12,6 +12,7 @@ import type { RequestParameter } from '../../../models/request';
 import type { TemplateTag } from '../../../plugins';
 import type { PluginTemplateTag, RenderPurpose } from '../../../templating/types';
 import { invariant } from '../../../utils/invariant';
+import { isBase64String } from '../../../utils/string-check';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../../utils/url/querystring';
 import { fakerFunctions } from './faker-functions';
 
@@ -96,9 +97,17 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         const renderContext = context.renderPurpose as RenderPurpose;
         // Get secret from external vaults when send request or in tag-preview, otherwise return default mask value
         if (renderContext === 'preview' || renderContext === 'send') {
+          let parsedConfigStr = configStr;
           let secretConfig = {};
+          if (isBase64String(configStr)) {
+            parsedConfigStr = (process.type === 'renderer' || process.type === 'worker') ? 
+              // executed in renderer or webworker
+              atob(configStr) : 
+              // executed in Inso(Nodejs)
+              Buffer.from(configStr, 'base64').toString('utf8');
+          }
           try {
-            secretConfig = JSON.parse(configStr);
+            secretConfig = JSON.parse(parsedConfigStr);
           } catch (error) {
             throw new Error('Get secret from external vault failed: Invalid vault secret config');
           }

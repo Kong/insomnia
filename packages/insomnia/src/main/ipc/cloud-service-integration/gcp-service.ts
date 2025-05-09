@@ -4,7 +4,7 @@ import { readFileSync } from 'fs';
 import { GoogleAuth, type JWTInput } from 'google-auth-library';
 
 import type { CloudProviderName } from '../../../models/cloud-credential';
-import { isValidJSONString } from '../../../utils/json';
+import { isValidJSONString } from '../../../utils/string-check';
 import type { CloudServiceResult, GCPSecretConfig, ICloudService } from './types';
 
 export const providerName: CloudProviderName = 'gcp';

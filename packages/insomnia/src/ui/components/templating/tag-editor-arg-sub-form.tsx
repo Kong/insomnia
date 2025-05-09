@@ -2,7 +2,7 @@ import React from 'react';
 
 import type { BaseModel } from '../../../models';
 import type { NunjucksParsedTag } from '../../../templating/types';
-import { isValidJSONString } from '../../../utils/json';
+import { isBase64String, isValidJSONString } from '../../../utils/string-check';
 import { ExternalVaultForm } from './external-vault/external-vault-form';
 
 export interface ArgConfigFormProps {
@@ -15,23 +15,32 @@ export interface ArgConfigFormProps {
 const formTagNameMapping = {
   vault: ExternalVaultForm,
 };
-const isValidJSONObjectString = (input: string) => {
+
+const parseConfigValue = (input: string) => {
+  let parsedContent;
   if (isValidJSONString(input)) {
-    const parsedContent = JSON.parse(input);
-    // Check if the parsed JSON is an real object.
-    return typeof parsedContent === 'object' && parsedContent !== null && !Array.isArray(parsedContent);
+    parsedContent = JSON.parse(input);
+  } else if (isBase64String(input)) {
+    const decodedString = atob(input);
+    parsedContent = isValidJSONString(decodedString) ? JSON.parse(decodedString) : decodedString;
   }
-  return false;
+  // check the parsed content is a valid JSON object
+  const isValidConfigValue =
+    typeof parsedContent === 'object' && parsedContent !== null && !Array.isArray(parsedContent);
+  return {
+    isValid: isValidConfigValue,
+    parsedContent: JSON.stringify(parsedContent),
+  };
 };
 export const couldRenderForm = (name: string) => name in formTagNameMapping;
 
 export const ArgConfigSubForm = (props: ArgConfigFormProps) => {
-  const { configValue, activeTagDefinition } = props;
-  const tagName = activeTagDefinition.name as keyof typeof formTagNameMapping;
+  const { configValue, ...restProps } = props;
+  const tagName = props.activeTagDefinition.name as keyof typeof formTagNameMapping;
   const ConfigForm = formTagNameMapping[tagName];
-
-  if (ConfigForm && isValidJSONObjectString(configValue)) {
-    return <ConfigForm {...props} />;
+  const { isValid, parsedContent } = parseConfigValue(configValue);
+  if (ConfigForm && isValid) {
+    return <ConfigForm {...restProps} configValue={parsedContent} />;
   }
   return configValue;
 };

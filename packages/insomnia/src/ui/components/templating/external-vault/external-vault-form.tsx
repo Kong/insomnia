@@ -30,7 +30,7 @@ export const ExternalVaultForm = (props: ArgConfigFormProps) => {
   const selectedCredentialDoc = cloudCredentialDocs.find(d => d._id === selectedCredentialId);
 
   const handleFormChange = debounce((newConfig: ExternalVaultConfig) => {
-    const newFormValue = JSON.stringify(newConfig);
+    const newFormValue = btoa(JSON.stringify(newConfig));
     onChange(newFormValue);
   }, 500);
   let SubForm;
