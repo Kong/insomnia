@@ -1187,6 +1187,7 @@ async function renderApp() {
       initialEntries: [initialEntry],
       future: {
         v7_relativeSplatPath: true,
+        v7_fetcherPersist: true,
       }
     },
   );
