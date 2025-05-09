@@ -762,7 +762,7 @@ const ProjectRoute: FC = () => {
         }
 
         const activity = scopeToActivity(file.scope);
-        navigate(`/organization/${organizationId}/project/${projectId}/workspace/${file.id}/${activity}`);
+        return navigate(`/organization/${organizationId}/project/${projectId}/workspace/${file.id}/${activity}`);
       },
     }));
 
