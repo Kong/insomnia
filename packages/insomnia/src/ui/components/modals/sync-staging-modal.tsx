@@ -13,7 +13,7 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router';
 import { stringify } from 'yaml';
 
 import { all } from '../../../models';

@@ -11,7 +11,7 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { useFetcher, useParams, useRevalidator } from 'react-router-dom';
+import { useFetcher, useParams, useRevalidator } from 'react-router';
 import { useInterval } from 'react-use';
 
 import type { GitRepository } from '../../../models/git-repository';

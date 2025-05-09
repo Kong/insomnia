@@ -2,7 +2,7 @@ import '../css/styles.css';
 
 import type { IpcRendererEvent } from 'electron';
 import React, { useEffect, useState } from 'react';
-import { type LoaderFunction, Outlet, useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
+import { type LoaderFunction, Outlet, useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 
 import { isDevelopment } from '../../common/constants';
 import * as models from '../../models';

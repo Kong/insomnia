@@ -16,7 +16,7 @@ import {
   Tabs,
   ToggleButton,
 } from 'react-aria-components';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
 
 import type { ClientCertificate } from '../../../models/client-certificate';
 import type { WorkspaceLoaderData } from '../../routes/workspace';

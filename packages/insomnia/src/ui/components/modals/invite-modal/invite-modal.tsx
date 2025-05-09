@@ -12,7 +12,7 @@ import {
   ModalOverlay,
   TextField,
 } from 'react-aria-components';
-import { useFetcher, useParams, useSearchParams } from 'react-router-dom';
+import { useFetcher, useParams, useSearchParams } from 'react-router';
 
 import { getAccountId, getCurrentSessionId } from '../../../../account/session';
 import { getAppWebsiteBaseURL } from '../../../../common/constants';

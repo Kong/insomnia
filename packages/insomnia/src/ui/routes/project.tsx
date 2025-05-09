@@ -30,7 +30,7 @@ import {
   useNavigate,
   useParams,
   useRouteLoaderData,
-} from 'react-router-dom';
+} from 'react-router';
 import { useLocalStorage } from 'react-use';
 
 import { logout } from '../../account/session';

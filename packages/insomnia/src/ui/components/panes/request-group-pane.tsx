@@ -1,6 +1,6 @@
 import React, { type FC, useRef, useState } from 'react';
 import { Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router';
 
 import { type EnvironmentKvPairData, EnvironmentType, getDataFromKVPair } from '../../../models/environment';
 import type { Settings } from '../../../models/settings';

@@ -2,7 +2,7 @@ import './rendererListeners';
 
 import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
-import { createMemoryRouter, matchPath, Outlet, RouterProvider } from 'react-router-dom';
+import { createMemoryRouter, matchPath, Outlet, RouterProvider } from 'react-router';
 
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from '../account/session';
 import {

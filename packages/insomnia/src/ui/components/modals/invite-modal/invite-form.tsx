@@ -9,7 +9,7 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { useFetcher, useParams, useSearchParams } from 'react-router-dom';
+import { useFetcher, useParams, useSearchParams } from 'react-router';
 
 import { getCurrentSessionId } from '../../../../account/session';
 import { debounce } from '../../../../common/misc';

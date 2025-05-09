@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useFetcher, useNavigate, useParams } from 'react-router-dom';
+import { useFetcher, useNavigate, useParams } from 'react-router';
 
 import { isNotNullOrUndefined } from '../../../common/misc';
 import type { RequestGroup } from '../../../models/request-group';

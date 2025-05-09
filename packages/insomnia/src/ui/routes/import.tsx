@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import type { ActionFunction } from 'react-router-dom';
+import type { ActionFunction } from 'react-router';
 
 import type { PostmanDataDumpRawData } from '../../common/import';
 import {

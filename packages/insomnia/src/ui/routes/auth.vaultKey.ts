@@ -1,6 +1,6 @@
 import * as srp from '@getinsomnia/srp-js';
 import { ipcRenderer } from 'electron';
-import { type ActionFunction } from 'react-router-dom';
+import { type ActionFunction } from 'react-router';
 
 import { userSession as sessionModel } from '../../models';
 import { removeAllSecrets } from '../../models/environment';

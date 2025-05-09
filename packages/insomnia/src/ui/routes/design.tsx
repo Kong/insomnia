@@ -39,7 +39,7 @@ import {
   useLoaderData,
   useParams,
   useRouteLoaderData,
-} from 'react-router-dom';
+} from 'react-router';
 import { useUnmount } from 'react-use';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
 import YAML from 'yaml';

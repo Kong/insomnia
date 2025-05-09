@@ -12,7 +12,7 @@ import {
   SelectValue,
   useDragAndDrop,
 } from 'react-aria-components';
-import { type LoaderFunction, redirect, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { type LoaderFunction, redirect, useFetcher, useParams, useRouteLoaderData } from 'react-router';
 
 import { database } from '../../common/database';
 import { documentationLinks } from '../../common/documentation';

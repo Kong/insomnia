@@ -1,7 +1,7 @@
 import React, { type FC, Fragment, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router';
 import { useLocalStorage } from 'react-use';
 
 import { getContentTypeFromHeaders } from '../../../common/constants';

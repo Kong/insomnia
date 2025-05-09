@@ -22,7 +22,7 @@ import {
   useNavigate,
   useParams,
   useRouteLoaderData,
-} from 'react-router-dom';
+} from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import * as models from '../../models';

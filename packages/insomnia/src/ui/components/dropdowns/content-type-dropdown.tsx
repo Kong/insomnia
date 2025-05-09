@@ -11,7 +11,7 @@ import {
   Select,
   SelectValue,
 } from 'react-aria-components';
-import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router';
 
 import {
   CONTENT_TYPE_EDN,
