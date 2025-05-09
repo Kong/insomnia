@@ -14,7 +14,7 @@ const RFC_3986_SUB_DELIMITERS = '$+,;='; // (unintentionally?) missing: !&'()*
 const URL_PATH_CHARACTER_WHITELIST = `${RFC_3986_GENERAL_DELIMITERS}${RFC_3986_SUB_DELIMITERS}`;
 
 interface IQueryStringOptions {
-  // Option to distingush between parameters with(&foo=) and without(&foo) equal signs. Both are converted to empty string by default.
+  // Option to distinguish between parameters with(&foo=) and without(&foo) equal signs. Both are converted to empty string by default.
   strictNullHandling?: boolean;
   // Option to encode parameters, default to true, necessary to disable for request.settingEncodeUrl = false
   encodeParams?: boolean;
@@ -80,7 +80,7 @@ export const buildQueryParameter = (
 
   /** allow empty names and values */
   strict?: boolean,
-  /** extra options like strict hanlde null value */
+  /** extra options like strict handle null value */
   options?: IQueryStringOptions,
 ) => {
   strict = strict === undefined ? true : strict;
@@ -101,8 +101,8 @@ export const buildQueryParameter = (
     if (!encodeParams) {
       return `${param.name}=${param.value}`;
     }
-    // Don't encode ',' in values
-    const value = flexibleEncodeComponent(param.value || '').replace(/%2C/gi, ',');
+    // Don't encode ',' in values, the original proposal was to keep values like 'foo,bar' intact
+    const value = flexibleEncodeComponent(param.value || '', ',');
     const name = flexibleEncodeComponent(param.name || '');
 
     return `${name}=${value}`;
@@ -117,7 +117,7 @@ export const buildQueryStringFromParams = (
   parameters: { name: string; value?: StrictNullSearchParamsValueType }[],
   /** allow empty names and values */
   strict?: boolean,
-  /** extra options like strict hanlde null value */
+  /** extra options like strict handle null value */
   options?: IQueryStringOptions,
 ) => {
   strict = strict === undefined ? true : strict;
@@ -142,14 +142,16 @@ export const buildQueryStringFromParams = (
  */
 export const deconstructQueryStringToParams = <T extends IQueryStringOptions>(
   qs?: string,
-
   /** allow empty names and values */
   strict?: boolean,
-  /** extra deconstruct options like strict hanlde null value */
-  options?: T,
+  /** extra deconstruct options like strict handle null value */
+  options?: T & {
+    /** skip decode the querystring */
+    skipDecode?: boolean;
+  },
 ): ProcessDeconstructFuncReturnType<T> => {
   strict = strict === undefined ? true : strict;
-  const { strictNullHandling = false } = options || {};
+  const { strictNullHandling = false, skipDecode = false } = options || {};
   const pairs: ProcessDeconstructFuncReturnType<T> = [];
   type ValueType = (typeof pairs)[number]['value'];
 
@@ -167,7 +169,7 @@ export const deconstructQueryStringToParams = <T extends IQueryStringOptions>(
 
     let name = '';
     try {
-      name = decodeURIComponent(encodedName || '');
+      name = skipDecode ? encodedName : decodeURIComponent(encodedName || '');
     } catch (error) {
       // Just leave it
       name = encodedName;
@@ -175,7 +177,12 @@ export const deconstructQueryStringToParams = <T extends IQueryStringOptions>(
 
     let value: ValueType = '';
     try {
-      value = strictNullHandling && encodedValue === null ? null : decodeURIComponent(encodedValue || '');
+      value =
+        strictNullHandling && encodedValue === null
+          ? null
+          : skipDecode
+            ? encodedValue
+            : decodeURIComponent(encodedValue || '');
     } catch (error) {
       // Just leave it
       value = encodedValue;
@@ -200,7 +207,7 @@ export const deconstructQueryStringToParams = <T extends IQueryStringOptions>(
 export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQueryStringOptions) => {
   // Default autoEncode = true if not passed
   encode = encode === undefined ? true : encode;
-  // Default do not strcit handle null value
+  // Default do not strict handle null value
   const { strictNullHandling = false } = options || {};
   const urlWithProto = setDefaultProtocol(url);
 
@@ -224,16 +231,11 @@ export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQuerySt
   // ~~~~~~~~~~~~~~ //
 
   if (parsedUrl.query) {
-    const qsParams = deconstructQueryStringToParams(parsedUrl.query, true, { strictNullHandling });
-    const encodedQsParams = [];
-    for (const { name, value } of qsParams) {
-      encodedQsParams.push({
-        name: flexibleEncodeComponent(name),
-        value: strictNullHandling && value === null ? null : flexibleEncodeComponent(value as string),
-      });
-    }
+    // Skip decode if already encoded, to avoid some decoded characters cannot be encoded again.
+    // E.g. %4E -> N, encodeURIComponent(decodeURIComponent('%4E')) is N which is not expected.
+    const qsParams = deconstructQueryStringToParams(parsedUrl.query, true, { strictNullHandling, skipDecode: true });
 
-    parsedUrl.query = buildQueryStringFromParams(encodedQsParams, true, { strictNullHandling });
+    parsedUrl.query = buildQueryStringFromParams(qsParams, true, { strictNullHandling });
     parsedUrl.search = `?${parsedUrl.query}`;
   }
 
@@ -245,10 +247,7 @@ export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQuerySt
  * @param str string to encode
  * @param ignore characters to ignore
  */
-export const flexibleEncodeComponent = (str = '', ignore = '') => {
-  // Sometimes spaces screw things up because of url.parse
-  str = str.replace(/%20/g, ' ');
-
+const flexibleEncodeComponent = (str = '', ignore = '') => {
   // Handle all already-encoded characters so we don't touch them
   str = str.replace(/%([0-9a-fA-F]{2})/g, '__ENC__$1');
 

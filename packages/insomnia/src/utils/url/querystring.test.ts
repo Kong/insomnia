@@ -69,7 +69,7 @@ describe('querystring', () => {
     });
   });
 
-  describe('build()', () => {
+  describe('buildQueryParameter()', () => {
     it('builds simple param', () => {
       const str = buildQueryParameter({ name: 'foo', value: 'bar??' });
       expect(str).toBe('foo=bar%3F%3F');
@@ -85,6 +85,21 @@ describe('querystring', () => {
       expect(str).toBe('foo');
     });
 
+    it('builds param with encoded value and name', () => {
+      const str = buildQueryParameter({ name: 'foo%11%09%2A%9D%0F', value: 'bar%11%09%2A%9D%0F' });
+      expect(str).toBe('foo%11%09%2A%9D%0F=bar%11%09%2A%9D%0F');
+    });
+
+    it('builds param with null value and disable strict', () => {
+      const str = buildQueryParameter({ name: 'foo', value: null }, false);
+      expect(str).toBe('foo=');
+    });
+
+    it('builds param with spaces', () => {
+      const str = buildQueryParameter({ name: 'foo bar', value: 'baz qux' });
+      expect(str).toBe('foo%20bar=baz%20qux');
+    });
+
     it('builds param with null value and enable strictNullHandling', () => {
       const str = buildQueryParameter({ name: 'foo', value: null }, true, { strictNullHandling: true });
       expect(str).toBe('foo');
@@ -93,6 +108,11 @@ describe('querystring', () => {
     it('builds param with empty string value', () => {
       const str = buildQueryParameter({ name: 'foo', value: '' });
       expect(str).toBe('foo');
+    });
+
+    it('builds param with empty string value and disable strict', () => {
+      const str = buildQueryParameter({ name: 'foo', value: '' }, false);
+      expect(str).toBe('foo=');
     });
 
     it('builds param with empty string value and enable strictNullHandling', () => {
@@ -112,9 +132,34 @@ describe('querystring', () => {
       expect(str).toBe('number=10');
       expect(str2).toBe('number=0');
     });
+
+    it('builds param ignore commas in the value', () => {
+      const str = buildQueryParameter({ name: 'foo,', value: '1,2,3' });
+      expect(str).toBe('foo%2C=1,2,3');
+    });
+
+    it('builds param without decode the commas back', () => {
+      const str = buildQueryParameter({ name: 'foo', value: '1%2C' });
+      expect(str).toBe('foo=1%2C');
+    });
+
+    it.fails('build query param with __ENC__ returns incorrect result', () => {
+      const str = buildQueryParameter({ name: 'foo', value: '__ENC__11' });
+      expect(str).toBe('foo=__ENC__11');
+    });
+
+    it.fails('build query param with __RAW__ returns incorrect result', () => {
+      const str = buildQueryParameter({ name: 'foo', value: '__RAW__22' });
+      expect(str).toBe('foo=__RAW__22');
+    });
+
+    it.fails('build query param with __RAW__AA throws error', () => {
+      const str = buildQueryParameter({ name: 'foo', value: '__RAW__AA' });
+      expect(str).toBe(expect.anything());
+    });
   });
 
-  describe('buildFromParams()', () => {
+  describe('buildQueryStringFromParams()', () => {
     it('builds from params', () => {
       const str = buildQueryStringFromParams([
         { name: 'foo', value: 'bar??' },
@@ -128,6 +173,7 @@ describe('querystring', () => {
 
       expect(str).toBe('foo=bar%3F%3F&foo1&foo2&hello&hi%20there=bar%3F%3F');
     });
+
     it('builds from params', () => {
       const str = buildQueryStringFromParams(
         [
@@ -142,6 +188,7 @@ describe('querystring', () => {
 
       expect(str).toBe('foo=bar%3F%3F&hello=&hi%20there=bar%3F%3F&=bar%3F%3F&=');
     });
+
     it('builds from params with strict mode and strictNullHandling', () => {
       const str = buildQueryStringFromParams(
         [
@@ -161,7 +208,7 @@ describe('querystring', () => {
     });
   });
 
-  describe('deconstructToParams()', () => {
+  describe('deconstructQueryStringToParams()', () => {
     it('builds from params', () => {
       const str = deconstructQueryStringToParams('foo=bar%3F%3F&hello&hi%20there=bar%3F%3F&=&=val');
 
@@ -171,6 +218,7 @@ describe('querystring', () => {
         { name: 'hi there', value: 'bar??' },
       ]);
     });
+
     it('builds from params with =', () => {
       const str = deconstructQueryStringToParams('foo=bar&1=2=3=4&hi');
 
@@ -200,6 +248,18 @@ describe('querystring', () => {
         { name: 'foo', value: 'bar' },
         { name: 'foo1', value: null },
         { name: 'foo2', value: '' },
+      ]);
+    });
+
+    it('builds from params with skipDecode', () => {
+      const str = deconstructQueryStringToParams('foo=bar%3F%3F&hello&hi%20there=bar%3F%3F&=&=val', true, {
+        skipDecode: true,
+      });
+
+      expect(str).toEqual([
+        { name: 'foo', value: 'bar%3F%3F' },
+        { name: 'hello', value: '' },
+        { name: 'hi%20there', value: 'bar%3F%3F' },
       ]);
     });
   });
@@ -289,6 +349,16 @@ describe('querystring', () => {
         strictNullHandling: true,
       });
       expect(urlNoEqualSign2).toBe('https://google.com/terminologies?foo=bar&foo1');
+    });
+
+    it('should not decode value back', () => {
+      expect(
+        smartEncodeUrl(
+          'https://google.com/?text=%4E%C3%A4%72%20%6D%61%6E%20%74%65%73%74%61%72%20%74%65%73%74%61%72%20%6D%61%6E',
+        ),
+      ).toBe(
+        'https://google.com/?text=%4E%C3%A4%72%20%6D%61%6E%20%74%65%73%74%61%72%20%74%65%73%74%61%72%20%6D%61%6E',
+      );
     });
   });
 });
