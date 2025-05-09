@@ -525,7 +525,19 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                               defaultChecked={editCookie.httpOnly || false}
                               onChange={event => setEditCookie({ ...editCookie, httpOnly: event.target.checked })}
                             />
-                            httpOnly
+                            HttpOnly
+                          </label>
+                        </div>
+                        <div className="grid w-full grid-cols-2 gap-2">
+                          <label className="flex items-center gap-1">
+                            <input
+                              className="space-left"
+                              type="checkbox"
+                              name="hostOnly"
+                              defaultChecked={editCookie.hostOnly || false}
+                              onChange={event => setEditCookie({ ...editCookie, hostOnly: event.target.checked })}
+                            />
+                            HostOnly
                           </label>
                         </div>
                       </TabPanel>
@@ -540,8 +552,9 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                                   // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
                                   const parsed = ToughCookie.parse(event.target.value, { loose: true })?.toJSON();
                                   if (parsed) {
-                                    // Make sure cookie has an id
+                                    // Make sure cookie has an id and keep its host-only-flag
                                     parsed.id = editCookie.id;
+                                    parsed.hostOnly = editCookie.hostOnly;
                                     setEditCookie(parsed as Cookie);
                                   }
                                 } catch (err) {
