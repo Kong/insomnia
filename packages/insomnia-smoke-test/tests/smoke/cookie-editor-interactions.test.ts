@@ -59,6 +59,33 @@ test.describe('Cookie editor', () => {
     await expect.soft(page.getByText('foo2=bar2')).toBeVisible();
   });
 
+  test('support __Host- prefix', async ({ page }) => {
+    // Open cookie editor
+    await page.click('button:has-text("Cookies")');
+
+    // Create a new cookie
+    await page.getByRole('button', { name: 'Add Cookie' }).click();
+
+    // Edit the new cookie
+    await page.getByRole('button', { name: 'Edit' }).first().click();
+    await page.getByText('HostOnly').click();
+    await expect.soft(page.locator('input[name="hostOnly"]')).toBeChecked();
+    await page.getByRole('tab', { name: 'Raw' }).click();
+    await page
+      .locator('text=Raw Cookie String >> input[type="text"]')
+      .fill('__Host-foo=bar; Expires=Tue, 19 Jan 2038 03:14:07 GMT; Secure; Domain=localhost; Path=/');
+    await page.locator('text=Done').nth(1).click();
+    await page.click('text=Done');
+
+    // Send request
+    await page.getByLabel('Request Collection').getByTestId('example http').press('Enter');
+    await page.click('[data-testid="request-pane"] button:has-text("Send")');
+
+    // Check in the timeline that the cookie was sent
+    await page.getByRole('tab', { name: 'Console' }).click();
+    await expect.soft(page.getByText('__Host-foo=bar')).toBeVisible();
+  });
+
   test('cookie list should update when cookie is updated', async ({ page }) => {
     // Open cookie editor
     await page.click('button:has-text("Cookies")');
