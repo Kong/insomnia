@@ -103,6 +103,7 @@ test.describe('Environment Editor', () => {
     const secondRow = kvTable.getByRole('option').nth(1);
     await secondRow.getByTestId('OneLineEditor').first().click();
     await page.keyboard.type('exampleObject');
+    await page.waitForTimeout(500);
     // change type to json
     await secondRow.getByRole('button', { name: 'Type Selection' }).click();
     await page.getByRole('menuitemradio', { name: 'JSON' }).click();
