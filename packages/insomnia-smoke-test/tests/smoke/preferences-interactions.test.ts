@@ -44,7 +44,6 @@ test('Check filter responses by environment preference', async ({ app, page }) =
 test('Enable http and https proxies', async ({ app, page }) => {
   const responsePane = page.getByTestId('response-pane');
 
-  // Set filter responses by environment
   await page.getByTestId('settings-button').click();
   await page.locator('text=Insomnia Preferences').first().click();
   await page.locator('[name="timeout"]').fill('1000');
@@ -55,7 +54,6 @@ test('Enable http and https proxies', async ({ app, page }) => {
   await page.locator('[name="httpsProxy"]').fill('127.0.0.1:2222');
   await page.locator('[name="noProxy"]').fill('');
   await page.locator('.app').press('Escape');
-  // await page.waitForTimeout(1000);
 
   const text = await loadFixture('simple.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
