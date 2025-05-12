@@ -48,6 +48,23 @@ collection:
         send: true
         store: true
       rebuildPath: true
+  - url: http://localhost:4010/pets/1
+    name: proxyEnabled
+    meta:
+      id: req_49f06ac9024446728a9765162d56b95b
+      created: 1666867365377
+      modified: 1666867670885
+      isPrivate: false
+    method: GET
+    scripts: {}
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
   - url: http://localhost:4010/graphql
     name: example graphql
     meta:
