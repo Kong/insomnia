@@ -57,7 +57,10 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProject }:
       doc.parentId = remoteProject._id;
       workspaceId = doc._id;
     }
-    await database.upsert(doc);
+    const allModelType = models.types();
+    if (allModelType.includes(doc.type)) {
+      await database.upsert(doc);
+    }
   }
 
   await database.flushChanges(flushId);
