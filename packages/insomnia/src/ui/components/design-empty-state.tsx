@@ -80,7 +80,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
                   onImport(spec.exampleOpenApiSpec);
                 }}
               >
-                start from an example
+                start from boilerplate
               </Button>
             </span>
           </p>
