@@ -209,7 +209,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
     await GitVCS.setAuthor();
     await GitVCS.addRemote(uri);
 
-    let legacyInsomniaWorkspace = null;
+    let legacyInsomniaWorkspace;
     if (!workspaceId) {
       legacyInsomniaWorkspace = await containsLegacyInsomniaDir({ fsClient });
     }

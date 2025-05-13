@@ -13,6 +13,10 @@ export type GitRepoLoaderData =
       branch: string;
       branches: string[];
       gitRepository: GitRepository | null;
+      legacyInsomniaWorkspace?: {
+        scope: WorkspaceScope;
+        name: string;
+      };
     }
   | {
       errors: string[];
