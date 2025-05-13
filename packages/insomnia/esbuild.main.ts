@@ -132,10 +132,10 @@ export default async function build(options: Options) {
       }
     };
 
-    startElectron();
     const preloadWatch = await preloadContext.watch();
     const mainWatch = await mainContext.watch();
     const hiddenWindowWatch = await hiddenPreloadContext.watch();
+    startElectron();
     return Promise.all([preloadWatch, mainWatch, hiddenWindowWatch]);
   }
   const preload = esbuild.build(preloadBuildOptions);
