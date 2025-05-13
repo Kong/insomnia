@@ -107,7 +107,6 @@ const openWebSocketConnection = async (
   _event: Electron.IpcMainInvokeEvent,
   options: OpenWebSocketRequestOptions,
 ): Promise<void> => {
-  console.log('websocket.open', options);
   const existingConnection = WebSocketConnections.get(options.requestId);
 
   if (existingConnection) {
