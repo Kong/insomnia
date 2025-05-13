@@ -1,4 +1,6 @@
 import { autoUpdater, BrowserWindow, dialog } from 'electron';
+import { promises as fsPromise } from 'fs';
+import path from 'path';
 
 import { CHECK_FOR_UPDATES_INTERVAL, getAppId, getAppVersion, isDevelopment, UpdateURL } from '../common/constants';
 import { delay } from '../common/misc';
@@ -51,7 +53,27 @@ const _sendUpdateStatus = (status: UpdateStatus) => {
   }
 };
 
+const isNsisInstaller = async () => {
+  if (process.platform !== 'win32') {
+    return;
+  }
+  console.log('process.execPath', process.execPath);
+  try {
+    const installDir = path.dirname(process.execPath);
+    const flagFilePath = path.join(installDir, 'installer-info.json');
+
+    const content = await fsPromise.readFile(flagFilePath, 'utf-8');
+    const json = JSON.parse(content);
+    console.log('installer type', json.installer);
+    return typeof json.installer === 'string' ? json.installer : null;
+  } catch (err) {
+    console.warn('Failed to read installer-info.json:', err);
+    return null;
+  }
+};
+
 export const init = async () => {
+  isNsisInstaller();
   autoUpdater.on('error', error => {
     console.warn(`[updater] Error: ${error.message}`);
     _sendUpdateStatus('Update Error');
