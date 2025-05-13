@@ -43,8 +43,13 @@ export function renderInWorker({
     const messageHandler = (event: MessageEvent) => {
       if (event.data.id === id) {
         worker.removeEventListener('message', messageHandler);
-        if (event.data.err) {
-          const error = new RenderError(event.data.err);
+        const workerError = event.data.err;
+        if (workerError) {
+          const error = new RenderError(workerError.message);
+          if (error instanceof RenderError) {
+            error.path = workerError.path || '';
+            error.location = workerError.location;
+          }
           error.type = 'render';
           const undefinedEnvironmentVariables = extractUndefinedVariableKey(input, newContext);
           if (undefinedEnvironmentVariables.length > 0) {
