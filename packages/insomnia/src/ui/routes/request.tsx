@@ -593,6 +593,7 @@ export const sendActionImplementation = async (options: {
     runtime,
   );
   if ('error' in mutatedContext) {
+    window.main.completeExecutionStep({ requestId });
     throw {
       // create response with error info, so that we can store response in db and show it in response viewer
       response: {
