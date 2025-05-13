@@ -96,7 +96,7 @@ npm test
 npm run dev
 
 # Start App with both renderer process live reload and main process auto restart
-npm run dev:main-watch 
+npm run dev:autoRestart
 ```
 
 ### Linux

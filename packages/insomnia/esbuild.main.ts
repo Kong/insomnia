@@ -8,14 +8,14 @@ import pkg from './package.json';
 
 interface Options {
   mode?: 'development' | 'production';
-  watch?: boolean;
+  autoRestart?: boolean;
 }
 
 export default async function build(options: Options) {
   const mode = options.mode || 'production';
   const __DEV__ = mode !== 'production';
   const PORT = pkg.dev['dev-server-port'];
-  const watch = options.watch || false;
+  const autoRestart = options.autoRestart || false;
 
   const outdir = __DEV__ ? path.join(__dirname, 'src') : path.join(__dirname, 'build');
 
@@ -75,11 +75,19 @@ export default async function build(options: Options) {
     ],
   };
 
-  if (__DEV__ && watch) {
+  let electronProcess: ChildProcess;
+  const startElectron = () => {
+    electronProcess = spawn('electron', ['--inspect=5858', '.'], {
+      stdio: 'inherit',
+      env: process.env,
+      shell: true,
+    });
+  };
+
+  if (__DEV__ && autoRestart) {
     // build script with auto reload
     console.log('[Dev Build] Watching for main process changes...');
     let buildCount = 0;
-    let electronProcess: ChildProcess;
     const restartElectronPlugin = (scriptName: string): Plugin => ({
       name: 'restart-electron',
       setup: build => {
@@ -88,7 +96,11 @@ export default async function build(options: Options) {
         });
         build.onEnd(() => {
           buildCount++;
-          if (buildCount > 3) {
+          // first build after main/preload/hiddenWindows is built
+          if (buildCount === 3) {
+            console.log('[Dev Build] Build complete, start Electron');
+            startElectron();
+          } else if (buildCount > 3) {
             console.log(`[Dev Build] Finish rebuilding ${scriptName}, restarting Electron`);
             restartElectronProcess();
           } else {
@@ -110,14 +122,6 @@ export default async function build(options: Options) {
       plugins: [restartElectronPlugin('hidden-browser-window-preload')],
     });
 
-    const startElectron = () => {
-      electronProcess = spawn('electron', ['--inspect=5858', '.'], {
-        stdio: 'inherit',
-        env: process.env,
-        shell: true,
-      });
-    };
-
     const restartElectronProcess = () => {
       console.log('[Dev Build] Start restarting Electron');
 
@@ -135,15 +139,19 @@ export default async function build(options: Options) {
     const preloadWatch = await preloadContext.watch();
     const mainWatch = await mainContext.watch();
     const hiddenWindowWatch = await hiddenPreloadContext.watch();
-    startElectron();
     return Promise.all([preloadWatch, mainWatch, hiddenWindowWatch]);
   }
   const preload = esbuild.build(preloadBuildOptions);
   const hiddenBrowserWindowPreload = esbuild.build(hiddenBrowserWindowPreloadBuildOptions);
   const main = esbuild.build(mainBuildOptions);
-  return Promise.all([main, preload, hiddenBrowserWindowPreload]).catch(err => {
-    console.error('[Build] Build failed:', err);
-  });
+  return Promise.all([main, preload, hiddenBrowserWindowPreload])
+    .catch(err => {
+      console.error('[Build] Build failed:', err);
+    })
+    .then(() => {
+      console.log('[Dev Build] Build complete, start Electron');
+      startElectron();
+    });
 }
 
 // Build if ran as a cli script
@@ -151,6 +159,6 @@ const isMain = require.main === module;
 
 if (isMain) {
   const mode = process.env.NODE_ENV === 'development' ? 'development' : 'production';
-  const watch = process.argv.includes('--watch');
-  build({ mode, watch });
+  const autoRestart = process.argv.includes('--autoRestart');
+  build({ mode, autoRestart });
 }
