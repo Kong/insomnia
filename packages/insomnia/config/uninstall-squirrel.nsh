@@ -15,6 +15,6 @@
   DetailPrint "Creating installer-info.json..."
 
   FileOpen $0 "$INSTDIR\installer-info.json" w
-  FileWrite $0 "{`"installer`": `"nsis`"}"
+  FileWrite $0 '{"installer": "nsis"}'
   FileClose $0
 !macroend
