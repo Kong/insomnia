@@ -84,6 +84,9 @@ const config = {
         target: 'nsis',
         arch: ['x64'],
       },
+      {
+        target: 'squirrel',
+      }
     ],
     signtoolOptions: {
       sign: './customSign.js',
@@ -95,7 +98,7 @@ const config = {
     },
   },
   nsis: {
-    artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
+    artifactName: `${BINARY_PREFIX}-nsis-\${version}.\${ext}`,
     include: './config/uninstall-squirrel.nsh',
     oneClick: false,
     selectPerMachineByDefault: true,
@@ -108,6 +111,10 @@ const config = {
     createStartMenuShortcut: true,
     shortcutName: 'Insomnia',
     deleteAppDataOnUninstall: false,
+  },
+  squirrelWindows: {
+    artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
+    iconUrl: 'https://github.com/kong/insomnia/blob/develop/packages/insomnia/src/icons/icon.ico?raw=true',
   },
   portable: {
     artifactName: `${BINARY_PREFIX}-\${version}-portable.\${ext}`,
@@ -155,16 +162,16 @@ const config = {
   },
 };
 
-const {
-  env: { BUILD_TARGETS },
-  platform,
-} = process;
-const targets = BUILD_TARGETS?.split(',');
-if (platform && targets) {
-  console.log('overriding build targets to: ', targets);
-  const PLATFORM_MAP = { darwin: 'mac', linux: 'linux', win32: 'win' };
-  config[PLATFORM_MAP[platform]].target = config[PLATFORM_MAP[platform]].target.filter(({ target }) =>
-    targets.includes(target),
-  );
-}
+// const {
+//   env: { BUILD_TARGETS },
+//   platform,
+// } = process;
+// const targets = BUILD_TARGETS?.split(',');
+// if (platform && targets) {
+//   console.log('overriding build targets to: ', targets);
+//   const PLATFORM_MAP = { darwin: 'mac', linux: 'linux', win32: 'win' };
+//   config[PLATFORM_MAP[platform]].target = config[PLATFORM_MAP[platform]].target.filter(({ target }) =>
+//     targets.includes(target),
+//   );
+// }
 module.exports = config;
