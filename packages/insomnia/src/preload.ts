@@ -77,6 +77,7 @@ const git: GitServiceAPI = {
   unstageChanges: options => ipcRenderer.invoke('git.unstageChanges', options),
   diffFileLoader: options => ipcRenderer.invoke('git.diffFileLoader', options),
   getRepositoryDirectoryTree: options => ipcRenderer.invoke('git.getRepositoryDirectoryTree', options),
+  migrateLegacyInsomniaFolderToFile: options => ipcRenderer.invoke('git.migrateLegacyInsomniaFolderToFile', options),
 
   initSignInToGitHub: () => ipcRenderer.invoke('git.initSignInToGitHub'),
   completeSignInToGitHub: options => ipcRenderer.invoke('git.completeSignInToGitHub', options),

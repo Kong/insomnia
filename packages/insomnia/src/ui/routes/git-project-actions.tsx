@@ -453,3 +453,10 @@ export const getRepositoryDirectoryTree: ActionFunction = async ({ params }) => 
 
   return window.main.git.getRepositoryDirectoryTree({ projectId });
 };
+
+export const migrateLegacyInsomniaFolderToFile: ActionFunction = async ({ params }) => {
+  const { projectId } = params;
+  invariant(projectId, 'Project ID is required');
+
+  return window.main.git.migrateLegacyInsomniaFolderToFile({ projectId });
+};

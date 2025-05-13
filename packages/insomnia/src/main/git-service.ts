@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'crypto';
 import { shell } from 'electron';
 import { app, net } from 'electron/main';
 import { fromUrl } from 'hosted-git-info';
-import { Errors, type PromiseFsClient } from 'isomorphic-git';
+import { Errors, type FsClient, type PromiseFsClient } from 'isomorphic-git';
 import path from 'path';
 import { v4 } from 'uuid';
 import YAML, { parse } from 'yaml';
@@ -209,10 +209,16 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
     await GitVCS.setAuthor();
     await GitVCS.addRemote(uri);
 
+    let legacyInsomniaWorkspace = null;
+    if (!workspaceId) {
+      legacyInsomniaWorkspace = await containsLegacyInsomniaDir({ fsClient });
+    }
+
     return {
       branch: await GitVCS.getCurrentBranch(),
       branches: await GitVCS.listBranches(),
       gitRepository,
+      legacyInsomniaWorkspace,
     };
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Error while fetching git repository.';
@@ -328,7 +334,7 @@ export const gitChangesLoader = async ({
       branch,
       changes,
     };
-  } catch (e) {
+  } catch {
     return {
       branch: '',
       changes: {
@@ -361,15 +367,41 @@ export const canPushLoader = async ({
     });
 
     return { canPush: hasUnpushedChanges };
-  } catch (err) {
+  } catch {
     return { canPush: false };
   }
 };
 
-async function containsInsomniaDir(fsClient: PromiseFsClient): Promise<boolean> {
+async function containsLegacyInsomniaDir({ fsClient }: { fsClient: PromiseFsClient }): Promise<
+  | {
+      scope: WorkspaceScope;
+      name: string;
+    }
+  | undefined
+> {
   const legacyInsomniaFolderStat = await fsClient.promises.lstat('.insomnia');
 
-  return legacyInsomniaFolderStat.isDirectory();
+  if (!legacyInsomniaFolderStat.isDirectory()) {
+    return;
+  }
+
+  const legacyInsomniaWorkspaceFolderPath = await fsClient.promises.readdir(
+    path.join('.insomnia', models.workspace.type),
+  );
+
+  const [workspaceFile] = await fsClient.promises.readdir(legacyInsomniaWorkspaceFolderPath);
+  const workspaceFilePath = path.join(legacyInsomniaWorkspaceFolderPath, workspaceFile);
+
+  const workspaceFileContents = await fsClient.promises.readFile(workspaceFilePath, 'utf8');
+  const workspaceDocument = YAML.parse(workspaceFileContents);
+
+  const workspaceName = workspaceDocument.name || 'Untitled';
+  const workspaceScope = workspaceDocument.scope;
+
+  return {
+    name: workspaceName,
+    scope: workspaceScope,
+  };
 }
 
 /**
@@ -392,57 +424,66 @@ async function containsInsomniaDir(fsClient: PromiseFsClient): Promise<boolean> 
 async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: PromiseFsClient; projectId: string }) {
   const legacyInsomniaFolderStat = await fsClient.promises.lstat('.insomnia');
 
-  if (legacyInsomniaFolderStat.isDirectory()) {
-    const legacyInsomniaModelFolders = await fsClient.promises.readdir('.insomnia');
+  if (!legacyInsomniaFolderStat.isDirectory()) {
+    return;
+  }
 
-    for (const folder of legacyInsomniaModelFolders) {
-      const folderPath = path.join('.insomnia', folder);
-      const folderStat = await fsClient.promises.lstat(folderPath);
+  const legacyInsomniaModelFolders = await fsClient.promises.readdir('.insomnia');
 
-      if (folderStat.isDirectory()) {
-        const folderFiles = await fsClient.promises.readdir(folderPath);
+  for (const folder of legacyInsomniaModelFolders) {
+    const folderPath = path.join('.insomnia', folder);
+    const folderStat = await fsClient.promises.lstat(folderPath);
 
-        for (const file of folderFiles) {
-          const filePath = path.join(folderPath, file);
-          const fileStat = await fsClient.promises.lstat(filePath);
+    if (!folderStat.isDirectory()) {
+      continue;
+    }
 
-          if (fileStat.isFile()) {
-            const fileContents = await fsClient.promises.readFile(filePath, 'utf8');
-            const id = file.split('.')[1];
-            const type = folder;
+    const folderFiles = await fsClient.promises.readdir(folderPath);
 
-            // Skip the file if there is a conflict marker
-            if (fileContents.split('\n').includes('=======')) {
-              return;
-            }
+    for (const file of folderFiles) {
+      const filePath = path.join(folderPath, file);
+      const fileStat = await fsClient.promises.lstat(filePath);
 
-            const doc: models.BaseModel = YAML.parse(fileContents);
-
-            if (id !== doc._id) {
-              throw new Error(`Doc _id does not match file path [${doc._id} != ${id || 'null'}]`);
-            }
-
-            if (type !== doc.type) {
-              throw new Error(`Doc type does not match file path [${doc.type} != ${type || 'null'}]`);
-            }
-
-            if (isWorkspace(doc)) {
-              console.log('[git] setting workspace parent to be that of the active project', {
-                original: doc.parentId,
-                new: projectId,
-              });
-              // Whenever we write a workspace into nedb we should set the parentId to be that of the current project
-              // This is because the parentId (or a project) is not synced into git, so it will be cleared whenever git writes the workspace into the db, thereby removing it from the project on the client
-              // In order to reproduce this bug, comment out the following line, then clone a repository into a local project, then open the workspace, you'll notice it will have moved into the default project
-              doc.parentId = projectId;
-            }
-
-            await database.upsert(doc, true);
-          }
-        }
+      if (!fileStat.isFile()) {
+        continue;
       }
+
+      const fileContents = await fsClient.promises.readFile(filePath, 'utf8');
+      const id = file.split('.')[1];
+      const type = folder;
+
+      // Skip the file if there is a conflict marker
+      if (fileContents.split('\n').includes('=======')) {
+        return;
+      }
+
+      const doc: models.BaseModel = YAML.parse(fileContents);
+
+      if (id !== doc._id) {
+        throw new Error(`Doc _id does not match file path [${doc._id} != ${id || 'null'}]`);
+      }
+
+      if (type !== doc.type) {
+        throw new Error(`Doc type does not match file path [${doc.type} != ${type || 'null'}]`);
+      }
+
+      if (isWorkspace(doc)) {
+        console.log('[git] setting workspace parent to be that of the active project', {
+          original: doc.parentId,
+          new: projectId,
+        });
+        // Whenever we write a workspace into nedb we should set the parentId to be that of the current project
+        // This is because the parentId (or a project) is not synced into git, so it will be cleared whenever git writes the workspace into the db, thereby removing it from the project on the client
+        // In order to reproduce this bug, comment out the following line, then clone a repository into a local project, then open the workspace, you'll notice it will have moved into the default project
+        doc.parentId = projectId;
+      }
+
+      await database.upsert(doc, true);
     }
   }
+
+  // Remove the legacy folder
+  await fsClient.promises.rmdir('.insomnia');
 }
 
 async function isInsomniaFile(fullPath: string, fsClient: PromiseFsClient) {
@@ -501,6 +542,10 @@ export const initGitRepoCloneAction = async ({
         name: string;
         path: string;
       }[];
+      legacyInsomniaFile?: {
+        scope: WorkspaceScope;
+        name: string;
+      };
     }
   | {
       errors: string[];
@@ -571,7 +616,9 @@ export const initGitRepoCloneAction = async ({
     }),
   );
 
-  return { files };
+  const legacyInsomniaFile = await containsLegacyInsomniaDir({ fsClient: inMemoryFsClient });
+
+  return { files, legacyInsomniaFile };
 };
 
 export const cloneGitRepoAction = async ({
@@ -1137,6 +1184,21 @@ export const commitToGitRepoAction = async ({
   return {
     errors: [],
   };
+};
+
+export const migrateLegacyInsomniaFolderToFile = async ({ projectId }: { projectId: string }) => {
+  const gitRepository = await getGitRepository({ projectId });
+
+  const fsClient = await getGitFSClient({ projectId, gitRepositoryId: gitRepository._id });
+
+  await importLegacyInsomniaFolder({ fsClient, projectId });
+
+  // @TODO - Stage the changes
+
+  await commitToGitRepoAction({
+    projectId,
+    message: 'Migrated legacy .insomnia folder to file',
+  });
 };
 
 export const commitAndPushToGitRepoAction = async ({
@@ -1720,7 +1782,7 @@ function getPreviewItemName(previewDiffItem: { before: string; after: string }) 
     if ((prev && 'fileName' in prev) || 'name' in prev) {
       prevName = prev.fileName || prev.name;
     }
-  } catch (e) {
+  } catch {
     // Nothing to do
   }
 
@@ -1729,7 +1791,7 @@ function getPreviewItemName(previewDiffItem: { before: string; after: string }) 
     if ((next && 'fileName' in next) || 'name' in next) {
       nextName = next.fileName || next.name;
     }
-  } catch (e) {
+  } catch {
     // Nothing to do
   }
 
@@ -2253,6 +2315,7 @@ export interface GitServiceAPI {
   unstageChanges: typeof unstageChangesAction;
   diffFileLoader: typeof diffFileLoader;
   getRepositoryDirectoryTree: typeof getRepositoryDirectoryTree;
+  migrateLegacyInsomniaFolderToFile: typeof migrateLegacyInsomniaFolderToFile;
 
   initSignInToGitHub: typeof initSignInToGitHub;
   completeSignInToGitHub: typeof completeSignInToGitHub;
@@ -2324,6 +2387,10 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.diffFileLoader', (_, options: Parameters<typeof diffFileLoader>[0]) => diffFileLoader(options));
   ipcMainHandle('git.getRepositoryDirectoryTree', (_, options: Parameters<typeof getRepositoryDirectoryTree>[0]) =>
     getRepositoryDirectoryTree(options),
+  );
+  ipcMainHandle(
+    'git.migrateLegacyInsomniaFolderToFile',
+    (_, options: Parameters<typeof migrateLegacyInsomniaFolderToFile>[0]) => migrateLegacyInsomniaFolderToFile(options),
   );
 
   ipcMainHandle('git.initSignInToGitHub', () => initSignInToGitHub());

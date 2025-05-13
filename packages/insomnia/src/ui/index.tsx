@@ -452,6 +452,13 @@ async function renderApp() {
                                   (await import('./routes/git-project-actions')).getRepositoryDirectoryTree(...args),
                               },
                               {
+                                path: 'migrate-legacy-insomnia-folder-to-file',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).migrateLegacyInsomniaFolderToFile(
+                                    ...args,
+                                  ),
+                              },
+                              {
                                 path: 'branch',
                                 children: [
                                   {
