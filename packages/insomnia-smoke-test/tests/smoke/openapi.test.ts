@@ -5,7 +5,7 @@ import { test } from '../../playwright/test';
 test('can render Spectral OpenAPI lint errors', async ({ page }) => {
   await page.getByRole('button', { name: 'Create document' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
-  await page.click('text=start from an example');
+  await page.click('text=start from boilerplate');
 
   const codeEditor = page.locator('.pane-one');
   await expect.soft(codeEditor).toContainText('openapi: 3.0.0');
