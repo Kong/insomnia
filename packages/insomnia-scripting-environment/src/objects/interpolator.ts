@@ -60,6 +60,7 @@ const interpolator = new Interpolator({
   },
 });
 
+/** @ignore */
 export function getInterpolator() {
   return interpolator;
 }

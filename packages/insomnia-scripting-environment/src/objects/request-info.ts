@@ -1,5 +1,14 @@
 export type EventName = 'prerequest' | 'test';
 
+/**
+ * Represents options for creating a request information instance.
+ *
+ * @property eventName - The name of the event associated with the request, if any.
+ * @property iteration - The current iteration number of the request, if applicable.
+ * @property iterationCount - The total number of iterations for the request, if applicable.
+ * @property requestName - The name of the request, if specified.
+ * @property requestId - The unique identifier of the request, if specified.
+ */
 export interface RequestInfoOption {
   eventName?: EventName;
   iteration?: number;
