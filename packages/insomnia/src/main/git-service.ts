@@ -22,7 +22,7 @@ import { insomniaFileSchema } from '../common/import-v5-parser';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
 import * as models from '../models';
 import type { GitRepository } from '../models/git-repository';
-import { type WorkspaceScope, WorkspaceScopeKeys } from '../models/workspace';
+import { isWorkspace, type WorkspaceScope, WorkspaceScopeKeys } from '../models/workspace';
 import { fsClient } from '../sync/git/fs-client';
 import GitVCS, {
   GIT_CLONE_DIR,
@@ -365,6 +365,85 @@ export const canPushLoader = async ({
     return { canPush: false };
   }
 };
+
+async function containsInsomniaDir(fsClient: PromiseFsClient): Promise<boolean> {
+  const legacyInsomniaFolderStat = await fsClient.promises.lstat('.insomnia');
+
+  return legacyInsomniaFolderStat.isDirectory();
+}
+
+/**
+ * The legacy git sync functionality stores one `.insomnia` directory in the root of the repository.
+ * The structure looks like this:
+ *
+ * ROOT_REPOSITORY_DIR/
+ * └── .insomnia/
+ *     ├── Workspace/
+ *     │   └── wrk-{{UUID}}.yaml
+ *     ├── Request/
+ *     │   ├── req-{{UUID}}.yaml
+ *     │   └── req-{{UUID}}.yaml
+ *     └── OtherModel/
+ *         └── other-{{UUID}}.yaml
+ *
+ * All entities are stored inside a subdirectory named after the model it represents (e.g., `Request`),
+ * and each file is named with the database ID as its name, with the `.yaml` extension.
+ */
+async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: PromiseFsClient; projectId: string }) {
+  const legacyInsomniaFolderStat = await fsClient.promises.lstat('.insomnia');
+
+  if (legacyInsomniaFolderStat.isDirectory()) {
+    const legacyInsomniaModelFolders = await fsClient.promises.readdir('.insomnia');
+
+    for (const folder of legacyInsomniaModelFolders) {
+      const folderPath = path.join('.insomnia', folder);
+      const folderStat = await fsClient.promises.lstat(folderPath);
+
+      if (folderStat.isDirectory()) {
+        const folderFiles = await fsClient.promises.readdir(folderPath);
+
+        for (const file of folderFiles) {
+          const filePath = path.join(folderPath, file);
+          const fileStat = await fsClient.promises.lstat(filePath);
+
+          if (fileStat.isFile()) {
+            const fileContents = await fsClient.promises.readFile(filePath, 'utf8');
+            const id = file.split('.')[1];
+            const type = folder;
+
+            // Skip the file if there is a conflict marker
+            if (fileContents.split('\n').includes('=======')) {
+              return;
+            }
+
+            const doc: models.BaseModel = YAML.parse(fileContents);
+
+            if (id !== doc._id) {
+              throw new Error(`Doc _id does not match file path [${doc._id} != ${id || 'null'}]`);
+            }
+
+            if (type !== doc.type) {
+              throw new Error(`Doc type does not match file path [${doc.type} != ${type || 'null'}]`);
+            }
+
+            if (isWorkspace(doc)) {
+              console.log('[git] setting workspace parent to be that of the active project', {
+                original: doc.parentId,
+                new: projectId,
+              });
+              // Whenever we write a workspace into nedb we should set the parentId to be that of the current project
+              // This is because the parentId (or a project) is not synced into git, so it will be cleared whenever git writes the workspace into the db, thereby removing it from the project on the client
+              // In order to reproduce this bug, comment out the following line, then clone a repository into a local project, then open the workspace, you'll notice it will have moved into the default project
+              doc.parentId = projectId;
+            }
+
+            await database.upsert(doc, true);
+          }
+        }
+      }
+    }
+  }
+}
 
 async function isInsomniaFile(fullPath: string, fsClient: PromiseFsClient) {
   if (!fullPath.endsWith('.yaml')) {
