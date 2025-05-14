@@ -7,6 +7,7 @@ import { delay } from '../common/misc';
 import * as models from '../models/index';
 import { invariant } from '../utils/invariant';
 import { ipcMainOn } from './ipc/electron';
+import { initNsusUpdater } from './nsisUpdate';
 
 export type UpdateStatus =
   | 'Update Error'
@@ -18,7 +19,7 @@ export type UpdateStatus =
   | 'Updates Not Supported'
   | 'Check Now';
 
-const isUpdateSupported = () => {
+export const isUpdateSupported = () => {
   if (process.platform === 'linux') {
     console.log('[updater] Not supported on this platform', process.platform);
     return false;
@@ -47,7 +48,7 @@ const getUpdateUrl = (updateChannel: string): string | null => {
   return fullUrl.toString();
 };
 
-const _sendUpdateStatus = (status: UpdateStatus) => {
+export const _sendUpdateStatus = (status: UpdateStatus) => {
   for (const window of BrowserWindow.getAllWindows()) {
     window.webContents.send('updaterStatus', status);
   }
@@ -55,7 +56,7 @@ const _sendUpdateStatus = (status: UpdateStatus) => {
 
 const isNsisInstaller = async () => {
   if (process.platform !== 'win32') {
-    return;
+    return false;
   }
   console.log('process.execPath', process.execPath);
   try {
@@ -65,15 +66,22 @@ const isNsisInstaller = async () => {
     const content = await fsPromise.readFile(flagFilePath, 'utf-8');
     const json = JSON.parse(content);
     console.log('installer type', json.installer);
-    return typeof json.installer === 'string' ? json.installer : null;
+    return json.installer === 'nsis';
   } catch (err) {
     console.warn('Failed to read installer-info.json:', err);
-    return null;
+    return false;
   }
 };
 
 export const init = async () => {
-  isNsisInstaller();
+  // use different update logic for windows nsis installer
+  if (process.platform === 'win32') {
+    const isNsis = await isNsisInstaller();
+    if (isNsis) {
+      initNsusUpdater();
+      return;
+    }
+  }
   autoUpdater.on('error', error => {
     console.warn(`[updater] Error: ${error.message}`);
     _sendUpdateStatus('Update Error');

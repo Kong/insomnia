@@ -56,6 +56,7 @@
     "dompurify": "^3.2.5",
     "electron-context-menu": "^3.6.1",
     "electron-log": "^4.4.8",
+    "electron-updater": "^6.6.2",
     "fastq": "^1.19.1",
     "graphql": "^16.10.0",
     "graphql-ws": "^5.16.2",
