@@ -18,7 +18,8 @@ export function decodeEncoding<T>(value: T) {
   return value;
 }
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
-
+const legacyModeErrorMessage = `In v11, we improved plugin security, which may break older plugins. 
+Consider enabling legacy mode in plugin settings`;
 export default class BaseExtension {
   _ext: PluginTemplateTag | null = null;
   _plugin: Plugin | null = null;
@@ -101,30 +102,30 @@ export default class BaseExtension {
     const helperContext: PluginTemplateTagContext = {
       app: {
         alert: () => {
-          throw new Error('Not available in safe mode, this can be enabled in plugin settings');
+          throw new Error(legacyModeErrorMessage);
         },
         dialog: () => {
-          throw new Error('Not available in safe mode, this can be enabled in plugin settings');
+          throw new Error(legacyModeErrorMessage);
         },
         prompt: () => {
-          throw new Error('Not available in safe mode, this can be enabled in plugin settings');
+          throw new Error(legacyModeErrorMessage);
         },
         getPath: () => {
-          throw new Error('Not available in safe mode, this can be enabled in plugin settings');
+          throw new Error(legacyModeErrorMessage);
         },
         getInfo: () => ({ version: getAppVersion(), platform: getAppPlatform() }),
         showSaveDialog: async () => {
-          throw new Error('Not available in safe mode, this can be enabled in plugin settings');
+          throw new Error(legacyModeErrorMessage);
         },
         clipboard: {
           readText: () => {
-            throw new Error('Not available in safe mode, this can be enabled in plugin settings');
+            throw new Error(legacyModeErrorMessage);
           },
           writeText: () => {
-            throw new Error('Not available in safe mode, this can be enabled in plugin settings');
+            throw new Error(legacyModeErrorMessage);
           },
           clear: () => {
-            throw new Error('Not available in safe mode, this can be enabled in plugin settings');
+            throw new Error(legacyModeErrorMessage);
           },
         },
       },

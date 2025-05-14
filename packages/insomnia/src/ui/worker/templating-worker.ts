@@ -7,7 +7,7 @@ const interceptor: any = (moduleName: string): NodeRequire => {
     return originalRequire(moduleName);
   }
   throw new Error(
-    `Cannot find module '${moduleName}', untrusted modules are not available in protected mode, this can be enabled in plugin settings`,
+    `Cannot find module '${moduleName}', untrusted modules are only available in legacy mode, this can be enabled in plugin settings`,
   );
 };
 async function performJob(input: {
