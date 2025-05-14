@@ -197,7 +197,7 @@ const Design: FC = () => {
   const updateApiSpecFetcher = useFetcher();
   const generateRequestCollectionFetcher = useFetcher();
   const [isLintPaneOpen, setIsLintPaneOpen] = useState(false);
-  const [isSpecPaneOpen, setIsSpecPaneOpen] = useState(true);
+  const [isSpecPaneOpen, setIsSpecPaneOpen] = useState(Boolean(parsedSpec));
 
   const { components, info, servers, paths } = parsedSpec || {};
   const { requestBodies, responses, parameters, headers, schemas, securitySchemes } = components || {};
