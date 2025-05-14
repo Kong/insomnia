@@ -56,10 +56,10 @@ jobs:
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
 
-      # - name: Verify secure wrapper (Windows)
-      #   if: ${{ matrix.os == 'windows-latest' }}
-      #   shell: bash
-      #   run: NODE_OPTIONS='--max_old_space_size=6144' ./build-secure-wrapper.sh
+      - name: Verify secure wrapper (Windows)
+        if: ${{ matrix.os == 'windows-latest' }}
+        shell: bash
+        run: NODE_OPTIONS='--max_old_space_size=6144' ./build-secure-wrapper.sh
 
       # See https://github.com/electron/electron/issues/42510#issuecomment-2171583086
       - if: ${{ runner.os == 'Linux' }}
@@ -78,6 +78,19 @@ jobs:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-package-critical-test-traces-${{ github.run_number }}
           path: packages/insomnia-smoke-test/traces
+      
+      - name: List files to be uploaded
+        run: |
+          echo "Listing files in dist directory:"
+          ls -R packages/insomnia/dist/
+          echo "Listing .exe files to be uploaded:"
+          ls -R packages/insomnia/dist/*.exe
+          echo "Listing .tar.gz files to be uploaded:"
+          ls -R packages/insomnia/dist/*.tar.gz
+          echo "Listing .zip files to be uploaded:"
+          ls -R packages/insomnia/dist/*.zip
+          echo "Listing .yml files to be uploaded:"
+          ls -R packages/insomnia/dist/*.yml
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

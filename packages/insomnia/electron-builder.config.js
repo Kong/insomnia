@@ -113,7 +113,7 @@ const config = {
     deleteAppDataOnUninstall: false,
   },
   squirrelWindows: {
-    artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
+    artifactName: `${BINARY_PREFIX}-squirrel-\${version}.\${ext}`,
     iconUrl: 'https://github.com/kong/insomnia/blob/develop/packages/insomnia/src/icons/icon.ico?raw=true',
   },
   portable: {
