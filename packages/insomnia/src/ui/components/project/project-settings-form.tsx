@@ -448,7 +448,6 @@ export const ProjectSettingsForm: FC<Props> = ({
                             {file.path === '.insomnia' && (
                               <span className="flex items-center gap-2 text-[--color-warning]">
                                 <Icon icon="triangle-exclamation" />
-                                Legacy Insomnia file
                               </span>
                             )}
                           </div>
@@ -460,7 +459,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                         </Cell>
                         <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
                           <span className="flex items-center gap-1 italic text-[--hl]">
-                            <Icon icon="file" className="text-[--hl]" />
+                            <Icon icon={file.path === '.insomnia' ? 'folder' : 'file'} className="text-[--hl]" />
                             <span className="truncate px-2 text-[--hl]">{file.path}</span>
                           </span>
                         </Cell>
@@ -472,12 +471,18 @@ export const ProjectSettingsForm: FC<Props> = ({
             </div>
           )}
           {insomniaFiles.some(file => file.path === '.insomnia') && (
-            <div className="">
-              <Icon icon="triangle-exclamation" className="text-[--color-warning]" />
-              <p className="">
+            <div className="rounded-sm bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] bg-opacity-50 p-[--padding-sm] text-[--color-font-warning]">
+              <Heading className="flex items-center gap-2 text-lg font-bold">
+                <Icon icon="triangle-exclamation" className="text-[--color-font-warning]" />
+                We found legacy Insomnia files in your repository
+              </Heading>
+              <p className="pt-2">
                 This Git repository contains legacy Insomnia git files. These will be imported and migrated to the new
-                format supported in Insomnia 11+. By migrating these, any users on older versions of Insomnia will no
-                longer be able to access these collections. THIS ACTION CAN NOT BE UNDONE.
+                format supported in Insomnia 11+.
+              </p>
+              <p className="pt-2">
+                By migrating these <strong>a new commit will be created</strong> which once synced will result in any
+                users on older versions of Insomnia no longer being able to access these collections.
               </p>
             </div>
           )}
