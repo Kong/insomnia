@@ -56,10 +56,10 @@ jobs:
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
 
-      # - name: Verify secure wrapper (Windows)
-      #   if: ${{ matrix.os == 'windows-latest' }}
-      #   shell: bash
-      #   run: NODE_OPTIONS='--max_old_space_size=6144' ./build-secure-wrapper.sh
+      - name: Verify secure wrapper (Windows)
+        if: ${{ matrix.os == 'windows-latest' }}
+        shell: bash
+        run: NODE_OPTIONS='--max_old_space_size=6144' ./build-secure-wrapper.sh
 
       # See https://github.com/electron/electron/issues/42510#issuecomment-2171583086
       - if: ${{ runner.os == 'Linux' }}
