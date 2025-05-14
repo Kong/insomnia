@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'crypto';
 import { shell } from 'electron';
 import { app, net } from 'electron/main';
 import { fromUrl } from 'hosted-git-info';
-import { Errors, type FsClient, type PromiseFsClient } from 'isomorphic-git';
+import { Errors, type PromiseFsClient } from 'isomorphic-git';
 import path from 'path';
 import { v4 } from 'uuid';
 import YAML, { parse } from 'yaml';
@@ -168,15 +168,21 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
 
+    const fsClient = await getGitFSClient({ gitRepositoryId: gitRepository._id, projectId, workspaceId });
+
     if (GitVCS.isInitializedForRepo(gitRepository._id) && !gitRepository.needsFullClone) {
+      let legacyInsomniaWorkspace;
+      if (!workspaceId) {
+        legacyInsomniaWorkspace = await containsLegacyInsomniaDir({ fsClient });
+      }
+
       return {
         branch: await GitVCS.getCurrentBranch(),
         branches: await GitVCS.listBranches(),
         gitRepository: gitRepository,
+        legacyInsomniaWorkspace,
       };
     }
-
-    const fsClient = await getGitFSClient({ gitRepositoryId: gitRepository._id, projectId, workspaceId });
 
     // Init VCS
     const { credentials, uri } = gitRepository;
@@ -376,6 +382,7 @@ async function containsLegacyInsomniaDir({ fsClient }: { fsClient: PromiseFsClie
   | {
       scope: WorkspaceScope;
       name: string;
+      path: string;
     }
   | undefined
 > {
@@ -400,6 +407,7 @@ async function containsLegacyInsomniaDir({ fsClient }: { fsClient: PromiseFsClie
     return {
       name: workspaceName,
       scope: workspaceScope,
+      path: GIT_INSOMNIA_DIR_NAME,
     };
   } catch (e) {
     console.warn('Failed to read legacy Insomnia directory', e);
@@ -628,11 +636,9 @@ export const initGitRepoCloneAction = async ({
 
   const legacyInsomniaFile = await containsLegacyInsomniaDir({ fsClient: inMemoryFsClient });
 
-  console.log({ legacyInsomniaFile });
-
   if (legacyInsomniaFile) {
     // Add the legacy Insomnia file on the top of the list
-    files.unshift({ ...legacyInsomniaFile, path: '.insomnia' });
+    files.unshift(legacyInsomniaFile);
   }
 
   return { files };

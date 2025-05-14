@@ -16,6 +16,7 @@ export type GitRepoLoaderData =
       legacyInsomniaWorkspace?: {
         scope: WorkspaceScope;
         name: string;
+        path: string;
       };
     }
   | {
