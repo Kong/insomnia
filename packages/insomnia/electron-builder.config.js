@@ -139,16 +139,16 @@ const config = {
   },
 };
 
-const {
-  env: { BUILD_TARGETS },
-  platform,
-} = process;
-const targets = BUILD_TARGETS?.split(',');
-if (platform && targets) {
-  console.log('overriding build targets to: ', targets);
-  const PLATFORM_MAP = { darwin: 'mac', linux: 'linux', win32: 'win' };
-  config[PLATFORM_MAP[platform]].target = config[PLATFORM_MAP[platform]].target.filter(({ target }) =>
-    targets.includes(target),
-  );
-}
+// const {
+//   env: { BUILD_TARGETS },
+//   platform,
+// } = process;
+// const targets = BUILD_TARGETS?.split(',');
+// if (platform && targets) {
+//   console.log('overriding build targets to: ', targets);
+//   const PLATFORM_MAP = { darwin: 'mac', linux: 'linux', win32: 'win' };
+//   config[PLATFORM_MAP[platform]].target = config[PLATFORM_MAP[platform]].target.filter(({ target }) =>
+//     targets.includes(target),
+//   );
+// }
 module.exports = config;
