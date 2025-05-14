@@ -3,7 +3,7 @@ import { type ActionFunction, type LoaderFunction, redirect } from 'react-router
 import * as models from '../../models';
 import type { GitRepository } from '../../models/git-repository';
 import type { WorkspaceScope } from '../../models/workspace';
-import { type GitLogEntry } from '../../sync/git/git-vcs';
+import type { GitLogEntry } from '../../sync/git/git-vcs';
 import type { MergeConflict } from '../../sync/types';
 import { invariant } from '../../utils/invariant';
 
