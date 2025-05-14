@@ -149,8 +149,11 @@ export default async function build(options: Options) {
       console.error('[Build] Build failed:', err);
     })
     .then(() => {
-      console.log('[Dev Build] Build complete, start Electron');
-      startElectron();
+      if (__DEV__) {
+        // start electron automatically in dev build
+        console.log('[Dev Build] Build complete, start Electron');
+        startElectron();
+      }
     });
 }
 
