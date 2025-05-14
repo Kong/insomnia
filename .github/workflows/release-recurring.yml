@@ -56,6 +56,19 @@ jobs:
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
 
+      - name: List files after pkgage
+        run: |
+          echo "Listing files in dist directory:"
+          ls -R packages/insomnia/dist/
+          echo "Listing .exe files to be uploaded:"
+          ls -R packages/insomnia/dist/*.exe
+          echo "Listing .tar.gz files to be uploaded:"
+          ls -R packages/insomnia/dist/*.tar.gz
+          echo "Listing .zip files to be uploaded:"
+          ls -R packages/insomnia/dist/*.zip
+          echo "Listing .yml files to be uploaded:"
+          ls -R packages/insomnia/dist/*.yml
+
       - name: Verify secure wrapper (Windows)
         if: ${{ matrix.os == 'windows-latest' }}
         shell: bash
