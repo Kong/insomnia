@@ -618,7 +618,12 @@ export const initGitRepoCloneAction = async ({
 
   const legacyInsomniaFile = await containsLegacyInsomniaDir({ fsClient: inMemoryFsClient });
 
-  return { files, legacyInsomniaFile };
+  if (legacyInsomniaFile) {
+    // Add the legacy Insomnia file on the top of the list
+    files.unshift({ ...legacyInsomniaFile, path: '.insomnia' });
+  }
+
+  return { files };
 };
 
 export const cloneGitRepoAction = async ({

@@ -445,6 +445,12 @@ export const ProjectSettingsForm: FC<Props> = ({
                               <Icon icon={scopeToIconMap[file.scope]} className="w-4" />
                             </span>
                             <span className="truncate">{file.name}</span>
+                            {file.path === '.insomnia' && (
+                              <span className="flex items-center gap-2 text-[--color-warning]">
+                                <Icon icon="triangle-exclamation" />
+                                Legacy Insomnia file
+                              </span>
+                            )}
                           </div>
                         </Cell>
                         <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
@@ -463,6 +469,16 @@ export const ProjectSettingsForm: FC<Props> = ({
                   </TableBody>
                 </Table>
               </div>
+            </div>
+          )}
+          {insomniaFiles.some(file => file.path === '.insomnia') && (
+            <div className="">
+              <Icon icon="triangle-exclamation" className="text-[--color-warning]" />
+              <p className="">
+                This Git repository contains legacy Insomnia git files. These will be imported and migrated to the new
+                format supported in Insomnia 11+. By migrating these, any users on older versions of Insomnia will no
+                longer be able to access these collections. THIS ACTION CAN NOT BE UNDONE.
+              </p>
             </div>
           )}
           <div className="flex items-center justify-end gap-2 pb-10">
