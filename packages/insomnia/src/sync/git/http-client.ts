@@ -1,4 +1,3 @@
-import { net } from 'electron/main';
 import type { GitHttpRequest, GitHttpResponse, HttpClient } from 'isomorphic-git';
 
 /**
@@ -57,7 +56,10 @@ async function request({ url, method = 'GET', headers = {}, body }: GitHttpReque
   if (body) {
     body = await collect(body);
   }
-  const res = await net.fetch(url, { method, headers, body });
+
+  const electron = await import('electron');
+
+  const res = await electron.net.fetch(url, { method, headers, body });
   const iter = res.body ? fromStream(res.body) : [new Uint8Array(await res.arrayBuffer())];
   // convert Header object to ordinary JSON
   headers = {};
