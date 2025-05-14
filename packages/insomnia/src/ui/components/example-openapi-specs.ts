@@ -1,4 +1,4 @@
-export const exampleOpenApiSpec = `openapi: 3.0.0
+export const petStoreSpec = `openapi: 3.0.0
 info:
   description: "This is a sample server Petstore server.  You can find out more about
     Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net,
@@ -614,4 +614,162 @@ components:
           type: string
         message:
           type: string
+`;
+
+export const todoSpec = `openapi: 3.0.0
+info:
+  title: Simple TODO API
+  version: 1.0.0
+  description: A minimal API to manage a list of TODO items.
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: https://api.example.com
+
+tags:
+  - name: Todos
+    description: Operations related to TODO items
+
+paths:
+  /todos:
+    get:
+      summary: List all todos
+      description: Returns a list of all TODO items.
+      operationId: listTodos
+      tags: [Todos]
+      responses:
+        '200':
+          description: A JSON array of TODOs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Todo'
+    post:
+      summary: Create a new todo
+      description: Creates a new TODO item.
+      operationId: createTodo
+      tags: [Todos]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TodoInput'
+      responses:
+        '201':
+          description: The created TODO item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+
+  /todos/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        description: The ID of the TODO item
+        schema:
+          type: string
+
+    get:
+      summary: Get a todo by ID
+      description: Retrieves a specific TODO item by its ID.
+      operationId: getTodoById
+      tags: [Todos]
+      responses:
+        '200':
+          description: The requested TODO item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+        '404':
+          description: TODO item not found
+
+    put:
+      summary: Update a todo by ID
+      description: Updates a specific TODO item by its ID.
+      operationId: updateTodo
+      tags: [Todos]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TodoInput'
+      responses:
+        '200':
+          description: The updated TODO item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+        '404':
+          description: TODO item not found
+
+    delete:
+      summary: Delete a todo by ID
+      description: Deletes a specific TODO item by its ID.
+      operationId: deleteTodo
+      tags: [Todos]
+      responses:
+        '204':
+          description: TODO item deleted
+        '404':
+          description: TODO item not found
+
+components:
+  schemas:
+    Todo:
+      type: object
+      description: A TODO item
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the TODO item
+        title:
+          type: string
+          description: The title of the TODO item
+        completed:
+          type: boolean
+          description: Indicates if the TODO item is completed
+      required:
+        - id
+        - title
+        - completed
+
+    TodoInput:
+      type: object
+      description: Input data for creating or updating a TODO item
+      properties:
+        title:
+          type: string
+          description: The title of the TODO item
+        completed:
+          type: boolean
+          description: Indicates if the TODO item is completed
+      required:
+        - title
+        - completed
+`;
+
+export const blankSpec = `openapi: 3.0.0
+info:
+  title: API
+  version: 0.0.0
+  description: An API
+  contact:
+    name: Support
+    email: sup@rest.rodeo
+servers:
+  - url: https://api.rest.rodeo
+    description: Live
+paths:
+  /:
+    description: Base
 `;
