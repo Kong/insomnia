@@ -318,7 +318,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                 setTab(key as OauthProviderName);
               }}
               aria-label="Git repository settings tabs"
-              className="mt-4 flex h-full w-full min-w-[600px] flex-col"
+              className="mt-4 flex h-full w-full flex-col"
             >
               <TabList
                 className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
