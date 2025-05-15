@@ -326,6 +326,7 @@ export const createConfiguredCurlInstance = ({
   if (caCert) {
     curl.setOpt(Curl.option.CAINFO_BLOB, caCert);
   }
+  // Use the system's native CA store for SSL certificate verification
   curl.setOpt(Curl.option.SSL_OPTIONS, CurlSslOpt.NativeCa);
   certificates.forEach(validCert => {
     const { passphrase, cert, key, pfx } = validCert;
@@ -385,7 +386,9 @@ export const createConfiguredCurlInstance = ({
   }
   const { validateSSL } = settings;
   if (!validateSSL) {
+    // Disable certificate verification
     curl.setOpt(Curl.option.SSL_VERIFYHOST, 0);
+    // Disable hostname verification
     curl.setOpt(Curl.option.SSL_VERIFYPEER, 0);
   }
   debugTimeline.push({
@@ -575,7 +578,8 @@ export const getHttpVersion = (preferredHttpVersion: string) => {
     }
   }
 };
-const setDefaultProtocol = (url: string, defaultProto?: string) => {
+
+export const setDefaultProtocol = (url: string, defaultProto?: string) => {
   const trimmedUrl = url.trim();
   defaultProto = defaultProto || 'http:';
 
