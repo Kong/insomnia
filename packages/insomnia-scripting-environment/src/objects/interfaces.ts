@@ -8,11 +8,14 @@ import type { ExecutionOption } from './execution';
 import type { RequestInfoOption } from './request-info';
 import type { RequestTestResult } from './test';
 
+/** @ignore */
 export interface IEnvironment {
   id: string;
   name: string;
   data: object;
 }
+
+/** @ignore */
 export interface RequestContext {
   request: Request;
   timelinePath: string;
