@@ -56,8 +56,6 @@ export async function registerInsomniaProtocols() {
           const url = new URL(`${apiURL}/${originalRequest.url.replace(`${insomniaStreamScheme}://`, '')}`);
           const urlStr = url.toString();
 
-          console.log('sse connecting main', apiURL);
-
           const sessionId = new URLSearchParams(url.search).get('sessionId');
 
           const curl = new Curl();
@@ -99,7 +97,6 @@ export async function registerInsomniaProtocols() {
 
           curl.on('stream', async (stream: Readable, _code: number, [headersWithStatus]: HeaderInfo[]) => {
             const { result, ...headers } = headersWithStatus;
-            console.log('sse headers', headers);
             resolve(
               new Response(Readable.toWeb(stream) as ReadableStream, {
                 status: _code,
