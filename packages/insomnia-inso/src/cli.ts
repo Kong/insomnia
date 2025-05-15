@@ -333,11 +333,11 @@ export const go = (args?: string[]) => {
     noProxy: '',
   };
 
-  if (process.env.HTTP_PROXY || process.env.HTTPS_PROXY) {
+  if (process.env.HTTP_PROXY || process.env.HTTPS_PROXY || process.env.http_proxy || process.env.https_proxy) {
     proxySettings.proxyEnabled = true;
-    proxySettings.httpProxy = process.env.HTTP_PROXY || '';
-    proxySettings.httpsProxy = process.env.HTTPS_PROXY || '';
-    proxySettings.noProxy = process.env.NO_PROXY || '';
+    proxySettings.httpProxy = process.env.HTTP_PROXY || process.env.http_proxy || '';
+    proxySettings.httpsProxy = process.env.HTTPS_PROXY || process.env.https_proxy || '';
+    proxySettings.noProxy = process.env.NO_PROXY || process.env.no_proxy || '';
   }
 
   // export and lint logic

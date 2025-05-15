@@ -149,12 +149,15 @@ describe('inso dev bundle', () => {
       expect(result.stdout).toContain('Adding SSL KEY certificate');
     });
 
-    it('send request with settings enabled (by testing followRedirects)', async () => {
-      const input =
-        '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withSettings" --verbose "Insomnia Designer" wrk_0b96eff';
-      const result = await runCliFromRoot(input);
-      expect(result.stdout).not.toContain("Issue another request to this URL: 'https://insomnia.rest/'");
-    });
+    // Disabled this test
+    // currently settings loading is disabled, as it could include values like proxies from UI, which might not make sense for the cli.
+    // it can be re-enabled if necessary
+    // it('send request with settings enabled (by testing followRedirects)', async () => {
+    //   const input =
+    //     '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withSettings" --verbose "Insomnia Designer" wrk_0b96eff';
+    //   const result = await runCliFromRoot(input);
+    //   expect(result.stdout).not.toContain("Issue another request to this URL: 'https://insomnia.rest/'");
+    // });
 
     it('run collection: run requests in specified order', async () => {
       const input =

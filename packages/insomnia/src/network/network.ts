@@ -414,10 +414,10 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     transientVariables,
     runtime,
     parentFolders,
+    settings,
   } = context;
   invariant(script, 'script must be provided');
 
-  const settings = await models.settings.get();
   // location is the complete path of a request, including project, collection and folder(if have).
   const requestLocation = ancestors
     .filter(doc => isRequest(doc) || isRequestGroup(doc) || isWorkspace(doc) || isProject(doc))
