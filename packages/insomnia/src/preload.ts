@@ -94,9 +94,9 @@ const cloudService: cloudServiceBridgeAPI = {
   authenticate: options => ipcRenderer.invoke('cloudService.authenticate', options),
   getSecret: options => ipcRenderer.invoke('cloudService.getSecret', options),
   exchangeCode: (type, data) => ipcRenderer.invoke('cloudService.exchangeCode', type, data),
+  openAuthUrl: type => ipcRenderer.invoke('cloudService.openAuthUrl', type),
   setCacheMaxAge: options => ipcRenderer.send('cloudService.setCacheMaxAge', options),
   clearCache: () => ipcRenderer.send('cloudService.clearCache'),
-  openAuthUrl: type => ipcRenderer.send('cloudService.openAuthUrl', type),
 };
 
 const main: Window['main'] = {

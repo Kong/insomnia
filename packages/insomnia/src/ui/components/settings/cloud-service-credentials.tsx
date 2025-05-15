@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 import { useFetcher } from 'react-router-dom';
 
-import { isDevelopment } from '../../../common/constants';
 import {
   type CloudProviderCredential,
   type CloudProviderName,
@@ -12,7 +11,7 @@ import {
 import { usePlanData } from '../../hooks/use-plan';
 import { useRootLoaderData } from '../../routes/root';
 import { Icon } from '../icon';
-import { showModal } from '../modals';
+import { showError, showModal } from '../modals';
 import { AskModal } from '../modals/ask-modal';
 import { CloudCredentialModal } from '../modals/cloud-credential-modal/cloud-credential-modal';
 import { SvgIcon } from '../svg-icon';
@@ -57,6 +56,7 @@ export const CloudServiceCredentialList = () => {
     show: boolean;
     provider: CloudProviderName;
     credential?: CloudProviderCredential;
+    authUrl?: string;
   }>();
   const deleteCredentialFetcher = useFetcher();
 
@@ -89,10 +89,19 @@ export const CloudServiceCredentialList = () => {
     });
   };
 
-  const handleCreateCloudServiceCredential = (key: CloudProviderName) => {
-    if (key === 'azure' && !isDevelopment()) {
-      // open Azure oauth page directly in production build
-      window.main.cloudService.openAuthUrl('azure');
+  const handleCreateCloudServiceCredential = async (key: CloudProviderName) => {
+    if (key === 'azure') {
+      const { authUrl, error } = await window.main.cloudService.openAuthUrl('azure');
+      // show error modal if no authUrl generated
+      if (!authUrl) {
+        console.error('Failed to open Azure auth url', error);
+        showError({
+          title: 'Azure Authorization Failed',
+          message: error || 'Failed to get Azure authentication url',
+        });
+      } else {
+        setModalState({ show: true, provider: key as CloudProviderName, authUrl });
+      }
     } else {
       setModalState({ show: true, provider: key as CloudProviderName });
     }
@@ -229,6 +238,7 @@ export const CloudServiceCredentialList = () => {
         <CloudCredentialModal
           provider={modalState.provider}
           providerCredential={modalState.credential}
+          authUrl={modalState.authUrl}
           onClose={hideModal}
         />
       )}

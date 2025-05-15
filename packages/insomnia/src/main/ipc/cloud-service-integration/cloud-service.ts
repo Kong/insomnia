@@ -1,4 +1,5 @@
 import type { AuthenticationResult as AzureOAuthCredential } from '@azure/msal-node';
+import { shell } from 'electron';
 
 import * as models from '../../../models';
 import type {
@@ -60,13 +61,19 @@ export const cloudServiceProviderAuthentication = (options: CloudServiceAuthOpti
   return cloudService.authenticate();
 };
 
-export const openAuthUrl = (type: 'azure') => {
+export const openAuthUrl = async (type: 'azure'): Promise<{ authUrl: string; error?: string }> => {
+  let authUrl = '';
   switch (type) {
     case 'azure':
-      AzureService.openAuthUrl();
-      break;
+      try {
+        authUrl = await AzureService.openAuthUrl();
+        shell.openExternal(authUrl);
+        return { authUrl };
+      } catch (error) {
+        return { authUrl, error: `Failed not get authentication url : ${error?.message}` };
+      }
     default:
-      return;
+      return { authUrl, error: 'Invalid cloud service provider name' };
   }
 };
 

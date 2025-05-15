@@ -176,7 +176,14 @@ export const getHashiCorpSecret = async (options: getExternalVaultOptions) => {
   };
   // Check if the token is expired. 0 means the token never expires like root token
   const { expires_at } = credentials as HashiCorpCredentials;
-  if (typeof expires_at === 'number' && expires_at !== 0 && expires_at < Date.now()) {
+  // Check if executed in Insomnia app
+  const isExecutedInApp = process.type === 'renderer' || process.type === 'worker';
+  if (
+    // Check if the token is expired. 0 means the token never expires like root token
+    (typeof expires_at === 'number' && expires_at !== 0 && expires_at < Date.now()) ||
+    // Executed in inso-cli
+    !isExecutedInApp
+  ) {
     const authResponse = await handleCloudServiceRequest(cloudServiceContext, 'authenticate', {
       provider: providerName,
       credentials,
@@ -184,19 +191,25 @@ export const getHashiCorpSecret = async (options: getExternalVaultOptions) => {
     const { success, result, error } = authResponse!;
     if (success && result) {
       const { access_token, expires_at } = result as { access_token: string; expires_at: number };
-      // update access_token and expires_at
-      const originCredential = await cloudServiceContext.models.getById(cloudCredentialId);
-      invariant(originCredential, 'No Cloud Credential found');
-      const originHashiCorpCredential = originCredential.credentials as HashiCorpCredentials;
-      const patch = {
-        credentials: {
-          ...originHashiCorpCredential,
-          access_token,
-          expires_at,
-        },
-      } as { credentials: HashiCorpCredentials };
-      await cloudServiceContext.models.update(originCredential, patch);
-      getSecretOption.credentials = patch.credentials;
+      // update access_token and expires_at when executed in app
+      if (isExecutedInApp) {
+        const originCredential = await cloudServiceContext.models.getById(cloudCredentialId);
+        invariant(originCredential, 'No Cloud Credential found');
+        const originHashiCorpCredential = originCredential.credentials as HashiCorpCredentials;
+        const patch = {
+          credentials: {
+            ...originHashiCorpCredential,
+            access_token,
+            expires_at,
+          },
+        } as { credentials: HashiCorpCredentials };
+        await cloudServiceContext.models.update(originCredential, patch);
+        getSecretOption.credentials = patch.credentials;
+      } else {
+        // executed in Inso
+        // @ts-expect-error update access_token for hashicorp credential
+        getSecretOption.credentials.access_token = access_token;
+      }
     } else {
       // failed to get new token
       throw new Error(error?.errorMessage);

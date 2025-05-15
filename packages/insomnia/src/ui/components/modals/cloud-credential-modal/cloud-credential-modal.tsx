@@ -9,8 +9,6 @@ import {
   getProviderDisplayName,
 } from '../../../../models/cloud-credential';
 import { Icon } from '../../icon';
-import { showModal } from '..';
-import { SettingsModal, TAB_CLOUD_CREDENTIAL } from '../settings-modal';
 import { AWSCredentialForm } from './aws-credential-form';
 import { GCPCredentialForm } from './gcp-credential-form';
 import { HashiCorpCredentialForm } from './hashicorp-credential-form';
@@ -18,12 +16,13 @@ import { HashiCorpCredentialForm } from './hashicorp-credential-form';
 export interface CloudCredentialModalProps {
   provider: CloudProviderName;
   providerCredential?: CloudProviderCredential;
+  authUrl?: string;
   onClose: (data?: any) => void;
   onComplete?: (data?: any) => void;
 }
 
 export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
-  const { provider, providerCredential, onClose, onComplete } = props;
+  const { provider, providerCredential, authUrl, onClose, onComplete } = props;
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState('');
   const [manulInputUrl, setManualInputUrl] = useState('');
@@ -59,6 +58,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
   const exchangeAzureCode = async () => {
     try {
       setError('');
+      setIsAuthenticating(true);
       const parsedURL = new URL(manulInputUrl);
       const code = parsedURL.searchParams.get('code');
       if (code && typeof code === 'string') {
@@ -72,7 +72,6 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
             credentials: result!,
             isAuthenticated: true,
           });
-          showModal(SettingsModal, { tab: TAB_CLOUD_CREDENTIAL });
         } else {
           setError(error!.errorMessage);
         }
@@ -82,6 +81,8 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
       }
     } catch (error) {
       setError(error.toString());
+    } finally {
+      setIsAuthenticating(false);
     }
   };
 
@@ -120,7 +121,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
                 </Heading>
                 <Button
                   className="flex aspect-square h-6 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                  id="close-add-cloud-crendeital-modal"
+                  id="close-add-cloud-credential-modal"
                   onPress={close}
                 >
                   <Icon icon="x" />
@@ -150,33 +151,50 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
                   errorMessage={fetchErrorMessage}
                 />
               )}
-              {provider === 'azure' && (
-                <div className="flex flex-col place-content-center place-items-center rounded-[--radius-md] border border-solid border-[--hl-sm] p-[--padding-sm]">
-                  <a
-                    className="cursor-pointer"
-                    onClick={() => {
-                      setIsAuthenticating(true);
-                      window.main.cloudService.openAuthUrl('azure');
-                    }}
-                  >
-                    {isAuthenticating ? 'Authenticating' : 'Click to authenticate'} with Azure
-                  </a>
-                  {isAuthenticating && (
-                    <label className="form-control form-control--outlined">
-                      <div className="form-row">
-                        <input
-                          placeholder="Manually paste the authentication url if you are not redirected"
-                          onChange={e => setManualInputUrl(e.target.value)}
+              {provider === 'azure' && authUrl && (
+                <div className="flex flex-col gap-[--padding-md] text-[--color-font]">
+                  <p>A new page should have opened in your default web browser to authenticate with Azure.</p>
+                  <div className="flex flex-col gap-3 rounded-md bg-[--hl-sm] p-[--padding-md]">
+                    <p className="text-[rgba(var(--color-font-rgb),0.8))] text-start">
+                      If you were not redirected, please copy and paste the following URL into your browser.
+                    </p>
+                    <div className="form-control form-control--outlined no-pad-top flex">
+                      <input type="text" value={authUrl} className="mr-[--padding-sm]" readOnly />
+                      <button
+                        className="btn btn--super-compact btn--outlined flex items-center gap-[--padding-xs]"
+                        onClick={() => {
+                          window.clipboard.writeText(authUrl);
+                        }}
+                      >
+                        <i className="fa fa-clipboard mr-1" aria-hidden="true" />
+                        Copy
+                      </button>
+                    </div>
+                    <p className="text-[rgba(var(--color-font-rgb),0.8))] text-start">
+                      If your browser does not open the Insomnia app automatically you can manually paste the redirect
+                      URL in Azure to here.
+                    </p>
+                    <div className="form-control form-control--outlined no-pad-top" style={{ display: 'flex' }}>
+                      <input
+                        type="text"
+                        className="mr-[--padding-sm]"
+                        placeholder="Manually paste the authentication url if you are not redirected"
+                        onChange={e => setManualInputUrl(e.target.value)}
+                      />{' '}
+                      <button
+                        className="btn btn--super-compact btn--outlined gap-[--padding-xs flex items-center"
+                        type="submit"
+                        disabled={isAuthenticating}
+                        onClick={exchangeAzureCode}
+                      >
+                        <Icon
+                          icon={isAuthenticating ? 'spinner' : 'sign-in'}
+                          className={`${isAuthenticating ? 'animate-spin' : ''} mr-1`}
                         />
-                        <Button
-                          className="h-[--line-height-xs] border border-solid border-[--hl-sm] px-[--padding-md]"
-                          onPress={() => exchangeAzureCode()}
-                        >
-                          Authenticate
-                        </Button>
-                      </div>
-                    </label>
-                  )}
+                        Auth
+                      </button>
+                    </div>
+                  </div>
                   {error && <p className="notice error margin-bottom-sm w-full">{error}</p>}
                 </div>
               )}

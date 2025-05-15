@@ -207,6 +207,11 @@ const Root = () => {
                 encType: 'application/json',
               },
             );
+            const closeModalBtn = document.getElementById('close-add-cloud-credential-modal');
+            if (closeModalBtn) {
+              // close the modal to hint user Azure oauth url if exists
+              closeModalBtn.click();
+            }
             showModal(SettingsModal, { tab: TAB_CLOUD_CREDENTIAL });
           } else {
             showError({

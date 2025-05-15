@@ -45,6 +45,7 @@ export type HandleChannels =
   | 'cloudService.authenticate'
   | 'cloudService.getSecret'
   | 'cloudService.exchangeCode'
+  | 'cloudService.openAuthUrl'
   | 'git.loadGitRepository'
   | 'git.getGitBranches'
   | 'git.gitFetchAction'
@@ -118,8 +119,7 @@ export type MainOnChannels =
   | 'updateLatestStepName'
   | 'startExecution'
   | 'cloudService.setCacheMaxAge'
-  | 'cloudService.clearCache'
-  | 'cloudService.openAuthUrl';
+  | 'cloudService.clearCache';
 
 export type RendererOnChannels =
   | 'clear-all-models'

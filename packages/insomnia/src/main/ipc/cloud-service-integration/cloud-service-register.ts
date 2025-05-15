@@ -21,7 +21,7 @@ export function registerCloudServiceHandlers() {
   ipcMainHandle('cloudService.authenticate', (_event, options) => cloudServiceProviderAuthentication(options));
   ipcMainHandle('cloudService.getSecret', (_event, options) => getSecret(options));
   ipcMainHandle('cloudService.exchangeCode', (_event, type, data) => exchangeCode(type, data));
-  ipcMainOn('cloudService.openAuthUrl', (_event, type) => openAuthUrl(type));
+  ipcMainHandle('cloudService.openAuthUrl', async (_event, type) => openAuthUrl(type));
   ipcMainOn('cloudService.clearCache', () => clearVaultCache());
   ipcMainOn('cloudService.setCacheMaxAge', (_event, { maxAge, unit }) => setCacheMaxAge(maxAge, unit));
 }

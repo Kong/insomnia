@@ -1,6 +1,5 @@
 import { type AuthenticationResult, AuthError, CryptoProvider, PublicClientApplication } from '@azure/msal-node';
 import crypto from 'crypto';
-import { shell } from 'electron';
 
 import { INSOMNIA_AZURE_CLIENT_ID, INSOMNIA_AZURE_REDIRECT_URI } from '../../../common/constants';
 import { insomniaFetch } from '../../../ui/insomniaFetch';
@@ -23,7 +22,7 @@ export interface AzureSecretObjectResponse extends AzureSecretAttributes {
 }
 export type AzureSecretResponse = AzureKeyObjectResponse | AzureSecretObjectResponse;
 
-// singeleton azure client instance
+// singleton azure client instance
 let azureClient: PublicClientApplication;
 let redirect_uri: string;
 let verifier: string;
@@ -45,7 +44,7 @@ const getAzureConfig = async () => {
     return {
       clientId: INSOMNIA_AZURE_CLIENT_ID,
       redirectUri: INSOMNIA_AZURE_REDIRECT_URI,
-    };
+  };
   }
 
   // Get Azure config from server
@@ -54,10 +53,14 @@ const getAzureConfig = async () => {
     method: 'GET',
     sessionId: '',
   }).then(data => {
-    return {
-      clientId: data.clientID,
-      redirectUri: data.clientRedirectURI,
-    };
+    const { clientID, clientRedirectURI } = data;
+    if (clientID && clientRedirectURI) {
+      return {
+        clientId: clientID,
+        redirectUri: clientRedirectURI,
+      };
+    }
+    throw new Error(`Can not get Azure config from server ${data}`);
   });
 };
 
@@ -99,7 +102,7 @@ export class AzureService extends OAuthCloudService implements ICloudService {
       codeChallenge: challenge,
       codeChallengeMethod: 'S256',
     });
-    shell.openExternal(authUrl);
+    return authUrl;
   }
 
   static async exchangeCode({ code }: { code: string }): Promise<CloudServiceResult<AuthenticationResult>> {
