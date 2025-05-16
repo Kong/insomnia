@@ -17,8 +17,8 @@ export function validatePluginName(pluginName: string, allowScopedPackageNames =
   const pluginNameWithoutPrefix = pluginName.replace(/^insomnia-plugin-/, '');
 
   // Check the length of the plugin name
-  // Plugin name must be less than 250 characters
-  if (pluginNameWithoutPrefix.trim().length === 0 || pluginNameWithoutPrefix.length > 250) {
+  // Plugin name must be less than 214 characters
+  if (pluginNameWithoutPrefix.trim().length === 0 || pluginNameWithoutPrefix.length > 214) {
     return 'Plugin name must not be empty or too long';
   }
 
