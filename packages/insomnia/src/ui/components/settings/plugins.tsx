@@ -41,7 +41,18 @@ export const Plugins: FC = () => {
   const { settings } = useRootLoaderData();
   const [showCreatePluginModal, setShowCreatePluginModal] = useState(false);
 
-  const [state, setState] = useState<State>({
+  const [
+    {
+      plugins,
+      error,
+      installPluginErrMsg,
+      isInstallingFromNpm,
+      isRefreshingPlugins,
+      npmPluginValue,
+      pluginNodeExtraCerts,
+    },
+    setState,
+  ] = useState<State>({
     plugins: [],
     npmPluginValue: '',
     error: null,
@@ -50,27 +61,31 @@ export const Plugins: FC = () => {
     isRefreshingPlugins: false,
     pluginNodeExtraCerts: settings.pluginNodeExtraCerts,
   });
-  const { plugins, error, installPluginErrMsg, isInstallingFromNpm, isRefreshingPlugins, npmPluginValue } = state;
 
-  const isIndeterminate = plugins.some(plugin => plugin.config.disabled);
-  const isAllPluginsDisabled = plugins.every(plugin => !plugin.config.disabled);
+  // If all plugins are enabled, we show the checked state
+  const isAllPluginsSelected = plugins.every(plugin => plugin.config.disabled === false);
 
-  useEffect(() => {
-    refreshPlugins();
-  }, []);
+  // If some plugins are enabled, we show the indeterminate state
+  const isIndeterminate = plugins.some(plugin => plugin.config.disabled === false);
 
   useEffect(() => {
     setState(state => ({ ...state, pluginNodeExtraCerts: settings.pluginNodeExtraCerts }));
   }, [settings.pluginNodeExtraCerts]);
 
-  async function refreshPlugins() {
+  useEffect(() => {
+    handleReloadPlugins();
+  }, [settings.pluginConfig]);
+
+  async function handleReloadPlugins() {
     setState(state => ({ ...state, isRefreshingPlugins: true }));
     // Get and reload plugins
     const plugins = await getPlugins(true);
+
     reload();
 
     setState(state => ({ ...state, plugins, isRefreshingPlugins: false }));
   }
+
   const patchSettings = useSettingsPatcher();
 
   return (
@@ -181,7 +196,7 @@ export const Plugins: FC = () => {
 
                     try {
                       await window.main.installPlugin(npmPluginValue.trim());
-                      await refreshPlugins();
+                      await handleReloadPlugins();
                       setState(state => ({ ...state, ...idleState, npmPluginValue: '' }));
                     } catch (err) {
                       console.error(err);
@@ -232,7 +247,7 @@ export const Plugins: FC = () => {
             </Label>
           </div>
 
-          {state.pluginNodeExtraCerts === '' && (
+          {pluginNodeExtraCerts === '' && (
             <div className="mt-2 flex flex-col gap-2">
               <div className="flex w-full items-center justify-center">
                 <label
@@ -270,7 +285,7 @@ export const Plugins: FC = () => {
             </div>
           )}
 
-          {state.pluginNodeExtraCerts !== '' && (
+          {pluginNodeExtraCerts !== '' && (
             <div className="mt-4 flex flex-col justify-between gap-2">
               <div className="flex h-20 w-full gap-2">
                 <TextField
@@ -279,7 +294,7 @@ export const Plugins: FC = () => {
                   className="group relative flex max-w-full flex-shrink-0 flex-grow flex-col gap-2 overflow-hidden"
                 >
                   <Input
-                    value={state.pluginNodeExtraCerts}
+                    value={pluginNodeExtraCerts}
                     className="flex h-[--line-height-xs] w-full items-center rounded-[--radius-md] border border-solid border-[--hl-md] bg-[--hl-xxs] p-[--padding-sm] text-[--color-font] focus:border-[--hl-lg] focus:bg-transparent"
                   />
                 </TextField>
@@ -308,7 +323,7 @@ export const Plugins: FC = () => {
                   className="flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                   isDisabled={isRefreshingPlugins}
                   onPress={() => {
-                    refreshPlugins();
+                    handleReloadPlugins();
                   }}
                 >
                   Reload
@@ -330,15 +345,25 @@ export const Plugins: FC = () => {
                 <div className="flex items-center gap-2 pl-2">
                   <div className="flex flex-1 items-center gap-3">
                     <Checkbox
-                      slot={null}
-                      isSelected={isAllPluginsDisabled || isIndeterminate}
+                      isSelected={isAllPluginsSelected}
                       isIndeterminate={isIndeterminate}
+                      onChange={isSelected => {
+                        const config = plugins.reduce(
+                          (acc, plugin) => {
+                            acc[plugin.name] = { ...plugin.config, disabled: !isSelected };
+                            return acc;
+                          },
+                          {} as Record<string, Plugin['config']>,
+                        );
+
+                        patchSettings({ pluginConfig: { ...settings.pluginConfig, ...config } });
+                      }}
                       className="group flex h-full items-center p-0"
                     >
                       <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
                         <Icon
-                          icon={isIndeterminate ? 'minus' : 'check'}
-                          className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
+                          icon={!isAllPluginsSelected ? 'minus' : 'check'}
+                          className="h-3 w-3 opacity-0 group-data-[indeterminate]:text-[--color-success] group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
                         />
                       </div>
                     </Checkbox>
@@ -386,15 +411,16 @@ export const Plugins: FC = () => {
                   >
                     <div className="flex flex-1 items-center gap-3">
                       <Checkbox
-                        slot={null}
                         isSelected={!plugin.config.disabled}
                         isDisabled={isRefreshingPlugins}
-                        className="group flex h-full items-center p-0"
+                        className="group flex h-full items-center p-0 disabled:animate-pulse"
                         onChange={isSelected => {
-                          const newConfig = { ...plugin.config, disabled: !isSelected };
-                          setState(state => ({ ...state, isRefreshingPlugins: true }));
-                          patchSettings({ pluginConfig: { ...settings.pluginConfig, [plugin.name]: newConfig } });
-                          refreshPlugins();
+                          patchSettings({
+                            pluginConfig: {
+                              ...settings.pluginConfig,
+                              [plugin.name]: { ...plugin.config, disabled: !isSelected },
+                            },
+                          });
                         }}
                       >
                         <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
@@ -470,7 +496,7 @@ export const Plugins: FC = () => {
                 onClose={() => setShowCreatePluginModal(false)}
                 onComplete={() => {
                   setShowCreatePluginModal(false);
-                  refreshPlugins();
+                  handleReloadPlugins();
                 }}
               />
             )}
