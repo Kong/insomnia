@@ -32,11 +32,11 @@ test.describe('test hidden window handling', () => {
     await page.click('text=Request was cancelled');
 
     await page.getByText('Special template tag format').click();
-    await page.getByRole('button', { name: 'Send' }).click();
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
     await page.getByText('200 OK').click();
 
     await page.getByText('Multiple template tags format').click();
-    await page.getByRole('button', { name: 'Send' }).click();
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
     await page.getByText('200 OK').click();
   });
 
