@@ -43,5 +43,5 @@ test('Can invite users in app', async ({ page }) => {
   // Remove the team
   await firstMemberInTheListLocator.getByLabel('Remove').click();
   // Confirm the deletion
-  await firstMemberInTheListLocator.getByLabel('Remove').click();
+  await firstMemberInTheListLocator.getByLabel('Remove').click({ force: true });
 });
