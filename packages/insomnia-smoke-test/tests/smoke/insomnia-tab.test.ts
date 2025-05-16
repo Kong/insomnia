@@ -33,11 +33,9 @@ test.describe('multiple-tab feature test', () => {
     await page.getByTestId('New Request').dblclick();
     await page.getByRole('textbox', { name: 'GET New Request' }).fill('bar');
     await page.getByTestId('foo').click();
-    await page.waitForTimeout(1000);
     const tabA = page.getByLabel('Insomnia Tabs').getByLabel('tab-foo', { exact: true });
     await expect.soft(tabA).toHaveAttribute('data-selected', 'true');
     await page.getByTestId('bar').click();
-    await page.waitForTimeout(1000);
     const tabB = page.getByLabel('Insomnia Tabs').getByLabel('tab-bar', { exact: true });
     await expect.soft(tabB).toHaveAttribute('data-selected', 'true');
 
@@ -48,12 +46,10 @@ test.describe('multiple-tab feature test', () => {
     await page.getByRole('button', { name: 'Create' }).click();
     await page.getByLabel('Create in collection').click();
     await page.getByLabel('HTTP Request').click();
-    await page.waitForTimeout(1000);
     await expect.soft(page.getByLabel('tab-New Request').getByLabel('Tab Tag')).toHaveText('GET');
     await page.getByTestId('tab-close-button').first().click();
     await page.getByLabel('Request Method').click();
     await page.getByRole('button', { name: 'POST' }).click();
-    await page.waitForTimeout(1000);
     await expect.soft(page.getByLabel('tab-New Request').getByLabel('Tab Tag')).toHaveText('POST');
 
     //click + button to add a new request
@@ -71,12 +67,10 @@ test.describe('multiple-tab feature test', () => {
     await page.getByLabel('Request collection', { exact: true }).click();
     await page.getByPlaceholder('Enter a name for your Request Collection').fill('Test add tab collection');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
-    await page.waitForTimeout(1000);
     await page.getByLabel('Tab Plus').click();
     await page.getByRole('menuitem', { name: 'add request to other' }).click();
     await page.getByLabel('Select Workspace').selectOption({ label: 'My first collection' });
     await page.getByRole('dialog').getByRole('button', { name: 'Add' }).click();
-    await page.waitForTimeout(1000);
     await expect.soft(page.getByTestId('workspace-context-dropdown')).toHaveText('My first collection');
 
     // close tab after delete a request
