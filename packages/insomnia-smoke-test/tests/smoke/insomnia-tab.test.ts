@@ -26,16 +26,24 @@ test.describe('multiple-tab feature test', () => {
     await page.getByLabel('HTTP Request').click();
     await page.getByTestId('New Request').dblclick();
     await page.getByRole('textbox', { name: 'GET New Request' }).fill('foo');
+    // Click outside the input to trigger the blur event
+    await page.locator('body').click();
+    await page.getByTestId('foo').click();
     await page.getByLabel('Create in collection').click();
     await page.getByLabel('HTTP Request').click();
     // check new request created
     await page.getByTestId('New Request').isVisible();
     await page.getByTestId('New Request').dblclick();
     await page.getByRole('textbox', { name: 'GET New Request' }).fill('bar');
+    // Click outside the input to trigger the blur event
+    await page.locator('body').click();
+    await page.getByTestId('bar').click();
     await page.getByTestId('foo').click();
+
     const tabA = page.getByLabel('Insomnia Tabs').getByLabel('tab-foo', { exact: true });
     await expect.soft(tabA).toHaveAttribute('data-selected', 'true');
     await page.getByTestId('bar').click();
+
     const tabB = page.getByLabel('Insomnia Tabs').getByLabel('tab-bar', { exact: true });
     await expect.soft(tabB).toHaveAttribute('data-selected', 'true');
 
