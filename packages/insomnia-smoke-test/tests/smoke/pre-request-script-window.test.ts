@@ -106,6 +106,11 @@ test.describe('test hidden window handling', () => {
 
     // send the another script with normal script
     await page.getByLabel('Request Collection').getByTestId('simple log').press('Enter');
+
+    const codeMirror = page.getByTestId('OneLineEditor').first().locator('.CodeMirror');
+    await expect
+      .soft(codeMirror.locator('.CodeMirror-line').getByRole('presentation'))
+      .toHaveText('http://127.0.0.1:4010/echo?simple=true');
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
 
     // it should still work
