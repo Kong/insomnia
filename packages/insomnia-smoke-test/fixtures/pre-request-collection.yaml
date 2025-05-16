@@ -1170,7 +1170,7 @@ collection:
             send: true
             store: true
           rebuildPath: true
-      - url: http://127.0.0.1:4010/echo
+      - url: http://127.0.0.1:4010/echo?simple=true
         name: simple log
         meta:
           id: req_fe900d4925bc471c85baa9d5fa1013c8
