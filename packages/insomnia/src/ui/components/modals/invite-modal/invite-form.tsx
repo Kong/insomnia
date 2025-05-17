@@ -9,7 +9,7 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { useFetcher, useParams, useSearchParams } from 'react-router-dom';
+import { useFetcher, useParams, useSearchParams } from 'react-router';
 
 import { getCurrentSessionId } from '../../../../account/session';
 import { debounce } from '../../../../common/misc';
@@ -288,7 +288,7 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
           <ListBox
             className="p-1 outline-none"
             selectionMode="single"
-            aria-label="Sort menu"
+            aria-label="Organization members"
             onAction={(email: Key) => {
               const exists = emails.findIndex(({ email: e }) => e === email) !== -1;
 
@@ -309,7 +309,7 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
               }
             }}
           >
-            {searchResult.map((item, index) => (
+            {searchResult.map(item => (
               <UserItem
                 id={item.name}
                 key={item.name}
@@ -317,9 +317,7 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
                 isSelected={emails.findIndex(({ email: e }) => e === item.name) !== -1}
               >
                 <img alt="" src={item.picture} className="h-6 w-6 rounded-full" />
-                <span className="truncate" data-testid={`search-test-result-iteration-${index}`}>
-                  {item.name}
-                </span>
+                <span className="truncate">{item.name}</span>
               </UserItem>
             ))}
           </ListBox>

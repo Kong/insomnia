@@ -1,5 +1,5 @@
 import React from 'react';
-import { type LoaderFunction, Outlet } from 'react-router-dom';
+import { type LoaderFunction, Outlet } from 'react-router';
 
 import type { SortOrder } from '../../common/constants';
 import { database } from '../../common/database';

@@ -5,7 +5,7 @@ import * as contentDisposition from 'content-disposition';
 import fs from 'fs';
 import { GRAPHQL_TRANSPORT_WS_PROTOCOL, MessageType } from 'graphql-ws';
 import { extension as mimeExtension } from 'mime-types';
-import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
+import { type ActionFunction, type LoaderFunction, redirect } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
 import type { RequestTestResult } from '../../../../insomnia-scripting-environment/src/objects';
@@ -593,6 +593,7 @@ export const sendActionImplementation = async (options: {
     runtime,
   );
   if ('error' in mutatedContext) {
+    window.main.completeExecutionStep({ requestId });
     throw {
       // create response with error info, so that we can store response in db and show it in response viewer
       response: {

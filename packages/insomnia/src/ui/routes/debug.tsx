@@ -40,7 +40,7 @@ import {
   useParams,
   useRouteLoaderData,
   useSearchParams,
-} from 'react-router-dom';
+} from 'react-router';
 
 import {
   DEFAULT_SIDEBAR_SIZE,

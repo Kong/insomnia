@@ -1,4 +1,4 @@
-import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
+import { type ActionFunction, type LoaderFunction, redirect } from 'react-router';
 
 import { database, type Operation } from '../../common/database';
 import { isNotNullOrUndefined } from '../../common/misc';

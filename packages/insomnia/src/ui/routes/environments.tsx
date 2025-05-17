@@ -18,7 +18,7 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { NavLink, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { NavLink, useFetcher, useParams, useRouteLoaderData } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import { debounce } from '../../common/misc';

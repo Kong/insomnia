@@ -14,7 +14,7 @@ import {
   ModalOverlay,
   Popover,
 } from 'react-aria-components';
-import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 
 import { getProductName } from '../../../common/constants';
 import { database as db } from '../../../common/database';

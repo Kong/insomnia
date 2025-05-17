@@ -2,8 +2,8 @@ import fs from 'fs';
 import type * as Har from 'har-format';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
-import { useRouteLoaderData } from 'react-router-dom';
-import { useFetcher } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router';
+import { useFetcher } from 'react-router';
 import { useInterval } from 'react-use';
 
 import {

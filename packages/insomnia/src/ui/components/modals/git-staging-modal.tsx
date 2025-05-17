@@ -13,7 +13,7 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router';
 
 import type { GitRepository } from '../../../models/git-repository';
 import type { GitChangesLoaderData, GitDiffResult } from '../../routes/git-actions';

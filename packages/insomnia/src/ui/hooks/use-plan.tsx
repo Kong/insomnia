@@ -1,4 +1,4 @@
-import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router';
 
 import { isOwnerOfOrganization } from '../../models/organization';
 import { formatCurrentPlanType, type OrganizationLoaderData } from '../routes/organization';

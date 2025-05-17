@@ -1,7 +1,7 @@
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router-dom';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router';
+import { useRouteLoaderData } from 'react-router';
 
 import { getProductName } from '../../../common/constants';
 import { exportAllData, exportProjectToFile } from '../../../common/export';

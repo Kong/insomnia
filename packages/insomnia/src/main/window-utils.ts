@@ -56,6 +56,7 @@ const stopAndWaitForHiddenBrowserWindow = async (runningHiddenBrowserWindow: Bro
     runningHiddenBrowserWindow.on('closed', () => {
       console.log('[main] restarting hidden browser window:', runningHiddenBrowserWindow.id);
       browserWindows.delete('HiddenBrowserWindow');
+
       resolve();
     });
     stopHiddenBrowserWindow();
@@ -117,6 +118,9 @@ export async function createHiddenBrowserWindow() {
       if (browserWindows.get('HiddenBrowserWindow')) {
         console.log('[main] closing hidden browser window');
         browserWindows.delete('HiddenBrowserWindow');
+        // @TODO: This should be set when the window closed is event is emmited so it's guaranteed to be realiable
+        // There might be other events we need to listen to also
+        hiddenWindowIsBusy = false;
       }
     });
 
@@ -162,8 +166,7 @@ export async function createHiddenBrowserWindow() {
 }
 
 export function stopHiddenBrowserWindow() {
-  browserWindows.get('HiddenBrowserWindow')?.close();
-  hiddenWindowIsBusy = false;
+  browserWindows.get('HiddenBrowserWindow')?.destroy();
 }
 
 export function createWindow(): ElectronBrowserWindow {

@@ -32,11 +32,15 @@ test.describe('test hidden window handling', () => {
     await page.click('text=Request was cancelled');
 
     await page.getByText('Special template tag format').click();
-    await page.getByRole('button', { name: 'Send' }).click();
+    await expect.soft(page.getByText(`{{ _['examplehost']}}`)).toBeVisible();
+
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
     await page.getByText('200 OK').click();
 
     await page.getByText('Multiple template tags format').click();
-    await page.getByRole('button', { name: 'Send' }).click();
+    await expect.soft(page.getByText(`{{_['a']['b']['c']['url']}}`)).toBeVisible();
+
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
     await page.getByText('200 OK').click();
   });
 
@@ -106,6 +110,11 @@ test.describe('test hidden window handling', () => {
 
     // send the another script with normal script
     await page.getByLabel('Request Collection').getByTestId('simple log').press('Enter');
+
+    const codeMirror = page.getByTestId('OneLineEditor').first().locator('.CodeMirror');
+    await expect
+      .soft(codeMirror.locator('.CodeMirror-line').getByRole('presentation'))
+      .toHaveText('http://127.0.0.1:4010/echo?simple=true');
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
 
     // it should still work
