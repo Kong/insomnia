@@ -1,14 +1,13 @@
 import { displayModifierKey, isMac } from './constants';
 import { keyboardKeys } from './keyboard-keys';
 import type { HotKeyRegistry, KeyboardShortcut, KeyCombination, PlatformKeyCombinations } from './settings';
-import { strings } from './strings';
 
 /**
  * The collection of available hotkeys' and their descriptions.
  * @IMPORTANT Not using dot, because NeDB prohibits field names to contain dots.
  */
 export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
-  workspace_showSettings: `Show ${strings.document.singular} / ${strings.collection.singular} Settings`,
+  workspace_showSettings: `Show Document / Collection Settings`,
   request_showSettings: 'Show Request Settings',
   preferences_showKeyboardShortcuts: 'Show Keyboard Shortcuts',
   preferences_showGeneral: 'Show App Preferences',

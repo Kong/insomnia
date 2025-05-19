@@ -1,5 +1,4 @@
 import { database as db } from '../common/database';
-import { strings } from '../common/strings';
 import type { BaseModel } from './index';
 
 export const name = 'ApiSpec';
@@ -24,7 +23,7 @@ export const isApiSpec = (model: Pick<BaseModel, 'type'>): model is ApiSpec => m
 
 export function init(): BaseApiSpec {
   return {
-    fileName: `New ${strings.document.singular}`,
+    fileName: `New Document`,
     contents: '',
     contentType: 'yaml',
   };

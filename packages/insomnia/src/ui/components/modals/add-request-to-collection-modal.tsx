@@ -6,7 +6,6 @@ import { OverlayContainer } from 'react-aria';
 import { useFetcher, useParams } from 'react-router';
 
 import { database } from '../../../common/database';
-import { strings } from '../../../common/strings';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -81,7 +80,7 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
         <ModalBody className="wide">
           <div className="form-control form-control--outlined">
             <label>
-              {strings.project.plural}:
+              Projects:
               <select name="projectId" value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)}>
                 {projectOptions.map(project => (
                   <option key={project._id} value={project._id}>
@@ -105,7 +104,7 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
 
           <div className="form-control form-control--outlined">
             <label>
-              {strings.collection.plural}:
+              Collections:
               <select
                 aria-label="Select Workspace"
                 name="workspaceId"

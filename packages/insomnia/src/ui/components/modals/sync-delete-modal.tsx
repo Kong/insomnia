@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useRouteLoaderData } from 'react-router';
 
-import { strings } from '../../../common/strings';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import type { VCS } from '../../../sync/vcs/vcs';
 import { Button } from '../../components/themed-button';
@@ -37,7 +36,7 @@ export const SyncDeleteModal = ({ vcs, onHide }: Props) => {
         action: 'delete',
         callback: async () => await vcs.archiveProject(),
         resourceName: state.workspaceName,
-        resourceType: strings.collection.singular.toLowerCase(),
+        resourceType: 'collection',
       });
       modalRef.current?.hide();
       onHide?.();
@@ -53,13 +52,12 @@ export const SyncDeleteModal = ({ vcs, onHide }: Props) => {
   return (
     <OverlayContainer>
       <Modal ref={modalRef} skinny onHide={onHide}>
-        <ModalHeader>Delete {strings.collection.singular}</ModalHeader>
+        <ModalHeader>Delete Collection</ModalHeader>
         <ModalBody className="wide pad-left pad-right text-center" noScroll>
           {error && <p className="notice error margin-bottom-sm no-margin-top">{error}</p>}
           <p className="selectable">
             This will permanently delete the{' '}
-            {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>}{' '}
-            {strings.collection.singular.toLowerCase()} remotely.
+            {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>} collection remotely.
           </p>
           <p className="selectable">
             Please type {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>} to confirm.
@@ -72,7 +70,7 @@ export const SyncDeleteModal = ({ vcs, onHide }: Props) => {
                 value={workspaceName}
               />
               <Button bg="danger" disabled={workspaceName !== activeWorkspace?.name}>
-                Delete {strings.collection.singular}
+                Delete Collection
               </Button>
             </div>
           </form>

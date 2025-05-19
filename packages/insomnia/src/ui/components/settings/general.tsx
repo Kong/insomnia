@@ -11,7 +11,6 @@ import {
 } from '../../../common/constants';
 import { docsKeyMaps } from '../../../common/documentation';
 import { type HttpVersion, HttpVersions, UpdateChannel } from '../../../common/settings';
-import { strings } from '../../../common/strings';
 import { initNewOAuthSession } from '../../../network/o-auth-2/get-token';
 import { useRootLoaderData } from '../../routes/root';
 import { Link } from '../base/link';
@@ -288,8 +287,7 @@ export const General: FC = () => {
           <BooleanSetting label="Send Anonymous Usage Statistics" setting="enableAnalytics" disabled={isLoggedIn} />
           <div className="py-2 pl-5 text-sm opacity-50">
             Help Kong improve its products by sending anonymous data about features and plugins used, hardware and
-            software configuration, statistics on number of requests, {strings.collection.plural.toLowerCase()},{' '}
-            {strings.document.plural.toLowerCase()}, etc.
+            software configuration, statistics on number of requests, collection, document, etc.
           </div>
           <div className="py-2 pl-5 text-sm opacity-50">
             Please note that this will not include personal data or any sensitive information, such as request data,

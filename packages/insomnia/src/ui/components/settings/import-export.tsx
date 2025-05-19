@@ -10,7 +10,6 @@ import { getProductName } from '../../../common/constants';
 import { exportAllData, exportProjectToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { isNotNullOrUndefined } from '../../../common/misc';
-import { strings } from '../../../common/strings';
 import { SegmentEvent } from '../../analytics';
 import { useOrganizationLoaderData } from '../../routes/organization';
 import type { ListWorkspacesLoaderData } from '../../routes/project';
@@ -321,7 +320,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                 className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                 onPress={handleExportProjectToFile}
               >
-                {`Export files from the "${projectName}" ${strings.project.singular}`}
+                {`Export files from the "${projectName}" Project`}
               </Button>
             )}
             <Button
@@ -388,7 +387,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                 onPress={() => setIsImportModalOpen(true)}
               >
                 <Icon icon="file-import" />
-                {`Import to the "${projectName}" ${strings.project.singular}`}
+                {`Import to the "${projectName}" Project`}
               </Button>
             </div>
           </div>
@@ -495,7 +494,7 @@ const ExportSection = ({
         className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
         onPress={handleExportProjectToFile}
       >
-        Export the "{projectName}" ${strings.project.singular}
+        Export the "{projectName}" Project
       </Button>
     </>
   );

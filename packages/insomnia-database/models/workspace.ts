@@ -2,7 +2,6 @@ import type { Merge } from 'type-fest';
 
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../common/constants';
 import { database as db } from '../common/database';
-import { strings } from '../common/strings';
 import type { BaseModel } from './index';
 import * as models from './index';
 import { isProjectId } from './project';
@@ -43,7 +42,7 @@ export const isEnvironment = (workspace: Pick<Workspace, 'scope'>) =>
   workspace.scope === WorkspaceScopeKeys.environment;
 
 export const init = (): BaseWorkspace => ({
-  name: `New ${strings.collection.singular}`,
+  name: `New Collection`,
   description: '',
   scope: WorkspaceScopeKeys.collection,
 });

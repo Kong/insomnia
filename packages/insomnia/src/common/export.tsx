@@ -16,7 +16,6 @@ import { SelectModal } from '../ui/components/modals/select-modal';
 import { database, database as db } from './database';
 import * as har from './har';
 import { getInsomniaV5DataExport } from './insomnia-v5';
-import { strings } from './strings';
 
 const getDocWithDescendants =
   (includePrivateDocs = false) =>
@@ -193,8 +192,7 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
       title: 'Cannot export',
       message: (
         <>
-          There are no workspaces to export in the <strong>{activeProjectName}</strong>{' '}
-          {strings.project.singular.toLowerCase()}.
+          There are no workspaces to export in the <strong>{activeProjectName}</strong> project.
         </>
       ),
     });

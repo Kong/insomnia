@@ -8,7 +8,6 @@ import { useFetcher, useParams } from 'react-router';
 
 import { database } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import { strings } from '../../../common/strings';
 import { useOrganizationLoaderData } from '../../routes/organization';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '../../routes/project';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
@@ -99,7 +98,7 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
             </div>
             <div className="form-control form-control--outlined">
               <label>
-                {strings.project.singular}:
+                Project:
                 <select name="projectId" value={selectedProjectId} onChange={e => setSelectedProjectId(e.target.value)}>
                   {projectOptions.map(project => (
                     <option key={project._id} value={project._id}>

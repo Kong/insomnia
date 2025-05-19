@@ -2,7 +2,6 @@ import type { BaseModel } from '@db/models';
 import clone from 'clone';
 import crypto from 'crypto';
 
-import { strings } from '../../common/strings';
 import { deleteKeys, resetKeys, shouldIgnoreKey } from '../ignore-keys';
 import { deterministicStringify } from '../lib/deterministicStringify';
 import type {
@@ -539,7 +538,7 @@ export const interceptAccessError = async <T>({
   callback,
   action,
   resourceName,
-  resourceType = strings.collection.singular.toLowerCase(),
+  resourceType = 'collection',
 }: {
   callback: () => T | Promise<T>;
   action: string;
