@@ -1,6 +1,6 @@
+import type { ClientCertificate } from '@db/models/client-certificate';
 import { describe, expect, it } from 'vitest';
 
-import type { ClientCertificate } from '../../models/client-certificate';
 import { filterClientCertificates } from '../certificate';
 
 describe('filterClientCertificates', () => {

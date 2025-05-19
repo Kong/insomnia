@@ -1,3 +1,7 @@
+import { isRemoteProject } from '@db/models/project';
+import { isRequest } from '@db/models/request';
+import { isRequestGroup } from '@db/models/request-group';
+import { isScratchpad, type Workspace } from '@db/models/workspace';
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, type ReactNode, useCallback, useEffect, useState } from 'react';
 import {
@@ -21,10 +25,6 @@ import { database as db } from '../../../common/database';
 import { exportGlobalEnvironmentToFile, exportMockServerToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { PlatformKeyCombinations } from '../../../common/settings';
-import { isRemoteProject } from '../../../models/project';
-import { isRequest } from '../../../models/request';
-import { isRequestGroup } from '../../../models/request-group';
-import { isScratchpad, type Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';

@@ -1,9 +1,9 @@
+import * as models from '@db/models/index';
 import fs from 'fs';
 import { tmpdir } from 'os';
 import path from 'path';
 import { describe, expect, it } from 'vitest';
 
-import * as models from '../../../models/index';
 import * as plugin from '../response';
 
 describe('init()', () => {

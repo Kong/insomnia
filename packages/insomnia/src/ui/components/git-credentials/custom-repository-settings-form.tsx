@@ -1,8 +1,8 @@
+import type { GitRepository } from '@db/models/git-repository';
 import React, { type FunctionComponent } from 'react';
 import { Input, Label, TextField } from 'react-aria-components';
 
 import { docsGitAccessToken } from '../../../common/documentation';
-import type { GitRepository } from '../../../models/git-repository';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
 

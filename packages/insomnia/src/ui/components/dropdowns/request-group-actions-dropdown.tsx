@@ -1,3 +1,6 @@
+import * as models from '@db/models';
+import type { Request } from '@db/models/request';
+import type { RequestGroup } from '@db/models/request-group';
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useRef, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
@@ -5,9 +8,6 @@ import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-ro
 
 import { toKebabCase } from '../../../common/misc';
 import type { PlatformKeyCombinations } from '../../../common/settings';
-import * as models from '../../../models';
-import type { Request } from '../../../models/request';
-import type { RequestGroup } from '../../../models/request-group';
 import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';

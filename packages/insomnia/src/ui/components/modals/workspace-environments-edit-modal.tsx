@@ -1,3 +1,11 @@
+import {
+  type Environment,
+  type EnvironmentKvPairData,
+  EnvironmentKvPairDataType,
+  EnvironmentType,
+  getDataFromKVPair,
+} from '@db/models/environment';
+import { isRemoteProject } from '@db/models/project';
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useMemo, useRef, useState } from 'react';
 import {
@@ -21,14 +29,6 @@ import {
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
 
 import { docsAfterResponseScript, docsTemplateTags } from '../../../common/documentation';
-import {
-  type Environment,
-  type EnvironmentKvPairData,
-  EnvironmentKvPairDataType,
-  EnvironmentType,
-  getDataFromKVPair,
-} from '../../../models/environment';
-import { isRemoteProject } from '../../../models/project';
 import { responseTagRegex } from '../../../templating/utils';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
 import type { WorkspaceLoaderData } from '../../routes/workspace';

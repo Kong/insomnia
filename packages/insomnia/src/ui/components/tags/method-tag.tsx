@@ -1,9 +1,9 @@
+import { type GrpcRequest, isGrpcRequest } from '@db/models/grpc-request';
+import { isEventStreamRequest, isRequest, type Request } from '@db/models/request';
+import { isWebSocketRequest, type WebSocketRequest } from '@db/models/websocket-request';
 import React, { type FC, memo } from 'react';
 
 import { CONTENT_TYPE_GRAPHQL, METHOD_DELETE, METHOD_OPTIONS } from '../../../common/constants';
-import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import { isEventStreamRequest, isRequest, type Request } from '../../../models/request';
-import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
 
 interface Props {
   method: string;

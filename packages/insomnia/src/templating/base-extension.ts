@@ -1,8 +1,9 @@
+import * as models from '@db/models/index';
+import type { Request } from '@db/models/request';
+import type { RequestGroup } from '@db/models/request-group';
+import type { Workspace } from '@db/models/workspace';
+
 import { database as db } from '../common/database';
-import * as models from '../models/index';
-import type { Request } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context';
 import type { Plugin } from '../plugins/index';
 import * as templating from './index';

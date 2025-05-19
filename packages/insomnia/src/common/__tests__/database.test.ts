@@ -1,7 +1,7 @@
+import type { BaseModel } from '@db/models';
+import * as models from '@db/models';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { BaseModel } from '../../models';
-import * as models from '../../models';
 import type { ChangeBufferEvent } from '../database';
 import { _repairDatabase, database as db } from '../database';
 

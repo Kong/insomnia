@@ -1,6 +1,7 @@
-import { type GrpcRequest, isGrpcRequest } from '../models/grpc-request';
-import { isRequest, type Request } from '../models/request';
-import { isRequestGroup, type RequestGroup } from '../models/request-group';
+import { type GrpcRequest, isGrpcRequest } from '@db/models/grpc-request';
+import { isRequest, type Request } from '@db/models/request';
+import { isRequestGroup, type RequestGroup } from '@db/models/request-group';
+
 import {
   HTTP_METHODS,
   SORT_CREATED_ASC,

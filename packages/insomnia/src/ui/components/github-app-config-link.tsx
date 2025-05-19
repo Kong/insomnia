@@ -1,7 +1,7 @@
+import type { GitRepository } from '@db/models/git-repository';
 import React from 'react';
 
 import { getAppWebsiteBaseURL } from '../../common/constants';
-import type { GitRepository } from '../../models/git-repository';
 import { getOauth2FormatName } from '../../sync/git/utils';
 
 interface ConfigLinkProps {

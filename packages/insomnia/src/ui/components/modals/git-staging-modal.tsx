@@ -1,3 +1,4 @@
+import type { GitRepository } from '@db/models/git-repository';
 import React, { type FC, useEffect } from 'react';
 import {
   Button,
@@ -15,7 +16,6 @@ import {
 } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';
 
-import type { GitRepository } from '../../../models/git-repository';
 import type { GitChangesLoaderData, GitDiffResult } from '../../routes/git-actions';
 import { DiffEditor } from '../diff-view-editor';
 import { ConfigLink } from '../github-app-config-link';

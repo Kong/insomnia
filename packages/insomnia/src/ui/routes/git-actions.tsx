@@ -1,9 +1,9 @@
+import { gitCredentials } from '@db/models';
+import type { GitRepository } from '@db/models/git-repository';
+import { WorkspaceScopeKeys } from '@db/models/workspace';
 import { fromUrl } from 'hosted-git-info';
 import { type ActionFunction, type LoaderFunction, redirect } from 'react-router';
 
-import { gitCredentials } from '../../models';
-import type { GitRepository } from '../../models/git-repository';
-import { WorkspaceScopeKeys } from '../../models/workspace';
 import { type GitLogEntry } from '../../sync/git/git-vcs';
 import type { MergeConflict } from '../../sync/types';
 import { invariant } from '../../utils/invariant';

@@ -1,3 +1,7 @@
+import * as models from '@db/models';
+import type { Environment } from '@db/models/environment';
+import { type AuthTypes, getCombinedPathParametersFromUrl, type RequestPathParameter } from '@db/models/request';
+import type { WebSocketRequest } from '@db/models/websocket-request';
 import React, { type FC, Fragment, useEffect, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton, Toolbar } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -5,10 +9,6 @@ import { useParams, useRouteLoaderData } from 'react-router';
 import { useLocalStorage } from 'react-use';
 
 import { CONTENT_TYPE_JSON } from '../../../common/constants';
-import * as models from '../../../models';
-import type { Environment } from '../../../models/environment';
-import { type AuthTypes, getCombinedPathParametersFromUrl, type RequestPathParameter } from '../../../models/request';
-import type { WebSocketRequest } from '../../../models/websocket-request';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { RenderError } from '../../../templating/render-error';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';

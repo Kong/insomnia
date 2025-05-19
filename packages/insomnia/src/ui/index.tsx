@@ -1,5 +1,6 @@
 import './rendererListeners';
 
+import * as models from '@db/models';
 import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { createMemoryRouter, matchPath, Outlet, RouterProvider } from 'react-router';
@@ -17,7 +18,6 @@ import {
 } from '../common/constants';
 import { database } from '../common/database';
 import { initializeLogging } from '../common/log';
-import * as models from '../models';
 import { initNewOAuthSession } from '../network/o-auth-2/get-token';
 import { init as initPlugins } from '../plugins';
 import { applyColorScheme } from '../plugins/misc';
@@ -1212,11 +1212,7 @@ async function renderApp() {
     match?.params.organizationId && localStorage.setItem('lastVisitedOrganizationId', match.params.organizationId);
   });
 
-  ReactDOM.createRoot(root).render(
-    <RouterProvider
-      router={router} 
-    />
-  );
+  ReactDOM.createRoot(root).render(<RouterProvider router={router} />);
 }
 
 renderApp();

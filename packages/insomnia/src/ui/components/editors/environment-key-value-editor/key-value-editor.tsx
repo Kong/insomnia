@@ -1,3 +1,9 @@
+import {
+  decryptSecretValue,
+  encryptSecretValue,
+  type EnvironmentKvPairData,
+  EnvironmentKvPairDataType,
+} from '@db/models/environment';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -14,12 +20,6 @@ import {
 } from 'react-aria-components';
 
 import { generateId } from '../../../../common/misc';
-import {
-  decryptSecretValue,
-  encryptSecretValue,
-  type EnvironmentKvPairData,
-  EnvironmentKvPairDataType,
-} from '../../../../models/environment';
 import { base64decode } from '../../../../utils/vault';
 import { PromptButton } from '../../base/prompt-button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';

@@ -1,9 +1,9 @@
+import { type EnvironmentKvPairData, EnvironmentType, getDataFromKVPair } from '@db/models/environment';
+import type { Settings } from '@db/models/settings';
 import React, { type FC, useRef, useState } from 'react';
 import { Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router';
 
-import { type EnvironmentKvPairData, EnvironmentType, getDataFromKVPair } from '../../../models/environment';
-import type { Settings } from '../../../models/settings';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { useRequestGroupPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';

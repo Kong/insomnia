@@ -1,3 +1,6 @@
+import * as models from '@db/models';
+import type { UserUploadEnvironment } from '@db/models/environment';
+import type { RunnerResultPerRequest, RunnerTestResult } from '@db/models/runner-test-result';
 import porderedJSON from 'json-order';
 import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -34,9 +37,6 @@ import { Tooltip } from '../../../src/ui/components/tooltip';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../common/constants';
 import type { ResponseTimelineEntry } from '../../main/network/libcurl-promise';
 import type { TimingStep } from '../../main/network/request-timing';
-import * as models from '../../models';
-import type { UserUploadEnvironment } from '../../models/environment';
-import type { RunnerResultPerRequest, RunnerTestResult } from '../../models/runner-test-result';
 import { cancelRequestById } from '../../network/cancellation';
 import { moveAfter, moveBefore } from '../../utils';
 import { invariant } from '../../utils/invariant';

@@ -1,6 +1,7 @@
+import * as models from '@db/models';
+
 import { isDevelopment } from '../common/constants';
 import { database } from '../common/database';
-import * as models from '../models';
 import * as plugins from '../plugins';
 import * as themes from '../plugins/misc';
 import * as templating from '../templating';

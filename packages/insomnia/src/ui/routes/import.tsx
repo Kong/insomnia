@@ -1,5 +1,8 @@
 import path from 'node:path';
 
+import * as models from '@db/models';
+import { isRemoteProject } from '@db/models/project';
+import type { Workspace } from '@db/models/workspace';
 import type { ActionFunction } from 'react-router';
 
 import type { PostmanDataDumpRawData } from '../../common/import';
@@ -11,9 +14,6 @@ import {
   scanResources,
   type ScanResult,
 } from '../../common/import';
-import * as models from '../../models';
-import { isRemoteProject } from '../../models/project';
-import type { Workspace } from '../../models/workspace';
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,

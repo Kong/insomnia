@@ -1,8 +1,8 @@
+import { isGitProject, isRemoteProject } from '@db/models/project';
 import { type FC } from 'react';
 import React from 'react';
 import { useRouteLoaderData } from 'react-router';
 
-import { isGitProject, isRemoteProject } from '../../../models/project';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
 import { useRootLoaderData } from '../../routes/root';
 import type { WorkspaceLoaderData } from '../../routes/workspace';

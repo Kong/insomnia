@@ -1,9 +1,9 @@
+import * as models from '@db/models/index';
 import classnames from 'classnames';
 import type { IpcRendererEvent } from 'electron';
 import React, { type FC, useEffect, useState } from 'react';
 
 import { getAppId, getAppPlatform, getAppVersion, getProductName, updatesSupported } from '../../common/constants';
-import * as models from '../../models/index';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import imgSrcCore from '../images/insomnia-logo.svg';
 import { useRootLoaderData } from '../routes/root';

@@ -1,3 +1,5 @@
+import * as models from '@db/models';
+import type { UnitTestSuite } from '@db/models/unit-test-suite';
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
@@ -31,8 +33,6 @@ import {
 import { DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import { database } from '../../common/database';
 import { isNotNullOrUndefined } from '../../common/misc';
-import * as models from '../../models';
-import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { showModal } from '../../ui/components/modals';
 import { AskModal } from '../../ui/components/modals/ask-modal';
 import { invariant } from '../../utils/invariant';

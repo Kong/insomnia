@@ -1,3 +1,16 @@
+import * as models from '@db/models';
+import { EnvironmentType } from '@db/models/environment';
+import type { OauthProviderName } from '@db/models/git-credentials';
+import { getById, update } from '@db/models/helpers/request-operations';
+import type { MockServer } from '@db/models/mock-server';
+import { isGitProject, isRemoteProject, type Project } from '@db/models/project';
+import { isRequest, type Request } from '@db/models/request';
+import { isRequestGroup, isRequestGroupId } from '@db/models/request-group';
+import { isRequestGroupMeta } from '@db/models/request-group-meta';
+import type { UnitTest } from '@db/models/unit-test';
+import type { UnitTestSuite } from '@db/models/unit-test-suite';
+import { isCollection, isEnvironment, scopeToActivity, type Workspace } from '@db/models/workspace';
+import type { WorkspaceMeta } from '@db/models/workspace-meta';
 import type { IRuleResult } from '@stoplight/spectral-core';
 import { generate, runTests, type Test } from 'insomnia-testing';
 import type { TestResults } from 'insomnia-testing/src/run/entities';
@@ -11,19 +24,6 @@ import { database } from '../../common/database';
 import { database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources, type ScanResult } from '../../common/import';
 import { generateId } from '../../common/misc';
-import * as models from '../../models';
-import { EnvironmentType } from '../../models/environment';
-import type { OauthProviderName } from '../../models/git-credentials';
-import { getById, update } from '../../models/helpers/request-operations';
-import type { MockServer } from '../../models/mock-server';
-import { isGitProject, isRemoteProject, type Project } from '../../models/project';
-import { isRequest, type Request } from '../../models/request';
-import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
-import { isRequestGroupMeta } from '../../models/request-group-meta';
-import type { UnitTest } from '../../models/unit-test';
-import type { UnitTestSuite } from '../../models/unit-test-suite';
-import { isCollection, isEnvironment, scopeToActivity, type Workspace } from '../../models/workspace';
-import type { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
 import {
   initializeLocalBackendProjectAndMarkForSync,
@@ -1185,9 +1185,11 @@ export const generateCollectionFromApiSpecAction: ActionFunction = async ({ para
     throw new Error('Error Generating Configuration');
   }
 
-  await scanResources([{
-    contentStr: apiSpec.contents,
-  }]);
+  await scanResources([
+    {
+      contentStr: apiSpec.contents,
+    },
+  ]);
 
   await importResourcesToWorkspace({
     workspaceId,
@@ -1229,9 +1231,11 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
     throw new Error('Error Generating Configuration');
   }
 
-  const resources = await scanResources([{
-    contentStr: apiSpec.contents,
-  }]);
+  const resources = await scanResources([
+    {
+      contentStr: apiSpec.contents,
+    },
+  ]);
 
   const allRequestsFromResources = resources.reduce(
     (accumulator, scanResult) => accumulator.concat(scanResult.requests ?? []),

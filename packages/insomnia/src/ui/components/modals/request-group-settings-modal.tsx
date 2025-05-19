@@ -1,9 +1,9 @@
+import type { RequestGroup } from '@db/models/request-group';
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useFetcher, useNavigate, useParams } from 'react-router';
 
 import { isNotNullOrUndefined } from '../../../common/misc';
-import type { RequestGroup } from '../../../models/request-group';
 import { invariant } from '../../../utils/invariant';
 import { useRequestGroupPatcher } from '../../hooks/use-request';
 import type { ListWorkspacesLoaderData } from '../../routes/project';

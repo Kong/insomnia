@@ -1,8 +1,9 @@
+import * as models from '@db/models';
+import type { RemoteProject } from '@db/models/project';
+import { isWorkspace, type Workspace } from '@db/models/workspace';
+
 import { DEFAULT_BRANCH_NAME } from '../../common/constants';
 import { database } from '../../common/database';
-import * as models from '../../models';
-import type { RemoteProject } from '../../models/project';
-import { isWorkspace, type Workspace } from '../../models/workspace';
 import type { BackendProjectWithTeam } from './normalize-backend-project-team';
 import { interceptAccessError } from './util';
 import type { VCS } from './vcs';

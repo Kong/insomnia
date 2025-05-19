@@ -1,13 +1,13 @@
+import { requestGroup } from '@db/models';
+import { type GrpcRequest, isGrpcRequest } from '@db/models/grpc-request';
+import { isRequest, type Request } from '@db/models/request';
+import type { RequestGroup } from '@db/models/request-group';
+import { isWebSocketRequest, type WebSocketRequest } from '@db/models/websocket-request';
 import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import { Button, Checkbox, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';
 
 import { exportRequestsToFile } from '../../../common/export';
-import { requestGroup } from '../../../models';
-import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import { isRequest, type Request } from '../../../models/request';
-import type { RequestGroup } from '../../../models/request-group';
-import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
 import type { Child, WorkspaceLoaderData } from '../../routes/workspace';
 import { Icon } from '../icon';
 import { getMethodShortHand } from '../tags/method-tag';

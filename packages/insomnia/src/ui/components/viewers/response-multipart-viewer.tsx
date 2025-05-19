@@ -1,3 +1,4 @@
+import type { ResponseHeader } from '@db/models/response';
 import { format } from 'date-fns';
 import type { SaveDialogOptions } from 'electron';
 import fs from 'fs';
@@ -9,7 +10,6 @@ import { Button } from 'react-aria-components';
 import { PassThrough } from 'stream';
 
 import { getContentTypeFromHeaders, PREVIEW_MODE_FRIENDLY } from '../../../common/constants';
-import type { ResponseHeader } from '../../../models/response';
 import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
 import { showModal } from '../modals/index';
 import { WrapperModal } from '../modals/wrapper-modal';

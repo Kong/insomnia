@@ -1,12 +1,12 @@
+import { sortProjects } from '@db/models/helpers/project';
+import * as models from '@db/models/index';
+import type { Project } from '@db/models/project';
 import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useFetcher, useParams } from 'react-router';
 
 import { database } from '../../../common/database';
 import { strings } from '../../../common/strings';
-import { sortProjects } from '../../../models/helpers/project';
-import * as models from '../../../models/index';
-import type { Project } from '../../../models/project';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';

@@ -1,3 +1,6 @@
+import * as models from '@db/models';
+import type { GitRepository } from '@db/models/git-repository';
+import { type WorkspaceScope, WorkspaceScopeKeys } from '@db/models/workspace';
 import { createHash, randomBytes } from 'crypto';
 import { shell } from 'electron';
 import { app, net } from 'electron/main';
@@ -20,9 +23,6 @@ import {
 import { database } from '../common/database';
 import { insomniaFileSchema } from '../common/import-v5-parser';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
-import * as models from '../models';
-import type { GitRepository } from '../models/git-repository';
-import { type WorkspaceScope, WorkspaceScopeKeys } from '../models/workspace';
 import { fsClient } from '../sync/git/fs-client';
 import GitVCS, {
   GIT_CLONE_DIR,

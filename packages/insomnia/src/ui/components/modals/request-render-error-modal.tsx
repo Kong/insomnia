@@ -1,10 +1,10 @@
+import type { GrpcRequest } from '@db/models/grpc-request';
+import type { Request } from '@db/models/request';
+import type { WebSocketRequest } from '@db/models/websocket-request';
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 import { docsTemplateTags } from '../../../common/documentation';
-import type { GrpcRequest } from '../../../models/grpc-request';
-import type { Request } from '../../../models/request';
-import type { WebSocketRequest } from '../../../models/websocket-request';
 import type { RenderError } from '../../../templating/render-error';
 import { Link } from '../base/link';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';

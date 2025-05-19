@@ -1,3 +1,4 @@
+import type { Request, RequestBody, RequestHeader, RequestParameter } from '@db/models/request';
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC } from 'react';
 import {
@@ -27,7 +28,6 @@ import {
   getContentTypeName,
   METHOD_POST,
 } from '../../../common/constants';
-import type { Request, RequestBody, RequestHeader, RequestParameter } from '../../../models/request';
 import { deconstructQueryStringToParams } from '../../../utils/url/querystring';
 import { SegmentEvent } from '../../analytics';
 import { useRequestPatcher } from '../../hooks/use-request';

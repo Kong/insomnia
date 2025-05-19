@@ -1,5 +1,6 @@
+import type { Cookie } from '@db/models/cookie-jar';
+
 import { cookiesFromJar, jarFromCookies } from '../common/cookies';
-import type { Cookie } from '../models/cookie-jar';
 
 export const addSetCookiesToToughCookieJar = async ({ setCookieStrings, currentUrl, cookieJar }: any) => {
   const rejectedCookies: string[] = [];

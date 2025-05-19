@@ -1,10 +1,10 @@
+import * as models from '@db/models';
+import type { UnitTestResult } from '@db/models/unit-test-result';
 import React, { type FC } from 'react';
 import { Heading } from 'react-aria-components';
 import { type LoaderFunction, redirect, useRouteLoaderData } from 'react-router';
 
 import { database } from '../../common/database';
-import * as models from '../../models';
-import type { UnitTestResult } from '../../models/unit-test-result';
 import { invariant } from '../../utils/invariant';
 import { Icon } from '../components/icon';
 

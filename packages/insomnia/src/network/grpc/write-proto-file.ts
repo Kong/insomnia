@@ -1,13 +1,13 @@
+import type { BaseModel } from '@db/models';
+import * as models from '@db/models';
+import { isProtoDirectory, type ProtoDirectory } from '@db/models/proto-directory';
+import { isProtoFile, type ProtoFile } from '@db/models/proto-file';
+import { isWorkspace, type Workspace } from '@db/models/workspace';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
 import { database as db } from '../../common/database';
-import type { BaseModel } from '../../models';
-import * as models from '../../models';
-import { isProtoDirectory, type ProtoDirectory } from '../../models/proto-directory';
-import { isProtoFile, type ProtoFile } from '../../models/proto-file';
-import { isWorkspace, type Workspace } from '../../models/workspace';
 
 interface WriteResult {
   filePath: string;

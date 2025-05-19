@@ -1,3 +1,9 @@
+import * as models from '@db/models';
+import type { OAuth2Token } from '@db/models/o-auth-2-token';
+import type { AuthTypeOAuth2, OAuth2ResponseType, RequestHeader, RequestParameter } from '@db/models/request';
+import type { Request } from '@db/models/request';
+import { isRequestGroup, isRequestGroupId, type RequestGroup } from '@db/models/request-group';
+import type { Response } from '@db/models/response';
 import crypto from 'crypto';
 import querystring from 'querystring';
 import { v4 as uuidv4 } from 'uuid';
@@ -5,12 +11,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { version } from '../../../package.json';
 import { database as db } from '../../common/database';
 import { escapeRegex } from '../../common/misc';
-import * as models from '../../models';
-import type { OAuth2Token } from '../../models/o-auth-2-token';
-import type { AuthTypeOAuth2, OAuth2ResponseType, RequestHeader, RequestParameter } from '../../models/request';
-import type { Request } from '../../models/request';
-import { isRequestGroup, isRequestGroupId, type RequestGroup } from '../../models/request-group';
-import type { Response } from '../../models/response';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getAuthObjectOrNull, isAuthEnabled } from '../authentication';
@@ -49,7 +49,11 @@ export const getOAuth2Token = async (
   authentication: AuthTypeOAuth2,
   forceRefresh = false,
 ): Promise<OAuth2Token | null> => {
-  const {oAuth2Token, closestAuthId} = await getExistingAccessTokenAndRefreshIfExpired(requestId, authentication, forceRefresh);
+  const { oAuth2Token, closestAuthId } = await getExistingAccessTokenAndRefreshIfExpired(
+    requestId,
+    authentication,
+    forceRefresh,
+  );
   if (oAuth2Token) {
     return oAuth2Token;
   }
@@ -200,22 +204,26 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   requestId: string,
   authentication: AuthTypeOAuth2,
   forceRefresh: boolean,
-): Promise<{oAuth2Token: OAuth2Token | null, closestAuthId: string}> {
+): Promise<{ oAuth2Token: OAuth2Token | null; closestAuthId: string }> {
   const activeRequest = await models.request.getById(requestId);
-  const requestGroups = (await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type])).filter(isRequestGroup) as RequestGroup[];
-  const closestAuth = requestGroups.find(({authentication}) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
+  const requestGroups = (
+    await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type])
+  ).filter(isRequestGroup) as RequestGroup[];
+  const closestAuth = requestGroups.find(
+    ({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication),
+  );
   const closestAuthId = closestAuth?._id || requestId;
   const token: OAuth2Token | null = await models.oAuth2Token.getByParentId(closestAuthId);
   if (!token) {
-    return {oAuth2Token: null, closestAuthId};
+    return { oAuth2Token: null, closestAuthId };
   }
   const expiresAt = token.expiresAt || Infinity;
   const isExpired = Date.now() > expiresAt;
   if (!isExpired && !forceRefresh) {
-    return {oAuth2Token: token, closestAuthId};
+    return { oAuth2Token: token, closestAuthId };
   }
   if (!token.refreshToken) {
-    return {oAuth2Token: null, closestAuthId};
+    return { oAuth2Token: null, closestAuthId };
   }
 
   let params = [
@@ -244,7 +252,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
     // brand new refresh and access tokens.
     const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
     models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
-    return {oAuth2Token: null, closestAuthId};
+    return { oAuth2Token: null, closestAuthId };
   }
   const isSuccessful = statusCode >= 200 && statusCode < 300;
   const hasBodyAndIsError = bodyBuffer && statusCode === 400;
@@ -258,7 +266,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
         console.log(`[oauth2] Refresh token rejected due to invalid_grant error: ${body.error_description}`);
         const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
         const token = await models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
-        return {oAuth2Token: token, closestAuthId};
+        return { oAuth2Token: token, closestAuthId };
       }
     }
 
@@ -267,7 +275,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   invariant(bodyBuffer, `[oauth2] No body returned from ${authentication.accessTokenUrl}`);
   const data = tryToParse(bodyBuffer.toString());
   if (!data) {
-    return {oAuth2Token: null, closestAuthId};
+    return { oAuth2Token: null, closestAuthId };
   }
   const old = await models.oAuth2Token.getOrCreateByParentId(closestAuthId);
   const oAuth2Token = await models.oAuth2Token.update(
@@ -277,7 +285,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
       refresh_token: data.refresh_token || token.refreshToken,
     }),
   );
-  return {oAuth2Token, closestAuthId};
+  return { oAuth2Token, closestAuthId };
 }
 
 export const oauthResponseToAccessToken = async (accessTokenUrl: string, response: Response) => {

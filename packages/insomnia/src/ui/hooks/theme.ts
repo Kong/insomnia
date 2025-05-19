@@ -1,7 +1,7 @@
+import type { ThemeSettings } from '@db/models/settings';
 import { useCallback, useState } from 'react';
 import { useAsync } from 'react-use';
 
-import type { ThemeSettings } from '../../models/settings';
 import { type ColorScheme, getThemes } from '../../plugins';
 import { applyColorScheme, type PluginTheme } from '../../plugins/misc';
 import { useRootLoaderData } from '../routes/root';

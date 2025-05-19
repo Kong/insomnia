@@ -1,3 +1,7 @@
+import * as models from '@db/models';
+import type { GrpcRequest, GrpcRequestHeader } from '@db/models/grpc-request';
+import { queryAllWorkspaceUrls } from '@db/models/helpers/query-all-workspace-urls';
+import { isRequestGroup, type RequestGroup } from '@db/models/request-group';
 import { readFile } from 'fs/promises';
 import React, { type FunctionComponent, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
@@ -9,10 +13,6 @@ import { database as db } from '../../../common/database';
 import { generateId } from '../../../common/misc';
 import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage } from '../../../common/render';
 import type { GrpcMethodType } from '../../../main/ipc/grpc';
-import * as models from '../../../models';
-import type { GrpcRequest, GrpcRequestHeader } from '../../../models/grpc-request';
-import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
-import { isRequestGroup, type RequestGroup } from '../../../models/request-group';
 import { getOrInheritHeaders } from '../../../network/network';
 import { urlMatchesCertHost } from '../../../network/url-matches-cert-host';
 import { RenderError } from '../../../templating/render-error';

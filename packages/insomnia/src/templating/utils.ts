@@ -1,7 +1,7 @@
+import { userSession } from '@db/models';
+import { decryptSecretValue, vaultEnvironmentMaskValue } from '@db/models/environment';
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
 
-import { userSession } from '../models';
-import { decryptSecretValue, vaultEnvironmentMaskValue } from '../models/environment';
 import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';
 import { decryptVaultKeyFromSession } from '../utils/vault';
 import objectPath from './third_party/objectPath';

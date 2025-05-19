@@ -1,9 +1,9 @@
+import type { Request } from '@db/models/request';
 import type { HTTPSnippetClient, HTTPSnippetTarget } from 'httpsnippet';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import { exportHarWithRequest } from '../../../common/har';
-import type { Request } from '../../../models/request';
 import { CopyButton } from '../base/copy-button';
 import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';

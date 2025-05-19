@@ -1,7 +1,7 @@
+import type { ThemeSettings } from '@db/models/settings';
 import Color from 'color';
 
 import { getAppDefaultTheme } from '../common/constants';
-import type { ThemeSettings } from '../models/settings';
 import type { Theme } from './index';
 import { type ColorScheme, getThemes } from './index';
 

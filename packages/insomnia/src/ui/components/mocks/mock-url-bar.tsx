@@ -1,10 +1,10 @@
+import * as models from '@db/models';
 import React, { useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router';
 import { useInterval } from 'react-use';
 
 import { getMockServiceBinURL, HTTP_METHODS } from '../../../common/constants';
-import * as models from '../../../models';
 import { useTimeoutWhen } from '../../hooks/useTimeoutWhen';
 import { type MockRouteLoaderData, useMockRoutePatcher } from '../../routes/mock-route';
 import { useRootLoaderData } from '../../routes/root';

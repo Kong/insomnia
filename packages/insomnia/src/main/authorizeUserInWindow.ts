@@ -1,6 +1,5 @@
+import * as models from '@db/models';
 import { BrowserWindow, dialog } from 'electron';
-
-import * as models from '../models';
 
 export enum ChromiumVerificationResult {
   BLIND_TRUST = 0,

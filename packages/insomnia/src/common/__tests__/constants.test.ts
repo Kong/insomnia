@@ -1,6 +1,6 @@
+import type { MockServer } from '@db/models/mock-server';
 import { describe, expect, it } from 'vitest';
 
-import type { MockServer } from '../../models/mock-server';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,

@@ -1,3 +1,4 @@
+import type { RunnerTestResult } from '@db/models/runner-test-result';
 import { format } from 'date-fns';
 import React, { type FC } from 'react';
 import {
@@ -12,7 +13,6 @@ import {
   TooltipTrigger,
 } from 'react-aria-components';
 
-import type { RunnerTestResult } from '../../..//models/runner-test-result';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
 import { getTimeAndUnit } from '../tags/time-tag';

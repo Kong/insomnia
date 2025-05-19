@@ -1,3 +1,7 @@
+import { isGrpcRequest } from '@db/models/grpc-request';
+import { isRequest } from '@db/models/request';
+import { isRequestGroup } from '@db/models/request-group';
+import { isWebSocketRequest } from '@db/models/websocket-request';
 import React, { memo, useEffect, useRef } from 'react';
 import { useState } from 'react';
 import {
@@ -22,10 +26,6 @@ import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-ro
 
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '../../common/hotkeys';
 import { fuzzyMatch } from '../../common/misc';
-import { isGrpcRequest } from '../../models/grpc-request';
-import { isRequest } from '../../models/request';
-import { isRequestGroup } from '../../models/request-group';
-import { isWebSocketRequest } from '../../models/websocket-request';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
 import type { LoaderResult, RemoteFilesLoaderResult } from '../routes/commands';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../routes/project';
@@ -498,14 +498,18 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
               ) : (
                 <>
                   {isLoadingComboboxItems ? (
-                    <Icon icon="spinner" className="absolute left-4 text-[--color-font] animate-spin" />
+                    <Icon icon="spinner" className="absolute left-4 animate-spin text-[--color-font]" />
                   ) : (
                     <Icon icon="search" className="absolute left-4 text-[--color-font]" />
                   )}
                   <Input
                     slot="input"
                     readOnly={isLoadingComboboxItems}
-                    placeholder={isLoadingComboboxItems ? "Loading..." : "Search and switch between requests, collections and documents"}
+                    placeholder={
+                      isLoadingComboboxItems
+                        ? 'Loading...'
+                        : 'Search and switch between requests, collections and documents'
+                    }
                     className="w-full rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-3 pl-10 pr-7 text-[--color-font] transition-none group-data-[open]:rounded-b-none"
                   />
                 </>

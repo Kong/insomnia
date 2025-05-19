@@ -1,3 +1,4 @@
+import * as models from '@db/models';
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
 import fs from 'fs';
 import { join as pathJoin, resolve as pathResolve } from 'path';
@@ -17,7 +18,6 @@ import { HttpVersions } from '../../common/settings';
 import { _parseHeaders, getHttpVersion } from '../../main/network/libcurl-promise';
 import { DEFAULT_BOUNDARY } from '../../main/network/multipart';
 import { _getAwsAuthHeaders } from '../../main/network/parse-header-strings';
-import * as models from '../../models';
 import * as networkUtils from '../network';
 import { getSetCookiesFromResponseHeaders } from '../network';
 

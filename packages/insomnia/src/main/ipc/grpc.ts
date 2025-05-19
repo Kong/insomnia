@@ -6,6 +6,8 @@ import {
 } from '@bufbuild/protobuf';
 import { Code, ConnectError, createPromiseClient } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-node';
+import * as models from '@db/models';
+import type { GrpcRequest, GrpcRequestBody, GrpcRequestHeader } from '@db/models/grpc-request';
 import {
   type Call,
   ChannelCredentials,
@@ -29,8 +31,6 @@ import electron, { type IpcMainEvent } from 'electron';
 import * as grpcReflection from 'grpc-reflection-js';
 
 import { version } from '../../../package.json';
-import * as models from '../../models';
-import type { GrpcRequest, GrpcRequestBody, GrpcRequestHeader } from '../../models/grpc-request';
 import { parseGrpcUrl } from '../../network/grpc/parse-grpc-url';
 import { writeProtoFile } from '../../network/grpc/write-proto-file';
 import { invariant } from '../../utils/invariant';

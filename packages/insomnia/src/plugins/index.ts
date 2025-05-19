@@ -1,15 +1,15 @@
+import * as models from '@db/models';
+import type { GrpcRequest } from '@db/models/grpc-request';
+import type { Request } from '@db/models/request';
+import type { RequestGroup } from '@db/models/request-group';
+import type { WebSocketRequest } from '@db/models/websocket-request';
+import type { Workspace } from '@db/models/workspace';
 import electron from 'electron';
 import fs from 'fs';
 import path from 'path';
 
 import type { ParsedApiSpec } from '../common/api-specs';
 import type { PluginConfigMap } from '../common/settings';
-import * as models from '../models';
-import type { GrpcRequest } from '../models/grpc-request';
-import type { Request } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { WebSocketRequest } from '../models/websocket-request';
-import type { Workspace } from '../models/workspace';
 import type { PluginTemplateTag } from '../templating/types';
 import { showError } from '../ui/components/modals/index';
 import type { PluginTheme } from './misc';

@@ -1,3 +1,4 @@
+import type { Cookie, CookieJar } from '@db/models/cookie-jar';
 import clone from 'clone';
 import { isValid } from 'date-fns';
 import React, { useState } from 'react';
@@ -23,7 +24,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { cookieToString } from '../../../common/cookies';
 import { fuzzyMatch } from '../../../common/misc';
-import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { PromptButton } from '../base/prompt-button';

@@ -1,7 +1,7 @@
+import { gitCredentials, gitRepository } from '@db/models';
+import type { OauthProviderName } from '@db/models/git-repository';
 import type { AuthCallback, AuthFailureCallback, AuthSuccessCallback, GitAuth, MessageCallback } from 'isomorphic-git';
 
-import { gitCredentials, gitRepository } from '../../models';
-import type { OauthProviderName } from '../../models/git-repository';
 import type { GitAuthor, GitCredentials } from './git-vcs';
 
 export const addDotGit = (url: string): string => (url.endsWith('.git') ? url : `${url}.git`);

@@ -1,8 +1,8 @@
+import { removeAllSecrets } from '@db/models/environment';
 import React, { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Input, Modal, ModalOverlay } from 'react-aria-components';
 import { useFetcher, useRouteLoaderData } from 'react-router';
 
-import { removeAllSecrets } from '../../../models/environment';
 import type { OrganizationLoaderData } from '../../routes/organization';
 import { useRootLoaderData } from '../../routes/root';
 import { Icon } from '../icon';

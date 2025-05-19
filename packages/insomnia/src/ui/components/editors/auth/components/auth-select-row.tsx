@@ -1,8 +1,8 @@
+import type { RequestAuthentication } from '@db/models/request';
 import React, { type ChangeEvent, type FC, type ReactNode, useCallback } from 'react';
 import { useRouteLoaderData } from 'react-router';
 
 import { toKebabCase } from '../../../../../common/misc';
-import type { RequestAuthentication } from '../../../../../models/request';
 import { getAuthObjectOrNull } from '../../../../../network/authentication';
 import { useRequestGroupPatcher, useRequestPatcher } from '../../../../hooks/use-request';
 import type { RequestLoaderData } from '../../../../routes/request';

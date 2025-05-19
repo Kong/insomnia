@@ -3,6 +3,9 @@
 import { invariant } from '../../utils/invariant';
 invariant(process.type !== 'renderer', 'Native abstractions for Nodejs module unavailable in renderer');
 
+import type { ClientCertificate } from '@db/models/client-certificate';
+import type { RequestHeader } from '@db/models/request';
+import type { ResponseHeader } from '@db/models/response';
 import {
   Curl,
   CurlAuth,
@@ -31,9 +34,6 @@ import {
   CONTENT_TYPE_FORM_URLENCODED,
 } from '../../common/constants';
 import { describeByteSize, hasAuthHeader } from '../../common/misc';
-import type { ClientCertificate } from '../../models/client-certificate';
-import type { RequestHeader } from '../../models/request';
-import type { ResponseHeader } from '../../models/response';
 import { buildMultipart } from './multipart';
 import { parseHeaderStrings } from './parse-header-strings';
 export interface CurlRequestOptions {

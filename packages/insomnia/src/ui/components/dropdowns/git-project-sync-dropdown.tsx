@@ -1,3 +1,4 @@
+import type { GitRepository } from '@db/models/git-repository';
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, useEffect, useState } from 'react';
 import {
@@ -14,7 +15,6 @@ import {
 import { useFetcher, useParams, useRevalidator } from 'react-router';
 import { useInterval } from 'react-use';
 
-import type { GitRepository } from '../../../models/git-repository';
 import { getOauth2FormatName } from '../../../sync/git/utils';
 import type { MergeConflict } from '../../../sync/types';
 import {

@@ -1,3 +1,6 @@
+import * as models from '@db/models';
+import { isRequest } from '@db/models/request';
+import { isResponse } from '@db/models/response';
 import fs from 'fs';
 import React, { type FC, useCallback } from 'react';
 import { Button } from 'react-aria-components';
@@ -5,9 +8,6 @@ import { useRouteLoaderData } from 'react-router';
 
 import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
-import * as models from '../../../models';
-import { isRequest } from '../../../models/request';
-import { isResponse } from '../../../models/response';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import type { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';

@@ -1,7 +1,7 @@
+import type { AuthTypeOAuth1 } from '@db/models/request';
 import React, { type FC } from 'react';
 import { useRouteLoaderData } from 'react-router';
 
-import type { AuthTypeOAuth1 } from '../../../../models/request';
 import {
   type OAuth1SignatureMethod,
   SIGNATURE_METHOD_HMAC_SHA1,

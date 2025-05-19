@@ -1,3 +1,4 @@
+import { isScratchpadProject } from '@db/models/project';
 import classNames from 'classnames';
 import React, {
   type FC,
@@ -15,7 +16,6 @@ import { Heading } from 'react-aria-components';
 import { useFetcher } from 'react-router';
 
 import type { ScanResult } from '../../../common/import';
-import { isScratchpadProject } from '../../../models/project';
 import { invariant } from '../../../utils/invariant';
 import { SegmentEvent } from '../../analytics';
 import type { ImportResourcesActionResult } from '../../routes/import';

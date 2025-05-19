@@ -1,11 +1,11 @@
+import * as models from '@db/models';
+import type { Organization } from '@db/models/organization';
+import { findPersonalOrganization } from '@db/models/organization';
+import type { Project } from '@db/models/project';
+import { scopeToActivity } from '@db/models/workspace';
 import { matchPath, type PathMatch } from 'react-router';
 
 import { database } from '../common/database';
-import * as models from '../models';
-import type { Organization } from '../models/organization';
-import { findPersonalOrganization } from '../models/organization';
-import type { Project } from '../models/project';
-import { scopeToActivity } from '../models/workspace';
 export const enum AsyncTask {
   SyncOrganization,
   MigrateProjects,

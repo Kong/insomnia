@@ -1,7 +1,7 @@
+import type { RequestParameter } from '@db/models/request';
 import React, { type FC, useCallback } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router';
 
-import type { RequestParameter } from '../../../models/request';
 import { useRequestPatcher } from '../../hooks/use-request';
 import type { RequestLoaderData, WebSocketRequestLoaderData } from '../../routes/request';
 import { CodeEditor } from '../codemirror/code-editor';

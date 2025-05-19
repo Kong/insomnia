@@ -1,11 +1,11 @@
+import * as models from '@db/models';
+import type { Cookie } from '@db/models/cookie-jar';
+import type { Request } from '@db/models/request';
+import type { Response } from '@db/models/response';
 import path from 'path';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { database as db } from '../../common/database';
-import * as models from '../../models';
-import type { Cookie } from '../../models/cookie-jar';
-import type { Request } from '../../models/request';
-import type { Response } from '../../models/response';
 import { AUTH_BASIC } from '../constants';
 import { exportHar, exportHarResponse, exportHarWithRequest } from '../har';
 import { getRenderedRequestAndContext } from '../render';

@@ -1,8 +1,8 @@
+import { isRequest, type Request } from '@db/models/request';
+import { isRequestGroup } from '@db/models/request-group';
 import { useEffect, useMemo, useRef } from 'react';
 import { useRouteLoaderData } from 'react-router';
 
-import { isRequest, type Request } from '../../models/request';
-import { isRequestGroup } from '../../models/request-group';
 import { invariant } from '../../utils/invariant';
 import { useRunnerContext } from '../context/app/runner-context';
 import type { RequestRow } from '../routes/runner';

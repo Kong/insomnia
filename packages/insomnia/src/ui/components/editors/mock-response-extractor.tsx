@@ -1,3 +1,4 @@
+import type { ResponseHeader } from '@db/models/response';
 import fs from 'fs/promises';
 import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
@@ -5,7 +6,6 @@ import { useNavigate, useParams } from 'react-router';
 import { useFetcher, useRouteLoaderData } from 'react-router';
 
 import { getContentTypeName, getMimeTypeFromContentType } from '../../../common/constants';
-import type { ResponseHeader } from '../../../models/response';
 import { invariant } from '../../../utils/invariant';
 import { isInMockContentTypeList, useMockRoutePatcher } from '../../routes/mock-route';
 import type { OrganizationLoaderData } from '../../routes/organization';

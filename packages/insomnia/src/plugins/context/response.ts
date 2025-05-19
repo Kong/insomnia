@@ -1,7 +1,6 @@
+import * as models from '@db/models/index';
+import type { ResponseHeader } from '@db/models/response';
 import fs from 'fs';
-
-import * as models from '../../models/index';
-import type { ResponseHeader } from '../../models/response';
 
 interface MaybeResponse {
   parentId?: string;

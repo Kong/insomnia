@@ -1,6 +1,6 @@
+import { isOwnerOfOrganization } from '@db/models/organization';
 import { useParams, useRouteLoaderData } from 'react-router';
 
-import { isOwnerOfOrganization } from '../../models/organization';
 import { formatCurrentPlanType, type OrganizationLoaderData } from '../routes/organization';
 import { useRootLoaderData } from '../routes/root';
 

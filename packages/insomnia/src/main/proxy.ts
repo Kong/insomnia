@@ -1,8 +1,8 @@
+import { settings } from '@db/models';
+import { isSettings } from '@db/models/settings';
 import { session } from 'electron/main';
 
 import { type ChangeBufferEvent, database as db } from '../common/database';
-import { settings } from '../models';
-import { isSettings } from '../models/settings';
 import { setDefaultProtocol } from '../utils/url/protocol';
 
 // Update the proxy settings before making the request.

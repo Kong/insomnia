@@ -1,13 +1,13 @@
+import * as models from '@db/models';
+import { type GrpcRequest, isGrpcRequest } from '@db/models/grpc-request';
+import { isScratchpadOrganizationId } from '@db/models/organization';
+import { isRequest, type Request } from '@db/models/request';
+import { isWebSocketRequest, type WebSocketRequest } from '@db/models/websocket-request';
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useFetcher, useNavigate, useParams } from 'react-router';
 
 import { isNotNullOrUndefined } from '../../../common/misc';
-import * as models from '../../../models';
-import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import { isScratchpadOrganizationId } from '../../../models/organization';
-import { isRequest, type Request } from '../../../models/request';
-import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
 import { invariant } from '../../../utils/invariant';
 import { useRequestPatcher } from '../../hooks/use-request';
 import type { ListWorkspacesLoaderData } from '../../routes/project';

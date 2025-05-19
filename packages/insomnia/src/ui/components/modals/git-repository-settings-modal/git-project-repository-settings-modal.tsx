@@ -1,10 +1,10 @@
+import type { GitRepository, OauthProviderName } from '@db/models/git-repository';
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';
 
 import { docsGitSync } from '../../../../common/documentation';
-import type { GitRepository, OauthProviderName } from '../../../../models/git-repository';
 import type { GitCredentials } from '../../../../sync/git/git-vcs';
 import { Link } from '../../base/link';
 import { Modal, type ModalHandle, type ModalProps } from '../../base/modal';

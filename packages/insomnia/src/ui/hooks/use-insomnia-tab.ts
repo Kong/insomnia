@@ -1,14 +1,14 @@
+import type { GrpcRequest } from '@db/models/grpc-request';
+import type { MockRoute } from '@db/models/mock-route';
+import type { Project } from '@db/models/project';
+import type { Request } from '@db/models/request';
+import type { RequestGroup } from '@db/models/request-group';
+import type { UnitTestSuite } from '@db/models/unit-test-suite';
+import type { WebSocketRequest } from '@db/models/websocket-request';
+import type { Workspace } from '@db/models/workspace';
 import { useCallback, useEffect } from 'react';
 import { matchPath, useLocation, useSearchParams } from 'react-router';
 
-import type { GrpcRequest } from '../../models/grpc-request';
-import type { MockRoute } from '../../models/mock-route';
-import type { Project } from '../../models/project';
-import type { Request } from '../../models/request';
-import type { RequestGroup } from '../../models/request-group';
-import type { UnitTestSuite } from '../../models/unit-test-suite';
-import type { WebSocketRequest } from '../../models/websocket-request';
-import type { Workspace } from '../../models/workspace';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { type BaseTab, type TabType } from '../components/tabs/tab';
 import { TAB_ROUTER_PATH } from '../components/tabs/tab-list';

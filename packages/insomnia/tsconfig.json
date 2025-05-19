@@ -12,7 +12,11 @@
     "module": "ESNext",
     "sourceMap": true,
     /* Runs in the DOM */
-    "lib": ["ES2023", "DOM.Iterable", "DOM"],
+    "lib": [
+      "ES2023",
+      "DOM.Iterable",
+      "DOM"
+    ],
     "jsx": "react",
     /* Strictness */
     "strict": true,
@@ -21,7 +25,12 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "useUnknownInCatchVariables": false,
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": true,
+    "paths": {
+      "@db/*": [
+        "../insomnia-database/*"
+      ]
+    },
   },
   "include": [
     ".eslintrc.js",

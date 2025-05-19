@@ -1,3 +1,10 @@
+import { webSocketRequest } from '@db/models';
+import * as models from '@db/models';
+import type { CookieJar } from '@db/models/cookie-jar';
+import type { Request } from '@db/models/request';
+import { type RequestAuthentication, type RequestHeader } from '@db/models/request';
+import { type BaseWebSocketRequest, isWebSocketRequest } from '@db/models/websocket-request';
+import type { WebSocketResponse } from '@db/models/websocket-response';
 import electron, { BrowserWindow } from 'electron';
 import fs from 'fs';
 import { MessageType, parseMessage } from 'graphql-ws';
@@ -12,13 +19,6 @@ import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSoc
 import { AUTH_API_KEY, AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
 import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
-import { webSocketRequest} from '../../models';
-import * as models from '../../models';
-import type { CookieJar } from '../../models/cookie-jar';
-import type { Request } from '../../models/request';
-import { type RequestAuthentication, type RequestHeader } from '../../models/request';
-import { type BaseWebSocketRequest, isWebSocketRequest } from '../../models/websocket-request';
-import type { WebSocketResponse } from '../../models/websocket-response';
 import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
@@ -137,7 +137,7 @@ const openWebSocketConnection = async (
   const responseEnvironmentId = environment ? environment._id : null;
 
   const caCert = await models.caCertificate.findByParentId(options.workspaceId);
-  const caCertficatePath = (caCert && !caCert.disabled) ? caCert.path : null;        
+  const caCertficatePath = caCert && !caCert.disabled ? caCert.path : null;
   // attempt to read CA Certificate PEM from disk, fallback to root certificates
   const caCertificate =
     (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
@@ -582,10 +582,10 @@ const findMany = async (options: { responseId: string }): Promise<WebSocketEvent
 
 const getProxyAgent = (url: string, httpProxy: string, httpsProxy: string) => {
   const useHttpsProxy = url.startsWith('wss:') || url.startsWith('https:');
-  return useHttpsProxy ?
-    new HttpsProxyAgent(setDefaultProtocol(httpsProxy)) : 
-    new HttpProxyAgent(setDefaultProtocol(httpProxy));
-}
+  return useHttpsProxy
+    ? new HttpsProxyAgent(setDefaultProtocol(httpsProxy))
+    : new HttpProxyAgent(setDefaultProtocol(httpProxy));
+};
 
 export interface WebSocketBridgeAPI {
   open: (options: OpenWebSocketRequestOptions) => void;

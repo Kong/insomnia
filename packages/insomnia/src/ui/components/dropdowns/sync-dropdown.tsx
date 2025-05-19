@@ -1,3 +1,5 @@
+import type { Project } from '@db/models/project';
+import type { Workspace } from '@db/models/workspace';
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, Fragment, useCallback, useEffect, useState } from 'react';
 import {
@@ -14,8 +16,6 @@ import {
 import { useFetcher, useParams } from 'react-router';
 import { useInterval } from 'react-use';
 
-import type { Project } from '../../../models/project';
-import type { Workspace } from '../../../models/workspace';
 import type { SyncDataLoaderData } from '../../routes/remote-collections';
 import { Icon } from '../icon';
 import { showError } from '../modals';

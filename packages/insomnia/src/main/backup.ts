@@ -1,12 +1,12 @@
 import { copyFile, mkdir, readdir } from 'node:fs/promises';
 import path from 'node:path';
 
+import * as models from '@db/models';
 import electron from 'electron';
 
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
 import { getClientString, getUpdatesBaseURL } from '../common/constants';
-import * as models from '../models';
 
 export async function backupIfNewerVersionAvailable() {
   try {

@@ -1,3 +1,11 @@
+import type {
+  AuthTypeAPIKey,
+  AuthTypeAwsIam,
+  AuthTypeBasic,
+  AuthTypeNTLM,
+  AuthTypes,
+  RequestAuthentication,
+} from '@db/models/request';
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, useCallback } from 'react';
 import {
@@ -14,14 +22,6 @@ import {
 import { useParams } from 'react-router';
 
 import { HAWK_ALGORITHM_SHA256 } from '../../../common/constants';
-import type {
-  AuthTypeAPIKey,
-  AuthTypeAwsIam,
-  AuthTypeBasic,
-  AuthTypeNTLM,
-  AuthTypes,
-  RequestAuthentication,
-} from '../../../models/request';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../../../network/o-auth-1/constants';
 import { GRANT_TYPE_AUTHORIZATION_CODE } from '../../../network/o-auth-2/constants';

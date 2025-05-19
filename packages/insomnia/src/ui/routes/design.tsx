@@ -1,3 +1,6 @@
+import type { ApiSpec } from '@db/models/api-spec';
+import * as models from '@db/models/index';
+import { isGitProject } from '@db/models/project';
 import { type IRuleResult } from '@stoplight/spectral-core';
 import CodeMirror from 'codemirror';
 import { stat } from 'fs/promises';
@@ -32,14 +35,7 @@ import {
   TooltipTrigger,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import {
-  type LoaderFunction,
-  NavLink,
-  useFetcher,
-  useLoaderData,
-  useParams,
-  useRouteLoaderData,
-} from 'react-router';
+import { type LoaderFunction, NavLink, useFetcher, useLoaderData, useParams, useRouteLoaderData } from 'react-router';
 import { useUnmount } from 'react-use';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
 import YAML from 'yaml';
@@ -47,9 +43,6 @@ import YAML from 'yaml';
 import { parseApiSpec } from '../../common/api-specs';
 import { ACTIVITY_SPEC, DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import { debounce, isNotNullOrUndefined } from '../../common/misc';
-import type { ApiSpec } from '../../models/api-spec';
-import * as models from '../../models/index';
-import { isGitProject } from '../../models/project';
 import { invariant } from '../../utils/invariant';
 import { CodeEditor, type CodeEditorHandle } from '../components/codemirror/code-editor';
 import { DesignEmptyState } from '../components/design-empty-state';

@@ -1,3 +1,4 @@
+import { all } from '@db/models';
 import React, { useEffect, useState } from 'react';
 import {
   Button,
@@ -16,7 +17,6 @@ import {
 import { useFetcher, useParams } from 'react-router';
 import { stringify } from 'yaml';
 
-import { all } from '../../../models';
 import type { StageEntry, Status, StatusCandidate } from '../../../sync/types';
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';

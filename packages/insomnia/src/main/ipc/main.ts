@@ -1,3 +1,4 @@
+import * as models from '@db/models';
 import chardet from 'chardet';
 import type { MarkerRange } from 'codemirror';
 import { app, BrowserWindow, type IpcRendererEvent, type MenuItemConstructorOptions, shell } from 'electron';
@@ -5,7 +6,6 @@ import fs from 'fs';
 import iconv from 'iconv-lite';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
-import * as models from '../../models';
 import type { SegmentEvent } from '../analytics';
 import { trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';

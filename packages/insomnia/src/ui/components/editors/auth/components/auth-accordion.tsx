@@ -1,8 +1,8 @@
+import type { RequestAccordionKeys } from '@db/models/request-meta';
 import classnames from 'classnames';
 import React, { type FC, type PropsWithChildren } from 'react';
 import { useRouteLoaderData } from 'react-router';
 
-import type { RequestAccordionKeys } from '../../../../../models/request-meta';
 import { useRequestMetaPatcher } from '../../../../hooks/use-request';
 import type { RequestLoaderData } from '../../../../routes/request';
 

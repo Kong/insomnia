@@ -1,6 +1,6 @@
+import { grpcRequest, request, requestGroup } from '@db/models';
 import { describe, expect, it } from 'vitest';
 
-import { grpcRequest, request, requestGroup } from '../../models';
 import {
   METHOD_DELETE,
   METHOD_GET,

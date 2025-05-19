@@ -1,5 +1,6 @@
+import type { AuthTypeOAuth2 } from '@db/models/request';
+
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML } from '../../../common/constants';
-import type { AuthTypeOAuth2 } from '../../../models/request';
 import { forceBracketNotation } from '../../../templating/utils';
 import { fakerFunctions } from '../../../ui/components/templating/faker-functions';
 import type { Converter, ImportRequest, Parameter } from '../entities';

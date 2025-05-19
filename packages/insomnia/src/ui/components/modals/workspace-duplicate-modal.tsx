@@ -1,3 +1,7 @@
+import { sortProjects } from '@db/models/helpers/project';
+import * as models from '@db/models/index';
+import type { Project } from '@db/models/project';
+import type { Workspace } from '@db/models/workspace';
 import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useFetcher, useParams } from 'react-router';
@@ -5,10 +9,6 @@ import { useFetcher, useParams } from 'react-router';
 import { database } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
-import { sortProjects } from '../../../models/helpers/project';
-import * as models from '../../../models/index';
-import type { Project } from '../../../models/project';
-import type { Workspace } from '../../../models/workspace';
 import { useOrganizationLoaderData } from '../../routes/organization';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '../../routes/project';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';

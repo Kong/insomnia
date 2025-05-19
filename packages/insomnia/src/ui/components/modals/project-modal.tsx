@@ -1,9 +1,9 @@
+import type { GitRepository } from '@db/models/git-repository';
+import type { Project } from '@db/models/project';
 import React, { useEffect } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useNavigation } from 'react-router';
 
-import type { GitRepository } from '../../../models/git-repository';
-import type { Project } from '../../../models/project';
 import type { StorageRules } from '../../routes/organization';
 import { Icon } from '../icon';
 import { ProjectSettingsForm } from '../project/project-settings-form';

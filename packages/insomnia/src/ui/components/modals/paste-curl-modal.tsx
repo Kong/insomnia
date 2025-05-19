@@ -1,7 +1,7 @@
+import type { Request } from '@db/models/request';
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 
-import type { Request } from '../../../models/request';
 import { convert } from '../../../utils/importers/convert';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';

@@ -1,3 +1,6 @@
+import * as models from '@db/models/index';
+import type { Project, RemoteProject } from '@db/models/project';
+import type { Stats } from '@db/models/stats';
 import electron, { app, session } from 'electron';
 import { BrowserWindow } from 'electron';
 import contextMenu from 'electron-context-menu';
@@ -24,9 +27,6 @@ import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
-import * as models from './models/index';
-import type { Project, RemoteProject } from './models/project';
-import type { Stats } from './models/stats';
 import type { ToastNotification } from './ui/components/toast';
 
 // Override the Electron userData path

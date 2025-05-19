@@ -1,8 +1,9 @@
+import * as models from '@db/models';
+import type { Workspace } from '@db/models/workspace';
+
 import { exportWorkspacesHAR } from '../../common/export';
 import { fetchImportContentFromURI, importResourcesToProject, scanResources } from '../../common/import';
 import { getInsomniaV5DataExport } from '../../common/insomnia-v5';
-import * as models from '../../models';
-import type { Workspace } from '../../models/workspace';
 
 interface InsomniaExport {
   workspace?: Workspace;
@@ -34,9 +35,11 @@ export const init = (activeProjectId?: string) => ({
           uri,
         });
 
-        await scanResources([{
-          contentStr: content,
-        }]);
+        await scanResources([
+          {
+            contentStr: content,
+          },
+        ]);
 
         await importResourcesToProject({
           projectId: activeProjectId,
@@ -46,9 +49,11 @@ export const init = (activeProjectId?: string) => ({
         if (!activeProjectId) {
           return;
         }
-        await scanResources([{
-          contentStr: content,
-        }]);
+        await scanResources([
+          {
+            contentStr: content,
+          },
+        ]);
 
         await importResourcesToProject({
           projectId: activeProjectId,

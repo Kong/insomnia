@@ -1,3 +1,8 @@
+import * as models from '@db/models/index';
+import type { MockServer } from '@db/models/mock-server';
+import { isGitProject, type Project } from '@db/models/project';
+import { isRequest } from '@db/models/request';
+import { isEnvironment, isMockServer, isScratchpad, type Workspace } from '@db/models/workspace';
 import React, { useEffect, useState } from 'react';
 import {
   Button,
@@ -17,11 +22,6 @@ import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
 
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import * as models from '../../../models/index';
-import type { MockServer } from '../../../models/mock-server';
-import { isGitProject, type Project } from '../../../models/project';
-import { isRequest } from '../../../models/request';
-import { isEnvironment, isMockServer, isScratchpad, type Workspace } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../routes/actions';
 import type { GetRepositoryDirectoryTreeResult } from '../../routes/git-project-actions';
 import {

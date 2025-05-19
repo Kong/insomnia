@@ -1,9 +1,9 @@
+import * as models from '@db/models';
+import { isGrpcRequestId } from '@db/models/grpc-request';
+import { isEventStreamRequest, isGraphqlSubscriptionRequest, isRequestId } from '@db/models/request';
+import { isWebSocketRequestId } from '@db/models/websocket-request';
 import { useCallback, useEffect } from 'react';
 
-import * as models from '../../models';
-import { isGrpcRequestId } from '../../models/grpc-request';
-import { isEventStreamRequest, isGraphqlSubscriptionRequest, isRequestId } from '../../models/request';
-import { isWebSocketRequestId } from '../../models/websocket-request';
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
 import uiEventBus from '../eventBus';
 

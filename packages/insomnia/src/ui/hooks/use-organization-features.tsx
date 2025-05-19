@@ -1,7 +1,7 @@
+import { isScratchpadOrganizationId } from '@db/models/organization';
 import { useEffect } from 'react';
 import { useFetcher, useParams } from 'react-router';
 
-import { isScratchpadOrganizationId } from '../../models/organization';
 import type { OrganizationFeatureLoaderData } from '../routes/organization';
 import { useLoaderDeferData } from './use-loader-defer-data';
 

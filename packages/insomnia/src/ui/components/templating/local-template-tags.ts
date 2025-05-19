@@ -1,3 +1,4 @@
+import type { RequestParameter } from '@db/models/request';
 import crypto from 'crypto';
 import { format } from 'date-fns';
 import fs from 'fs';
@@ -7,7 +8,6 @@ import os from 'os';
 import { CookieJar } from 'tough-cookie';
 import * as uuid from 'uuid';
 
-import type { RequestParameter } from '../../../models/request';
 import type { TemplateTag } from '../../../plugins';
 import type { PluginTemplateTag } from '../../../templating/types';
 import { invariant } from '../../../utils/invariant';

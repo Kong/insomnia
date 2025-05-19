@@ -1,3 +1,4 @@
+import * as models from '@db/models/index';
 import { Analytics } from '@segment/analytics-node';
 import crypto from 'crypto';
 import { net } from 'electron';
@@ -11,7 +12,6 @@ import {
   getProductName,
   getSegmentWriteKey,
 } from '../common/constants';
-import * as models from '../models/index';
 
 const analytics = new Analytics({
   writeKey: getSegmentWriteKey(),

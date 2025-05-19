@@ -1,10 +1,10 @@
+import { userSession } from '@db/models';
+import { type Organization, SCRATCHPAD_ORGANIZATION_ID } from '@db/models/organization';
+import type { Project } from '@db/models/project';
+import type { Workspace } from '@db/models/workspace';
 import type { LoaderFunction } from 'react-router';
 
 import { database } from '../../common/database';
-import { userSession } from '../../models';
-import { type Organization, SCRATCHPAD_ORGANIZATION_ID } from '../../models/organization';
-import type { Project } from '../../models/project';
-import type { Workspace } from '../../models/workspace';
 
 export interface UntrackedProjectsLoaderData {
   untrackedProjects: (Project & { workspacesCount: number })[];

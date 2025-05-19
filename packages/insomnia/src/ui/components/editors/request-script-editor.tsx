@@ -1,3 +1,4 @@
+import type { Settings } from '@db/models/settings';
 import type { Snippet } from 'codemirror';
 import React, { type FC, useRef } from 'react';
 import {
@@ -24,7 +25,6 @@ import {
   Vault,
 } from '../../../../../insomnia-scripting-environment/src/objects';
 import { ParentFolders } from '../../../../../insomnia-scripting-environment/src/objects/folders';
-import type { Settings } from '../../../models/settings';
 import { translateHandlersInScript } from '../../../utils/importers/importers/postman';
 import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';
 import { Icon } from '../icon';

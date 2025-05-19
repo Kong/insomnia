@@ -1,5 +1,3 @@
-import React from 'react';
-
 import {
   type Environment,
   type EnvironmentKvPairData,
@@ -7,7 +5,9 @@ import {
   getKVPairFromData,
   vaultEnvironmentPath,
   vaultEnvironmentRuntimePath,
-} from '../../../models/environment';
+} from '@db/models/environment';
+import React from 'react';
+
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';

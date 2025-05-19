@@ -1,6 +1,7 @@
+import type { MockServer } from '@db/models/mock-server';
+
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
-import type { MockServer } from '../models/mock-server';
 import type { KeyCombination } from './settings';
 
 // Vite is filtering out process.env variables that are not prefixed with VITE_.

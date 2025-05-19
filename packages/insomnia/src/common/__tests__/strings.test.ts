@@ -1,7 +1,7 @@
+import * as models from '@db/models';
+import { WorkspaceScopeKeys } from '@db/models/workspace';
 import { describe, expect, it } from 'vitest';
 
-import * as models from '../../models';
-import { WorkspaceScopeKeys } from '../../models/workspace';
 import { getWorkspaceLabel } from '../get-workspace-label';
 import { strings } from '../strings';
 

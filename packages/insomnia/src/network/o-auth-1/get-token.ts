@@ -2,12 +2,12 @@
  * Get an OAuth1Token object and also handle storing/saving/refreshing
  * @returns {Promise.<void>}
  */
+import type { RequestAuthentication, RequestBody } from '@db/models/request';
 import crypto from 'crypto';
 import OAuth1 from 'oauth-1.0a';
 
 import type { AUTH_OAUTH_1 } from '../../common/constants';
 import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
-import type { RequestAuthentication, RequestBody } from '../../models/request';
 import type { OAuth1SignatureMethod } from './constants';
 import {
   SIGNATURE_METHOD_HMAC_SHA1,

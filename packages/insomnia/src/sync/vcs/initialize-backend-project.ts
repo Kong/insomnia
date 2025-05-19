@@ -1,8 +1,9 @@
+import * as models from '@db/models';
+import { type BaseModel, canSync } from '@db/models';
+import type { Project } from '@db/models/project';
+import type { Workspace } from '@db/models/workspace';
+
 import { database } from '../../common/database';
-import * as models from '../../models';
-import { type BaseModel, canSync } from '../../models';
-import type { Project } from '../../models/project';
-import type { Workspace } from '../../models/workspace';
 import type { StatusCandidate } from '../types';
 import type { VCS } from './vcs';
 

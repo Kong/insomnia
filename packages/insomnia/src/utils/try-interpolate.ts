@@ -1,7 +1,8 @@
+import type { GrpcRequest } from '@db/models/grpc-request';
+import type { Request } from '@db/models/request';
+import type { WebSocketRequest } from '@db/models/websocket-request';
+
 import { getRenderContext, render } from '../common/render';
-import type { GrpcRequest } from '../models/grpc-request';
-import type { Request } from '../models/request';
-import type { WebSocketRequest } from '../models/websocket-request';
 import { RenderError } from '../templating/render-error';
 import { showModal } from '../ui/components/modals';
 import { RequestRenderErrorModal } from '../ui/components/modals/request-render-error-modal';

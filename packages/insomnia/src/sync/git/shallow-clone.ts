@@ -1,6 +1,6 @@
+import type { GitRepository } from '@db/models/git-repository';
 import * as git from 'isomorphic-git';
 
-import type { GitRepository } from '../../models/git-repository';
 import { GIT_CLONE_DIR, GIT_INTERNAL_DIR } from './git-vcs';
 import { httpClient } from './http-client';
 import { gitCallbacks } from './utils';

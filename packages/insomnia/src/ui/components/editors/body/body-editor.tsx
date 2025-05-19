@@ -1,3 +1,4 @@
+import { isEventStreamRequest, type Request, type RequestBodyParameter } from '@db/models/request';
 import clone from 'clone';
 import { lookup } from 'mime-types';
 import React, { type FC, useCallback } from 'react';
@@ -13,7 +14,6 @@ import {
 } from '../../../../common/constants';
 import { documentationLinks } from '../../../../common/documentation';
 import { getContentTypeHeader } from '../../../../common/misc';
-import { isEventStreamRequest, type Request, type RequestBodyParameter } from '../../../../models/request';
 import { NunjucksEnabledProvider } from '../../../context/nunjucks/nunjucks-enabled-context';
 import { useRequestPatcher } from '../../../hooks/use-request';
 import { ContentTypeDropdown } from '../../dropdowns/content-type-dropdown';

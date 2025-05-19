@@ -1,8 +1,8 @@
+import * as models from '@db/models';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CONTENT_TYPE_FORM_URLENCODED } from '../../../common/constants';
 import { database as db } from '../../../common/database';
-import * as models from '../../../models';
 import * as plugin from '../request';
 const CONTEXT = {
   user_key: 'my_user_key',

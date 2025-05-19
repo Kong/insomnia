@@ -1,3 +1,7 @@
+import * as models from '@db/models';
+import type { MockRoute } from '@db/models/mock-route';
+import type { MockServer } from '@db/models/mock-server';
+import type { Response } from '@db/models/response';
 import fs from 'fs';
 import type * as Har from 'har-format';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
@@ -15,10 +19,6 @@ import {
 } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
-import * as models from '../../../models';
-import type { MockRoute } from '../../../models/mock-route';
-import type { MockServer } from '../../../models/mock-server';
-import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/cancellation';
 import { insomniaFetch } from '../../../ui/insomniaFetch';
 import { jsonPrettify } from '../../../utils/prettify/json';

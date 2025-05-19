@@ -1,3 +1,4 @@
+import { isRemoteProject } from '@db/models/project';
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment } from 'react';
 import {
@@ -15,7 +16,6 @@ import {
 import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 
 import { fuzzyMatch } from '../../common/misc';
-import { isRemoteProject } from '../../models/project';
 import uiEventBus from '../eventBus';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
 import type { WorkspaceLoaderData } from '../routes/workspace';

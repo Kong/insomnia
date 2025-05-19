@@ -1,14 +1,15 @@
-import type { CookieJar } from '../models/cookie-jar';
-import type { Environment, UserUploadEnvironment } from '../models/environment';
-import type { GrpcRequest } from '../models/grpc-request';
-import type { OAuth2Token } from '../models/o-auth-2-token';
-import type { Project } from '../models/project';
-import type { Request } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { Response } from '../models/response';
-import type { getBodyBuffer, getLatestForRequest } from '../models/response';
-import type { WebSocketRequest } from '../models/websocket-request';
-import type { Workspace } from '../models/workspace';
+import type { CookieJar } from '@db/models/cookie-jar';
+import type { Environment, UserUploadEnvironment } from '@db/models/environment';
+import type { GrpcRequest } from '@db/models/grpc-request';
+import type { OAuth2Token } from '@db/models/o-auth-2-token';
+import type { Project } from '@db/models/project';
+import type { Request } from '@db/models/request';
+import type { RequestGroup } from '@db/models/request-group';
+import type { Response } from '@db/models/response';
+import type { getBodyBuffer, getLatestForRequest } from '@db/models/response';
+import type { WebSocketRequest } from '@db/models/websocket-request';
+import type { Workspace } from '@db/models/workspace';
+
 import type { PluginStore } from '../plugins/context';
 import type { PromptModalOptions } from '../ui/components/modals/prompt-modal';
 import type { extractNunjucksTagFromCoords } from './utils';

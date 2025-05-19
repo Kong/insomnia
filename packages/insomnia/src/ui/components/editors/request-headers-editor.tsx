@@ -1,9 +1,9 @@
+import type { RequestHeader } from '@db/models/request';
 import React, { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { generateId } from '../../../common/misc';
-import type { RequestHeader } from '../../../models/request';
 import { invariant } from '../../../utils/invariant';
 import { useRequestGroupPatcher, useRequestPatcher } from '../../hooks/use-request';
 import { CodeEditor } from '../codemirror/code-editor';

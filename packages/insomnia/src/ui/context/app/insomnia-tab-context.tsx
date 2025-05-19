@@ -1,8 +1,8 @@
+import { isScratchpadOrganizationId } from '@db/models/organization';
 import React, { createContext, type FC, type PropsWithChildren, useCallback, useContext, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useLocalStorage } from 'react-use';
 
-import { isScratchpadOrganizationId } from '../../../models/organization';
 import type { BaseTab } from '../../components/tabs/tab';
 import type { OrganizationTabs } from '../../components/tabs/tab-list';
 import uiEventBus from '../../eventBus';

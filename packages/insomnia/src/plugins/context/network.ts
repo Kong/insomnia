@@ -1,5 +1,6 @@
-import * as models from '../../models';
-import type { Request } from '../../models/request';
+import * as models from '@db/models';
+import type { Request } from '@db/models/request';
+
 import {
   fetchRequestData,
   responseTransform,

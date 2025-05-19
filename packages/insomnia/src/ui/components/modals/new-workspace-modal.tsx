@@ -1,3 +1,5 @@
+import { isGitProject, type Project } from '@db/models/project';
+import { type WorkspaceScope, WorkspaceScopeKeys } from '@db/models/workspace';
 import React, { useEffect, useState } from 'react';
 import {
   Button,
@@ -20,8 +22,6 @@ import {
 } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';
 
-import { isGitProject, type Project } from '../../../models/project';
-import { type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../routes/actions';
 import type { GetRepositoryDirectoryTreeResult } from '../../routes/git-project-actions';
 import type { StorageRules } from '../../routes/organization';

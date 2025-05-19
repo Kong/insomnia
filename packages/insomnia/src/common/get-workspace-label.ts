@@ -1,4 +1,5 @@
-import { isDesign, isEnvironment, isMockServer, type Workspace } from '../models/workspace';
+import { isDesign, isEnvironment, isMockServer, type Workspace } from '@db/models/workspace';
+
 import { strings } from './strings';
 
 export const getWorkspaceLabel = (workspace: Workspace) => {

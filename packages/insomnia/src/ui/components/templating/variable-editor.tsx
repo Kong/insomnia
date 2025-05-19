@@ -1,6 +1,6 @@
+import { vaultEnvironmentMaskValue, vaultEnvironmentRuntimePath } from '@db/models/environment';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { vaultEnvironmentMaskValue, vaultEnvironmentRuntimePath } from '../../../models/environment';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 import type { RenderPurpose } from '../../../templating/types';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';

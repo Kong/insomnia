@@ -1,9 +1,9 @@
+import type { GitCredentials } from '@db/models/git-credentials';
+import type { GitRepository } from '@db/models/git-repository';
 import React, { useEffect, useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
 import { useFetcher } from 'react-router';
 
-import type { GitCredentials } from '../../../models/git-credentials';
-import type { GitRepository } from '../../../models/git-repository';
 import { Icon } from '../icon';
 import { showAlert } from '../modals';
 

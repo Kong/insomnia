@@ -1,3 +1,7 @@
+import * as models from '@db/models/index';
+import type { MockRoute } from '@db/models/mock-route';
+import { isRequest, type Request } from '@db/models/request';
+import { isRequestGroup } from '@db/models/request-group';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Button,
@@ -14,10 +18,6 @@ import { useFetcher, useParams } from 'react-router';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
 import { debounce } from '../../../common/misc';
-import * as models from '../../../models/index';
-import type { MockRoute } from '../../../models/mock-route';
-import { isRequest, type Request } from '../../../models/request';
-import { isRequestGroup } from '../../../models/request-group';
 import { INSOMNIA_TAB_HEIGHT } from '../../constant';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { type Size, useResizeObserver } from '../../hooks/use-resize-observer';

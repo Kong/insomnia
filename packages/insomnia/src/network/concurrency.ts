@@ -1,12 +1,12 @@
+import type { ClientCertificate } from '@db/models/client-certificate';
+import type { CookieJar } from '@db/models/cookie-jar';
+import type { Environment, UserUploadEnvironment } from '@db/models/environment';
+import type { Request } from '@db/models/request';
+import type { Settings } from '@db/models/settings';
 import type { queueAsPromised } from 'fastq';
 import * as fastq from 'fastq';
 
 import type { RequestContext, RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
-import type { ClientCertificate } from '../models/client-certificate';
-import type { CookieJar } from '../models/cookie-jar';
-import type { Environment, UserUploadEnvironment } from '../models/environment';
-import type { Request } from '../models/request';
-import type { Settings } from '../models/settings';
 import { cancellableExecution } from './cancellation';
 
 export interface ExecuteScriptContext {

@@ -1,9 +1,9 @@
+import * as models from '@db/models';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import * as models from '../../../models';
 import { writeProtoFile } from '../write-proto-file';
 
 describe('writeProtoFile', () => {

@@ -1,6 +1,7 @@
 // @TODOs
 // - [ ] Rename things that run a fetch to fetchSomething...
 // - [ ] Make sure that pull handles updating the parentId to the current project._id
+import type { BaseModel } from '@db/models';
 import clone from 'clone';
 import crypto from 'crypto';
 import path from 'path';
@@ -9,7 +10,6 @@ import * as crypt from '../../account/crypt';
 import * as session from '../../account/session';
 import type { Operation } from '../../common/database';
 import { generateId } from '../../common/misc';
-import type { BaseModel } from '../../models';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import Store from '../store';
 import type { BaseDriver } from '../store/drivers/base';

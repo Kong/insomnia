@@ -1,3 +1,12 @@
+import type { OauthProviderName } from '@db/models/git-credentials';
+import type { GitRepository } from '@db/models/git-repository';
+import {
+  getDefaultProjectStorageType,
+  getProjectStorageTypeLabel,
+  isGitProject,
+  isRemoteProject,
+  type Project,
+} from '@db/models/project';
 import type { FC } from 'react';
 import React, { useEffect, useState } from 'react';
 import {
@@ -21,15 +30,6 @@ import {
 } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';
 
-import type { OauthProviderName } from '../../../models/git-credentials';
-import type { GitRepository } from '../../../models/git-repository';
-import {
-  getDefaultProjectStorageType,
-  getProjectStorageTypeLabel,
-  isGitProject,
-  isRemoteProject,
-  type Project,
-} from '../../../models/project';
 import type { UpdateProjectActionResult } from '../../routes/actions';
 import type { InitGitCloneResult } from '../../routes/git-project-actions';
 import type { StorageRules } from '../../routes/organization';

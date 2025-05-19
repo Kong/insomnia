@@ -1,3 +1,20 @@
+import * as models from '@db/models';
+import { userSession } from '@db/models';
+import { type ApiSpec } from '@db/models/api-spec';
+import type { GitRepository } from '@db/models/git-repository';
+import { sortProjects } from '@db/models/helpers/project';
+import type { MockServer } from '@db/models/mock-server';
+import type { Organization } from '@db/models/organization';
+import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '@db/models/organization';
+import {
+  getProjectStorageTypeLabel,
+  isGitProject,
+  isRemoteProject,
+  type Project,
+  SCRATCHPAD_PROJECT_ID,
+} from '@db/models/project';
+import { isDesign, scopeToActivity, type Workspace, type WorkspaceScope } from '@db/models/workspace';
+import type { WorkspaceMeta } from '@db/models/workspace-meta';
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, Fragment, useEffect, useMemo, useState } from 'react';
 import {
@@ -45,23 +62,6 @@ import {
 import { database } from '../../common/database';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
-import * as models from '../../models';
-import { userSession } from '../../models';
-import { type ApiSpec } from '../../models/api-spec';
-import type { GitRepository } from '../../models/git-repository';
-import { sortProjects } from '../../models/helpers/project';
-import type { MockServer } from '../../models/mock-server';
-import type { Organization } from '../../models/organization';
-import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../../models/organization';
-import {
-  getProjectStorageTypeLabel,
-  isGitProject,
-  isRemoteProject,
-  type Project,
-  SCRATCHPAD_PROJECT_ID,
-} from '../../models/project';
-import { isDesign, scopeToActivity, type Workspace, type WorkspaceScope } from '../../models/workspace';
-import type { WorkspaceMeta } from '../../models/workspace-meta';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';

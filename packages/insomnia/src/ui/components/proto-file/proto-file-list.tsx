@@ -1,8 +1,8 @@
+import type { ProtoDirectory } from '@db/models/proto-directory';
+import type { ProtoFile } from '@db/models/proto-file';
 import React, { type FunctionComponent } from 'react';
 import { Checkbox } from 'react-aria-components';
 
-import type { ProtoDirectory } from '../../../models/proto-directory';
-import type { ProtoFile } from '../../../models/proto-file';
 import { Button } from '../themed-button';
 
 export type SelectProtoFileHandler = (id: string) => void;

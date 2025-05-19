@@ -1,8 +1,8 @@
+import type { Organization } from '@db/models/organization';
 import React, { createContext, type FC, type PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
 
 import { CDN_INVALIDATION_TTL } from '../../../common/constants';
-import type { Organization } from '../../../models/organization';
 import { insomniaFetch } from '../../../ui/insomniaFetch';
 import { avatarImageCache } from '../../hooks/image-cache';
 import type { ProjectIdLoaderData } from '../../routes/project';

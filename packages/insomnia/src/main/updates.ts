@@ -1,8 +1,8 @@
+import * as models from '@db/models/index';
 import { autoUpdater, BrowserWindow, dialog } from 'electron';
 
 import { CHECK_FOR_UPDATES_INTERVAL, getAppId, getAppVersion, isDevelopment, UpdateURL } from '../common/constants';
 import { delay } from '../common/misc';
-import * as models from '../models/index';
 import { invariant } from '../utils/invariant';
 import { ipcMainOn } from './ipc/electron';
 

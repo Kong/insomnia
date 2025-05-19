@@ -1,13 +1,13 @@
 import '../css/styles.css';
 
+import * as models from '@db/models';
+import type { Settings } from '@db/models/settings';
+import type { UserSession } from '@db/models/user-session';
 import type { IpcRendererEvent } from 'electron';
 import React, { useEffect, useState } from 'react';
 import { type LoaderFunction, Outlet, useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 
 import { isDevelopment } from '../../common/constants';
-import * as models from '../../models';
-import type { Settings } from '../../models/settings';
-import type { UserSession } from '../../models/user-session';
 import { reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
 import { setTheme } from '../../plugins/misc';

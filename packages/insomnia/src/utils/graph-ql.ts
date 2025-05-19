@@ -1,7 +1,7 @@
+import type { Request } from '@db/models/request';
 import { getOperationAST, parse } from 'graphql';
 
 import { CONTENT_TYPE_GRAPHQL } from '../common/constants';
-import type { Request } from '../models/request';
 import type { RenderedRequest } from '../templating/types';
 
 // parse graphql request body since we save entire query variables as string rather then stringified json string. - INS-4281

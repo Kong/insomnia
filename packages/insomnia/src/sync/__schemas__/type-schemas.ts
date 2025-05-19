@@ -1,6 +1,6 @@
+import { baseModelSchema } from '@db/models/__schemas__/model-schemas';
 import { createBuilder, type Schema } from '@develohpanda/fluent-builder';
 
-import { baseModelSchema } from '../../models/__schemas__/model-schemas';
 import type { BackendProject, Branch, MergeConflict, SnapshotStateEntry, StatusCandidate, Team } from '../types';
 import type { BackendProjectWithTeam } from '../vcs/normalize-backend-project-team';
 

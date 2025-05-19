@@ -1,4 +1,5 @@
-import { userSession } from '../models';
+import { userSession } from '@db/models';
+
 import { insomniaFetch } from '../ui/insomniaFetch';
 import * as crypt from './crypt';
 

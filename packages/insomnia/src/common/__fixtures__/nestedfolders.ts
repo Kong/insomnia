@@ -1,4 +1,4 @@
-import { type BaseModel, request, requestGroup, workspace } from '../../models';
+import { type BaseModel, request, requestGroup, workspace } from '@db/models';
 
 export const data: Record<string, Partial<BaseModel>[]> = {
   [workspace.type]: [

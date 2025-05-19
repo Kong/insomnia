@@ -1,6 +1,7 @@
+import type { Request } from '@db/models/request';
+import type { Response } from '@db/models/response';
+
 import { getAppPlatform, getAppVersion } from '../common/constants';
-import type { Request } from '../models/request';
-import type { Response } from '../models/response';
 import type { Plugin } from '../plugins/index';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
 import * as templating from './worker';

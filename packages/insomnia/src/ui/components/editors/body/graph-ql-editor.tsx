@@ -1,3 +1,5 @@
+import * as models from '@db/models';
+import type { Request } from '@db/models/request';
 import type { LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
 import type { GraphQLHintOptions } from 'codemirror-graphql/hint';
 import type { GraphQLInfoOptions } from 'codemirror-graphql/info';
@@ -27,8 +29,6 @@ import { CONTENT_TYPE_JSON } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
-import * as models from '../../../../models';
-import type { Request } from '../../../../models/request';
 import {
   fetchRequestData,
   responseTransform,

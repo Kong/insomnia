@@ -1,8 +1,9 @@
+import * as models from '@db/models';
+import type { Request as DBRequest } from '@db/models/request';
+import type { RequestGroup } from '@db/models/request-group';
+import type { Workspace } from '@db/models/workspace';
+
 import { database as db } from '../common/database';
-import * as models from '../models';
-import type { Request as DBRequest } from '../models/request';
-import type { RequestGroup } from '../models/request-group';
-import type { Workspace } from '../models/workspace';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
 
 export const resolveDbByKey = async (request: Request) => {

@@ -1,8 +1,8 @@
+import { userSession as sessionModel } from '@db/models';
 import React, { Fragment } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { type ActionFunction, redirect, useFetcher, useFetchers, useNavigate } from 'react-router';
 
-import { userSession as sessionModel } from '../../models';
 import { invariant } from '../../utils/invariant';
 import { getVaultKeyFromStorage } from '../../utils/vault';
 import { SegmentEvent } from '../analytics';

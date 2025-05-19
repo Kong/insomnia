@@ -1,3 +1,11 @@
+import {
+  type Environment,
+  type EnvironmentKvPairData,
+  EnvironmentKvPairDataType,
+  EnvironmentType,
+  getDataFromKVPair,
+} from '@db/models/environment';
+import { isRemoteProject } from '@db/models/project';
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useEffect, useRef, useState } from 'react';
 import {
@@ -22,14 +30,6 @@ import { NavLink, useFetcher, useParams, useRouteLoaderData } from 'react-router
 
 import { DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
 import { debounce } from '../../common/misc';
-import {
-  type Environment,
-  type EnvironmentKvPairData,
-  EnvironmentKvPairDataType,
-  EnvironmentType,
-  getDataFromKVPair,
-} from '../../models/environment';
-import { isRemoteProject } from '../../models/project';
 import { decryptVaultKeyFromSession } from '../../utils/vault';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';

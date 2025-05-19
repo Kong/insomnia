@@ -1,3 +1,6 @@
+import * as models from '@db/models';
+import type { OAuth2Token } from '@db/models/o-auth-2-token';
+import type { AuthTypeOAuth2, OAuth2ResponseType, RequestAuthentication } from '@db/models/request';
 import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useRouteLoaderData } from 'react-router';
 
@@ -5,9 +8,6 @@ import type { AUTH_OAUTH_2 } from '../../../../common/constants';
 import { toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
-import * as models from '../../../../models';
-import type { OAuth2Token } from '../../../../models/o-auth-2-token';
-import type { AuthTypeOAuth2, OAuth2ResponseType, RequestAuthentication } from '../../../../models/request';
 import {
   GRANT_TYPE_AUTHORIZATION_CODE,
   GRANT_TYPE_CLIENT_CREDENTIALS,

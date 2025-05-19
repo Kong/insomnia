@@ -1,5 +1,6 @@
+import { settings } from '@db/models';
+
 import { getInsomniaVaultKey } from '../common/constants';
-import { settings } from '../models';
 
 export const base64encode = (input: string | JsonWebKey) => {
   const inputStr = typeof input === 'string' ? input : JSON.stringify(input);

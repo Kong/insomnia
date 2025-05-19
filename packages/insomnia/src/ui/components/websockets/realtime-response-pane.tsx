@@ -1,3 +1,5 @@
+import type { Response } from '@db/models/response';
+import type { WebSocketResponse } from '@db/models/websocket-response';
 import fs from 'fs';
 import React, { type FC, useEffect, useState } from 'react';
 import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
@@ -8,8 +10,6 @@ import { getSetCookieHeaders } from '../../../common/misc';
 import type { CurlEvent } from '../../../main/network/curl';
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import type { WebSocketEvent } from '../../../main/network/websocket';
-import type { Response } from '../../../models/response';
-import type { WebSocketResponse } from '../../../models/websocket-response';
 import { deserializeNDJSON } from '../../../utils/ndjson';
 import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
 import type { RequestLoaderData, WebSocketRequestLoaderData } from '../../routes/request';

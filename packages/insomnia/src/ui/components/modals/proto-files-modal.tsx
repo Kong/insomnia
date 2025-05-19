@@ -1,3 +1,6 @@
+import * as models from '@db/models';
+import { isProtoDirectory, type ProtoDirectory } from '@db/models/proto-directory';
+import { isProtoFile, type ProtoFile } from '@db/models/proto-file';
 import * as protoLoader from '@grpc/proto-loader';
 import fs from 'fs';
 import path from 'path';
@@ -6,9 +9,6 @@ import { useParams } from 'react-router';
 
 import { type ChangeBufferEvent, database as db } from '../../../common/database';
 import { selectFileOrFolder } from '../../../common/select-file-or-folder';
-import * as models from '../../../models';
-import { isProtoDirectory, type ProtoDirectory } from '../../../models/proto-directory';
-import { isProtoFile, type ProtoFile } from '../../../models/proto-file';
 import { ProtoDirectoryLoader } from '../../../network/grpc/proto-directory-loader';
 import { writeProtoFile } from '../../../network/grpc/write-proto-file';
 import { Modal, type ModalHandle } from '../base/modal';

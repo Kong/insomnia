@@ -5,7 +5,7 @@ import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import { GraphQLSchema } from 'graphql';
 
 import { HandleRender } from '../src/common/render';
-import { Settings } from '../src/models/settings';
+import { Settings } from '@db/models/settings';
 import { NunjucksParsedTag } from '../src/templating/utils';
 
 type LinkClickCallback = (url: string) => void;

@@ -1,10 +1,10 @@
+import * as models from '@db/models';
+import { environmentModelSchema, requestGroupModelSchema } from '@db/models/__schemas__/model-schemas';
+import type { Environment } from '@db/models/environment';
+import type { Workspace } from '@db/models/workspace';
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import * as models from '../../models';
-import { environmentModelSchema, requestGroupModelSchema } from '../../models/__schemas__/model-schemas';
-import type { Environment } from '../../models/environment';
-import type { Workspace } from '../../models/workspace';
 import * as renderUtils from '../render';
 
 const envBuilder = createBuilder(environmentModelSchema);
