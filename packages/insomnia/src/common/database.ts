@@ -4,10 +4,8 @@
 import electron from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 
-import { mustGetModel } from '../models';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
-import { generateId } from './misc';
 
 export type Query<T extends BaseModel = BaseModel> = {
   [key in keyof T]?: string | SpecificQuery | null | undefined;
@@ -42,13 +40,6 @@ export const database =
           if (db._empty) {
             return _send<void>('batchModifyDocs', ...arguments);
           }
-          const flushId = await database.bufferChanges();
-
-          // Perform from least to most dangerous
-          await Promise.all(upsert.map(doc => database.upsert(doc, true)));
-          await Promise.all(remove.map(doc => database.unsafeRemove(doc, true)));
-
-          await database.flushChanges(flushId);
         },
 
         /** buffers database changes and returns a buffer id, automatically call flushChanges in millis,
@@ -57,9 +48,6 @@ export const database =
           if (db._empty) {
             return _send<number>('bufferChanges', ...arguments);
           }
-          bufferingChanges = true;
-          setTimeout(database.flushChanges, millis);
-          return ++bufferChangesId;
         },
 
         /** buffers database changes and returns a buffer id */
@@ -67,8 +55,6 @@ export const database =
           if (db._empty) {
             return _send<number>('bufferChangesIndefinitely', ...arguments);
           }
-          bufferingChanges = true;
-          return ++bufferChangesId;
         },
 
         /** return count num of documents matching query */
@@ -76,42 +62,18 @@ export const database =
           if (db._empty) {
             return _send<number>('count', ...arguments);
           }
-          return new Promise<number>((resolve, reject) => {
-            (db[type] as NeDB<T>).count(query, (err, count) => {
-              if (err) {
-                return reject(err);
-              }
-
-              resolve(count);
-            });
-          });
         },
 
-        docCreate: async <T extends BaseModel>(type: string, ...patches: Patch<T>[]) => {
-          const doc = await models.initModel<T>(
-            type,
-            ...patches,
-            // Fields that the user can't touch
-            {
-              type: type,
-            },
-          );
-          return database.insert<T>(doc);
+        docCreate: async function <T extends BaseModel>(type: string, patches: Patch<T>[]) {
+          if (db._empty) {
+            return _send<T>('docCreate', ...arguments);
+          }
         },
 
-        docUpdate: async <T extends BaseModel>(originalDoc: T, ...patches: Patch<T>[]) => {
-          // No need to re-initialize the model during update; originalDoc will be in a valid state by virtue of loading
-          const doc = await models.initModel<T>(
-            originalDoc.type,
-            originalDoc,
-
-            // NOTE: This is before `patches` because we want `patch.modified` to win if it has it
-            {
-              modified: Date.now(),
-            },
-            ...patches,
-          );
-          return database.update<T>(doc, false, patches);
+        docUpdate: async function <T extends BaseModel>(originalDoc: T, patches: Patch<T>[]) {
+          if (db._empty) {
+            return _send<T>('docUpdate', ...arguments);
+          }
         },
 
         /** duplicate doc and its decendents recursively */
@@ -119,44 +81,6 @@ export const database =
           if (db._empty) {
             return _send<T>('duplicate', ...arguments);
           }
-          const flushId = await database.bufferChanges();
-
-          async function next<T extends BaseModel>(docToCopy: T, patch: Patch<T>) {
-            const model = mustGetModel(docToCopy.type);
-            const overrides = {
-              _id: generateId(model.prefix),
-              modified: Date.now(),
-              created: Date.now(),
-              type: docToCopy.type, // Ensure this is not overwritten by the patch
-            };
-
-            // 1. Copy the doc
-            const newDoc = Object.assign({}, docToCopy, patch, overrides);
-
-            // Don't initialize the model during insert, and simply duplicate
-            const createdDoc = await database.insert(newDoc, false, false);
-
-            // 2. Get all the children
-            for (const type of allTypes()) {
-              // Note: We never want to duplicate a response
-              if (!models.canDuplicate(type)) {
-                continue;
-              }
-
-              const parentId = docToCopy._id;
-              const children = await database.find(type, { parentId });
-
-              for (const doc of children) {
-                await next(doc, { parentId: createdDoc._id });
-              }
-            }
-
-            return createdDoc;
-          }
-
-          const createdDoc = await next(originalDoc, patch);
-          await database.flushChanges(flushId);
-          return createdDoc;
         },
 
         /** find documents matching query */
@@ -168,25 +92,6 @@ export const database =
           if (db._empty) {
             return _send<T[]>('find', ...arguments);
           }
-          return new Promise<T[]>((resolve, reject) => {
-            (db[type] as NeDB<T>)
-              .find(query)
-              .sort(sort)
-              .exec(async (err, rawDocs) => {
-                if (err) {
-                  reject(err);
-                  return;
-                }
-
-                const docs: T[] = [];
-
-                for (const rawDoc of rawDocs) {
-                  docs.push(await models.initModel(type, rawDoc));
-                }
-
-                resolve(docs);
-              });
-          });
         },
 
         findMostRecentlyModified: async function <T extends BaseModel>(
@@ -197,68 +102,12 @@ export const database =
           if (db._empty) {
             return _send<T[]>('findMostRecentlyModified', ...arguments);
           }
-          return new Promise<T[]>(resolve => {
-            (db[type] as NeDB<T>)
-              .find(query)
-              .sort({
-                modified: -1,
-              })
-              // @ts-expect-error -- TSCONVERSION limit shouldn't be applied if it's null, or default to something that means no-limit
-              .limit(limit)
-              .exec(async (err, rawDocs) => {
-                if (err) {
-                  console.warn('[db] Failed to find docs', err);
-                  resolve([]);
-                  return;
-                }
-
-                const docs: T[] = [];
-
-                for (const rawDoc of rawDocs) {
-                  docs.push(await models.initModel(type, rawDoc));
-                }
-
-                resolve(docs);
-              });
-          });
         },
 
         /** trigger all changeListeners */
         flushChanges: async function (id = 0, fake = false) {
           if (db._empty) {
             return _send<void>('flushChanges', ...arguments);
-          }
-
-          // Only flush if ID is 0 or the current flush ID is the same as passed
-          if (id !== 0 && bufferChangesId !== id) {
-            return;
-          }
-
-          bufferingChanges = false;
-          const changes = [...changeBuffer];
-          changeBuffer = [];
-
-          if (changes.length === 0) {
-            // No work to do
-            return;
-          }
-
-          if (fake) {
-            console.log(`[db] Dropped ${changes.length} changes.`);
-            return;
-          }
-          // Notify local listeners too
-          for (const fn of changeListeners) {
-            await fn(changes);
-          }
-          // Notify remote listeners
-          const isMainContext = process.type === 'browser';
-          if (isMainContext) {
-            const windows = electron.BrowserWindow.getAllWindows();
-
-            for (const window of windows) {
-              window.webContents.send('db.changes', changes);
-            }
           }
         },
 
@@ -267,20 +116,12 @@ export const database =
           if (db._empty) {
             return _send<T>('get', ...arguments);
           }
-
-          // Short circuit IDs used to represent nothing
-          if (!id || id === 'n/a') {
-            return null;
-          }
-          return database.getWhere<T>(type, { _id: id });
         },
 
         getMostRecentlyModified: async function <T extends BaseModel>(type: string, query: Query<T> = {}) {
           if (db._empty) {
             return _send<T>('getMostRecentlyModified', ...arguments);
           }
-          const docs = await database.findMostRecentlyModified<T>(type, query, 1);
-          return docs.length ? docs[0] : null;
         },
 
         /** get the first document matching query */
@@ -288,8 +129,6 @@ export const database =
           if (db._empty) {
             return _send<T>('getWhere', ...arguments);
           }
-          const docs = await database.find<T>(type, query);
-          return docs.length ? docs[0] : null;
         },
 
         /** init in renderer process */
@@ -306,29 +145,6 @@ export const database =
           if (db._empty) {
             return _send<T>('insert', ...arguments);
           }
-          return new Promise<T>(async (resolve, reject) => {
-            let docWithDefaults: T | null = null;
-
-            try {
-              if (initializeModel) {
-                docWithDefaults = await models.initModel<T>(doc.type, doc);
-              } else {
-                docWithDefaults = doc;
-              }
-            } catch (err) {
-              return reject(err);
-            }
-
-            (db[doc.type] as NeDB<T>).insert(docWithDefaults, (err, newDoc: T) => {
-              if (err) {
-                return reject(err);
-              }
-
-              resolve(newDoc);
-              // NOTE: This needs to be after we resolve
-              notifyOfChange('insert', newDoc, fromSync);
-            });
-          });
         },
 
         onChange: (callback: ChangeListener) => {
@@ -344,59 +160,12 @@ export const database =
           if (db._empty) {
             return _send<void>('remove', ...arguments);
           }
-
-          const flushId = await database.bufferChanges();
-
-          const docs = await database.withDescendants(doc);
-          const docIds = docs.map(d => d._id);
-          const types = [...new Set(docs.map(d => d.type))];
-
-          // Don't really need to wait for this to be over;
-          types.map(t =>
-            db[t].remove(
-              {
-                _id: {
-                  $in: docIds,
-                },
-              },
-              {
-                multi: true,
-              },
-            ),
-          );
-
-          docs.map(d => notifyOfChange('remove', d, fromSync));
-          await database.flushChanges(flushId);
         },
 
         removeWhere: async function <T extends BaseModel>(type: string, query: Query<T>) {
           if (db._empty) {
             return _send<void>('removeWhere', ...arguments);
           }
-          const flushId = await database.bufferChanges();
-
-          for (const doc of await database.find<T>(type, query)) {
-            const docs = await database.withDescendants(doc);
-            const docIds = docs.map(d => d._id);
-            const types = [...new Set(docs.map(d => d.type))];
-
-            // Don't really need to wait for this to be over;
-            types.map(t =>
-              db[t].remove(
-                {
-                  _id: {
-                    $in: docIds,
-                  },
-                },
-                {
-                  multi: true,
-                },
-              ),
-            );
-            docs.map(d => notifyOfChange('remove', d, false));
-          }
-
-          await database.flushChanges(flushId);
         },
 
         /** Removes entries without removing their children */
@@ -404,41 +173,12 @@ export const database =
           if (db._empty) {
             return _send<void>('unsafeRemove', ...arguments);
           }
-
-          (db[doc.type] as NeDB<T>).remove({ _id: doc._id });
-          notifyOfChange('remove', doc, fromSync);
         },
 
         update: async function <T extends BaseModel>(doc: T, fromSync = false, patches: Patch<T>[] = []) {
           if (db._empty) {
             return _send<T>('update', ...arguments);
           }
-
-          return new Promise<T>(async (resolve, reject) => {
-            let docWithDefaults: T;
-
-            try {
-              docWithDefaults = await models.initModel<T>(doc.type, doc);
-            } catch (err) {
-              return reject(err);
-            }
-
-            (db[doc.type] as NeDB<T>).update(
-              { _id: docWithDefaults._id },
-              docWithDefaults,
-              // TODO(TSCONVERSION) see comment below, upsert can happen automatically as part of the update
-              // @ts-expect-error -- TSCONVERSION expects 4 args but only sent 3. Need to validate what UpdateOptions should be.
-              err => {
-                if (err) {
-                  return reject(err);
-                }
-
-                resolve(docWithDefaults);
-                // NOTE: This needs to be after we resolve
-                notifyOfChange('update', docWithDefaults, fromSync, patches);
-              },
-            );
-          });
         },
 
         // TODO(TSCONVERSION) the update method above can now take an upsert property
@@ -446,12 +186,6 @@ export const database =
           if (db._empty) {
             return _send<T>('upsert', ...arguments);
           }
-          const existingDoc = await database.get<T>(doc.type, doc._id);
-
-          if (existingDoc) {
-            return database.update<T>(doc, fromSync);
-          }
-          return database.insert<T>(doc, fromSync);
         },
 
         /** get all ancestors of specified types of a document */
@@ -459,35 +193,6 @@ export const database =
           if (db._empty) {
             return _send<T[]>('withAncestors', ...arguments);
           }
-
-          if (!doc) {
-            return [];
-          }
-
-          let docsToReturn: T[] = doc ? [doc] : [];
-
-          async function next(docs: T[]): Promise<T[]> {
-            const foundDocs: T[] = [];
-
-            for (const d of docs) {
-              for (const type of types) {
-                // If the doc is null, we want to search for parentId === null
-                const another = await database.get<T>(type, d.parentId);
-                another && foundDocs.push(another);
-              }
-            }
-
-            if (foundDocs.length === 0) {
-              // Didn't find anything. We're done
-              return docsToReturn;
-            }
-
-            // Continue searching for children
-            docsToReturn = [...docsToReturn, ...foundDocs];
-            return next(foundDocs);
-          }
-
-          return next([doc]);
         },
 
         /**
@@ -511,43 +216,6 @@ export const database =
           if (db._empty) {
             return _send<BaseModel[]>('withDescendants', ...arguments);
           }
-          let docsToReturn: BaseModel[] = doc ? [doc] : [];
-
-          async function next(docs: (BaseModel | null)[]): Promise<BaseModel[]> {
-            let foundDocs: BaseModel[] = [];
-
-            for (const doc of docs) {
-              if (stopType && doc && doc.type === stopType) {
-                continue;
-              }
-
-              const promises: Promise<BaseModel[]>[] = [];
-
-              const types = queryTypes?.length ? queryTypes : allTypes();
-
-              for (const type of types) {
-                // If the doc is null, we want to search for parentId === null
-                const parentId = doc ? doc._id : null;
-                const promise = database.find(type, { parentId });
-                promises.push(promise);
-              }
-
-              for (const more of await Promise.all(promises)) {
-                foundDocs = [...foundDocs, ...more];
-              }
-            }
-
-            if (foundDocs.length === 0) {
-              // Didn't find anything. We're done
-              return docsToReturn;
-            }
-
-            // Continue searching for children
-            docsToReturn = [...docsToReturn, ...foundDocs];
-            return next(foundDocs);
-          }
-
-          return next([doc]);
         },
       };
 
@@ -561,12 +229,6 @@ const db = {
 // ~~~~~~~ //
 const allTypes = () => Object.keys(db);
 
-// ~~~~~~~~~~~~~~~~ //
-// Change Listeners //
-// ~~~~~~~~~~~~~~~~ //
-let bufferingChanges = false;
-let bufferChangesId = 1;
-
 export type ChangeBufferEvent<T extends BaseModel = BaseModel> = [
   event: ChangeType,
   doc: T,
@@ -574,30 +236,9 @@ export type ChangeBufferEvent<T extends BaseModel = BaseModel> = [
   patches: Patch<T>[],
 ];
 
-let changeBuffer: ChangeBufferEvent[] = [];
-
 type ChangeListener = (changes: ChangeBufferEvent[]) => void;
 
 let changeListeners: ChangeListener[] = [];
-
-/** push changes into the buffer, so that changeListeners can get change contents when database.flushChanges is called,
- * this method should be called whenever a document change happens */
-async function notifyOfChange<T extends BaseModel>(
-  event: ChangeType,
-  doc: T,
-  fromSync: boolean,
-  patches: Patch<T>[] = [],
-) {
-  const updatedDoc = doc;
-
-  // TODO: Use object is better than array
-  changeBuffer.push([event, updatedDoc, fromSync, patches]);
-
-  // Flush right away if we're not buffering
-  if (!bufferingChanges) {
-    await database.flushChanges();
-  }
-}
 
 // ~~~~~~~~~~~~~~~~~~~ //
 // DEFAULT MODEL STUFF //
