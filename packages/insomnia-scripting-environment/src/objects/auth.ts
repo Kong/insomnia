@@ -1,4 +1,4 @@
-import type { OAuth2ResponseType, RequestAuthentication } from 'insomnia/src/models/request';
+import type { OAuth2ResponseType, RequestAuthentication } from 'insomnia-database/models/request';
 import type { OAuth1SignatureMethod } from 'insomnia/src/network/o-auth-1/constants';
 
 import { Property } from './properties';

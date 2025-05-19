@@ -1,7 +1,7 @@
-import type { ClientCertificate } from 'insomnia/src/models/client-certificate';
-import type { CookieJar as InsomniaCookieJar } from 'insomnia/src/models/cookie-jar';
-import type { Request } from 'insomnia/src/models/request';
-import type { Settings } from 'insomnia/src/models/settings';
+import type { ClientCertificate } from 'insomnia-database/models/client-certificate';
+import type { CookieJar as InsomniaCookieJar } from 'insomnia-database/models/cookie-jar';
+import type { Request } from 'insomnia-database/models/request';
+import type { Settings } from 'insomnia-database/models/settings';
 import type { sendCurlAndWriteTimelineError, sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
 
 import type { ExecutionOption } from './execution';

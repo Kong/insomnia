@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import type { ClientCertificate } from 'insomnia/src/models/client-certificate';
-import type { RequestHeader } from 'insomnia/src/models/request';
-import type { Settings } from 'insomnia/src/models/settings';
+import type { ClientCertificate } from 'insomnia-database/models/client-certificate';
+import type { RequestHeader } from 'insomnia-database/models/request';
+import type { Settings } from 'insomnia-database/models/settings';
 import { filterClientCertificates } from 'insomnia/src/network/certificate';
 
 import { toPreRequestAuth } from './auth';

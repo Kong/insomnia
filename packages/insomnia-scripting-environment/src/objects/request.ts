@@ -1,11 +1,11 @@
-import { type ClientCertificate, init as initClientCertificate } from 'insomnia/src/models/client-certificate';
+import { type ClientCertificate, init as initClientCertificate } from 'insomnia-database/models/client-certificate';
 import type {
   Request as InsomniaRequest,
   RequestBody as InsomniaRequestBody,
   RequestBodyParameter,
   RequestPathParameter,
-} from 'insomnia/src/models/request';
-import type { Settings } from 'insomnia/src/models/settings';
+} from 'insomnia-database/models/request';
+import type { Settings } from 'insomnia-database/models/settings';
 
 import { type AuthOptions, type AuthOptionTypes, fromPreRequestAuth, RequestAuth } from './auth';
 import type { CertificateOptions } from './certificates';
