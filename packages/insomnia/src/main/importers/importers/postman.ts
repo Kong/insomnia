@@ -1,4 +1,5 @@
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML } from '../../../common/constants';
+import { translateHandlersInScript } from '../../../common/import';
 import type { AuthTypeOAuth2 } from '../../../models/request';
 import { forceBracketNotation } from '../../../templating/utils';
 import { fakerFunctions } from '../../../ui/components/templating/faker-functions';
@@ -110,24 +111,6 @@ const mapGrantTypeToInsomniaGrantType = (grantType: string) => {
 
   return grantType || 'authorization_code';
 };
-
-export function translateHandlersInScript(scriptContent: string): string {
-  let translated = scriptContent;
-
-  // Replace pm.* with insomnia.*
-  // This is a simple implementation that only replaces the first instance of pm.* in the script
-  let offset = 0;
-  for (let i = 0; i < scriptContent.length - 2; i++) {
-    const isPM = scriptContent.slice(i, i + 3) === 'pm.';
-    const isPrevCharacterAlphaNumeric = i - 1 >= 0 && /[0-9a-zA-Z_$]/.test(scriptContent[i - 1]);
-    if (isPM && !isPrevCharacterAlphaNumeric) {
-      translated = translated.slice(0, i + offset) + 'insomnia.' + translated.slice(i + 3 + offset);
-      offset += 6;
-    }
-  }
-
-  return translated;
-}
 
 export class ImportPostman {
   collection;

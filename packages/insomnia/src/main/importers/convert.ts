@@ -1,3 +1,5 @@
+invariant(process.type !== 'renderer', 'This file should only be run in the main process');
+import { invariant } from '../../utils/invariant';
 import type { ImportEntry, ImportRequest } from './entities';
 import { setDefaults } from './utils';
 

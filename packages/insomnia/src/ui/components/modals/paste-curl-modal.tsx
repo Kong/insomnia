@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 
 import type { Request } from '../../../models/request';
-import { convert } from '../../../utils/importers/convert';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -21,7 +20,7 @@ export const PasteCurlModal = ({
   useEffect(() => {
     async function parseCurlToRequest() {
       try {
-        const { data } = await convert({
+        const { data } = await window.main.convert({
           contentStr: defaultValue || '',
         });
         const { resources } = data;
@@ -56,7 +55,7 @@ export const PasteCurlModal = ({
                 return;
               }
               try {
-                const { data } = await convert({
+                const { data } = await window.main.convert({
                   contentStr: value,
                 });
                 const { resources } = data;

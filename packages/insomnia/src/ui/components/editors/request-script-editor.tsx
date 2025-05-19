@@ -24,8 +24,8 @@ import {
   Vault,
 } from '../../../../../insomnia-scripting-environment/src/objects';
 import { ParentFolders } from '../../../../../insomnia-scripting-environment/src/objects/folders';
+import { translateHandlersInScript } from '../../../common/import';
 import type { Settings } from '../../../models/settings';
-import { translateHandlersInScript } from '../../../utils/importers/importers/postman';
 import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';
 import { Icon } from '../icon';
 

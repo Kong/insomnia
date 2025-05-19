@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { translateHandlersInScript } from '../postman';
+import { translateHandlersInScript } from '../../../../common/import';
 
 describe('test translateHandlersInScript', () => {
   [

@@ -11,6 +11,7 @@ import { trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { backup, restoreBackup } from '../backup';
 import type { GitServiceAPI } from '../git-service';
+import { convert } from '../importers/convert';
 import installPlugin from '../install-plugin';
 import type { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
@@ -43,6 +44,7 @@ export interface RendererToMainBridgeAPI {
   readFile: (options: { path: string; encoding?: string }) => Promise<{ content: string; encoding: string }>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
+  convert: typeof convert;
   on: (channel: RendererOnChannels, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
   webSocket: WebSocketBridgeAPI;
   grpc: gRPCBridgeAPI;
@@ -140,6 +142,9 @@ export function registerMainHandlers() {
       content: iconv.decode(contentBuffer, defaultEncoding),
       encoding: defaultEncoding,
     };
+  });
+  ipcMainHandle('convert', async (_, options: Parameters<typeof convert>[0]) => {
+    return convert(options);
   });
 
   ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => {

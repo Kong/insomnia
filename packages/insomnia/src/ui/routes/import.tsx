@@ -11,6 +11,7 @@ import {
   scanResources,
   type ScanResult,
 } from '../../common/import';
+import type { ImportEntry } from '../../main/importers/entities';
 import * as models from '../../models';
 import { isRemoteProject } from '../../models/project';
 import type { Workspace } from '../../models/workspace';
@@ -19,7 +20,6 @@ import {
   pushSnapshotOnInitialize,
 } from '../../sync/vcs/initialize-backend-project';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
-import type { ImportEntry } from '../../utils/importers/entities';
 import { invariant } from '../../utils/invariant';
 import { fetchAndCacheOrganizationStorageRule } from './organization';
 

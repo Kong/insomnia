@@ -1,5 +1,7 @@
 import { readFile } from 'fs/promises';
 
+import type { InsomniaImporter } from '../main/importers/convert';
+import type { ImportEntry } from '../main/importers/entities';
 import { type ApiSpec, isApiSpec } from '../models/api-spec';
 import { type CookieJar, isCookieJar } from '../models/cookie-jar';
 import { type BaseEnvironment, type Environment, isEnvironment } from '../models/environment';
@@ -15,9 +17,6 @@ import { isUnitTestSuite, type UnitTestSuite } from '../models/unit-test-suite';
 import { isWebSocketRequest, type WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import type { CurrentPlan } from '../ui/routes/organization';
-import { convert, type InsomniaImporter } from '../utils/importers/convert';
-import type { ImportEntry } from '../utils/importers/entities';
-import { id as postmanEnvImporterId } from '../utils/importers/importers/postman-env';
 import { invariant } from '../utils/invariant';
 import { database as db } from './database';
 import { importInsomniaV5Data } from './insomnia-v5';
@@ -27,13 +26,23 @@ export interface ExportedModel extends BaseModel {
   _type: string;
 }
 
-interface ConvertResult {
-  type: InsomniaImporter;
-  data: {
-    resources: ExportedModel[];
-  };
-}
+export function translateHandlersInScript(scriptContent: string): string {
+  let translated = scriptContent;
 
+  // Replace pm.* with insomnia.*
+  // This is a simple implementation that only replaces the first instance of pm.* in the script
+  let offset = 0;
+  for (let i = 0; i < scriptContent.length - 2; i++) {
+    const isPM = scriptContent.slice(i, i + 3) === 'pm.';
+    const isPrevCharacterAlphaNumeric = i - 1 >= 0 && /[0-9a-zA-Z_$]/.test(scriptContent[i - 1]);
+    if (isPM && !isPrevCharacterAlphaNumeric) {
+      translated = translated.slice(0, i + offset) + 'insomnia.' + translated.slice(i + 3 + offset);
+      offset += 6;
+    }
+  }
+
+  return translated;
+}
 const isSubEnvironmentResource = (environment: Environment) => {
   return (
     !environment.parentId ||
@@ -135,7 +144,7 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
             },
           };
         } else {
-          result = (await convert(importEntry)) as unknown as ConvertResult;
+          result = (await window.main.convert(importEntry)) as unknown as ConvertResult;
         }
       } catch (err: unknown) {
         if (err instanceof Error) {
@@ -230,7 +239,7 @@ export async function importResourcesToProject({
     }
 
     // if the resource is postman environment,
-    if (importer.id === postmanEnvImporterId && resources.find(isEnvironment)) {
+    if (importer.id === 'postman-environment' && resources.find(isEnvironment)) {
       await Promise.all(
         resources.filter(isEnvironment).map(resource =>
           importResourcesToNewWorkspace({

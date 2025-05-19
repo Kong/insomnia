@@ -110,6 +110,7 @@ const main: Window['main'] = {
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
   writeFile: options => ipcRenderer.invoke('writeFile', options),
   readFile: options => ipcRenderer.invoke('readFile', options),
+  convert: options => ipcRenderer.invoke('convert', options),
   on: (channel, listener) => {
     ipcRenderer.on(channel, listener);
     return () => ipcRenderer.removeListener(channel, listener);
