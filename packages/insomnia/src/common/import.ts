@@ -25,7 +25,12 @@ import { generateId } from './misc';
 export interface ExportedModel extends BaseModel {
   _type: string;
 }
-
+interface ConvertResult {
+  type: InsomniaImporter;
+  data: {
+    resources: ExportedModel[];
+  };
+}
 export function translateHandlersInScript(scriptContent: string): string {
   let translated = scriptContent;
 
