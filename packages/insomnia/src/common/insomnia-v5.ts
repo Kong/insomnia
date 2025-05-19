@@ -42,12 +42,7 @@ import {
 type WithExportType<T extends models.BaseModel> = T & { _type: string };
 
 function filterEmptyValue(value: string | number | boolean | null | undefined) {
-  return (
-    value !== null &&
-    value !== undefined &&
-    value !== '' &&
-    !(typeof value === 'object' && Object.keys(value).length === 0)
-  );
+  return value !== null && value !== undefined && !(typeof value === 'object' && Object.keys(value).length === 0);
 }
 
 function removeEmptyFields(data: any): any {
