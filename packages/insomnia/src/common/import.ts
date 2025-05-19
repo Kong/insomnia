@@ -149,7 +149,8 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
             },
           };
         } else {
-          result = (await window.main.convert(importEntry)) as unknown as ConvertResult;
+          const importFork = process.type === 'renderer' ? window.main : await import('../main/importers/convert');
+          result = (await importFork.convert(importEntry)) as unknown as ConvertResult;
         }
       } catch (err: unknown) {
         if (err instanceof Error) {
