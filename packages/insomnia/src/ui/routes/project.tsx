@@ -1,20 +1,24 @@
-import * as models from '@db/models';
-import { userSession } from '@db/models';
-import { type ApiSpec } from '@db/models/api-spec';
-import type { GitRepository } from '@db/models/git-repository';
-import { sortProjects } from '@db/models/helpers/project';
-import type { MockServer } from '@db/models/mock-server';
-import type { Organization } from '@db/models/organization';
-import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '@db/models/organization';
+import * as models from 'insomnia-database/models';
+import { userSession } from 'insomnia-database/models';
+import { type ApiSpec } from 'insomnia-database/models/api-spec';
+import type { GitRepository } from 'insomnia-database/models/git-repository';
+import { sortProjects } from 'insomnia-database/models/helpers/project';
+import type { MockServer } from 'insomnia-database/models/mock-server';
+import type { Organization } from 'insomnia-database/models/organization';
+import {
+  isOwnerOfOrganization,
+  isPersonalOrganization,
+  isScratchpadOrganizationId,
+} from 'insomnia-database/models/organization';
 import {
   getProjectStorageTypeLabel,
   isGitProject,
   isRemoteProject,
   type Project,
   SCRATCHPAD_PROJECT_ID,
-} from '@db/models/project';
-import { isDesign, scopeToActivity, type Workspace, type WorkspaceScope } from '@db/models/workspace';
-import type { WorkspaceMeta } from '@db/models/workspace-meta';
+} from 'insomnia-database/models/project';
+import { isDesign, scopeToActivity, type Workspace, type WorkspaceScope } from 'insomnia-database/models/workspace';
+import type { WorkspaceMeta } from 'insomnia-database/models/workspace-meta';
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, Fragment, useEffect, useMemo, useState } from 'react';
 import {
@@ -59,7 +63,7 @@ import {
   DEFAULT_SIDEBAR_SIZE,
   getAppWebsiteBaseURL,
 } from '../../common/constants';
-import { database } from '../../common/database';
+import { database } from 'insomnia/src/common/database';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';

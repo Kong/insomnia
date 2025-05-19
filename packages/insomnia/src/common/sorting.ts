@@ -1,6 +1,6 @@
-import { type GrpcRequest, isGrpcRequest } from '@db/models/grpc-request';
-import { isRequest, type Request } from '@db/models/request';
-import { isRequestGroup, type RequestGroup } from '@db/models/request-group';
+import { type GrpcRequest, isGrpcRequest } from 'insomnia-database/models/grpc-request';
+import { isRequest, type Request } from 'insomnia-database/models/request';
+import { isRequestGroup, type RequestGroup } from 'insomnia-database/models/request-group';
 
 import {
   HTTP_METHODS,

@@ -1,5 +1,5 @@
-import { isGitProject, type Project } from '@db/models/project';
-import { type WorkspaceScope, WorkspaceScopeKeys } from '@db/models/workspace';
+import { isGitProject, type Project } from 'insomnia-database/models/project';
+import { type WorkspaceScope, WorkspaceScopeKeys } from 'insomnia-database/models/workspace';
 import React, { useEffect, useState } from 'react';
 import {
   Button,

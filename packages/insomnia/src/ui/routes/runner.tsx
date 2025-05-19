@@ -1,6 +1,6 @@
-import * as models from '@db/models';
-import type { UserUploadEnvironment } from '@db/models/environment';
-import type { RunnerResultPerRequest, RunnerTestResult } from '@db/models/runner-test-result';
+import * as models from 'insomnia-database/models';
+import type { UserUploadEnvironment } from 'insomnia-database/models/environment';
+import type { RunnerResultPerRequest, RunnerTestResult } from 'insomnia-database/models/runner-test-result';
 import porderedJSON from 'json-order';
 import React, { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import {

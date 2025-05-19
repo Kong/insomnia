@@ -1,9 +1,5 @@
-import {
-  decryptSecretValue,
-  encryptSecretValue,
-  type EnvironmentKvPairData,
-  EnvironmentKvPairDataType,
-} from '@db/models/environment';
+import * as crypt from 'insomnia/src/account/crypt';
+import { type EnvironmentKvPairData, EnvironmentKvPairDataType } from 'insomnia-database/models/environment';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -20,7 +16,7 @@ import {
 } from 'react-aria-components';
 
 import { generateId } from '../../../../common/misc';
-import { base64decode } from '../../../../utils/vault';
+import { base64decode, base64encode } from '../../../../utils/vault';
 import { PromptButton } from '../../base/prompt-button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { Icon } from '../../icon';
@@ -31,6 +27,29 @@ import { Tooltip } from '../../tooltip';
 import { checkNestedKeys, ensureKeyIsValid } from '../environment-utils';
 import { PasswordInput } from './password-input';
 
+export const encryptSecretValue = (rawValue: string, symmetricKey: JsonWebKey) => {
+  if (typeof symmetricKey !== 'object' || Object.keys(symmetricKey).length === 0) {
+    // invalid symmetricKey
+    return rawValue;
+  }
+  const encryptResult = crypt.encryptAES(symmetricKey, rawValue);
+  const encryptedValue = base64encode(encryptResult);
+  return encryptedValue;
+};
+
+export const decryptSecretValue = (encryptedValue: string, symmetricKey: JsonWebKey) => {
+  if (typeof symmetricKey !== 'object' || Object.keys(symmetricKey).length === 0) {
+    // invalid symmetricKey
+    return encryptedValue;
+  }
+  try {
+    const jsonWebKey = base64decode(encryptedValue, true);
+    return crypt.decryptAES(symmetricKey, jsonWebKey);
+  } catch (error) {
+    // return origin value if failed to decrypt
+    return encryptedValue;
+  }
+};
 interface EditorProps {
   data: EnvironmentKvPairData[];
   onChange: (newPair: EnvironmentKvPairData[]) => void;

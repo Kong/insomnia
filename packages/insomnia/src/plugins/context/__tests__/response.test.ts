@@ -1,4 +1,4 @@
-import * as models from '@db/models/index';
+import * as models from 'insomnia-database/models/index';
 import fs from 'fs';
 import { tmpdir } from 'os';
 import path from 'path';

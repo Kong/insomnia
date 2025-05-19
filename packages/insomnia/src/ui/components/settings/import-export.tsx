@@ -1,6 +1,6 @@
-import { isScratchpadOrganizationId, type Organization } from '@db/models/organization';
-import type { Project } from '@db/models/project';
-import { isScratchpad, type Workspace } from '@db/models/workspace';
+import { isScratchpadOrganizationId, type Organization } from 'insomnia-database/models/organization';
+import type { Project } from 'insomnia-database/models/project';
+import { isScratchpad, type Workspace } from 'insomnia-database/models/workspace';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';

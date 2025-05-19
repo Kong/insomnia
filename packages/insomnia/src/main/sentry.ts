@@ -1,9 +1,9 @@
-import * as models from '@db/models/index';
-import { isSettings } from '@db/models/settings';
+import * as models from 'insomnia-database/models/index';
+import { isSettings } from 'insomnia-database/models/settings';
 import * as Sentry from '@sentry/electron/main';
 
 import * as session from '../account/session';
-import { type ChangeBufferEvent, database as db } from '../common/database';
+import { type ChangeBufferEvent, database as db } from 'insomnia/src/common/database';
 import { SENTRY_OPTIONS } from '../common/sentry';
 
 let enabled = false;

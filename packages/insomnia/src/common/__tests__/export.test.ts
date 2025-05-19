@@ -1,7 +1,7 @@
-import * as models from '@db/models';
+import * as models from 'insomnia-database/models';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { database as db } from '../../common/database';
+import { database as db } from 'insomnia/src/common/database';
 import { exportRequestsHAR, exportWorkspacesHAR } from '../export';
 describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   beforeEach(async () => {

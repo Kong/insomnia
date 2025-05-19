@@ -1,6 +1,6 @@
-import type { ApiSpec } from '@db/models/api-spec';
-import * as models from '@db/models/index';
-import { isGitProject } from '@db/models/project';
+import type { ApiSpec } from 'insomnia-database/models/api-spec';
+import * as models from 'insomnia-database/models/index';
+import { isGitProject } from 'insomnia-database/models/project';
 import { type IRuleResult } from '@stoplight/spectral-core';
 import CodeMirror from 'codemirror';
 import { stat } from 'fs/promises';

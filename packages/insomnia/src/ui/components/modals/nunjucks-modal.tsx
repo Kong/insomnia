@@ -1,4 +1,4 @@
-import type { Workspace } from '@db/models/workspace';
+import type { Workspace } from 'insomnia-database/models/workspace';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';

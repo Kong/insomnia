@@ -1,5 +1,6 @@
-import { PREVIEW_MODE_FRIENDLY, type PreviewMode } from '../common/constants';
-import { database as db } from '../common/database';
+import { PREVIEW_MODE_FRIENDLY, type PreviewMode } from 'insomnia/src/common/constants';
+import { database as db } from 'insomnia/src/common/database';
+
 import type { BaseModel } from './index';
 
 export const name = 'Request Meta';

@@ -3,9 +3,9 @@
 import { invariant } from '../../utils/invariant';
 invariant(process.type !== 'renderer', 'Native abstractions for Nodejs module unavailable in renderer');
 
-import type { ClientCertificate } from '@db/models/client-certificate';
-import type { RequestHeader } from '@db/models/request';
-import type { ResponseHeader } from '@db/models/response';
+import type { ClientCertificate } from 'insomnia-database/models/client-certificate';
+import type { RequestHeader } from 'insomnia-database/models/request';
+import type { ResponseHeader } from 'insomnia-database/models/response';
 import {
   Curl,
   CurlAuth,

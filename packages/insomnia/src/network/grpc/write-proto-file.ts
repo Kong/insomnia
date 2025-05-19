@@ -1,13 +1,13 @@
-import type { BaseModel } from '@db/models';
-import * as models from '@db/models';
-import { isProtoDirectory, type ProtoDirectory } from '@db/models/proto-directory';
-import { isProtoFile, type ProtoFile } from '@db/models/proto-file';
-import { isWorkspace, type Workspace } from '@db/models/workspace';
+import type { BaseModel } from 'insomnia-database/models';
+import * as models from 'insomnia-database/models';
+import { isProtoDirectory, type ProtoDirectory } from 'insomnia-database/models/proto-directory';
+import { isProtoFile, type ProtoFile } from 'insomnia-database/models/proto-file';
+import { isWorkspace, type Workspace } from 'insomnia-database/models/workspace';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-import { database as db } from '../../common/database';
+import { database as db } from 'insomnia/src/common/database';
 
 interface WriteResult {
   filePath: string;

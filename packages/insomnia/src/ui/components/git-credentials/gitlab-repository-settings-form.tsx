@@ -1,5 +1,5 @@
-import type { GitCredentials } from '@db/models/git-credentials';
-import type { GitRepository } from '@db/models/git-repository';
+import type { GitCredentials } from 'insomnia-database/models/git-credentials';
+import type { GitRepository } from 'insomnia-database/models/git-repository';
 import React, { useEffect, useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
 import { useFetcher } from 'react-router';

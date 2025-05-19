@@ -1,8 +1,8 @@
-import * as models from '@db/models';
-import type { Request } from '@db/models/request';
-import type { RequestGroup } from '@db/models/request-group';
-import type { Response } from '@db/models/response';
-import { isWorkspace, type Workspace } from '@db/models/workspace';
+import * as models from 'insomnia-database/models';
+import type { Request } from 'insomnia-database/models/request';
+import type { RequestGroup } from 'insomnia-database/models/request-group';
+import type { Response } from 'insomnia-database/models/response';
+import { isWorkspace, type Workspace } from 'insomnia-database/models/workspace';
 import clone from 'clone';
 import fs from 'fs';
 import type * as Har from 'har-format';

@@ -1,7 +1,7 @@
-import * as models from '@db/models';
-import { EnvironmentType } from '@db/models/environment';
-import type { RequestGroup } from '@db/models/request-group';
-import type { RequestGroupMeta } from '@db/models/request-group-meta';
+import * as models from 'insomnia-database/models';
+import { EnvironmentType } from 'insomnia-database/models/environment';
+import type { RequestGroup } from 'insomnia-database/models/request-group';
+import type { RequestGroupMeta } from 'insomnia-database/models/request-group-meta';
 import { type ActionFunction, type LoaderFunction, redirect } from 'react-router';
 
 import { invariant } from '../../utils/invariant';

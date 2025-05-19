@@ -1,6 +1,6 @@
-import * as models from '@db/models';
-import type { GitRepository } from '@db/models/git-repository';
-import type { WorkspaceScope } from '@db/models/workspace';
+import * as models from 'insomnia-database/models';
+import type { GitRepository } from 'insomnia-database/models/git-repository';
+import type { WorkspaceScope } from 'insomnia-database/models/workspace';
 import { type ActionFunction, type LoaderFunction, redirect } from 'react-router';
 
 import type { GitLogEntry } from '../../sync/git/git-vcs';

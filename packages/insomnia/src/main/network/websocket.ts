@@ -1,10 +1,10 @@
-import { webSocketRequest } from '@db/models';
-import * as models from '@db/models';
-import type { CookieJar } from '@db/models/cookie-jar';
-import type { Request } from '@db/models/request';
-import { type RequestAuthentication, type RequestHeader } from '@db/models/request';
-import { type BaseWebSocketRequest, isWebSocketRequest } from '@db/models/websocket-request';
-import type { WebSocketResponse } from '@db/models/websocket-response';
+import { webSocketRequest } from 'insomnia-database/models';
+import * as models from 'insomnia-database/models';
+import type { CookieJar } from 'insomnia-database/models/cookie-jar';
+import type { Request } from 'insomnia-database/models/request';
+import { type RequestAuthentication, type RequestHeader } from 'insomnia-database/models/request';
+import { type BaseWebSocketRequest, isWebSocketRequest } from 'insomnia-database/models/websocket-request';
+import type { WebSocketResponse } from 'insomnia-database/models/websocket-response';
 import electron, { BrowserWindow } from 'electron';
 import fs from 'fs';
 import { MessageType, parseMessage } from 'graphql-ws';

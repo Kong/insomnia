@@ -1,4 +1,4 @@
-import * as models from '@db/models';
+import * as models from 'insomnia-database/models';
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
 import fs from 'fs';
 import { join as pathJoin, resolve as pathResolve } from 'path';

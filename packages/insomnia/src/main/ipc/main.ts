@@ -1,9 +1,9 @@
-import * as models from '@db/models';
 import chardet from 'chardet';
 import type { MarkerRange } from 'codemirror';
 import { app, BrowserWindow, type IpcRendererEvent, type MenuItemConstructorOptions, shell } from 'electron';
 import fs from 'fs';
 import iconv from 'iconv-lite';
+import * as models from 'insomnia-database/models';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
 import type { SegmentEvent } from '../analytics';

@@ -1,4 +1,4 @@
-import { isEventStreamRequest, type Request, type RequestBodyParameter } from '@db/models/request';
+import { isEventStreamRequest, type Request, type RequestBodyParameter } from 'insomnia-database/models/request';
 import clone from 'clone';
 import { lookup } from 'mime-types';
 import React, { type FC, useCallback } from 'react';

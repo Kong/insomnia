@@ -1,4 +1,4 @@
-import type { Settings } from '@db/models/settings';
+import type { Settings } from 'insomnia-database/models/settings';
 import type { Snippet } from 'codemirror';
 import React, { type FC, useRef } from 'react';
 import {

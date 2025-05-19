@@ -1,8 +1,8 @@
-import * as models from '@db/models';
-import type { MockRoute } from '@db/models/mock-route';
-import type { MockServer } from '@db/models/mock-server';
-import type { Request, RequestHeader } from '@db/models/request';
-import type { Response } from '@db/models/response';
+import * as models from 'insomnia-database/models';
+import type { MockRoute } from 'insomnia-database/models/mock-route';
+import type { MockServer } from 'insomnia-database/models/mock-server';
+import type { Request, RequestHeader } from 'insomnia-database/models/request';
+import type { Response } from 'insomnia-database/models/response';
 import type * as Har from 'har-format';
 import React from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
@@ -19,7 +19,7 @@ import {
   getMockServiceURL,
   RESPONSE_CODE_REASONS,
 } from '../../common/constants';
-import { database as db } from '../../common/database';
+import { database as db } from 'insomnia/src/common/database';
 import { getResponseCookiesFromHeaders } from '../../common/har';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';

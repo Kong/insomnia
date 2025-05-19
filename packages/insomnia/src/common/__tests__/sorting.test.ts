@@ -1,4 +1,4 @@
-import { grpcRequest, request, requestGroup } from '@db/models';
+import { grpcRequest, request, requestGroup } from 'insomnia-database/models';
 import { describe, expect, it } from 'vitest';
 
 import {

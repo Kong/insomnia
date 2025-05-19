@@ -1,4 +1,4 @@
-import type { GitRepository } from '@db/models/git-repository';
+import type { GitRepository } from 'insomnia-database/models/git-repository';
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, useEffect, useState } from 'react';
 import {

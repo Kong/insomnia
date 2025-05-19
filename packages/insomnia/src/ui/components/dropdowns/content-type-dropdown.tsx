@@ -1,4 +1,4 @@
-import type { Request, RequestBody, RequestHeader, RequestParameter } from '@db/models/request';
+import type { Request, RequestBody, RequestHeader, RequestParameter } from 'insomnia-database/models/request';
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC } from 'react';
 import {

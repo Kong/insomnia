@@ -1,7 +1,7 @@
-import * as models from '@db/models/index';
 import { Analytics } from '@segment/analytics-node';
 import crypto from 'crypto';
 import { net } from 'electron';
+import * as models from 'insomnia-database/models/index';
 import { v4 as uuidv4 } from 'uuid';
 
 import {

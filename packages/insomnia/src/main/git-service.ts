@@ -1,6 +1,6 @@
-import * as models from '@db/models';
-import type { GitRepository } from '@db/models/git-repository';
-import { type WorkspaceScope, WorkspaceScopeKeys } from '@db/models/workspace';
+import * as models from 'insomnia-database/models';
+import type { GitRepository } from 'insomnia-database/models/git-repository';
+import { type WorkspaceScope, WorkspaceScopeKeys } from 'insomnia-database/models/workspace';
 import { createHash, randomBytes } from 'crypto';
 import { shell } from 'electron';
 import { app, net } from 'electron/main';
@@ -20,7 +20,7 @@ import {
   INSOMNIA_GITLAB_REDIRECT_URI,
   PLAYWRIGHT,
 } from '../common/constants';
-import { database } from '../common/database';
+import { database } from 'insomnia/src/common/database';
 import { insomniaFileSchema } from '../common/import-v5-parser';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
 import { fsClient } from '../sync/git/fs-client';

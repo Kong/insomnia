@@ -1,5 +1,5 @@
-import type { ProtoDirectory } from '@db/models/proto-directory';
-import type { ProtoFile } from '@db/models/proto-file';
+import type { ProtoDirectory } from 'insomnia-database/models/proto-directory';
+import type { ProtoFile } from 'insomnia-database/models/proto-file';
 import React, { type FunctionComponent } from 'react';
 import { Checkbox } from 'react-aria-components';
 

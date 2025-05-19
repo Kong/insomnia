@@ -1,7 +1,7 @@
-import * as models from '@db/models';
-import { queryAllWorkspaceUrls } from '@db/models/helpers/query-all-workspace-urls';
-import { getCombinedPathParametersFromUrl, type RequestParameter } from '@db/models/request';
-import type { Settings } from '@db/models/settings';
+import * as models from 'insomnia-database/models';
+import { queryAllWorkspaceUrls } from 'insomnia-database/models/helpers/query-all-workspace-urls';
+import { getCombinedPathParametersFromUrl, type RequestParameter } from 'insomnia-database/models/request';
+import type { Settings } from 'insomnia-database/models/settings';
 import React, { type FC, Fragment, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';

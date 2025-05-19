@@ -4,8 +4,8 @@ import {
   EnvironmentKvPairDataType,
   EnvironmentType,
   getDataFromKVPair,
-} from '@db/models/environment';
-import { isRemoteProject } from '@db/models/project';
+} from 'insomnia-database/models/environment';
+import { isRemoteProject } from 'insomnia-database/models/project';
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useEffect, useRef, useState } from 'react';
 import {

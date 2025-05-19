@@ -1,4 +1,4 @@
-import * as models from '@db/models';
+import * as models from 'insomnia-database/models';
 import { BrowserWindow, dialog } from 'electron';
 
 export enum ChromiumVerificationResult {

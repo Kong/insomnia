@@ -1,8 +1,8 @@
-import * as models from '@db/models/index';
-import { isRequest, type Request } from '@db/models/request';
-import type { Response } from '@db/models/response';
-import type { WebSocketRequest } from '@db/models/websocket-request';
-import { isWebSocketResponse, type WebSocketResponse } from '@db/models/websocket-response';
+import * as models from 'insomnia-database/models/index';
+import { isRequest, type Request } from 'insomnia-database/models/request';
+import type { Response } from 'insomnia-database/models/response';
+import type { WebSocketRequest } from 'insomnia-database/models/websocket-request';
+import { isWebSocketResponse, type WebSocketResponse } from 'insomnia-database/models/websocket-response';
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
 import React, { useCallback, useRef } from 'react';
 import { Button } from 'react-aria-components';

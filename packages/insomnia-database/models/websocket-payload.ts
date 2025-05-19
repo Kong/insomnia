@@ -1,4 +1,5 @@
-import { database } from '../common/database';
+import { database } from 'insomnia/src/common/database';
+
 import type { BaseModel } from '.';
 
 export const name = 'WebSocket Payload';

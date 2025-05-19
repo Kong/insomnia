@@ -1,6 +1,6 @@
 import { cp, mkdir, readdir, stat, writeFile } from 'node:fs/promises';
 
-import * as models from '@db/models';
+import * as models from 'insomnia-database/models';
 import childProcess from 'child_process';
 import * as electron from 'electron';
 import { app } from 'electron';

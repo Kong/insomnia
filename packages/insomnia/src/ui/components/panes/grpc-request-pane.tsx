@@ -1,7 +1,7 @@
-import * as models from '@db/models';
-import type { GrpcRequest, GrpcRequestHeader } from '@db/models/grpc-request';
-import { queryAllWorkspaceUrls } from '@db/models/helpers/query-all-workspace-urls';
-import { isRequestGroup, type RequestGroup } from '@db/models/request-group';
+import * as models from 'insomnia-database/models';
+import type { GrpcRequest, GrpcRequestHeader } from 'insomnia-database/models/grpc-request';
+import { queryAllWorkspaceUrls } from 'insomnia-database/models/helpers/query-all-workspace-urls';
+import { isRequestGroup, type RequestGroup } from 'insomnia-database/models/request-group';
 import { readFile } from 'fs/promises';
 import React, { type FunctionComponent, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
@@ -9,7 +9,7 @@ import { useParams, useRouteLoaderData } from 'react-router';
 import { useMount } from 'react-use';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
-import { database as db } from '../../../common/database';
+import { database as db } from 'insomnia/src/common/database';
 import { generateId } from '../../../common/misc';
 import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage } from '../../../common/render';
 import type { GrpcMethodType } from '../../../main/ipc/grpc';

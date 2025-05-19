@@ -1,7 +1,7 @@
-import * as models from '@db/models';
-import { isGrpcRequestId } from '@db/models/grpc-request';
-import { isEventStreamRequest, isGraphqlSubscriptionRequest, isRequestId } from '@db/models/request';
-import { isWebSocketRequestId } from '@db/models/websocket-request';
+import * as models from 'insomnia-database/models';
+import { isGrpcRequestId } from 'insomnia-database/models/grpc-request';
+import { isEventStreamRequest, isGraphqlSubscriptionRequest, isRequestId } from 'insomnia-database/models/request';
+import { isWebSocketRequestId } from 'insomnia-database/models/websocket-request';
 import { useCallback, useEffect } from 'react';
 
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';

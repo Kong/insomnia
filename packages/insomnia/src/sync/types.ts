@@ -1,4 +1,4 @@
-import type { BaseModel } from '@db/models';
+import type { BaseModel } from 'insomnia-database/models';
 
 export interface Team {
   id: string;

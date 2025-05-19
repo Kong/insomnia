@@ -1,4 +1,4 @@
-import type { RequestHeader } from '@db/models/request';
+import type { RequestHeader } from 'insomnia-database/models/request';
 
 import allCharsets from '../datasets/charsets';
 import allMimeTypes from '../datasets/content-types';

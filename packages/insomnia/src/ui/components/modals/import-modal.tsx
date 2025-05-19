@@ -1,4 +1,4 @@
-import { isScratchpadProject } from '@db/models/project';
+import { isScratchpadProject } from 'insomnia-database/models/project';
 import classNames from 'classnames';
 import React, {
   type FC,

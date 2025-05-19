@@ -1,6 +1,6 @@
-import type { BaseModel } from '@db/models';
 import clone from 'clone';
 import crypto from 'crypto';
+import type { BaseModel } from 'insomnia-database/models';
 
 import { deleteKeys, resetKeys, shouldIgnoreKey } from '../ignore-keys';
 import { deterministicStringify } from '../lib/deterministicStringify';

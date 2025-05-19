@@ -1,6 +1,6 @@
 import fs from 'fs';
+import { database as db, type Query } from 'insomnia/src/common/database';
 
-import { database as db, type Query } from '../common/database';
 import * as requestOperations from './helpers/request-operations';
 import type { BaseModel } from './index';
 import * as models from './index';

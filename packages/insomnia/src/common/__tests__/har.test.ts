@@ -1,11 +1,11 @@
-import * as models from '@db/models';
-import type { Cookie } from '@db/models/cookie-jar';
-import type { Request } from '@db/models/request';
-import type { Response } from '@db/models/response';
+import * as models from 'insomnia-database/models';
+import type { Cookie } from 'insomnia-database/models/cookie-jar';
+import type { Request } from 'insomnia-database/models/request';
+import type { Response } from 'insomnia-database/models/response';
 import path from 'path';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { database as db } from '../../common/database';
+import { database as db } from 'insomnia/src/common/database';
 import { AUTH_BASIC } from '../constants';
 import { exportHar, exportHarResponse, exportHarWithRequest } from '../har';
 import { getRenderedRequestAndContext } from '../render';

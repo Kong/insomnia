@@ -1,5 +1,5 @@
-import type { GitRepository } from '@db/models/git-repository';
-import type { Project } from '@db/models/project';
+import type { GitRepository } from 'insomnia-database/models/git-repository';
+import type { Project } from 'insomnia-database/models/project';
 import React, { useEffect } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useNavigation } from 'react-router';

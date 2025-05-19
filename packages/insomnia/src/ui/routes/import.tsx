@@ -1,8 +1,8 @@
 import path from 'node:path';
 
-import * as models from '@db/models';
-import { isRemoteProject } from '@db/models/project';
-import type { Workspace } from '@db/models/workspace';
+import * as models from 'insomnia-database/models';
+import { isRemoteProject } from 'insomnia-database/models/project';
+import type { Workspace } from 'insomnia-database/models/workspace';
 import type { ActionFunction } from 'react-router';
 
 import type { PostmanDataDumpRawData } from '../../common/import';

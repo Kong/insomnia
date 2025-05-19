@@ -1,6 +1,7 @@
-import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
-import { database as db } from '../common/database';
-import type { RunnerSource } from '../ui/routes/request';
+import { database as db } from 'insomnia/src/common/database';
+import type { RunnerSource } from 'insomnia/src/ui/routes/request';
+import type { RequestTestResult } from 'insomnia-scripting-environment/src/objects';
+
 import type { BaseModel } from './index';
 
 export const name = 'Runner Test Result';

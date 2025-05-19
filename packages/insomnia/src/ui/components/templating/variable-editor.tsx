@@ -1,4 +1,4 @@
-import { vaultEnvironmentMaskValue, vaultEnvironmentRuntimePath } from '@db/models/environment';
+import { vaultEnvironmentMaskValue, vaultEnvironmentRuntimePath } from 'insomnia-database/models/environment';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';

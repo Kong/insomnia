@@ -1,5 +1,4 @@
 import { OperationTypeNode } from 'graphql';
-
 import type {
   AUTH_API_KEY,
   AUTH_ASAP,
@@ -13,12 +12,18 @@ import type {
   AUTH_OAUTH_1,
   HAWK_ALGORITHM_SHA1,
   HAWK_ALGORITHM_SHA256,
-} from '../common/constants';
-import { AUTH_BASIC, CONTENT_TYPE_FORM_URLENCODED, getContentTypeFromHeaders, METHOD_GET } from '../common/constants';
-import { database as db } from '../common/database';
-import type { OAuth1SignatureMethod } from '../network/o-auth-1/constants';
-import { getOperationType } from '../utils/graph-ql';
-import { deconstructQueryStringToParams } from '../utils/url/querystring';
+} from 'insomnia/src/common/constants';
+import {
+  AUTH_BASIC,
+  CONTENT_TYPE_FORM_URLENCODED,
+  getContentTypeFromHeaders,
+  METHOD_GET,
+} from 'insomnia/src/common/constants';
+import { database as db } from 'insomnia/src/common/database';
+import type { OAuth1SignatureMethod } from 'insomnia/src/network/o-auth-1/constants';
+import { getOperationType } from 'insomnia/src/utils/graph-ql';
+import { deconstructQueryStringToParams } from 'insomnia/src/utils/url/querystring';
+
 import type { BaseModel } from './index';
 
 export const name = 'Request';

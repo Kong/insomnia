@@ -1,11 +1,12 @@
-import { database } from '../../common/database';
+import { database } from 'insomnia/src/common/database';
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,
-} from '../../sync/vcs/initialize-backend-project';
-import type { VCS } from '../../sync/vcs/vcs';
-import { insomniaFetch } from '../../ui/insomniaFetch';
-import { invariant } from '../../utils/invariant';
+} from 'insomnia/src/sync/vcs/initialize-backend-project';
+import type { VCS } from 'insomnia/src/sync/vcs/vcs';
+import { insomniaFetch } from 'insomnia/src/ui/insomniaFetch';
+import { invariant } from 'insomnia/src/utils/invariant';
+
 import { isDefaultOrganizationProject, type Project, update as updateProject } from '../project';
 import type { Workspace } from '../workspace';
 import { getOrCreateByParentId as getOrCreateWorkspaceMeta } from '../workspace-meta';

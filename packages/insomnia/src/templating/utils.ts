@@ -1,8 +1,9 @@
-import { userSession } from '@db/models';
-import { decryptSecretValue, vaultEnvironmentMaskValue } from '@db/models/environment';
 import type { EditorFromTextArea, MarkerRange } from 'codemirror';
+import { userSession } from 'insomnia-database/models';
+import { vaultEnvironmentMaskValue } from 'insomnia-database/models/environment';
 
 import type { NunjucksParsedTag, NunjucksParsedTagArg, RenderPurpose } from '../templating/types';
+import { decryptSecretValue } from '../ui/components/editors/environment-key-value-editor/key-value-editor';
 import { decryptVaultKeyFromSession } from '../utils/vault';
 import objectPath from './third_party/objectPath';
 

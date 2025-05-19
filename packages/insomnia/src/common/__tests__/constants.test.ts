@@ -1,4 +1,4 @@
-import type { MockServer } from '@db/models/mock-server';
+import type { MockServer } from 'insomnia-database/models/mock-server';
 import { describe, expect, it } from 'vitest';
 
 import {

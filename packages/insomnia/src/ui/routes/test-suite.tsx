@@ -1,9 +1,9 @@
-import * as models from '@db/models';
-import { isGrpcRequest } from '@db/models/grpc-request';
-import { isRequest, type Request } from '@db/models/request';
-import type { UnitTest } from '@db/models/unit-test';
-import type { UnitTestSuite } from '@db/models/unit-test-suite';
-import { isWebSocketRequest } from '@db/models/websocket-request';
+import * as models from 'insomnia-database/models';
+import { isGrpcRequest } from 'insomnia-database/models/grpc-request';
+import { isRequest, type Request } from 'insomnia-database/models/request';
+import type { UnitTest } from 'insomnia-database/models/unit-test';
+import type { UnitTestSuite } from 'insomnia-database/models/unit-test-suite';
+import { isWebSocketRequest } from 'insomnia-database/models/websocket-request';
 import React, { Fragment, useRef, useState } from 'react';
 import {
   Button,
@@ -20,7 +20,7 @@ import {
 } from 'react-aria-components';
 import { type LoaderFunction, redirect, useFetcher, useParams, useRouteLoaderData } from 'react-router';
 
-import { database } from '../../common/database';
+import { database } from 'insomnia/src/common/database';
 import { documentationLinks } from '../../common/documentation';
 import { invariant } from '../../utils/invariant';
 import { CodeEditor, type CodeEditorHandle } from '../components/codemirror/code-editor';

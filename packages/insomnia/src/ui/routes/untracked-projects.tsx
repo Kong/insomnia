@@ -1,10 +1,10 @@
-import { userSession } from '@db/models';
-import { type Organization, SCRATCHPAD_ORGANIZATION_ID } from '@db/models/organization';
-import type { Project } from '@db/models/project';
-import type { Workspace } from '@db/models/workspace';
+import { userSession } from 'insomnia-database/models';
+import { type Organization, SCRATCHPAD_ORGANIZATION_ID } from 'insomnia-database/models/organization';
+import type { Project } from 'insomnia-database/models/project';
+import type { Workspace } from 'insomnia-database/models/workspace';
 import type { LoaderFunction } from 'react-router';
 
-import { database } from '../../common/database';
+import { database } from 'insomnia/src/common/database';
 
 export interface UntrackedProjectsLoaderData {
   untrackedProjects: (Project & { workspacesCount: number })[];

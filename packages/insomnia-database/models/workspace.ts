@@ -1,7 +1,7 @@
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from 'insomnia/src/common/constants';
+import { database as db } from 'insomnia/src/common/database';
 import type { Merge } from 'type-fest';
 
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../common/constants';
-import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 import * as models from './index';
 import { isProjectId } from './project';

@@ -1,4 +1,4 @@
-import { removeAllSecrets } from '@db/models/environment';
+import { removeAllSecrets } from 'insomnia-database/models/environment';
 import React, { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Input, Modal, ModalOverlay } from 'react-aria-components';
 import { useFetcher, useRouteLoaderData } from 'react-router';

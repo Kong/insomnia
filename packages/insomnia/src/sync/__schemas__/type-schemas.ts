@@ -1,4 +1,4 @@
-import { baseModelSchema } from '@db/models/__schemas__/model-schemas';
+import { baseModelSchema } from 'insomnia-database/models/__schemas__/model-schemas';
 import { createBuilder, type Schema } from '@develohpanda/fluent-builder';
 
 import type { BackendProject, Branch, MergeConflict, SnapshotStateEntry, StatusCandidate, Team } from '../types';

@@ -1,4 +1,4 @@
-import type { RequestAccordionKeys } from '@db/models/request-meta';
+import type { RequestAccordionKeys } from 'insomnia-database/models/request-meta';
 import classnames from 'classnames';
 import React, { type FC, type PropsWithChildren } from 'react';
 import { useRouteLoaderData } from 'react-router';

@@ -1,4 +1,4 @@
-import type { Request } from '@db/models/request';
+import type { Request } from 'insomnia-database/models/request';
 import { getOperationAST, parse } from 'graphql';
 
 import { CONTENT_TYPE_GRAPHQL } from '../common/constants';

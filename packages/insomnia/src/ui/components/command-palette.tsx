@@ -1,7 +1,7 @@
-import { isGrpcRequest } from '@db/models/grpc-request';
-import { isRequest } from '@db/models/request';
-import { isRequestGroup } from '@db/models/request-group';
-import { isWebSocketRequest } from '@db/models/websocket-request';
+import { isGrpcRequest } from 'insomnia-database/models/grpc-request';
+import { isRequest } from 'insomnia-database/models/request';
+import { isRequestGroup } from 'insomnia-database/models/request-group';
+import { isWebSocketRequest } from 'insomnia-database/models/websocket-request';
 import React, { memo, useEffect, useRef } from 'react';
 import { useState } from 'react';
 import {

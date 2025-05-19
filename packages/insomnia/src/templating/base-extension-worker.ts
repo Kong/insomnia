@@ -1,5 +1,5 @@
-import type { Request } from '@db/models/request';
-import type { Response } from '@db/models/response';
+import type { Request } from 'insomnia-database/models/request';
+import type { Response } from 'insomnia-database/models/response';
 
 import { getAppPlatform, getAppVersion } from '../common/constants';
 import type { Plugin } from '../plugins/index';

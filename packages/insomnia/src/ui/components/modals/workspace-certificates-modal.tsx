@@ -1,4 +1,4 @@
-import type { ClientCertificate } from '@db/models/client-certificate';
+import type { ClientCertificate } from 'insomnia-database/models/client-certificate';
 import React, { Fragment, useEffect, useId, useState } from 'react';
 import {
   Button,

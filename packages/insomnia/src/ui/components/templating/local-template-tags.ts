@@ -1,4 +1,4 @@
-import type { RequestParameter } from '@db/models/request';
+import type { RequestParameter } from 'insomnia-database/models/request';
 import crypto from 'crypto';
 import { format } from 'date-fns';
 import fs from 'fs';

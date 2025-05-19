@@ -1,5 +1,5 @@
-import type { Project } from '@db/models/project';
-import type { Workspace } from '@db/models/workspace';
+import type { Project } from 'insomnia-database/models/project';
+import type { Workspace } from 'insomnia-database/models/workspace';
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, Fragment, useCallback, useEffect, useState } from 'react';
 import {

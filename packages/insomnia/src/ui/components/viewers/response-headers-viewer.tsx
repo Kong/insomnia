@@ -1,4 +1,4 @@
-import type { ResponseHeader } from '@db/models/response';
+import type { ResponseHeader } from 'insomnia-database/models/response';
 import React, { type FC, Fragment, useMemo } from 'react';
 import { URL } from 'url';
 

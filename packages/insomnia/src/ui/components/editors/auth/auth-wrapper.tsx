@@ -1,4 +1,4 @@
-import type { AuthTypes, RequestAuthentication } from '@db/models/request';
+import type { AuthTypes, RequestAuthentication } from 'insomnia-database/models/request';
 import React, { type FC, type ReactNode } from 'react';
 import { Toolbar } from 'react-aria-components';
 

@@ -1,7 +1,13 @@
-import { getAppDefaultDarkTheme, getAppDefaultLightTheme, getAppDefaultTheme } from '../common/constants';
-import { database as db } from '../common/database';
-import * as hotkeys from '../common/hotkeys';
-import { HttpVersions, type KeyboardShortcut, type Settings as BaseSettings, UpdateChannel } from '../common/settings';
+import { getAppDefaultDarkTheme, getAppDefaultLightTheme, getAppDefaultTheme } from 'insomnia/src/common/constants';
+import { database as db } from 'insomnia/src/common/database';
+import * as hotkeys from 'insomnia/src/common/hotkeys';
+import {
+  HttpVersions,
+  type KeyboardShortcut,
+  type Settings as BaseSettings,
+  UpdateChannel,
+} from 'insomnia/src/common/settings';
+
 import type { BaseModel } from './index';
 
 export type Settings = BaseModel & BaseSettings;

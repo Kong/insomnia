@@ -1,4 +1,4 @@
-import type { GitRepository } from '@db/models/git-repository';
+import type { GitRepository } from 'insomnia-database/models/git-repository';
 import React, { type FunctionComponent } from 'react';
 import { Input, Label, TextField } from 'react-aria-components';
 

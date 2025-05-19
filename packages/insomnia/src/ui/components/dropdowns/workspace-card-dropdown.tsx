@@ -1,8 +1,8 @@
-import type { ApiSpec } from '@db/models/api-spec';
-import type { MockServer } from '@db/models/mock-server';
-import { isRemoteProject, type Project } from '@db/models/project';
-import type { Workspace } from '@db/models/workspace';
-import { WorkspaceScopeKeys } from '@db/models/workspace';
+import type { ApiSpec } from 'insomnia-database/models/api-spec';
+import type { MockServer } from 'insomnia-database/models/mock-server';
+import { isRemoteProject, type Project } from 'insomnia-database/models/project';
+import type { Workspace } from 'insomnia-database/models/workspace';
+import { WorkspaceScopeKeys } from 'insomnia-database/models/workspace';
 import React, { type FC, Fragment, useCallback, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';

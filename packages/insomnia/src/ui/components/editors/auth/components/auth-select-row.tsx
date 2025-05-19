@@ -1,4 +1,4 @@
-import type { RequestAuthentication } from '@db/models/request';
+import type { RequestAuthentication } from 'insomnia-database/models/request';
 import React, { type ChangeEvent, type FC, type ReactNode, useCallback } from 'react';
 import { useRouteLoaderData } from 'react-router';
 

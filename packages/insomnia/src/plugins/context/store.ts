@@ -1,4 +1,4 @@
-import * as models from '@db/models';
+import * as models from 'insomnia-database/models';
 
 import type { Plugin } from '../index';
 

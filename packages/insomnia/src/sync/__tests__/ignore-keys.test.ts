@@ -1,4 +1,4 @@
-import { baseModelSchema, workspaceModelSchema } from '@db/models/__schemas__/model-schemas';
+import { baseModelSchema, workspaceModelSchema } from 'insomnia-database/models/__schemas__/model-schemas';
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { describe, expect, it } from 'vitest';
 

@@ -1,9 +1,9 @@
-import type { BaseModel } from '@db/models';
+import type { BaseModel } from 'insomnia-database/models';
 import { useEffect, useState } from 'react';
 import { useRouteLoaderData } from 'react-router';
 import { useParams } from 'react-router';
 
-import { type ChangeBufferEvent, database } from '../../common/database';
+import { type ChangeBufferEvent, database } from 'insomnia/src/common/database';
 import type { WorkspaceLoaderData } from '../routes/workspace';
 // We use this hook to determine if the active request has been updated from the system (not the user typing)
 // For example, by pulling a new version from the remote, switching branches, etc.

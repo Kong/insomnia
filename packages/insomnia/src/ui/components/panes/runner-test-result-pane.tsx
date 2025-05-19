@@ -1,4 +1,4 @@
-import type { BaseRunnerTestResult, RunnerResultPerRequest } from '@db/models/runner-test-result';
+import type { BaseRunnerTestResult, RunnerResultPerRequest } from 'insomnia-database/models/runner-test-result';
 import React, { type FC, useState } from 'react';
 import { Toolbar } from 'react-aria-components';
 

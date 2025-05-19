@@ -1,8 +1,8 @@
-import type { ClientCertificate } from '@db/models/client-certificate';
-import type { CookieJar } from '@db/models/cookie-jar';
-import type { Environment, UserUploadEnvironment } from '@db/models/environment';
-import type { Request } from '@db/models/request';
-import type { Settings } from '@db/models/settings';
+import type { ClientCertificate } from 'insomnia-database/models/client-certificate';
+import type { CookieJar } from 'insomnia-database/models/cookie-jar';
+import type { Environment, UserUploadEnvironment } from 'insomnia-database/models/environment';
+import type { Request } from 'insomnia-database/models/request';
+import type { Settings } from 'insomnia-database/models/settings';
 import type { queueAsPromised } from 'fastq';
 import * as fastq from 'fastq';
 

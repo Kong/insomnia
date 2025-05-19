@@ -1,4 +1,4 @@
-import type { ClientCertificate } from '@db/models/client-certificate';
+import type { ClientCertificate } from 'insomnia-database/models/client-certificate';
 
 import { setDefaultProtocol } from '../utils/url/protocol';
 import { urlMatchesCertHost } from './url-matches-cert-host';

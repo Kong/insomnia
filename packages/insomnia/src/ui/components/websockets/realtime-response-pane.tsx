@@ -1,5 +1,5 @@
-import type { Response } from '@db/models/response';
-import type { WebSocketResponse } from '@db/models/websocket-response';
+import type { Response } from 'insomnia-database/models/response';
+import type { WebSocketResponse } from 'insomnia-database/models/websocket-response';
 import fs from 'fs';
 import React, { type FC, useEffect, useState } from 'react';
 import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';

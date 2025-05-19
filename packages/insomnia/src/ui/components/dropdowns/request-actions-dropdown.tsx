@@ -1,12 +1,12 @@
-import type { Environment } from '@db/models/environment';
-import type { GrpcRequest } from '@db/models/grpc-request';
-import type { Project } from '@db/models/project';
-import { isRequest, type Request } from '@db/models/request';
-import type { RequestGroup } from '@db/models/request-group';
-import { incrementDeletedRequests } from '@db/models/stats';
+import type { Environment } from 'insomnia-database/models/environment';
+import type { GrpcRequest } from 'insomnia-database/models/grpc-request';
+import type { Project } from 'insomnia-database/models/project';
+import { isRequest, type Request } from 'insomnia-database/models/request';
+import type { RequestGroup } from 'insomnia-database/models/request-group';
+import { incrementDeletedRequests } from 'insomnia-database/models/stats';
 // Plugin action related imports
 // Plugin action related imports
-import type { WebSocketRequest } from '@db/models/websocket-request';
+import type { WebSocketRequest } from 'insomnia-database/models/websocket-request';
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useCallback, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';

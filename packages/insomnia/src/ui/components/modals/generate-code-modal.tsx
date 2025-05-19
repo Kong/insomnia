@@ -1,4 +1,4 @@
-import type { Request } from '@db/models/request';
+import type { Request } from 'insomnia-database/models/request';
 import type { HTTPSnippetClient, HTTPSnippetTarget } from 'httpsnippet';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';

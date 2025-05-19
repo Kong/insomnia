@@ -1,7 +1,7 @@
-import * as models from '@db/models';
+import * as models from 'insomnia-database/models';
 
 import { isDevelopment } from '../common/constants';
-import { database } from '../common/database';
+import { database } from 'insomnia/src/common/database';
 import * as plugins from '../plugins';
 import * as themes from '../plugins/misc';
 import * as templating from '../templating';

@@ -1,5 +1,5 @@
-import type { BaseModel } from '@db/models';
-import * as models from '@db/models';
+import type { BaseModel } from 'insomnia-database/models';
+import * as models from 'insomnia-database/models';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ChangeBufferEvent } from '../database';

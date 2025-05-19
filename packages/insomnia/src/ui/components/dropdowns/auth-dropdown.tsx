@@ -5,7 +5,7 @@ import type {
   AuthTypeNTLM,
   AuthTypes,
   RequestAuthentication,
-} from '@db/models/request';
+} from 'insomnia-database/models/request';
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, useCallback } from 'react';
 import {

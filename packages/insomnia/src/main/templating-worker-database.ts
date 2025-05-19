@@ -1,9 +1,9 @@
-import * as models from '@db/models';
-import type { Request as DBRequest } from '@db/models/request';
-import type { RequestGroup } from '@db/models/request-group';
-import type { Workspace } from '@db/models/workspace';
+import * as models from 'insomnia-database/models';
+import type { Request as DBRequest } from 'insomnia-database/models/request';
+import type { RequestGroup } from 'insomnia-database/models/request-group';
+import type { Workspace } from 'insomnia-database/models/workspace';
 
-import { database as db } from '../common/database';
+import { database as db } from 'insomnia/src/common/database';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
 
 export const resolveDbByKey = async (request: Request) => {

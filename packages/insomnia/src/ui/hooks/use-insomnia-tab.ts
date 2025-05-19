@@ -1,11 +1,11 @@
-import type { GrpcRequest } from '@db/models/grpc-request';
-import type { MockRoute } from '@db/models/mock-route';
-import type { Project } from '@db/models/project';
-import type { Request } from '@db/models/request';
-import type { RequestGroup } from '@db/models/request-group';
-import type { UnitTestSuite } from '@db/models/unit-test-suite';
-import type { WebSocketRequest } from '@db/models/websocket-request';
-import type { Workspace } from '@db/models/workspace';
+import type { GrpcRequest } from 'insomnia-database/models/grpc-request';
+import type { MockRoute } from 'insomnia-database/models/mock-route';
+import type { Project } from 'insomnia-database/models/project';
+import type { Request } from 'insomnia-database/models/request';
+import type { RequestGroup } from 'insomnia-database/models/request-group';
+import type { UnitTestSuite } from 'insomnia-database/models/unit-test-suite';
+import type { WebSocketRequest } from 'insomnia-database/models/websocket-request';
+import type { Workspace } from 'insomnia-database/models/workspace';
 import { useCallback, useEffect } from 'react';
 import { matchPath, useLocation, useSearchParams } from 'react-router';
 

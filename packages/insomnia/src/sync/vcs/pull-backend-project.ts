@@ -1,9 +1,9 @@
-import * as models from '@db/models';
-import type { RemoteProject } from '@db/models/project';
-import { isWorkspace, type Workspace } from '@db/models/workspace';
+import * as models from 'insomnia-database/models';
+import type { RemoteProject } from 'insomnia-database/models/project';
+import { isWorkspace, type Workspace } from 'insomnia-database/models/workspace';
 
 import { DEFAULT_BRANCH_NAME } from '../../common/constants';
-import { database } from '../../common/database';
+import { database } from 'insomnia/src/common/database';
 import type { BackendProjectWithTeam } from './normalize-backend-project-team';
 import { interceptAccessError } from './util';
 import type { VCS } from './vcs';

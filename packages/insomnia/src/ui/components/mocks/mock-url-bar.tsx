@@ -1,4 +1,4 @@
-import * as models from '@db/models';
+import * as models from 'insomnia-database/models';
 import React, { useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router';

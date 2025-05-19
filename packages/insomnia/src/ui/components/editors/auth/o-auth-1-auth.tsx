@@ -1,4 +1,4 @@
-import type { AuthTypeOAuth1 } from '@db/models/request';
+import type { AuthTypeOAuth1 } from 'insomnia-database/models/request';
 import React, { type FC } from 'react';
 import { useRouteLoaderData } from 'react-router';
 

@@ -1,13 +1,13 @@
-import * as models from '@db/models';
-import { isProtoDirectory, type ProtoDirectory } from '@db/models/proto-directory';
-import { isProtoFile, type ProtoFile } from '@db/models/proto-file';
+import * as models from 'insomnia-database/models';
+import { isProtoDirectory, type ProtoDirectory } from 'insomnia-database/models/proto-directory';
+import { isProtoFile, type ProtoFile } from 'insomnia-database/models/proto-file';
 import * as protoLoader from '@grpc/proto-loader';
 import fs from 'fs';
 import path from 'path';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 
-import { type ChangeBufferEvent, database as db } from '../../../common/database';
+import { type ChangeBufferEvent, database as db } from 'insomnia/src/common/database';
 import { selectFileOrFolder } from '../../../common/select-file-or-folder';
 import { ProtoDirectoryLoader } from '../../../network/grpc/proto-directory-loader';
 import { writeProtoFile } from '../../../network/grpc/write-proto-file';

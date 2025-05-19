@@ -1,4 +1,4 @@
-import type { AuthTypeOAuth2 } from '@db/models/request';
+import type { AuthTypeOAuth2 } from 'insomnia-database/models/request';
 
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML } from '../../../common/constants';
 import { forceBracketNotation } from '../../../templating/utils';

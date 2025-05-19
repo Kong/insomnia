@@ -1,17 +1,17 @@
-import * as models from '@db/models';
-import type { CaCertificate } from '@db/models/ca-certificate';
-import type { ClientCertificate } from '@db/models/client-certificate';
-import type { Cookie, CookieJar } from '@db/models/cookie-jar';
+import * as models from 'insomnia-database/models';
+import type { CaCertificate } from 'insomnia-database/models/ca-certificate';
+import type { ClientCertificate } from 'insomnia-database/models/client-certificate';
+import type { Cookie, CookieJar } from 'insomnia-database/models/cookie-jar';
 import {
   type Environment,
   EnvironmentType,
   getKVPairFromData,
   type UserUploadEnvironment,
   vaultEnvironmentPath,
-} from '@db/models/environment';
-import type { MockRoute } from '@db/models/mock-route';
-import type { MockServer } from '@db/models/mock-server';
-import { isProject, type Project } from '@db/models/project';
+} from 'insomnia-database/models/environment';
+import type { MockRoute } from 'insomnia-database/models/mock-route';
+import type { MockServer } from 'insomnia-database/models/mock-server';
+import { isProject, type Project } from 'insomnia-database/models/project';
 import {
   type BaseRequest,
   isRequest,
@@ -19,11 +19,11 @@ import {
   type RequestAuthentication,
   type RequestHeader,
   type RequestParameter,
-} from '@db/models/request';
-import { isRequestGroup, type RequestGroup } from '@db/models/request-group';
-import type { Settings } from '@db/models/settings';
-import type { WebSocketRequest } from '@db/models/websocket-request';
-import { isWorkspace, type Workspace } from '@db/models/workspace';
+} from 'insomnia-database/models/request';
+import { isRequestGroup, type RequestGroup } from 'insomnia-database/models/request-group';
+import type { Settings } from 'insomnia-database/models/settings';
+import type { WebSocketRequest } from 'insomnia-database/models/websocket-request';
+import { isWorkspace, type Workspace } from 'insomnia-database/models/workspace';
 import clone from 'clone';
 import fs from 'fs';
 import orderedJSON from 'json-order';
@@ -36,7 +36,7 @@ import type {
 } from '../../../insomnia-scripting-environment/src/objects';
 import { SINGLE_VALUE_HEADERS } from '../common/common-headers';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../common/constants';
-import { database as db } from '../common/database';
+import { database as db } from 'insomnia/src/common/database';
 import { generateId, getContentTypeHeader, getLocationHeader, getSetCookieHeaders } from '../common/misc';
 import { getRenderedRequestAndContext } from '../common/render';
 import { ascendingFirstIndexStringSort } from '../common/sorting';

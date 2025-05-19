@@ -1,16 +1,16 @@
 import { createWriteStream } from 'node:fs';
 import path from 'node:path';
 
-import type { BaseModel } from '@db/models';
-import * as models from '@db/models';
-import type { CookieJar } from '@db/models/cookie-jar';
-import type { Environment, UserUploadEnvironment } from '@db/models/environment';
-import { type GrpcRequest, isGrpcRequestId } from '@db/models/grpc-request';
-import type { GrpcRequestMeta } from '@db/models/grpc-request-meta';
-import * as requestOperations from '@db/models/helpers/request-operations';
-import type { MockRoute } from '@db/models/mock-route';
-import type { MockServer } from '@db/models/mock-server';
-import { isGraphqlSubscriptionRequest } from '@db/models/request';
+import type { BaseModel } from 'insomnia-database/models';
+import * as models from 'insomnia-database/models';
+import type { CookieJar } from 'insomnia-database/models/cookie-jar';
+import type { Environment, UserUploadEnvironment } from 'insomnia-database/models/environment';
+import { type GrpcRequest, isGrpcRequestId } from 'insomnia-database/models/grpc-request';
+import type { GrpcRequestMeta } from 'insomnia-database/models/grpc-request-meta';
+import * as requestOperations from 'insomnia-database/models/helpers/request-operations';
+import type { MockRoute } from 'insomnia-database/models/mock-route';
+import type { MockServer } from 'insomnia-database/models/mock-server';
+import { isGraphqlSubscriptionRequest } from 'insomnia-database/models/request';
 import {
   getPathParametersFromUrl,
   isEventStreamRequest,
@@ -20,13 +20,17 @@ import {
   type RequestBody,
   type RequestHeader,
   type RequestParameter,
-} from '@db/models/request';
-import { isRequestMeta, type RequestMeta } from '@db/models/request-meta';
-import type { RequestVersion } from '@db/models/request-version';
-import type { Response } from '@db/models/response';
-import type { ResponseInfo, RunnerResultPerRequestPerIteration } from '@db/models/runner-test-result';
-import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '@db/models/websocket-request';
-import { isWebSocketResponse, type WebSocketResponse } from '@db/models/websocket-response';
+} from 'insomnia-database/models/request';
+import { isRequestMeta, type RequestMeta } from 'insomnia-database/models/request-meta';
+import type { RequestVersion } from 'insomnia-database/models/request-version';
+import type { Response } from 'insomnia-database/models/response';
+import type { ResponseInfo, RunnerResultPerRequestPerIteration } from 'insomnia-database/models/runner-test-result';
+import {
+  isWebSocketRequest,
+  isWebSocketRequestId,
+  type WebSocketRequest,
+} from 'insomnia-database/models/websocket-request';
+import { isWebSocketResponse, type WebSocketResponse } from 'insomnia-database/models/websocket-response';
 import * as contentDisposition from 'content-disposition';
 import fs from 'fs';
 import { GRAPHQL_TRANSPORT_WS_PROTOCOL, MessageType } from 'graphql-ws';
@@ -43,7 +47,7 @@ import {
   METHOD_GET,
   METHOD_POST,
 } from '../../common/constants';
-import { type ChangeBufferEvent, database } from '../../common/database';
+import { type ChangeBufferEvent, database } from 'insomnia/src/common/database';
 import { getContentDispositionHeader } from '../../common/misc';
 import type { ResponsePatch } from '../../main/network/libcurl-promise';
 import type { TimingStep } from '../../main/network/request-timing';

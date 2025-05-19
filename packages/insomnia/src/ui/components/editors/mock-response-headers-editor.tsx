@@ -1,4 +1,4 @@
-import type { RequestHeader } from '@db/models/request';
+import type { RequestHeader } from 'insomnia-database/models/request';
 import React, { type FC, useCallback } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router';
 

@@ -1,11 +1,11 @@
-import { type BaseModel, types as modelTypes } from '@db/models';
-import * as models from '@db/models';
-import type { Environment, UserUploadEnvironment } from '@db/models/environment';
-import type { Request } from '@db/models/request';
-import type { RequestGroup } from '@db/models/request-group';
-import { getBodyBuffer } from '@db/models/response';
-import type { Settings } from '@db/models/settings';
-import { isWorkspace, type Workspace } from '@db/models/workspace';
+import { type BaseModel, types as modelTypes } from 'insomnia-database/models';
+import * as models from 'insomnia-database/models';
+import type { Environment, UserUploadEnvironment } from 'insomnia-database/models/environment';
+import type { Request } from 'insomnia-database/models/request';
+import type { RequestGroup } from 'insomnia-database/models/request-group';
+import { getBodyBuffer } from 'insomnia-database/models/response';
+import type { Settings } from 'insomnia-database/models/settings';
+import { isWorkspace, type Workspace } from 'insomnia-database/models/workspace';
 import fs from 'fs/promises';
 import path from 'path';
 

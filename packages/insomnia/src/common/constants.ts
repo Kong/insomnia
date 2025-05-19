@@ -1,4 +1,4 @@
-import type { MockServer } from '@db/models/mock-server';
+import type { MockServer } from 'insomnia-database/models/mock-server';
 
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';

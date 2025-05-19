@@ -1,6 +1,6 @@
-import * as models from '@db/models';
-import type { OAuth2Token } from '@db/models/o-auth-2-token';
-import type { AuthTypeOAuth2, OAuth2ResponseType, RequestAuthentication } from '@db/models/request';
+import * as models from 'insomnia-database/models';
+import type { OAuth2Token } from 'insomnia-database/models/o-auth-2-token';
+import type { AuthTypeOAuth2, OAuth2ResponseType, RequestAuthentication } from 'insomnia-database/models/request';
 import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useRouteLoaderData } from 'react-router';
 

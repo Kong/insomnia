@@ -1,6 +1,6 @@
-import { gitCredentials } from '@db/models';
-import type { GitRepository } from '@db/models/git-repository';
-import { WorkspaceScopeKeys } from '@db/models/workspace';
+import { gitCredentials } from 'insomnia-database/models';
+import type { GitRepository } from 'insomnia-database/models/git-repository';
+import { WorkspaceScopeKeys } from 'insomnia-database/models/workspace';
 import { fromUrl } from 'hosted-git-info';
 import { type ActionFunction, type LoaderFunction, redirect } from 'react-router';
 

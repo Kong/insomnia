@@ -1,7 +1,7 @@
-import * as models from '@db/models';
-import { environmentModelSchema, requestGroupModelSchema } from '@db/models/__schemas__/model-schemas';
-import type { Environment } from '@db/models/environment';
-import type { Workspace } from '@db/models/workspace';
+import * as models from 'insomnia-database/models';
+import { environmentModelSchema, requestGroupModelSchema } from 'insomnia-database/models/__schemas__/model-schemas';
+import type { Environment } from 'insomnia-database/models/environment';
+import type { Workspace } from 'insomnia-database/models/workspace';
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { beforeEach, describe, expect, it } from 'vitest';
 

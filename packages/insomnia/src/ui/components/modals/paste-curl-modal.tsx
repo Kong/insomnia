@@ -1,4 +1,4 @@
-import type { Request } from '@db/models/request';
+import type { Request } from 'insomnia-database/models/request';
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 

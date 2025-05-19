@@ -1,12 +1,12 @@
 import fs from 'fs';
+import { database as db, type Query } from 'insomnia/src/common/database';
+import type { ResponseTimelineEntry } from 'insomnia/src/main/network/libcurl-promise';
+import { deserializeNDJSON } from 'insomnia/src/utils/ndjson';
+import type { RequestTestResult } from 'insomnia-scripting-environment/src/objects';
 import type { Readable } from 'stream';
 import zlib from 'zlib';
 
-import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
-import { database as db, type Query } from '../common/database';
-import type { ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as requestOperations from '../models/helpers/request-operations';
-import { deserializeNDJSON } from '../utils/ndjson';
 import type { BaseModel } from './index';
 import * as models from './index';
 

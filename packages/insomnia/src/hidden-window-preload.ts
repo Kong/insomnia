@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 
-import type { Compression } from '@db/models/response';
+import type { Compression } from 'insomnia-database/models/response';
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 
 import {

@@ -1,4 +1,4 @@
-import type { RequestBody } from '@db/models/request';
+import type { RequestBody } from 'insomnia-database/models/request';
 
 import * as misc from '../../common/misc';
 import type { RenderedRequest } from '../../templating/types';

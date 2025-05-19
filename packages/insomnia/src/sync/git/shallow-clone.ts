@@ -1,4 +1,4 @@
-import type { GitRepository } from '@db/models/git-repository';
+import type { GitRepository } from 'insomnia-database/models/git-repository';
 import * as git from 'isomorphic-git';
 
 import { GIT_CLONE_DIR, GIT_INTERNAL_DIR } from './git-vcs';

@@ -25,12 +25,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "useUnknownInCatchVariables": false,
-    "verbatimModuleSyntax": true,
-    "paths": {
-      "@db/*": [
-        "../insomnia-database/*"
-      ]
-    },
+    "verbatimModuleSyntax": true
   },
   "include": [
     ".eslintrc.js",

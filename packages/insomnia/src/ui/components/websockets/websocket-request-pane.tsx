@@ -1,7 +1,11 @@
-import * as models from '@db/models';
-import type { Environment } from '@db/models/environment';
-import { type AuthTypes, getCombinedPathParametersFromUrl, type RequestPathParameter } from '@db/models/request';
-import type { WebSocketRequest } from '@db/models/websocket-request';
+import * as models from 'insomnia-database/models';
+import type { Environment } from 'insomnia-database/models/environment';
+import {
+  type AuthTypes,
+  getCombinedPathParametersFromUrl,
+  type RequestPathParameter,
+} from 'insomnia-database/models/request';
+import type { WebSocketRequest } from 'insomnia-database/models/websocket-request';
 import React, { type FC, Fragment, useEffect, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton, Toolbar } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';

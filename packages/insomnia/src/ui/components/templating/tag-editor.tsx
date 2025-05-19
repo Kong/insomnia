@@ -1,15 +1,15 @@
-import * as models from '@db/models';
-import type { BaseModel } from '@db/models/index';
-import { isRequest, type Request } from '@db/models/request';
-import { isRequestGroup, type RequestGroup } from '@db/models/request-group';
-import type { Workspace } from '@db/models/workspace';
+import * as models from 'insomnia-database/models';
+import type { BaseModel } from 'insomnia-database/models/index';
+import { isRequest, type Request } from 'insomnia-database/models/request';
+import { isRequestGroup, type RequestGroup } from 'insomnia-database/models/request-group';
+import type { Workspace } from 'insomnia-database/models/workspace';
 import classnames from 'classnames';
 import clone from 'clone';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useMount } from 'react-use';
 
-import { database as db } from '../../../common/database';
+import { database as db } from 'insomnia/src/common/database';
 import { docsAfterResponseScript } from '../../../common/documentation';
 import { delay, fnOrString } from '../../../common/misc';
 import { metaSortKeySort } from '../../../common/sorting';

@@ -1,4 +1,4 @@
-import { isRemoteProject } from '@db/models/project';
+import { isRemoteProject } from 'insomnia-database/models/project';
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment } from 'react';
 import {

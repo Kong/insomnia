@@ -1,12 +1,12 @@
-import type { OauthProviderName } from '@db/models/git-credentials';
-import type { GitRepository } from '@db/models/git-repository';
+import type { OauthProviderName } from 'insomnia-database/models/git-credentials';
+import type { GitRepository } from 'insomnia-database/models/git-repository';
 import {
   getDefaultProjectStorageType,
   getProjectStorageTypeLabel,
   isGitProject,
   isRemoteProject,
   type Project,
-} from '@db/models/project';
+} from 'insomnia-database/models/project';
 import type { FC } from 'react';
 import React, { useEffect, useState } from 'react';
 import {

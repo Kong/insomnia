@@ -1,15 +1,15 @@
-import { userSession } from '@db/models';
-import { updateLocalProjectToRemote } from '@db/models/helpers/project';
+import { userSession } from 'insomnia-database/models';
+import { updateLocalProjectToRemote } from 'insomnia-database/models/helpers/project';
 import {
   findPersonalOrganization,
   isOwnerOfOrganization,
   isPersonalOrganization,
   isScratchpadOrganizationId,
   type Organization,
-} from '@db/models/organization';
-import { type Project, type as ProjectType } from '@db/models/project';
-import type { Settings } from '@db/models/settings';
-import { isScratchpad } from '@db/models/workspace';
+} from 'insomnia-database/models/organization';
+import { type Project, type as ProjectType } from 'insomnia-database/models/project';
+import type { Settings } from 'insomnia-database/models/settings';
+import { isScratchpad } from 'insomnia-database/models/workspace';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import {
   Button,
@@ -40,7 +40,7 @@ import { useLocalStorage } from 'react-use';
 
 import * as session from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
-import { database } from '../../common/database';
+import { database } from 'insomnia/src/common/database';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import {
   migrateProjectsIntoOrganization,

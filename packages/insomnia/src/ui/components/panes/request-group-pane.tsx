@@ -1,5 +1,5 @@
-import { type EnvironmentKvPairData, EnvironmentType, getDataFromKVPair } from '@db/models/environment';
-import type { Settings } from '@db/models/settings';
+import { type EnvironmentKvPairData, EnvironmentType, getDataFromKVPair } from 'insomnia-database/models/environment';
+import type { Settings } from 'insomnia-database/models/settings';
 import React, { type FC, useRef, useState } from 'react';
 import { Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router';

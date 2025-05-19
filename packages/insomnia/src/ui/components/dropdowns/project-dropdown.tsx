@@ -1,5 +1,10 @@
-import type { GitRepository } from '@db/models/git-repository';
-import { getProjectStorageTypeLabel, isGitProject, isRemoteProject, type Project } from '@db/models/project';
+import type { GitRepository } from 'insomnia-database/models/git-repository';
+import {
+  getProjectStorageTypeLabel,
+  isGitProject,
+  isRemoteProject,
+  type Project,
+} from 'insomnia-database/models/project';
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover, Tooltip, TooltipTrigger } from 'react-aria-components';

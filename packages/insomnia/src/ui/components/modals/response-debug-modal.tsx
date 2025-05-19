@@ -1,5 +1,5 @@
-import * as models from '@db/models/index';
-import type { Response } from '@db/models/response';
+import * as models from 'insomnia-database/models/index';
+import type { Response } from 'insomnia-database/models/response';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';

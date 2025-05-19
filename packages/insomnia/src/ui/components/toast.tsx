@@ -1,4 +1,4 @@
-import * as models from '@db/models/index';
+import * as models from 'insomnia-database/models/index';
 import classnames from 'classnames';
 import type { IpcRendererEvent } from 'electron';
 import React, { type FC, useEffect, useState } from 'react';

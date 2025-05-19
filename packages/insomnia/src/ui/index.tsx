@@ -1,6 +1,6 @@
 import './rendererListeners';
 
-import * as models from '@db/models';
+import * as models from 'insomnia-database/models';
 import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { createMemoryRouter, matchPath, Outlet, RouterProvider } from 'react-router';
@@ -16,7 +16,7 @@ import {
   getSkipOnboarding,
   isDevelopment,
 } from '../common/constants';
-import { database } from '../common/database';
+import { database } from 'insomnia/src/common/database';
 import { initializeLogging } from '../common/log';
 import { initNewOAuthSession } from '../network/o-auth-2/get-token';
 import { init as initPlugins } from '../plugins';

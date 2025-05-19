@@ -1,9 +1,9 @@
-import * as models from '@db/models';
-import { type BaseModel, canSync } from '@db/models';
-import type { Project } from '@db/models/project';
-import type { Workspace } from '@db/models/workspace';
+import * as models from 'insomnia-database/models';
+import { type BaseModel, canSync } from 'insomnia-database/models';
+import type { Project } from 'insomnia-database/models/project';
+import type { Workspace } from 'insomnia-database/models/workspace';
 
-import { database } from '../../common/database';
+import { database } from 'insomnia/src/common/database';
 import type { StatusCandidate } from '../types';
 import type { VCS } from './vcs';
 

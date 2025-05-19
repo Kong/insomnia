@@ -1,4 +1,4 @@
-import { project, request, requestGroup, workspace } from '@db/models';
+import { project, request, requestGroup, workspace } from 'insomnia-database/models';
 import fs from 'fs';
 import path from 'path';
 import { describe, expect, it } from 'vitest';

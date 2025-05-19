@@ -1,7 +1,7 @@
-import * as models from '@db/models';
-import type { Project, RemoteProject } from '@db/models/project';
+import * as models from 'insomnia-database/models';
+import type { Project, RemoteProject } from 'insomnia-database/models/project';
 
-import { database } from '../../common/database';
+import { database } from 'insomnia/src/common/database';
 
 // Migration:
 // Team ~= Project > Workspaces

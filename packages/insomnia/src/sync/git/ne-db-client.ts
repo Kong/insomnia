@@ -1,11 +1,11 @@
-import type { BaseModel } from '@db/models';
-import * as models from '@db/models';
-import { isWorkspace } from '@db/models/workspace';
+import type { BaseModel } from 'insomnia-database/models';
+import * as models from 'insomnia-database/models';
+import { isWorkspace } from 'insomnia-database/models/workspace';
 import type { PromiseFsClient } from 'isomorphic-git';
 import path from 'path';
 import YAML from 'yaml';
 
-import { database as db } from '../../common/database';
+import { database as db } from 'insomnia/src/common/database';
 import { resetKeys } from '../ignore-keys';
 import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';
 import parseGitPath from './parse-git-path';

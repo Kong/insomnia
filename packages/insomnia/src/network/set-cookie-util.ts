@@ -1,4 +1,4 @@
-import type { Cookie } from '@db/models/cookie-jar';
+import type { Cookie } from 'insomnia-database/models/cookie-jar';
 
 import { cookiesFromJar, jarFromCookies } from '../common/cookies';
 

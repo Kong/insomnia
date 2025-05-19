@@ -1,11 +1,11 @@
-import { sortProjects } from '@db/models/helpers/project';
-import * as models from '@db/models/index';
-import type { Project } from '@db/models/project';
+import { database } from 'insomnia/src/common/database';
+import { sortProjects } from 'insomnia-database/models/helpers/project';
+import * as models from 'insomnia-database/models/index';
+import type { Project } from 'insomnia-database/models/project';
 import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useFetcher, useParams } from 'react-router';
 
-import { database } from '../../../common/database';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';

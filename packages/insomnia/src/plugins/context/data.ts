@@ -1,5 +1,5 @@
-import * as models from '@db/models';
-import type { Workspace } from '@db/models/workspace';
+import * as models from 'insomnia-database/models';
+import type { Workspace } from 'insomnia-database/models/workspace';
 
 import { exportWorkspacesHAR } from '../../common/export';
 import { fetchImportContentFromURI, importResourcesToProject, scanResources } from '../../common/import';

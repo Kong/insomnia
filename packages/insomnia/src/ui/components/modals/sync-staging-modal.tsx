@@ -1,4 +1,4 @@
-import { all } from '@db/models';
+import { all } from 'insomnia-database/models';
 import React, { useEffect, useState } from 'react';
 import {
   Button,

@@ -1,5 +1,5 @@
-import { isRequest, type Request } from '@db/models/request';
-import { isRequestGroup } from '@db/models/request-group';
+import { isRequest, type Request } from 'insomnia-database/models/request';
+import { isRequestGroup } from 'insomnia-database/models/request-group';
 import { useEffect, useMemo, useRef } from 'react';
 import { useRouteLoaderData } from 'react-router';
 

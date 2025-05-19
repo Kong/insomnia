@@ -1,11 +1,11 @@
-import * as models from '@db/models';
-import type { Organization } from '@db/models/organization';
-import { findPersonalOrganization } from '@db/models/organization';
-import type { Project } from '@db/models/project';
-import { scopeToActivity } from '@db/models/workspace';
+import * as models from 'insomnia-database/models';
+import type { Organization } from 'insomnia-database/models/organization';
+import { findPersonalOrganization } from 'insomnia-database/models/organization';
+import type { Project } from 'insomnia-database/models/project';
+import { scopeToActivity } from 'insomnia-database/models/workspace';
 import { matchPath, type PathMatch } from 'react-router';
 
-import { database } from '../common/database';
+import { database } from 'insomnia/src/common/database';
 export const enum AsyncTask {
   SyncOrganization,
   MigrateProjects,

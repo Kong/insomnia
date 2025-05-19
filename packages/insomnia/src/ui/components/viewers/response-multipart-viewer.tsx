@@ -1,4 +1,4 @@
-import type { ResponseHeader } from '@db/models/response';
+import type { ResponseHeader } from 'insomnia-database/models/response';
 import { format } from 'date-fns';
 import type { SaveDialogOptions } from 'electron';
 import fs from 'fs';

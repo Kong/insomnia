@@ -2,7 +2,7 @@ if (process.type === 'renderer') {
   throw new Error('multipart.ts unavailable in renderer');
 }
 
-import type { RequestBodyParameter } from '@db/models/request';
+import type { RequestBodyParameter } from 'insomnia-database/models/request';
 import fs from 'fs';
 import { lookup } from 'mime-types';
 import os from 'os';

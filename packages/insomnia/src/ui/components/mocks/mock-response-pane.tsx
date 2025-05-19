@@ -1,7 +1,7 @@
-import * as models from '@db/models';
-import type { MockRoute } from '@db/models/mock-route';
-import type { MockServer } from '@db/models/mock-server';
-import type { Response } from '@db/models/response';
+import * as models from 'insomnia-database/models';
+import type { MockRoute } from 'insomnia-database/models/mock-route';
+import type { MockServer } from 'insomnia-database/models/mock-server';
+import type { Response } from 'insomnia-database/models/response';
 import fs from 'fs';
 import type * as Har from 'har-format';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';

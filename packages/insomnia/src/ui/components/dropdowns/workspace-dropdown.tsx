@@ -1,7 +1,7 @@
-import { isRemoteProject } from '@db/models/project';
-import { isRequest } from '@db/models/request';
-import { isRequestGroup } from '@db/models/request-group';
-import { isScratchpad, type Workspace } from '@db/models/workspace';
+import { isRemoteProject } from 'insomnia-database/models/project';
+import { isRequest } from 'insomnia-database/models/request';
+import { isRequestGroup } from 'insomnia-database/models/request-group';
+import { isScratchpad, type Workspace } from 'insomnia-database/models/workspace';
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, type ReactNode, useCallback, useEffect, useState } from 'react';
 import {
@@ -21,7 +21,7 @@ import {
 import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 
 import { getProductName } from '../../../common/constants';
-import { database as db } from '../../../common/database';
+import { database as db } from 'insomnia/src/common/database';
 import { exportGlobalEnvironmentToFile, exportMockServerToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { PlatformKeyCombinations } from '../../../common/settings';

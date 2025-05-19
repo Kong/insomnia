@@ -1,5 +1,5 @@
-import * as models from '@db/models';
-import type { Request } from '@db/models/request';
+import * as models from 'insomnia-database/models';
+import type { Request } from 'insomnia-database/models/request';
 
 import {
   fetchRequestData,

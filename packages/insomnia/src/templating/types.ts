@@ -1,14 +1,14 @@
-import type { CookieJar } from '@db/models/cookie-jar';
-import type { Environment, UserUploadEnvironment } from '@db/models/environment';
-import type { GrpcRequest } from '@db/models/grpc-request';
-import type { OAuth2Token } from '@db/models/o-auth-2-token';
-import type { Project } from '@db/models/project';
-import type { Request } from '@db/models/request';
-import type { RequestGroup } from '@db/models/request-group';
-import type { Response } from '@db/models/response';
-import type { getBodyBuffer, getLatestForRequest } from '@db/models/response';
-import type { WebSocketRequest } from '@db/models/websocket-request';
-import type { Workspace } from '@db/models/workspace';
+import type { CookieJar } from 'insomnia-database/models/cookie-jar';
+import type { Environment, UserUploadEnvironment } from 'insomnia-database/models/environment';
+import type { GrpcRequest } from 'insomnia-database/models/grpc-request';
+import type { OAuth2Token } from 'insomnia-database/models/o-auth-2-token';
+import type { Project } from 'insomnia-database/models/project';
+import type { Request } from 'insomnia-database/models/request';
+import type { RequestGroup } from 'insomnia-database/models/request-group';
+import type { Response } from 'insomnia-database/models/response';
+import type { getBodyBuffer, getLatestForRequest } from 'insomnia-database/models/response';
+import type { WebSocketRequest } from 'insomnia-database/models/websocket-request';
+import type { Workspace } from 'insomnia-database/models/workspace';
 
 import type { PluginStore } from '../plugins/context';
 import type { PromptModalOptions } from '../ui/components/modals/prompt-modal';

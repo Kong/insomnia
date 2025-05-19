@@ -1,5 +1,5 @@
-import { userSession } from '@db/models';
-import * as models from '@db/models';
+import { userSession } from 'insomnia-database/models';
+import * as models from 'insomnia-database/models';
 import type { ActionFunction, LoaderFunction } from 'react-router';
 
 import { invariant } from '../../utils/invariant';

@@ -1,6 +1,6 @@
-import * as models from '@db/models';
-import type { Request } from '@db/models/request';
-import type { RequestGroup } from '@db/models/request-group';
+import * as models from 'insomnia-database/models';
+import type { Request } from 'insomnia-database/models/request';
+import type { RequestGroup } from 'insomnia-database/models/request-group';
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useRef, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';

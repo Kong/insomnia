@@ -1,5 +1,5 @@
-import { stats } from '@db/models';
-import { getBodyBuffer } from '@db/models/response';
+import { stats } from 'insomnia-database/models';
+import { getBodyBuffer } from 'insomnia-database/models/response';
 
 import { parseGraphQLReqeustBody } from '../utils/graph-ql';
 import {

@@ -7,18 +7,18 @@ import {
   userSession,
   webSocketRequest,
   workspace,
-} from '@db/models';
-import type { Environment } from '@db/models/environment';
-import type { GrpcRequest } from '@db/models/grpc-request';
-import { isScratchpadOrganizationId, type Organization } from '@db/models/organization';
-import { isRemoteProject, type Project } from '@db/models/project';
-import type { Request } from '@db/models/request';
-import type { RequestGroup } from '@db/models/request-group';
-import type { WebSocketRequest } from '@db/models/websocket-request';
-import { scopeToActivity, type Workspace } from '@db/models/workspace';
+} from 'insomnia-database/models';
+import type { Environment } from 'insomnia-database/models/environment';
+import type { GrpcRequest } from 'insomnia-database/models/grpc-request';
+import { isScratchpadOrganizationId, type Organization } from 'insomnia-database/models/organization';
+import { isRemoteProject, type Project } from 'insomnia-database/models/project';
+import type { Request } from 'insomnia-database/models/request';
+import type { RequestGroup } from 'insomnia-database/models/request-group';
+import type { WebSocketRequest } from 'insomnia-database/models/websocket-request';
+import { scopeToActivity, type Workspace } from 'insomnia-database/models/workspace';
 import type { LoaderFunction } from 'react-router';
 
-import { database } from '../../common/database';
+import { database } from 'insomnia/src/common/database';
 import { fuzzyMatch } from '../../common/misc';
 import { invariant } from '../../utils/invariant';
 import { insomniaFetch } from '../insomniaFetch';

@@ -1,8 +1,8 @@
-import { requestGroup } from '@db/models';
-import { type GrpcRequest, isGrpcRequest } from '@db/models/grpc-request';
-import { isRequest, type Request } from '@db/models/request';
-import type { RequestGroup } from '@db/models/request-group';
-import { isWebSocketRequest, type WebSocketRequest } from '@db/models/websocket-request';
+import { requestGroup } from 'insomnia-database/models';
+import { type GrpcRequest, isGrpcRequest } from 'insomnia-database/models/grpc-request';
+import { isRequest, type Request } from 'insomnia-database/models/request';
+import type { RequestGroup } from 'insomnia-database/models/request-group';
+import { isWebSocketRequest, type WebSocketRequest } from 'insomnia-database/models/websocket-request';
 import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import { Button, Checkbox, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';

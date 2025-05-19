@@ -1,16 +1,16 @@
-import * as models from '@db/models';
+import * as models from 'insomnia-database/models';
 import {
   PATH_PARAMETER_REGEX,
   type Request,
   type RequestAuthentication,
   type RequestParameter,
-} from '@db/models/request';
-import { isRequestGroup, type RequestGroup } from '@db/models/request-group';
-import type { WebSocketRequest } from '@db/models/websocket-request';
+} from 'insomnia-database/models/request';
+import { isRequestGroup, type RequestGroup } from 'insomnia-database/models/request-group';
+import type { WebSocketRequest } from 'insomnia-database/models/websocket-request';
 import classNames from 'classnames';
 import React, { type FC, useEffect, useState } from 'react';
 
-import { database as db } from '../../common/database';
+import { database as db } from 'insomnia/src/common/database';
 import { getAuthObjectOrNull, isAuthEnabled } from '../../network/authentication';
 import { getOrInheritAuthentication } from '../../network/network';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../utils/url/querystring';

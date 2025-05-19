@@ -1,6 +1,6 @@
-import type { GrpcRequest } from '@db/models/grpc-request';
-import type { Request } from '@db/models/request';
-import type { WebSocketRequest } from '@db/models/websocket-request';
+import type { GrpcRequest } from 'insomnia-database/models/grpc-request';
+import type { Request } from 'insomnia-database/models/request';
+import type { WebSocketRequest } from 'insomnia-database/models/websocket-request';
 
 import { getRenderContext, render } from '../common/render';
 import { RenderError } from '../templating/render-error';

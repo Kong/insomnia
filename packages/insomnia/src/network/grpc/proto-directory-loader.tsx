@@ -1,5 +1,5 @@
-import * as models from '@db/models';
-import type { ProtoDirectory } from '@db/models/proto-directory';
+import * as models from 'insomnia-database/models';
+import type { ProtoDirectory } from 'insomnia-database/models/proto-directory';
 import fs from 'fs';
 import path from 'path';
 

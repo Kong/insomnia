@@ -1,5 +1,5 @@
-import type { ThemeSettings } from '@db/models/settings';
 import Color from 'color';
+import type { ThemeSettings } from 'insomnia-database/models/settings';
 
 import { getAppDefaultTheme } from '../common/constants';
 import type { Theme } from './index';

@@ -1,11 +1,9 @@
 import * as crypto from 'crypto';
+import { JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
+import { database as db } from 'insomnia/src/common/database';
+import { generateId } from 'insomnia/src/common/misc';
 import orderedJSON from 'json-order';
 
-import * as crypt from '../account/crypt';
-import { JSON_ORDER_SEPARATOR } from '../common/constants';
-import { database as db } from '../common/database';
-import { generateId } from '../common/misc';
-import { base64decode, base64encode } from '../utils/vault';
 import { type BaseModel, project, workspace } from './index';
 import type { Project } from './project';
 import type { Workspace } from './workspace';
@@ -125,30 +123,6 @@ export const maskVaultEnvironmentData = (environment: Environment) => {
     }
   }
   return environment;
-};
-
-export const encryptSecretValue = (rawValue: string, symmetricKey: JsonWebKey) => {
-  if (typeof symmetricKey !== 'object' || Object.keys(symmetricKey).length === 0) {
-    // invalid symmetricKey
-    return rawValue;
-  }
-  const encryptResult = crypt.encryptAES(symmetricKey, rawValue);
-  const encryptedValue = base64encode(encryptResult);
-  return encryptedValue;
-};
-
-export const decryptSecretValue = (encryptedValue: string, symmetricKey: JsonWebKey) => {
-  if (typeof symmetricKey !== 'object' || Object.keys(symmetricKey).length === 0) {
-    // invalid symmetricKey
-    return encryptedValue;
-  }
-  try {
-    const jsonWebKey = base64decode(encryptedValue, true);
-    return crypt.decryptAES(symmetricKey, jsonWebKey);
-  } catch (error) {
-    // return origin value if failed to decrypt
-    return encryptedValue;
-  }
 };
 
 // remove all secret items when user reset vault key

@@ -1,4 +1,4 @@
-import { isGitProject, isRemoteProject } from '@db/models/project';
+import { isGitProject, isRemoteProject } from 'insomnia-database/models/project';
 import { type FC } from 'react';
 import React from 'react';
 import { useRouteLoaderData } from 'react-router';

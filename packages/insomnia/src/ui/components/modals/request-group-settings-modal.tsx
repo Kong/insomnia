@@ -1,4 +1,4 @@
-import type { RequestGroup } from '@db/models/request-group';
+import type { RequestGroup } from 'insomnia-database/models/request-group';
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useFetcher, useNavigate, useParams } from 'react-router';

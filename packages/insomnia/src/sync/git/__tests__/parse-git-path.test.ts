@@ -1,4 +1,4 @@
-import * as models from '@db/models';
+import * as models from 'insomnia-database/models';
 import { describe, expect, it } from 'vitest';
 
 import { GIT_INSOMNIA_DIR } from '../git-vcs';

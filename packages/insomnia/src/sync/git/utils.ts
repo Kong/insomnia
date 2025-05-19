@@ -1,5 +1,5 @@
-import { gitCredentials, gitRepository } from '@db/models';
-import type { OauthProviderName } from '@db/models/git-repository';
+import { gitCredentials, gitRepository } from 'insomnia-database/models';
+import type { OauthProviderName } from 'insomnia-database/models/git-repository';
 import type { AuthCallback, AuthFailureCallback, AuthSuccessCallback, GitAuth, MessageCallback } from 'isomorphic-git';
 
 import type { GitAuthor, GitCredentials } from './git-vcs';

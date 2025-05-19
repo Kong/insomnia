@@ -1,7 +1,7 @@
 import { copyFile, mkdir, readdir } from 'node:fs/promises';
 import path from 'node:path';
 
-import * as models from '@db/models';
+import * as models from 'insomnia-database/models';
 import electron from 'electron';
 
 import appConfig from '../../config/config.json';

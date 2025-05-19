@@ -1,7 +1,7 @@
-import * as models from '@db/models/index';
-import type { MockRoute } from '@db/models/mock-route';
-import { isRequest, type Request } from '@db/models/request';
-import { isRequestGroup } from '@db/models/request-group';
+import * as models from 'insomnia-database/models/index';
+import type { MockRoute } from 'insomnia-database/models/mock-route';
+import { isRequest, type Request } from 'insomnia-database/models/request';
+import { isRequestGroup } from 'insomnia-database/models/request-group';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Button,
@@ -16,7 +16,7 @@ import {
 } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';
 
-import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
+import { type ChangeBufferEvent, type ChangeType, database } from 'insomnia/src/common/database';
 import { debounce } from '../../../common/misc';
 import { INSOMNIA_TAB_HEIGHT } from '../../constant';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';

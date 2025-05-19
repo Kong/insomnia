@@ -1,4 +1,4 @@
-import type { ResponseHeader } from '@db/models/response';
+import type { ResponseHeader } from 'insomnia-database/models/response';
 import fs from 'fs/promises';
 import React, { useState } from 'react';
 import { Button } from 'react-aria-components';

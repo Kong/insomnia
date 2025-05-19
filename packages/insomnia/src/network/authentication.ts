@@ -1,4 +1,4 @@
-import type { AuthTypeOAuth2, RequestAuthentication, RequestParameter } from '@db/models/request';
+import type { AuthTypeOAuth2, RequestAuthentication, RequestParameter } from 'insomnia-database/models/request';
 import * as Hawk from 'hawk';
 
 import {

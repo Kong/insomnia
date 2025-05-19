@@ -1,4 +1,4 @@
-import * as models from '@db/models';
+import * as models from 'insomnia-database/models';
 import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
 import React, { type FC, useCallback, useMemo } from 'react';

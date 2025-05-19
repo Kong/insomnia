@@ -1,15 +1,20 @@
-import * as models from '@db/models';
-import type { OAuth2Token } from '@db/models/o-auth-2-token';
-import type { AuthTypeOAuth2, OAuth2ResponseType, RequestHeader, RequestParameter } from '@db/models/request';
-import type { Request } from '@db/models/request';
-import { isRequestGroup, isRequestGroupId, type RequestGroup } from '@db/models/request-group';
-import type { Response } from '@db/models/response';
+import * as models from 'insomnia-database/models';
+import type { OAuth2Token } from 'insomnia-database/models/o-auth-2-token';
+import type {
+  AuthTypeOAuth2,
+  OAuth2ResponseType,
+  RequestHeader,
+  RequestParameter,
+} from 'insomnia-database/models/request';
+import type { Request } from 'insomnia-database/models/request';
+import { isRequestGroup, isRequestGroupId, type RequestGroup } from 'insomnia-database/models/request-group';
+import type { Response } from 'insomnia-database/models/response';
 import crypto from 'crypto';
 import querystring from 'querystring';
 import { v4 as uuidv4 } from 'uuid';
 
 import { version } from '../../../package.json';
-import { database as db } from '../../common/database';
+import { database as db } from 'insomnia/src/common/database';
 import { escapeRegex } from '../../common/misc';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';

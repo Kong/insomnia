@@ -1,5 +1,5 @@
-import * as models from '@db/models';
-import type { UnitTestSuite } from '@db/models/unit-test-suite';
+import * as models from 'insomnia-database/models';
+import type { UnitTestSuite } from 'insomnia-database/models/unit-test-suite';
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
@@ -31,7 +31,7 @@ import {
 } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '../../common/constants';
-import { database } from '../../common/database';
+import { database } from 'insomnia/src/common/database';
 import { isNotNullOrUndefined } from '../../common/misc';
 import { showModal } from '../../ui/components/modals';
 import { AskModal } from '../../ui/components/modals/ask-modal';

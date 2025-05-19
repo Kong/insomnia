@@ -5,7 +5,7 @@ import {
   getKVPairFromData,
   vaultEnvironmentPath,
   vaultEnvironmentRuntimePath,
-} from '@db/models/environment';
+} from 'insomnia-database/models/environment';
 import React from 'react';
 
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';

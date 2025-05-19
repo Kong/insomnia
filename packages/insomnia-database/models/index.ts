@@ -15,9 +15,9 @@ import {
   EXPORT_TYPE_WEBSOCKET_PAYLOAD,
   EXPORT_TYPE_WEBSOCKET_REQUEST,
   EXPORT_TYPE_WORKSPACE,
-} from '../common/constants';
-import { generateId } from '../common/misc';
-import { typedKeys } from '../utils';
+} from 'insomnia/src/common/constants';
+import { generateId } from 'insomnia/src/common/misc';
+
 import * as _apiSpec from './api-spec';
 import * as _caCertificate from './ca-certificate';
 import * as _clientCertificate from './client-certificate';
@@ -218,6 +218,10 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
   // If we put those keys in init method, all related models will show as modified in git sync.
   const modelOptionalKeys: string[] = 'optionalKeys' in model ? model.optionalKeys || [] : [];
   // Prune extra keys from doc
+  const typedKeys = <T extends object>(obj: T) => {
+    return Object.keys(obj) as (keyof T)[];
+  };
+
   for (const key of typedKeys(migratedDoc)) {
     if (!(key in objectDefaults) && !modelOptionalKeys.includes(key)) {
       delete migratedDoc[key];

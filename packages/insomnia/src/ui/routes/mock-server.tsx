@@ -1,5 +1,5 @@
-import * as models from '@db/models';
-import type { MockRoute } from '@db/models/mock-route';
+import * as models from 'insomnia-database/models';
+import type { MockRoute } from 'insomnia-database/models/mock-route';
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {

@@ -1,13 +1,13 @@
 // This file could be imported by both main and renderer processes, so it should be written in a way that works in both contexts.
 
 /* eslint-disable prefer-rest-params -- don't want to change ...arguments usage for these sensitive functions without more testing */
-import { mustGetModel } from '@db/models';
-import type { CookieJar } from '@db/models/cookie-jar';
-import { type Environment } from '@db/models/environment';
-import type { GitRepository } from '@db/models/git-repository';
-import type { BaseModel } from '@db/models/index';
-import * as models from '@db/models/index';
-import type { Workspace } from '@db/models/workspace';
+import { mustGetModel } from 'insomnia-database/models';
+import type { CookieJar } from 'insomnia-database/models/cookie-jar';
+import { type Environment } from 'insomnia-database/models/environment';
+import type { GitRepository } from 'insomnia-database/models/git-repository';
+import type { BaseModel } from 'insomnia-database/models/index';
+import * as models from 'insomnia-database/models/index';
+import type { Workspace } from 'insomnia-database/models/workspace';
 import NeDB from '@seald-io/nedb';
 import electron from 'electron';
 import fsPath from 'path';

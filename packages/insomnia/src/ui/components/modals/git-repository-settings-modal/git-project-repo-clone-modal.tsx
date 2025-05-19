@@ -1,4 +1,4 @@
-import type { GitRepository, OauthProviderName } from '@db/models/git-repository';
+import type { GitRepository, OauthProviderName } from 'insomnia-database/models/git-repository';
 import React, { useEffect, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';

@@ -1,4 +1,4 @@
-import * as models from '@db/models/index';
+import * as models from 'insomnia-database/models/index';
 import { autoUpdater, BrowserWindow, dialog } from 'electron';
 
 import { CHECK_FOR_UPDATES_INTERVAL, getAppId, getAppVersion, isDevelopment, UpdateURL } from '../common/constants';

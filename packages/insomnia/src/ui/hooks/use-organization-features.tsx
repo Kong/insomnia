@@ -1,4 +1,4 @@
-import { isScratchpadOrganizationId } from '@db/models/organization';
+import { isScratchpadOrganizationId } from 'insomnia-database/models/organization';
 import { useEffect } from 'react';
 import { useFetcher, useParams } from 'react-router';
 

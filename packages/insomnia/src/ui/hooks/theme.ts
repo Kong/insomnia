@@ -1,4 +1,4 @@
-import type { ThemeSettings } from '@db/models/settings';
+import type { ThemeSettings } from 'insomnia-database/models/settings';
 import { useCallback, useState } from 'react';
 import { useAsync } from 'react-use';
 

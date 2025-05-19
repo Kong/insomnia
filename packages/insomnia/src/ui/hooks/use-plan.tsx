@@ -1,4 +1,4 @@
-import { isOwnerOfOrganization } from '@db/models/organization';
+import { isOwnerOfOrganization } from 'insomnia-database/models/organization';
 import { useParams, useRouteLoaderData } from 'react-router';
 
 import { formatCurrentPlanType, type OrganizationLoaderData } from '../routes/organization';

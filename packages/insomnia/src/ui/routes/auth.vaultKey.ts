@@ -1,6 +1,6 @@
-import { userSession as sessionModel } from '@db/models';
-import { removeAllSecrets } from '@db/models/environment';
-import type { UserSession } from '@db/models/user-session';
+import { userSession as sessionModel } from 'insomnia-database/models';
+import { removeAllSecrets } from 'insomnia-database/models/environment';
+import type { UserSession } from 'insomnia-database/models/user-session';
 import * as srp from '@getinsomnia/srp-js';
 import { ipcRenderer } from 'electron';
 import { type ActionFunction } from 'react-router';

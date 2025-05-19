@@ -1,5 +1,5 @@
-import * as models from '@db/models';
-import type { Request } from '@db/models/request';
+import * as models from 'insomnia-database/models';
+import type { Request } from 'insomnia-database/models/request';
 import type { LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
 import type { GraphQLHintOptions } from 'codemirror-graphql/hint';
 import type { GraphQLInfoOptions } from 'codemirror-graphql/info';
@@ -26,7 +26,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useLocalStorage } from 'react-use';
 
 import { CONTENT_TYPE_JSON } from '../../../../common/constants';
-import { database as db } from '../../../../common/database';
+import { database as db } from 'insomnia/src/common/database';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
 import {

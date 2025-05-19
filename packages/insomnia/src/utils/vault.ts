@@ -1,4 +1,4 @@
-import { settings } from '@db/models';
+import { settings } from 'insomnia-database/models';
 
 import { getInsomniaVaultKey } from '../common/constants';
 

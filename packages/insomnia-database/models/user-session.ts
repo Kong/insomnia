@@ -1,5 +1,6 @@
-import type { AESMessage } from '../account/crypt';
-import { database as db } from '../common/database';
+import type { AESMessage } from 'insomnia/src/account/crypt';
+import { database as db } from 'insomnia/src/common/database';
+
 import type { BaseModel } from './index';
 
 export interface BaseUserSession {

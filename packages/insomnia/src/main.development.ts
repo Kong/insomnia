@@ -1,6 +1,6 @@
-import * as models from '@db/models/index';
-import type { Project, RemoteProject } from '@db/models/project';
-import type { Stats } from '@db/models/stats';
+import * as models from 'insomnia-database/models/index';
+import type { Project, RemoteProject } from 'insomnia-database/models/project';
+import type { Stats } from 'insomnia-database/models/stats';
 import electron, { app, session } from 'electron';
 import { BrowserWindow } from 'electron';
 import contextMenu from 'electron-context-menu';
@@ -10,7 +10,7 @@ import path from 'path';
 
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
-import { database } from './common/database';
+import { database } from 'insomnia/src/common/database';
 import log, { initializeLogging } from './common/log';
 import { SegmentEvent, trackSegmentEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';

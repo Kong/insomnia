@@ -1,6 +1,6 @@
-import { type GrpcRequest, isGrpcRequest } from '@db/models/grpc-request';
-import { isEventStreamRequest, isRequest, type Request } from '@db/models/request';
-import { isWebSocketRequest, type WebSocketRequest } from '@db/models/websocket-request';
+import { type GrpcRequest, isGrpcRequest } from 'insomnia-database/models/grpc-request';
+import { isEventStreamRequest, isRequest, type Request } from 'insomnia-database/models/request';
+import { isWebSocketRequest, type WebSocketRequest } from 'insomnia-database/models/websocket-request';
 import React, { type FC, memo } from 'react';
 
 import { CONTENT_TYPE_GRAPHQL, METHOD_DELETE, METHOD_OPTIONS } from '../../../common/constants';

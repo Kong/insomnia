@@ -1,4 +1,4 @@
-import type { RunnerTestResult } from '@db/models/runner-test-result';
+import type { RunnerTestResult } from 'insomnia-database/models/runner-test-result';
 import { format } from 'date-fns';
 import React, { type FC } from 'react';
 import {

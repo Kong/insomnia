@@ -1,4 +1,4 @@
-import { userSession as sessionModel } from '@db/models';
+import { userSession as sessionModel } from 'insomnia-database/models';
 import React, { Fragment } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { type ActionFunction, redirect, useFetcher, useFetchers, useNavigate } from 'react-router';

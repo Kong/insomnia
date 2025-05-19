@@ -1,16 +1,16 @@
-import * as models from '@db/models';
+import * as models from 'insomnia-database/models';
 import {
   type Environment,
   type UserUploadEnvironment,
   vaultEnvironmentPath,
   vaultEnvironmentRuntimePath,
-} from '@db/models/environment';
-import type { GrpcRequest, GrpcRequestBody } from '@db/models/grpc-request';
-import { isProject } from '@db/models/project';
-import { PATH_PARAMETER_REGEX, type Request } from '@db/models/request';
-import { isRequestGroup } from '@db/models/request-group';
-import type { WebSocketRequest } from '@db/models/websocket-request';
-import { isWorkspace, type Workspace } from '@db/models/workspace';
+} from 'insomnia-database/models/environment';
+import type { GrpcRequest, GrpcRequestBody } from 'insomnia-database/models/grpc-request';
+import { isProject } from 'insomnia-database/models/project';
+import { PATH_PARAMETER_REGEX, type Request } from 'insomnia-database/models/request';
+import { isRequestGroup } from 'insomnia-database/models/request-group';
+import type { WebSocketRequest } from 'insomnia-database/models/websocket-request';
+import { isWorkspace, type Workspace } from 'insomnia-database/models/workspace';
 import clone from 'clone';
 import orderedJSON from 'json-order';
 

@@ -1,12 +1,12 @@
-import type { GrpcRequest } from '@db/models/grpc-request';
-import type { GrpcRequestMeta } from '@db/models/grpc-request-meta';
-import type { Request } from '@db/models/request';
-import type { RequestGroup } from '@db/models/request-group';
-import type { RequestGroupMeta } from '@db/models/request-group-meta';
-import type { RequestMeta } from '@db/models/request-meta';
-import type { Settings } from '@db/models/settings';
-import type { WebSocketRequest } from '@db/models/websocket-request';
-import type { WorkspaceMeta } from '@db/models/workspace-meta';
+import type { GrpcRequest } from 'insomnia-database/models/grpc-request';
+import type { GrpcRequestMeta } from 'insomnia-database/models/grpc-request-meta';
+import type { Request } from 'insomnia-database/models/request';
+import type { RequestGroup } from 'insomnia-database/models/request-group';
+import type { RequestGroupMeta } from 'insomnia-database/models/request-group-meta';
+import type { RequestMeta } from 'insomnia-database/models/request-meta';
+import type { Settings } from 'insomnia-database/models/settings';
+import type { WebSocketRequest } from 'insomnia-database/models/websocket-request';
+import type { WorkspaceMeta } from 'insomnia-database/models/workspace-meta';
 import { useFetcher, useParams } from 'react-router';
 
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';

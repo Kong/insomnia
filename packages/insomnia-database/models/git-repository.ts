@@ -1,5 +1,6 @@
-import { database as db } from '../common/database';
-import type { GitCredentials } from '../sync/git/git-vcs';
+import { database as db } from 'insomnia/src/common/database';
+import type { GitCredentials } from 'insomnia/src/sync/git/git-vcs';
+
 import type { BaseModel } from './index';
 
 export type OauthProviderName = 'gitlab' | 'github' | 'custom';

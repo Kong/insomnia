@@ -1,9 +1,9 @@
-import * as models from '@db/models';
-import type { GrpcRequest } from '@db/models/grpc-request';
-import type { Request } from '@db/models/request';
-import type { RequestGroup } from '@db/models/request-group';
-import type { WebSocketRequest } from '@db/models/websocket-request';
-import type { Workspace } from '@db/models/workspace';
+import * as models from 'insomnia-database/models';
+import type { GrpcRequest } from 'insomnia-database/models/grpc-request';
+import type { Request } from 'insomnia-database/models/request';
+import type { RequestGroup } from 'insomnia-database/models/request-group';
+import type { WebSocketRequest } from 'insomnia-database/models/websocket-request';
+import type { Workspace } from 'insomnia-database/models/workspace';
 import electron from 'electron';
 import fs from 'fs';
 import path from 'path';

@@ -1,11 +1,11 @@
-import * as models from '@db/models';
-import { isWorkspace, type Workspace } from '@db/models/workspace';
-import type { WorkspaceMeta } from '@db/models/workspace-meta';
+import * as models from 'insomnia-database/models';
+import { isWorkspace, type Workspace } from 'insomnia-database/models/workspace';
+import type { WorkspaceMeta } from 'insomnia-database/models/workspace-meta';
 import type { PromiseFsClient } from 'isomorphic-git';
 import path from 'path';
 import YAML from 'yaml';
 
-import { database as db } from '../../common/database';
+import { database as db } from 'insomnia/src/common/database';
 import type { InsomniaFile } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, importInsomniaV5Data } from '../../common/insomnia-v5';
 import Stat from './stat';

@@ -1,4 +1,4 @@
-import type { Cookie, CookieJar } from '@db/models/cookie-jar';
+import type { Cookie, CookieJar } from 'insomnia-database/models/cookie-jar';
 import clone from 'clone';
 import { isValid } from 'date-fns';
 import React, { useState } from 'react';

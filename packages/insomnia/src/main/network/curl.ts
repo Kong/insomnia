@@ -1,11 +1,11 @@
 import type { Readable } from 'node:stream';
 
-import * as models from '@db/models';
-import type { CookieJar } from '@db/models/cookie-jar';
-import type { Environment } from '@db/models/environment';
-import type { RequestAuthentication, RequestHeader } from '@db/models/request';
-import type { Response } from '@db/models/response';
-import { readCurlResponse } from '@db/models/response';
+import * as models from 'insomnia-database/models';
+import type { CookieJar } from 'insomnia-database/models/cookie-jar';
+import type { Environment } from 'insomnia-database/models/environment';
+import type { RequestAuthentication, RequestHeader } from 'insomnia-database/models/request';
+import type { Response } from 'insomnia-database/models/response';
+import { readCurlResponse } from 'insomnia-database/models/response';
 import { Curl, CurlFeature, CurlInfoDebug, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import electron, { BrowserWindow } from 'electron';
 import fs from 'fs';

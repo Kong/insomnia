@@ -1,7 +1,7 @@
 import crypto from 'crypto';
+import { database as db } from 'insomnia/src/common/database';
 import { v4 as uuidv4 } from 'uuid';
 
-import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 export const name = 'Cookie Jar';
 

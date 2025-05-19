@@ -1,16 +1,16 @@
-import * as models from '@db/models';
-import type { ApiSpec } from '@db/models/api-spec';
-import type { CookieJar } from '@db/models/cookie-jar';
-import { type Environment, maskVaultEnvironmentData } from '@db/models/environment';
-import type { GrpcRequest } from '@db/models/grpc-request';
-import type { MockRoute } from '@db/models/mock-route';
-import type { MockServer } from '@db/models/mock-server';
-import type { Request } from '@db/models/request';
-import type { RequestGroup } from '@db/models/request-group';
-import type { UnitTest } from '@db/models/unit-test';
-import type { UnitTestSuite } from '@db/models/unit-test-suite';
-import type { WebSocketRequest } from '@db/models/websocket-request';
-import type { Workspace, WorkspaceScope } from '@db/models/workspace';
+import * as models from 'insomnia-database/models';
+import type { ApiSpec } from 'insomnia-database/models/api-spec';
+import type { CookieJar } from 'insomnia-database/models/cookie-jar';
+import { type Environment, maskVaultEnvironmentData } from 'insomnia-database/models/environment';
+import type { GrpcRequest } from 'insomnia-database/models/grpc-request';
+import type { MockRoute } from 'insomnia-database/models/mock-route';
+import type { MockServer } from 'insomnia-database/models/mock-server';
+import type { Request } from 'insomnia-database/models/request';
+import type { RequestGroup } from 'insomnia-database/models/request-group';
+import type { UnitTest } from 'insomnia-database/models/unit-test';
+import type { UnitTestSuite } from 'insomnia-database/models/unit-test-suite';
+import type { WebSocketRequest } from 'insomnia-database/models/websocket-request';
+import type { Workspace, WorkspaceScope } from 'insomnia-database/models/workspace';
 import { parse, stringify } from 'yaml';
 
 import {

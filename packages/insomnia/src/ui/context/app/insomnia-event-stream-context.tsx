@@ -1,4 +1,4 @@
-import type { Organization } from '@db/models/organization';
+import type { Organization } from 'insomnia-database/models/organization';
 import React, { createContext, type FC, type PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
 

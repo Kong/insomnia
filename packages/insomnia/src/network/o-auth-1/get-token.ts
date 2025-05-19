@@ -2,7 +2,7 @@
  * Get an OAuth1Token object and also handle storing/saving/refreshing
  * @returns {Promise.<void>}
  */
-import type { RequestAuthentication, RequestBody } from '@db/models/request';
+import type { RequestAuthentication, RequestBody } from 'insomnia-database/models/request';
 import crypto from 'crypto';
 import OAuth1 from 'oauth-1.0a';
 

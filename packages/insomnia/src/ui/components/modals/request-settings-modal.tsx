@@ -1,8 +1,8 @@
-import * as models from '@db/models';
-import { type GrpcRequest, isGrpcRequest } from '@db/models/grpc-request';
-import { isScratchpadOrganizationId } from '@db/models/organization';
-import { isRequest, type Request } from '@db/models/request';
-import { isWebSocketRequest, type WebSocketRequest } from '@db/models/websocket-request';
+import * as models from 'insomnia-database/models';
+import { type GrpcRequest, isGrpcRequest } from 'insomnia-database/models/grpc-request';
+import { isScratchpadOrganizationId } from 'insomnia-database/models/organization';
+import { isRequest, type Request } from 'insomnia-database/models/request';
+import { isWebSocketRequest, type WebSocketRequest } from 'insomnia-database/models/websocket-request';
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useFetcher, useNavigate, useParams } from 'react-router';

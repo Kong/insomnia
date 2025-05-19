@@ -1,5 +1,5 @@
-import * as models from '@db/models';
-import type { WebSocketRequest } from '@db/models/websocket-request';
+import * as models from 'insomnia-database/models';
+import type { WebSocketRequest } from 'insomnia-database/models/websocket-request';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
 import { useFetcher, useParams } from 'react-router';
 

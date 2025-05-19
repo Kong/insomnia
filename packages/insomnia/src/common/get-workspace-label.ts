@@ -1,4 +1,4 @@
-import { isDesign, isEnvironment, isMockServer, type Workspace } from '@db/models/workspace';
+import { isDesign, isEnvironment, isMockServer, type Workspace } from 'insomnia-database/models/workspace';
 
 const strings = {
   collection: {

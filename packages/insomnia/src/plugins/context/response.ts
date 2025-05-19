@@ -1,5 +1,5 @@
-import * as models from '@db/models/index';
-import type { ResponseHeader } from '@db/models/response';
+import * as models from 'insomnia-database/models/index';
+import type { ResponseHeader } from 'insomnia-database/models/response';
 import fs from 'fs';
 
 interface MaybeResponse {

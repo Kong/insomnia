@@ -1,4 +1,5 @@
-import { database } from '../common/database';
+import { database } from 'insomnia/src/common/database';
+
 import type { BaseModel } from '.';
 import type { RequestAuthentication, RequestHeader, RequestParameter, RequestPathParameter } from './request';
 

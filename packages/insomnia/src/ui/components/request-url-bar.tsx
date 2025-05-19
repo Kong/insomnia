@@ -1,14 +1,14 @@
-import * as models from '@db/models';
-import { vaultEnvironmentRuntimePath } from '@db/models/environment';
-import type { Request } from '@db/models/request';
-import { isEventStreamRequest, isGraphqlSubscriptionRequest } from '@db/models/request';
-import { isRequestGroup, type RequestGroup } from '@db/models/request-group';
+import * as models from 'insomnia-database/models';
+import { vaultEnvironmentRuntimePath } from 'insomnia-database/models/environment';
+import type { Request } from 'insomnia-database/models/request';
+import { isEventStreamRequest, isGraphqlSubscriptionRequest } from 'insomnia-database/models/request';
+import { isRequestGroup, type RequestGroup } from 'insomnia-database/models/request-group';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData, useSearchParams } from 'react-router';
 import { useInterval } from 'react-use';
 
-import { database as db } from '../../common/database';
+import { database as db } from 'insomnia/src/common/database';
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../../network/network';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';

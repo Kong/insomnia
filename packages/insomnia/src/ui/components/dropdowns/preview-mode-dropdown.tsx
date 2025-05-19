@@ -1,6 +1,6 @@
-import * as models from '@db/models';
-import { isRequest } from '@db/models/request';
-import { isResponse } from '@db/models/response';
+import * as models from 'insomnia-database/models';
+import { isRequest } from 'insomnia-database/models/request';
+import { isResponse } from 'insomnia-database/models/response';
 import fs from 'fs';
 import React, { type FC, useCallback } from 'react';
 import { Button } from 'react-aria-components';

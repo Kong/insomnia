@@ -6,8 +6,8 @@ import {
 } from '@bufbuild/protobuf';
 import { Code, ConnectError, createPromiseClient } from '@connectrpc/connect';
 import { createConnectTransport } from '@connectrpc/connect-node';
-import * as models from '@db/models';
-import type { GrpcRequest, GrpcRequestBody, GrpcRequestHeader } from '@db/models/grpc-request';
+import * as models from 'insomnia-database/models';
+import type { GrpcRequest, GrpcRequestBody, GrpcRequestHeader } from 'insomnia-database/models/grpc-request';
 import {
   type Call,
   ChannelCredentials,

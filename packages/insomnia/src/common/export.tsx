@@ -1,11 +1,11 @@
-import { type Environment } from '@db/models/environment';
-import * as requestOperations from '@db/models/helpers/request-operations';
-import { type BaseModel, environment } from '@db/models/index';
-import * as models from '@db/models/index';
-import { isRequest } from '@db/models/request';
-import { isWorkspace, type Workspace } from '@db/models/workspace';
 import { format } from 'date-fns';
 import { mkdir, writeFile } from 'fs/promises';
+import { type Environment } from 'insomnia-database/models/environment';
+import * as requestOperations from 'insomnia-database/models/helpers/request-operations';
+import { type BaseModel, environment } from 'insomnia-database/models/index';
+import * as models from 'insomnia-database/models/index';
+import { isRequest } from 'insomnia-database/models/request';
+import { isWorkspace, type Workspace } from 'insomnia-database/models/workspace';
 import path from 'path';
 import React from 'react';
 
