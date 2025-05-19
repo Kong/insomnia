@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'crypto';
 import { shell } from 'electron';
 import { app, net } from 'electron/main';
 import { fromUrl } from 'hosted-git-info';
-import { Errors, type PromiseFsClient } from 'isomorphic-git';
+import { Errors, type HeadStatus, type PromiseFsClient, type StageStatus, type WorkdirStatus } from 'isomorphic-git';
 import path from 'path';
 import { v4 } from 'uuid';
 import YAML, { parse } from 'yaml';
@@ -433,17 +433,18 @@ async function containsLegacyInsomniaDir({ fsClient }: { fsClient: PromiseFsClie
  * and each file is named with the database ID as its name, with the `.yaml` extension.
  */
 async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: PromiseFsClient; projectId: string }) {
+  const changes: { path: string; status: [HeadStatus, WorkdirStatus, StageStatus] }[] = [];
   try {
-    const legacyInsomniaFolderStat = await fsClient.promises.lstat('.insomnia');
+    const legacyInsomniaFolderStat = await fsClient.promises.lstat(GIT_INSOMNIA_DIR_NAME);
 
     if (!legacyInsomniaFolderStat.isDirectory()) {
       return;
     }
 
-    const legacyInsomniaModelFolders = await fsClient.promises.readdir('.insomnia');
+    const legacyInsomniaModelFolders = await fsClient.promises.readdir(GIT_INSOMNIA_DIR_NAME);
 
     for (const folder of legacyInsomniaModelFolders) {
-      const folderPath = path.join('.insomnia', folder);
+      const folderPath = path.join(GIT_INSOMNIA_DIR_NAME, folder);
       const folderStat = await fsClient.promises.lstat(folderPath);
 
       if (!folderStat.isDirectory()) {
@@ -461,7 +462,8 @@ async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: P
         }
 
         const fileContents = await fsClient.promises.readFile(filePath, 'utf8');
-        const id = file.split('.')[1];
+
+        const id = file.split('.')[0];
         const type = folder;
 
         // Skip the file if there is a conflict marker
@@ -488,15 +490,33 @@ async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: P
           // This is because the parentId (or a project) is not synced into git, so it will be cleared whenever git writes the workspace into the db, thereby removing it from the project on the client
           // In order to reproduce this bug, comment out the following line, then clone a repository into a local project, then open the workspace, you'll notice it will have moved into the default project
           doc.parentId = projectId;
+
+          const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(doc._id);
+
+          const gitFilePath = `insomnia.${doc._id}.yaml`;
+          await models.workspaceMeta.update(workspaceMeta, { gitFilePath });
+
+          changes.push({
+            path: gitFilePath,
+            status: [0, 1, 0],
+          });
         }
 
         await database.upsert(doc, true);
+        changes.push({
+          path: filePath,
+          // It existed and was removed from the git repository
+          status: [1, 0, 1],
+        });
       }
     }
 
     // Remove the legacy folder
-    await fsClient.promises.rmdir('.insomnia');
-    return {};
+    await fsClient.promises.rmdir(GIT_INSOMNIA_DIR_NAME, { recursive: true });
+
+    return {
+      changes,
+    };
   } catch (e) {
     return {
       errors: [`Failed to import legacy Insomnia folder: ${e.message}`],
@@ -1214,9 +1234,23 @@ export const migrateLegacyInsomniaFolderToFile = async ({ projectId }: { project
 
   const fsClient = await getGitFSClient({ projectId, gitRepositoryId: gitRepository._id });
 
-  await importLegacyInsomniaFolder({ fsClient, projectId });
+  const result = await importLegacyInsomniaFolder({ fsClient, projectId });
 
-  // @TODO - Stage the changes
+  if (result && 'errors' in result && result.errors) {
+    console.error('Failed to import legacy Insomnia folder', result.errors);
+    return;
+  }
+
+  if (!result || 'errors' in result) {
+    console.error('Failed to import legacy Insomnia folder');
+    return;
+  }
+
+  const { changes } = result;
+
+  await GitVCS.stageChanges(changes);
+
+  await GitVCS.setAuthor();
 
   await commitToGitRepoAction({
     projectId,
