@@ -51,20 +51,7 @@ export default defineConfig(({ mode }) => {
       ],
       force: true,
     },
-    plugins: [
-      // Allows us to import modules that will be resolved by Node's require() function.
-      // e.g. import fs from 'fs'; will get transformed to const fs = require('fs'); so that it works in the renderer process.
-      // This is necessary because we use nodeIntegration: true in the renderer process and allow importing modules from node.
-      electronNodeRequire({
-        modules: [
-          'electron',
-          ...Object.keys(pkg.dependencies),
-          ...builtinModules.filter(m => m !== 'buffer'),
-          ...builtinModules.map(m => `node:${m}`),
-        ],
-      }),
-      react(),
-    ],
+    plugins: [react()],
     worker: {
       format: 'es',
       plugins: () => [

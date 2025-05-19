@@ -1,11 +1,8 @@
 // This file could be imported by both main and renderer processes, so it should be written in a way that works in both contexts.
 
 /* eslint-disable prefer-rest-params -- don't want to change ...arguments usage for these sensitive functions without more testing */
-import electron from 'electron';
-import { v4 as uuidv4 } from 'uuid';
 
 import type { BaseModel } from '../models/index';
-import * as models from '../models/index';
 
 export type Query<T extends BaseModel = BaseModel> = {
   [key in keyof T]?: string | SpecificQuery | null | undefined;
@@ -133,7 +130,7 @@ export const database =
 
         /** init in renderer process */
         initClient: async () => {
-          electron.ipcRenderer.on('db.changes', async (_e, changes) => {
+          window.main.on('db.changes', async (_e, changes) => {
             for (const fn of changeListeners) {
               await fn(changes);
             }
@@ -251,15 +248,5 @@ type Patch<T> = Partial<T>;
 // ~~~~~~~ //
 // If you call database.x methods within the render process, you can obtain results by this helper function. In renderer process, db._empty is true.
 async function _send<T>(fnName: string, ...args: any[]) {
-  return new Promise<T>((resolve, reject) => {
-    const replyChannel = `db.fn.reply:${uuidv4()}`;
-    electron.ipcRenderer.send('db.fn', fnName, replyChannel, ...args);
-    electron.ipcRenderer.once(replyChannel, (_e, err, result: T) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(result);
-      }
-    });
-  });
+  return electron.ipcRenderer.invoke('db.fn', fnName, ...args);
 }

@@ -292,16 +292,16 @@ export const database = {
     }
 
     delete db._empty;
-    electron.ipcMain.on('db.fn', async (e, fnName, replyChannel, ...args) => {
+    electron.ipcMain.handle('db.fn', async (_, fnName, ...args) => {
       try {
         // @ts-expect-error -- mapping unsoundness
         const result = await database[fnName](...args);
-        e.sender.send(replyChannel, null, result);
+        return result;
       } catch (err) {
-        e.sender.send(replyChannel, {
+        return {
           message: err.message,
           stack: err.stack,
-        });
+        };
       }
     });
 
