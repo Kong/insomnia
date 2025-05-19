@@ -1,5 +1,3 @@
-import { format as urlFormat, parse as urlParse } from 'url';
-
 import { setDefaultProtocol } from './protocol';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
@@ -197,7 +195,7 @@ export const deconstructQueryStringToParams = <T extends IQueryStringOptions>(
  * @param encode enable encoding
  * @param options enable extra options like strict null handling
  */
-export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQueryStringOptions) => {
+export const smartEncodeUrl = async (url: string, encode?: boolean, options?: IQueryStringOptions) => {
   // Default autoEncode = true if not passed
   encode = encode === undefined ? true : encode;
   // Default do not strcit handle null value
@@ -208,7 +206,7 @@ export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQuerySt
     return urlWithProto;
   }
   // Parse the URL into components
-  const parsedUrl = urlParse(urlWithProto);
+  const parsedUrl = await window.main.urlParse(urlWithProto);
 
   // ~~~~~~~~~~~ //
   // 1. Pathname //
@@ -237,7 +235,7 @@ export const smartEncodeUrl = (url: string, encode?: boolean, options?: IQuerySt
     parsedUrl.search = `?${parsedUrl.query}`;
   }
 
-  return urlFormat(parsedUrl);
+  return await window.main.urlFormat(parsedUrl);
 };
 
 /**

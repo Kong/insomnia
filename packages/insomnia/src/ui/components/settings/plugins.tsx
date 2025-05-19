@@ -4,9 +4,7 @@ import { Button, FileTrigger } from 'react-aria-components';
 
 import { ACCEPTED_NODE_CA_FILE_EXTS, NPM_PACKAGE_BASE, PLUGIN_HUB_BASE } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
-import { createPlugin } from '../../../plugins/create';
 import type { Plugin } from '../../../plugins/index';
-import { getPlugins } from '../../../plugins/index';
 import { reload } from '../../../templating/index';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { useRootLoaderData } from '../../routes/root';
@@ -52,7 +50,7 @@ export const Plugins: FC = () => {
   async function refreshPlugins() {
     setState(state => ({ ...state, isRefreshingPlugins: true }));
     // Get and reload plugins
-    const plugins = await getPlugins(true);
+    const plugins = await window.main.getPlugins(true);
     reload();
 
     setState(state => ({ ...state, plugins, isRefreshingPlugins: false }));
@@ -240,7 +238,7 @@ export const Plugins: FC = () => {
                 // Remove insomnia-plugin- prefix if they accidentally typed it
                 name = name.replace(/^insomnia-plugin-/, '');
                 try {
-                  await createPlugin(
+                  await window.main.createPlugin(
                     `insomnia-plugin-${name}`,
                     '0.0.1',
                     [

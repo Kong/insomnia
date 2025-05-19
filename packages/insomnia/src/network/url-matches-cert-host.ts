@@ -1,13 +1,11 @@
-import { parse as urlParse, URL } from 'url';
-
 import { escapeRegex } from '../common/misc';
 import { setDefaultProtocol } from '../utils/url/protocol';
 
 const DEFAULT_PORT = 443;
 
-export function urlMatchesCertHost(certificateHost: string, requestUrl: string, needCheckPort = true) {
+export async function urlMatchesCertHost(certificateHost: string, requestUrl: string, needCheckPort = true) {
   const cHostWithProtocol = setDefaultProtocol(certificateHost, 'https:');
-  const { hostname, port } = urlParse(requestUrl);
+  const { hostname, port } = await window.main.urlParse(requestUrl);
   let certificateHostWithProtocol = new URL('https://example.com');
   try {
     certificateHostWithProtocol = new URL(cHostWithProtocol);

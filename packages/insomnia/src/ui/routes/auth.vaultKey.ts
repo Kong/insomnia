@@ -1,5 +1,4 @@
 import * as srp from '@getinsomnia/srp-js';
-import { ipcRenderer } from 'electron';
 import { type ActionFunction } from 'react-router';
 
 import { userSession as sessionModel } from '../../models';
@@ -193,7 +192,7 @@ export const clearVaultKeyAction: ActionFunction = async ({ request }) => {
       key: 'Vault key reset',
       message: 'Your vault key has been reset, all you local secrets have been deleted.',
     };
-    ipcRenderer.emit('show-notification', null, notification);
+    window.main.showNotication('show-notification', notification);
     return true;
   }
   return false;

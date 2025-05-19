@@ -3,6 +3,8 @@ import type { MarkerRange } from 'codemirror';
 import { app, BrowserWindow, type IpcRendererEvent, type MenuItemConstructorOptions, shell } from 'electron';
 import fs from 'fs';
 import iconv from 'iconv-lite';
+import type { UrlObject, UrlWithParsedQuery } from 'url';
+import { format as urlFormat, parse as urlParse } from 'url';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
 import * as models from '../../models';
@@ -23,6 +25,7 @@ import {
   updateLatestStepName,
 } from '../network/request-timing';
 import type { WebSocketBridgeAPI } from '../network/websocket';
+import { getPlugins } from '../plugins';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import extractPostmanDataDumpHandler from './extractPostmanDataDump';
 import type { gRPCBridgeAPI } from './grpc';
@@ -41,6 +44,10 @@ export interface RendererToMainBridgeAPI {
   installPlugin: typeof installPlugin;
   writeFile: (options: { path: string; content: string }) => Promise<string>;
   readFile: (options: { path: string; encoding?: string }) => Promise<{ content: string; encoding: string }>;
+  urlParse: (url: string) => Promise<UrlWithParsedQuery>;
+  urlFormat: (url: string) => Promise<string>;
+  showNotication: (options: { title: string; body: string }) => void;
+  getPlugins: () => Promise<void>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
   on: (channel: RendererOnChannels, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
@@ -141,7 +148,15 @@ export function registerMainHandlers() {
       encoding: defaultEncoding,
     };
   });
-
+  ipcMainHandle('urlParse', async (_, url: string) => {
+    return urlParse(url);
+  });
+  ipcMainHandle('urlFormat', async (_, url: string | UrlObject) => {
+    return urlFormat(url);
+  });
+  ipcMainHandle('get-plugins', async () => {
+    return getPlugins();
+  });
   ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => {
     return curlRequest(options);
   });

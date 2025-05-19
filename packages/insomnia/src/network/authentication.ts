@@ -1,4 +1,4 @@
-import * as Hawk from 'hawk';
+// import * as Hawk from 'hawk';
 
 import {
   AUTH_API_KEY,

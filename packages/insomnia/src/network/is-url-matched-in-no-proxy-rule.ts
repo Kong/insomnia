@@ -1,5 +1,3 @@
-import { parse as urlParse } from 'url';
-
 function formatHostname(rawHostname: string) {
   // canonicalize the hostname, so that 'oogle.com' won't match 'google.com'
   const hostname = rawHostname.replace(/^\.*/, '.').toLowerCase();
@@ -22,11 +20,11 @@ function matchesHostname(hostname: string, noProxyZoneHostname: string) {
   return isMatchedAt > -1 && isMatchedAt === hostname.length - wildcardNeedle.length;
 }
 
-export function isUrlMatchedInNoProxyRule(url: string | undefined, noProxyRule: any) {
+export async function isUrlMatchedInNoProxyRule(url: string | undefined, noProxyRule: any) {
   if (!url || !noProxyRule || typeof noProxyRule !== 'string') {
     return false;
   }
-  const uri = urlParse(url);
+  const uri = await window.main.urlParse(url);
   if (!uri.hostname && !uri.port && !uri.protocol) {
     return false;
   }

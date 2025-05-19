@@ -5,6 +5,7 @@ import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
 import type { CurlBridgeAPI } from './main/network/curl';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
+import { options } from './ui/components/editors/auth/api-key-auth';
 import { invariant } from './utils/invariant';
 
 const ports = new Map<'hiddenWindowPort', MessagePort>();
@@ -110,6 +111,10 @@ const main: Window['main'] = {
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
   writeFile: options => ipcRenderer.invoke('writeFile', options),
   readFile: options => ipcRenderer.invoke('readFile', options),
+  urlParse: options => ipcRenderer.invoke('urlParse', options),
+  urlFormat: options => ipcRenderer.invoke('urlFormat', options),
+  showNotications: options => ipcRenderer.send('show-notifications', options),
+  getPlugins: options => ipcRenderer.invoke('getPlugins', options),
   on: (channel, listener) => {
     ipcRenderer.on(channel, listener);
     return () => ipcRenderer.removeListener(channel, listener);

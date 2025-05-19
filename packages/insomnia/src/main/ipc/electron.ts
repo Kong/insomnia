@@ -74,7 +74,9 @@ export type HandleChannels =
   | 'git.getGitHubRepository'
   | 'git.initSignInToGitLab'
   | 'git.completeSignInToGitLab'
-  | 'git.signOutOfGitLab';
+  | 'git.signOutOfGitLab'
+  | 'urlParse'
+  | 'urlFormat';
 
 export const ipcMainHandle = (
   channel: HandleChannels,
