@@ -702,19 +702,6 @@ export const sendActionImplementation = async (options: {
     iterationCount,
     runtime,
   });
-  if ('error' in postMutatedContext) {
-    throw {
-      response: await responseTransform(
-        response,
-        requestData.activeEnvironmentId,
-        renderedRequest,
-        renderedResult.context,
-      ),
-      maxHistoryResponses: requestData.settings.maxHistoryResponses,
-      requestMeta,
-      error: postMutatedContext.error,
-    };
-  }
 
   window.main.completeExecutionStep({ requestId });
 
@@ -832,7 +819,6 @@ export const deleteAllResponsesAction: ActionFunction = async ({ params }) => {
   }
   return null;
 };
-
 export const deleteResponseAction: ActionFunction = async ({ request, params }) => {
   const { workspaceId, requestId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');

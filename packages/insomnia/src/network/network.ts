@@ -426,7 +426,13 @@ export async function savePatchesMadeByScript(patches: {
   });
 }
 
-export const tryToExecuteScript = async (context: RequestAndContextAndOptionalResponse) => {
+type TryToExecuteScriptResult =
+  | (RequestAndContextAndOptionalResponse & { requestTestResults: RequestTestResult[] | undefined })
+  | { error: string };
+
+export const tryToExecuteScript = async (
+  context: RequestAndContextAndOptionalResponse,
+): Promise<TryToExecuteScriptResult> => {
   const {
     script,
     request,
@@ -592,28 +598,53 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       execution: output.execution,
       transientVariables,
       parentFolders: output.parentFolders,
+      timelinePath,
+      ancestors,
+      responseId,
+      script,
     };
   } catch (err) {
+    const errMessage = `Detected error in Pre-request or After-response Script:\n${err.message || err}`
     await fs.promises.appendFile(
       timelinePath,
-      serializeNDJSON([{ value: err.message, name: 'Text', timestamp: Date.now() }]),
+      serializeNDJSON([
+        {
+          value: errMessage,
+          name: 'Text',
+          timestamp: Date.now(),
+        },
+      ]),
     );
 
-    const requestId = request._id;
-    // stack trace is ignored as it is always from preload
-    const errMessage = err.message ? err.message : err;
-    const responsePatch = {
-      _id: responseId,
-      parentId: requestId,
-      environemntId: environment._id,
-      globalEnvironmentId: globals?._id,
-      timelinePath,
-      statusMessage: 'Error',
-      error: errMessage,
+    // errors are handled differently in pre-request and after-response scripts
+    if (response === undefined) {
+      // in pre-request script
+      // all errors are regarded as fatal error
+      const requestId = request._id;
+      // stack trace is ignored as it is always from preload
+
+      const responsePatch = {
+        _id: responseId,
+        parentId: requestId,
+        environemntId: environment._id,
+        globalEnvironmentId: globals?._id,
+        timelinePath,
+        statusMessage: 'Error',
+        error: errMessage,
+      };
+      const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
+      models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
+      return {
+        error: errMessage,
+      };
+    }
+
+    // in after-response script
+    // error will only be displayed in console, instead of preview INS-5470
+    return {
+      ...context,
+      requestTestResults: undefined,
     };
-    const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
-    models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
-    return { error: errMessage };
   }
 };
 
@@ -679,6 +710,7 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
     return {
       error: `Execute after-response script failed: ${postMutatedContext?.error}`,
       ...context,
+      requestTestResults: new Array<RequestTestResult>(),
     };
   }
 
