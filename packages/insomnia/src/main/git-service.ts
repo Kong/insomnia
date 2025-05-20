@@ -438,7 +438,7 @@ async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: P
     const legacyInsomniaFolderStat = await fsClient.promises.lstat(GIT_INSOMNIA_DIR_NAME);
 
     if (!legacyInsomniaFolderStat.isDirectory()) {
-      return;
+      return {};
     }
 
     const legacyInsomniaModelFolders = await fsClient.promises.readdir(GIT_INSOMNIA_DIR_NAME);
@@ -468,7 +468,9 @@ async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: P
 
         // Skip the file if there is a conflict marker
         if (fileContents.split('\n').includes('=======')) {
-          return;
+          return {
+            errors: [`File ${filePath} contains a merge conflict`],
+          };
         }
 
         const doc: models.BaseModel = YAML.parse(fileContents);
@@ -814,6 +816,11 @@ export const cloneGitRepoAction = async ({
 
       await GitVCS.setAuthor();
       await GitVCS.addRemote(uri);
+
+      const hasLegacyInsomniaDir = await containsLegacyInsomniaDir({ fsClient: inMemoryFsClient });
+      if (hasLegacyInsomniaDir) {
+        await migrateLegacyInsomniaFolderToFile({ projectId: project._id });
+      }
 
       await database.flushChanges(bufferId);
       trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
@@ -1236,26 +1243,19 @@ export const migrateLegacyInsomniaFolderToFile = async ({ projectId }: { project
 
   const result = await importLegacyInsomniaFolder({ fsClient, projectId });
 
-  if (result && 'errors' in result && result.errors) {
+  if (result.errors) {
     console.error('Failed to import legacy Insomnia folder', result.errors);
     return;
   }
 
-  if (!result || 'errors' in result) {
-    console.error('Failed to import legacy Insomnia folder');
-    return;
+  if (result.changes) {
+    await GitVCS.setAuthor();
+    await GitVCS.stageChanges(result.changes);
+    await commitToGitRepoAction({
+      projectId,
+      message: 'Migrated legacy .insomnia folder to file',
+    });
   }
-
-  const { changes } = result;
-
-  await GitVCS.stageChanges(changes);
-
-  await GitVCS.setAuthor();
-
-  await commitToGitRepoAction({
-    projectId,
-    message: 'Migrated legacy .insomnia folder to file',
-  });
 };
 
 export const commitAndPushToGitRepoAction = async ({
