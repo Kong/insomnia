@@ -1,7 +1,7 @@
 import { Readable } from 'node:stream';
 
-import { Curl, CurlAuth, CurlFeature, CurlSslOpt, type HeaderInfo } from '@getinsomnia/node-libcurl';
-import { app, net, protocol } from 'electron';
+import { Curl, CurlAuth, CurlFeature, CurlSslOpt, type HeaderInfo, CurlProxy } from '@getinsomnia/node-libcurl';
+import { app, net, protocol, session } from 'electron';
 import { parse as urlParse } from 'url';
 
 import { getApiBaseURL } from '../common/constants';
@@ -48,14 +48,17 @@ export async function registerInsomniaProtocols() {
 
   if (!protocol.isProtocolHandled(insomniaStreamScheme)) {
     protocol.handle(insomniaStreamScheme, async originalRequest => {
+      const apiURL = getApiBaseURL();
+      const url = new URL(`${apiURL}/${originalRequest.url.replace(`${insomniaStreamScheme}://`, '')}`);
+      const urlStr = url.toString();
       const settings = await getSettings();
+      // systemProxy follows the PAC return value format.
+      // https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Proxy_servers_and_tunneling/Proxy_Auto-Configuration_PAC_file#return_value_format
+      let systemProxyStr = await session.defaultSession.resolveProxy(urlStr);
+
       // here we use libcurl to forward the SSE request because the SSE request sent by net.fetch can not be disconnected correctly in some cases
       return await new Promise((resolve, reject) => {
         try {
-          const apiURL = getApiBaseURL();
-          const url = new URL(`${apiURL}/${originalRequest.url.replace(`${insomniaStreamScheme}://`, '')}`);
-          const urlStr = url.toString();
-
           const sessionId = new URLSearchParams(url.search).get('sessionId');
 
           const curl = new Curl();
@@ -64,7 +67,59 @@ export async function registerInsomniaProtocols() {
           curl.setOpt(Curl.option.SSL_OPTIONS, CurlSslOpt.NativeCa);
 
           if (!settings.proxyEnabled) {
-            curl.setOpt(Curl.option.PROXY, '');
+            // follow system proxy
+            if (!systemProxyStr) {
+              // if systemProxy is empty, it means no proxy is used
+              systemProxyStr = 'DIRECT';
+            }
+
+            const proxies = systemProxyStr
+              .trim()
+              .split(/\s*;\s*/g)
+              .filter(Boolean);
+
+            // only the first proxy specified will be used
+            const firstProxy = proxies[0];
+            const parts = firstProxy.split(/\s+/);
+
+            const proxyType = parts[0];
+
+            if (proxyType === 'DIRECT') {
+              curl.setOpt(Curl.option.PROXY, '');
+            } else {
+              let unknownProxy = false;
+              let curlOptProxyType = CurlProxy.Http;
+              switch (proxyType) {
+                case 'PROXY':
+                  curlOptProxyType = CurlProxy.Http;
+                  break;
+                case 'HTTP':
+                  curlOptProxyType = CurlProxy.Http;
+                  break;
+                case 'SOCKS':
+                  curlOptProxyType = CurlProxy.Socks4;
+                  break;
+                case 'HTTPS':
+                  curlOptProxyType = CurlProxy.Https;
+                  break;
+                case 'SOCKS4':
+                  curlOptProxyType = CurlProxy.Socks4;
+                  break;
+                case 'SOCKS5':
+                  curlOptProxyType = CurlProxy.Socks5;
+                  break;
+                default:
+                  // unknown proxy type
+                  unknownProxy = true;
+                  break;
+              }
+              if (unknownProxy) {
+                curl.setOpt(Curl.option.PROXY, '');
+              } else {
+                curl.setOpt(Curl.option.PROXYTYPE, curlOptProxyType);
+                curl.setOpt(Curl.option.PROXY, parts[1]);
+              }
+            }
           } else {
             const { protocol } = urlParse(urlStr);
             const { httpProxy, httpsProxy, noProxy } = settings;
