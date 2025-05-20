@@ -3,7 +3,8 @@ module.exports = {
   content: [
     './src/index.html',
     './src/**/*.{js,ts,jsx,tsx}',
-  ],
+    process.env.USE_SUBMODULE && '../../insomnia-submodule/lib/**/*.{js,ts,jsx,tsx}'
+  ].filter(Boolean),
   theme: {
     extend: {
       animation: {
