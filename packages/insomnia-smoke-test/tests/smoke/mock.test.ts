@@ -1,6 +1,8 @@
 import { test } from '../../playwright/test';
 
-test('can make a mock route: WARNING: THIS TEST DEPENDS ON mock.insomnia.moe to be up', async ({ page }) => {
+test('can make a mock route: WARNING: THIS TEST DEPENDS ON https://mock-stage.insomnia.run to be up', async ({
+  page,
+}) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   await page.getByLabel('New Mock Server').click();
