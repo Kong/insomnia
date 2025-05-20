@@ -1,5 +1,6 @@
 import eslint from '@eslint/js';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
+import importX from 'eslint-plugin-import-x'
 import playwright from 'eslint-plugin-playwright'
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
@@ -10,6 +11,21 @@ export default tseslint.config(
   eslint.configs.recommended,
   tseslint.configs.strict,
   tseslint.configs.stylistic,
+  {
+    files: ['packages/insomnia/src/ui/**/*.{ts,tsx}'],
+    ignores: [
+      'packages/insomnia/src/ui/routes/**/*.{ts,tsx}',
+      'packages/insomnia/src/ui/worker/**/*.{ts,tsx}'
+    ],
+    plugins: { 'import-x': importX },
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+    },
+    rules: {
+      'import-x/no-nodejs-modules': 'warn',
+    },
+  },
   {
     files: ['packages/insomnia-smoke-test/tests/**/*.ts'],
     plugins: { 'playwright': playwright },
