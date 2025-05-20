@@ -604,7 +604,7 @@ export const tryToExecuteScript = async (
       script,
     };
   } catch (err) {
-    const errMessage = `Detected error in Pre-request or After-response Script:\n${err.message || err}`
+    const errMessage = eventName === 'prerequest' ? `Error executing pre-request script:\n${err.message || err}` : `Error executing after-response script:\n${err.message || err}`
     await fs.promises.appendFile(
       timelinePath,
       serializeNDJSON([
@@ -621,7 +621,6 @@ export const tryToExecuteScript = async (
       // in pre-request script
       // all errors are regarded as fatal error
       const requestId = request._id;
-      // stack trace is ignored as it is always from preload
 
       const responsePatch = {
         _id: responseId,
