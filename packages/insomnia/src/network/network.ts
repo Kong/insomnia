@@ -617,7 +617,7 @@ export const tryToExecuteScript = async (
     );
 
     // errors are handled differently in pre-request and after-response scripts
-    if (response === undefined) {
+    if (eventName === 'prerequest') {
       // in pre-request script
       // all errors are regarded as fatal error
       const requestId = request._id;
