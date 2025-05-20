@@ -1,0 +1,25 @@
+type: environment.insomnia.rest/5.0
+name: Script Environment
+meta:
+  id: wrk_bf4544d564f64a38b9628ae682158e56
+  created: 1730427817756
+  modified: 1747723771584
+environments:
+  name: Base Script Env
+  meta:
+    id: env_0d92f8b4fa49360a4ef56655e915c6c769071121
+    created: 1730427817763
+    modified: 1747723747587
+    isPrivate: false
+  data:
+    __env_source: base
+  subEnvironments:
+    - name: Sub Script Env
+      meta:
+        id: env_8e44039256ed4ed68add7567c697d6b3
+        created: 1747723719954
+        modified: 1747723755787
+        isPrivate: false
+        sortKey: 1747723719954
+      data:
+        __env_source: sub

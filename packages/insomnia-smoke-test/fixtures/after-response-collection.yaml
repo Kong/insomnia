@@ -132,6 +132,35 @@ collection:
         send: true
         store: true
       rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: persist global environment
+    meta:
+      id: req_66f5764d5b8c4054ababea2cb6f1aa4d
+      created: 1636141014552
+      modified: 1636707449231
+      isPrivate: false
+      sortKey: -1636141014553
+    method: POST
+    body:
+      mimeType: application/json
+      text: "{}"
+    headers:
+      - name: Content-Type
+        value: application/json
+    scripts:
+      afterResponse: |-
+        console.log('globals ' + insomnia.globals.get('__env_source'));
+        console.log('baseGlobals ' + insomnia.baseGlobals.get('__env_source'));
+        insomnia.globals.set('__fromGlobals', 'selectedGlobal');
+        insomnia.baseGlobals.set('__fromBaseGlobals', 'selectedBaseGlobal');
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true  
 cookieJar:
   name: Default Jar
   meta:
