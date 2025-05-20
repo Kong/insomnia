@@ -30,14 +30,14 @@ export const UpgradeModal = forwardRef<UpgradeModalHandle, ModalProps>((_, ref) 
           title = 'Upgrade Plan',
           yesText = 'Upgrade',
           noText = 'Cancel',
-          color = 'surpirse',
+          color = 'surprise',
           isOwner,
         } = options;
         const planDetail = newPlan === 'team' ? 'Pro plan or above' : 'Enterprise plan';
         const upgradeDetail = isOwner
           ? 'please upgrade your plan.'
           : 'please contact the organization owner to upgrade the plan.';
-        const message = `${featureName} is only enbaled for ${planDetail}, ${upgradeDetail}`;
+        const message = `${featureName} is only enabled for ${planDetail}, ${upgradeDetail}`;
         const onDone = async (isYes: boolean) => {
           if (isYes) {
             window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
