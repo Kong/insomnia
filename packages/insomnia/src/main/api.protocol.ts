@@ -1,6 +1,6 @@
 import { Readable } from 'node:stream';
 
-import { Curl, CurlAuth, CurlFeature, CurlSslOpt, type HeaderInfo, CurlProxy } from '@getinsomnia/node-libcurl';
+import { Curl, CurlAuth, CurlFeature, CurlProxy, CurlSslOpt, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import { app, net, protocol, session } from 'electron';
 import { parse as urlParse } from 'url';
 
@@ -57,6 +57,7 @@ export async function registerInsomniaProtocols() {
       let systemProxyStr = await session.defaultSession.resolveProxy(urlStr);
 
       // here we use libcurl to forward the SSE request because the SSE request sent by net.fetch can not be disconnected correctly in some cases
+      // see https://github.com/electron/electron/issues/47097
       return await new Promise((resolve, reject) => {
         try {
           const sessionId = new URLSearchParams(url.search).get('sessionId');
