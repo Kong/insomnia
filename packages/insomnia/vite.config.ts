@@ -70,6 +70,7 @@ export default defineConfig(({ mode }) => {
     resolve: process.env.USE_SUBMODULE ? {
       alias: {
         'insomnia-enterprise/enterprise-feature-A/renderer': path.resolve(__dirname, '../../insomnia-submodule/lib/enterprise-feature-A/renderer.tsx'),
+        'insomnia-enterprise/css': path.resolve(__dirname, '../../insomnia-submodule/dist/style.css'),
         'insomnia': __dirname,
       },
     } : {
