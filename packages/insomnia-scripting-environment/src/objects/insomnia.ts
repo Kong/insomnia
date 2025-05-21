@@ -189,6 +189,7 @@ export async function initInsomniaObject(rawObj: RequestContext, log: (...args: 
   );
 
   const variables = new Variables({
+    baseGlobalVars: baseGlobals,
     globalVars: globals,
     environmentVars: environment,
     collectionVars: baseEnvironment,

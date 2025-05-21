@@ -57,6 +57,7 @@ function mergeFolderLevelVars(folderLevelVars: Environment[]) {
 export class Variables {
   // TODO: support vars for all levels
   private globalVars: Environment;
+  private baseGlobalVars: Environment;
   private collectionVars: Environment;
   private environmentVars: Environment;
   private iterationDataVars: Environment;
@@ -64,6 +65,7 @@ export class Variables {
   private localVars: Environment;
 
   constructor(args: {
+    baseGlobalVars: Environment;
     globalVars: Environment;
     collectionVars: Environment;
     environmentVars: Environment;
@@ -71,6 +73,7 @@ export class Variables {
     folderLevelVars: Environment[];
     localVars: Environment;
   }) {
+    this.baseGlobalVars = args.baseGlobalVars;
     this.globalVars = args.globalVars;
     this.collectionVars = args.collectionVars;
     this.environmentVars = args.environmentVars;
@@ -80,6 +83,7 @@ export class Variables {
   }
 
   has = (variableName: string) => {
+    const baseGlobalVarsHas = this.baseGlobalVars.has(variableName);
     const globalVarsHas = this.globalVars.has(variableName);
     const collectionVarsHas = this.collectionVars.has(variableName);
     const environmentVarsHas = this.environmentVars.has(variableName);
@@ -88,6 +92,7 @@ export class Variables {
     const localVarsHas = this.localVars.has(variableName);
 
     return (
+      baseGlobalVarsHas ||
       globalVarsHas ||
       collectionVarsHas ||
       environmentVarsHas ||
@@ -106,6 +111,7 @@ export class Variables {
       this.environmentVars,
       this.collectionVars,
       this.globalVars,
+      this.baseGlobalVars,
     ].forEach(vars => {
       const value = vars.get(variableName);
       if (!finalVal && value) {
@@ -132,6 +138,7 @@ export class Variables {
 
   toObject = () => {
     return [
+      this.baseGlobalVars,
       this.globalVars,
       this.collectionVars,
       this.environmentVars,
