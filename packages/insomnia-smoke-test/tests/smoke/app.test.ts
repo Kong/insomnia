@@ -30,10 +30,16 @@ test('can send requests', async ({ app, page }) => {
   await page.locator('.CodeMirror textarea').fill(curl);
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
+  await expect
+    .soft(page.getByTestId('request-pane').getByTestId('OneLineEditor').getByText(`https://mock.insomnia.rest`))
+    .toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
 
   await page.getByLabel('Request Collection').getByTestId('send JSON request').press('Enter');
+  await expect
+    .soft(page.getByTestId('request-pane').getByTestId('OneLineEditor').getByText(`http://127.0.0.1:4010/pets/1`))
+    .toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
   await expect.soft(responseBody).toContainText('"id": "1"');
@@ -45,6 +51,9 @@ test('can send requests', async ({ app, page }) => {
     .getByLabel('Request Collection')
     .getByTestId('connects to event stream and shows ping response')
     .press('Enter');
+  await expect
+    .soft(page.getByTestId('request-pane').getByTestId('OneLineEditor').getByText(`http://127.0.0.1:4010/events`))
+    .toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Connect' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
   await page.getByRole('tab', { name: 'Console' }).click();
@@ -55,6 +64,11 @@ test('can send requests', async ({ app, page }) => {
     .getByLabel('Request Collection')
     .getByTestId('sends dummy.csv request and shows rich response')
     .press('Enter');
+  await expect
+    .soft(
+      page.getByTestId('request-pane').getByTestId('OneLineEditor').getByText(`http://127.0.0.1:4010/file/dummy.csv`),
+    )
+    .toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
   await page.getByRole('button', { name: 'Preview' }).click();
@@ -65,6 +79,11 @@ test('can send requests', async ({ app, page }) => {
     .getByLabel('Request Collection')
     .getByTestId('sends dummy.xml request and shows raw response')
     .press('Enter');
+  await expect
+    .soft(
+      page.getByTestId('request-pane').getByTestId('OneLineEditor').getByText(`http://127.0.0.1:4010/file/dummy.xml`),
+    )
+    .toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
   await expect.soft(responseBody).toContainText('xml version="1.0"');
@@ -74,6 +93,11 @@ test('can send requests', async ({ app, page }) => {
     .getByLabel('Request Collection')
     .getByTestId('sends dummy.pdf request and shows rich response')
     .press('Enter');
+  await expect
+    .soft(
+      page.getByTestId('request-pane').getByTestId('OneLineEditor').getByText(`http://127.0.0.1:4010/file/dummy.pdf`),
+    )
+    .toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
   await page.getByRole('tab', { name: 'Console' }).click();
@@ -88,12 +112,20 @@ test('can send requests', async ({ app, page }) => {
     .getByLabel('Request Collection')
     .getByTestId('sends request with cookie and get cookie in response')
     .press('Enter');
+  await expect
+    .soft(page.getByTestId('request-pane').getByTestId('OneLineEditor').getByText(`http://127.0.0.1:4010/cookies`))
+    .toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
   await page.getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responseBody).toContainText('Set-Cookie: insomnia-test-cookie=value123');
 
   await page.getByLabel('Request Collection').getByTestId('delayed request').press('Enter');
+  await expect
+    .soft(
+      page.getByTestId('request-pane').getByTestId('OneLineEditor').getByText(`http://127.0.0.1:4010/delay/seconds/20`),
+    )
+    .toBeVisible();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
 
   await page.getByRole('button', { name: 'Cancel Request' }).click();
