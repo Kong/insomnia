@@ -7,7 +7,7 @@ const interceptor: any = (moduleName: string): NodeRequire => {
     return originalRequire(moduleName);
   }
   throw new Error(
-    `Cannot find module '${moduleName}', untrusted modules are not available in protected mode, this can be enabled in plugin settings`,
+    `Cannot find module '${moduleName}'. This version improves the security around plugins by limiting scope of access by default. This may break some plugins which rely on having the same kind of access Insomnia does. You can still grant elevated access to plugins, should your workflow absolutely require it, by navigating to Preferences > Plugins and checking the box enabling elevated access for plugins.`,
   );
 };
 async function performJob(input: {
