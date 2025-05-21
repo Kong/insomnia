@@ -409,8 +409,7 @@ async function containsLegacyInsomniaDir({ fsClient }: { fsClient: PromiseFsClie
       scope: workspaceScope,
       path: GIT_INSOMNIA_DIR_NAME,
     };
-  } catch (e) {
-    console.warn('Failed to read legacy Insomnia directory', e);
+  } catch {
     return;
   }
 }
