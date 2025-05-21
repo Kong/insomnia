@@ -442,74 +442,78 @@ async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: P
 
     const legacyInsomniaModelFolders = await fsClient.promises.readdir(GIT_INSOMNIA_DIR_NAME);
 
+    const legacyInsomniaFiles: { filePath: string; type: string }[] = [];
+
     for (const folder of legacyInsomniaModelFolders) {
       const folderPath = path.join(GIT_INSOMNIA_DIR_NAME, folder);
       const folderStat = await fsClient.promises.lstat(folderPath);
 
-      if (!folderStat.isDirectory()) {
-        continue;
+      if (folderStat.isDirectory()) {
+        const folderFiles = await fsClient.promises.readdir(folderPath);
+
+        for (const file of folderFiles) {
+          const filePath = path.join(folderPath, file);
+          const fileStat = await fsClient.promises.lstat(filePath);
+
+          if (fileStat.isFile()) legacyInsomniaFiles.push({ filePath, type: folder });
+        }
+      }
+    }
+
+    if (legacyInsomniaFiles.length === 0) {
+      return {};
+    }
+
+    for (const legacyInsomniaFile of legacyInsomniaFiles) {
+      const fileContents = await fsClient.promises.readFile(legacyInsomniaFile.filePath, 'utf8');
+
+      const id = legacyInsomniaFile.filePath.split('.')[0];
+      const type = legacyInsomniaFile.type;
+
+      // Skip the file if there is a conflict marker
+      if (fileContents.split('\n').includes('=======')) {
+        return {
+          errors: [`File ${legacyInsomniaFile.filePath} contains a merge conflict`],
+        };
       }
 
-      const folderFiles = await fsClient.promises.readdir(folderPath);
+      const doc: models.BaseModel = YAML.parse(fileContents);
 
-      for (const file of folderFiles) {
-        const filePath = path.join(folderPath, file);
-        const fileStat = await fsClient.promises.lstat(filePath);
+      if (id !== doc._id) {
+        throw new Error(`Doc _id does not match file path [${doc._id} != ${id || 'null'}]`);
+      }
 
-        if (!fileStat.isFile()) {
-          continue;
-        }
+      if (type !== doc.type) {
+        throw new Error(`Doc type does not match file path [${doc.type} != ${type || 'null'}]`);
+      }
 
-        const fileContents = await fsClient.promises.readFile(filePath, 'utf8');
+      if (isWorkspace(doc)) {
+        console.log('[git] setting workspace parent to be that of the active project', {
+          original: doc.parentId,
+          new: projectId,
+        });
+        // Whenever we write a workspace into nedb we should set the parentId to be that of the current project
+        // This is because the parentId (or a project) is not synced into git, so it will be cleared whenever git writes the workspace into the db, thereby removing it from the project on the client
+        // In order to reproduce this bug, comment out the following line, then clone a repository into a local project, then open the workspace, you'll notice it will have moved into the default project
+        doc.parentId = projectId;
 
-        const id = file.split('.')[0];
-        const type = folder;
+        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(doc._id);
 
-        // Skip the file if there is a conflict marker
-        if (fileContents.split('\n').includes('=======')) {
-          return {
-            errors: [`File ${filePath} contains a merge conflict`],
-          };
-        }
+        const gitFilePath = `insomnia.${doc._id}.yaml`;
+        await models.workspaceMeta.update(workspaceMeta, { gitFilePath });
 
-        const doc: models.BaseModel = YAML.parse(fileContents);
-
-        if (id !== doc._id) {
-          throw new Error(`Doc _id does not match file path [${doc._id} != ${id || 'null'}]`);
-        }
-
-        if (type !== doc.type) {
-          throw new Error(`Doc type does not match file path [${doc.type} != ${type || 'null'}]`);
-        }
-
-        if (isWorkspace(doc)) {
-          console.log('[git] setting workspace parent to be that of the active project', {
-            original: doc.parentId,
-            new: projectId,
-          });
-          // Whenever we write a workspace into nedb we should set the parentId to be that of the current project
-          // This is because the parentId (or a project) is not synced into git, so it will be cleared whenever git writes the workspace into the db, thereby removing it from the project on the client
-          // In order to reproduce this bug, comment out the following line, then clone a repository into a local project, then open the workspace, you'll notice it will have moved into the default project
-          doc.parentId = projectId;
-
-          const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(doc._id);
-
-          const gitFilePath = `insomnia.${doc._id}.yaml`;
-          await models.workspaceMeta.update(workspaceMeta, { gitFilePath });
-
-          changes.push({
-            path: gitFilePath,
-            status: [0, 1, 0],
-          });
-        }
-
-        await database.upsert(doc, true);
         changes.push({
-          path: filePath,
-          // It existed and was removed from the git repository
-          status: [1, 0, 1],
+          path: gitFilePath,
+          status: [0, 1, 0],
         });
       }
+
+      await database.upsert(doc, true);
+      changes.push({
+        path: legacyInsomniaFile.filePath,
+        // It existed and was removed from the git repository
+        status: [1, 0, 1],
+      });
     }
 
     // Remove the legacy folder
