@@ -4,12 +4,34 @@ import playwright from 'eslint-plugin-playwright'
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort';
+import eslintPluginUnicorn from 'eslint-plugin-unicorn';
+import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   eslint.configs.recommended,
   tseslint.configs.strict,
   tseslint.configs.stylistic,
+  {
+    languageOptions: {
+      globals: globals.builtin,
+    },
+    plugins: {
+      unicorn: eslintPluginUnicorn,
+    },
+    rules: {
+      'unicorn/prefer-array-flat': 'error',
+      'unicorn/prefer-array-flat-map': 'error',
+      'unicorn/prefer-array-index-of': 'error',
+      'unicorn/prefer-node-protocol': 'error',
+      'unicorn/no-for-loop': 'error',
+      'unicorn/no-new-buffer': 'error',
+      'unicorn/prefer-object-from-entries': 'error',
+      'unicorn/prefer-string-slice': 'error',
+      'unicorn/prefer-includes': 'error',
+      'unicorn/throw-new-error': 'error',
+    },
+  },
   {
     files: ['packages/insomnia-smoke-test/tests/**/*.ts'],
     plugins: { 'playwright': playwright },
