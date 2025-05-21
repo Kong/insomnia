@@ -1,5 +1,5 @@
-import fs from 'fs/promises';
-import path from 'path';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
 import type { BaseDriver } from './base';
 import { gracefulRename } from './graceful-rename';
@@ -117,7 +117,7 @@ export default class FileSystemDriver implements BaseDriver {
     const keys: string[] = [];
 
     for (const rawKey of rawKeys) {
-      keys.push(rawKey.substring(this._directory.length));
+      keys.push(rawKey.slice(this._directory.length));
     }
 
     return keys;

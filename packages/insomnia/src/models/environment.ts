@@ -1,4 +1,5 @@
-import * as crypto from 'crypto';
+import * as crypto from 'node:crypto';
+
 import orderedJSON from 'json-order';
 
 import * as crypt from '../account/crypt';

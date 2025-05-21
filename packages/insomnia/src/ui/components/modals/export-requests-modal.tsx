@@ -243,7 +243,7 @@ export const ExportRequestsModal = ({
     if (docIsRequest && node.selectedRequests === node.totalRequests) {
       return [node.doc._id];
     }
-    return node.children.map(child => getSelectedRequestIds(child)).reduce((acc, reqIds) => [...acc, ...reqIds], []);
+    return node.children.flatMap(child => getSelectedRequestIds(child));
   };
 
   const setItemSelected = (node: Node, isSelected: boolean, id?: string) => {

@@ -82,7 +82,7 @@ const cleanCycles = (obj: Error) => {
   return JSON.parse(
     JSON.stringify(obj, (_, value) => {
       if (typeof value === 'object' && value !== null) {
-        if (cache.indexOf(value) !== -1) {
+        if (cache.includes(value)) {
           // Instead of going in a circle, we'll print [object Object]
           return '' + value;
         }

@@ -1,9 +1,10 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import os from 'node:os';
+
 import { format } from 'date-fns';
-import fs from 'fs';
 import iconv from 'iconv-lite';
 import { JSONPath } from 'jsonpath-plus';
-import os from 'os';
 import { CookieJar } from 'tough-cookie';
 import * as uuid from 'uuid';
 
@@ -642,7 +643,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
         // Make sure we only send the request once per render so we don't have infinite recursion
         const requestChain = context.context.getExtraInfo()?.requestChain || [];
-        if (requestChain.some((id: string) => id === request._id)) {
+        if (requestChain.includes(request._id)) {
           console.log('[response tag] Preventing recursive render');
           shouldResend = false;
         }

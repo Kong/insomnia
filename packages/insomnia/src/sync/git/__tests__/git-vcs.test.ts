@@ -1,5 +1,6 @@
+import path from 'node:path';
+
 import * as git from 'isomorphic-git';
-import path from 'path';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR } from '../git-vcs';

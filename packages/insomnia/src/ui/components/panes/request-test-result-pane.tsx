@@ -1,4 +1,5 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
+
 import React, { type FC, useState } from 'react';
 import { Toolbar } from 'react-aria-components';
 
@@ -43,7 +44,7 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
         case 'skipped':
           return result.status === 'skipped';
         default:
-          throw Error(`unexpected target test type ${targetTests}`);
+          throw new Error(`unexpected target test type ${targetTests}`);
       }
     })
     .filter(result => {

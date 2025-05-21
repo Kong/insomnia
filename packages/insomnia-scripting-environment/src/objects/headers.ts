@@ -147,7 +147,7 @@ export class Header extends Property {
     const separatorPos = headerStr.indexOf(':');
 
     if (separatorPos <= 0) {
-      throw Error('Header.parseSingle: the header string seems invalid');
+      throw new Error('Header.parseSingle: the header string seems invalid');
     }
 
     const key = headerStr.slice(0, separatorPos);

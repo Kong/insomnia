@@ -1,6 +1,7 @@
-import fs from 'fs';
-import { tmpdir } from 'os';
-import path from 'path';
+import fs from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import * as models from '../../../models/index';

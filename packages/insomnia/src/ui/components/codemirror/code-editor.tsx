@@ -382,7 +382,7 @@ export const CodeEditor = memo(
           environmentAutocomplete: {
             getVariables: async () => (!handleGetRenderContext ? [] : (await handleGetRenderContext())?.keys || []),
             getTags: async () =>
-              !handleGetRenderContext ? [] : (await getTagDefinitions()).map(transformEnums).flat(),
+              !handleGetRenderContext ? [] : (await getTagDefinitions()).flatMap(transformEnums),
             getConstants: getAutocompleteConstants,
             getSnippets: getAutocompleteSnippets,
             hotKeyRegistry: settings.hotKeyRegistry,

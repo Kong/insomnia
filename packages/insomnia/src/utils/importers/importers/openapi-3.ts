@@ -1,7 +1,8 @@
+import crypto from 'node:crypto';
+import { parse as urlParse } from 'node:url';
+
 import SwaggerParser from '@apidevtools/swagger-parser';
-import crypto from 'crypto';
 import type { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
-import { parse as urlParse } from 'url';
 import YAML from 'yaml';
 
 import type { Authentication, Converter, ImportRequest } from '../entities';
@@ -187,7 +188,7 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
     method: string;
     tags?: string[];
   } & OpenAPIV3.SchemaObject)[] = Object.keys(document.paths)
-    .map(path => {
+    .flatMap(path => {
       const schemasPerMethod = document.paths[path];
 
       if (!schemasPerMethod) {
@@ -203,8 +204,7 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
         path,
         method,
       }));
-    })
-    .flat();
+    });
 
   const folders = document.tags?.map(importFolderItem(defaultParent)) || [];
   const folderLookup = folders.reduce(

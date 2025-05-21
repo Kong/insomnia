@@ -1,6 +1,7 @@
-import type { ExecException } from 'child_process';
-import { exec } from 'child_process';
-import path from 'path';
+import type { ExecException } from 'node:child_process';
+import { exec } from 'node:child_process';
+import path from 'node:path';
+
 import { beforeAll, describe, expect, it } from 'vitest';
 // Tests both bundle and packaged versions of the CLI with the same commands and expectations.
 // Intended to be coarse grained (only checks for success or failure) smoke test to ensure packaging worked as expected.

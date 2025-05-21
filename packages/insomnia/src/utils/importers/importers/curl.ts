@@ -1,5 +1,6 @@
+import { URL } from 'node:url';
+
 import { type ControlOperator, parse, type ParseEntry } from 'shell-quote';
-import { URL } from 'url';
 
 import { type Converter, type ImportRequest, type Parameter } from '../entities';
 

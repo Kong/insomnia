@@ -253,7 +253,7 @@ function rawOptionsToVariables(
     return [new VariableList(undefined, options)];
   }
 
-  throw Error('options is not valid: it must be VariableList<Variable> | Variable[] | object');
+  throw new Error('options is not valid: it must be VariableList<Variable> | Variable[] | object');
 }
 
 export class RequestAuth extends Property {
@@ -264,7 +264,7 @@ export class RequestAuth extends Property {
     super();
 
     if (!RequestAuth.isValidType(options.type)) {
-      throw Error(`invalid auth type ${options.type}`);
+      throw new Error(`invalid auth type ${options.type}`);
     }
 
     this.type = options.type;
@@ -329,13 +329,13 @@ export class RequestAuth extends Property {
       this.type = currentType;
       this.authOptions.set(currentType, authOpts[0]);
     } else {
-      throw Error('no valid RequestAuth options is found');
+      throw new Error('no valid RequestAuth options is found');
     }
   }
 
   use(type: AuthOptionTypes, options: VariableList<Variable> | Variable[] | AuthOptions) {
     if (!RequestAuth.isValidType(type)) {
-      throw Error(
+      throw new Error(
         `invalid type (${type}), it must be noauth | basic | bearer | jwt | digest | oauth1 | oauth2 | hawk | awsv4 | ntlm | apikey | edgegrid | asap.`,
       );
     }
@@ -345,7 +345,7 @@ export class RequestAuth extends Property {
       this.type = type;
       this.authOptions.set(type, authOpts[0]);
     } else {
-      throw Error('no valid RequestAuth options is found');
+      throw new Error('no valid RequestAuth options is found');
     }
   }
 }
@@ -421,7 +421,7 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
     case 'oauth1': {
       const signMethod = ((): OAuth1SignatureMethod => {
         const method = findValueInKvArray('signatureMethod', authObj.oauth1);
-        const unsupportedError = Error(
+        const unsupportedError = new Error(
           `auth transforming(fromPreRequestAuth): unsupported signatureMethod type for oauth1: ${method}`,
         );
         switch (method) {
@@ -440,7 +440,7 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
           case 'PLAINTEXT':
             return 'PLAINTEXT';
           default:
-            throw Error(`auth transforming(fromPreRequestAuth): unknown signatureMethod type for oauth1: ${method}`);
+            throw new Error(`auth transforming(fromPreRequestAuth): unknown signatureMethod type for oauth1: ${method}`);
         }
       })();
 
@@ -478,7 +478,7 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
           case 'refresh_token':
             return 'refresh_token';
           default:
-            throw Error(`auth transforming(fromPreRequestAuth): unknown auth grant type for oauth2: ${inputGrantType}`);
+            throw new Error(`auth transforming(fromPreRequestAuth): unknown auth grant type for oauth2: ${inputGrantType}`);
         }
       })();
 
@@ -488,7 +488,7 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
         if (['code', 'id_token', 'id_token token', 'none', 'token', ''].includes(inputResponseType)) {
           return inputResponseType as OAuth2ResponseType;
         }
-        throw Error(
+        throw new Error(
           `unknown response type for oauth2: "${inputResponseType}", it could be: 'code' | 'id_token' | 'id_token token' | 'none' | 'token' | ''`,
         );
       })();
@@ -559,9 +559,9 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
       };
     case 'netrc':
       // TODO(george): support this in the script side
-      throw Error('netrc is not supported yet');
+      throw new Error('netrc is not supported yet');
     default:
-      throw Error(`unknown auth type: ${authObj.type}`);
+      throw new Error(`unknown auth type: ${authObj.type}`);
   }
 }
 
@@ -657,7 +657,7 @@ export function toPreRequestAuth(auth: RequestAuthentication | {}): AuthOptions 
           case 'refresh_token':
             return 'refresh_token';
           default:
-            throw Error(`auth transforming(toPreRequestAuth): unknown auth grant type for oauth2: ${inputGrantType}`);
+            throw new Error(`auth transforming(toPreRequestAuth): unknown auth grant type for oauth2: ${inputGrantType}`);
         }
       })();
 
@@ -756,9 +756,9 @@ export function toPreRequestAuth(auth: RequestAuthentication | {}): AuthOptions 
       };
     case 'netrc':
       // TODO: not supported yet
-      throw Error('netrc auth is not supported in scripting yet');
+      throw new Error('netrc auth is not supported in scripting yet');
     default:
       // @ts-expect-error - user can input any string
-      throw Error(`unknown auth type: ${auth.type}`);
+      throw new Error(`unknown auth type: ${auth.type}`);
   }
 }

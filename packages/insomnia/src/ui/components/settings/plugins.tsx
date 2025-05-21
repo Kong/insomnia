@@ -1,4 +1,5 @@
-import * as path from 'path';
+import * as path from 'node:path';
+
 import React, { type FC, useEffect, useState } from 'react';
 import {
   Button,

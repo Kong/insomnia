@@ -51,11 +51,11 @@ export class FormParam extends Property {
   }
 
   static _postman_propertyAllowsMultipleValues() {
-    throw Error('unsupported');
+    throw new Error('unsupported');
   }
 
   static _postman_propertyIndexKey() {
-    throw Error('unsupported');
+    throw new Error('unsupported');
   }
 
   // TODO: it is not supported yet in existing scripts
@@ -169,7 +169,7 @@ export class RequestBody extends PropertyBase {
       case 'graphql':
         return this.graphql == null;
       default:
-        throw Error(`isEmpty: mode (${this.mode}) is unexpected`);
+        throw new Error(`isEmpty: mode (${this.mode}) is unexpected`);
     }
   }
 
@@ -191,10 +191,10 @@ export class RequestBody extends PropertyBase {
         case 'graphql':
           return this.graphql ? JSON.stringify(this.graphql) : '';
         default:
-          throw Error(`mode (${this.mode}) is unexpected`);
+          throw new Error(`mode (${this.mode}) is unexpected`);
       }
     } catch (e) {
-      throw Error(`toString: ${e}`);
+      throw new Error(`toString: ${e}`);
     }
   }
 
@@ -307,7 +307,7 @@ export class Request extends Property {
       const headerInstance = new Header(header);
       this.headers.add(headerInstance);
     } else {
-      throw Error('header must be Header | {key: string; value: string}');
+      throw new Error('header must be Header | {key: string; value: string}');
     }
   }
 
@@ -378,7 +378,7 @@ export class Request extends Property {
           ? header.key.toLocaleLowerCase() !== toRemove.key.toLocaleLowerCase()
           : header.key !== toRemove.key;
       }
-      throw Error('type of the "toRemove" must be: string | Header');
+      throw new Error('type of the "toRemove" must be: string | Header');
     }, {});
 
     this.headers = new HeaderList(undefined, filteredHeaders);
@@ -560,7 +560,7 @@ export function mergeClientCertificates(
     return [specifiedCert, ...originalClientCertificates];
   }
 
-  throw Error('Invalid certificate configuration: "cert+key" and "pfx" can not be set at the same time');
+  throw new Error('Invalid certificate configuration: "cert+key" and "pfx" can not be set at the same time');
 }
 
 export function toScriptRequestBody(insomniaReqBody: InsomniaRequestBody): RequestBodyOptions {
@@ -621,7 +621,7 @@ export function mergeRequestBody(
         mimeType = 'application/json';
         break;
       default:
-        throw Error(`unknown request body mode: ${updatedReqBody.mode}`);
+        throw new Error(`unknown request body mode: ${updatedReqBody.mode}`);
     }
   }
   if (originalReqBody.mimeType) {
@@ -652,7 +652,7 @@ export function mergeRequestBody(
       }, {}),
     };
   } catch (e) {
-    throw Error(`failed to update body: ${e}`);
+    throw new Error(`failed to update body: ${e}`);
   }
 }
 

@@ -435,9 +435,9 @@ export async function getRenderContext({
         getKeySource(subObject[key], templatingUtils.forceBracketNotation(inKey, key), inSource);
       }
     } else if (typeStr === '[object Array]') {
-      for (let i = 0; i < subObject.length; i++) {
+      for (const [i, element] of subObject.entries()) {
         // @ts-expect-error -- mapping unsoundness
-        getKeySource(subObject[i], templatingUtils.forceBracketNotation(inKey, i), inSource);
+        getKeySource(element, templatingUtils.forceBracketNotation(inKey, i), inSource);
       }
     }
   }

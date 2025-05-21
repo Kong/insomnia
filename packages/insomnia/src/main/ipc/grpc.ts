@@ -165,7 +165,9 @@ const getMethodsFromReflectionServer = async (reflectionApi: GrpcRequest['reflec
     if (res.fileDescriptorSet === undefined) {
       return [];
     }
-    const packageDefinition = protoLoader.loadFileDescriptorSetFromBuffer(new Buffer(res.fileDescriptorSet.toBinary()));
+    const packageDefinition = protoLoader.loadFileDescriptorSetFromBuffer(
+      Buffer.from(res.fileDescriptorSet.toBinary()),
+    );
     for (const definition of Object.values(packageDefinition)) {
       const serviceDefinition = asServiceDefinition(definition);
       if (serviceDefinition === null) {

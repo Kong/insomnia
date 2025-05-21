@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import path from 'node:path';
@@ -6,7 +7,6 @@ import * as commander from 'commander';
 import type { logType } from 'consola';
 import consola, { BasicReporter, FancyReporter, LogLevel } from 'consola';
 import { cosmiconfig } from 'cosmiconfig';
-import fs from 'fs';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
 import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
 import type { UserUploadEnvironment } from 'insomnia/src/models/environment';

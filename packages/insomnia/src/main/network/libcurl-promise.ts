@@ -3,6 +3,11 @@
 import { invariant } from '../../utils/invariant';
 invariant(process.type !== 'renderer', 'Native abstractions for Nodejs module unavailable in renderer');
 
+import fs from 'node:fs';
+import path from 'node:path';
+import type { Readable, Writable } from 'node:stream';
+import { parse as urlParse } from 'node:url';
+
 import {
   Curl,
   CurlAuth,
@@ -15,10 +20,6 @@ import {
 } from '@getinsomnia/node-libcurl';
 import { isValid } from 'date-fns';
 import electron from 'electron';
-import fs from 'fs';
-import path from 'path';
-import type { Readable, Writable } from 'stream';
-import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
 import { version } from '../../../package.json';
@@ -577,7 +578,7 @@ const setDefaultProtocol = (url: string, defaultProto?: string) => {
   }
 
   // Default the proto if it doesn't exist
-  if (trimmedUrl.indexOf('://') === -1) {
+  if (!trimmedUrl.includes('://')) {
     return `${defaultProto}//${trimmedUrl}`;
   }
 

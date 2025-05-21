@@ -1,5 +1,6 @@
+import crypto from 'node:crypto';
+
 import clone from 'clone';
-import crypto from 'crypto';
 
 import { strings } from '../../common/strings';
 import type { BaseModel } from '../../models';

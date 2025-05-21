@@ -467,7 +467,7 @@ export class ImportPostman {
 
     if (!authentication) {
       if (authorizationHeader) {
-        switch (authorizationHeader?.substring(0, authorizationHeader.indexOf(' '))) {
+        switch (authorizationHeader?.slice(0, Math.max(0, authorizationHeader.indexOf(' ')))) {
           case 'Bearer': // will work for OAuth2 as well
             return {
               authentication: this.importBearerAuthenticationFromHeader(authorizationHeader),
@@ -662,7 +662,7 @@ export class ImportPostman {
 
     const authStringIndex = authHeader.trim().replace(/\s+/g, ' ').indexOf(' ');
     const hasEncodedAuthString = authStringIndex !== -1;
-    const encodedAuthString = hasEncodedAuthString ? authHeader.substring(authStringIndex + 1) : '';
+    const encodedAuthString = hasEncodedAuthString ? authHeader.slice(Math.max(0, authStringIndex + 1)) : '';
     const authString = Buffer.from(encodedAuthString, 'base64').toString();
     const item = {
       type: 'basic',
@@ -709,7 +709,7 @@ export class ImportPostman {
     return {
       type: 'bearer',
       disabled: false,
-      token: tokenIndex + 1 ? authHeader2.substring(tokenIndex + 1) : '',
+      token: tokenIndex + 1 ? authHeader2.slice(Math.max(0, tokenIndex + 1)) : '',
       prefix: '',
     };
   };

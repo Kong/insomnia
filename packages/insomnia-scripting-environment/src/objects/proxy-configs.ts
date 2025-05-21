@@ -252,7 +252,7 @@ export class ProxyConfig extends Property {
    */
   updateProtocols(_protocols: string[]) {
     // In Insomnia there is no whitelist while there is a blacklist
-    throw Error('updateProtocols is not supported in Insomnia');
+    throw new Error('updateProtocols is not supported in Insomnia');
   }
 }
 
@@ -340,7 +340,7 @@ export function transformToSdkProxyOptions(
 
   if (bestProxy !== '') {
     let sanitizedProxy = bestProxy;
-    if (bestProxy.indexOf('://') === -1) {
+    if (!bestProxy.includes('://')) {
       getExistingConsole().warn(`The protocol is missing for proxy, 'https:' is enabled for: ${bestProxy}`);
       sanitizedProxy = 'https://' + bestProxy;
     }

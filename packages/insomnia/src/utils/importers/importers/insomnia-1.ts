@@ -150,9 +150,8 @@ export const convert: Converter = rawData => {
   }
 
   return data.items
-    .map(item => {
+    .flatMap(item => {
       const requestGroup = importRequestGroupItem(item);
       return [requestGroup, ...item.requests.map(importRequestItem(requestGroup._id))];
-    })
-    .flat();
+    });
 };

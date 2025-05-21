@@ -1,11 +1,12 @@
+import fs from 'node:fs';
+import { type IncomingMessage } from 'node:http';
+import path from 'node:path';
+import tls, { type KeyObject, type PxfObject } from 'node:tls';
+
 import electron, { BrowserWindow } from 'electron';
-import fs from 'fs';
 import { MessageType, parseMessage } from 'graphql-ws';
-import { type IncomingMessage } from 'http';
 import { HttpProxyAgent } from 'http-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
-import path from 'path';
-import tls, { type KeyObject, type PxfObject } from 'tls';
 import { v4 as uuidV4 } from 'uuid';
 import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSocket } from 'ws';
 

@@ -1,3 +1,8 @@
+import fs from 'node:fs';
+import * as os from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+
 import {
   app,
   BrowserWindow,
@@ -11,10 +16,6 @@ import {
   screen,
   shell,
 } from 'electron';
-import fs from 'fs';
-import * as os from 'os';
-import path from 'path';
-import { pathToFileURL } from 'url';
 
 import {
   getAppBuildDate,

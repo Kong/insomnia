@@ -1,6 +1,7 @@
-import { spawn } from 'child_process';
+import { spawn } from 'node:child_process';
+import path from 'node:path';
+
 import { app } from 'electron';
-import path from 'path';
 
 import log from '../common/log';
 

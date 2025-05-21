@@ -1,6 +1,7 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+
 import { format } from 'date-fns';
-import { mkdir, writeFile } from 'fs/promises';
-import path from 'path';
 import React from 'react';
 
 import { type Environment } from '../models/environment';

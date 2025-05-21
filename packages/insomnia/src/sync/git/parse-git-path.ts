@@ -1,4 +1,4 @@
-import path from 'path';
+import path from 'node:path';
 
 import { GIT_CLONE_DIR } from './git-vcs';
 

@@ -1,7 +1,8 @@
+import fs from 'node:fs';
+import { join as pathJoin } from 'node:path';
+
 import clone from 'clone';
-import fs from 'fs';
 import orderedJSON from 'json-order';
-import { join as pathJoin } from 'path';
 
 import type {
   ExecutionOption,
@@ -91,7 +92,7 @@ export function getOrInheritHeaders({
   const originalCaseMap = new Map<string, string>();
   // parent folders, then child folders, then request
   const headerContexts = [...requestGroups.reverse(), request];
-  const headers = headerContexts.map(({ headers }) => headers || []).flat();
+  const headers = headerContexts.flatMap(({ headers }) => headers || []);
   headers.forEach(({ name, value, disabled }) => {
     if (disabled || !name.trim()) {
       return;

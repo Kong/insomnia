@@ -1,7 +1,7 @@
+import { Buffer } from 'node:buffer';
 import path from 'node:path';
 
 import { expect } from '@playwright/test';
-import { Buffer } from 'buffer';
 
 import { getFixturePath, loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';

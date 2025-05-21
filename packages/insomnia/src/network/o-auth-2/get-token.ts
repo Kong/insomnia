@@ -1,5 +1,6 @@
-import crypto from 'crypto';
-import querystring from 'querystring';
+import crypto from 'node:crypto';
+import querystring from 'node:querystring';
+
 import { v4 as uuidv4 } from 'uuid';
 
 import { version } from '../../../package.json';
