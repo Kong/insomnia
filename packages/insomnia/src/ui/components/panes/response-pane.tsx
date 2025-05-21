@@ -1,4 +1,3 @@
-import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
 import React, { type FC, useCallback, useMemo } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
@@ -8,7 +7,6 @@ import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
 import { cancelRequestById } from '../../../network/cancellation';
-import { jsonPrettify } from '../../../utils/prettify/json';
 import { useExecutionState } from '../../hooks/use-execution-state';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import type { RequestLoaderData } from '../../routes/request';
@@ -82,32 +80,14 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
       if (canceled) {
         return;
       }
-
-      const readStream = models.response.getBodyStream(activeResponse);
-      const dataBuffers: any[] = [];
-
-      if (readStream && outputPath && typeof readStream !== 'string') {
-        readStream.on('data', data => {
-          dataBuffers.push(data);
-        });
-        readStream.on('end', () => {
-          const to = fs.createWriteStream(outputPath);
-          const finalBuffer = Buffer.concat(dataBuffers);
-          to.on('error', err => {
-            showError({
-              title: 'Save Failed',
-              message: 'Failed to save response body',
-              error: err,
-            });
-          });
-
-          if (prettify && contentType.includes('json')) {
-            to.write(jsonPrettify(finalBuffer.toString('utf8')));
-          } else {
-            to.write(finalBuffer);
-          }
-
-          to.end();
+      try {
+        const { content } = await window.main.readFile({ path: outputPath });
+        await window.main.writeFile({ path: outputPath, content });
+      } catch (err) {
+        showError({
+          title: 'Save Failed',
+          message: 'Failed to save response body',
+          error: err,
         });
       }
     },

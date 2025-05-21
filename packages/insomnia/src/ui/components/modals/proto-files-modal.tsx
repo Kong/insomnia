@@ -1,5 +1,4 @@
 import * as protoLoader from '@grpc/proto-loader';
-import fs from 'fs';
 import path from 'path';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
@@ -212,10 +211,10 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
     if (!(await isProtofileValid(filePath))) {
       return;
     }
-    const contents = await fs.promises.readFile(filePath, 'utf-8');
+    const { content } = await window.main.readFile({ path: filePath });
     const updatedFile = await models.protoFile.update(protoFile, {
       name: path.basename(filePath),
-      protoText: contents,
+      protoText: content,
     });
     const impacted = await models.grpcRequest.findByProtoFileId(updatedFile._id);
     const requestIds = impacted.map(g => g._id);

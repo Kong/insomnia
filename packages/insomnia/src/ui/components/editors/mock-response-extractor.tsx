@@ -1,4 +1,3 @@
-import fs from 'fs/promises';
 import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
@@ -88,7 +87,8 @@ If you want to create a self-hosted mock server route from a request response in
               if (selectedMockServer && selectedMockRoute) {
                 if (activeResponse) {
                   // TODO: move this out of the renderer, and upsert mock
-                  const body = await fs.readFile(activeResponse.bodyPath);
+                  const { content } = await window.main.readFile({ path: activeResponse.bodyPath });
+                  const body = content;
 
                   patchMockRoute(selectedMockRoute, {
                     body: body.toString(),

@@ -3,7 +3,6 @@ import type { GraphQLHintOptions } from 'codemirror-graphql/hint';
 import type { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import type { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import type { OpenDialogOptions } from 'electron';
-import { readFileSync } from 'fs';
 import type { GraphQLNonNull, GraphQLSchema, OperationTypeNode } from 'graphql';
 import {
   buildClientSchema,
@@ -427,12 +426,12 @@ export const GraphQLEditor: FC<Props> = ({
     }
     try {
       const filePath = filePaths[0]; // showOpenDialog is single select
-      const file = readFileSync(filePath);
-      const content = JSON.parse(file.toString());
-      if (!content.data) {
+      const { content } = await window.main.readFile({ path: filePath });
+      const contents = JSON.parse(content);
+      if (!contents.data) {
         throw new Error('JSON file should have a data field with the introspection results');
       }
-      setSchema(buildClientSchema(content.data));
+      setSchema(buildClientSchema(contents.data));
       setSchemaLastFetchTime(Date.now());
       setSchemaFetchError(undefined);
       setSchemaIsFetching(false);

@@ -1,4 +1,3 @@
-import { readFile } from 'fs/promises';
 import React, { type FunctionComponent, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router';
@@ -86,8 +85,12 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
       );
       const caCertificate = await models.caCertificate.findByParentId(workspaceId);
       const caCertificatePath = caCertificate && !caCertificate.disabled ? caCertificate.path : undefined;
-      const clientCert = clientCertificate?.cert ? await readFile(clientCertificate?.cert, 'utf8') : undefined;
-      const clientKey = clientCertificate?.key ? await readFile(clientCertificate?.key, 'utf8') : undefined;
+      const clientCert = clientCertificate?.cert
+        ? (await window.main.readFile({ path: clientCertificate?.cert })).content
+        : undefined;
+      const clientKey = clientCertificate?.key
+        ? (await window.main.readFile({ path: clientCertificate?.key })).content
+        : undefined;
 
       const renderedWithCertificates = {
         ...rendered,
@@ -96,7 +99,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
           ? {
               clientCert,
               clientKey,
-              caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
+              caCertificate: caCertificatePath
+                ? (await window.main.readFile({ path: caCertificatePath })).content
+                : undefined,
             }
           : {}),
       };
@@ -146,9 +151,15 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
           rejectUnauthorized: settings.validateSSL,
           ...(request.url.toLowerCase().startsWith('grpcs:')
             ? {
-                clientCert: clientCertificate?.cert ? await readFile(clientCertificate?.cert || '', 'utf8') : undefined,
-                clientKey: clientCertificate?.key ? await readFile(clientCertificate?.key || '', 'utf8') : undefined,
-                caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
+                clientCert: clientCertificate?.cert
+                  ? (await window.main.readFile({ path: clientCertificate?.cert || '' })).content
+                  : undefined,
+                clientKey: clientCertificate?.key
+                  ? (await window.main.readFile({ path: clientCertificate?.key || '' })).content
+                  : undefined,
+                caCertificate: caCertificatePath
+                  ? (await window.main.readFile({ path: caCertificatePath })).content
+                  : undefined,
               }
             : {}),
         });
@@ -265,10 +276,10 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                     const caCertificate = await models.caCertificate.findByParentId(workspaceId);
                     const caCertificatePath = caCertificate && !caCertificate.disabled ? caCertificate.path : undefined;
                     const clientCert = clientCertificate?.cert
-                      ? await readFile(clientCertificate?.cert, 'utf8')
+                      ? (await window.main.readFile({ path: clientCertificate?.cert })).content
                       : undefined;
                     const clientKey = clientCertificate?.key
-                      ? await readFile(clientCertificate?.key, 'utf8')
+                      ? (await window.main.readFile({ path: clientCertificate?.key })).content
                       : undefined;
                     rendered = {
                       ...rendered,
@@ -277,7 +288,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                         ? {
                             clientCert,
                             clientKey,
-                            caCertificate: caCertificatePath ? await readFile(caCertificatePath, 'utf8') : undefined,
+                            caCertificate: caCertificatePath
+                              ? (await window.main.readFile({ path: caCertificatePath })).content
+                              : undefined,
                           }
                         : {}),
                     };

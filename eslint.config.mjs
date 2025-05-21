@@ -24,6 +24,19 @@ export default tseslint.config(
     },
     rules: {
       'import-x/no-nodejs-modules': 'warn',
+      'import-x/no-commonjs': 'error',
+      'import-x/no-amd': 'error',
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'electron',
+              message: 'Please call Electron APIs from window.main',
+            },
+          ],
+        },
+      ],
     },
   },
   {

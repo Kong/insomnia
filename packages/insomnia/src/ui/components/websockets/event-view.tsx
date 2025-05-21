@@ -1,4 +1,3 @@
-import fs from 'fs';
 import React, { type FC, useCallback } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router';
 
@@ -37,20 +36,16 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
     if (canceled || !outputPath) {
       return;
     }
-
-    const to = fs.createWriteStream(outputPath);
-
-    to.on('error', err => {
+    try {
+      await window.main.writeFile({ path: outputPath, content: raw });
+    } catch (err) {
       showError({
         title: 'Save Failed',
         message: 'Failed to save response body',
         error: err,
       });
-    });
-
-    to.write(raw);
-
-    to.end();
+      return;
+    }
   }, [raw]);
 
   const handleCopyResponseToClipboard = useCallback(() => {

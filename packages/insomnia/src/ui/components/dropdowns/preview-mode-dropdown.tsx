@@ -1,4 +1,3 @@
-import fs from 'fs';
 import React, { type FC, useCallback } from 'react';
 import { Button } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router';
@@ -45,11 +44,9 @@ export const PreviewModeDropdown: FC<Props> = ({ download, copyToClipboard }) =>
     if (!filePath) {
       return;
     }
-    const to = fs.createWriteStream(filePath);
-    to.on('error', err => {
+    window.main.writeFile({ path: filePath, content: har }).catch(err => {
       console.warn('Failed to export har', err);
     });
-    to.end(har);
   }, [activeRequest, activeResponse]);
 
   const exportDebugFile = useCallback(async () => {

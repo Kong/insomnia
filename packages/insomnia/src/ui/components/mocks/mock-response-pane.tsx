@@ -1,4 +1,3 @@
-import fs from 'fs';
 import type * as Har from 'har-format';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
@@ -341,7 +340,7 @@ const PreviewModeDropdown = ({
               if (canceled || !filePath || !bodyBuffer) {
                 return;
               }
-              fs.promises.writeFile(filePath, bodyBuffer.toString('utf8'));
+              await window.main.writeFile({ path: filePath, content: bodyBuffer.toString('utf8') });
             }}
           />
         </DropdownItem>
@@ -361,7 +360,7 @@ const PreviewModeDropdown = ({
                 if (canceled || !filePath || !bodyBuffer) {
                   return;
                 }
-                fs.promises.writeFile(filePath, jsonPrettify(bodyBuffer.toString('utf8')));
+                await window.main.writeFile({ path: filePath, content: jsonPrettify(bodyBuffer.toString('utf8')) });
               }}
             />
           )}
@@ -386,7 +385,7 @@ const PreviewModeDropdown = ({
                 .map(v => v.value)
                 .join('');
 
-              fs.promises.writeFile(filePath, headers);
+              await window.main.writeFile({ path: filePath, content: headers });
             }}
           />
         </DropdownItem>
@@ -407,8 +406,7 @@ const PreviewModeDropdown = ({
               }
               const data = await exportHarCurrentRequest(activeRequest, activeResponse);
               const har = JSON.stringify(data, null, '\t');
-
-              fs.promises.writeFile(filePath, har);
+              await window.main.writeFile({ path: filePath, content: har });
             }}
           />
         </DropdownItem>

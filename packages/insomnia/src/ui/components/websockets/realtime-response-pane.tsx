@@ -1,4 +1,3 @@
-import fs from 'fs';
 import React, { type FC, useEffect, useState } from 'react';
 import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -94,17 +93,8 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
-      try {
-        await fs.promises.stat(response.timelinePath);
-      } catch (err) {
-        if (err.code === 'ENOENT') {
-          return setTimeline([]);
-        }
-      }
-
-      const rawBuffer = await fs.promises.readFile(response.timelinePath);
-      const timelineString = rawBuffer.toString();
-      const timelineParsed = deserializeNDJSON(timelineString);
+      const { content } = await window.main.readFile({ path: response.timelinePath });
+      const timelineParsed = deserializeNDJSON(content);
       if (isMounted) {
         setTimeline(timelineParsed);
       }
