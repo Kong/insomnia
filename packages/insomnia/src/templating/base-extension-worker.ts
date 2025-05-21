@@ -18,8 +18,7 @@ export function decodeEncoding<T>(value: T) {
   return value;
 }
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
-const legacyModeErrorMessage = `In v11, we improved plugin security, which may break older plugins. 
-Consider enabling legacy mode in plugin settings`;
+const legacyModeErrorMessage = `This version improves the security around plugins by limiting scope of access by default. This may break some plugins which rely on having the same kind of access Insomnia does. You can still grant elevated access to plugins, should your workflow absolutely require it, by navigating to Preferences > Plugins and checking the box enabling elevated access for plugins.`;
 export default class BaseExtension {
   _ext: PluginTemplateTag | null = null;
   _plugin: Plugin | null = null;
