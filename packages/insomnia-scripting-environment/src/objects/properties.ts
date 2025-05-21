@@ -150,7 +150,9 @@ export class Property extends PropertyBase {
 
   static replaceSubstitutions(content: string, ...variables: object[]): string {
     if (!Array.isArray(variables) || typeof content !== 'string') {
-      throw new Error("replaceSubstitutions: the first param's type is not string or other parameters are not an array");
+      throw new Error(
+        "replaceSubstitutions: the first param's type is not string or other parameters are not an array",
+      );
     }
 
     let context: object = {};
@@ -162,7 +164,9 @@ export class Property extends PropertyBase {
 
   static replaceSubstitutionsIn(obj: object, ...variables: object[]): object {
     if (!Array.isArray(variables) || typeof obj !== 'object') {
-      throw new Error("replaceSubstitutions: the first param's type is not object or other parameters are not an array");
+      throw new Error(
+        "replaceSubstitutions: the first param's type is not object or other parameters are not an array",
+      );
     }
 
     try {
@@ -285,7 +289,8 @@ export class PropertyList<T extends Property> {
   // TODO: value is not used as its usage is unknown
 
   has(item: T, _value?: any) {
-    return this.includes(item);
+    // eslint-disable-next-line unicorn/prefer-includes
+    return this.indexOf(item) >= 0;
   }
 
   idx(index: number) {
