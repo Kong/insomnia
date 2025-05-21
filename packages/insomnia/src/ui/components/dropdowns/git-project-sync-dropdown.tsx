@@ -32,6 +32,7 @@ import { Icon } from '../icon';
 import { showAlert, showModal } from '../modals';
 import { GitProjectBranchesModal } from '../modals/git-project-branches-modal';
 import { GitProjectLogModal } from '../modals/git-project-log-modal';
+import { GitProjectMigrationModal } from '../modals/git-project-migration-modal';
 import { GitProjectStagingModal } from '../modals/git-project-staging-modal';
 import { GitProjectRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { SyncMergeModal } from '../modals/sync-merge-modal';
@@ -50,6 +51,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
   const [isGitBranchesModalOpen, setIsGitBranchesModalOpen] = useState(false);
   const [isGitLogModalOpen, setIsGitLogModalOpen] = useState(false);
   const [isGitStagingModalOpen, setIsGitStagingModalOpen] = useState(false);
+  const [isMigrationModalOpen, setIsMigrationModalOpen] = useState(false);
 
   const gitPushFetcher = useFetcher<PushToGitRemoteResult>();
   const gitCheckoutFetcher = useFetcher();
@@ -70,6 +72,15 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
     }
   }, [gitRepoDataFetcher, gitRepository?.uri, gitRepository?._id, organizationId, projectId]);
 
+  const legacyInsomniaWorkspace =
+    gitRepoDataFetcher.data &&
+    'legacyInsomniaWorkspace' in gitRepoDataFetcher.data &&
+    gitRepoDataFetcher.data.legacyInsomniaWorkspace
+      ? gitRepoDataFetcher.data.legacyInsomniaWorkspace
+      : null;
+
+  console.log({ isMigrationModalOpen, gitRepository, legacyInsomniaWorkspace });
+
   // Only fetch the repo status if we have a repo uri and we don't have the status already
   const shouldFetchGitRepoStatus = Boolean(
     gitRepository?.uri &&
@@ -78,6 +89,16 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
       !gitStatusFetcher.data &&
       gitRepoDataFetcher.data,
   );
+
+  useEffect(() => {
+    if (
+      gitRepoDataFetcher.data &&
+      !('errors' in gitRepoDataFetcher.data) &&
+      gitRepoDataFetcher.data.legacyInsomniaWorkspace
+    ) {
+      setIsMigrationModalOpen(true);
+    }
+  }, [gitRepoDataFetcher.data]);
 
   useEffect(() => {
     if (shouldFetchGitRepoStatus) {
@@ -480,6 +501,14 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
       {isGitLogModalOpen && gitRepository && <GitProjectLogModal onClose={() => setIsGitLogModalOpen(false)} />}
       {isGitStagingModalOpen && gitRepository && (
         <GitProjectStagingModal onClose={() => setIsGitStagingModalOpen(false)} />
+      )}
+      {isMigrationModalOpen && gitRepository && legacyInsomniaWorkspace && (
+        <GitProjectMigrationModal
+          legacyFile={legacyInsomniaWorkspace}
+          onClose={() => {
+            setIsMigrationModalOpen(false);
+          }}
+        />
       )}
     </>
   );
