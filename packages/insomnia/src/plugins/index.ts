@@ -104,17 +104,18 @@ export async function init() {
   await reloadPlugins();
 }
 
-async function _traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: string[], allConfigs: PluginConfigMap) {
+async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: string[], allConfigs: PluginConfigMap) {
   for (const p of allPaths) {
     if (!fs.existsSync(p)) {
       continue;
     }
     const folders = (await fs.promises.readdir(p)).filter(f => f.startsWith('insomnia-plugin-'));
     folders.length && console.log('[plugin] Loading', folders.map(f => f.replace('insomnia-plugin-', '')).join(', '));
+
     for (const filename of fs.readdirSync(p)) {
       try {
-        const modulePath = path.join(p, filename);
-        const packageJSONPath = path.join(modulePath, 'package.json');
+        const modulePath = path.resolve(p, filename);
+        const packageJSONPath = path.resolve(modulePath, 'package.json');
 
         // Only read directories
         if (!fs.statSync(modulePath).isDirectory()) {
@@ -123,7 +124,7 @@ async function _traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: 
 
         // Is it a scoped directory?
         if (filename.startsWith('@')) {
-          await _traversePluginPath(pluginMap, [modulePath], allConfigs);
+          await traversePluginPath(pluginMap, [modulePath], allConfigs);
         }
 
         // Is it a Node module?
@@ -131,10 +132,22 @@ async function _traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: 
           continue;
         }
 
-        // Delete `require` cache if plugin has been required before
-        for (const p of Object.keys(global.require.cache)) {
-          if (p.indexOf(modulePath) === 0) {
-            delete global.require.cache[p];
+        // Sanitize paths and check for known module patterns to prevent command injection
+        const safeModulePath = path.resolve(modulePath);
+        // Base directory we're processing from `allPaths`
+        const pluginBasePath = p;
+
+        // Check if the resolved module path is inside the base plugin path (to prevent directory traversal)
+        if (!safeModulePath.startsWith(pluginBasePath)) {
+          console.warn(`[plugin] Ignored potentially unsafe plugin path: ${modulePath}`);
+          continue;
+        }
+
+        // Now delete the require cache for this module, ensuring we're deleting only the relevant entries
+        for (const cachePath of Object.keys(global.require.cache)) {
+          // Check if the cache path starts with the safe module path
+          if (cachePath.startsWith(safeModulePath)) {
+            delete global.require.cache[cachePath];
           }
         }
 
@@ -182,29 +195,29 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
       .split(':')
       .filter(p => p)
       .map(p => {
+        // Ensure proper resolution of paths and avoid path traversal
         if (p.indexOf('~/') === 0) {
-          return path.join(process.env['HOME'] || '/', p.slice(1));
+          return path.resolve(process.env['HOME'] || '/', p.slice(1));
         }
-        return p;
+        return path.resolve(p); // Use resolve to avoid path traversal
       });
+
     // Make sure the default directories exist
-    const pluginPath = path.join(
+    const pluginPath = path.resolve(
       process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'),
       'plugins',
     );
     fs.mkdirSync(pluginPath, { recursive: true });
+
     // Also look in node_modules folder in each directory
     const basePaths = [pluginPath, ...extraPaths];
-    const extendedPaths = basePaths.map(p => path.join(p, 'node_modules'));
+    const extendedPaths = basePaths.map(p => path.resolve(p, 'node_modules'));
     const allPaths = [...basePaths, ...extendedPaths];
-    // Store plugins in a map so that plugins with the same
-    // name only get added once
-    // TODO: Make this more complex and have the latest version always win
-    const pluginMap: Record<string, Plugin> = {
-      // "name": "module"
-    };
 
-    await _traversePluginPath(pluginMap, allPaths, allConfigs);
+    // Store plugins in a map so that plugins with the same name only get added once
+    const pluginMap: Record<string, Plugin> = {};
+
+    await traversePluginPath(pluginMap, allPaths, allConfigs);
     plugins = Object.keys(pluginMap).map(name => pluginMap[name]);
   }
 

@@ -1,23 +1,32 @@
 import * as path from 'path';
 import React, { type FC, useEffect, useState } from 'react';
-import { Button, FileTrigger } from 'react-aria-components';
+import {
+  Button,
+  Checkbox,
+  FileTrigger,
+  GridList,
+  GridListItem,
+  Input,
+  Label,
+  Separator,
+  TextField,
+} from 'react-aria-components';
 
 import { ACCEPTED_NODE_CA_FILE_EXTS, NPM_PACKAGE_BASE, PLUGIN_HUB_BASE } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
-import { createPlugin } from '../../../plugins/create';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
 import { reload } from '../../../templating/index';
+import { validatePluginName } from '../../../utils/plugin';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { useRootLoaderData } from '../../routes/root';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
-import { showAlert, showPrompt } from '../modals';
 import { Tooltip } from '../tooltip';
-import { BooleanSetting } from './boolean-setting';
-// import { BooleanSetting } from './boolean-setting';
+import { CreatePluginModal } from './create-plugin-modal';
+
 interface State {
   plugins: Plugin[];
   npmPluginValue: string;
@@ -30,7 +39,20 @@ interface State {
 
 export const Plugins: FC = () => {
   const { settings } = useRootLoaderData();
-  const [state, setState] = useState<State>({
+  const [showCreatePluginModal, setShowCreatePluginModal] = useState(false);
+
+  const [
+    {
+      plugins,
+      error,
+      installPluginErrMsg,
+      isInstallingFromNpm,
+      isRefreshingPlugins,
+      npmPluginValue,
+      pluginNodeExtraCerts,
+    },
+    setState,
+  ] = useState<State>({
     plugins: [],
     npmPluginValue: '',
     error: null,
@@ -39,24 +61,31 @@ export const Plugins: FC = () => {
     isRefreshingPlugins: false,
     pluginNodeExtraCerts: settings.pluginNodeExtraCerts,
   });
-  const { plugins, error, installPluginErrMsg, isInstallingFromNpm, isRefreshingPlugins, npmPluginValue } = state;
 
-  useEffect(() => {
-    refreshPlugins();
-  }, []);
+  // If all plugins are enabled, we show the checked state
+  const isAllPluginsSelected = plugins.every(plugin => plugin.config.disabled === false);
+
+  // If some plugins are enabled, we show the indeterminate state
+  const isIndeterminate = plugins.some(plugin => plugin.config.disabled === false);
 
   useEffect(() => {
     setState(state => ({ ...state, pluginNodeExtraCerts: settings.pluginNodeExtraCerts }));
   }, [settings.pluginNodeExtraCerts]);
 
-  async function refreshPlugins() {
+  useEffect(() => {
+    handleReloadPlugins();
+  }, [settings.pluginConfig]);
+
+  async function handleReloadPlugins() {
     setState(state => ({ ...state, isRefreshingPlugins: true }));
     // Get and reload plugins
     const plugins = await getPlugins(true);
+
     reload();
 
     setState(state => ({ ...state, plugins, isRefreshingPlugins: false }));
   }
+
   const patchSettings = useSettingsPatcher();
 
   return (
@@ -66,281 +95,412 @@ export const Plugins: FC = () => {
       </p>
 
       <div className="notice warning margin-bottom text-left">
-        <div className="selectable force-pre-wrap">
+        <div className="selectable force-pre-wrap flex flex-col gap-2">
           <p>
             Plugins with elevated access can access anything Insomnia can. It's recommended that elevated access remain
             disabled.
           </p>
-          <BooleanSetting label="Allow elevated access for plugins" setting="pluginsAllowElevatedAccess" />
+          <Checkbox
+            slot={null}
+            isSelected={Boolean(settings.pluginsAllowElevatedAccess)}
+            onChange={isSelected => {
+              patchSettings({ pluginsAllowElevatedAccess: isSelected });
+            }}
+            className="group flex h-full items-center gap-2 p-0"
+          >
+            <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
+              <Icon
+                icon="check"
+                className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
+              />
+            </div>
+            <span className="text-sm font-semibold">Allow elevated access for plugins</span>
+          </Checkbox>
         </div>
       </div>
 
-      {plugins.length === 0 ? (
-        <div className="faint pad text-center italic">No Plugins Added</div>
-      ) : (
-        <table className="table--fancy table--striped table--valign-middle margin-top margin-bottom">
-          <thead>
-            <tr>
-              <th>Enable?</th>
-              <th>Name</th>
-              <th>Version</th>
-              <th>Folder</th>
-            </tr>
-          </thead>
-          <tbody>
-            {plugins.map(plugin => {
-              const link = path.join(
-                /^insomnia-plugin-/.test(plugin.name) ? PLUGIN_HUB_BASE : NPM_PACKAGE_BASE,
-                plugin.name,
-              );
-              return !plugin.directory ? null : (
-                <tr key={plugin.name}>
-                  <td style={{ width: '4rem' }}>
-                    <input
-                      type="checkbox"
-                      checked={!plugin.config.disabled}
-                      disabled={isRefreshingPlugins}
-                      onChange={async event => {
-                        const newConfig = { ...plugin.config, disabled: !event.target.checked };
-                        setState(state => ({ ...state, isRefreshingPlugins: true }));
-                        patchSettings({ pluginConfig: { ...settings.pluginConfig, [plugin.name]: newConfig } });
-                        refreshPlugins();
-                      }}
-                    />
-                  </td>
-                  <td>
-                    {plugin.name}
-                    {plugin.description && (
-                      <HelpTooltip info className="space-left">
-                        {plugin.description}
-                      </HelpTooltip>
-                    )}
-                  </td>
-                  <td>
-                    {plugin.version}
-                    <a className="space-left" href={link} title={link}>
-                      <i className="fa fa-external-link-square" />
+      <div className="flex flex-col gap-6">
+        {(error || installPluginErrMsg) && (
+          <div className="notice error margin-bottom text-left">
+            <Button
+              className="pull-right icon"
+              onPress={() => setState(state => ({ ...state, error: null, installPluginErrMsg: '' }))}
+            >
+              <i className="fa fa-times" />
+            </Button>
+            <div className="selectable force-pre-wrap">
+              <b>{installPluginErrMsg}</b>
+              <br />
+              Try using the install button on <a href={PLUGIN_HUB_BASE}>Plugin Hub.</a>
+              {error && (error.stack || error.message) && (
+                <details>
+                  <summary>Additional Information</summary>
+                  <pre className="pad-top-sm force-wrap selectable">
+                    <code>{error.stack || error.message}</code>
+                  </pre>
+                </details>
+              )}
+            </div>
+          </div>
+        )}
+        <div className="flex w-full flex-col">
+          <Label className="text-lg font-bold" slot="label">
+            Install Plugin
+          </Label>
+
+          <div className="mt-2 flex flex-col gap-2">
+            <div className="flex gap-2">
+              <div className="flex w-full gap-2">
+                <TextField
+                  aria-label='"Plugin Name"'
+                  isRequired
+                  className="group relative flex max-w-full flex-shrink-0 flex-grow flex-col gap-2 overflow-hidden"
+                  isDisabled={isInstallingFromNpm}
+                  type="text"
+                  value={npmPluginValue}
+                  onChange={value => {
+                    setState(state => ({ ...state, npmPluginValue: value }));
+                  }}
+                >
+                  <Input
+                    placeholder="e.g. insomnia-plugin-example"
+                    autoFocus
+                    className="flex h-[--line-height-xs] w-full items-center rounded-[--radius-md] border border-solid border-[--hl-md] bg-[--hl-xxs] p-[--padding-sm] text-[--color-font] focus:border-[--hl-lg] focus:bg-transparent"
+                  />
+                </TextField>
+                <Button
+                  className="flex h-full w-[13ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                  isDisabled={isInstallingFromNpm}
+                  type="submit"
+                  onPress={async () => {
+                    setState(state => ({ ...state, isInstallingFromNpm: true }));
+
+                    const idleState: Partial<State> = {
+                      isInstallingFromNpm: false,
+                      error: null,
+                      installPluginErrMsg: '',
+                    };
+
+                    const validationError = validatePluginName(npmPluginValue.trim());
+
+                    if (validationError) {
+                      setState(state => ({
+                        ...state,
+                        isInstallingFromNpm: false,
+                        error: null,
+                        installPluginErrMsg: `Failed to install ${npmPluginValue}. ${validationError}`,
+                      }));
+
+                      return;
+                    }
+
+                    try {
+                      await window.main.installPlugin(npmPluginValue.trim());
+                      await handleReloadPlugins();
+                      setState(state => ({ ...state, ...idleState, npmPluginValue: '' }));
+                    } catch (err) {
+                      console.error(err);
+                      setState(state => ({
+                        ...state,
+                        ...idleState,
+                        error: err,
+                        installPluginErrMsg: `Failed to install ${npmPluginValue}. Please contact the plugin author sharing the below stack trace to help them to ensure compatibility with the latest Insomnia.`,
+                      }));
+                    }
+                  }}
+                >
+                  {isInstallingFromNpm ? 'Installing...' : 'Install Plugin'}
+                </Button>
+              </div>
+            </div>
+            <Label slot="description" className="p-0 text-sm text-[--hl]">
+              Plugin name must start with insomnia-plugin-
+            </Label>
+          </div>
+        </div>
+        <div className="flex w-full flex-col">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <Label className="text-lg font-bold" slot="label">
+                Certification
+              </Label>
+
+              <Tooltip
+                className="cursor-pointer pt-2"
+                message={
+                  <span>
+                    You can bundle multiple root certificates into a single file.{' '}
+                    <a
+                      className="underline"
+                      href="https://github.com/Kong/insomnia/wiki/Combining-Multiple-Root-CAs-into-a-single-file"
+                    >
+                      See instructions <i className="fa fa-external-link" />
                     </a>
-                  </td>
-                  <td
-                    className="no-wrap"
-                    style={{
-                      width: '10rem',
+                  </span>
+                }
+              >
+                <i className="fa fa-info-circle" />
+              </Tooltip>
+            </div>
+            <Label className="p-0 text-sm font-semibold" slot="description">
+              <span className="text-[--hl]">Plugin installation trusted certificates file</span>
+            </Label>
+          </div>
+
+          {pluginNodeExtraCerts === '' && (
+            <div className="mt-2 flex flex-col gap-2">
+              <div className="flex w-full items-center justify-center">
+                <label
+                  htmlFor="dropzone-file"
+                  className="flex h-20 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-[--hl-md] bg-[--hl-xxs] hover:bg-transparent focus:border-[--hl-lg]"
+                >
+                  <FileTrigger
+                    allowsMultiple={false}
+                    acceptedFileTypes={ACCEPTED_NODE_CA_FILE_EXTS}
+                    onSelect={fileList => {
+                      if (!fileList) {
+                        return;
+                      }
+                      const files = Array.from(fileList);
+                      if (files.length === 0) {
+                        return;
+                      }
+                      patchSettings({ pluginNodeExtraCerts: window.webUtils.getPathForFile(files[0]) });
                     }}
                   >
-                    <CopyButton size="small" variant="contained" title={plugin.directory} content={plugin.directory}>
-                      Copy Path
-                    </CopyButton>{' '}
-                    <Button onPress={() => window.shell.showItemInFolder(plugin.directory)}>Reveal Folder</Button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      )}
+                    <Button>
+                      <div className="pointer-events-none flex flex-col items-center justify-center p-8 text-[--hl-xl]">
+                        <Icon icon="upload" className="mb-2 h-5 w-5" />
+                        <p className="text pointer-events-none mb-2 text-sm">
+                          <span className="font-bold">Click to upload</span> or drag and drop
+                        </p>
+                      </div>
+                    </Button>
+                  </FileTrigger>
+                </label>
+              </div>
+              <Label slot="description" className="p-0 text-sm text-[--hl]">
+                Supported Formats: ({ACCEPTED_NODE_CA_FILE_EXTS.join(', ')})
+              </Label>
+            </div>
+          )}
 
-      {error && (
-        <div className="notice error margin-bottom text-left">
-          <button className="pull-right icon" onClick={() => setState(state => ({ ...state, error: null }))}>
-            <i className="fa fa-times" />
-          </button>
-          <div className="selectable force-pre-wrap">
-            <b>{installPluginErrMsg}</b>
-            <br />
-            Try using the install button on <a href={PLUGIN_HUB_BASE}>Plugin Hub.</a>
-            <details>
-              <summary>Additional Information</summary>
-              <pre className="pad-top-sm force-wrap selectable">
-                <code>{error.stack || error.message}</code>
-              </pre>
-            </details>
-          </div>
-        </div>
-      )}
-
-      <form
-        onSubmit={async event => {
-          event.preventDefault();
-          setState(state => ({ ...state, isInstallingFromNpm: true }));
-          const newState: Partial<State> = {
-            isInstallingFromNpm: false,
-            error: null,
-            installPluginErrMsg: '',
-          };
-          if (!npmPluginValue.startsWith('insomnia-plugin-')) {
-            newState.installPluginErrMsg = 'Please enter a plugin name starting with insomnia-plugin-';
-            newState.error = new Error('Invalid plugin name');
-            setState(state => ({ ...state, ...newState }));
-            return;
-          }
-          try {
-            await window.main.installPlugin(npmPluginValue.trim());
-            await refreshPlugins();
-            newState.npmPluginValue = ''; // Clear input if successful install
-          } catch (err) {
-            newState.installPluginErrMsg = `Failed to install ${npmPluginValue}. Please contact the plugin author sharing the below stack trace to help them to ensure compatibility with the latest Insomnia.`;
-            newState.error = err;
-          }
-          setState(state => ({ ...state, ...newState }));
-        }}
-      >
-        <div className="form-row">
-          <div className="form-control">
-            <Icon icon="info-circle" className="px-2" />
-            <span>Enter the full name of an npm package beginning with insomnia-plugin-*</span>
-          </div>
-        </div>
-        <div className="form-row">
-          <div className="form-control form-control--outlined">
-            <input
-              onChange={event => {
-                if (event.target instanceof HTMLInputElement) {
-                  setState(state => ({ ...state, npmPluginValue: event.target.value }));
-                }
-              }}
-              disabled={isInstallingFromNpm}
-              type="text"
-              placeholder="insomnia-plugin-placeholder"
-              value={npmPluginValue}
-            />
-          </div>
-          <div className="form-control width-auto">
-            <Button
-              className="m-1 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-              isDisabled={isInstallingFromNpm}
-              type="submit"
-            >
-              {isInstallingFromNpm && <i className="fa fa-refresh fa-spin space-right" />}
-              Install Plugin
-            </Button>
-          </div>
-        </div>
-      </form>
-      <div className="mt-2 flex w-full flex-row justify-center">
-        <Button
-          className="m-1 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-          onPress={() => window.main.openInBrowser(PLUGIN_HUB_BASE)}
-        >
-          Browse Plugin Hub
-        </Button>
-        <Button
-          className="m-1 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-          onPress={() =>
-            showPrompt({
-              title: 'New Plugin',
-              defaultValue: 'demo-example',
-              placeholder: 'example-name',
-              submitName: 'Generate',
-              label: 'Plugin Name',
-              selectText: true,
-              validate: name =>
-                name.match(/^[a-z][a-z-]*[a-z]$/) ? '' : 'Plugin name must be of format my-plugin-name',
-              onComplete: async name => {
-                // Remove insomnia-plugin- prefix if they accidentally typed it
-                name = name.replace(/^insomnia-plugin-/, '');
-                try {
-                  await createPlugin(
-                    `insomnia-plugin-${name}`,
-                    '0.0.1',
-                    [
-                      '// For help writing plugins, visit the documentation to get started:',
-                      `//   ${docsPlugins}`,
-                      '',
-                      '// TODO: Add plugin code here...',
-                    ].join('\n'),
-                  );
-                } catch (err) {
-                  console.error(err);
-                  showAlert({
-                    title: 'Failed to Create Plugin',
-                    message: err.message,
-                  });
-                }
-                refreshPlugins();
-              },
-            })
-          }
-        >
-          Generate New Plugin
-        </Button>
-        <Button
-          className="m-1 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-          onPress={() =>
-            window.shell.showItemInFolder(
-              path.join(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'plugins'),
-            )
-          }
-        >
-          Reveal Plugins Folder
-        </Button>
-        <Button
-          isDisabled={isRefreshingPlugins}
-          className="m-1 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-          onPress={() => refreshPlugins()}
-        >
-          Reload Plugins
-          {isRefreshingPlugins && <i className="fa fa-refresh fa-spin space-left" />}
-        </Button>
-      </div>
-
-      <div className="form-row mt-6">
-        <div className="form-control">
-          <span className="mr-2">
-            Plugin Installation Trusted Certificates File ({ACCEPTED_NODE_CA_FILE_EXTS.join(', ')})
-          </span>
-          <Tooltip
-            className="cursor-pointer"
-            message={
-              <span>
-                You can bundle multiple root certificates into a single file.{' '}
-                <a
-                  className="underline"
-                  href="https://github.com/Kong/insomnia/wiki/Combining-Multiple-Root-CAs-into-a-single-file"
+          {pluginNodeExtraCerts !== '' && (
+            <div className="mt-4 flex flex-col justify-between gap-2">
+              <div className="flex h-20 w-full gap-2">
+                <TextField
+                  name="name"
+                  isRequired
+                  className="group relative flex max-w-full flex-shrink-0 flex-grow flex-col gap-2 overflow-hidden"
                 >
-                  See instructions <i className="fa fa-external-link" />
-                </a>
-              </span>
-            }
-          >
-            <i className="fa fa-info-circle" />
-          </Tooltip>
+                  <Input
+                    value={pluginNodeExtraCerts}
+                    className="flex h-[--line-height-xs] w-full items-center rounded-[--radius-md] border border-solid border-[--hl-md] bg-[--hl-xxs] p-[--padding-sm] text-[--color-font] focus:border-[--hl-lg] focus:bg-transparent"
+                  />
+                </TextField>
+                <Button
+                  className="flex h-[--line-height-xs] items-center justify-center rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  onPress={() => {
+                    patchSettings({ pluginNodeExtraCerts: '' });
+                  }}
+                >
+                  Clear
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
-      <div className="form-row">
-        <div className="form-control form-control--outlined">
-          <input disabled={true} type="text" value={state.pluginNodeExtraCerts} />
+        <Separator className="my-4" />
+        <div className="flex w-full flex-col">
+          <div className="flex items-center justify-between gap-2">
+            <Label className="text-lg font-bold" slot="label">
+              Plugins ({plugins.length})
+            </Label>
+
+            {plugins.length > 0 && (
+              <div className="flex flex-1 items-center justify-end gap-2">
+                <Button
+                  className="flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  isDisabled={isRefreshingPlugins}
+                  onPress={() => {
+                    handleReloadPlugins();
+                  }}
+                >
+                  Reload
+                </Button>
+
+                <Button
+                  className="flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  onPress={() => setShowCreatePluginModal(true)}
+                  isDisabled={isRefreshingPlugins}
+                >
+                  New Plugin
+                </Button>
+              </div>
+            )}
+          </div>
+          <div className="mt-4 flex flex-col">
+            {plugins.length > 0 && (
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2 pl-2">
+                  <div className="flex flex-1 items-center gap-3">
+                    <Checkbox
+                      isSelected={isAllPluginsSelected}
+                      isIndeterminate={isIndeterminate}
+                      onChange={isSelected => {
+                        const config = plugins.reduce(
+                          (acc, plugin) => {
+                            acc[plugin.name] = { ...plugin.config, disabled: !isSelected };
+                            return acc;
+                          },
+                          {} as Record<string, Plugin['config']>,
+                        );
+
+                        patchSettings({ pluginConfig: { ...settings.pluginConfig, ...config } });
+                      }}
+                      className="group flex h-full items-center p-0"
+                    >
+                      <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
+                        <Icon
+                          icon={!isAllPluginsSelected ? 'minus' : 'check'}
+                          className="h-3 w-3 opacity-0 group-data-[indeterminate]:text-[--color-success] group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
+                        />
+                      </div>
+                    </Checkbox>
+                    <span className="text-xs font-bold uppercase text-[--hl-xl]">Name</span>
+                  </div>
+                  <div className="flex items-center gap-6">
+                    <span className="w-[10ch] text-center text-xs font-bold uppercase text-[--hl-xl]">Version</span>
+                    <span className="w-[10ch] text-center text-xs font-bold uppercase text-[--hl-xl]">Folder</span>
+                  </div>
+                </div>
+                <Separator className="mt-2" />
+              </div>
+            )}
+            <GridList
+              aria-label="Installed Plugins"
+              selectionMode="multiple"
+              items={plugins}
+              className="flex flex-col"
+              renderEmptyState={() => (
+                <div className="flex h-36 flex-col items-center">
+                  <h3 className="mt-2 font-semibold text-[--hl-xl]">No plugins</h3>
+                  <p className="mt-1 text-sm text-[--hl-xl]">Get started by creating a new project.</p>
+                  <Button
+                    className="mt-4 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                    onPress={() => setShowCreatePluginModal(true)}
+                    isDisabled={isRefreshingPlugins}
+                  >
+                    New Plugin
+                  </Button>
+                </div>
+              )}
+            >
+              {plugin => {
+                const link = path.resolve(
+                  /^insomnia-plugin-/.test(plugin.name) ? PLUGIN_HUB_BASE : NPM_PACKAGE_BASE,
+                  plugin.name,
+                );
+
+                return (
+                  <GridListItem
+                    textValue={plugin.name}
+                    id={plugin.name}
+                    className="flex h-[--line-height-sm] items-center gap-2 rounded-sm pl-2 odd:bg-[--hl-xxs]"
+                    data-testid={plugin.name}
+                  >
+                    <div className="flex flex-1 items-center gap-3">
+                      <Checkbox
+                        isSelected={!plugin.config.disabled}
+                        isDisabled={isRefreshingPlugins}
+                        className="group flex h-full items-center p-0 disabled:animate-pulse"
+                        onChange={isSelected => {
+                          patchSettings({
+                            pluginConfig: {
+                              ...settings.pluginConfig,
+                              [plugin.name]: { ...plugin.config, disabled: !isSelected },
+                            },
+                          });
+                        }}
+                      >
+                        <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
+                          <Icon
+                            icon="check"
+                            className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
+                          />
+                        </div>
+                      </Checkbox>
+                      <div className="flex items-center gap-2">
+                        <span className="whitespace-nowrap">{plugin.name}</span>
+                        {plugin.description && (
+                          <HelpTooltip info className="space-left">
+                            {plugin.description}
+                          </HelpTooltip>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-6">
+                      <div className="flex w-[8ch] items-center justify-center gap-2">
+                        {plugin.version}
+                        <a className="space-left" href={link} title={link}>
+                          <i className="fa fa-external-link-square" />
+                        </a>
+                      </div>
+                      <div className="flex w-[8ch] items-center gap-1">
+                        <CopyButton
+                          size="small"
+                          variant="text"
+                          title={plugin.directory}
+                          content={plugin.directory}
+                          confirmMessage=""
+                          className="px-[calc(var(--padding-md) * 0.8)] w-[40px] border border-solid border-transparent"
+                        >
+                          <Icon icon="copy" className="h-4 w-4 text-white" />
+                        </CopyButton>
+                        <Button onPress={() => window.shell.showItemInFolder(plugin.directory)}>
+                          <Icon icon="folder-open" className="h-4 w-4 text-white" />
+                        </Button>
+                      </div>
+                    </div>
+                  </GridListItem>
+                );
+              }}
+            </GridList>
+          </div>
         </div>
-        <div className="form-control width-auto">
-          <FileTrigger
-            allowsMultiple={false}
-            acceptedFileTypes={ACCEPTED_NODE_CA_FILE_EXTS}
-            onSelect={fileList => {
-              if (!fileList) {
-                return;
+
+        <div className="mt-2 flex w-full justify-center">
+          <span className="text-sm text-[--hl]">
+            Need more plugins?{' '}
+            <Button
+              className="text-[var(--color-surprise)] underline"
+              onPress={() => window.main.openInBrowser(PLUGIN_HUB_BASE)}
+            >
+              Browse Plugin Hub
+            </Button>{' '}
+            or{' '}
+            <Button
+              className="text-[var(--color-surprise)] underline"
+              onPress={() =>
+                window.shell.showItemInFolder(
+                  path.resolve(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'plugins'),
+                )
               }
-              const files = Array.from(fileList);
-              if (files.length === 0) {
-                return;
-              }
-              patchSettings({ pluginNodeExtraCerts: window.webUtils.getPathForFile(files[0]) });
-            }}
-          >
-            <Button className="m-1 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
-              Browse...
-            </Button>
-          </FileTrigger>
-        </div>
-        <div className="form-control width-auto">
-          <Button
-            className="m-1 flex h-[--line-height-xs] items-center justify-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] py-1 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-            onPress={() => {
-              patchSettings({ pluginNodeExtraCerts: '' });
-            }}
-            isDisabled={state.pluginNodeExtraCerts === ''}
-          >
-            Clear
-          </Button>
+            >
+              Reveal Plugins Folder
+            </Button>{' '}
+            to manage installed ones.
+            {showCreatePluginModal && (
+              <CreatePluginModal
+                onClose={() => setShowCreatePluginModal(false)}
+                onComplete={() => {
+                  setShowCreatePluginModal(false);
+                  handleReloadPlugins();
+                }}
+              />
+            )}
+          </span>
         </div>
       </div>
     </div>
