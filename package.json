@@ -23,7 +23,6 @@
   ],
   "scripts": {
     "dev": "npm start -w insomnia",
-    "dev:local": "cross-env INSOMNIA_AI_URL=https://ai.dev.insomnia.moe INSOMNIA_MOCK_API_URL=http://localhost:8002 INSOMNIA_APP_WEBSITE_URL=http://localhost:8002 INSOMNIA_API_URL=http://localhost:8000 npm start -w insomnia",
     "lint": "npm run lint --workspaces --if-present",
     "type-check": "npm run type-check --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
