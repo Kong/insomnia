@@ -1,14 +1,24 @@
-import { cp, mkdir, readdir, stat, writeFile } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { cp, lstat, mkdir, mkdtemp, readdir, rm, stat, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { promisify } from 'node:util';
 
-import childProcess from 'child_process';
-import * as electron from 'electron';
-import { app } from 'electron';
-import path from 'path';
+import { app, net } from 'electron';
 
-import { isDevelopment, isWindows } from '../common/constants';
+import { isDevelopment } from '../common/constants';
 import * as models from '../models';
+import { validatePluginName } from '../utils/plugin';
 
-const YARN_DEPRECATED_WARN = /(?<keyword>warning)(?<dependencies>[^>:].+[>:])(?<issue>.+)/;
+// Promisified version of execFile to use async/await
+export const execFilePromise = promisify(execFile);
+
+// Allowed tarball hostnames for security
+// This is a security measure to prevent downloading from untrusted sources
+// and to ensure that the tarball is from a known source.
+// The list can be expanded as needed, but should be kept minimal for security.
+// Currently, only npmjs.org and GitHub Packages are allowed.
+const allowedTarballHostnames = ['registry.npmjs.org', 'npm.pkg.github.com'];
 
 interface InsomniaPlugin {
   // Insomnia attribute from package.json
@@ -42,168 +52,217 @@ interface InsomniaPlugin {
   };
 }
 
-export default async function (lookupName: string) {
-  return new Promise<void>(async (resolve, reject) => {
-    let info: InsomniaPlugin | null = null;
+/**
+ * Install an Insomnia plugin by name.
+ * allowScopedPackageNames - If true, allows scoped package names (e.g., @scope/plugin).
+ * This is something we might want to support in the future, but for now, we don't.
+ * @param pluginName - The npm package name of the plugin to install
+ */
+export default async function installPlugin(pluginName: string, allowScopedPackageNames = false): Promise<void> {
+  const validationError = validatePluginName(pluginName, allowScopedPackageNames);
 
+  if (validationError) {
+    throw new Error(validationError);
+  }
+
+  let tmpDir = '';
+
+  try {
+    // Step 1: Validate the plugin and fetch its npm metadata
+    const info: InsomniaPlugin = await getPluginInfo(pluginName, allowScopedPackageNames);
+
+    // Get the normalized module name (without version suffixes)
+    const moduleName = info.name;
+
+    // Check the module name for any invalid characters
+    // This is a basic validation to ensure the module name is safe
+    // and doesn't contain any unexpected characters.
+    const validationError = validatePluginName(moduleName, allowScopedPackageNames);
+
+    if (validationError) {
+      throw new Error(validationError);
+    }
+
+    // Determine the target plugin installation directory
+    const userDataPath = process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData');
+    const pluginDir = path.resolve(userDataPath, 'plugins', moduleName);
+
+    console.log(`[plugins] Installing plugin ${moduleName} to ${pluginDir}`);
+
+    // Step 2: Create the plugin directory if it doesn't exist
+    await mkdir(pluginDir, { recursive: true });
+
+    if (!info.dist?.tarball) {
+      throw new Error('Invalid plugin metadata: missing tarball URL');
+    }
+
+    // Step 3: Ensure the plugin tarball can be fetched
     try {
-      info = await _isInsomniaPlugin(lookupName);
-      // Get actual module name without version suffixes and things
-      const moduleName = info.name;
-      const pluginDir = path.join(
-        process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'),
-        'plugins',
-        moduleName,
-      );
-
-      // Make plugin directory
-      await mkdir(pluginDir, { recursive: true });
-
-      // Download the module
-      try {
-        await electron.net.fetch(info.dist.tarball);
-      } catch (err) {
-        reject(new Error(`Failed to make plugin request ${info?.dist.tarball}: ${err.message}`));
-        return;
+      // After fetching info, check the info.dist.tarball. This prevents downloading from weird hosts.
+      const tarballUrl = new URL(info.dist.tarball);
+      if (!allowedTarballHostnames.includes(tarballUrl.hostname)) {
+        throw new Error(`Tarball must come from an allowed host. Got: ${tarballUrl.hostname}`);
       }
 
-      const { tmpDir } = await _installPluginToTmpDir(lookupName);
-      console.log(`[plugins] Moving plugin from ${tmpDir} to ${pluginDir}`);
+      // Fetch the tarball to ensure it's accessible
+      // This is a simple check to ensure the tarball URL is valid and accessible
+      const tarballResponse = await net.fetch(info.dist.tarball);
 
-      // Move entire module to plugins folder
-      await cp(path.join(tmpDir, moduleName), pluginDir, { recursive: true, verbatimSymlinks: true });
-
-      // Move each dependency into node_modules folder
-      const pluginModulesDir = path.join(pluginDir, 'node_modules');
-      await mkdir(pluginModulesDir, { recursive: true });
-
-      for (const filename of await readdir(tmpDir)) {
-        const src = path.join(tmpDir, filename);
-        const file = await stat(src);
-        if (filename === moduleName || !file.isDirectory()) {
-          continue;
-        }
-
-        const dest = path.join(pluginModulesDir, filename);
-        await cp(src, dest, { recursive: true, verbatimSymlinks: true });
+      // Check if the response is OK (status code 200)
+      if (!tarballResponse.ok) {
+        throw new Error(`Failed to fetch tarball: ${tarballResponse.statusText}`);
       }
-    } catch (err) {
-      reject(err);
-      return;
+    } catch (err: any) {
+      throw new Error(`Failed to fetch plugin tarball ${info.dist.tarball}: ${err.message}`);
     }
 
-    resolve();
-  });
-}
+    // Step 4: Install the plugin into a temporary directory
+    tmpDir = await installPluginToTmpDir(pluginName, allowScopedPackageNames);
+    console.log(`[plugins] Moving plugin from temp directory ${tmpDir} to final plugin directory ${pluginDir}`);
 
-async function _isInsomniaPlugin(lookupName: string) {
-  return new Promise<InsomniaPlugin>(async (resolve, reject) => {
-    console.log('[plugins] Fetching module info from npm');
-    childProcess.execFile(
-      escape(process.execPath),
-      [
-        '--no-deprecation', // Because Yarn still uses `new Buffer()`
-        escape(_getYarnPath()),
-        'info',
-        lookupName,
-        '--json',
-        '--registry',
-        'https://registry.npmjs.org/',
-      ],
-      {
-        timeout: 5 * 60 * 1000,
-        maxBuffer: 1024 * 1024,
-        shell: true,
-        env: await _getYarnEnvValues(),
-      },
-      (err, stdout, stderr) => {
-        if (stderr) {
-          reject(new Error(`Yarn error ${stderr.toString()}`));
-          return;
-        }
+    // Step 5: Move the main plugin folder into the plugin directory
+    await cp(path.resolve(tmpDir, moduleName), pluginDir, {
+      recursive: true,
+      verbatimSymlinks: true,
+    });
 
-        let yarnOutput;
+    // Step 6: Handle the plugin's dependencies
+    // Create a node_modules directory inside the plugin directory
+    const pluginModulesDir = path.resolve(pluginDir, 'node_modules');
+    await mkdir(pluginModulesDir, { recursive: true });
 
-        try {
-          yarnOutput = JSON.parse(stdout.toString());
-        } catch (ex) {
-          // Output is not JSON. Check if yarn/electron terminated with non-zero exit code.
-          // In certain environments electron can exit with error even if output is OK.
-          // Parsing is attempted before checking exit code as workaround for false errors.
-          if (err) {
-            reject(new Error(`${lookupName} npm error: ${err.message}`));
-          } else {
-            reject(new Error(`Yarn response not JSON: ${ex.message}`));
-          }
+    // Read all folders/files in the temp directory
+    const tmpFiles = await readdir(tmpDir);
 
-          return;
-        }
-
-        const data = yarnOutput.data;
-
-        if (!('insomnia' in data)) {
-          reject(new Error(`"${lookupName}" not a plugin! Package missing "insomnia" attribute`));
-          return;
-        }
-
-        console.log(`[plugins] Detected Insomnia plugin ${data.name}`);
-        const insomniaPlugin: InsomniaPlugin = {
-          insomnia: data.insomnia,
-          name: data.name,
-          version: data.version,
-          dist: {
-            shasum: data.dist.shasum,
-            tarball: data.dist.tarball,
-          },
-        };
-        resolve(insomniaPlugin);
-      },
+    // Filter out the main plugin directory and non-directories
+    // and copy each directory to the plugin's node_modules directory
+    // Use Promise.all to copy all directories in parallel
+    const filtered = await Promise.all(
+      tmpFiles.map(async filename => {
+        const fullPath = path.resolve(tmpDir, filename);
+        const fileStat = await stat(fullPath);
+        return { filename, include: filename !== moduleName && fileStat.isDirectory() };
+      }),
     );
+
+    await Promise.all(
+      filtered
+        .filter(f => f.include)
+        .map(async ({ filename }) => {
+          const src = path.resolve(tmpDir, filename);
+          const dest = path.resolve(pluginModulesDir, filename);
+          await cp(src, dest, { recursive: true, verbatimSymlinks: true });
+        }),
+    );
+  } catch (err) {
+    // Log and rethrow any installation errors
+    console.error(`[plugins] Failed to install plugin ${pluginName}:`, err);
+    throw err;
+  } finally {
+    // Ensure the temporary directory is cleaned up
+    if (tmpDir) {
+      try {
+        await rm(tmpDir, { recursive: true, force: true });
+      } catch (error) {
+        console.warn(`[plugins] Failed to clean tmp dir ${tmpDir}:`, error);
+      }
+    }
+  }
+}
+
+/**
+ * Executes a Yarn command safely inside the app.
+ * Handles environment setup, timeout, and stderr validation.
+ */
+export async function runYarnCommand(args: string[], cwd?: string) {
+  const yarnPath = await getYarnPath();
+
+  const { stdout, stderr } = await execFilePromise(process.execPath, ['--no-deprecation', yarnPath, ...args], {
+    cwd,
+    env: await getYarnEnvValues(),
+    timeout: 5 * 60 * 1000, // 5 minutes
+    maxBuffer: 1024 * 1024, // 1MB buffer
   });
+
+  if (stderr && !containsOnlyDeprecationWarnings(stderr)) {
+    throw new Error(`Yarn error: ${stderr}`);
+  }
+
+  return stdout.toString();
 }
 
-async function _getYarnEnvValues() {
-  const settings = await models.settings.get();
-  const yarnEnv: Record<string, string> = {
-    NODE_ENV: 'production',
-    ELECTRON_RUN_AS_NODE: 'true',
+/**
+ * Checks if the given npm package is an Insomnia plugin.
+ * Verifies that the package contains an "insomnia" attribute.
+ */
+export async function getPluginInfo(lookupName: string, allowScopedPackageNames = false) {
+  const validationError = validatePluginName(lookupName, allowScopedPackageNames);
+
+  if (validationError) {
+    throw new Error(validationError);
+  }
+
+  console.log('[plugins] Fetching module info from npm');
+
+  const stdout = await runYarnCommand(['info', lookupName, '--json', '--registry', 'https://registry.npmjs.org/']);
+
+  let yarnOutput;
+  try {
+    yarnOutput = JSON.parse(stdout);
+  } catch (err) {
+    throw new Error(`Invalid JSON received from yarn: ${(err as Error).message}`);
+  }
+
+  const data = yarnOutput.data;
+  if (!data || typeof data !== 'object') {
+    throw new Error(`Unexpected yarn output structure`);
+  }
+
+  if (!data.insomnia) {
+    throw new Error(`Package "${lookupName}" is not an Insomnia plugin (missing "insomnia" attribute)`);
+  }
+
+  return {
+    insomnia: data.insomnia,
+    name: data.name,
+    version: data.version,
+    dist: {
+      shasum: data.dist.shasum,
+      tarball: data.dist.tarball,
+    },
   };
-  if (settings.pluginNodeExtraCerts) {
-    yarnEnv.NODE_EXTRA_CA_CERTS = settings.pluginNodeExtraCerts;
-  }
-  if (settings.proxyEnabled) {
-    if (settings.httpProxy) {
-      yarnEnv.HTTP_PROXY = settings.httpProxy;
-    }
-    if (settings.httpsProxy) {
-      yarnEnv.HTTPS_PROXY = settings.httpsProxy;
-    }
-    if (settings.noProxy) {
-      yarnEnv.NO_PROXY = settings.noProxy;
-    }
-  }
-  return yarnEnv;
 }
 
-async function _installPluginToTmpDir(lookupName: string) {
-  return new Promise<{ tmpDir: string }>(async (resolve, reject) => {
-    const tmpDir = path.join(electron.app.getPath('temp'), `${lookupName}-${Date.now()}`);
-    await mkdir(tmpDir, { recursive: true });
-    // Write a dummy package.json so that yarn doesn't traverse up the directory tree
-    await writeFile(path.join(tmpDir, 'package.json'), JSON.stringify({ license: 'ISC', workspaces: [] }), 'utf-8');
+/**
+ * Installs a plugin into a temporary directory using Yarn.
+ * Creates a minimal package.json and downloads the dependency.
+ */
+export async function installPluginToTmpDir(lookupName: string, allowScopedPackageNames = false) {
+  const validationError = validatePluginName(lookupName, allowScopedPackageNames);
 
-    console.log(`[plugins] Installing plugin to ${tmpDir}`);
-    childProcess.execFile(
-      escape(process.execPath),
+  if (validationError) {
+    throw new Error(validationError);
+  }
+
+  try {
+    const tmpDir = await mkdtemp(path.resolve(tmpdir(), `${lookupName.replace('/', '-')}-${Date.now()}`));
+
+    await writeFile(
+      path.resolve(tmpDir, 'package.json'),
+      JSON.stringify({ license: 'ISC', workspaces: [] }, null, 2),
+      'utf-8',
+    );
+
+    console.log(`[plugins] Installing plugin into temp dir: ${tmpDir}`);
+
+    await runYarnCommand(
       [
-        '--no-deprecation', // Because Yarn still uses `new Buffer()`
-        escape(_getYarnPath()),
         'add',
         lookupName,
         '--modules-folder',
-        escape(tmpDir),
+        tmpDir,
         '--cwd',
-        escape(tmpDir),
+        tmpDir,
         '--no-lockfile',
         '--production',
         '--no-progress',
@@ -211,81 +270,196 @@ async function _installPluginToTmpDir(lookupName: string) {
         '--registry',
         'https://registry.npmjs.org/',
       ],
-      {
-        timeout: 5 * 60 * 1000,
-        maxBuffer: 1024 * 1024,
-        cwd: tmpDir,
-        shell: true,
-        // Some package installs require a shell
-        env: await _getYarnEnvValues(),
-      },
-      (err, stdout, stderr) => {
-        console.log('[plugins] Install complete', { err, stdout, stderr });
-        // Check yarn/electron process exit code.
-        // In certain environments electron can exit with error even if the command was performed successfully.
-        // Checking for success message in output is a workaround for false errors.
-        if (err && !stdout.toString().includes('success')) {
-          reject(new Error(`${lookupName} install error: ${err.message}`));
-          return;
-        }
-
-        if (stderr && !containsOnlyDeprecationWarnings(stderr)) {
-          reject(new Error(`Yarn error ${stderr.toString()}`));
-          return;
-        }
-
-        resolve({
-          tmpDir,
-        });
-      },
+      tmpDir,
     );
-  });
-}
 
-export function containsOnlyDeprecationWarnings(stderr: string) {
-  // Split on line breaks and remove falsy values (null, undefined, 0, -0, NaN, "", false)
-  const arr = stderr.split(/\r?\n/).filter(error => error);
-  // Retrieve all matching deprecated dependency warning
-  const warnings = arr.filter(error => isDeprecatedDependencies(error));
-  // Print each deprecation warnings to the console, so we don't hide them.
-  warnings.forEach(warning => console.warn('[plugins] deprecation warning during installation: ', warning));
-  // If they mismatch, it means there are warnings and errors
-  return warnings.length === arr.length;
+    // Check if the plugin was installed successfully
+    const pluginDir = path.resolve(tmpDir, lookupName);
+    const pluginExists = await stat(pluginDir)
+      .then(() => true)
+      .catch(() => false);
+    if (!pluginExists) {
+      throw new Error(`Plugin "${lookupName}" not found in temporary directory`);
+    }
+
+    console.log(`[plugins] Plugin installed successfully in temp dir: ${tmpDir}`);
+
+    // Check if the plugin has a package.json file
+    const packageJsonPath = path.resolve(pluginDir, 'package.json');
+    const packageJsonExists = await stat(packageJsonPath)
+      .then(() => true)
+      .catch(() => false);
+
+    if (!packageJsonExists) {
+      throw new Error(`Plugin "${lookupName}" does not have a package.json file`);
+    }
+
+    return tmpDir;
+  } catch (err) {
+    throw new Error(`Failed to install plugin: ${(err as Error).message}`);
+  }
 }
 
 /**
- * Provided a string, it checks for the following message:<br>
- * <<[warning] xxx > yyy > zzz: yyy<n is [no longer maintained] and [not recommended for usage] <br>
- * due to the number of issues. Please, [upgrade your dependencies] to xxx>> <br>
- * @param str The error message
- * @returns {boolean} Returns true if it's a deprecated warning
+ * Resolves and validates the path to the standalone Yarn binary.
+ * Ensures no symlinks and the path is within the app folder.
  */
-export function isDeprecatedDependencies(str: string) {
-  // The issue contains the message as it is without the dependency list
-  const message = YARN_DEPRECATED_WARN.exec(str)?.groups?.issue;
-  // Strict check, everything must be matched to be a false positive
-  // !! is not a mistake, makes it returns boolean instead of undefined on error
-  return !!(
-    message &&
-    message.includes('no longer maintained') &&
-    message.includes('not recommended for usage') &&
-    message.includes('upgrade your dependencies')
-  );
+export async function getYarnPath() {
+  const SAFE_APP_BASE = path.resolve(__dirname, '..');
+
+  const appPath = app.getAppPath();
+  const resolvedAppPath = path.resolve(appPath);
+
+  // Validate app path is safe
+  if (!resolvedAppPath.startsWith(SAFE_APP_BASE)) {
+    throw new Error('Unsafe app path detected.');
+  }
+
+  const yarnPath = isDevelopment()
+    ? path.resolve(resolvedAppPath, './bin/yarn-standalone.js')
+    : path.resolve(resolvedAppPath, '../bin/yarn-standalone.js');
+
+  if (!yarnPath.startsWith(SAFE_APP_BASE)) {
+    throw new Error('Unsafe yarn path detected.');
+  }
+
+  // Ensure file exists and is not a symlink
+  try {
+    const stats = await lstat(yarnPath);
+
+    if (stats.isSymbolicLink()) {
+      throw new Error('yarn-standalone.js is a symlink, refusing to use it.');
+    }
+  } catch (err: any) {
+    if (err.code === 'ENOENT') {
+      throw new Error(`yarn-standalone.js not found at expected location: ${yarnPath}`);
+    }
+    throw err;
+  }
+
+  return yarnPath;
 }
 
-function _getYarnPath() {
-  // TODO: This is brittle. Make finding this more robust.
-  if (isDevelopment()) {
-    return path.resolve(app.getAppPath(), './bin/yarn-standalone.js');
+/**
+ * Checks if the Yarn stderr output only contains deprecation warnings.
+ */
+export function containsOnlyDeprecationWarnings(output: string): boolean {
+  const MAX_LINES = 20;
+  const MAX_LINE_LENGTH = 300;
+
+  if (!output) return true;
+
+  if (hasUnexpectedBinaryData(output)) {
+    return false; // Contains unexpected binary data
   }
-  return path.resolve(app.getAppPath(), '../bin/yarn-standalone.js');
+
+  const lines = output
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean);
+
+  if (lines.length > MAX_LINES) {
+    return false;
+  }
+
+  const deprecationPatterns = [
+    /^warning:.*deprecated/i,
+    /^deprecated:/i,
+    /this feature is deprecated/i,
+    /will be removed/i,
+    /deprecation warning/i,
+  ];
+
+  return lines.every(line => {
+    if (line.length > MAX_LINE_LENGTH) return false;
+    return deprecationPatterns.some(pattern => pattern.test(line));
+  });
 }
 
-function escape(p: string) {
-  if (isWindows()) {
-    // Quote for Windows paths
-    return `"${p}"`;
+/**
+ * Checks for unexpected binary characters in a string output.
+ * Only printable ASCII characters, tabs, CR, and LF are allowed.
+ */
+export function hasUnexpectedBinaryData(output: string): boolean {
+  for (let i = 0; i < output.length; i++) {
+    const code = output.charCodeAt(i);
+    if (!(code === 0x09 || code === 0x0a || code === 0x0d || (code >= 0x20 && code <= 0x7e))) {
+      return true;
+    }
   }
-  // Escape whitespace and parenthesis with backslashes for Unix paths
-  return p.replace(/([\s()])/g, '\\$1');
+  return false;
+}
+
+/**
+ * Trims a string safely.
+ * Returns undefined if input is not a string or becomes empty after trimming.
+ */
+export function safeTrim(value: unknown): string | undefined {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  }
+  return undefined;
+}
+
+/**
+ * Constructs the environment variables needed for running Yarn.
+ * Pulls settings from the application models.
+ */
+export async function getYarnEnvValues(): Promise<Record<string, string>> {
+  const settings = await models.settings.get();
+
+  const yarnEnv: Record<string, string> = {
+    NODE_ENV: 'production',
+    ELECTRON_RUN_AS_NODE: 'true',
+  };
+
+  // Add extra certificates if defined
+  const extraCerts = safeTrim(settings.pluginNodeExtraCerts);
+  if (extraCerts) {
+    yarnEnv.NODE_EXTRA_CA_CERTS = extraCerts;
+  }
+
+  // Add proxy settings if enabled
+  if (settings.proxyEnabled === true) {
+    Object.assign(yarnEnv, buildProxyEnv(settings));
+  }
+
+  return yarnEnv;
+}
+
+/**
+ * Builds proxy-related environment variables from settings.
+ */
+export function buildProxyEnv(settings: any): Record<string, string> {
+  const proxyEnv: Record<string, string> = {};
+
+  const httpProxy = safeTrim(settings.httpProxy);
+  if (httpProxy) {
+    proxyEnv.HTTP_PROXY = httpProxy;
+  }
+
+  const httpsProxy = safeTrim(settings.httpsProxy);
+  if (httpsProxy && isValidProxyUrl(httpsProxy)) {
+    proxyEnv.HTTPS_PROXY = httpsProxy;
+  }
+
+  const noProxy = safeTrim(settings.noProxy);
+  if (noProxy) {
+    proxyEnv.NO_PROXY = noProxy;
+  }
+
+  return proxyEnv;
+}
+
+/**
+ * Validates that a given string is a well-formed URL.
+ */
+export function isValidProxyUrl(url: string): boolean {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
 }

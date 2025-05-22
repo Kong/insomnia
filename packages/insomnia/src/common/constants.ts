@@ -127,7 +127,7 @@ export enum UpdateURL {
 
 // API
 export const getApiBaseURL = () => env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
-export const getMockServiceURL = () => env.INSOMNIA_MOCK_API_URL || 'https://mock.insomnia.rest';
+export const getMockServiceURL = () => env.INSOMNIA_MOCK_API_URL || 'https://mock.insomnia.run';
 
 export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
   if (!mockServer.useInsomniaCloud) {

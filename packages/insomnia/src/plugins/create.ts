@@ -1,37 +1,43 @@
-import electron from 'electron';
 import fs from 'fs';
 import path from 'path';
 
-export async function createPlugin(moduleName: string, version: string, mainJs: string) {
-  const pluginDir = path.join(
-    process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'),
-    'plugins',
-    moduleName,
-  );
+import { getSafePluginDir } from '../utils/plugin';
 
-  if (fs.existsSync(pluginDir)) {
-    throw new Error(`Plugin already exists at "${pluginDir}"`);
-  }
-  fs.mkdirSync(pluginDir, { recursive: true });
+export async function createPlugin(pluginName: string, mainJs: string) {
+  const pluginDir = getSafePluginDir(pluginName);
 
-  // Write package.json
-  fs.writeFileSync(
-    path.join(pluginDir, 'package.json'),
-    JSON.stringify(
-      {
-        name: moduleName,
-        version,
-        private: true,
-        insomnia: {
-          name: moduleName.replace(/^insomnia-plugin-/, ''),
-          description: '',
+  try {
+    const packagePath = path.resolve(pluginDir, 'package.json');
+    const mainJsPath = path.resolve(pluginDir, 'main.js');
+
+    if (fs.existsSync(packagePath) || fs.existsSync(mainJsPath)) {
+      throw new Error('Plugin files already exist');
+    }
+
+    fs.mkdirSync(pluginDir, { recursive: true });
+    // 'wx' to write only if not exists
+    fs.writeFileSync(
+      packagePath,
+      JSON.stringify(
+        {
+          name: pluginName,
+          version: '0.0.1',
+          private: true,
+          insomnia: {
+            name: pluginName.replace(/^insomnia-plugin-/, ''),
+            description: '',
+          },
+          main: 'main.js',
         },
-        main: 'main.js',
-      },
-      null,
-      2,
-    ),
-  );
-  // Write main JS file
-  fs.writeFileSync(path.join(pluginDir, 'main.js'), mainJs);
+        null,
+        2,
+      ),
+      { flag: 'wx' },
+    );
+    // 'wx' to write only if not exists
+    fs.writeFileSync(mainJsPath, mainJs, { flag: 'wx' });
+  } catch (err: any) {
+    console.error('Failed to create plugin files:', err);
+    throw new Error('Plugin creation failed. Please try again.');
+  }
 }
