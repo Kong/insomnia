@@ -1,0 +1,98 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Reporter > logTestResult > should log test results with dot reporter 1`] = `
+"
+Test results:
+.F.
+
+Test: 1 failed, 2 passed, 3 total
+
+Test failed error"
+`;
+
+exports[`Reporter > logTestResult > should log test results with list reporter 1`] = `
+"
+Test results:
+✅ passed test case
+❌ failed test case
+✅ passed test case
+
+Test: 1 failed, 2 passed, 3 total
+
+Test failed error"
+`;
+
+exports[`Reporter > logTestResult > should log test results with min reporter 1`] = `
+"
+Test results:
+ 
+
+Test: 1 failed, 2 passed, 3 total
+
+Test failed error"
+`;
+
+exports[`Reporter > logTestResult > should log test results with progress reporter 1`] = `
+"
+Test results:
+[-x-]
+
+Test: 1 failed, 2 passed, 3 total
+
+Test failed error"
+`;
+
+exports[`Reporter > logTestResult > should log test results with spec reporter 1`] = `
+"
+Test results:
+✅ passed test case
+❌ failed test case
+✅ passed test case
+
+Test: 1 failed, 2 passed, 3 total
+
+Test failed error"
+`;
+
+exports[`Reporter > logTestResult > should log test results with tap reporter 1`] = `
+"
+Test results:
+TAP version 13
+1..3
+ok 1 - passed test case
+not ok 2 - failed test case
+ok 3 - passed test case
+
+
+Test: 1 failed, 2 passed, 3 total
+
+Test failed error"
+`;
+
+exports[`Reporter > logTestResultSummary > should handle requests with empty test results 1`] = `
+"
+Test Requests: 1 failed, 2 passed, 3 total
+Tests:         1 failed, 1 passed, 2 total
+"
+`;
+
+exports[`Reporter > logTestResultSummary > should log summary for all failed tests 1`] = `
+"
+Test Requests: 3 failed, 3 total
+Tests:         5 failed, 5 total
+"
+`;
+
+exports[`Reporter > logTestResultSummary > should log summary for all passed tests 1`] = `
+"
+Test Requests: 3 passed, 3 total
+Tests:         6 passed, 6 total
+"
+`;
+
+exports[`Reporter > logTestResultSummary > should log summary for mixed test results 1`] = `
+"
+Test Requests: 2 failed, 1 passed, 3 total
+Tests:         3 failed, 4 passed, 7 total
+"
+`;

@@ -32,6 +32,7 @@ import type { BaseModel } from './db/models/types';
 import { loadTestSuites, promptTestSuites } from './db/models/unit-test-suite';
 import { matchIdIsh } from './db/models/util';
 import { loadWorkspace, promptWorkspace } from './db/models/workspace';
+import { logTestResult, logTestResultSummary, reporterTypes, type TestReporter } from './reporter';
 
 export interface GlobalOptions {
   ci: boolean;
@@ -41,9 +42,6 @@ export interface GlobalOptions {
   verbose: boolean;
   workingDir: string;
 }
-
-export type TestReporter = 'dot' | 'list' | 'spec' | 'min' | 'progress' | 'tap';
-export const reporterTypes: TestReporter[] = ['dot', 'list', 'min', 'progress', 'spec', 'tap'];
 
 export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: string) => {
   try {
@@ -206,45 +204,6 @@ const collect = (val: string, memo: string[]) => {
   return memo;
 };
 const localAppDir = getAppDataDir(getDefaultProductName());
-const logTestResult = (reporter: TestReporter, testResults?: RequestTestResult[]) => {
-  if (!testResults || testResults.length === 0) {
-    return '';
-  }
-  const fallbackReporter = testResults.map(r => `${r.status === 'passed' ? '✅' : '❌'} ${r.testCase}`).join('\n');
-
-  const reporterMap = {
-    dot: testResults.map(r => (r.status === 'passed' ? '.' : 'F')).join(''),
-    list: fallbackReporter,
-    min: ' ',
-    progress: `[${testResults.map(r => (r.status === 'passed' ? '-' : 'x')).join('')}]`,
-    spec: fallbackReporter,
-    tap: convertToTAP(testResults),
-  };
-  const summary = `
-
-Total tests: ${testResults.length}
-Passed: ${testResults.filter(r => r.status === 'passed').length}
-Failed: ${testResults.filter(r => r.status === 'failed').length}
-
-${testResults
-  .filter(r => r.status === 'failed')
-  .map(r => r.errorMessage)
-  .join('\n')}`;
-  return `${reporterMap[reporter] || fallbackReporter}${summary}`;
-};
-function convertToTAP(testCases: RequestTestResult[]): string {
-  let tapOutput = 'TAP version 13\n';
-  const totalTests = testCases.length;
-  // Add the number of test cases
-  tapOutput += `1..${totalTests}\n`;
-  // Iterate through each test case and format it in TAP
-  testCases.forEach((test, index) => {
-    const testNumber = index + 1;
-    const testStatus = test.status === 'passed' ? 'ok' : 'not ok';
-    tapOutput += `${testStatus} ${testNumber} - ${test.testCase}\n`;
-  });
-  return tapOutput;
-}
 const readFileFromPathOrUrl = async (pathOrUrl: string) => {
   if (!pathOrUrl) {
     return '';
@@ -762,6 +721,8 @@ export const go = (args?: string[]) => {
             iterationCount,
           );
           let success = true;
+
+          const testResultsQueue: RequestTestResult[][] = [];
           for (let i = 0; i < iterationCount; i++) {
             let reqIndex = 0;
             while (reqIndex < requestsToRun.length) {
@@ -784,10 +745,10 @@ export const go = (args?: string[]) => {
                 .map(e => appendNewLineIfNeeded(e.value))
                 .join('');
               logger.trace(timeline);
+
               if (res.testResults?.length) {
-                console.log(`
-Test results:`);
-                console.log(logTestResult(options.reporter, res.testResults));
+                testResultsQueue.push(res.testResults);
+                logTestResult(options.reporter, res.testResults);
                 const hasFailedTests = res.testResults.some(t => t.status === 'failed');
                 if (hasFailedTests) {
                   success = false;
@@ -809,6 +770,9 @@ Test results:`);
               }
             }
           }
+
+          logTestResultSummary(testResultsQueue);
+
           return process.exit(success ? 0 : 1);
         } catch (error) {
           logErrorAndExit(error);
@@ -837,14 +801,14 @@ Test results:`);
       // Assert identifier is a file
       const identifierAsAbsPath =
         identifier && getAbsoluteFilePath({ workingDir: options.workingDir, file: identifier });
-      let isIdentiferAFile = false;
+      let isIdentifierAFile = false;
       try {
-        isIdentiferAFile = identifier && (await fs.promises.stat(identifierAsAbsPath)).isFile();
+        isIdentifierAFile = identifier && (await fs.promises.stat(identifierAsAbsPath)).isFile();
       } catch (err) {}
       const pathToSearch = '';
       let specContent;
       let rulesetFileName;
-      if (isIdentiferAFile) {
+      if (isIdentifierAFile) {
         // try load as a file
         logger.trace(`Linting specification file from identifier: \`${identifierAsAbsPath}\``);
         specContent = await fs.promises.readFile(identifierAsAbsPath, 'utf-8');
@@ -854,7 +818,7 @@ Test results:`);
           return process.exit(1);
         }
       }
-      if (!isIdentiferAFile) {
+      if (!isIdentifierAFile) {
         try {
           specContent = await resolveSpecInDatabase(identifier, options);
         } catch (err) {
