@@ -142,11 +142,14 @@ export async function trackPageView(name: string) {
 function _getOsName() {
   const platform = getAppPlatform();
   switch (platform) {
-    case 'darwin':
+    case 'darwin': {
       return 'mac';
-    case 'win32':
+    }
+    case 'win32': {
       return 'windows';
-    default:
+    }
+    default: {
       return platform;
+    }
   }
 }

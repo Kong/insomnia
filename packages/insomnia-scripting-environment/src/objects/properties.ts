@@ -117,7 +117,7 @@ export class PropertyBase {
 
   toJSON() {
     const entriesToExport = Object.entries(this).filter(
-      (kv: [string, any]) => typeof kv[1] !== 'function' && typeof kv[1] !== 'undefined' && kv[0] !== '_kind',
+      (kv: [string, any]) => typeof kv[1] !== 'function' && kv[1] !== undefined && kv[0] !== '_kind',
     );
 
     return Object.fromEntries(entriesToExport);

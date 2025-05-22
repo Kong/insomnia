@@ -121,18 +121,23 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
         switch (dateType) {
           case 'millis':
-          case 'ms':
+          case 'ms': {
             return now.getTime() + '';
+          }
           case 'unix':
           case 'seconds':
-          case 's':
+          case 's': {
             return Math.round(now.getTime() / 1000) + '';
-          case 'iso-8601':
+          }
+          case 'iso-8601': {
             return now.toISOString();
-          case 'custom':
+          }
+          case 'custom': {
             return format(now, formatStr);
-          default:
+          }
+          default: {
             throw new Error(`Invalid date type "${dateType}"`);
+          }
         }
       },
     },
@@ -155,13 +160,16 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
       run(_context, uuidType = 'v4') {
         switch ((uuidType + '').toLowerCase()) {
           case '1':
-          case 'v1':
+          case 'v1': {
             return uuid.v1();
+          }
           case '4':
-          case 'v4':
+          case 'v4': {
             return uuid.v4();
-          default:
+          }
+          default: {
             throw new Error(`Invalid UUID type "${uuidType}"`);
+          }
         }
       },
     },
@@ -534,12 +542,15 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           hide: args => !(args[0].value !== 'raw' && args[0].value !== 'url'),
           displayName: args => {
             switch (args[0].value) {
-              case 'body':
+              case 'body': {
                 return 'Filter (JSONPath or XPath)';
-              case 'header':
+              }
+              case 'header': {
                 return 'Header Name';
-              default:
+              }
+              default: {
                 return 'Filter';
+              }
             }
           },
         },
@@ -606,7 +617,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         let response = await context.util.models.response.getLatestForRequestId(id, environmentId);
 
         switch (resendBehavior) {
-          case 'no-history':
+          case 'no-history': {
             if (!response) {
               shouldResend = true;
             } else {
@@ -615,8 +626,9 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
                 response.environmentId !== environmentId || response.globalEnvironmentId !== globalEnvironmentId;
             }
             break;
+          }
 
-          case 'when-expired':
+          case 'when-expired': {
             if (!response) {
               shouldResend = true;
             } else if (
@@ -630,15 +642,18 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
               shouldResend = ageSeconds > maxAgeSeconds;
             }
             break;
+          }
 
-          case 'always':
+          case 'always': {
             shouldResend = true;
             break;
+          }
 
           case 'never':
-          default:
+          default: {
             shouldResend = false;
             break;
+          }
         }
 
         // Make sure we only send the request once per render so we don't have infinite recursion
@@ -864,14 +879,18 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             ['url', 'oauth2', 'oauth2-identity', 'oauth2-refresh', 'name', 'folder'].includes(args[0].value + ''),
           displayName: args => {
             switch (args[0].value) {
-              case 'cookie':
+              case 'cookie': {
                 return 'Cookie Name';
-              case 'parameter':
+              }
+              case 'parameter': {
                 return 'Query Parameter Name';
-              case 'header':
+              }
+              case 'header': {
                 return 'Header Name';
-              default:
+              }
+              default: {
                 return 'Name';
+              }
             }
           },
         },

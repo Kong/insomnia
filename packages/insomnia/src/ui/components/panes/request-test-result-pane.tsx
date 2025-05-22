@@ -35,16 +35,21 @@ export const RequestTestResultRows: FC<RequestTestResultRowsProps> = ({
   const testResultRows = requestTestResults
     .filter(result => {
       switch (targetTests) {
-        case 'all':
+        case 'all': {
           return true;
-        case 'passed':
+        }
+        case 'passed': {
           return result.status === 'passed';
-        case 'failed':
+        }
+        case 'failed': {
           return result.status === 'failed';
-        case 'skipped':
+        }
+        case 'skipped': {
           return result.status === 'skipped';
-        default:
+        }
+        default: {
           throw new Error(`unexpected target test type ${targetTests}`);
+        }
       }
     })
     .filter(result => {

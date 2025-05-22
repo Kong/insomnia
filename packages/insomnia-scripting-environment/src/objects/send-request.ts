@@ -84,25 +84,31 @@ function requestToCurlOptions(req: string | Request | RequestOptions, settings: 
     let mimeType = 'application/octet-stream';
     if (finalReq.body) {
       switch (finalReq.body.mode) {
-        case 'raw':
+        case 'raw': {
           mimeType = 'text/plain';
           break;
-        case 'file':
+        }
+        case 'file': {
           // TODO: improve this by sniffing
           mimeType = 'application/octet-stream';
           break;
-        case 'formdata':
+        }
+        case 'formdata': {
           // boundary should already be part of Content-Type header
           mimeType = 'multipart/form-data';
           break;
-        case 'urlencoded':
+        }
+        case 'urlencoded': {
           mimeType = 'application/x-www-form-urlencoded';
           break;
-        case 'graphql':
+        }
+        case 'graphql': {
           mimeType = 'application/json';
           break;
-        default:
+        }
+        default: {
           throw new Error(`unknown body mode: ${finalReq.body.mode}`);
+        }
       }
     }
 

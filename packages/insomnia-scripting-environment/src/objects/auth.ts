@@ -376,12 +376,13 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
   };
 
   switch (authObj.type) {
-    case 'noauth':
+    case 'noauth': {
       return {
         type: 'none',
         disabled: true,
       };
-    case 'apikey':
+    }
+    case 'apikey': {
       return {
         type: 'apikey',
         disabled: findValueInKvArray('disabled', authObj.apikey) === 'true',
@@ -389,14 +390,16 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
         value: findValueInKvArray('value', authObj.apikey),
         addTo: findValueInKvArray('in', authObj.apikey),
       };
-    case 'bearer':
+    }
+    case 'bearer': {
       return {
         type: 'bearer',
         disabled: findValueInKvArray('disabled', authObj.bearer) === 'true',
         token: findValueInKvArray('token', authObj.bearer),
         prefix: findValueInKvArray('prefix', authObj.bearer),
       };
-    case 'basic':
+    }
+    case 'basic': {
       return {
         type: 'basic',
         disabled: findValueInKvArray('disabled', authObj.basic) === 'true',
@@ -404,20 +407,23 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
         username: findValueInKvArray('username', authObj.basic),
         password: findValueInKvArray('password', authObj.basic),
       };
-    case 'digest':
+    }
+    case 'digest': {
       return {
         type: 'digest',
         disabled: findValueInKvArray('disabled', authObj.digest) === 'true',
         username: findValueInKvArray('username', authObj.digest),
         password: findValueInKvArray('password', authObj.digest),
       };
-    case 'ntlm':
+    }
+    case 'ntlm': {
       return {
         type: 'ntlm',
         disabled: findValueInKvArray('disabled', authObj.ntlm) === 'true',
         username: findValueInKvArray('username', authObj.ntlm),
         password: findValueInKvArray('password', authObj.ntlm),
       };
+    }
     case 'oauth1': {
       const signMethod = ((): OAuth1SignatureMethod => {
         const method = findValueInKvArray('signatureMethod', authObj.oauth1);
@@ -425,22 +431,30 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
           `auth transforming(fromPreRequestAuth): unsupported signatureMethod type for oauth1: ${method}`,
         );
         switch (method) {
-          case 'HMAC-SHA1':
+          case 'HMAC-SHA1': {
             return 'HMAC-SHA1';
-          case 'HMAC-SHA256':
+          }
+          case 'HMAC-SHA256': {
             return 'HMAC-SHA256';
-          case 'HMAC-SHA512':
+          }
+          case 'HMAC-SHA512': {
             throw unsupportedError;
-          case 'RSA-SHA1':
+          }
+          case 'RSA-SHA1': {
             return 'RSA-SHA1';
-          case 'RSA-SHA256':
+          }
+          case 'RSA-SHA256': {
             throw unsupportedError;
-          case 'RSA-SHA512':
+          }
+          case 'RSA-SHA512': {
             throw unsupportedError;
-          case 'PLAINTEXT':
+          }
+          case 'PLAINTEXT': {
             return 'PLAINTEXT';
-          default:
+          }
+          default: {
             throw new Error(`auth transforming(fromPreRequestAuth): unknown signatureMethod type for oauth1: ${method}`);
+          }
         }
       })();
 
@@ -467,18 +481,24 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
       const grantType = (() => {
         switch (inputGrantType) {
           case 'authorization_code':
-          case 'authorization_code_with_pkce':
+          case 'authorization_code_with_pkce': {
             return 'authorization_code';
-          case 'implicit':
+          }
+          case 'implicit': {
             return 'implicit';
-          case 'password_credentials':
+          }
+          case 'password_credentials': {
             return 'password';
-          case 'client_credentials':
+          }
+          case 'client_credentials': {
             return 'client_credentials';
-          case 'refresh_token':
+          }
+          case 'refresh_token': {
             return 'refresh_token';
-          default:
+          }
+          default: {
             throw new Error(`auth transforming(fromPreRequestAuth): unknown auth grant type for oauth2: ${inputGrantType}`);
+          }
         }
       })();
 
@@ -520,7 +540,7 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
         origin: findValueInOauth2Options('origin', authObj.oauth2),
       };
     }
-    case 'awsv4':
+    case 'awsv4': {
       return {
         type: 'iam',
         disabled: findValueInKvArray('disabled', authObj.awsv4) === 'true',
@@ -530,7 +550,8 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
         region: findValueInKvArray('region', authObj.awsv4),
         service: findValueInKvArray('service', authObj.awsv4),
       };
-    case 'hawk':
+    }
+    case 'hawk': {
       return {
         type: 'hawk',
         disabled: findValueInKvArray('disabled', authObj.hawk) === 'true',
@@ -546,7 +567,8 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
         // nonce
         // user
       };
-    case 'asap':
+    }
+    case 'asap': {
       return {
         type: 'asap',
         disabled: findValueInKvArray('disabled', authObj.asap) === 'true',
@@ -557,11 +579,14 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
         keyId: findValueInKvArray('kid', authObj.asap),
         privateKey: findValueInKvArray('privateKey', authObj.asap),
       };
-    case 'netrc':
+    }
+    case 'netrc': {
       // TODO(george): support this in the script side
       throw new Error('netrc is not supported yet');
-    default:
+    }
+    default: {
       throw new Error(`unknown auth type: ${authObj.type}`);
+    }
   }
 }
 
@@ -571,9 +596,10 @@ export function toPreRequestAuth(auth: RequestAuthentication | {}): AuthOptions 
   }
 
   switch (auth.type) {
-    case 'none':
+    case 'none': {
       return { type: 'noauth' };
-    case 'apikey':
+    }
+    case 'apikey': {
       return {
         type: 'apikey',
         apikey: [
@@ -583,7 +609,8 @@ export function toPreRequestAuth(auth: RequestAuthentication | {}): AuthOptions 
           { key: 'in', value: auth.addTo || '' },
         ],
       };
-    case 'bearer':
+    }
+    case 'bearer': {
       return {
         type: 'bearer',
         bearer: [
@@ -592,7 +619,8 @@ export function toPreRequestAuth(auth: RequestAuthentication | {}): AuthOptions 
           { key: 'prefix', value: auth.prefix || '' },
         ],
       };
-    case 'basic':
+    }
+    case 'basic': {
       return {
         type: 'basic',
         basic: [
@@ -602,7 +630,8 @@ export function toPreRequestAuth(auth: RequestAuthentication | {}): AuthOptions 
           { key: 'password', value: auth.password || '' },
         ],
       };
-    case 'digest':
+    }
+    case 'digest': {
       return {
         type: 'digest',
         digest: [
@@ -611,7 +640,8 @@ export function toPreRequestAuth(auth: RequestAuthentication | {}): AuthOptions 
           { key: 'password', value: auth.password || '' },
         ],
       };
-    case 'ntlm':
+    }
+    case 'ntlm': {
       return {
         type: 'ntlm',
         ntlm: [
@@ -620,7 +650,8 @@ export function toPreRequestAuth(auth: RequestAuthentication | {}): AuthOptions 
           { key: 'password', value: auth.password || '' },
         ],
       };
-    case 'oauth1':
+    }
+    case 'oauth1': {
       return {
         type: 'oauth1',
         oauth1: [
@@ -642,22 +673,29 @@ export function toPreRequestAuth(auth: RequestAuthentication | {}): AuthOptions 
           { key: 'includeBodyHash', value: auth.includeBodyHash ? 'true' : 'false' },
         ],
       };
+    }
     case 'oauth2': {
       const inputGrantType = auth.grantType;
       const grantType = (() => {
         switch (inputGrantType) {
-          case 'authorization_code':
+          case 'authorization_code': {
             return auth.usePkce ? 'authorization_code_with_pkce' : 'authorization_code';
-          case 'implicit':
+          }
+          case 'implicit': {
             return 'implicit';
-          case 'password':
+          }
+          case 'password': {
             return 'password_credentials';
-          case 'client_credentials':
+          }
+          case 'client_credentials': {
             return 'client_credentials';
-          case 'refresh_token':
+          }
+          case 'refresh_token': {
             return 'refresh_token';
-          default:
+          }
+          default: {
             throw new Error(`auth transforming(toPreRequestAuth): unknown auth grant type for oauth2: ${inputGrantType}`);
+          }
         }
       })();
 
@@ -710,7 +748,7 @@ export function toPreRequestAuth(auth: RequestAuthentication | {}): AuthOptions 
         ],
       };
     }
-    case 'iam':
+    case 'iam': {
       return {
         type: 'awsv4',
         awsv4: [
@@ -722,7 +760,8 @@ export function toPreRequestAuth(auth: RequestAuthentication | {}): AuthOptions 
           { key: 'service', value: auth.service || '' },
         ],
       };
-    case 'hawk':
+    }
+    case 'hawk': {
       return {
         type: 'hawk',
         hawk: [
@@ -741,7 +780,8 @@ export function toPreRequestAuth(auth: RequestAuthentication | {}): AuthOptions 
           { key: 'includePayloadHash', value: 'false' },
         ],
       };
-    case 'asap':
+    }
+    case 'asap': {
       return {
         type: 'asap',
         asap: [
@@ -754,11 +794,14 @@ export function toPreRequestAuth(auth: RequestAuthentication | {}): AuthOptions 
           { key: 'privateKey', value: auth.privateKey || '' },
         ],
       };
-    case 'netrc':
+    }
+    case 'netrc': {
       // TODO: not supported yet
       throw new Error('netrc auth is not supported in scripting yet');
-    default:
+    }
+    default: {
       // @ts-expect-error - user can input any string
       throw new Error(`unknown auth type: ${auth.type}`);
+    }
   }
 }

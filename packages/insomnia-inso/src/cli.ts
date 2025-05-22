@@ -110,14 +110,18 @@ export class InsoError extends Error {
  */
 export function getAppDataDir(app: string): string {
   switch (process.platform) {
-    case 'darwin':
+    case 'darwin': {
       return path.join(homedir(), 'Library', 'Application Support', app);
-    case 'win32':
+    }
+    case 'win32': {
       return path.join(process.env.APPDATA || path.join(homedir(), 'AppData', 'Roaming'), app);
-    case 'linux':
+    }
+    case 'linux': {
       return path.join(process.env.XDG_DATA_HOME || path.join(homedir(), '.config'), app);
-    default:
+    }
+    default: {
       throw new Error('Unsupported platform');
+    }
   }
 }
 export const getDefaultProductName = (): string => {
@@ -248,7 +252,7 @@ const getListFromFileOrUrl = (content: string, fileType?: string): Record<string
     // at least 2 rows required for csv
     if (csvRows.length > 1) {
       const csvHeaders = csvRows[0];
-      const csvContentRows = csvRows.slice(1, csvRows.length);
+      const csvContentRows = csvRows.slice(1);
       return csvContentRows.map(contentRow =>
         csvHeaders.reduce((acc: Record<string, any>, cur, idx) => {
           acc[cur] = contentRow[idx] ?? '';

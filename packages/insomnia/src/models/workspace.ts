@@ -168,15 +168,20 @@ export function isScratchpad(workspace?: Workspace) {
 
 export const scopeToActivity = (scope: WorkspaceScope) => {
   switch (scope) {
-    case WorkspaceScopeKeys.collection:
+    case WorkspaceScopeKeys.collection: {
       return ACTIVITY_DEBUG;
-    case WorkspaceScopeKeys.design:
+    }
+    case WorkspaceScopeKeys.design: {
       return ACTIVITY_SPEC;
-    case WorkspaceScopeKeys.mockServer:
+    }
+    case WorkspaceScopeKeys.mockServer: {
       return 'mock-server';
-    case WorkspaceScopeKeys.environment:
+    }
+    case WorkspaceScopeKeys.environment: {
       return 'environment';
-    default:
+    }
+    default: {
       return ACTIVITY_DEBUG;
+    }
   }
 };

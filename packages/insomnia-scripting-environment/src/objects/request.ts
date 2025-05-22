@@ -158,18 +158,24 @@ export class RequestBody extends PropertyBase {
 
   isEmpty() {
     switch (this.mode) {
-      case 'formdata':
+      case 'formdata': {
         return this.formdata == null;
-      case 'urlencoded':
+      }
+      case 'urlencoded': {
         return this.urlencoded == null;
-      case 'raw':
+      }
+      case 'raw': {
         return this.raw == null;
-      case 'file':
+      }
+      case 'file': {
         return this.file == null;
-      case 'graphql':
+      }
+      case 'graphql': {
         return this.graphql == null;
-      default:
+      }
+      default: {
         throw new Error(`isEmpty: mode (${this.mode}) is unexpected`);
+      }
     }
   }
 
@@ -180,18 +186,24 @@ export class RequestBody extends PropertyBase {
 
     try {
       switch (this.mode) {
-        case 'formdata':
+        case 'formdata': {
           return this.formdata?.map(param => param.toString(), {}).join('&') || '';
-        case 'urlencoded':
+        }
+        case 'urlencoded': {
           return this.urlencoded?.map(param => param.toString(), {}).join('&') || '';
-        case 'raw':
+        }
+        case 'raw': {
           return this.raw || '';
-        case 'file':
+        }
+        case 'file': {
           return this.file || '';
-        case 'graphql':
+        }
+        case 'graphql': {
           return this.graphql ? JSON.stringify(this.graphql) : '';
-        default:
+        }
+        default: {
           throw new Error(`mode (${this.mode}) is unexpected`);
+        }
       }
     } catch (e) {
       throw new Error(`toString: ${e}`);
@@ -600,28 +612,35 @@ export function mergeRequestBody(
   let mimeType = 'application/octet-stream';
   if (updatedReqBody) {
     switch (updatedReqBody.mode) {
-      case undefined:
+      case undefined: {
         mimeType = 'application/octet-stream';
         break;
-      case 'raw':
+      }
+      case 'raw': {
         mimeType = 'text/plain';
         break;
-      case 'file':
+      }
+      case 'file': {
         // TODO: improve this by sniffing
         mimeType = 'application/octet-stream';
         break;
-      case 'formdata':
+      }
+      case 'formdata': {
         // boundary should already be part of Content-Type header
         mimeType = 'multipart/form-data';
         break;
-      case 'urlencoded':
+      }
+      case 'urlencoded': {
         mimeType = 'application/x-www-form-urlencoded';
         break;
-      case 'graphql':
+      }
+      case 'graphql': {
         mimeType = 'application/json';
         break;
-      default:
+      }
+      default: {
         throw new Error(`unknown request body mode: ${updatedReqBody.mode}`);
+      }
     }
   }
   if (originalReqBody.mimeType) {

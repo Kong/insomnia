@@ -468,38 +468,44 @@ export class ImportPostman {
     if (!authentication) {
       if (authorizationHeader) {
         switch (authorizationHeader?.slice(0, Math.max(0, authorizationHeader.indexOf(' ')))) {
-          case 'Bearer': // will work for OAuth2 as well
+          case 'Bearer': { // will work for OAuth2 as well
             return {
               authentication: this.importBearerAuthenticationFromHeader(authorizationHeader),
               headers,
             };
+          }
 
-          case 'Basic':
+          case 'Basic': {
             return {
               authentication: this.importBasicAuthenticationFromHeader(authorizationHeader),
               headers,
             };
+          }
 
-          case 'AWS4-HMAC-SHA256':
+          case 'AWS4-HMAC-SHA256': {
             return this.importАwsv4AuthenticationFromHeader(authorizationHeader, headers);
+          }
 
-          case 'Digest':
+          case 'Digest': {
             return {
               authentication: this.importDigestAuthenticationFromHeader(authorizationHeader),
               headers,
             };
+          }
 
-          case 'OAuth':
+          case 'OAuth': {
             return {
               authentication: this.importOauth1AuthenticationFromHeader(authorizationHeader),
               headers,
             };
+          }
 
-          default:
+          default: {
             return {
               authentication: {},
               headers,
             };
+          }
         }
       }
       return {
@@ -509,53 +515,61 @@ export class ImportPostman {
     }
 
     switch (authentication.type) {
-      case 'awsv4':
+      case 'awsv4': {
         return {
           authentication: this.importAwsV4Authentication(authentication),
           headers,
         };
+      }
 
-      case 'basic':
+      case 'basic': {
         return {
           authentication: this.importBasicAuthentication(authentication),
           headers,
         };
+      }
 
-      case 'bearer':
+      case 'bearer': {
         return {
           authentication: this.importBearerTokenAuthentication(authentication),
           headers,
         };
+      }
 
-      case 'digest':
+      case 'digest': {
         return {
           authentication: this.importDigestAuthentication(authentication),
           headers,
         };
+      }
 
-      case 'oauth1':
+      case 'oauth1': {
         return {
           authentication: this.importOauth1Authentication(authentication),
           headers,
         };
+      }
 
-      case 'oauth2':
+      case 'oauth2': {
         return {
           authentication: this.importOauth2Authentication(authentication),
           headers,
         };
+      }
 
-      case 'apikey':
+      case 'apikey': {
         return {
           authentication: this.importApiKeyAuthentication(authentication),
           headers,
         };
+      }
 
-      default:
+      default: {
         return {
           authentication: {},
           headers: originalHeaders,
         };
+      }
     }
   };
 
