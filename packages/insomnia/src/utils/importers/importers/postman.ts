@@ -609,7 +609,7 @@ export class ImportPostman {
     }
     const isAMZSecurityTokenHeader = ({ key }: Header) => key === 'X-Amz-Security-Token';
     const sessionToken = headers?.find(isAMZSecurityTokenHeader)?.value;
-    const credentials = RegExp(/(?<=Credential=).*/)
+    const credentials = new RegExp(/(?<=Credential=).*/)
       .exec(authHeader)?.[0]
       .split('/');
 
@@ -667,8 +667,8 @@ export class ImportPostman {
     const item = {
       type: 'basic',
       disabled: false,
-      username: RegExp(/.+?(?=:)/).exec(authString)?.[0],
-      password: RegExp(/(?<=:).*/).exec(authString)?.[0],
+      username: new RegExp(/.+?(?=:)/).exec(authString)?.[0],
+      password: new RegExp(/(?<=:).*/).exec(authString)?.[0],
     };
     item.username = transformPostmanToNunjucksString(item.username);
     item.password = transformPostmanToNunjucksString(item.password);
@@ -748,7 +748,7 @@ export class ImportPostman {
     const item = {
       type: 'digest',
       disabled: false,
-      username: RegExp(/(?<=username=")(.*?)(?=")/).exec(authHeader)?.[0],
+      username: new RegExp(/(?<=username=")(.*?)(?=")/).exec(authHeader)?.[0],
       password: '',
     };
 
@@ -812,18 +812,18 @@ export class ImportPostman {
     const item = {
       type: 'oauth1',
       disabled: false,
-      callback: RegExp(/(?<=oauth_callback=")(.*?)(?=")/).exec(authHeader)?.[0],
-      consumerKey: RegExp(/(?<=oauth_consumer_key=")(.*?)(?=")/).exec(authHeader)?.[0],
+      callback: new RegExp(/(?<=oauth_callback=")(.*?)(?=")/).exec(authHeader)?.[0],
+      consumerKey: new RegExp(/(?<=oauth_consumer_key=")(.*?)(?=")/).exec(authHeader)?.[0],
       consumerSecret: '',
-      nonce: RegExp(/(?<=oauth_nonce=")(.*?)(?=")/).exec(authHeader)?.[0],
+      nonce: new RegExp(/(?<=oauth_nonce=")(.*?)(?=")/).exec(authHeader)?.[0],
       privateKey: '',
-      realm: RegExp(/(?<=realm=")(.*?)(?=")/).exec(authHeader)?.[0],
-      signatureMethod: RegExp(/(?<=oauth_signature_method=")(.*?)(?=")/).exec(authHeader)?.[0],
-      timestamp: RegExp(/(?<=oauth_timestamp=")(.*?)(?=")/).exec(authHeader)?.[0],
-      tokenKey: RegExp(/(?<=oauth_token=")(.*?)(?=")/).exec(authHeader)?.[0],
+      realm: new RegExp(/(?<=realm=")(.*?)(?=")/).exec(authHeader)?.[0],
+      signatureMethod: new RegExp(/(?<=oauth_signature_method=")(.*?)(?=")/).exec(authHeader)?.[0],
+      timestamp: new RegExp(/(?<=oauth_timestamp=")(.*?)(?=")/).exec(authHeader)?.[0],
+      tokenKey: new RegExp(/(?<=oauth_token=")(.*?)(?=")/).exec(authHeader)?.[0],
       tokenSecret: '',
-      verifier: RegExp(/(?<=oauth_verifier=")(.*?)(?=")/).exec(authHeader)?.[0],
-      version: RegExp(/(?<=oauth_version=")(.*?)(?=")/).exec(authHeader)?.[0],
+      verifier: new RegExp(/(?<=oauth_verifier=")(.*?)(?=")/).exec(authHeader)?.[0],
+      version: new RegExp(/(?<=oauth_version=")(.*?)(?=")/).exec(authHeader)?.[0],
     };
 
     return item;

@@ -20,16 +20,23 @@ export default tseslint.config(
       unicorn: eslintPluginUnicorn,
     },
     rules: {
-      'unicorn/prefer-array-flat': 'error',
-      'unicorn/prefer-array-flat-map': 'error',
-      'unicorn/prefer-array-index-of': 'error',
-      'unicorn/prefer-node-protocol': 'error',
       'unicorn/no-for-loop': 'error',
       'unicorn/no-new-buffer': 'error',
+      'unicorn/prefer-array-flat-map': 'error',
+      'unicorn/prefer-array-flat': 'error',
+      'unicorn/prefer-array-index-of': 'error',
+      'unicorn/prefer-includes': 'error',
+      'unicorn/prefer-node-protocol': 'error',
       'unicorn/prefer-object-from-entries': 'error',
       'unicorn/prefer-string-slice': 'error',
-      'unicorn/prefer-includes': 'error',
       'unicorn/throw-new-error': 'error',
+      // 'unicorn/custom-error-definition': 'error', //TODO: Enable this rule
+      'unicorn/error-message': 'error',
+      // 'unicorn/explicit-length-check': 'error', //TODO: Enable this rule
+      'unicorn/no-abusive-eslint-disable': 'error',
+      // 'unicorn/expiring-todo-comments': 'error', //TODO: Enable this rule
+      'unicorn/new-for-builtins': 'error',
+      'unicorn/no-invalid-remove-event-listener': 'error',
     },
   },
   {

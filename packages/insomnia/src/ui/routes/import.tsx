@@ -51,11 +51,11 @@ export const scanForResourcesAction: ActionFunction = async ({ request }): Promi
       try {
         filePaths = JSON.parse(formData.get('filePaths') as string);
         if (!Array.isArray(filePaths)) {
-          throw new Error();
+          throw new Error('filePaths is not an array');
         }
         filePaths = filePaths.filter(filePath => typeof filePath === 'string' && filePath);
         if (filePaths.length === 0) {
-          throw new Error();
+          throw new Error('filePaths is empty');
         }
       } catch (err) {
         return [
