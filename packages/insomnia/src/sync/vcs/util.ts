@@ -505,7 +505,7 @@ export function describeChanges<T extends BaseModel>(a: T, b: T): string[] {
   }
 
   const changes: string[] = [];
-  const allKeys = [...Object.keys({ ...a, ...b })] as (keyof T)[];
+  const allKeys = Object.keys({ ...a, ...b }) as (keyof T)[];
 
   for (const key of allKeys) {
     if (shouldIgnoreKey(key as keyof T, a)) {

@@ -371,7 +371,7 @@ export const convert: Converter = rawData => {
   for (const parseEntry of parseEntries) {
     if (typeof parseEntry === 'string') {
       if (parseEntry.startsWith('$')) {
-        currentCommand.push(parseEntry.slice(1, Infinity));
+        currentCommand.push(parseEntry.slice(1));
       } else {
         currentCommand.push(parseEntry);
       }

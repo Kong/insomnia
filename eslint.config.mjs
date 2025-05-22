@@ -37,6 +37,15 @@ export default tseslint.config(
       // 'unicorn/expiring-todo-comments': 'error', //TODO: Enable this rule
       'unicorn/new-for-builtins': 'error',
       'unicorn/no-invalid-remove-event-listener': 'error',
+      // 'unicorn/no-negated-condition': 'error', //TODO: Enable this rule
+      // 'unicorn/no-null': 'error', // TODO: Enable this rule
+      'unicorn/no-static-only-class': 'error',
+      'unicorn/no-thenable': 'error',
+      'unicorn/no-this-assignment': 'error',
+      'unicorn/no-typeof-undefined': 'error',
+      'unicorn/no-unnecessary-polyfills': 'error',
+      'unicorn/no-unnecessary-slice-end': 'error',
+      'unicorn/no-useless-spread': 'error',
     },
   },
   {

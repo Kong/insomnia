@@ -252,8 +252,8 @@ export class ImportPostman {
       headers: headers.map(({ key, value, disabled, description }) => ({
         name: transformPostmanToNunjucksString(key),
         value: transformPostmanToNunjucksString(value),
-        ...(typeof disabled !== 'undefined' ? { disabled } : {}),
-        ...(typeof description !== 'undefined' ? { description } : {}),
+        ...(disabled !== undefined ? { disabled } : {}),
+        ...(description !== undefined ? { description } : {}),
       })),
       body,
       authentication,

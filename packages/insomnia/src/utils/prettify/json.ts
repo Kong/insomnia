@@ -227,7 +227,7 @@ const convertUnicode = (originalStr: string) => {
   }
 
   // Finally, add the rest of the string to the end.
-  convertedStr += originalStr.slice(lastI, originalStr.length);
+  convertedStr += originalStr.slice(lastI);
 
   return convertedStr;
 };
