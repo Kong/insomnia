@@ -93,7 +93,7 @@ test.describe('Environment Editor', () => {
     firstRow = kvTable.getByRole('option').first();
     await firstRow.getByTestId('OneLineEditor').first().click();
     await page.keyboard.type('exampleString');
-    await firstRow.getByTestId('OneLineEditor').nth(1).click();
+    await firstRow.getByTestId('OneLineEditor').nth(1).click({ delay: 200 });
     await page.keyboard.type('kvstring');
     // add one more row
     // Delay the click to let debounce finish
