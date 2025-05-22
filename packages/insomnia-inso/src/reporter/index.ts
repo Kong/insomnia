@@ -43,7 +43,11 @@ const formatSummaryLine = ({
   return `${pc.bold(title)} ${failedText}${passedText}${totalText}`;
 };
 
-export const logTestResult = (reporter: TestReporter, testResults?: RequestTestResult[]) => {
+export const logTestResult = (
+  reporter: TestReporter,
+  testResults?: RequestTestResult[],
+  log: typeof console.log = console.log,
+) => {
   if (!testResults || testResults.length === 0) {
     return;
   }
@@ -72,20 +76,20 @@ ${testResults
 Test results:
 ${reporterMap[reporter] || fallbackReporter}${summary}`;
 
-  console.log(output);
+  log(output);
 };
 
-export const logTestResultSummary = (testResultsQueue: RequestTestResult[][]) => {
-  if (!testResultsQueue.length) {
+export const logTestResultSummary = (testResultsList: RequestTestResult[][], log: typeof console.log = console.log) => {
+  if (!testResultsList.length) {
     return;
   }
 
-  const totalRequestCount = testResultsQueue.length;
+  const totalRequestCount = testResultsList.length;
   let failedRequestCount = 0,
     totalTestCount = 0,
     failedTestCount = 0;
 
-  testResultsQueue.forEach(testResults => {
+  testResultsList.forEach(testResults => {
     const { total, failed } = countTestResults(testResults);
 
     totalTestCount += total;
@@ -103,5 +107,5 @@ ${formatSummaryLine({ title: 'Test Requests:', total: totalRequestCount, passed:
 ${formatSummaryLine({ title: 'Tests:        ', total: totalTestCount, passed: passedTestCount, failed: failedTestCount })}
 `;
 
-  console.log(summary);
+  log(summary);
 };
