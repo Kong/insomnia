@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'crypto';
 import { shell } from 'electron';
 import { app, net } from 'electron/main';
 import { fromUrl } from 'hosted-git-info';
-import { Errors, type PromiseFsClient } from 'isomorphic-git';
+import { Errors, type HeadStatus, type PromiseFsClient, type StageStatus, type WorkdirStatus } from 'isomorphic-git';
 import path from 'path';
 import { v4 } from 'uuid';
 import YAML, { parse } from 'yaml';
@@ -22,7 +22,7 @@ import { insomniaFileSchema } from '../common/import-v5-parser';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
 import * as models from '../models';
 import type { GitRepository } from '../models/git-repository';
-import { type WorkspaceScope, WorkspaceScopeKeys } from '../models/workspace';
+import { isWorkspace, type WorkspaceScope, WorkspaceScopeKeys } from '../models/workspace';
 import { fsClient } from '../sync/git/fs-client';
 import GitVCS, {
   GIT_CLONE_DIR,
@@ -168,15 +168,21 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
 
+    const fsClient = await getGitFSClient({ gitRepositoryId: gitRepository._id, projectId, workspaceId });
+
     if (GitVCS.isInitializedForRepo(gitRepository._id) && !gitRepository.needsFullClone) {
+      let legacyInsomniaWorkspace;
+      if (!workspaceId) {
+        legacyInsomniaWorkspace = await containsLegacyInsomniaDir({ fsClient });
+      }
+
       return {
         branch: await GitVCS.getCurrentBranch(),
         branches: await GitVCS.listBranches(),
         gitRepository: gitRepository,
+        legacyInsomniaWorkspace,
       };
     }
-
-    const fsClient = await getGitFSClient({ gitRepositoryId: gitRepository._id, projectId, workspaceId });
 
     // Init VCS
     const { credentials, uri } = gitRepository;
@@ -209,10 +215,16 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
     await GitVCS.setAuthor();
     await GitVCS.addRemote(uri);
 
+    let legacyInsomniaWorkspace;
+    if (!workspaceId) {
+      legacyInsomniaWorkspace = await containsLegacyInsomniaDir({ fsClient });
+    }
+
     return {
       branch: await GitVCS.getCurrentBranch(),
       branches: await GitVCS.listBranches(),
       gitRepository,
+      legacyInsomniaWorkspace,
     };
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Error while fetching git repository.';
@@ -328,7 +340,7 @@ export const gitChangesLoader = async ({
       branch,
       changes,
     };
-  } catch (e) {
+  } catch {
     return {
       branch: '',
       changes: {
@@ -361,10 +373,161 @@ export const canPushLoader = async ({
     });
 
     return { canPush: hasUnpushedChanges };
-  } catch (err) {
+  } catch {
     return { canPush: false };
   }
 };
+
+async function containsLegacyInsomniaDir({ fsClient }: { fsClient: PromiseFsClient }): Promise<
+  | {
+      scope: WorkspaceScope;
+      name: string;
+      path: string;
+    }
+  | undefined
+> {
+  try {
+    const legacyInsomniaFolderStat = await fsClient.promises.lstat(GIT_INSOMNIA_DIR_NAME);
+
+    if (!legacyInsomniaFolderStat.isDirectory()) {
+      return;
+    }
+
+    const legacyInsomniaWorkspaceFolderPath = path.join(GIT_INSOMNIA_DIR_NAME, models.workspace.type);
+
+    const [workspaceFile] = await fsClient.promises.readdir(legacyInsomniaWorkspaceFolderPath);
+    const workspaceFilePath = path.join(legacyInsomniaWorkspaceFolderPath, workspaceFile);
+
+    const workspaceFileContents = await fsClient.promises.readFile(workspaceFilePath, 'utf8');
+    const workspaceDocument = YAML.parse(workspaceFileContents);
+
+    const workspaceName = workspaceDocument.name || 'Untitled';
+    const workspaceScope = workspaceDocument.scope;
+
+    return {
+      name: workspaceName,
+      scope: workspaceScope,
+      path: GIT_INSOMNIA_DIR_NAME,
+    };
+  } catch {
+    return;
+  }
+}
+
+/**
+ * The legacy git sync functionality stores one `.insomnia` directory in the root of the repository.
+ * The structure looks like this:
+ *
+ * ROOT_REPOSITORY_DIR/
+ * └── .insomnia/
+ *     ├── Workspace/
+ *     │   └── wrk-{{UUID}}.yaml
+ *     ├── Request/
+ *     │   ├── req-{{UUID}}.yaml
+ *     │   └── req-{{UUID}}.yaml
+ *     └── OtherModel/
+ *         └── other-{{UUID}}.yaml
+ *
+ * All entities are stored inside a subdirectory named after the model it represents (e.g., `Request`),
+ * and each file is named with the database ID as its name, with the `.yaml` extension.
+ */
+async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: PromiseFsClient; projectId: string }) {
+  const changes: { path: string; status: [HeadStatus, WorkdirStatus, StageStatus] }[] = [];
+  try {
+    const legacyInsomniaFolderStat = await fsClient.promises.lstat(GIT_INSOMNIA_DIR_NAME);
+
+    if (!legacyInsomniaFolderStat.isDirectory()) {
+      return {};
+    }
+
+    const legacyInsomniaModelFolders = await fsClient.promises.readdir(GIT_INSOMNIA_DIR_NAME);
+
+    const legacyInsomniaFiles: { filePath: string; type: string }[] = [];
+
+    for (const folder of legacyInsomniaModelFolders) {
+      const folderPath = path.join(GIT_INSOMNIA_DIR_NAME, folder);
+      const folderStat = await fsClient.promises.lstat(folderPath);
+
+      if (folderStat.isDirectory()) {
+        const folderFiles = await fsClient.promises.readdir(folderPath);
+
+        for (const file of folderFiles) {
+          const filePath = path.join(folderPath, file);
+          const fileStat = await fsClient.promises.lstat(filePath);
+
+          if (fileStat.isFile()) legacyInsomniaFiles.push({ filePath, type: folder });
+        }
+      }
+    }
+
+    if (legacyInsomniaFiles.length === 0) {
+      return {};
+    }
+
+    for (const legacyInsomniaFile of legacyInsomniaFiles) {
+      const fileContents = await fsClient.promises.readFile(legacyInsomniaFile.filePath, 'utf8');
+
+      const id = legacyInsomniaFile.filePath.split('.')[0];
+      const type = legacyInsomniaFile.type;
+
+      // Skip the file if there is a conflict marker
+      if (fileContents.split('\n').includes('=======')) {
+        return {
+          errors: [`File ${legacyInsomniaFile.filePath} contains a merge conflict`],
+        };
+      }
+
+      const doc: models.BaseModel = YAML.parse(fileContents);
+
+      if (id !== doc._id) {
+        throw new Error(`Doc _id does not match file path [${doc._id} != ${id || 'null'}]`);
+      }
+
+      if (type !== doc.type) {
+        throw new Error(`Doc type does not match file path [${doc.type} != ${type || 'null'}]`);
+      }
+
+      if (isWorkspace(doc)) {
+        console.log('[git] setting workspace parent to be that of the active project', {
+          original: doc.parentId,
+          new: projectId,
+        });
+        // Whenever we write a workspace into nedb we should set the parentId to be that of the current project
+        // This is because the parentId (or a project) is not synced into git, so it will be cleared whenever git writes the workspace into the db, thereby removing it from the project on the client
+        // In order to reproduce this bug, comment out the following line, then clone a repository into a local project, then open the workspace, you'll notice it will have moved into the default project
+        doc.parentId = projectId;
+
+        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(doc._id);
+
+        const gitFilePath = `insomnia.${doc._id}.yaml`;
+        await models.workspaceMeta.update(workspaceMeta, { gitFilePath });
+
+        changes.push({
+          path: gitFilePath,
+          status: [0, 1, 0],
+        });
+      }
+
+      await database.upsert(doc, true);
+      changes.push({
+        path: legacyInsomniaFile.filePath,
+        // It existed and was removed from the git repository
+        status: [1, 0, 1],
+      });
+    }
+
+    // Remove the legacy folder
+    await fsClient.promises.rmdir(GIT_INSOMNIA_DIR_NAME, { recursive: true });
+
+    return {
+      changes,
+    };
+  } catch (e) {
+    return {
+      errors: [`Failed to import legacy Insomnia folder: ${e.message}`],
+    };
+  }
+}
 
 async function isInsomniaFile(fullPath: string, fsClient: PromiseFsClient) {
   if (!fullPath.endsWith('.yaml')) {
@@ -422,6 +585,10 @@ export const initGitRepoCloneAction = async ({
         name: string;
         path: string;
       }[];
+      legacyInsomniaFile?: {
+        scope: WorkspaceScope;
+        name: string;
+      };
     }
   | {
       errors: string[];
@@ -491,6 +658,13 @@ export const initGitRepoCloneAction = async ({
       };
     }),
   );
+
+  const legacyInsomniaFile = await containsLegacyInsomniaDir({ fsClient: inMemoryFsClient });
+
+  if (legacyInsomniaFile) {
+    // Add the legacy Insomnia file on the top of the list
+    files.unshift(legacyInsomniaFile);
+  }
 
   return { files };
 };
@@ -645,6 +819,11 @@ export const cloneGitRepoAction = async ({
 
       await GitVCS.setAuthor();
       await GitVCS.addRemote(uri);
+
+      const hasLegacyInsomniaDir = await containsLegacyInsomniaDir({ fsClient: inMemoryFsClient });
+      if (hasLegacyInsomniaDir) {
+        await migrateLegacyInsomniaFolderToFile({ projectId: project._id });
+      }
 
       await database.flushChanges(bufferId);
       trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
@@ -1058,6 +1237,28 @@ export const commitToGitRepoAction = async ({
   return {
     errors: [],
   };
+};
+
+export const migrateLegacyInsomniaFolderToFile = async ({ projectId }: { projectId: string }) => {
+  const gitRepository = await getGitRepository({ projectId });
+
+  const fsClient = await getGitFSClient({ projectId, gitRepositoryId: gitRepository._id });
+
+  const result = await importLegacyInsomniaFolder({ fsClient, projectId });
+
+  if (result.errors) {
+    console.error('Failed to import legacy Insomnia folder', result.errors);
+    return;
+  }
+
+  if (result.changes) {
+    await GitVCS.setAuthor();
+    await GitVCS.stageChanges(result.changes);
+    await commitToGitRepoAction({
+      projectId,
+      message: 'Migrated legacy .insomnia folder to file',
+    });
+  }
 };
 
 export const commitAndPushToGitRepoAction = async ({
@@ -1641,7 +1842,7 @@ function getPreviewItemName(previewDiffItem: { before: string; after: string }) 
     if ((prev && 'fileName' in prev) || 'name' in prev) {
       prevName = prev.fileName || prev.name;
     }
-  } catch (e) {
+  } catch {
     // Nothing to do
   }
 
@@ -1650,7 +1851,7 @@ function getPreviewItemName(previewDiffItem: { before: string; after: string }) 
     if ((next && 'fileName' in next) || 'name' in next) {
       nextName = next.fileName || next.name;
     }
-  } catch (e) {
+  } catch {
     // Nothing to do
   }
 
@@ -2174,6 +2375,7 @@ export interface GitServiceAPI {
   unstageChanges: typeof unstageChangesAction;
   diffFileLoader: typeof diffFileLoader;
   getRepositoryDirectoryTree: typeof getRepositoryDirectoryTree;
+  migrateLegacyInsomniaFolderToFile: typeof migrateLegacyInsomniaFolderToFile;
 
   initSignInToGitHub: typeof initSignInToGitHub;
   completeSignInToGitHub: typeof completeSignInToGitHub;
@@ -2245,6 +2447,10 @@ export const registerGitServiceAPI = () => {
   ipcMainHandle('git.diffFileLoader', (_, options: Parameters<typeof diffFileLoader>[0]) => diffFileLoader(options));
   ipcMainHandle('git.getRepositoryDirectoryTree', (_, options: Parameters<typeof getRepositoryDirectoryTree>[0]) =>
     getRepositoryDirectoryTree(options),
+  );
+  ipcMainHandle(
+    'git.migrateLegacyInsomniaFolderToFile',
+    (_, options: Parameters<typeof migrateLegacyInsomniaFolderToFile>[0]) => migrateLegacyInsomniaFolderToFile(options),
   );
 
   ipcMainHandle('git.initSignInToGitHub', () => initSignInToGitHub());

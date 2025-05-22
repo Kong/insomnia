@@ -157,8 +157,8 @@ export function registerMainHandlers() {
     trackPageView(options.name);
   });
 
-  ipcMainHandle('installPlugin', (_, lookupName: string) => {
-    return installPlugin(lookupName);
+  ipcMainHandle('installPlugin', (_, lookupName: string, allowScopedPackageNames = false) => {
+    return installPlugin(lookupName, allowScopedPackageNames);
   });
 
   ipcMainOn('restart', () => {

@@ -13,6 +13,11 @@ export type GitRepoLoaderData =
       branch: string;
       branches: string[];
       gitRepository: GitRepository | null;
+      legacyInsomniaWorkspace?: {
+        scope: WorkspaceScope;
+        name: string;
+        path: string;
+      };
     }
   | {
       errors: string[];
@@ -452,4 +457,11 @@ export const getRepositoryDirectoryTree: ActionFunction = async ({ params }) => 
   invariant(projectId, 'Project ID is required');
 
   return window.main.git.getRepositoryDirectoryTree({ projectId });
+};
+
+export const migrateLegacyInsomniaFolderToFile: ActionFunction = async ({ params }) => {
+  const { projectId } = params;
+  invariant(projectId, 'Project ID is required');
+
+  return window.main.git.migrateLegacyInsomniaFolderToFile({ projectId });
 };

@@ -67,6 +67,7 @@ export type HandleChannels =
   | 'git.unstageChanges'
   | 'git.diffFileLoader'
   | 'git.getRepositoryDirectoryTree'
+  | 'git.migrateLegacyInsomniaFolderToFile'
   | 'git.initSignInToGitHub'
   | 'git.completeSignInToGitHub'
   | 'git.signOutOfGitHub'
