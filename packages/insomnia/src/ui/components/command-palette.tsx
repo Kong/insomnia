@@ -498,14 +498,18 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
               ) : (
                 <>
                   {isLoadingComboboxItems ? (
-                    <Icon icon="spinner" className="absolute left-4 text-[--color-font] animate-spin" />
+                    <Icon icon="spinner" className="absolute left-4 animate-spin text-[--color-font]" />
                   ) : (
                     <Icon icon="search" className="absolute left-4 text-[--color-font]" />
                   )}
                   <Input
                     slot="input"
                     readOnly={isLoadingComboboxItems}
-                    placeholder={isLoadingComboboxItems ? "Loading..." : "Search and switch between requests, collections and documents"}
+                    placeholder={
+                      isLoadingComboboxItems
+                        ? 'Loading...'
+                        : 'Search and switch between requests, collections and documents'
+                    }
                     className="w-full rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-3 pl-10 pr-7 text-[--color-font] transition-none group-data-[open]:rounded-b-none"
                   />
                 </>

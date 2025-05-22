@@ -468,7 +468,8 @@ export class ImportPostman {
     if (!authentication) {
       if (authorizationHeader) {
         switch (authorizationHeader?.slice(0, Math.max(0, authorizationHeader.indexOf(' ')))) {
-          case 'Bearer': { // will work for OAuth2 as well
+          case 'Bearer': {
+            // will work for OAuth2 as well
             return {
               authentication: this.importBearerAuthenticationFromHeader(authorizationHeader),
               headers,
@@ -623,9 +624,7 @@ export class ImportPostman {
     }
     const isAMZSecurityTokenHeader = ({ key }: Header) => key === 'X-Amz-Security-Token';
     const sessionToken = headers?.find(isAMZSecurityTokenHeader)?.value;
-    const credentials = new RegExp(/(?<=Credential=).*/)
-      .exec(authHeader)?.[0]
-      .split('/');
+    const credentials = new RegExp(/(?<=Credential=).*/).exec(authHeader)?.[0].split('/');
 
     return {
       authentication: {

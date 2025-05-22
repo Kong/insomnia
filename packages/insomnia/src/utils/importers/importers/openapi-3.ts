@@ -187,24 +187,23 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
     path: string;
     method: string;
     tags?: string[];
-  } & OpenAPIV3.SchemaObject)[] = Object.keys(document.paths)
-    .flatMap(path => {
-      const schemasPerMethod = document.paths[path];
+  } & OpenAPIV3.SchemaObject)[] = Object.keys(document.paths).flatMap(path => {
+    const schemasPerMethod = document.paths[path];
 
-      if (!schemasPerMethod) {
-        return [];
-      }
+    if (!schemasPerMethod) {
+      return [];
+    }
 
-      const methods = Object.entries(schemasPerMethod)
-        // Only keep entries that are plain objects and not spec extensions
-        .filter(([key, value]) => isPlainObject(value) && !isSpecExtension(key));
+    const methods = Object.entries(schemasPerMethod)
+      // Only keep entries that are plain objects and not spec extensions
+      .filter(([key, value]) => isPlainObject(value) && !isSpecExtension(key));
 
-      return methods.map(([method]) => ({
-        ...(schemasPerMethod as Record<string, OpenAPIV3.SchemaObject>)[method],
-        path,
-        method,
-      }));
-    });
+    return methods.map(([method]) => ({
+      ...(schemasPerMethod as Record<string, OpenAPIV3.SchemaObject>)[method],
+      path,
+      method,
+    }));
+  });
 
   const folders = document.tags?.map(importFolderItem(defaultParent)) || [];
   const folderLookup = folders.reduce(

@@ -234,7 +234,7 @@ export class ProxyConfig extends Property {
    *                  - `username`: The username for proxy authentication.
    *                  - `password`: The password for proxy authentication.
    */
-  update(options: Omit<ProxyConfigOptions, "bypass" | "protocol">) {
+  update(options: Omit<ProxyConfigOptions, 'bypass' | 'protocol'>) {
     this.host = options.host;
     this.match = options.match;
     this.port = options.port;

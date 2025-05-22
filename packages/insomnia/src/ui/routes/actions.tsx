@@ -1186,9 +1186,11 @@ export const generateCollectionFromApiSpecAction: ActionFunction = async ({ para
     throw new Error('Error Generating Configuration');
   }
 
-  await scanResources([{
-    contentStr: apiSpec.contents,
-  }]);
+  await scanResources([
+    {
+      contentStr: apiSpec.contents,
+    },
+  ]);
 
   await importResourcesToWorkspace({
     workspaceId,
@@ -1230,9 +1232,11 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
     throw new Error('Error Generating Configuration');
   }
 
-  const resources = await scanResources([{
-    contentStr: apiSpec.contents,
-  }]);
+  const resources = await scanResources([
+    {
+      contentStr: apiSpec.contents,
+    },
+  ]);
 
   const allRequestsFromResources = resources.reduce(
     (accumulator, scanResult) => accumulator.concat(scanResult.requests ?? []),

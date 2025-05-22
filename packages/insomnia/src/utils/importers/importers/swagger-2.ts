@@ -51,8 +51,8 @@ const parseDocument = (rawData: string) => {
 const parseEndpoints = (document: OpenAPIV2.Document) => {
   const defaultParent = WORKSPACE_ID;
   const globalMimeTypes = document.consumes ?? [];
-  const endpointsSchemas: OpenAPIV2.OperationObject[] = Object.keys(document.paths)
-    .flatMap((path: keyof OpenAPIV2.PathsObject) => {
+  const endpointsSchemas: OpenAPIV2.OperationObject[] = Object.keys(document.paths).flatMap(
+    (path: keyof OpenAPIV2.PathsObject) => {
       const schemasPerMethod: OpenAPIV2.PathItemObject = document.paths[path];
       const methods = Object.keys(schemasPerMethod) as (keyof OpenAPIV2.PathItemObject)[];
       return methods
@@ -62,7 +62,8 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
           path,
           method,
         }));
-    });
+    },
+  );
 
   const tags = document.tags || [];
 

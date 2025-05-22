@@ -106,7 +106,6 @@ export class Console {
     this.printLog(this.rows, 'error', ...values);
   };
 
-
   /**
    * Clears the console output for the specified log level.
    * This method is currently not supported.

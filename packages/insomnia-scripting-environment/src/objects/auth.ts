@@ -453,7 +453,9 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
             return 'PLAINTEXT';
           }
           default: {
-            throw new Error(`auth transforming(fromPreRequestAuth): unknown signatureMethod type for oauth1: ${method}`);
+            throw new Error(
+              `auth transforming(fromPreRequestAuth): unknown signatureMethod type for oauth1: ${method}`,
+            );
           }
         }
       })();
@@ -497,7 +499,9 @@ export function fromPreRequestAuth(auth: RequestAuth): RequestAuthentication {
             return 'refresh_token';
           }
           default: {
-            throw new Error(`auth transforming(fromPreRequestAuth): unknown auth grant type for oauth2: ${inputGrantType}`);
+            throw new Error(
+              `auth transforming(fromPreRequestAuth): unknown auth grant type for oauth2: ${inputGrantType}`,
+            );
           }
         }
       })();
@@ -694,7 +698,9 @@ export function toPreRequestAuth(auth: RequestAuthentication | {}): AuthOptions 
             return 'refresh_token';
           }
           default: {
-            throw new Error(`auth transforming(toPreRequestAuth): unknown auth grant type for oauth2: ${inputGrantType}`);
+            throw new Error(
+              `auth transforming(toPreRequestAuth): unknown auth grant type for oauth2: ${inputGrantType}`,
+            );
           }
         }
       })();

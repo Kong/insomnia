@@ -38,7 +38,7 @@ jobs:
 
       - name: Smoke test electron app
         run: npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
-         
+
       - name: Upload smoke test
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
