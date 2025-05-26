@@ -12,7 +12,6 @@ import type { SocketIORequest } from '../../models/socket-io-request';
 import type { WebSocketRequest } from '../../models/websocket-request';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
 import { useInsomniaTabContext } from '../context/app/insomnia-tab-context';
-import { useFetcherWithPromise } from './use-fetcher-with-promise';
 
 export const useRequestPatcher = () => {
   const { organizationId, projectId, workspaceId } = useParams<{
@@ -118,7 +117,7 @@ export const useRequestPayloadPatcher = () => {
     projectId: string;
     workspaceId: string;
   }>();
-  const fetcher = useFetcherWithPromise();
+  const fetcher = useFetcher();
   return async (requestId: string, patch: Partial<SocketIOPayload>) => {
     await fetcher.submit(JSON.stringify(patch), {
       action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-payload`,

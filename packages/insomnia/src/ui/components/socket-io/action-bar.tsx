@@ -1,6 +1,6 @@
 import React, { type FC, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { Button } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router';
 
 import * as models from '../../../models';
 import type { SocketIORequest } from '../../../models/socket-io-request';
