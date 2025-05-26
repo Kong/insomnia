@@ -20,6 +20,14 @@ export interface VariableDefinition {
   disabled?: boolean;
 }
 
+/**
+ * Represents a variable with a unique identifier, value, and type.
+ * This class extends the `Property` class and provides methods to
+ * get and set the variable's value, as well as a utility to cast
+ * a value to its underlying value if it is a `Variable` object.
+ *
+ * @extends Property
+ */
 export class Variable extends Property {
   /**
    * Represents the unique identifier for a variable.
