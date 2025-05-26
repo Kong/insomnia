@@ -110,10 +110,10 @@ test.describe('Check vault used in environment', () => {
     const firstRow = kvTable.getByRole('option').first();
     await firstRow.getByTestId('OneLineEditor').first().click();
     await page.keyboard.type('foo');
-    await firstRow.getByTestId('OneLineEditor').nth(1).click();
+    await firstRow.getByTestId('OneLineEditor').nth(1).click({ delay: 200 });
     await page.keyboard.type('bar');
-    await page.waitForTimeout(500);
-    await firstRow.getByRole('button', { name: 'Type Selection' }).click();
+    // Delay the click to let debounce finish
+    await firstRow.getByRole('button', { name: 'Type Selection' }).click({ delay: 200 });
     await page.getByRole('menuitemradio', { name: 'Secret' }).click();
     await expect.soft(firstRow.locator('.fa-eye-slash')).toBeVisible();
     await firstRow.locator('.fa-eye-slash').click();
@@ -125,10 +125,10 @@ test.describe('Check vault used in environment', () => {
     const secondRow = kvTable.getByRole('option').nth(1);
     await secondRow.getByTestId('OneLineEditor').first().click();
     await page.keyboard.type('hello');
-    await secondRow.getByTestId('OneLineEditor').nth(1).click();
+    await secondRow.getByTestId('OneLineEditor').nth(1).click({ delay: 200 });
     await page.keyboard.type('world');
-    await page.waitForTimeout(500);
-    await secondRow.getByRole('button', { name: 'Type Selection' }).click();
+    // Delay the click to let debounce finish
+    await secondRow.getByRole('button', { name: 'Type Selection' }).click({ delay: 200 });
     await page.getByRole('menuitemradio', { name: 'Secret' }).click();
 
     // go back
@@ -160,7 +160,6 @@ test.describe('Check vault used in environment', () => {
     await page.locator('text=Insomnia Preferences').first().click();
     await page.locator('text=Enable vault in scripts').click();
     await page.locator('.app').press('Escape');
-    await page.waitForTimeout(500);
 
     // activate global private vault environment from import
     await page.getByLabel('Manage Environments').click();
@@ -173,6 +172,8 @@ test.describe('Check vault used in environment', () => {
     await page.getByTestId('underlay').click();
     // activate request
     await page.getByTestId('legacy-array-vault').getByLabel('GET legacy-array-vault', { exact: true }).click();
+    // Wait for tab appear
+    await expect.soft(page.getByLabel('Insomnia Tabs').getByText('legacy-array-vault', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Send' }).click();
     await page.getByRole('tab', { name: 'Console' }).click();
     await page.getByText('password').click();
@@ -187,6 +188,7 @@ test.describe('Check vault used in environment', () => {
     await page.getByTestId('underlay').click();
     // activate request
     await page.getByTestId('legacy-object-vault').getByLabel('GET legacy-object-vault', { exact: true }).click();
+    await expect.soft(page.getByLabel('Insomnia Tabs').getByText('legacy-object-vault', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Send' }).click();
 
     await page.getByRole('tab', { name: 'Console' }).click();

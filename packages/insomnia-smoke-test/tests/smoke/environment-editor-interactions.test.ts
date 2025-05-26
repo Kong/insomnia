@@ -67,11 +67,10 @@ test.describe('Environment Editor', () => {
     await page.getByTestId('CodeEditor').getByRole('textbox').fill('"testNumber":9000,');
     await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
     await page.getByTestId('CodeEditor').getByRole('textbox').fill('"testString":"Gandalf",');
-    // Let debounce finish
-    await page.waitForTimeout(1500);
 
     // Open request
-    await page.getByRole('button', { name: 'Close' }).click();
+    // Delay the click to let debounce finish
+    await page.getByRole('button', { name: 'Close' }).click({ delay: 200 });
     await page.getByLabel('Manage collection environments').press('Escape');
     await page.getByLabel('Request Collection').getByTestId('New Request').press('Enter');
 
@@ -94,30 +93,28 @@ test.describe('Environment Editor', () => {
     firstRow = kvTable.getByRole('option').first();
     await firstRow.getByTestId('OneLineEditor').first().click();
     await page.keyboard.type('exampleString');
-    await firstRow.getByTestId('OneLineEditor').nth(1).click();
+    await firstRow.getByTestId('OneLineEditor').nth(1).click({ delay: 200 });
     await page.keyboard.type('kvstring');
-    // wait for editor update
-    await page.waitForTimeout(1000);
     // add one more row
-    await page.getByRole('button', { name: 'Add Row' }).click();
+    // Delay the click to let debounce finish
+    await page.getByRole('button', { name: 'Add Row' }).click({ delay: 200 });
     const secondRow = kvTable.getByRole('option').nth(1);
     await secondRow.getByTestId('OneLineEditor').first().click();
     await page.keyboard.type('exampleObject');
-    await page.waitForTimeout(500);
     // change type to json
-    await secondRow.getByRole('button', { name: 'Type Selection' }).click();
+    // Delay the click to let debounce finish
+    await secondRow.getByRole('button', { name: 'Type Selection' }).click({ delay: 200 });
     await page.getByRole('menuitemradio', { name: 'JSON' }).click();
     await secondRow.getByRole('button', { name: 'Edit JSON' }).click();
     // wait for modal to show
-    await page.waitForTimeout(500);
+    await expect.soft(page.getByRole('dialog').getByTestId('CodeEditor')).toBeVisible();
     const bodyEditor = page.getByTestId('CodeEditor').getByRole('textbox');
     // move cursor right and input json string
     await bodyEditor.focus();
     await bodyEditor.press('ArrowRight');
     await bodyEditor.fill('"anotherString":"kvAnotherStr","anotherNumber": 12345');
-    await page.getByRole('button', { name: 'Modal Submit' }).click();
-    // Let debounce finish
-    await page.waitForTimeout(1500);
+    // Delay the click to let debounce finish
+    await page.getByRole('button', { name: 'Modal Submit' }).click({ delay: 200 });
 
     // Open request
     await page.getByRole('button', { name: 'Close' }).click();
