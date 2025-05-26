@@ -1,6 +1,8 @@
 import { getAppPlatform, getAppVersion } from '../common/constants';
 import type { Request } from '../models/request';
+import type { RequestGroup } from '../models/request-group';
 import type { Response } from '../models/response';
+import type { Workspace } from '../models/workspace';
 import type { Plugin } from '../plugins/index';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
 import * as templating from './worker';
@@ -211,8 +213,8 @@ export default class BaseExtension {
                 body: JSON.stringify({ request, types: ['RequestGroup', 'Workspace'] }),
               });
 
-              const ancestors = await resp.json();
-              return ancestors;
+              const ancestors = (await resp.json()) as (Request | RequestGroup | Workspace)[];
+              return ancestors.filter(doc => doc._id !== request._id);
             },
           },
           workspace: {
