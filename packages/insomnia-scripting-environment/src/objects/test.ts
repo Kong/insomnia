@@ -1,3 +1,4 @@
+/** @ignore */
 export async function test(msg: string, fn: () => Promise<void>, log: (testResult: RequestTestResult) => void) {
   const wrapFn = async () => {
     const started = performance.now();
@@ -30,6 +31,7 @@ export async function test(msg: string, fn: () => Promise<void>, log: (testResul
 }
 
 let testPromises = new Array<Promise<void>>();
+/** ignore */
 export async function waitForAllTestsDone() {
   await Promise.allSettled(testPromises);
   testPromises = [];
@@ -38,6 +40,7 @@ function startTestObserver(promise: Promise<void>) {
   testPromises.push(promise);
 }
 
+/** ignore */
 export async function skip(msg: string, _: () => Promise<void>, log: (testResult: RequestTestResult) => void) {
   log({
     testCase: msg,
@@ -47,8 +50,12 @@ export async function skip(msg: string, _: () => Promise<void>, log: (testResult
   });
 }
 
+/** ignore */
 export type TestStatus = 'passed' | 'failed' | 'skipped';
+/** ignore */
 export type TestCategory = 'unknown' | 'pre-request' | 'after-response';
+
+/** ignore */
 export interface RequestTestResult {
   testCase: string;
   status: TestStatus;
@@ -57,6 +64,7 @@ export interface RequestTestResult {
   category: TestCategory;
 }
 
+/** ignore */
 export interface TestHandler {
   (msg: string, fn: () => Promise<void>): Promise<void>;
   skip?: (msg: string, fn: () => Promise<void>) => void;
