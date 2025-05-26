@@ -104,6 +104,13 @@ export class Variable extends Property {
   }
 }
 
+/**
+ * A specialized list for managing variables, extending the `PropertyList` class.
+ *
+ * @template T - The type of variable that extends the `Variable` base class.
+ *
+ * @extends PropertyList<T>
+ */
 export class VariableList<T extends Variable> extends PropertyList<T> {
   /** @ignore */
   override _kind = 'VariableList';
