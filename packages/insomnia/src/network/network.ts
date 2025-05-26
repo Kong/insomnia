@@ -540,7 +540,6 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         JSON_ORDER_PREFIX,
         JSON_ORDER_SEPARATOR,
       );
-      console.log('globals' + JSON.stringify(output.globals));
       globals.data = output.globals || {};
       globals.dataPropertyOrder = globalEnvPropertyOrder.map;
     }
@@ -551,7 +550,6 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         JSON_ORDER_PREFIX,
         JSON_ORDER_SEPARATOR,
       );
-      console.log('base globals' + JSON.stringify(output.baseGlobals));
       baseGlobals.data = output.baseGlobals || {};
       baseGlobals.dataPropertyOrder = globalBaseEnvPropertyOrder.map;
     }
