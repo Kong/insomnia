@@ -29,7 +29,7 @@ describe('test Variables object', () => {
   it('test environment overriding', () => {
     const baseGlobalVariables = new Variables({
       baseGlobalVars: new Environment('baseGlobals', { scope: 'baseGlobals', value: 'baseGlobals-value' }),
-      globalVars: new Environment('globals', { scope: 'global', value: {} }),
+      globalVars: new Environment('globals', {}),
       environmentVars: new Environment('environments', {}),
       collectionVars: new Environment('baseEnvironment', {}),
       iterationDataVars: new Environment('iterationData', {}),
