@@ -555,6 +555,7 @@ export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChan
       environment: new Environment('environment', {}),
       baseEnvironment: new Environment('baseEnvironment', {}),
       variables: new Variables({
+        baseGlobalVars: new Environment('baseGlobals', {}),
         globalVars: new Environment('globals', {}),
         environmentVars: new Environment('environment', {}),
         collectionVars: new Environment('collection', {}),
