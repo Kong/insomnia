@@ -14,7 +14,7 @@ import { JavaScriptReporter } from './javascript-reporter';
 
 function prependInterceptedRequireToSource(source: string): string {
   const injectScript = `
-  const externalModules = new Map([['chai', global.chai], ['chai-json-schema', global.require('chai-json-schema')]]);
+  const externalModules = new Map([['chai', global.chai], ['chai-json-schema', global.chaiJSONSchema]]);
 
   const requireInterceptor = (moduleName) => {
     if (
@@ -74,6 +74,8 @@ const runInternal = async <TReturn, TNetworkResponse>(
     chai.use(require('chai-json-schema'));
     // @ts-expect-error -- global hack
     global.chai = chai;
+    // @ts-expect-error -- global hack
+    global.chaiJSONSchema = require('chai-json-schema');
 
     const mocha: Mocha = new Mocha({
       //       ms   * sec * min
@@ -98,6 +100,8 @@ const runInternal = async <TReturn, TNetworkResponse>(
         delete global.insomnia;
         // @ts-expect-error -- global hack
         delete global.chai;
+        // @ts-expect-error -- global hack
+        delete global.chaiJSONSchema;
 
         if (keepFile && mocha.files.length) {
           console.log(`Test files: ${JSON.stringify(mocha.files)}.`);
