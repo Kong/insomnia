@@ -165,7 +165,9 @@ const getMethodsFromReflectionServer = async (reflectionApi: GrpcRequest['reflec
     if (res.fileDescriptorSet === undefined) {
       return [];
     }
-    const packageDefinition = protoLoader.loadFileDescriptorSetFromBuffer(new Buffer(res.fileDescriptorSet.toBinary()));
+    const packageDefinition = protoLoader.loadFileDescriptorSetFromBuffer(
+      Buffer.from(res.fileDescriptorSet.toBinary()),
+    );
     for (const definition of Object.values(packageDefinition)) {
       const serviceDefinition = asServiceDefinition(definition);
       if (serviceDefinition === null) {
@@ -178,14 +180,17 @@ const getMethodsFromReflectionServer = async (reflectionApi: GrpcRequest['reflec
   } catch (error) {
     const connectError = ConnectError.from(error);
     switch (connectError.code) {
-      case Code.Unauthenticated:
+      case Code.Unauthenticated: {
         throw new Error('Invalid reflection server api key');
-      case Code.NotFound:
+      }
+      case Code.NotFound: {
         throw new Error(
           "The reflection server api key doesn't have access to the module or the module does not exists",
         );
-      default:
+      }
+      default: {
         throw error;
+      }
     }
   }
 };

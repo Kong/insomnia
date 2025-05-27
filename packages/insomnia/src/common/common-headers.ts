@@ -20,17 +20,21 @@ export const SINGLE_VALUE_HEADERS = [
 export const getCommonHeaderValues = (pair: RequestHeader): any[] => {
   switch (pair.name.toLowerCase()) {
     case 'content-type':
-    case 'accept':
+    case 'accept': {
       return allMimeTypes;
+    }
 
-    case 'accept-charset':
+    case 'accept-charset': {
       return allCharsets;
+    }
 
-    case 'accept-encoding':
+    case 'accept-encoding': {
       return allEncodings;
+    }
 
-    default:
+    default: {
       return [];
+    }
   }
 };
 

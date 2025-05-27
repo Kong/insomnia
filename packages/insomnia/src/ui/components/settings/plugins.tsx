@@ -1,4 +1,5 @@
-import * as path from 'path';
+import * as path from 'node:path';
+
 import React, { type FC, useEffect, useState } from 'react';
 import {
   Button,
@@ -398,7 +399,7 @@ export const Plugins: FC = () => {
             >
               {plugin => {
                 const link = path.resolve(
-                  /^insomnia-plugin-/.test(plugin.name) ? PLUGIN_HUB_BASE : NPM_PACKAGE_BASE,
+                  plugin.name.startsWith('insomnia-plugin-') ? PLUGIN_HUB_BASE : NPM_PACKAGE_BASE,
                   plugin.name,
                 );
 

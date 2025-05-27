@@ -92,7 +92,7 @@ const runScript = async ({ script, context }: { script: string; context: Request
     waitForAllTestsDone,
   );
   if (mutatedInsomniaObject == null || !(mutatedInsomniaObject instanceof InsomniaObject)) {
-    throw Error('insomnia object is invalid or script returns earlier than expected.');
+    throw new Error('insomnia object is invalid or script returns earlier than expected.');
   }
   const mutatedContextObject = mutatedInsomniaObject.toObject();
   const updatedRequest = mergeRequests(context.request, mutatedContextObject.request);

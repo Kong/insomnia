@@ -163,40 +163,57 @@ function pickOneOf(oneofs: OneOf[], stackDepth: StackDepth) {
 
 function mockScalar(type: string, fieldName: string): any {
   switch (type) {
-    case 'string':
+    case 'string': {
       return interpretMockViaFieldName(fieldName);
-    case 'number':
+    }
+    case 'number': {
       return 10;
-    case 'bool':
+    }
+    case 'bool': {
       return true;
-    case 'int32':
+    }
+    case 'int32': {
       return 10;
-    case 'int64':
+    }
+    case 'int64': {
       return 20;
-    case 'uint32':
+    }
+    case 'uint32': {
       return 100;
-    case 'uint64':
+    }
+    case 'uint64': {
       return 100;
-    case 'sint32':
+    }
+    case 'sint32': {
       return 100;
-    case 'sint64':
+    }
+    case 'sint64': {
       return 1200;
-    case 'fixed32':
+    }
+    case 'fixed32': {
       return 1400;
-    case 'fixed64':
+    }
+    case 'fixed64': {
       return 1500;
-    case 'sfixed32':
+    }
+    case 'sfixed32': {
       return 1600;
-    case 'sfixed64':
+    }
+    case 'sfixed64': {
       return 1700;
-    case 'double':
+    }
+    case 'double': {
       return 1.4;
-    case 'float':
+    }
+    case 'float': {
       return 1.1;
-    case 'bytes':
+    }
+    case 'bytes': {
       return Buffer.from([0xa1, 0xb2, 0xc3]);
-    default:
+    }
+    default: {
       return null;
+    }
   }
 }
 

@@ -1,7 +1,8 @@
+import crypto from 'node:crypto';
+import { parse as urlParse } from 'node:url';
+
 import SwaggerParser from '@apidevtools/swagger-parser';
-import crypto from 'crypto';
 import type { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
-import { parse as urlParse } from 'url';
 import YAML from 'yaml';
 
 import type { Authentication, Converter, ImportRequest } from '../entities';
@@ -186,25 +187,23 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
     path: string;
     method: string;
     tags?: string[];
-  } & OpenAPIV3.SchemaObject)[] = Object.keys(document.paths)
-    .map(path => {
-      const schemasPerMethod = document.paths[path];
+  } & OpenAPIV3.SchemaObject)[] = Object.keys(document.paths).flatMap(path => {
+    const schemasPerMethod = document.paths[path];
 
-      if (!schemasPerMethod) {
-        return [];
-      }
+    if (!schemasPerMethod) {
+      return [];
+    }
 
-      const methods = Object.entries(schemasPerMethod)
-        // Only keep entries that are plain objects and not spec extensions
-        .filter(([key, value]) => isPlainObject(value) && !isSpecExtension(key));
+    const methods = Object.entries(schemasPerMethod)
+      // Only keep entries that are plain objects and not spec extensions
+      .filter(([key, value]) => isPlainObject(value) && !isSpecExtension(key));
 
-      return methods.map(([method]) => ({
-        ...(schemasPerMethod as Record<string, OpenAPIV3.SchemaObject>)[method],
-        path,
-        method,
-      }));
-    })
-    .flat();
+    return methods.map(([method]) => ({
+      ...(schemasPerMethod as Record<string, OpenAPIV3.SchemaObject>)[method],
+      path,
+      method,
+    }));
+  });
 
   const folders = document.tags?.map(importFolderItem(defaultParent)) || [];
   const folderLookup = folders.reduce(
@@ -411,17 +410,21 @@ const parseSecurity = (
     }
 
     switch (authScheme.schemeDetails.type) {
-      case SECURITY_TYPE.HTTP:
+      case SECURITY_TYPE.HTTP: {
         return parseHttpAuth((authScheme.schemeDetails as OpenAPIV3.HttpSecurityScheme).scheme);
+      }
 
-      case SECURITY_TYPE.OAUTH:
+      case SECURITY_TYPE.OAUTH: {
         return parseOAuth2(authScheme.schemeDetails as OpenAPIV3.OAuth2SecurityScheme, authScheme.securityScopes);
+      }
 
-      case SECURITY_TYPE.API_KEY:
+      case SECURITY_TYPE.API_KEY: {
         return parseApiKeyAuth(authScheme.schemeDetails as OpenAPIV3.ApiKeySecurityScheme);
+      }
 
-      default:
+      default: {
         return {};
+      }
     }
   })();
 
@@ -641,22 +644,25 @@ const generateUniqueRequestId = (endpointSchema: OpenAPIV3.OperationObject<{ met
 
 const parseHttpAuth = (scheme: string) => {
   switch (scheme) {
-    case HTTP_AUTH_SCHEME.BASIC:
+    case HTTP_AUTH_SCHEME.BASIC: {
       return {
         type: 'basic',
         username: '{{ _.httpUsername }}',
         password: '{{ _.httpPassword }}',
       };
+    }
 
-    case HTTP_AUTH_SCHEME.BEARER:
+    case HTTP_AUTH_SCHEME.BEARER: {
       return {
         type: 'bearer',
         token: '{{ _.bearerToken }}',
         prefix: '',
       };
+    }
 
-    default:
+    default: {
       return {};
+    }
   }
 };
 
@@ -714,7 +720,7 @@ const parseOAuth2 = (scheme: OpenAPIV3.OAuth2SecurityScheme, selectedScopes: str
   };
 
   switch (grantType) {
-    case OAUTH_FLOWS.AUTHORIZATION_CODE:
+    case OAUTH_FLOWS.AUTHORIZATION_CODE: {
       return {
         ...base,
         clientSecret: '{{ _.oauth2ClientSecret }}',
@@ -724,24 +730,27 @@ const parseOAuth2 = (scheme: OpenAPIV3.OAuth2SecurityScheme, selectedScopes: str
         authorizationUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.AUTHORIZATION_CODE])
           ?.authorizationUrl,
       };
+    }
 
-    case OAUTH_FLOWS.CLIENT_CREDENTIALS:
+    case OAUTH_FLOWS.CLIENT_CREDENTIALS: {
       return {
         ...base,
         clientSecret: '{{ _.oauth2ClientSecret }}',
         accessTokenUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.CLIENT_CREDENTIALS])
           ?.tokenUrl,
       };
+    }
 
-    case OAUTH_FLOWS.IMPLICIT:
+    case OAUTH_FLOWS.IMPLICIT: {
       return {
         ...base,
         redirectUrl: '{{ _.oauth2RedirectUrl }}',
         authorizationUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.IMPLICIT])
           ?.authorizationUrl,
       };
+    }
 
-    case OAUTH_FLOWS.PASSWORD:
+    case OAUTH_FLOWS.PASSWORD: {
       return {
         ...base,
         clientSecret: '{{ _.oauth2ClientSecret }}',
@@ -749,9 +758,11 @@ const parseOAuth2 = (scheme: OpenAPIV3.OAuth2SecurityScheme, selectedScopes: str
         password: '{{ _.oauth2Password }}',
         accessTokenUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.PASSWORD])?.tokenUrl,
       };
+    }
 
-    default:
+    default: {
       return {};
+    }
   }
 };
 

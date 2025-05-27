@@ -1,4 +1,5 @@
-import path from 'path';
+import path from 'node:path';
+
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GIT_CLONE_DIR } from '../git-vcs';

@@ -96,7 +96,7 @@ const replaceFragments = (sourceNode, fragments) => {
       const fragment = fragments.find(fragment => fragment.name.value === selection.name.value);
 
       if (!fragment) {
-        throw Error(`Found usage of unknown fragment ${selection.name.value}`);
+        throw new Error(`Found usage of unknown fragment ${selection.name.value}`);
       }
 
       foundFragments = [...foundFragments, fragment];

@@ -1,4 +1,4 @@
-import { parse as urlParse } from 'url';
+import { parse as urlParse } from 'node:url';
 
 function formatHostname(rawHostname: string) {
   // canonicalize the hostname, so that 'oogle.com' won't match 'google.com'
@@ -11,7 +11,7 @@ function parseNoProxyZone(zone: string) {
   const zoneParts = zone.split(':', 2);
   const zoneHost = formatHostname(zoneParts[0]);
   const zonePort = zoneParts[1];
-  const hasPort = zone.indexOf(':') > -1;
+  const hasPort = zone.includes(':');
 
   return { hostname: zoneHost, port: zonePort, hasPort: hasPort };
 }

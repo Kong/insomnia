@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'node:fs';
 
 import * as models from '../../models/index';
 import type { ResponseHeader } from '../../models/response';

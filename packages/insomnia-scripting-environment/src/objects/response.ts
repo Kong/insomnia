@@ -62,7 +62,7 @@ export class Response extends Property {
     this.stream = options.stream;
     const detectedStatus = options.reason || RESPONSE_CODE_REASONS[options.code];
     if (!detectedStatus) {
-      throw Error(
+      throw new Error(
         `Response constructor: reason or code field must be set in the options(reason: ${options.reason}, code:${options.code})`,
       );
     } else {
@@ -112,11 +112,11 @@ export class Response extends Property {
     if (contentType) {
       const directives = contentType.valueOf().split('; ');
       if (directives.length === 0) {
-        throw Error('contentInfo: header Content-Type value is blank');
+        throw new Error('contentInfo: header Content-Type value is blank');
       } else {
         const mimeType = directives[0];
         if (!mimeType) {
-          throw Error('contentInfo: mime type in header Content-Type is invalid');
+          throw new Error('contentInfo: mime type in header Content-Type is invalid');
         }
         mimeInfo.mimeType = mimeType;
         directives.forEach(dir => {
@@ -158,7 +158,7 @@ export class Response extends Property {
     const contentInfo = this.contentInfo();
     const bodyInBase64 = this.stream || this.body;
     if (!bodyInBase64) {
-      throw Error('dataURI(): response body is not defined');
+      throw new Error('dataURI(): response body is not defined');
     }
 
     return `data:${contentInfo.contentType};baseg4, ${bodyInBase64}`;
@@ -169,7 +169,7 @@ export class Response extends Property {
     try {
       return JSON.parse(this.body.toString(), reviver);
     } catch (e) {
-      throw Error(`json: failed to parse: ${e}`);
+      throw new Error(`json: failed to parse: ${e}`);
     }
   }
 
@@ -212,7 +212,7 @@ export class Response extends Property {
       ) {
         return;
       }
-      throw Error(`"${got}" is not equal to the expected value: "${expected}"`);
+      throw new Error(`"${got}" is not equal to the expected value: "${expected}"`);
     };
     const haveStatus = (expected: number | string, checkEquality: boolean) => {
       if (typeof expected === 'string') {
@@ -235,9 +235,9 @@ export class Response extends Property {
           return;
         }
       } catch (e) {
-        throw Error(`Failed to verify response body schema, response could not be a valid json: "${e}"`);
+        throw new Error(`Failed to verify response body schema, response could not be a valid json: "${e}"`);
       }
-      throw Error("Response's schema is not equal to the expected value");
+      throw new Error("Response's schema is not equal to the expected value");
     };
 
     return {
@@ -322,7 +322,7 @@ export async function readBodyFromPath(
   });
 
   if (readResponseResult.error) {
-    throw Error(`Failed to read body: ${readResponseResult.error}`);
+    throw new Error(`Failed to read body: ${readResponseResult.error}`);
   }
   return readResponseResult.body;
 }

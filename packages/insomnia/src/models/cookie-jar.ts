@@ -1,4 +1,5 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
+
 import { v4 as uuidv4 } from 'uuid';
 
 import { database as db } from '../common/database';

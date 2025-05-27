@@ -63,12 +63,12 @@ export const requireInterceptor = (moduleName: string): any => {
   ) {
     const externalModule = externalModules.get(moduleName);
     if (!externalModule) {
-      throw Error(`no module is found for "${moduleName}"`);
+      throw new Error(`no module is found for "${moduleName}"`);
     }
     return externalModule;
   } else if (moduleName === 'insomnia-collection' || moduleName === 'postman-collection') {
     return CollectionModule;
   }
 
-  throw Error(`no module is found for "${moduleName}"`);
+  throw new Error(`no module is found for "${moduleName}"`);
 };

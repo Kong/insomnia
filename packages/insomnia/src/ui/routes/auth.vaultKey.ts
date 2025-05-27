@@ -118,7 +118,7 @@ export const validateVaultKey = async (session: UserSession, vaultKey: string, v
   // ~~~~~~~~~~~~~~~~~~~~~ //
   // Compute and Submit M1 //
   // ~~~~~~~~~~~~~~~~~~~~~ //
-  srpClient.setB(new Buffer(srpB, 'hex'));
+  srpClient.setB(Buffer.from(srpB, 'hex'));
   const srpM1 = srpClient.computeM1().toString('hex');
   const { srpM2, error: verifyM1Error } = await insomniaFetch<{
     srpM2: string;
@@ -136,7 +136,7 @@ export const validateVaultKey = async (session: UserSession, vaultKey: string, v
   // ~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // Verify Server Identity M2 //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  srpClient.checkM2(new Buffer(srpM2, 'hex'));
+  srpClient.checkM2(Buffer.from(srpM2, 'hex'));
   const srpK = srpClient.computeK().toString('hex');
   return srpK;
 };

@@ -305,20 +305,24 @@ export async function applyColorScheme(settings: ThemeSettings) {
   const scheme = getColorScheme(settings);
 
   switch (scheme) {
-    case 'light':
+    case 'light': {
       await setTheme(settings.lightTheme);
       break;
+    }
 
-    case 'dark':
+    case 'dark': {
       await setTheme(settings.darkTheme);
       break;
+    }
 
-    case 'default':
+    case 'default': {
       await setTheme(settings.theme);
       break;
+    }
 
-    default:
+    default: {
       throw new Error(scheme);
+    }
   }
 }
 

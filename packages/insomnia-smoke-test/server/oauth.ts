@@ -184,8 +184,9 @@ export const oauthRoutes = async (port: number) => {
             </html>
           `);
         }
-        default:
+        default: {
           return next(new Error('Invalid prompt'));
+        }
       }
     } catch (err) {
       return next(err);

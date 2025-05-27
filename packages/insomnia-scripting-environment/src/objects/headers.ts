@@ -147,7 +147,7 @@ export class Header extends Property {
     const separatorPos = headerStr.indexOf(':');
 
     if (separatorPos <= 0) {
-      throw Error('Header.parseSingle: the header string seems invalid');
+      throw new Error('Header.parseSingle: the header string seems invalid');
     }
 
     const key = headerStr.slice(0, separatorPos);
@@ -166,7 +166,7 @@ export class Header extends Property {
    * @returns A string representation of the headers, joined by the specified separator.
    */
   static unparse(headers: { key: string; value: string }[] | PropertyList<Header>, separator?: string): string {
-    const headerArray: { key: string; value: string }[] = [...headers.map(header => this.unparseSingle(header), {})];
+    const headerArray: { key: string; value: string }[] = headers.map(header => this.unparseSingle(header), {});
 
     return headerArray.join(separator || '\n');
   }

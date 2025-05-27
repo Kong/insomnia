@@ -149,10 +149,8 @@ export const convert: Converter = rawData => {
     return null;
   }
 
-  return data.items
-    .map(item => {
-      const requestGroup = importRequestGroupItem(item);
-      return [requestGroup, ...item.requests.map(importRequestItem(requestGroup._id))];
-    })
-    .flat();
+  return data.items.flatMap(item => {
+    const requestGroup = importRequestGroupItem(item);
+    return [requestGroup, ...item.requests.map(importRequestItem(requestGroup._id))];
+  });
 };

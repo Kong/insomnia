@@ -1,5 +1,6 @@
+import { readFile } from 'node:fs/promises';
+
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import { readFile } from 'fs/promises';
 import React, { type FC } from 'react';
 import { Button, Heading, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 

@@ -1,8 +1,9 @@
+import { stat } from 'node:fs/promises';
+import path from 'node:path';
+
 import { type IRuleResult } from '@stoplight/spectral-core';
 import CodeMirror from 'codemirror';
-import { stat } from 'fs/promises';
 import type { OpenAPIV3 } from 'openapi-types';
-import path from 'path';
 import React, {
   type FC,
   Fragment,
@@ -32,14 +33,7 @@ import {
   TooltipTrigger,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import {
-  type LoaderFunction,
-  NavLink,
-  useFetcher,
-  useLoaderData,
-  useParams,
-  useRouteLoaderData,
-} from 'react-router';
+import { type LoaderFunction, NavLink, useFetcher, useLoaderData, useParams, useRouteLoaderData } from 'react-router';
 import { useUnmount } from 'react-use';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
 import YAML from 'yaml';

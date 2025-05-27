@@ -88,7 +88,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
 
   const parametersCount = pathParameters.length + activeRequest.parameters.filter(p => !p.disabled).length;
   const headersCount = activeRequest.headers.filter(h => !h.disabled).length + readOnlyHttpPairs.length;
-  const urlHasQueryParameters = activeRequest.url.indexOf('?') >= 0;
+  const urlHasQueryParameters = activeRequest.url.includes('?');
   const contentType = getContentTypeFromHeaders(activeRequest.headers) || activeRequest.body.mimeType;
   const isBodyEmpty = Boolean(typeof activeRequest.body.mimeType !== 'string' && !activeRequest.body.text);
   const requestAuth = getAuthObjectOrNull(activeRequest.authentication);

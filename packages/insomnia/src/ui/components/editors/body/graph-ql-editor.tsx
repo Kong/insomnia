@@ -1,9 +1,10 @@
+import { readFileSync } from 'node:fs';
+
 import type { LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
 import type { GraphQLHintOptions } from 'codemirror-graphql/hint';
 import type { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import type { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import type { OpenDialogOptions } from 'electron';
-import { readFileSync } from 'fs';
 import type { GraphQLNonNull, GraphQLSchema, OperationTypeNode } from 'graphql';
 import {
   buildClientSchema,

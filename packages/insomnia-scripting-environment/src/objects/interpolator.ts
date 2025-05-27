@@ -35,7 +35,7 @@ class Interpolator {
       const funcName = tagName.slice(1) as keyof typeof fakerFunctions; // remove prefix '$'
 
       if (!fakerFunctions[funcName]) {
-        throw Error(`replaceIn: no faker function is found: ${funcName}`);
+        throw new Error(`replaceIn: no faker function is found: ${funcName}`);
       }
 
       const generated = fakerFunctions[funcName]();

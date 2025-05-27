@@ -127,7 +127,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
             },
         environmentAutocomplete: canAutocomplete && {
           getVariables: async () => (!handleGetRenderContext ? [] : (await handleGetRenderContext())?.keys || []),
-          getTags: async () => (!handleGetRenderContext ? [] : (await getTagDefinitions()).map(transformEnums).flat()),
+          getTags: async () => (!handleGetRenderContext ? [] : (await getTagDefinitions()).flatMap(transformEnums)),
           getConstants: getAutocompleteConstants,
           hotKeyRegistry: settings.hotKeyRegistry,
           autocompleteDelay: settings.autocompleteDelay,

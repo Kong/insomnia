@@ -1,6 +1,7 @@
-import type { ExecException } from 'child_process';
-import { exec } from 'child_process';
-import path from 'path';
+import type { ExecException } from 'node:child_process';
+import { exec } from 'node:child_process';
+import path from 'node:path';
+
 import { beforeAll, describe, expect, it } from 'vitest';
 // Tests both bundle and packaged versions of the CLI with the same commands and expectations.
 // Intended to be coarse grained (only checks for success or failure) smoke test to ensure packaging worked as expected.
@@ -175,7 +176,8 @@ describe('inso dev bundle', () => {
     });
 
     it('read and write folder environments', async () => {
-      const input = '$PWD/packages/insomnia-inso/bin/inso run collection wrk_cfacae2b022e49c8851c2376674cc890 -w packages/insomnia-inso/src/examples/script-folder-environments.yml --requestNamePattern "updateFolderValue" --verbose';
+      const input =
+        '$PWD/packages/insomnia-inso/bin/inso run collection wrk_cfacae2b022e49c8851c2376674cc890 -w packages/insomnia-inso/src/examples/script-folder-environments.yml --requestNamePattern "updateFolderValue" --verbose';
       const result = await runCliFromRoot(input);
       expect(result.stdout).toContain('updated value from folder: 666');
     });

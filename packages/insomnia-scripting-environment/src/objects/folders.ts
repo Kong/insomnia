@@ -84,7 +84,7 @@ export class ParentFolders {
   get = (idOrName: string) => {
     const folder = this.folders.find(folder => folder.name === idOrName || folder.id === idOrName);
     if (!folder) {
-      throw Error(`Folder "${idOrName}" not found`);
+      throw new Error(`Folder "${idOrName}" not found`);
     }
     return folder;
   };
@@ -99,7 +99,7 @@ export class ParentFolders {
   getById = (id: string) => {
     const folder = this.folders.find(folder => folder.id === id);
     if (!folder) {
-      throw Error(`Folder "${id}" not found`);
+      throw new Error(`Folder "${id}" not found`);
     }
     return folder;
   };
@@ -114,7 +114,7 @@ export class ParentFolders {
   getByName = (folderName: string) => {
     const folder = this.folders.find(folder => folder.name === folderName);
     if (!folder) {
-      throw Error(`Folder "${folderName}" not found`);
+      throw new Error(`Folder "${folderName}" not found`);
     }
     return folder;
   };

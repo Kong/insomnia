@@ -30,14 +30,17 @@ export const selectFileOrFolder = async ({ itemTypes, extensions }: Options) => 
     buttonLabel: 'Select',
     properties: types.map(type => {
       switch (type) {
-        case 'file':
+        case 'file': {
           return 'openFile';
+        }
 
-        case 'directory':
+        case 'directory': {
           return 'openDirectory';
+        }
 
-        default:
+        default: {
           throw new Error(`unrecognized item type: "${type}"`);
+        }
       }
     }),
     filters: [

@@ -1,5 +1,6 @@
+import { URL } from 'node:url';
+
 import React, { type FC, Fragment, useMemo } from 'react';
-import { URL } from 'url';
 
 import type { ResponseHeader } from '../../../models/response';
 import { CopyButton } from '../base/copy-button';

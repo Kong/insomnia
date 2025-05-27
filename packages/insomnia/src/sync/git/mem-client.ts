@@ -1,5 +1,6 @@
+import path from 'node:path';
+
 import type { PromiseFsClient } from 'isomorphic-git';
-import path from 'path';
 
 import Stat from './stat';
 import { SystemError } from './system-error';
@@ -423,7 +424,7 @@ export class MemClient {
   _remove(entry: FSEntry) {
     const parentEntry = this._assertDir(path.dirname(entry.path));
 
-    const index = parentEntry.children.findIndex(c => c === entry);
+    const index = parentEntry.children.indexOf(entry);
 
     if (index < 0) {
       // Should never happen so w/e

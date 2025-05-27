@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import path from 'node:path';
@@ -6,7 +7,6 @@ import * as commander from 'commander';
 import type { logType } from 'consola';
 import consola, { BasicReporter, FancyReporter, LogLevel } from 'consola';
 import { cosmiconfig } from 'cosmiconfig';
-import fs from 'fs';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
 import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
 import type { UserUploadEnvironment } from 'insomnia/src/models/environment';
@@ -110,14 +110,18 @@ export class InsoError extends Error {
  */
 export function getAppDataDir(app: string): string {
   switch (process.platform) {
-    case 'darwin':
+    case 'darwin': {
       return path.join(homedir(), 'Library', 'Application Support', app);
-    case 'win32':
+    }
+    case 'win32': {
       return path.join(process.env.APPDATA || path.join(homedir(), 'AppData', 'Roaming'), app);
-    case 'linux':
+    }
+    case 'linux': {
       return path.join(process.env.XDG_DATA_HOME || path.join(homedir(), '.config'), app);
-    default:
+    }
+    default: {
       throw new Error('Unsupported platform');
+    }
   }
 }
 export const getDefaultProductName = (): string => {
@@ -248,7 +252,7 @@ const getListFromFileOrUrl = (content: string, fileType?: string): Record<string
     // at least 2 rows required for csv
     if (csvRows.length > 1) {
       const csvHeaders = csvRows[0];
-      const csvContentRows = csvRows.slice(1, csvRows.length);
+      const csvContentRows = csvRows.slice(1);
       return csvContentRows.map(contentRow =>
         csvHeaders.reduce((acc: Record<string, any>, cur, idx) => {
           acc[cur] = contentRow[idx] ?? '';

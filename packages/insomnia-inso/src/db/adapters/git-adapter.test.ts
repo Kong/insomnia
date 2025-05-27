@@ -1,4 +1,5 @@
-import path from 'path';
+import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import gitAdapter from './git-adapter';

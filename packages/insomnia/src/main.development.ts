@@ -1,9 +1,10 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
 import electron, { app, session } from 'electron';
 import { BrowserWindow } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
-import fs from 'fs/promises';
-import path from 'path';
 
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';

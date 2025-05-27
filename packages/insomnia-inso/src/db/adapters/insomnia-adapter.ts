@@ -1,6 +1,7 @@
-import fs from 'fs';
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { importInsomniaV5Data } from 'insomnia/src/common/insomnia-v5';
-import path from 'path';
 import YAML from 'yaml';
 
 import { InsoError } from '../../cli';
