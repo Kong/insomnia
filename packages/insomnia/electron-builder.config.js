@@ -94,8 +94,9 @@ const config = {
     },
     publish: {
       provider: 'generic',
-      url: 'https://updates.insomnia.rest/updates/win/',
+      url: 'http://localhost/',
     },
+    generateUpdatesFilesForAllChannels: true,
   },
   nsis: {
     artifactName: `${BINARY_PREFIX}-nsis-\${version}.\${ext}`,
