@@ -74,8 +74,6 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
     return listeners;
   }, [eventListeners]);
 
-  console.log('rows', rows);
-
   const handleDeleteEvent = (deleteItem: SocketIOEventListener) => {
     const newListeners = eventListeners.filter(item => item.id !== deleteItem.id);
     requestPatcher(request._id, { eventListeners: newListeners });
@@ -196,7 +194,7 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
               defaultValue={item.desc}
               placeholder="Description"
               onChange={e => {
-                handleChange({ ...item, eventName: e.target.value }, 'desc');
+                handleChange({ ...item, desc: e.target.value }, 'desc');
               }}
             />
             <div>

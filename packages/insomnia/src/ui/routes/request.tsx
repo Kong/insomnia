@@ -46,7 +46,7 @@ import type { RequestVersion } from '../../models/request-version';
 import type { Response } from '../../models/response';
 import type { ResponseInfo, RunnerResultPerRequestPerIteration } from '../../models/runner-test-result';
 import type { SocketIOPayload } from '../../models/socket-io-payload';
-import { isSocketIORequest, type SocketIORequest } from '../../models/socket-io-request';
+import { isSocketIORequest, isSocketIORequestId, type SocketIORequest } from '../../models/socket-io-request';
 import type { SocketIOResponse } from '../../models/socket-io-response';
 import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '../../models/websocket-request';
 import { isWebSocketResponse, type WebSocketResponse } from '../../models/websocket-response';
@@ -889,6 +889,8 @@ export const deleteAllResponsesAction: ActionFunction = async ({ params }) => {
   invariant(workspaceMeta, 'Active workspace meta not found');
   if (isWebSocketRequestId(requestId)) {
     await models.webSocketResponse.removeForRequest(requestId, workspaceMeta.activeEnvironmentId);
+  } else if (isSocketIORequestId(requestId)) {
+    await models.socketIOResponse.removeForRequest(requestId, workspaceMeta.activeEnvironmentId);
   } else {
     await models.response.removeForRequest(requestId, workspaceMeta.activeEnvironmentId);
   }
@@ -910,6 +912,15 @@ export const deleteResponseAction: ActionFunction = async ({ request, params }) 
     invariant(res, 'Response not found');
     await models.webSocketResponse.remove(res);
     const response = await models.webSocketResponse.getLatestForRequest(requestId, workspaceMeta.activeEnvironmentId);
+    if (response?.requestVersionId) {
+      await models.requestVersion.restore(response.requestVersionId);
+    }
+    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: response?._id || null });
+  } else if (isSocketIORequestId(requestId)) {
+    const res = await models.socketIOResponse.getById(responseId);
+    invariant(res, 'Response not found');
+    await models.socketIOResponse.remove(res);
+    const response = await models.socketIOResponse.getLatestForRequest(requestId, workspaceMeta.activeEnvironmentId);
     if (response?.requestVersionId) {
       await models.requestVersion.restore(response.requestVersionId);
     }

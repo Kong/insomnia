@@ -72,6 +72,8 @@ export const ResponseHistoryDropdown = ({
   const handleDeleteResponses = useCallback(async () => {
     if (isWebSocketResponse(activeResponse)) {
       window.main.webSocket.close({ requestId });
+    } else if (isSocketIOResponse(activeResponse)) {
+      window.main.socketIO.close({ requestId });
     }
     fetcher.submit(
       {},
@@ -87,6 +89,8 @@ export const ResponseHistoryDropdown = ({
     if (activeResponse) {
       if (isWebSocketResponse(activeResponse)) {
         window.main.webSocket.close({ requestId });
+      } else if (isSocketIOResponse(activeResponse)) {
+        window.main.socketIO.close({ requestId });
       }
     }
     fetcher.submit(

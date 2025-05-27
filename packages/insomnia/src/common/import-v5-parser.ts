@@ -331,6 +331,13 @@ export const SocketIORequestSettingsSchema = z.object({
   }),
 });
 
+export const SocketIOEventListenerSchema = z.object({
+  id: z.string(),
+  eventName: z.string().optional().default(''),
+  desc: z.string().optional().default(''),
+  isOpen: z.boolean().optional().default(false),
+});
+
 export const RequestParametersSchema = z.array(
   z.object({
     name: z.string().optional().default(''),
@@ -462,7 +469,9 @@ export const SocketIORequestSchema = z.object({
       store: true,
     },
   }),
+  eventListeners: SocketIOEventListenerSchema.array().optional(),
   meta: MetaSchema.extend({
+    id: z.string().startsWith('socketio-req'),
     sortKey: z.number().optional(),
   }).optional(),
 });

@@ -204,6 +204,9 @@ interface BodyContentProps {
   handleChange?: (id: string, value: string) => void;
   selectedArg?: Key;
   setSelectedArg?: (key: Key) => void;
+  filter?: string;
+  updateFilter?: (filter: string) => void;
+  filterHistory?: string[];
 }
 export const SocketIOBodyContent = ({
   args,
@@ -212,6 +215,9 @@ export const SocketIOBodyContent = ({
   handleChange,
   selectedArg,
   setSelectedArg,
+  filter,
+  updateFilter,
+  filterHistory,
 }: BodyContentProps) => {
   const editorsRef = useRef(new Map());
   const tabs = useMemo(() => {
@@ -222,6 +228,7 @@ export const SocketIOBodyContent = ({
       };
     });
   }, [args]);
+
   return (
     <div className="h-full">
       {tabs.length > 1 ? (
@@ -269,10 +276,14 @@ export const SocketIOBodyContent = ({
                   mode={arg.mode}
                   readOnly={readonly}
                   ref={ref => editorsRef.current?.set(arg.id, ref)}
-                  onChange={value => handleChange?.(arg.id, value)}
+                  onChange={readonly ? undefined : value => handleChange?.(arg.id, value)}
                   enableNunjucks
                   className="w-full"
                   defaultValue={arg.value}
+                  updateFilter={updateFilter}
+                  filterHistory={filterHistory}
+                  filter={filter}
+                  autoPrettify
                 />
               </TabPanel>
             )}
@@ -286,10 +297,14 @@ export const SocketIOBodyContent = ({
           mode={tabs[0].mode}
           readOnly={readonly}
           ref={ref => editorsRef.current?.set(tabs[0].id, ref)}
-          onChange={value => handleChange?.(tabs[0].id, value)}
+          onChange={readonly ? undefined : value => handleChange?.(tabs[0].id, value)}
           enableNunjucks
           className="w-full"
           defaultValue={tabs[0]?.value}
+          updateFilter={updateFilter}
+          filterHistory={filterHistory}
+          filter={filter}
+          autoPrettify
         />
       )}
     </div>
