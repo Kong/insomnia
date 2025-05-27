@@ -298,7 +298,7 @@ export const SocketIORequestSettingsSchema = z.object({
   }),
 });
 
-const RequestPathParametersSchema = z.array(
+export const RequestPathParametersSchema = z.array(
   z.object({
     name: z.string().optional().default(''),
     value: z.string().optional().default(''),
@@ -415,7 +415,9 @@ export const SocketIORequestSchema = z.object({
       store: true,
     },
   }),
+  eventListeners: SocketIOEventListenerSchema.array().optional(),
   meta: MetaSchema.extend({
+    id: z.string().startsWith('socketio-req'),
     sortKey: z.number().optional(),
   }).optional(),
 });

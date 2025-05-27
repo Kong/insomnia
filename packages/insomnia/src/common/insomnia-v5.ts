@@ -38,6 +38,7 @@ import {
   type InsomniaFile,
   InsomniaFileSchema,
   type Meta,
+  SocketIORequestSchema,
   WebsocketRequestSchema,
 } from './import-v5-parser';
 
@@ -282,9 +283,11 @@ function getTestSuites(file: InsomniaFile): (UnitTestSuite | UnitTest)[] {
   return [];
 }
 
-function getCollection(file: InsomniaFile): (Request | WebSocketRequest | GrpcRequest | RequestGroup)[] {
+function getCollection(
+  file: InsomniaFile,
+): (Request | WebSocketRequest | SocketIORequest | GrpcRequest | RequestGroup)[] {
   if (file.type === 'collection.insomnia.rest/5.0' || file.type === 'spec.insomnia.rest/5.0') {
-    const resources: (Request | WebSocketRequest | GrpcRequest | RequestGroup)[] = [];
+    const resources: (Request | WebSocketRequest | SocketIORequest | GrpcRequest | RequestGroup)[] = [];
 
     function walkCollection(
       collection: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'],
@@ -397,6 +400,34 @@ function getCollection(file: InsomniaFile): (Request | WebSocketRequest | GrpcRe
             };
 
             resources.push(websocketRequest);
+          } else {
+            const socketIORequest = SocketIORequestSchema.safeParse(item);
+            if (socketIORequest.success) {
+              const data = socketIORequest.data;
+              const socketIO: WithExportType<SocketIORequest> = {
+                ...mapMetaToInsomniaMeta(
+                  data.meta || {
+                    id: '__SOCKET_IO_REQUEST_ID__',
+                  },
+                ),
+                type: 'SocketIORequest',
+                _type: EXPORT_TYPE_REQUEST,
+                name: item.name || 'Imported Socket.IO Request',
+                parentId,
+                url: data.url,
+                authentication: data.authentication || {},
+                metaSortKey: item.meta?.sortKey ?? 0,
+                headers: data.headers || [],
+                parameters: data.parameters || [],
+                settingEncodeUrl: data.settings.encodeUrl,
+                settingSendCookies: data.settings.cookies.send,
+                settingStoreCookies: data.settings.cookies.store,
+                pathParameters: data.pathParameters || [],
+                eventListeners: data.eventListeners || [],
+              };
+
+              resources.push(socketIO);
+            }
           }
         }
       });
