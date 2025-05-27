@@ -56,6 +56,7 @@ export const initNsusUpdater = async () => {
     setInterval(async () => {
       const settings = await models.settings.get();
       if (settings.updateAutomatically) {
+        autoUpdater.channel = settings.updateChannel;
         _checkForUpdates();
       }
     }, CHECK_FOR_UPDATES_INTERVAL);
@@ -66,6 +67,8 @@ export const initNsusUpdater = async () => {
 
     _sendUpdateStatus('Checking');
     await delay(300); // Pacing
+    const settings = await models.settings.get();
+    autoUpdater.channel = settings.updateChannel;
     _checkForUpdates();
   });
 };
