@@ -58,7 +58,7 @@ export default defineConfig(({ mode }) => {
       electronNodeRequire({
         modules: [
           'electron',
-          ...Object.keys(pkg.dependencies),
+          ...Object.keys(pkg.dependencies).filter(pkg => pkg !== 'insomnia-enterprise'),
           ...builtinModules.filter(m => m !== 'buffer'),
           ...builtinModules.map(m => `node:${m}`),
         ],
@@ -73,5 +73,24 @@ export default defineConfig(({ mode }) => {
         }),
       ],
     },
+    resolve: process.env.USE_SUBMODULE
+      ? {
+          alias: {
+            'insomnia-enterprise/external-vault/renderer': path.resolve(
+              __dirname,
+              '../../insomnia-submodule/lib/external-vault/renderer.tsx',
+            ),
+            'insomnia-enterprise/external-vault/common': path.resolve(
+              __dirname,
+              '../../insomnia-submodule/lib/external-vault/common.ts',
+            ),
+            'insomnia': __dirname,
+          },
+        }
+      : {
+          alias: {
+            insomnia: __dirname,
+          },
+        },
   };
 });

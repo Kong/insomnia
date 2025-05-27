@@ -3,6 +3,7 @@ import { BrowserWindow } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import fs from 'fs/promises';
+import { CloudServiceRegister } from 'insomnia-enterprise/external-vault/main';
 import path from 'path';
 
 import { userDataFolder } from '../config/config.json';
@@ -72,6 +73,7 @@ app.on('ready', async () => {
   registerWebSocketHandlers();
   registerCurlHandlers();
   registerSecretStorageHandlers();
+  CloudServiceRegister.registerCloudServiceHandlers();
 
   /**
    * There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.

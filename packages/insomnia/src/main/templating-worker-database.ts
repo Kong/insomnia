@@ -1,3 +1,5 @@
+import { TemplateWorkerDatabase as ExternalVaultTemplateWorkerDatabase } from 'insomnia-enterprise/external-vault/main';
+
 import { database as db } from '../common/database';
 import * as models from '../models';
 import type { Request as DBRequest } from '../models/request';
@@ -21,6 +23,20 @@ export const resolveDbByKey = async (request: Request) => {
   if (url.host === 'oAuth2Token.getByRequestId'.toLowerCase()) {
     result = await models.oAuth2Token.getByParentId(body.parentId);
   }
+
+  const ret = await ExternalVaultTemplateWorkerDatabase.resolveDbByKey({
+    url,
+    body,
+  });
+
+  if (ret.response) {
+    return ret.response;
+  }
+
+  if (ret.result) {
+    result = ret.result;
+  }
+
   if (url.host === 'cookieJar.getOrCreateForParentId'.toLowerCase()) {
     result = await models.cookieJar.getOrCreateForParentId(body.parentId);
   }

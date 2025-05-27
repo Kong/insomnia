@@ -37,6 +37,14 @@ export default async function build(options: Options) {
     sourcemap: true,
     format: 'cjs',
     external: ['electron'],
+    alias: process.env.USE_SUBMODULE
+      ? {
+          'insomnia-enterprise/external-vault/preload': path.resolve(
+            __dirname,
+            '../../insomnia-submodule/lib/external-vault/preload.ts',
+          ),
+        }
+      : undefined,
   });
 
   const hiddenBrowserWindowPreload = esbuild.build({
@@ -65,9 +73,21 @@ export default async function build(options: Options) {
       'electron',
       '@getinsomnia/node-libcurl',
       'fsevents',
-      ...Object.keys(pkg.dependencies),
+      ...Object.keys(pkg.dependencies).filter(pkg => pkg !== 'insomnia-enterprise'),
       ...Object.keys(builtinModules),
     ],
+    alias: process.env.USE_SUBMODULE
+      ? {
+          'insomnia-enterprise/external-vault/main': path.resolve(
+            __dirname,
+            '../../insomnia-submodule/lib/external-vault/main.ts',
+          ),
+          'insomnia-enterprise/external-vault/common': path.resolve(
+            __dirname,
+            '../../insomnia-submodule/lib/external-vault/common.ts',
+          ),
+        }
+      : undefined,
   });
 
   return Promise.all([main, preload, hiddenBrowserWindowPreload]);

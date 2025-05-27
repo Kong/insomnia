@@ -1,4 +1,5 @@
 import { stat } from 'fs/promises';
+import type { CloudProviderCredential } from 'insomnia/src/models';
 import type { CaCertificate } from 'insomnia/src/models/ca-certificate';
 import type { ClientCertificate } from 'insomnia/src/models/client-certificate';
 import type { CookieJar } from 'insomnia/src/models/cookie-jar';
@@ -31,6 +32,7 @@ export interface Database {
   CaCertificate: CaCertificate[];
   CookieJar: CookieJar[];
   Settings: Settings[];
+  CloudCredential: CloudProviderCredential[];
 }
 
 export const emptyDb = (): Database => ({
@@ -46,6 +48,7 @@ export const emptyDb = (): Database => ({
   CaCertificate: [],
   CookieJar: [],
   Settings: [],
+  CloudCredential: [],
 });
 
 export type DbAdapter = (dir: string, filterTypes?: (keyof Database)[]) => Promise<Database | null>;

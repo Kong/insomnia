@@ -1,3 +1,6 @@
+import type { CloudCredential } from 'insomnia-enterprise/external-vault/common';
+
+import type { BaseModel } from '../models';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
 import type { GrpcRequest } from '../models/grpc-request';
@@ -70,6 +73,7 @@ export interface NunjucksParsedTagArg {
   displayName?: DisplayName;
   quotedBy?: '"' | "'";
   validate?: (value: string) => string;
+  modelFilter?: (model: BaseModel, tagArg: NunjucksParsedTagArg[]) => boolean;
   hide?: (arg0: NunjucksParsedTagArg[]) => boolean;
   model?: string;
   options?: PluginArgumentEnumOption[];
@@ -192,10 +196,20 @@ export interface PluginTemplateTagContext {
   renderPurpose?: RenderPurpose;
   util: {
     render: (str: string) => string | Promise<string | null>;
+    cloudService: {
+      getExternalVault: (options: any) => Promise<string>;
+    };
     models: {
       request: {
         getById: (id: string) => Promise<Request | null>;
         getAncestors: (request: Request) => Promise<(Request | RequestGroup | Workspace)[]>;
+      };
+      cloudCredential: {
+        getById: (id: string) => Promise<CloudCredential.CloudProviderCredential | null>;
+        update: (
+          originCredential: CloudCredential.CloudProviderCredential,
+          patch: Partial<CloudCredential.CloudProviderCredential>,
+        ) => Promise<CloudCredential.CloudProviderCredential>;
       };
       workspace: { getById: (id: string) => Promise<Workspace | null> };
       oAuth2Token: { getByRequestId: (id: string) => Promise<OAuth2Token | null> };

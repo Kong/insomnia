@@ -1,3 +1,5 @@
+import { BaseExtension as ExternalVaultBaseExtension } from 'insomnia-enterprise/external-vault/common';
+
 import { database as db } from '../common/database';
 import * as models from '../models/index';
 import type { Request } from '../models/request';
@@ -103,6 +105,7 @@ export default class BaseExtension {
           templating.render(str, {
             context: renderContext,
           }),
+        cloudService: ExternalVaultBaseExtension.cloudService,
         models: {
           request: {
             getById: models.request.getById,
@@ -114,6 +117,7 @@ export default class BaseExtension {
               return ancestors.filter(doc => doc._id !== request._id);
             },
           },
+          cloudCredential: ExternalVaultBaseExtension.cloudCredential,
           workspace: {
             getById: models.workspace.getById,
           },

@@ -1,9 +1,12 @@
+import { BaseExtensionWorker as ExternalVaultBaseExtensionWorker } from 'insomnia-enterprise/external-vault/common';
+
 import { getAppPlatform, getAppVersion } from '../common/constants';
 import type { Request } from '../models/request';
 import type { Response } from '../models/response';
 import type { Plugin } from '../plugins/index';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
 import * as templating from './worker';
+
 export function decodeEncoding<T>(value: T) {
   if (typeof value !== 'string') {
     return value;
@@ -194,6 +197,7 @@ export default class BaseExtension {
           templating.render(str, {
             context: renderContext,
           }),
+        cloudService: ExternalVaultBaseExtensionWorker.cloudService,
         models: {
           request: {
             getById: async (id: string) => {
@@ -226,6 +230,7 @@ export default class BaseExtension {
               return workspace;
             },
           },
+          cloudCredential: ExternalVaultBaseExtensionWorker.cloudCredential,
           oAuth2Token: {
             getByRequestId: async (parentId: string) => {
               const resp = await fetch('insomnia-templating-worker-database://oAuth2Token.getByRequestId', {

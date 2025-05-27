@@ -6,13 +6,17 @@
     "target": "es2020",
     "allowJs": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "isolatedModules": true,
     /* Transpiling Options */
     "module": "ESNext",
     "sourceMap": true,
     /* Runs in the DOM */
-    "lib": ["ES2023", "DOM.Iterable", "DOM"],
+    "lib": [
+      "ES2023",
+      "DOM.Iterable",
+      "DOM"
+    ],
     "jsx": "react",
     /* Strictness */
     "strict": true,
@@ -21,7 +25,22 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "useUnknownInCatchVariables": false,
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": true,
+    "baseUrl": ".",
+    "paths": {
+      "insomnia-enterprise/external-vault/main": [
+        "../../insomnia-submodule/lib/external-vault/main.ts"
+      ],
+      "insomnia-enterprise/external-vault/renderer": [
+        "../../insomnia-submodule/lib/external-vault/renderer.tsx"
+      ],
+      "insomnia-enterprise/external-vault/common": [
+        "../../insomnia-submodule/lib/external-vault/common.ts"
+      ],
+      "insomnia-enterprise/external-vault/preload": [
+        "../../insomnia-submodule/lib/external-vault/preload.ts"
+      ],
+    }
   },
   "include": [
     ".eslintrc.js",

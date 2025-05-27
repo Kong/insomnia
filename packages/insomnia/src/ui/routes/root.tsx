@@ -1,6 +1,8 @@
 import '../css/styles.css';
 
 import type { IpcRendererEvent } from 'electron';
+import type { CloudCredential } from 'insomnia-enterprise/external-vault/common';
+import { Root as ExternalVaultRoot } from 'insomnia-enterprise/external-vault/renderer';
 import React, { useEffect, useState } from 'react';
 import { type LoaderFunction, Outlet, useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
@@ -27,6 +29,7 @@ export interface RootLoaderData {
   settings: Settings;
   workspaceCount: number;
   userSession: UserSession;
+  cloudCredentials: CloudCredential.CloudProviderCredential[];
 }
 
 export const useRootLoaderData = () => {
@@ -37,11 +40,13 @@ export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
   const settings = await models.settings.get();
   const workspaceCount = await models.workspace.count();
   const userSession = await models.userSession.getOrCreate();
+  const cloudCredentials = await models.cloudCredential.all();
 
   return {
     settings,
     workspaceCount,
     userSession,
+    cloudCredentials,
   };
 };
 
@@ -175,6 +180,7 @@ const Root = () => {
           },
         );
       }
+      await ExternalVaultRoot.onShellOpen(urlWithoutParams, params, actionFetcher);
       if (urlWithoutParams === 'insomnia://app/auth/finish') {
         return actionFetcher.submit(
           {

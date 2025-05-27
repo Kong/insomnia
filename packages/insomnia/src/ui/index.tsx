@@ -1,5 +1,6 @@
 import './rendererListeners';
 
+import { cloudCredentialRoute } from 'insomnia-enterprise/external-vault/renderer';
 import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { createMemoryRouter, matchPath, Outlet, RouterProvider } from 'react-router-dom';
@@ -193,6 +194,7 @@ async function renderApp() {
             path: 'settings/update',
             action: async (...args) => (await import('./routes/actions')).updateSettingsAction(...args),
           },
+          cloudCredentialRoute,
           {
             path: 'untracked-projects',
             loader: async (...args) => (await import('./routes/untracked-projects')).loader(...args),

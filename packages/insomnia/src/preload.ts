@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer, webUtils as _webUtils } from 'electron';
+import { cloudService } from 'insomnia-enterprise/external-vault/preload';
 
 import type { GitServiceAPI } from './main/git-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
@@ -119,6 +120,7 @@ const main: Window['main'] = {
   grpc,
   curl,
   secretStorage,
+  cloudService,
   trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
   showNunjucksContextMenu: options => ipcRenderer.send('show-nunjucks-context-menu', options),

@@ -1,3 +1,6 @@
+import { SvgIcnAzureLogo } from 'insomnia-enterprise/external-vault/renderer';
+import { SvgIcnGCPLogo } from 'insomnia-enterprise/external-vault/renderer';
+import { SvgIcnHashiCorp } from 'insomnia-enterprise/external-vault/renderer';
 import React, { type NamedExoticComponent, type SVGProps } from 'react';
 import type { ValueOf } from 'type-fest';
 
@@ -131,6 +134,9 @@ export const IconEnum = {
   receive: 'receive',
   sent: 'sent',
   systemEvent: 'system-event',
+  gcpLogo: 'gcp-logo',
+  azureLogo: 'azure-logo',
+  hashiCorp: 'hashicorp',
   /** Blank icon */
   empty: 'empty',
 } as const;
@@ -193,6 +199,9 @@ const icons: Record<IconId, [ThemeKeys, NamedExoticComponent<SVGProps<SVGSVGElem
   [IconEnum.sent]: [ThemeEnum.default, SvgIcnSent],
   [IconEnum.checkmarkCircle]: [ThemeEnum.default, SvgIcnCheckmarkCircle],
   [IconEnum.systemEvent]: [ThemeEnum.default, SvgIcnSystemEvent],
+  [IconEnum.gcpLogo]: [ThemeEnum.default, SvgIcnGCPLogo],
+  [IconEnum.azureLogo]: [ThemeEnum.default, SvgIcnAzureLogo],
+  [IconEnum.hashiCorp]: [ThemeEnum.default, SvgIcnHashiCorp],
 };
 
 export type IconId = ValueOf<typeof IconEnum>;

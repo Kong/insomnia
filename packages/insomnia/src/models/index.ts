@@ -1,3 +1,5 @@
+import { CloudCredential as _cloudCredential } from 'insomnia-enterprise/external-vault/common';
+
 import {
   EXPORT_TYPE_API_SPEC,
   EXPORT_TYPE_COOKIE_JAR,
@@ -53,6 +55,8 @@ import * as _webSocketResponse from './websocket-response';
 import * as _workspace from './workspace';
 import * as _workspaceMeta from './workspace-meta';
 
+export type CloudProviderCredential = _cloudCredential.CloudProviderCredential;
+
 export interface BaseModel {
   _id: string;
   type: string;
@@ -102,6 +106,7 @@ export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
 export * as organization from './organization';
 export const userSession = _userSession;
+export const cloudCredential = _cloudCredential;
 
 export function all() {
   // NOTE: This list should be from most to least specific (ie. parents above children)
@@ -142,6 +147,7 @@ export function all() {
     webSocketRequest,
     webSocketResponse,
     userSession,
+    cloudCredential,
   ] as const;
 }
 

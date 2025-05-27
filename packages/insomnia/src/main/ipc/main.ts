@@ -3,6 +3,7 @@ import type { MarkerRange } from 'codemirror';
 import { app, BrowserWindow, type IpcRendererEvent, type MenuItemConstructorOptions, shell } from 'electron';
 import fs from 'fs';
 import iconv from 'iconv-lite';
+import type { CloudServiceRegister } from 'insomnia-enterprise/external-vault/main';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
 import * as models from '../../models';
@@ -49,6 +50,7 @@ export interface RendererToMainBridgeAPI {
   curl: CurlBridgeAPI;
   git: GitServiceAPI;
   secretStorage: secretStorageBridgeAPI;
+  cloudService: CloudServiceRegister.cloudServiceBridgeAPI;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   showNunjucksContextMenu: (options: { key: string; nunjucksTag?: { template: string; range: MarkerRange } }) => void;

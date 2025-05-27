@@ -24,8 +24,8 @@ export function electronNodeRequire(options: Options): Plugin {
       // Create aliases for the modules so that we can resolve them with this plugin
       conf.resolve ??= {};
       conf.resolve.alias = {
-        ...conf.resolve.alias,
         ...Object.fromEntries(modules.map(e => [e, `virtual:external:${e}`])),
+        ...conf.resolve.alias,
       };
 
       // Ignore the modules from Rollup's commonjs plugin so that we can resolve them with this plugin

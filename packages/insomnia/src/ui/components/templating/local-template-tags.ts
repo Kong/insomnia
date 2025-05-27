@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { format } from 'date-fns';
 import fs from 'fs';
 import iconv from 'iconv-lite';
+import { LocalTemplateTags } from 'insomnia-enterprise/external-vault/common';
 import { JSONPath } from 'jsonpath-plus';
 import os from 'os';
 import { CookieJar } from 'tough-cookie';
@@ -15,6 +16,7 @@ import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } fro
 import { fakerFunctions } from './faker-functions';
 
 const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
+  LocalTemplateTags.localTemplatePlugin,
   {
     templateTag: {
       name: 'faker',
