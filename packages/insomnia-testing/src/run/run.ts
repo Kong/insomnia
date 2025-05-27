@@ -12,6 +12,51 @@ import type { InsomniaOptions } from './insomnia';
 import { Insomnia } from './insomnia';
 import { JavaScriptReporter } from './javascript-reporter';
 
+function prependInterceptedRequireToSource(source: string): string {
+  const injectScript = `
+  const externalModules = new Map([['chai', chai]]);
+
+  const requireInterceptor = (moduleName) => {
+    if (
+      [
+        // node.js modules
+        'path',
+        'assert',
+        'buffer',
+        'util',
+        'url',
+        'punycode',
+        'querystring',
+        'string_decoder',
+        'stream',
+        'timers',
+        'events',
+        // follows should be npm modules
+        // but they are moved to here to avoid introducing additional dependencies
+      ].includes(moduleName)
+    ) {
+      return require(moduleName);
+    } else if (['atob', 'btoa'].includes(moduleName)) {
+      return moduleName === 'atob' ? atob : btoa;
+    } else if (externalModules.has(moduleName)) {
+      const externalModule = externalModules.get(moduleName);
+      if (!externalModule) {
+        throw Error(\`no module is found for "$\{moduleName}"\`);
+      }
+      return externalModule;
+    }
+  
+    throw Error(\`no module is found for "$\{moduleName}"\`);
+  };
+
+  require = requireInterceptor;
+  global.require = requireInterceptor;
+  `;
+
+  // Ensure that the require is at the top of the file
+  return `${injectScript}\n${source}`;
+}
+
 // declare var insomnia: Insomnia;
 const runInternal = async <TReturn, TNetworkResponse>(
   testSrc: string | string[],
@@ -42,7 +87,7 @@ const runInternal = async <TReturn, TNetworkResponse>(
 
     const sources = Array.isArray(testSrc) ? testSrc : [testSrc];
     sources.forEach(source => {
-      mocha.addFile(writeTempFile(source));
+      mocha.addFile(writeTempFile(prependInterceptedRequireToSource(source)));
     });
 
     try {
