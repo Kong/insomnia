@@ -14,7 +14,7 @@ import { JavaScriptReporter } from './javascript-reporter';
 
 function prependInterceptedRequireToSource(source: string): string {
   const injectScript = `
-  const externalModules = new Map([['chai', chai]]);
+  const externalModules = new Map([['chai', global.chai], ['chai-json-schema', global.require('chai-json-schema')]]);
 
   const requireInterceptor = (moduleName) => {
     if (
@@ -50,7 +50,6 @@ function prependInterceptedRequireToSource(source: string): string {
   };
 
   require = requireInterceptor;
-  global.require = requireInterceptor;
   `;
 
   // Ensure that the require is at the top of the file
