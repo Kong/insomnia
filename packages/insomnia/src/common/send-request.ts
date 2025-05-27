@@ -98,9 +98,18 @@ export async function getSendRequestCallbackMemDb(
 
     const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
     let activeGlobalEnvironment: Environment | undefined = undefined;
+    let activeGlobalBaseEnvironment: Environment | undefined = undefined;
     if (workspaceMeta?.activeGlobalEnvironmentId) {
       activeGlobalEnvironment =
         (await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId)) || undefined;
+      const activeGlobalEnvironmentParentId = activeGlobalEnvironment?.parentId || '';
+      if (activeGlobalEnvironmentParentId.startsWith('wrk_')) {
+        // activeGlobalEnvironment is a base global environment
+        activeGlobalBaseEnvironment = activeGlobalEnvironment;
+      } else if (activeGlobalEnvironmentParentId.startsWith('env_')) {
+        // activeGlobalEnvironment is a sub global environment
+        activeGlobalBaseEnvironment = (await models.environment.getById(activeGlobalEnvironmentParentId)) || undefined;
+      }
     }
 
     const responseId = generateId('res');
@@ -120,6 +129,7 @@ export async function getSendRequestCallbackMemDb(
       baseEnvironment,
       cookieJar,
       activeGlobalEnvironment,
+      activeGlobalBaseEnvironment,
       activeEnvironmentId,
       workspace,
       timelinePath,

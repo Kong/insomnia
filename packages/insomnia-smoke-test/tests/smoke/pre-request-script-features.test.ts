@@ -459,7 +459,7 @@ test.describe('pre-request features tests', () => {
     await expect.soft(responsePane).toContainText('PASShappy tests');
   });
 
-  test('environment and baseEnvironment can be persisted', async ({ page }) => {
+  test('environment and baseEnvironment can be persisted', async ({ app, page }) => {
     const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     await page.getByLabel('Request Collection').getByTestId('persist environment').press('Enter');
 
@@ -492,6 +492,81 @@ test.describe('pre-request features tests', () => {
           },
         },
       },
+    });
+    // close modal and go back
+    await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
+    await page
+      .locator('[data-icon="chevron-left"]')
+      .filter({ has: page.locator(':visible') })
+      .first()
+      .click();
+    // import global environment
+    const globalEnvText = await loadFixture('script-global-environment.yaml');
+    await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), globalEnvText);
+    await page.getByLabel('Import').click();
+    await page.locator('[data-test-id="import-from-clipboard"]').click();
+    await page.getByRole('button', { name: 'Scan' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+    // go to request collection
+    await page.getByLabel('Pre-request Scripts', { exact: true }).click();
+    await page.getByLabel('Request Collection').getByTestId('persist global environment').press('Enter');
+    // activate global environment
+    await page.getByLabel('Manage Environments').click();
+    await page.getByPlaceholder('Choose a global environment').click();
+    await page.getByRole('option', { name: 'Script Environment' }).click();
+    await page.getByRole('option', { name: 'Base Script Env' }).click();
+    await page.getByTestId('underlay').click();
+    // send
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    // check when activate global base environment, globals and baseGlobals refer to the same env
+    await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();
+    await page.getByText('log: globals base').click();
+    await page.getByText('log: baseGlobals base').click();
+    // view base environment has been updated
+    await page.getByLabel('Manage Environments').click();
+    await page.getByLabel('Manage global environment').click();
+    await page.getByLabel('Environment name').getByText('Base Script Env').click();
+    const globalBaseEditor = page.getByTestId('CodeEditor').locator('.CodeMirror-line');
+    const globalBaseRows = await globalBaseEditor.allInnerTexts();
+    const globalBaseBodyJson = JSON.parse(globalBaseRows.join(' '));
+    expect.soft(globalBaseBodyJson).toEqual({
+      // if select global base environment, both globals and baseGlobals set method will point to global base environment
+      __env_source: 'base',
+      __fromBaseGlobals: 'selectedBaseGlobal',
+    });
+
+    // switch back to request collection tab
+    await page.getByLabel('Insomnia Tabs').getByLabel('persist global environment').first().click();
+    // activate global sub environment
+    await page.getByLabel('Manage Environments').click();
+    await page.getByRole('option', { name: 'Sub Script Env' }).click();
+    await page.getByTestId('underlay').click();
+    // send
+    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+    // check when activate global sub environment, globals refers to the selected while baseGlobals refers to the base env
+    await page.getByTestId('response-pane').getByRole('tab', { name: 'Console' }).click();
+    await page.getByText('log: globals sub').click();
+    await page.getByText('log: baseGlobals base').click();
+    // view sub environment has been updated
+    await page.getByLabel('Manage Environments').click();
+    await page.getByLabel('Manage global environment').click();
+    await page.getByLabel('Environment name').getByText('Sub Script Env').first().click();
+    let globalSubEditor = page.getByTestId('CodeEditor').locator('.CodeMirror-line');
+    let globalSubRows = await globalSubEditor.allInnerTexts();
+    let globalSubBodyJson = JSON.parse(globalSubRows.join(' '));
+    expect.soft(globalSubBodyJson).toEqual({
+      // if select global sub environment, globals will point to the selected sub environment
+      __env_source: 'sub',
+      __fromGlobals: 'selectedGlobal',
+    });
+    await page.getByLabel('Environment name').getByText('Base Script Env').click();
+    globalSubEditor = page.getByTestId('CodeEditor').locator('.CodeMirror-line');
+    globalSubRows = await globalSubEditor.allInnerTexts();
+    globalSubBodyJson = JSON.parse(globalSubRows.join(' '));
+    expect.soft(globalSubBodyJson).toEqual({
+      // if select global sub environment, baseGlobals will point to the base environment of the selected one
+      __env_source: 'base',
+      __fromBaseGlobals: 'selectedBaseGlobal',
     });
   });
 

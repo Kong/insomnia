@@ -36,6 +36,7 @@ export interface TransformedExecuteScriptContext {
   clientCertificates: ClientCertificate[];
   settings: Settings;
   globals?: Environment;
+  baseGlobals?: Environment;
   cookieJar: CookieJar;
   requestTestResults?: RequestTestResult[];
   userUploadEnvironment?: UserUploadEnvironment;
