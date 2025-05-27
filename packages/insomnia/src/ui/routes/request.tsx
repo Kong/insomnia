@@ -702,6 +702,19 @@ export const sendActionImplementation = async (options: {
     iterationCount,
     runtime,
   });
+  if ('error' in postMutatedContext && postMutatedContext.error.includes("Executing script timeout")) {
+    throw {
+      response: await responseTransform(
+        response,
+        requestData.activeEnvironmentId,
+        renderedRequest,
+        renderedResult.context,
+      ),
+      maxHistoryResponses: requestData.settings.maxHistoryResponses,
+      requestMeta,
+      error: postMutatedContext.error,
+    };
+  }
 
   window.main.completeExecutionStep({ requestId });
 
