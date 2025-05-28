@@ -33,6 +33,7 @@ const shouldReturnSuccessCode = [
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/nedb -e env_env_ca046a --reporter min uts_fe901c',
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/git-repo -e env_env_ca046a uts_fe901c',
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/insomnia-v4/insomnia_v4.yaml -e env_env_0e4670 spc_3b2850',
+
   // export file, request can inherit auth headers and variables from folder, also test --disableCertValidation with local https smoke test server
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/examples/folder-inheritance-document.yml spc_a8144e --verbose --disableCertValidation',
 
@@ -58,6 +59,8 @@ const shouldReturnErrorCode = [
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/git-repo -e env_env_ca046a uts_7f0f85',
   '$PWD/packages/insomnia-inso/bin/inso lint spec -w packages/insomnia-inso/src/db/fixtures/git-repo-malformed-spec spc_46c5a4',
   '$PWD/packages/insomnia-inso/bin/inso lint spec packages/insomnia-inso/src/db/fixtures/insomnia-v4/malformed.yaml',
+  // With require
+  '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/insomnia-v5/with-tests.yaml -e env_env_7c2769 uts_1c6207',
   // after-response script and test
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/after-response-failed-test.yml wrk_616795 --verbose',
 ];
