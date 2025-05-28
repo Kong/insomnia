@@ -126,12 +126,6 @@ export async function registerInsomniaProtocols() {
               } else {
                 curl.setOpt(Curl.option.PROXYTYPE, curlOptProxyType);
                 curl.setOpt(Curl.option.PROXY, parts[1]);
-                console.log(
-                  'Using system proxy to send SSE request to insomnia backend:',
-                  systemProxyStr,
-                  proxyType,
-                  parts[1],
-                );
               }
             }
           } else {
