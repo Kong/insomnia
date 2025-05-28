@@ -103,7 +103,9 @@ test('Critical Path For Template Tags Interactions', async ({ page, app }) => {
   // test response template tags
   // send request first to populate response
   await page.getByLabel('Request Collection').getByTestId('Base Response').press('Enter');
-  await page.getByRole('button', { name: 'Send' }).click();
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+  const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
+  await expect.soft(statusTag).toContainText('200 OK');
   await page.getByLabel('Request Collection').getByTestId('Response Tag').press('Enter');
   await page.getByText('Body', { exact: true }).click();
   for (const { tagPrefix, expectedResult } of templateTagTestCases.response) {
@@ -122,7 +124,7 @@ test('Critical Path For Template Tags Interactions', async ({ page, app }) => {
   await page.getByText('Body', { exact: true }).click();
   const { tagPrefix } = templateTagTestCases.prompt[0];
   await page.locator(`[data-template^="${tagPrefix}"]`).isVisible();
-  await page.getByRole('button', { name: 'Send' }).click();
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   // prompt is not allowed to use by default
   await expect.soft(page.getByText('Unexpected Request Failure')).toBeVisible();
   await page.getByRole('dialog').getByRole('button', { name: 'OK' }).click();
@@ -131,7 +133,7 @@ test('Critical Path For Template Tags Interactions', async ({ page, app }) => {
   await page.getByRole('tab', { name: 'Plugins' }).click();
   await page.locator('text=Allow elevated access for plugins').click();
   await page.locator('.app').press('Escape');
-  await page.getByRole('button', { name: 'Send' }).click();
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await page.getByRole('dialog').locator('#prompt-input').fill('prompt-value');
   await page.getByRole('dialog').getByRole('button', { name: 'Submit' }).click();
   await page.click('text=Console');
