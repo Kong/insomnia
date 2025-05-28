@@ -1,8 +1,8 @@
 import { Readable } from 'node:stream';
+import { parse as urlParse } from 'node:url';
 
 import { Curl, CurlAuth, CurlFeature, CurlProxy, CurlSslOpt, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import { app, net, protocol, session } from 'electron';
-import { parse as urlParse } from 'node:url';
 
 import { getApiBaseURL } from '../common/constants';
 import { get as getSettings } from '../models/settings';
@@ -126,6 +126,12 @@ export async function registerInsomniaProtocols() {
               } else {
                 curl.setOpt(Curl.option.PROXYTYPE, curlOptProxyType);
                 curl.setOpt(Curl.option.PROXY, parts[1]);
+                console.log(
+                  'Using system proxy to send SSE request to insomnia backend:',
+                  systemProxyStr,
+                  proxyType,
+                  parts[1],
+                );
               }
             }
           } else {
