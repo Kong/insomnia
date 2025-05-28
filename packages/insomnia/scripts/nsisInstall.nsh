@@ -6,7 +6,7 @@
     IfFileExists $0 0 skip_uninstall
     MessageBox MB_YESNO "Existing Insomnia installation found, which must be uninstalled first.$\n$\nClick 'No' to exit this installer so you can uninstall yourself.$\n$\nClick 'Yes' to allow this installer to uninstall for you (your existing Insomnia data will be preserved)." IDYES do_uninstall IDNO exit_installer
     do_uninstall:
-      nsExec::ExecWait '"$0" --uninstall -s'
+      nsExec::Exec '"$0" --uninstall -s'
       delete "$PROFILE\AppData\Local\insomnia\Update.exe"
       delete "$PROFILE\AppData\Local\insomnia\.dead"
       rmDir "$PROFILE\AppData\Local\insomnia"
