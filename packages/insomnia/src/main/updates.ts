@@ -58,9 +58,9 @@ const isNsisInstaller = async () => {
   if (process.platform !== 'win32') {
     return false;
   }
-  console.log('process.execPath', process.execPath);
   try {
     const installDir = path.dirname(process.execPath);
+    // we inject this file(nsisInstall.nsh) during the NSIS build process to indicate the installer type
     const flagFilePath = path.join(installDir, 'installer-info.json');
 
     const content = await fsPromise.readFile(flagFilePath, 'utf-8');

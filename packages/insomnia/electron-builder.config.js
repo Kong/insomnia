@@ -100,7 +100,7 @@ const config = {
   },
   nsis: {
     artifactName: `${BINARY_PREFIX}-nsis-\${version}.\${ext}`,
-    include: './config/uninstall-squirrel.nsh',
+    include: './scripts/nsisInstall.nsh',
     oneClick: false,
     selectPerMachineByDefault: true,
     allowToChangeInstallationDirectory: true,
