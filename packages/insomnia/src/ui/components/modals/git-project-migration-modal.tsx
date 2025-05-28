@@ -148,6 +148,7 @@ export const GitProjectMigrationModal: FC<{
               </div>
               <div className="flex items-center justify-end gap-2 pb-10">
                 <Button
+                  isDisabled={migrateLegacyWorkspaceFetcher.state !== 'idle'}
                   onPress={migrateLegacyWorkspace}
                   className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
                 >
