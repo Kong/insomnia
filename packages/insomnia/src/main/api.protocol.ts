@@ -2,7 +2,7 @@ import { Readable } from 'node:stream';
 
 import { Curl, CurlAuth, CurlFeature, CurlProxy, CurlSslOpt, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import { app, net, protocol, session } from 'electron';
-import { parse as urlParse } from 'url';
+import { parse as urlParse } from 'node:url';
 
 import { getApiBaseURL } from '../common/constants';
 import { get as getSettings } from '../models/settings';
@@ -91,28 +91,35 @@ export async function registerInsomniaProtocols() {
               let unknownProxy = false;
               let curlOptProxyType = CurlProxy.Http;
               switch (proxyType) {
-                case 'PROXY':
+                case 'PROXY': {
                   curlOptProxyType = CurlProxy.Http;
                   break;
-                case 'HTTP':
+                }
+                case 'HTTP': {
                   curlOptProxyType = CurlProxy.Http;
                   break;
-                case 'SOCKS':
+                }
+                case 'SOCKS': {
                   curlOptProxyType = CurlProxy.Socks4;
                   break;
-                case 'HTTPS':
+                }
+                case 'HTTPS': {
                   curlOptProxyType = CurlProxy.Https;
                   break;
-                case 'SOCKS4':
+                }
+                case 'SOCKS4': {
                   curlOptProxyType = CurlProxy.Socks4;
                   break;
-                case 'SOCKS5':
+                }
+                case 'SOCKS5': {
                   curlOptProxyType = CurlProxy.Socks5;
                   break;
-                default:
+                }
+                default: {
                   // unknown proxy type
                   unknownProxy = true;
                   break;
+                }
               }
               if (unknownProxy) {
                 curl.setOpt(Curl.option.PROXY, '');
