@@ -1,10 +1,8 @@
-import { SvgIcnAzureLogo } from 'insomnia-enterprise/external-vault/renderer';
-import { SvgIcnGCPLogo } from 'insomnia-enterprise/external-vault/renderer';
-import { SvgIcnHashiCorp } from 'insomnia-enterprise/external-vault/renderer';
 import React, { type NamedExoticComponent, type SVGProps } from 'react';
 import type { ValueOf } from 'type-fest';
 
 import { SvgIcnArrowRight } from './assets/svgr/IcnArrowRight';
+import { SvgIcnAzureLogo } from './assets/svgr/IcnAzureLogo';
 import { SvgIcnBitbucketLogo } from './assets/svgr/IcnBitbucketLogo';
 import { SvgIcnBrackets } from './assets/svgr/IcnBrackets';
 import { SvgIcnBug } from './assets/svgr/IcnBug';
@@ -26,12 +24,14 @@ import { SvgIcnErrors } from './assets/svgr/IcnErrors';
 import { SvgIcnFile } from './assets/svgr/IcnFile';
 import { SvgIcnFolder } from './assets/svgr/IcnFolder';
 import { SvgIcnFolderOpen } from './assets/svgr/IcnFolderOpen';
+import { SvgIcnGCPLogo } from './assets/svgr/IcnGCPLogo';
 import { SvgIcnGear } from './assets/svgr/IcnGear';
 import { SvgIcnGitBranch } from './assets/svgr/IcnGitBranch';
 import { SvgIcnGithubLogo } from './assets/svgr/IcnGithubLogo';
 import { SvgIcnGitlabLogo } from './assets/svgr/IcnGitlabLogo';
 import { SvgIcnGlobe } from './assets/svgr/IcnGlobe';
 import { SvgIcnGui } from './assets/svgr/IcnGui';
+import { SvgIcnHashiCorp } from './assets/svgr/IcnHashiCorp';
 import { SvgIcnHeart } from './assets/svgr/IcnHeart';
 import { SvgIcnHome } from './assets/svgr/IcnHome';
 import { SvgIcnIndentation } from './assets/svgr/IcnIndentation';

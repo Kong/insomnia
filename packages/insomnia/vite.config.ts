@@ -39,7 +39,8 @@ export default defineConfig(({ mode }) => {
       },
     },
     optimizeDeps: {
-      exclude: ['@getinsomnia/node-libcurl'],
+      // exclude insomnia-enterprise because it uses dynamic imports inside and Vite can't handle them properly
+      exclude: ['@getinsomnia/node-libcurl', 'insomnia-enterprise'],
       // these packages are only used in web worker, Vite won't be able to discover the import on the initial scan，so we need to include them here to let vite pre-bundle them
       // https://vitejs.dev/guide/dep-pre-bundling.html#customizing-the-behavior
       include: [
