@@ -831,6 +831,8 @@ const ProjectRoute: FC = () => {
 
   const isGitSyncEnabled = features.gitSync.enabled;
 
+  console.log({ isGitSyncEnabled, activeProject, storageRules });
+
   const createInProjectActionList: {
     id: string;
     name: string;
@@ -921,7 +923,8 @@ const ProjectRoute: FC = () => {
   ];
 
   const isRemoteProjectInconsistent = activeProject && isRemoteProject(activeProject) && !storageRules.enableCloudSync;
-  const isLocalProjectInconsistent = activeProject && !isRemoteProject(activeProject) && !storageRules.enableLocalVault;
+  const isLocalProjectInconsistent =
+    activeProject && !isRemoteProject(activeProject) && !isGitProject(activeProject) && !storageRules.enableLocalVault;
   const isGitSyncProjectInconsistent = activeProject && isGitProject(activeProject) && !storageRules.enableGitSync;
   const isProjectInconsistent =
     isRemoteProjectInconsistent || isLocalProjectInconsistent || isGitSyncProjectInconsistent;
