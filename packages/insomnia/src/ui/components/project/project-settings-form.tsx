@@ -191,7 +191,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   };
 
   return (
-    <div className="flex max-w-[600px] flex-col gap-4">
+    <div className="flex w-full max-w-[600px] flex-col gap-4">
       {error && (
         <div className="flex items-center gap-2 rounded-sm bg-[rgba(var(--color-danger-rgb),0.5)] px-2 py-1 text-sm text-[--color-font-danger]">
           <Icon icon="triangle-exclamation" />
@@ -509,7 +509,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                 </>
               ) : (
                 <>
-                  <Icon icon="git-alt" className="" />
+                  <Icon icon={['fab', 'git-alt']} />
                   <span>{insomniaFiles.length > 0 ? 'Import all' : 'Clone'}</span>
                 </>
               )}
