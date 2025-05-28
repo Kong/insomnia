@@ -2,7 +2,7 @@ import os from 'node:os';
 
 import { expect } from '@playwright/test';
 
-import { loadFixture, getFixturePath } from '../../playwright/paths';
+import { getFixturePath, loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 interface TemplateTagTestCase {
