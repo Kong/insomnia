@@ -2,8 +2,8 @@ import * as templating from '../../templating/worker';
 
 const originalRequire = self.require;
 const interceptor: any = (moduleName: string): NodeRequire => {
-  const allowList = ['crypto', 'date-fns', 'fs', 'iconv-lite', 'jsonpath-plus', 'os', 'tough-cookie', 'uuid'];
-  if (allowList.includes(moduleName)) {
+  const blockList = ['child_process'];
+  if (!blockList.includes(moduleName)) {
     return originalRequire(moduleName);
   }
   throw new Error(
