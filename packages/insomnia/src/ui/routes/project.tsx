@@ -831,8 +831,6 @@ const ProjectRoute: FC = () => {
 
   const isGitSyncEnabled = features.gitSync.enabled;
 
-  console.log({ isGitSyncEnabled, activeProject, storageRules });
-
   const createInProjectActionList: {
     id: string;
     name: string;
