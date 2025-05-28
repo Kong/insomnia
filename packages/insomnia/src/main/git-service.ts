@@ -468,7 +468,6 @@ async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: P
     for (const legacyInsomniaFile of legacyInsomniaFiles) {
       const fileContents = await fsClient.promises.readFile(legacyInsomniaFile.filePath, 'utf8');
 
-      const id = legacyInsomniaFile.filePath.split('.')[0];
       const type = legacyInsomniaFile.type;
 
       // Skip the file if there is a conflict marker
@@ -480,8 +479,8 @@ async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: P
 
       const doc: models.BaseModel = YAML.parse(fileContents);
 
-      if (id !== doc._id) {
-        throw new Error(`Doc _id does not match file path [${doc._id} != ${id || 'null'}]`);
+      if (!legacyInsomniaFile.filePath.includes(doc._id)) {
+        throw new Error(`Doc _id does not match file path [${doc._id} - ${legacyInsomniaFile.filePath}]`);
       }
 
       if (type !== doc.type) {
