@@ -79,8 +79,6 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
       ? gitRepoDataFetcher.data.legacyInsomniaWorkspace
       : null;
 
-  console.log({ isMigrationModalOpen, gitRepository, legacyInsomniaWorkspace });
-
   // Only fetch the repo status if we have a repo uri and we don't have the status already
   const shouldFetchGitRepoStatus = Boolean(
     gitRepository?.uri &&

@@ -1,0 +1,284 @@
+type: spec.insomnia.rest/5.0
+name: Endpoint Security 1.2
+meta:
+  id: wrk_d58fc511fbf1495591e9939627cf4b9a
+  created: 1639600546875
+  modified: 1639600569168
+collection:
+  - url: mock.insomnia.run
+    name: Simple request
+    meta:
+      id: req_01e2be4c819d44948d045c9a7ee5c02c
+      created: 1748258822451
+      modified: 1748352624154
+      isPrivate: false
+      sortKey: -1748258822451
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/11.1.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_7c2769239b7a889ba348c82883908cdf238ed89a
+    created: 1747824499497
+    modified: 1748352396643
+  cookies:
+    - key: AEC
+      value: AVh_V2g1A9_EwAqx29_jG23KRcQDGWRpcHQiD9558-GKVpB0rTF47IiU8w
+      domain: google.com
+      path: /
+      secure: true
+      httpOnly: true
+      hostOnly: false
+      creation: 2025-05-26T11:27:07.118Z
+      lastAccessed: 2025-05-27T13:26:36.643Z
+      sameSite: lax
+      id: d917923c-defa-4a7e-8832-b88a020d1abf
+environments:
+  name: Base environment
+  meta:
+    id: env_7c2769239b7a889ba348c82883908cdf238ed89a
+    created: 1639600546883
+    modified: 1639600569167
+    isPrivate: false
+  data:
+    base_url: "{{ scheme }}://{{ host }}{{ base_path }}"
+  subEnvironments:
+    - name: OpenAPI env
+      meta:
+        id: env_env_7c2769239b7a889ba348c82883908cdf238ed89a_sub
+        created: 1639600569165
+        modified: 1639600569165
+        isPrivate: false
+        sortKey: 1639600569165
+      data:
+        scheme: https
+        base_path: /v1
+        host: api.server.test
+        xApiKey: xApiKey
+        xAppVersion: xAppVersion
+        cookieName: cookieName
+        anotherCookieName: anotherCookieName
+        key: key
+        anotherKey: anotherKey
+        httpUsername: username
+        httpPassword: password
+        bearerToken: bearerToken
+        oauth2ClientId: clientId
+        oauth2ClientSecret: clientSecret
+        oauth2Username: username
+        oauth2Password: password
+spec:
+  contents:
+    openapi: 3.0.6
+    info:
+      title: Endpoint Security
+      version: "1.2"
+    servers:
+      - url: https://api.server.test/v3
+    components:
+      securitySchemes:
+        Basic:
+          type: http
+          scheme: basic
+        Bearer:
+          type: http
+          scheme: bearer
+        Key-Header:
+          type: apiKey
+          name: x-api_key
+          in: header
+        AnotherKey-Header:
+          type: apiKey
+          name: x-app-version
+          in: header
+        Key-Cookie:
+          type: apiKey
+          name: CookieName
+          in: cookie
+        AnotherKey-Cookie:
+          type: apiKey
+          name: AnotherCookieName
+          in: cookie
+        Key-Query:
+          type: apiKey
+          name: key
+          in: query
+        AnotherKey-Query:
+          type: apiKey
+          name: another_key
+          in: query
+        OAuth2-AuthorizationCode:
+          type: oauth2
+          scheme: bearer
+          flows:
+            authorizationCode:
+              authorizationUrl: https://api.server.test/v1/auth
+              tokenUrl: https://api.server.test/v1/token
+              scopes:
+                read:something: Read all the data
+                write:something: Write all the data
+        OAuth2-Implicit:
+          type: oauth2
+          scheme: bearer
+          flows:
+            implicit:
+              authorizationUrl: https://api.server.test/v1/auth
+              scopes:
+                read:something: Read all the data
+                write:something: Write all the data
+        OAuth2-ClientCredentials:
+          type: oauth2
+          scheme: bearer
+          flows:
+            clientCredentials:
+              tokenUrl: https://api.server.test/v1/token
+              scopes:
+                read:something: Read all the data
+                write:something: Write all the data
+        OAuth2-Password:
+          type: oauth2
+          scheme: bearer
+          flows:
+            password:
+              tokenUrl: https://api.server.test/v1/token
+              scopes:
+                read:something: Read all the data
+                write:something: Write all the data
+    paths:
+      /none:
+        get:
+          responses:
+            "200":
+              description: OK
+      /none/basic:
+        get:
+          responses:
+            "200":
+              description: OK
+      /basic:
+        get:
+          responses:
+            "200":
+              description: OK
+      /bearer:
+        get:
+          responses:
+            "200":
+              description: OK
+      /key/header:
+        get:
+          responses:
+            "200":
+              description: OK
+      /key/cookie:
+        get:
+          responses:
+            "200":
+              description: OK
+      /key/query:
+        get:
+          responses:
+            "200":
+              description: OK
+      /oauth2/authorization-code:
+        get:
+          responses:
+            "200":
+              description: OK
+      /oauth2/implicit:
+        get:
+          responses:
+            "200":
+              description: OK
+      /oauth2/client-credentials:
+        get:
+          responses:
+            "200":
+              description: OK
+      /oauth2/password:
+        get:
+          responses:
+            "200":
+              description: OK
+      /all:
+        get:
+          responses:
+            "200":
+              description: OK
+  meta:
+    id: spc_5eb712667d224bad81878f64e08415ec
+    created: 1639600546876
+    modified: 1748348769663
+testSuites:
+  - name: Testing the tests
+    meta:
+      id: uts_1c62076507fe4d1da10a420ec8ed5c23
+      created: 1748258613202
+      modified: 1748352456417
+      sortKey: -1748258613202
+    tests:
+      - name: Passes using chai-json-schema
+        meta:
+          id: ut_d96b3abaa29a401aa6651b54246ed5a8
+          created: 1748258614657
+          modified: 1748352500897
+          sortKey: -1748258614657
+        requestId: req_01e2be4c819d44948d045c9a7ee5c02c
+        code: |-
+          var goodApple = {
+            skin: 'thin',
+            colors: ['red', 'green', 'yellow'],
+            taste: 10
+          };
+          var badApple = {
+            colors: ['brown'],
+            taste: 0,
+            worms: 2
+          };
+          var fruitSchema = {
+            title: 'fresh fruit schema v1',
+            type: 'object',
+            required: ['skin', 'colors', 'taste'],
+            properties: {
+              colors: {
+                type: 'array',
+                minItems: 1,
+                uniqueItems: true,
+                items: {
+                  type: 'string'
+                }
+              },
+              skin: {
+                type: 'string'
+              },
+              taste: {
+                type: 'number',
+                minimum: 5
+              }
+            }
+          };
+
+          //bdd style
+          expect(goodApple).to.be.jsonSchema(fruitSchema);
+          expect(badApple).to.not.be.jsonSchema(fruitSchema);
+      - name: Fails because it tries to require this module
+        meta:
+          id: ut_23b3800039454613aa58b5a6c410d25d
+          created: 1748352244627
+          modified: 1748352486644
+          sortKey: -1748352244627
+        requestId: req_01e2be4c819d44948d045c9a7ee5c02c
+        code: |-
+          const cp = require('child_process')
+          const response1 = await insomnia.send();
+          expect(response1.status).to.equal(200);
