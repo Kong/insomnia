@@ -13,6 +13,12 @@ const templateTagTestCases: Record<string, TemplateTagTestCase[]> = {
   base64: [{ tagPrefix: "{% base64 'encode', 'normal', 'insomnia-test' %}", expectedResult: 'aW5zb21uaWEtdGVzdA==' }],
   cookie: [{ tagPrefix: "{% cookie 'http://127.0.0.1/echo', 'from' %}", expectedResult: 'cookie' }],
   faker: [{ tagPrefix: "{% faker 'guid' %}", expectedResult: result => result.length === 36 }],
+  file: [
+    {
+      tagPrefix: `{% file '${getFixturePath('files/template-file.txt')}' %}`,
+      expectedResult: 'File Tag Test',
+    },
+  ],
   hash: [{ tagPrefix: "{% hash 'md5', 'hex', 'insomnia-test' %}", expectedResult: 'b9c076eabf32fa4cdd7573a6df12d33c' }],
   jsonPath: [{ tagPrefix: '{% jsonpath', expectedResult: 'bar' }],
   os: [{ tagPrefix: "{% os 'arch', '' %}", expectedResult: os.arch() }],
@@ -50,8 +56,11 @@ const templateTagTestCases: Record<string, TemplateTagTestCase[]> = {
 };
 
 test('Critical Path For Template Tags Interactions', async ({ page, app }) => {
-  // import request collection
-  const text = await loadFixture('template-tag-collection.yaml');
+  // import request collection and replace the template tag file path with the actual fixture file path
+  const text = (await loadFixture('template-tag-collection.yaml')).replace(
+    '__TEMPLATE_TAG_FILE_PATH',
+    getFixturePath('files/template-file.txt'),
+  );
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
   await page.getByLabel('Import').click();

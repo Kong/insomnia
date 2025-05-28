@@ -66,6 +66,7 @@ collection:
         {% base64 'encode', 'normal', 'insomnia-test' %}
         {% base64 'decode', 'normal', 'aW5zb21uaWEtdGVzdA==' %}
         {% faker 'guid' %}
+        {% file '__TEMPLATE_TAG_FILE_PATH' %}
         {% hash 'md5', 'hex', 'insomnia-test' %}
         {% os 'arch', '' %}
         {% jsonpath '{"foo":"bar"}', 'b64::JC5mb28=::46b' %}
