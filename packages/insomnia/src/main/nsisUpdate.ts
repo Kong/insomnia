@@ -17,7 +17,7 @@ export const initNsusUpdater = async () => {
     _sendUpdateStatus('Up to Date');
   });
   autoUpdater.on('update-available', () => {
-    console.log('[updater] Update Available');
+    console.log('[updater] NSIS Update Available');
     _sendUpdateStatus('Downloading...');
   });
   autoUpdater.on('update-downloaded', async ({ releaseNotes, releaseName }) => {
@@ -41,10 +41,7 @@ export const initNsusUpdater = async () => {
       });
   });
   const settings = await models.settings.get();
-  const channel = settings.updateChannel;
   const updateSupported = isUpdateSupported();
-  // set auto-update channel
-  autoUpdater.channel = channel;
 
   // perhaps disable this method of upgrading just incase it trigger before backup is complete
   // on app start
@@ -56,29 +53,29 @@ export const initNsusUpdater = async () => {
     setInterval(async () => {
       const settings = await models.settings.get();
       if (settings.updateAutomatically) {
-        autoUpdater.channel = settings.updateChannel;
         _checkForUpdates();
       }
     }, CHECK_FOR_UPDATES_INTERVAL);
   }
   // on check now button pushed
   ipcMainOn('manualUpdateCheck', async () => {
-    console.log('[updater] Manual update check');
+    console.log('[updater] Manual NSIS update check');
 
     _sendUpdateStatus('Checking');
     await delay(300); // Pacing
-    const settings = await models.settings.get();
-    autoUpdater.channel = settings.updateChannel;
     _checkForUpdates();
   });
 };
 
-const _checkForUpdates = () => {
+const _checkForUpdates = async () => {
   try {
-    console.log(`[updater] Checking for updates`);
+    console.log(`[updater] Checking for NSIS updates`);
+    const settings = await models.settings.get();
+    // set auto-update channel
+    autoUpdater.channel = settings.updateChannel;
     autoUpdater.checkForUpdates();
   } catch (err) {
-    console.warn('[updater] Failed to check for updates:', err.message);
+    console.warn('[updater] Failed to check for NSIS updates:', err.message);
     _sendUpdateStatus('Update Error');
   }
 };
