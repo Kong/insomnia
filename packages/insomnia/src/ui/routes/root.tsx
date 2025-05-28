@@ -65,7 +65,7 @@ const Root = () => {
         console.log('[deep-link] Invalid args, expected insomnia://x/y/z', url);
         return;
       }
-      let urlWithoutParams = url.substring(0, url.indexOf('?')) || url;
+      let urlWithoutParams = url.slice(0, Math.max(0, url.indexOf('?'))) || url;
       const params = Object.fromEntries(parsedUrl.searchParams);
       // Change protocol for dev redirects to match switch case
       if (isDevelopment()) {

@@ -1,5 +1,6 @@
+import crypto from 'node:crypto';
+
 import clone from 'clone';
-import crypto from 'crypto';
 
 import { strings } from '../../common/strings';
 import type { BaseModel } from '../../models';
@@ -504,7 +505,7 @@ export function describeChanges<T extends BaseModel>(a: T, b: T): string[] {
   }
 
   const changes: string[] = [];
-  const allKeys = [...Object.keys({ ...a, ...b })] as (keyof T)[];
+  const allKeys = Object.keys({ ...a, ...b }) as (keyof T)[];
 
   for (const key of allKeys) {
     if (shouldIgnoreKey(key as keyof T, a)) {

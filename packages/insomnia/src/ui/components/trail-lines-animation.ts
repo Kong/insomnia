@@ -57,7 +57,7 @@ export function animateTrailPaths(totalActiveLines: number, scope: RefObject<Ele
 
   const ctx = gsap.context(() => {
     const groups: Node[] = gsap.utils.toArray<Node>('.group-elements');
-    const availableGroups = new Set<Node>([...groups]);
+    const availableGroups = new Set<Node>(groups);
 
     function animate(delay = 0) {
       const group: Node = gsap.utils.random([...availableGroups]);

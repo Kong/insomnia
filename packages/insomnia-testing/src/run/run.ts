@@ -1,10 +1,11 @@
+import { unlink, writeFileSync } from 'node:fs';
+import fs from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import chai from 'chai';
-import { unlink, writeFileSync } from 'fs';
-import fs from 'fs';
 import type { Reporter, ReporterConstructor } from 'mocha';
 import Mocha from 'mocha';
-import { tmpdir } from 'os';
-import { join } from 'path';
 
 import type { TestResults } from './entities';
 import type { InsomniaOptions } from './insomnia';

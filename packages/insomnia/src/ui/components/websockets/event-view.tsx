@@ -1,4 +1,5 @@
-import fs from 'fs';
+import fs from 'node:fs';
+
 import React, { type FC, useCallback } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router';
 

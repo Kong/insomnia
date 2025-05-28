@@ -1,9 +1,11 @@
 import eslint from '@eslint/js';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
-import playwright from 'eslint-plugin-playwright'
+import playwright from 'eslint-plugin-playwright';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort';
+import eslintPluginUnicorn from 'eslint-plugin-unicorn';
+import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
@@ -11,8 +13,47 @@ export default tseslint.config(
   tseslint.configs.strict,
   tseslint.configs.stylistic,
   {
+    languageOptions: {
+      globals: globals.builtin,
+    },
+    plugins: {
+      unicorn: eslintPluginUnicorn,
+    },
+    rules: {
+      'unicorn/error-message': 'error',
+      'unicorn/new-for-builtins': 'error',
+      'unicorn/no-abusive-eslint-disable': 'error',
+      'unicorn/no-for-loop': 'error',
+      'unicorn/no-invalid-remove-event-listener': 'error',
+      'unicorn/no-new-buffer': 'error',
+      'unicorn/no-static-only-class': 'error',
+      'unicorn/no-thenable': 'error',
+      'unicorn/no-typeof-undefined': 'error',
+      'unicorn/no-unnecessary-polyfills': 'error',
+      'unicorn/no-unnecessary-slice-end': 'error',
+      'unicorn/no-useless-spread': 'error',
+      'unicorn/prefer-array-flat-map': 'error',
+      'unicorn/prefer-array-flat': 'error',
+      'unicorn/prefer-array-index-of': 'error',
+      'unicorn/prefer-includes': 'error',
+      'unicorn/prefer-node-protocol': 'error',
+      'unicorn/prefer-object-from-entries': 'error',
+      'unicorn/prefer-string-slice': 'error',
+      'unicorn/prefer-string-starts-ends-with': 'error',
+      'unicorn/relative-url-style': 'error',
+      'unicorn/switch-case-braces': 'error',
+      'unicorn/throw-new-error': 'error',
+      // 'unicorn/custom-error-definition': 'error', //TODO: Enable this rule
+      // 'unicorn/expiring-todo-comments': 'error', //TODO: Enable this rule
+      // 'unicorn/explicit-length-check': 'error', //TODO: Enable this rule
+      // 'unicorn/no-negated-condition': 'error', //TODO: Enable this rule
+      // 'unicorn/no-null': 'error', // TODO: Enable this rule
+      // 'unicorn/prefer-add-event-listener': 'error', //TODO: Enable this rule
+    },
+  },
+  {
     files: ['packages/insomnia-smoke-test/tests/**/*.ts'],
-    plugins: { 'playwright': playwright },
+    plugins: { playwright: playwright },
     rules: {
       ...playwright.configs['flat/recommended'].rules,
       'playwright/expect-expect': 'off',
@@ -21,19 +62,22 @@ export default tseslint.config(
       'playwright/prefer-native-locators': 'error',
       'playwright/prefer-to-be': 'error',
       'playwright/prefer-to-contain': 'error',
-    }
+    },
   },
   {
     files: ['packages/insomnia/src/**/*.{ts,tsx}'],
     plugins: { 'react-hooks': reactHooksPlugin },
     rules: {
-      'react-hooks/exhaustive-deps': ['error', {
-        // From react-use https://github.com/streamich/react-use/issues/1703#issuecomment-770972824
-        additionalHooks:
-          '^use(Async|AsyncFn|AsyncRetry|Debounce|UpdateEffect|IsomorphicLayoutEffect|DeepCompareEffect|ShallowCompareEffect)$',
-      }],
+      'react-hooks/exhaustive-deps': [
+        'error',
+        {
+          // From react-use https://github.com/streamich/react-use/issues/1703#issuecomment-770972824
+          additionalHooks:
+            '^use(Async|AsyncFn|AsyncRetry|Debounce|UpdateEffect|IsomorphicLayoutEffect|DeepCompareEffect|ShallowCompareEffect)$',
+        },
+      ],
       'react-hooks/rules-of-hooks': 'error',
-    }
+    },
   },
   {
     settings: {
@@ -80,7 +124,6 @@ export default tseslint.config(
       'react/jsx-key': ['error', { checkFragmentShorthand: true }],
       'react/no-array-index-key': 'error',
       'react/self-closing-comp': 'error',
-
 
       '@typescript-eslint/array-type': ['error', { default: 'array', readonly: 'array' }],
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],

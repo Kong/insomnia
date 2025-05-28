@@ -265,7 +265,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const patchRequest = useRequestPatcher();
-  const urlHasQueryParameters = activeRequest.url.indexOf('?') >= 0;
+  const urlHasQueryParameters = activeRequest.url.includes('?');
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniqueKey = `${environment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta.activeResponseId}`;
   const requestAuth = getAuthObjectOrNull(activeRequest.authentication);

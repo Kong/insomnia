@@ -1,9 +1,9 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import type { Readable } from 'node:stream';
 
 import { Curl, CurlFeature, CurlInfoDebug, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import electron, { BrowserWindow } from 'electron';
-import fs from 'fs';
-import path from 'path';
 import { v4 as uuidV4 } from 'uuid';
 
 import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';

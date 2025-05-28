@@ -1,5 +1,6 @@
+import path from 'node:path';
+
 import { createBuilder } from '@develohpanda/fluent-builder';
-import path from 'path';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import YAML from 'yaml';
 

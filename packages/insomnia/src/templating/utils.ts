@@ -17,8 +17,8 @@ export function getKeys(obj: any, prefix = ''): { name: string; value: any }[] {
   const typeOfObj = Object.prototype.toString.call(obj);
 
   if (typeOfObj === '[object Array]') {
-    for (let i = 0; i < obj.length; i++) {
-      allKeys = [...allKeys, ...getKeys(obj[i], forceBracketNotation(prefix, i))];
+    for (const [i, element] of obj.entries()) {
+      allKeys = [...allKeys, ...getKeys(element, forceBracketNotation(prefix, i))];
     }
   } else if (typeOfObj === '[object Object]') {
     const keys = Object.keys(obj);

@@ -3,7 +3,7 @@ import type { BaseRenderContext } from '../../templating/types';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- see below
 // @ts-ignore -- inso transpiles to commonjs so doesn't play nice with this
-const worker = new Worker(new URL('./templating-worker.ts', import.meta.url), { type: 'module' });
+const worker = new Worker(new URL('templating-worker.ts', import.meta.url), { type: 'module' });
 
 // Triggered by a mistake in the work initialization code above
 worker.addEventListener('error', event => {

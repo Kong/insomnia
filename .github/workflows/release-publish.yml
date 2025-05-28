@@ -15,7 +15,7 @@ env:
   IS_PRERELEASE: ${{ contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta') }}
   ARTIFACTS_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts
   INSO_DOCKER_IMAGE: kong/inso # By default, registry is docker.io
-  NOTARY_REPOSITORY: "kong/notary" # All signatures will be pushed to public notary repository
+  NOTARY_REPOSITORY: 'kong/notary' # All signatures will be pushed to public notary repository
   ARTIFACTS_REPOSITORY: ${{  vars.ARTIFACTS_REPOSITORY }}
 
 jobs:
@@ -43,8 +43,8 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: ".nvmrc"
-          cache: "npm"
+          node-version-file: '.nvmrc'
+          cache: 'npm'
           cache-dependency-path: package-lock.json
 
       - name: Install packages
@@ -77,7 +77,7 @@ jobs:
             type=raw,value=latest,enable=${{ env.IS_PRERELEASE == 'false' }}
             type=raw,value=alpha,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'alpha') }}
             type=raw,value=beta,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'beta') }}
-          sep-tags: ","
+          sep-tags: ','
 
       # Setup regctl to parse platform specific image digest from image manifest
       - name: Install regctl
@@ -194,7 +194,7 @@ jobs:
           PULP_HOST: ${{ secrets.PULP_HOST }}
           VERBOSE: ${{ runner.debug == '1' && '1' || '' }}
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-          CLOUDSMITH_DRY_RUN: ""
+          CLOUDSMITH_DRY_RUN: ''
           IGNORE_CLOUDSMITH_FAILURES: ${{ vars.IGNORE_CLOUDSMITH_FAILURES }}
           USE_CLOUDSMITH: ${{ vars.USE_CLOUDSMITH }}
           USE_PULP: ${{ vars.USE_PULP }}

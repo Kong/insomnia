@@ -1,8 +1,9 @@
 /* eslint-disable no-empty-pattern */
 // Read more about creating fixtures https://playwright.dev/docs/test-fixtures
+import path from 'node:path';
+
 import type { ElectronApplication, TraceMode } from '@playwright/test';
 import { test as baseTest } from '@playwright/test';
-import path from 'path';
 
 import { bundleType, cwd, executablePath, mainPath, randomDataPath } from './paths';
 

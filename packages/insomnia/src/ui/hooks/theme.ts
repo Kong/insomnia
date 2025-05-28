@@ -55,20 +55,24 @@ export const useThemes = () => {
   const activate = useCallback(
     async (themeName: string, colorScheme: ColorScheme) => {
       switch (colorScheme) {
-        case 'light':
+        case 'light': {
           await apply({ lightTheme: themeName });
           break;
+        }
 
-        case 'dark':
+        case 'dark': {
           await apply({ darkTheme: themeName });
           break;
+        }
 
-        case 'default':
+        case 'default': {
           await apply({ theme: themeName });
           break;
+        }
 
-        default:
+        default: {
           throw new Error(colorScheme);
+        }
       }
     },
     [apply],

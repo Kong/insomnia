@@ -106,13 +106,12 @@ export class Console {
     this.printLog(this.rows, 'error', ...values);
   };
 
-
   /**
    * Clears the console output for the specified log level.
    * This method is currently not supported.
    */
   clear = (_level: LogLevel, _message?: any, ..._optionalParams: any[]) => {
-    throw Error('currently "clear" is not supported for the timeline');
+    throw new Error('currently "clear" is not supported for the timeline');
   };
 
   /** @ignore */

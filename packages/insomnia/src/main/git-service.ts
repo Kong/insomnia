@@ -1,9 +1,10 @@
-import { createHash, randomBytes } from 'crypto';
+import { createHash, randomBytes } from 'node:crypto';
+import path from 'node:path';
+
 import { shell } from 'electron';
 import { app, net } from 'electron/main';
 import { fromUrl } from 'hosted-git-info';
 import { Errors, type HeadStatus, type PromiseFsClient, type StageStatus, type WorkdirStatus } from 'isomorphic-git';
-import path from 'path';
 import { v4 } from 'uuid';
 import YAML, { parse } from 'yaml';
 

@@ -9,18 +9,24 @@ import { Icon } from './icon';
 
 const formatCurrentPlanType = (type: PersonalPlanType) => {
   switch (type) {
-    case 'free':
+    case 'free': {
       return 'Hobby';
-    case 'individual':
+    }
+    case 'individual': {
       return 'Individual';
-    case 'team':
+    }
+    case 'team': {
       return 'Pro';
-    case 'enterprise':
+    }
+    case 'enterprise': {
       return 'Enterprise';
-    case 'enterprise-member':
+    }
+    case 'enterprise-member': {
       return 'Enterprise Member';
-    default:
+    }
+    default: {
       return 'Free';
+    }
   }
 };
 

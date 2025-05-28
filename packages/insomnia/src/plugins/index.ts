@@ -1,6 +1,7 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 import electron from 'electron';
-import fs from 'fs';
-import path from 'path';
 
 import type { ParsedApiSpec } from '../common/api-specs';
 import type { PluginConfigMap } from '../common/settings';

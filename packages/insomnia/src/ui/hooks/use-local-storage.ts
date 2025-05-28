@@ -184,7 +184,7 @@ function useLocalStorage<T>(
 // notifies all instances using the same `key` to update
 const callbacks = new Set<(key: string) => void>();
 function triggerCallbacks(key: string): void {
-  for (const callback of [...callbacks]) {
+  for (const callback of callbacks) {
     callback(key);
   }
 }

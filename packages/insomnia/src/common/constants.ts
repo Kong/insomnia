@@ -90,16 +90,19 @@ export const MNEMONIC_SYM = isMac() ? '' : '&';
 export const displayModifierKey = (key: keyof Omit<KeyCombination, 'keyCode'>) => {
   const mac = isMac();
   switch (key) {
-    case 'ctrl':
+    case 'ctrl': {
       return mac ? '⌃' : 'Ctrl';
+    }
 
-    case 'alt':
+    case 'alt': {
       return mac ? '⌥' : 'Alt';
+    }
 
-    case 'shift':
+    case 'shift': {
       return mac ? '⇧' : 'Shift';
+    }
 
-    case 'meta':
+    case 'meta': {
       if (mac) {
         return '⌘';
       }
@@ -113,9 +116,11 @@ export const displayModifierKey = (key: keyof Omit<KeyCombination, 'keyCode'>) =
       // Note: To avoid using a Microsoft trademark, much Linux documentation refers to the key as "Super". This can confuse some users who still consider it a "Windows key". In KDE Plasma documentation it is called the Meta key even though the X11 "Super" shift bit is used.
       // see: https://en.wikipedia.org/wiki/Super_key_(keyboard_button)
       return 'Super';
+    }
 
-    default:
+    default: {
       throw new Error(key + 'unrecognized key');
+    }
   }
 };
 
@@ -178,25 +183,29 @@ export const isDesignActivity = (activity?: string): activity is GlobalActivity 
   switch (activity) {
     case ACTIVITY_SPEC:
     case ACTIVITY_DEBUG:
-    case ACTIVITY_UNIT_TEST:
+    case ACTIVITY_UNIT_TEST: {
       return true;
+    }
 
     case ACTIVITY_HOME:
-    default:
+    default: {
       return false;
+    }
   }
 };
 
 export const isCollectionActivity = (activity?: string): activity is GlobalActivity => {
   switch (activity) {
-    case ACTIVITY_DEBUG:
+    case ACTIVITY_DEBUG: {
       return true;
+    }
 
     case ACTIVITY_SPEC:
     case ACTIVITY_UNIT_TEST:
     case ACTIVITY_HOME:
-    default:
+    default: {
       return false;
+    }
   }
 };
 
@@ -205,11 +214,13 @@ export const isValidActivity = (activity: string): activity is GlobalActivity =>
     case ACTIVITY_SPEC:
     case ACTIVITY_DEBUG:
     case ACTIVITY_UNIT_TEST:
-    case ACTIVITY_HOME:
+    case ACTIVITY_HOME: {
       return true;
+    }
 
-    default:
+    default: {
       return false;
+    }
   }
 };
 

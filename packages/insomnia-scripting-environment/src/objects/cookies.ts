@@ -39,7 +39,7 @@ export class Cookie extends Property {
     if (typeof cookieDef === 'string') {
       const cookieDefParsed = Cookie.parse(cookieDef);
       if (!cookieDefParsed) {
-        throw Error('failed to parse cookie, the cookie string seems invalid');
+        throw new Error('failed to parse cookie, the cookie string seems invalid');
       }
       cookieDef = cookieDefParsed;
     }
@@ -50,7 +50,7 @@ export class Cookie extends Property {
 
     const cookie = ToughCookie.fromJSON(def);
     if (!cookie) {
-      throw Error('failed to parse cookie, the cookie string seems invalid');
+      throw new Error('failed to parse cookie, the cookie string seems invalid');
     }
 
     this.id = cookieDef.id || '';
@@ -72,7 +72,7 @@ export class Cookie extends Property {
   static parse(cookieStr: string) {
     const cookieObj = ToughCookie.parse(cookieStr, { loose: true });
     if (!cookieObj) {
-      throw Error('failed to parse cookie, the cookie string seems invalid');
+      throw new Error('failed to parse cookie, the cookie string seems invalid');
     }
 
     const hostOnly = cookieObj.extensions?.includes('HostOnly') || false;
@@ -100,7 +100,7 @@ export class Cookie extends Property {
       ) {
         return { key: entry.key, value: entry.value };
       }
-      throw Error('failed to create cookie, extension must be: { key: string; value: string }[]');
+      throw new Error('failed to create cookie, extension must be: { key: string; value: string }[]');
     });
 
     return {
@@ -125,7 +125,7 @@ export class Cookie extends Property {
   static unparseSingle(cookieOpt: CookieOptions) {
     const cookie = new Cookie(cookieOpt);
     if (!cookie) {
-      throw Error('failed to unparse cookie, the cookie options seems invalid');
+      throw new Error('failed to unparse cookie, the cookie options seems invalid');
     }
     return cookie.toString();
   }

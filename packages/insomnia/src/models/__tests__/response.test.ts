@@ -1,8 +1,9 @@
-import fs from 'fs';
-import { tmpdir } from 'os';
-import path from 'path';
+import fs from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import zlib from 'node:zlib';
+
 import { describe, expect, it } from 'vitest';
-import zlib from 'zlib';
 
 import * as models from '../../models';
 

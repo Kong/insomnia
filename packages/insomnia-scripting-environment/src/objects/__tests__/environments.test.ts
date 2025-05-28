@@ -7,6 +7,7 @@ import { Folder, ParentFolders } from '../folders';
 describe('test Variables object', () => {
   it('test basic operations', () => {
     const variables = new Variables({
+      baseGlobalVars: new Environment('baseGlobals', { value: 'baseValue' }),
       globalVars: new Environment('globals', { value: 'xyz' }),
       environmentVars: new Environment('environments', {}),
       collectionVars: new Environment('baseEnvironment', {}),
@@ -26,7 +27,17 @@ describe('test Variables object', () => {
   });
 
   it('test environment overriding', () => {
+    const baseGlobalVariables = new Variables({
+      baseGlobalVars: new Environment('baseGlobals', { scope: 'baseGlobals', value: 'baseGlobals-value' }),
+      globalVars: new Environment('globals', {}),
+      environmentVars: new Environment('environments', {}),
+      collectionVars: new Environment('baseEnvironment', {}),
+      iterationDataVars: new Environment('iterationData', {}),
+      folderLevelVars: [],
+      localVars: new Environment('local', {}),
+    });
     const globalOnlyVariables = new Variables({
+      baseGlobalVars: new Environment('baseGlobals', { scope: 'baseGlobals', value: 'baseGlobals-value' }),
       globalVars: new Environment('globals', { scope: 'global', value: 'global-value' }),
       environmentVars: new Environment('environments', {}),
       collectionVars: new Environment('baseEnvironment', {}),
@@ -35,6 +46,7 @@ describe('test Variables object', () => {
       localVars: new Environment('local', {}),
     });
     const normalVariables = new Variables({
+      baseGlobalVars: new Environment('baseGlobals', { scope: 'baseGlobals', value: 'baseGlobals-value' }),
       globalVars: new Environment('globals', { scope: 'global', value: 'global-value' }),
       environmentVars: new Environment('environments', { scope: 'subEnv', value: 'subEnv-value' }),
       collectionVars: new Environment('baseEnvironment', { scope: 'baseEnv', value: 'baseEnv-value' }),
@@ -43,6 +55,7 @@ describe('test Variables object', () => {
       localVars: new Environment('local', {}),
     });
     const variablesWithIterationData = new Variables({
+      baseGlobalVars: new Environment('baseGlobals', { scope: 'baseGlobals', value: 'baseGlobals-value' }),
       globalVars: new Environment('globals', { scope: 'global', value: 'global-value' }),
       environmentVars: new Environment('environments', { scope: 'subEnv', value: 'subEnv-value' }),
       collectionVars: new Environment('baseEnvironment', { scope: 'baseEnv', value: 'baseEnv-value' }),
@@ -51,6 +64,7 @@ describe('test Variables object', () => {
       localVars: new Environment('local', {}),
     });
     const variablesWithFolderLevelData = new Variables({
+      baseGlobalVars: new Environment('baseGlobals', { scope: 'baseGlobals', value: 'baseGlobals-value' }),
       globalVars: new Environment('globals', { scope: 'global', value: 'global-value' }),
       environmentVars: new Environment('environments', { scope: 'subEnv', value: 'subEnv-value' }),
       collectionVars: new Environment('baseEnvironment', { scope: 'baseEnv', value: 'baseEnv-value' }),
@@ -62,6 +76,7 @@ describe('test Variables object', () => {
       localVars: new Environment('local', { scope: 'local' }),
     });
     const variablesWithLocalData = new Variables({
+      baseGlobalVars: new Environment('baseGlobals', { scope: 'baseGlobals', value: 'baseGlobals-value' }),
       globalVars: new Environment('globals', { scope: 'global', value: 'global-value' }),
       environmentVars: new Environment('environments', { scope: 'subEnv', value: 'subEnv-value' }),
       collectionVars: new Environment('baseEnvironment', { scope: 'baseEnv', value: 'baseEnv-value' }),
@@ -70,6 +85,7 @@ describe('test Variables object', () => {
       localVars: new Environment('local', { scope: 'local', value: 'local-value' }),
     });
 
+    expect(baseGlobalVariables.get('value')).toEqual('baseGlobals-value');
     expect(globalOnlyVariables.get('value')).toEqual('global-value');
     expect(normalVariables.get('value')).toEqual('subEnv-value');
     expect(variablesWithIterationData.get('value')).toEqual('iterationData-value');
@@ -86,6 +102,7 @@ describe('test Variables object', () => {
     ]);
 
     const variables = new Variables({
+      baseGlobalVars: new Environment('baseGlobals', { scope: 'baseEnv', value: 'baseGlobal-value' }),
       globalVars: new Environment('globals', { scope: 'global', value: 'global-value' }),
       environmentVars: new Environment('environments', { scope: 'subEnv', value: 'subEnv-value' }),
       collectionVars: new Environment('baseEnvironment', { scope: 'baseEnv', value: 'baseEnv-value' }),

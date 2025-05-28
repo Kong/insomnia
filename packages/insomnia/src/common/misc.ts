@@ -1,6 +1,7 @@
+import zlib from 'node:zlib';
+
 import fuzzysort from 'fuzzysort';
 import { v4 as uuidv4 } from 'uuid';
-import zlib from 'zlib';
 
 import { DEBOUNCE_MILLIS } from './constants';
 

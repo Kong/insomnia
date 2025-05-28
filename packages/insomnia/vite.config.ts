@@ -1,6 +1,7 @@
+import { builtinModules } from 'node:module';
+import path from 'node:path';
+
 import react from '@vitejs/plugin-react';
-import { builtinModules } from 'module';
-import path from 'path';
 import { defineConfig } from 'vite';
 
 import pkg from './package.json';

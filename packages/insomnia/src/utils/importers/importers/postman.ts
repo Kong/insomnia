@@ -252,8 +252,8 @@ export class ImportPostman {
       headers: headers.map(({ key, value, disabled, description }) => ({
         name: transformPostmanToNunjucksString(key),
         value: transformPostmanToNunjucksString(value),
-        ...(typeof disabled !== 'undefined' ? { disabled } : {}),
-        ...(typeof description !== 'undefined' ? { description } : {}),
+        ...(disabled !== undefined ? { disabled } : {}),
+        ...(description !== undefined ? { description } : {}),
       })),
       body,
       authentication,
@@ -467,39 +467,46 @@ export class ImportPostman {
 
     if (!authentication) {
       if (authorizationHeader) {
-        switch (authorizationHeader?.substring(0, authorizationHeader.indexOf(' '))) {
-          case 'Bearer': // will work for OAuth2 as well
+        switch (authorizationHeader?.slice(0, Math.max(0, authorizationHeader.indexOf(' ')))) {
+          case 'Bearer': {
+            // will work for OAuth2 as well
             return {
               authentication: this.importBearerAuthenticationFromHeader(authorizationHeader),
               headers,
             };
+          }
 
-          case 'Basic':
+          case 'Basic': {
             return {
               authentication: this.importBasicAuthenticationFromHeader(authorizationHeader),
               headers,
             };
+          }
 
-          case 'AWS4-HMAC-SHA256':
+          case 'AWS4-HMAC-SHA256': {
             return this.importАwsv4AuthenticationFromHeader(authorizationHeader, headers);
+          }
 
-          case 'Digest':
+          case 'Digest': {
             return {
               authentication: this.importDigestAuthenticationFromHeader(authorizationHeader),
               headers,
             };
+          }
 
-          case 'OAuth':
+          case 'OAuth': {
             return {
               authentication: this.importOauth1AuthenticationFromHeader(authorizationHeader),
               headers,
             };
+          }
 
-          default:
+          default: {
             return {
               authentication: {},
               headers,
             };
+          }
         }
       }
       return {
@@ -509,53 +516,61 @@ export class ImportPostman {
     }
 
     switch (authentication.type) {
-      case 'awsv4':
+      case 'awsv4': {
         return {
           authentication: this.importAwsV4Authentication(authentication),
           headers,
         };
+      }
 
-      case 'basic':
+      case 'basic': {
         return {
           authentication: this.importBasicAuthentication(authentication),
           headers,
         };
+      }
 
-      case 'bearer':
+      case 'bearer': {
         return {
           authentication: this.importBearerTokenAuthentication(authentication),
           headers,
         };
+      }
 
-      case 'digest':
+      case 'digest': {
         return {
           authentication: this.importDigestAuthentication(authentication),
           headers,
         };
+      }
 
-      case 'oauth1':
+      case 'oauth1': {
         return {
           authentication: this.importOauth1Authentication(authentication),
           headers,
         };
+      }
 
-      case 'oauth2':
+      case 'oauth2': {
         return {
           authentication: this.importOauth2Authentication(authentication),
           headers,
         };
+      }
 
-      case 'apikey':
+      case 'apikey': {
         return {
           authentication: this.importApiKeyAuthentication(authentication),
           headers,
         };
+      }
 
-      default:
+      default: {
         return {
           authentication: {},
           headers: originalHeaders,
         };
+      }
     }
   };
 
@@ -609,9 +624,7 @@ export class ImportPostman {
     }
     const isAMZSecurityTokenHeader = ({ key }: Header) => key === 'X-Amz-Security-Token';
     const sessionToken = headers?.find(isAMZSecurityTokenHeader)?.value;
-    const credentials = RegExp(/(?<=Credential=).*/)
-      .exec(authHeader)?.[0]
-      .split('/');
+    const credentials = new RegExp(/(?<=Credential=).*/).exec(authHeader)?.[0].split('/');
 
     return {
       authentication: {
@@ -662,13 +675,13 @@ export class ImportPostman {
 
     const authStringIndex = authHeader.trim().replace(/\s+/g, ' ').indexOf(' ');
     const hasEncodedAuthString = authStringIndex !== -1;
-    const encodedAuthString = hasEncodedAuthString ? authHeader.substring(authStringIndex + 1) : '';
+    const encodedAuthString = hasEncodedAuthString ? authHeader.slice(Math.max(0, authStringIndex + 1)) : '';
     const authString = Buffer.from(encodedAuthString, 'base64').toString();
     const item = {
       type: 'basic',
       disabled: false,
-      username: RegExp(/.+?(?=:)/).exec(authString)?.[0],
-      password: RegExp(/(?<=:).*/).exec(authString)?.[0],
+      username: new RegExp(/.+?(?=:)/).exec(authString)?.[0],
+      password: new RegExp(/(?<=:).*/).exec(authString)?.[0],
     };
     item.username = transformPostmanToNunjucksString(item.username);
     item.password = transformPostmanToNunjucksString(item.password);
@@ -709,7 +722,7 @@ export class ImportPostman {
     return {
       type: 'bearer',
       disabled: false,
-      token: tokenIndex + 1 ? authHeader2.substring(tokenIndex + 1) : '',
+      token: tokenIndex + 1 ? authHeader2.slice(Math.max(0, tokenIndex + 1)) : '',
       prefix: '',
     };
   };
@@ -748,7 +761,7 @@ export class ImportPostman {
     const item = {
       type: 'digest',
       disabled: false,
-      username: RegExp(/(?<=username=")(.*?)(?=")/).exec(authHeader)?.[0],
+      username: new RegExp(/(?<=username=")(.*?)(?=")/).exec(authHeader)?.[0],
       password: '',
     };
 
@@ -812,18 +825,18 @@ export class ImportPostman {
     const item = {
       type: 'oauth1',
       disabled: false,
-      callback: RegExp(/(?<=oauth_callback=")(.*?)(?=")/).exec(authHeader)?.[0],
-      consumerKey: RegExp(/(?<=oauth_consumer_key=")(.*?)(?=")/).exec(authHeader)?.[0],
+      callback: new RegExp(/(?<=oauth_callback=")(.*?)(?=")/).exec(authHeader)?.[0],
+      consumerKey: new RegExp(/(?<=oauth_consumer_key=")(.*?)(?=")/).exec(authHeader)?.[0],
       consumerSecret: '',
-      nonce: RegExp(/(?<=oauth_nonce=")(.*?)(?=")/).exec(authHeader)?.[0],
+      nonce: new RegExp(/(?<=oauth_nonce=")(.*?)(?=")/).exec(authHeader)?.[0],
       privateKey: '',
-      realm: RegExp(/(?<=realm=")(.*?)(?=")/).exec(authHeader)?.[0],
-      signatureMethod: RegExp(/(?<=oauth_signature_method=")(.*?)(?=")/).exec(authHeader)?.[0],
-      timestamp: RegExp(/(?<=oauth_timestamp=")(.*?)(?=")/).exec(authHeader)?.[0],
-      tokenKey: RegExp(/(?<=oauth_token=")(.*?)(?=")/).exec(authHeader)?.[0],
+      realm: new RegExp(/(?<=realm=")(.*?)(?=")/).exec(authHeader)?.[0],
+      signatureMethod: new RegExp(/(?<=oauth_signature_method=")(.*?)(?=")/).exec(authHeader)?.[0],
+      timestamp: new RegExp(/(?<=oauth_timestamp=")(.*?)(?=")/).exec(authHeader)?.[0],
+      tokenKey: new RegExp(/(?<=oauth_token=")(.*?)(?=")/).exec(authHeader)?.[0],
       tokenSecret: '',
-      verifier: RegExp(/(?<=oauth_verifier=")(.*?)(?=")/).exec(authHeader)?.[0],
-      version: RegExp(/(?<=oauth_version=")(.*?)(?=")/).exec(authHeader)?.[0],
+      verifier: new RegExp(/(?<=oauth_verifier=")(.*?)(?=")/).exec(authHeader)?.[0],
+      version: new RegExp(/(?<=oauth_version=")(.*?)(?=")/).exec(authHeader)?.[0],
     };
 
     return item;

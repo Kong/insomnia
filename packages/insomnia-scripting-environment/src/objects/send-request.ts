@@ -84,25 +84,31 @@ function requestToCurlOptions(req: string | Request | RequestOptions, settings: 
     let mimeType = 'application/octet-stream';
     if (finalReq.body) {
       switch (finalReq.body.mode) {
-        case 'raw':
+        case 'raw': {
           mimeType = 'text/plain';
           break;
-        case 'file':
+        }
+        case 'file': {
           // TODO: improve this by sniffing
           mimeType = 'application/octet-stream';
           break;
-        case 'formdata':
+        }
+        case 'formdata': {
           // boundary should already be part of Content-Type header
           mimeType = 'multipart/form-data';
           break;
-        case 'urlencoded':
+        }
+        case 'urlencoded': {
           mimeType = 'application/x-www-form-urlencoded';
           break;
-        case 'graphql':
+        }
+        case 'graphql': {
           mimeType = 'application/json';
           break;
-        default:
-          throw Error(`unknown body mode: ${finalReq.body.mode}`);
+        }
+        default: {
+          throw new Error(`unknown body mode: ${finalReq.body.mode}`);
+        }
       }
     }
 
@@ -193,7 +199,7 @@ function requestToCurlOptions(req: string | Request | RequestOptions, settings: 
     };
   }
 
-  throw Error('the request type must be: string | Request | RequestOptions.');
+  throw new Error('the request type must be: string | Request | RequestOptions.');
 }
 
 async function curlOutputToResponse(
@@ -201,7 +207,7 @@ async function curlOutputToResponse(
   request: string | Request | RequestOptions,
 ): Promise<Response> {
   if (result.headerResults.length === 0) {
-    throw Error('curlOutputToResponse: no header result is found');
+    throw new Error('curlOutputToResponse: no header result is found');
   }
   if (result.patch.error) {
     throw result.patch.error;
@@ -209,7 +215,7 @@ async function curlOutputToResponse(
 
   const lastRedirect = result.headerResults[result.headerResults.length - 1];
   if (!lastRedirect) {
-    throw Error('curlOutputToResponse: the lastRedirect is not defined');
+    throw new Error('curlOutputToResponse: the lastRedirect is not defined');
   }
 
   const originalRequest =
@@ -269,7 +275,7 @@ async function curlOutputToResponse(
     bodyCompression: result.patch.bodyCompression,
   });
   if (bodyResult.error) {
-    throw Error(bodyResult.error);
+    throw new Error(bodyResult.error);
   }
   return new Response({
     code: lastRedirect.code,

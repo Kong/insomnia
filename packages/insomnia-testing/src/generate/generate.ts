@@ -1,4 +1,4 @@
-import { writeFile } from 'fs';
+import { writeFile } from 'node:fs';
 
 import { escapeJsStr, indent } from './util';
 
@@ -52,17 +52,17 @@ const generateSuiteLines = (n: number, suite?: TestSuite | null) => {
   lines.push(indent(n, `describe('${escapeJsStr(suite.name)}', () => {`));
   const suites = suite.suites || [];
 
-  for (let i = 0; i < suites.length; i++) {
+  for (const [i, suite_] of suites.entries()) {
     if (i !== 0) {
       lines.push('');
     }
 
-    lines.push(...generateSuiteLines(n + 1, suites[i]));
+    lines.push(...generateSuiteLines(n + 1, suite_));
   }
 
   const tests = suite.tests || [];
 
-  for (let i = 0; i < tests.length; i++) {
+  for (const [i, test] of tests.entries()) {
     // Add blank like if
     // - it's the first test
     // - we've outputted suites above
@@ -70,7 +70,7 @@ const generateSuiteLines = (n: number, suite?: TestSuite | null) => {
       lines.push('');
     }
 
-    lines.push(...generateTestLines(n + 1, tests[i]));
+    lines.push(...generateTestLines(n + 1, test));
   }
 
   lines.push(indent(n, '});'));

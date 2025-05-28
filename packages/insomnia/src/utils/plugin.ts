@@ -1,6 +1,7 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 import electron from 'electron';
-import fs from 'fs';
-import path from 'path';
 
 // Allow only safe characters (alphanumeric, dashes, underscores, dots)
 // Disallow any path traversal (../), shell metacharacters, etc.

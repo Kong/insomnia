@@ -1,10 +1,11 @@
 // inspiration: https://github.com/grpc/grpc/blob/master/examples/node/dynamic_codegen/route_guide/route_guide_server.js
+import fs from 'node:fs';
+import path from 'node:path';
+
 import * as grpc from '@grpc/grpc-js';
 import type { HandleCall } from '@grpc/grpc-js/build/src/server-call';
 import * as protoLoader from '@grpc/proto-loader';
 import { addReflection } from '@ravanallc/grpc-server-reflection';
-import fs from 'fs';
-import path from 'path';
 
 const PROTO_PATH = path.resolve('../../packages/insomnia/src/network/grpc/__fixtures__/library/route_guide.proto');
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {

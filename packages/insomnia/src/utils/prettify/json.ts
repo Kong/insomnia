@@ -130,10 +130,11 @@ export const jsonPrettify = (json?: string | object, indentChars = '\t', replace
     }
 
     switch (currentChar) {
-      case ',':
+      case ',': {
         newJson += currentChar + '\n' + repeatString(tab, indentLevel);
         continue;
-      case '{':
+      }
+      case '{': {
         if (nextChar === '}') {
           newJson += currentChar + nextChar;
           i++;
@@ -142,7 +143,8 @@ export const jsonPrettify = (json?: string | object, indentChars = '\t', replace
           newJson += currentChar + '\n' + repeatString(tab, indentLevel);
         }
         continue;
-      case '[':
+      }
+      case '[': {
         if (nextChar === ']') {
           newJson += currentChar + nextChar;
           i++;
@@ -151,30 +153,37 @@ export const jsonPrettify = (json?: string | object, indentChars = '\t', replace
           newJson += currentChar + '\n' + repeatString(tab, indentLevel);
         }
         continue;
-      case '}':
+      }
+      case '}': {
         indentLevel--;
         newJson += '\n' + repeatString(tab, indentLevel) + currentChar;
         continue;
-      case ']':
+      }
+      case ']': {
         indentLevel--;
         newJson += '\n' + repeatString(tab, indentLevel) + currentChar;
         continue;
-      case ':':
+      }
+      case ':': {
         newJson += ': ';
         continue;
-      case '"':
+      }
+      case '"': {
         state = STATE_IN_STRING;
         newJson += currentChar;
         continue;
+      }
       case ' ':
       case '\n':
       case '\t':
-      case '\r':
+      case '\r': {
         // Don't add whitespace
         continue;
-      default:
+      }
+      default: {
         newJson += currentChar;
         continue;
+      }
     }
   }
 
@@ -227,7 +236,7 @@ const convertUnicode = (originalStr: string) => {
   }
 
   // Finally, add the rest of the string to the end.
-  convertedStr += originalStr.slice(lastI, originalStr.length);
+  convertedStr += originalStr.slice(lastI);
 
   return convertedStr;
 };

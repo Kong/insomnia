@@ -204,13 +204,16 @@ function getThemeClassName(theme: ThemeKeys) {
     case ThemeEnum.notice:
     case ThemeEnum.success:
     case ThemeEnum.surprise:
-    case ThemeEnum.warning:
+    case ThemeEnum.warning: {
       return `fill-${theme} text-${theme}`;
-    case ThemeEnum.highlight:
+    }
+    case ThemeEnum.highlight: {
       return 'fill-hl text-danger';
+    }
     case ThemeEnum.default:
-    default:
+    default: {
       return 'fill-current text-current';
+    }
   }
 }
 

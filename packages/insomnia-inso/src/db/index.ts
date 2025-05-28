@@ -1,4 +1,5 @@
-import { stat } from 'fs/promises';
+import { stat } from 'node:fs/promises';
+
 import type { CaCertificate } from 'insomnia/src/models/ca-certificate';
 import type { ClientCertificate } from 'insomnia/src/models/client-certificate';
 import type { CookieJar } from 'insomnia/src/models/cookie-jar';

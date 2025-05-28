@@ -3,6 +3,11 @@
 import { invariant } from '../../utils/invariant';
 invariant(process.type !== 'renderer', 'Native abstractions for Nodejs module unavailable in renderer');
 
+import fs from 'node:fs';
+import path from 'node:path';
+import type { Readable, Writable } from 'node:stream';
+import { parse as urlParse } from 'node:url';
+
 import {
   Curl,
   CurlAuth,
@@ -15,10 +20,6 @@ import {
 } from '@getinsomnia/node-libcurl';
 import { isValid } from 'date-fns';
 import electron from 'electron';
-import fs from 'fs';
-import path from 'path';
-import type { Readable, Writable } from 'stream';
-import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
 import { version } from '../../../package.json';
@@ -551,20 +552,27 @@ const parseRequestBodyPath = async (body: any) => {
 
 export const getHttpVersion = (preferredHttpVersion: string) => {
   switch (preferredHttpVersion) {
-    case 'V1_0':
+    case 'V1_0': {
       return { log: 'Using HTTP 1.0', curlHttpVersion: CurlHttpVersion.V1_0 };
-    case 'V1_1':
+    }
+    case 'V1_1': {
       return { log: 'Using HTTP 1.1', curlHttpVersion: CurlHttpVersion.V1_1 };
-    case 'V2PriorKnowledge':
+    }
+    case 'V2PriorKnowledge': {
       return { log: 'Using HTTP/2 PriorKnowledge', curlHttpVersion: CurlHttpVersion.V2PriorKnowledge };
-    case 'V2_0':
+    }
+    case 'V2_0': {
       return { log: 'Using HTTP/2', curlHttpVersion: CurlHttpVersion.V2_0 };
-    case 'v3':
+    }
+    case 'v3': {
       return { log: 'Using HTTP/3', curlHttpVersion: CurlHttpVersion.v3 };
-    case 'default':
+    }
+    case 'default': {
       return { log: 'Using default HTTP version' };
-    default:
+    }
+    default: {
       return { log: `Unknown HTTP version specified ${preferredHttpVersion}` };
+    }
   }
 };
 const setDefaultProtocol = (url: string, defaultProto?: string) => {
@@ -577,7 +585,7 @@ const setDefaultProtocol = (url: string, defaultProto?: string) => {
   }
 
   // Default the proto if it doesn't exist
-  if (trimmedUrl.indexOf('://') === -1) {
+  if (!trimmedUrl.includes('://')) {
     return `${defaultProto}//${trimmedUrl}`;
   }
 

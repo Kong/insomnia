@@ -434,10 +434,9 @@ export async function getRenderContext({
         // @ts-expect-error -- mapping unsoundness
         getKeySource(subObject[key], templatingUtils.forceBracketNotation(inKey, key), inSource);
       }
-    } else if (typeStr === '[object Array]') {
-      for (let i = 0; i < subObject.length; i++) {
-        // @ts-expect-error -- mapping unsoundness
-        getKeySource(subObject[i], templatingUtils.forceBracketNotation(inKey, i), inSource);
+    } else if (typeStr === '[object Array]' && Array.isArray(subObject)) {
+      for (const [i, element] of subObject.entries()) {
+        getKeySource(element, templatingUtils.forceBracketNotation(inKey, i), inSource);
       }
     }
   }

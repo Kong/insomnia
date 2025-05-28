@@ -15,7 +15,7 @@ export const Popover: FC<Props> = (props: Props) => {
 
   // Handle events that should cause the popup to close,
   // e.g. blur, clicking outside, or pressing the escape key.
-  const { popoverProps } = usePopover({ ...{ ...props, ...overlayProps, offset: 4 }, popoverRef }, state);
+  const { popoverProps } = usePopover({ ...props, ...overlayProps, offset: 4, popoverRef }, state);
 
   return (
     <Overlay>

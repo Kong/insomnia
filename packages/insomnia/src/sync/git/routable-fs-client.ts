@@ -1,5 +1,6 @@
+import path from 'node:path';
+
 import type * as git from 'isomorphic-git';
-import path from 'path';
 
 type Methods =
   | 'readFile'
