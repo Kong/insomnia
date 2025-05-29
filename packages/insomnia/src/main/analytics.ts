@@ -1,5 +1,5 @@
-import crypto from 'node:crypto';
 import * as Sentry from '@sentry/electron/main';
+import crypto from 'node:crypto';
 
 import { Analytics } from '@segment/analytics-node';
 import { net } from 'electron';
