@@ -7,22 +7,22 @@ import * as models from '../models/index';
 import { ipcMainOn } from './ipc/electron';
 import { _sendUpdateStatus, isUpdateSupported } from './updates';
 
-export const initNsusUpdater = async () => {
+export const initNsisUpdater = async () => {
   autoUpdater.on('error', error => {
-    console.warn(`[updater] Error: ${error.message}`);
+    console.warn(`[NSIS updater] Error: ${error.message}`);
     _sendUpdateStatus('Update Error');
   });
   autoUpdater.on('update-not-available', () => {
-    console.log('[updater] Not Available');
+    console.log('[NSIS updater] Not Available');
     _sendUpdateStatus('Up to Date');
   });
   autoUpdater.on('update-available', () => {
-    console.log('[updater] NSIS Update Available');
+    console.log('[NSIS updater] Update Available');
     _sendUpdateStatus('Downloading...');
   });
   autoUpdater.on('update-downloaded', async ({ releaseNotes, releaseName }) => {
-    console.log(`[updater] Downloaded ${releaseName}`);
-    console.log(`[updater] Downloaded ${releaseNotes}`);
+    console.log(`[NSIS updater] Downloaded ${releaseName}`);
+    console.log(`[NSIS updater] Downloaded ${releaseNotes}`);
     _sendUpdateStatus('Performing backup...');
     _sendUpdateStatus('Updated (Restart Required)');
 
@@ -59,7 +59,7 @@ export const initNsusUpdater = async () => {
   }
   // on check now button pushed
   ipcMainOn('manualUpdateCheck', async () => {
-    console.log('[updater] Manual NSIS update check');
+    console.log('[NSIS updater] Manual update check');
 
     _sendUpdateStatus('Checking');
     await delay(300); // Pacing
@@ -69,13 +69,13 @@ export const initNsusUpdater = async () => {
 
 const _checkForUpdates = async () => {
   try {
-    console.log(`[updater] Checking for NSIS updates`);
+    console.log(`[NSIS updater] Checking for updates`);
     const settings = await models.settings.get();
     // set auto-update channel
     autoUpdater.channel = settings.updateChannel;
     autoUpdater.checkForUpdates();
   } catch (err) {
-    console.warn('[updater] Failed to check for NSIS updates:', err.message);
+    console.warn('[NSIS updater] Failed to check for updates:', err.message);
     _sendUpdateStatus('Update Error');
   }
 };

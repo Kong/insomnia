@@ -7,7 +7,7 @@ import { delay } from '../common/misc';
 import * as models from '../models/index';
 import { invariant } from '../utils/invariant';
 import { ipcMainOn } from './ipc/electron';
-import { initNsusUpdater } from './nsisUpdate';
+import { initNsisUpdater } from './nsisUpdate';
 
 export type UpdateStatus =
   | 'Update Error'
@@ -78,7 +78,7 @@ export const init = async () => {
   if (process.platform === 'win32') {
     const isNsis = await isNsisInstaller();
     if (isNsis) {
-      initNsusUpdater();
+      initNsisUpdater();
       return;
     }
   }

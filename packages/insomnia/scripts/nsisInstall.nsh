@@ -2,14 +2,11 @@
   ${ifNot} ${isUpdated}
     StrCpy $0 "$PROFILE\AppData\Local\insomnia\Update.exe"
     StrCpy $1 "$PROFILE\AppData\Local\insomnia\.dead"
-    IfFileExists $1 0 skip_uninstall
+    IfFileExists $1 skip_uninstall
     IfFileExists $0 0 skip_uninstall
     MessageBox MB_YESNO "Existing Insomnia installation found, which must be uninstalled first.$\n$\nClick 'No' to exit this installer so you can uninstall yourself.$\n$\nClick 'Yes' to allow this installer to uninstall for you (your existing Insomnia data will be preserved)." IDYES do_uninstall IDNO exit_installer
     do_uninstall:
       nsExec::Exec '"$0" --uninstall -s'
-      delete "$PROFILE\AppData\Local\insomnia\Update.exe"
-      delete "$PROFILE\AppData\Local\insomnia\.dead"
-      rmDir "$PROFILE\AppData\Local\insomnia"
       Goto skip_uninstall
     exit_installer:
       Quit
