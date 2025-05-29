@@ -8,8 +8,8 @@ const execAsync = util.promisify(exec);
 // through hooking into the signing step of electron-builder while the final nsis installer is being built
 // This makes it possible to sign the Update.exe and stub of Insomnia.exe that end up in the installation folder
 exports.default = async function (configuration) {
-  if (configuration.options.target.length === 0 || (configuration.options.target[0].target !== 'nsis')) {
-    console.log('[customSign] Skipping signing because target is not nsis.');
+  if (configuration.options.target.length === 0) {
+    console.log('[customSign] Skipping signing because target is empty');
     return;
   }
 

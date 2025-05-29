@@ -244,6 +244,7 @@ jobs:
           name: ${{ runner.os }}-${{ runner.arch }}-artifacts
           path: |
             packages/insomnia/dist/*.exe
+            packages/insomnia/dist/*.yml
             packages/insomnia/dist/squirrel-windows/*
             packages/insomnia/dist/*.zip
             packages/insomnia/dist/*.dmg
