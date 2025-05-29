@@ -274,6 +274,9 @@ export const WorkspaceDropdown: FC<{}> = () => {
           : []),
       ],
     },
+  ];
+  const actionlist = [
+    ...(isScratchpadWorkspace ? scratchpadActionList : workspaceActionsList),
     ...(actionPlugins.length > 0
       ? [
           {
@@ -290,7 +293,6 @@ export const WorkspaceDropdown: FC<{}> = () => {
         ]
       : []),
   ];
-  const actionlist = isScratchpadWorkspace ? scratchpadActionList : workspaceActionsList;
   return (
     <>
       <MenuTrigger onOpenChange={isOpen => isOpen && handleDropdownOpen()}>
