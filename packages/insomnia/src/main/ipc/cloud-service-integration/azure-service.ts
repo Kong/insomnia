@@ -1,5 +1,6 @@
+import crypto from 'node:crypto';
+
 import { type AuthenticationResult, AuthError, CryptoProvider, PublicClientApplication } from '@azure/msal-node';
-import crypto from 'crypto';
 
 import { INSOMNIA_AZURE_CLIENT_ID, INSOMNIA_AZURE_REDIRECT_URI } from '../../../common/constants';
 import { insomniaFetch } from '../../../ui/insomniaFetch';

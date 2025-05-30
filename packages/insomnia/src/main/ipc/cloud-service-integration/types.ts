@@ -59,7 +59,7 @@ export type HashiCorpSecretConfig = HCPSecretConfig | HashiCorpVaultKVV1SecretCo
 
 export type ExternalVaultConfig = AWSSecretConfig | GCPSecretConfig | HashiCorpSecretConfig | AzureSecretConfig;
 
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class, unicorn/no-static-only-class
 export abstract class OAuthCloudService {
   static async openAuthUrl(): Promise<string> {
     throw new Error('Subclasses must implement the static method openAuthUrl');

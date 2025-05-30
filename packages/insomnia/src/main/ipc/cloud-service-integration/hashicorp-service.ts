@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 
 import {
   type CloudProviderName,
@@ -172,7 +172,7 @@ export class HashiCorpService implements ICloudService {
       }
       const { authMethod, serverAddress } = this._credential;
       const finalUrl = serverAddress.endsWith('/')
-        ? serverAddress.substring(0, serverAddress.length - 1)
+        ? serverAddress.slice(0, Math.max(0, serverAddress.length - 1))
         : serverAddress;
       if (authMethod === HashiCorpVaultAuthMethod.appRole) {
         const { role_id, secret_id } = this._credential;
@@ -282,8 +282,9 @@ export class HashiCorpService implements ICloudService {
         const uniqueKeyHashV2 = crypto.createHash('md5').update(uniqueKeyV2).digest('hex');
         return uniqueKeyHashV2;
       }
-      default:
+      default: {
         return defaultUniqueKeyHash;
+      }
     }
   }
 
@@ -297,7 +298,7 @@ export class HashiCorpService implements ICloudService {
         // on-prem vault
         const { serverAddress } = this._credential;
         const finalUrl = serverAddress.endsWith('/')
-          ? serverAddress.substring(0, serverAddress.length - 1)
+          ? serverAddress.slice(0, Math.max(0, serverAddress.length - 1))
           : serverAddress;
         const { kvVersion, secretEnginePath } = config as
           | HashiCorpVaultKVV1SecretConfig

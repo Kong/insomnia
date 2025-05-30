@@ -1,3 +1,5 @@
+import crypto from 'node:crypto';
+
 import {
   DecryptionFailure,
   GetSecretValueCommand,
@@ -16,7 +18,6 @@ import {
   STSServiceException,
 } from '@aws-sdk/client-sts';
 import { fromIni, fromSSO } from '@aws-sdk/credential-providers';
-import crypto from 'crypto';
 
 import { AWSCredentialType, type AWSServiceCredential, type CloudProviderName } from '../../../models/cloud-credential';
 import type { AWSSecretConfig, CloudServiceResult, ICloudService } from './types';
@@ -34,12 +35,13 @@ export class AWSService implements ICloudService {
     const { type } = this._credential;
 
     switch (type) {
-      case AWSCredentialType.temp:
+      case AWSCredentialType.temp: {
         return {
           accessKeyId: this._credential.accessKeyId,
           secretAccessKey: this._credential.secretAccessKey,
           sessionToken: this._credential.sessionToken,
         };
+      }
 
       case AWSCredentialType.file: {
         return fromIni({
@@ -58,8 +60,9 @@ export class AWSService implements ICloudService {
         });
       }
 
-      default:
+      default: {
         throw new Error(`Unsupported credential type: ${type}`);
+      }
     }
   }
 

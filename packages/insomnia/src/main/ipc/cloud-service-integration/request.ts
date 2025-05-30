@@ -53,11 +53,11 @@ export const nodeCurlRequest = async (options: NodeCurlRequestOptions): Promise<
     throw new Error(patch.error);
   }
   if (headerResults.length === 0) {
-    throw Error('Error in response: no header result is found');
+    throw new Error('Error in response: no header result is found');
   }
   const lastRedirect = headerResults[headerResults.length - 1];
   if (!lastRedirect) {
-    throw Error('Error in response: the lastRedirect is not defined');
+    throw new Error('Error in response: the lastRedirect is not defined');
   }
   const bodyResult = await readCurlResponse({
     bodyPath: responseBodyPath,

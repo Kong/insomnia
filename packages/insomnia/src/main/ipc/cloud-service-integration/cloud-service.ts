@@ -38,19 +38,24 @@ export type CloudServiceGetSecretConfig = AWSGetSecretConfig | GCPGetSecretConfi
 // factory pattern to create cloud service class based on its provider name
 function createCloudService(name: CloudProviderName, credential: BaseCloudCredential['credentials']) {
   switch (name) {
-    case 'aws':
+    case 'aws': {
       return new AWSService(credential as AWSTemporaryCredential);
-    case 'gcp':
+    }
+    case 'gcp': {
       return new GCPService(
         // for backward compatibility, gcp credential used to be a string of service account key file path
         typeof credential === 'string' ? credential : (credential as GCPCredentials).serviceAccountKeyFilePath,
       );
-    case 'hashicorp':
+    }
+    case 'hashicorp': {
       return new HashiCorpService(credential as HashiCorpCredentials);
-    case 'azure':
+    }
+    case 'azure': {
       return new AzureService(credential as AzureOAuthCredential);
-    default:
+    }
+    default: {
       throw new Error('Invalid cloud service provider name');
+    }
   }
 }
 
@@ -64,7 +69,7 @@ export const cloudServiceProviderAuthentication = (options: CloudServiceAuthOpti
 export const openAuthUrl = async (type: 'azure'): Promise<{ authUrl: string; error?: string }> => {
   let authUrl = '';
   switch (type) {
-    case 'azure':
+    case 'azure': {
       try {
         authUrl = await AzureService.openAuthUrl();
         shell.openExternal(authUrl);
@@ -72,16 +77,19 @@ export const openAuthUrl = async (type: 'azure'): Promise<{ authUrl: string; err
       } catch (error) {
         return { authUrl, error: `Failed not get authentication url : ${error?.message}` };
       }
-    default:
+    }
+    default: {
       return { authUrl, error: 'Invalid cloud service provider name' };
+    }
   }
 };
 
 export const exchangeCode = async (type: 'azure', data: any) => {
   // eslint-disable-next-line default-case
   switch (type) {
-    case 'azure':
+    case 'azure': {
       return AzureService.exchangeCode(data);
+    }
   }
 };
 

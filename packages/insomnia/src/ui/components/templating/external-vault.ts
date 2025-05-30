@@ -42,16 +42,21 @@ export interface getExternalVaultOptions {
 }
 export const getExternalVault = async (options: getExternalVaultOptions) => {
   switch (options.provider) {
-    case 'aws':
+    case 'aws': {
       return getAWSSecret(options);
-    case 'gcp':
+    }
+    case 'gcp': {
       return getGCPSecret(options);
-    case 'hashicorp':
+    }
+    case 'hashicorp': {
       return getHashiCorpSecret(options);
-    case 'azure':
+    }
+    case 'azure': {
       return getAzureSecret(options);
-    default:
+    }
+    default: {
       return '';
+    }
   }
 };
 

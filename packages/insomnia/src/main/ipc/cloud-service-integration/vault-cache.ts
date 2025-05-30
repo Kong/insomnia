@@ -10,16 +10,21 @@ export type MaxAgeUnit = 'ms' | 's' | 'min' | 'h';
 export const timeToMs = (time: number, unit: MaxAgeUnit = 'ms') => {
   if (typeof time === 'number' && time > 0) {
     switch (unit) {
-      case 'ms':
+      case 'ms': {
         return time;
-      case 's':
+      }
+      case 's': {
         return time * 1000;
-      case 'min':
+      }
+      case 'min': {
         return time * 1000 * 60;
-      case 'h':
+      }
+      case 'h': {
         return time * 1000 * 60 * 60;
-      default:
+      }
+      default: {
         return time;
+      }
     }
   }
   return 0;
@@ -78,7 +83,7 @@ export class VaultCache<K = string, T = any> {
     if (newSize > 0) {
       this._cache.resize(newSize);
     } else {
-      throw Error('cache size must be positive number');
+      throw new Error('cache size must be positive number');
     }
   }
 

@@ -36,7 +36,7 @@ export const ExternalVaultForm = (props: ArgConfigFormProps) => {
   let SubForm;
 
   switch (provider) {
-    case 'aws':
+    case 'aws': {
       SubForm = (
         <AWSSecretManagerForm
           formData={formData as AWSSecretConfig}
@@ -45,7 +45,8 @@ export const ExternalVaultForm = (props: ArgConfigFormProps) => {
         />
       );
       break;
-    case 'gcp':
+    }
+    case 'gcp': {
       SubForm = (
         <GCPSecretManagerForm
           formData={formData as GCPSecretConfig}
@@ -54,7 +55,8 @@ export const ExternalVaultForm = (props: ArgConfigFormProps) => {
         />
       );
       break;
-    case 'hashicorp':
+    }
+    case 'hashicorp': {
       SubForm = (
         <HashiCorpVaultForm
           formData={formData as HashiCorpSecretConfig}
@@ -63,7 +65,8 @@ export const ExternalVaultForm = (props: ArgConfigFormProps) => {
         />
       );
       break;
-    case 'azure':
+    }
+    case 'azure': {
       SubForm = (
         <AzureKeyVaultForm
           formData={formData as AzureSecretConfig}
@@ -72,8 +75,10 @@ export const ExternalVaultForm = (props: ArgConfigFormProps) => {
         />
       );
       break;
-    default:
+    }
+    default: {
       SubForm = null;
+    }
   }
 
   return (

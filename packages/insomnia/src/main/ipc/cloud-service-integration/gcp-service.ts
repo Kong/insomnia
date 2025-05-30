@@ -1,6 +1,7 @@
+import crypto from 'node:crypto';
+import { readFileSync } from 'node:fs';
+
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
-import crypto from 'crypto';
-import { readFileSync } from 'fs';
 import { GoogleAuth, type JWTInput } from 'google-auth-library';
 
 import type { CloudProviderName } from '../../../models/cloud-credential';
