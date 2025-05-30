@@ -13,8 +13,8 @@ import {
   getProductName,
   getSegmentWriteKey,
 } from '../common/constants';
-import * as models from '../models/index';
 import { SENTRY_OPTIONS } from '../common/sentry';
+import * as models from '../models/index';
 
 Sentry.init({
   ...SENTRY_OPTIONS,
