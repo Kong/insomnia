@@ -1,7 +1,7 @@
 import type { AuthenticationResult } from '@azure/msal-node';
 import React, { useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
-import { useFetcher } from 'react-router-dom';
+import { useFetcher } from 'react-router';
 
 import {
   type CloudProviderCredential,

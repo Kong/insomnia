@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
-import { useFetcher } from 'react-router-dom';
+import { useFetcher } from 'react-router';
 
 import {
   type BaseCloudCredential,
