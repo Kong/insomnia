@@ -14,6 +14,11 @@ import {
   getSegmentWriteKey,
 } from '../common/constants';
 import * as models from '../models/index';
+import { SENTRY_OPTIONS } from '../common/sentry';
+
+Sentry.init({
+  ...SENTRY_OPTIONS,
+});
 
 const analytics = new Analytics({
   writeKey: getSegmentWriteKey(),
