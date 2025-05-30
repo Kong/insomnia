@@ -1,7 +1,7 @@
-import * as Sentry from '@sentry/electron/main';
 import crypto from 'node:crypto';
 
 import { Analytics } from '@segment/analytics-node';
+import * as Sentry from '@sentry/electron/main';
 import { net } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 
