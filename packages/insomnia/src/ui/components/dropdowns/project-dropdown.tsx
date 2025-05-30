@@ -31,7 +31,8 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
   const updateProjectFetcher = useFetcher();
 
   const isRemoteProjectInconsistent = isRemoteProject(project) && !storageRules.enableCloudSync;
-  const isLocalProjectInconsistent = !isRemoteProject(project) && !storageRules.enableLocalVault;
+  const isLocalProjectInconsistent =
+    !isRemoteProject(project) && !isGitProject(project) && !storageRules.enableLocalVault;
   const isGitProjectInconsistent = isGitProject(project) && !storageRules.enableGitSync;
   const isProjectInconsistent = isRemoteProjectInconsistent || isLocalProjectInconsistent || isGitProjectInconsistent;
 
