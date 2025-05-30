@@ -22,7 +22,7 @@
     "packages/insomnia-scripting-environment"
   ],
   "scripts": {
-    "dev": "npm start -w insomnia",
+    "dev": "dotenv -- npm start -w insomnia",
     "lint": "npm run lint --workspaces --if-present",
     "type-check": "npm run type-check --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
@@ -47,6 +47,7 @@
     "@types/node": "^22.13.10",
     "@typescript-eslint/eslint-plugin": "^8.29.0",
     "@typescript-eslint/parser": "^8.29.0",
+    "dotenv-cli": "^8.0.0",
     "esbuild": "^0.24.0",
     "esbuild-runner": "^2.2.2",
     "eslint": "^9.23.0",
