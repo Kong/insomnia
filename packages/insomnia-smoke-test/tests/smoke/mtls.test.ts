@@ -64,6 +64,7 @@ test('can use client certificate for mTLS', async ({ app, page }) => {
   await page.locator('[data-test-id="client-certificate-toggle"]').click();
   await page.getByRole('button', { name: 'Done' }).click();
   await page.getByLabel('Request Collection').getByTestId('pet 2').press('Enter');
+  await expect.soft(page.getByLabel('Insomnia Tabs').getByText('pet 2', { exact: true })).toBeVisible();
 
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   await expect.soft(statusTag).toContainText('401 Unauthorized');
