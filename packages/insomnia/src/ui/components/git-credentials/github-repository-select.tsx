@@ -117,8 +117,8 @@ export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: st
           </div>
           {errors.length > 0 && (
             <div className="notice error margin-bottom-sm">
-              {errors.map((error, index) => (
-                <p key={index}>{error}</p>
+              {errors.map(error => (
+                <p key={error}>{error}</p>
               ))}
             </div>
           )}
