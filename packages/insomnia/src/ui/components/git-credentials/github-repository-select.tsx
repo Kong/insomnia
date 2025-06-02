@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Button as ComboButton, ComboBox, Input, ListBox, ListBoxItem, Popover } from 'react-aria-components';
 
-// import { useFetcher, useParams } from 'react-router';
 import { getAppWebsiteBaseURL } from '../../../common/constants';
 import { isGitHubAppUserToken } from '../github-app-config-link';
 import { Icon } from '../icon';
-import { showError } from '../modals';
 import { Button } from '../themed-button';
 
 type GitHubRepository = Awaited<ReturnType<typeof window.main.git.getGitHubRepositories>>['repos'][number];
@@ -15,17 +13,13 @@ export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: st
   const [repositories, setRepositories] = useState<GitHubRepository[]>([]);
   const [selectedRepository, setSelectedRepository] = useState<GitHubRepository | null>(null);
   const [cannotFindRepository, setCannotFindRepository] = useState(false);
+  const [errors, setErrors] = useState<string[]>([]);
 
   const getRepositories = async () => {
     setLoading(true);
     setRepositories([]);
     const { repos, errors } = await window.main.git.getGitHubRepositories({});
-    if (errors.length) {
-      showError({
-        title: 'Error fetching repositories',
-        message: errors.join('\n'),
-      });
-    }
+    setErrors(errors);
     setRepositories(repos);
     setLoading(false);
   };
@@ -121,6 +115,13 @@ export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: st
               <Icon icon="refresh" className={loading ? 'animate-spin' : ''} />
             </Button>
           </div>
+          {errors.length > 0 && (
+            <div className="notice error margin-bottom-sm">
+              {errors.map(error => (
+                <p key={error}>{error}</p>
+              ))}
+            </div>
+          )}
           {isGitHubAppUserToken(token) && (
             <div className={`flex gap-1 text-sm ${loading ? 'opacity-40' : ''}`}>
               Can't find a repository?
