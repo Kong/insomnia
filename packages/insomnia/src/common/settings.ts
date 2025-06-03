@@ -156,4 +156,5 @@ export interface Settings {
   saveVaultKeyLocally: boolean;
   enableVaultInScripts: boolean;
   saveVaultKeyToOSSecretManager: boolean;
+  vaultSecretCacheDuration: number;
 }

@@ -1,9 +1,12 @@
 import packageJson from '../../package.json';
+import type { CloudProviderCredential } from '../models/cloud-credential';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Response } from '../models/response';
 import type { Workspace } from '../models/workspace';
+import type { NodeCurlRequestOptions, NodeCurlResponseType } from '../plugins/context/network';
 import type { Plugin } from '../plugins/index';
+import { insomniaFetch } from '../ui/insomniaFetch';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
 import * as templating from './worker';
 export function decodeEncoding<T>(value: T) {
@@ -166,6 +169,16 @@ export default class BaseExtension {
       network: {
         sendRequest: async (request: Request, extraInfo?: { requestChain: string[] }): Promise<Response> =>
           fetchFromTemplateWorkerDatabase('network.sendRequest', { request, extraInfo }),
+        nodeCurlRequest: async (options: NodeCurlRequestOptions) => {
+          const resp = await fetch('insomnia-templating-worker-database://network.nodeCurlRequest', {
+            method: 'post',
+            body: JSON.stringify({ options }),
+          });
+
+          const body = await resp.json();
+          return body as NodeCurlResponseType;
+        },
+        insomniaFetch,
       },
       context: renderContext,
       meta: renderMeta,
@@ -188,6 +201,26 @@ export default class BaseExtension {
               return ancestors.filter(doc => doc._id !== request._id);
             },
           },
+          cloudCredential: {
+            getById: async (id: string) => {
+              const resp = await fetch('insomnia-templating-worker-database://cloudCredential.getById', {
+                method: 'post',
+                body: JSON.stringify({ id }),
+              });
+
+              const cloudCredential = await resp.json();
+              return cloudCredential;
+            },
+            update: async (originCredential: CloudProviderCredential, patch: Partial<CloudProviderCredential>) => {
+              const resp = await fetch('insomnia-templating-worker-database://cloudCredential.update', {
+                method: 'post',
+                body: JSON.stringify({ originCredential, patch }),
+              });
+
+              const updated = await resp.json();
+              return updated;
+            },
+          },
           workspace: {
             getById: async (id: string) => fetchFromTemplateWorkerDatabase('workspace.getById', { id }),
           },
@@ -206,6 +239,16 @@ export default class BaseExtension {
               response?: { bodyPath?: string; bodyCompression?: 'zip' | null | '__NEEDS_MIGRATION__' | undefined },
               readFailureValue?: string,
             ) => fetchFromTemplateWorkerDatabase('response.getBodyBuffer', { response, readFailureValue }),
+          },
+          settings: {
+            getSettings: async () => {
+              const resp = await fetch('insomnia-templating-worker-database://settings.getSettings', {
+                method: 'post',
+              });
+
+              const latest = await resp.json();
+              return latest;
+            },
           },
         },
       },

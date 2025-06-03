@@ -73,6 +73,7 @@ export function init(): BaseSettings {
     saveVaultKeyLocally: true,
     enableVaultInScripts: false,
     saveVaultKeyToOSSecretManager: true,
+    vaultSecretCacheDuration: 30,
   };
 }
 
