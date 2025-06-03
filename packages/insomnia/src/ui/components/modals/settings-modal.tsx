@@ -7,6 +7,7 @@ import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { BooleanSetting } from '../settings/boolean-setting';
+import { CloudServiceCredentialList } from '../settings/cloud-service-credentials';
 import { General } from '../settings/general';
 import { ImportExport } from '../settings/import-export';
 import { MaskedSetting } from '../settings/masked-setting';
@@ -105,6 +106,12 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
             >
               Plugins
             </Tab>
+            <Tab
+              className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+              id="cloudCred"
+            >
+              Cloud Credentials
+            </Tab>
           </TabList>
           <TabPanel className="h-full w-full overflow-y-auto" id="general">
             <General />
@@ -156,6 +163,9 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           </TabPanel>
           <TabPanel className="h-full w-full overflow-y-auto p-4" id="plugins">
             <Plugins />
+          </TabPanel>
+          <TabPanel className="h-full w-full overflow-y-auto p-4" id="cloudCred">
+            <CloudServiceCredentialList />
           </TabPanel>
         </Tabs>
       </ModalBody>
