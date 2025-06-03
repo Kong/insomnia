@@ -1,3 +1,5 @@
+import type { BaseModel } from '../models';
+import type { CloudProviderCredential } from '../models/cloud-credential';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
 import type { GrpcRequest } from '../models/grpc-request';
@@ -7,11 +9,14 @@ import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Response } from '../models/response';
 import type { getBodyBuffer, getLatestForRequest } from '../models/response';
+import type { get as getSettings } from '../models/settings';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace } from '../models/workspace';
+import type { NodeCurlRequestOptions, NodeCurlResponseType } from '../plugins/context/network';
 import type { PluginStore } from '../plugins/context/store';
 import type { PromptModalOptions } from '../ui/components/modals/prompt-modal';
+import type { insomniaFetch } from '../ui/insomniaFetch';
 import type { extractNunjucksTagFromCoords } from './utils';
 
 export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
@@ -78,6 +83,7 @@ export interface NunjucksParsedTagArg {
   displayName?: DisplayName;
   quotedBy?: '"' | "'";
   validate?: (value: string) => string;
+  modelFilter?: (model: BaseModel, tagArg: NunjucksParsedTagArg[]) => boolean;
   hide?: (arg0: NunjucksParsedTagArg[]) => boolean;
   model?: string;
   options?: PluginArgumentEnumOption[];
@@ -198,6 +204,8 @@ export interface PluginTemplateTagContext {
         environmentId?: string;
       },
     ): Promise<Response>;
+    nodeCurlRequest(options: NodeCurlRequestOptions): Promise<NodeCurlResponseType>;
+    insomniaFetch: typeof insomniaFetch;
   };
   context: BaseRenderContext & {
     value: string | number;
@@ -218,12 +226,22 @@ export interface PluginTemplateTagContext {
         getById: (id: string) => Promise<Request | null>;
         getAncestors: (request: Request) => Promise<(Request | RequestGroup | Workspace)[]>;
       };
+      cloudCredential: {
+        getById: (id: string) => Promise<CloudProviderCredential | null>;
+        update: (
+          originCredential: CloudProviderCredential,
+          patch: Partial<CloudProviderCredential>,
+        ) => Promise<CloudProviderCredential>;
+      };
       workspace: { getById: (id: string) => Promise<Workspace | null> };
       oAuth2Token: { getByRequestId: (id: string) => Promise<OAuth2Token | null> };
       cookieJar: { getOrCreateForParentId: (parentId: string) => Promise<CookieJar> };
       response: {
         getLatestForRequestId: typeof getLatestForRequest;
         getBodyBuffer: typeof getBodyBuffer;
+      };
+      settings: {
+        getSettings: typeof getSettings;
       };
     };
   };
