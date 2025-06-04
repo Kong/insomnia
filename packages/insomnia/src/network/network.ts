@@ -152,8 +152,13 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
   const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
   return { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
+
 // Intended to gather all required database objects and initialize ids
-export const fetchRequestData = async (requestId: string) => {
+export const fetchRequestData = async (
+  requestId: string,
+  // Override the active environment id to use for the request
+  overrideEnvironmentId?: string,
+) => {
   const request = await models.request.getById(requestId);
   invariant(request, 'failed to find request ' + requestId);
   const ancestors = await db.withAncestors<Request | RequestGroup | Workspace | Project | MockRoute | MockServer>(
@@ -167,21 +172,23 @@ export const fetchRequestData = async (requestId: string) => {
       models.mockServer.type,
     ],
   );
+
   const workspaceDoc = ancestors.find(isWorkspace);
   invariant(workspaceDoc?._id, 'failed to find workspace');
   const workspaceId = workspaceDoc._id;
 
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'failed to find workspace');
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-  // fallback to base environment
-  const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+
+  const activeEnvironmentId = overrideEnvironmentId ?? workspaceMeta.activeEnvironmentId;
   const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
-  // no active environment in workspaceMeta, fallback to workspace root environment as active environment
-  const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(workspace._id));
-  invariant(environment, 'failed to find environment ' + activeEnvironmentId);
 
   const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+  // no active environment in workspaceMeta, fallback to workspace root environment as active environment
+  const environment = activeEnvironment || baseEnvironment;
+  invariant(environment, 'failed to find environment ' + activeEnvironmentId);
+
   const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
 
   let activeGlobalEnvironment: Environment | undefined = undefined;
@@ -202,9 +209,11 @@ export const fetchRequestData = async (requestId: string) => {
   invariant(settings, 'failed to create settings');
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const caCert = await models.caCertificate.findByParentId(workspaceId);
+
   const responseId = generateId('res');
   const responsesDir = pathJoin(
-    (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
+    process.env['INSOMNIA_DATA_PATH'] ||
+      (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
     'responses',
   );
   const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
@@ -213,13 +222,14 @@ export const fetchRequestData = async (requestId: string) => {
     request,
     environment,
     baseEnvironment,
-    cookieJar,
     activeGlobalEnvironment,
     activeGlobalBaseEnvironment,
+    activeEnvironmentId: environment._id,
     settings,
     clientCertificates,
     caCert,
-    activeEnvironmentId: activeEnvironmentId || environment._id,
+    cookieJar,
+    workspace,
     timelinePath,
     responseId,
     ancestors,

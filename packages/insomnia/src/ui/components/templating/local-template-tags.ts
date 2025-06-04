@@ -666,7 +666,10 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         if (shouldResend && context.renderPurpose === 'send') {
           console.log('[response tag] Resending dependency');
           requestChain.push(request._id);
-          response = await context.network.sendRequest(request, { requestChain });
+          response = await context.network.sendRequest(request, {
+            requestChain,
+            environmentId: environmentId || undefined,
+          });
         }
 
         if (!response) {

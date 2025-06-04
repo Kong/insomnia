@@ -183,7 +183,13 @@ export interface PluginTemplateTagContext {
   app: AppContext;
   store: PluginStore;
   network: {
-    sendRequest(request: Request, extraInfo?: { requestChain: string[] }): Promise<Response>;
+    sendRequest(
+      request: Request,
+      extraInfo?: {
+        requestChain: string[];
+        environmentId?: string;
+      },
+    ): Promise<Response>;
   };
   context: BaseRenderContext & {
     value: string | number;

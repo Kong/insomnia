@@ -7,11 +7,20 @@ import {
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '../../network/network';
+import type { PluginTemplateTagContext } from '../../templating/types';
 
-export function init() {
+export function init(): {
+  network: PluginTemplateTagContext['network'];
+} {
   return {
     network: {
-      async sendRequest(req: Request, extraInfo?: { requestChain: string[] }) {
+      async sendRequest(
+        req: Request,
+        extraInfo?: {
+          requestChain: string[];
+          environmentId?: string;
+        },
+      ) {
         const {
           request,
           environment,
@@ -21,7 +30,7 @@ export function init() {
           activeEnvironmentId,
           timelinePath,
           responseId,
-        } = await fetchRequestData(req._id);
+        } = await fetchRequestData(req._id, extraInfo?.environmentId);
 
         const renderResult = await tryToInterpolateRequest({
           request,
