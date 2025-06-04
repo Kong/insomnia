@@ -1,4 +1,5 @@
 import { dialog } from 'electron';
+import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 
 import { CHECK_FOR_UPDATES_INTERVAL } from '../common/constants';
@@ -8,6 +9,8 @@ import { ipcMainOn } from './ipc/electron';
 import { _sendUpdateStatus, isUpdateSupported } from './updates';
 
 export const initNsisUpdater = async () => {
+  autoUpdater.logger = log;
+  autoUpdater.disableDifferentialDownload = true;
   autoUpdater.on('error', error => {
     console.warn(`[NSIS updater] Error: ${error.message}`);
     _sendUpdateStatus('Update Error');
@@ -20,9 +23,8 @@ export const initNsisUpdater = async () => {
     console.log('[NSIS updater] Update Available');
     _sendUpdateStatus('Downloading...');
   });
-  autoUpdater.on('update-downloaded', async ({ releaseNotes, releaseName }) => {
-    console.log(`[NSIS updater] Downloaded ${releaseName}`);
-    console.log(`[NSIS updater] Downloaded ${releaseNotes}`);
+  autoUpdater.on('update-downloaded', async ({ version }) => {
+    console.log(`[NSIS updater] Downloaded ${version}`);
     _sendUpdateStatus('Performing backup...');
     _sendUpdateStatus('Updated (Restart Required)');
 
@@ -31,7 +33,7 @@ export const initNsisUpdater = async () => {
         type: 'info',
         buttons: ['Restart', 'Later'],
         title: 'Application Update',
-        message: releaseName || '',
+        message: `New version: ${version}`,
         detail: 'A new version of Insomnia has been downloaded. Restart the application to apply the updates.',
       })
       .then(returnValue => {
