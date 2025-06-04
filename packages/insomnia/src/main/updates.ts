@@ -1,6 +1,6 @@
 import { autoUpdater, BrowserWindow, dialog } from 'electron';
-import { promises as fsPromise } from 'fs';
-import path from 'path';
+import { promises as fsPromise } from 'node:fs';
+import path from 'node:path';
 
 import { CHECK_FOR_UPDATES_INTERVAL, getAppId, getAppVersion, isDevelopment, UpdateURL } from '../common/constants';
 import { delay } from '../common/misc';
