@@ -1,5 +1,4 @@
 import * as models from '../../models';
-import type { Request } from '../../models/request';
 import {
   fetchRequestData,
   responseTransform,
@@ -14,13 +13,7 @@ export function init(): {
 } {
   return {
     network: {
-      async sendRequest(
-        req: Request,
-        extraInfo?: {
-          requestChain: string[];
-          environmentId?: string;
-        },
-      ) {
+      async sendRequest(req, extraInfo) {
         const {
           request,
           environment,
