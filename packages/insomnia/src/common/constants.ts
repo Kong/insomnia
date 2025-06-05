@@ -12,6 +12,9 @@ export const INSOMNIA_GITLAB_REDIRECT_URI = env.INSOMNIA_GITLAB_REDIRECT_URI;
 export const INSOMNIA_GITLAB_CLIENT_ID = env.INSOMNIA_GITLAB_CLIENT_ID;
 export const INSOMNIA_GITLAB_API_URL = env.INSOMNIA_GITLAB_API_URL;
 export const PLAYWRIGHT = env.PLAYWRIGHT;
+export const ENTERPRISE_PLUGINS = {
+  'external-vault': 'insomnia-plugin-external-vault',
+};
 // App Stuff
 export const getSkipOnboarding = () => env.INSOMNIA_SKIP_ONBOARDING;
 export const getInsomniaSession = () => env.INSOMNIA_SESSION;

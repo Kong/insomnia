@@ -99,6 +99,9 @@ const pluginToMainAPI = {
   'settings.getSettings': async () => {
     return await models.settings.get();
   },
+  'openInBrowser': async (body: { url: string }) => {
+    return window.main.openInBrowser(body.url);
+  },
   'network.sendRequest': async (body: { request: DBRequest; extraInfo?: { requestChain: string[] } }) => {
     const { request, environment, settings, clientCertificates, caCert, timelinePath, responseId } =
       await fetchRequestData(body.request._id);
