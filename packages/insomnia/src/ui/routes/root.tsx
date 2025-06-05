@@ -206,7 +206,7 @@ const Root = () => {
         const { code, ...restParams } = params;
         if (code && typeof code === 'string') {
           const authResult = await executePluginAction({
-            pluginName: ENTERPRISE_PLUGINS['external-vault'],
+            pluginName: ENTERPRISE_PLUGINS['external-vault'].pluginName,
             actionName: 'exchangeCode',
             params: { provider: 'azure', code },
           });

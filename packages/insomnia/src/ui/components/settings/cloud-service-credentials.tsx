@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 import { useFetcher } from 'react-router';
 
@@ -10,6 +10,7 @@ import {
   getProviderDisplayName,
 } from '../../../models/cloud-credential';
 import { executePluginAction } from '../../../plugins';
+import { getActivePlugins } from '../../../plugins';
 import { usePlanData } from '../../hooks/use-plan';
 import { useRootLoaderData } from '../../routes/root';
 import { Icon } from '../icon';
@@ -20,7 +21,6 @@ import { SvgIcon } from '../svg-icon';
 import { Tooltip } from '../tooltip';
 import { UpgradeNotice } from '../upgrade-notice';
 import { NumberSetting } from './number-setting';
-// import { NumberSetting } from './number-setting';
 
 interface createCredentialItemType {
   name: string;
@@ -61,7 +61,16 @@ export const CloudServiceCredentialList = () => {
     credential?: CloudProviderCredential;
     authUrl?: string;
   }>();
+  const [isVaultPluginInstalled, setIsVaultPluginInstalled] = useState(false);
   const deleteCredentialFetcher = useFetcher();
+  useEffect(() => {
+    const checkVaultPlugin = async () => {
+      const plugins = await getActivePlugins();
+      const vaultPlugin = plugins.find(plugin => plugin.name === ENTERPRISE_PLUGINS['external-vault'].pluginName);
+      setIsVaultPluginInstalled(!!vaultPlugin);
+    };
+    checkVaultPlugin();
+  }, []);
 
   const handleDeleteItem = (id: string, name: string) => {
     showModal(AskModal, {
@@ -94,8 +103,8 @@ export const CloudServiceCredentialList = () => {
 
   const handleCreateCloudServiceCredential = async (key: CloudProviderName) => {
     if (key === 'azure') {
-      const { authUrl, error } = await await executePluginAction({
-        pluginName: ENTERPRISE_PLUGINS['external-vault'],
+      const { authUrl, error } = await executePluginAction({
+        pluginName: ENTERPRISE_PLUGINS['external-vault'].pluginName,
         actionName: 'openAuthUrl',
         params: { provider: 'azure' },
       });
@@ -116,6 +125,9 @@ export const CloudServiceCredentialList = () => {
 
   if (!isEnterprisePlan) {
     return <UpgradeNotice isOwner={isOwner} featureName="Cloud Credentials feature" newPlan="enterprise" />;
+  }
+  if (!isVaultPluginInstalled) {
+    return <div className="faint pad text-center italic">External Vault feature is not enabled.</div>;
   }
 
   return (
@@ -237,7 +249,7 @@ export const CloudServiceCredentialList = () => {
             className="pointer mb-[--padding-sm] ml-[--padding-sm] flex h-[--line-height-xs] w-32 items-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
             onClick={async () =>
               await executePluginAction({
-                pluginName: ENTERPRISE_PLUGINS['external-vault'],
+                pluginName: ENTERPRISE_PLUGINS['external-vault'].pluginName,
                 actionName: 'clearCache',
               })
             }
