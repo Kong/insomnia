@@ -6,7 +6,6 @@ import type { Response } from '../models/response';
 import type { Workspace } from '../models/workspace';
 import type { NodeCurlRequestOptions, NodeCurlResponseType } from '../plugins/context/network';
 import type { Plugin } from '../plugins/index';
-import { insomniaFetch } from '../ui/insomniaFetch';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
 import * as templating from './worker';
 export function decodeEncoding<T>(value: T) {
@@ -178,7 +177,6 @@ export default class BaseExtension {
           const body = await resp.json();
           return body as NodeCurlResponseType;
         },
-        insomniaFetch,
       },
       context: renderContext,
       meta: renderMeta,
@@ -190,6 +188,11 @@ export default class BaseExtension {
         decode: async (buffer: Buffer, encoding?: string) =>
           fetchFromTemplateWorkerDatabase('decode', { buffer, encoding }),
         render: (str: string) => templating.render(str, { context: renderContext }),
+        openInBrowser: (url: string) =>
+          fetch('insomnia-templating-worker-database://openInBrowser', {
+            method: 'post',
+            body: JSON.stringify({ url }),
+          }),
         models: {
           request: {
             getById: async (id: string) => fetchFromTemplateWorkerDatabase('request.getById', { id }),
