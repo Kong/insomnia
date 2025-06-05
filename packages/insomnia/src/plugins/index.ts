@@ -4,6 +4,7 @@ import path from 'node:path';
 import electron from 'electron';
 
 import type { ParsedApiSpec } from '../common/api-specs';
+import { database as db } from '../common/database';
 import type { PluginConfigMap } from '../common/settings';
 import * as models from '../models';
 import type { GrpcRequest } from '../models/grpc-request';
@@ -14,6 +15,7 @@ import type { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace } from '../models/workspace';
 import type { PluginTemplateTag } from '../templating/types';
 import { showError } from '../ui/components/modals/index';
+import * as pluginContexts from './context';
 import type { PluginTheme } from './misc';
 import themes from './themes';
 
@@ -32,6 +34,7 @@ export interface Plugin {
     requestActions?: OmitInternal<RequestAction>[];
     workspaceActions?: OmitInternal<WorkspaceAction>[];
     documentActions?: OmitInternal<DocumentAction>[];
+    pluginActions?: OmitInternal<PluginAction>[];
   };
 }
 
@@ -81,6 +84,12 @@ export type DocumentAction = { plugin: Plugin } & {
   action: (context: Record<string, any>, documents: ParsedApiSpec) => void | Promise<void>;
   label: string;
   hideAfterClick?: boolean;
+};
+
+export type PluginAction = { plugin: Plugin } & {
+  name: string;
+  description?: string;
+  action: (context: Record<string, any>, params?: any) => Promise<any>;
 };
 
 type RequestHookCallback = (context: any) => void;
@@ -230,7 +239,7 @@ export async function reloadPlugins() {
   await getPlugins(true);
 }
 
-async function getActivePlugins(): Promise<Plugin[]> {
+export async function getActivePlugins(): Promise<Plugin[]> {
   return (await getPlugins()).filter(p => !p.config.disabled);
 }
 
@@ -317,6 +326,86 @@ export async function getTemplateTags(): Promise<TemplateTag[]> {
   }
 
   return extensions;
+}
+
+export async function getPluginActions(): Promise<PluginAction[]> {
+  let extensions: PluginAction[] = [];
+
+  for (const plugin of await getActivePlugins()) {
+    const actions = plugin.module.pluginActions || [];
+    extensions = [
+      ...extensions,
+      ...actions.map(p => ({
+        plugin,
+        ...p,
+      })),
+    ];
+  }
+
+  return extensions;
+}
+
+export async function executePluginAction({
+  pluginName,
+  actionName,
+  context,
+  params,
+}: {
+  pluginName: string;
+  actionName: string;
+  context?: Record<string, any>;
+  params?: Record<string, any>;
+}): Promise<any> {
+  const plugins = getActivePlugins();
+  return plugins.then(plugins => {
+    const plugin = plugins.find(p => p.name === pluginName);
+    if (!plugin) {
+      throw new Error(`Plugin ${pluginName} not found`);
+    }
+    const action = plugin.module.pluginActions?.find(a => a.name === actionName);
+    if (!action) {
+      throw new Error(`Action ${actionName} not found in plugin ${pluginName}`);
+    }
+    const commonContext = {
+      ...pluginContexts.app.init('no-render'),
+      ...pluginContexts.store.init(plugin),
+      ...pluginContexts.network.init(),
+      util: {
+        openInBrowser: (url: string) => window.main.openInBrowser(url),
+        models: {
+          request: {
+            getById: models.request.getById,
+            getAncestors: async (request: any) => {
+              const ancestors = await db.withAncestors<Request | RequestGroup | Workspace>(request, [
+                models.requestGroup.type,
+                models.workspace.type,
+              ]);
+              return ancestors.filter(doc => doc._id !== request._id);
+            },
+          },
+          workspace: {
+            getById: models.workspace.getById,
+          },
+          oAuth2Token: {
+            getByRequestId: models.oAuth2Token.getByParentId,
+          },
+          cookieJar: {
+            getOrCreateForParentId: (parentId: string) => {
+              return models.cookieJar.getOrCreateForParentId(parentId);
+            },
+          },
+          response: {
+            getLatestForRequestId: models.response.getLatestForRequest,
+            getBodyBuffer: models.response.getBodyBuffer,
+          },
+          settings: {
+            getSettings: models.settings.get,
+          },
+        },
+      },
+    };
+    return action.action({ ...commonContext, ...context }, params);
+  });
 }
 
 export async function getRequestHooks(): Promise<RequestHook[]> {

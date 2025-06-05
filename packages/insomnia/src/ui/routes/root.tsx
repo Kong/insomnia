@@ -4,21 +4,29 @@ import type { IpcRendererEvent } from 'electron';
 import React, { useEffect, useState } from 'react';
 import { type LoaderFunction, Outlet, useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 
-import { isDevelopment } from '../../common/constants';
+import { ENTERPRISE_PLUGINS, isDevelopment } from '../../common/constants';
 import * as models from '../../models';
+import type { CloudProviderCredential } from '../../models/cloud-credential';
 import type { Settings } from '../../models/settings';
 import type { UserSession } from '../../models/user-session';
-import { reloadPlugins } from '../../plugins';
+import { executePluginAction, reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
 import { setTheme } from '../../plugins/misc';
 import { SegmentEvent } from '../analytics';
 import { getLoginUrl } from '../auth-session-provider';
+import { CopyButton } from '../components/base/copy-button';
+import { Link } from '../components/base/link';
 import { ErrorBoundary } from '../components/error-boundary';
 import { showError, showModal } from '../components/modals';
 import { AlertModal } from '../components/modals/alert-modal';
 import { AskModal } from '../components/modals/ask-modal';
 import { ImportModal } from '../components/modals/import-modal';
-import { SettingsModal, TAB_INDEX_PLUGINS, TAB_INDEX_THEMES } from '../components/modals/settings-modal';
+import {
+  SettingsModal,
+  TAB_CLOUD_CREDENTIAL,
+  TAB_INDEX_PLUGINS,
+  TAB_INDEX_THEMES,
+} from '../components/modals/settings-modal';
 import { AppHooks } from '../containers/app-hooks';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import Modals from './modals';
@@ -27,6 +35,7 @@ export interface RootLoaderData {
   settings: Settings;
   workspaceCount: number;
   userSession: UserSession;
+  cloudCredentials: CloudProviderCredential[];
 }
 
 export const useRootLoaderData = () => {
@@ -37,11 +46,13 @@ export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
   const settings = await models.settings.get();
   const workspaceCount = await models.workspace.count();
   const userSession = await models.userSession.getOrCreate();
+  const cloudCredentials = await models.cloudCredential.all();
 
   return {
     settings,
     workspaceCount,
     userSession,
+    cloudCredentials,
   };
 };
 
@@ -189,6 +200,90 @@ const Root = () => {
             encType: 'application/json',
           },
         );
+      }
+      if (urlWithoutParams === 'insomnia://oauth/azure/authenticate') {
+        const { code, ...restParams } = params;
+        if (code && typeof code === 'string') {
+          const authResult = await executePluginAction({
+            pluginName: ENTERPRISE_PLUGINS['external-vault'],
+            actionName: 'exchangeCode',
+            params: { provider: 'azure', code },
+          });
+          const { success, result, error } = authResult;
+          if (success) {
+            const { account, uniqueId } = result!;
+            const name = account?.username || uniqueId;
+            actionFetcher.submit(
+              JSON.stringify({
+                name,
+                credentials: result,
+                provider: 'azure',
+                isAuthenticated: true,
+              }),
+              {
+                action: '/cloud-credential/new',
+                method: 'post',
+                encType: 'application/json',
+              },
+            );
+            const closeModalBtn = document.getElementById('close-add-cloud-credential-modal');
+            if (closeModalBtn) {
+              // close the modal to hint user Azure oauth url if exists
+              closeModalBtn.click();
+            }
+            showModal(SettingsModal, { tab: TAB_CLOUD_CREDENTIAL });
+          } else {
+            showError({
+              title: 'Azure Authorization Failed',
+              message: error?.errorMessage,
+            });
+          }
+        } else {
+          const errorDetailKeys = Object.keys(restParams);
+          const { error, error_description, error_uri } = restParams;
+          if (error && error_description) {
+            showError({
+              title: 'Azure Authorization Failed',
+              message: (
+                <div className="flex flex-col gap-1 text-left">
+                  <span className="text-lg font-bold">{error}</span>
+                  <span className="whitespace-normal">{error_description}</span>
+                  {error_uri && (
+                    <div className="mt-2 flex items-center justify-center">
+                      <Link button className="btn btn--clicky w-80" href={error_uri}>
+                        View Document <i className="fa fa-external-link" />
+                      </Link>
+                    </div>
+                  )}
+                  <CopyButton
+                    size="small"
+                    className="absolute right-[--padding-sm] top-[--padding-sm]"
+                    content={error_description}
+                    title="Copy Description"
+                    style={{ borderWidth: 0 }}
+                  >
+                    <i className="fa fa-copy" />
+                  </CopyButton>
+                </div>
+              ),
+            });
+          } else {
+            showError({
+              title: 'Azure Authorization Failed',
+              message: (
+                <div className="flex flex-col gap-1 text-left">
+                  {errorDetailKeys.length > 0
+                    ? errorDetailKeys.map(k => (
+                        <span key={k} className="whitespace-normal">
+                          {k}: {restParams[k]}
+                        </span>
+                      ))
+                    : 'Unknown error'}
+                </div>
+              ),
+            });
+          }
+        }
       }
       if (urlWithoutParams === 'insomnia://app/auth/finish') {
         return actionFetcher.submit(
