@@ -11,7 +11,6 @@ import {
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '../../network/network';
-import { insomniaFetch } from '../../ui/insomniaFetch';
 
 type NodeCurlRequestType = Pick<Request, 'url' | 'method' | 'headers'> &
   Partial<Pick<Request, 'body' | 'authentication'>>;
@@ -127,7 +126,6 @@ export function init() {
           },
         };
       },
-      insomniaFetch,
     },
   };
 }

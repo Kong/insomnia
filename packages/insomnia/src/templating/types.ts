@@ -249,3 +249,9 @@ export interface PluginTemplateTag {
   validate?: (value: any) => string | null;
   priority?: number;
 }
+export interface RenderInputType {
+  input: string;
+  context: BaseRenderContext;
+  path: string;
+  ignoreUndefinedEnvVariable: boolean;
+}

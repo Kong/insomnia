@@ -4,6 +4,7 @@ import path from 'node:path';
 import electron from 'electron';
 
 import type { ParsedApiSpec } from '../common/api-specs';
+import { ENTERPRISE_PLUGINS } from '../common/constants';
 import { database as db } from '../common/database';
 import type { PluginConfigMap } from '../common/settings';
 import * as models from '../models';
@@ -325,6 +326,21 @@ export async function getTemplateTags(): Promise<TemplateTag[]> {
   }
 
   return extensions;
+}
+
+export async function isEnterprisePluginTemplateTag(input: string) {
+  if (!input.includes('{%')) {
+    return false;
+  }
+  const enterprisePluginNames = Object.keys(ENTERPRISE_PLUGINS).map(plugin => ENTERPRISE_PLUGINS[plugin].pluginName);
+  const activePlugins = await getActivePlugins();
+  return activePlugins
+    .filter(plugin => enterprisePluginNames.includes(plugin.name))
+    .some(plugin => {
+      const templateTags = plugin.module.templateTags || [];
+      const tagNames = templateTags.map(tt => tt.name);
+      return tagNames.some(tagName => input.match(new RegExp(`^{% *${tagName} *.+`)));
+    });
 }
 
 export async function getPluginActions(): Promise<PluginAction[]> {

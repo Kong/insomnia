@@ -1806,7 +1806,7 @@ export const createCloudCredentialAction: ActionFunction = async ({ request }) =
       return credentials;
     }
     const authenticateResponse = await executePluginAction({
-      pluginName: ENTERPRISE_PLUGINS['external-vault'],
+      pluginName: ENTERPRISE_PLUGINS['external-vault'].pluginName,
       actionName: 'authenticate',
       params: { provider, credentials },
     });
@@ -1838,7 +1838,7 @@ export const updateCloudCredentialAction: ActionFunction = async ({ request, par
   invariant(provider, 'Cloud Provider name is required');
   if (name && provider && credentials) {
     const authenticateResponse = await executePluginAction({
-      pluginName: ENTERPRISE_PLUGINS['external-vault'],
+      pluginName: ENTERPRISE_PLUGINS['external-vault'].pluginName,
       actionName: 'authenticate',
       params: { provider, credentials },
     });

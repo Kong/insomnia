@@ -1,5 +1,5 @@
 import { extractUndefinedVariableKey, RenderError } from '../../templating/render-error';
-import type { BaseRenderContext } from '../../templating/types';
+import type { RenderInputType } from '../../templating/types';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- see below
 // @ts-ignore -- inso transpiles to commonjs so doesn't play nice with this
@@ -10,17 +10,7 @@ worker.addEventListener('error', event => {
   console.error('Error from worker:', event.message);
 });
 
-export function renderInWorker({
-  input,
-  context,
-  path,
-  ignoreUndefinedEnvVariable,
-}: {
-  input: string;
-  context: BaseRenderContext;
-  path: string;
-  ignoreUndefinedEnvVariable: boolean;
-}): Promise<string> {
+export function renderInWorker({ input, context, path, ignoreUndefinedEnvVariable }: RenderInputType): Promise<string> {
   const newContext = {
     ...context,
     serializedFunctions: {
