@@ -16,6 +16,7 @@ import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
+import { isEnterprisePluginTemplateTag } from '../plugins';
 import * as templating from '../templating';
 import { RenderError } from '../templating/render-error';
 import type {
@@ -24,6 +25,7 @@ import type {
   RenderContextAncestor,
   RenderContextOptions,
   RenderedRequest,
+  RenderInputType,
 } from '../templating/types';
 import * as templatingUtils from '../templating/utils';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
@@ -228,12 +230,7 @@ export async function buildRenderContext({
 
   return finalRenderContext;
 }
-const renderInThisProcess = async (input: {
-  input: string;
-  context: BaseRenderContext;
-  path: string;
-  ignoreUndefinedEnvVariable: boolean;
-}) => {
+const renderInThisProcess = async (input: RenderInputType) => {
   return templating.render(input.input, {
     context: input.context,
     path: input.path,
@@ -303,9 +300,12 @@ export async function render<T>(
         const pluginsAreRestrictedToRunInWorker = settings?.pluginsAllowElevatedAccess === false;
         const currentProcessIsRendererAndPluginsAreRestricted =
           process.type === 'renderer' && pluginsAreRestrictedToRunInWorker;
-        const renderFork = currentProcessIsRendererAndPluginsAreRestricted
-          ? (await import('../ui/worker/templating-handler')).renderInWorker
-          : renderInThisProcess;
+        const renderFork = async (renderInput: RenderInputType) => {
+          const inputIsEnterprisePluginTag = await isEnterprisePluginTemplateTag(input as string);
+          return currentProcessIsRendererAndPluginsAreRestricted && !inputIsEnterprisePluginTag
+            ? (await import('../ui/worker/templating-handler')).renderInWorker(renderInput)
+            : renderInThisProcess(renderInput);
+        };
 
         // @ts-expect-error -- TSCONVERSION
         input = await renderFork({ input, context, path, ignoreUndefinedEnvVariable });
