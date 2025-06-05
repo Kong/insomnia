@@ -15,7 +15,6 @@ import type { Workspace } from '../models/workspace';
 import type { PluginStore } from '../plugins/context';
 import type { NodeCurlRequestOptions, NodeCurlResponseType } from '../plugins/context/network';
 import type { PromptModalOptions } from '../ui/components/modals/prompt-modal';
-import type { insomniaFetch } from '../ui/insomniaFetch';
 import type { extractNunjucksTagFromCoords } from './utils';
 
 export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
@@ -191,7 +190,6 @@ export interface PluginTemplateTagContext {
   network: {
     sendRequest(request: Request, extraInfo?: { requestChain: string[] }): Promise<Response>;
     nodeCurlRequest(options: NodeCurlRequestOptions): Promise<NodeCurlResponseType>;
-    insomniaFetch: typeof insomniaFetch;
   };
   context: BaseRenderContext & {
     value: string | number;
@@ -200,6 +198,7 @@ export interface PluginTemplateTagContext {
   renderPurpose?: RenderPurpose;
   util: {
     render: (str: string) => string | Promise<string | null>;
+    openInBrowser?: (url: string) => void;
     models: {
       request: {
         getById: (id: string) => Promise<Request | null>;

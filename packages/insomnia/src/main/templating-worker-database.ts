@@ -147,6 +147,9 @@ export const resolveDbByKey = async (request: Request) => {
       },
     };
   }
+  if (url.host === 'openInBrowser'.toLowerCase()) {
+    result = window.main.openInBrowser(body.url);
+  }
 
   return new Response(JSON.stringify(result));
 };

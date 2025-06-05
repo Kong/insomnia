@@ -28,6 +28,7 @@ export const TAB_INDEX_SHORTCUTS = 'keyboard';
 export const TAB_INDEX_THEMES = 'themes';
 export const TAB_INDEX_PLUGINS = 'plugins';
 export const TAB_INDEX_AI = 'ai';
+export const TAB_CLOUD_CREDENTIAL = 'cloudCred';
 
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const [defaultTabKey, setDefaultTabKey] = useState('general');

@@ -7,12 +7,13 @@ import { type ActionFunction, redirect } from 'react-router';
 
 import { version } from '../../../package.json';
 import { parseApiSpec, resolveComponentSchemaRefs } from '../../common/api-specs';
-import { ACTIVITY_DEBUG, getAIServiceURL, METHOD_GET } from '../../common/constants';
+import { ACTIVITY_DEBUG, ENTERPRISE_PLUGINS, getAIServiceURL, METHOD_GET } from '../../common/constants';
 import { database } from '../../common/database';
 import { database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources, type ScanResult } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
+import type { BaseCloudCredential } from '../../models/cloud-credential';
 import { EnvironmentType } from '../../models/environment';
 import type { OauthProviderName } from '../../models/git-credentials';
 import { getById, update } from '../../models/helpers/request-operations';
@@ -26,6 +27,7 @@ import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { isCollection, isEnvironment, scopeToActivity, type Workspace } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
+import { executePluginAction } from '../../plugins';
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,
@@ -1784,5 +1786,88 @@ export const toggleExpandAllRequestGroupsAction: ActionFunction = async ({ param
       return models.requestGroupMeta.create({ parentId: requestGroup._id, collapsed: isCollapsed });
     }),
   );
+  return null;
+};
+
+export const createCloudCredentialAction: ActionFunction = async ({ request }) => {
+  const patch = await request.json();
+  const { name, provider, credentials, isAuthenticated } = patch as BaseCloudCredential & { isAuthenticated?: boolean };
+  invariant(typeof name === 'string', 'Name is required');
+  invariant(provider, 'Cloud Provider name is required');
+  if (name && provider && credentials) {
+    if (isAuthenticated) {
+      // find credential with same name for oauth authenticated cloud service
+      const existingCredential = await models.cloudCredential.getByName(name, provider);
+      if (existingCredential.length === 0) {
+        await models.cloudCredential.create(patch);
+      } else {
+        await models.cloudCredential.update(existingCredential[0], patch);
+      }
+      return credentials;
+    }
+    const authenticateResponse = await executePluginAction({
+      pluginName: ENTERPRISE_PLUGINS['external-vault'],
+      actionName: 'authenticate',
+      params: { provider, credentials },
+    });
+    const { success, error, result } = authenticateResponse!;
+    if (success) {
+      if (provider === 'hashicorp') {
+        // update access token and expires_at
+        const { access_token, expires_at } = result as { access_token: string; expires_at: number };
+        patch.credentials['access_token'] = access_token;
+        patch.credentials['expires_at'] = expires_at;
+      }
+      await models.cloudCredential.create(patch);
+    } else {
+      return {
+        error: error?.errorMessage,
+      };
+    }
+    return result;
+  }
+  return { error: 'Invalid parameters for creating cloud credential' };
+};
+
+export const updateCloudCredentialAction: ActionFunction = async ({ request, params }) => {
+  const { cloudCredentialId } = params;
+  invariant(typeof cloudCredentialId === 'string', 'Credential ID is required');
+  const patch = await request.json();
+  const { name, provider, credentials } = patch;
+  invariant(typeof name === 'string', 'Name is required');
+  invariant(provider, 'Cloud Provider name is required');
+  if (name && provider && credentials) {
+    const authenticateResponse = await executePluginAction({
+      pluginName: ENTERPRISE_PLUGINS['external-vault'],
+      actionName: 'authenticate',
+      params: { provider, credentials },
+    });
+    const { success, error, result } = authenticateResponse!;
+    if (success) {
+      const originCredential = await models.cloudCredential.getById(cloudCredentialId);
+      invariant(originCredential, 'No Cloud Credential found');
+      if (provider === 'hashicorp') {
+        // update access token and expires_at
+        const { access_token, expires_at } = result as { access_token: string; expires_at: number };
+        patch.credentials['access_token'] = access_token;
+        patch.credentials['expires_at'] = expires_at;
+      }
+      await models.cloudCredential.update(originCredential, patch);
+    } else {
+      return {
+        error: error?.errorMessage,
+      };
+    }
+    return result;
+  }
+  return { error: 'Invalid parameters for updating cloud credential' };
+};
+
+export const deleteCloudCredentialAction: ActionFunction = async ({ params }) => {
+  const { cloudCredentialId } = params;
+  invariant(typeof cloudCredentialId === 'string', 'Cloud Credential ID is required');
+  const cloudCredential = await models.cloudCredential.getById(cloudCredentialId);
+  invariant(cloudCredential, 'Cloud Credential not found');
+  await models.cloudCredential.remove(cloudCredential);
   return null;
 };

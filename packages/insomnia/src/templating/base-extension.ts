@@ -103,6 +103,7 @@ export default class BaseExtension {
           templating.render(str, {
             context: renderContext,
           }),
+        openInBrowser: (url: string) => window.main.openInBrowser(url),
         models: {
           request: {
             getById: models.request.getById,
@@ -113,6 +114,10 @@ export default class BaseExtension {
               ]);
               return ancestors.filter(doc => doc._id !== request._id);
             },
+          },
+          cloudCredential: {
+            getById: models.cloudCredential.getById,
+            update: models.cloudCredential.update,
           },
           workspace: {
             getById: models.workspace.getById,
@@ -128,6 +133,9 @@ export default class BaseExtension {
           response: {
             getLatestForRequestId: models.response.getLatestForRequest,
             getBodyBuffer: models.response.getBodyBuffer,
+          },
+          settings: {
+            getSettings: models.settings.get,
           },
         },
       },
