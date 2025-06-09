@@ -195,33 +195,33 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   si.hStdOutput = outwr;
   si.hStdError = outwr;
 
-  std::wstring sourceInsomniaExe = std::wstring(workDir) + L"\\insomnia.dll";
+  std::wstring sourceInsomniaExe = std::wstring(workDir) + L"\\Insomnia-origin.exe";
   ::DebugLog((L"Source insomnia executable: " + sourceInsomniaExe).c_str());
 
-  std::wstring tmpExe = std::wstring(workDir) + L"\\insomnia-" + INSOMNIA_VERSION + L".exe";
+  // std::wstring tmpExe = std::wstring(workDir) + L"\\insomnia-" + INSOMNIA_VERSION + L".exe";
 
   // if the file already exists, continue as normal since another instance of Insomnia
   // is likely already running
-  DWORD attrs = ::GetFileAttributesW(tmpExe.c_str());
-  if (attrs != INVALID_FILE_ATTRIBUTES && !(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
-    ::DebugLog(L"File already exists, skipping copy.");
-  } else {
-    // if it's a directory, then exit and prompt the user to uninstall
-    if (attrs != INVALID_FILE_ATTRIBUTES) {
-      ::DebugLog(L"File is a directory, exiting.");
-      return ::ExitWithWarning(nCmdShow, L"Insomnia installation is corrupted. Please reinstall.");
-    }
+  // DWORD attrs = ::GetFileAttributesW(tmpExe.c_str());
+  // if (attrs != INVALID_FILE_ATTRIBUTES && !(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
+  //   ::DebugLog(L"File already exists, skipping copy.");
+  // } else {
+  //   // if it's a directory, then exit and prompt the user to uninstall
+  //   if (attrs != INVALID_FILE_ATTRIBUTES) {
+  //     ::DebugLog(L"File is a directory, exiting.");
+  //     return ::ExitWithWarning(nCmdShow, L"Insomnia installation is corrupted. Please reinstall.");
+  //   }
 
-    ::DebugLog((L"Copying insomnia executable to: " + tmpExe).c_str());
-    // create the insomnia-$VERSION.exe file
-    if (!::CopyFileW(sourceInsomniaExe.c_str(), tmpExe.c_str(), FALSE)) {
-      ::DebugLog(L"Could not copy file.");
-      return ::ExitWithWarning(nCmdShow, L"Cannot read or write to executable folder.");
-    }
-    ::DebugLog(L"File copied.");
-  }
+  //   ::DebugLog((L"Copying insomnia executable to: " + tmpExe).c_str());
+  //   // create the insomnia-$VERSION.exe file
+  //   if (!::CopyFileW(sourceInsomniaExe.c_str(), tmpExe.c_str(), FALSE)) {
+  //     ::DebugLog(L"Could not copy file.");
+  //     return ::ExitWithWarning(nCmdShow, L"Cannot read or write to executable folder.");
+  //   }
+  //   ::DebugLog(L"File copied.");
+  // }
 
-  std::wstring exePath = QuotePathIfNeeded(tmpExe);
+  std::wstring exePath = QuotePathIfNeeded(sourceInsomniaExe);
   if (!::CreateProcessW(0, &exePath[0], 0, 0, TRUE, 0, 0, workDir.c_str(), &si, &pi)) {
     ::DebugLog((L"Could not create process with command: " + exePath).c_str());
     ::CloseHandle(outrd);
@@ -251,17 +251,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
   // finally, delete the insomnia-$VERSION.exe file after waiting up to 5s for
   // the handle to fully release
-  for (int i = 1; i < 5; i++) {
-    Sleep(1000);
-    ::DebugLog((std::wstring(L"Attempt ") + std::to_wstring(i) + L" to delete " + tmpExe).c_str());
-    if (::DeleteFileW(tmpExe.c_str())) {
-      ::DebugLog(L"File deleted.");
-      break;
-    }
-    DWORD lastErr = ::GetLastError();
-    ::DebugLog((L"Failed to delete file: " + tmpExe).c_str());
-    ::DebugLog((L"Return value: " + std::to_wstring(lastErr)).c_str());
-  }
+  // for (int i = 1; i < 5; i++) {
+  //   Sleep(1000);
+  //   ::DebugLog((std::wstring(L"Attempt ") + std::to_wstring(i) + L" to delete " + tmpExe).c_str());
+  //   if (::DeleteFileW(tmpExe.c_str())) {
+  //     ::DebugLog(L"File deleted.");
+  //     break;
+  //   }
+  //   DWORD lastErr = ::GetLastError();
+  //   ::DebugLog((L"Failed to delete file: " + tmpExe).c_str());
+  //   ::DebugLog((L"Return value: " + std::to_wstring(lastErr)).c_str());
+  // }
 
   return 0;
 }
