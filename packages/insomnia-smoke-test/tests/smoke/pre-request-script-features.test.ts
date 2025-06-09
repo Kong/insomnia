@@ -532,6 +532,7 @@ test.describe('pre-request features tests', () => {
     expect.soft(globalBaseBodyJson).toEqual({
       // if select global base environment, both globals and baseGlobals set method will point to global base environment
       __env_source: 'base',
+      __fromGlobals: 'selectedGlobal',
       __fromBaseGlobals: 'selectedBaseGlobal',
     });
 
@@ -551,22 +552,13 @@ test.describe('pre-request features tests', () => {
     await page.getByLabel('Manage Environments').click();
     await page.getByLabel('Manage global environment').click();
     await page.getByLabel('Environment name').getByText('Sub Script Env').first().click();
-    let globalSubEditor = page.getByTestId('CodeEditor').locator('.CodeMirror-line');
-    let globalSubRows = await globalSubEditor.allInnerTexts();
-    let globalSubBodyJson = JSON.parse(globalSubRows.join(' '));
+    const globalSubEditor = page.getByTestId('CodeEditor').locator('.CodeMirror-line');
+    const globalSubRows = await globalSubEditor.allInnerTexts();
+    const globalSubBodyJson = JSON.parse(globalSubRows.join(' '));
     expect.soft(globalSubBodyJson).toEqual({
       // if select global sub environment, globals will point to the selected sub environment
       __env_source: 'sub',
       __fromGlobals: 'selectedGlobal',
-    });
-    await page.getByLabel('Environment name').getByText('Base Script Env').click();
-    globalSubEditor = page.getByTestId('CodeEditor').locator('.CodeMirror-line');
-    globalSubRows = await globalSubEditor.allInnerTexts();
-    globalSubBodyJson = JSON.parse(globalSubRows.join(' '));
-    expect.soft(globalSubBodyJson).toEqual({
-      // if select global sub environment, baseGlobals will point to the base environment of the selected one
-      __env_source: 'base',
-      __fromBaseGlobals: 'selectedBaseGlobal',
     });
   });
 
