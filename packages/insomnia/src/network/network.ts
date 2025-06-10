@@ -508,20 +508,16 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         },
         response,
         vault,
-        globals: globals
-          ? {
-              id: globals._id,
-              name: globals.name,
-              data: globals.data || {},
-            }
-          : undefined,
-        baseGlobals: baseGlobals
-          ? {
-              id: baseGlobals._id,
-              name: baseGlobals.name,
-              data: baseGlobals.data || {},
-            }
-          : undefined,
+        globals: globals && {
+          id: globals._id,
+          name: globals.name,
+          data: globals.data || {},
+        },
+        baseGlobals: baseGlobals && {
+          id: baseGlobals._id,
+          name: baseGlobals.name,
+          data: baseGlobals.data || {},
+        },
         iterationData: userUploadEnvironment
           ? {
               name: userUploadEnvironment.name,

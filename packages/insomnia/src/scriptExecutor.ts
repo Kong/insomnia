@@ -95,20 +95,16 @@ export const runScript = async ({
     settings: updatedSettings,
     clientCertificates: updatedCertificates,
     cookieJar: updatedCookieJar,
-    globals: context.globals
-      ? {
-          id: context.environment.id,
-          name: context.environment.name,
-          data: mutatedContextObject.globals,
-        }
-      : undefined,
-    baseGlobals: context.baseGlobals
-      ? {
-          id: context.baseEnvironment.id,
-          name: context.baseEnvironment.name,
-          data: mutatedContextObject.baseGlobals,
-        }
-      : undefined,
+    globals: context.globals && {
+      id: context.environment.id,
+      name: context.environment.name,
+      data: mutatedContextObject.globals,
+    },
+    baseGlobals: context.baseGlobals && {
+      id: context.baseEnvironment.id,
+      name: context.baseEnvironment.name,
+      data: mutatedContextObject.baseGlobals,
+    },
     requestTestResults: mutatedContextObject.requestTestResults,
     execution: mutatedContextObject.execution,
     parentFolders: mutatedContextObject.parentFolders,
