@@ -5,7 +5,7 @@ const execAsync = util.promisify(exec);
 
 // adapted from https://www.electron.build/win.html#how-do-delegate-code-signing
 // It was possible code-sign installer after packaging, but some files are only available
-// through hooking into the signing step of electron-builder while the final nsis installer is being built
+// through hooking into the signing step of electron-builder while the final installer is being built
 // This makes it possible to sign the Update.exe and stub of Insomnia.exe that end up in the installation folder
 exports.default = async function (configuration) {
   if (configuration.options.target.length === 0) {
