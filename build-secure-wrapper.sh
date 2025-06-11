@@ -31,6 +31,7 @@ if [ ! $BUILD_CONTEXT ]; then
   npm run package:windows:unpacked -w insomnia
 fi
 
+cp $DEST_DIR/Insomnia.exe $DEST_DIR/insomnia.dll
 cp $DEST_DIR/Insomnia.exe $DEST_DIR/Insomnia-origin.exe
 cp $SRC_DIR/icons/icon.ico $CPP_DIR/insomnia.ico
 
@@ -58,7 +59,7 @@ if [ ! $BUILD_CONTEXT ]; then
   npm run package:windows:dist -w insomnia
 
   echo "Resetting to prevent accidental loops..."
-  mv $DEST_DIR/Insomnia-origin.exe $DEST_DIR/Insomnia.exe
+  mv $DEST_DIR/Insomnia.dll $DEST_DIR/Insomnia.exe
 fi
 
 echo "Done."

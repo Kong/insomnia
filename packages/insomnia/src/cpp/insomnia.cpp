@@ -195,33 +195,82 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   si.hStdOutput = outwr;
   si.hStdError = outwr;
 
-  std::wstring sourceInsomniaExe = std::wstring(workDir) + L"\\Insomnia-origin.exe";
+  std::wstring sourceInsomniaExe = std::wstring(workDir) + L"\\insomnia.dll";
+  std::wstring sourceOriginInsomniaExe = std::wstring(workDir) + L"\\Insomnia-origin.exe";
   ::DebugLog((L"Source insomnia executable: " + sourceInsomniaExe).c_str());
 
-  // std::wstring tmpExe = std::wstring(workDir) + L"\\insomnia-" + INSOMNIA_VERSION + L".exe";
+  std::wstring tmpExe = std::wstring(workDir) + L"\\insomnia-" + INSOMNIA_VERSION + L".exe";
+
+  // Read installer-info.json from current directory and parse "installer" key
+  std::wstring installJsonPath = workDir + L"\\installer-info.json";
+  ::DebugLog((L"Reading installer-info.json from: " + installJsonPath).c_str());
+
+  // Variable to mark if installer is nsis
+  bool isNsisInstaller = false;
+
+  HANDLE hFile = ::CreateFileW(installJsonPath.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  if (hFile == INVALID_HANDLE_VALUE) {
+    ::DebugLog(L"installer-info.json not found or cannot be opened.");
+  } else {
+    DWORD fileSize = ::GetFileSize(hFile, NULL);
+    if (fileSize > 0 && fileSize < 65536) { // reasonable size check
+      std::string jsonContent(fileSize, '\0');
+      DWORD bytesRead = 0;
+      if (::ReadFile(hFile, &jsonContent[0], fileSize, &bytesRead, NULL) && bytesRead == fileSize) {
+        size_t pos = jsonContent.find("\"installer\"");
+        if (pos != std::string::npos) {
+          size_t colon = jsonContent.find(':', pos);
+          if (colon != std::string::npos) {
+            size_t valueStart = jsonContent.find_first_not_of(" \t\r\n", colon + 1);
+            if (valueStart != std::string::npos && jsonContent[valueStart] == '"') {
+              size_t quote1 = valueStart;
+              size_t quote2 = jsonContent.find('"', quote1 + 1);
+              if (quote2 != std::string::npos && quote2 > quote1) {
+                std::string value = jsonContent.substr(quote1 + 1, quote2 - quote1 - 1);
+                if (value == "nsis") {
+                  ::DebugLog(L"installer is nsis in installer-info.json");
+                  isNsisInstaller = true;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    ::CloseHandle(hFile);
+  }
 
   // if the file already exists, continue as normal since another instance of Insomnia
   // is likely already running
-  // DWORD attrs = ::GetFileAttributesW(tmpExe.c_str());
-  // if (attrs != INVALID_FILE_ATTRIBUTES && !(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
-  //   ::DebugLog(L"File already exists, skipping copy.");
-  // } else {
-  //   // if it's a directory, then exit and prompt the user to uninstall
-  //   if (attrs != INVALID_FILE_ATTRIBUTES) {
-  //     ::DebugLog(L"File is a directory, exiting.");
-  //     return ::ExitWithWarning(nCmdShow, L"Insomnia installation is corrupted. Please reinstall.");
-  //   }
+  if (!isNsisInstaller) {
+    ::DebugLog(L"Installer is not nsis, checking for existing executable.");
+    DWORD attrs = ::GetFileAttributesW(tmpExe.c_str());
+    if (attrs != INVALID_FILE_ATTRIBUTES && !(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
+      ::DebugLog(L"File already exists, skipping copy.");
+    } else {
+      // if it's a directory, then exit and prompt the user to uninstall
+      if (attrs != INVALID_FILE_ATTRIBUTES) {
+        ::DebugLog(L"File is a directory, exiting.");
+        return ::ExitWithWarning(nCmdShow, L"Insomnia installation is corrupted. Please reinstall.");
+      }
 
-  //   ::DebugLog((L"Copying insomnia executable to: " + tmpExe).c_str());
-  //   // create the insomnia-$VERSION.exe file
-  //   if (!::CopyFileW(sourceInsomniaExe.c_str(), tmpExe.c_str(), FALSE)) {
-  //     ::DebugLog(L"Could not copy file.");
-  //     return ::ExitWithWarning(nCmdShow, L"Cannot read or write to executable folder.");
-  //   }
-  //   ::DebugLog(L"File copied.");
-  // }
+      ::DebugLog((L"Copying insomnia executable to: " + tmpExe).c_str());
+      // create the insomnia-$VERSION.exe file
+      if (!::CopyFileW(sourceInsomniaExe.c_str(), tmpExe.c_str(), FALSE)) {
+        ::DebugLog(L"Could not copy file.");
+        return ::ExitWithWarning(nCmdShow, L"Cannot read or write to executable folder.");
+      }
+      ::DebugLog(L"File copied.");
+    }
+  }
 
-  std::wstring exePath = QuotePathIfNeeded(sourceInsomniaExe);
+  std::wstring exePath;
+  if (!isNsisInstaller) {
+    exePath = QuotePathIfNeeded(tmpExe);
+  } else {
+    exePath = QuotePathIfNeeded(sourceOriginInsomniaExe);
+  }
+
   if (!::CreateProcessW(0, &exePath[0], 0, 0, TRUE, 0, 0, workDir.c_str(), &si, &pi)) {
     ::DebugLog((L"Could not create process with command: " + exePath).c_str());
     ::CloseHandle(outrd);
@@ -251,17 +300,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
   // finally, delete the insomnia-$VERSION.exe file after waiting up to 5s for
   // the handle to fully release
-  // for (int i = 1; i < 5; i++) {
-  //   Sleep(1000);
-  //   ::DebugLog((std::wstring(L"Attempt ") + std::to_wstring(i) + L" to delete " + tmpExe).c_str());
-  //   if (::DeleteFileW(tmpExe.c_str())) {
-  //     ::DebugLog(L"File deleted.");
-  //     break;
-  //   }
-  //   DWORD lastErr = ::GetLastError();
-  //   ::DebugLog((L"Failed to delete file: " + tmpExe).c_str());
-  //   ::DebugLog((L"Return value: " + std::to_wstring(lastErr)).c_str());
-  // }
+  if (!isNsisInstaller) {
+    DWORD attrs = ::GetFileAttributesW(tmpExe.c_str());
+    if (attrs != INVALID_FILE_ATTRIBUTES && !(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
+      for (int i = 1; i < 5; i++) {
+        Sleep(1000);
+        ::DebugLog((std::wstring(L"Attempt ") + std::to_wstring(i) + L" to delete " + tmpExe).c_str());
+        if (::DeleteFileW(tmpExe.c_str())) {
+          ::DebugLog(L"File deleted.");
+          break;
+        }
+        DWORD lastErr = ::GetLastError();
+        ::DebugLog((L"Failed to delete file: " + tmpExe).c_str());
+        ::DebugLog((L"Return value: " + std::to_wstring(lastErr)).c_str());
+      }
+    }
+  }
 
   return 0;
 }
