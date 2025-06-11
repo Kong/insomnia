@@ -49,6 +49,13 @@ export const General: FC = () => {
           {!isMac() && <BooleanSetting label="Hide menu bar" setting="autoHideMenuBar" />}
           <BooleanSetting label="Raw template syntax" setting="nunjucksPowerUserMode" />
         </div>
+        <div>
+          <BooleanSetting
+            label="Use variables in OpenAPI import"
+            setting="importOpenApiPathParamsAsVars"
+            help="If checked, converts OpenAPI path parameters (e.g., /foo/{bar}) to Insomnia path parameters (/foo/:bar) instead of variables (/foo/{{_.$1}})."
+          />
+        </div>
       </div>
 
       <div className="row-fill row-fill--top pad-top-sm">

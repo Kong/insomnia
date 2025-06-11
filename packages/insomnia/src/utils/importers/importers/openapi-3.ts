@@ -8,6 +8,9 @@ import YAML from 'yaml';
 import type { Authentication, Converter, ImportRequest } from '../entities';
 import { unthrowableParseJson } from '../utils';
 
+import * as models from '../../../models';
+import type { Settings } from '../../../models/settings';
+
 export const id = 'openapi3';
 export const name = 'OpenAPI 3.0';
 export const description = 'Importer for OpenAPI 3.0 specification (json/yaml)';
@@ -174,7 +177,7 @@ const parseEnvs = (baseEnv: ImportRequest, document?: OpenAPIV3.Document | null)
 /**
  * Create request definitions based on openapi document.
  */
-const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
+const parseEndpoints = (document?: OpenAPIV3.Document | null, settings?: Settings) => {
   if (!document) {
     return [];
   }
@@ -225,7 +228,7 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
     tags.forEach(tag => {
       const parentId = folderLookup[tag] || defaultParent;
       const resolvedSecurity = (endpointSchema as unknown as OpenAPIV3.Document).security || rootSecurity;
-      requests.push(importRequest(endpointSchema, parentId, resolvedSecurity, securitySchemes));
+      requests.push(importRequest(endpointSchema, parentId, resolvedSecurity, securitySchemes, settings));
     });
   });
 
@@ -237,30 +240,31 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
  */
 const importFolderItem =
   (parentId: string) =>
-  (item: OpenAPIV3.SchemaObject): ImportRequest => {
-    const hash = crypto
-      .createHash('sha1')
-      // @ts-expect-error -- this is not present on the official types, yet was here in the source code
-      .update(item.name)
-      .digest('hex')
-      .slice(0, 8);
-    return {
-      parentId,
-      _id: `fld___WORKSPACE_ID__${hash}`,
-      _type: 'request_group',
-      // @ts-expect-error -- this is not present on the official types, yet was here in the source code
-      name: item.name || 'Folder {requestGroupCount}',
-      description: item.description || '',
+    (item: OpenAPIV3.SchemaObject): ImportRequest => {
+      const hash = crypto
+        .createHash('sha1')
+        // @ts-expect-error -- this is not present on the official types, yet was here in the source code
+        .update(item.name)
+        .digest('hex')
+        .slice(0, 8);
+      return {
+        parentId,
+        _id: `fld___WORKSPACE_ID__${hash}`,
+        _type: 'request_group',
+        // @ts-expect-error -- this is not present on the official types, yet was here in the source code
+        name: item.name || 'Folder {requestGroupCount}',
+        description: item.description || '',
+      };
     };
-  };
 
 /**
  * Return path with parameters replaced by insomnia variables
  *
  * I.e. "/foo/:bar" => "/foo/{{ bar }}"
  */
-const pathWithParamsAsVariables = (path?: string) => path?.replace(VARIABLE_SEARCH_VALUE, ':$1') ?? '';
-
+const pathWithParamsAsVariables = (path?: string, importOpenApiPathParamsAsVars?: boolean): string => {
+  return path?.replace(VARIABLE_SEARCH_VALUE, importOpenApiPathParamsAsVars ? '{{ _.$1 }}' : ':$1') ?? '';
+}
 /**
  * Return Insomnia request
  */
@@ -269,6 +273,7 @@ const importRequest = (
   parentId: string,
   security?: OpenAPIV3.SecurityRequirementObject[],
   securitySchemes?: OpenAPIV3.SecuritySchemeObject,
+  settings?: Settings,
 ): ImportRequest => {
   const name = endpointSchema.summary || endpointSchema.path;
   const id = generateUniqueRequestId(endpointSchema as OpenAPIV3.OperationObject);
@@ -285,7 +290,7 @@ const importRequest = (
     parentId: parentId,
     name,
     method: endpointSchema.method?.toUpperCase(),
-    url: `{{ _.base_url }}${pathWithParamsAsVariables(endpointSchema.path)}`,
+    url: `{{ _.base_url }}${pathWithParamsAsVariables(endpointSchema.path, settings?.importOpenApiPathParamsAsVars)}`,
     body: body,
     description: endpointSchema.description || '',
     headers: [...paramHeaders, ...securityHeaders],
@@ -770,6 +775,8 @@ export const convert: Converter = async rawData => {
   // Reset
   requestCounts = {};
 
+  const settings = await models.settings.get();
+
   // Validate
   let apiDocument = parseDocument(rawData);
 
@@ -807,7 +814,7 @@ export const convert: Converter = async rawData => {
   };
 
   const openapiEnvs = parseEnvs(baseEnv, apiDocument);
-  const endpoints = parseEndpoints(apiDocument);
+  const endpoints = parseEndpoints(apiDocument, settings);
 
   return [workspace, baseEnv, ...openapiEnvs, ...endpoints];
 };
