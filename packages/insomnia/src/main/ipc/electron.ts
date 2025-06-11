@@ -12,6 +12,7 @@ import { type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '..
 import type { extractNunjucksTagFromCoords } from '../../templating/utils';
 import { localTemplateTags } from '../../ui/components/templating/local-template-tags';
 import { invariant } from '../../utils/invariant';
+import type { GitServiceAPIKeys } from '../git-service';
 
 export type HandleChannels =
   | 'authorizeUserInWindow'
@@ -42,40 +43,7 @@ export type HandleChannels =
   | 'secretStorage.deleteSecret'
   | 'secretStorage.encryptString'
   | 'secretStorage.decryptString'
-  | 'git.loadGitRepository'
-  | 'git.getGitBranches'
-  | 'git.gitFetchAction'
-  | 'git.gitLogLoader'
-  | 'git.gitChangesLoader'
-  | 'git.canPushLoader'
-  | 'git.cloneGitRepo'
-  | 'git.initGitRepoClone'
-  | 'git.updateGitRepo'
-  | 'git.resetGitRepo'
-  | 'git.commitToGitRepo'
-  | 'git.commitAndPushToGitRepo'
-  | 'git.createNewGitBranch'
-  | 'git.checkoutGitBranch'
-  | 'git.mergeGitBranch'
-  | 'git.deleteGitBranch'
-  | 'git.pushToGitRemote'
-  | 'git.pullFromGitRemote'
-  | 'git.continueMerge'
-  | 'git.discardChanges'
-  | 'git.gitStatus'
-  | 'git.stageChanges'
-  | 'git.unstageChanges'
-  | 'git.diffFileLoader'
-  | 'git.getRepositoryDirectoryTree'
-  | 'git.migrateLegacyInsomniaFolderToFile'
-  | 'git.initSignInToGitHub'
-  | 'git.completeSignInToGitHub'
-  | 'git.signOutOfGitHub'
-  | 'git.getGitHubRepositories'
-  | 'git.getGitHubRepository'
-  | 'git.initSignInToGitLab'
-  | 'git.completeSignInToGitLab'
-  | 'git.signOutOfGitLab';
+  | `git.${GitServiceAPIKeys}`;
 
 export const ipcMainHandle = (
   channel: HandleChannels,

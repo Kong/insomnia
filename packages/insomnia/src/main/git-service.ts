@@ -42,7 +42,6 @@ import { getOauth2FormatName } from '../sync/git/utils';
 import type { MergeConflict } from '../sync/types';
 import { invariant } from '../utils/invariant';
 import { SegmentEvent, trackSegmentEvent } from './analytics';
-import { ipcMainHandle } from './ipc/electron';
 
 type PushPull = 'push' | 'pull';
 type VCSAction =
@@ -342,14 +341,7 @@ export const gitChangesLoader = async ({
       changes,
     };
   } catch {
-    return {
-      branch: '',
-      changes: {
-        staged: [],
-        unstaged: [],
-      },
-      errors: ['Failed to get changes'],
-    };
+    return gitServiceAPIFallback.gitChangesLoader();
   }
 };
 
@@ -563,7 +555,7 @@ const recursivelyFindInsomniaFiles = async (
 };
 
 // Actions
-export const initGitRepoCloneAction = async ({
+export const initGitRepoClone = async ({
   uri,
   authorName,
   authorEmail,
@@ -669,7 +661,7 @@ export const initGitRepoCloneAction = async ({
   return { files };
 };
 
-export const cloneGitRepoAction = async ({
+export const cloneGitRepo = async ({
   organizationId,
   projectId,
   cloneIntoProjectId,
@@ -1054,7 +1046,7 @@ export const cloneGitRepoAction = async ({
   }
 };
 
-export const updateGitRepoAction = async ({
+export const updateGitRepo = async ({
   projectId,
   workspaceId,
   authorEmail,
@@ -1173,7 +1165,7 @@ export const updateGitRepoAction = async ({
   }
 };
 
-export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) => {
+export const resetGitRepo = async ({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) => {
   const repo = await getGitRepository({ projectId, workspaceId });
 
   invariant(repo, 'Git Repository not found');
@@ -1204,7 +1196,7 @@ export interface CommitToGitRepoResult {
   errors?: string[];
 }
 
-export const commitToGitRepoAction = async ({
+export const commitToGitRepo = async ({
   projectId,
   workspaceId,
   message,
@@ -1254,14 +1246,14 @@ export const migrateLegacyInsomniaFolderToFile = async ({ projectId }: { project
   if (result.changes) {
     await GitVCS.setAuthor();
     await GitVCS.stageChanges(result.changes);
-    await commitToGitRepoAction({
+    await commitToGitRepo({
       projectId,
       message: 'Migrated legacy .insomnia folder to file',
     });
   }
 };
 
-export const commitAndPushToGitRepoAction = async ({
+export const commitAndPushToGitRepo = async ({
   projectId,
   workspaceId,
   message,
@@ -1365,7 +1357,7 @@ export interface CreateNewGitBranchResult {
   errors?: string[];
 }
 
-export const createNewGitBranchAction = async ({
+export const createNewGitBranch = async ({
   projectId,
   workspaceId,
   branch,
@@ -1411,7 +1403,7 @@ export interface CheckoutGitBranchResult {
   errors?: string[];
 }
 
-export const checkoutGitBranchAction = async ({
+export const checkoutGitBranch = async ({
   projectId,
   workspaceId,
   branch,
@@ -1514,7 +1506,7 @@ export interface DeleteGitBranchResult {
   errors?: string[];
 }
 
-export const deleteGitBranchAction = async ({
+export const deleteGitBranch = async ({
   projectId,
   workspaceId,
   branch,
@@ -1543,7 +1535,7 @@ export interface PushToGitRemoteResult {
   gitRepository?: GitRepository;
 }
 
-export const pushToGitRemoteAction = async ({
+export const pushToGitRemote = async ({
   projectId,
   workspaceId,
   // @TODO - Force is never used
@@ -1714,7 +1706,7 @@ async function getGitChanges(vcs: typeof GitVCS) {
   };
 }
 
-export const discardChangesAction = async ({
+export const discardChanges = async ({
   projectId,
   workspaceId,
   paths,
@@ -1747,7 +1739,7 @@ export interface GitStatusResult {
   };
 }
 
-export const gitStatusAction = async ({
+export const gitStatus = async ({
   projectId,
   workspaceId,
 }: {
@@ -1770,15 +1762,11 @@ export const gitStatusAction = async ({
     };
   } catch (e) {
     console.error(e);
-    return {
-      status: {
-        localChanges: 0,
-      },
-    };
+    return gitServiceAPIFallback.gitStatus();
   }
 };
 
-export const stageChangesAction = async ({
+export const stageChanges = async ({
   projectId,
   workspaceId,
   paths,
@@ -1805,7 +1793,7 @@ export const stageChangesAction = async ({
   }
 };
 
-export const unstageChangesAction = async ({
+export const unstageChanges = async ({
   projectId,
   workspaceId,
   paths,
@@ -1901,9 +1889,7 @@ export const diffFileLoader = async ({
     };
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Error while unstaging changes';
-    return {
-      errors: [errorMessage],
-    };
+    return gitServiceAPIFallback.diffFileLoader(errorMessage);
   }
 };
 
@@ -2349,125 +2335,78 @@ async function signOutOfGitLab() {
   }
 }
 
-export interface GitServiceAPI {
-  loadGitRepository: typeof loadGitRepository;
-  getGitBranches: typeof getGitBranches;
-  gitFetchAction: typeof gitFetchAction;
-  gitLogLoader: typeof gitLogLoader;
-  gitChangesLoader: typeof gitChangesLoader;
-  canPushLoader: typeof canPushLoader;
-  initGitRepoClone: typeof initGitRepoCloneAction;
-  cloneGitRepo: typeof cloneGitRepoAction;
-  updateGitRepo: typeof updateGitRepoAction;
-  resetGitRepo: typeof resetGitRepoAction;
-  commitToGitRepo: typeof commitToGitRepoAction;
-  commitAndPushToGitRepo: typeof commitAndPushToGitRepoAction;
-  createNewGitBranch: typeof createNewGitBranchAction;
-  checkoutGitBranch: typeof checkoutGitBranchAction;
-  mergeGitBranch: typeof mergeGitBranch;
-  deleteGitBranch: typeof deleteGitBranchAction;
-  pushToGitRemote: typeof pushToGitRemoteAction;
-  pullFromGitRemote: typeof pullFromGitRemote;
-  continueMerge: typeof continueMerge;
-  discardChanges: typeof discardChangesAction;
-  gitStatus: typeof gitStatusAction;
-  stageChanges: typeof stageChangesAction;
-  unstageChanges: typeof unstageChangesAction;
-  diffFileLoader: typeof diffFileLoader;
-  getRepositoryDirectoryTree: typeof getRepositoryDirectoryTree;
-  migrateLegacyInsomniaFolderToFile: typeof migrateLegacyInsomniaFolderToFile;
+export const gitServiceAPI = {
+  loadGitRepository,
+  getGitBranches,
+  gitFetchAction,
+  gitLogLoader,
+  gitChangesLoader,
+  canPushLoader,
+  initGitRepoClone,
+  cloneGitRepo,
+  updateGitRepo,
+  resetGitRepo,
+  commitToGitRepo,
+  commitAndPushToGitRepo,
+  createNewGitBranch,
+  checkoutGitBranch,
+  mergeGitBranch,
+  deleteGitBranch,
+  pushToGitRemote,
+  pullFromGitRemote,
+  continueMerge,
+  discardChanges,
+  gitStatus,
+  stageChanges,
+  unstageChanges,
+  diffFileLoader,
+  getRepositoryDirectoryTree,
+  migrateLegacyInsomniaFolderToFile,
+  initSignInToGitHub,
+  completeSignInToGitHub,
+  signOutOfGitHub,
+  getGitHubRepositories,
+  getGitHubRepository,
+  initSignInToGitLab,
+  completeSignInToGitLab,
+  signOutOfGitLab,
+};
 
-  initSignInToGitHub: typeof initSignInToGitHub;
-  completeSignInToGitHub: typeof completeSignInToGitHub;
-  signOutOfGitHub: typeof signOutOfGitHub;
-  getGitHubRepositories: typeof getGitHubRepositories;
-  getGitHubRepository: typeof getGitHubRepository;
+export type GitServiceAPI = typeof gitServiceAPI;
+export type GitServiceAPIKeys = keyof GitServiceAPI;
 
-  initSignInToGitLab: typeof initSignInToGitLab;
-  completeSignInToGitLab: typeof completeSignInToGitLab;
-  signOutOfGitLab: typeof signOutOfGitLab;
-}
+/**
+ * List of commands that should be run in a worker process.
+ *
+ * These commands are expected to be long-running or resource-intensive, so they should not block the main process.
+ *
+ * ! Note: Should only include read-only commands to avoid the risk of data corruption.
+ */
+export const workerCommandList = ['gitStatus', 'diffFileLoader', 'gitChangesLoader'] as const;
+export type WorkerCommandList = (typeof workerCommandList)[number];
 
-export const registerGitServiceAPI = () => {
-  ipcMainHandle('git.loadGitRepository', (_, options: Parameters<typeof loadGitRepository>[0]) =>
-    loadGitRepository(options),
-  );
-  ipcMainHandle('git.getGitBranches', (_, options: Parameters<typeof getGitBranches>[0]) => getGitBranches(options));
-  ipcMainHandle('git.gitFetchAction', (_, options: Parameters<typeof gitFetchAction>[0]) => gitFetchAction(options));
-  ipcMainHandle('git.gitLogLoader', (_, options: Parameters<typeof gitLogLoader>[0]) => gitLogLoader(options));
-  ipcMainHandle('git.gitChangesLoader', (_, options: Parameters<typeof gitChangesLoader>[0]) =>
-    gitChangesLoader(options),
-  );
-  ipcMainHandle('git.canPushLoader', (_, options: Parameters<typeof canPushLoader>[0]) => canPushLoader(options));
-  ipcMainHandle('git.cloneGitRepo', (_, options: Parameters<typeof cloneGitRepoAction>[0]) =>
-    cloneGitRepoAction(options),
-  );
-  ipcMainHandle('git.initGitRepoClone', (_, options: Parameters<typeof initGitRepoCloneAction>[0]) =>
-    initGitRepoCloneAction(options),
-  );
-  ipcMainHandle('git.updateGitRepo', (_, options: Parameters<typeof updateGitRepoAction>[0]) =>
-    updateGitRepoAction(options),
-  );
-  ipcMainHandle('git.resetGitRepo', (_, options: Parameters<typeof resetGitRepoAction>[0]) =>
-    resetGitRepoAction(options),
-  );
-  ipcMainHandle('git.commitToGitRepo', (_, options: Parameters<typeof commitToGitRepoAction>[0]) =>
-    commitToGitRepoAction(options),
-  );
-  ipcMainHandle('git.commitAndPushToGitRepo', (_, options: Parameters<typeof commitAndPushToGitRepoAction>[0]) =>
-    commitAndPushToGitRepoAction(options),
-  );
-  ipcMainHandle('git.createNewGitBranch', (_, options: Parameters<typeof createNewGitBranchAction>[0]) =>
-    createNewGitBranchAction(options),
-  );
-  ipcMainHandle('git.checkoutGitBranch', (_, options: Parameters<typeof checkoutGitBranchAction>[0]) =>
-    checkoutGitBranchAction(options),
-  );
-  ipcMainHandle('git.mergeGitBranch', (_, options: Parameters<typeof mergeGitBranch>[0]) => mergeGitBranch(options));
-  ipcMainHandle('git.deleteGitBranch', (_, options: Parameters<typeof deleteGitBranchAction>[0]) =>
-    deleteGitBranchAction(options),
-  );
-  ipcMainHandle('git.pushToGitRemote', (_, options: Parameters<typeof pushToGitRemoteAction>[0]) =>
-    pushToGitRemoteAction(options),
-  );
-  ipcMainHandle('git.pullFromGitRemote', (_, options: Parameters<typeof pullFromGitRemote>[0]) =>
-    pullFromGitRemote(options),
-  );
-  ipcMainHandle('git.continueMerge', (_, options: Parameters<typeof continueMerge>[0]) => continueMerge(options));
-  ipcMainHandle('git.discardChanges', (_, options: Parameters<typeof discardChangesAction>[0]) =>
-    discardChangesAction(options),
-  );
-  ipcMainHandle('git.gitStatus', (_, options: Parameters<typeof gitStatusAction>[0]) => gitStatusAction(options));
-  ipcMainHandle('git.stageChanges', (_, options: Parameters<typeof stageChangesAction>[0]) =>
-    stageChangesAction(options),
-  );
-  ipcMainHandle('git.unstageChanges', (_, options: Parameters<typeof unstageChangesAction>[0]) =>
-    unstageChangesAction(options),
-  );
-  ipcMainHandle('git.diffFileLoader', (_, options: Parameters<typeof diffFileLoader>[0]) => diffFileLoader(options));
-  ipcMainHandle('git.getRepositoryDirectoryTree', (_, options: Parameters<typeof getRepositoryDirectoryTree>[0]) =>
-    getRepositoryDirectoryTree(options),
-  );
-  ipcMainHandle(
-    'git.migrateLegacyInsomniaFolderToFile',
-    (_, options: Parameters<typeof migrateLegacyInsomniaFolderToFile>[0]) => migrateLegacyInsomniaFolderToFile(options),
-  );
-
-  ipcMainHandle('git.initSignInToGitHub', () => initSignInToGitHub());
-  ipcMainHandle('git.completeSignInToGitHub', (_, options: Parameters<typeof completeSignInToGitHub>[0]) =>
-    completeSignInToGitHub(options),
-  );
-  ipcMainHandle('git.signOutOfGitHub', () => signOutOfGitHub());
-  ipcMainHandle('git.getGitHubRepositories', (_, options: Parameters<typeof getGitHubRepositories>[0]) =>
-    getGitHubRepositories(options),
-  );
-  ipcMainHandle('git.getGitHubRepository', (_, options: Parameters<typeof getGitHubRepository>[0]) =>
-    getGitHubRepository(options),
-  );
-
-  ipcMainHandle('git.initSignInToGitLab', () => initSignInToGitLab());
-  ipcMainHandle('git.completeSignInToGitLab', (_, options: Parameters<typeof completeSignInToGitLab>[0]) =>
-    completeSignInToGitLab(options),
-  );
-  ipcMainHandle('git.signOutOfGitLab', () => signOutOfGitLab());
+// This is intended to be used as a fallback for the gitServiceAPI in case of errors or unavailability.
+export const gitServiceAPIFallback = {
+  gitStatus: () => {
+    return {
+      status: {
+        localChanges: 0,
+      },
+    };
+  },
+  diffFileLoader: (errorMessage = 'Failed to load diff') => {
+    return {
+      errors: [errorMessage],
+    };
+  },
+  gitChangesLoader: () => {
+    return {
+      branch: '',
+      changes: {
+        staged: [],
+        unstaged: [],
+      },
+      errors: ['Failed to get changes'],
+    };
+  },
 };

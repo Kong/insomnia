@@ -336,7 +336,7 @@ export const database = {
     }
 
     delete db._empty;
-    electron.ipcMain.on('db.fn', async (e, fnName, replyChannel, ...args) => {
+    electron.ipcMain?.on('db.fn', async (e, fnName, replyChannel, ...args) => {
       try {
         // @ts-expect-error -- mapping unsoundness
         const result = await database[fnName](...args);

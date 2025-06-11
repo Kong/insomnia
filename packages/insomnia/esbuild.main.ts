@@ -71,7 +71,24 @@ export default async function build(options: Options) {
     ],
   });
 
-  return Promise.all([main, preload, hiddenBrowserWindowPreload]);
+  const gitWorker = esbuild.build({
+    entryPoints: ['./src/git-worker.ts'],
+    outfile: path.join(outdir, 'git-worker.js'),
+    target: 'esnext',
+    bundle: true,
+    platform: 'node',
+    sourcemap: true,
+    format: 'cjs',
+    external: [
+      'electron',
+      '@getinsomnia/node-libcurl',
+      'fsevents',
+      ...Object.keys(pkg.dependencies),
+      ...Object.keys(builtinModules),
+    ],
+  });
+
+  return Promise.all([main, preload, hiddenBrowserWindowPreload, gitWorker]);
 }
 
 // Build if ran as a cli script
