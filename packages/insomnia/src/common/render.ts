@@ -26,6 +26,7 @@ import type {
 } from '../templating/types';
 import * as templatingUtils from '../templating/utils';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
+import { localTemplateTags } from '../ui/components/templating/local-template-tags';
 import { setDefaultProtocol } from '../utils/url/protocol';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
@@ -223,6 +224,13 @@ export async function buildRenderContext({
 
   return finalRenderContext;
 }
+export const getUnknownTags = (input: string) => {
+  const knownTags: string[] = localTemplateTags.map(plugin => plugin.templateTag.name);
+  const unknownTags = (input.match(/{%[\s\S]*?%}/g) || [])
+    .map(tag => (tag.match(/{%\s*(\w+)/) || [])[1])
+    .filter(tag => tag && !knownTags.includes(tag));
+  return unknownTags;
+};
 const renderInThisProcess = async (input: {
   input: string;
   context: BaseRenderContext;
@@ -295,7 +303,11 @@ export async function render<T>(
         // which case it's okay to render locally.
 
         const settings = await models.settings.get();
-        const pluginsAreRestrictedToRunInWorker = settings?.pluginsAllowElevatedAccess === false;
+
+        const hasUnknownTags = getUnknownTags(input).length > 0;
+
+        const pluginsAreRestrictedToRunInWorker = settings?.pluginsAllowElevatedAccess === false || hasUnknownTags;
+
         const currentProcessIsRendererAndPluginsAreRestricted =
           process.type === 'renderer' && pluginsAreRestrictedToRunInWorker;
         const renderFork = currentProcessIsRendererAndPluginsAreRestricted

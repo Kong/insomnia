@@ -6,6 +6,29 @@ import { environmentModelSchema, requestGroupModelSchema } from '../../models/__
 import type { Environment } from '../../models/environment';
 import type { Workspace } from '../../models/workspace';
 import * as renderUtils from '../render';
+import { getUnknownTags } from '../render';
+
+describe('getUnknownTags()', () => {
+  it('returns empty array for no tags', () => {
+    expect(getUnknownTags('Hello World')).toEqual([]);
+  });
+
+  it('returns empty array for known tags', () => {
+    expect(getUnknownTags('Hello {% uuid %}')).toEqual([]);
+  });
+
+  it('returns unknown tags', () => {
+    expect(getUnknownTags('Hello {% unknownTag %}')).toEqual(['unknownTag']);
+  });
+
+  it('returns multiple unknown tags', () => {
+    expect(getUnknownTags('Hello {% unknownTag1 %} and {% unknownTag2 %}')).toEqual(['unknownTag1', 'unknownTag2']);
+  });
+
+  it('ignores known tags with parameters', () => {
+    expect(getUnknownTags("Hello {% hash 'md5', 'hex', value %}")).toEqual([]);
+  });
+});
 
 const envBuilder = createBuilder(environmentModelSchema);
 const reqGroupBuilder = createBuilder(requestGroupModelSchema);
