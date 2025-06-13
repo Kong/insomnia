@@ -1,12 +1,10 @@
-import * as Sentry from '@sentry/electron/main';
+import fs from 'node:fs';
+
 import chardet from 'chardet';
 import type { MarkerRange } from 'codemirror';
 import { app, BrowserWindow, type IpcRendererEvent, type MenuItemConstructorOptions, shell } from 'electron';
-import fs from 'fs';
 import iconv from 'iconv-lite';
 
-import type { LandingPage } from '../../common/sentry';
-import { APP_START_TIME, SentryMetrics } from '../../common/sentry';
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
 import * as models from '../../models';
 import type { SegmentEvent } from '../analytics';
@@ -26,7 +24,7 @@ import {
   updateLatestStepName,
 } from '../network/request-timing';
 import type { WebSocketBridgeAPI } from '../network/websocket';
-import { ipcMainHandle, ipcMainOn, ipcMainOnce, type RendererOnChannels } from './electron';
+import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import extractPostmanDataDumpHandler from './extractPostmanDataDump';
 import type { gRPCBridgeAPI } from './grpc';
 import type { secretStorageBridgeAPI } from './secret-storage';
@@ -72,7 +70,6 @@ export interface RendererToMainBridgeAPI {
   startExecution: (options: { requestId: string }) => void;
   completeExecutionStep: (options: { requestId: string }) => void;
   updateLatestStepName: (options: { requestId: string; stepName: string }) => void;
-  landingPageRendered: (landingPage: LandingPage, tags?: Record<string, string>) => void;
   extractJsonFileFromPostmanDataDumpArchive: (archivePath: string) => Promise<any>;
 }
 export function registerMainHandlers() {
@@ -161,8 +158,8 @@ export function registerMainHandlers() {
     trackPageView(options.name);
   });
 
-  ipcMainHandle('installPlugin', (_, lookupName: string) => {
-    return installPlugin(lookupName);
+  ipcMainHandle('installPlugin', (_, lookupName: string, allowScopedPackageNames = false) => {
+    return installPlugin(lookupName, allowScopedPackageNames);
   });
 
   ipcMainOn('restart', () => {
@@ -176,20 +173,6 @@ export function registerMainHandlers() {
       shell.openExternal(href);
     }
   });
-
-  ipcMainOnce(
-    'landingPageRendered',
-    (_, { landingPage, tags = {} }: { landingPage: LandingPage; tags?: Record<string, string> }) => {
-      const duration = performance.now() - APP_START_TIME;
-      Sentry.metrics.distribution(SentryMetrics.APP_START_DURATION, duration, {
-        tags: {
-          landingPage,
-          ...tags,
-        },
-        unit: 'millisecond',
-      });
-    },
-  );
 
   ipcMainHandle('extractJsonFileFromPostmanDataDumpArchive', extractPostmanDataDumpHandler);
 }

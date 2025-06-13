@@ -1,5 +1,5 @@
 import React, { type FC, useCallback } from 'react';
-import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import type { RequestHeader } from '../../../models/request';

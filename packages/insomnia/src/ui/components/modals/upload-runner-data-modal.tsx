@@ -80,7 +80,7 @@ export const UploadDataModal = ({ onUploadFile, onClose, userUploadData }: Uploa
         // at least 2 rows required for csv
         if (csvRows.length > 1) {
           const csvHeaders = csvRows[0];
-          const csvContentRows = csvRows.slice(1, csvRows.length);
+          const csvContentRows = csvRows.slice(1);
           const uploadData = csvContentRows.map(contentRow =>
             csvHeaders.reduce((acc: UploadDataType, cur, idx) => {
               acc[cur] = contentRow[idx] ?? '';

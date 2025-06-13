@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia-inso",
-  "version": "11.1.0-beta.1",
+  "version": "11.2.0",
   "homepage": "https://insomnia.rest",
   "description": "A CLI for Insomnia - The Collaborative API Design Tool",
   "author": "Kong <office@konghq.com>",
@@ -21,7 +21,7 @@
   },
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
-    "test:unit": "vitest run --exclude '**/cli.test.ts'",
+    "test:unit": "cross-env NO_COLOR=1 vitest run --exclude '**/cli.test.ts'",
     "test:bundle": "vitest cli.test.ts -t \"inso dev bundle\"",
     "test:binary": "vitest cli.test.ts -t \"inso packaged binary\"",
     "type-check": "tsc --noEmit --project tsconfig.json",
@@ -41,15 +41,16 @@
   },
   "dependencies": {
     "@seald-io/nedb": "^4.1.1",
-    "@stoplight/spectral-core": "^1.19.5",
+    "@stoplight/spectral-core": "^1.20.0",
     "@stoplight/spectral-formats": "^1.8.2",
-    "@stoplight/spectral-ruleset-bundler": "^1.6.2",
-    "@stoplight/spectral-rulesets": "^1.21.4",
+    "@stoplight/spectral-ruleset-bundler": "1.6.3",
+    "@stoplight/spectral-rulesets": "^1.22.0",
     "@stoplight/types": "^14.1.1",
     "commander": "^12.1.0",
     "consola": "^2.15.3",
     "cosmiconfig": "^9.0.0",
     "enquirer": "^2.4.1",
+    "picocolors": "^1.1.1",
     "string-argv": "^0.3.2",
     "yaml": "^2.7.1"
   }

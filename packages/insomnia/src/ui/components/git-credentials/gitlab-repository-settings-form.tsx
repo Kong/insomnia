@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
-import { useFetcher } from 'react-router-dom';
+import { useFetcher } from 'react-router';
 
 import type { GitCredentials } from '../../../models/git-credentials';
 import type { GitRepository } from '../../../models/git-repository';

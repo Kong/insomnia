@@ -50,7 +50,7 @@ function parseErrors(errors: LintError[], output: ValidationError[]) {
       let end = start + 1;
 
       if (error.evidence) {
-        const index = error.evidence.substring(start).search(/.\b/);
+        const index = error.evidence.slice(Math.max(0, start)).search(/.\b/);
 
         if (index > -1) {
           end += index;

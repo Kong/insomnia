@@ -141,11 +141,11 @@ export const TagEditor: FC<Props> = props => {
     const defaultArgs = templateUtils.tokenizeTag(
       templateUtils.getDefaultFill(activeTagDefinition.name, activeTagDefinition.args),
     ).args;
-    for (let i = 0; i < defaultArgs.length; i++) {
+    for (const [i, defaultArg] of defaultArgs.entries()) {
       if (activeTagData.args[i]) {
         continue;
       }
-      activeTagData.args[i] = defaultArgs[i];
+      activeTagData.args[i] = defaultArg;
     }
     const tagData = clone(activeTagData);
     const argData: NunjucksParsedTagArg = tagData.args[argIndex];

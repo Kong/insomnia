@@ -1,4 +1,4 @@
-import { format as urlFormat, parse as urlParse } from 'url';
+import { format as urlFormat, parse as urlParse } from 'node:url';
 
 import { setDefaultProtocol } from './protocol';
 
@@ -34,7 +34,7 @@ type ProcessDeconstructFuncReturnType<T> = T extends { strictNullHandling: true 
   : ISearchParams[];
 export const getJoiner = (url: string) => {
   url = url || '';
-  return url.indexOf('?') === -1 ? '?' : '&';
+  return !url.includes('?') ? '?' : '&';
 };
 
 /**

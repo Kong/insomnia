@@ -1,9 +1,12 @@
+import fs from 'node:fs';
+import { type IncomingMessage } from 'node:http';
+import path from 'node:path';
+import tls, { type KeyObject, type PxfObject } from 'node:tls';
+
 import electron, { BrowserWindow } from 'electron';
-import fs from 'fs';
 import { MessageType, parseMessage } from 'graphql-ws';
-import type { IncomingMessage } from 'http';
-import path from 'path';
-import tls, { type KeyObject, type PxfObject } from 'tls';
+import { HttpProxyAgent } from 'http-proxy-agent';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 import { v4 as uuidV4 } from 'uuid';
 import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSocket } from 'ws';
 
@@ -15,7 +18,7 @@ import * as models from '../../models';
 import type { CookieJar } from '../../models/cookie-jar';
 import type { Request } from '../../models/request';
 import { type RequestAuthentication, type RequestHeader } from '../../models/request';
-import type { BaseWebSocketRequest } from '../../models/websocket-request';
+import { type BaseWebSocketRequest, isWebSocketRequest } from '../../models/websocket-request';
 import type { WebSocketResponse } from '../../models/websocket-response';
 import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
@@ -25,6 +28,7 @@ import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import type { RenderedRequest } from '../../templating/types';
 import { parseGraphQLReqeustBody } from '../../utils/graph-ql';
 import { invariant } from '../../utils/invariant';
+import { setDefaultProtocol } from '../../utils/url/protocol';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 
@@ -134,7 +138,7 @@ const openWebSocketConnection = async (
   const responseEnvironmentId = environment ? environment._id : null;
 
   const caCert = await models.caCertificate.findByParentId(options.workspaceId);
-  const caCertficatePath = caCert?.path;
+  const caCertficatePath = caCert && !caCert.disabled ? caCert.path : null;
   // attempt to read CA Certificate PEM from disk, fallback to root certificates
   const caCertificate =
     (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
@@ -239,6 +243,7 @@ const openWebSocketConnection = async (
         global: settings.followRedirects,
       }[request.settingFollowRedirects] ?? true;
     const protocols = lowerCasedEnabledHeaders['sec-websocket-protocol']?.split(',').map(p => p.trim());
+    const shouldUseProxy = settings.proxyEnabled && isWebSocketRequest(request) && request.settingUseProxy;
     const ws = new WebSocket(url, protocols, {
       headers: lowerCasedEnabledHeaders,
       ca: caCertificate,
@@ -248,6 +253,10 @@ const openWebSocketConnection = async (
       rejectUnauthorized: settings.validateSSL,
       followRedirects,
       maxRedirects: settings.maxRedirects > 0 ? settings.maxRedirects : undefined,
+      // apply proxy settings
+      ...(shouldUseProxy && {
+        agent: getProxyAgent(url, settings.httpProxy, settings.httpsProxy),
+      }),
     });
     WebSocketConnections.set(options.requestId, ws);
 
@@ -570,6 +579,13 @@ const findMany = async (options: { responseId: string }): Promise<WebSocketEvent
       // Reverse the list of messages so that we get the latest message first
       .reverse() || []
   );
+};
+
+const getProxyAgent = (url: string, httpProxy: string, httpsProxy: string) => {
+  const useHttpsProxy = url.startsWith('wss:') || url.startsWith('https:');
+  return useHttpsProxy
+    ? new HttpsProxyAgent(setDefaultProtocol(httpsProxy))
+    : new HttpProxyAgent(setDefaultProtocol(httpProxy));
 };
 
 export interface WebSocketBridgeAPI {

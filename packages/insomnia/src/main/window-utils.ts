@@ -1,4 +1,8 @@
-import * as Sentry from '@sentry/electron/main';
+import fs from 'node:fs';
+import * as os from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+
 import {
   app,
   BrowserWindow,
@@ -12,10 +16,6 @@ import {
   screen,
   shell,
 } from 'electron';
-import fs from 'fs';
-import * as os from 'os';
-import path from 'path';
-import { pathToFileURL } from 'url';
 
 import {
   getAppBuildDate,
@@ -28,7 +28,6 @@ import {
 } from '../common/constants';
 import { docsBase } from '../common/documentation';
 import * as log from '../common/log';
-import { APP_START_TIME, SentryMetrics } from '../common/sentry';
 import { invariant } from '../utils/invariant';
 import ElectronStorage from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
@@ -58,6 +57,7 @@ const stopAndWaitForHiddenBrowserWindow = async (runningHiddenBrowserWindow: Bro
     runningHiddenBrowserWindow.on('closed', () => {
       console.log('[main] restarting hidden browser window:', runningHiddenBrowserWindow.id);
       browserWindows.delete('HiddenBrowserWindow');
+
       resolve();
     });
     stopHiddenBrowserWindow();
@@ -119,6 +119,9 @@ export async function createHiddenBrowserWindow() {
       if (browserWindows.get('HiddenBrowserWindow')) {
         console.log('[main] closing hidden browser window');
         browserWindows.delete('HiddenBrowserWindow');
+        // @TODO: This should be set when the window closed is event is emmited so it's guaranteed to be realiable
+        // There might be other events we need to listen to also
+        hiddenWindowIsBusy = false;
       }
     });
 
@@ -164,11 +167,10 @@ export async function createHiddenBrowserWindow() {
 }
 
 export function stopHiddenBrowserWindow() {
-  browserWindows.get('HiddenBrowserWindow')?.close();
-  hiddenWindowIsBusy = false;
+  browserWindows.get('HiddenBrowserWindow')?.destroy();
 }
 
-export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): ElectronBrowserWindow {
+export function createWindow(): ElectronBrowserWindow {
   const { bounds, fullscreen, maximize } = getBounds();
   const { x, y, width, height } = bounds;
 
@@ -256,12 +258,7 @@ export function createWindow({ firstLaunch }: { firstLaunch?: boolean } = {}): E
   const appUrl = process.env.APP_RENDER_URL || pathToFileURL(appPath).href;
 
   console.log(`[main] Loading ${appUrl}`);
-  if (firstLaunch) {
-    const duration = performance.now() - APP_START_TIME;
-    Sentry.metrics.distribution(SentryMetrics.MAIN_PROCESS_START_DURATION, duration, {
-      unit: 'millisecond',
-    });
-  }
+
   mainBrowserWindow.loadURL(appUrl);
   // Emitted when the window is closed.
   mainBrowserWindow.on('closed', () => {
@@ -808,8 +805,8 @@ export function initElectronStorage() {
   return electronStorage;
 }
 
-export function createWindowsAndReturnMain({ firstLaunch }: { firstLaunch?: boolean } = {}) {
-  const mainWindow = browserWindows.get('Insomnia') ?? createWindow({ firstLaunch });
+export function createWindowsAndReturnMain() {
+  const mainWindow = browserWindows.get('Insomnia') ?? createWindow();
   if (!browserWindows.get('HiddenBrowserWindow')) {
     createHiddenBrowserWindow();
   }

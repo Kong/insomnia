@@ -1,9 +1,10 @@
 // This file could be imported by both main and renderer processes, so it should be written in a way that works in both contexts.
 
 /* eslint-disable prefer-rest-params -- don't want to change ...arguments usage for these sensitive functions without more testing */
+import fsPath from 'node:path';
+
 import NeDB from '@seald-io/nedb';
 import electron from 'electron';
-import fsPath from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 import { mustGetModel } from '../models';
@@ -857,7 +858,7 @@ async function _fixMultipleCookieJars(workspace: Workspace) {
   console.log(`[fix] Merged ${cookieJars.length} cookie jars under ${workspace.name}`);
 }
 
-// Append .git to old git URIs to mimic previous isomorphic-git behaviour
+// Append .git to old git URIs to mimic previous isomorphic-git behavior
 async function _fixOldGitURIs(doc: GitRepository) {
   if (!doc.uriNeedsMigration) {
     return;

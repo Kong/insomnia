@@ -1,6 +1,5 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import * as Sentry from '@sentry/electron/renderer';
-import React, { type FC, Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type FC, Fragment, useEffect, useMemo, useState } from 'react';
 import {
   Button,
   GridList,
@@ -23,7 +22,6 @@ import {
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import {
   type ActionFunction,
-  defer,
   type LoaderFunction,
   redirect,
   useFetcher,
@@ -32,7 +30,7 @@ import {
   useNavigate,
   useParams,
   useRouteLoaderData,
-} from 'react-router-dom';
+} from 'react-router';
 import { useLocalStorage } from 'react-use';
 
 import { logout } from '../../account/session';
@@ -46,7 +44,6 @@ import {
 } from '../../common/constants';
 import { database } from '../../common/database';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
-import { LandingPage, SentryMetrics } from '../../common/sentry';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { userSession } from '../../models';
@@ -615,7 +612,7 @@ export const loader: LoaderFunction = async ({ params }) => {
     ? await models.gitRepository.getById(project.gitRepositoryId || '')
     : null;
 
-  return defer({
+  return {
     localFiles,
     learningFeaturePromise,
     remoteFilesPromise,
@@ -629,7 +626,7 @@ export const loader: LoaderFunction = async ({ params }) => {
     collectionsCount: localFiles.filter(file => file.scope === 'collection').length,
     mockServersCount: localFiles.filter(file => file.scope === 'mock-server').length,
     projectsSyncStatusPromise,
-  });
+  };
 };
 
 const ProjectRoute: FC = () => {
@@ -765,7 +762,7 @@ const ProjectRoute: FC = () => {
         }
 
         const activity = scopeToActivity(file.scope);
-        navigate(`/organization/${organizationId}/project/${projectId}/workspace/${file.id}/${activity}`);
+        return navigate(`/organization/${organizationId}/project/${projectId}/workspace/${file.id}/${activity}`);
       },
     }));
 
@@ -924,28 +921,11 @@ const ProjectRoute: FC = () => {
   ];
 
   const isRemoteProjectInconsistent = activeProject && isRemoteProject(activeProject) && !storageRules.enableCloudSync;
-  const isLocalProjectInconsistent = activeProject && !isRemoteProject(activeProject) && !storageRules.enableLocalVault;
+  const isLocalProjectInconsistent =
+    activeProject && !isRemoteProject(activeProject) && !isGitProject(activeProject) && !storageRules.enableLocalVault;
   const isGitSyncProjectInconsistent = activeProject && isGitProject(activeProject) && !storageRules.enableGitSync;
   const isProjectInconsistent =
     isRemoteProjectInconsistent || isLocalProjectInconsistent || isGitSyncProjectInconsistent;
-
-  useEffect(() => {
-    window.main.landingPageRendered(LandingPage.ProjectDashboard);
-  }, []);
-
-  const nextProjectId = useRef<string>();
-  const startSwitchProjectTime = useRef<number>();
-
-  useEffect(() => {
-    if (nextProjectId.current && startSwitchProjectTime.current && nextProjectId.current === projectId) {
-      const duration = performance.now() - startSwitchProjectTime.current;
-      Sentry.metrics.distribution(SentryMetrics.PROJECT_SWITCH_DURATION, duration, {
-        unit: 'millisecond',
-      });
-      nextProjectId.current = undefined;
-      startSwitchProjectTime.current = undefined;
-    }
-  }, [projectId]);
 
   return (
     <ErrorBoundary>
@@ -1047,8 +1027,6 @@ const ProjectRoute: FC = () => {
                   onSelectionChange={keys => {
                     if (keys !== 'all') {
                       const [value] = keys.values();
-                      nextProjectId.current = value.toString();
-                      startSwitchProjectTime.current = performance.now();
 
                       navigate({
                         pathname: `/organization/${organizationId}/project/${value}`,
@@ -1229,7 +1207,8 @@ const ProjectRoute: FC = () => {
                     </div>
                   </div>
                 )}
-                {filesWithPresence.length > 0 && (
+                {/* Show filter UI if there are files with presence or if the user has entered any filter input(even no match) */}
+                {(filesWithPresence.length > 0 || workspaceListFilter) && (
                   <div className="flex w-full max-w-xl justify-between gap-2 p-[--padding-md]">
                     <SearchField
                       aria-label="Files filter"

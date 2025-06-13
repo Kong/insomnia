@@ -39,7 +39,7 @@ export class QueryParam extends Property {
         this.disabled = optionsObj.disabled;
         this.fileName = optionsObj.fileName;
       } catch (e) {
-        throw Error(`invalid QueryParam options ${e}`);
+        throw new Error(`invalid QueryParam options ${e}`);
       }
     } else if (typeof options === 'object' && 'key' in options && 'value' in options) {
       this.key = options.key;
@@ -49,7 +49,7 @@ export class QueryParam extends Property {
       this.disabled = options.disabled;
       this.fileName = options.fileName;
     } else {
-      throw Error('unknown options for new QueryParam');
+      throw new Error('unknown options for new QueryParam');
     }
   }
 
@@ -67,7 +67,7 @@ export class QueryParam extends Property {
   static parseSingle(paramStr: string, _idx?: number, _all?: string[]) {
     const pairs = QueryParam.parse(paramStr);
     if (pairs.length === 0) {
-      throw Error('invalid search query string');
+      throw new Error('invalid search query string');
     }
 
     return pairs[0];
@@ -110,7 +110,7 @@ export class QueryParam extends Property {
     if (typeof param === 'string') {
       const paramObj = QueryParam.parseSingle(param);
       if (!paramObj) {
-        throw Error('failed to update param: input `param` is invalid');
+        throw new Error('failed to update param: input `param` is invalid');
       }
       this.key = typeof paramObj.key === 'string' ? paramObj.key : '';
       this.value = typeof paramObj.value === 'string' ? paramObj.value : '';
@@ -119,7 +119,7 @@ export class QueryParam extends Property {
       this.value = param.value;
       this.type = param.type;
     } else {
-      throw Error('the param for update must be: string | { key: string; value: string }');
+      throw new Error('the param for update must be: string | { key: string; value: string }');
     }
   }
 }
@@ -227,7 +227,7 @@ export class Url extends PropertyBase {
       }
       this.origin = urlString;
     } else {
-      throw Error(`url is invalid: ${urlOptions} `); // TODO:
+      throw new Error(`url is invalid: ${urlOptions} `); // TODO:
     }
   }
 
@@ -273,7 +273,7 @@ export class Url extends PropertyBase {
         this.queryParams = [...this.queryParams, new QueryParam({ ...pair })];
       });
     } else {
-      throw Error(`addQueryParams: invalid params: ${JSON.stringify(params)}`);
+      throw new Error(`addQueryParams: invalid params: ${JSON.stringify(params)}`);
     }
   }
 
@@ -324,7 +324,7 @@ export class Url extends PropertyBase {
         return !shouldDelete;
       });
     } else {
-      throw Error(
+      throw new Error(
         'removeQueryParams: failed to remove query params: unknown params type, only supports QueryParam[], string[] or string',
       );
     }
@@ -467,10 +467,10 @@ export class UrlMatchPattern extends Property {
       return false;
     }
 
-    for (let i = 0; i < patternSegments.length; i++) {
-      if (patternSegments[i] === '*') {
+    for (const [i, patternSegment] of patternSegments.entries()) {
+      if (patternSegment === '*') {
         continue;
-      } else if (patternSegments[i] !== inputHostSegments[i]) {
+      } else if (patternSegment !== inputHostSegments[i]) {
         return false;
       }
     }
@@ -505,10 +505,10 @@ export class UrlMatchPattern extends Property {
       return false;
     }
 
-    for (let i = 0; i < patternSegments.length; i++) {
-      if (patternSegments[i] === '*') {
+    for (const [i, patternSegment] of patternSegments.entries()) {
+      if (patternSegment === '*') {
         continue;
-      } else if (patternSegments[i] !== inputSegments[i]) {
+      } else if (patternSegment !== inputSegments[i]) {
         return false;
       }
     }
@@ -613,7 +613,7 @@ export class UrlMatchPatternList<T extends UrlMatchPattern> extends PropertyList
 
 export function toUrlObject(url: string | Url): Url {
   if (!url) {
-    throw Error('Request URL is not specified');
+    throw new Error('Request URL is not specified');
   }
   return typeof url === 'string' ? new Url(url) : url;
 }

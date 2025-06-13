@@ -381,8 +381,7 @@ export const CodeEditor = memo(
           mode: !handleRender ? normalizeMimeType(mode) : { name: 'nunjucks', baseMode: normalizeMimeType(mode) },
           environmentAutocomplete: {
             getVariables: async () => (!handleGetRenderContext ? [] : (await handleGetRenderContext())?.keys || []),
-            getTags: async () =>
-              !handleGetRenderContext ? [] : (await getTagDefinitions()).map(transformEnums).flat(),
+            getTags: async () => (!handleGetRenderContext ? [] : (await getTagDefinitions()).flatMap(transformEnums)),
             getConstants: getAutocompleteConstants,
             getSnippets: getAutocompleteSnippets,
             hotKeyRegistry: settings.hotKeyRegistry,

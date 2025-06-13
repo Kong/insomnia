@@ -1,6 +1,7 @@
 import { fakerFunctions } from 'insomnia/src/ui/components/templating/faker-functions';
 import { configure, type ConfigureOptions, type Environment as NunjuncksEnv } from 'nunjucks';
 
+/** @ignore */
 class Interpolator {
   private engine: NunjuncksEnv;
 
@@ -34,7 +35,7 @@ class Interpolator {
       const funcName = tagName.slice(1) as keyof typeof fakerFunctions; // remove prefix '$'
 
       if (!fakerFunctions[funcName]) {
-        throw Error(`replaceIn: no faker function is found: ${funcName}`);
+        throw new Error(`replaceIn: no faker function is found: ${funcName}`);
       }
 
       const generated = fakerFunctions[funcName]();
@@ -45,6 +46,7 @@ class Interpolator {
   };
 }
 
+/** @ignore */
 const interpolator = new Interpolator({
   autoescape: false,
   // Don't escape HTML
@@ -60,6 +62,7 @@ const interpolator = new Interpolator({
   },
 });
 
+/** @ignore */
 export function getInterpolator() {
   return interpolator;
 }

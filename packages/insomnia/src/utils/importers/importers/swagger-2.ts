@@ -1,5 +1,6 @@
+import crypto from 'node:crypto';
+
 import SwaggerParser from '@apidevtools/swagger-parser';
-import crypto from 'crypto';
 import type { OpenAPIV2 } from 'openapi-types';
 import YAML from 'yaml';
 
@@ -50,8 +51,8 @@ const parseDocument = (rawData: string) => {
 const parseEndpoints = (document: OpenAPIV2.Document) => {
   const defaultParent = WORKSPACE_ID;
   const globalMimeTypes = document.consumes ?? [];
-  const endpointsSchemas: OpenAPIV2.OperationObject[] = Object.keys(document.paths)
-    .map((path: keyof OpenAPIV2.PathsObject) => {
+  const endpointsSchemas: OpenAPIV2.OperationObject[] = Object.keys(document.paths).flatMap(
+    (path: keyof OpenAPIV2.PathsObject) => {
       const schemasPerMethod: OpenAPIV2.PathItemObject = document.paths[path];
       const methods = Object.keys(schemasPerMethod) as (keyof OpenAPIV2.PathItemObject)[];
       return methods
@@ -61,14 +62,13 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
           path,
           method,
         }));
-    })
-    .flat();
+    },
+  );
 
   const tags = document.tags || [];
 
   const implicitTags = endpointsSchemas
-    .map(endpointSchema => endpointSchema.tags)
-    .flat()
+    .flatMap(endpointSchema => endpointSchema.tags)
     .reduce((distinct, value) => {
       // remove duplicates
       if (value !== undefined && !distinct.includes(value)) {
@@ -413,7 +413,7 @@ const generateParameterExample = (
     'integer': () => 0,
     'boolean': () => true,
     'object': (parameter: OpenAPIV2.Parameter) => {
-      if (ancestors.indexOf(parameter) !== -1) {
+      if (ancestors.includes(parameter)) {
         return {};
       }
 

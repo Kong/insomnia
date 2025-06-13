@@ -13,7 +13,7 @@ export const setDefaultProtocol = (url: string, defaultProto?: string) => {
   }
 
   // Default the proto if it doesn't exist
-  if (trimmedUrl.indexOf('://') === -1) {
+  if (!trimmedUrl.includes('://')) {
     return `${defaultProto}//${trimmedUrl}`;
   }
 

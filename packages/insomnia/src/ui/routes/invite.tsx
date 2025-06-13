@@ -1,4 +1,4 @@
-import type { ActionFunction, LoaderFunction } from 'react-router-dom';
+import type { ActionFunction, LoaderFunction } from 'react-router';
 
 import { userSession } from '../../models';
 import * as models from '../../models';

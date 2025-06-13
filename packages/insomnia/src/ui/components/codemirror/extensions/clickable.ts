@@ -41,7 +41,7 @@ CodeMirror.defineExtension(
       if (event.target instanceof HTMLElement) {
         const cls = event.target.className;
 
-        if (cls.indexOf('cm-clickable') >= 0) {
+        if (cls.includes('cm-clickable')) {
           handleClick(decode(event.target.innerHTML));
         }
       }

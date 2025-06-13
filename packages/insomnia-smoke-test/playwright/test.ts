@@ -1,8 +1,9 @@
 /* eslint-disable no-empty-pattern */
 // Read more about creating fixtures https://playwright.dev/docs/test-fixtures
+import path from 'node:path';
+
 import type { ElectronApplication, TraceMode } from '@playwright/test';
 import { test as baseTest } from '@playwright/test';
-import path from 'path';
 
 import { bundleType, cwd, executablePath, mainPath, randomDataPath } from './paths';
 
@@ -86,7 +87,7 @@ export const test = baseTest.extend<{
       INSOMNIA_GITHUB_API_URL: webServerUrl + '/github-api/graphql',
       INSOMNIA_GITLAB_API_URL: webServerUrl + '/gitlab-api',
       INSOMNIA_UPDATES_URL: webServerUrl || 'https://updates.insomnia.rest',
-      INSOMNIA_MOCK_API_URL: 'https://mock.insomnia.moe',
+      INSOMNIA_MOCK_API_URL: 'https://mock-stage.insomnia.run',
       INSOMNIA_SKIP_ONBOARDING: String(userConfig.skipOnboarding),
       INSOMNIA_PUBLIC_KEY: userConfig.publicKey,
       INSOMNIA_SECRET_KEY: userConfig.secretKey,

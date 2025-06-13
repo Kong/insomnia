@@ -1,6 +1,7 @@
-import childProcess from 'child_process';
-import { cp, mkdir, rm } from 'fs/promises';
-import path from 'path';
+import childProcess from 'node:child_process';
+import { cp, mkdir, rm } from 'node:fs/promises';
+import path from 'node:path';
+
 import * as vite from 'vite';
 
 import buildMainAndPreload from '../esbuild.main';

@@ -191,7 +191,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
     try {
       JSON.parse(input);
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   };

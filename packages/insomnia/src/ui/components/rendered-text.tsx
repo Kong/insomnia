@@ -22,6 +22,10 @@ class RenderedTextInternal extends PureComponent<Props, State> {
     const { render, children } = this.props;
 
     if (!children) {
+      this.setState({
+        renderedText: '',
+        error: '',
+      });
       return;
     }
 

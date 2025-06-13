@@ -68,6 +68,7 @@ jobs:
         run: npm ci
 
       - name: Setup Inso CLI version env var
+        shell: bash
         run: |
           echo "INSO_VERSION=$(jq .version ./packages/${{ env.INSO_PACKAGE_NAME }}/package.json -rj)" >> $GITHUB_ENV
 

@@ -2,7 +2,7 @@ import './rendererListeners';
 
 import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
-import { createMemoryRouter, matchPath, Outlet, RouterProvider } from 'react-router-dom';
+import { createMemoryRouter, matchPath, Outlet, RouterProvider } from 'react-router';
 
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from '../account/session';
 import {
@@ -450,6 +450,13 @@ async function renderApp() {
                                 path: 'repository-tree',
                                 loader: async (...args) =>
                                   (await import('./routes/git-project-actions')).getRepositoryDirectoryTree(...args),
+                              },
+                              {
+                                path: 'migrate-legacy-insomnia-folder-to-file',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).migrateLegacyInsomniaFolderToFile(
+                                    ...args,
+                                  ),
                               },
                               {
                                 path: 'branch',

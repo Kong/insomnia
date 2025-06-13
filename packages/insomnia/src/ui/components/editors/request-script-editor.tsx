@@ -550,10 +550,12 @@ export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChan
   const requestScriptSnippets = getRequestScriptSnippets(
     new InsomniaObject({
       globals: new Environment('globals', {}),
+      baseGlobals: new Environment('baseGlobals', {}),
       iterationData: new Environment('iterationData', {}),
       environment: new Environment('environment', {}),
       baseEnvironment: new Environment('baseEnvironment', {}),
       variables: new Variables({
+        baseGlobalVars: new Environment('baseGlobals', {}),
         globalVars: new Environment('globals', {}),
         environmentVars: new Environment('environment', {}),
         collectionVars: new Environment('collection', {}),

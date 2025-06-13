@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer, webUtils as _webUtils } from 'electron';
+import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 
 import type { GitServiceAPI } from './main/git-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
@@ -77,6 +77,7 @@ const git: GitServiceAPI = {
   unstageChanges: options => ipcRenderer.invoke('git.unstageChanges', options),
   diffFileLoader: options => ipcRenderer.invoke('git.diffFileLoader', options),
   getRepositoryDirectoryTree: options => ipcRenderer.invoke('git.getRepositoryDirectoryTree', options),
+  migrateLegacyInsomniaFolderToFile: options => ipcRenderer.invoke('git.migrateLegacyInsomniaFolderToFile', options),
 
   initSignInToGitHub: () => ipcRenderer.invoke('git.initSignInToGitHub'),
   completeSignInToGitHub: options => ipcRenderer.invoke('git.completeSignInToGitHub', options),
@@ -105,7 +106,8 @@ const main: Window['main'] = {
   restoreBackup: options => ipcRenderer.invoke('restoreBackup', options),
   authorizeUserInWindow: options => ipcRenderer.invoke('authorizeUserInWindow', options),
   setMenuBarVisibility: options => ipcRenderer.send('setMenuBarVisibility', options),
-  installPlugin: options => ipcRenderer.invoke('installPlugin', options),
+  installPlugin: (lookupName: string, allowScopedPackageNames = false) =>
+    ipcRenderer.invoke('installPlugin', lookupName, allowScopedPackageNames),
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
   writeFile: options => ipcRenderer.invoke('writeFile', options),
@@ -148,11 +150,6 @@ const main: Window['main'] = {
         port.postMessage({ ...options, type: 'runPreRequestScript' });
       }),
   },
-  landingPageRendered: (landingPage, tags) =>
-    ipcRenderer.send('landingPageRendered', {
-      landingPage,
-      tags,
-    }),
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     ipcRenderer.invoke('extractJsonFileFromPostmanDataDumpArchive', archivePath),
 };
@@ -180,7 +177,7 @@ const clipboard: Window['clipboard'] = {
   clear: () => ipcRenderer.send('clear'),
 };
 const webUtils: Window['webUtils'] = {
-  getPathForFile: (file: File) => _webUtils.getPathForFile(file),
+  getPathForFile: (file: File) => webUtilities.getPathForFile(file),
 };
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('main', main);

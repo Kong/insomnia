@@ -1,5 +1,6 @@
+import { dirname } from 'node:path';
+
 import log from 'electron-log';
-import { dirname } from 'path';
 
 import { isDevelopment } from './constants';
 

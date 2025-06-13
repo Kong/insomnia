@@ -1,6 +1,6 @@
 import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import { Button, Checkbox, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router';
 
 import { exportRequestsToFile } from '../../../common/export';
 import { requestGroup } from '../../../models';
@@ -243,7 +243,7 @@ export const ExportRequestsModal = ({
     if (docIsRequest && node.selectedRequests === node.totalRequests) {
       return [node.doc._id];
     }
-    return node.children.map(child => getSelectedRequestIds(child)).reduce((acc, reqIds) => [...acc, ...reqIds], []);
+    return node.children.flatMap(child => getSelectedRequestIds(child));
   };
 
   const setItemSelected = (node: Node, isSelected: boolean, id?: string) => {

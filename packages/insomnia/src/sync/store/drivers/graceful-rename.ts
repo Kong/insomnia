@@ -1,4 +1,4 @@
-import fs from 'fs/promises';
+import fs from 'node:fs/promises';
 
 import { isWindows } from '../../../common/constants';
 // Based on node-graceful-fs and vs-code's take on renaming files in a way that is more resilient to Windows locking renames

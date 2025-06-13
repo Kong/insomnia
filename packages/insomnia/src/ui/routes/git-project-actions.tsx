@@ -1,9 +1,9 @@
-import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
+import { type ActionFunction, type LoaderFunction, redirect } from 'react-router';
 
 import * as models from '../../models';
 import type { GitRepository } from '../../models/git-repository';
 import type { WorkspaceScope } from '../../models/workspace';
-import { type GitLogEntry } from '../../sync/git/git-vcs';
+import type { GitLogEntry } from '../../sync/git/git-vcs';
 import type { MergeConflict } from '../../sync/types';
 import { invariant } from '../../utils/invariant';
 
@@ -13,6 +13,11 @@ export type GitRepoLoaderData =
       branch: string;
       branches: string[];
       gitRepository: GitRepository | null;
+      legacyInsomniaWorkspace?: {
+        scope: WorkspaceScope;
+        name: string;
+        path: string;
+      };
     }
   | {
       errors: string[];
@@ -452,4 +457,11 @@ export const getRepositoryDirectoryTree: ActionFunction = async ({ params }) => 
   invariant(projectId, 'Project ID is required');
 
   return window.main.git.getRepositoryDirectoryTree({ projectId });
+};
+
+export const migrateLegacyInsomniaFolderToFile: ActionFunction = async ({ params }) => {
+  const { projectId } = params;
+  invariant(projectId, 'Project ID is required');
+
+  return window.main.git.migrateLegacyInsomniaFolderToFile({ projectId });
 };

@@ -1,0 +1,81 @@
+type: collection.insomnia.rest/5.0
+name: simple
+meta:
+  id: wrk_dc393cdd96524c44a632fdc3b09aa5c5
+  created: 1736279931529
+  modified: 1736279931529
+collection:
+  - url: http://localhost:4010/echo?foo=bar&baz=qux
+    name: example http
+    meta:
+      id: req_49f06ac9024446728a9765162d56b95a
+      created: 1666867365377
+      modified: 1666867670885
+      isPrivate: false
+    method: GET
+    scripts:
+      preRequest: console.log('executing pre-request script');
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: ws://localhost:4010?foo=bar&baz=qux
+    name: example websocket
+    meta:
+      id: ws-req_9030f28cd1a64b44971cee35bbc09987
+      created: 1666867628351
+      modified: 1666867647526
+    settings:
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_5ac9997401a64a9ea81374670872319a
+    created: 1666867357074
+    modified: 1666868115288
+  cookies:
+    - id: bc6e6a71-1290-4334-8662-a49c1c58b037
+      key: foo
+      value: bar
+      domain: localhost
+      expires: 2038-01-19T03:14:07.000Z
+      path: /
+      secure: false
+      httpOnly: false
+environments:
+  name: Base Environment
+  meta:
+    id: env_e86a031c9817439bb89991d31a46e50c
+    created: 1666867357072
+    modified: 1666867924188
+    isPrivate: false
+  data:
+    foo: bar
+    current-env: base
+  subEnvironments:
+    - name: production
+      meta:
+        id: env_f5742e2375e24f25b65c2ae97fbbda30
+        created: 1666867721814
+        modified: 1666867928920
+        isPrivate: false
+      data:
+        foo: bar
+        current-env: production
+    - name: staging
+      meta:
+        id: env_fdc1a90ec92c42899f599a4e8ab40a5f
+        created: 1666867735110
+        modified: 1666867933395
+        isPrivate: false
+      data:
+        foo: bar
+        current-env: staging

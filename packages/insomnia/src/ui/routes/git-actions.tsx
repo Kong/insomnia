@@ -1,5 +1,5 @@
 import { fromUrl } from 'hosted-git-info';
-import { type ActionFunction, type LoaderFunction, redirect } from 'react-router-dom';
+import { type ActionFunction, type LoaderFunction, redirect } from 'react-router';
 
 import { gitCredentials } from '../../models';
 import type { GitRepository } from '../../models/git-repository';

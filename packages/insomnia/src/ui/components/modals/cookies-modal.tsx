@@ -17,7 +17,7 @@ import {
   Tabs,
   TextField,
 } from 'react-aria-components';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
 import { Cookie as ToughCookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -284,7 +284,7 @@ const CookieList = ({ cookies, onCookieDelete, onUpdateCookie }: CookieListProps
               textValue={cookie.domain}
               className="flex min-h-[40px] justify-between gap-2 rounded-sm px-2 py-1 leading-[36px] outline-none odd:bg-[--hl-xs]"
             >
-              <span className="flex min-w-[20%] items-center break-all leading-relaxed">
+              <span className="flex min-w-[20%] items-center break-all leading-relaxed" data-testid="cookie-domain">
                 <RenderedText>{cookie.domain || ''}</RenderedText>
               </span>
               <span className="flex w-[70%] items-center break-all leading-relaxed">
@@ -525,7 +525,19 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                               defaultChecked={editCookie.httpOnly || false}
                               onChange={event => setEditCookie({ ...editCookie, httpOnly: event.target.checked })}
                             />
-                            httpOnly
+                            HttpOnly
+                          </label>
+                        </div>
+                        <div className="grid w-full grid-cols-2 gap-2">
+                          <label className="flex items-center gap-1">
+                            <input
+                              className="space-left"
+                              type="checkbox"
+                              name="hostOnly"
+                              defaultChecked={editCookie.hostOnly || false}
+                              onChange={event => setEditCookie({ ...editCookie, hostOnly: event.target.checked })}
+                            />
+                            HostOnly
                           </label>
                         </div>
                       </TabPanel>
@@ -540,8 +552,9 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                                   // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
                                   const parsed = ToughCookie.parse(event.target.value, { loose: true })?.toJSON();
                                   if (parsed) {
-                                    // Make sure cookie has an id
+                                    // Make sure cookie has an id and keep its host-only-flag
                                     parsed.id = editCookie.id;
+                                    parsed.hostOnly = editCookie.hostOnly;
                                     setEditCookie(parsed as Cookie);
                                   }
                                 } catch (err) {

@@ -3,7 +3,7 @@ import type { BaseRenderContext } from '../../templating/types';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- see below
 // @ts-ignore -- inso transpiles to commonjs so doesn't play nice with this
-const worker = new Worker(new URL('./templating-worker.ts', import.meta.url), { type: 'module' });
+const worker = new Worker(new URL('templating-worker.ts', import.meta.url), { type: 'module' });
 
 // Triggered by a mistake in the work initialization code above
 worker.addEventListener('error', event => {
@@ -43,8 +43,13 @@ export function renderInWorker({
     const messageHandler = (event: MessageEvent) => {
       if (event.data.id === id) {
         worker.removeEventListener('message', messageHandler);
-        if (event.data.err) {
-          const error = new RenderError(event.data.err);
+        const workerError = event.data.err;
+        if (workerError) {
+          const error = new RenderError(workerError.message);
+          if (error instanceof RenderError) {
+            error.path = workerError.path || '';
+            error.location = workerError.location;
+          }
           error.type = 'render';
           const undefinedEnvironmentVariables = extractUndefinedVariableKey(input, newContext);
           if (undefinedEnvironmentVariables.length > 0) {

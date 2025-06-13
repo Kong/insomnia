@@ -14,7 +14,7 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router';
 
 import type { GitLogLoaderData } from '../../routes/git-project-actions';
 import { Icon } from '../icon';

@@ -1,7 +1,8 @@
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
-import { exit } from 'process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { exit } from 'node:process';
+
 import { v4 as uuidv4 } from 'uuid';
 
 // Default to dev so that the playwright vscode extension works

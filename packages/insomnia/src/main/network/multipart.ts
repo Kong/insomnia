@@ -2,10 +2,11 @@ if (process.type === 'renderer') {
   throw new Error('multipart.ts unavailable in renderer');
 }
 
-import fs from 'fs';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
 import { lookup } from 'mime-types';
-import os from 'os';
-import path from 'path';
 
 import type { RequestBodyParameter } from '../../models/request';
 

@@ -1,5 +1,6 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import { project, request, requestGroup, workspace } from '../../models';
@@ -38,9 +39,11 @@ describe('importRaw()', () => {
 
     const projectToImportTo = await project.create();
 
-    const scanResult = await importUtil.scanResources([{
-      contentStr: content,
-    }]);
+    const scanResult = await importUtil.scanResources([
+      {
+        contentStr: content,
+      },
+    ]);
 
     expect(scanResult[0].type?.id).toBe('curl');
     expect(scanResult[0].errors.length).toBe(0);
@@ -68,9 +71,11 @@ describe('importRaw()', () => {
 
     const existingWorkspace = await workspace.create();
 
-    const scanResult = await importUtil.scanResources([{
-      contentStr: content,
-    }]);
+    const scanResult = await importUtil.scanResources([
+      {
+        contentStr: content,
+      },
+    ]);
 
     expect(scanResult[0].type?.id).toBe('curl');
     expect(scanResult[0].errors.length).toBe(0);
@@ -92,9 +97,11 @@ describe('importRaw()', () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'postman', 'aws-signature-auth-v2_0-input.json');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
     const projectToImportTo = await project.create();
-    const scanResult = await importUtil.scanResources([{
-      contentStr: content,
-    }]);
+    const scanResult = await importUtil.scanResources([
+      {
+        contentStr: content,
+      },
+    ]);
 
     expect(scanResult[0].type?.id).toBe('postman');
     expect(scanResult[0].errors.length).toBe(0);
@@ -119,9 +126,11 @@ describe('importRaw()', () => {
 
     const existingWorkspace = await workspace.create();
 
-    const scanResult = await importUtil.scanResources([{
-      contentStr: content,
-    }]);
+    const scanResult = await importUtil.scanResources([
+      {
+        contentStr: content,
+      },
+    ]);
 
     expect(scanResult[0].type?.id).toBe('postman');
     expect(scanResult[0].errors.length).toBe(0);
@@ -142,9 +151,11 @@ describe('importRaw()', () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'openapi', 'endpoint-security-input.yaml');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
-    const scanResult = await importUtil.scanResources([{
-      contentStr: content,
-    }]);
+    const scanResult = await importUtil.scanResources([
+      {
+        contentStr: content,
+      },
+    ]);
 
     expect(scanResult[0].type?.id).toBe('openapi3');
     expect(scanResult[0].errors.length).toBe(0);

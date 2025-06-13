@@ -7,7 +7,7 @@ import { getInterpolator } from './interpolator';
 export const unsupportedError = (featureName: string, alternative?: string) => {
   const message =
     `${featureName} is not supported yet` + (alternative ? `, please use ${alternative} instead temporarily.` : '');
-  return Error(message);
+  return new Error(message);
 };
 
 export class PropertyBase {
@@ -117,7 +117,7 @@ export class PropertyBase {
 
   toJSON() {
     const entriesToExport = Object.entries(this).filter(
-      (kv: [string, any]) => typeof kv[1] !== 'function' && typeof kv[1] !== 'undefined' && kv[0] !== '_kind',
+      (kv: [string, any]) => typeof kv[1] !== 'function' && kv[1] !== undefined && kv[0] !== '_kind',
     );
 
     return Object.fromEntries(entriesToExport);
@@ -150,7 +150,9 @@ export class Property extends PropertyBase {
 
   static replaceSubstitutions(content: string, ...variables: object[]): string {
     if (!Array.isArray(variables) || typeof content !== 'string') {
-      throw Error("replaceSubstitutions: the first param's type is not string or other parameters are not an array");
+      throw new Error(
+        "replaceSubstitutions: the first param's type is not string or other parameters are not an array",
+      );
     }
 
     let context: object = {};
@@ -162,7 +164,9 @@ export class Property extends PropertyBase {
 
   static replaceSubstitutionsIn(obj: object, ...variables: object[]): object {
     if (!Array.isArray(variables) || typeof obj !== 'object') {
-      throw Error("replaceSubstitutions: the first param's type is not object or other parameters are not an array");
+      throw new Error(
+        "replaceSubstitutions: the first param's type is not object or other parameters are not an array",
+      );
     }
 
     try {
@@ -177,7 +181,7 @@ export class Property extends PropertyBase {
       const rendered = getInterpolator().render(content, context);
       return JSON.parse(rendered);
     } catch (e: any) {
-      throw Error(`replaceSubstitutionsIn: ${e.toString()}`);
+      throw new Error(`replaceSubstitutionsIn: ${e.toString()}`);
     }
   }
 
@@ -285,6 +289,7 @@ export class PropertyList<T extends Property> {
   // TODO: value is not used as its usage is unknown
 
   has(item: T, _value?: any) {
+    // eslint-disable-next-line unicorn/prefer-includes
     return this.indexOf(item) >= 0;
   }
 

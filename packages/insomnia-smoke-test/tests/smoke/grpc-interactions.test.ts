@@ -82,7 +82,7 @@ test.describe('gRPC interactions', () => {
 
     // Check response
     await expect.soft(statusTag).toContainText('0 OK');
-    await page.locator('text=Response 64').click();
     await expect.soft(responseBody).toContainText('Patriots Path');
+    await page.locator('text=Response 64').click();
   });
 });

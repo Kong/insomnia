@@ -1,12 +1,12 @@
 import crypto from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { createServer } from 'node:https';
+import { join } from 'node:path';
 
 import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import express from 'express';
-import { readFileSync } from 'fs';
 import { createHandler } from 'graphql-http/lib/use/http';
-import { createServer } from 'https';
-import { join } from 'path';
 
 import { basicAuthRouter } from './basic-auth';
 import githubApi from './github-api';

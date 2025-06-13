@@ -41,6 +41,7 @@ export interface EditorEventListener<T extends keyof EditorEventMap> {
 export interface OneLineEditorHandle {
   selectAll: () => void;
   focusEnd: () => void;
+  setValue: (value: string) => void;
 }
 export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>(
   (
@@ -126,7 +127,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
             },
         environmentAutocomplete: canAutocomplete && {
           getVariables: async () => (!handleGetRenderContext ? [] : (await handleGetRenderContext())?.keys || []),
-          getTags: async () => (!handleGetRenderContext ? [] : (await getTagDefinitions()).map(transformEnums).flat()),
+          getTags: async () => (!handleGetRenderContext ? [] : (await getTagDefinitions()).flatMap(transformEnums)),
           getConstants: getAutocompleteConstants,
           hotKeyRegistry: settings.hotKeyRegistry,
           autocompleteDelay: settings.autocompleteDelay,
@@ -351,6 +352,13 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
             codeMirror.current.focus();
           }
           codeMirror.current?.getDoc()?.setCursor(codeMirror.current.getDoc().lineCount(), 0);
+        },
+        setValue: (value: string) => {
+          if (codeMirror.current) {
+            const cursor = codeMirror.current.getCursor();
+            codeMirror.current.setValue(value);
+            codeMirror.current.setCursor(cursor);
+          }
         },
       }),
       [],

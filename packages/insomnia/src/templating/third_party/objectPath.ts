@@ -28,7 +28,7 @@ const ObjectPath = {
 
       if (dot === -1 && bracket === -1) {
         // we've reached the end
-        parts.push(str.slice(i, str.length));
+        parts.push(str.slice(i));
         i = str.length;
       } else if (bracket === -1 || (dot !== -1 && dot < bracket)) {
         // dots

@@ -88,7 +88,7 @@ export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContex
   __private: {
     // Provide modules that can be used in the renderer process
     async loadRendererModules() {
-      if (typeof globalThis.document === 'undefined') {
+      if (globalThis.document === undefined) {
         return {};
       }
 

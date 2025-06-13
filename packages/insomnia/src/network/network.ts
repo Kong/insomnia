@@ -1,7 +1,8 @@
+import fs from 'node:fs';
+import { join as pathJoin } from 'node:path';
+
 import clone from 'clone';
-import fs from 'fs';
 import orderedJSON from 'json-order';
-import { join as pathJoin } from 'path';
 
 import type {
   ExecutionOption,
@@ -91,7 +92,7 @@ export function getOrInheritHeaders({
   const originalCaseMap = new Map<string, string>();
   // parent folders, then child folders, then request
   const headerContexts = [...requestGroups.reverse(), request];
-  const headers = headerContexts.map(({ headers }) => headers || []).flat();
+  const headers = headerContexts.flatMap(({ headers }) => headers || []);
   headers.forEach(({ name, value, disabled }) => {
     if (disabled || !name.trim()) {
       return;
@@ -151,8 +152,13 @@ export const fetchRequestGroupData = async (requestGroupId: string) => {
   const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
   return { environment, settings, clientCertificates, caCert, activeEnvironmentId, timelinePath, responseId };
 };
+
 // Intended to gather all required database objects and initialize ids
-export const fetchRequestData = async (requestId: string) => {
+export const fetchRequestData = async (
+  requestId: string,
+  // Override the active environment id to use for the request
+  overrideEnvironmentId?: string,
+) => {
   const request = await models.request.getById(requestId);
   invariant(request, 'failed to find request ' + requestId);
   const ancestors = await db.withAncestors<Request | RequestGroup | Workspace | Project | MockRoute | MockServer>(
@@ -166,35 +172,48 @@ export const fetchRequestData = async (requestId: string) => {
       models.mockServer.type,
     ],
   );
+
   const workspaceDoc = ancestors.find(isWorkspace);
   invariant(workspaceDoc?._id, 'failed to find workspace');
   const workspaceId = workspaceDoc._id;
 
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'failed to find workspace');
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-  // fallback to base environment
-  const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+
+  const activeEnvironmentId = overrideEnvironmentId ?? workspaceMeta.activeEnvironmentId;
   const activeEnvironment = activeEnvironmentId && (await models.environment.getById(activeEnvironmentId));
-  // no active environment in workspaceMeta, fallback to workspace root environment as active environment
-  const environment = activeEnvironment || (await models.environment.getOrCreateForParentId(workspace._id));
-  invariant(environment, 'failed to find environment ' + activeEnvironmentId);
 
   const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+  // no active environment in workspaceMeta, fallback to workspace root environment as active environment
+  const environment = activeEnvironment || baseEnvironment;
+  invariant(environment, 'failed to find environment ' + activeEnvironmentId);
+
   const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
 
   let activeGlobalEnvironment: Environment | undefined = undefined;
+  let activeGlobalBaseEnvironment: Environment | undefined = undefined;
   if (workspaceMeta?.activeGlobalEnvironmentId) {
     activeGlobalEnvironment = (await models.environment.getById(workspaceMeta.activeGlobalEnvironmentId)) || undefined;
+    const activeGlobalEnvironmentParentId = activeGlobalEnvironment?.parentId || '';
+    if (activeGlobalEnvironmentParentId.startsWith('wrk_')) {
+      // activeGlobalEnvironment is a base global environment
+      activeGlobalBaseEnvironment = activeGlobalEnvironment;
+    } else if (activeGlobalEnvironmentParentId.startsWith('env_')) {
+      // activeGlobalEnvironment is a sub global environment
+      activeGlobalBaseEnvironment = (await models.environment.getById(activeGlobalEnvironmentParentId)) || undefined;
+    }
   }
 
   const settings = await models.settings.get();
   invariant(settings, 'failed to create settings');
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const caCert = await models.caCertificate.findByParentId(workspaceId);
+
   const responseId = generateId('res');
   const responsesDir = pathJoin(
-    (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
+    process.env['INSOMNIA_DATA_PATH'] ||
+      (process.type === 'renderer' ? window : require('electron')).app.getPath('userData'),
     'responses',
   );
   const timelinePath = pathJoin(responsesDir, responseId + '.timeline');
@@ -203,12 +222,14 @@ export const fetchRequestData = async (requestId: string) => {
     request,
     environment,
     baseEnvironment,
-    cookieJar,
     activeGlobalEnvironment,
+    activeGlobalBaseEnvironment,
+    activeEnvironmentId: environment._id,
     settings,
     clientCertificates,
     caCert,
-    activeEnvironmentId: activeEnvironmentId || environment._id,
+    cookieJar,
+    workspace,
     timelinePath,
     responseId,
     ancestors,
@@ -221,6 +242,7 @@ export const tryToExecutePreRequestScript = async (
     environment,
     baseEnvironment,
     activeGlobalEnvironment,
+    activeGlobalBaseEnvironment,
     cookieJar,
     settings,
     clientCertificates,
@@ -261,6 +283,7 @@ export const tryToExecutePreRequestScript = async (
       settings,
       cookieJar,
       globals: activeGlobalEnvironment,
+      baseGlobals: activeGlobalBaseEnvironment,
       userUploadEnvironment,
       requestTestResults: new Array<RequestTestResult>(),
       transientVariables,
@@ -280,6 +303,7 @@ export const tryToExecutePreRequestScript = async (
     clientCertificates,
     cookieJar,
     globals: activeGlobalEnvironment,
+    baseGlobals: activeGlobalBaseEnvironment,
     userUploadEnvironment,
     iteration,
     iterationCount,
@@ -300,17 +324,19 @@ export const tryToExecutePreRequestScript = async (
       settings,
       cookieJar,
       globals: activeGlobalEnvironment,
+      baseGlobals: activeGlobalBaseEnvironment,
       requestTestResults: new Array<RequestTestResult>(),
       parentFolders,
     };
   }
-  await savePatchesMadeByScript(
+  await savePatchesMadeByScript({
     mutatedContext,
     environment,
     baseEnvironment,
     activeGlobalEnvironment,
+    activeGlobalBaseEnvironment,
     originalRequestGroups,
-  );
+  });
 
   return {
     request: mutatedContext.request,
@@ -319,6 +345,7 @@ export const tryToExecutePreRequestScript = async (
     clientCertificates: mutatedContext.clientCertificates || clientCertificates,
     settings: mutatedContext.settings || settings,
     globals: mutatedContext.globals,
+    baseGlobals: mutatedContext.baseGlobals,
     cookieJar: mutatedContext.cookieJar,
     requestTestResults: mutatedContext.requestTestResults,
     userUploadEnvironment: mutatedContext.userUploadEnvironment,
@@ -332,14 +359,24 @@ export const tryToExecutePreRequestScript = async (
 // The rule for the global environment:
 //  - If no global environment is seleted, no operation
 //  - If one global environment is selected, it persists content to the selected global environment (base or sub).
-export async function savePatchesMadeByScript(
-  mutatedContext: TransformedExecuteScriptContext,
-  environment: Environment,
-  baseEnvironment: Environment,
-  activeGlobalEnvironment: Environment | undefined,
-  originalRequestGroups: RequestGroup[],
-  responseCookies?: Cookie[],
-) {
+export async function savePatchesMadeByScript(patches: {
+  mutatedContext: TransformedExecuteScriptContext;
+  environment: Environment;
+  baseEnvironment: Environment;
+  activeGlobalEnvironment: Environment | undefined;
+  activeGlobalBaseEnvironment: Environment | undefined;
+  originalRequestGroups: RequestGroup[];
+  responseCookies?: Cookie[];
+}) {
+  const {
+    mutatedContext,
+    environment,
+    baseEnvironment,
+    activeGlobalEnvironment,
+    activeGlobalBaseEnvironment,
+    originalRequestGroups,
+    responseCookies,
+  } = patches;
   if (!mutatedContext) {
     return;
   }
@@ -354,6 +391,8 @@ export async function savePatchesMadeByScript(
   // when base environment is activated, `mutatedContext.environment` points to it
   const isActiveEnvironmentBase = mutatedContext.environment?._id === baseEnvironment._id;
   const hasEnvironmentAndIsNotBase = mutatedContext.environment && !isActiveEnvironmentBase;
+  const hasGlobalEnvironmentAndIsNotBase =
+    mutatedContext.globals && mutatedContext.globals?._id !== activeGlobalBaseEnvironment?._id;
   const updateEnvironment = async (originEnvironment: Environment, mutatedContextEnvironment: Environment) => {
     const { environmentType } = originEnvironment;
     const { data, dataPropertyOrder } = mutatedContextEnvironment;
@@ -374,9 +413,14 @@ export async function savePatchesMadeByScript(
     await updateEnvironment(baseEnvironment, mutatedContext.baseEnvironment);
   }
 
-  if (activeGlobalEnvironment && mutatedContext) {
+  if (activeGlobalEnvironment && hasGlobalEnvironmentAndIsNotBase) {
     invariant(mutatedContext.globals, 'globals must be defined when there is selected one');
     await updateEnvironment(activeGlobalEnvironment, mutatedContext.globals);
+  }
+
+  if (activeGlobalBaseEnvironment) {
+    invariant(mutatedContext.baseGlobals, 'global base env must be defined when there is selected one');
+    await updateEnvironment(activeGlobalBaseEnvironment, mutatedContext.baseGlobals);
   }
 
   mutatedContext.parentFolders.forEach(mutatedFolder => {
@@ -405,6 +449,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     cookieJar,
     response,
     globals,
+    baseGlobals,
     userUploadEnvironment,
     iteration,
     iterationCount,
@@ -414,10 +459,10 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
     transientVariables,
     runtime,
     parentFolders,
+    settings,
   } = context;
   invariant(script, 'script must be provided');
 
-  const settings = await models.settings.get();
   // location is the complete path of a request, including project, collection and folder(if have).
   const requestLocation = ancestors
     .filter(doc => isRequest(doc) || isRequestGroup(doc) || isWorkspace(doc) || isProject(doc))
@@ -464,6 +509,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         response,
         vault,
         globals: globals?.data || undefined,
+        baseGlobals: baseGlobals?.data || undefined,
         iterationData: userUploadEnvironment
           ? {
               name: userUploadEnvironment.name,
@@ -509,6 +555,16 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       globals.dataPropertyOrder = globalEnvPropertyOrder.map;
     }
 
+    if (baseGlobals) {
+      const globalBaseEnvPropertyOrder = orderedJSON.parse(
+        JSON.stringify(output.baseGlobals || {}),
+        JSON_ORDER_PREFIX,
+        JSON_ORDER_SEPARATOR,
+      );
+      baseGlobals.data = output.baseGlobals || {};
+      baseGlobals.dataPropertyOrder = globalBaseEnvPropertyOrder.map;
+    }
+
     if (userUploadEnvironment) {
       const userUploadEnvPropertyOrder = orderedJSON.parse(
         JSON.stringify(output?.iterationData?.data || []),
@@ -541,6 +597,7 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
       clientCertificates: output.clientCertificates,
       cookieJar: output.cookieJar,
       globals,
+      baseGlobals,
       userUploadEnvironment,
       requestTestResults: output.requestTestResults,
       execution: output.execution,
@@ -580,7 +637,9 @@ interface RequestContextForScript {
   clientCertificates: ClientCertificate[];
   cookieJar: CookieJar;
   ancestors: (Request | RequestGroup | Workspace | Project | MockRoute | MockServer)[];
-  globals?: Environment; // there could be no global environment
+  // there could be no global and no global base environment
+  globals?: Environment;
+  baseGlobals?: Environment;
   settings: Settings;
   execution?: ExecutionOption;
   transientVariables: Environment;
@@ -638,22 +697,24 @@ export async function tryToExecuteAfterResponseScript(context: RequestAndContext
   const respondedWithoutError = context.response && !('error' in context.response);
   if (respondedWithoutError) {
     const resp = context.response as sendCurlAndWriteTimelineResponse;
-    await savePatchesMadeByScript(
-      postMutatedContext,
-      context.environment,
-      context.baseEnvironment,
-      context.globals,
-      originalRequestGroups,
-      resp.cookies,
-    );
+    await savePatchesMadeByScript({
+      mutatedContext: postMutatedContext,
+      environment: context.environment,
+      baseEnvironment: context.baseEnvironment,
+      activeGlobalEnvironment: context.globals,
+      activeGlobalBaseEnvironment: context.baseGlobals,
+      originalRequestGroups: originalRequestGroups,
+      responseCookies: resp.cookies,
+    });
   } else {
-    await savePatchesMadeByScript(
-      postMutatedContext,
-      context.environment,
-      context.baseEnvironment,
-      context.globals,
-      originalRequestGroups,
-    );
+    await savePatchesMadeByScript({
+      mutatedContext: postMutatedContext,
+      environment: context.environment,
+      baseEnvironment: context.baseEnvironment,
+      activeGlobalEnvironment: context.globals,
+      activeGlobalBaseEnvironment: context.baseGlobals,
+      originalRequestGroups: originalRequestGroups,
+    });
   }
 
   return postMutatedContext;

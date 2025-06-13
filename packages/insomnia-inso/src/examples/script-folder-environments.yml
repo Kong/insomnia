@@ -8,21 +8,21 @@ resources:
     modified: 1668533312225
     created: 1668533312225
     name: folder1
-    description: ""
+    description: ''
     environment:
-      val: "1"
+      val: '1'
     environmentPropertyOrder: null
     metaSortKey: -1668533312225
     _type: request_group
-    afterResponseScript: ""
-    preRequestScript: ""
+    afterResponseScript: ''
+    preRequestScript: ''
   - _id: req_51dfc16d0f324a799e46aad52ffd0cd2
     parentId: fld_01de564274824ecaad272330339ea6b3
     modified: 1722852690008
     created: 1722852503814
     url: localhost:4010/echo
     name: updateFolderValue
-    description: ""
+    description: ''
     method: GET
     body: {}
     parameters: []
@@ -50,7 +50,7 @@ resources:
     modified: 1722852498102
     created: 1722852498102
     name: FolderEnv
-    description: ""
+    description: ''
     scope: collection
     _type: workspace
   - _id: env_fa53fdd70393dd67a77da3c45c26f2b75ecbc1f2

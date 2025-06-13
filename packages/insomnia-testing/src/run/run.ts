@@ -1,15 +1,60 @@
+import { unlink, writeFileSync } from 'node:fs';
+import fs from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import chai from 'chai';
-import { unlink, writeFileSync } from 'fs';
-import fs from 'fs';
 import type { Reporter, ReporterConstructor } from 'mocha';
 import Mocha from 'mocha';
-import { tmpdir } from 'os';
-import { join } from 'path';
 
 import type { TestResults } from './entities';
 import type { InsomniaOptions } from './insomnia';
 import { Insomnia } from './insomnia';
 import { JavaScriptReporter } from './javascript-reporter';
+
+function prependInterceptedRequireToSource(source: string): string {
+  const injectScript = `
+  const externalModules = new Map([['chai', global.chai], ['chai-json-schema', global.chaiJSONSchema]]);
+
+  const requireInterceptor = (moduleName) => {
+    if (
+      [
+        // node.js modules
+        'path',
+        'assert',
+        'buffer',
+        'util',
+        'url',
+        'punycode',
+        'querystring',
+        'string_decoder',
+        'stream',
+        'timers',
+        'events',
+        // follows should be npm modules
+        // but they are moved to here to avoid introducing additional dependencies
+      ].includes(moduleName)
+    ) {
+      return require(moduleName);
+    } else if (['atob', 'btoa'].includes(moduleName)) {
+      return moduleName === 'atob' ? atob : btoa;
+    } else if (externalModules.has(moduleName)) {
+      const externalModule = externalModules.get(moduleName);
+      if (!externalModule) {
+        throw Error(\`no module is found for "$\{moduleName}"\`);
+      }
+      return externalModule;
+    }
+  
+    throw Error(\`no module is found for "$\{moduleName}"\`);
+  };
+
+  require = requireInterceptor;
+  `;
+
+  // Ensure that the require is at the top of the file
+  return `${injectScript}\n${source}`;
+}
 
 // declare var insomnia: Insomnia;
 const runInternal = async <TReturn, TNetworkResponse>(
@@ -29,6 +74,8 @@ const runInternal = async <TReturn, TNetworkResponse>(
     chai.use(require('chai-json-schema'));
     // @ts-expect-error -- global hack
     global.chai = chai;
+    // @ts-expect-error -- global hack
+    global.chaiJSONSchema = require('chai-json-schema');
 
     const mocha: Mocha = new Mocha({
       //       ms   * sec * min
@@ -41,7 +88,7 @@ const runInternal = async <TReturn, TNetworkResponse>(
 
     const sources = Array.isArray(testSrc) ? testSrc : [testSrc];
     sources.forEach(source => {
-      mocha.addFile(writeTempFile(source));
+      mocha.addFile(writeTempFile(prependInterceptedRequireToSource(source)));
     });
 
     try {
@@ -53,6 +100,8 @@ const runInternal = async <TReturn, TNetworkResponse>(
         delete global.insomnia;
         // @ts-expect-error -- global hack
         delete global.chai;
+        // @ts-expect-error -- global hack
+        delete global.chaiJSONSchema;
 
         if (keepFile && mocha.files.length) {
           console.log(`Test files: ${JSON.stringify(mocha.files)}.`);

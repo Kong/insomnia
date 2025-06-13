@@ -1,5 +1,6 @@
+import fs from 'node:fs';
+
 import clone from 'clone';
-import fs from 'fs';
 import type * as Har from 'har-format';
 import { Cookie as ToughCookie } from 'tough-cookie';
 

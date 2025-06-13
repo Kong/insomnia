@@ -1,6 +1,7 @@
+import { builtinModules } from 'node:module';
+import path from 'node:path';
+
 import esbuild from 'esbuild';
-import { builtinModules } from 'module';
-import path from 'path';
 
 import pkg from './package.json';
 

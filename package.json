@@ -55,6 +55,7 @@
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
+    "eslint-plugin-unicorn": "^59.0.1",
     "patch-package": "^8.0.0",
     "prettier": "3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.11",
@@ -65,8 +66,6 @@
     "vitest": "^3.1.1"
   },
   "dependencies": {
-    "@getinsomnia/node-libcurl": "^2.35.0",
-    "@types/decompress": "^4.2.7",
-    "decompress": "^4.2.1"
+    "@getinsomnia/node-libcurl": "^2.35.0"
   }
 }

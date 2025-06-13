@@ -1,6 +1,7 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+
 import { format } from 'date-fns';
-import { mkdir, writeFile } from 'fs/promises';
-import path from 'path';
 import React from 'react';
 
 import { type Environment } from '../models/environment';
@@ -263,8 +264,9 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
             break;
           }
 
-          default:
+          default: {
             throw new Error(`selected export format "${selectedFormat}" is invalid`);
+          }
         }
         window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: selectedFormat } });
       } catch (err) {
@@ -385,20 +387,23 @@ export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) 
 
       try {
         switch (selectedFormat) {
-          case VALUE_HAR:
+          case VALUE_HAR: {
             stringifiedExport = await exportRequestsHAR(requests, shouldExportPrivateEnvironments);
             break;
+          }
 
-          case VALUE_YAML:
+          case VALUE_YAML: {
             stringifiedExport = await getInsomniaV5DataExport({
               workspaceId,
               includePrivateEnvironments: shouldExportPrivateEnvironments,
               requestIds,
             });
             break;
+          }
 
-          default:
+          default: {
             throw new Error(`selected export format "${selectedFormat}" is invalid`);
+          }
         }
         await writeExportedFileToFileSystem(fileName, stringifiedExport);
         window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: selectedFormat } });

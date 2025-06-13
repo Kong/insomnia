@@ -183,7 +183,13 @@ export interface PluginTemplateTagContext {
   app: AppContext;
   store: PluginStore;
   network: {
-    sendRequest(request: Request, extraInfo?: { requestChain: string[] }): Promise<Response>;
+    sendRequest(
+      request: Request,
+      extraInfo?: {
+        requestChain: string[];
+        environmentId?: string;
+      },
+    ): Promise<Response>;
   };
   context: BaseRenderContext & {
     value: string | number;
@@ -199,7 +205,7 @@ export interface PluginTemplateTagContext {
       };
       workspace: { getById: (id: string) => Promise<Workspace | null> };
       oAuth2Token: { getByRequestId: (id: string) => Promise<OAuth2Token | null> };
-      cookieJar: { getOrCreateForWorkspace: (workspace: Workspace) => Promise<CookieJar> };
+      cookieJar: { getOrCreateForParentId: (parentId: string) => Promise<CookieJar> };
       response: {
         getLatestForRequestId: typeof getLatestForRequest;
         getBodyBuffer: typeof getBodyBuffer;

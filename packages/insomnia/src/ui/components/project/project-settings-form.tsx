@@ -19,7 +19,7 @@ import {
   Tabs,
   TextField,
 } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
 import type { GitRepository } from '../../../models/git-repository';
@@ -191,7 +191,7 @@ export const ProjectSettingsForm: FC<Props> = ({
   };
 
   return (
-    <div className="flex max-w-[600px] flex-col gap-4">
+    <div className="flex w-full max-w-[600px] flex-col gap-4">
       {error && (
         <div className="flex items-center gap-2 rounded-sm bg-[rgba(var(--color-danger-rgb),0.5)] px-2 py-1 text-sm text-[--color-font-danger]">
           <Icon icon="triangle-exclamation" />
@@ -318,7 +318,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                 setTab(key as OauthProviderName);
               }}
               aria-label="Git repository settings tabs"
-              className="mt-4 flex h-full w-full min-w-[600px] flex-col"
+              className="mt-4 flex h-full w-full flex-col"
             >
               <TabList
                 className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
@@ -445,6 +445,11 @@ export const ProjectSettingsForm: FC<Props> = ({
                               <Icon icon={scopeToIconMap[file.scope]} className="w-4" />
                             </span>
                             <span className="truncate">{file.name}</span>
+                            {file.path === '.insomnia' && (
+                              <span className="flex items-center gap-2 text-[--color-warning]">
+                                <Icon icon="triangle-exclamation" />
+                              </span>
+                            )}
                           </div>
                         </Cell>
                         <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
@@ -454,7 +459,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                         </Cell>
                         <Cell className="whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
                           <span className="flex items-center gap-1 italic text-[--hl]">
-                            <Icon icon="file" className="text-[--hl]" />
+                            <Icon icon={file.path === '.insomnia' ? 'folder' : 'file'} className="text-[--hl]" />
                             <span className="truncate px-2 text-[--hl]">{file.path}</span>
                           </span>
                         </Cell>
@@ -463,6 +468,22 @@ export const ProjectSettingsForm: FC<Props> = ({
                   </TableBody>
                 </Table>
               </div>
+            </div>
+          )}
+          {insomniaFiles.some(file => file.path === '.insomnia') && (
+            <div className="rounded-sm bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] bg-opacity-50 p-[--padding-sm] text-[--color-font-warning]">
+              <Heading className="flex items-center gap-2 text-lg font-bold">
+                <Icon icon="triangle-exclamation" className="text-[--color-font-warning]" />
+                We found legacy Insomnia files in your repository
+              </Heading>
+              <p className="pt-2">
+                This Git repository contains legacy Insomnia git files. These will be imported and migrated to the new
+                format supported in Insomnia 11+.
+              </p>
+              <p className="pt-2">
+                By migrating these <strong>a new commit will be created</strong> which once synced will result in any
+                users on older versions of Insomnia no longer being able to access these collections.
+              </p>
             </div>
           )}
           <div className="flex items-center justify-end gap-2 pb-10">
@@ -488,7 +509,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                 </>
               ) : (
                 <>
-                  <Icon icon="git-alt" className="" />
+                  <Icon icon={['fab', 'git-alt']} />
                   <span>{insomniaFiles.length > 0 ? 'Import all' : 'Clone'}</span>
                 </>
               )}

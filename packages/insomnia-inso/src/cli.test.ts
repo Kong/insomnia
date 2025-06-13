@@ -1,6 +1,7 @@
-import type { ExecException } from 'child_process';
-import { exec } from 'child_process';
-import path from 'path';
+import type { ExecException } from 'node:child_process';
+import { exec } from 'node:child_process';
+import path from 'node:path';
+
 import { beforeAll, describe, expect, it } from 'vitest';
 // Tests both bundle and packaged versions of the CLI with the same commands and expectations.
 // Intended to be coarse grained (only checks for success or failure) smoke test to ensure packaging worked as expected.
@@ -10,7 +11,7 @@ const shouldReturnSuccessCode = [
   '$PWD/packages/insomnia-inso/bin/inso -h',
 
   // lint spec
-  // as identifer filepath
+  // as identifier filepath
   '$PWD/packages/insomnia-inso/bin/inso lint spec packages/insomnia-inso/src/commands/fixtures/openapi-spec.yaml',
   // as identifier filepath with spectral.yaml
   '$PWD/packages/insomnia-inso/bin/inso lint spec packages/insomnia-inso/src/commands/fixtures/with-ruleset/path-plugin.yaml',
@@ -24,13 +25,16 @@ const shouldReturnSuccessCode = [
   '$PWD/packages/insomnia-inso/bin/inso export spec -w packages/insomnia-inso/src/db/fixtures/nedb spc_46c5a4',
   '$PWD/packages/insomnia-inso/bin/inso export spec -w packages/insomnia-inso/src/db/fixtures/git-repo spc_46c5a4',
   '$PWD/packages/insomnia-inso/bin/inso export spec -w packages/insomnia-inso/src/db/fixtures/insomnia-v4/insomnia_v4.yaml spc_3b2850',
+  '$PWD/packages/insomnia-inso/bin/inso export spec -w packages/insomnia-inso/src/db/fixtures/insomnia-v5/example-spec.yaml "My Design Document"',
 
   // run test
   // nedb, gitrepo, export file
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/nedb -e env_env_ca046a uts_fe901c',
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/nedb -e env_env_ca046a --reporter min uts_fe901c',
+  '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/nedb -e env_0568bc9 uts_a29c6e',
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/git-repo -e env_env_ca046a uts_fe901c',
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/insomnia-v4/insomnia_v4.yaml -e env_env_0e4670 spc_3b2850',
+
   // export file, request can inherit auth headers and variables from folder, also test --disableCertValidation with local https smoke test server
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/examples/folder-inheritance-document.yml spc_a8144e --verbose --disableCertValidation',
 
@@ -56,6 +60,8 @@ const shouldReturnErrorCode = [
   '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/git-repo -e env_env_ca046a uts_7f0f85',
   '$PWD/packages/insomnia-inso/bin/inso lint spec -w packages/insomnia-inso/src/db/fixtures/git-repo-malformed-spec spc_46c5a4',
   '$PWD/packages/insomnia-inso/bin/inso lint spec packages/insomnia-inso/src/db/fixtures/insomnia-v4/malformed.yaml',
+  // With require
+  '$PWD/packages/insomnia-inso/bin/inso run test -w packages/insomnia-inso/src/db/fixtures/insomnia-v5/with-tests.yaml -e env_env_7c2769 uts_1c6207',
   // after-response script and test
   '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/examples/after-response-failed-test.yml wrk_616795 --verbose',
 ];
@@ -148,12 +154,15 @@ describe('inso dev bundle', () => {
       expect(result.stdout).toContain('Adding SSL KEY certificate');
     });
 
-    it('send request with settings enabled (by testing followRedirects)', async () => {
-      const input =
-        '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withSettings" --verbose "Insomnia Designer" wrk_0b96eff';
-      const result = await runCliFromRoot(input);
-      expect(result.stdout).not.toContain("Issue another request to this URL: 'https://insomnia.rest/'");
-    });
+    // Disabled this test
+    // currently settings loading is disabled, as it could include values like proxies from UI, which might not make sense for the cli.
+    // it can be re-enabled if necessary
+    // it('send request with settings enabled (by testing followRedirects)', async () => {
+    //   const input =
+    //     '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withSettings" --verbose "Insomnia Designer" wrk_0b96eff';
+    //   const result = await runCliFromRoot(input);
+    //   expect(result.stdout).not.toContain("Issue another request to this URL: 'https://insomnia.rest/'");
+    // });
 
     it('run collection: run requests in specified order', async () => {
       const input =
@@ -171,7 +180,8 @@ describe('inso dev bundle', () => {
     });
 
     it('read and write folder environments', async () => {
-      const input = '$PWD/packages/insomnia-inso/bin/inso run collection wrk_cfacae2b022e49c8851c2376674cc890 -w packages/insomnia-inso/src/examples/script-folder-environments.yml --requestNamePattern "updateFolderValue" --verbose';
+      const input =
+        '$PWD/packages/insomnia-inso/bin/inso run collection wrk_cfacae2b022e49c8851c2376674cc890 -w packages/insomnia-inso/src/examples/script-folder-environments.yml --requestNamePattern "updateFolderValue" --verbose';
       const result = await runCliFromRoot(input);
       expect(result.stdout).toContain('updated value from folder: 666');
     });

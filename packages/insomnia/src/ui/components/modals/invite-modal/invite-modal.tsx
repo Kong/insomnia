@@ -12,7 +12,7 @@ import {
   ModalOverlay,
   TextField,
 } from 'react-aria-components';
-import { useFetcher, useParams, useSearchParams } from 'react-router-dom';
+import { useFetcher, useParams, useSearchParams } from 'react-router';
 
 import { getAccountId, getCurrentSessionId } from '../../../../account/session';
 import { getAppWebsiteBaseURL } from '../../../../common/constants';
@@ -192,10 +192,9 @@ const InviteModal: FC<{
               ) : (
                 <>
                   <ListBox aria-label="Invitation list" className="flex flex-col gap-1">
-                    {collaborators?.map((member: Collaborator, idx: number) => (
+                    {collaborators?.map((member: Collaborator) => (
                       <MemberListItem
                         key={member.id}
-                        index={idx}
                         organizationId={organizationId}
                         member={member}
                         currentUserAccountId={currentUserAccountId}
@@ -243,7 +242,6 @@ const InviteModal: FC<{
 };
 
 const MemberListItem: FC<{
-  index: number;
   organizationId: string;
   member: Collaborator;
   currentUserAccountId: string;
@@ -256,7 +254,6 @@ const MemberListItem: FC<{
   onResetCurrentPage: () => void;
   onError: (error: string | null) => void;
 }> = ({
-  index,
   organizationId,
   member,
   currentUserAccountId,
@@ -314,7 +311,6 @@ const MemberListItem: FC<{
   return (
     <ListBoxItem
       id={isAcceptedMember ? member.metadata.userId : member.id}
-      data-testid={`collaborator-test-iteration-${index}`}
       textValue={textValue}
       className="flex justify-between gap-[16px] rounded-sm px-2 leading-[36px] outline-none odd:bg-[--hl-xs]"
     >
@@ -449,6 +445,7 @@ const MemberListItem: FC<{
         )}
         <PromptButton
           confirmMessage="Confirm"
+          ariaLabel={isAcceptedMember || isGroup ? 'Remove' : 'Revoke'}
           className="flex min-w-[85px] items-center gap-2 px-2 py-1 text-sm font-semibold text-[--color-font] transition-all aria-pressed:bg-[--hl-sm]"
           doneMessage={isFailed ? 'Failed' : isAcceptedMember || isGroup ? 'Removed' : 'Revoked'}
           disabled={memberRoleName === 'owner' || isCurrentUser}

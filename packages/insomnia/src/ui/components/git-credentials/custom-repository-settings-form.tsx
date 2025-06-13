@@ -64,12 +64,12 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
             className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
           />
         </TextField>
-        <TextField name="authorName" className="flex w-full flex-col gap-1 px-0.5" isRequired>
-          <Label className="text-start text-sm font-semibold">Author Name</Label>
+        <TextField name="authorEmail" className="flex w-full flex-col gap-1 px-0.5" isRequired>
+          <Label className="text-start text-sm font-semibold">Author Email</Label>
           <Input
-            placeholder="Name"
+            placeholder="Email"
             disabled={Boolean(uri)}
-            defaultValue={author?.name}
+            defaultValue={author?.email}
             className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
           />
         </TextField>

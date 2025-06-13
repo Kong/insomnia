@@ -1,5 +1,6 @@
+import crypto from 'node:crypto';
+
 import { Analytics } from '@segment/analytics-node';
-import crypto from 'crypto';
 import { net } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -141,11 +142,14 @@ export async function trackPageView(name: string) {
 function _getOsName() {
   const platform = getAppPlatform();
   switch (platform) {
-    case 'darwin':
+    case 'darwin': {
       return 'mac';
-    case 'win32':
+    }
+    case 'win32': {
       return 'windows';
-    default:
+    }
+    default: {
       return platform;
+    }
   }
 }

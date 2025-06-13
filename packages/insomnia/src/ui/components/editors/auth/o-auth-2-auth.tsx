@@ -1,5 +1,5 @@
 import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router';
 
 import type { AUTH_OAUTH_2 } from '../../../../common/constants';
 import { toKebabCase } from '../../../../common/misc';
@@ -434,7 +434,12 @@ const OAuth2Tokens: FC = () => {
     };
     fn();
   }, [_id]);
-  const { handleRender } = useNunjucks();
+  const { handleRender } = useNunjucks({
+    renderContext: {
+      // add purpose here so that secret values(secret variable & external vault) will be revealed in manual OAuth request
+      purpose: 'send',
+    },
+  });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 

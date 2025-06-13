@@ -8,11 +8,14 @@ import type { ExecutionOption } from './execution';
 import type { RequestInfoOption } from './request-info';
 import type { RequestTestResult } from './test';
 
+/** @ignore */
 export interface IEnvironment {
   id: string;
   name: string;
   data: object;
 }
+
+/** @ignore */
 export interface RequestContext {
   request: Request;
   timelinePath: string;
@@ -20,7 +23,9 @@ export interface RequestContext {
   baseEnvironment: IEnvironment;
   vault?: IEnvironment;
   collectionVariables?: object;
+  // globals are optional because they are activated only when selected
   globals?: object;
+  baseGlobals?: object;
   iterationData?: Omit<IEnvironment, 'id'>;
   timeout: number;
   settings: Settings;

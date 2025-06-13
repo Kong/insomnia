@@ -1,9 +1,10 @@
+import fs from 'node:fs';
+
 import type { ISpectralDiagnostic, RulesetDefinition } from '@stoplight/spectral-core';
 import { Spectral } from '@stoplight/spectral-core';
 // @ts-expect-error - tsconfig needs to be updated to separate main/renderer code
 import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
 import { oas } from '@stoplight/spectral-rulesets';
-import fs from 'fs';
 
 interface SpectralRunParams {
   contents: string;

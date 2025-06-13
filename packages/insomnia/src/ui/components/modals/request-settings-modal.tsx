@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useFetcher, useNavigate, useParams } from 'react-router-dom';
+import { useFetcher, useNavigate, useParams } from 'react-router';
 
 import { isNotNullOrUndefined } from '../../../common/misc';
 import * as models from '../../../models';
@@ -125,6 +125,17 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                           type="checkbox"
                           name="settingStoreCookies"
                           checked={request.settingStoreCookies}
+                          onChange={toggleCheckBox}
+                        />
+                      </label>
+                    </div>
+                    <div className="form-control form-control--thin">
+                      <label>
+                        Use proxy from preferences settings
+                        <input
+                          type="checkbox"
+                          name="settingUseProxy"
+                          checked={request.settingUseProxy}
                           onChange={toggleCheckBox}
                         />
                       </label>

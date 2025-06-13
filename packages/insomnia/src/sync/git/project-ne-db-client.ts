@@ -1,5 +1,6 @@
+import path from 'node:path';
+
 import type { PromiseFsClient } from 'isomorphic-git';
-import path from 'path';
 import YAML from 'yaml';
 
 import { database as db } from '../../common/database';

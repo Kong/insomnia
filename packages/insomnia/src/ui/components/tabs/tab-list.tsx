@@ -10,7 +10,7 @@ import {
   type Selection,
   useDragAndDrop,
 } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
 import { debounce } from '../../../common/misc';
@@ -290,14 +290,17 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
         return;
       }
       switch (label) {
-        case TAB_CONTEXT_MENU_COMMAND.CLOSE_ALL:
+        case TAB_CONTEXT_MENU_COMMAND.CLOSE_ALL: {
           closeAllTabs?.();
           break;
-        case TAB_CONTEXT_MENU_COMMAND.CLOSE_OTHERS:
+        }
+        case TAB_CONTEXT_MENU_COMMAND.CLOSE_OTHERS: {
           closeOtherTabs?.(extra?.currentTabId);
           break;
-        default:
+        }
+        default: {
           break;
+        }
       }
     });
 

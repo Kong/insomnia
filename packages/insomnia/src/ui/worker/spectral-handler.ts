@@ -9,7 +9,7 @@ export class SpectralRunner {
   constructor() {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- see below
     // @ts-ignore -- inso transpiles to commonjs so doesn't play nice with this
-    this.worker = new Worker(new URL('./spectral-worker.ts', import.meta.url), { type: 'module' });
+    this.worker = new Worker(new URL('spectral-worker.ts', import.meta.url), { type: 'module' });
   }
 
   terminate() {

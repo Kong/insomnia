@@ -1,5 +1,6 @@
+import { URL } from 'node:url';
+
 import { type ControlOperator, parse, type ParseEntry } from 'shell-quote';
-import { URL } from 'url';
 
 import { type Converter, type ImportRequest, type Parameter } from '../entities';
 
@@ -283,13 +284,15 @@ const pairsToDataParameters = (keyedPairs: PairsByName): Parameter[] => {
       case 'd':
       case 'data':
       case 'data-ascii':
-      case 'data-binary':
+      case 'data-binary': {
         dataParameters = dataParameters.concat(pairs.flatMap(pair => pairToParameters(pair, true)));
         break;
-      case 'data-raw':
+      }
+      case 'data-raw': {
         dataParameters = dataParameters.concat(pairs.flatMap(pair => pairToParameters(pair)));
         break;
-      case 'data-urlencode':
+      }
+      case 'data-urlencode': {
         dataParameters = dataParameters.concat(
           pairs
             .flatMap(pair => pairToParameters(pair, true))
@@ -305,8 +308,10 @@ const pairsToDataParameters = (keyedPairs: PairsByName): Parameter[] => {
             }),
         );
         break;
-      default:
+      }
+      default: {
         throw new Error(`unhandled data flag ${flagName}`);
+      }
     }
   }
 
@@ -370,7 +375,7 @@ export const convert: Converter = rawData => {
   for (const parseEntry of parseEntries) {
     if (typeof parseEntry === 'string') {
       if (parseEntry.startsWith('$')) {
-        currentCommand.push(parseEntry.slice(1, Infinity));
+        currentCommand.push(parseEntry.slice(1));
       } else {
         currentCommand.push(parseEntry);
       }

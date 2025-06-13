@@ -19,7 +19,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   await page.getByLabel('OAuth Testing').click();
 
- // Test Folder Level Auth propagates to heirs
+  // Test Folder Level Auth propagates to heirs
 
   // select the folder (collapses heirs
   await page.getByTestId('Folder Level Auth Code').click();

@@ -41,6 +41,7 @@ export class InsomniaObject {
   private iterationData: Environment;
   // TODO: follows will be enabled after Insomnia supports them
   private globals: Environment;
+  private baseGlobals: Environment;
   private _settings: Settings;
 
   private requestTestResults: RequestTestResult[];
@@ -49,6 +50,7 @@ export class InsomniaObject {
 
   constructor(rawObj: {
     globals: Environment;
+    baseGlobals: Environment;
     iterationData: Environment;
     environment: Environment;
     baseEnvironment: Environment;
@@ -64,6 +66,7 @@ export class InsomniaObject {
     vault?: Vault;
   }) {
     this.globals = rawObj.globals;
+    this.baseGlobals = rawObj.baseGlobals;
     this.environment = rawObj.environment;
     this.baseEnvironment = rawObj.baseEnvironment;
     this.collectionVariables = this.baseEnvironment; // collectionVariables is mapped to baseEnvironment
@@ -122,6 +125,7 @@ export class InsomniaObject {
   toObject = () => {
     return {
       globals: this.globals.toObject(),
+      baseGlobals: this.baseGlobals.toObject(),
       environment: this.environment.toObject(),
       baseEnvironment: this.baseEnvironment.toObject(),
       iterationData: this.iterationData.toObject(),
@@ -141,15 +145,15 @@ export class InsomniaObject {
 
 export async function initInsomniaObject(rawObj: RequestContext, log: (...args: any[]) => void) {
   // Mapping rule for the global environment:
-  // - when one global environment is selected, `globals` points to the selected one
-  // Potential mapping rule for the future:
-  // - The base global environment could also be introduced
+  // - If global base environment is selected, both `baseGlobals` and `globals` point to the selected one.
+  // - If one global sub environment is selected,  `baseGlobals` points to the base env of the selected one and `globals` points to the selected one.
+  const baseGlobals = new Environment('baseGlobals', rawObj.baseGlobals || {});
   const globals = new Environment('globals', rawObj.globals || {}); // could be undefined
   // Mapping rule for the environment and base environment:
   // - If base environment is selected, both `baseEnvironment` and `environment` point to the selected one.
   // - If one sub environment is selected,  `baseEnvironment` points to the base env and `environment` points to the selected one.
   const baseEnvironment = new Environment(rawObj.baseEnvironment.name || '', rawObj.baseEnvironment.data);
-  // reuse baseEnvironment when the "selected envrionment" points to the base environment
+  // reuse baseEnvironment when the "selected environment" points to the base environment
   const environment =
     rawObj.baseEnvironment.id === rawObj.environment.id
       ? baseEnvironment
@@ -185,6 +189,7 @@ export async function initInsomniaObject(rawObj: RequestContext, log: (...args: 
   );
 
   const variables = new Variables({
+    baseGlobalVars: baseGlobals,
     globalVars: globals,
     environmentVars: environment,
     collectionVars: baseEnvironment,
@@ -262,6 +267,7 @@ export async function initInsomniaObject(rawObj: RequestContext, log: (...args: 
 
   return new InsomniaObject({
     globals,
+    baseGlobals,
     environment,
     baseEnvironment,
     iterationData,

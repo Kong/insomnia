@@ -2,10 +2,11 @@ import type { RulesetDefinition } from '@stoplight/spectral-core';
 import { Spectral } from '@stoplight/spectral-core';
 
 const { bundleAndLoadRuleset } = require('@stoplight/spectral-ruleset-bundler/with-loader');
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { oas } from '@stoplight/spectral-rulesets';
 import { DiagnosticSeverity } from '@stoplight/types';
-import fs from 'fs';
-import path from 'path';
 
 import { InsoError, logger } from '../cli';
 export const getRuleSetFileFromFolderByFilename = async (filePath: string) => {

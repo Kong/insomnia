@@ -1,8 +1,9 @@
+import { stat } from 'node:fs/promises';
+import path from 'node:path';
+
 import { type IRuleResult } from '@stoplight/spectral-core';
 import CodeMirror from 'codemirror';
-import { stat } from 'fs/promises';
 import type { OpenAPIV3 } from 'openapi-types';
-import path from 'path';
 import React, {
   type FC,
   Fragment,
@@ -32,14 +33,7 @@ import {
   TooltipTrigger,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import {
-  type LoaderFunction,
-  NavLink,
-  useFetcher,
-  useLoaderData,
-  useParams,
-  useRouteLoaderData,
-} from 'react-router-dom';
+import { type LoaderFunction, NavLink, useFetcher, useLoaderData, useParams, useRouteLoaderData } from 'react-router';
 import { useUnmount } from 'react-use';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
 import YAML from 'yaml';
@@ -197,7 +191,7 @@ const Design: FC = () => {
   const updateApiSpecFetcher = useFetcher();
   const generateRequestCollectionFetcher = useFetcher();
   const [isLintPaneOpen, setIsLintPaneOpen] = useState(false);
-  const [isSpecPaneOpen, setIsSpecPaneOpen] = useState(true);
+  const [isSpecPaneOpen, setIsSpecPaneOpen] = useState(Boolean(parsedSpec));
 
   const { components, info, servers, paths } = parsedSpec || {};
   const { requestBodies, responses, parameters, headers, schemas, securitySchemes } = components || {};
@@ -918,7 +912,8 @@ const Design: FC = () => {
                   showPrettifyButton
                   ref={editor}
                   lintOptions={lintOptions}
-                  mode="openapi"
+                  // only set the openapi mode if there are contents
+                  mode={apiSpec.contents ? 'openapi' : undefined}
                   defaultValue={apiSpec.contents || ''}
                   onChange={onCodeEditorChange}
                   uniquenessKey={uniquenessKey}
@@ -940,90 +935,92 @@ const Design: FC = () => {
                   />
                 )}
               </div>
-              <div
-                className={`flex ${isLintPaneOpen ? '' : 'h-[--line-height-sm]'} box-border flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden`}
-              >
-                <div className="flex items-center gap-2 p-[--padding-sm]">
-                  <TooltipTrigger>
-                    <Button className="flex cursor-pointer select-none items-center gap-2">
-                      <Icon icon={rulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
-                      Ruleset
-                    </Button>
-                    <Tooltip
-                      placement="top end"
-                      offset={8}
-                      className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
-                    >
-                      <div>
-                        {rulesetPath ? (
-                          <Fragment>
-                            <p>Using ruleset from</p>
-                            <code className="break-words p-0">{rulesetPath}</code>
-                          </Fragment>
-                        ) : (
-                          <Fragment>
-                            <p>Using default OAS ruleset.</p>
-                            <p>
-                              To use a custom ruleset add a <code className="p-0">.spectral.yaml</code> file to the root
-                              of your git repository
-                            </p>
-                          </Fragment>
-                        )}
+              {apiSpec.contents ? (
+                <div
+                  className={`flex ${isLintPaneOpen ? '' : 'h-[--line-height-sm]'} box-border flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden`}
+                >
+                  <div className="flex items-center gap-2 p-[--padding-sm]">
+                    <TooltipTrigger>
+                      <Button className="flex cursor-pointer select-none items-center gap-2">
+                        <Icon icon={rulesetPath ? 'file-circle-check' : 'file-circle-xmark'} />
+                        Ruleset
+                      </Button>
+                      <Tooltip
+                        placement="top end"
+                        offset={8}
+                        className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                      >
+                        <div>
+                          {rulesetPath ? (
+                            <Fragment>
+                              <p>Using ruleset from</p>
+                              <code className="break-words p-0">{rulesetPath}</code>
+                            </Fragment>
+                          ) : (
+                            <Fragment>
+                              <p>Using default OAS ruleset.</p>
+                              <p>
+                                To use a custom ruleset add a <code className="p-0">.spectral.yaml</code> file to the
+                                root of your git repository
+                              </p>
+                            </Fragment>
+                          )}
+                        </div>
+                      </Tooltip>
+                    </TooltipTrigger>
+                    {lintErrors.length > 0 && (
+                      <div className="flex select-none items-center gap-2">
+                        <Icon icon="circle-xmark" className="text-[--color-danger]" />
+                        {lintErrors.length}
                       </div>
-                    </Tooltip>
-                  </TooltipTrigger>
-                  {lintErrors.length > 0 && (
-                    <div className="flex select-none items-center gap-2">
-                      <Icon icon="circle-xmark" className="text-[--color-danger]" />
-                      {lintErrors.length}
-                    </div>
-                  )}
-                  {lintWarnings.length > 0 && (
-                    <div className="flex select-none items-center gap-2">
-                      <Icon icon="triangle-exclamation" className="text-[--color-warning]" />
-                      {lintWarnings.length}
-                    </div>
-                  )}
-                  {lintMessages.length === 0 && apiSpec.contents && (
-                    <div className="flex select-none items-center gap-2">
-                      <Icon icon="check-square" className="text-[--color-success]" />
-                      No lint problems
-                    </div>
-                  )}
-                  <span className="flex-1" />
-                  {lintMessages.length > 0 && (
-                    <Button aria-label="Toggle lint panel" onPress={() => setIsLintPaneOpen(!isLintPaneOpen)}>
-                      <Icon icon={isLintPaneOpen ? 'chevron-down' : 'chevron-up'} />
-                    </Button>
+                    )}
+                    {lintWarnings.length > 0 && (
+                      <div className="flex select-none items-center gap-2">
+                        <Icon icon="triangle-exclamation" className="text-[--color-warning]" />
+                        {lintWarnings.length}
+                      </div>
+                    )}
+                    {lintMessages.length === 0 && apiSpec.contents && (
+                      <div className="flex select-none items-center gap-2">
+                        <Icon icon="check-square" className="text-[--color-success]" />
+                        No lint problems
+                      </div>
+                    )}
+                    <span className="flex-1" />
+                    {lintMessages.length > 0 && (
+                      <Button aria-label="Toggle lint panel" onPress={() => setIsLintPaneOpen(!isLintPaneOpen)}>
+                        <Icon icon={isLintPaneOpen ? 'chevron-down' : 'chevron-up'} />
+                      </Button>
+                    )}
+                  </div>
+                  {isLintPaneOpen && (
+                    <ListBox
+                      className="flex-1 select-none overflow-y-auto"
+                      onAction={index => {
+                        const listIndex = parseInt(index.toString(), 10);
+                        const lintMessage = lintMessages[listIndex];
+                        handleScrollToLintMessage(lintMessage);
+                      }}
+                      items={lintMessages.map((message, index) => ({
+                        ...message,
+                        id: index,
+                        value: message,
+                      }))}
+                    >
+                      {item => (
+                        <ListBoxItem className="flex items-center gap-2 p-[--padding-sm] text-xs outline-none transition-colors even:bg-[--hl-xs] focus-within:bg-[--hl-md] data-[focused]:bg-[--hl-md]">
+                          <Icon
+                            className={item.type === 'error' ? 'text-[--color-danger]' : 'text-[--color-warning]'}
+                            icon={item.type === 'error' ? 'circle-xmark' : 'triangle-exclamation'}
+                          />
+                          <span className="truncate">{item.message}</span>
+                          <span className="flex-shrink-0 text-[--hl-lg]">[Ln {item.line}]</span>
+                        </ListBoxItem>
+                      )}
+                    </ListBox>
                   )}
                 </div>
-                {isLintPaneOpen && (
-                  <ListBox
-                    className="flex-1 select-none overflow-y-auto"
-                    onAction={index => {
-                      const listIndex = parseInt(index.toString(), 10);
-                      const lintMessage = lintMessages[listIndex];
-                      handleScrollToLintMessage(lintMessage);
-                    }}
-                    items={lintMessages.map((message, index) => ({
-                      ...message,
-                      id: index,
-                      value: message,
-                    }))}
-                  >
-                    {item => (
-                      <ListBoxItem className="flex items-center gap-2 p-[--padding-sm] text-xs outline-none transition-colors even:bg-[--hl-xs] focus-within:bg-[--hl-md] data-[focused]:bg-[--hl-md]">
-                        <Icon
-                          className={item.type === 'error' ? 'text-[--color-danger]' : 'text-[--color-warning]'}
-                          icon={item.type === 'error' ? 'circle-xmark' : 'triangle-exclamation'}
-                        />
-                        <span className="truncate">{item.message}</span>
-                        <span className="flex-shrink-0 text-[--hl-lg]">[Ln {item.line}]</span>
-                      </ListBoxItem>
-                    )}
-                  </ListBox>
-                )}
-              </div>
+              ) : null}
             </div>
           </Panel>
           {isSpecPaneOpen && (

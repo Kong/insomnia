@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
-import { useParams } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router';
+import { useParams } from 'react-router';
 
 import { type ChangeBufferEvent, database } from '../../common/database';
 import type { BaseModel } from '../../models';

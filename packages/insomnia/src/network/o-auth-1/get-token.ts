@@ -2,7 +2,8 @@
  * Get an OAuth1Token object and also handle storing/saving/refreshing
  * @returns {Promise.<void>}
  */
-import crypto from 'crypto';
+import crypto from 'node:crypto';
+
 import OAuth1 from 'oauth-1.0a';
 
 import type { AUTH_OAUTH_1 } from '../../common/constants';

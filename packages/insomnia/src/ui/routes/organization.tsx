@@ -1,5 +1,4 @@
-import * as Sentry from '@sentry/electron/renderer';
-import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import {
   Button,
   Link,
@@ -24,13 +23,12 @@ import {
   useNavigate,
   useParams,
   useRouteLoaderData,
-} from 'react-router-dom';
+} from 'react-router';
 import { useLocalStorage } from 'react-use';
 
 import * as session from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
 import { database } from '../../common/database';
-import { SentryMetrics } from '../../common/sentry';
 import { userSession } from '../../models';
 import { updateLocalProjectToRemote } from '../../models/helpers/project';
 import {
@@ -101,18 +99,24 @@ export interface UserProfileResponse {
 export type PersonalPlanType = 'free' | 'individual' | 'team' | 'enterprise' | 'enterprise-member';
 export const formatCurrentPlanType = (type: PersonalPlanType) => {
   switch (type) {
-    case 'free':
+    case 'free': {
       return 'Hobby';
-    case 'individual':
+    }
+    case 'individual': {
       return 'Individual';
-    case 'team':
+    }
+    case 'team': {
       return 'Pro';
-    case 'enterprise':
+    }
+    case 'enterprise': {
       return 'Enterprise';
-    case 'enterprise-member':
+    }
+    case 'enterprise-member': {
       return 'Enterprise Member';
-    default:
+    }
+    default: {
       return 'Free';
+    }
   }
 };
 type PaymentSchedules = 'month' | 'year';
@@ -659,24 +663,6 @@ const OrganizationRoute = () => {
 
   const { generating: loadingAI, progress: loadingAIProgress } = useAIContext();
 
-  const nextOrganizationId = useRef<string>();
-  const startSwitchOrganizationTime = useRef<number>();
-
-  useEffect(() => {
-    if (
-      nextOrganizationId.current &&
-      startSwitchOrganizationTime.current &&
-      nextOrganizationId.current === organizationId
-    ) {
-      const duration = performance.now() - startSwitchOrganizationTime.current;
-      Sentry.metrics.distribution(SentryMetrics.ORGANIZATION_SWITCH_DURATION, duration, {
-        unit: 'millisecond',
-      });
-      nextOrganizationId.current = undefined;
-      startSwitchOrganizationTime.current = undefined;
-    }
-  }, [organizationId]);
-
   return (
     <InsomniaEventStreamProvider>
       <InsomniaTabProvider>
@@ -761,8 +747,6 @@ const OrganizationRoute = () => {
                                 : 'outline-transparent hover:outline-[--hl-md] focus:outline-[--hl-md]'
                             }`}
                             onClick={async () => {
-                              nextOrganizationId.current = organization.id;
-                              startSwitchOrganizationTime.current = performance.now();
                               const routeForOrganization = await getInitialRouteForOrganization({
                                 organizationId: organization.id,
                               });

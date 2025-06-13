@@ -1,5 +1,6 @@
+import path from 'node:path';
+
 import * as git from 'isomorphic-git';
-import path from 'path';
 import { parse, stringify } from 'yaml';
 
 import type { MergeConflict } from '../types';

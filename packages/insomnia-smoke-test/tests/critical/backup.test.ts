@@ -1,6 +1,7 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { expect } from '@playwright/test';
-import fs from 'fs';
-import path from 'path';
 
 import { test } from '../../playwright/test';
 

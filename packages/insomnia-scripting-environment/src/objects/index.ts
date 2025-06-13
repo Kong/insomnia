@@ -11,3 +11,5 @@ export * from './async_objects';
 export * from './test';
 export * from './execution';
 export * from './proxy-configs';
+export * from './folders';
+export * from './request-info';

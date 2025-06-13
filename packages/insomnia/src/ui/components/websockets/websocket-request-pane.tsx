@@ -1,7 +1,7 @@
 import React, { type FC, Fragment, useEffect, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton, Toolbar } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router';
 import { useLocalStorage } from 'react-use';
 
 import { CONTENT_TYPE_JSON } from '../../../common/constants';
@@ -37,7 +37,7 @@ import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { Pane } from '../panes/pane';
 import { RenderedQueryString } from '../rendered-query-string';
-import { WebSocketActionBar } from './action-bar';
+import { WebSocketActionBar, type WebSocketActionBarHandle } from './action-bar';
 
 const supportedAuthTypes: AuthTypes[] = ['apikey', 'basic', 'bearer'];
 
@@ -193,6 +193,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
 
   const [previewMode, setPreviewMode] = useState(CONTENT_TYPE_JSON);
 
+  const webSocketActionBarRef = useRef<WebSocketActionBarHandle>(null);
   const [dismissPathParameterTip, setDismissPathParameterTip] = useLocalStorage('dismissPathParameterTip', '');
 
   useEffect(() => {
@@ -256,13 +257,15 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
     // Only update if url changed
     if (url !== activeRequest.url) {
       patchRequest(requestId, { url, parameters });
+      // Please refer to the comment in the request-pane
+      webSocketActionBarRef.current?.setUrl(url);
     }
   };
 
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const patchRequest = useRequestPatcher();
-  const urlHasQueryParameters = activeRequest.url.indexOf('?') >= 0;
+  const urlHasQueryParameters = activeRequest.url.includes('?');
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniqueKey = `${environment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta.activeResponseId}`;
   const requestAuth = getAuthObjectOrNull(activeRequest.authentication);
@@ -278,6 +281,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
           defaultValue={activeRequest.url}
           readyState={readyState}
           onChange={url => patchRequest(requestId, { url })}
+          ref={webSocketActionBarRef}
         />
       </header>
       <Tabs aria-label="Websocket request pane tabs" className="flex h-full w-full flex-1 flex-col">

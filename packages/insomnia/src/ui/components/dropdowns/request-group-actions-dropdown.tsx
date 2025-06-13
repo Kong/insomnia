@@ -1,7 +1,7 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useRef, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
-import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 
 import { toKebabCase } from '../../../common/misc';
 import type { PlatformKeyCombinations } from '../../../common/settings';
