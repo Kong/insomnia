@@ -1,7 +1,6 @@
 import crypto from 'node:crypto';
 
 import { Analytics } from '@segment/analytics-node';
-import * as Sentry from '@sentry/electron/main';
 import { net } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -15,10 +14,6 @@ import {
 } from '../common/constants';
 import { SENTRY_OPTIONS } from '../common/sentry';
 import * as models from '../models/index';
-
-Sentry.init({
-  ...SENTRY_OPTIONS,
-});
 
 const analytics = new Analytics({
   writeKey: getSegmentWriteKey(),
