@@ -277,7 +277,7 @@ export const ExportRequestsModal = ({
   const isExportDisabled =
     (state?.treeRoot?.totalRequests && state?.treeRoot?.totalRequests > 0 && state?.treeRoot?.selectedRequests === 0) ||
     false;
-  console.log(state && state.treeRoot);
+
   return (
     <ModalOverlay
       isOpen
