@@ -1,0 +1,195 @@
+type: collection.insomnia.rest/5.0
+name: Template Tag Collection
+meta:
+  id: wrk_cd3c229026474b7fae20da41d66ba3ab
+  created: 1748314417144
+  modified: 1748314417144
+collection:
+  - name: FolderWithRequest
+    meta:
+      id: fld_6e809c3828564b0c834039df29a22531
+      created: 1748315205407
+      modified: 1748315205407
+      sortKey: -1748315205407
+    children:
+      - url: http://127.0.0.1:4010/echo
+        name: Request Tag
+        meta:
+          id: req_205aa10dc11c4914bd73d8194c8d1e81
+          created: 1748315231656
+          modified: 1748327301424
+          isPrivate: false
+          sortKey: -1748315231656
+        method: GET
+        body:
+          mimeType: text/plain
+          text: |+
+            {% request 'name', '', '' %}
+            {% request 'folder', '', '' %}
+            {% request 'url', '', '' %}
+            {% request 'parameter', 'foo', '' %}
+            {% request 'cookie', 'from', '' %}
+
+        parameters:
+          - id: pair_10b0769f64bd47e5953e446085d801b1
+            name: foo
+            value: bar
+            disabled: false
+        headers:
+          - name: Content-Type
+            value: text/plain
+          - name: User-Agent
+            value: insomnia/11.1.0
+        authentication:
+          type: oauth2
+          grantType: authorization_code
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: Common Tag
+    meta:
+      id: req_901db4952ceb478cbf3e8a067ebe69a7
+      created: 1748327288726
+      modified: 1748329418160
+      isPrivate: false
+      sortKey: -1748327288726
+    method: GET
+    body:
+      mimeType: text/plain
+      text: |
+        {% base64 'encode', 'normal', 'insomnia-test' %}
+        {% base64 'decode', 'normal', 'aW5zb21uaWEtdGVzdA==' %}
+        {% faker 'guid' %}
+        {% file '__TEMPLATE_TAG_FILE_PATH' %}
+        {% hash 'md5', 'hex', 'insomnia-test' %}
+        {% os 'arch', '' %}
+        {% jsonpath '{"foo":"bar"}', 'b64::JC5mb28=::46b' %}
+        {% now 'millis', '' %}
+        {% uuid 'v4' %}
+        {% cookie 'http://127.0.0.1/echo', 'from' %}
+    headers:
+      - name: Content-Type
+        value: text/plain
+      - name: User-Agent
+        value: insomnia/11.1.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: Response Tag
+    meta:
+      id: req_71794e4f43f5498e8b7e87d98be8d21b
+      created: 1748331291452
+      modified: 1748331512535
+      isPrivate: false
+      sortKey: -1748331291452
+    method: GET
+    body:
+      mimeType: text/plain
+      text: >-
+        {% response 'body', 'req_60295920e8a9459fb32cacb739a261f5',
+        'b64::JC5tZXRob2Q=::46b', 'never', 60 %}
+
+        {% response 'header', 'req_60295920e8a9459fb32cacb739a261f5',
+        'b64::Y29udGVudC10eXBl::46b', 'never', 60 %}
+
+        {% response 'url', 'req_60295920e8a9459fb32cacb739a261f5', '', 'never',
+        60 %}
+    headers:
+      - name: Content-Type
+        value: text/plain
+      - name: User-Agent
+        value: insomnia/11.1.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: Prompt Tag
+    meta:
+      id: req_05ce27906a824071ad138cb6d99248d0
+      created: 1748335221312
+      modified: 1748336216272
+      isPrivate: false
+      sortKey: -1748335221312
+    method: GET
+    body:
+      mimeType: text/plain
+      text: "{% prompt 'prompt test', '', 'test', 'insomnia-test', false, true %}"
+    headers:
+      - name: Content-Type
+        value: text/plain
+      - name: User-Agent
+        value: insomnia/11.1.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://127.0.0.1:4010/echo
+    name: Base Response
+    meta:
+      id: req_60295920e8a9459fb32cacb739a261f5
+      created: 1748331328603
+      modified: 1748331472232
+      isPrivate: false
+      sortKey: -1748331328603
+    method: GET
+    body:
+      mimeType: application/x-www-form-urlencoded
+      params:
+        - id: pair_a1beae72f2964d85b87bc35f1b9fd401
+          name: foo
+          value: bar
+          disabled: false
+    headers:
+      - name: User-Agent
+        value: insomnia/11.1.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true      
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_f7254814b5365cfdd815f6ed8523b2a92d0f19e1
+    created: 1748314417147
+    modified: 1748314417147
+  cookies:
+    - id: 179e1b5e-1fd4-49b6-b506-62d469c4cd93
+      key: from
+      value: cookie
+      domain: 127.0.0.1
+      path: /echo
+      expires: 2038-12-31T12:00:00.000Z
+      secure: false
+      httpOnly: false
+environments:
+  name: Base Environment
+  meta:
+    id: env_f7254814b5365cfdd815f6ed8523b2a92d0f19e1
+    created: 1748314417145
+    modified: 1748314417145
+    isPrivate: false
