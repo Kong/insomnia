@@ -8,8 +8,7 @@ import { type ActionFunction, redirect } from 'react-router';
 import { version } from '../../../package.json';
 import { parseApiSpec, resolveComponentSchemaRefs } from '../../common/api-specs';
 import { ACTIVITY_DEBUG, getAIServiceURL, METHOD_GET } from '../../common/constants';
-import { database } from '../../common/database';
-import { database as db } from '../../common/database';
+import { database, database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources, type ScanResult } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
@@ -39,6 +38,7 @@ import { SpectralRunner } from '../worker/spectral-handler';
 // Project
 export const createNewProjectAction: ActionFunction = async ({ request, params }) => {
   const { organizationId } = params;
+
   invariant(organizationId, 'Organization ID is required');
   const newProjectData = (await request.json()) as {
     name: string;
@@ -62,6 +62,13 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
       parentId: organizationId,
     });
 
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.projectCreated,
+      properties: {
+        storage: 'Local',
+      },
+    });
+
     return redirect(`/organization/${organizationId}/project/${project._id}`);
   }
 
@@ -76,6 +83,13 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
         error: errors.join(', '),
       };
     }
+
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.projectCreated,
+      properties: {
+        storage: 'Git',
+      },
+    });
 
     return redirect(`/organization/${organizationId}/project/${projectId}`);
   }
@@ -98,6 +112,15 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
       },
       sessionId,
     });
+
+    if (newCloudProject && !('error' in newCloudProject)) {
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.projectCreated,
+        properties: {
+          storage: 'Cloud',
+        },
+      });
+    }
 
     if (!newCloudProject || 'error' in newCloudProject) {
       let error = 'An unexpected error occurred while creating the project. Please try again.';
@@ -209,6 +232,15 @@ export const updateProjectAction: ActionFunction = async ({ request, params }) =
         sessionId,
       });
 
+      if (response && !response.error) {
+        window.main.trackSegmentEvent({
+          event: SegmentEvent.projectUpdated,
+          properties: {
+            storage: 'Local',
+          },
+        });
+      }
+
       if (response && 'error' in response) {
         let error = 'An unexpected error occurred while updating your project. Please try again.';
 
@@ -249,6 +281,15 @@ export const updateProjectAction: ActionFunction = async ({ request, params }) =
         },
         sessionId,
       });
+
+      if (newCloudProject && !('error' in newCloudProject)) {
+        window.main.trackSegmentEvent({
+          event: SegmentEvent.projectUpdated,
+          properties: {
+            storage: 'Cloud',
+          },
+        });
+      }
 
       if (!newCloudProject || 'error' in newCloudProject) {
         let error = 'An unexpected error occurred while updating your project. Please try again.';
@@ -292,6 +333,15 @@ export const updateProjectAction: ActionFunction = async ({ request, params }) =
           method: 'DELETE',
           sessionId,
         });
+
+        if (response && !response.error) {
+          window.main.trackSegmentEvent({
+            event: SegmentEvent.projectUpdated,
+            properties: {
+              storage: 'Git',
+            },
+          });
+        }
 
         if (response && 'error' in response) {
           let error = 'An unexpected error occurred while updating your project. Please try again.';
@@ -357,6 +407,13 @@ export const updateProjectAction: ActionFunction = async ({ request, params }) =
 
     // local project rename
     await models.project.update(project, { name });
+
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.projectUpdated,
+      properties: {
+        storage: 'Local',
+      },
+    });
 
     return {
       success: true,
