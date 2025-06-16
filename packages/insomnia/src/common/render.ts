@@ -306,7 +306,7 @@ export async function render<T>(
 
         const hasUnknownTags = getUnknownTags(input).length > 0;
 
-        const pluginsAreRestrictedToRunInWorker = settings?.pluginsAllowElevatedAccess === false || hasUnknownTags;
+        const pluginsAreRestrictedToRunInWorker = settings?.pluginsAllowElevatedAccess === false && hasUnknownTags;
 
         const currentProcessIsRendererAndPluginsAreRestricted =
           process.type === 'renderer' && pluginsAreRestrictedToRunInWorker;

@@ -212,7 +212,7 @@ export function createWindow(): ElectronBrowserWindow {
       preload: path.join(__dirname, 'preload.js'),
       zoomFactor: getZoomFactor(),
       nodeIntegration: true,
-      nodeIntegrationInWorker: true,
+      nodeIntegrationInWorker: false,
       webviewTag: true,
       // TODO: enable context isolation
       contextIsolation: false,
