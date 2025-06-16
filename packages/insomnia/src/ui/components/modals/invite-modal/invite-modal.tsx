@@ -14,6 +14,7 @@ import {
 } from 'react-aria-components';
 import { useFetcher, useParams, useSearchParams } from 'react-router';
 
+import { showAlert } from '..';
 import { getAccountId, getCurrentSessionId } from '../../../../account/session';
 import { getAppWebsiteBaseURL } from '../../../../common/constants';
 import { debounce } from '../../../../common/misc';
@@ -23,7 +24,6 @@ import { insomniaFetch } from '../../../insomniaFetch';
 import type { Collaborator, CollaboratorsListLoaderResult } from '../../../routes/invite';
 import { PromptButton } from '../../base/prompt-button';
 import { Icon } from '../../icon';
-import { showAlert } from '..';
 import { InviteForm } from './invite-form';
 import { OrganizationMemberRolesSelector, type Role, SELECTOR_TYPE } from './organization-member-roles-selector';
 
@@ -373,6 +373,7 @@ const MemberListItem: FC<{
                     method: 'POST',
                   },
                 );
+                window.main.trackSegmentEvent({ event: SegmentEvent.inviteResent });
               }
             }}
             className="flex min-w-[75px] items-center gap-2 px-2 py-1 text-sm font-semibold text-[--color-font] transition-all aria-pressed:bg-[--hl-sm]"
@@ -476,6 +477,7 @@ const MemberListItem: FC<{
               revokeOrganizationInvite(organizationId, member.metadata.invitationId)
                 .then(() => {
                   onResetCurrentPage();
+                  window.main.trackSegmentEvent({ event: SegmentEvent.inviteRevoked });
                 })
                 .catch(error => {
                   onError(error.message);
