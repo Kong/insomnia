@@ -8,7 +8,7 @@ import { type ActionFunction, redirect } from 'react-router';
 import { version } from '../../../package.json';
 import { parseApiSpec, resolveComponentSchemaRefs } from '../../common/api-specs';
 import { ACTIVITY_DEBUG, getAIServiceURL, METHOD_GET } from '../../common/constants';
-import { database, database as db } from '../../common/database';
+import { database } from '../../common/database';
 import { importResourcesToWorkspace, scanResources, type ScanResult } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
@@ -740,7 +740,7 @@ async function duplicateWorkspace(
   invariant(workspace, 'Workspace not found');
   invariant(duplicateToProject, 'Project not found');
   async function duplicate(workspace: Workspace, { name, parentId }: Pick<Workspace, 'name' | 'parentId'>) {
-    const newWorkspace = await db.duplicate(workspace, {
+    const newWorkspace = await database.duplicate(workspace, {
       name,
       parentId,
     });
