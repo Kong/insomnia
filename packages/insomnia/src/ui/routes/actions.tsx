@@ -65,7 +65,7 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
     window.main.trackSegmentEvent({
       event: SegmentEvent.projectCreated,
       properties: {
-        storage: 'Local',
+        storage: 'local',
       },
     });
 
@@ -87,7 +87,7 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
     window.main.trackSegmentEvent({
       event: SegmentEvent.projectCreated,
       properties: {
-        storage: 'Git',
+        storage: 'git',
       },
     });
 
@@ -117,7 +117,7 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
       window.main.trackSegmentEvent({
         event: SegmentEvent.projectCreated,
         properties: {
-          storage: 'Cloud',
+          storage: 'remote',
         },
       });
     }
@@ -236,7 +236,7 @@ export const updateProjectAction: ActionFunction = async ({ request, params }) =
         window.main.trackSegmentEvent({
           event: SegmentEvent.projectUpdated,
           properties: {
-            storage: 'Local',
+            storage: 'local',
           },
         });
       }
@@ -286,7 +286,7 @@ export const updateProjectAction: ActionFunction = async ({ request, params }) =
         window.main.trackSegmentEvent({
           event: SegmentEvent.projectUpdated,
           properties: {
-            storage: 'Cloud',
+            storage: 'remote',
           },
         });
       }
@@ -338,7 +338,7 @@ export const updateProjectAction: ActionFunction = async ({ request, params }) =
           window.main.trackSegmentEvent({
             event: SegmentEvent.projectUpdated,
             properties: {
-              storage: 'Git',
+              storage: 'git',
             },
           });
         }
@@ -411,7 +411,7 @@ export const updateProjectAction: ActionFunction = async ({ request, params }) =
     window.main.trackSegmentEvent({
       event: SegmentEvent.projectUpdated,
       properties: {
-        storage: 'Local',
+        storage: 'local',
       },
     });
 
