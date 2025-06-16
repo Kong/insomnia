@@ -138,7 +138,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
             window.main.trackSegmentEvent({
               event: SegmentEvent.importStarted,
               properties: {
-                source: `${activeWorkspace.scope}-menu`,
+                source: `scratchpad-${activeWorkspace.scope}-menu`,
               },
             });
 
@@ -153,7 +153,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
             window.main.trackSegmentEvent({
               event: SegmentEvent.exportStarted,
               properties: {
-                source: `${activeWorkspace.scope}-menu`,
+                source: `scratchpad-${activeWorkspace.scope}-menu`,
               },
             });
             if (activeWorkspace.scope === 'mock-server') {
