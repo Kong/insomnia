@@ -26,7 +26,7 @@ import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
 import { filterClientCertificates } from '../../network/certificate';
 import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import type { RenderedRequest } from '../../templating/types';
-import { parseGraphQLReqeustBody } from '../../utils/graph-ql';
+import { parseGraphQLRequestBody } from '../../utils/graph-ql';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
@@ -452,7 +452,9 @@ const handleGraphQLWsMessage = (data: MessageEvent['data'], request: Request) =>
   const requestId = request._id;
   // send subscribe operation to graphql websocket server when ack is received
   if (graphqlServerDataType === MessageType.ConnectionAck) {
-    parseGraphQLReqeustBody(request as RenderedRequest);
+    // TODO: remove this temporary hack to support GraphQL variables in the request body properly
+    parseGraphQLRequestBody(request as RenderedRequest);
+    
     let subscriptionPayload = {};
     try {
       // @ts-expect-error graphql request has body attribute

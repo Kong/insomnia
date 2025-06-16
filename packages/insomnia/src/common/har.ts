@@ -14,7 +14,7 @@ import * as plugins from '../plugins';
 import * as pluginContexts from '../plugins/context/index';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest } from '../templating/types';
-import { parseGraphQLReqeustBody } from '../utils/graph-ql';
+import { parseGraphQLRequestBody } from '../utils/graph-ql';
 import { smartEncodeUrl } from '../utils/url/querystring';
 import { getAppVersion } from './constants';
 import { jarFromCookies } from './cookies';
@@ -167,7 +167,10 @@ export async function exportHarWithRequest(request: Request, environmentId?: str
   try {
     const renderResult = await getRenderedRequestAndContext({ request, environment: environmentId });
     const renderedRequest = await _applyRequestPluginHooks(renderResult.request, renderResult.context);
-    parseGraphQLReqeustBody(renderedRequest);
+
+    // TODO: remove this temporary hack to support GraphQL variables in the request body properly
+    parseGraphQLRequestBody(renderedRequest);
+    
     return exportHarWithRenderedRequest(renderedRequest, addContentLength);
   } catch (err) {
     if (err instanceof RenderError) {

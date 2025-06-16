@@ -5,7 +5,7 @@ import type { Request } from '../models/request';
 import type { RenderedRequest } from '../templating/types';
 
 // parse graphql request body since we save entire query variables as string rather then stringified json string. - INS-4281
-export function parseGraphQLReqeustBody(renderedRequest: RenderedRequest) {
+export function parseGraphQLRequestBody(renderedRequest: RenderedRequest) {
   if (renderedRequest && renderedRequest.body?.text && renderedRequest.body?.mimeType === CONTENT_TYPE_GRAPHQL) {
     try {
       const parsedBody = JSON.parse(renderedRequest.body.text);

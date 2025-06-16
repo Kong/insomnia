@@ -1,6 +1,6 @@
 import { stats } from '../models';
 import { getBodyBuffer } from '../models/response';
-import { parseGraphQLReqeustBody } from '../utils/graph-ql';
+import { parseGraphQLRequestBody } from '../utils/graph-ql';
 import {
   fetchRequestData,
   responseTransform,
@@ -27,7 +27,7 @@ export function getSendRequestCallback() {
     const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
     // TODO: remove this temporary hack to support GraphQL variables in the request body properly
-    parseGraphQLReqeustBody(renderedRequest);
+    parseGraphQLRequestBody(renderedRequest);
 
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,

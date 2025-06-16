@@ -7,6 +7,7 @@ import {
   tryToTransformRequestWithPlugins,
 } from '../../network/network';
 import type { PluginTemplateTagContext } from '../../templating/types';
+import { parseGraphQLRequestBody } from '../../utils/graph-ql';
 
 export function init(): {
   network: PluginTemplateTagContext['network'];
@@ -32,6 +33,10 @@ export function init(): {
           extraInfo,
         });
         const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+
+        // TODO: remove this temporary hack to support GraphQL variables in the request body properly
+        parseGraphQLRequestBody(renderedRequest);
+
         const response = await sendCurlAndWriteTimeline(
           renderedRequest,
           clientCertificates,

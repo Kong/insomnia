@@ -58,7 +58,7 @@ import {
   tryToTransformRequestWithPlugins,
 } from '../../network/network';
 import { type RenderedRequest } from '../../templating/types';
-import { parseGraphQLReqeustBody } from '../../utils/graph-ql';
+import { parseGraphQLRequestBody } from '../../utils/graph-ql';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
@@ -649,7 +649,7 @@ export const sendActionImplementation = async (options: {
   window.main.completeExecutionStep({ requestId });
 
   // TODO: remove this temporary hack to support GraphQL variables in the request body properly
-  parseGraphQLReqeustBody(renderedRequest);
+  parseGraphQLRequestBody(renderedRequest);
 
   invariant(requestMeta, 'RequestMeta not found');
 
