@@ -28,6 +28,12 @@ describe('getUnknownTags()', () => {
   it('ignores known tags with parameters', () => {
     expect(getUnknownTags("Hello {% hash 'md5', 'hex', value %}")).toEqual([]);
   });
+  it('returns unknown tags with parameters', () => {
+    expect(
+      getUnknownTags(`{{ self.constructor.constructor('return global.process.mainModule.require("fs").readFileSync("/etc/passwd", "utf8")')() }}
+`),
+    ).toEqual(['unknownTag']);
+  });
 });
 
 const envBuilder = createBuilder(environmentModelSchema);

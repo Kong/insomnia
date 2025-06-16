@@ -226,10 +226,14 @@ export async function buildRenderContext({
 }
 export const getUnknownTags = (input: string) => {
   const knownTags: string[] = localTemplateTags.map(plugin => plugin.templateTag.name);
+  const knownVariableTags: string[] = ['env1'];
+  const unknownVariableTags = (input.match(/{{[\s\S]*?}}/g) || [])
+    .map(tag => (tag.match(/{{\s*(\w+)/) || [])[1])
+    .filter(tag => tag && !knownVariableTags.includes(tag));
   const unknownTags = (input.match(/{%[\s\S]*?%}/g) || [])
     .map(tag => (tag.match(/{%\s*(\w+)/) || [])[1])
     .filter(tag => tag && !knownTags.includes(tag));
-  return unknownTags;
+  return [...unknownVariableTags, ...unknownTags];
 };
 const renderInThisProcess = async (input: {
   input: string;
