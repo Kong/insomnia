@@ -86,11 +86,12 @@ export interface GitChangesLoaderData {
   branch: string;
 }
 
-export const gitChangesLoader: LoaderFunction = async ({ params }): Promise<GitChangesLoaderData> => {
+export const gitChangesAction: ActionFunction = async ({ params }): Promise<GitChangesLoaderData> => {
   const { projectId, workspaceId } = params;
   invariant(typeof projectId === 'string', 'Project Id is required');
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
-  return window.main.git.gitChangesLoader({ projectId, workspaceId });
+  const gitOperationPID = crypto.randomUUID();
+  return window.main.git.gitChangesLoader({ projectId, workspaceId, pid: gitOperationPID });
 };
 
 export interface GitCanPushLoaderData {
@@ -399,16 +400,29 @@ export interface GitStatusResult {
   };
 }
 
-export const gitStatusAction: ActionFunction = async ({ params }): Promise<GitStatusResult> => {
+export const gitStatusAction: ActionFunction = async ({ params, request }): Promise<GitStatusResult> => {
   const { projectId, workspaceId } = params;
   invariant(typeof projectId === 'string', 'Project Id is required');
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
 
-  return window.main.git.gitStatus({ projectId, workspaceId });
+  const gitOperationPID = crypto.randomUUID();
+
+  console.warn(
+    `[debug] Starting git status operation for project ${projectId} in workspace ${workspaceId} with PID ${gitOperationPID}`,
+    request.signal,
+  );
+
+  request.signal.onabort = () => {
+    console.warn('[debug] Git status request aborted');
+    window.main.git.abortGitWorkerOperation({ pid: gitOperationPID });
+  };
+
+  return window.main.git.gitStatus({ projectId, workspaceId, pid: gitOperationPID });
 };
 
 export async function checkGitChanges({ projectId, workspaceId }: { projectId: string; workspaceId: string }) {
-  return window.main.git.gitChangesLoader({ projectId, workspaceId });
+  const gitOperationPID = crypto.randomUUID();
+  return window.main.git.gitChangesLoader({ projectId, workspaceId, pid: gitOperationPID });
 }
 
 export async function checkGitCanPush({ projectId, workspaceId }: { projectId: string; workspaceId: string }) {
@@ -465,8 +479,9 @@ export const diffFileLoader: LoaderFunction = async ({ request, params }): Promi
   invariant(filepath, 'Filepath is required');
 
   const staged = urlParams.get('staged') === 'true';
+  const gitOperationPID = crypto.randomUUID();
 
-  return window.main.git.diffFileLoader({ projectId, workspaceId, filepath, staged });
+  return window.main.git.diffFileLoader({ projectId, workspaceId, filepath, staged, pid: gitOperationPID });
 };
 
 export const loadGitHubCredentials: LoaderFunction = async () => {

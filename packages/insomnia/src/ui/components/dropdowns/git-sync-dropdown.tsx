@@ -84,13 +84,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
   useEffect(() => {
     if (shouldFetchGitRepoStatus) {
       // file://./../../routes/git-actions.tsx#gitStatusAction
-      gitStatusFetcher.submit(
-        {},
-        {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/status`,
-          method: 'post',
-        },
-      );
+      gitStatusFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/status`);
     }
   }, [gitStatusFetcher, organizationId, projectId, shouldFetchGitRepoStatus, workspaceId]);
 

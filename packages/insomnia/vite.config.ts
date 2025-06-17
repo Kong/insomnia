@@ -49,6 +49,7 @@ export default defineConfig(({ mode }) => {
         '@stoplight/spectral-rulesets',
         'codemirror-graphql/utils/SchemaReference',
         'openapi-types',
+        'isomorphic-git',
       ],
       force: true,
     },

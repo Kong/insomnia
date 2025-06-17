@@ -13,6 +13,7 @@ import type { extractNunjucksTagFromCoords } from '../../templating/utils';
 import { localTemplateTags } from '../../ui/components/templating/local-template-tags';
 import { invariant } from '../../utils/invariant';
 import type { GitServiceAPIKeys } from '../git-service';
+import type { GitWorkerServiceAPIKeys } from '../git-worker-service';
 
 export type HandleChannels =
   | 'authorizeUserInWindow'
@@ -43,7 +44,9 @@ export type HandleChannels =
   | 'secretStorage.deleteSecret'
   | 'secretStorage.encryptString'
   | 'secretStorage.decryptString'
-  | `git.${GitServiceAPIKeys}`;
+  | `git.${GitServiceAPIKeys}`
+  | `git.${GitWorkerServiceAPIKeys}`
+  | 'git.abortGitWorkerOperation';
 
 export const ipcMainHandle = (
   channel: HandleChannels,

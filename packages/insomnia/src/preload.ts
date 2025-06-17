@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils as webUtilities } from 'electron';
 
-import type { GitServiceAPI } from './main/git-service';
+import type { GitServiceMainAPI } from './main/git-service-register';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
 import type { CurlBridgeAPI } from './main/network/curl';
@@ -51,7 +51,7 @@ const secretStorage: secretStorageBridgeAPI = {
   decryptString: cipherText => ipcRenderer.invoke('secretStorage.decryptString', cipherText),
 };
 
-const git: GitServiceAPI = {
+const git: GitServiceMainAPI = {
   loadGitRepository: options => ipcRenderer.invoke('git.loadGitRepository', options),
   getGitBranches: options => ipcRenderer.invoke('git.getGitBranches', options),
   gitFetchAction: options => ipcRenderer.invoke('git.gitFetchAction', options),
@@ -88,6 +88,8 @@ const git: GitServiceAPI = {
   initSignInToGitLab: () => ipcRenderer.invoke('git.initSignInToGitLab'),
   completeSignInToGitLab: options => ipcRenderer.invoke('git.completeSignInToGitLab', options),
   signOutOfGitLab: () => ipcRenderer.invoke('git.signOutOfGitLab'),
+
+  abortGitWorkerOperation: options => ipcRenderer.invoke('git.abortGitWorkerOperation', options),
 };
 
 const main: Window['main'] = {

@@ -914,7 +914,7 @@ async function renderApp() {
                                   {
                                     path: 'changes',
                                     loader: async (...args) =>
-                                      (await import('./routes/git-actions')).gitChangesLoader(...args),
+                                      (await import('./routes/git-actions')).gitChangesAction(...args),
                                   },
                                   {
                                     path: 'log',

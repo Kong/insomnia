@@ -6,7 +6,7 @@ import { app, net } from 'electron/main';
 import { fromUrl } from 'hosted-git-info';
 import { Errors, type HeadStatus, type PromiseFsClient, type StageStatus, type WorkdirStatus } from 'isomorphic-git';
 import { v4 } from 'uuid';
-import YAML, { parse } from 'yaml';
+import YAML from 'yaml';
 
 import {
   getApiBaseURL,
@@ -87,31 +87,6 @@ function parseGitToHttpsURL(s: string) {
   return parsed;
 }
 
-async function getGitRepository({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) {
-  if (workspaceId) {
-    const workspace = await models.workspace.getById(workspaceId);
-    invariant(workspace, 'Workspace not found');
-    const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
-    invariant(workspaceMeta, 'Workspace meta not found');
-    if (!workspaceMeta.gitRepositoryId) {
-      throw new Error('Workspace is not linked to a git repository');
-    }
-
-    const gitRepository = await models.gitRepository.getById(workspaceMeta.gitRepositoryId);
-    invariant(gitRepository, 'Git Repository not found');
-
-    return gitRepository;
-  }
-
-  invariant(projectId, 'Project ID is required');
-  const project = await models.project.getById(projectId);
-  invariant(project, 'Project not found');
-  invariant(project.gitRepositoryId, 'Project is not linked to a git repository');
-  const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
-  invariant(gitRepository, 'Git Repository not found');
-  return gitRepository;
-}
-
 async function getGitFSClient({
   projectId,
   workspaceId,
@@ -162,6 +137,31 @@ async function getGitFSClient({
   });
 
   return routableFS;
+}
+
+export async function getGitRepository({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) {
+  if (workspaceId) {
+    const workspace = await models.workspace.getById(workspaceId);
+    invariant(workspace, 'Workspace not found');
+    const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+    invariant(workspaceMeta, 'Workspace meta not found');
+    if (!workspaceMeta.gitRepositoryId) {
+      throw new Error('Workspace is not linked to a git repository');
+    }
+
+    const gitRepository = await models.gitRepository.getById(workspaceMeta.gitRepositoryId);
+    invariant(gitRepository, 'Git Repository not found');
+
+    return gitRepository;
+  }
+
+  invariant(projectId, 'Project ID is required');
+  const project = await models.project.getById(projectId);
+  invariant(project, 'Project not found');
+  invariant(project.gitRepositoryId, 'Project is not linked to a git repository');
+  const gitRepository = await models.gitRepository.getById(project.gitRepositoryId);
+  invariant(gitRepository, 'Git Repository not found');
+  return gitRepository;
 }
 
 export async function loadGitRepository({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) {
@@ -301,47 +301,6 @@ export const gitLogLoader = async ({ projectId, workspaceId }: { projectId: stri
       log: [],
       errors: ['Failed to fetch log'],
     };
-  }
-};
-
-export interface GitChangesLoaderData {
-  changes: {
-    staged: {
-      name: string;
-      path: string;
-    }[];
-    unstaged: {
-      name: string;
-      path: string;
-    }[];
-  };
-  branch: string;
-  errors?: string[];
-}
-
-export const gitChangesLoader = async ({
-  projectId,
-  workspaceId,
-}: {
-  projectId: string;
-  workspaceId?: string;
-}): Promise<GitChangesLoaderData> => {
-  try {
-    const gitRepository = await getGitRepository({ projectId, workspaceId });
-    const branch = await GitVCS.getCurrentBranch();
-
-    const { changes, hasUncommittedChanges } = await getGitChanges(GitVCS);
-
-    await models.gitRepository.update(gitRepository, {
-      hasUncommittedChanges,
-    });
-
-    return {
-      branch,
-      changes,
-    };
-  } catch {
-    return gitServiceAPIFallback.gitChangesLoader();
   }
 };
 
@@ -1733,39 +1692,6 @@ export const discardChanges = async ({
   }
 };
 
-export interface GitStatusResult {
-  status: {
-    localChanges: number;
-  };
-}
-
-export const gitStatus = async ({
-  projectId,
-  workspaceId,
-}: {
-  projectId: string;
-  workspaceId?: string;
-}): Promise<GitStatusResult> => {
-  try {
-    const gitRepository = await getGitRepository({ workspaceId, projectId });
-    const { hasUncommittedChanges, changes } = await getGitChanges(GitVCS);
-    const localChanges = changes.staged.length + changes.unstaged.length;
-
-    await models.gitRepository.update(gitRepository, {
-      hasUncommittedChanges,
-    });
-
-    return {
-      status: {
-        localChanges,
-      },
-    };
-  } catch (e) {
-    console.error(e);
-    return gitServiceAPIFallback.gitStatus();
-  }
-};
-
 export const stageChanges = async ({
   projectId,
   workspaceId,
@@ -1817,79 +1743,6 @@ export const unstageChanges = async ({
     return {
       errors: [errorMessage],
     };
-  }
-};
-
-function getPreviewItemName(previewDiffItem: { before: string; after: string }) {
-  let prevName = '';
-  let nextName = '';
-
-  try {
-    const prev = parse(previewDiffItem.before);
-
-    if ((prev && 'fileName' in prev) || 'name' in prev) {
-      prevName = prev.fileName || prev.name;
-    }
-  } catch {
-    // Nothing to do
-  }
-
-  try {
-    const next = parse(previewDiffItem.after);
-    if ((next && 'fileName' in next) || 'name' in next) {
-      nextName = next.fileName || next.name;
-    }
-  } catch {
-    // Nothing to do
-  }
-
-  return nextName || prevName;
-}
-
-export type GitDiffResult =
-  | {
-      name: string;
-      diff?: {
-        before: string;
-        after: string;
-      };
-    }
-  | {
-      errors: string[];
-    };
-
-export const diffFileLoader = async ({
-  projectId,
-  workspaceId,
-  filepath,
-  staged,
-}: {
-  projectId: string;
-  workspaceId?: string;
-  filepath: string;
-  staged: boolean;
-}): Promise<GitDiffResult> => {
-  try {
-    await getGitRepository({ workspaceId, projectId });
-    const fileStatus = await GitVCS.fileStatus(filepath);
-
-    const diff = staged
-      ? {
-          before: fileStatus.head,
-          after: fileStatus.stage,
-        }
-      : {
-          before: fileStatus.stage || fileStatus.head,
-          after: fileStatus.workdir,
-        };
-
-    return {
-      name: getPreviewItemName(diff) || filepath,
-      diff,
-    };
-  } catch (e) {
-    const errorMessage = e instanceof Error ? e.message : 'Error while unstaging changes';
-    return gitServiceAPIFallback.diffFileLoader(errorMessage);
   }
 };
 
@@ -2340,7 +2193,6 @@ export const gitServiceAPI = {
   getGitBranches,
   gitFetchAction,
   gitLogLoader,
-  gitChangesLoader,
   canPushLoader,
   initGitRepoClone,
   cloneGitRepo,
@@ -2356,10 +2208,8 @@ export const gitServiceAPI = {
   pullFromGitRemote,
   continueMerge,
   discardChanges,
-  gitStatus,
   stageChanges,
   unstageChanges,
-  diffFileLoader,
   getRepositoryDirectoryTree,
   migrateLegacyInsomniaFolderToFile,
   initSignInToGitHub,
@@ -2375,38 +2225,22 @@ export const gitServiceAPI = {
 export type GitServiceAPI = typeof gitServiceAPI;
 export type GitServiceAPIKeys = keyof GitServiceAPI;
 
-/**
- * List of commands that should be run in a worker process.
- *
- * These commands are expected to be long-running or resource-intensive, so they should not block the main process.
- *
- * ! Note: Should only include read-only commands to avoid the risk of data corruption.
- */
-export const workerCommandList = ['gitStatus', 'diffFileLoader', 'gitChangesLoader'] as const;
-export type WorkerCommandList = (typeof workerCommandList)[number];
+export const updateHasUncommittedChanges = async ({
+  projectId,
+  workspaceId,
+  hasUncommittedChanges,
+}: {
+  projectId: string;
+  workspaceId?: string;
+  hasUncommittedChanges: boolean;
+}) => {
+  try {
+    const gitRepository = await getGitRepository({ projectId, workspaceId });
 
-// This is intended to be used as a fallback for the gitServiceAPI in case of errors or unavailability.
-export const gitServiceAPIFallback = {
-  gitStatus: () => {
-    return {
-      status: {
-        localChanges: 0,
-      },
-    };
-  },
-  diffFileLoader: (errorMessage = 'Failed to load diff') => {
-    return {
-      errors: [errorMessage],
-    };
-  },
-  gitChangesLoader: () => {
-    return {
-      branch: '',
-      changes: {
-        staged: [],
-        unstaged: [],
-      },
-      errors: ['Failed to get changes'],
-    };
-  },
+    await models.gitRepository.update(gitRepository, {
+      hasUncommittedChanges,
+    });
+  } catch (error) {
+    console.error('Error updating hasUncommittedChanges:', error);
+  }
 };

@@ -23,10 +23,12 @@ export type GitRepoLoaderData =
       errors: string[];
     };
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export const gitRepoLoader: ActionFunction = async ({ params }): Promise<GitRepoLoaderData> => {
   const { projectId } = params;
   invariant(typeof projectId === 'string', 'Project Id is required');
-
+  await sleep(10000);
   return window.main.git.loadGitRepository({ projectId });
 };
 
@@ -90,7 +92,8 @@ export const gitChangesLoader: LoaderFunction = async ({ params }): Promise<GitC
   const { projectId } = params;
   invariant(typeof projectId === 'string', 'Project Id is required');
 
-  return window.main.git.gitChangesLoader({ projectId });
+  const gitOperationPID = crypto.randomUUID();
+  return window.main.git.gitChangesLoader({ projectId, pid: gitOperationPID });
 };
 
 export interface GitCanPushLoaderData {
@@ -385,14 +388,29 @@ export interface GitStatusResult {
   };
 }
 
-export const gitStatusAction: ActionFunction = async ({ params }): Promise<GitStatusResult> => {
+export const gitStatusAction: ActionFunction = async ({ params, request }): Promise<GitStatusResult> => {
+  console.log('[debug]', request.body);
+
   const { projectId } = params;
   invariant(typeof projectId === 'string', 'Project Id is required');
-  return window.main.git.gitStatus({ projectId });
+
+  const gitOperationPID = crypto.randomUUID();
+  console.warn(
+    `[debug] Starting git status operation for project ${projectId} in with PID ${gitOperationPID}`,
+    request.signal,
+  );
+
+  request.signal.onabort = () => {
+    console.warn('[debug] Git status request aborted');
+    window.main.git.abortGitWorkerOperation({ pid: gitOperationPID });
+  };
+
+  return window.main.git.gitStatus({ projectId, pid: gitOperationPID });
 };
 
 export const checkGitChanges = async (projectId: string) => {
-  return window.main.git.gitChangesLoader({ projectId });
+  const gitOperationPID = crypto.randomUUID();
+  return window.main.git.gitChangesLoader({ projectId, pid: gitOperationPID });
 };
 
 export const checkGitCanPush = async (projectId: string) => {
@@ -447,7 +465,8 @@ export const diffFileLoader: LoaderFunction = async ({ request, params }): Promi
 
   const staged = urlParams.get('staged') === 'true';
 
-  return window.main.git.diffFileLoader({ projectId, filepath, staged });
+  const gitOperationPID = crypto.randomUUID();
+  return window.main.git.diffFileLoader({ projectId, filepath, staged, pid: gitOperationPID });
 };
 
 export type GetRepositoryDirectoryTreeResult = Awaited<ReturnType<typeof window.main.git.getRepositoryDirectoryTree>>;

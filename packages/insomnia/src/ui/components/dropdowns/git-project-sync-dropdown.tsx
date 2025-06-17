@@ -1,5 +1,5 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import React, { type FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 import {
   Button,
   Collection,
@@ -57,7 +57,10 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
   const gitCheckoutFetcher = useFetcher();
   const gitRepoDataFetcher = useFetcher<GitRepoLoaderData>();
   const gitFetchFetcher = useFetcher<GitFetchLoaderData>();
-  const gitStatusFetcher = useFetcher<GitStatusResult>();
+  // Use key to identify the fetcher, to leverage the AbortController for the fetcher
+  const gitStatusFetcher = useFetcher<GitStatusResult>({
+    key: `git-status-git-project-sync-dropdown`,
+  });
 
   const loadingPush = gitPushFetcher.state === 'loading';
   const loadingFetch = gitFetchFetcher.state === 'loading';
@@ -98,11 +101,17 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
     }
   }, [gitRepoDataFetcher.data]);
 
+  const counterRef = useRef(0);
   useEffect(() => {
-    if (shouldFetchGitRepoStatus) {
+    // Should force
+    if (shouldFetchGitRepoStatus || counterRef.current === 0) {
+      counterRef.current = 1;
       // file://./../../routes/git-actions.tsx#gitStatusAction
+      const gitOperationPID = crypto.randomUUID();
       gitStatusFetcher.submit(
-        {},
+        {
+          pid: gitOperationPID,
+        },
         {
           action: `/organization/${organizationId}/project/${projectId}/git/status`,
           method: 'post',
