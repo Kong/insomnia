@@ -558,7 +558,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({ params, request
   await database.flushChanges(flushId);
 
   const { id } = await models.userSession.getOrCreate();
-  if (id && !workspaceMeta.gitRepositoryId) {
+  if (id && !workspaceMeta.gitRepositoryId && !isGitProject(project)) {
     const vcs = VCSInstance();
     await initializeLocalBackendProjectAndMarkForSync({
       vcs,
