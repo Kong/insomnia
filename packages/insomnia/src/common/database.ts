@@ -618,6 +618,7 @@ export const database = {
     doc: T | null,
     stopType: string | null = null,
     queryTypes: string[] = [],
+    queryTypesDescendantMap?: Record<string, string[]>,
   ): Promise<BaseModel[]> {
     if (db._empty) {
       return _send<BaseModel[]>('withDescendants', ...arguments);
@@ -634,7 +635,10 @@ export const database = {
 
         const promises: Promise<BaseModel[]>[] = [];
 
-        const types = queryTypes?.length ? queryTypes : allTypes();
+        const queryTypesFromDescendantMap = queryTypesDescendantMap
+          ? queryTypesDescendantMap[doc?.type || ''] || []
+          : null;
+        const types = queryTypesFromDescendantMap ?? (queryTypes?.length ? queryTypes : allTypes());
 
         for (const type of types) {
           // If the doc is null, we want to search for parentId === null

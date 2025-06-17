@@ -1,6 +1,7 @@
 import { parse, stringify } from 'yaml';
 
 import * as models from '../models';
+import { WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP } from '../models';
 import type { ApiSpec } from '../models/api-spec';
 import type { CookieJar } from '../models/cookie-jar';
 import { type Environment, maskVaultEnvironmentData } from '../models/environment';
@@ -453,7 +454,12 @@ export async function getInsomniaV5DataExport({
       throw new Error('Workspace not found');
     }
 
-    const workspaceDescendants = await database.withDescendants(workspace);
+    const workspaceDescendants = await database.withDescendants(
+      workspace,
+      null,
+      [],
+      WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP,
+    );
 
     const exportableTypes = Object.values(models.MODELS_BY_EXPORT_TYPE).map(model => model.type);
 
