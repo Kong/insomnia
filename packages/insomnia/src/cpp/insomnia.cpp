@@ -212,31 +212,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   if (hFile == INVALID_HANDLE_VALUE) {
     ::DebugLog(L"installer-info.json not found or cannot be opened.");
   } else {
-    DWORD fileSize = ::GetFileSize(hFile, NULL);
-    if (fileSize > 0 && fileSize < 65536) { // reasonable size check
-      std::string jsonContent(fileSize, '\0');
-      DWORD bytesRead = 0;
-      if (::ReadFile(hFile, &jsonContent[0], fileSize, &bytesRead, NULL) && bytesRead == fileSize) {
-        size_t pos = jsonContent.find("\"installer\"");
-        if (pos != std::string::npos) {
-          size_t colon = jsonContent.find(':', pos);
-          if (colon != std::string::npos) {
-            size_t valueStart = jsonContent.find_first_not_of(" \t\r\n", colon + 1);
-            if (valueStart != std::string::npos && jsonContent[valueStart] == '"') {
-              size_t quote1 = valueStart;
-              size_t quote2 = jsonContent.find('"', quote1 + 1);
-              if (quote2 != std::string::npos && quote2 > quote1) {
-                std::string value = jsonContent.substr(quote1 + 1, quote2 - quote1 - 1);
-                if (value == "nsis") {
-                  ::DebugLog(L"installer is nsis in installer-info.json");
-                  isNsisInstaller = true;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+    // if the file exists, we assume it's an NSIS installer
+    ::DebugLog(L"installer is nsis in installer-info.json");
+    isNsisInstaller = true;
     ::CloseHandle(hFile);
   }
 

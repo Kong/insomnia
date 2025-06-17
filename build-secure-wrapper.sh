@@ -59,7 +59,7 @@ if [ ! $BUILD_CONTEXT ]; then
   npm run package:windows:dist -w insomnia
 
   echo "Resetting to prevent accidental loops..."
-  mv $DEST_DIR/Insomnia.dll $DEST_DIR/Insomnia.exe
+  mv $DEST_DIR/insomnia.dll $DEST_DIR/Insomnia.exe
 fi
 
 echo "Done."
