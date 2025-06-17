@@ -170,7 +170,7 @@ export const NewWorkspaceModal = ({
                   />
                   <FieldError className="text-xs text-red-500" />
                 </TextField>
-                {isGitProject(project) && gitRepoTreeFetcher.data && (
+                {isGitProject(project) && (
                   <>
                     <TextField
                       name="fileName"
@@ -205,19 +205,29 @@ export const NewWorkspaceModal = ({
                     <Label className="text-sm text-[--hl]">
                       Folder where the file will be saved in the repository:
                     </Label>
+
                     <Tree
                       className="grid max-h-52 gap-0 overflow-auto rounded-sm border border-solid border-[--hl-sm]"
-                      defaultSelectedKeys={[gitRepoTreeFetcher.data.repositoryTree.id]}
+                      defaultSelectedKeys={[gitRepoTreeFetcher.data?.repositoryTree.id || '']}
                       disallowEmptySelection
-                      defaultExpandedKeys={[gitRepoTreeFetcher.data.repositoryTree.id]}
+                      defaultExpandedKeys={[gitRepoTreeFetcher.data?.repositoryTree.id || '']}
                       onSelectionChange={selection => {
                         if (selection !== 'all') {
-                          setWorkspaceData({ ...workspaceData, folderPath: selection.values().next().value as string });
+                          setWorkspaceData({
+                            ...workspaceData,
+                            folderPath: selection.values().next().value as string,
+                          });
                         }
                       }}
                       aria-label="Files"
                       selectionMode="single"
-                      items={[gitRepoTreeFetcher.data.repositoryTree]}
+                      items={gitRepoTreeFetcher.data?.repositoryTree ? [gitRepoTreeFetcher.data?.repositoryTree] : []}
+                      renderEmptyState={() => (
+                        <div className="flex h-full items-center justify-center gap-2 p-2 text-sm text-[--hl]">
+                          <Icon icon="spinner" className="size-5 animate-spin" />
+                          Loading files...
+                        </div>
+                      )}
                     >
                       {function renderItem(item) {
                         return (
@@ -329,14 +339,14 @@ export const NewWorkspaceModal = ({
                 <div className="flex items-center gap-2">
                   <Button
                     onPress={close}
-                    isDisabled={createNewWorkspaceFetcher.state !== 'idle'}
+                    isDisabled={createNewWorkspaceFetcher.state !== 'idle' || gitRepoTreeFetcher.state !== 'idle'}
                     className="rounded-sm border border-solid border-[--hl-md] px-3 py-2 text-[--color-font] transition-colors hover:bg-opacity-90 hover:no-underline"
                   >
                     Cancel
                   </Button>
                   <Button
                     type="submit"
-                    isDisabled={createNewWorkspaceFetcher.state !== 'idle'}
+                    isDisabled={createNewWorkspaceFetcher.state !== 'idle' || gitRepoTreeFetcher.state !== 'idle'}
                     className="flex w-[10ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] bg-[--color-surprise] px-3 py-2 text-center text-[--color-font-surprise] transition-colors hover:bg-opacity-90 hover:no-underline"
                   >
                     {createNewWorkspaceFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
