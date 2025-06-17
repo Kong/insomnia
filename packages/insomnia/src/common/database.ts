@@ -29,7 +29,7 @@ export interface Operation {
 
 export interface SpecificQuery {
   $gt?: number;
-  $in?: string[];
+  $in?: (string | null)[];
   $nin?: string[];
   $ne?: string | null;
 }
@@ -625,25 +625,31 @@ export const database = {
     }
     let docsToReturn: BaseModel[] = doc ? [doc] : [];
 
-    async function next(docs: (BaseModel | null)[]): Promise<BaseModel[]> {
+    async function findDescendants(docs: (BaseModel | null)[]): Promise<BaseModel[]> {
       let foundDocs: BaseModel[] = [];
 
-      for (const doc of docs) {
-        if (stopType && doc && doc.type === stopType) {
-          continue;
+      let docsToSearch = docs.filter(doc => doc && doc.type !== stopType);
+
+      if (docsToSearch.length > 0) {
+        // If the doc is null, we want to search for parentId === null
+        const parentIds = docsToSearch.map(d => (d ? d._id : null));
+
+        // If no queryTypes are provided, we want to search all types
+        if (queryTypes.length === 0) {
+          queryTypes = allTypes();
         }
 
+        // If queryTypesDescendantMap is provided, use it to get the types
+        if (queryTypesDescendantMap) {
+          queryTypes = queryTypesDescendantMap[docsToSearch[0]?.type || ''] || queryTypes;
+        }
+
+        // Find all descendants of the current docs
         const promises: Promise<BaseModel[]>[] = [];
 
-        const queryTypesFromDescendantMap = queryTypesDescendantMap
-          ? queryTypesDescendantMap[doc?.type || ''] || []
-          : null;
-        const types = queryTypesFromDescendantMap ?? (queryTypes?.length ? queryTypes : allTypes());
-
-        for (const type of types) {
+        for (const type of queryTypes) {
           // If the doc is null, we want to search for parentId === null
-          const parentId = doc ? doc._id : null;
-          const promise = database.find(type, { parentId });
+          const promise = database.find(type, { parentId: { $in: parentIds } });
           promises.push(promise);
         }
 
@@ -659,10 +665,10 @@ export const database = {
 
       // Continue searching for children
       docsToReturn = [...docsToReturn, ...foundDocs];
-      return next(foundDocs);
+      return findDescendants(foundDocs);
     }
 
-    return next([doc]);
+    return findDescendants([doc]);
   },
 };
 
