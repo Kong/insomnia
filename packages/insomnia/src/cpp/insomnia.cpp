@@ -196,8 +196,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   si.hStdError = outwr;
 
   std::wstring sourceInsomniaExe = std::wstring(workDir) + L"\\insomnia.dll";
-  std::wstring sourceOriginInsomniaExe = std::wstring(workDir) + L"\\Insomnia-origin.exe";
+  std::wstring sourceOriginInsomniaExe = std::wstring(workDir) + L"\\Insomnia-origin-" + INSOMNIA_VERSION + L".exe";
   ::DebugLog((L"Source insomnia executable: " + sourceInsomniaExe).c_str());
+  ::DebugLog((L"Source origin insomnia executable: " + sourceOriginInsomniaExe).c_str());
 
   std::wstring tmpExe = std::wstring(workDir) + L"\\insomnia-" + INSOMNIA_VERSION + L".exe";
 
