@@ -14,7 +14,7 @@ import type { GitRepository } from '../models/git-repository';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
 import type { Workspace } from '../models/workspace';
-import { generateId } from './misc';
+import { generateId, isNotNullOrUndefined } from './misc';
 
 export type Query<T extends BaseModel = BaseModel> = {
   [key in keyof T]?: string | SpecificQuery | null | undefined;
@@ -641,7 +641,25 @@ export const database = {
 
         // If queryTypesDescendantMap is provided, use it to get the types
         if (queryTypesDescendantMap) {
-          queryTypes = queryTypesDescendantMap[docsToSearch[0]?.type || ''] || queryTypes;
+          // Get all the unique types from the docsToSearch
+          let uniqueTypes = new Set<string>();
+          for (const d of docsToSearch) {
+            if (d && d.type) {
+              uniqueTypes.add(d.type);
+            }
+          }
+
+          let uniqueDescendantTypes = new Set<string>();
+
+          // For each unique type, get its descendants from the map
+          for (const type of uniqueTypes) {
+            const descendants = queryTypesDescendantMap[type];
+            if (descendants) {
+              descendants.forEach(t => uniqueDescendantTypes.add(t));
+            }
+          }
+
+          queryTypes = Array.from(uniqueDescendantTypes) || queryTypes;
         }
 
         // Find all descendants of the current docs
