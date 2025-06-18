@@ -559,6 +559,10 @@ const importResourcesToNewWorkspace = async ({
     }
   }
 
+  // Make sure the new workspace has required resources like base environment, cookie jar and workspaceMeta
+  await models.environment.getOrCreateForParentId(newWorkspace._id);
+  await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
+
   // we sync the new workspace to the cloud in workspaceLoader when user enters the workspace
   // since we won't navigate to the workspace automatically after import
   // here we push to the cloud programmatically

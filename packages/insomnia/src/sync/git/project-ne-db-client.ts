@@ -230,8 +230,15 @@ export class GitProjectNeDBClient {
   async getWorkspaceIdFromFilePath(filePath: string) {
     filePath = path.normalize(filePath);
 
+    const workspaces = await db.find<Workspace>(models.workspace.type, {
+      parentId: this._projectId,
+    });
+
     const workspaceMeta = await db.find<WorkspaceMeta>(models.workspaceMeta.type, {
       gitFilePath: filePath,
+      parentId: {
+        $in: workspaces.map(w => w._id),
+      },
     });
 
     if (workspaceMeta.length === 0) {
