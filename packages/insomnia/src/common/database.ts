@@ -659,7 +659,7 @@ export const database = {
             }
           }
 
-          queryTypes = Array.from(uniqueDescendantTypes) || queryTypes;
+          queryTypes = Array.from(uniqueDescendantTypes);
         }
 
         // Find all descendants of the current docs
