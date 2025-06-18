@@ -628,7 +628,7 @@ export const database = {
     async function findDescendants(docs: (BaseModel | null)[]): Promise<BaseModel[]> {
       let foundDocs: BaseModel[] = [];
 
-      let docsToSearch = docs.filter(doc => doc && doc.type !== stopType);
+      const docsToSearch = docs.filter(doc => doc && doc.type !== stopType);
 
       if (docsToSearch.length > 0) {
         // If the doc is null, we want to search for parentId === null
@@ -642,14 +642,14 @@ export const database = {
         // If queryTypesDescendantMap is provided, use it to get the types
         if (queryTypesDescendantMap) {
           // Get all the unique types from the docsToSearch
-          let uniqueTypes = new Set<string>();
+          const uniqueTypes = new Set<string>();
           for (const d of docsToSearch) {
             if (d && d.type) {
               uniqueTypes.add(d.type);
             }
           }
 
-          let uniqueDescendantTypes = new Set<string>();
+          const uniqueDescendantTypes = new Set<string>();
 
           // For each unique type, get its descendants from the map
           for (const type of uniqueTypes) {
