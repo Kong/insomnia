@@ -14,7 +14,7 @@ import type { GitRepository } from '../models/git-repository';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
 import type { Workspace } from '../models/workspace';
-import { generateId, isNotNullOrUndefined } from './misc';
+import { generateId } from './misc';
 
 export type Query<T extends BaseModel = BaseModel> = {
   [key in keyof T]?: string | SpecificQuery | null | undefined;
