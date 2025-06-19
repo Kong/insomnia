@@ -435,6 +435,7 @@ export const WebsocketRequestSchema = z.object({
     },
   }),
   meta: MetaSchema.extend({
+    id: z.string().startsWith('ws-req'),
     sortKey: z.number().optional(),
   }).optional(),
 });
