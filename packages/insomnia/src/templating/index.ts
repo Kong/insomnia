@@ -172,6 +172,7 @@ async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: bool
   const nunjucksEnvironment = nunjucks.configure(config) as NunjucksEnvironment;
   nunjucksEnvironment.addGlobal('range', undefined);
   nunjucksEnvironment.addGlobal('cycler', undefined);
+  nunjucksEnvironment.addGlobal('joiner', undefined);
   const pluginTemplateTags = await (await import('../plugins')).getTemplateTags();
 
   const allExtensions = [
