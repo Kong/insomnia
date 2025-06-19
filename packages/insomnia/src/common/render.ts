@@ -15,7 +15,7 @@ import { isRequestGroup } from '../models/request-group';
 import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
-import { isEnterprisePluginTemplateTag } from '../plugins';
+import { isPreBundlePluginTemplateTag } from '../plugins';
 import * as templating from '../templating';
 import { RenderError } from '../templating/render-error';
 import type {
@@ -296,7 +296,7 @@ export async function render<T>(
         const currentProcessIsRendererAndPluginsAreRestricted =
           process.type === 'renderer' && pluginsAreRestrictedToRunInWorker;
         const renderFork = async (renderInput: RenderInputType) => {
-          const inputIsEnterprisePluginTag = await isEnterprisePluginTemplateTag(input as string);
+          const inputIsEnterprisePluginTag = await isPreBundlePluginTemplateTag(input as string);
           return currentProcessIsRendererAndPluginsAreRestricted && !inputIsEnterprisePluginTag
             ? (await import('../ui/worker/templating-handler')).renderInWorker(renderInput)
             : renderInThisProcess(renderInput);

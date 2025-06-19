@@ -171,8 +171,9 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
           continue;
         }
 
+        const isExecutedInApp = process.type === 'renderer' || process.type === 'worker' || process.type === 'browser';
         // Validate bundle plugin checksum for production builds
-        if (!isDevelopment() && pluginBasePath.startsWith(bundlePluginPath)) {
+        if (!isDevelopment() && pluginBasePath.startsWith(bundlePluginPath) && isExecutedInApp) {
           const pluginName = pluginJson.name;
           const featureName = Object.keys(ENTERPRISE_PLUGINS).find(
             name => ENTERPRISE_PLUGINS[name].pluginName === pluginName,
@@ -279,7 +280,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
 export function getPreBundlePluginPath() {
   const pluginDirRelativePath = isDevelopment() ? './plugins' : '../plugins';
   return path.resolve(
-    process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getAppPath(),
+    process.env['INSOMNIA_APP_PATH'] || (process.type === 'renderer' ? window : electron).app.getAppPath(),
     pluginDirRelativePath,
   );
 }
@@ -377,7 +378,7 @@ export async function getTemplateTags(): Promise<TemplateTag[]> {
   return extensions;
 }
 
-export async function isEnterprisePluginTemplateTag(input: string) {
+export async function isPreBundlePluginTemplateTag(input: string) {
   if (!input.includes('{%')) {
     return false;
   }

@@ -3,6 +3,7 @@ import { build, type BuildOptions, context } from 'esbuild';
 const isProd = Boolean(process.env.NODE_ENV === 'production');
 const watch = Boolean(process.env.ESBUILD_WATCH);
 const version = process.env.VERSION || 'dev';
+const bundlePluginDir = require('node:path').resolve(__dirname, '../insomnia/plugins');
 const config: BuildOptions = {
   outfile: './dist/index.js',
   bundle: true,
@@ -30,6 +31,7 @@ const config: BuildOptions = {
   ],
   define: {
     'process.env.DEFAULT_APP_NAME': JSON.stringify(isProd ? 'Insomnia' : 'insomnia-app'),
+    'process.env.INSOMNIA_APP_PATH': JSON.stringify(bundlePluginDir),
     'process.env.VERSION': JSON.stringify(isProd ? version : 'dev'),
     '__DEV__': JSON.stringify(!isProd),
   },

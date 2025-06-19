@@ -73,7 +73,12 @@ export function init() {
         const settings = await models.settings.get();
         const settingFollowRedirects = settings?.followRedirects ? 'on' : 'off';
         const { request: originRequest, caCertficatePath = null } = options;
-        const response = await window.main.curlRequest({
+        const curlRequest =
+          process.type === 'renderer' || process.type === 'worker'
+            ? window.main.curlRequest
+            : // when exeucted in Inso;
+              (await import('../../main/network/libcurl-promise')).curlRequest;
+        const response = await curlRequest({
           requestId: `cloud-service-integration-${requestId}`,
           req: {
             authentication: {},
