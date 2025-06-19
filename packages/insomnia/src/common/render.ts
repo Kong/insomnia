@@ -170,10 +170,14 @@ export async function buildRenderContext({
     finalRenderContext = await renderSubContext(envObject, finalRenderContext);
   }
 
-  finalRenderContext[vaultEnvironmentPath] = await maskOrDecryptVaultDataIfNecessary(
+  const vaultEnvironmentData = await maskOrDecryptVaultDataIfNecessary(
     finalRenderContext[vaultEnvironmentPath],
     renderContext?.getPurpose(),
   );
+  if (vaultEnvironmentData) {
+    // avoid add undefined data to render context
+    finalRenderContext[vaultEnvironmentPath] = vaultEnvironmentData;
+  }
   // Merge all vault environments under vaultEnvironmentPath to vaultEnvironmentRuntimePath which is more human readable.
   // This will also keep all legacy environment variables defined under the vaultEnvironmentRuntimePath.
   if (finalRenderContext[vaultEnvironmentPath]) {

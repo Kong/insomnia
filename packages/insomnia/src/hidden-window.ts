@@ -130,8 +130,16 @@ const runScript = async ({ script, context }: { script: string; context: Request
     settings: updatedSettings,
     clientCertificates: updatedCertificates,
     cookieJar: updatedCookieJar,
-    globals: mutatedContextObject.globals,
-    baseGlobals: mutatedContextObject.baseGlobals,
+    globals: context.globals && {
+      id: context.globals.id,
+      name: context.globals.name,
+      data: mutatedContextObject.globals,
+    },
+    baseGlobals: context.baseGlobals && {
+      id: context.baseGlobals.id,
+      name: context.baseGlobals.name,
+      data: mutatedContextObject.baseGlobals,
+    },
     requestTestResults: mutatedContextObject.requestTestResults,
     logs: scriptConsole.dumpLogsAsArray(),
     parentFolders: mutatedContextObject.parentFolders,
