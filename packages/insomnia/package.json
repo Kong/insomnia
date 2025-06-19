@@ -21,6 +21,7 @@
     "generate:schema": "esr ./src/schema.ts",
     "build:main.min.js": "cross-env NODE_ENV=development esr esbuild.main.ts",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
+    "bundle-plugins": "esr scripts/bundle-plugins.ts",
     "package": "npm run build && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js",
     "package:windows:unpacked": "npm run build && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --dir",
     "package:windows:dist": "cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --win squirrel --prepackaged ./dist/win-unpacked",

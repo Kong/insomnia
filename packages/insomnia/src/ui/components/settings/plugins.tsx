@@ -16,7 +16,7 @@ import {
 import { ACCEPTED_NODE_CA_FILE_EXTS, NPM_PACKAGE_BASE, PLUGIN_HUB_BASE } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
 import type { Plugin } from '../../../plugins/index';
-import { getPlugins } from '../../../plugins/index';
+import { getPlugins, getPreBundlePluginPath } from '../../../plugins/index';
 import { reload } from '../../../templating/index';
 import { validatePluginName } from '../../../utils/plugin';
 import { useSettingsPatcher } from '../../hooks/use-request';
@@ -68,6 +68,7 @@ export const Plugins: FC = () => {
 
   // If some plugins are enabled, we show the indeterminate state
   const isIndeterminate = plugins.some(plugin => plugin.config.disabled === false);
+  const preBundlePlugins = plugins.filter(plugin => plugin.directory.startsWith(getPreBundlePluginPath()));
 
   useEffect(() => {
     setState(state => ({ ...state, pluginNodeExtraCerts: settings.pluginNodeExtraCerts }));
@@ -341,7 +342,7 @@ export const Plugins: FC = () => {
             )}
           </div>
           <div className="mt-4 flex flex-col">
-            {plugins.length > 0 && (
+            {plugins.length > 0 && plugins.length !== preBundlePlugins.length && (
               <div className="flex flex-col">
                 <div className="flex items-center gap-2 pl-2">
                   <div className="flex flex-1 items-center gap-3">
@@ -402,6 +403,9 @@ export const Plugins: FC = () => {
                   plugin.name.startsWith('insomnia-plugin-') ? PLUGIN_HUB_BASE : NPM_PACKAGE_BASE,
                   plugin.name,
                 );
+                const { directory } = plugin;
+                const preBundlePluginDirectory = getPreBundlePluginPath();
+                const isPreBundlePlugin = directory.startsWith(preBundlePluginDirectory);
 
                 return (
                   <GridListItem
@@ -411,26 +415,28 @@ export const Plugins: FC = () => {
                     data-testid={plugin.name}
                   >
                     <div className="flex flex-1 items-center gap-3">
-                      <Checkbox
-                        isSelected={!plugin.config.disabled}
-                        isDisabled={isRefreshingPlugins}
-                        className="group flex h-full items-center p-0 disabled:animate-pulse"
-                        onChange={isSelected => {
-                          patchSettings({
-                            pluginConfig: {
-                              ...settings.pluginConfig,
-                              [plugin.name]: { ...plugin.config, disabled: !isSelected },
-                            },
-                          });
-                        }}
-                      >
-                        <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
-                          <Icon
-                            icon="check"
-                            className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
-                          />
-                        </div>
-                      </Checkbox>
+                      {!isPreBundlePlugin && (
+                        <Checkbox
+                          isSelected={!plugin.config.disabled}
+                          isDisabled={isRefreshingPlugins}
+                          className="group flex h-full items-center p-0 disabled:animate-pulse"
+                          onChange={isSelected => {
+                            patchSettings({
+                              pluginConfig: {
+                                ...settings.pluginConfig,
+                                [plugin.name]: { ...plugin.config, disabled: !isSelected },
+                              },
+                            });
+                          }}
+                        >
+                          <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
+                            <Icon
+                              icon="check"
+                              className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
+                            />
+                          </div>
+                        </Checkbox>
+                      )}
                       <div className="flex items-center gap-2">
                         <span className="whitespace-nowrap">{plugin.name}</span>
                         {plugin.description && (
@@ -444,9 +450,11 @@ export const Plugins: FC = () => {
                     <div className="flex items-center gap-6">
                       <div className="flex w-[8ch] items-center justify-center gap-2">
                         {plugin.version}
-                        <a className="space-left" href={link} title={link}>
-                          <i className="fa fa-external-link-square" />
-                        </a>
+                        {!isPreBundlePlugin && (
+                          <a className="space-left" href={link} title={link}>
+                            <i className="fa fa-external-link-square" />
+                          </a>
+                        )}
                       </div>
                       <div className="flex w-[8ch] items-center gap-1">
                         <CopyButton

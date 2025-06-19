@@ -1,12 +1,22 @@
+const { execSync } = require('child_process');
 const BINARY_PREFIX = 'Insomnia.Core';
+let bundlePluginsRun = false;
 // NOTE: USE_HARD_LINKS
 // https://github.com/electron-userland/electron-builder/issues/4594#issuecomment-574653870
 
 /**
  * @type {import('electron-builder').Configuration}
- * @see https://www.electron.build/configuration/configuration
+ * @see https://www.electron.build/configuration
  */
 const config = {
+  beforePack: () => {
+    if (!bundlePluginsRun) {
+      console.log('Running bundle-plugins before build...');
+      execSync('npm run bundle-plugins', { stdio: 'inherit', cwd: __dirname });
+      bundlePluginsRun = true;
+    }
+    return true;
+  },
   npmRebuild: false,
   appId: 'com.insomnia.app',
   protocols: [
@@ -31,6 +41,11 @@ const config = {
       to: './bin',
       filter: 'yarn-standalone.js',
     },
+    {
+      from: './plugins',
+      to: './plugins',
+      filter: ['**/*'],
+    }
   ],
   extraMetadata: {
     main: 'main.min.js', // Override the main path in package.json

@@ -1,10 +1,11 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
 import electron from 'electron';
 
 import type { ParsedApiSpec } from '../common/api-specs';
-import { ENTERPRISE_PLUGINS } from '../common/constants';
+import { ENTERPRISE_PLUGINS, isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import type { PluginConfigMap } from '../common/settings';
 import * as models from '../models';
@@ -147,6 +148,7 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
         const safeModulePath = path.resolve(modulePath);
         // Base directory we're processing from `allPaths`
         const pluginBasePath = p;
+        const bundlePluginPath = getPreBundlePluginPath();
 
         // Check if the resolved module path is inside the base plugin path (to prevent directory traversal)
         if (!safeModulePath.startsWith(pluginBasePath)) {
@@ -167,6 +169,43 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
         // Not an Insomnia plugin because it doesn't have the package.json['insomnia']
         if (!('insomnia' in pluginJson)) {
           continue;
+        }
+
+        // Validate bundle plugin checksum for production builds
+        if (!isDevelopment() && pluginBasePath.startsWith(bundlePluginPath)) {
+          const pluginName = pluginJson.name;
+          const featureName = Object.keys(ENTERPRISE_PLUGINS).find(
+            name => ENTERPRISE_PLUGINS[name].pluginName === pluginName,
+          );
+          if (!featureName) {
+            console.warn(`[plugin] Ignored unknown bundle plugin from path: ${modulePath}`);
+            continue;
+          }
+          const { checksum } = ENTERPRISE_PLUGINS[featureName];
+          // traverse all files in the plugin directory and calculate the checksum
+          const checksumFileRelativePat = Object.keys(checksum);
+          let isSafePluginBundle = true;
+          for (const relativePath of checksumFileRelativePat) {
+            const filePath = path.resolve(modulePath, relativePath);
+            if (!fs.existsSync(filePath)) {
+              console.warn(`[plugin] Ignored missing file in bundle plugin: ${filePath}`);
+              isSafePluginBundle = false;
+              break;
+            }
+            const fileContent = fs.readFileSync(filePath);
+            const hashAlgorithm = checksum[relativePath].startsWith('sha512-') ? 'sha512' : 'sha256';
+            const calculatedChecksum = crypto.createHash(hashAlgorithm).update(fileContent).digest('base64');
+            if (`${hashAlgorithm}-${calculatedChecksum}` !== checksum[relativePath]) {
+              console.warn(
+                `[plugin] Ignored bundle plugin ${pluginName} because the checksum for ${filePath} does not match`,
+              );
+              isSafePluginBundle = false;
+              break;
+            }
+          }
+          if (!isSafePluginBundle) {
+            continue;
+          }
         }
 
         // Delete require cache entry and re-require
@@ -218,10 +257,12 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
       process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'),
       'plugins',
     );
+    // pre-bundle plugins under app path
+    const preBundlePluginPath = getPreBundlePluginPath();
     fs.mkdirSync(pluginPath, { recursive: true });
 
     // Also look in node_modules folder in each directory
-    const basePaths = [pluginPath, ...extraPaths];
+    const basePaths = [pluginPath, preBundlePluginPath, ...extraPaths];
     const extendedPaths = basePaths.map(p => path.resolve(p, 'node_modules'));
     const allPaths = [...basePaths, ...extendedPaths];
 
@@ -233,6 +274,14 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
   }
 
   return plugins;
+}
+
+export function getPreBundlePluginPath() {
+  const pluginDirRelativePath = isDevelopment() ? './plugins' : '../plugins';
+  return path.resolve(
+    process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getAppPath(),
+    pluginDirRelativePath,
+  );
 }
 
 export async function reloadPlugins() {
