@@ -167,7 +167,8 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               if (event.avatar) {
                 window.setTimeout(() => avatarImageCache.invalidate(event.avatar), CDN_INVALIDATION_TTL);
               }
-              syncOrganizationsFetcher.submit(
+              const syncOrganizationsFetcherSubmit = syncOrganizationsFetcher.submit;
+              syncOrganizationsFetcherSubmit(
                 {},
                 {
                   action: '/organization/sync',
@@ -176,8 +177,8 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               );
             } else if (event.type === 'StorageRuleChanged' && event.team && event.team.includes('org_')) {
               const orgId = event.team;
-
-              syncStorageRuleFetcher.submit(
+              const syncStorageRuleFetcherSubmit = syncStorageRuleFetcher.submit;
+              syncStorageRuleFetcherSubmit(
                 {},
                 {
                   action: `/organization/${orgId}/sync-storage-rule`,
@@ -185,7 +186,8 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
                 },
               );
             } else if (event.type === 'TeamProjectChanged' && event.team === organizationId) {
-              syncProjectsFetcher.submit(
+              const syncProjectsFetcherSubmit = syncProjectsFetcher.submit;
+              syncProjectsFetcherSubmit(
                 {},
                 {
                   action: `/organization/${organizationId}/sync-projects`,
@@ -198,7 +200,8 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               remoteId &&
               event.project === remoteId
             ) {
-              syncProjectsFetcher.submit(
+              const syncProjectsFetcherSubmit = syncProjectsFetcher.submit;
+              syncProjectsFetcherSubmit(
                 {},
                 {
                   action: `/organization/${organizationId}/sync-projects`,
@@ -210,7 +213,8 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               const organizations = JSON.parse(
                 localStorage.getItem(`${accountId}:organizations`) || '[]',
               ) as Organization[];
-              clearVaultKeyFetcher.submit(
+              const clearVaultKeyFetcherSubmit = clearVaultKeyFetcher.submit;
+              clearVaultKeyFetcherSubmit(
                 {
                   organizations: organizations?.map(org => org.id) || [],
                   sessionId: event.sessionId,
@@ -227,7 +231,8 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               remoteId &&
               event.project === remoteId
             ) {
-              syncDataFetcher.submit(
+              const syncDataFetcherSubmit = syncDataFetcher.submit;
+              syncDataFetcherSubmit(
                 {},
                 {
                   method: 'POST',
@@ -249,14 +254,14 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
     }
     return;
   }, [
-    clearVaultKeyFetcher,
+    clearVaultKeyFetcher.submit,
     organizationId,
     projectId,
     remoteId,
-    syncDataFetcher,
-    syncOrganizationsFetcher,
-    syncProjectsFetcher,
-    syncStorageRuleFetcher,
+    syncDataFetcher.submit,
+    syncOrganizationsFetcher.submit,
+    syncProjectsFetcher.submit,
+    syncStorageRuleFetcher.submit,
     userSession.accountId,
     userSession.id,
     workspaceId,
