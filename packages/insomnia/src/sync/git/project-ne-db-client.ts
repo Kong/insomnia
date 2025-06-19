@@ -3,7 +3,7 @@ import path from 'node:path';
 import type { PromiseFsClient } from 'isomorphic-git';
 import YAML from 'yaml';
 
-import { database as db } from '../../common/database';
+import { database, database as db } from '../../common/database';
 import type { InsomniaFile } from '../../common/import-v5-parser';
 import { getInsomniaV5DataExport, importInsomniaV5Data } from '../../common/insomnia-v5';
 import * as models from '../../models';
@@ -89,8 +89,15 @@ export class GitProjectNeDBClient {
     const workspace = dataToImport.find(isWorkspace) as Workspace | undefined;
 
     const isExistingWorkspace = workspace && (await models.workspace.getById(workspace._id));
-    // Remove the workspace if it already exists to clean up any descendants that might have been removed.
-    isExistingWorkspace && (await models.workspace.remove(workspace));
+
+    if (isExistingWorkspace) {
+      const originDocs = await database.withDescendants(workspace);
+      // If the workspace already exists, we need to remove any documents that are not in the new data
+      const deletedDocs = originDocs.filter(originDoc => !dataToImport.some(doc => doc._id === originDoc._id));
+      await database.batchModifyDocs({
+        remove: deletedDocs,
+      });
+    }
 
     for (const doc of dataToImport) {
       if (isWorkspace(doc)) {
