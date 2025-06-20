@@ -763,5 +763,19 @@ describe('withDescendants()', () => {
       }),
       'Should return workspace with all request groups and requests',
     ).resolves.toEqual([workspace, folder1, request1, folder2, request2]);
+
+    await expect(
+      db.withDescendants(workspace, null, [], {
+        Workspace: ['RequestGroup'],
+      }),
+      'Should return only workspace and top request group',
+    ).resolves.toEqual([workspace, folder1]);
+
+    await expect(
+      db.withDescendants(workspace, null, [], {
+        RequestGroup: ['RequestGroup', 'Request'],
+      }),
+      'Should return only workspace because no workspace descendants are requested',
+    ).resolves.toEqual([workspace]);
   });
 });

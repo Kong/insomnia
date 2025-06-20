@@ -258,10 +258,13 @@ export const WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP: Record<string, string[]> = {
     apiSpec.type,
     mockServer.type,
     unitTestSuite.type,
+    protoDirectory.type,
+    protoFile.type,
   ],
   [requestGroup.type]: [requestGroup.type, request.type, grpcRequest.type, webSocketRequest.type],
   [webSocketRequest.type]: [webSocketPayload.type],
   [mockServer.type]: [mockRoute.type],
   [environment.type]: [environment.type],
   [unitTestSuite.type]: [unitTest.type],
+  [protoDirectory.type]: [protoFile.type],
 };
