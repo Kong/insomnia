@@ -25,6 +25,7 @@ export function init(): BaseGitRepository {
       name: '',
       email: '',
     },
+    statusIdentifier: '',
     cachedGitLastCommitTime: null,
     cachedGitRepositoryBranch: null,
     cachedGitLastAuthor: null,
@@ -43,6 +44,7 @@ export interface BaseGitRepository {
     email: string;
   };
   hasUncommittedChanges: boolean;
+  statusIdentifier: string;
   cachedGitLastCommitTime: number | null;
   cachedGitRepositoryBranch: string | null;
   cachedGitLastAuthor: string | null;

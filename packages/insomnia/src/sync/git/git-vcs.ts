@@ -1,3 +1,4 @@
+import { hash } from 'node:crypto';
 import path from 'node:path';
 
 import * as git from 'isomorphic-git';
@@ -541,6 +542,26 @@ export class GitVCS {
         name: workdir.name || stage.name || head.name || '',
       })),
     };
+  }
+
+  async statusIdentifier() {
+    const status = await git.statusMatrix({
+      ...this._baseOpts,
+    });
+
+    const lastCommit = await git.resolveRef({
+      ...this._baseOpts,
+      ref: 'HEAD',
+    });
+
+    const statusIdentifier = status
+      .map(([filepath, headOid, workdirOid, stageOid]) => {
+        return `${filepath}:${headOid}:${workdirOid}:${stageOid}`;
+      })
+      .join(',');
+
+    // Hash the status identifier to get a unique identifier for the current status
+    return hash('sha1', Buffer.from(statusIdentifier + lastCommit));
   }
 
   async addRemote(url: string) {

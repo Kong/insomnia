@@ -177,6 +177,10 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
         legacyInsomniaWorkspace = await containsLegacyInsomniaDir({ fsClient });
       }
 
+      await models.gitRepository.update(gitRepository, {
+        statusIdentifier: await GitVCS.statusIdentifier(),
+      });
+
       return {
         branch: await GitVCS.getCurrentBranch(),
         branches: await GitVCS.listBranches(),
@@ -220,6 +224,10 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
     if (!workspaceId) {
       legacyInsomniaWorkspace = await containsLegacyInsomniaDir({ fsClient });
     }
+
+    await models.gitRepository.update(gitRepository, {
+      statusIdentifier: await GitVCS.statusIdentifier(),
+    });
 
     return {
       branch: await GitVCS.getCurrentBranch(),
@@ -335,6 +343,7 @@ export const gitChangesLoader = async ({
 
     await models.gitRepository.update(gitRepository, {
       hasUncommittedChanges,
+      statusIdentifier: await GitVCS.statusIdentifier(),
     });
 
     return {
@@ -1228,6 +1237,7 @@ export const commitToGitRepoAction = async ({
     // update workspace meta with git sync data, use for show unpushed changes on collection card
     await models.gitRepository.update(gitRepository, {
       hasUnpushedChanges,
+      statusIdentifier: await GitVCS.statusIdentifier(),
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Error while committing changes';
@@ -1319,6 +1329,7 @@ export const commitAndPushToGitRepoAction = async ({
 
     await models.gitRepository.update(repo, {
       hasUnpushedChanges,
+      statusIdentifier: await GitVCS.statusIdentifier(),
     });
   } catch (err: unknown) {
     if (err instanceof Errors.PushRejectedError && err.data.reason === 'not-fast-forward') {
@@ -1391,6 +1402,7 @@ export const createNewGitBranchAction = async ({
     await models.gitRepository.update(gitRepository, {
       hasUncommittedChanges,
       hasUnpushedChanges,
+      statusIdentifier: await GitVCS.statusIdentifier(),
     });
   } catch (err) {
     if (err instanceof Errors.HttpError) {
@@ -1437,23 +1449,13 @@ export const checkoutGitBranchAction = async ({
     };
   }
 
-  const log = (await GitVCS.log({ depth: 1 })) || [];
-
-  const author = log[0] ? log[0].commit.author : null;
-  const cachedGitLastCommitTime = author ? author.timestamp * 1000 : null;
-
-  await models.gitRepository.update(gitRepository, {
-    cachedGitLastCommitTime,
-    cachedGitRepositoryBranch: branch,
-    cachedGitLastAuthor: author?.name || null,
-  });
-
   const { hasUncommittedChanges } = await getGitChanges(GitVCS);
   const hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
 
   await models.gitRepository.update(gitRepository, {
     hasUncommittedChanges,
     hasUnpushedChanges,
+    statusIdentifier: await GitVCS.statusIdentifier(),
   });
 
   await database.flushChanges(bufferId);
@@ -1490,6 +1492,11 @@ export const mergeGitBranch = async ({
       ...vcsSegmentEventProperties('git', 'merge_branch'),
       providerName,
     });
+
+    await models.gitRepository.update(gitRepository, {
+      statusIdentifier: await GitVCS.statusIdentifier(),
+    });
+
     await database.flushChanges(bufferId, true);
     return {};
   } catch (err) {
@@ -1638,6 +1645,11 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
     const providerName = getOauth2FormatName(gitRepository.credentials);
     const bufferId = await database.bufferChanges();
     await GitVCS.pull(gitRepository.credentials);
+
+    await models.gitRepository.update(gitRepository, {
+      statusIdentifier: await GitVCS.statusIdentifier(),
+    });
+
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'pull'),
       providerName,
@@ -1677,7 +1689,7 @@ export const continueMerge = async ({
   commitParent: string[];
 }) => {
   try {
-    await getGitRepository({ workspaceId, projectId });
+    const gitRepository = await getGitRepository({ workspaceId, projectId });
     const bufferId = await database.bufferChanges();
 
     await GitVCS.continueMerge({
@@ -1686,6 +1698,9 @@ export const continueMerge = async ({
       commitParent,
     });
 
+    await models.gitRepository.update(gitRepository, {
+      statusIdentifier: await GitVCS.statusIdentifier(),
+    });
     await database.flushChanges(bufferId);
 
     return {};
@@ -1726,12 +1741,15 @@ export const discardChangesAction = async ({
   errors?: string[];
 }> => {
   try {
-    await getGitRepository({ workspaceId, projectId });
+    const gitRepository = await getGitRepository({ workspaceId, projectId });
     const { changes } = await getGitChanges(GitVCS);
 
     const files = changes.unstaged.filter(change => paths.includes(change.path));
 
     await GitVCS.discardChanges(files);
+    await models.gitRepository.update(gitRepository, {
+      statusIdentifier: await GitVCS.statusIdentifier(),
+    });
     return {};
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Error while rolling back changes';
