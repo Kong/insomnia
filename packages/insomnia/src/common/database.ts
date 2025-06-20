@@ -171,6 +171,11 @@ export const database = {
       return _send<T[]>('find', ...arguments);
     }
     return new Promise<T[]>((resolve, reject) => {
+      if (!db[type]) {
+        console.warn(`[db] No collection for type "${type}"`);
+        resolve([]);
+        return;
+      }
       (db[type] as NeDB<T>)
         .find(query)
         .sort(sort)

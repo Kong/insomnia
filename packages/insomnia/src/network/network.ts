@@ -419,7 +419,7 @@ export async function savePatchesMadeByScript(patches: {
   }
 
   if (activeGlobalBaseEnvironment) {
-    invariant(mutatedContext.baseGlobals, 'global base env must be defined when there is selected one');
+    invariant(mutatedContext.baseGlobals, 'baseGlobals must be defined when there is active global base environment');
     await updateEnvironment(activeGlobalBaseEnvironment, mutatedContext.baseGlobals);
   }
 
@@ -508,8 +508,16 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
         },
         response,
         vault,
-        globals: globals?.data || undefined,
-        baseGlobals: baseGlobals?.data || undefined,
+        globals: globals && {
+          id: globals._id,
+          name: globals.name,
+          data: globals.data || {},
+        },
+        baseGlobals: baseGlobals && {
+          id: baseGlobals._id,
+          name: baseGlobals.name,
+          data: baseGlobals.data || {},
+        },
         iterationData: userUploadEnvironment
           ? {
               name: userUploadEnvironment.name,
@@ -547,21 +555,21 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
 
     if (globals) {
       const globalEnvPropertyOrder = orderedJSON.parse(
-        JSON.stringify(output.globals || {}),
+        JSON.stringify(output.globals?.data || {}),
         JSON_ORDER_PREFIX,
         JSON_ORDER_SEPARATOR,
       );
-      globals.data = output.globals || {};
+      globals.data = output.globals?.data || {};
       globals.dataPropertyOrder = globalEnvPropertyOrder.map;
     }
 
     if (baseGlobals) {
       const globalBaseEnvPropertyOrder = orderedJSON.parse(
-        JSON.stringify(output.baseGlobals || {}),
+        JSON.stringify(output.baseGlobals?.data || {}),
         JSON_ORDER_PREFIX,
         JSON_ORDER_SEPARATOR,
       );
-      baseGlobals.data = output.baseGlobals || {};
+      baseGlobals.data = output.baseGlobals?.data || {};
       baseGlobals.dataPropertyOrder = globalBaseEnvPropertyOrder.map;
     }
 
