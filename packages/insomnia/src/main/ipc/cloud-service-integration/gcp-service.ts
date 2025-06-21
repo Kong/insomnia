@@ -1,15 +1,17 @@
 import crypto from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
-import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
 import { GoogleAuth, type JWTInput } from 'google-auth-library';
 
 import type { CloudProviderName } from '../../../models/cloud-credential';
-import { isValidJSONString } from '../../../utils/string-check';
+import { isValidJSONString } from '../../../utils/json';
+import { createAgent } from './cloud-service-request';
+import { nodeCurlRequest } from './cloud-service-request';
 import type { CloudServiceResult, GCPSecretConfig, ICloudService } from './types';
 
 export const providerName: CloudProviderName = 'gcp';
 export type GCPGetSecretConfig = Omit<GCPSecretConfig, 'secretName'>;
+
 export class GCPService implements ICloudService {
   private _keyPath: string;
 
@@ -51,33 +53,42 @@ export class GCPService implements ICloudService {
     return { isValid, errorMessage };
   }
 
-  async authenticate(): Promise<CloudServiceResult<{}>> {
+  async _getGoogleAuth(credentials: JWTInput) {
+    const agent = await createAgent({});
+    const auth = new GoogleAuth({
+      credentials,
+      // General scope for GCP
+      scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+      clientOptions: {
+        transporterOptions: {
+          agent: agent.httpsAgent,
+        },
+      },
+    });
+    return auth;
+  }
+
+  async authenticate(): Promise<CloudServiceResult<{ accessToken: string }>> {
     const validateResult = this._validateKeyPath();
     if (validateResult.isValid) {
-      const auth = new GoogleAuth({
-        credentials: validateResult.credentials,
-        // General scope for GCP
-        scopes: ['https://www.googleapis.com/auth/cloud-platform'],
-      });
+      const auth = await this._getGoogleAuth(validateResult.credentials);
       try {
         const client = await auth.getClient();
         // use get access token to validate credential
-        await client.getAccessToken();
+        const accessToken = await client.getAccessToken();
         return {
           success: true,
-          result: {},
+          result: { accessToken: accessToken.token || '' },
         };
       } catch (error) {
         return {
           success: false,
-          result: null,
           error: { errorMessage: error?.message, errorCode: error?.code },
         };
       }
     } else {
       return {
         success: false,
-        result: null,
         error: { errorMessage: validateResult.errorMessage, errorCode: '' },
       };
     }
@@ -96,11 +107,19 @@ export class GCPService implements ICloudService {
     const secretVersion = version || 'latest';
     const validateResult = this._validateKeyPath();
     if (validateResult.isValid) {
+      const authResult = await this.authenticate();
+      if (!authResult.success) {
+        // authentication failed
+        return {
+          success: false,
+          error: authResult.error,
+        };
+      }
+      // Get google secret manager secret value directly using url
+      // Refer: https://cloud.google.com/secret-manager/docs/reference/rest#rest-resource:-v1beta1.projects.secrets.versions
+      const secretManagerUrl = 'https://secretmanager.googleapis.com';
       const { credentials } = validateResult;
       const { project_id } = credentials;
-      const secretClient = new SecretManagerServiceClient({
-        credentials,
-      });
       const fullPathSecretNamePattern = /^projects\/[a-z0-9-]+\/secrets\/[a-zA-Z0-9_-]+$/;
       const fullPathSecretNameWithVersionPattern =
         /^projects\/[a-z0-9-]+\/secrets\/[a-zA-Z0-9_-]+\/versions\/[a-zA-Z0-9_-]+$/;
@@ -115,24 +134,42 @@ export class GCPService implements ICloudService {
         finalSecretName = `projects/${project_id}/secrets/${secretName}/versions/${secretVersion}`;
       }
       try {
-        const [versionResponse] = await secretClient.accessSecretVersion({ name: finalSecretName });
-        const secretResult = versionResponse.payload?.data?.toString() || '';
-        return {
-          success: true,
-          result: { value: secretResult },
-        };
-      } catch (error) {
-        console.error(error);
+        const finalUrl = `${secretManagerUrl}/v1/${finalSecretName}:access`;
+        const secretResponse = await nodeCurlRequest({
+          request: {
+            url: finalUrl,
+            method: 'GET',
+            headers: [
+              {
+                name: 'Authorization',
+                value: `Bearer ${authResult.result?.accessToken}`,
+              },
+            ],
+          },
+        });
+        const secretResponseBody = await secretResponse.json();
+        if (secretResponse.ok) {
+          const { payload } = secretResponseBody;
+          const { data } = payload;
+          return {
+            success: true,
+            result: { value: Buffer.from(data, 'base64').toString('utf-8') },
+          };
+        }
         return {
           success: false,
-          result: null,
+          error: { errorMessage: secretResponseBody?.error?.message, errorCode: secretResponseBody?.error?.code },
+        };
+      } catch (error) {
+        console.error('Failed to get secret value from gcp secret manager', error);
+        return {
+          success: false,
           error: { errorMessage: error.toString(), errorCode: error?.code },
         };
       }
     } else {
       return {
         success: false,
-        result: null,
         error: { errorMessage: validateResult.errorMessage, errorCode: '' },
       };
     }

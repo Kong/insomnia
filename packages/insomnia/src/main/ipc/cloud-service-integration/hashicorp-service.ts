@@ -7,7 +7,7 @@ import {
   HashiCorpVaultAuthMethod,
   type HCPCredential,
 } from '../../../models/cloud-credential';
-import { nodeCurlRequest, type NodeCurlResponseType } from './request';
+import { nodeCurlRequest, type NodeCurlResponseType } from './cloud-service-request';
 import type {
   CloudServiceResult,
   HashiCorpSecretConfig,
@@ -177,7 +177,7 @@ export class HashiCorpService implements ICloudService {
       if (authMethod === HashiCorpVaultAuthMethod.appRole) {
         const { role_id, secret_id } = this._credential;
 
-        // authenticate to on-prem deployement with app role
+        // authenticate to on-prem deployment with app role
         const authResponse = await nodeCurlRequest({
           request: {
             url: `${finalUrl}/v1/auth/approle/login`,

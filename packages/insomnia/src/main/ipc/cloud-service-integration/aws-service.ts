@@ -20,6 +20,7 @@ import {
 import { fromIni, fromSSO } from '@aws-sdk/credential-providers';
 
 import { AWSCredentialType, type AWSServiceCredential, type CloudProviderName } from '../../../models/cloud-credential';
+import { createAgent } from './cloud-service-request';
 import type { AWSSecretConfig, CloudServiceResult, ICloudService } from './types';
 
 export type AWSGetSecretConfig = Omit<AWSSecretConfig, 'SecretId' | 'SecretType' | 'SecretKey'>;
@@ -68,9 +69,11 @@ export class AWSService implements ICloudService {
 
   async authenticate(): Promise<CloudServiceResult<GetCallerIdentityCommandOutput>> {
     const { region } = this._credential;
+    const httpAgent = await createAgent({});
     const stsClient = new STSClient({
       region,
       credentials: this._getAWSCredentials(false),
+      requestHandler: httpAgent,
     });
 
     try {
@@ -110,9 +113,11 @@ export class AWSService implements ICloudService {
     const { region } = this._credential;
     const { VersionId, VersionStage } = config;
     const enableCache = 'enableCache' in this._credential ? Boolean(this._credential.enableCache) : false;
+    const httpAgent = await createAgent({});
     const secretClient = new SecretsManagerClient({
       region,
       credentials: this._getAWSCredentials(enableCache),
+      requestHandler: httpAgent,
     });
     try {
       const input = {

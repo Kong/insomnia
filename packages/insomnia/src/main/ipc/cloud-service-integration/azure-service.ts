@@ -1,10 +1,16 @@
 import crypto from 'node:crypto';
 
-import { type AuthenticationResult, AuthError, CryptoProvider, PublicClientApplication } from '@azure/msal-node';
+import {
+  type AuthenticationResult,
+  AuthError,
+  CryptoProvider,
+  type NetworkRequestOptions,
+  type NodeSystemOptions,
+  PublicClientApplication,
+} from '@azure/msal-node';
 
-import { INSOMNIA_AZURE_CLIENT_ID, INSOMNIA_AZURE_REDIRECT_URI } from '../../../common/constants';
-import { insomniaFetch } from '../../../ui/insomniaFetch';
-import { nodeCurlRequest } from './request';
+import { getApiBaseURL, INSOMNIA_AZURE_CLIENT_ID, INSOMNIA_AZURE_REDIRECT_URI } from '../../../common/constants';
+import { nodeCurlRequest } from './cloud-service-request';
 import { type CloudServiceResult, type ICloudService, OAuthCloudService } from './types';
 
 interface AzureSecretAttributes {
@@ -45,15 +51,23 @@ const getAzureConfig = async () => {
     return {
       clientId: INSOMNIA_AZURE_CLIENT_ID,
       redirectUri: INSOMNIA_AZURE_REDIRECT_URI,
-  };
+    };
   }
 
-  // Get Azure config from server
-  return insomniaFetch<{ clientID: string; clientRedirectURI: string; error?: string }>({
-    path: '/v1/oauth/azure/config',
-    method: 'GET',
-    sessionId: '',
-  }).then(data => {
+  const getConfigResponse = await nodeCurlRequest({
+    request: {
+      url: `${getApiBaseURL()}/v1/oauth/azure/config`,
+      method: 'GET',
+      headers: [
+        {
+          name: 'Content-Type',
+          value: 'application/json',
+        },
+      ],
+    },
+  });
+  if (getConfigResponse.ok) {
+    const data = await getConfigResponse.json();
     const { clientID, clientRedirectURI } = data;
     if (clientID && clientRedirectURI) {
       return {
@@ -61,12 +75,126 @@ const getAzureConfig = async () => {
         redirectUri: clientRedirectURI,
       };
     }
-    throw new Error(`Can not get Azure config from server ${data}`);
-  });
+    throw new Error(`Can not get Azure config from server ${JSON.stringify(data)}`);
+  } else {
+    let errorBody;
+    const contentType = getConfigResponse.headers.find(h => h.name.toLocaleLowerCase() === 'content-type')?.value;
+    if (contentType?.toLowerCase().includes('application/json')) {
+      errorBody = getConfigResponse.json() as { error?: { code: string; message: string } };
+    } else {
+      errorBody = getConfigResponse.body;
+    }
+    const errorMessage =
+      (typeof errorBody === 'object' && errorBody.error?.message) ||
+      (errorBody as string) ||
+      'Unknown error, failed to Azure config';
+    throw new Error(errorMessage);
+  }
 };
 
 const getAzureClient = async () => {
+  const systemOptions: NodeSystemOptions = {
+    networkClient: {
+      // Workaround use libcurl promise with proxy settings
+      // Refer: https://github.com/AzureAD/microsoft-authentication-library-for-js/issues/7584#issuecomment-2674562106
+      // Origin issue related: https://github.com/AzureAD/microsoft-authentication-library-for-js/issues/6527#issuecomment-1746091561
+      sendGetRequestAsync: async (url: string, options?: NetworkRequestOptions) => {
+        try {
+          const requestHeader = options?.headers;
+          const requestBody = options?.body;
+          const headers = requestHeader
+            ? Object.keys(requestHeader).map(key => ({ name: key, value: requestHeader[key] }))
+            : [];
+          const response = await nodeCurlRequest({
+            request: {
+              url,
+              method: 'GET',
+              headers,
+              ...(requestBody && {
+                body: {
+                  mimeType: 'text/plain',
+                  text: JSON.stringify(requestBody),
+                },
+              }),
+            },
+          });
+          const responseHeaders = response.headers;
+          return {
+            status: response.code,
+            headers: responseHeaders.reduce(
+              (acc, { name, value }) => {
+                acc[name] = value;
+                return acc;
+              },
+              {} as Record<string, any>,
+            ),
+            body: await response.json(),
+          };
+        } catch (error) {
+          console.error('[SERVICE] BotFrameworkService networkClient.sendGetRequestAsync', error);
+          throw error;
+        }
+      },
+      sendPostRequestAsync: async (url: string, options?: NetworkRequestOptions) => {
+        try {
+          const requestHeader = options?.headers;
+          const requestBody = options?.body;
+          const contentType = requestHeader?.['Content-Type'] || requestHeader?.['content-type'];
+          let mimeType = 'text/plain';
+          let params;
+          if (contentType) {
+            // mapping with lib curl request body format
+            if (contentType.includes('application/json')) {
+              mimeType = 'application/json';
+            } else if (contentType.includes('application/x-www-form-urlencoded')) {
+              mimeType = 'application/x-www-form-urlencoded';
+              params = requestBody?.split('&').map(param => {
+                const [key, value] = param.split('=');
+                return {
+                  name: decodeURIComponent(key),
+                  value: decodeURIComponent(value || ''),
+                };
+              });
+            }
+          }
+          const headers = requestHeader
+            ? Object.keys(requestHeader).map(key => ({ name: key, value: requestHeader[key] }))
+            : [];
+          const response = await nodeCurlRequest({
+            request: {
+              url,
+              method: 'POST',
+              headers,
+              ...(requestBody && {
+                body: {
+                  mimeType,
+                  text: requestBody,
+                  params,
+                },
+              }),
+            },
+          });
+          const responseHeaders = response.headers;
+          return {
+            status: response.code,
+            headers: responseHeaders.reduce(
+              (acc, { name, value }) => {
+                acc[name] = value;
+                return acc;
+              },
+              {} as Record<string, any>,
+            ),
+            body: await response.json(),
+          };
+        } catch (error) {
+          console.error('[SERVICE] BotFrameworkService networkClient.sendPostRequestAsync', error);
+          throw error;
+        }
+      },
+    },
+  };
   if (!azureClient) {
+    // Check if the client is already initialized
     const azureConfig = await getAzureConfig();
     const { clientId, redirectUri } = azureConfig;
     azureClient = new PublicClientApplication({
@@ -74,6 +202,7 @@ const getAzureClient = async () => {
         clientId,
         authority,
       },
+      system: systemOptions,
     });
     redirect_uri = redirectUri;
   }
@@ -196,7 +325,6 @@ export class AzureService extends OAuthCloudService implements ICloudService {
     } catch (error) {
       return {
         success: false,
-        result: null,
         error: { errorMessage: error.toString(), errorCode: '' },
       };
     }

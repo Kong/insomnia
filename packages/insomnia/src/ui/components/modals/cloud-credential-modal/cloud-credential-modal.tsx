@@ -112,7 +112,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
       >
         <Dialog className="flex h-full flex-1 flex-col overflow-hidden outline-none">
           {({ close }) => (
-            <div className="flex flex-1 flex-col gap-4 overflow-hidden">
+            <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-2">
               <div className="flex items-center justify-between gap-2">
                 <Heading slot="title" className="text-2xl">
                   {providerCredential
