@@ -94,7 +94,7 @@ export default async function installPlugin(name: string) {
         }),
     );
   } catch (error) {
-    console.error(`Failed to install plugin ${pluginName}:`, error);
+    console.error(`Failed to install plugin ${pluginName}: ${error.toString()}`);
     throw error;
   } finally {
     // Ensure the temporary directory is cleaned up
@@ -103,7 +103,7 @@ export default async function installPlugin(name: string) {
         console.log(`[plugins] Cleaning up temporary directory: ${tmpDir}`);
         await rm(tmpDir, { recursive: true, force: true });
       } catch (error) {
-        console.warn(`[plugins] Failed to clean tmp dir ${tmpDir}:`, error);
+        console.warn(`[plugins] Failed to clean tmp dir ${tmpDir}: ${error.toString()}`);
       }
     }
   }
