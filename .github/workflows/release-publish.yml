@@ -243,33 +243,3 @@ jobs:
       registry-password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
       provenance-registry-username: ${{ secrets.DOCKER_REGISTRY_USER }}
       provenance-registry-password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
-
-  create-draft-release:
-    timeout-minutes: 10
-    runs-on: ubuntu-22.04
-    needs: [artifact-provenance] # Wait for the artifact provenance to be generated
-    permissions:
-      actions: read # For getting workflow run info for keyless signing of docker image
-      contents: write # Required to upload assets
-      packages: write
-    steps:
-      - name: Checkout branch # Check out the develop branch
-        uses: actions/checkout@v4
-        with:
-          ref: develop
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Download release assets
-        run: |
-          gh release download core@${{ env.RELEASE_VERSION }} \
-          --dir=${{ env.ARTIFACTS_DOWNLOAD_PATH }} \
-          --clobber
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Upload release assets
-        run: |
-          gh release upload core@${{ env.RELEASE_VERSION }} \
-          ${{ env.ARTIFACTS_DOWNLOAD_PATH }}/* \
-          --repo=kong/insomnia
-        env:
-          GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}

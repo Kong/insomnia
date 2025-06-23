@@ -1,0 +1,102 @@
+name: CE-Release-trigger
+run-name: Trigger CE Release (${{ github.event.inputs.version}}) by @{{ github.actor }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        required: true
+        type: choice
+        description: Channel of the release (alpha/beta/stable)
+        options:
+          - alpha
+          - beta
+          - stable
+      version:
+        required: false
+        description: force version of the release (e.g. 9.0.0) if previous release was successful, this should auto increment
+
+env:
+  RELEASE_VERSION: ${{ github.event.inputs.version }}
+  RELEASE_BRANCH: release/${{ github.event.inputs.version }}
+  ARTIFACTS_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts
+
+jobs:
+  create-pr:
+    timeout-minutes: 5
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Create Pull Request in CE
+        run: |
+          gh pr create \
+          --base develop \
+          --head ${{ env.RELEASE_BRANCH }} \
+          --title ":rocket: ${{ env.RELEASE_VERSION}}" \
+          --repo kong/insomnia \
+          --body "$(cat <<EOF
+          # WARNING: <ins>Do not merge</ins> this PR. Use the "Publish" workflow.
+
+          ## Publish workflow:
+
+          When ready to publish, trigger [Publish](https://github.com/Kong/insomnia/actions/workflows/release-publish.yml) workflow with these variables:
+          - Release version (\`version\`): \`${{ env.RELEASE_VERSION}}\`
+
+          Alternatively, you can trigger the workflow from [GitHub CLI](https://cli.github.com/):
+          \`\`\`bash
+          gh workflow run release-publish.yml -f version=${{ env.RELEASE_VERSION}} --repo Kong/insomnia
+          \`\`\`
+
+          > Release notes will be generated automatically based on the commit messages during publish. Remove any unwanted notes manually afterwards.
+
+          <details>
+          <summary>Merge branch step failed on the publish workflow? Try this...</summary>
+
+          Run locally:
+
+          \`\`\`bash
+          # Make sure git remote is Kong/insomnia...
+
+          git checkout develop
+          git merge --no-ff release/${{ env.RELEASE_VERSION}}
+
+          # Solve merge conflicts ...
+          # If there's package-lock conflicts, run \`npm install\` and commit the package-lock changes
+
+          git push
+          \`\`\`
+          </details>
+          EOF
+          )"
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
+  create-draft-release:
+    timeout-minutes: 10
+    runs-on: ubuntu-22.04
+    permissions:
+      actions: read # For getting workflow run info for keyless signing of docker image
+      contents: write # Required to upload assets
+      packages: write
+    steps:
+      - name: Checkout branch # Check out the develop branch
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Download release assets
+        run: |
+          gh release download core@${{ env.RELEASE_VERSION }} \
+          --dir=${{ env.ARTIFACTS_DOWNLOAD_PATH }} \
+          --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload release assets
+        run: |
+          gh release upload core@${{ env.RELEASE_VERSION }} \
+          ${{ env.ARTIFACTS_DOWNLOAD_PATH }}/* \
+          --repo=kong/insomnia
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
+      
+
+
