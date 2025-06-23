@@ -145,7 +145,7 @@ jobs:
           Remove-Item -Path "packages/insomnia/dist/win-unpacked/tosign" -Recurse -Force
           Remove-Item -Path "packages/insomnia/dist/win-unpacked/signed" -Recurse -Force
 
-      # re-packages the now code-signed electron-builder contents into a squirrel installer
+      # re-packages the now code-signed electron-builder contents into the installer
       - name: Package dist app (Windows only)
         if: runner.os == 'Windows'
         shell: bash
@@ -244,6 +244,7 @@ jobs:
           name: ${{ runner.os }}-${{ runner.arch }}-artifacts
           path: |
             packages/insomnia/dist/*.exe
+            packages/insomnia/dist/*.yml
             packages/insomnia/dist/squirrel-windows/*
             packages/insomnia/dist/*.zip
             packages/insomnia/dist/*.dmg
