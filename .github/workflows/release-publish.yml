@@ -110,6 +110,7 @@ jobs:
           file: "./artifacts/*-artifacts/insomnia/dist/Insomnia.*;./artifacts/*-artifacts/insomnia/dist/*.yml;./artifacts/*-artifacts/insomnia/dist/squirrel-windows/*;./artifacts/*-artifacts/insomnia-inso/artifacts/inso-*;./artifacts/**/*sbom.{spdx,cyclonedx}.json"
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
+          overwrite: true
 
       # TODO: also take care of aarch64 image
       - name: Load the Inso CLI Docker Archive
