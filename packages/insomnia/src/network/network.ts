@@ -983,13 +983,7 @@ const extractCookies = async (
   return { cookies: [], rejectedCookies: [], totalSetCookies: 0 };
 };
 
-export const getSetCookiesFromResponseHeaders = (headers: any[]) =>
-  getSetCookieHeaders(headers).map(h => {
-    const name = h.value.split('=')[0];
-    // encodeURIComponent is used to ensure that the cookie value is properly encoded
-    const value = h.value.split('=')[1];
-    return `${encodeURIComponent(name)}=${encodeURIComponent(value)}`;
-  });
+export const getSetCookiesFromResponseHeaders = (headers: any[]) => getSetCookieHeaders(headers).map(h => h.value);
 
 export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any; finalUrl: string }): string => {
   if (!headerResults || !headerResults.length) {
