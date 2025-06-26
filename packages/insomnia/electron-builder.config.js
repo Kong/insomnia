@@ -1,6 +1,5 @@
 const { execSync } = require('child_process');
 const BINARY_PREFIX = 'Insomnia.Core';
-let bundlePluginsRun = false;
 // NOTE: USE_HARD_LINKS
 // https://github.com/electron-userland/electron-builder/issues/4594#issuecomment-574653870
 
@@ -9,14 +8,6 @@ let bundlePluginsRun = false;
  * @see https://www.electron.build/configuration
  */
 const config = {
-  beforePack: () => {
-    if (!bundlePluginsRun) {
-      console.log('Running bundle-plugins before build...');
-      execSync('npm run bundle-plugins', { stdio: 'inherit', cwd: __dirname });
-      bundlePluginsRun = true;
-    }
-    return true;
-  },
   npmRebuild: false,
   appId: 'com.insomnia.app',
   protocols: [
