@@ -47,8 +47,14 @@ export function hasAcceptEncodingHeader<T extends Header>(headers: T[]) {
   return filterHeaders(headers, 'accept-encoding').length > 0;
 }
 
-export function getSetCookieHeaders<T extends Header>(headers: T[]): T[] {
-  return filterHeaders(headers, 'set-cookie');
+export function getSetCookieHeaders(headers: Header[]): Header[] {
+  return filterHeaders(headers, 'set-cookie').map(h => {
+    // remove Nunjucks interpolation symbols
+    return {
+      name: h.name,
+      value: h.value.replaceAll('{{', '').replaceAll('}}', '').replaceAll('{%', '').replaceAll('%}', ''),
+    };
+  });
 }
 
 export function getLocationHeader<T extends Header>(headers: T[]): T | null {
