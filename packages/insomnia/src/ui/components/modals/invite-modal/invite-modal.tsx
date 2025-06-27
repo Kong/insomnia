@@ -14,7 +14,6 @@ import {
 } from 'react-aria-components';
 import { useFetcher, useParams, useSearchParams } from 'react-router';
 
-import { showAlert } from '..';
 import { getAccountId, getCurrentSessionId } from '../../../../account/session';
 import { getAppWebsiteBaseURL } from '../../../../common/constants';
 import { debounce } from '../../../../common/misc';
@@ -24,6 +23,7 @@ import { insomniaFetch } from '../../../insomniaFetch';
 import type { Collaborator, CollaboratorsListLoaderResult } from '../../../routes/invite';
 import { PromptButton } from '../../base/prompt-button';
 import { Icon } from '../../icon';
+import { showAlert } from '../index';
 import { InviteForm } from './invite-form';
 import { OrganizationMemberRolesSelector, type Role, SELECTOR_TYPE } from './organization-member-roles-selector';
 
