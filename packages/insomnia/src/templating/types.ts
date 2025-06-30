@@ -197,6 +197,7 @@ export interface PluginTemplateTagContext {
   meta: { requestId?: string; workspaceId?: string };
   renderPurpose?: RenderPurpose;
   util: {
+    JSONPath: ({ json, path }: { json: any; path: string }) => Promise<any[]>;
     nodeOS: () => Promise<{
       arch: NodeJS.Architecture;
       platform: NodeJS.Platform;

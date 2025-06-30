@@ -14,7 +14,15 @@ export function decodeEncoding<T>(value: T) {
   const results = value.match(/^b64::(.+)::46b$/);
 
   if (results) {
-    return Buffer.from(results[1], 'base64').toString('utf8');
+    const base64 = results[1];
+    try {
+      const binary = atob(base64);
+      const bytes = new Uint8Array([...binary].map(char => char.charCodeAt(0)));
+      return new TextDecoder().decode(bytes);
+    } catch (e) {
+      console.error('Invalid base64 string:', e);
+      return value;
+    }
   }
 
   return value;
@@ -192,6 +200,15 @@ export default class BaseExtension {
       meta: renderMeta,
       renderPurpose,
       util: {
+        JSONPath: async ({ json, path }: { json: any; path: string }) => {
+          const resp = await fetch('insomnia-templating-worker-database://JSONPath', {
+            method: 'post',
+            body: JSON.stringify({ json, path }),
+          });
+
+          const body = await resp.json();
+          return body;
+        },
         readFileSync: async (path: string, encoding?: string) => {
           const resp = await fetch('insomnia-templating-worker-database://fs.readFileSync', {
             method: 'post',

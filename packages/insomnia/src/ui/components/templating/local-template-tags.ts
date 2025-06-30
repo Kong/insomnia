@@ -1,5 +1,4 @@
 import { format } from 'date-fns';
-import { JSONPath } from 'jsonpath-plus';
 
 import type { RequestParameter } from '../../../models/request';
 import type { TemplateTag } from '../../../plugins';
@@ -7,7 +6,6 @@ import type { PluginTemplateTag } from '../../../templating/types';
 import { invariant } from '../../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../../utils/url/querystring';
 import { fakerFunctions } from './faker-functions';
-
 const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
   {
     templateTag: {
@@ -61,23 +59,29 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         invariant(kind === 'normal' || kind === 'url' || kind === 'hex', 'invalid kind');
         if (action === 'encode') {
           if (kind === 'normal') {
-            return Buffer.from(text, 'utf8').toString('base64');
+            return btoa(new TextEncoder().encode(text).reduce((data, byte) => data + String.fromCharCode(byte), ''));
           }
+
           if (kind === 'hex') {
-            return Buffer.from(text, 'hex').toString('base64');
+            const bytes = new Uint8Array(text.match(/.{1,2}/g).map((byte: string) => parseInt(byte, 16)));
+            return btoa(String.fromCharCode(...bytes));
           }
+
           if (kind === 'url') {
-            return Buffer.from(text, 'utf8')
-              .toString('base64')
-              .replace(/\+/g, '-')
-              .replace(/\//g, '_')
-              .replace(/=/g, '');
+            const base64 = btoa(
+              new TextEncoder().encode(text).reduce((data, byte) => data + String.fromCharCode(byte), ''),
+            );
+            return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
           }
         }
+        const binary = atob(text);
+        const bytes = new Uint8Array([...binary].map(char => char.charCodeAt(0)));
+
         if (kind === 'hex') {
-          return Buffer.from(text, 'base64').toString('hex');
+          return [...bytes].map(byte => byte.toString(16).padStart(2, '0')).join('');
         }
-        return Buffer.from(text, 'base64').toString('utf8');
+
+        return new TextDecoder().decode(bytes);
       },
     },
   },
@@ -181,16 +185,9 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           type: 'string',
         },
       ],
-      async run(context, fnName: 'arch', filter) {
+      async run(context, fnName: 'arch') {
         const os = await context.util.nodeOS();
-        let value = os[fnName];
-
-        if (JSONPath && ['userInfo', 'cpus'].includes(fnName)) {
-          try {
-            const results = JSONPath({ json: value, path: filter });
-            value = Array.isArray(results) ? results[0] : results;
-          } catch (err) {}
-        }
+        const value = os[fnName];
 
         if (typeof value !== 'string') {
           return JSON.stringify(value);
@@ -296,7 +293,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           type: 'string',
         },
       ],
-      run(_context, jsonString, filter) {
+      async run(context, jsonString, filter) {
         let body;
         try {
           body = JSON.parse(jsonString);
@@ -306,7 +303,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
         let results;
         try {
-          results = JSONPath({ json: body, path: filter });
+          results = await context.util.JSONPath({ json: body, path: filter });
           if (!Array.isArray(results)) {
             results = [results];
           }
@@ -713,7 +710,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             }
 
             try {
-              results = JSONPath({ json: bodyJSON, path: sanitizedFilter });
+              results = await context.util.JSONPath({ json: bodyJSON, path: sanitizedFilter });
               if (!Array.isArray(results)) {
                 results = [results];
               }

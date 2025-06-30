@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 
 import iconv from 'iconv-lite';
+import { JSONPath } from 'jsonpath-plus';
 
 import { database as db } from '../common/database';
 import * as models from '../models';
@@ -21,6 +22,9 @@ export const resolveDbByKey = async (request: Request) => {
   }
   if (url.host === 'decode'.toLowerCase()) {
     result = iconv.decode(body.buffer, body.encoding || 'utf8');
+  }
+  if (url.host === 'JSONPath'.toLowerCase()) {
+    result = JSONPath({ json: body.json, path: body.path });
   }
   if (url.host === 'request.getById'.toLowerCase()) {
     result = await models.request.getById(body.id);
