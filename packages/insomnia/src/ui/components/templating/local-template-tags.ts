@@ -1,8 +1,5 @@
-import crypto from 'node:crypto';
-
 import { format } from 'date-fns';
 import { JSONPath } from 'jsonpath-plus';
-import * as uuid from 'uuid';
 
 import type { RequestParameter } from '../../../models/request';
 import type { TemplateTag } from '../../../plugins';
@@ -153,20 +150,8 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           ],
         },
       ],
-      run(_context, uuidType = 'v4') {
-        switch ((uuidType + '').toLowerCase()) {
-          case '1':
-          case 'v1': {
-            return uuid.v1();
-          }
-          case '4':
-          case 'v4': {
-            return uuid.v4();
-          }
-          default: {
-            throw new Error(`Invalid UUID type "${uuidType}"`);
-          }
-        }
+      run() {
+        return crypto.randomUUID();
       },
     },
   },
@@ -245,7 +230,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           placeholder: 'Value to hash',
         },
       ],
-      run(_context, algorithm, encoding, value = '') {
+      async run(_context, algorithm: 'md5' | 'sha1' | 'sha256' | 'sha512', encoding, value = '') {
         if (encoding !== 'hex' && encoding !== 'latin1' && encoding !== 'base64') {
           throw new Error(`Invalid encoding ${encoding}. Choices are hex, latin1, base64`);
         }
@@ -254,10 +239,24 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         if (valueType !== 'string') {
           throw new Error(`Cannot hash value of type "${valueType}"`);
         }
+        const supportedAlgorithm: AlgorithmIdentifier =
+          {
+            md5: 'SHA-1', //MD5 is considered cryptographically broken
+            sha1: 'SHA-1',
+            sha256: 'SHA-256',
+            sha512: 'SHA-512',
+          }[algorithm.toLowerCase()] || 'SHA-256';
+        const buffer = await crypto.subtle.digest(supportedAlgorithm, new TextEncoder().encode(value));
+        const hashArray = Array.from(new Uint8Array(buffer));
 
-        const hash = crypto.createHash(algorithm);
-        hash.update(value || '', 'utf8');
-        return hash.digest(encoding);
+        if (encoding === 'base64') {
+          return btoa(String.fromCharCode.apply(null, hashArray));
+        }
+        if (encoding === 'latin1') {
+          return String.fromCharCode.apply(null, hashArray);
+        }
+        // hex
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
       },
     },
   },
@@ -429,8 +428,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         // We do this because we may render the prompt multiple times per request.
         // We cache it under the requestId so it only prompts once. We then clear
         // the cache in a response hook when the request is sent.
-        const titleHash = crypto.createHash('md5').update(title).digest('hex');
-        const storageKey = explicitStorageKey || `${context.meta.requestId}.${titleHash}`;
+        const storageKey = explicitStorageKey || `${context.meta.requestId}.${title}`;
         const cachedValue = await context.store.getItem(storageKey);
 
         // Directly return cached value if using explicitly defined storage key
