@@ -983,6 +983,71 @@ export class GitVCS {
     }
   }
 
+  async reset({ relativeHeadIndex, mode }: { relativeHeadIndex: `HEAD~${number}`; mode: 'hard' | 'soft' }) {
+    const HEAD_COMMIT_NUMBER_REGEX = /^HEAD~([0-9]+)$/;
+    const matches = relativeHeadIndex.match(HEAD_COMMIT_NUMBER_REGEX);
+
+    if (matches) {
+      const branch = await this.getCurrentBranch();
+      const count = +matches[1];
+      const commits = await this.log({ depth: count + 1 });
+
+      console.log('[git] Reset', {
+        branch,
+        count,
+        commits,
+      });
+
+      if (!commits || commits.length < count + 1) {
+        throw new Error(`Not enough commits to reset ${count}`);
+      }
+
+      const commit = commits.pop()?.oid;
+
+      if (!('promises' in this._baseOpts.fs)) {
+        throw new Error('Expected fs to be of PromiseFsClient');
+      }
+
+      await this._baseOpts.fs.promises.writeFile(path.join(GIT_INTERNAL_DIR, `/refs/heads/${branch}`), commit);
+
+      if (mode === 'hard') {
+        const allFiles = await git.statusMatrix({ ...this._baseOpts });
+
+        // Status Matrix Row Indexes
+        const FILEPATH = 0;
+        const WORKDIR = 2;
+        const STAGE = 3;
+
+        // Status Matrix State
+        const UNCHANGED = 1;
+
+        // Get all files which have been modified or staged - does not include new untracked files or deleted files
+        const modifiedFiles = allFiles
+          .filter(row => row[WORKDIR] > UNCHANGED && row[STAGE] > UNCHANGED)
+          .map(row => row[FILEPATH]);
+
+        const removeFile = this._baseOpts.fs.promises.unlink;
+        // Delete modified/staged files
+        await Promise.all(modifiedFiles.map(path => removeFile(path)));
+
+        // clear the index (if any)
+        await this._baseOpts.fs.promises.unlink(path.join(GIT_INTERNAL_DIR, '/index'));
+        // checkout the branch into the working tree
+        await this.checkout(branch);
+      }
+
+      console.log('[git] Reset complete', {
+        branch,
+        commit,
+        mode,
+      });
+
+      return;
+    }
+
+    throw new Error(`Invalid ref ${relativeHeadIndex}`);
+  }
+
   async repoExists() {
     try {
       await git.getConfig({ ...this._baseOpts, path: '' });
