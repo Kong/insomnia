@@ -935,7 +935,7 @@ export const runAllTestsAction: ActionFunction = async ({ params }) => {
       results,
       parentId: workspaceId,
     });
-    window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun });
+    window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRunAll, properties: { organizationId, projectId } });
 
     return redirect(
       `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`,
@@ -965,7 +965,7 @@ export const runAllTestsAction: ActionFunction = async ({ params }) => {
       results,
       parentId: workspaceId,
     });
-    window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun });
+    window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRunAll, properties: { organizationId, projectId } });
 
     return redirect(
       `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`,
@@ -1086,7 +1086,7 @@ export const runTestAction: ActionFunction = async ({ params }) => {
       results,
       parentId: unitTest.parentId,
     });
-    window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun });
+    window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun, properties: { organizationId, projectId } });
 
     return redirect(
       `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`,
@@ -1116,7 +1116,7 @@ export const runTestAction: ActionFunction = async ({ params }) => {
       results,
       parentId: unitTest.parentId,
     });
-    window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun });
+    window.main.trackSegmentEvent({ event: SegmentEvent.unitTestRun, properties: { organizationId, projectId } });
 
     return redirect(
       `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`,
