@@ -17,6 +17,7 @@ import {
 import { useFetcher, useParams } from 'react-router';
 
 import type { GitLogLoaderData } from '../../routes/git-project-actions';
+import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
 import { TimeFromNow } from '../time-from-now';
 
@@ -33,6 +34,8 @@ export const GitProjectLogModal: FC<Props> = ({ onClose }) => {
 
   const gitLogFetcher = useFetcher<GitLogLoaderData>();
 
+  const resetToHeadIndexFetcher = useFetcher<{ errors: string[] }>();
+
   const isLoading = gitLogFetcher.state !== 'idle';
 
   useEffect(() => {
@@ -41,6 +44,10 @@ export const GitProjectLogModal: FC<Props> = ({ onClose }) => {
       gitLogFetcher.load(`/organization/${organizationId}/project/${projectId}/git/log`);
     }
   }, [organizationId, projectId, gitLogFetcher]);
+
+  if (resetToHeadIndexFetcher.data?.errors) {
+    console.error('Failed to reset to head index', resetToHeadIndexFetcher.data.errors);
+  }
 
   const { log } = gitLogFetcher.data && 'log' in gitLogFetcher.data ? gitLogFetcher.data : { log: [] };
 
@@ -91,13 +98,16 @@ export const GitProjectLogModal: FC<Props> = ({ onClose }) => {
                     <Column className="sticky top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] px-2 py-2 text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
                       Author
                     </Column>
+                    <Column className="sticky top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] px-2 py-2 text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                      Actions
+                    </Column>
                   </TableHeader>
                   <TableBody
                     renderEmptyState={() => (
                       <div className="p-2 text-center">{isLoading ? 'Loading...' : 'No history available'}</div>
                     )}
                     className="divide divide-solid divide-[--hl-sm]"
-                    items={log.filter(l => !!l).map(logEntry => ({ id: logEntry.oid, ...logEntry }))}
+                    items={log.filter(l => !!l).map((logEntry, index) => ({ id: logEntry.oid, index, ...logEntry }))}
                   >
                     {item => (
                       <Row className="group transition-colors focus-within:bg-[--hl-xxs] focus:outline-none">
@@ -122,6 +132,29 @@ export const GitProjectLogModal: FC<Props> = ({ onClose }) => {
                               {item.commit.author.email}
                             </Tooltip>
                           </TooltipTrigger>
+                        </Cell>
+                        <Cell className="content-center whitespace-nowrap border-b border-solid border-[--hl-sm] text-sm font-medium focus:outline-none group-last-of-type:border-none">
+                          <PromptButton
+                            className="flex min-w-[12ch] items-center justify-center gap-2 rounded border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                            confirmMessage="Confirm"
+                            onClick={() => {
+                              console.log('Resetting to', item.index);
+                              resetToHeadIndexFetcher.submit(
+                                {
+                                  relativeHeadIndex: item.index,
+                                  mode: 'soft',
+                                },
+                                {
+                                  method: 'POST',
+                                  encType: 'application/json',
+                                  action: `/organization/${organizationId}/project/${projectId}/git/resetToHeadIndexAction`,
+                                },
+                              );
+                            }}
+                          >
+                            <Icon icon="rotate-backward" className="h-4 w-4" />
+                            Hard reset
+                          </PromptButton>
                         </Cell>
                       </Row>
                     )}

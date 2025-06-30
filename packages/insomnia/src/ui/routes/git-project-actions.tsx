@@ -425,6 +425,24 @@ export const unstageChangesAction: ActionFunction = async ({
   return window.main.git.unstageChanges({ projectId, paths });
 };
 
+export const resetToHeadIndexAction: ActionFunction = async ({
+  params,
+  request,
+}): Promise<{
+  errors?: string[];
+}> => {
+  const { projectId } = params;
+  invariant(projectId, 'Project ID is required');
+
+  const { relativeHeadIndex, mode } = (await request.json()) as { relativeHeadIndex: number; mode: 'soft' | 'hard' };
+
+  return window.main.git.resetToHeadIndexAction({
+    projectId,
+    mode,
+    relativeHeadIndex: `HEAD~${relativeHeadIndex}`,
+  });
+};
+
 export type GitDiffResult =
   | {
       name: string;
