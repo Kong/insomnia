@@ -65,7 +65,16 @@ export const RequestGroupPane: FC<{ settings: Settings }> = ({ settings }) => {
 
   return (
     <>
-      <Tabs aria-label="Request group tabs" className="flex h-full w-full flex-1 flex-col">
+      <Tabs
+        aria-label="Request group tabs"
+        className="flex h-full w-full flex-1 flex-col"
+        onSelectionChange={key => {
+          // Save environment changes when nav away from environment tab.
+          if (key !== 'environment' && environmentEditorRef) {
+            saveChanges();
+          }
+        }}
+      >
         <TabList
           className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
           aria-label="Request pane tabs"
