@@ -197,6 +197,13 @@ export interface PluginTemplateTagContext {
   meta: { requestId?: string; workspaceId?: string };
   renderPurpose?: RenderPurpose;
   util: {
+    nodeOS: () => Promise<{
+      arch: NodeJS.Architecture;
+      platform: NodeJS.Platform;
+      release: string;
+    }>;
+    readFileSync: (path: string, encoding?: string) => Promise<string | Buffer>;
+    decode: (buffer: Buffer, encoding?: string) => Promise<string>;
     render: (str: string) => string | Promise<string | null>;
     models: {
       request: {

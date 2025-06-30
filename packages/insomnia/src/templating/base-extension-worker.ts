@@ -192,6 +192,32 @@ export default class BaseExtension {
       meta: renderMeta,
       renderPurpose,
       util: {
+        readFileSync: async (path: string, encoding?: string) => {
+          const resp = await fetch('insomnia-templating-worker-database://fs.readFileSync', {
+            method: 'post',
+            body: JSON.stringify({ path, encoding }),
+          });
+
+          const body = await resp.json();
+          return body;
+        },
+        nodeOS: async () => {
+          const resp = await fetch('insomnia-templating-worker-database://node.os', {
+            method: 'post',
+            body: JSON.stringify({ nothing: true }),
+          });
+          const body = await resp.json();
+          return body;
+        },
+        decode: async (buffer: Buffer, encoding?: string) => {
+          const resp = await fetch('insomnia-templating-worker-database://decode', {
+            method: 'post',
+            body: JSON.stringify({ buffer, encoding }),
+          });
+
+          const body = await resp.json();
+          return body;
+        },
         render: (str: string) =>
           templating.render(str, {
             context: renderContext,

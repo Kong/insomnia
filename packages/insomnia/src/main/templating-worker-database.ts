@@ -1,14 +1,27 @@
+import fs from 'node:fs';
+import os from 'node:os';
+
+import iconv from 'iconv-lite';
+
 import { database as db } from '../common/database';
 import * as models from '../models';
 import type { Request as DBRequest } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Workspace } from '../models/workspace';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
-
 export const resolveDbByKey = async (request: Request) => {
   const url = new URL(request.url);
   let result;
   const body = await request.json();
+  if (url.host === 'fs.readFileSync'.toLowerCase()) {
+    result = await fs.promises.readFile(body.path, body.encoding || 'utf8');
+  }
+  if (url.host === 'node.os'.toLowerCase()) {
+    result = { arch: os.arch(), platform: os.platform(), release: os.release() };
+  }
+  if (url.host === 'decode'.toLowerCase()) {
+    result = iconv.decode(body.buffer, body.encoding || 'utf8');
+  }
   if (url.host === 'request.getById'.toLowerCase()) {
     result = await models.request.getById(body.id);
   }

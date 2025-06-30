@@ -1,9 +1,6 @@
 import crypto from 'node:crypto';
-import fs from 'node:fs';
-import os from 'node:os';
 
 import { format } from 'date-fns';
-import iconv from 'iconv-lite';
 import { JSONPath } from 'jsonpath-plus';
 import * as uuid from 'uuid';
 
@@ -199,8 +196,9 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           type: 'string',
         },
       ],
-      run(_context, fnName: 'arch' | 'cpus', filter) {
-        let value = os[fnName]();
+      async run(context, fnName: 'arch', filter) {
+        const os = await context.util.nodeOS();
+        let value = os[fnName];
 
         if (JSONPath && ['userInfo', 'cpus'].includes(fnName)) {
           try {
@@ -274,12 +272,12 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           type: 'file',
         },
       ],
-      run(_context, path) {
+      async run(context, path) {
         if (!path) {
           throw new Error('No file selected');
         }
 
-        return fs.readFileSync(path, 'utf8');
+        return await context.util.readFileSync(path, 'utf8');
       },
     },
   },
@@ -675,7 +673,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             throw new Error(bodyBuffer);
           }
           try {
-            return iconv.decode(bodyBuffer, charset);
+            return context.util.decode(bodyBuffer, charset);
           } catch (err) {
             console.warn('[response] Failed to decode body', err);
             return bodyBuffer.toString();
@@ -700,7 +698,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             throw new Error(bodyBuffer);
           }
           try {
-            body = iconv.decode(bodyBuffer, charset);
+            body = await context.util.decode(bodyBuffer, charset);
           } catch (err) {
             console.warn('[response] Failed to decode body', err);
             body = bodyBuffer.toString();
