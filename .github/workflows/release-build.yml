@@ -17,6 +17,11 @@ jobs:
       packages: write
       contents: write # publish sbom to GH releases/tag assets
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        with:
+          egress-policy: audit
+          
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -54,6 +59,11 @@ jobs:
             csc_link_secret: ''
             csc_key_password_secret: ''
     steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        with:
+          egress-policy: audit
+
       - name: Checkout branch
         uses: actions/checkout@v4
 
@@ -269,6 +279,11 @@ jobs:
     needs: build-and-upload-release-artifacts
     runs-on: ubuntu-22.04
     steps:
+      - name: Harden runner
+        uses: step-security/harden-runner@6c439dc8bdf85cadbbce9ed30d1c7b959517bc49 # v2.12.2
+        with:
+          egress-policy: audit
+
       - name: Get release version
         id: release_version
         shell: bash

@@ -14,6 +14,11 @@ jobs:
     # must be macos, linux-brew doesn't have casks
     runs-on: macos-latest
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        with:
+          egress-policy: audit
+
       - name: Set up Homebrew
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@266845213695c3047d210b2e8fbc42ecdaf45802 # master
