@@ -1,3 +1,9 @@
+import fs from 'node:fs';
+import { arch, platform, release } from 'node:os';
+
+import iconv from 'iconv-lite';
+import { JSONPath } from 'jsonpath-plus';
+
 import { database as db } from '../common/database';
 import * as models from '../models/index';
 import type { Request } from '../models/request';
@@ -99,6 +105,21 @@ export default class BaseExtension {
       meta: renderMeta,
       renderPurpose,
       util: {
+        JSONPath,
+        nodeOS: async () => {
+          return {
+            platform: platform(),
+            arch: arch(),
+            release: release(),
+          };
+        },
+        readFileSync: async (path: string, encoding = 'utf8') => {
+          const content = await fs.promises.readFile(path);
+          return encoding === 'utf8' ? content.toString(encoding) : content;
+        },
+        decode: async (buffer: Buffer, encoding = 'utf8') => {
+          return iconv.decode(buffer, encoding);
+        },
         render: (str: string) =>
           templating.render(str, {
             context: renderContext,

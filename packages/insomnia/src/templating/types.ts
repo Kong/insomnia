@@ -199,7 +199,7 @@ export interface PluginTemplateTagContext {
   util: {
     JSONPath: ({ json, path }: { json: any; path: string }) => Promise<any[]>;
     nodeOS: () => Promise<{
-      arch: NodeJS.Architecture;
+      arch: string;
       platform: NodeJS.Platform;
       release: string;
     }>;
