@@ -24,6 +24,7 @@ export interface EnvironmentEditorHandle {
 export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>(
   ({ environmentInfo, onBlur, onChange }, ref) => {
     const editorRef = useRef<CodeEditorHandle>(null);
+    const editorErrorRef = useRef('');
     const [error, setError] = useState('');
     const getValue = useCallback(() => {
       // @ts-expect-error -- current can be null
@@ -41,11 +42,16 @@ export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>(
     useImperativeHandle(
       ref,
       () => ({
-        isValid: () => !error,
+        isValid: () => !editorErrorRef.current,
         getValue,
       }),
-      [error, getValue],
+      [getValue],
     );
+
+    const updateEditorError = (message: string) => {
+      editorErrorRef.current = message;
+      setError(message);
+    };
 
     const defaultValue = orderedJSON.stringify(
       environmentInfo.object,
@@ -60,7 +66,7 @@ export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>(
           autoPrettify
           enableNunjucks
           onChange={() => {
-            setError('');
+            updateEditorError('');
             try {
               const value = getValue();
               // Check for invalid key names
@@ -68,13 +74,13 @@ export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>(
                 // Check root and nested properties
                 const err = checkNestedKeys(value.object);
                 if (err) {
-                  setError(err);
+                  updateEditorError(err);
                 } else {
                   onChange?.(value);
                 }
               }
             } catch (err) {
-              setError(err.message);
+              updateEditorError(err.message);
             }
           }}
           defaultValue={defaultValue}
