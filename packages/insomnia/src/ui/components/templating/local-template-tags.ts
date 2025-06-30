@@ -5,7 +5,6 @@ import os from 'node:os';
 import { format } from 'date-fns';
 import iconv from 'iconv-lite';
 import { JSONPath } from 'jsonpath-plus';
-import { CookieJar } from 'tough-cookie';
 import * as uuid from 'uuid';
 
 import type { RequestParameter } from '../../../models/request';
@@ -356,40 +355,12 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         }
 
         const cookieJar = await context.util.models.cookieJar.getOrCreateForParentId(workspace._id);
-
-        return new Promise((resolve, reject) => {
-          let jar;
-          try {
-            // For some reason, fromJSON modifies `cookies`.
-            // Create a copy first just to be sure.
-            const copy = JSON.stringify({ cookies: cookieJar.cookies });
-            jar = CookieJar.fromJSON(copy);
-          } catch (error) {
-            console.log('[cookies] Failed to initialize cookie jar', error);
-            jar = new CookieJar();
-          }
-          jar.rejectPublicSuffixes = false;
-          jar.looseMode = true;
-
-          jar.getCookies(url, {}, (err, cookies) => {
-            if (err) {
-              console.warn(`Failed to find cookie for ${url}`, err);
-            }
-
-            if (!cookies || cookies.length === 0) {
-              console.log(cookies);
-              reject(new Error(`No cookies in store for url "${url}"`));
-            }
-
-            const cookie = cookies.find(cookie => cookie.key === name);
-            if (!cookie) {
-              const names = cookies.map(c => `"${c.key}"`).join(',\n\t');
-              throw new Error(`No cookie with name "${name}".\nChoices are [\n\t${names}\n] for url "${url}"`);
-            } else {
-              resolve(cookie ? cookie.value : null);
-            }
-          });
-        });
+        const found = cookieJar.cookies.find(cookie => cookie.key === name);
+        invariant(
+          found,
+          `No cookie with name "${name}" found in cookie jar for url "${url}"\nChoices are [\n\t${cookieJar.cookies.map(c => c.key)}\n] for`,
+        );
+        return found.value;
       },
     },
   },
@@ -957,38 +928,12 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
                 request.settingEncodeUrl,
               )
             : '';
-          return new Promise((resolve, reject) => {
-            let jar;
-            try {
-              // For some reason, fromJSON modifies `cookies`.
-              // Create a copy first just to be sure.
-              const copy = JSON.stringify({ cookies: cookieJar.cookies });
-              jar = CookieJar.fromJSON(copy);
-            } catch (error) {
-              console.log('[cookies] Failed to initialize cookie jar', error);
-              jar = new CookieJar();
-            }
-            jar.rejectPublicSuffixes = false;
-            jar.looseMode = true;
-
-            jar.getCookies(url, {}, (err, cookies) => {
-              if (err) {
-                console.warn(`Failed to find cookie for ${url}`, err);
-              }
-
-              if (!cookies || cookies.length === 0) {
-                reject(new Error(`No cookies in store for url "${url}"`));
-              }
-
-              const cookie = cookies.find(cookie => cookie.key === name);
-              if (!cookie) {
-                const names = cookies.map(c => `"${c.key}"`).join(',\n\t');
-                throw new Error(`No cookie with name "${name}".\nChoices are [\n\t${names}\n] for url "${url}"`);
-              } else {
-                resolve(cookie ? cookie.value : null);
-              }
-            });
-          });
+          const found = cookieJar.cookies.find(cookie => cookie.key === name);
+          invariant(
+            found,
+            `No cookie with name "${name}" found in cookie jar for url "${url}"\nChoices are [\n\t${cookieJar.cookies.map(c => c.key)}\n] for`,
+          );
+          return found.value;
         }
         if (attribute === 'parameter') {
           if (!name) {
