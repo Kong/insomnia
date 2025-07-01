@@ -8,7 +8,7 @@ const bundlePlugins = ['@kong-insomnia/plugin-poc-external-vault@0.0.1-alpha.1']
 const bundlePluginsDir = path.resolve(__dirname, '..', 'plugins');
 const yarnPath = path.resolve(__dirname, '..', 'bin', 'yarn-standalone.js');
 const NPM_REGISTRY = 'https://registry.npmjs.org/';
-const PLUGIN_NPM_REGISTRY = process.env.PLUGIN_NPM_REGISTRY || NPM_REGISTRY;
+const PLUGIN_NPM_REGISTRY = process.env.PLUGIN_NPM_REGISTRY || 'https://npm.pkg.github.com';
 const execFilePromise = promisify(execFile);
 
 if (require.main === module) {
