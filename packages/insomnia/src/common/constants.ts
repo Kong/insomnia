@@ -14,8 +14,8 @@ export const INSOMNIA_GITLAB_API_URL = env.INSOMNIA_GITLAB_API_URL;
 export const PLAYWRIGHT = env.PLAYWRIGHT;
 export const ENTERPRISE_PLUGINS: Record<string, any> = {
   'external-vault': {
-    pluginName: '@kenttest/plugin-external-vault',
-    pluginVersion: '0.0.1-beta1',
+    pluginName: '@kong-insomnia/plugin-poc-external-vault',
+    pluginVersion: '0.0.1-alpha.1',
     checksum: {
       'dist/index.js':
         'sha512-leeE7/gFrc899RXLgVbNLioproBC6NXjMJZQpnzYAsJ0DiehIhy6/9ghIwkQahqs5lkQxK8uJgAfabwUYJLHVQ==',

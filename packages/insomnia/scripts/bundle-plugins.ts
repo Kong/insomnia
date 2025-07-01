@@ -4,9 +4,11 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 
-const bundlePlugins = ['@kenttest/plugin-external-vault'];
+const bundlePlugins = ['@kong-insomnia/plugin-poc-external-vault@0.0.1-alpha.1'];
 const bundlePluginsDir = path.resolve(__dirname, '..', 'plugins');
 const yarnPath = path.resolve(__dirname, '..', 'bin', 'yarn-standalone.js');
+const NPM_REGISTRY = 'https://registry.npmjs.org/';
+const PLUGIN_NPM_REGISTRY = process.env.PLUGIN_NPM_REGISTRY || NPM_REGISTRY;
 const execFilePromise = promisify(execFile);
 
 if (require.main === module) {
@@ -20,8 +22,13 @@ if (require.main === module) {
         await installPlugin(bundlePlugin);
       }
     } catch (err) {
-      console.log('[bundle-plugin] ERROR:', err);
-      process.exit(1);
+      console.log('[Bundle Plugin] Failed to bundle plugins:', err);
+      if (process.env.GITHUB_ACTIONS === 'true') {
+        // execute in Github Actions
+        process.exit(1);
+      } else {
+        process.exit(0);
+      }
     }
   });
 }
@@ -31,6 +38,7 @@ export async function runYarnCommand(args: string[], cwd?: string) {
     cwd,
     env: {
       NODE_ENV: 'production',
+      PLUGIN_NPM_REGISTRY: process.env.PLUGIN_NPM_REGISTRY || 'https://registry.npmjs.org/',
     },
     timeout: 5 * 60 * 1000, // 5 minutes
     maxBuffer: 1024 * 1024, // 1MB buffer
@@ -44,7 +52,7 @@ export async function runYarnCommand(args: string[], cwd?: string) {
 }
 
 export default async function installPlugin(name: string) {
-  const { scope, pkg: pluginName } = parsePackageName(name);
+  const { scope, name: pluginName } = parsePackageName(name);
   const pluginDir = path.resolve(bundlePluginsDir, pluginName);
   // Ensure the plugin directory exists
   await mkdir(pluginDir, { recursive: true });
@@ -53,7 +61,7 @@ export default async function installPlugin(name: string) {
   try {
     // Install the plugin into a temporary directory
     tmpDir = await installPluginToTmpDir(name);
-    console.log(`[plugins] Moving plugin from temp directory ${tmpDir} to final plugin directory ${pluginDir}`);
+    console.log(`[[Bundle Plugin]] Moving plugin from temp directory ${tmpDir} to final plugin directory ${pluginDir}`);
 
     // Handle the plugin's dependencies
     // Create a node_modules directory inside the plugin directory
@@ -62,7 +70,7 @@ export default async function installPlugin(name: string) {
 
     // Read all folders/files in the temp directory
     const tmpFiles = await readdir(tmpDir);
-    console.log(`[plugins] Moving plugin from temp directory ${tmpDir} to final plugin directory ${pluginDir}`);
+    console.log(`[[Bundle Plugin]] Moving plugin from temp directory ${tmpDir} to final plugin directory ${pluginDir}`);
 
     // Move the main plugin folder into the plugin directory
     await cp(path.resolve(tmpDir, scope || '', pluginName), pluginDir, {
@@ -94,16 +102,16 @@ export default async function installPlugin(name: string) {
         }),
     );
   } catch (error) {
-    console.error(`Failed to install plugin ${pluginName}: ${error.toString()}`);
+    console.error(`[Bundle Plugin] Failed to install plugin ${pluginName}: ${error.toString()}`);
     throw error;
   } finally {
     // Ensure the temporary directory is cleaned up
     if (tmpDir) {
       try {
-        console.log(`[plugins] Cleaning up temporary directory: ${tmpDir}`);
+        console.log(`[[Bundle Plugin]] Cleaning up temporary directory: ${tmpDir}`);
         await rm(tmpDir, { recursive: true, force: true });
       } catch (error) {
-        console.warn(`[plugins] Failed to clean tmp dir ${tmpDir}: ${error.toString()}`);
+        console.warn(`[[Bundle Plugin]] Failed to clean tmp dir ${tmpDir}: ${error.toString()}`);
       }
     }
   }
@@ -114,16 +122,22 @@ export default async function installPlugin(name: string) {
  * Creates a minimal package.json and downloads the dependency.
  */
 export async function installPluginToTmpDir(name: string) {
-  const { scope, pkg: pluginName } = parsePackageName(name);
+  const { scope, name: pluginName } = parsePackageName(name);
   try {
     const tmpDir = await mkdtemp(path.resolve(tmpdir(), `${pluginName}-${Date.now()}`));
+    const yarnrcPath = path.resolve(tmpDir, '.yarnrc');
 
     await writeFile(
       path.resolve(tmpDir, 'package.json'),
       JSON.stringify({ license: 'ISC', workspaces: [] }, null, 2),
       'utf-8',
     );
-
+    // Generate the yarnrc file in the temporary directory
+    await writeFile(
+      yarnrcPath,
+      `registry "${NPM_REGISTRY}"\n"@kong-insomnia:registry" "${PLUGIN_NPM_REGISTRY}"\n`,
+      'utf-8',
+    );
     console.log(`[plugins] Installing plugin into temp dir: ${tmpDir}`);
 
     await runYarnCommand(
@@ -138,8 +152,8 @@ export async function installPluginToTmpDir(name: string) {
         '--production',
         '--no-progress',
         '--ignore-workspace-root-check',
-        '--registry',
-        'https://registry.npmjs.org/',
+        '--use-yarnrc',
+        yarnrcPath,
       ],
       tmpDir,
     );
@@ -150,31 +164,37 @@ export async function installPluginToTmpDir(name: string) {
       .then(() => true)
       .catch(() => false);
     if (!pluginExists) {
-      throw new Error(`Plugin "${name}" not found in temporary directory`);
+      throw new Error(`[Bundle Plugin] "${name}" not found in temporary directory`);
     }
 
-    console.log(`[plugins] Plugin installed successfully in temp dir: ${tmpDir}`);
+    console.log(`[[Bundle Plugin]] Plugin installed successfully in temp dir: ${tmpDir}`);
 
     // Check if the plugin has a package.json file
     const packageJsonPath = path.resolve(tmpDir, scope || '', pluginName, 'package.json');
+    console.log(packageJsonPath);
     const packageJsonExists = await stat(packageJsonPath)
       .then(() => true)
       .catch(() => false);
 
     if (!packageJsonExists) {
-      throw new Error(`Plugin "${name}" does not have a package.json file`);
+      throw new Error(`[Bundle Plugin] Plugin "${name}" does not have a package.json file`);
     }
 
     return tmpDir;
   } catch (err) {
-    throw new Error(`Failed to install plugin: ${(err as Error).message}`);
+    throw new Error(`[Bundle Plugin] Failed to install plugin: ${(err as Error).message}`);
   }
 }
 
 function parsePackageName(name: string) {
-  if (name.startsWith('@')) {
-    const [scope, pkg] = name.split('/');
-    return { scope, pkg };
+  const regex = /^(@[^\/]+\/)?([^@]+)(?:@(.+))?$/;
+  const match = name.match(regex);
+  if (!match) {
+    throw new Error(`[[Bundle Plugin]] Invalid package name: ${name}`);
   }
-  return { scope: null, pkg: name };
+  return {
+    scope: match[1] ? match[1].slice(0, -1) : null, // remove trailing slash
+    name: match[2],
+    version: match[3] || null,
+  };
 }
