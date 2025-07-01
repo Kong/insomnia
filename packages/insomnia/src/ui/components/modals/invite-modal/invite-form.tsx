@@ -259,6 +259,7 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
                     properties: {
                       numberOfInvites: emailsToInvite.length,
                       numberOfTeams: groupsToInvite.length,
+                      role: selectedRoleRef.current.name,
                     },
                   });
 

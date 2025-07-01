@@ -9,7 +9,6 @@ import { version } from '../../../package.json';
 import { parseApiSpec, resolveComponentSchemaRefs } from '../../common/api-specs';
 import { ACTIVITY_DEBUG, getAIServiceURL, METHOD_GET } from '../../common/constants';
 import { database } from '../../common/database';
-import { database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources, type ScanResult } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
@@ -40,6 +39,7 @@ import { SpectralRunner } from '../worker/spectral-handler';
 // Project
 export const createNewProjectAction: ActionFunction = async ({ request, params }) => {
   const { organizationId } = params;
+
   invariant(organizationId, 'Organization ID is required');
   const newProjectData = (await request.json()) as {
     name: string;
@@ -63,6 +63,13 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
       parentId: organizationId,
     });
 
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.projectCreated,
+      properties: {
+        storage: 'local',
+      },
+    });
+
     return redirect(`/organization/${organizationId}/project/${project._id}`);
   }
 
@@ -77,6 +84,13 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
         error: errors.join(', '),
       };
     }
+
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.projectCreated,
+      properties: {
+        storage: 'git',
+      },
+    });
 
     return redirect(`/organization/${organizationId}/project/${projectId}`);
   }
@@ -99,6 +113,15 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
       },
       sessionId,
     });
+
+    if (newCloudProject && !('error' in newCloudProject)) {
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.projectCreated,
+        properties: {
+          storage: 'remote',
+        },
+      });
+    }
 
     if (!newCloudProject || 'error' in newCloudProject) {
       let error = 'An unexpected error occurred while creating the project. Please try again.';
@@ -210,6 +233,15 @@ export const updateProjectAction: ActionFunction = async ({ request, params }) =
         sessionId,
       });
 
+      if (response && !response.error) {
+        window.main.trackSegmentEvent({
+          event: SegmentEvent.projectUpdated,
+          properties: {
+            storage: 'local',
+          },
+        });
+      }
+
       if (response && 'error' in response) {
         let error = 'An unexpected error occurred while updating your project. Please try again.';
 
@@ -250,6 +282,15 @@ export const updateProjectAction: ActionFunction = async ({ request, params }) =
         },
         sessionId,
       });
+
+      if (newCloudProject && !('error' in newCloudProject)) {
+        window.main.trackSegmentEvent({
+          event: SegmentEvent.projectUpdated,
+          properties: {
+            storage: 'remote',
+          },
+        });
+      }
 
       if (!newCloudProject || 'error' in newCloudProject) {
         let error = 'An unexpected error occurred while updating your project. Please try again.';
@@ -293,6 +334,15 @@ export const updateProjectAction: ActionFunction = async ({ request, params }) =
           method: 'DELETE',
           sessionId,
         });
+
+        if (response && !response.error) {
+          window.main.trackSegmentEvent({
+            event: SegmentEvent.projectUpdated,
+            properties: {
+              storage: 'git',
+            },
+          });
+        }
 
         if (response && 'error' in response) {
           let error = 'An unexpected error occurred while updating your project. Please try again.';
@@ -358,6 +408,13 @@ export const updateProjectAction: ActionFunction = async ({ request, params }) =
 
     // local project rename
     await models.project.update(project, { name });
+
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.projectUpdated,
+      properties: {
+        storage: 'local',
+      },
+    });
 
     return {
       success: true,
@@ -684,7 +741,7 @@ async function duplicateWorkspace(
   invariant(workspace, 'Workspace not found');
   invariant(duplicateToProject, 'Project not found');
   async function duplicate(workspace: Workspace, { name, parentId }: Pick<Workspace, 'name' | 'parentId'>) {
-    const newWorkspace = await db.duplicate(workspace, {
+    const newWorkspace = await database.duplicate(workspace, {
       name,
       parentId,
     });

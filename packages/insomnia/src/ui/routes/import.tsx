@@ -21,6 +21,7 @@ import {
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import type { ImportEntry } from '../../utils/importers/entities';
 import { invariant } from '../../utils/invariant';
+import { SegmentEvent } from '../analytics';
 import { fetchAndCacheOrganizationStorageRule } from './organization';
 
 export const scanForResourcesAction: ActionFunction = async ({ request }): Promise<ScanResult[]> => {
@@ -30,6 +31,13 @@ export const scanForResourcesAction: ActionFunction = async ({ request }): Promi
     const source = formData.get('importFrom');
     invariant(typeof source === 'string', 'Source is required.');
     invariant(['file', 'uri', 'clipboard'].includes(source), 'Unsupported import type');
+
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.importScanned,
+      properties: {
+        source,
+      },
+    });
 
     const contentList: ImportEntry[] = [];
     if (source === 'uri') {
@@ -150,6 +158,7 @@ export const importResourcesAction: ActionFunction = async ({ request }): Promis
     await importResourcesToWorkspace({
       workspaceId: workspaceId,
     });
+
     // TODO: find more elegant way to wait for import to finish
     return { done: true };
   }

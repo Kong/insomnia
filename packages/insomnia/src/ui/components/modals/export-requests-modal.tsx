@@ -8,6 +8,7 @@ import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, type Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
+import { SegmentEvent } from '../../analytics';
 import type { Child, WorkspaceLoaderData } from '../../routes/workspace';
 import { Icon } from '../icon';
 import { getMethodShortHand } from '../tags/method-tag';
@@ -330,6 +331,15 @@ export const ExportRequestsModal = ({
                 </Button>
                 <Button
                   onPress={() => {
+                    if (state?.treeRoot) {
+                      window.main.trackSegmentEvent({
+                        event: SegmentEvent.exportRequestsChosen,
+                        properties: {
+                          totalRequests: state.treeRoot.totalRequests,
+                          exported_requests: state.treeRoot.selectedRequests,
+                        },
+                      });
+                    }
                     state?.treeRoot && exportRequestsToFile(workspaceIdToExport, getSelectedRequestIds(state.treeRoot));
                     close();
                   }}
