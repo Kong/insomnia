@@ -15,7 +15,7 @@ env:
   IS_PRERELEASE: ${{ contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta') }}
   ARTIFACTS_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts
   INSO_DOCKER_IMAGE: kong/inso # By default, registry is docker.io
-  NOTARY_REPOSITORY: 'kong/notary' # All signatures will be pushed to public notary repository
+  NOTARY_REPOSITORY: "kong/notary" # All signatures will be pushed to public notary repository
   ARTIFACTS_REPOSITORY: ${{  vars.ARTIFACTS_REPOSITORY }}
 
 jobs:
@@ -43,8 +43,8 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+          node-version-file: ".nvmrc"
+          cache: "npm"
           cache-dependency-path: package-lock.json
 
       - name: Install packages
@@ -77,7 +77,7 @@ jobs:
             type=raw,value=latest,enable=${{ env.IS_PRERELEASE == 'false' }}
             type=raw,value=alpha,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'alpha') }}
             type=raw,value=beta,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'beta') }}
-          sep-tags: ','
+          sep-tags: ","
 
       # Setup regctl to parse platform specific image digest from image manifest
       - name: Install regctl
@@ -130,49 +130,49 @@ jobs:
           --source-uri 'github.com/Kong/insomnia-ee' \
           ${{env.ARTIFACTS_DOWNLOAD_PATH}}/Insomnia.Core-${{env.RELEASE_VERSION}}.{snap,tar.gz,zip,rpm,dmg,deb,AppImage,exe}
 
-      - name: Publish release
-        run: |
-          gh release edit core@${{ env.RELEASE_VERSION }} \
-          --tag=${{ env.RELEASE_CORE_TAG }} \
-          --target=${{ env.RELEASE_BRANCH }} \
-          --prerelease=${{ env.IS_PRERELEASE }} \
-          --draft=false
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Publish release
+      #   run: |
+      #     gh release edit core@${{ env.RELEASE_VERSION }} \
+      #     --tag=${{ env.RELEASE_CORE_TAG }} \
+      #     --target=${{ env.RELEASE_BRANCH }} \
+      #     --prerelease=${{ env.IS_PRERELEASE }} \
+      #     --draft=false
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish beta/stable of Insomnia to Insomnia API
-        if: ${{ !contains(github.event.inputs.version, 'alpha') }}
-        run: |
-          curl \
-            --fail \
-            --request POST \
-            --url $INSOMNIA_API_URL/v1/releases \
-            --header "Authorization: Bearer ${INSOMNIA_API_TOKEN}" \
-            --header "Content-Type: application/json" \
-            --data "{ \"app\": \"${RELEASE_APP}\", \"version\": \"${RELEASE_VERSION}\", \"channel\": \"${RELEASE_CHANNEL}\", \"release_date\": \"$(date --rfc-3339=ns | sed 's/ /T/; s/\(\....\).*\([+-]\)/\1\2/g')\" }"
-        env:
-          INSOMNIA_API_URL: ${{ secrets.INSOMNIA_API_URL }}
-          INSOMNIA_API_TOKEN: ${{ secrets.INSOMNIA_API_TOKEN }}
-          RELEASE_APP: com.insomnia.app
-          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
-          RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
+      # - name: Publish beta/stable of Insomnia to Insomnia API
+      #   if: ${{ !contains(github.event.inputs.version, 'alpha') }}
+      #   run: |
+      #     curl \
+      #       --fail \
+      #       --request POST \
+      #       --url $INSOMNIA_API_URL/v1/releases \
+      #       --header "Authorization: Bearer ${INSOMNIA_API_TOKEN}" \
+      #       --header "Content-Type: application/json" \
+      #       --data "{ \"app\": \"${RELEASE_APP}\", \"version\": \"${RELEASE_VERSION}\", \"channel\": \"${RELEASE_CHANNEL}\", \"release_date\": \"$(date --rfc-3339=ns | sed 's/ /T/; s/\(\....\).*\([+-]\)/\1\2/g')\" }"
+      #   env:
+      #     INSOMNIA_API_URL: ${{ secrets.INSOMNIA_API_URL }}
+      #     INSOMNIA_API_TOKEN: ${{ secrets.INSOMNIA_API_TOKEN }}
+      #     RELEASE_APP: com.insomnia.app
+      #     RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+      #     RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
-      - name: Publish beta/stable of inso to Insomnia API
-        if: ${{ !contains(github.event.inputs.version, 'alpha') }}
-        run: |
-          curl \
-            --fail \
-            --request POST \
-            --url $INSOMNIA_API_URL/v1/releases \
-            --header "Authorization: Bearer ${INSOMNIA_API_TOKEN}" \
-            --header "Content-Type: application/json" \
-            --data "{ \"app\": \"${RELEASE_APP}\", \"version\": \"${RELEASE_VERSION}\", \"channel\": \"${RELEASE_CHANNEL}\", \"release_date\": \"$(date --rfc-3339=ns | sed 's/ /T/; s/\(\....\).*\([+-]\)/\1\2/g')\" }"
-        env:
-          INSOMNIA_API_URL: ${{ secrets.INSOMNIA_API_URL }}
-          INSOMNIA_API_TOKEN: ${{ secrets.INSOMNIA_API_TOKEN }}
-          RELEASE_APP: com.insomnia.inso
-          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
-          RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
+      # - name: Publish beta/stable of inso to Insomnia API
+      #   if: ${{ !contains(github.event.inputs.version, 'alpha') }}
+      #   run: |
+      #     curl \
+      #       --fail \
+      #       --request POST \
+      #       --url $INSOMNIA_API_URL/v1/releases \
+      #       --header "Authorization: Bearer ${INSOMNIA_API_TOKEN}" \
+      #       --header "Content-Type: application/json" \
+      #       --data "{ \"app\": \"${RELEASE_APP}\", \"version\": \"${RELEASE_VERSION}\", \"channel\": \"${RELEASE_CHANNEL}\", \"release_date\": \"$(date --rfc-3339=ns | sed 's/ /T/; s/\(\....\).*\([+-]\)/\1\2/g')\" }"
+      #   env:
+      #     INSOMNIA_API_URL: ${{ secrets.INSOMNIA_API_URL }}
+      #     INSOMNIA_API_TOKEN: ${{ secrets.INSOMNIA_API_TOKEN }}
+      #     RELEASE_APP: com.insomnia.inso
+      #     RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+      #     RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
       - name: Upload x64 Linux snap to snapcraft (beta and stable only)
         if: ${{ !contains(github.event.inputs.version, 'alpha') }}
@@ -194,7 +194,7 @@ jobs:
           PULP_HOST: ${{ secrets.PULP_HOST }}
           VERBOSE: ${{ runner.debug == '1' && '1' || '' }}
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-          CLOUDSMITH_DRY_RUN: ''
+          CLOUDSMITH_DRY_RUN: ""
           IGNORE_CLOUDSMITH_FAILURES: ${{ vars.IGNORE_CLOUDSMITH_FAILURES }}
           USE_CLOUDSMITH: ${{ vars.USE_CLOUDSMITH }}
           USE_PULP: ${{ vars.USE_PULP }}
