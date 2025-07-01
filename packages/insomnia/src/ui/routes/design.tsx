@@ -1,6 +1,7 @@
 import path from 'node:path';
 
 import { type IRuleResult, Spectral } from '@stoplight/spectral-core';
+// @ts-expect-error - tsconfig needs to be updated to separate main/renderer code
 import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
 import { oas } from '@stoplight/spectral-rulesets';
 import CodeMirror from 'codemirror';

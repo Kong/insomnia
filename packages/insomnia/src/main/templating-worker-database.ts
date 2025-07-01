@@ -24,10 +24,10 @@ export const resolveDbByKey = async (request: Request) => {
 
 // These are exposed to the templating worker and can be used by plugins from context.util
 const pluginToMainAPI = {
-  'fs.readFileSync': async (body: { path: string; encoding: 'utf8' }) => {
+  'readFile': async (body: { path: string; encoding: 'utf8' }) => {
     return await fs.promises.readFile(body.path, { encoding: body.encoding || 'utf8' });
   },
-  'node.os': async () => {
+  'nodeOS': async () => {
     return { arch: os.arch(), platform: os.platform(), release: os.release() };
   },
   'decode': async (body: { buffer: Buffer; encoding: 'utf8' }) => {
