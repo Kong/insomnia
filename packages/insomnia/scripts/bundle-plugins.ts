@@ -8,7 +8,14 @@ const bundlePlugins = ['@kong-insomnia/plugin-poc-external-vault@0.0.1-alpha.1']
 const bundlePluginsDir = path.resolve(__dirname, '..', 'plugins');
 const yarnPath = path.resolve(__dirname, '..', 'bin', 'yarn-standalone.js');
 const NPM_REGISTRY = 'https://registry.npmjs.org/';
+const NODE_AUTH_TOKEN = process.env.NODE_AUTH_TOKEN || '';
+if (!NODE_AUTH_TOKEN) {
+  throw new Error('[Bundle Plugin] NODE_AUTH_TOKEN environment variable is not set');
+}
 const PLUGIN_NPM_REGISTRY = process.env.PLUGIN_NPM_REGISTRY || 'https://npm.pkg.github.com';
+const registryUrl = PLUGIN_NPM_REGISTRY.endsWith('/') ? PLUGIN_NPM_REGISTRY : `${PLUGIN_NPM_REGISTRY}/`;
+const authString = `${registryUrl.replace(/(^\w+:|^)/, '')}:_authToken=${NODE_AUTH_TOKEN}`;
+
 const execFilePromise = promisify(execFile);
 
 if (require.main === module) {
@@ -125,17 +132,17 @@ export async function installPluginToTmpDir(name: string) {
   const { scope, name: pluginName } = parsePackageName(name);
   try {
     const tmpDir = await mkdtemp(path.resolve(tmpdir(), `${pluginName}-${Date.now()}`));
-    const yarnrcPath = path.resolve(tmpDir, '.yarnrc');
+    const npmrcPath = path.resolve(tmpDir, '.npmrc');
 
     await writeFile(
       path.resolve(tmpDir, 'package.json'),
       JSON.stringify({ license: 'ISC', workspaces: [] }, null, 2),
       'utf-8',
     );
-    // Generate the yarnrc file in the temporary directory
+    // Generate the npmrc file in the temporary directory
     await writeFile(
-      yarnrcPath,
-      `registry "${NPM_REGISTRY}"\n"@kong-insomnia:registry" "${PLUGIN_NPM_REGISTRY}"\n`,
+      npmrcPath,
+      `registry = "${NPM_REGISTRY}"\n@kong-insomnia:registry = "${PLUGIN_NPM_REGISTRY}"\n${authString}`,
       'utf-8',
     );
     console.log(`[plugins] Installing plugin into temp dir: ${tmpDir}`);
@@ -152,12 +159,12 @@ export async function installPluginToTmpDir(name: string) {
         '--production',
         '--no-progress',
         '--ignore-workspace-root-check',
-        '--use-yarnrc',
-        yarnrcPath,
+        '--registry',
+        'https://registry.npmjs.org/',
       ],
       tmpDir,
     );
-
+    await rm(npmrcPath, { recursive: true, force: true });
     // Check if the plugin was installed successfully
     const pluginDir = path.resolve(tmpDir, scope || pluginName);
     const pluginExists = await stat(pluginDir)
