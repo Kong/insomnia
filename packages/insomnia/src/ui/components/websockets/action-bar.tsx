@@ -2,6 +2,7 @@ import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useLayo
 import { useFetcher, useParams } from 'react-router';
 
 import * as models from '../../../models';
+import type { SocketIORequest } from '../../../models/socket-io-request';
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
@@ -12,7 +13,7 @@ import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydow
 import { DisconnectButton } from './disconnect-button';
 
 interface ActionBarProps {
-  request: WebSocketRequest;
+  request: WebSocketRequest | SocketIORequest;
   environmentId: string;
   defaultValue: string;
   readyState: boolean;
@@ -52,12 +53,7 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
       [fetcher, organizationId, projectId, requestId, workspaceId],
     );
 
-    const handleSubmit = useCallback(async () => {
-      updateTabById?.(request._id, { temporary: false });
-      if (isOpen) {
-        window.main.webSocket.close({ requestId: request._id });
-        return;
-      }
+    const generateConnectParams = useCallback(async () => {
       // Render any nunjucks tags in the url/headers/authentication settings/cookies
 
       const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
@@ -73,15 +69,51 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
           workspaceCookieJar,
         },
       });
-      rendered &&
-        connect({
+      if (request.type === 'WebSocketRequest' && rendered) {
+        return {
           url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
           headers: rendered.headers,
           authentication: rendered.authentication,
           cookieJar: rendered.workspaceCookieJar,
           suppressUserAgent: rendered.suppressUserAgent,
+        };
+      }
+
+      // socket.io use a separate field (query) for query parameters
+      if (request.type === 'SocketIORequest' && rendered) {
+        const query: Record<string, string> = {};
+        rendered.parameters.forEach(({ name, value }: { name: string; value: string }) => {
+          if (name) {
+            query[name] = value;
+          }
         });
-    }, [connect, environmentId, isOpen, request, updateTabById, workspaceId]);
+        return {
+          url: rendered.url,
+          query,
+          headers: rendered.headers,
+          authentication: rendered.authentication,
+          cookieJar: rendered.workspaceCookieJar,
+          suppressUserAgent: rendered.suppressUserAgent,
+        };
+      }
+
+      return null;
+    }, [environmentId, request, workspaceId]);
+
+    const handleSubmit = useCallback(async () => {
+      updateTabById?.(request._id, { temporary: false });
+      if (isOpen) {
+        if (request.type === 'WebSocketRequest') {
+          // If the request is already open, close it
+          window.main.webSocket.close({ requestId: request._id });
+        } else if (request.type === 'SocketIORequest') {
+          window.main.socketIO.close({ requestId: request._id });
+        }
+        return;
+      }
+      const connectParams = await generateConnectParams();
+      connectParams && connect(connectParams);
+    }, [connect, generateConnectParams, isOpen, request._id, request.type, updateTabById]);
 
     const setUrl = useCallback(
       (url: string) => {
@@ -118,9 +150,21 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
     });
 
     const isConnectingOrClosed = !readyState;
+    const getRequestLabel = () => {
+      let requestTypeLabel = '';
+      if (request.type === 'WebSocketRequest') {
+        requestTypeLabel = 'WS';
+      } else if (request.type === 'SocketIORequest') {
+        requestTypeLabel = 'Socket.IO';
+      }
+      return requestTypeLabel;
+    };
+
     return (
       <>
-        {!isOpen && <span className="flex items-center pl-[--padding-md] text-[--color-notice]">WS</span>}
+        {!isOpen && (
+          <span className="flex items-center pl-[--padding-md] text-[--color-notice]">{getRequestLabel()}</span>
+        )}
         {isOpen && (
           <span className="text-success flex items-center pl-[--padding-md]">
             <span className="mr-[--padding-sm] h-2.5 w-2.5 rounded-[50%] bg-[--color-success]" />
