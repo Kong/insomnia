@@ -83,7 +83,10 @@ export async function trackSegmentEvent(event: SegmentEvent, properties?: Record
       analytics.track(
         {
           event,
-          properties,
+          properties: {
+            ...properties,
+            platform: 'app',
+          },
           context,
           anonymousId,
           userId: userSession?.hashedAccountId || '',

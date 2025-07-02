@@ -29,6 +29,7 @@ import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { invariant } from '../../../utils/invariant';
+import { SegmentEvent } from '../../analytics';
 import { useAIContext } from '../../context/app/ai-context';
 import { useRootLoaderData } from '../../routes/root';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
@@ -133,13 +134,28 @@ export const WorkspaceDropdown: FC<{}> = () => {
           id: 'Import',
           name: 'Import',
           icon: <Icon icon="file-import" />,
-          action: () => setIsImportModalOpen(true),
+          action: () => {
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.importStarted,
+              properties: {
+                source: `scratchpad-${activeWorkspace.scope}-menu`,
+              },
+            });
+
+            setIsImportModalOpen(true);
+          },
         },
         {
           id: 'Export',
           name: 'Export',
           icon: <Icon icon="file-export" />,
           action: () => {
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.exportStarted,
+              properties: {
+                source: `scratchpad-${activeWorkspace.scope}-menu`,
+              },
+            });
             if (activeWorkspace.scope === 'mock-server') {
               return exportMockServerToFile(activeWorkspace);
             }
@@ -176,7 +192,15 @@ export const WorkspaceDropdown: FC<{}> = () => {
           id: 'from-file',
           name: 'From File',
           icon: <Icon icon="file-import" />,
-          action: () => setIsImportModalOpen(true),
+          action: () => {
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.importStarted,
+              properties: {
+                source: `${activeWorkspace.scope}-menu`,
+              },
+            });
+            setIsImportModalOpen(true);
+          },
         },
       ],
     },
@@ -235,6 +259,13 @@ export const WorkspaceDropdown: FC<{}> = () => {
           name: 'Export',
           icon: <Icon icon="file-export" />,
           action: () => {
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.exportStarted,
+              properties: {
+                source: `${activeWorkspace.scope}-menu`,
+              },
+            });
+
             if (activeWorkspace.scope === 'mock-server') {
               return exportMockServerToFile(activeWorkspace);
             }

@@ -11,6 +11,7 @@ import type { UserSession } from '../../models/user-session';
 import { reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
 import { setTheme } from '../../plugins/misc';
+import { SegmentEvent } from '../analytics';
 import { getLoginUrl } from '../auth-session-provider';
 import { ErrorBoundary } from '../components/error-boundary';
 import { showError, showModal } from '../components/modals';
@@ -90,6 +91,13 @@ const Root = () => {
         );
       }
       if (urlWithoutParams === 'insomnia://app/import') {
+        window.main.trackSegmentEvent({
+          event: SegmentEvent.importStarted,
+          properties: {
+            source: 'import-url',
+          },
+        });
+
         return setImportUri(params.uri);
       }
       if (urlWithoutParams === 'insomnia://plugins/install') {

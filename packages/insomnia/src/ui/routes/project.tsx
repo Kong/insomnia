@@ -66,6 +66,7 @@ import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { getInitialRouteForOrganization } from '../../utils/router';
+import { SegmentEvent } from '../analytics';
 import { AvatarGroup } from '../components/avatar';
 import { GitProjectSyncDropdown } from '../components/dropdowns/git-project-sync-dropdown';
 import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
@@ -1308,6 +1309,12 @@ const ProjectRoute: FC = () => {
 
                     <Button
                       onPress={() => {
+                        window.main.trackSegmentEvent({
+                          event: SegmentEvent.importStarted,
+                          properties: {
+                            source: 'project',
+                          },
+                        });
                         setImportModalType('file');
                       }}
                       aria-label="Import"

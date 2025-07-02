@@ -19,6 +19,30 @@ import type { BackendProject, Compare, Snapshot, Status, StatusCandidate } from 
 import { UserAbortResolveMergeConflictError, VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { pullBackendProject } from '../../sync/vcs/pull-backend-project';
 import { invariant } from '../../utils/invariant';
+import { SegmentEvent } from '../analytics';
+
+type PushPull = 'push' | 'pull';
+type VCSAction =
+  | PushPull
+  | `force_${PushPull}`
+  | 'create_branch'
+  | 'merge_branch'
+  | 'delete_branch'
+  | 'checkout_branch'
+  | 'commit'
+  | 'stage_all'
+  | 'stage'
+  | 'unstage_all'
+  | 'unstage'
+  | 'rollback'
+  | 'rollback_all'
+  | 'update'
+  | 'setup'
+  | 'clone';
+
+export function vcsSegmentEventProperties(type: 'remote', action: VCSAction, error?: string) {
+  return { type, action, error };
+}
 
 async function getSyncItems({ workspaceId }: { workspaceId: string }) {
   const syncItemsList: (
@@ -457,10 +481,21 @@ export const pullFromRemoteAction: ActionFunction = async ({ params }) => {
       projectId: project._id,
     });
 
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.vcsAction,
+      properties: vcsSegmentEventProperties('remote', 'pull'),
+    });
+
     await database.batchModifyDocs(delta);
     delete remoteCompareCache[workspaceId];
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while pulling from remote.';
+
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.vcsAction,
+      properties: vcsSegmentEventProperties('remote', 'pull', errorMessage),
+    });
+
     return {
       error: errorMessage,
     };
@@ -519,9 +554,21 @@ export const pushToRemoteAction: ActionFunction = async ({ params }) => {
       teamId: project.parentId,
       teamProjectId: project.remoteId,
     });
+
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.vcsAction,
+      properties: vcsSegmentEventProperties('remote', 'push'),
+    });
+
     delete remoteCompareCache[workspaceId];
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while pushing to remote.';
+
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.vcsAction,
+      properties: vcsSegmentEventProperties('remote', 'push', errorMessage),
+    });
+
     return {
       error: errorMessage,
     };
