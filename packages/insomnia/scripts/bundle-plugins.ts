@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 
-const bundlePlugins = ['@kong-insomnia/plugin-poc-external-vault@0.0.1-alpha.1'];
+const bundlePlugins = ['@kong/plugin-poc-external-vault@0.0.1-alpha.1'];
 const bundlePluginsDir = path.resolve(__dirname, '..', 'plugins');
 const yarnPath = path.resolve(__dirname, '..', 'bin', 'yarn-standalone.js');
 const NPM_REGISTRY = 'https://registry.npmjs.org/';
@@ -12,7 +12,7 @@ const NODE_AUTH_TOKEN = process.env.NODE_AUTH_TOKEN || '';
 if (!NODE_AUTH_TOKEN) {
   throw new Error('[Bundle Plugin] NODE_AUTH_TOKEN environment variable is not set');
 }
-const PLUGIN_NPM_REGISTRY = process.env.PLUGIN_NPM_REGISTRY || 'https://npm.pkg.github.com';
+const PLUGIN_NPM_REGISTRY = process.env.PLUGIN_NPM_REGISTRY || 'https://npm.pkg.github.com/';
 const registryUrl = PLUGIN_NPM_REGISTRY.endsWith('/') ? PLUGIN_NPM_REGISTRY : `${PLUGIN_NPM_REGISTRY}/`;
 const authString = `${registryUrl.replace(/(^\w+:|^)/, '')}:_authToken=${NODE_AUTH_TOKEN}`;
 
@@ -142,7 +142,7 @@ export async function installPluginToTmpDir(name: string) {
     // Generate the npmrc file in the temporary directory
     await writeFile(
       npmrcPath,
-      `registry = "${NPM_REGISTRY}"\n@kong-insomnia:registry = "${PLUGIN_NPM_REGISTRY}"\n${authString}`,
+      `registry = "${NPM_REGISTRY}"\n${scope}:registry = "${PLUGIN_NPM_REGISTRY}"\n${authString}`,
       'utf-8',
     );
     console.log(`[plugins] Installing plugin into temp dir: ${tmpDir}`);
