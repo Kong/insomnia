@@ -17,7 +17,7 @@ export const UpgradeNotice = (props: UpgradeNoticeProps) => {
   const upgradeDetail = isOwner
     ? 'Please upgrade your plan.'
     : 'Please contact the organization owner to upgrade the plan.';
-  const message = `${featureName} is only enbaled for ${planDetail}.`;
+  const message = `${featureName} is only enabled for ${planDetail}.`;
   const handleUpgradePlan = () => {
     window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
   };
