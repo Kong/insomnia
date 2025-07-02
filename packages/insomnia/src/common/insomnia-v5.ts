@@ -300,6 +300,7 @@ function getCollection(file: InsomniaFile): (Request | WebSocketRequest | GrpcRe
             _type: EXPORT_TYPE_REQUEST_GROUP,
             name: item.name || 'Imported Folder',
             parentId,
+            headers: item.headers?.map(({ name, value }) => ({ name: name || '', value: value || '' })) || [],
             preRequestScript: item.scripts?.preRequest || '',
             afterResponseScript: item.scripts?.afterResponse || '',
             authentication: item.authentication || {},
