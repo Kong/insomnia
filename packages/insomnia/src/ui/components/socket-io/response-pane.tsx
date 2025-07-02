@@ -1,4 +1,5 @@
-import fs from 'fs';
+import fs from 'node:fs';
+
 import React, { type FC, useEffect, useState } from 'react';
 import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';

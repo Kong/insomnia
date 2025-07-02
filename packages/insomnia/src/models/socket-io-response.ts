@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'node:fs';
 
 import { database as db, type Query } from '../common/database';
 import * as requestOperations from './helpers/request-operations';
