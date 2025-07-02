@@ -22,6 +22,8 @@ jobs:
     # windows on recurring should be portable
     if: ${{ !startsWith(github.head_ref, 'release/') }}
     runs-on: ${{ matrix.os }}
+    permissions:
+      packages: write
     strategy:
       fail-fast: false
       matrix:
