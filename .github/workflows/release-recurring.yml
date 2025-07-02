@@ -23,7 +23,7 @@ jobs:
     if: ${{ !startsWith(github.head_ref, 'release/') }}
     runs-on: ${{ matrix.os }}
     permissions:
-      packages: write
+      packages: read
     strategy:
       fail-fast: false
       matrix:
@@ -66,8 +66,6 @@ jobs:
         if: ${{ matrix.os == 'windows-latest' }}
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' ./build-secure-wrapper.sh
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # See https://github.com/electron/electron/issues/42510#issuecomment-2171583086
       - if: ${{ runner.os == 'Linux' }}
