@@ -23,7 +23,6 @@ jobs:
     if: ${{ !startsWith(github.head_ref, 'release/') }}
     runs-on: ${{ matrix.os }}
     permissions:
-      contents: read
       packages: read
     strategy:
       fail-fast: false
