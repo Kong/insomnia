@@ -175,6 +175,7 @@ jobs:
           npm run package -w insomnia-inso
         env:
           VERSION: ${{ env.INSO_VERSION }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Code-sign & create Inso CLI installer (macOS only)
         if: runner.os == 'macOS'
