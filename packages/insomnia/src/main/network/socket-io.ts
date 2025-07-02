@@ -1,10 +1,11 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import tls from 'node:tls';
+
 import electron, { BrowserWindow } from 'electron';
-import fs from 'fs';
 import { HttpProxyAgent } from 'http-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
-import path from 'path';
 import { io as SocketIOClient, type ManagerOptions, type Socket, type SocketOptions } from 'socket.io-client';
-import tls from 'tls';
 import { v4 as uuidV4 } from 'uuid';
 
 import { jarFromCookies } from '../../common/cookies';
