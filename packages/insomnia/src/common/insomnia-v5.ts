@@ -29,14 +29,14 @@ import {
 } from './constants';
 import { database } from './database';
 import {
+  type Insomnia_GRPCRequest,
+  type Insomnia_Request,
+  type Insomnia_RequestGroup,
+  type Insomnia_WebsocketRequest,
   type InsomniaFile,
-  insomniaFileSchema,
+  InsomniaFileSchema,
   type Meta,
   WebsocketRequestSchema,
-  type Z_GRPCRequest,
-  type Z_Request,
-  type Z_RequestGroup,
-  type Z_WebsocketRequest,
 } from './import-v5-parser';
 
 type WithExportType<T extends models.BaseModel> = T & { _type: string };
@@ -410,7 +410,7 @@ function getCollection(file: InsomniaFile): (Request | WebSocketRequest | GrpcRe
 
 export function importInsomniaV5Data(rawData: string) {
   try {
-    const file = insomniaFileSchema.parse(parse(rawData));
+    const file = InsomniaFileSchema.parse(parse(rawData));
 
     if (file.type === 'collection.insomnia.rest/5.0') {
       return [getWorkspace(file), ...getEnvironments(file), ...getCookieJar(file), ...getCollection(file)];
@@ -483,7 +483,7 @@ export async function getInsomniaV5DataExport({
         .filter(resource => resource.parentId === parentId)
         .forEach(resource => {
           if (models.request.isRequest(resource)) {
-            const request: Z_Request = {
+            const request: Insomnia_Request = {
               url: resource.url,
               name: resource.name,
               meta: {
@@ -517,7 +517,7 @@ export async function getInsomniaV5DataExport({
             };
             collection.push(request);
           } else if (models.requestGroup.isRequestGroup(resource)) {
-            const requestGroup: Z_RequestGroup = {
+            const requestGroup: Insomnia_RequestGroup = {
               name: resource.name,
               meta: {
                 id: resource._id,
@@ -539,7 +539,7 @@ export async function getInsomniaV5DataExport({
             };
             collection.push(requestGroup);
           } else if (models.webSocketRequest.isWebSocketRequest(resource)) {
-            const webSocketRequest: Z_WebsocketRequest = {
+            const webSocketRequest: Insomnia_WebsocketRequest = {
               url: resource.url,
               name: resource.name,
               meta: {
@@ -565,7 +565,7 @@ export async function getInsomniaV5DataExport({
             };
             collection.push(webSocketRequest);
           } else if (models.grpcRequest.isGrpcRequest(resource)) {
-            const grpcRequest: Z_GRPCRequest = {
+            const grpcRequest: Insomnia_GRPCRequest = {
               url: resource.url,
               name: resource.name,
               meta: {
