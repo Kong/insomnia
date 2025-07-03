@@ -1,6 +1,7 @@
 import type { LoaderFunction } from 'react-router';
 
 import { database } from '../../common/database';
+import { insomniaFetch } from '../../common/insomniaFetch';
 import { fuzzyMatch } from '../../common/misc';
 import {
   environment,
@@ -21,7 +22,6 @@ import type { RequestGroup } from '../../models/request-group';
 import type { WebSocketRequest } from '../../models/websocket-request';
 import { scopeToActivity, type Workspace } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
-import { insomniaFetch } from '../insomniaFetch';
 
 export interface CommandItem<TItem> {
   id: string;

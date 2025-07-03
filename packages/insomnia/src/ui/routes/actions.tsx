@@ -10,6 +10,7 @@ import { parseApiSpec, resolveComponentSchemaRefs } from '../../common/api-specs
 import { ACTIVITY_DEBUG, getAIServiceURL, METHOD_GET } from '../../common/constants';
 import { database } from '../../common/database';
 import { importResourcesToWorkspace, scanResources, type ScanResult } from '../../common/import';
+import { insomniaFetch } from '../../common/insomniaFetch';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import { EnvironmentType } from '../../models/environment';
@@ -30,7 +31,6 @@ import {
   pushSnapshotOnInitialize,
 } from '../../sync/vcs/initialize-backend-project';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
-import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { SpectralRunner } from '../worker/spectral-handler';

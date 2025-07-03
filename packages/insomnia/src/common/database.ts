@@ -14,6 +14,7 @@ import type { GitRepository } from '../models/git-repository';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
 import type { Workspace } from '../models/workspace';
+import { runtime } from '../utils/get-runtime';
 import { generateId } from './misc';
 
 export type Query<T extends BaseModel = BaseModel> = {
@@ -38,14 +39,14 @@ export type ChangeType = 'insert' | 'update' | 'remove';
 export const database = {
   // Get all documents of a certain type
   all: async function <T extends BaseModel>(type: string) {
-    if (db._empty) {
+    if (runtime === 'electron-renderer') {
       return _send<T[]>('all', ...arguments);
     }
     return database.find<T>(type);
   },
 
   batchModifyDocs: async function ({ upsert = [], remove = [] }: Operation) {
-    if (db._empty) {
+    if (runtime === 'electron-renderer') {
       return _send<void>('batchModifyDocs', ...arguments);
     }
     const flushId = await database.bufferChanges();
@@ -60,7 +61,7 @@ export const database = {
   /** buffers database changes and returns a buffer id, automatically call flushChanges in millis,
    * bufferChanges and flushChanges should be called in pair every time documents changes are made to trigger change listeners */
   bufferChanges: async function (millis = 1000) {
-    if (db._empty) {
+    if (runtime === 'electron-renderer') {
       return _send<number>('bufferChanges', ...arguments);
     }
     bufferingChanges = true;
@@ -70,7 +71,7 @@ export const database = {
 
   /** buffers database changes and returns a buffer id */
   bufferChangesIndefinitely: async function () {
-    if (db._empty) {
+    if (runtime === 'electron-renderer') {
       return _send<number>('bufferChangesIndefinitely', ...arguments);
     }
     bufferingChanges = true;
@@ -79,7 +80,7 @@ export const database = {
 
   /** return count num of documents matching query */
   count: async function <T extends BaseModel>(type: string, query: Query<T> = {}) {
-    if (db._empty) {
+    if (runtime === 'electron-renderer') {
       return _send<number>('count', ...arguments);
     }
     return new Promise<number>((resolve, reject) => {
@@ -122,7 +123,7 @@ export const database = {
 
   /** duplicate doc and its decendents recursively */
   duplicate: async function <T extends BaseModel>(originalDoc: T, patch: Patch<T> = {}) {
-    if (db._empty) {
+    if (runtime === 'electron-renderer') {
       return _send<T>('duplicate', ...arguments);
     }
     const flushId = await database.bufferChanges();
@@ -167,15 +168,10 @@ export const database = {
 
   /** find documents matching query */
   find: async function <T extends BaseModel>(type: string, query: Query<T> | string = {}, sort: Sort = { created: 1 }) {
-    if (db._empty) {
+    if (runtime === 'electron-renderer') {
       return _send<T[]>('find', ...arguments);
     }
     return new Promise<T[]>((resolve, reject) => {
-      if (!db[type]) {
-        console.warn(`[db] No collection for type "${type}"`);
-        resolve([]);
-        return;
-      }
       (db[type] as NeDB<T>)
         .find(query)
         .sort(sort)
@@ -201,7 +197,7 @@ export const database = {
     query: Query<T> = {},
     limit: number | null = null,
   ) {
-    if (db._empty) {
+    if (runtime === 'electron-renderer') {
       return _send<T[]>('findMostRecentlyModified', ...arguments);
     }
     return new Promise<T[]>(resolve => {
@@ -232,7 +228,7 @@ export const database = {
 
   /** trigger all changeListeners */
   flushChanges: async function (id = 0, fake = false) {
-    if (db._empty) {
+    if (runtime === 'electron-renderer') {
       return _send<void>('flushChanges', ...arguments);
     }
 
@@ -259,8 +255,7 @@ export const database = {
       await fn(changes);
     }
     // Notify remote listeners
-    const isMainContext = process.type === 'browser';
-    if (isMainContext) {
+    if (runtime === 'electron-main') {
       const windows = electron.BrowserWindow.getAllWindows();
 
       for (const window of windows) {
@@ -271,7 +266,7 @@ export const database = {
 
   /** get the exact document by id */
   get: async function <T extends BaseModel>(type: string, id?: string) {
-    if (db._empty) {
+    if (runtime === 'electron-renderer') {
       return _send<T>('get', ...arguments);
     }
 
@@ -283,7 +278,7 @@ export const database = {
   },
 
   getMostRecentlyModified: async function <T extends BaseModel>(type: string, query: Query<T> = {}) {
-    if (db._empty) {
+    if (runtime === 'electron-renderer') {
       return _send<T>('getMostRecentlyModified', ...arguments);
     }
     const docs = await database.findMostRecentlyModified<T>(type, query, 1);
@@ -292,7 +287,7 @@ export const database = {
 
   /** get the first document matching query */
   getWhere: async function <T extends BaseModel>(type: string, query: Query<T>) {
-    if (db._empty) {
+    if (runtime === 'electron-renderer') {
       return _send<T>('getWhere', ...arguments);
     }
     const docs = await database.find<T>(type, query);
@@ -310,10 +305,6 @@ export const database = {
       changeListeners = [];
 
       for (const attr of Object.keys(db)) {
-        if (attr === '_empty') {
-          continue;
-        }
-
         delete db[attr];
       }
     }
@@ -340,19 +331,20 @@ export const database = {
       db[modelType] = collection;
     }
 
-    delete db._empty;
-    electron.ipcMain.on('db.fn', async (e, fnName, replyChannel, ...args) => {
-      try {
-        // @ts-expect-error -- mapping unsoundness
-        const result = await database[fnName](...args);
-        e.sender.send(replyChannel, null, result);
-      } catch (err) {
-        e.sender.send(replyChannel, {
-          message: err.message,
-          stack: err.stack,
-        });
-      }
-    });
+    if (runtime === 'electron-main') {
+      electron.ipcMain.on('db.fn', async (e, fnName, replyChannel, ...args) => {
+        try {
+          // @ts-expect-error -- mapping unsoundness
+          const result = await database[fnName](...args);
+          e.sender.send(replyChannel, null, result);
+        } catch (err) {
+          e.sender.send(replyChannel, {
+            message: err.message,
+            stack: err.stack,
+          });
+        }
+      });
+    }
 
     // NOTE: Only repair the DB if we're not running in memory. Repairing here causes tests to hang indefinitely for some reason.
     // TODO: Figure out why this makes tests hang
@@ -410,6 +402,9 @@ export const database = {
 
   /** init in renderer process */
   initClient: async () => {
+    if (runtime !== 'electron-renderer') {
+      throw new Error('Database client can only be initialized in the renderer process');
+    }
     electron.ipcRenderer.on('db.changes', async (_e, changes) => {
       for (const fn of changeListeners) {
         await fn(changes);
@@ -419,7 +414,7 @@ export const database = {
   },
 
   insert: async function <T extends BaseModel>(doc: T, fromSync = false, initializeModel = true) {
-    if (db._empty) {
+    if (runtime === 'electron-renderer') {
       return _send<T>('insert', ...arguments);
     }
     return new Promise<T>(async (resolve, reject) => {
@@ -457,7 +452,7 @@ export const database = {
 
   /** remove doc and its descendants */
   remove: async function <T extends BaseModel>(doc: T, fromSync = false) {
-    if (db._empty) {
+    if (runtime === 'electron-renderer') {
       return _send<void>('remove', ...arguments);
     }
 
@@ -486,7 +481,7 @@ export const database = {
   },
 
   removeWhere: async function <T extends BaseModel>(type: string, query: Query<T>) {
-    if (db._empty) {
+    if (runtime === 'electron-renderer') {
       return _send<void>('removeWhere', ...arguments);
     }
     const flushId = await database.bufferChanges();
@@ -517,7 +512,7 @@ export const database = {
 
   /** Removes entries without removing their children */
   unsafeRemove: async function <T extends BaseModel>(doc: T, fromSync = false) {
-    if (db._empty) {
+    if (runtime === 'electron-renderer') {
       return _send<void>('unsafeRemove', ...arguments);
     }
 
@@ -526,7 +521,7 @@ export const database = {
   },
 
   update: async function <T extends BaseModel>(doc: T, fromSync = false, patches: Patch<T>[] = []) {
-    if (db._empty) {
+    if (runtime === 'electron-renderer') {
       return _send<T>('update', ...arguments);
     }
 
@@ -559,7 +554,7 @@ export const database = {
 
   // TODO(TSCONVERSION) the update method above can now take an upsert property
   upsert: async function <T extends BaseModel>(doc: T, fromSync = false) {
-    if (db._empty) {
+    if (runtime === 'electron-renderer') {
       return _send<T>('upsert', ...arguments);
     }
     const existingDoc = await database.get<T>(doc.type, doc._id);
@@ -572,7 +567,7 @@ export const database = {
 
   /** get all ancestors of specified types of a document */
   withAncestors: async function <T extends BaseModel>(doc: T | null, types: string[] = allTypes()) {
-    if (db._empty) {
+    if (runtime === 'electron-renderer') {
       return _send<T[]>('withAncestors', ...arguments);
     }
 
@@ -624,7 +619,7 @@ export const database = {
     stopType: string | null = null,
     queryTypes: string[] = [],
   ): Promise<BaseModel[]> {
-    if (db._empty) {
+    if (runtime === 'electron-renderer') {
       return _send<BaseModel[]>('withDescendants', ...arguments);
     }
     let docsToReturn: BaseModel[] = doc ? [doc] : [];
@@ -669,11 +664,7 @@ export const database = {
 
 type DB = Record<string, NeDB>;
 
-// @ts-expect-error -- TSCONVERSION _empty doesn't match the index signature, use something other than _empty in future
-const db: DB = {
-  // _empty is true if it's in the renderer process
-  _empty: true,
-} as DB;
+const db: DB = {};
 
 // ~~~~~~~ //
 // HELPERS //
@@ -732,7 +723,7 @@ type Patch<T> = Partial<T>;
 // ~~~~~~~ //
 // Helpers //
 // ~~~~~~~ //
-// If you call database.x methods within the render process, you can obtain results by this helper function. In renderer process, db._empty is true.
+// If you call database.x methods within the render process, you can obtain results by this helper function.
 async function _send<T>(fnName: string, ...args: any[]) {
   return new Promise<T>((resolve, reject) => {
     const replyChannel = `db.fn.reply:${uuidv4()}`;

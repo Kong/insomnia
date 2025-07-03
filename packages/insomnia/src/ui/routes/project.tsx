@@ -43,6 +43,7 @@ import {
   getAppWebsiteBaseURL,
 } from '../../common/constants';
 import { database } from '../../common/database';
+import { insomniaFetch } from '../../common/insomniaFetch';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
@@ -63,7 +64,6 @@ import {
 import { isDesign, scopeToActivity, type Workspace, type WorkspaceScope } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
-import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { getInitialRouteForOrganization } from '../../utils/router';
 import { SegmentEvent } from '../analytics';

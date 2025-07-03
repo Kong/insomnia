@@ -16,10 +16,10 @@ import { useFetcher, useParams, useSearchParams } from 'react-router';
 
 import { getAccountId, getCurrentSessionId } from '../../../../account/session';
 import { getAppWebsiteBaseURL } from '../../../../common/constants';
+import { insomniaFetch } from '../../../../common/insomniaFetch';
 import { debounce } from '../../../../common/misc';
 import { invariant } from '../../../../utils/invariant';
 import { SegmentEvent } from '../../../analytics';
-import { insomniaFetch } from '../../../insomniaFetch';
 import type { Collaborator, CollaboratorsListLoaderResult } from '../../../routes/invite';
 import { PromptButton } from '../../base/prompt-button';
 import { Icon } from '../../icon';

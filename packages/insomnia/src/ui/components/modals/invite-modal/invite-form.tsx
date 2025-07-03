@@ -11,10 +11,9 @@ import {
 } from 'react-aria-components';
 import { useFetcher, useParams, useSearchParams } from 'react-router';
 
-import { getCurrentSessionId } from '../../../../account/session';
+import { insomniaFetch } from '../../../../common/insomniaFetch';
 import { debounce } from '../../../../common/misc';
 import { SegmentEvent } from '../../../analytics';
-import { insomniaFetch } from '../../../insomniaFetch';
 import type { CollaboratorSearchLoaderResult } from '../../../routes/invite';
 import { Icon } from '../../icon';
 import { startInvite } from './encryption';

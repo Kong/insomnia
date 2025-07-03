@@ -16,12 +16,12 @@ import {
 } from '../../common/constants';
 import { database as db } from '../../common/database';
 import { getResponseCookiesFromHeaders } from '../../common/har';
+import { insomniaFetch } from '../../common/insomniaFetch';
 import * as models from '../../models';
 import type { MockRoute } from '../../models/mock-route';
 import type { MockServer } from '../../models/mock-server';
 import type { Request, RequestHeader } from '../../models/request';
 import type { Response } from '../../models/response';
-import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { Dropdown, DropdownItem, ItemContent } from '../components/base/dropdown';
 import { CodeEditor } from '../components/codemirror/code-editor';

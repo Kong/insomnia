@@ -433,7 +433,15 @@ export function importInsomniaV5Data(rawData: string) {
 
     return [getWorkspace(file), getMockServer(file), ...getMockRoutes(file)];
   } catch (err) {
-    console.error('Failed to import Insomnia v5 data', err);
+    // It's not a valid Insomnia v5 file, this is expected because we also support importing other formats
+    const isInvalidInsomniaFileError =
+      err.issues?.length === 1 &&
+      err.issues[0].code === 'invalid_union_discriminator' &&
+      err.issues[0].path?.length === 1 &&
+      err.issues[0].path[0] === 'type';
+    if (!isInvalidInsomniaFileError) {
+      console.error('Failed to import Insomnia v5 data', err);
+    }
     return [];
   }
 }

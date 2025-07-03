@@ -1,5 +1,6 @@
-import { getApiBaseURL, getClientString, INSOMNIA_FETCH_TIME_OUT, PLAYWRIGHT } from '../common/constants';
-import { generateId } from '../common/misc';
+import { runtime } from '../utils/get-runtime';
+import { getApiBaseURL, getClientString, INSOMNIA_FETCH_TIME_OUT, PLAYWRIGHT } from './constants';
+import { generateId } from './misc';
 
 interface FetchConfig {
   method: 'POST' | 'PUT' | 'GET' | 'DELETE' | 'PATCH';
@@ -58,7 +59,11 @@ export async function insomniaFetch<T = void>({
     const response = await fetch((origin || getApiBaseURL()) + path, config);
     const uri = response.headers.get('x-insomnia-command');
     if (uri) {
-      window.main.openDeepLink(uri);
+      if (runtime === 'electron-renderer') {
+        window.main.openDeepLink(uri);
+      } else {
+        throw new Error(`Unexpected deep link response: ${uri}`);
+      }
     }
     const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
     if (onlyResolveOnSuccess && !response.ok) {

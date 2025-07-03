@@ -2,8 +2,8 @@ import React, { createContext, type FC, type PropsWithChildren, useContext, useE
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
 
 import { CDN_INVALIDATION_TTL } from '../../../common/constants';
+import { insomniaFetch } from '../../../common/insomniaFetch';
 import type { Organization } from '../../../models/organization';
-import { insomniaFetch } from '../../../ui/insomniaFetch';
 import { avatarImageCache } from '../../hooks/image-cache';
 import type { ProjectIdLoaderData } from '../../routes/project';
 import { useRootLoaderData } from '../../routes/root';

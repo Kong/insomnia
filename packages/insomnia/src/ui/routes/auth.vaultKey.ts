@@ -2,12 +2,12 @@ import * as srp from '@getinsomnia/srp-js';
 import { ipcRenderer } from 'electron';
 import { type ActionFunction } from 'react-router';
 
+import { insomniaFetch } from '../../common/insomniaFetch';
 import { userSession as sessionModel } from '../../models';
 import { removeAllSecrets } from '../../models/environment';
 import type { UserSession } from '../../models/user-session';
 import { base64encode, saveVaultKeyIfNecessary } from '../../utils/vault';
 import type { ToastNotification } from '../components/toast';
-import { insomniaFetch } from '../insomniaFetch';
 
 const { Buffer, Client, generateAES256Key, getRandomHex, params, srpGenKey } = srp;
 interface FetchError {

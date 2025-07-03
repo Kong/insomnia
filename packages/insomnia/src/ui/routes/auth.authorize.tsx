@@ -2,13 +2,13 @@ import React, { Fragment } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { type ActionFunction, redirect, useFetcher, useFetchers, useNavigate } from 'react-router';
 
+import { insomniaFetch } from '../../common/insomniaFetch';
 import { userSession as sessionModel } from '../../models';
 import { invariant } from '../../utils/invariant';
 import { getVaultKeyFromStorage } from '../../utils/vault';
 import { SegmentEvent } from '../analytics';
 import { getLoginUrl, submitAuthCode } from '../auth-session-provider';
 import { Icon } from '../components/icon';
-import { insomniaFetch } from '../insomniaFetch';
 import { validateVaultKey } from './auth.vaultKey';
 
 export const action: ActionFunction = async ({ request }) => {

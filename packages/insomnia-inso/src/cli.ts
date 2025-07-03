@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { homedir } from 'node:os';
 import path from 'node:path';
 
 import * as commander from 'commander';
@@ -21,6 +20,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { type RequestTestResult } from '../../insomnia-scripting-environment/src/objects';
 import packageJson from '../package.json';
+import { createProject, type CreateProjectOptions } from './commands/create-project';
 import { exportSpecification, writeFileWithCliOptions } from './commands/export-specification';
 import { getRuleSetFileFromFolderByFilename, lintSpecification } from './commands/lint-specification';
 import type { Database } from './db';
@@ -33,11 +33,11 @@ import { loadTestSuites, promptTestSuites } from './db/models/unit-test-suite';
 import { matchIdIsh } from './db/models/util';
 import { loadWorkspace, promptWorkspace } from './db/models/workspace';
 import { logTestResult, logTestResultSummary, reporterTypes, type TestReporter } from './reporter';
+import { localAppDir } from './utils/app-data';
 
 export interface GlobalOptions {
   ci: boolean;
   config: string;
-  exportFile: string;
   printOptions: boolean;
   verbose: boolean;
   workingDir: string;
@@ -53,7 +53,7 @@ export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: 
       logger.debug(`Found config file at ${results?.filepath}.`);
       const scripts = results.config?.scripts || {};
       const filePath = results.filepath;
-      const options = ['workingDir', 'ci', 'verbose', 'exportFile', 'printOptions'].reduce((acc, key) => {
+      const options = ['workingDir', 'ci', 'verbose', 'printOptions'].reduce((acc, key) => {
         const value = results.config?.options?.[key];
         if (value) {
           return { ...acc, [key]: value };
@@ -103,35 +103,6 @@ export class InsoError extends Error {
   }
 }
 
-/**
- * getAppDataDir returns the data directory for an Electron app,
- * it is equivalent to the app.getPath('userData') API in Electron.
- * https://www.electronjs.org/docs/api/app#appgetpathname
- */
-export function getAppDataDir(app: string): string {
-  switch (process.platform) {
-    case 'darwin': {
-      return path.join(homedir(), 'Library', 'Application Support', app);
-    }
-    case 'win32': {
-      return path.join(process.env.APPDATA || path.join(homedir(), 'AppData', 'Roaming'), app);
-    }
-    case 'linux': {
-      return path.join(process.env.XDG_DATA_HOME || path.join(homedir(), '.config'), app);
-    }
-    default: {
-      throw new Error('Unsupported platform');
-    }
-  }
-}
-export const getDefaultProductName = (): string => {
-  const name = process.env.DEFAULT_APP_NAME;
-  if (!name) {
-    throw new Error('Environment variable DEFAULT_APP_NAME is not set.');
-  }
-  return name;
-};
-
 export const getAbsoluteFilePath = ({ workingDir, file }: { workingDir?: string; file: string }) => {
   return file && path.resolve(workingDir || process.cwd(), file);
 };
@@ -158,12 +129,12 @@ const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
 
 const resolveSpecInDatabase = async (identifier: string, options: GlobalOptions) => {
   let pathToSearch = '';
-  const useLocalAppData = !options.workingDir && !options.exportFile;
+  const useLocalAppData = !options.workingDir;
   if (useLocalAppData) {
-    logger.warn('No working directory or export file provided, using local app data directory.');
+    logger.warn('No working directory provided, using local app data directory.');
     pathToSearch = localAppDir;
   } else {
-    pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
+    pathToSearch = path.resolve(options.workingDir || process.cwd());
   }
   const db = await loadDb({ pathToSearch, filterTypes: ['ApiSpec'] });
   if (!db.ApiSpec.length) {
@@ -207,7 +178,6 @@ const collect = (val: string, memo: string[]) => {
   memo.push(val);
   return memo;
 };
-const localAppDir = getAppDataDir(getDefaultProductName());
 const readFileFromPathOrUrl = async (pathOrUrl: string) => {
   if (!pathOrUrl) {
     return '';
@@ -303,11 +273,33 @@ export const go = (args?: string[]) => {
     proxySettings.noProxy = process.env.NO_PROXY || process.env.no_proxy || '';
   }
 
+  const defaultReporter: TestReporter = 'spec';
+
+  // Merge global options, config file options, and command options
+  // Initialize logger
+  const mergeOptionsAndInit = async <T extends Record<string, any>>(cmd: T): Promise<GlobalOptions & T> => {
+    const globals: GlobalOptions = program.optsWithGlobals();
+
+    const commandOptions = { ...globals, ...cmd };
+    const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
+
+    const options = {
+      reporter: defaultReporter,
+      ...(__configFile?.options || {}),
+      ...commandOptions,
+    };
+    logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
+    options.ci && logger.setReporters([new BasicReporter()]);
+    options.printOptions && logger.log('Loaded options', options, '\n');
+
+    return options;
+  };
+
   // export and lint logic
   // Provide a path to a file which looks like an insomnia db
   // it may contain multiple workspaces, and specs.
   // you can also just provide a spec file
-  // things get confusing when you might have a workingDir a exportFile and an identifier, since they can all be paths to a spec file
+  // things get confusing when you might have a workingDir and an identifier, since they can all be paths to a spec file
 
   // differences
   // lint can read a .spectral.yml from the folder provided
@@ -340,7 +332,6 @@ export const go = (args?: string[]) => {
 
   const run = program.command('run').description('Execution utilities');
 
-  const defaultReporter: TestReporter = 'spec';
   run
     .command('test [identifier]')
     .description('Run Insomnia unit test suites, identifier can be a test suite id or a API Spec id')
@@ -384,13 +375,13 @@ export const go = (args?: string[]) => {
         logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
         options.ci && logger.setReporters([new BasicReporter()]);
         options.printOptions && logger.log('Loaded options', options, '\n');
-        const useLocalAppData = !options.workingDir && !options.exportFile;
+        const useLocalAppData = !options.workingDir;
         let pathToSearch = '';
         if (useLocalAppData) {
-          logger.warn('No working directory or export file provided, using local app data directory.');
+          logger.warn('No working directory provided, using local app data directory.');
           pathToSearch = localAppDir;
         } else {
-          pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
+          pathToSearch = path.resolve(options.workingDir || process.cwd());
         }
         if (options.reporter && !reporterTypes.find(r => r === options.reporter)) {
           logger.fatal(`Reporter "${options.reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
@@ -522,7 +513,6 @@ export const go = (args?: string[]) => {
         const globals: {
           config: string;
           workingDir: string;
-          exportFile: string;
           ci: boolean;
           printOptions: boolean;
           verbose: boolean;
@@ -540,12 +530,12 @@ export const go = (args?: string[]) => {
         options.ci && logger.setReporters([new BasicReporter()]);
         options.printOptions && logger.log('Loaded options', options, '\n');
         let pathToSearch = '';
-        const useLocalAppData = !options.workingDir && !options.exportFile;
+        const useLocalAppData = !options.workingDir;
         if (useLocalAppData) {
-          logger.warn('No working directory or export file provided, using local app data directory.');
+          logger.warn('No working directory provided, using local app data directory.');
           pathToSearch = localAppDir;
         } else {
-          pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
+          pathToSearch = path.resolve(options.workingDir || process.cwd());
         }
 
         const db = await loadDb({
@@ -785,6 +775,46 @@ export const go = (args?: string[]) => {
       },
     );
 
+  program
+    .command('create')
+    .command('project <project-name>')
+    .description('Create a new Insomnia project, identifier can be a workspace id. (Only support Cloud Sync for now)')
+    .requiredOption('--type <type>', 'storage type for the project', 'cloud')
+    .requiredOption('--organizationId <id>', 'organization id to create the project in', '')
+    .option('-o, --output <path>', 'save the result to a JSON file, including project id and name')
+    .action(
+      async (projectName: string, cmd: Pick<CreateProjectOptions, 'type' | 'organizationId'> & { output?: string }) => {
+        const options = await mergeOptionsAndInit(cmd);
+
+        try {
+          const newProject = await createProject({
+            projectName,
+            type: cmd.type,
+            organizationId: cmd.organizationId,
+            workingDir: options.workingDir,
+          });
+
+          logger.log(`Project "${projectName}" created successfully, id: ${newProject._id}.`);
+
+          if (options.output) {
+            const outputPath = getAbsoluteFilePath({ workingDir: options.workingDir, file: options.output });
+            if (!outputPath) {
+              logger.fatal('Output path is not valid');
+              return process.exit(1);
+            }
+            await writeFileWithCliOptions(
+              outputPath,
+              JSON.stringify({ id: newProject._id, name: newProject.name }, null, 2),
+            );
+            logger.log(`Output saved to "${outputPath}".`);
+          }
+
+          return process.exit(0);
+        } catch (error) {
+          logErrorAndExit(error);
+        }
+      },
+    );
   program
     .command('lint')
     .description(

@@ -15,13 +15,13 @@ import {
   type PreviewMode,
 } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
+import { insomniaFetch } from '../../../common/insomniaFetch';
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import * as models from '../../../models';
 import type { MockRoute } from '../../../models/mock-route';
 import type { MockServer } from '../../../models/mock-server';
 import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/cancellation';
-import { insomniaFetch } from '../../../ui/insomniaFetch';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { useExecutionState } from '../../hooks/use-execution-state';
 import type { MockRouteLoaderData } from '../../routes/mock-route';

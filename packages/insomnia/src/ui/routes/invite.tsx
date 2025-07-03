@@ -1,9 +1,9 @@
 import type { ActionFunction, LoaderFunction } from 'react-router';
 
+import { insomniaFetch } from '../../common/insomniaFetch';
 import { userSession } from '../../models';
 import * as models from '../../models';
 import { invariant } from '../../utils/invariant';
-import { insomniaFetch } from '../insomniaFetch';
 
 interface PaginatedList {
   start: number;

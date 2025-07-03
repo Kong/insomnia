@@ -9,9 +9,9 @@ import clone from 'clone';
 import * as crypt from '../../account/crypt';
 import * as session from '../../account/session';
 import type { Operation } from '../../common/database';
+import { insomniaFetch } from '../../common/insomniaFetch';
 import { generateId } from '../../common/misc';
 import type { BaseModel } from '../../models';
-import { insomniaFetch } from '../../ui/insomniaFetch';
 import Store from '../store';
 import type { BaseDriver } from '../store/drivers/base';
 import compress from '../store/hooks/compress';
@@ -58,7 +58,7 @@ export function chunkArray<T>(arr: T[], chunkSize: number) {
 }
 
 // Stage/Unstage
-// Staged items are about to be commited
+// Staged items are about to be committed
 // Unstaged items have changed compared to staged or not and can be staged
 //
 export class VCS {

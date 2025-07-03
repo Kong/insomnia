@@ -29,6 +29,7 @@ import { useLocalStorage } from 'react-use';
 import * as session from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
 import { database } from '../../common/database';
+import { insomniaFetch } from '../../common/insomniaFetch';
 import { userSession } from '../../models';
 import { updateLocalProjectToRemote } from '../../models/helpers/project';
 import {
@@ -46,7 +47,6 @@ import {
   migrateProjectsIntoOrganization,
   shouldMigrateProjectUnderOrganization,
 } from '../../sync/vcs/migrate-projects-into-organization';
-import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { AsyncTask, getInitialRouteForOrganization } from '../../utils/router';
 import { getLoginUrl } from '../auth-session-provider';
@@ -658,7 +658,7 @@ const OrganizationRoute = () => {
   const untrackedWorkspaces = untrackedProjectsFetcher.data?.untrackedWorkspaces || [];
   const hasUntrackedData = untrackedProjects.length > 0 || untrackedWorkspaces.length > 0;
 
-  const [isOrganizationSidebarOpen, setIsOganizationSidebarOpen] = useLocalStorage('organizationSidebarOpen', true);
+  const [isOrganizationSidebarOpen, setIsOrganizationSidebarOpen] = useLocalStorage('organizationSidebarOpen', true);
   const [isMinimal, setIsMinimal] = useLocalStorage('isMinimal', false);
 
   const { generating: loadingAI, progress: loadingAIProgress } = useAIContext();
@@ -873,7 +873,7 @@ const OrganizationRoute = () => {
                 <TooltipTrigger>
                   <ToggleButton
                     className="h-[10px] w-[10px] flex-grow-0 gap-2 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
-                    onChange={setIsOganizationSidebarOpen}
+                    onChange={setIsOrganizationSidebarOpen}
                     isSelected={isOrganizationSidebarOpen}
                   >
                     {({ isSelected }) => {
