@@ -42,6 +42,7 @@ const createCloudProject = async ({
   const { id: sessionId } = await models.userSession.getOrCreate();
   invariant(sessionId, 'User session not found. Please log in by the Insomnia app.');
 
+  // Create a new cloud project in the backend
   const newCloudProject = await insomniaFetch<
     | {
         id: string;
@@ -66,6 +67,7 @@ const createCloudProject = async ({
     throw new Error(newCloudProject.error);
   }
 
+  // Link the new cloud project to the local Insomnia database
   const project = await models.project.create({
     _id: newCloudProject.id,
     name: newCloudProject.name,
