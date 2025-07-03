@@ -15,7 +15,7 @@ coverage
 build/Release
 node_modules/
 **/node_modules/
-plugins/
+packages/**/plugins
 .npm
 .eslintcache
 .node_repl_history
