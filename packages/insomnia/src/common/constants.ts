@@ -14,12 +14,12 @@ export const INSOMNIA_GITLAB_API_URL = env.INSOMNIA_GITLAB_API_URL;
 export const PLAYWRIGHT = env.PLAYWRIGHT;
 export const ENTERPRISE_PLUGINS: Record<string, any> = {
   'external-vault': {
-    pluginName: '@kong-insomnia/plugin-poc-external-vault',
+    pluginName: '@kong/plugin-poc-external-vault',
     pluginVersion: '0.0.1-alpha.1',
     checksum: {
       'dist/index.js':
-        'sha512-leeE7/gFrc899RXLgVbNLioproBC6NXjMJZQpnzYAsJ0DiehIhy6/9ghIwkQahqs5lkQxK8uJgAfabwUYJLHVQ==',
-      'package.json': 'sha512-liCGPClbqhiHMYhRLIKFpE02o8JTEMPzpWuoGC4YiflVzMBu7x0JzHz1eE2d/4D8ndCG4fXGUH6cRNJfXExEiQ==',
+        'sha512-ThLetTUf66THS1BHbVwhmeCjmru2f33knRU3rwkECUDDJwYiF2WNAUFPfXRKTG7eyoVdjwwxMcStPBwN+swzgg==',
+      'package.json': 'sha512-zEg3V8S99l3AXP/5s7gcgKktYaKDbHP+luglAy+fgzwWrhbfR68ZDWVrMXdJXRFOBGQTsTr18FkROdhWggzg3w==',
     },
   },
 };
