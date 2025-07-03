@@ -311,7 +311,6 @@ const openSocketIOConnection = async (
         eventLogPath: responseBodyPath,
         elapsedTime: performance.now() - start,
         url: url,
-        connected: true,
       };
 
       const res = await models.socketIOResponse.create(responsePatch, settings.maxHistoryResponses);
@@ -339,10 +338,6 @@ const openSocketIOConnection = async (
       deleteRequestMaps(request._id, reason, closeEvent);
       for (const window of BrowserWindow.getAllWindows()) {
         window.webContents.send(readyStateChannel, socket.connected);
-      }
-      const response = await models.socketIOResponse.getById(responseId);
-      if (response) {
-        await models.socketIOResponse.update(response, { connected: false });
       }
     });
 

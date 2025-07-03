@@ -25,7 +25,6 @@ export interface BaseSocketIOResponse {
   elapsedTime: number;
   error: string;
   url: string;
-  connected: boolean;
 }
 
 export type SocketIOResponse = BaseModel & BaseSocketIOResponse;
@@ -41,7 +40,6 @@ export function init(): BaseSocketIOResponse {
     elapsedTime: 0,
     error: '',
     url: '',
-    connected: false,
   };
 }
 
