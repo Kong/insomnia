@@ -20,7 +20,7 @@ import { Icon } from '../icon';
 import { MarkdownEditor } from '../markdown-editor';
 import { Pane } from '../panes/pane';
 import { RenderedQueryString } from '../rendered-query-string';
-import { SocketIOActionBar } from './action-bar';
+import { WebSocketActionBar } from '../websockets/action-bar';
 import { SocketIOBodyTabPane } from './body-tab-pane';
 import { SocketIOEventTabPane } from './event-tab-pane';
 
@@ -106,7 +106,7 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
   return (
     <Pane type="request">
       <header className="pane__header theme--pane__header !items-stretch">
-        <SocketIOActionBar
+        <WebSocketActionBar
           key={uniqueKey}
           request={activeRequest}
           environmentId={environment?._id || ''}

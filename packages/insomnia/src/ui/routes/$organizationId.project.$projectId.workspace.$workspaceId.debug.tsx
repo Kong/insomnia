@@ -103,7 +103,6 @@ import { RequestGroupPane } from '../components/panes/request-group-pane';
 import { RequestPane } from '../components/panes/request-pane';
 import { ResponsePane } from '../components/panes/response-pane';
 import { SocketIORequestPane } from '../components/socket-io/request-pane';
-import { SocketIOResponsePane } from '../components/socket-io/response-pane';
 import { OrganizationTabList } from '../components/tabs/tab-list';
 import { getMethodShortHand } from '../components/tags/method-tag';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
@@ -1248,10 +1247,7 @@ export const Debug: FC = () => {
                           {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
                             <GrpcResponsePane grpcState={grpcState} />
                           )}
-                          {isSocketIORequest(activeRequest) && <SocketIOResponsePane requestId={activeRequest._id} />}
-                          {isRealtimeRequest && !isSocketIORequest(activeRequest) && (
-                            <RealtimeResponsePane requestId={activeRequest._id} />
-                          )}
+                          {isRealtimeRequest && <RealtimeResponsePane requestId={activeRequest._id} />}
                           {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
                             <ResponsePane activeRequestId={activeRequest._id} />
                           )}
