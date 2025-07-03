@@ -31,10 +31,7 @@ import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { isCollection, isEnvironment, scopeToActivity, type Workspace } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
-import {
-  initializeLocalBackendProjectAndMarkForSync,
-  pushSnapshotOnInitialize,
-} from '../../sync/vcs/initialize-backend-project';
+import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
