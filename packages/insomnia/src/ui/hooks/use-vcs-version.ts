@@ -40,7 +40,7 @@ export function useActiveApiSpecSyncVCSVersion() {
 export function useGitVCSVersion() {
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const projectData = useRouteLoaderData('/project') as ProjectLoaderData;
-  const gitRepository = workspaceData.gitRepository || projectData.activeProjectGitRepository;
-  console.log('[git] useGitVCSVersion', gitRepository?.statusIdentifier);
+  const gitRepository = workspaceData?.gitRepository || projectData?.activeProjectGitRepository;
+
   return gitRepository?.statusIdentifier || '';
 }
