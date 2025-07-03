@@ -127,15 +127,18 @@ const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
   }
 };
 
-const resolveSpecInDatabase = async (identifier: string, options: GlobalOptions) => {
-  let pathToSearch = '';
-  const useLocalAppData = !options.workingDir;
-  if (useLocalAppData) {
-    logger.warn('No working directory provided, using local app data directory.');
-    pathToSearch = localAppDir;
-  } else {
-    pathToSearch = path.resolve(options.workingDir);
+const getWorkingDir = (options: { workingDir?: string }): string => {
+  if (options.workingDir) {
+    return path.resolve(options.workingDir);
   }
+
+  logger.warn('No working directory provided, using local app data directory.');
+  return localAppDir;
+};
+
+const resolveSpecInDatabase = async (identifier: string, options: GlobalOptions) => {
+  const pathToSearch = getWorkingDir(options);
+
   const db = await loadDb({ pathToSearch, filterTypes: ['ApiSpec'] });
   if (!db.ApiSpec.length) {
     throw new InsoError(`Specification content not found using API spec id: "${identifier}" in "${pathToSearch}"`);
@@ -298,15 +301,6 @@ export const go = (args?: string[]) => {
     options.printOptions && logger.log('Loaded options', options, '\n');
 
     return options;
-  };
-
-  const getWorkingDir = (options: { workingDir?: string }): string => {
-    if (options.workingDir) {
-      return path.resolve(options.workingDir);
-    }
-
-    logger.warn('No working directory provided, using local app data directory.');
-    return localAppDir;
   };
 
   // export and lint logic
