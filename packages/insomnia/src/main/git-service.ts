@@ -19,7 +19,7 @@ import {
   PLAYWRIGHT,
 } from '../common/constants';
 import { database } from '../common/database';
-import { insomniaFileSchema } from '../common/import-v5-parser';
+import { InsomniaFileSchema } from '../common/import-v5-parser';
 import { insomniaSchemaTypeToScope } from '../common/insomnia-v5';
 import * as models from '../models';
 import type { GitRepository } from '../models/git-repository';
@@ -649,7 +649,7 @@ export const initGitRepoCloneAction = async ({
   const files = await Promise.all(
     insomniaFiles.map(async file => {
       const fileContents = await inMemoryFsClient.promises.readFile(path.join(GIT_CLONE_DIR, file), 'utf8');
-      const insomniaFile = insomniaFileSchema.parse(YAML.parse(fileContents));
+      const insomniaFile = InsomniaFileSchema.parse(YAML.parse(fileContents));
 
       return {
         scope: insomniaSchemaTypeToScope(insomniaFile.type),

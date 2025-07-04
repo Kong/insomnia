@@ -1,12 +1,15 @@
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 // This uses zod in order to ensure the parsed input matches our types before we insert it into the database
 
-const literalSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
+const LiteralSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
+const KeyLiteralSchema = z.union([z.string(), z.number()]);
 
-type Literal = z.infer<typeof literalSchema>;
+type Literal = z.infer<typeof LiteralSchema>;
 type Json = Literal | { [key: string]: Json } | Json[];
-const jsonSchema: z.ZodType<Json> = z.lazy(() => z.union([literalSchema, z.array(jsonSchema), z.record(jsonSchema)]));
+const JsonSchema: z.ZodType<Json> = z.lazy(() =>
+  z.union([LiteralSchema, z.array(JsonSchema), z.record(KeyLiteralSchema, JsonSchema)]),
+);
 
 const MetaSchema = z.object({
   id: z.string(),
@@ -37,7 +40,7 @@ const CookieSchema = z.object({
   path: z.string().optional().default('/'),
   secure: z.boolean().optional().default(false),
   httpOnly: z.boolean().optional().default(false),
-  extensions: z.array(jsonSchema).optional(),
+  extensions: z.array(JsonSchema).optional(),
   creation: z.coerce.date().optional(),
   creationIndex: z.number().optional(),
   hostOnly: z.boolean().optional(),
@@ -53,8 +56,8 @@ const CookieJarSchema = z.object({
 
 const EnvironmentSchema = z.object({
   name: z.string().optional(),
-  data: jsonSchema.optional(),
-  dataPropertyOrder: jsonSchema.optional(),
+  data: JsonSchema.optional(),
+  dataPropertyOrder: JsonSchema.optional(),
   color: z.string().optional().nullable(),
   meta: MetaSchema.extend({
     sortKey: z.number().optional(),
@@ -63,8 +66,8 @@ const EnvironmentSchema = z.object({
     .array(
       z.object({
         name: z.string(),
-        data: jsonSchema.optional(),
-        dataPropertyOrder: jsonSchema.optional(),
+        data: JsonSchema.optional(),
+        dataPropertyOrder: JsonSchema.optional(),
         color: z.string().optional().nullable(),
         meta: MetaSchema.extend({
           sortKey: z.number().optional(),
@@ -123,177 +126,141 @@ const MockRouteSchema = z.object({
   meta: MetaSchema.optional(),
 });
 
+const BasicAuthenticationSchema = z.object({
+  type: z.literal('basic'),
+  useISO88591: z.boolean().optional(),
+  username: z.string().optional(),
+  password: z.string().optional(),
+  disabled: z.boolean().optional(),
+});
+
+const ApiKeyAuthenticationSchema = z.object({
+  type: z.literal('apikey'),
+  key: z.string().optional(),
+  value: z.string().optional(),
+  disabled: z.boolean().optional(),
+  addTo: z.string().optional(),
+});
+
+const OAuth2AuthenticationSchema = z.object({
+  type: z.literal('oauth2'),
+  disabled: z.boolean().optional(),
+  grantType: z.enum(['authorization_code', 'client_credentials', 'implicit', 'password', 'refresh_token']),
+  accessTokenUrl: z.string().optional(),
+  authorizationUrl: z.string().optional(),
+  clientId: z.string().optional(),
+  clientSecret: z.string().optional(),
+  audience: z.string().optional(),
+  scope: z.string().optional(),
+  resource: z.string().optional(),
+  username: z.string().optional(),
+  password: z.string().optional(),
+  redirectUrl: z.string().optional(),
+  credentialsInBody: z.boolean().optional(),
+  state: z.string().optional(),
+  code: z.string().optional(),
+  accessToken: z.string().optional(),
+  refreshToken: z.string().optional(),
+  tokenPrefix: z.string().optional(),
+  usePkce: z.boolean().optional(),
+  pkceMethod: z.string().optional(),
+  responseType: z.enum(['code', 'token', 'none', 'id_token', 'id_token token']).optional(),
+  origin: z.string().optional(),
+});
+
+const HawkAuthenticationSchema = z.object({
+  type: z.literal('hawk'),
+  id: z.string().optional(),
+  key: z.string().optional(),
+  ext: z.string().optional(),
+  validatePayload: z.boolean().optional(),
+  algorithm: z.enum(['sha1', 'sha256']),
+  disabled: z.boolean().optional(),
+});
+
+const OAuth1AuthenticationSchema = z.object({
+  type: z.literal('oauth1'),
+  disabled: z.boolean().optional(),
+  signatureMethod: z.enum(['HMAC-SHA1', 'RSA-SHA1', 'HMAC-SHA256', 'PLAINTEXT']).optional(),
+  consumerKey: z.string().optional(),
+  tokenKey: z.string().optional(),
+  tokenSecret: z.string().optional(),
+  privateKey: z.string().optional(),
+  version: z.string().optional(),
+  nonce: z.string().optional(),
+  timestamp: z.string().optional(),
+  callback: z.string().optional(),
+  realm: z.string().optional(),
+  verifier: z.string().optional(),
+  includeBodyHash: z.boolean().optional(),
+});
+
+const DigestAuthenticationSchema = z.object({
+  type: z.literal('digest'),
+  disabled: z.boolean().optional(),
+  username: z.string().optional(),
+  password: z.string().optional(),
+});
+
+const NTLMAuthenticationSchema = z.object({
+  type: z.literal('ntlm'),
+  disabled: z.boolean().optional(),
+  username: z.string().optional(),
+  password: z.string().optional(),
+});
+
+const BearerAuthenticationSchema = z.object({
+  type: z.literal('bearer'),
+  disabled: z.boolean().optional(),
+  token: z.string().optional(),
+  prefix: z.string().optional(),
+});
+
+const AWS_IAM_AuthenticationSchema = z.object({
+  type: z.literal('iam'),
+  disabled: z.boolean().optional(),
+  accessKeyId: z.string().optional(),
+  secretAccessKey: z.string().optional(),
+  sessionToken: z.string().optional(),
+  region: z.string().optional(),
+  service: z.string().optional(),
+});
+
+const NetrcAuthenticationSchema = z.object({
+  type: z.literal('netrc'),
+  disabled: z.boolean().optional(),
+});
+
+const ASAPAuthenticationSchema = z.object({
+  type: z.literal('asap'),
+  disabled: z.boolean().optional(),
+  issuer: z.string().optional(),
+  subject: z.string().optional(),
+  audience: z.string().optional(),
+  addintionalClaims: z.string().optional(),
+  privateKey: z.string().optional(),
+  keyId: z.string().optional(),
+});
+
+const NoneAuthenticationSchema = z.object({
+  type: z.literal('none'),
+  disabled: z.boolean().optional(),
+});
+
 const AuthenticationSchema = z.union([
   z.discriminatedUnion('type', [
-    z.object(
-      {
-        type: z.literal('basic'),
-        useISO88591: z.boolean().default(false),
-        username: z.string(),
-        password: z.string(),
-        disabled: z.boolean().optional(),
-      },
-      {
-        description: 'Basic Authentication',
-      },
-    ),
-    z.object(
-      {
-        type: z.literal('apikey'),
-        key: z.string().optional(),
-        value: z.string().optional(),
-        disabled: z.boolean().optional(),
-        addTo: z.string().optional(),
-      },
-      {
-        description: 'API Key Authentication',
-      },
-    ),
-    z.object(
-      {
-        type: z.literal('oauth2'),
-        disabled: z.boolean().optional(),
-        grantType: z.enum(['authorization_code', 'client_credentials', 'implicit', 'password', 'refresh_token']),
-        accessTokenUrl: z.string().optional(),
-        authorizationUrl: z.string().optional(),
-        clientId: z.string().optional(),
-        clientSecret: z.string().optional(),
-        audience: z.string().optional(),
-        scope: z.string().optional(),
-        resource: z.string().optional(),
-        username: z.string().optional(),
-        password: z.string().optional(),
-        redirectUrl: z.string().optional(),
-        credentialsInBody: z.boolean().optional(),
-        state: z.string().optional(),
-        code: z.string().optional(),
-        accessToken: z.string().optional(),
-        refreshToken: z.string().optional(),
-        tokenPrefix: z.string().optional(),
-        usePkce: z.boolean().optional(),
-        pkceMethod: z.string().optional(),
-        responseType: z.enum(['code', 'token', 'none', 'id_token', 'id_token token']).optional(),
-        origin: z.string().optional(),
-      },
-      {
-        description: 'OAuth 2.0 Authentication',
-      },
-    ),
-    z.object(
-      {
-        type: z.literal('hawk'),
-        id: z.string().optional().default(''),
-        key: z.string().optional().default(''),
-        ext: z.string().optional(),
-        validatePayload: z.boolean().optional(),
-        algorithm: z.enum(['sha1', 'sha256']),
-        disabled: z.boolean().optional(),
-      },
-      {
-        description: 'Hawk Authentication',
-      },
-    ),
-    z.object(
-      {
-        type: z.literal('oauth1'),
-        disabled: z.boolean().optional(),
-        signatureMethod: z.enum(['HMAC-SHA1', 'RSA-SHA1', 'HMAC-SHA256', 'PLAINTEXT']),
-        consumerKey: z.string().optional(),
-        tokenKey: z.string().optional(),
-        tokenSecret: z.string().optional(),
-        privateKey: z.string().optional(),
-        version: z.string().optional(),
-        nonce: z.string().optional(),
-        timestamp: z.string().optional(),
-        callback: z.string().optional(),
-        realm: z.string().optional(),
-        verifier: z.string().optional(),
-        includeBodyHash: z.boolean().optional(),
-      },
-      {
-        description: 'OAuth 1.0 Authentication',
-      },
-    ),
-    z.object(
-      {
-        type: z.literal('digest'),
-        disabled: z.boolean().optional(),
-        username: z.string().optional(),
-        password: z.string().optional(),
-      },
-      {
-        description: 'Digest Authentication',
-      },
-    ),
-    z.object(
-      {
-        type: z.literal('ntlm'),
-        disabled: z.boolean().optional(),
-        username: z.string().optional().default(''),
-        password: z.string().optional().default(''),
-      },
-      {
-        description: 'NTLM Authentication',
-      },
-    ),
-    z.object(
-      {
-        type: z.literal('bearer'),
-        disabled: z.boolean().optional(),
-        token: z.string().optional(),
-        prefix: z.string().optional(),
-      },
-      {
-        description: 'Bearer Authentication',
-      },
-    ),
-    z.object(
-      {
-        type: z.literal('iam'),
-        disabled: z.boolean().optional(),
-        accessKeyId: z.string().optional(),
-        secretAccessKey: z.string().optional(),
-        sessionToken: z.string().optional(),
-        region: z.string().optional(),
-        service: z.string().optional(),
-      },
-      {
-        description: 'AWS IAM Authentication',
-      },
-    ),
-    z.object(
-      {
-        type: z.literal('netrc'),
-        disabled: z.boolean().optional(),
-      },
-      {
-        description: 'Netrc Authentication',
-      },
-    ),
-    z.object(
-      {
-        type: z.literal('asap'),
-        disabled: z.boolean().optional(),
-        issuer: z.string().optional(),
-        subject: z.string().optional(),
-        audience: z.string().optional(),
-        addintionalClaims: z.string().optional(),
-        privateKey: z.string().optional(),
-        keyId: z.string().optional(),
-      },
-      {
-        description: 'ASAP Authentication',
-      },
-    ),
-    z.object(
-      {
-        type: z.literal('none'),
-        disabled: z.boolean().optional(),
-      },
-      {
-        description: 'No Authentication',
-      },
-    ),
+    BasicAuthenticationSchema,
+    ApiKeyAuthenticationSchema,
+    OAuth2AuthenticationSchema,
+    HawkAuthenticationSchema,
+    OAuth1AuthenticationSchema,
+    DigestAuthenticationSchema,
+    NTLMAuthenticationSchema,
+    BearerAuthenticationSchema,
+    AWS_IAM_AuthenticationSchema,
+    NetrcAuthenticationSchema,
+    ASAPAuthenticationSchema,
+    NoneAuthenticationSchema,
   ]),
   z.object({}),
 ]);
@@ -323,10 +290,20 @@ export const WebSocketRequestSettingsSchema = z.object({
   followRedirects: z.enum(['global', 'on', 'off']).optional().default('global'),
 });
 
-export const RequestParametersSchema = z.array(
+const RequestPathParametersSchema = z.array(
   z.object({
     name: z.string().optional().default(''),
     value: z.string().optional().default(''),
+  }),
+);
+
+const RequestParametersSchema = z.array(
+  z.object({
+    name: z.string().optional().default(''),
+    value: z.string().optional().default(''),
+    disabled: z.boolean().optional(),
+    id: z.string().optional(),
+    fileName: z.string().optional(),
   }),
 );
 
@@ -340,8 +317,8 @@ export const RequestHeadersSchema = z.array(
 export const RequestGroupSchema = z.object({
   name: z.string().optional().default(''),
   description: z.string().optional(),
-  environment: jsonSchema.optional(),
-  environmentPropertyOrder: jsonSchema.optional(),
+  environment: JsonSchema.optional(),
+  environmentPropertyOrder: JsonSchema.optional(),
   scripts: ScriptsSchema.optional(),
   authentication: AuthenticationSchema.optional(),
   headers: RequestHeadersSchema.optional(),
@@ -375,33 +352,9 @@ export const RequestSchema = z.object({
         .optional(),
     })
     .optional(),
-  headers: z
-    .array(
-      z.object({
-        name: z.string().optional().default(''),
-        value: z.string().optional().default(''),
-      }),
-    )
-    .optional(),
-  parameters: z
-    .array(
-      z.object({
-        name: z.string().optional().default(''),
-        value: z.string().optional().default(''),
-        disabled: z.boolean().optional(),
-        id: z.string().optional(),
-        fileName: z.string().optional(),
-      }),
-    )
-    .optional(),
-  pathParameters: z
-    .array(
-      z.object({
-        name: z.string().optional().default(''),
-        value: z.string().optional().default(''),
-      }),
-    )
-    .optional(),
+  headers: RequestHeadersSchema.optional(),
+  parameters: RequestParametersSchema.optional(),
+  pathParameters: RequestPathParametersSchema.optional(),
   authentication: AuthenticationSchema.optional(),
   scripts: ScriptsSchema.optional(),
   settings: RequestSettingsSchema.optional().default({
@@ -425,7 +378,7 @@ export const WebsocketRequestSchema = z.object({
   headers: RequestHeadersSchema.optional(),
   authentication: AuthenticationSchema.optional(),
   parameters: RequestParametersSchema.optional(),
-  pathParameters: RequestParametersSchema.optional(),
+  pathParameters: RequestPathParametersSchema.optional(),
   settings: WebSocketRequestSettingsSchema.optional().default({
     encodeUrl: true,
     followRedirects: 'global',
@@ -500,11 +453,11 @@ const SpecSchema = z.union([
   }),
   z.object({
     meta: MetaSchema.optional(),
-    contents: jsonSchema.optional(),
+    contents: JsonSchema.optional(),
   }),
 ]);
 
-const collectionSchema = z.object({
+const CollectionSchema = z.object({
   type: z.literal('collection.insomnia.rest/5.0'),
   meta: MetaSchema.optional(),
   name: z.string().optional(),
@@ -515,7 +468,7 @@ const collectionSchema = z.object({
   cookieJar: CookieJarSchema.optional(),
 });
 
-const apiSpecSchema = z.object({
+const ApiSpecSchema = z.object({
   type: z.literal('spec.insomnia.rest/5.0'),
   meta: MetaSchema.optional(),
   name: z.string().optional(),
@@ -528,7 +481,7 @@ const apiSpecSchema = z.object({
   testSuites: z.array(TestSuiteSchema).optional(),
 });
 
-const mockServerSchema = z.object({
+const MockServerSchema = z.object({
   type: z.literal('mock.insomnia.rest/5.0'),
   meta: MetaSchema.optional(),
   name: z.string().optional(),
@@ -543,7 +496,7 @@ const mockServerSchema = z.object({
   routes: z.array(MockRouteSchema).optional(),
 });
 
-const globalEnvironmentsSchema = z.object({
+const GlobalEnvironmentsSchema = z.object({
   type: z.literal('environment.insomnia.rest/5.0'),
   meta: MetaSchema.optional(),
   name: z.string().optional(),
@@ -551,16 +504,16 @@ const globalEnvironmentsSchema = z.object({
   environments: EnvironmentSchema.optional(),
 });
 
-export const insomniaFileSchema = z.discriminatedUnion('type', [
-  collectionSchema,
-  apiSpecSchema,
-  mockServerSchema,
-  globalEnvironmentsSchema,
+export const InsomniaFileSchema = z.discriminatedUnion('type', [
+  CollectionSchema,
+  ApiSpecSchema,
+  MockServerSchema,
+  GlobalEnvironmentsSchema,
 ]);
 
-export type InsomniaFile = z.infer<typeof insomniaFileSchema>;
+export type InsomniaFile = z.infer<typeof InsomniaFileSchema>;
 
-export type Z_GRPCRequest = z.infer<typeof GRPCRequestSchema>;
-export type Z_RequestGroup = z.infer<typeof RequestGroupWithChildrenSchema>;
-export type Z_Request = z.infer<typeof RequestSchema>;
-export type Z_WebsocketRequest = z.infer<typeof WebsocketRequestSchema>;
+export type Insomnia_GRPCRequest = z.infer<typeof GRPCRequestSchema>;
+export type Insomnia_RequestGroup = z.infer<typeof RequestGroupWithChildrenSchema>;
+export type Insomnia_Request = z.infer<typeof RequestSchema>;
+export type Insomnia_WebsocketRequest = z.infer<typeof WebsocketRequestSchema>;
