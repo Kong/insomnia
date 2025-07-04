@@ -9,15 +9,15 @@ import { localAppDir } from '../utils/app-data';
 
 export interface CreateProjectOptions {
   projectName: string;
-  type: 'remote';
+  type: 'cloud';
   organizationId: string;
   workingDir?: string;
 }
 
 export const createProject = async ({ projectName, type, organizationId, workingDir }: CreateProjectOptions) => {
   invariant(projectName, 'Project name is required.');
-  // Currently, only supporting creating remote projects
-  invariant(type === 'remote', 'Type must be "remote".');
+  // Currently, only supporting creating cloud-sync projects
+  invariant(type === 'cloud', 'Type must be "cloud".');
   invariant(organizationId, 'Organization ID is required.');
 
   // Set the environment variable for Insomnia data path, to ensure database initialization works correctly
