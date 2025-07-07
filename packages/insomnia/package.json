@@ -35,6 +35,12 @@
     "type-check:watch": "npm run type-check -- --watch",
     "convert-svg": "npm_config_yes=true npx @svgr/cli@6.4.0 --no-index --config-file svgr.config.js --out-dir src/ui/components/assets/svgr src/ui/components/assets/"
   },
+  "//": [
+    "dependencies will be external to the vite bundle and electron main (commonjs)",
+    "devDependencies will be included in the vite bundle (esm)",
+    "See: packages/insomnia/vite.config.ts",
+    "and: packages/insomnia/esbuild.main.ts"
+  ],
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.3.6",
     "@apidevtools/swagger-parser": "10.1.1",
