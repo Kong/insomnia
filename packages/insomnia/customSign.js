@@ -5,12 +5,11 @@ const execAsync = util.promisify(exec);
 
 // adapted from https://www.electron.build/win.html#how-do-delegate-code-signing
 // It was possible code-sign installer after packaging, but some files are only available
-// through hooking into the signing step of electron-builder while the final squirrel installer is being built
-// This makes it possible to sign the Update.exe and stub of Insomnia.exe that end up in C:\Users\<user>\AppData\Local\insomnia
+// through hooking into the signing step of electron-builder while the final installer is being built
+// This makes it possible to sign the Update.exe and stub of Insomnia.exe that end up in the installation folder
 exports.default = async function (configuration) {
-  // skip signing if not windows squirrel
-  if (configuration.options.target.length === 0 || configuration.options.target[0].target !== 'squirrel') {
-    console.log('[customSign] Skipping signing because target is not windows squirrel.');
+  if (configuration.options.target.length === 0) {
+    console.log('[customSign] Skipping signing because target is empty');
     return;
   }
 

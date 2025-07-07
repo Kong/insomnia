@@ -32,6 +32,7 @@ if [ ! $BUILD_CONTEXT ]; then
 fi
 
 cp $DEST_DIR/Insomnia.exe $DEST_DIR/insomnia.dll
+cp $DEST_DIR/Insomnia.exe $DEST_DIR/Insomnia-origin-$VERSION.exe
 cp $SRC_DIR/icons/icon.ico $CPP_DIR/insomnia.ico
 
 echo "Injecting version strings..."

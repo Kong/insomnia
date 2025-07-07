@@ -88,3 +88,5 @@ jobs:
             packages/insomnia/dist/*.exe
             packages/insomnia/dist/*.tar.gz
             packages/insomnia/dist/*.zip
+            packages/insomnia/dist/*.yml
+            packages/insomnia/dist/squirrel-windows/*.exe

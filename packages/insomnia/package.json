@@ -1,6 +1,6 @@
 {
   "name": "insomnia",
-  "version": "11.2.0",
+  "version": "11.3.0-beta.0",
   "productName": "Insomnia",
   "private": true,
   "description": "The Collaborative API Design Tool",
@@ -22,8 +22,8 @@
     "build:main.min.js": "cross-env NODE_ENV=development esr esbuild.main.ts",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "package": "npm run build && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js",
-    "package:windows:unpacked": "npm run build && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --dir",
-    "package:windows:dist": "cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --win squirrel --prepackaged ./dist/win-unpacked",
+    "package:windows:unpacked": "npm run build && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --win squirrel nsis --dir",
+    "package:windows:dist": "cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --win squirrel nsis --prepackaged ./dist/win-unpacked",
     "start": "npx -y concurrently -n browser,main --kill-others \"npm run start:dev-server\" \"npm run start:electron\"",
     "start:dev-server": "vite dev",
     "start:electron": "cross-env NODE_ENV=development esr esbuild.main.ts && electron --inspect=5858 .",
@@ -56,6 +56,7 @@
     "dompurify": "^3.2.5",
     "electron-context-menu": "^3.6.1",
     "electron-log": "^4.4.8",
+    "electron-updater": "^6.6.2",
     "fastq": "^1.19.1",
     "graphql": "^16.10.0",
     "graphql-ws": "^5.16.2",
@@ -85,7 +86,7 @@
     "tough-cookie": "^4.1.4",
     "uuid": "^9.0.1",
     "yaml": "^2.7.1",
-    "zod": "^3.24.2"
+    "zod": "^3.25.71"
   },
   "devDependencies": {
     "@develohpanda/fluent-builder": "^2.1.2",

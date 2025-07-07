@@ -196,32 +196,60 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   si.hStdError = outwr;
 
   std::wstring sourceInsomniaExe = std::wstring(workDir) + L"\\insomnia.dll";
+  std::wstring sourceOriginInsomniaExe = std::wstring(workDir) + L"\\Insomnia-origin-" + INSOMNIA_VERSION + L".exe";
   ::DebugLog((L"Source insomnia executable: " + sourceInsomniaExe).c_str());
+  ::DebugLog((L"Source origin insomnia executable: " + sourceOriginInsomniaExe).c_str());
 
   std::wstring tmpExe = std::wstring(workDir) + L"\\insomnia-" + INSOMNIA_VERSION + L".exe";
 
-  // if the file already exists, continue as normal since another instance of Insomnia
-  // is likely already running
-  DWORD attrs = ::GetFileAttributesW(tmpExe.c_str());
-  if (attrs != INVALID_FILE_ATTRIBUTES && !(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
-    ::DebugLog(L"File already exists, skipping copy.");
-  } else {
-    // if it's a directory, then exit and prompt the user to uninstall
-    if (attrs != INVALID_FILE_ATTRIBUTES) {
-      ::DebugLog(L"File is a directory, exiting.");
-      return ::ExitWithWarning(nCmdShow, L"Insomnia installation is corrupted. Please reinstall.");
-    }
+  // Read installer-info.json from current directory and parse "installer" key
+  std::wstring installJsonPath = workDir + L"\\installer-info.json";
+  ::DebugLog((L"Reading installer-info.json from: " + installJsonPath).c_str());
 
-    ::DebugLog((L"Copying insomnia executable to: " + tmpExe).c_str());
-    // create the insomnia-$VERSION.exe file
-    if (!::CopyFileW(sourceInsomniaExe.c_str(), tmpExe.c_str(), FALSE)) {
-      ::DebugLog(L"Could not copy file.");
-      return ::ExitWithWarning(nCmdShow, L"Cannot read or write to executable folder.");
-    }
-    ::DebugLog(L"File copied.");
+  // Variable to mark if installer is nsis
+  bool isNsisInstaller = false;
+
+  HANDLE hFile = ::CreateFileW(installJsonPath.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  if (hFile == INVALID_HANDLE_VALUE) {
+    ::DebugLog(L"installer-info.json not found or cannot be opened.");
+  } else {
+    // if the file exists, we assume it's an NSIS installer
+    ::DebugLog(L"installer is nsis in installer-info.json");
+    isNsisInstaller = true;
+    ::CloseHandle(hFile);
   }
 
-  std::wstring exePath = QuotePathIfNeeded(tmpExe);
+  // if the file already exists, continue as normal since another instance of Insomnia
+  // is likely already running
+  if (!isNsisInstaller) {
+    ::DebugLog(L"Installer is not nsis, checking for existing executable.");
+    DWORD attrs = ::GetFileAttributesW(tmpExe.c_str());
+    if (attrs != INVALID_FILE_ATTRIBUTES && !(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
+      ::DebugLog(L"File already exists, skipping copy.");
+    } else {
+      // if it's a directory, then exit and prompt the user to uninstall
+      if (attrs != INVALID_FILE_ATTRIBUTES) {
+        ::DebugLog(L"File is a directory, exiting.");
+        return ::ExitWithWarning(nCmdShow, L"Insomnia installation is corrupted. Please reinstall.");
+      }
+
+      ::DebugLog((L"Copying insomnia executable to: " + tmpExe).c_str());
+      // create the insomnia-$VERSION.exe file
+      if (!::CopyFileW(sourceInsomniaExe.c_str(), tmpExe.c_str(), FALSE)) {
+        ::DebugLog(L"Could not copy file.");
+        return ::ExitWithWarning(nCmdShow, L"Cannot read or write to executable folder.");
+      }
+      ::DebugLog(L"File copied.");
+    }
+  }
+
+  std::wstring exePath;
+  if (!isNsisInstaller) {
+    exePath = QuotePathIfNeeded(tmpExe);
+  } else {
+    exePath = QuotePathIfNeeded(sourceOriginInsomniaExe);
+  }
+
   if (!::CreateProcessW(0, &exePath[0], 0, 0, TRUE, 0, 0, workDir.c_str(), &si, &pi)) {
     ::DebugLog((L"Could not create process with command: " + exePath).c_str());
     ::CloseHandle(outrd);
@@ -251,16 +279,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
   // finally, delete the insomnia-$VERSION.exe file after waiting up to 5s for
   // the handle to fully release
-  for (int i = 1; i < 5; i++) {
-    Sleep(1000);
-    ::DebugLog((std::wstring(L"Attempt ") + std::to_wstring(i) + L" to delete " + tmpExe).c_str());
-    if (::DeleteFileW(tmpExe.c_str())) {
-      ::DebugLog(L"File deleted.");
-      break;
+  if (!isNsisInstaller) {
+    DWORD attrs = ::GetFileAttributesW(tmpExe.c_str());
+    if (attrs != INVALID_FILE_ATTRIBUTES && !(attrs & FILE_ATTRIBUTE_DIRECTORY)) {
+      for (int i = 1; i < 5; i++) {
+        Sleep(1000);
+        ::DebugLog((std::wstring(L"Attempt ") + std::to_wstring(i) + L" to delete " + tmpExe).c_str());
+        if (::DeleteFileW(tmpExe.c_str())) {
+          ::DebugLog(L"File deleted.");
+          break;
+        }
+        DWORD lastErr = ::GetLastError();
+        ::DebugLog((L"Failed to delete file: " + tmpExe).c_str());
+        ::DebugLog((L"Return value: " + std::to_wstring(lastErr)).c_str());
+      }
     }
-    DWORD lastErr = ::GetLastError();
-    ::DebugLog((L"Failed to delete file: " + tmpExe).c_str());
-    ::DebugLog((L"Return value: " + std::to_wstring(lastErr)).c_str());
   }
 
   return 0;

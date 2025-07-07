@@ -81,13 +81,37 @@ const config = {
   win: {
     target: [
       {
-        target: 'squirrel',
+        target: 'nsis',
+        arch: ['x64'],
       },
+      {
+        target: 'squirrel',
+      }
     ],
     signtoolOptions: {
       sign: './customSign.js',
       signingHashAlgorithms: ['sha256'], // avoid duplicate signing hook calls https://github.com/electron-userland/electron-builder/issues/3995#issuecomment-505725704
     },
+    publish: {
+      provider: 'generic',
+      url: 'https://updates.insomnia.rest/updates/win/',
+    },
+    generateUpdatesFilesForAllChannels: true,
+  },
+  nsis: {
+    artifactName: `${BINARY_PREFIX}-nsis-\${version}.\${ext}`,
+    include: './scripts/nsisInstall.nsh',
+    oneClick: false,
+    selectPerMachineByDefault: true,
+    allowToChangeInstallationDirectory: true,
+    installerIcon: './build/icon.ico',
+    installerSidebar: './src/icons/nsis-sidebar.bmp',
+    uninstallerSidebar: './src/icons/nsis-sidebar.bmp',
+    uninstallerIcon: './build/icon.ico',
+    createDesktopShortcut: true,
+    createStartMenuShortcut: true,
+    shortcutName: 'Insomnia',
+    deleteAppDataOnUninstall: false,
   },
   squirrelWindows: {
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,

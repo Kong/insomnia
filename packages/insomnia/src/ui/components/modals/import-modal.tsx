@@ -333,9 +333,20 @@ export const ImportModal: FC<ImportModalProps> = ({
 
   useEffect(() => {
     if (importFetcher?.data?.done === true) {
+      // Track the import completion event
+      if (scanResourcesFetcherData?.length) {
+        window.main.trackSegmentEvent({
+          event: SegmentEvent.importCompleted,
+          properties: {
+            workspaces: scanResourcesFetcherData.map(scanResult => scanResult.workspaces?.length || 0),
+            requests: scanResourcesFetcherData.map(scanResult => scanResult.requests?.length || 0),
+          },
+        });
+      }
+
       modalRef.current?.hide();
     }
-  }, [importFetcher.data]);
+  }, [importFetcher.data, scanResourcesFetcherData]);
   // allow workspace import if there is only one workspace
   const totalWorkspacesCount = useMemo(() => {
     return (

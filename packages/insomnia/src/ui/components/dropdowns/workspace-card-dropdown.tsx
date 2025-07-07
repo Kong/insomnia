@@ -14,6 +14,7 @@ import { WorkspaceScopeKeys } from '../../../models/workspace';
 import type { DocumentAction } from '../../../plugins';
 import { getDocumentActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
+import { SegmentEvent } from '../../analytics';
 import { useLoadingRecord } from '../../hooks/use-loading-record';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Icon } from '../icon';
@@ -143,13 +144,33 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
         </DropdownItem>
         <DropdownSection aria-label="Meta section">
           <DropdownItem aria-label="Import">
-            <ItemContent label="Import" icon="file-import" onClick={() => setIsImportModalOpen(true)} />
+            <ItemContent
+              label="Import"
+              icon="file-import"
+              onClick={() => {
+                window.main.trackSegmentEvent({
+                  event: SegmentEvent.importStarted,
+                  properties: {
+                    source: `${workspace.scope}-list`,
+                  },
+                });
+
+                setIsImportModalOpen(true);
+              }}
+            />
           </DropdownItem>
           <DropdownItem aria-label="Export">
             <ItemContent
               label="Export"
               icon="file-export"
               onClick={() => {
+                window.main.trackSegmentEvent({
+                  event: SegmentEvent.exportStarted,
+                  properties: {
+                    source: `${workspace.scope}-list`,
+                  },
+                });
+
                 if (workspace.scope === 'mock-server') {
                   return exportMockServerToFile(workspace);
                 }

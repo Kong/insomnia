@@ -1042,6 +1042,16 @@ describe('getSetCookiesFromResponseHeaders', () => {
     ];
     expect(getSetCookiesFromResponseHeaders(headers)).toEqual(['monster', 'mash']);
   });
+  it('sanitize special characters, remove interpolation symbols', () => {
+    const headers = [
+      { name: 'Set-Cookie', value: 'sessionid=+_)(*&^%$#@!; HttpOnly; Path=/' },
+      { name: 'set-cookie', value: '{% magic %}={{_.env}}; HttpOnly; Path=/' },
+    ];
+    expect(getSetCookiesFromResponseHeaders(headers)).toEqual([
+      'sessionid=+_)(*&^%$#@!; HttpOnly; Path=/',
+      ' magic =_.env; HttpOnly; Path=/',
+    ]);
+  });
 });
 describe('getCurrentUrl for tough-cookie', () => {
   it('defaults to finalUrl', () => {

@@ -6,8 +6,8 @@ import React from 'react';
 
 import { type Environment } from '../models/environment';
 import * as requestOperations from '../models/helpers/request-operations';
-import { type BaseModel, environment } from '../models/index';
 import * as models from '../models/index';
+import { type BaseModel, environment } from '../models/index';
 import { isRequest } from '../models/request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import { SegmentEvent } from '../ui/analytics';
@@ -268,7 +268,7 @@ export const exportProjectToFile = (activeProjectName: string, workspacesForActi
             throw new Error(`selected export format "${selectedFormat}" is invalid`);
           }
         }
-        window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: selectedFormat } });
+        window.main.trackSegmentEvent({ event: SegmentEvent.exportCompleted });
       } catch (err) {
         showError({
           title: 'Export Failed',
