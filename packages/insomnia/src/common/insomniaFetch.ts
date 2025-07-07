@@ -24,6 +24,9 @@ export class ResponseFailError extends Error {
   name = 'ResponseFailError';
 }
 
+// It uses the Fetch API to make requests to the Insomnia API.
+// When used in the Electron renderer process, it respects the system proxy settings;
+// but when used in the Node.js or Electron main environment, it does not use any proxy settings.
 // Adds headers, retries and opens deep links returned from the api
 export async function insomniaFetch<T = void>({
   method,

@@ -1,4 +1,4 @@
-import type { AESMessage } from '../account/crypt';
+import type { AESMessage } from '../common/account/crypt';
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 

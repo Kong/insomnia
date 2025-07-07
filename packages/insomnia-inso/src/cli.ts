@@ -22,6 +22,7 @@ import { type RequestTestResult } from '../../insomnia-scripting-environment/src
 import packageJson from '../package.json';
 import { createProject, type CreateProjectOptions } from './commands/create-project';
 import { exportSpecification, writeFileWithCliOptions } from './commands/export-specification';
+import { importCollections, type ImportCollectionsOptions } from './commands/import-collections';
 import { getRuleSetFileFromFolderByFilename, lintSpecification } from './commands/lint-specification';
 import type { Database } from './db';
 import { isFile, loadDb } from './db';
@@ -786,6 +787,34 @@ export const go = (args?: string[]) => {
         }
       },
     );
+
+  program
+    .command('import')
+    .command('collections')
+    .description('Import Postman data dumps from zip/json files')
+    .requiredOption('--from <path>', 'Source directory or files where the collections are located')
+    .option('--toDir <directory>', 'Target directory to import the collections into')
+    .option('--toProject <id>', 'Target project id to import the collections into')
+    .action(async (cmd: ImportCollectionsOptions & { output?: string }) => {
+      const options = await mergeOptionsAndInit(cmd);
+      try {
+        await importCollections(options);
+
+        if (options.output) {
+          const outputPath = getAbsoluteFilePath({ workingDir: options.workingDir, file: options.output });
+          if (!outputPath) {
+            logger.fatal('Output path is not valid');
+            return process.exit(1);
+          }
+          logger.log(`Output saved to "${outputPath}".`);
+        }
+
+        return process.exit(0);
+      } catch (error) {
+        logErrorAndExit(error);
+      }
+    });
+
   program
     .command('lint')
     .description(

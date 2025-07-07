@@ -4,7 +4,8 @@ import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { createMemoryRouter, matchPath, Outlet, RouterProvider } from 'react-router';
 
-import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from '../account/session';
+import { migrateFromLocalStorage } from '../account/session';
+import { type SessionData, setSessionData, setVaultSessionData } from '../common/account/session';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_SPEC,

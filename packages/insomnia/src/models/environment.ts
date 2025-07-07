@@ -2,7 +2,7 @@ import * as crypto from 'node:crypto';
 
 import orderedJSON from 'json-order';
 
-import * as crypt from '../account/crypt';
+import * as crypt from '../common/account/crypt';
 import { JSON_ORDER_SEPARATOR } from '../common/constants';
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';

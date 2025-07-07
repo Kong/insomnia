@@ -14,7 +14,7 @@ import {
 } from 'react-aria-components';
 import { useFetcher, useParams, useSearchParams } from 'react-router';
 
-import { getAccountId, getCurrentSessionId } from '../../../../account/session';
+import { getAccountId, getCurrentSessionId } from '../../../../common/account/session';
 import { getAppWebsiteBaseURL } from '../../../../common/constants';
 import { insomniaFetch } from '../../../../common/insomniaFetch';
 import { debounce } from '../../../../common/misc';

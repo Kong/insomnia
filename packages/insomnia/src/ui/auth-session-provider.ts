@@ -1,6 +1,6 @@
 import { keyPair, open } from '@getinsomnia/api-client/sealedbox';
 
-import * as session from '../account/session';
+import { absorbKey } from '../common/account/session';
 import { getAppWebsiteBaseURL, getInsomniaPublicKey, getInsomniaSecretKey } from '../common/constants';
 import { invariant } from '../utils/invariant';
 
@@ -74,7 +74,8 @@ export async function submitAuthCode(code: string) {
 
     const decoder = new TextDecoder();
     const box: AuthBox = JSON.parse(decoder.decode(boxData));
-    await session.absorbKey(box.token, box.key);
+    await absorbKey(box.token, box.key);
+    window.main.loginStateChange();
   } catch (error) {
     console.error(error);
     return error;

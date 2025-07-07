@@ -15,12 +15,14 @@ import { isUnitTestSuite, type UnitTestSuite } from '../models/unit-test-suite';
 import { isWebSocketRequest, type WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import type { CurrentPlan } from '../ui/routes/organization';
+import { runtime } from '../utils/get-runtime';
 import { convert, type InsomniaImporter } from '../utils/importers/convert';
 import type { ImportEntry } from '../utils/importers/entities';
 import { id as postmanEnvImporterId } from '../utils/importers/importers/postman-env';
 import { invariant } from '../utils/invariant';
 import { database as db } from './database';
 import { importInsomniaV5Data } from './insomnia-v5';
+import { insomniaFetch } from './insomniaFetch';
 import { generateId } from './misc';
 
 export interface ExportedModel extends BaseModel {
@@ -71,22 +73,6 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
 export interface PostmanDataDumpRawData {
   collectionList: ImportEntry[];
   envList: ImportEntry[];
-}
-
-export async function getFilesFromPostmanExportedDataDump(filePath: string): Promise<PostmanDataDumpRawData> {
-  let res;
-  try {
-    res = await window.main.extractJsonFileFromPostmanDataDumpArchive(filePath);
-  } catch (err) {
-    throw new Error('Extract failed');
-  }
-  if (res && res.data) {
-    return res.data;
-  } else if (res?.err) {
-    throw new Error(res.err);
-  } else {
-    throw new Error('Extract failed');
-  }
 }
 
 export interface ScanResult {
@@ -318,8 +304,17 @@ function filterResourcesInWorkspace(resources: BaseModel[], workspace: Workspace
 }
 
 const isTeamOrAbove = async () => {
-  const { accountId } = await userSession.getOrCreate();
-  const currentPlan = (JSON.parse(localStorage.getItem(`${accountId}:currentPlan`) || '{}') as CurrentPlan) || {};
+  const { accountId, id: sessionId } = await userSession.getOrCreate();
+  let currentPlan = {} as CurrentPlan;
+  if (runtime === 'electron-renderer') {
+    currentPlan = (JSON.parse(localStorage.getItem(`${accountId}:currentPlan`) || '{}') as CurrentPlan) || {};
+  } else {
+    currentPlan = await insomniaFetch<CurrentPlan>({
+      method: 'GET',
+      path: '/v1/billing/current-plan',
+      sessionId,
+    });
+  }
   return ['team', 'enterprise', 'enterprise-member'].includes(currentPlan?.type);
 };
 const updateIdsInString = (str: string, ResourceIdMap: Map<string, string>) => {

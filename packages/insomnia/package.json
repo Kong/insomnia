@@ -62,7 +62,6 @@
     "graphql-ws": "^5.16.2",
     "grpc-reflection-js": "Kong/grpc-reflection-js#master",
     "hawk": "9.0.2",
-    "hkdf": "^0.0.2",
     "hosted-git-info": "5.2.1",
     "html-entities": "^2.6.0",
     "http-proxy-agent": "^7.0.2",

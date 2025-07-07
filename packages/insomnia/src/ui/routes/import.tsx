@@ -5,7 +5,6 @@ import type { ActionFunction } from 'react-router';
 import type { PostmanDataDumpRawData } from '../../common/import';
 import {
   fetchImportContentFromURI,
-  getFilesFromPostmanExportedDataDump,
   importResourcesToProject,
   importResourcesToWorkspace,
   scanResources,
@@ -23,6 +22,22 @@ import type { ImportEntry } from '../../utils/importers/entities';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { fetchAndCacheOrganizationStorageRule } from './organization';
+
+export async function getFilesFromPostmanExportedDataDump(filePath: string): Promise<PostmanDataDumpRawData> {
+  let res;
+  try {
+    res = await window.main.extractJsonFileFromPostmanDataDumpArchive(filePath);
+  } catch (err) {
+    throw new Error('Extract failed');
+  }
+  if (res && res.data) {
+    return res.data;
+  } else if (res?.err) {
+    throw new Error(res.err);
+  } else {
+    throw new Error('Extract failed');
+  }
+}
 
 export const scanForResourcesAction: ActionFunction = async ({ request }): Promise<ScanResult[]> => {
   try {

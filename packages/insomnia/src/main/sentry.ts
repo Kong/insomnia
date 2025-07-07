@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/electron/main';
 
-import * as session from '../account/session';
+import * as session from '../common/account/session';
 import { type ChangeBufferEvent, database as db } from '../common/database';
 import { SENTRY_OPTIONS } from '../common/sentry';
 import * as models from '../models/index';

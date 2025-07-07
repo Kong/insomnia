@@ -6,8 +6,8 @@ import path from 'node:path';
 
 import clone from 'clone';
 
-import * as crypt from '../../account/crypt';
-import * as session from '../../account/session';
+import * as crypt from '../../common/account/crypt';
+import * as session from '../../common/account/session';
 import type { Operation } from '../../common/database';
 import { insomniaFetch } from '../../common/insomniaFetch';
 import { generateId } from '../../common/misc';
