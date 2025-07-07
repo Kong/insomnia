@@ -1,4 +1,4 @@
-import type { UrlWithStringQuery } from 'node:url';
+import { format as urlFormat, parse as urlParse } from 'node:url';
 
 import { setDefaultProtocol } from './protocol';
 
@@ -190,57 +190,7 @@ export const deconstructQueryStringToParams = <T extends IQueryStringOptions>(
 
   return pairs;
 };
-const urlParse = (urlStr: string): UrlWithStringQuery => {
-  // Create a dummy anchor element to parse the URL
-  const parser = document.createElement('a');
-  parser.href = urlStr;
 
-  // Extract the components of the URL
-  const query = parser.search ? parser.search.slice(1) : '';
-  const pathname = parser.pathname || '/';
-
-  return {
-    protocol: parser.protocol,
-    slashes: parser.protocol.includes(':'),
-    auth: parser.username || parser.password ? `${parser.username}:${parser.password}` : null,
-    host: parser.host,
-    port: parser.port,
-    hostname: parser.hostname,
-    hash: parser.hash,
-    search: parser.search,
-    query: query,
-    pathname: pathname,
-    path: `${pathname}${parser.search}`,
-    href: parser.href,
-  };
-};
-
-const urlFormat = (urlObj: UrlWithStringQuery): string => {
-  let urlString = urlObj.protocol ? `${urlObj.protocol}//` : '';
-  if (urlObj.auth) {
-    urlString += `${urlObj.auth}@`;
-  }
-  if (urlObj.host) {
-    urlString += urlObj.host;
-  } else {
-    if (urlObj.hostname) {
-      urlString += urlObj.hostname;
-    }
-    if (urlObj.port) {
-      urlString += `:${urlObj.port}`;
-    }
-  }
-  if (urlObj.pathname) {
-    urlString += urlObj.pathname;
-  }
-  if (urlObj.search) {
-    urlString += urlObj.search;
-  }
-  if (urlObj.hash) {
-    urlString += urlObj.hash;
-  }
-  return urlString;
-};
 /**
  * Automatically encode the path and querystring components
  * @param url url to encode

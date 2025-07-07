@@ -1,10 +1,8 @@
 import { format } from 'date-fns';
 
-import type { RequestParameter } from '../../../models/request';
 import type { TemplateTag } from '../../../plugins';
 import type { PluginTemplateTag } from '../../../templating/types';
 import { invariant } from '../../../utils/invariant';
-import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../../utils/url/querystring';
 import { fakerFunctions } from './faker-functions';
 const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
   {
@@ -886,21 +884,18 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         if (!workspace) {
           throw new Error(`Workspace not found for ${meta.workspaceId}`);
         }
-        const params: RequestParameter[] = [];
+
         if (attribute === 'url') {
-          for (const p of request.parameters) {
-            params.push({
-              name: (await context.util.render(p.name)) || '',
-              value: (await context.util.render(p.value)) || '',
-            });
-          }
           const rendered = await context.util.render(request.url);
-          return rendered
-            ? smartEncodeUrl(
-                joinUrlAndQueryString(rendered, buildQueryStringFromParams(params)),
-                request.settingEncodeUrl,
-              )
-            : '';
+          const url = new URL(rendered || '', 'http://localhost');
+          for (const p of request.parameters) {
+            const name = await context.util.render(p.name);
+            const value = await context.util.render(p.value);
+            if (name && value) {
+              url.searchParams.append(name, value);
+            }
+          }
+          return url;
         }
         if (attribute === 'cookie') {
           if (!name) {
@@ -908,23 +903,11 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           }
 
           const cookieJar = await context.util.models.cookieJar.getOrCreateForParentId(workspace._id);
-          for (const p of request.parameters) {
-            params.push({
-              name: (await context.util.render(p.name)) || '',
-              value: (await context.util.render(p.value)) || '',
-            });
-          }
-          const rendered = await context.util.render(request.url);
-          const url = rendered
-            ? smartEncodeUrl(
-                joinUrlAndQueryString(rendered, buildQueryStringFromParams(params)),
-                request.settingEncodeUrl,
-              )
-            : '';
+
           const found = cookieJar.cookies.find(cookie => cookie.key === name);
           invariant(
             found,
-            `No cookie with name "${name}" found in cookie jar for url "${url}"\nChoices are [\n\t${cookieJar.cookies.map(c => c.key)}\n] for`,
+            `No cookie with name "${name}" found in cookie jar for url "${request.url}"\nChoices are [\n\t${cookieJar.cookies.map(c => c.key)}\n] for`,
           );
           return found.value;
         }
