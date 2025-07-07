@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { JSONPath } from 'jsonpath-plus';
 
 import type { TemplateTag } from '../../../plugins';
 import type { PluginTemplateTag } from '../../../templating/types';
@@ -301,7 +302,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
         let results;
         try {
-          results = await context.util.JSONPath({ json: body, path: filter });
+          results = await JSONPath({ json: body, path: filter });
           if (!Array.isArray(results)) {
             results = [results];
           }
@@ -708,7 +709,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             }
 
             try {
-              results = await context.util.JSONPath({ json: bodyJSON, path: sanitizedFilter });
+              results = await JSONPath({ json: bodyJSON, path: sanitizedFilter });
               if (!Array.isArray(results)) {
                 results = [results];
               }

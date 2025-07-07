@@ -2,7 +2,6 @@ import fs from 'node:fs';
 import os from 'node:os';
 
 import iconv from 'iconv-lite';
-import { JSONPath } from 'jsonpath-plus';
 
 import { database as db } from '../common/database';
 import * as models from '../models';
@@ -32,9 +31,6 @@ const pluginToMainAPI = {
   },
   'decode': async (body: { buffer: Buffer; encoding: 'utf8' }) => {
     return iconv.decode(body.buffer, body.encoding || 'utf8');
-  },
-  'JSONPath': async (body: { json: string; path: string }) => {
-    return JSONPath({ json: body.json, path: body.path });
   },
   'request.getById': async (body: { id: string }) => {
     return await models.request.getById(body.id);

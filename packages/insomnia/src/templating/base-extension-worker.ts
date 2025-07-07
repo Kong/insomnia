@@ -166,17 +166,12 @@ export default class BaseExtension {
       meta: renderMeta,
       renderPurpose,
       util: {
-        JSONPath: async ({ json, path }: { json: any; path: string }) =>
-          fetchFromTemplateWorkerDatabase('JSONPath', { json, path }),
         readFileSync: async (path: string, encoding?: string) =>
           fetchFromTemplateWorkerDatabase('readFile', { path, encoding }),
-        nodeOS: async () => fetchFromTemplateWorkerDatabase('readFile', { nothing: true }),
+        nodeOS: async () => fetchFromTemplateWorkerDatabase('nodeOS', { nothing: true }),
         decode: async (buffer: Buffer, encoding?: string) =>
           fetchFromTemplateWorkerDatabase('decode', { buffer, encoding }),
-        render: (str: string) =>
-          templating.render(str, {
-            context: renderContext,
-          }),
+        render: (str: string) => templating.render(str, { context: renderContext }),
         models: {
           request: {
             getById: async (id: string) => fetchFromTemplateWorkerDatabase('request.getById', { id }),
