@@ -166,7 +166,7 @@ export default class BaseExtension {
       meta: renderMeta,
       renderPurpose,
       util: {
-        readFileSync: async (path: string, encoding?: string) =>
+        readFile: async (path: string, encoding?: string) =>
           fetchFromTemplateWorkerDatabase('readFile', { path, encoding }),
         nodeOS: async () => fetchFromTemplateWorkerDatabase('nodeOS', { nothing: true }),
         decode: async (buffer: Buffer, encoding?: string) =>

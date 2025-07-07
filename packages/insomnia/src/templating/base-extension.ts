@@ -111,7 +111,7 @@ export default class BaseExtension {
             release: release(),
           };
         },
-        readFileSync: async (path: string, encoding = 'utf8') => {
+        readFile: async (path: string, encoding = 'utf8') => {
           const content = await fs.promises.readFile(path);
           return encoding === 'utf8' ? content.toString(encoding) : content;
         },
