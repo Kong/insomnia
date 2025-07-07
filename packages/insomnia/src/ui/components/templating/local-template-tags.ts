@@ -292,7 +292,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           type: 'string',
         },
       ],
-      async run(context, jsonString, filter) {
+      async run(_context, jsonString, filter) {
         let body;
         try {
           body = JSON.parse(jsonString);
