@@ -56,6 +56,7 @@ import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganization
 import {
   getProjectStorageTypeLabel,
   isGitProject,
+  isLocalProject,
   isRemoteProject,
   type Project,
   SCRATCHPAD_PROJECT_ID,
@@ -69,6 +70,7 @@ import { getInitialRouteForOrganization } from '../../utils/router';
 import { SegmentEvent } from '../analytics';
 import { AvatarGroup } from '../components/avatar';
 import { GitProjectSyncDropdown } from '../components/dropdowns/git-project-sync-dropdown';
+import { LocalProjectBar } from '../components/dropdowns/local-project-bar';
 import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { WorkspaceCardDropdown } from '../components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
@@ -1120,6 +1122,7 @@ const ProjectRoute: FC = () => {
                       gitRepository={activeProjectGitRepository || null}
                     />
                   )}
+                  {isLocalProject(activeProject) && !isGitProject(activeProject) && <LocalProjectBar />}
                 </>
               )}
               {!isLearningFeatureDismissed && learningFeature?.active && (
@@ -1458,6 +1461,7 @@ const ProjectRoute: FC = () => {
             )}
           </Panel>
         </PanelGroup>
+
         {isGitRepositoryCloneModalOpen && (
           <GitRepositoryCloneModal onHide={() => setIsGitRepositoryCloneModalOpen(false)} />
         )}
