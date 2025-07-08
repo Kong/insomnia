@@ -69,6 +69,7 @@ import { invariant } from '../../utils/invariant';
 import { getInitialRouteForOrganization } from '../../utils/router';
 import { SegmentEvent } from '../analytics';
 import { AvatarGroup } from '../components/avatar';
+import { CloudSyncProjectBar } from '../components/dropdowns/cloud-sync-project-bar';
 import { GitProjectSyncDropdown } from '../components/dropdowns/git-project-sync-dropdown';
 import { LocalProjectBar } from '../components/dropdowns/local-project-bar';
 import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
@@ -1123,6 +1124,7 @@ const ProjectRoute: FC = () => {
                     />
                   )}
                   {isLocalProject(activeProject) && !isGitProject(activeProject) && <LocalProjectBar />}
+                  {isRemoteProject(activeProject) && <CloudSyncProjectBar />}
                 </>
               )}
               {!isLearningFeatureDismissed && learningFeature?.active && (
