@@ -428,7 +428,7 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
 
 export const isApiSpecImport = ({ id }: Pick<InsomniaImporter, 'id'>) => id === 'openapi3' || id === 'swagger2';
 
-const importResourcesToNewWorkspace = async ({
+export const importResourcesToNewWorkspace = async ({
   projectId,
   resourceCacheItem,
   workspaceToImport,
@@ -569,4 +569,6 @@ const importResourcesToNewWorkspace = async ({
   if (syncNewWorkspaceIfNeeded) {
     await syncNewWorkspaceIfNeeded(newWorkspace);
   }
+
+  return newWorkspace;
 };

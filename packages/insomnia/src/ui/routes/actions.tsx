@@ -9,7 +9,13 @@ import { version } from '../../../package.json';
 import { parseApiSpec, resolveComponentSchemaRefs } from '../../common/api-specs';
 import { ACTIVITY_DEBUG, getAIServiceURL, METHOD_GET } from '../../common/constants';
 import { database } from '../../common/database';
-import { importResourcesToWorkspace, scanResources, type ScanResult } from '../../common/import';
+import {
+  importResourcesToNewWorkspace,
+  importResourcesToWorkspace,
+  scanResources,
+  type ScanResult,
+} from '../../common/import';
+import { getInsomniaV5DataExport, importInsomniaV5Data } from '../../common/insomnia-v5';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import { EnvironmentType } from '../../models/environment';
@@ -25,15 +31,13 @@ import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { isCollection, isEnvironment, scopeToActivity, type Workspace } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
-import {
-  initializeLocalBackendProjectAndMarkForSync,
-  pushSnapshotOnInitialize,
-} from '../../sync/vcs/initialize-backend-project';
+import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { SpectralRunner } from '../worker/spectral-handler';
+import { syncNewWorkspaceIfNeeded } from './import';
 
 // Project
 export const createNewProjectAction: ActionFunction = async ({ request, params }) => {
@@ -731,68 +735,6 @@ export const deleteWorkspaceAction: ActionFunction = async ({ params, request })
   return redirect(`/organization/${organizationId}/project/${projectId}`);
 };
 
-async function duplicateWorkspace(
-  workspace: Workspace | null,
-  duplicateToProject: Project | null,
-  newWorkspaceName: string,
-  needPushSnapshotOnInitialize = false,
-) {
-  invariant(workspace, 'Workspace not found');
-  invariant(duplicateToProject, 'Project not found');
-  async function duplicate(workspace: Workspace, { name, parentId }: Pick<Workspace, 'name' | 'parentId'>) {
-    const newWorkspace = await database.duplicate(workspace, {
-      name,
-      parentId,
-    });
-    await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
-      fileName: name,
-    });
-    models.stats.incrementCreatedRequestsForDescendents(newWorkspace);
-    return newWorkspace;
-  }
-  const newWorkspace = await duplicate(workspace, {
-    name: newWorkspaceName,
-    parentId: duplicateToProject._id,
-  });
-  // Create default env, cookie jar, and meta
-  await models.environment.getOrCreateForParentId(newWorkspace._id);
-  await models.cookieJar.getOrCreateForParentId(newWorkspace._id);
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
-
-  if (isGitProject(duplicateToProject)) {
-    await models.workspaceMeta.update(workspaceMeta, {
-      gitFilePath: `insomnia.${newWorkspace._id}.yaml`,
-    });
-  }
-
-  const isGitSync = !!workspaceMeta.gitRepositoryId;
-
-  // Automatically sync to cloud if needed
-  if (isRemoteProject(duplicateToProject) && !isGitSync) {
-    try {
-      const { id } = await models.userSession.getOrCreate();
-      // Mark for sync if logged in and in the expected project
-      if (id) {
-        const vcs = VCSInstance().newInstance();
-        await initializeLocalBackendProjectAndMarkForSync({
-          vcs,
-          workspace: newWorkspace,
-        });
-        if (needPushSnapshotOnInitialize) {
-          await pushSnapshotOnInitialize({
-            vcs,
-            workspace: newWorkspace,
-            project: duplicateToProject,
-          });
-        }
-      }
-    } catch (e) {
-      console.warn('Failed to initialize local backend project', e);
-    }
-  }
-  return newWorkspace;
-}
-
 /** Duplicate workspace to other project and automatically sync to cloud if needed  */
 export const duplicateWorkspaceAction: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
@@ -809,7 +751,30 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request }) => {
 
   // duplicate the workspace to the new project
   const newProject = (await models.project.getById(newProjectId)) as Project;
-  const newWorkspace = await duplicateWorkspace(oldWorkspace, newProject, newWorkspaceName || oldWorkspace.name, true);
+  const workspaceExport = await getInsomniaV5DataExport({
+    workspaceId: oldWorkspace._id,
+    includePrivateEnvironments: true,
+  });
+
+  const data = importInsomniaV5Data(workspaceExport);
+
+  const newWorkspace = await importResourcesToNewWorkspace({
+    projectId: newProject._id,
+    workspaceToImport: {
+      ...oldWorkspace,
+      name: newWorkspaceName || oldWorkspace.name,
+    },
+    resourceCacheItem: {
+      resources: data,
+      content: JSON.stringify(data, null, 2),
+      importer: {
+        id: 'insomnia-v5',
+        name: 'Insomnia v5 Importer',
+        description: 'Import Insomnia v5 data',
+      },
+    },
+    syncNewWorkspaceIfNeeded,
+  });
   return redirect(
     `/organization/${newOrgId}/project/${newProjectId}/workspace/${newWorkspace._id}/${scopeToActivity(newWorkspace.scope)}`,
   );

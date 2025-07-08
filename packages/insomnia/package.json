@@ -85,8 +85,7 @@
     "swagger-ui-dist": "^5.21.0",
     "tough-cookie": "^4.1.4",
     "uuid": "^9.0.1",
-    "yaml": "^2.7.1",
-    "zod": "^3.25.71"
+    "yaml": "^2.7.1"
   },
   "devDependencies": {
     "@develohpanda/fluent-builder": "^2.1.2",
@@ -181,7 +180,8 @@
     "vite": "^6.3.1",
     "vkbeautify": "^0.99.3",
     "ws": "^8.18.1",
-    "xpath": "0.0.34"
+    "xpath": "0.0.34",
+    "zod": "^3.25.75"
   },
   "dev": {
     "dev-server-port": 3334
