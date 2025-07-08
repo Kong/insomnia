@@ -355,8 +355,6 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
 
   const status = gitStatusFetcher.data?.status;
 
-  const commitToolTipMsg = status?.localChanges ? 'Local changes made' : 'No local changes made';
-
   const branchesActionList: {
     id: string;
     label: string;
@@ -387,7 +385,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
 
   const allSyncMenuActionList = [...gitSyncActions, ...branchesActionList, ...currentBranchActions];
 
-  const pendingChangesCount = 2;
+  const pendingChangesCount = status?.localChanges ?? 0;
   const pullCount = 5;
   const pushCount = 2;
 
