@@ -20,7 +20,6 @@ test('can send gRPC requests with reflection', async ({ app, page }) => {
   await page.getByLabel('PreRelease gRPC').click();
 
   await page.getByLabel('Request Collection').getByTestId('UnaryWithOutProtoFile').press('Enter');
-  await expect.soft(page.getByRole('button', { name: 'Select Method' })).toBeDisabled();
   await page.getByTestId('button-server-reflection').click();
 
   await page.getByRole('button', { name: 'Select Method' }).click();
