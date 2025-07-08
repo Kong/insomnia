@@ -617,6 +617,7 @@ export const database = {
    * @param doc - The document to start the search from. If null, the search starts from the root.
    * @param stopType - An optional type of document to stop the search at. If a document of this type is encountered, its descendants are not included.
    * @param queryTypes - An optional array of document types to query. If not provided, all types are queried.
+   * @param queryTypesDescendantMap - An optional map that specifies which descendant types to query for each parent type. If provided, it overrides the default behavior of querying all descendant types and queryTypes.
    * @returns A promise that resolves to an array of all descendant documents.
    */
   withDescendants: async function <T extends BaseModel>(
@@ -639,41 +640,41 @@ export const database = {
         // If the doc is null, we want to search for parentId === null
         const parentIds = docsToSearch.map(d => (d ? d._id : null));
 
-        // If no queryTypes are provided, we want to search all types
-        if (queryTypes.length === 0) {
-          queryTypes = allTypes();
-        }
+        // Find all descendants of the current docs
+        const promises: Promise<BaseModel[]>[] = [];
 
         // If queryTypesDescendantMap is provided, use it to get the types
         if (queryTypesDescendantMap) {
-          // Get all the unique types from the docsToSearch
-          const uniqueTypes = new Set<string>();
+          const uniqueDescendantTypes = new Set<string>();
+          const parentIdsMap = new Map<string, (string | null)[]>();
+
           for (const d of docsToSearch) {
             if (d && d.type) {
-              uniqueTypes.add(d.type);
-            }
-          }
-
-          const uniqueDescendantTypes = new Set<string>();
-
-          // For each unique type, get its descendants from the map
-          for (const type of uniqueTypes) {
-            const descendants = queryTypesDescendantMap[type];
-            if (descendants) {
-              descendants.forEach(t => uniqueDescendantTypes.add(t));
+              queryTypesDescendantMap[d.type]?.forEach(t => {
+                uniqueDescendantTypes.add(t);
+                parentIdsMap.set(t, [...(parentIdsMap.get(t) || []), d ? d._id : null]);
+              });
             }
           }
 
           queryTypes = Array.from(uniqueDescendantTypes);
-        }
 
-        // Find all descendants of the current docs
-        const promises: Promise<BaseModel[]>[] = [];
+          for (const type of queryTypes) {
+            // If the doc is null, we want to search for parentId === null
+            const promise = database.find(type, { parentId: { $in: parentIdsMap.get(type) || [] } });
+            promises.push(promise);
+          }
+        } else {
+          // If no queryTypes are provided, we want to search all types
+          if (queryTypes.length === 0) {
+            queryTypes = allTypes();
+          }
 
-        for (const type of queryTypes) {
-          // If the doc is null, we want to search for parentId === null
-          const promise = database.find(type, { parentId: { $in: parentIds } });
-          promises.push(promise);
+          for (const type of queryTypes) {
+            // If the doc is null, we want to search for parentId === null
+            const promise = database.find(type, { parentId: { $in: parentIds } });
+            promises.push(promise);
+          }
         }
 
         for (const more of await Promise.all(promises)) {
