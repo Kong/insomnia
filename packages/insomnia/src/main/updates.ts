@@ -1,8 +1,8 @@
+import { spawn } from 'node:child_process';
 import { promises as fsPromise } from 'node:fs';
 import path from 'node:path';
 
-import { autoUpdater, BrowserWindow, dialog, app } from 'electron';
-import { spawn } from 'node:child_process';
+import { app, autoUpdater, BrowserWindow, dialog } from 'electron';
 
 import { CHECK_FOR_UPDATES_INTERVAL, getAppId, getAppVersion, isDevelopment, UpdateURL } from '../common/constants';
 import { delay } from '../common/misc';
@@ -113,9 +113,9 @@ export const init = async () => {
         if (returnValue.response === 0) {
           const updateExe = path.resolve(path.dirname(process.execPath), '..', 'Update.exe');
           spawn(updateExe, ['--processStartAndWait', 'Insomnia.exe'], {
-                  detached: true,
-                  windowsHide: true
-                });
+            detached: true,
+            windowsHide: true,
+          });
           app.quit();
         }
       });
