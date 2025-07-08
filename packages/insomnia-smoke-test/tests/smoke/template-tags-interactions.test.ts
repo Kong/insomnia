@@ -92,9 +92,7 @@ test('Critical Path For Template Tags Interactions', async ({ page, app }) => {
     const isFunction = typeof expectedResult === 'function';
     expect
       .soft(
-        typeof expectedResult === 'function'
-          ? expectedResult(previewText || '')
-          : previewText?.includes(expectedResult),
+        isFunction ? expectedResult(previewText || '') : previewText?.includes(expectedResult),
         ` Template tag "${tagPrefix}" should render as "${expectedResult}" but returned ${previewText}.`,
       )
       .toBeTruthy();
