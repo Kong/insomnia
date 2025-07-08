@@ -8,6 +8,7 @@ import {
   MenuSection,
   MenuTrigger,
   Popover,
+  Separator,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
@@ -386,6 +387,10 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
 
   const allSyncMenuActionList = [...gitSyncActions, ...branchesActionList, ...currentBranchActions];
 
+  const pendingChangesCount = 2;
+  const pullCount = 5;
+  const pushCount = 2;
+
   return (
     <>
       <MenuTrigger>
@@ -395,36 +400,39 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
             aria-label="Git Sync"
             className="flex h-full flex-1 items-center gap-2 truncate px-[--padding-md]"
           >
-            <Icon icon={isLoading ? 'refresh' : iconClassName} className={`w-5 ${isLoading ? 'animate-spin' : ''}`} />
-            <span className="truncate">{isSynced ? currentBranch : 'Not synced'}</span>
+            {pendingChangesCount > 0 ? (
+              <TooltipTrigger delay={0}>
+                <Button className="relative">
+                  <Icon icon="code-branch" className="w-5" />
+                  <span className="absolute -bottom-1 -right-1 flex max-h-[12px] items-center justify-center rounded-full bg-[--color-surprise] p-1 text-[8px] text-white">
+                    {pendingChangesCount}
+                  </span>
+                </Button>
+                <Tooltip
+                  offset={8}
+                  className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                >
+                  <span>{pendingChangesCount} pending changes</span>
+                </Tooltip>
+              </TooltipTrigger>
+            ) : (
+              <Icon icon="code-branch" className="w-5" />
+            )}
+            <div className="flex items-center gap-2">
+              <span className="truncate">{isSynced ? currentBranch : 'Not synced'}</span>
+              <Separator orientation="vertical" className="h-4 border border-solid border-[--hl-sm] bg-[--color-bg]" />
+              <div className="flex flex-shrink-0 items-center gap-2 text-xs text-[--color-font-secondary]">
+                <div className="flex items-center gap-1 text-xs">
+                  <span>{pullCount}</span>
+                  <Icon icon="arrow-down" className="w-2" />
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>{pushCount}</span>
+                  <Icon icon="arrow-up" className="w-2" />
+                </div>
+              </div>
+            </div>
           </Button>
-          <TooltipTrigger
-            onOpenChange={isOpen => {
-              const shouldFetchGitRepoStatus = isOpen && gitStatusFetcher.state === 'idle';
-              shouldFetchGitRepoStatus &&
-                gitStatusFetcher.submit(
-                  {},
-                  {
-                    action: `/organization/${organizationId}/project/${projectId}/git/status`,
-                    method: 'post',
-                  },
-                );
-            }}
-          >
-            <Button className={`h-full px-[--padding-md] ${status?.localChanges ? 'text-[--color-warning]' : ''}`}>
-              <Icon
-                icon={loadingStatus ? 'refresh' : 'cube'}
-                className={`transition-colors ${isLoading ? 'animate-pulse' : loadingStatus ? 'animate-spin' : ''}`}
-              />
-            </Button>
-            <Tooltip
-              placement="top end"
-              offset={8}
-              className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
-            >
-              {commitToolTipMsg}
-            </Tooltip>
-          </TooltipTrigger>
         </div>
         <Popover className="min-w-max max-w-lg overflow-hidden" placement="top end" offset={8}>
           <Menu
