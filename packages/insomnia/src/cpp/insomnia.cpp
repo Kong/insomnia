@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <windows.h>
+#include <filesystem>
 
 const wchar_t *INSOMNIA_VERSION = L"__VERSION__";
 
@@ -122,7 +123,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     // Squirrel.Windows install
     std::wstring shortcut = QuotePathIfNeeded(insomniaExecutable);
-    std::wstring args = std::wstring(L"--createShortcut=") + shortcut;
+    std::wstring shortcutTarget = std::filesystem::path(shortcut).filename().wstring();
+    ::DebugLog((L"Shortcut target: " + shortcutTarget).c_str());
+    std::wstring args = std::wstring(L"--createShortcut=") + shortcutTarget;
     ::ShellExecuteW(0, L"open", updatePath.c_str(), args.c_str(), NULL, SW_HIDE);
 
     return 0;
@@ -134,7 +137,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   } else if (cmdLine.find(SQUIRREL_UNINSTALL) != std::wstring::npos) {
     // Squirrel.Windows uninstall
     std::wstring shortcut = QuotePathIfNeeded(insomniaExecutable);
-    std::wstring args = std::wstring(L"--removeShortcut=") + shortcut;
+    std::wstring shortcutTarget = std::filesystem::path(shortcut).filename().wstring();
+    ::DebugLog((L"Shortcut target: " + shortcutTarget).c_str());
+    std::wstring args = std::wstring(L"--removeShortcut=") + shortcutTarget;
     ::ShellExecuteW(0, L"open", updatePath.c_str(), args.c_str(), NULL, SW_HIDE);
     ::DebugLog(L"Squirrel.Windows uninstall");
 
