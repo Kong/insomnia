@@ -23,7 +23,8 @@ export const WorkspaceSyncDropdown: FC = () => {
     return null;
   }
 
-  const isLocalProject = !isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId;
+  const isLocalProject =
+    !isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId && !isGitProject(activeProject);
 
   if (isLocalProject) {
     return <LocalProjectBar />;
