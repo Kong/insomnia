@@ -14,5 +14,12 @@
     "development": "rTOCSvGV23cHGJyb3HI9EUQDNA6ar7ay",
     "production": "4l7QUfACrIcqvC913hiIwAA2BDYP2OJ1"
   },
+  "bundlePlugins": [
+    {
+      "name": "@kong/plugin-poc-external-vault",
+      "version": "0.0.1-alpha.1",
+      "feature": "external-vault"
+    }
+  ],
   "sentryDsn": "https://aaec2e800e644070a8daba5b7ad02c16@o1147619.ingest.sentry.io/6311804"
 }

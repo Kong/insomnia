@@ -4,7 +4,13 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 
-const bundlePlugins = ['@kong/plugin-poc-external-vault@0.0.1-alpha.1'];
+import appConfig from '../config/config.json';
+
+const bundlePlugins: string[] =
+  appConfig.bundlePlugins.map(plugin => {
+    const { name, version } = plugin;
+    return version ? `${name}@${version}` : name;
+  }) || [];
 const bundlePluginsDir = path.resolve(__dirname, '..', 'plugins');
 const yarnPath = path.resolve(__dirname, '..', 'bin', 'yarn-standalone.js');
 const NPM_REGISTRY = 'https://registry.npmjs.org/';

@@ -7,7 +7,13 @@ import { type ActionFunction, redirect } from 'react-router';
 
 import { version } from '../../../package.json';
 import { parseApiSpec, resolveComponentSchemaRefs } from '../../common/api-specs';
-import { ACTIVITY_DEBUG, ENTERPRISE_PLUGINS, getAIServiceURL, METHOD_GET } from '../../common/constants';
+import {
+  ACTIVITY_DEBUG,
+  FEATURE_NAME_EXTERNAL_VAULT,
+  getAIServiceURL,
+  getBundlePluginByFeature,
+  METHOD_GET,
+} from '../../common/constants';
 import { database } from '../../common/database';
 import { database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources, type ScanResult } from '../../common/import';
@@ -27,7 +33,7 @@ import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { isCollection, isEnvironment, scopeToActivity, type Workspace } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
-import { executePluginAction } from '../../plugins';
+import { executePluginRouterAction } from '../../plugins';
 import {
   initializeLocalBackendProjectAndMarkForSync,
   pushSnapshotOnInitialize,
@@ -1805,8 +1811,8 @@ export const createCloudCredentialAction: ActionFunction = async ({ request }) =
       }
       return credentials;
     }
-    const authenticateResponse = await executePluginAction({
-      pluginName: ENTERPRISE_PLUGINS['external-vault'].pluginName,
+    const authenticateResponse = await executePluginRouterAction({
+      pluginName: getBundlePluginByFeature(FEATURE_NAME_EXTERNAL_VAULT)?.name || '',
       actionName: 'authenticate',
       params: { provider, credentials },
     });
@@ -1837,8 +1843,8 @@ export const updateCloudCredentialAction: ActionFunction = async ({ request, par
   invariant(typeof name === 'string', 'Name is required');
   invariant(provider, 'Cloud Provider name is required');
   if (name && provider && credentials) {
-    const authenticateResponse = await executePluginAction({
-      pluginName: ENTERPRISE_PLUGINS['external-vault'].pluginName,
+    const authenticateResponse = await executePluginRouterAction({
+      pluginName: getBundlePluginByFeature(FEATURE_NAME_EXTERNAL_VAULT)?.name || '',
       actionName: 'authenticate',
       params: { provider, credentials },
     });

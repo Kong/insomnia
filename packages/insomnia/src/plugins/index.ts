@@ -5,7 +5,7 @@ import path from 'node:path';
 import electron from 'electron';
 
 import type { ParsedApiSpec } from '../common/api-specs';
-import { ENTERPRISE_PLUGINS, isDevelopment } from '../common/constants';
+import { getAppBundlePlugins, isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import type { PluginConfigMap } from '../common/settings';
 import * as models from '../models';
@@ -16,6 +16,8 @@ import type { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace } from '../models/workspace';
 import type { PluginTemplateTag } from '../templating/types';
 import { showError } from '../ui/components/modals/index';
+import { insomniaFetch } from '../ui/insomniaFetch';
+import { buildQueryStringFromParams } from '../utils/url/querystring';
 import * as pluginContexts from './context';
 import type { PluginTheme } from './misc';
 import themes from './themes';
@@ -35,7 +37,7 @@ export interface Plugin {
     requestActions?: OmitInternal<RequestAction>[];
     workspaceActions?: OmitInternal<WorkspaceAction>[];
     documentActions?: OmitInternal<DocumentAction>[];
-    pluginActions?: OmitInternal<PluginAction>[];
+    pluginRouterActions?: OmitInternal<PluginAction>[];
   };
 }
 
@@ -174,17 +176,42 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
         const isExecutedInApp = process.type === 'renderer' || process.type === 'worker' || process.type === 'browser';
         // Validate bundle plugin checksum for production builds
         if (!isDevelopment() && pluginBasePath.startsWith(bundlePluginPath) && isExecutedInApp) {
-          const pluginName = pluginJson.name;
-          const featureName = Object.keys(ENTERPRISE_PLUGINS).find(
-            name => ENTERPRISE_PLUGINS[name].pluginName === pluginName,
-          );
-          if (!featureName) {
+          let pluginChecksum: Record<string, any>;
+          const appBundlePlugins = getAppBundlePlugins();
+          const { name: pluginName, version: pluginVersion, insomnia: pluginInsomniaConfig } = pluginJson;
+          // Check if the plugin is a pre-bundle plugin
+          const isBundlePlugin = appBundlePlugins.some(p => p.name === pluginName);
+          if (!isBundlePlugin) {
             console.warn(`[plugin] Ignored unknown bundle plugin from path: ${modulePath}`);
             continue;
           }
-          const { checksum } = ENTERPRISE_PLUGINS[featureName];
+          try {
+            // const { id: sessionId } = await models.userSession.getOrCreate();
+            // Get bundle plugin checksum
+            // const urlParams = buildQueryStringFromParams([
+            //   { name: 'pluginName', value: pluginName },
+            //   { name: 'pluginVersion', value: pluginVersion },
+            // ]);
+            // pluginChecksum = await insomniaFetch({
+            //   method: 'GET',
+            //   path: `/v1/plugins/checksum?${urlParams}`,
+            //   sessionId,
+            //   onlyResolveOnSuccess: true,
+            // });
+            // TODO server integration
+            pluginChecksum = {
+              'dist/index.js':
+                'sha512-ThLetTUf66THS1BHbVwhmeCjmru2f33knRU3rwkECUDDJwYiF2WNAUFPfXRKTG7eyoVdjwwxMcStPBwN+swzgg==',
+              'package.json':
+                'sha512-zEg3V8S99l3AXP/5s7gcgKktYaKDbHP+luglAy+fgzwWrhbfR68ZDWVrMXdJXRFOBGQTsTr18FkROdhWggzg3w==',
+            };
+          } catch (err) {
+            console.warn(`[plugin] Failed to get bundle plugin checksum: ${err.message}`);
+            continue;
+          }
+
           // traverse all files in the plugin directory and calculate the checksum
-          const checksumFileRelativePat = Object.keys(checksum);
+          const checksumFileRelativePat = Object.keys(pluginChecksum);
           let isSafePluginBundle = true;
           for (const relativePath of checksumFileRelativePat) {
             const filePath = path.resolve(modulePath, relativePath);
@@ -194,9 +221,9 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
               break;
             }
             const fileContent = fs.readFileSync(filePath);
-            const hashAlgorithm = checksum[relativePath].startsWith('sha512-') ? 'sha512' : 'sha256';
+            const hashAlgorithm = pluginChecksum[relativePath].startsWith('sha512-') ? 'sha512' : 'sha256';
             const calculatedChecksum = crypto.createHash(hashAlgorithm).update(fileContent).digest('base64');
-            if (`${hashAlgorithm}-${calculatedChecksum}` !== checksum[relativePath]) {
+            if (`${hashAlgorithm}-${calculatedChecksum}` !== pluginChecksum[relativePath]) {
               console.warn(
                 `[plugin] Ignored bundle plugin ${pluginName} because the checksum for ${filePath} does not match`,
               );
@@ -382,10 +409,10 @@ export async function isPreBundlePluginTemplateTag(input: string) {
   if (!input.includes('{%')) {
     return false;
   }
-  const enterprisePluginNames = Object.keys(ENTERPRISE_PLUGINS).map(plugin => ENTERPRISE_PLUGINS[plugin].pluginName);
+  const bunelPluginNames = getAppBundlePlugins().map(p => p.name);
   const activePlugins = await getActivePlugins();
   return activePlugins
-    .filter(plugin => enterprisePluginNames.includes(plugin.name))
+    .filter(plugin => bunelPluginNames.includes(plugin.name))
     .some(plugin => {
       const templateTags = plugin.module.templateTags || [];
       const tagNames = templateTags.map(tt => tt.name);
@@ -393,11 +420,11 @@ export async function isPreBundlePluginTemplateTag(input: string) {
     });
 }
 
-export async function getPluginActions(): Promise<PluginAction[]> {
+export async function getPluginRouterActions(): Promise<PluginAction[]> {
   let extensions: PluginAction[] = [];
 
   for (const plugin of await getActivePlugins()) {
-    const actions = plugin.module.pluginActions || [];
+    const actions = plugin.module.pluginRouterActions || [];
     extensions = [
       ...extensions,
       ...actions.map(p => ({
@@ -410,7 +437,7 @@ export async function getPluginActions(): Promise<PluginAction[]> {
   return extensions;
 }
 
-export async function executePluginAction({
+export async function executePluginRouterAction({
   pluginName,
   actionName,
   context,
@@ -427,7 +454,7 @@ export async function executePluginAction({
     if (!plugin) {
       throw new Error(`Plugin ${pluginName} not found`);
     }
-    const action = plugin.module.pluginActions?.find(a => a.name === actionName);
+    const action = plugin.module.pluginRouterActions?.find(p => p.name === actionName);
     if (!action) {
       throw new Error(`Action ${actionName} not found in plugin ${pluginName}`);
     }
