@@ -180,7 +180,6 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
   }
 
   const isLoading =
-    gitRepoDataFetcher.state === 'loading' ||
     gitFetchFetcher.state === 'loading' ||
     gitCheckoutFetcher.state === 'loading' ||
     gitPushFetcher.state === 'loading' ||
@@ -404,14 +403,15 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
           }}
         >
           <Button
+            isDisabled={isLoading}
             data-testid="git-dropdown"
             aria-label="Git Sync"
-            className={`flex h-[--line-height-sm] w-full items-center gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all ${isLoading ? 'animated-pulse' : 'hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]'}`}
+            className={`flex h-[--line-height-sm] w-full items-center gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all ${isLoading ? 'animate-pulse' : 'hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]'}`}
           >
             <Icon icon={icon} className="size-4" />
             <Separator orientation="vertical" className="h-5 border border-solid border-[--hl-sm] bg-[--color-bg]" />
             <div className="relative flex items-center">
-              <Icon icon="code-branch" className="size-4" />
+              <Icon icon={isLoading ? 'spinner' : 'code-branch'} className={`size-4 ${isLoading && 'animate-spin'}`} />
               {pendingChangesCount > 0 && (
                 <div className="absolute -bottom-2 -right-1 h-[12px] min-w-[12px] bg-[--color-surprise] px-[4px] text-center font-semibold text-[--color-font-surprise] [border-radius:20px] [font-size:6px] [line-height:12px]">
                   {pendingChangesCount}
