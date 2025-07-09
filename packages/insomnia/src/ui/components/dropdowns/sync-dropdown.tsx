@@ -271,16 +271,16 @@ export const SyncDropdown: FC<Props> = () => {
       <MenuTrigger>
         <TooltipTrigger delay={0}>
           <Button
+            isDisabled={isSyncing}
             data-testid="git-dropdown"
             aria-label="Git Sync"
-            className={`flex h-[--line-height-sm] w-full items-center gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all ${isSyncing ? 'animate-pulse cursor-not-allowed' : 'hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]'}`}
+            className={`flex h-[--line-height-sm] w-full items-center gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all ${isSyncing ? 'animate-pulse' : 'hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]'}`}
           >
             <Icon icon="earth-americas" className="size-4" />
-
             <Separator orientation="vertical" className="h-4 border border-solid border-[--hl-sm] bg-[--color-bg]" />
             <div className="relative">
-              <Icon icon="code-branch" className="size-4" />
-              {canCreateSnapshot && (
+              <Icon icon={isSyncing ? 'spinner' : 'code-branch'} className={`size-4 ${isSyncing && 'animate-spin'}`} />
+              {canCreateSnapshot && !isSyncing && (
                 <div className="absolute -bottom-1 -right-1 size-[10px] rounded-full bg-[--color-surprise]" />
               )}
             </div>
@@ -331,66 +331,64 @@ export const SyncDropdown: FC<Props> = () => {
           </Tooltip>
         </TooltipTrigger>
 
-        {!isSyncing && (
-          <Popover className="min-w-max max-w-lg overflow-hidden" placement="top end" offset={8}>
-            <Menu
-              aria-label="Insomnia Sync Menu"
-              selectionMode="single"
-              disabledKeys={allSyncMenuActionList.filter(item => item.isDisabled).map(item => item.id)}
-              onAction={key => {
-                const item = allSyncMenuActionList.find(item => item.id === key);
-                item?.action();
-              }}
-              className="max-h-[85vh] max-w-lg select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
-            >
-              {syncError && (
+        <Popover className="min-w-max max-w-lg overflow-hidden" placement="top end" offset={8}>
+          <Menu
+            aria-label="Insomnia Sync Menu"
+            selectionMode="single"
+            disabledKeys={allSyncMenuActionList.filter(item => item.isDisabled).map(item => item.id)}
+            onAction={key => {
+              const item = allSyncMenuActionList.find(item => item.id === key);
+              item?.action();
+            }}
+            className="max-h-[85vh] max-w-lg select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+          >
+            {syncError && (
+              <MenuSection className="border-b border-solid border-[--hl-sm]">
+                <MenuItem
+                  className={
+                    'text-md flex w-full items-center gap-2 overflow-hidden whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold'
+                  }
+                  aria-label={syncError}
+                >
+                  <Icon icon="exclamation-triangle" className="text-[--color-warning]" />
+                  <p className="whitespace-normal">{syncError}</p>
+                </MenuItem>
+              </MenuSection>
+            )}
+            {!syncError && (
+              <Fragment>
                 <MenuSection className="border-b border-solid border-[--hl-sm]">
-                  <MenuItem
-                    className={
-                      'text-md flex w-full items-center gap-2 overflow-hidden whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold'
-                    }
-                    aria-label={syncError}
-                  >
-                    <Icon icon="exclamation-triangle" className="text-[--color-warning]" />
-                    <p className="whitespace-normal">{syncError}</p>
-                  </MenuItem>
+                  <Collection items={localBranchesActionList}>
+                    {item => (
+                      <MenuItem
+                        className={`text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold ${item.isActive ? 'font-bold' : ''}`}
+                        aria-label={item.name}
+                      >
+                        <Icon icon={item.icon} className={item.isActive ? 'text-[--color-success]' : ''} />
+                        <span className="truncate">{item.name}</span>
+                      </MenuItem>
+                    )}
+                  </Collection>
                 </MenuSection>
-              )}
-              {!syncError && (
-                <Fragment>
-                  <MenuSection className="border-b border-solid border-[--hl-sm]">
-                    <Collection items={localBranchesActionList}>
-                      {item => (
-                        <MenuItem
-                          className={`text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold ${item.isActive ? 'font-bold' : ''}`}
-                          aria-label={item.name}
-                        >
-                          <Icon icon={item.icon} className={item.isActive ? 'text-[--color-success]' : ''} />
-                          <span className="truncate">{item.name}</span>
-                        </MenuItem>
-                      )}
-                    </Collection>
-                  </MenuSection>
-                  <MenuSection>
-                    <Collection items={syncMenuActionList}>
-                      {item => (
-                        <MenuItem
-                          className={
-                            'text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
-                          }
-                          aria-label={item.name}
-                        >
-                          <Icon icon={item.icon} />
-                          <span>{item.name}</span>
-                        </MenuItem>
-                      )}
-                    </Collection>
-                  </MenuSection>
-                </Fragment>
-              )}
-            </Menu>
-          </Popover>
-        )}
+                <MenuSection>
+                  <Collection items={syncMenuActionList}>
+                    {item => (
+                      <MenuItem
+                        className={
+                          'text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
+                        }
+                        aria-label={item.name}
+                      >
+                        <Icon icon={item.icon} />
+                        <span>{item.name}</span>
+                      </MenuItem>
+                    )}
+                  </Collection>
+                </MenuSection>
+              </Fragment>
+            )}
+          </Menu>
+        </Popover>
       </MenuTrigger>
       {isGitRepoSettingsModalOpen && <GitRepositorySettingsModal onHide={() => setIsGitRepoSettingsModalOpen(false)} />}
       {isSyncBranchesModalOpen && (
