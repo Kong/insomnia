@@ -413,7 +413,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
             <div className="relative flex items-center">
               <Icon icon="code-branch" className="size-4" />
               {pendingChangesCount > 0 && (
-                <div className="absolute -bottom-2 -right-1 h-[14px] min-w-[8px] bg-[--color-surprise] px-[4px] text-center text-[--color-font-surprise] [border-radius:20px] [font-size:8px] [line-height:14px]">
+                <div className="absolute -bottom-2 -right-1 h-[12px] min-w-[12px] bg-[--color-surprise] px-[4px] text-center font-semibold text-[--color-font-surprise] [border-radius:20px] [font-size:6px] [line-height:12px]">
                   {pendingChangesCount}
                 </div>
               )}
