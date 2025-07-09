@@ -509,7 +509,6 @@ export const ProjectSettingsForm: FC<Props> = ({
                 </>
               ) : (
                 <>
-                  <Icon icon={['fab', 'git-alt']} />
                   <span>{insomniaFiles.length > 0 ? 'Import all' : 'Clone'}</span>
                 </>
               )}
