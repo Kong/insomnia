@@ -10,6 +10,7 @@ interface Options {
   mode?: 'development' | 'production';
   autoRestart?: boolean;
 }
+const inspectPort = process.env.INSPECT_PORT || '5858';
 
 export default async function build(options: Options) {
   const mode = options.mode || 'production';
@@ -77,7 +78,7 @@ export default async function build(options: Options) {
 
   let electronProcess: ChildProcess;
   const startElectron = () => {
-    electronProcess = spawn('electron', ['--inspect=5858', '.'], {
+    electronProcess = spawn('electron', [`--inspect=${inspectPort}`, '.'], {
       stdio: 'inherit',
       env: process.env,
       shell: true,
