@@ -2,7 +2,7 @@ import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML } from '../
 import type { AuthTypeOAuth2 } from '../../../models/request';
 import { forceBracketNotation } from '../../../templating/utils';
 import { fakerFunctions } from '../../../ui/components/templating/faker-functions';
-import type { Converter, ImportRequest, Parameter } from '../entities';
+import type { Converter, ImportRequest, Parameter, PathParameters } from '../entities';
 import type {
   Auth as V200Auth,
   EventList as V200EventList,
@@ -14,6 +14,7 @@ import type {
   Request1 as V200Request1,
   Url,
   UrlEncodedParameter as V200UrlEncodedParameter,
+  Variable1 as V200Variable1,
 } from './postman-2.0.types';
 import type {
   Auth as V210Auth,
@@ -27,6 +28,7 @@ import type {
   QueryParam,
   Request1 as V210Request1,
   UrlEncodedParameter as V210UrlEncodedParameter,
+  Variable1 as V210Variable1,
 } from './postman-2.1.types';
 
 export const id = 'postman';
@@ -49,6 +51,8 @@ type Item = V200Item | V210Item;
 type Folder = V200Folder | V210Folder;
 
 type Header = V200Header | V210Header;
+
+type UrlVariable = V200Variable1 | V210Variable1;
 
 let requestCount = 1;
 let requestGroupCount = 1;
@@ -223,6 +227,12 @@ export class ImportPostman {
       parameters = this.importParameters(request.url?.query);
     }
 
+    let pathParameters = [] as PathParameters[];
+
+    if (typeof request.url === 'object' && request.url?.variable) {
+      pathParameters = this.importPathParameters(request.url.variable);
+    }
+
     const preRequestScript = this.importPreRequestScript(event);
     const afterResponseScript = this.importAfterResponseScript(event);
 
@@ -248,6 +258,7 @@ export class ImportPostman {
       description: (request.description as string) || '',
       url: transformPostmanToNunjucksString(this.importUrl(request.url)),
       parameters: parameters,
+      pathParameters,
       method: request.method || 'GET',
       headers: headers.map(({ key, value, disabled, description }) => ({
         name: transformPostmanToNunjucksString(key),
@@ -273,6 +284,19 @@ export class ImportPostman {
           value: transformPostmanToNunjucksString(value),
           disabled: disabled || false,
         }) as Parameter,
+    );
+  };
+
+  importPathParameters = (parameters: UrlVariable[]): PathParameters[] => {
+    if (!parameters || parameters?.length === 0) {
+      return [];
+    }
+    return parameters.map(
+      ({ key, value }) =>
+        ({
+          name: transformPostmanToNunjucksString(key as string),
+          value: transformPostmanToNunjucksString(value as string),
+        }) as PathParameters,
     );
   };
 
