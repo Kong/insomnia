@@ -6,12 +6,10 @@ import { Icon } from '../icon';
 
 export const CloudSyncProjectBar: FC = () => {
   return (
-    <div className="flex h-[--line-height-sm] w-full items-center justify-between px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all">
-      <div className="flex items-center gap-2">
-        <Icon icon="earth-americas" />
-        <Separator orientation="vertical" className="h-5 border border-solid border-[--hl-sm] bg-[--color-bg]" />
-        <span>Cloud Sync project</span>
-      </div>
+    <div className="flex h-[--line-height-sm] w-full items-center gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all">
+      <Icon icon="earth-americas" className="size-4" />
+      <Separator orientation="vertical" className="h-5 border border-solid border-[--hl-sm] bg-[--color-bg]" />
+      <span className="flex-1 truncate">Cloud Sync project</span>
       <TooltipTrigger delay={0}>
         <Button className="cursor-default">
           <Icon icon="question-circle" />

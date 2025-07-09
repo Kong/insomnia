@@ -170,13 +170,13 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
     );
   }
 
-  let iconClassName: IconProp = ['fab', 'git-alt'];
+  let icon: IconProp = ['fab', 'git-alt'];
   const providerName = getOauth2FormatName(gitRepository?.credentials);
   if (providerName === 'github') {
-    iconClassName = ['fab', 'github'];
+    icon = ['fab', 'github'];
   }
   if (providerName === 'gitlab') {
-    iconClassName = ['fab', 'gitlab'];
+    icon = ['fab', 'gitlab'];
   }
 
   const isLoading =
@@ -389,51 +389,49 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
   return (
     <>
       <MenuTrigger>
-        <div
-          className={`flex h-[--line-height-sm] w-full items-center text-sm text-[--color-font] ring-1 ring-transparent transition-all ${isLoading ? 'animated-pulse' : 'hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]'}`}
+        <TooltipTrigger
+          delay={0}
+          onOpenChange={isOpen => {
+            const shouldFetchGitRepoStatus = isOpen && gitStatusFetcher.state === 'idle';
+            shouldFetchGitRepoStatus &&
+              gitStatusFetcher.submit(
+                {},
+                {
+                  action: `/organization/${organizationId}/project/${projectId}/git/status`,
+                  method: 'post',
+                },
+              );
+          }}
         >
           <Button
             data-testid="git-dropdown"
             aria-label="Git Sync"
-            className="flex h-full flex-1 items-center gap-2 truncate px-[--padding-md]"
+            className={`flex h-[--line-height-sm] w-full items-center gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all ${isLoading ? 'animated-pulse' : 'hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]'}`}
           >
-            <TooltipTrigger delay={0}>
-              <Button>
-                <Icon icon={iconClassName} />
-              </Button>
-              <Tooltip
-                offset={8}
-                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
-              >
-                <span>
-                  Connected to <span className="capitalize">{providerName}</span>
-                </span>
-              </Tooltip>
-            </TooltipTrigger>
+            <Icon icon={icon} className="size-4" />
             <Separator orientation="vertical" className="h-5 border border-solid border-[--hl-sm] bg-[--color-bg]" />
-            {pendingChangesCount > 0 ? (
-              <TooltipTrigger delay={0}>
-                <Button className="relative">
-                  <Icon icon="code-branch" />
-                  <span className="absolute -bottom-1 -right-1 flex max-h-[10px] items-center justify-center rounded-full bg-[--color-surprise] p-1 text-[6px] font-semibold text-[--color-font]">
-                    {pendingChangesCount}
-                  </span>
-                </Button>
-                <Tooltip
-                  offset={8}
-                  className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
-                >
-                  <span>{pendingChangesCount} pending changes</span>
-                </Tooltip>
-              </TooltipTrigger>
-            ) : (
-              <Icon icon="code-branch" />
-            )}
-            <div className="flex items-center gap-2">
-              <span className="truncate">{isSynced ? currentBranch : 'Not synced'}</span>
+            <div className="relative flex items-center">
+              <Icon icon="code-branch" className="size-4" />
+              {pendingChangesCount > 0 && (
+                <div className="absolute -bottom-2 -right-1 h-[14px] min-w-[8px] bg-[--color-surprise] px-[4px] text-center text-[--color-font-surprise] [border-radius:20px] [font-size:8px] [line-height:14px]">
+                  {pendingChangesCount}
+                </div>
+              )}
             </div>
+            <span className="flex-1 truncate">
+              {isSynced ? currentBranch : gitRepoDataFetcher.state !== 'idle' ? 'Syncing...' : 'Not synced'}
+            </span>
           </Button>
-        </div>
+          <Tooltip
+            offset={8}
+            className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+          >
+            <div>
+              Connected to <span className="capitalize">{providerName}</span>
+            </div>
+            <span>{pendingChangesCount} pending changes</span>
+          </Tooltip>
+        </TooltipTrigger>
         <Popover className="min-w-max max-w-lg overflow-hidden" placement="top end" offset={8}>
           <Menu
             aria-label="Git Sync Menu"

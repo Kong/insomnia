@@ -6,12 +6,10 @@ import { Icon } from '../icon';
 
 export const LocalProjectBar: FC = () => {
   return (
-    <div className="flex h-[--line-height-sm] w-full items-center justify-between px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all">
-      <div className="flex items-center gap-2">
-        <Icon icon="laptop" className="w-5" />
-        <Separator orientation="vertical" className="h-5 border border-solid border-[--hl-sm] bg-[--color-bg]" />
-        <span>Local Vault project</span>
-      </div>
+    <div className="flex h-[--line-height-sm] w-full items-center justify-between gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all">
+      <Icon icon="laptop" className="size-4" />
+      <Separator orientation="vertical" className="h-5 border border-solid border-[--hl-sm] bg-[--color-bg]" />
+      <span className="flex-1 truncate">Local Vault project</span>
       <TooltipTrigger delay={0}>
         <Button className="cursor-default">
           <Icon icon="question-circle" />
