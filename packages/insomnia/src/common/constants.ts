@@ -382,6 +382,11 @@ export const dashboardSortOrderName: Record<DashboardSortOrder, string> = {
 
 export type PreviewMode = 'friendly' | 'source' | 'raw';
 
+export function getBundlePluginByFeature(feature: string) {
+  const bundlePlugins = getAppBundlePlugins();
+  return bundlePlugins.find(p => p.feature === feature);
+}
+
 export function getPreviewModeName(previewMode: PreviewMode, useLong = false) {
   if (previewMode in previewModeMap) {
     return useLong ? previewModeMap[previewMode][1] : previewModeMap[previewMode][0];
