@@ -62,7 +62,6 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
 
   const loadingPush = gitPushFetcher.state === 'loading';
   const loadingFetch = gitFetchFetcher.state === 'loading';
-  const loadingStatus = gitStatusFetcher.state === 'loading';
 
   const [isPulling, setIsPulling] = useState(false);
 
@@ -390,7 +389,9 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
   return (
     <>
       <MenuTrigger>
-        <div className="flex h-[--line-height-sm] w-full items-center text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
+        <div
+          className={`flex h-[--line-height-sm] w-full items-center text-sm text-[--color-font] ring-1 ring-transparent transition-all ${isLoading ? 'animated-pulse' : 'hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]'}`}
+        >
           <Button
             data-testid="git-dropdown"
             aria-label="Git Sync"
@@ -414,7 +415,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
               <TooltipTrigger delay={0}>
                 <Button className="relative">
                   <Icon icon="code-branch" />
-                  <span className="absolute -bottom-1 -right-1 flex max-h-[10px] items-center justify-center rounded-full bg-[--color-surprise] p-1 text-[6px] text-[--color-font] font-semibold">
+                  <span className="absolute -bottom-1 -right-1 flex max-h-[10px] items-center justify-center rounded-full bg-[--color-surprise] p-1 text-[6px] font-semibold text-[--color-font]">
                     {pendingChangesCount}
                   </span>
                 </Button>
