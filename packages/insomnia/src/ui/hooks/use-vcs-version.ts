@@ -42,5 +42,5 @@ export function useGitVCSVersion() {
   const projectData = useRouteLoaderData('/project') as ProjectLoaderData;
   const gitRepository = workspaceData?.gitRepository || projectData?.activeProjectGitRepository;
 
-  return gitRepository?.statusIdentifier || '';
+  return gitRepository?.status.id || '';
 }

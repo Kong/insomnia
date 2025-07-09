@@ -25,11 +25,13 @@ export function init(): BaseGitRepository {
       name: '',
       email: '',
     },
-    statusIdentifier: '',
+    status: {
+      id: '',
+      pending: 0,
+    },
     cachedGitLastCommitTime: null,
     cachedGitRepositoryBranch: null,
     cachedGitLastAuthor: null,
-    hasUncommittedChanges: false,
     hasUnpushedChanges: false,
     uriNeedsMigration: true,
   };
@@ -43,8 +45,10 @@ export interface BaseGitRepository {
     name: string;
     email: string;
   };
-  hasUncommittedChanges: boolean;
-  statusIdentifier: string;
+  status: {
+    id: string;
+    pending: number;
+  };
   cachedGitLastCommitTime: number | null;
   cachedGitRepositoryBranch: string | null;
   cachedGitLastAuthor: string | null;

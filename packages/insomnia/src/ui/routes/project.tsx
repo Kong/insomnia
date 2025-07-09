@@ -651,6 +651,7 @@ const ProjectRoute: FC = () => {
     organizationId: string;
     projectId: string;
   };
+
   const [learningFeature] = useLoaderDeferData<LearningFeature>(learningFeaturePromise);
   const [remoteFiles] = useLoaderDeferData<InsomniaFile[]>(remoteFilesPromise, projectId);
   const [checkAllProjectSyncStatus] = useLoaderDeferData<Record<string, boolean>>(projectsSyncStatusPromise);
@@ -785,7 +786,7 @@ const ProjectRoute: FC = () => {
         presence: projectPresence,
         hasUncommittedOrUnpushedChanges:
           checkAllProjectSyncStatus?.[project._id] ||
-          project.gitRepository?.hasUncommittedChanges ||
+          (project.gitRepository?.status.pending ?? 0) > 0 ||
           project.gitRepository?.hasUnpushedChanges,
       };
     });

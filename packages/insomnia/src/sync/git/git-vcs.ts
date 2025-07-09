@@ -388,6 +388,8 @@ export class GitVCS {
   async statusWithContent() {
     const baseOpts = this._baseOpts;
 
+    const gitTreeIds: string[] = [];
+
     // Adopted from statusMatrix of isomorphic-git https://github.com/isomorphic-git/isomorphic-git/blob/main/src/api/statusMatrix.js#L157
     const status: {
       filepath: string;
@@ -465,6 +467,8 @@ export class GitVCS {
           workdirOid = await workdir?.oid();
         }
 
+        gitTreeIds.push(`${filepath}:${headOid}:${workdirOid}:${stageOid}`);
+
         // Adopted from isomorphic-git statusMatrix.
         // This is needed to return the same status code numbers as isomorphic-git
         // In isomorphic-git it can be found in these types: git.HeadStatus, git.WorkdirStatus, and git.StageStatus
@@ -518,19 +522,26 @@ export class GitVCS {
       },
     });
 
-    return status;
+    return {
+      status,
+      identifier: hash('sha1', gitTreeIds.join('')),
+    };
   }
 
   async status(): Promise<{
+    identifier: string;
+    totalChangesCount: number;
     staged: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus]; name: string }[];
     unstaged: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus]; name: string }[];
   }> {
-    const status = await this.statusWithContent();
+    const { status, identifier } = await this.statusWithContent();
 
     const unstagedChanges = status.filter(({ workdir, stage }) => stage.status !== workdir.status);
     const stagedChanges = status.filter(({ head, stage }) => stage.status !== head.status);
 
     return {
+      identifier,
+      totalChangesCount: unstagedChanges.length + stagedChanges.length,
       staged: stagedChanges.map(({ filepath, head, workdir, stage }) => ({
         path: filepath,
         status: [head.status, workdir.status, stage.status],
@@ -558,10 +569,19 @@ export class GitVCS {
       .map(([filepath, headOid, workdirOid, stageOid]) => {
         return `${filepath}:${headOid}:${workdirOid}:${stageOid}`;
       })
-      .join(',');
+      .join('');
+
+    const totalChangesCount = status.filter(([, headOid, workdirOid, stageOid]) => {
+      // If the headOid is not equal to the workdirOid or stageOid, it means there are pending changes
+      return headOid !== workdirOid || headOid !== stageOid;
+    }).length;
 
     // Hash the status identifier to get a unique identifier for the current status
-    return hash('sha1', Buffer.from(statusIdentifier + lastCommit));
+    const hashedStatus = hash('sha1', Buffer.from(statusIdentifier + lastCommit));
+    return {
+      identifier: hashedStatus,
+      totalChangesCount,
+    };
   }
 
   async addRemote(url: string) {
