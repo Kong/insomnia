@@ -386,8 +386,6 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
   const allSyncMenuActionList = [...gitSyncActions, ...branchesActionList, ...currentBranchActions];
 
   const pendingChangesCount = status?.localChanges ?? 0;
-  const pullCount = 5;
-  const pushCount = 2;
 
   return (
     <>
@@ -398,11 +396,25 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
             aria-label="Git Sync"
             className="flex h-full flex-1 items-center gap-2 truncate px-[--padding-md]"
           >
+            <TooltipTrigger delay={0}>
+              <Button>
+                <Icon icon={iconClassName} />
+              </Button>
+              <Tooltip
+                offset={8}
+                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+              >
+                <span>
+                  Connected to <span className="capitalize">{providerName}</span>
+                </span>
+              </Tooltip>
+            </TooltipTrigger>
+            <Separator orientation="vertical" className="h-5 border border-solid border-[--hl-sm] bg-[--color-bg]" />
             {pendingChangesCount > 0 ? (
               <TooltipTrigger delay={0}>
                 <Button className="relative">
-                  <Icon icon="code-branch" className="w-5" />
-                  <span className="absolute -bottom-1 -right-1 flex max-h-[12px] items-center justify-center rounded-full bg-[--color-surprise] p-1 text-[8px] text-white">
+                  <Icon icon="code-branch" />
+                  <span className="absolute -bottom-1 -right-1 flex max-h-[10px] items-center justify-center rounded-full bg-[--color-surprise] p-1 text-[6px] text-[--color-font] font-semibold">
                     {pendingChangesCount}
                   </span>
                 </Button>
@@ -414,21 +426,10 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
                 </Tooltip>
               </TooltipTrigger>
             ) : (
-              <Icon icon="code-branch" className="w-5" />
+              <Icon icon="code-branch" />
             )}
             <div className="flex items-center gap-2">
               <span className="truncate">{isSynced ? currentBranch : 'Not synced'}</span>
-              <Separator orientation="vertical" className="h-4 border border-solid border-[--hl-sm] bg-[--color-bg]" />
-              <div className="flex flex-shrink-0 items-center gap-2 text-xs text-[--color-font-secondary]">
-                <div className="flex items-center gap-1 text-xs">
-                  <span>{pullCount}</span>
-                  <Icon icon="arrow-down" className="w-2" />
-                </div>
-                <div className="flex items-center gap-1">
-                  <span>{pushCount}</span>
-                  <Icon icon="arrow-up" className="w-2" />
-                </div>
-              </div>
             </div>
           </Button>
         </div>
