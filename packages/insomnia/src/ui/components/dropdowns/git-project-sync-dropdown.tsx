@@ -8,6 +8,7 @@ import {
   MenuSection,
   MenuTrigger,
   Popover,
+  Separator,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
@@ -61,7 +62,6 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
 
   const loadingPush = gitPushFetcher.state === 'loading';
   const loadingFetch = gitFetchFetcher.state === 'loading';
-  const loadingStatus = gitStatusFetcher.state === 'loading';
 
   const [isPulling, setIsPulling] = useState(false);
 
@@ -170,17 +170,16 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
     );
   }
 
-  let iconClassName: IconProp = ['fab', 'git-alt'];
+  let icon: IconProp = ['fab', 'git-alt'];
   const providerName = getOauth2FormatName(gitRepository?.credentials);
   if (providerName === 'github') {
-    iconClassName = ['fab', 'github'];
+    icon = ['fab', 'github'];
   }
   if (providerName === 'gitlab') {
-    iconClassName = ['fab', 'gitlab'];
+    icon = ['fab', 'gitlab'];
   }
 
   const isLoading =
-    gitRepoDataFetcher.state === 'loading' ||
     gitFetchFetcher.state === 'loading' ||
     gitCheckoutFetcher.state === 'loading' ||
     gitPushFetcher.state === 'loading' ||
@@ -354,8 +353,6 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
 
   const status = gitStatusFetcher.data?.status;
 
-  const commitToolTipMsg = status?.localChanges ? 'Local changes made' : 'No local changes made';
-
   const branchesActionList: {
     id: string;
     label: string;
@@ -386,46 +383,55 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
 
   const allSyncMenuActionList = [...gitSyncActions, ...branchesActionList, ...currentBranchActions];
 
+  const pendingChangesCount = status?.localChanges ?? 0;
+
   return (
     <>
       <MenuTrigger>
-        <div className="flex h-[--line-height-sm] w-full items-center text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
+        <TooltipTrigger
+          delay={0}
+          onOpenChange={isOpen => {
+            const shouldFetchGitRepoStatus = isOpen && gitStatusFetcher.state === 'idle';
+            shouldFetchGitRepoStatus &&
+              gitStatusFetcher.submit(
+                {},
+                {
+                  action: `/organization/${organizationId}/project/${projectId}/git/status`,
+                  method: 'post',
+                },
+              );
+          }}
+        >
           <Button
+            isDisabled={isLoading}
             data-testid="git-dropdown"
             aria-label="Git Sync"
-            className="flex h-full flex-1 items-center gap-2 truncate px-[--padding-md]"
+            className={`flex h-[--line-height-sm] w-full items-center gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all ${isLoading ? 'animate-pulse' : 'hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]'}`}
           >
-            <Icon icon={isLoading ? 'refresh' : iconClassName} className={`w-5 ${isLoading ? 'animate-spin' : ''}`} />
-            <span className="truncate">{isSynced ? currentBranch : 'Not synced'}</span>
+            <Icon icon={icon} className="size-4" />
+            <Separator orientation="vertical" className="h-5 border border-solid border-[--hl-sm] bg-[--color-bg]" />
+            <div className="relative flex items-center">
+              <Icon icon={isLoading ? 'spinner' : 'code-branch'} className={`size-4 ${isLoading && 'animate-spin'}`} />
+              {pendingChangesCount > 0 && (
+                <div className="absolute -bottom-2 -right-1 h-[12px] min-w-[12px] bg-[--color-surprise] px-[4px] text-center font-semibold text-[--color-font-surprise] [border-radius:20px] [font-size:6px] [line-height:12px]">
+                  {pendingChangesCount}
+                </div>
+              )}
+            </div>
+            <span className="flex-1 truncate">
+              {isSynced ? currentBranch : gitRepoDataFetcher.state !== 'idle' ? 'Syncing...' : 'Not synced'}
+            </span>
           </Button>
-          <TooltipTrigger
-            onOpenChange={isOpen => {
-              const shouldFetchGitRepoStatus = isOpen && gitStatusFetcher.state === 'idle';
-              shouldFetchGitRepoStatus &&
-                gitStatusFetcher.submit(
-                  {},
-                  {
-                    action: `/organization/${organizationId}/project/${projectId}/git/status`,
-                    method: 'post',
-                  },
-                );
-            }}
+          <Tooltip
+            offset={8}
+            className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
           >
-            <Button className={`h-full px-[--padding-md] ${status?.localChanges ? 'text-[--color-warning]' : ''}`}>
-              <Icon
-                icon={loadingStatus ? 'refresh' : 'cube'}
-                className={`transition-colors ${isLoading ? 'animate-pulse' : loadingStatus ? 'animate-spin' : ''}`}
-              />
-            </Button>
-            <Tooltip
-              placement="top end"
-              offset={8}
-              className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
-            >
-              {commitToolTipMsg}
-            </Tooltip>
-          </TooltipTrigger>
-        </div>
+            <div>
+              Connected to <span className="capitalize">{providerName}</span>
+            </div>
+            <span>{pendingChangesCount} pending changes</span>
+          </Tooltip>
+        </TooltipTrigger>
         <Popover className="min-w-max max-w-lg overflow-hidden" placement="top end" offset={8}>
           <Menu
             aria-label="Git Sync Menu"

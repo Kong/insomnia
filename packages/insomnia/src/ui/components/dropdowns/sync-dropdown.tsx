@@ -8,6 +8,7 @@ import {
   MenuSection,
   MenuTrigger,
   Popover,
+  Separator,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
@@ -103,14 +104,6 @@ export const SyncDropdown: FC<Props> = () => {
     }
   }, [error]);
 
-  if (syncDataLoaderFetcher.state !== 'idle' && !syncDataLoaderFetcher.data) {
-    return (
-      <Button className="flex h-9 w-full items-center gap-4 rounded-sm px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
-        <Icon icon="refresh" className="animate-spin" /> Initializing
-      </Button>
-    );
-  }
-
   let syncData: Extract<SyncDataLoaderData, { historyCount: number }> = {
     status: {
       stage: {},
@@ -143,6 +136,8 @@ export const SyncDropdown: FC<Props> = () => {
 
   const canCreateSnapshot = Object.keys(status.stage).length > 0 || Object.keys(status.unstaged).length > 0;
 
+  const pullCount = behind;
+  const pushCount = ahead;
   const canPush = ahead > 0;
   const canPull = behind > 0;
   const pullToolTipMsg = canPull
@@ -151,7 +146,6 @@ export const SyncDropdown: FC<Props> = () => {
   const pushToolTipMsg = canPush
     ? `There ${ahead === 1 ? 'is' : 'are'} ${ahead} commit${ahead === 1 ? '' : 's'} to push`
     : 'No changes to push';
-  const snapshotToolTipMsg = canCreateSnapshot ? 'Local changes made' : 'No local changes made';
 
   const localBranchesActionList: {
     id: string;
@@ -271,71 +265,72 @@ export const SyncDropdown: FC<Props> = () => {
   const allSyncMenuActionList = [...localBranchesActionList, ...syncMenuActionList];
   const syncError =
     syncDataLoaderFetcher.data && 'error' in syncDataLoaderFetcher.data ? syncDataLoaderFetcher.data.error : null;
+
   return (
     <Fragment>
       <MenuTrigger>
-        <div className="flex h-[--line-height-sm] w-full items-center text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
+        <TooltipTrigger delay={0}>
           <Button
-            aria-label="Insomnia Sync"
-            className="flex h-full flex-1 items-center gap-2 truncate px-[--padding-md]"
+            isDisabled={isSyncing}
+            data-testid="git-dropdown"
+            aria-label="Git Sync"
+            className={`flex h-[--line-height-sm] w-full items-center gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all ${isSyncing ? 'animate-pulse' : 'hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]'}`}
           >
-            <Icon
-              icon={syncError ? 'warning' : isSyncing ? 'refresh' : 'cloud'}
-              className={`w-5 ${syncError ? 'text-[--color-warning]' : isSyncing ? 'animate-spin' : ''}`}
-            />
-            <span className={`truncate ${syncError ? 'text-[--color-warning]' : ''}`}>
+            <Icon icon="earth-americas" className="size-4" />
+            <Separator orientation="vertical" className="h-4 border border-solid border-[--hl-sm] bg-[--color-bg]" />
+            <div className="relative">
+              <Icon icon={isSyncing ? 'spinner' : 'code-branch'} className={`size-4 ${isSyncing && 'animate-spin'}`} />
+              {canCreateSnapshot && !isSyncing && (
+                <div className="absolute -bottom-1 -right-1 size-[10px] rounded-full bg-[--color-surprise]" />
+              )}
+            </div>
+            <span className={`flex-1 truncate ${syncError ? 'text-[--color-warning]' : ''}`}>
               {syncError ? 'Error syncing with Insomnia Cloud' : currentBranch}
             </span>
+            {!syncError && (
+              <div className="flex flex-shrink-0 items-center gap-1.5 text-xs text-[--color-font-secondary]">
+                <div className="flex items-center gap-0.5">
+                  <span>{pullCount}</span>
+                  <Icon icon="arrow-down" className="w-2" />
+                </div>
+                <div className="flex items-center gap-0.5">
+                  <span>{pushCount}</span>
+                  <Icon icon="arrow-up" className="w-2" />
+                </div>
+              </div>
+            )}
           </Button>
-          <div className="flex h-full items-center">
-            <TooltipTrigger>
-              <Button className="h-full pl-2">
-                <Icon
-                  icon="cube"
-                  className={`transition-colors ${canCreateSnapshot ? 'text-[--color-warning]' : 'opacity-50'}`}
-                />
-              </Button>
-              <Tooltip
-                placement="top end"
-                offset={8}
-                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
-              >
-                {snapshotToolTipMsg}
-              </Tooltip>
-            </TooltipTrigger>
-            <TooltipTrigger>
-              <Button className="h-full px-2">
-                <Icon
-                  icon="cloud-download"
-                  className={`transition-colors ${canPull ? '' : 'opacity-50'} ${pullFetcher.state !== 'idle' ? 'animate-pulse' : ''}`}
-                />
-              </Button>
-              <Tooltip
-                placement="top end"
-                offset={8}
-                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
-              >
+          <Tooltip
+            offset={8}
+            className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+          >
+            <div className="flex flex-col gap-1">
+              <div>Encrypted and synced securely to the cloud. Ideal for out of the box collaboration.</div>
+              {canCreateSnapshot && (
+                <div className="flex items-center gap-2">
+                  <div className="size-[10px] rounded-full bg-[--color-surprise]" />
+                  There are pending changes to commit.
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-0.5">
+                  <span>{pullCount}</span>
+                  <Icon icon="arrow-down" className="w-2" />
+                </div>
                 {pullToolTipMsg}
-              </Tooltip>
-            </TooltipTrigger>
-
-            <TooltipTrigger>
-              <Button className="h-full pr-[--padding-md]">
-                <Icon
-                  icon="cloud-upload"
-                  className={`transition-colors ${canPush ? '' : 'opacity-50'} ${pushFetcher.state !== 'idle' ? 'animate-pulse' : ''}`}
-                />
-              </Button>
-              <Tooltip
-                placement="top end"
-                offset={8}
-                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
-              >
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-0.5">
+                  <span>{pushCount}</span>
+                  <Icon icon="arrow-up" className="w-2" />
+                </div>
                 {pushToolTipMsg}
-              </Tooltip>
-            </TooltipTrigger>
-          </div>
-        </div>
+              </div>
+              <div className="text-[--color-warning]">{syncError ? `Error: ${syncError}` : ''}</div>
+            </div>
+          </Tooltip>
+        </TooltipTrigger>
+
         <Popover className="min-w-max max-w-lg overflow-hidden" placement="top end" offset={8}>
           <Menu
             aria-label="Insomnia Sync Menu"
