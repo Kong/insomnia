@@ -203,6 +203,9 @@ test.describe('Check vault used in environment', () => {
     await page.getByTestId('underlay').click();
     // activate request
     await page.getByTestId('legacy-invalid-vault').getByLabel('GET legacy-invalid-vault', { exact: true }).click();
+    await expect
+      .soft(page.getByLabel('Insomnia Tabs').getByText('legacy-invalid-vault', { exact: true }))
+      .toBeVisible();
     await page.getByRole('button', { name: 'Send' }).click(); // Expect to see error message
     await expect.soft(page.getByText('Unexpected Request Failure')).toBeVisible();
     await expect.soft(page.getByText('vault is a reserved key for insomnia vault')).toBeVisible();

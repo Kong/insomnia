@@ -4,6 +4,7 @@ import { translateHandlersInScript } from '../postman';
 
 describe('test translateHandlersInScript', () => {
   [
+    // pm. -> insomnia.
     {
       script: "pm.environment.set('', '')",
       expected: "insomnia.environment.set('', '')",
@@ -37,6 +38,48 @@ describe('test translateHandlersInScript', () => {
                 console.log(insomnia.variables.get('score'), insomnia.variables.get('score2'));
                 console.log(insomnia.collectionVariables.get('score'));
                 console.log(insomnia.environment.get('score'));`,
+    },
+    // responseBody
+    {
+      script: 'responseBody',
+      expected: 'insomnia.response.body',
+    },
+    {
+      script: 'log(responseBody)',
+      expected: 'log(insomnia.response.body)',
+    },
+    {
+      script: '$responseBody',
+      expected: '$responseBody',
+    },
+    {
+      script: 'foo.responseBody',
+      expected: 'foo.responseBody',
+    },
+    {
+      script: 'responseBody$foo',
+      expected: 'responseBody$foo',
+    },
+    // responseCode.code
+    {
+      script: 'responseCode.code',
+      expected: 'insomnia.response.code',
+    },
+    {
+      script: 'log(responseCode.code)',
+      expected: 'log(insomnia.response.code)',
+    },
+    {
+      script: '$responseCode.code',
+      expected: '$responseCode.code',
+    },
+    {
+      script: 'foo.responseCode.code',
+      expected: 'foo.responseCode.code',
+    },
+    {
+      script: 'responseCode.code$foo',
+      expected: 'responseCode.code$foo',
     },
   ].forEach(testCase => {
     it(`translate: ${testCase.script}`, () => {
