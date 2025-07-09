@@ -8,6 +8,7 @@ import {
   MenuSection,
   MenuTrigger,
   Popover,
+  Separator,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
@@ -103,14 +104,6 @@ export const SyncDropdown: FC<Props> = () => {
     }
   }, [error]);
 
-  if (syncDataLoaderFetcher.state !== 'idle' && !syncDataLoaderFetcher.data) {
-    return (
-      <Button className="flex h-9 w-full items-center gap-4 rounded-sm px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
-        <Icon icon="refresh" className="animate-spin" /> Initializing
-      </Button>
-    );
-  }
-
   let syncData: Extract<SyncDataLoaderData, { historyCount: number }> = {
     status: {
       stage: {},
@@ -143,6 +136,8 @@ export const SyncDropdown: FC<Props> = () => {
 
   const canCreateSnapshot = Object.keys(status.stage).length > 0 || Object.keys(status.unstaged).length > 0;
 
+  const pullCount = behind;
+  const pushCount = ahead;
   const canPush = ahead > 0;
   const canPull = behind > 0;
   const pullToolTipMsg = canPull
@@ -151,7 +146,6 @@ export const SyncDropdown: FC<Props> = () => {
   const pushToolTipMsg = canPush
     ? `There ${ahead === 1 ? 'is' : 'are'} ${ahead} commit${ahead === 1 ? '' : 's'} to push`
     : 'No changes to push';
-  const snapshotToolTipMsg = canCreateSnapshot ? 'Local changes made' : 'No local changes made';
 
   const localBranchesActionList: {
     id: string;
@@ -271,129 +265,147 @@ export const SyncDropdown: FC<Props> = () => {
   const allSyncMenuActionList = [...localBranchesActionList, ...syncMenuActionList];
   const syncError =
     syncDataLoaderFetcher.data && 'error' in syncDataLoaderFetcher.data ? syncDataLoaderFetcher.data.error : null;
+
   return (
     <Fragment>
       <MenuTrigger>
-        <div className="flex h-[--line-height-sm] w-full items-center text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
+        <div
+          className={`flex h-[--line-height-sm] w-full items-center text-sm text-[--color-font] ring-1 ring-transparent transition-all ${isSyncing ? 'animate-pulse cursor-not-allowed' : 'hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]'}`}
+        >
           <Button
-            aria-label="Insomnia Sync"
+            data-testid="git-dropdown"
+            aria-label="Git Sync"
             className="flex h-full flex-1 items-center gap-2 truncate px-[--padding-md]"
           >
-            <Icon
-              icon={syncError ? 'warning' : isSyncing ? 'refresh' : 'cloud'}
-              className={`w-5 ${syncError ? 'text-[--color-warning]' : isSyncing ? 'animate-spin' : ''}`}
-            />
-            <span className={`truncate ${syncError ? 'text-[--color-warning]' : ''}`}>
-              {syncError ? 'Error syncing with Insomnia Cloud' : currentBranch}
-            </span>
-          </Button>
-          <div className="flex h-full items-center">
-            <TooltipTrigger>
-              <Button className="h-full pl-2">
-                <Icon
-                  icon="cube"
-                  className={`transition-colors ${canCreateSnapshot ? 'text-[--color-warning]' : 'opacity-50'}`}
-                />
+            <TooltipTrigger delay={0}>
+              <Button className="relative">
+                <Icon icon="earth-americas" />
               </Button>
               <Tooltip
-                placement="top end"
                 offset={8}
                 className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
               >
-                {snapshotToolTipMsg}
-              </Tooltip>
-            </TooltipTrigger>
-            <TooltipTrigger>
-              <Button className="h-full px-2">
-                <Icon
-                  icon="cloud-download"
-                  className={`transition-colors ${canPull ? '' : 'opacity-50'} ${pullFetcher.state !== 'idle' ? 'animate-pulse' : ''}`}
-                />
-              </Button>
-              <Tooltip
-                placement="top end"
-                offset={8}
-                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
-              >
-                {pullToolTipMsg}
+                Encrypted and synced securely to the cloud. Ideal for out of the box collaboration.
               </Tooltip>
             </TooltipTrigger>
 
-            <TooltipTrigger>
-              <Button className="h-full pr-[--padding-md]">
-                <Icon
-                  icon="cloud-upload"
-                  className={`transition-colors ${canPush ? '' : 'opacity-50'} ${pushFetcher.state !== 'idle' ? 'animate-pulse' : ''}`}
-                />
-              </Button>
-              <Tooltip
-                placement="top end"
-                offset={8}
-                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
-              >
-                {pushToolTipMsg}
-              </Tooltip>
-            </TooltipTrigger>
-          </div>
-        </div>
-        <Popover className="min-w-max max-w-lg overflow-hidden" placement="top end" offset={8}>
-          <Menu
-            aria-label="Insomnia Sync Menu"
-            selectionMode="single"
-            disabledKeys={allSyncMenuActionList.filter(item => item.isDisabled).map(item => item.id)}
-            onAction={key => {
-              const item = allSyncMenuActionList.find(item => item.id === key);
-              item?.action();
-            }}
-            className="max-h-[85vh] max-w-lg select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
-          >
-            {syncError && (
-              <MenuSection className="border-b border-solid border-[--hl-sm]">
-                <MenuItem
-                  className={
-                    'text-md flex w-full items-center gap-2 overflow-hidden whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold'
-                  }
-                  aria-label={syncError}
+            <Separator orientation="vertical" className="h-4 border border-solid border-[--hl-sm] bg-[--color-bg]" />
+            {canCreateSnapshot ? (
+              <TooltipTrigger delay={0}>
+                <Button className="relative">
+                  <Icon icon="code-branch" className="w-5" />
+                  <span className="absolute bottom-0.5 right-0.5 flex max-h-[8px] items-center justify-center rounded-full bg-[--color-surprise] p-1 text-[8px] text-white" />
+                </Button>
+                <Tooltip
+                  offset={8}
+                  className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
                 >
-                  <Icon icon="exclamation-triangle" className="text-[--color-warning]" />
-                  <p className="whitespace-normal">{syncError}</p>
-                </MenuItem>
-              </MenuSection>
+                  <span>Pending changes exists</span>
+                </Tooltip>
+              </TooltipTrigger>
+            ) : (
+              <Icon icon="code-branch" className="w-5" />
             )}
-            {!syncError && (
-              <Fragment>
+            <div className="flex flex-1 items-center justify-between gap-2">
+              <span className={`truncate ${syncError ? 'text-[--color-warning]' : ''}`}>
+                {syncError ? 'Error syncing with Insomnia Cloud' : currentBranch}
+              </span>
+              {!syncError && (
+                <div className="flex flex-shrink-0 items-center gap-1.5 text-xs text-[--color-font-secondary]">
+                  <TooltipTrigger delay={0}>
+                    <Button className="relative">
+                      <div className="flex items-center gap-0.5">
+                        <span>{pullCount}</span>
+                        <Icon icon="arrow-down" className="w-2" />
+                      </div>
+                    </Button>
+                    <Tooltip
+                      offset={8}
+                      className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                    >
+                      {pullToolTipMsg}
+                    </Tooltip>
+                  </TooltipTrigger>
+                  <TooltipTrigger delay={0}>
+                    <Button className="relative">
+                      <div className="flex items-center gap-0.5">
+                        <span>{pushCount}</span>
+                        <Icon icon="arrow-up" className="w-2" />
+                      </div>
+                    </Button>
+                    <Tooltip
+                      offset={8}
+                      className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+                    >
+                      {pushToolTipMsg}
+                    </Tooltip>
+                  </TooltipTrigger>
+                </div>
+              )}
+            </div>
+          </Button>
+        </div>
+
+        {!isSyncing && (
+          <Popover className="min-w-max max-w-lg overflow-hidden" placement="top end" offset={8}>
+            <Menu
+              aria-label="Insomnia Sync Menu"
+              selectionMode="single"
+              disabledKeys={allSyncMenuActionList.filter(item => item.isDisabled).map(item => item.id)}
+              onAction={key => {
+                const item = allSyncMenuActionList.find(item => item.id === key);
+                item?.action();
+              }}
+              className="max-h-[85vh] max-w-lg select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] py-2 text-sm shadow-lg focus:outline-none"
+            >
+              {syncError && (
                 <MenuSection className="border-b border-solid border-[--hl-sm]">
-                  <Collection items={localBranchesActionList}>
-                    {item => (
-                      <MenuItem
-                        className={`text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold ${item.isActive ? 'font-bold' : ''}`}
-                        aria-label={item.name}
-                      >
-                        <Icon icon={item.icon} className={item.isActive ? 'text-[--color-success]' : ''} />
-                        <span className="truncate">{item.name}</span>
-                      </MenuItem>
-                    )}
-                  </Collection>
+                  <MenuItem
+                    className={
+                      'text-md flex w-full items-center gap-2 overflow-hidden whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors focus:outline-none disabled:cursor-not-allowed aria-selected:font-bold'
+                    }
+                    aria-label={syncError}
+                  >
+                    <Icon icon="exclamation-triangle" className="text-[--color-warning]" />
+                    <p className="whitespace-normal">{syncError}</p>
+                  </MenuItem>
                 </MenuSection>
-                <MenuSection>
-                  <Collection items={syncMenuActionList}>
-                    {item => (
-                      <MenuItem
-                        className={
-                          'text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
-                        }
-                        aria-label={item.name}
-                      >
-                        <Icon icon={item.icon} />
-                        <span>{item.name}</span>
-                      </MenuItem>
-                    )}
-                  </Collection>
-                </MenuSection>
-              </Fragment>
-            )}
-          </Menu>
-        </Popover>
+              )}
+              {!syncError && (
+                <Fragment>
+                  <MenuSection className="border-b border-solid border-[--hl-sm]">
+                    <Collection items={localBranchesActionList}>
+                      {item => (
+                        <MenuItem
+                          className={`text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold ${item.isActive ? 'font-bold' : ''}`}
+                          aria-label={item.name}
+                        >
+                          <Icon icon={item.icon} className={item.isActive ? 'text-[--color-success]' : ''} />
+                          <span className="truncate">{item.name}</span>
+                        </MenuItem>
+                      )}
+                    </Collection>
+                  </MenuSection>
+                  <MenuSection>
+                    <Collection items={syncMenuActionList}>
+                      {item => (
+                        <MenuItem
+                          className={
+                            'text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:font-bold'
+                          }
+                          aria-label={item.name}
+                        >
+                          <Icon icon={item.icon} />
+                          <span>{item.name}</span>
+                        </MenuItem>
+                      )}
+                    </Collection>
+                  </MenuSection>
+                </Fragment>
+              )}
+            </Menu>
+          </Popover>
+        )}
       </MenuTrigger>
       {isGitRepoSettingsModalOpen && <GitRepositorySettingsModal onHide={() => setIsGitRepoSettingsModalOpen(false)} />}
       {isSyncBranchesModalOpen && (
