@@ -145,17 +145,9 @@ export default async function build(options: Options) {
   const preload = esbuild.build(preloadBuildOptions);
   const hiddenBrowserWindowPreload = esbuild.build(hiddenBrowserWindowPreloadBuildOptions);
   const main = esbuild.build(mainBuildOptions);
-  return Promise.all([main, preload, hiddenBrowserWindowPreload])
-    .catch(err => {
-      console.error('[Build] Build failed:', err);
-    })
-    .then(() => {
-      if (__DEV__) {
-        // start electron automatically in dev build
-        console.log('[Dev Build] Build complete, start Electron');
-        startElectron();
-      }
-    });
+  return Promise.all([main, preload, hiddenBrowserWindowPreload]).catch(err => {
+    console.error('[Build] Build failed:', err);
+  });
 }
 
 // Build if ran as a cli script
