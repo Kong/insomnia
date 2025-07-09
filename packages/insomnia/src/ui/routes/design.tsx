@@ -63,7 +63,6 @@ import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useAIContext } from '../context/app/ai-context';
 import { useInsomniaTab } from '../hooks/use-insomnia-tab';
 import { useActiveApiSpecSyncVCSVersion, useGitVCSVersion } from '../hooks/use-vcs-version';
-import { SpectralRunner } from '../worker/spectral-handler';
 import { useRootLoaderData } from './root';
 import type { WorkspaceLoaderData } from './workspace';
 
@@ -199,19 +198,13 @@ const Design: FC = () => {
   const lintErrors = lintMessages.filter(message => message.type === 'error');
   const lintWarnings = lintMessages.filter(message => message.type === 'warning');
 
-  const spectralRunnerRef = useRef<SpectralRunner>();
-
   const registerCodeMirrorLint = (rulesetPath: string) => {
     CodeMirror.registerHelper('lint', 'openapi', async (contents: string) => {
-      let runner = spectralRunnerRef.current;
-
-      if (!runner) {
-        runner = new SpectralRunner();
-        spectralRunnerRef.current = runner;
-      }
-
       try {
-        const diagnostics = await runner.runDiagnostics({ contents, rulesetPath });
+        const diagnostics = await window.main.lintSpec({ documentContent: contents, rulesetPath });
+        if (diagnostics.error) {
+          return Promise.reject(diagnostics.error);
+        }
         const lintResult = diagnostics.map(({ severity, code, message, range }) => {
           return {
             from: CodeMirror.Pos(range.start.line, range.start.character),
@@ -241,7 +234,6 @@ const Design: FC = () => {
   useUnmount(() => {
     // delete the helper to avoid it run multiple times when user enter the page next time
     CodeMirror.registerHelper('lint', 'openapi', undefined);
-    spectralRunnerRef.current?.terminate();
   });
 
   const onCodeEditorChange = useMemo(() => {

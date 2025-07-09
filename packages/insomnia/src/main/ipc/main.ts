@@ -1,8 +1,17 @@
 import fs from 'node:fs';
+import path from 'node:path';
 
+import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
 import chardet from 'chardet';
 import type { MarkerRange } from 'codemirror';
-import { app, BrowserWindow, type IpcRendererEvent, type MenuItemConstructorOptions, shell } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  type IpcRendererEvent,
+  type MenuItemConstructorOptions,
+  shell,
+  utilityProcess,
+} from 'electron';
 import iconv from 'iconv-lite';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
@@ -58,7 +67,10 @@ export interface RendererToMainBridgeAPI {
     menuItems: MenuItemConstructorOptions[];
     extra?: Record<string, any>;
   }) => void;
-
+  lintSpec: (options: {
+    documentContent: string;
+    rulesetPath: string;
+  }) => Promise<ISpectralDiagnostic[] | { error: string }>;
   database: {
     caCertificate: {
       create: (options: { parentId: string; path: string }) => Promise<string>;
@@ -114,6 +126,28 @@ export function registerMainHandlers() {
     } catch (err) {
       throw new Error(err);
     }
+  });
+  ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
+    const { documentContent, rulesetPath } = options;
+    return new Promise((resolve, reject) => {
+      const worker = utilityProcess.fork(path.join(__dirname, 'ui/worker/lint-worker.js'), {
+        stdio: ['ignore', 'inherit', 'inherit'],
+        serviceName: 'lint-worker',
+      });
+
+      worker.on('message', msg => {
+        console.log('[lint-worker] received message:', msg);
+        resolve(msg);
+        worker.kill();
+      });
+
+      worker.on('error', err => {
+        console.error('[lint-worker] error:', err);
+        reject({ error: err.message });
+      });
+
+      worker.postMessage({ documentContent, rulesetPath });
+    });
   });
 
   ipcMainHandle('readFile', async (_, options: { path: string; encoding?: string }) => {

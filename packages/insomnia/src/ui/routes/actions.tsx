@@ -36,7 +36,6 @@ import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
-import { SpectralRunner } from '../worker/spectral-handler';
 import { syncNewWorkspaceIfNeeded } from './import';
 
 // Project
@@ -1198,12 +1197,11 @@ export const generateCollectionFromApiSpecAction: ActionFunction = async ({ para
     `version-control/git/${gitRepositoryId}/other/.spectral.yaml`,
   );
 
-  const spectralRunner = new SpectralRunner();
-
-  const results = (await spectralRunner.runDiagnostics({ contents: apiSpec.contents, rulesetPath })).filter(
-    isLintError,
-  );
-  spectralRunner.terminate();
+  const diagnostics = await window.main.lintSpec({ documentContent: apiSpec.contents, rulesetPath });
+  if (diagnostics.error) {
+    throw diagnostics;
+  }
+  const results = diagnostics.filter(isLintError);
   if (apiSpec.contents && results && results.length) {
     throw new Error('Error Generating Configuration');
   }
@@ -1244,12 +1242,11 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
     `version-control/git/${workspaceMeta?.gitRepositoryId}/other/.spectral.yaml`,
   );
 
-  const spectralRunner = new SpectralRunner();
-
-  const results = (await spectralRunner.runDiagnostics({ contents: apiSpec.contents, rulesetPath })).filter(
-    isLintError,
-  );
-  spectralRunner.terminate();
+  const diagnostics = await window.main.lintSpec({ documentContent: apiSpec.contents, rulesetPath });
+  if (diagnostics.error) {
+    throw diagnostics;
+  }
+  const results = diagnostics.filter(isLintError);
   if (apiSpec.contents && results && results.length) {
     throw new Error('Error Generating Configuration');
   }
