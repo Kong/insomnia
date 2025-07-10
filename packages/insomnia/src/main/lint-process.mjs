@@ -20,7 +20,6 @@ process.parentPort.on('message', async ({ data: { documentContent, rulesetPath }
   }
 
   try {
-    console.log('[lint-process] Linting document content');
     const spectral = new Spectral.Spectral();
     const { fetch } = spectralRuntime;
     const ruleset = hasValidCustomRuleset ? await bundleAndLoadRuleset(rulesetPath, { fs, fetch, }) : oas;

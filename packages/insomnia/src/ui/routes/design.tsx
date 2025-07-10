@@ -192,6 +192,7 @@ const Design: FC = () => {
       try {
         const { diagnostics, error } = await window.main.lintSpec({ documentContent: contents, rulesetPath });
         if (error) {
+          console.error(error);
           return Promise.reject(error);
         }
         const lintResult = diagnostics?.map(({ severity, code, message, range }) => {
@@ -961,10 +962,10 @@ const Design: FC = () => {
                         {lintWarnings.length}
                       </div>
                     )}
-                    {lintMessages.length === 0 && apiSpec.contents && (
+                    {apiSpec.contents && (
                       <div className="flex select-none items-center gap-2">
-                        <Icon icon="check-square" className="text-[--color-success]" />
-                        No lint problems
+                        {lintMessages.length === 0 && <Icon icon="check-square" className="text-[--color-success]" />}
+                        {lintMessages.length === 0 ? 'No lint problems' : 'Lint problems detected'}
                       </div>
                     )}
                     <span className="flex-1" />
