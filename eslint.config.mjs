@@ -62,6 +62,7 @@ export default tseslint.config(
       'playwright/prefer-native-locators': 'error',
       'playwright/prefer-to-be': 'error',
       'playwright/prefer-to-contain': 'error',
+      'playwright/no-wait-for-selector': 'off',
     },
   },
   {
