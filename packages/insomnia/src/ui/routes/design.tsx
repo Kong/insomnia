@@ -169,9 +169,10 @@ const Design: FC = () => {
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
   const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
-  const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
 
   const { apiSpec, rulesetPath, parsedSpec } = useLoaderData() as LoaderData;
+
+  const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
 
   const editor = useRef<CodeEditorHandle>(null);
   const { generating, generateTestsFromSpec, access } = useAIContext();

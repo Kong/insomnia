@@ -130,7 +130,7 @@ export function registerMainHandlers() {
   ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
     const { documentContent, rulesetPath } = options;
     return new Promise((resolve, reject) => {
-      const lintProcess = utilityProcess.fork(path.join(__dirname, 'main/lint-process.js'));
+      const lintProcess = utilityProcess.fork(path.join(__dirname, 'main/lint-process.mjs'));
 
       lintProcess.on('message', msg => {
         resolve(msg);
