@@ -130,7 +130,7 @@ export function registerMainHandlers() {
   ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
     const { documentContent, rulesetPath } = options;
     return new Promise((resolve, reject) => {
-      const worker = utilityProcess.fork(path.join(__dirname, 'ui/worker/lint-worker.js'), {
+      const worker = utilityProcess.fork(path.join(__dirname, 'main/lint-worker.js'), {
         stdio: ['ignore', 'inherit', 'inherit'],
         serviceName: 'lint-worker',
       });
