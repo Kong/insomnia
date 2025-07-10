@@ -133,7 +133,6 @@ export function registerMainHandlers() {
       const lintProcess = utilityProcess.fork(path.join(__dirname, 'main/lint-process.js'));
 
       lintProcess.on('message', msg => {
-        console.log('[lint-process] received message:', msg);
         resolve(msg);
         lintProcess.kill();
       });

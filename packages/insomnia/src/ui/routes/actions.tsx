@@ -1,3 +1,4 @@
+import { stat } from 'node:fs/promises';
 import path from 'node:path';
 
 import type { IRuleResult } from '@stoplight/spectral-core';
@@ -1192,10 +1193,15 @@ export const generateCollectionFromApiSpecAction: ActionFunction = async ({ para
 
   const gitRepositoryId = isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
 
-  const rulesetPath = path.join(
-    process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-    `version-control/git/${gitRepositoryId}/other/.spectral.yaml`,
-  );
+  let rulesetPath = gitRepositoryId
+    ? path.join(
+        process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
+        `version-control/git/${gitRepositoryId}/other/.spectral.yaml`,
+      )
+    : '';
+  if (!(await stat(rulesetPath)).isFile()) {
+    rulesetPath = '';
+  }
 
   const { diagnostics, error } = await window.main.lintSpec({ documentContent: apiSpec.contents, rulesetPath });
   if (error) {
@@ -1236,11 +1242,17 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
 
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
 
+  const gitRepositoryId = workspaceMeta?.gitRepositoryId;
   const isLintError = (result: IRuleResult) => result.severity === 0;
-  const rulesetPath = path.join(
-    process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-    `version-control/git/${workspaceMeta?.gitRepositoryId}/other/.spectral.yaml`,
-  );
+  let rulesetPath = gitRepositoryId
+    ? path.join(
+        process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
+        `version-control/git/${gitRepositoryId}/other/.spectral.yaml`,
+      )
+    : '';
+  if (!(await stat(rulesetPath)).isFile()) {
+    rulesetPath = '';
+  }
 
   const { diagnostics, error } = await window.main.lintSpec({ documentContent: apiSpec.contents, rulesetPath });
   if (error) {
