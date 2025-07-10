@@ -18,7 +18,6 @@ process.parentPort.on('message', async ({ data: { documentContent, rulesetPath }
       hasValidCustomRuleset = true;
     } catch { }
   }
-
   try {
     const spectral = new Spectral.Spectral();
     const { fetch } = spectralRuntime;

@@ -53,6 +53,7 @@ import { EnvironmentPicker } from '../components/environment-picker';
 import { Icon } from '../components/icon';
 import { InsomniaAI } from '../components/insomnia-ai-icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
+import { showError } from '../components/modals';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { CertificatesModal } from '../components/modals/workspace-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
@@ -192,7 +193,11 @@ const Design: FC = () => {
       try {
         const { diagnostics, error } = await window.main.lintSpec({ documentContent: contents, rulesetPath });
         if (error) {
-          console.error(error);
+          console.log('Handled error detected while linting:', error);
+          showError({
+            title: 'Linting Error',
+            message: `An error occurred while linting the OpenAPI specification: ${error}`,
+          });
           return Promise.reject(error);
         }
         const lintResult = diagnostics?.map(({ severity, code, message, range }) => {
@@ -208,9 +213,14 @@ const Design: FC = () => {
         });
         setLintMessages?.(lintResult || []);
         return lintResult;
-      } catch (e) {
+      } catch (error) {
         // return a rejected promise so that codemirror do nothing
-        return Promise.reject(e);
+        console.log('Unhandled error while linting:', error);
+        showError({
+          title: 'Linting Error',
+          message: `An error occurred while linting the OpenAPI specification: ${error}`,
+        });
+        return Promise.reject(error);
       }
     });
   };
