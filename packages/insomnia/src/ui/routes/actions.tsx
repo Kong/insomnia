@@ -1197,11 +1197,11 @@ export const generateCollectionFromApiSpecAction: ActionFunction = async ({ para
     `version-control/git/${gitRepositoryId}/other/.spectral.yaml`,
   );
 
-  const diagnostics = await window.main.lintSpec({ documentContent: apiSpec.contents, rulesetPath });
-  if (diagnostics.error) {
-    throw diagnostics;
+  const { diagnostics, error } = await window.main.lintSpec({ documentContent: apiSpec.contents, rulesetPath });
+  if (error) {
+    throw error;
   }
-  const results = diagnostics.filter(isLintError);
+  const results = diagnostics?.filter(isLintError);
   if (apiSpec.contents && results && results.length) {
     throw new Error('Error Generating Configuration');
   }
@@ -1242,11 +1242,11 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
     `version-control/git/${workspaceMeta?.gitRepositoryId}/other/.spectral.yaml`,
   );
 
-  const diagnostics = await window.main.lintSpec({ documentContent: apiSpec.contents, rulesetPath });
-  if (diagnostics.error) {
-    throw diagnostics;
+  const { diagnostics, error } = await window.main.lintSpec({ documentContent: apiSpec.contents, rulesetPath });
+  if (error) {
+    throw error;
   }
-  const results = diagnostics.filter(isLintError);
+  const results = diagnostics?.filter(isLintError);
   if (apiSpec.contents && results && results.length) {
     throw new Error('Error Generating Configuration');
   }

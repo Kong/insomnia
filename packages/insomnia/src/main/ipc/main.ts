@@ -70,7 +70,7 @@ export interface RendererToMainBridgeAPI {
   lintSpec: (options: {
     documentContent: string;
     rulesetPath: string;
-  }) => Promise<ISpectralDiagnostic[] | { error: string }>;
+  }) => Promise<{ diagnostics?: ISpectralDiagnostic[]; error?: string }>;
   database: {
     caCertificate: {
       create: (options: { parentId: string; path: string }) => Promise<string>;
@@ -130,23 +130,20 @@ export function registerMainHandlers() {
   ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
     const { documentContent, rulesetPath } = options;
     return new Promise((resolve, reject) => {
-      const worker = utilityProcess.fork(path.join(__dirname, 'main/lint-worker.js'), {
-        stdio: ['ignore', 'inherit', 'inherit'],
-        serviceName: 'lint-worker',
-      });
+      const lintProcess = utilityProcess.fork(path.join(__dirname, 'main/lint-process.js'));
 
-      worker.on('message', msg => {
-        console.log('[lint-worker] received message:', msg);
+      lintProcess.on('message', msg => {
+        console.log('[lint-process] received message:', msg);
         resolve(msg);
-        worker.kill();
+        lintProcess.kill();
       });
 
-      worker.on('error', err => {
-        console.error('[lint-worker] error:', err);
-        reject({ error: err.message });
+      lintProcess.on('error', err => {
+        console.error('[lint-process] error:', err);
+        reject({ error: err.toString() });
       });
 
-      worker.postMessage({ documentContent, rulesetPath });
+      lintProcess.postMessage({ documentContent, rulesetPath });
     });
   });
 

@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-console.log('Lint worker started');
+console.log('[lint-process] Lint worker started');
 import fs from 'node:fs';
 
 import Spectral from '@stoplight/spectral-core';
@@ -12,14 +12,14 @@ process.on('uncaughtException', (error) => {
 
 process.parentPort.on('message', async ({ data: { documentContent, rulesetPath } }) => {
   try {
-    console.log('Linting document content');
+    console.log('[lint-process] Linting document content');
     const spectral = new Spectral.Spectral();
     const { fetch } = spectralRuntime;
     const ruleset = rulesetPath ? await bundleAndLoadRuleset(rulesetPath, { fs, fetch, }) : oas;
     spectral.setRuleset(ruleset);
-    console.log('Ruleset loaded:', rulesetPath || 'default OAS ruleset');
-    const results = await spectral.run(documentContent);
-    process.parentPort.postMessage(results);
+    console.log('[lint-process] Ruleset loaded:', rulesetPath || 'default OAS ruleset');
+    const diagnostics = await spectral.run(documentContent);
+    process.parentPort.postMessage({ diagnostics });
   } catch (err) {
     process.parentPort.postMessage({ error: err.message });
   }

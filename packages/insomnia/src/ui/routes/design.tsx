@@ -201,11 +201,11 @@ const Design: FC = () => {
   const registerCodeMirrorLint = (rulesetPath: string) => {
     CodeMirror.registerHelper('lint', 'openapi', async (contents: string) => {
       try {
-        const diagnostics = await window.main.lintSpec({ documentContent: contents, rulesetPath });
-        if (diagnostics.error) {
-          return Promise.reject(diagnostics.error);
+        const { diagnostics, error } = await window.main.lintSpec({ documentContent: contents, rulesetPath });
+        if (error) {
+          return Promise.reject(error);
         }
-        const lintResult = diagnostics.map(({ severity, code, message, range }) => {
+        const lintResult = diagnostics?.map(({ severity, code, message, range }) => {
           return {
             from: CodeMirror.Pos(range.start.line, range.start.character),
             to: CodeMirror.Pos(range.end.line, range.end.character),
@@ -216,7 +216,7 @@ const Design: FC = () => {
             line: range.start.line,
           };
         });
-        setLintMessages?.(lintResult);
+        setLintMessages?.(lintResult || []);
         return lintResult;
       } catch (e) {
         // return a rejected promise so that codemirror do nothing
