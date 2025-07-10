@@ -69,7 +69,6 @@ export const Plugins: FC = () => {
 
   // If some plugins are enabled, we show the indeterminate state
   const isIndeterminate = plugins.some(plugin => plugin.config.disabled === false);
-  const preBundlePlugins = plugins.filter(plugin => plugin.directory.startsWith(preBundlePluginDirectory));
 
   useEffect(() => {
     setState(state => ({ ...state, pluginNodeExtraCerts: settings.pluginNodeExtraCerts }));
@@ -82,7 +81,12 @@ export const Plugins: FC = () => {
   async function handleReloadPlugins() {
     setState(state => ({ ...state, isRefreshingPlugins: true }));
     // Get and reload plugins
-    const plugins = await getPlugins(true);
+    const plugins = await (
+      await getPlugins(true)
+    ).filter(p => {
+      // Filter out pre-bundled plugins
+      return !p.directory.startsWith(preBundlePluginDirectory);
+    });
 
     reload();
 
@@ -343,43 +347,41 @@ export const Plugins: FC = () => {
             )}
           </div>
           <div className="mt-4 flex flex-col">
-            {plugins.length > 0 && plugins.length !== preBundlePlugins.length && (
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2 pl-2">
-                  <div className="flex flex-1 items-center gap-3">
-                    <Checkbox
-                      isSelected={isAllPluginsSelected}
-                      isIndeterminate={isIndeterminate}
-                      onChange={isSelected => {
-                        const config = plugins.reduce(
-                          (acc, plugin) => {
-                            acc[plugin.name] = { ...plugin.config, disabled: !isSelected };
-                            return acc;
-                          },
-                          {} as Record<string, Plugin['config']>,
-                        );
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2 pl-2">
+                <div className="flex flex-1 items-center gap-3">
+                  <Checkbox
+                    isSelected={isAllPluginsSelected}
+                    isIndeterminate={isIndeterminate}
+                    onChange={isSelected => {
+                      const config = plugins.reduce(
+                        (acc, plugin) => {
+                          acc[plugin.name] = { ...plugin.config, disabled: !isSelected };
+                          return acc;
+                        },
+                        {} as Record<string, Plugin['config']>,
+                      );
 
-                        patchSettings({ pluginConfig: { ...settings.pluginConfig, ...config } });
-                      }}
-                      className="group flex h-full items-center p-0"
-                    >
-                      <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
-                        <Icon
-                          icon={!isAllPluginsSelected ? 'minus' : 'check'}
-                          className="h-3 w-3 opacity-0 group-data-[indeterminate]:text-[--color-success] group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
-                        />
-                      </div>
-                    </Checkbox>
-                    <span className="text-xs font-bold uppercase text-[--hl-xl]">Name</span>
-                  </div>
-                  <div className="flex items-center gap-6">
-                    <span className="w-[10ch] text-center text-xs font-bold uppercase text-[--hl-xl]">Version</span>
-                    <span className="w-[10ch] text-center text-xs font-bold uppercase text-[--hl-xl]">Folder</span>
-                  </div>
+                      patchSettings({ pluginConfig: { ...settings.pluginConfig, ...config } });
+                    }}
+                    className="group flex h-full items-center p-0"
+                  >
+                    <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
+                      <Icon
+                        icon={!isAllPluginsSelected ? 'minus' : 'check'}
+                        className="h-3 w-3 opacity-0 group-data-[indeterminate]:text-[--color-success] group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
+                      />
+                    </div>
+                  </Checkbox>
+                  <span className="text-xs font-bold uppercase text-[--hl-xl]">Name</span>
                 </div>
-                <Separator className="mt-2" />
+                <div className="flex items-center gap-6">
+                  <span className="w-[10ch] text-center text-xs font-bold uppercase text-[--hl-xl]">Version</span>
+                  <span className="w-[10ch] text-center text-xs font-bold uppercase text-[--hl-xl]">Folder</span>
+                </div>
               </div>
-            )}
+              <Separator className="mt-2" />
+            </div>
             <GridList
               aria-label="Installed Plugins"
               selectionMode="multiple"
@@ -405,7 +407,6 @@ export const Plugins: FC = () => {
                   plugin.name,
                 );
                 const { directory } = plugin;
-                const isPreBundlePlugin = directory.startsWith(preBundlePluginDirectory);
 
                 return (
                   <GridListItem
@@ -415,7 +416,6 @@ export const Plugins: FC = () => {
                     data-testid={plugin.name}
                   >
                     <div className="flex flex-1 items-center gap-3">
-                      {/* {!isPreBundlePlugin && ( */}
                       <Checkbox
                         isSelected={!plugin.config.disabled}
                         isDisabled={isRefreshingPlugins}
@@ -436,7 +436,6 @@ export const Plugins: FC = () => {
                           />
                         </div>
                       </Checkbox>
-                      {/* )} */}
                       <div className="flex items-center gap-2">
                         <span className="whitespace-nowrap">{plugin.name}</span>
                         {plugin.description && (
@@ -448,14 +447,7 @@ export const Plugins: FC = () => {
                     </div>
 
                     <div className="flex items-center gap-6">
-                      <div className="flex w-[8ch] items-center justify-center gap-2">
-                        {plugin.version}
-                        {!isPreBundlePlugin && (
-                          <a className="space-left" href={link} title={link}>
-                            <i className="fa fa-external-link-square" />
-                          </a>
-                        )}
-                      </div>
+                      <div className="flex w-[8ch] items-center justify-center gap-2">{plugin.version}</div>
                       <div className="flex w-[8ch] items-center gap-1">
                         <CopyButton
                           size="small"

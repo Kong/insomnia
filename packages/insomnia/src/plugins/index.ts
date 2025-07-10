@@ -17,6 +17,7 @@ import type { Workspace } from '../models/workspace';
 import type { PluginTemplateTag } from '../templating/types';
 import { showError } from '../ui/components/modals/index';
 import { insomniaFetch } from '../ui/insomniaFetch';
+import { isValidJSONString } from '../utils/string-check';
 import { buildQueryStringFromParams } from '../utils/url/querystring';
 import * as pluginContexts from './context';
 import type { PluginTheme } from './misc';
@@ -175,10 +176,10 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
 
         const isExecutedInApp = process.type === 'renderer' || process.type === 'worker' || process.type === 'browser';
         // Validate bundle plugin checksum for production builds
-        if (!isDevelopment() && pluginBasePath.startsWith(bundlePluginPath) && isExecutedInApp) {
-          let pluginChecksum: Record<string, any>;
+        if (isDevelopment() && pluginBasePath.startsWith(bundlePluginPath) && isExecutedInApp) {
+          let pluginChecksum = null;
           const appBundlePlugins = getAppBundlePlugins();
-          const { name: pluginName, version: pluginVersion, insomnia: pluginInsomniaConfig } = pluginJson;
+          const { name: pluginName, version: pluginVersion } = pluginJson;
           // Check if the plugin is a pre-bundle plugin
           const isBundlePlugin = appBundlePlugins.some(p => p.name === pluginName);
           if (!isBundlePlugin) {
@@ -186,34 +187,37 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
             continue;
           }
           try {
-            // const { id: sessionId } = await models.userSession.getOrCreate();
-            // Get bundle plugin checksum
-            // const urlParams = buildQueryStringFromParams([
-            //   { name: 'pluginName', value: pluginName },
-            //   { name: 'pluginVersion', value: pluginVersion },
-            // ]);
-            // pluginChecksum = await insomniaFetch({
-            //   method: 'GET',
-            //   path: `/v1/plugins/checksum?${urlParams}`,
-            //   sessionId,
-            //   onlyResolveOnSuccess: true,
-            // });
-            // TODO server integration
-            pluginChecksum = {
-              'dist/index.js':
-                'sha512-ThLetTUf66THS1BHbVwhmeCjmru2f33knRU3rwkECUDDJwYiF2WNAUFPfXRKTG7eyoVdjwwxMcStPBwN+swzgg==',
-              'package.json':
-                'sha512-zEg3V8S99l3AXP/5s7gcgKktYaKDbHP+luglAy+fgzwWrhbfR68ZDWVrMXdJXRFOBGQTsTr18FkROdhWggzg3w==',
-            };
+            const { id: sessionId, accountId } = await models.userSession.getOrCreate();
+            const planType = JSON.parse(localStorage.getItem(`${accountId}:currentPlan`) || '{}').type;
+            if (!planType.includes('enterprise')) {
+              continue;
+            }
+            //Get bundle plugin checksum
+            const urlParams = buildQueryStringFromParams([
+              { name: 'pluginName', value: pluginName },
+              { name: 'pluginVersion', value: pluginVersion },
+            ]);
+            const { checksum } = await insomniaFetch<{ checksum: string }>({
+              method: 'GET',
+              path: `/v1/enterprise/plugin-checksum?${urlParams}`,
+              sessionId,
+              onlyResolveOnSuccess: true,
+            });
+            if (isValidJSONString(checksum)) {
+              pluginChecksum = JSON.parse(checksum);
+            }
           } catch (err) {
             console.warn(`[plugin] Failed to get bundle plugin checksum: ${err.message}`);
             continue;
           }
-
+          if (!pluginChecksum) {
+            console.warn(`[plugin] Ignored bundle plugin ${pluginName} because the checksum is not available`);
+            continue;
+          }
           // traverse all files in the plugin directory and calculate the checksum
-          const checksumFileRelativePat = Object.keys(pluginChecksum);
+          const checksumFileRelativePaths = Object.keys(pluginChecksum);
           let isSafePluginBundle = true;
-          for (const relativePath of checksumFileRelativePat) {
+          for (const relativePath of checksumFileRelativePaths) {
             const filePath = path.resolve(modulePath, relativePath);
             if (!fs.existsSync(filePath)) {
               console.warn(`[plugin] Ignored missing file in bundle plugin: ${filePath}`);
@@ -450,7 +454,7 @@ export async function executePluginRouterAction({
 }): Promise<any> {
   const plugins = getActivePlugins();
   return plugins.then(plugins => {
-    const plugin = plugins.find(p => p.name === pluginName);
+    const plugin = plugins.find(p => p.name === pluginName && p.directory.startsWith(getPreBundlePluginPath()));
     if (!plugin) {
       throw new Error(`Plugin ${pluginName} not found`);
     }

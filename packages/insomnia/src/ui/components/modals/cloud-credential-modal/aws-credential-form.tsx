@@ -58,7 +58,7 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
 
   return (
     <form
-      className="flex flex-shrink-0 flex-col gap-2"
+      className="flex flex-shrink-0 flex-col gap-2 p-[--padding-sm]"
       onSubmit={e => {
         e.preventDefault();
         e.stopPropagation();
