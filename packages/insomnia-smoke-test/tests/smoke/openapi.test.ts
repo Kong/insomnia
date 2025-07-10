@@ -14,6 +14,8 @@ test('can render Spectral OpenAPI lint errors', async ({ page }) => {
   // Cause a lint error
   await page.locator('[data-testid="CodeEditor"] >> text=info').click();
   page.keyboard.insertText(' ');
-  await page.getByRole('button', { name: 'Toggle lint panel' }).click();
+  const lintErrorPaneToggle = page.getByRole('button', { name: 'Toggle lint panel' });
+  await lintErrorPaneToggle.waitFor();
+  await lintErrorPaneToggle.click();
   await page.getByRole('option', { name: 'oas3-schema must have' }).click();
 });

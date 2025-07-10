@@ -11,11 +11,19 @@ process.on('uncaughtException', (error) => {
 });
 
 process.parentPort.on('message', async ({ data: { documentContent, rulesetPath } }) => {
+  let hasValidCustomRuleset = false;
+  if (rulesetPath) {
+    try {
+      (await fs.promises.stat(rulesetPath)).isFile()
+      hasValidCustomRuleset = true;
+    } catch { }
+  }
+
   try {
     console.log('[lint-process] Linting document content');
     const spectral = new Spectral.Spectral();
     const { fetch } = spectralRuntime;
-    const ruleset = rulesetPath ? await bundleAndLoadRuleset(rulesetPath, { fs, fetch, }) : oas;
+    const ruleset = hasValidCustomRuleset ? await bundleAndLoadRuleset(rulesetPath, { fs, fetch, }) : oas;
     spectral.setRuleset(ruleset);
     console.log('[lint-process] Ruleset loaded:', rulesetPath || 'default OAS ruleset');
     const diagnostics = await spectral.run(documentContent);

@@ -1193,15 +1193,9 @@ export const generateCollectionFromApiSpecAction: ActionFunction = async ({ para
 
   const gitRepositoryId = isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
 
-  let rulesetPath = gitRepositoryId
-    ? path.join(
-        process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-        `version-control/git/${gitRepositoryId}/other/.spectral.yaml`,
-      )
+  const rulesetPath = gitRepositoryId
+    ? path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)
     : '';
-  if (!(await stat(rulesetPath)).isFile()) {
-    rulesetPath = '';
-  }
 
   const { diagnostics, error } = await window.main.lintSpec({ documentContent: apiSpec.contents, rulesetPath });
   if (error) {
@@ -1244,15 +1238,9 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
 
   const gitRepositoryId = workspaceMeta?.gitRepositoryId;
   const isLintError = (result: IRuleResult) => result.severity === 0;
-  let rulesetPath = gitRepositoryId
-    ? path.join(
-        process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-        `version-control/git/${gitRepositoryId}/other/.spectral.yaml`,
-      )
+  const rulesetPath = gitRepositoryId
+    ? path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)
     : '';
-  if (!(await stat(rulesetPath)).isFile()) {
-    rulesetPath = '';
-  }
 
   const { diagnostics, error } = await window.main.lintSpec({ documentContent: apiSpec.contents, rulesetPath });
   if (error) {

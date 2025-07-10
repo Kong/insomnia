@@ -88,22 +88,12 @@ export const loader: LoaderFunction = async ({ params }): Promise<LoaderData> =>
 
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
 
-  let rulesetPath = '';
+  const gitRepositoryId = isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
 
-  try {
-    const gitRepositoryId = isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
+  const rulesetPath = gitRepositoryId
+    ? path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)
+    : '';
 
-    const spectralRulesetPath = path.join(
-      process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-      `version-control/git/${gitRepositoryId}/other/.spectral.yaml`,
-    );
-
-    if ((await stat(spectralRulesetPath)).isFile()) {
-      rulesetPath = spectralRulesetPath;
-    }
-  } catch (err) {
-    // Ignore
-  }
   let parsedSpec: OpenAPIV3.Document | undefined;
 
   try {
@@ -117,25 +107,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<LoaderData> =>
   };
 };
 
-const SwaggerUIDiv = ({ text }: { text: string }) => {
-  useEffect(() => {
-    let spec = {};
-    try {
-      spec = parseApiSpec(text).contents || {};
-    } catch (err) {}
-    SwaggerUIBundle({ spec, dom_id: '#swagger-ui' });
-  }, [text]);
-  return (
-    <div
-      id="swagger-ui"
-      style={{
-        overflowY: 'auto',
-        height: '100%',
-        background: '#FFF',
-      }}
-    />
-  );
-};
+const SwaggerUIDiv = ({ text }: { text: string }) => {};
 
 interface LintMessage {
   type: 'error' | 'warning' | 'info';
