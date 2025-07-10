@@ -1,4 +1,3 @@
-import { stat } from 'node:fs/promises';
 import path from 'node:path';
 
 import { type IRuleResult } from '@stoplight/spectral-core';
@@ -107,8 +106,25 @@ export const loader: LoaderFunction = async ({ params }): Promise<LoaderData> =>
   };
 };
 
-const SwaggerUIDiv = ({ text }: { text: string }) => {};
-
+const SwaggerUIDiv = ({ text }: { text: string }) => {
+  useEffect(() => {
+    let spec = {};
+    try {
+      spec = parseApiSpec(text).contents || {};
+    } catch (err) {}
+    SwaggerUIBundle({ spec, dom_id: '#swagger-ui' });
+  }, [text]);
+  return (
+    <div
+      id="swagger-ui"
+      style={{
+        overflowY: 'auto',
+        height: '100%',
+        background: '#FFF',
+      }}
+    />
+  );
+};
 interface LintMessage {
   type: 'error' | 'warning' | 'info';
   message: string;

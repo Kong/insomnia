@@ -1,4 +1,3 @@
-import { stat } from 'node:fs/promises';
 import path from 'node:path';
 
 import type { IRuleResult } from '@stoplight/spectral-core';
