@@ -3,6 +3,7 @@ import { build, type BuildOptions, context } from 'esbuild';
 const isProd = Boolean(process.env.NODE_ENV === 'production');
 const watch = Boolean(process.env.ESBUILD_WATCH);
 const version = process.env.VERSION || 'dev';
+
 const config: BuildOptions = {
   outfile: './dist/index.js',
   bundle: true,

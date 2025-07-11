@@ -4,12 +4,12 @@ import type { IpcRendererEvent } from 'electron';
 import React, { useEffect, useState } from 'react';
 import { type LoaderFunction, Outlet, useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 
-import { ENTERPRISE_PLUGINS, isDevelopment } from '../../common/constants';
+import { FEATURE_NAME_EXTERNAL_VAULT, getBundlePluginByFeature, isDevelopment } from '../../common/constants';
 import * as models from '../../models';
 import type { CloudProviderCredential } from '../../models/cloud-credential';
 import type { Settings } from '../../models/settings';
 import type { UserSession } from '../../models/user-session';
-import { executePluginAction, reloadPlugins } from '../../plugins';
+import { executePluginRouterAction, reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
 import { setTheme } from '../../plugins/misc';
 import { SegmentEvent } from '../analytics';
@@ -205,8 +205,8 @@ const Root = () => {
       if (urlWithoutParams === 'insomnia://oauth/azure/authenticate') {
         const { code, ...restParams } = params;
         if (code && typeof code === 'string') {
-          const authResult = await executePluginAction({
-            pluginName: ENTERPRISE_PLUGINS['external-vault'].pluginName,
+          const authResult = await executePluginRouterAction({
+            pluginName: getBundlePluginByFeature(FEATURE_NAME_EXTERNAL_VAULT)?.name || '',
             actionName: 'exchangeCode',
             params: { provider: 'azure', code },
           });

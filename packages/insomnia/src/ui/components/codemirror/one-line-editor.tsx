@@ -9,6 +9,7 @@ import { useMount, useUnmount } from 'react-use';
 import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
 import * as misc from '../../../common/misc';
 import type { KeyCombination } from '../../../common/settings';
+import { getTemplateTags } from '../../../plugins';
 import { getTagDefinitions } from '../../../templating/index';
 import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '../../../templating/types';
 import { extractNunjucksTagFromCoords } from '../../../templating/utils';
@@ -372,11 +373,15 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         })}
         data-editor-type={type || 'text'}
         data-testid="OneLineEditor"
-        onContextMenu={event => {
+        onContextMenu={async event => {
           if (readOnly) {
             return;
           }
           event.preventDefault();
+          const pluginTemplateTags = (await getTemplateTags()).map(tag => ({
+            // Skip unsupported objects like functions in template tag to send in IPC
+            templateTag: JSON.parse(JSON.stringify(tag.templateTag)),
+          }));
           const target = event.target as HTMLElement;
           // right click on nunjucks tag
           if (target?.classList?.contains('nunjucks-tag')) {
@@ -384,10 +389,10 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
             const nunjucksTag = extractNunjucksTagFromCoords({ left: clientX, top: clientY }, codeMirror);
             if (nunjucksTag) {
               // show context menu for nunjucks tag
-              window.main.showNunjucksContextMenu({ key: id, nunjucksTag });
+              window.main.showNunjucksContextMenu({ key: id, nunjucksTag, pluginTemplateTags });
             }
           } else {
-            window.main.showNunjucksContextMenu({ key: id });
+            window.main.showNunjucksContextMenu({ key: id, pluginTemplateTags });
           }
         }}
       >
