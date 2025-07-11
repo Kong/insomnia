@@ -10,7 +10,7 @@ import {
   getProviderDisplayName,
 } from '../../../models/cloud-credential';
 import { executePluginRouterAction } from '../../../plugins';
-import { getActivePlugins } from '../../../plugins';
+import { getActiveBundlePlugins } from '../../../plugins';
 import { usePlanData } from '../../hooks/use-plan';
 import { useRootLoaderData } from '../../routes/root';
 import { Icon } from '../icon';
@@ -66,7 +66,7 @@ export const CloudServiceCredentialList = () => {
   const deleteCredentialFetcher = useFetcher();
   useEffect(() => {
     const checkVaultPlugin = async () => {
-      const plugins = await getActivePlugins();
+      const plugins = await getActiveBundlePlugins();
       const vaultPlugin = plugins.find(p => p.name === externalVaultPluginName);
       setIsVaultPluginInstalled(!!vaultPlugin);
     };
@@ -128,7 +128,12 @@ export const CloudServiceCredentialList = () => {
     return <UpgradeNotice isOwner={isOwner} featureName="Cloud Credentials feature" newPlan="enterprise" />;
   }
   if (!isVaultPluginInstalled) {
-    return <div className="faint pad text-center italic">External Vault feature is not enabled.</div>;
+    return (
+      <div className="notice pad info flex flex-col items-center justify-center gap-2">
+        <p>External vault feature could not be enabled because the required plugin is not enabled.</p>
+        <p>Please check your network and reload plugins.</p>
+      </div>
+    );
   }
 
   return (

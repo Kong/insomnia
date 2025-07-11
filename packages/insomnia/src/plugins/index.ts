@@ -324,6 +324,11 @@ export async function getActivePlugins(): Promise<Plugin[]> {
   return (await getPlugins()).filter(p => !p.config.disabled);
 }
 
+export async function getActiveBundlePlugins(): Promise<Plugin[]> {
+  const preBundlePluginPath = getPreBundlePluginPath();
+  return (await getActivePlugins()).filter(p => p.directory.startsWith(preBundlePluginPath));
+}
+
 export async function getRequestGroupActions(): Promise<RequestGroupAction[]> {
   let extensions: RequestGroupAction[] = [];
 
@@ -414,7 +419,7 @@ export async function isPreBundlePluginTemplateTag(input: string) {
     return false;
   }
   const bunelPluginNames = getAppBundlePlugins().map(p => p.name);
-  const activePlugins = await getActivePlugins();
+  const activePlugins = await getActiveBundlePlugins();
   return activePlugins
     .filter(plugin => bunelPluginNames.includes(plugin.name))
     .some(plugin => {
@@ -452,9 +457,9 @@ export async function executePluginRouterAction({
   context?: Record<string, any>;
   params?: Record<string, any>;
 }): Promise<any> {
-  const plugins = getActivePlugins();
+  const plugins = getActiveBundlePlugins();
   return plugins.then(plugins => {
-    const plugin = plugins.find(p => p.name === pluginName && p.directory.startsWith(getPreBundlePluginPath()));
+    const plugin = plugins.find(p => p.name === pluginName);
     if (!plugin) {
       throw new Error(`Plugin ${pluginName} not found`);
     }
