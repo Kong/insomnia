@@ -89,7 +89,8 @@ export const loader: LoaderFunction = async ({ params }): Promise<LoaderData> =>
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
 
   const gitRepositoryId = isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
-
+  // we don't run the lint here because it is expensive and slows first render too much
+  // TODO: add this in once we run this loader outside the renderer
   const rulesetPath = gitRepositoryId
     ? path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)
     : '';

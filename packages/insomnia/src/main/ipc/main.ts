@@ -37,6 +37,9 @@ import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import extractPostmanDataDumpHandler from './extractPostmanDataDump';
 import type { gRPCBridgeAPI } from './grpc';
 import type { secretStorageBridgeAPI } from './secret-storage';
+
+let lintProcess: Electron.UtilityProcess | null = null;
+
 export interface RendererToMainBridgeAPI {
   loginStateChange: () => void;
   openInBrowser: (url: string) => void;
@@ -130,11 +133,18 @@ export function registerMainHandlers() {
   ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
     const { documentContent, rulesetPath } = options;
     return new Promise((resolve, reject) => {
-      const lintProcess = utilityProcess.fork(path.join(__dirname, 'main/lint-process.mjs'));
+      // Use a filescoped variable to store and terminate the last open
+      // This ensures we use a last in first out type of process management
+      // We only care about the most recent lint request
+      if (lintProcess) {
+        lintProcess.kill();
+      }
+      lintProcess = utilityProcess.fork(path.join(__dirname, 'main/lint-process.mjs'));
 
       lintProcess.on('message', msg => {
         resolve(msg);
-        lintProcess.kill();
+        lintProcess?.kill();
+        lintProcess = null;
       });
 
       lintProcess.on('error', err => {
