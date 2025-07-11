@@ -37,7 +37,6 @@ import { logTestResult, logTestResultSummary, reporterTypes, type TestReporter }
 export interface GlobalOptions {
   ci: boolean;
   config: string;
-  exportFile: string;
   printOptions: boolean;
   verbose: boolean;
   workingDir: string;
@@ -53,7 +52,7 @@ export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: 
       logger.debug(`Found config file at ${results?.filepath}.`);
       const scripts = results.config?.scripts || {};
       const filePath = results.filepath;
-      const options = ['workingDir', 'ci', 'verbose', 'exportFile', 'printOptions'].reduce((acc, key) => {
+      const options = ['workingDir', 'ci', 'verbose', 'printOptions'].reduce((acc, key) => {
         const value = results.config?.options?.[key];
         if (value) {
           return { ...acc, [key]: value };
@@ -132,6 +131,8 @@ export const getDefaultProductName = (): string => {
   return name;
 };
 
+const localAppDir = getAppDataDir(getDefaultProductName());
+
 export const getAbsoluteFilePath = ({ workingDir, file }: { workingDir?: string; file: string }) => {
   return file && path.resolve(workingDir || process.cwd(), file);
 };
@@ -156,15 +157,18 @@ const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
   }
 };
 
-const resolveSpecInDatabase = async (identifier: string, options: GlobalOptions) => {
-  let pathToSearch = '';
-  const useLocalAppData = !options.workingDir && !options.exportFile;
-  if (useLocalAppData) {
-    logger.warn('No working directory or export file provided, using local app data directory.');
-    pathToSearch = localAppDir;
-  } else {
-    pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
+const getWorkingDir = (options: { workingDir?: string }): string => {
+  if (options.workingDir) {
+    return path.resolve(options.workingDir);
   }
+
+  logger.warn('No working directory provided, using local app data directory.');
+  return localAppDir;
+};
+
+const resolveSpecInDatabase = async (identifier: string, options: GlobalOptions) => {
+  const pathToSearch = getWorkingDir(options);
+
   const db = await loadDb({ pathToSearch, filterTypes: ['ApiSpec'] });
   if (!db.ApiSpec.length) {
     throw new InsoError(`Specification content not found using API spec id: "${identifier}" in "${pathToSearch}"`);
@@ -207,7 +211,6 @@ const collect = (val: string, memo: string[]) => {
   memo.push(val);
   return memo;
 };
-const localAppDir = getAppDataDir(getDefaultProductName());
 const readFileFromPathOrUrl = async (pathOrUrl: string) => {
   if (!pathOrUrl) {
     return '';
@@ -303,11 +306,38 @@ export const go = (args?: string[]) => {
     proxySettings.noProxy = process.env.NO_PROXY || process.env.no_proxy || '';
   }
 
+  // Merge global options, config file options, and command options
+  // Initialize logger
+  const mergeOptionsAndInit = async <T extends Record<string, any>>(
+    cmd: T,
+  ): Promise<
+    GlobalOptions &
+      T & {
+        configFileContent: Awaited<ReturnType<typeof tryToReadInsoConfigFile>>;
+      }
+  > => {
+    const globals: GlobalOptions = program.optsWithGlobals();
+
+    const commandOptions = { ...globals, ...cmd };
+    const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
+
+    const options = {
+      ...(__configFile?.options || {}),
+      ...commandOptions,
+      configFileContent: __configFile,
+    };
+    logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
+    options.ci && logger.setReporters([new BasicReporter()]);
+    options.printOptions && logger.log('Loaded options', options, '\n');
+
+    return options;
+  };
+
   // export and lint logic
   // Provide a path to a file which looks like an insomnia db
   // it may contain multiple workspaces, and specs.
   // you can also just provide a spec file
-  // things get confusing when you might have a workingDir a exportFile and an identifier, since they can all be paths to a spec file
+  // things get confusing when you might have a workingDir and an identifier, since they can all be paths to a spec file
 
   // differences
   // lint can read a .spectral.yml from the folder provided
@@ -373,25 +403,10 @@ export const go = (args?: string[]) => {
           noProxy?: string;
         },
       ) => {
-        const globals: GlobalOptions = program.optsWithGlobals();
-        const commandOptions = { ...globals, ...cmd };
-        const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
+        const options = await mergeOptionsAndInit(cmd);
 
-        const options = {
-          ...(__configFile?.options || {}),
-          ...commandOptions,
-        };
-        logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
-        options.ci && logger.setReporters([new BasicReporter()]);
-        options.printOptions && logger.log('Loaded options', options, '\n');
-        const useLocalAppData = !options.workingDir && !options.exportFile;
-        let pathToSearch = '';
-        if (useLocalAppData) {
-          logger.warn('No working directory or export file provided, using local app data directory.');
-          pathToSearch = localAppDir;
-        } else {
-          pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
-        }
+        const pathToSearch = getWorkingDir(options);
+
         if (options.reporter && !reporterTypes.find(r => r === options.reporter)) {
           logger.fatal(`Reporter "${options.reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
           return process.exit(1);
@@ -517,36 +532,12 @@ export const go = (args?: string[]) => {
           httpsProxy?: string;
           httpProxy?: string;
           noProxy?: string;
+          reporter: TestReporter;
         },
       ) => {
-        const globals: {
-          config: string;
-          workingDir: string;
-          exportFile: string;
-          ci: boolean;
-          printOptions: boolean;
-          verbose: boolean;
-        } = program.optsWithGlobals();
+        const options = await mergeOptionsAndInit(cmd);
 
-        const commandOptions = { ...globals, ...cmd };
-        const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
-
-        const options = {
-          reporter: defaultReporter,
-          ...(__configFile?.options || {}),
-          ...commandOptions,
-        };
-        logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
-        options.ci && logger.setReporters([new BasicReporter()]);
-        options.printOptions && logger.log('Loaded options', options, '\n');
-        let pathToSearch = '';
-        const useLocalAppData = !options.workingDir && !options.exportFile;
-        if (useLocalAppData) {
-          logger.warn('No working directory or export file provided, using local app data directory.');
-          pathToSearch = localAppDir;
-        } else {
-          pathToSearch = path.resolve(options.workingDir || process.cwd(), options.exportFile || '');
-        }
+        const pathToSearch = getWorkingDir(options);
 
         const db = await loadDb({
           pathToSearch,
@@ -793,15 +784,8 @@ export const go = (args?: string[]) => {
     .command('spec [identifier]')
     .description('Lint an API Specification, identifier can be an API Spec id or a file path')
     .action(async identifier => {
-      const globals: GlobalOptions = program.optsWithGlobals();
-      const commandOptions = globals;
-      const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
-      const options = {
-        ...(__configFile?.options || {}),
-        ...commandOptions,
-      };
-      logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
-      options.ci && logger.setReporters([new BasicReporter()]);
+      const options = await mergeOptionsAndInit({});
+
       // Assert identifier is a file
       const identifierAsAbsPath =
         identifier && getAbsoluteFilePath({ workingDir: options.workingDir, file: identifier });
@@ -852,14 +836,8 @@ export const go = (args?: string[]) => {
     .option('-o, --output <path>', 'save the generated config to a file', '')
     .option('-s, --skipAnnotations', 'remove all "x-kong-" annotations, defaults to false', false)
     .action(async (identifier, cmd: { output: string; skipAnnotations: boolean }) => {
-      const globals: GlobalOptions = program.optsWithGlobals();
-      const commandOptions = { ...globals, ...cmd };
-      const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
-      const options = {
-        ...(__configFile?.options || {}),
-        ...commandOptions,
-      };
-      options.printOptions && logger.log('Loaded options', options, '\n');
+      const options = await mergeOptionsAndInit(cmd);
+
       let specContent = '';
       try {
         specContent = await resolveSpecInDatabase(identifier, options);
@@ -892,24 +870,14 @@ export const go = (args?: string[]) => {
     .description('Run scripts defined in .insorc')
     .allowUnknownOption()
     .action(async (scriptName: string, cmd) => {
-      const commandOptions = { ...program.optsWithGlobals(), ...cmd };
-      // TODO: getAbsolutePath to working directory and use it to check from config file
-      const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
+      const options = await mergeOptionsAndInit(cmd);
 
-      const options = {
-        ...(__configFile?.options || {}),
-        ...commandOptions,
-      };
-      logger.level = options.verbose ? LogLevel.Verbose : LogLevel.Info;
-      options.ci && logger.setReporters([new BasicReporter()]);
-      options.printOptions && logger.log('Loaded options', options, '\n');
-
-      const scriptTask = __configFile?.scripts?.[scriptName];
+      const scriptTask = options.configFileContent?.scripts?.[scriptName];
 
       if (!scriptTask) {
         logger.fatal(
           `Could not find inso script "${scriptName}" in the config file.`,
-          Object.keys(__configFile?.scripts || {}),
+          Object.keys(options.configFileContent?.scripts || {}),
         );
         return process.exit(1);
       }
