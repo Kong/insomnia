@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import { join as pathJoin, resolve as pathResolve } from 'node:path';
 
-import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import { CurlHttpVersion, CurlNetrc } from '../../__mocks__/@getinsomnia/node-libcurl';
 import {
   AUTH_AWS_IAM,
   AUTH_BASIC,

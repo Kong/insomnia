@@ -1,9 +1,16 @@
 import { Readable } from 'node:stream';
 import { parse as urlParse } from 'node:url';
 
-import { Curl, CurlAuth, CurlFeature, CurlProxy, CurlSslOpt, type HeaderInfo } from '@getinsomnia/node-libcurl';
 import { app, net, protocol, session } from 'electron';
 
+import {
+  Curl,
+  CurlAuth,
+  CurlFeature,
+  CurlProxy,
+  CurlSslOpt,
+  type HeaderInfo,
+} from '../__mocks__/@getinsomnia/node-libcurl';
 import { getApiBaseURL } from '../common/constants';
 import { get as getSettings } from '../models/settings';
 import * as _userSession from '../models/user-session';

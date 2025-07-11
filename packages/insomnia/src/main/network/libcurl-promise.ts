@@ -1,23 +1,12 @@
-// NOTE: this file should not be imported by electron renderer because node-libcurl is not-context-aware
-// Related issue https://github.com/JCMais/node-libcurl/issues/155
+// NOTE: this file should not be imported by electron renderer
 import { invariant } from '../../utils/invariant';
 invariant(process.type !== 'renderer', 'Native abstractions for Nodejs module unavailable in renderer');
 
+import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import type { Readable, Writable } from 'node:stream';
 import { parse as urlParse } from 'node:url';
 
-import {
-  Curl,
-  CurlAuth,
-  CurlCode,
-  CurlFeature,
-  CurlHttpVersion,
-  CurlInfoDebug,
-  CurlNetrc,
-  CurlSslOpt,
-} from '@getinsomnia/node-libcurl';
 import { isValid } from 'date-fns';
 import electron from 'electron';
 import { v4 as uuidv4 } from 'uuid';
@@ -31,12 +20,13 @@ import {
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
 } from '../../common/constants';
-import { describeByteSize, hasAuthHeader } from '../../common/misc';
+import { hasAuthHeader } from '../../common/misc';
 import type { ClientCertificate } from '../../models/client-certificate';
 import type { RequestHeader } from '../../models/request';
 import type { ResponseHeader } from '../../models/response';
 import { buildMultipart } from './multipart';
 import { parseHeaderStrings } from './parse-header-strings';
+
 export interface CurlRequestOptions {
   requestId: string; // for cancellation
   req: RequestUsedHere;
@@ -49,6 +39,7 @@ export interface CurlRequestOptions {
   // make libcurl not decompress the response content
   noDecompress?: boolean;
 }
+
 interface RequestUsedHere {
   headers: any;
   method: string;
@@ -62,6 +53,7 @@ interface RequestUsedHere {
   cookies: { name: string; value: string }[];
   suppressUserAgent: boolean;
 }
+
 interface SettingsUsedHere {
   preferredHttpVersion: string;
   maxRedirects: number;
@@ -76,7 +68,7 @@ interface SettingsUsedHere {
 }
 
 export interface ResponseTimelineEntry {
-  name: keyof typeof CurlInfoDebug;
+  name: string;
   timestamp: number;
   value: string;
 }
@@ -109,190 +101,222 @@ export interface ResponsePatch {
   timelinePath?: string;
   url?: string;
 }
+
 const getDataDirectory = () => process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
 
 // NOTE: this is a dictionary of functions to close open listeners
 const cancelCurlRequestHandlers: Record<string, () => void> = {};
 export const cancelCurlRequest = (id: string) => cancelCurlRequestHandlers[id]();
+
 export const curlRequest = (options: CurlRequestOptions) =>
-  new Promise<CurlRequestOutput>(async resolve => {
-    try {
-      const responsesDir = path.join(getDataDirectory(), 'responses');
-      // TODO: remove this check, its only used for network.test.ts
-      await fs.promises.mkdir(responsesDir, { recursive: true });
-      const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
+  new Promise<CurlRequestOutput>(resolve => {
+    (async () => {
+      try {
+        const responsesDir = path.join(getDataDirectory(), 'responses');
+        // TODO: remove this check, its only used for network.test.ts
+        await fs.promises.mkdir(responsesDir, { recursive: true });
+        const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
 
-      const {
-        requestId,
-        req,
-        finalUrl,
-        settings,
-        certificates,
-        caCertficatePath,
-        socketPath,
-        authHeader,
-        noDecompress = false,
-      } = options;
-      const caCert = caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString();
+        const {
+          requestId,
+          req,
+          finalUrl,
+          settings,
+          certificates,
+          caCertficatePath,
+          socketPath,
+          authHeader,
+          noDecompress = false,
+        } = options;
+        const caCert = caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString();
 
-      const { curl, debugTimeline } = createConfiguredCurlInstance({
-        req,
-        finalUrl,
-        settings,
-        caCert,
-        certificates,
-        socketPath,
-        noDecompress,
-      });
-      const { method, body } = req;
-      // Only set CURLOPT_CUSTOMREQUEST if not HEAD or GET.
-      // See https://curl.haxx.se/libcurl/c/CURLOPT_CUSTOMREQUEST.html
-      // This is how you tell Curl to send a HEAD request
-      if (method.toUpperCase() === 'HEAD') {
-        curl.setOpt(Curl.option.NOBODY, 1);
-      } else if (method.toUpperCase() === 'POST') {
-        // This is how you tell Curl to send a POST request
-        curl.setOpt(Curl.option.POST, 1);
-      } else {
-        // IMPORTANT: Only use CUSTOMREQUEST for all but HEAD and POST
-        curl.setOpt(Curl.option.CUSTOMREQUEST, method);
-      }
+        const { curlArgs, debugTimeline } = createCurlArguments({
+          req,
+          finalUrl,
+          settings,
+          caCert,
+          certificates,
+          socketPath,
+          noDecompress,
+        });
 
-      const requestBodyPath = await parseRequestBodyPath(body);
-      const requestBody = parseRequestBody({ body, method });
-      const isMultipart = body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
-      let requestFileDescriptor: number | undefined;
-      const { authentication } = req;
-      if (requestBodyPath) {
-        // AWS IAM file upload not supported
-        invariant(authentication.type !== AUTH_AWS_IAM, 'AWS authentication not supported for provided body type');
-        const { size: contentLength } = fs.statSync(requestBodyPath);
-        curl.setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
-        curl.setOpt(Curl.option.UPLOAD, 1);
-        // We need this, otherwise curl will send it as a POST
-        curl.setOpt(Curl.option.CUSTOMREQUEST, method);
-        // read file into request and close file descriptor
-        requestFileDescriptor = fs.openSync(requestBodyPath, 'r');
-        curl.setOpt(Curl.option.READDATA, requestFileDescriptor);
-        curl.on('end', () => closeReadFunction(isMultipart, requestFileDescriptor, requestBodyPath));
-        curl.on('error', () => closeReadFunction(isMultipart, requestFileDescriptor, requestBodyPath));
-      } else if (requestBody !== undefined) {
-        curl.setOpt(Curl.option.POSTFIELDS, requestBody);
-      }
+        const { method, body } = req;
 
-      // NOTE: temporary workaround for testing mockbin api
-      if (process.env.PLAYWRIGHT) {
-        req.headers = [...req.headers, { name: 'X-Mockbin-Test', value: 'true' }];
-      }
+        // Handle request body
+        const requestBodyPath = await parseRequestBodyPath(body);
+        const requestBody = parseRequestBody({ body, method });
+        const isMultipart = body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
 
-      const headerStrings = parseHeaderStrings({ req, requestBody, requestBodyPath, finalUrl, authHeader });
-      curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
-
-      // Create instance and handlers, poke value options in, set up write and debug callbacks, listen for events
-      const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
-      // cancel request by id map
-      cancelCurlRequestHandlers[requestId] = () => {
-        if (requestFileDescriptor && responseBodyPath) {
-          closeReadFunction(isMultipart, requestFileDescriptor, requestBodyPath);
-        }
-        curl.isOpen && curl.close();
-      };
-
-      // set up response writer
-      let responseBodyBytes = 0;
-      curl.setOpt(Curl.option.WRITEFUNCTION, buffer => {
-        responseBodyBytes += buffer.length;
-        responseBodyWriteStream.write(buffer);
-        return buffer.length;
-      });
-
-      curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, buffer) => {
-        const isSSLData = infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut;
-        const isEmpty = buffer.length === 0;
-        // Don't show cookie setting because this will display every domain in the jar
-        const isAddCookie = infoType === CurlInfoDebug.Text && buffer.toString('utf8').indexOf('Added cookie') === 0;
-        if (isSSLData || isEmpty || isAddCookie) {
-          return 0;
+        // Set method-specific arguments
+        if (method.toUpperCase() === 'HEAD') {
+          curlArgs.push('--head');
+        } else if (method.toUpperCase() !== 'GET' && method.toUpperCase() !== 'POST') {
+          curlArgs.push('--request', method);
         }
 
-        // NOTE: resolves "Text" from CurlInfoDebug[CurlInfoDebug.Text]
-        let name = CurlInfoDebug[infoType] as keyof typeof CurlInfoDebug;
-        let timelineMessage;
-        const isRequestData = infoType === CurlInfoDebug.DataOut;
-        if (isRequestData) {
-          // Ignore large post data messages
-          const isLessThan10KB = buffer.length / 1024 < (settings.maxTimelineDataSizeKB || 1);
-          timelineMessage = isLessThan10KB ? buffer.toString('utf8') : `(${describeByteSize(buffer.length)} hidden)`;
-        }
-        const isResponseData = infoType === CurlInfoDebug.DataIn;
-        if (isResponseData) {
-          timelineMessage = `Received ${describeByteSize(buffer.length)} chunk`;
-          name = 'Text';
-        }
-        const value = timelineMessage || buffer.toString('utf8');
-        debugTimeline.push({ name, value, timestamp: Date.now() });
-        return 0;
-      });
-      // returns "rawHeaders" string in a buffer, rather than HeaderInfo[] type which is an object with deduped keys
-      // this provides support for multiple set-cookies and duplicated headers
-      curl.enable(CurlFeature.Raw);
-      // NOTE: legacy write end callback
-      curl.on('end', () => responseBodyWriteStream.end());
-      curl.on('end', async (_1: any, _2: any, rawHeaders: Buffer) => {
-        const patch = {
-          bytesContent: responseBodyBytes,
-          bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD) as number,
-          elapsedTime: (curl.getInfo(Curl.info.TOTAL_TIME) as number) * 1000,
-          url: curl.getInfo(Curl.info.EFFECTIVE_URL) as string,
-        };
-        curl.isOpen && curl.close();
-        await waitForStreamToFinish(responseBodyWriteStream);
-
-        const headerResults = _parseHeaders(rawHeaders);
-        resolve({ patch, debugTimeline, headerResults, responseBodyPath });
-      });
-      // NOTE: legacy write end callback
-      curl.on('error', () => responseBodyWriteStream.end());
-      curl.on('error', async (err, code) => {
-        const elapsedTime = (curl.getInfo(Curl.info.TOTAL_TIME) as number) * 1000;
-        curl.isOpen && curl.close();
-        await waitForStreamToFinish(responseBodyWriteStream);
-
-        // If libcurl can't decompress the response, retry without decompression
-        if (code === CurlCode.CURLE_BAD_CONTENT_ENCODING && !noDecompress) {
-          resolve(curlRequest({ ...options, noDecompress: true }));
-          return;
+        // Handle body data
+        if (requestBodyPath) {
+          // AWS IAM file upload not supported
+          invariant(
+            req.authentication.type !== AUTH_AWS_IAM,
+            'AWS authentication not supported for provided body type',
+          );
+          curlArgs.push('--data-binary', `@${requestBodyPath}`);
+        } else if (requestBody !== undefined) {
+          curlArgs.push('--data', requestBody);
         }
 
-        let error = err + '';
-        let statusMessage = 'Error';
-
-        if (code === CurlCode.CURLE_ABORTED_BY_CALLBACK) {
-          error = 'Request aborted';
-          statusMessage = 'Abort';
+        // NOTE: temporary workaround for testing mockbin api
+        if (process.env.PLAYWRIGHT) {
+          req.headers = [...req.headers, { name: 'X-Mockbin-Test', value: 'true' }];
         }
-        const patch = {
-          statusMessage,
-          error: error || 'Something went wrong',
-          elapsedTime,
+
+        const headerStrings = parseHeaderStrings({ req, requestBody, requestBodyPath, finalUrl, authHeader });
+        headerStrings.forEach((header: string) => {
+          curlArgs.push('--header', header);
+        });
+
+        // Add output file
+        curlArgs.push('--output', responseBodyPath);
+
+        // Add verbose and dump headers
+        curlArgs.push('--verbose');
+        curlArgs.push('--dump-header', path.join(responsesDir, uuidv4() + '.headers'));
+
+        // Track timings and debug info
+        const startTime = Date.now();
+        let responseBodyBytes = 0;
+        let effectiveUrl = finalUrl;
+        let totalTime = 0;
+
+        // Create curl process
+        const curlProcess = spawn('curl', curlArgs, {
+          stdio: ['pipe', 'pipe', 'pipe'],
+        });
+
+        let stderrOutput = '';
+        let stdoutOutput = '';
+
+        // Handle cancellation
+        cancelCurlRequestHandlers[requestId] = () => {
+          curlProcess.kill('SIGTERM');
+          if (requestBodyPath && isMultipart) {
+            fs.unlink(requestBodyPath, () => {});
+          }
         };
 
-        // NOTE: legacy, default headerResults
-        resolve({ patch, debugTimeline, headerResults: [{ version: '', code: 0, reason: '', headers: [] }] });
-      });
-      curl.perform();
-    } catch (error) {
-      console.error(error);
-      const patch = {
-        statusMessage: 'Error',
-        error: error.message || 'Something went wrong',
-        elapsedTime: 0,
-      };
-      resolve({ patch, debugTimeline: [], headerResults: [{ version: '', code: 0, reason: '', headers: [] }] });
-    }
+        // Collect stderr for debug info
+        curlProcess.stderr?.on('data', (data: Buffer) => {
+          stderrOutput += data.toString();
+          debugTimeline.push({
+            name: 'Text',
+            value: data.toString(),
+            timestamp: Date.now(),
+          });
+        });
+
+        // Collect stdout (not used with --output, but just in case)
+        curlProcess.stdout?.on('data', (data: Buffer) => {
+          stdoutOutput += data.toString();
+        });
+
+        curlProcess.on('close', async code => {
+          totalTime = Date.now() - startTime;
+
+          try {
+            // Read response body to get size
+            const stats = await fs.promises.stat(responseBodyPath);
+            responseBodyBytes = stats.size;
+          } catch {
+            responseBodyBytes = 0;
+          }
+
+          // Parse effective URL from stderr
+          const effectiveUrlMatch = stderrOutput.match(/< Location: (.+)/);
+          if (effectiveUrlMatch) {
+            effectiveUrl = effectiveUrlMatch[1].trim();
+          }
+
+          // Parse headers from header dump file
+          const headerDumpPath = curlArgs[curlArgs.indexOf('--dump-header') + 1];
+          let headerResults: HeaderResult[] = [];
+
+          try {
+            const headerContent = await fs.promises.readFile(headerDumpPath, 'utf8');
+            headerResults = _parseHeaders(Buffer.from(headerContent));
+            // Clean up header dump file
+            fs.unlink(headerDumpPath, () => {});
+          } catch {
+            headerResults = [{ version: '', code: 0, reason: '', headers: [] }];
+          }
+
+          if (code === 0) {
+            // Success
+            const patch = {
+              bytesContent: responseBodyBytes,
+              bytesRead: responseBodyBytes,
+              elapsedTime: totalTime,
+              url: effectiveUrl,
+            };
+            resolve({ patch, debugTimeline, headerResults, responseBodyPath });
+          } else {
+            // Error
+            let error = `curl exited with code ${code}`;
+            let statusMessage = 'Error';
+
+            // Parse error from stderr
+            if (stderrOutput.includes('Operation was aborted by an application callback')) {
+              error = 'Request aborted';
+              statusMessage = 'Abort';
+            } else if (stderrOutput.includes('timeout')) {
+              error = 'Request timeout';
+              statusMessage = 'Timeout';
+            }
+
+            // If libcurl can't decompress the response, retry without decompression
+            if (stderrOutput.includes('bad content encoding') && !noDecompress) {
+              resolve(curlRequest({ ...options, noDecompress: true }));
+              return;
+            }
+
+            const patch = {
+              statusMessage,
+              error: error || 'Something went wrong',
+              elapsedTime: totalTime,
+            };
+
+            resolve({ patch, debugTimeline, headerResults: [{ version: '', code: 0, reason: '', headers: [] }] });
+          }
+
+          // Clean up multipart file if needed
+          if (isMultipart && requestBodyPath) {
+            fs.unlink(requestBodyPath, () => {});
+          }
+        });
+
+        curlProcess.on('error', async err => {
+          totalTime = Date.now() - startTime;
+
+          const patch = {
+            statusMessage: 'Error',
+            error: err.message || 'Something went wrong',
+            elapsedTime: totalTime,
+          };
+          resolve({ patch, debugTimeline, headerResults: [{ version: '', code: 0, reason: '', headers: [] }] });
+        });
+      } catch (error: any) {
+        console.error(error);
+        const patch = {
+          statusMessage: 'Error',
+          error: error.message || 'Something went wrong',
+          elapsedTime: 0,
+        };
+        resolve({ patch, debugTimeline: [], headerResults: [{ version: '', code: 0, reason: '', headers: [] }] });
+      }
+    })();
   });
 
-export const createConfiguredCurlInstance = ({
+export const createCurlArguments = ({
   req,
   finalUrl,
   settings,
@@ -310,59 +334,66 @@ export const createConfiguredCurlInstance = ({
   noDecompress?: boolean;
 }) => {
   const debugTimeline: ResponseTimelineEntry[] = [];
-  const curl = new Curl();
-  curl.setOpt(Curl.option.URL, finalUrl);
-  socketPath && curl.setOpt(Curl.option.UNIX_SOCKET_PATH, socketPath);
+  const curlArgs: string[] = [];
 
-  // Set all the basic options
+  // Basic URL
+  curlArgs.push(finalUrl);
 
-  // True so debug function works
-  curl.setOpt(Curl.option.VERBOSE, true);
-  // True so curl doesn't print progress
-  curl.setOpt(Curl.option.NOPROGRESS, true);
-  // whether to decompress response content
-  curl.setOpt(Curl.option.ACCEPT_ENCODING, noDecompress ? null : '');
-  // fallback to root certificates or leave unset to use keychain on macOS
-  if (caCert) {
-    curl.setOpt(Curl.option.CAINFO_BLOB, caCert);
+  // Unix socket path
+  if (socketPath) {
+    curlArgs.push('--unix-socket', socketPath);
   }
-  // Use the system's native CA store for SSL certificate verification
-  curl.setOpt(Curl.option.SSL_OPTIONS, CurlSslOpt.NativeCa);
+
+  // Compression
+  if (!noDecompress) {
+    curlArgs.push('--compressed');
+  }
+
+  // CA certificate
+  if (caCert) {
+    const caCertPath = path.join(getDataDirectory(), 'ca-cert.pem');
+    fs.writeFileSync(caCertPath, caCert);
+    curlArgs.push('--cacert', caCertPath);
+  }
+
+  // Client certificates
   certificates.forEach(validCert => {
     const { passphrase, cert, key, pfx } = validCert;
     if (cert) {
-      curl.setOpt(Curl.option.SSLCERT, cert);
-      curl.setOpt(Curl.option.SSLCERTTYPE, 'PEM');
+      curlArgs.push('--cert', cert);
+      curlArgs.push('--cert-type', 'PEM');
       debugTimeline.push({ value: 'Adding SSL PEM certificate', name: 'Text', timestamp: Date.now() });
     }
     if (pfx) {
-      curl.setOpt(Curl.option.SSLCERT, pfx);
-      curl.setOpt(Curl.option.SSLCERTTYPE, 'P12');
+      curlArgs.push('--cert', pfx);
+      curlArgs.push('--cert-type', 'P12');
       debugTimeline.push({ value: 'Adding SSL P12 certificate', name: 'Text', timestamp: Date.now() });
     }
     if (key) {
-      curl.setOpt(Curl.option.SSLKEY, key);
+      curlArgs.push('--key', key);
       debugTimeline.push({ value: 'Adding SSL KEY certificate', name: 'Text', timestamp: Date.now() });
     }
     if (passphrase) {
-      curl.setOpt(Curl.option.KEYPASSWD, passphrase);
+      curlArgs.push('--pass', passphrase);
     }
   });
+
+  // HTTP version
   const httpVersion = getHttpVersion(settings.preferredHttpVersion);
   debugTimeline.push({ value: httpVersion.log, name: 'Text', timestamp: Date.now() });
 
-  if (httpVersion.curlHttpVersion) {
-    curl.setOpt(Curl.option.HTTP_VERSION, httpVersion.curlHttpVersion);
+  if (httpVersion.curlFlag) {
+    curlArgs.push(httpVersion.curlFlag);
   }
 
-  // Set maximum amount of redirects allowed
-  // NOTE: Setting this to -1 breaks some versions of libcurl
+  // Redirects
   if (settings.maxRedirects > 0) {
-    curl.setOpt(Curl.option.MAXREDIRS, settings.maxRedirects);
+    curlArgs.push('--max-redirs', settings.maxRedirects.toString());
   }
 
+  // Proxy settings
   if (!settings.proxyEnabled) {
-    curl.setOpt(Curl.option.PROXY, '');
+    curlArgs.push('--noproxy', '*');
   } else {
     const { protocol } = urlParse(req.url);
     const { httpProxy, httpsProxy, noProxy } = settings;
@@ -370,26 +401,25 @@ export const createConfiguredCurlInstance = ({
     const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
     debugTimeline.push({ value: `Enable network proxy for ${protocol || ''}`, name: 'Text', timestamp: Date.now() });
     if (proxy) {
-      curl.setOpt(Curl.option.PROXY, proxy);
-      curl.setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
+      curlArgs.push('--proxy', proxy);
+      curlArgs.push('--proxy-anyauth');
     }
     if (noProxy) {
-      curl.setOpt(Curl.option.NOPROXY, noProxy);
+      curlArgs.push('--noproxy', noProxy);
     }
   }
+
+  // Timeout
   const { timeout } = settings;
-  if (timeout <= 0) {
-    curl.setOpt(Curl.option.TIMEOUT_MS, 0);
-  } else {
-    curl.setOpt(Curl.option.TIMEOUT_MS, timeout);
+  if (timeout > 0) {
+    curlArgs.push('--max-time', Math.ceil(timeout / 1000).toString());
     debugTimeline.push({ value: `Enable timeout of ${timeout}ms`, name: 'Text', timestamp: Date.now() });
   }
+
+  // SSL validation
   const { validateSSL } = settings;
   if (!validateSSL) {
-    // Disable certificate verification
-    curl.setOpt(Curl.option.SSL_VERIFYHOST, 0);
-    // Disable hostname verification
-    curl.setOpt(Curl.option.SSL_VERIFYPEER, 0);
+    curlArgs.push('--insecure');
   }
   debugTimeline.push({
     value: `${validateSSL ? 'Enable' : 'Disable'} SSL validation`,
@@ -397,6 +427,7 @@ export const createConfiguredCurlInstance = ({
     timestamp: Date.now(),
   });
 
+  // Follow redirects
   const followRedirects =
     {
       off: false,
@@ -404,29 +435,38 @@ export const createConfiguredCurlInstance = ({
       global: settings.followRedirects,
     }[req.settingFollowRedirects] ?? true;
 
-  curl.setOpt(Curl.option.FOLLOWLOCATION, followRedirects);
-
-  // Don't rebuild dot sequences in path
-  if (!req.settingRebuildPath) {
-    curl.setOpt(Curl.option.PATH_AS_IS, true);
+  if (followRedirects) {
+    curlArgs.push('--location');
   }
 
+  // Path handling
+  if (!req.settingRebuildPath) {
+    curlArgs.push('--path-as-is');
+  }
+
+  // Cookies
   if (req.settingSendCookies) {
     const { cookieJar, cookies } = req;
-    curl.setOpt(Curl.option.COOKIEFILE, '');
 
+    // Add individual cookies
     for (const { name, value } of cookies) {
-      curl.setOpt(Curl.option.COOKIE, `${name}=${value}`);
+      curlArgs.push('--cookie', `${name}=${value}`);
     }
-    // set-cookies from previous redirects
+
+    // Add cookies from jar
     if (cookieJar.cookies.length) {
       debugTimeline.push({
         value: `Enable cookie sending with jar of ${cookieJar.cookies.length} cookie${cookieJar.cookies.length !== 1 ? 's' : ''}`,
         name: 'Text',
         timestamp: Date.now(),
       });
+
+      // Create temporary cookie jar file
+      const cookieJarPath = path.join(getDataDirectory(), 'temp-cookies.txt');
+      const cookieLines = ['# Netscape HTTP Cookie File'];
+
       for (const cookie of cookieJar.cookies) {
-        const setCookie = [
+        const cookieLine = [
           cookie.httpOnly ? `#HttpOnly_${cookie.domain}` : cookie.domain,
           cookie.hostOnly ? 'FALSE' : 'TRUE',
           cookie.path,
@@ -437,45 +477,45 @@ export const createConfiguredCurlInstance = ({
           cookie.key,
           cookie.value,
         ].join('\t');
-        curl.setOpt(Curl.option.COOKIELIST, setCookie);
+        cookieLines.push(cookieLine);
       }
+
+      fs.writeFileSync(cookieJarPath, cookieLines.join('\n'));
+      curlArgs.push('--cookie', cookieJarPath);
     }
   }
-  const { headers, authentication } = req;
 
+  // User agent
+  const { headers, authentication } = req;
   const userAgent: RequestHeader | null = headers.find((h: any) => h.name.toLowerCase() === 'user-agent') || null;
   const userAgentOrFallback = typeof userAgent?.value === 'string' ? userAgent?.value : 'insomnia/' + version;
-  curl.setOpt(Curl.option.USERAGENT, userAgentOrFallback);
+
   if (req.suppressUserAgent) {
-    curl.setOpt(Curl.option.USERAGENT, '');
+    curlArgs.push('--user-agent', '');
+  } else {
+    curlArgs.push('--user-agent', userAgentOrFallback);
   }
 
+  // Authentication
   const { username, password, disabled } = authentication;
   const isDigest = authentication.type === AUTH_DIGEST;
   const isNLTM = authentication.type === AUTH_NTLM;
   const isDigestOrNLTM = isDigest || isNLTM;
+
   if (!hasAuthHeader(headers) && !disabled && isDigestOrNLTM) {
-    isDigest && curl.setOpt(Curl.option.HTTPAUTH, CurlAuth.Digest);
-    isNLTM && curl.setOpt(Curl.option.HTTPAUTH, CurlAuth.Ntlm);
-    curl.setOpt(Curl.option.USERNAME, username || '');
-    curl.setOpt(Curl.option.PASSWORD, password || '');
+    if (isDigest) {
+      curlArgs.push('--digest');
+    } else if (isNLTM) {
+      curlArgs.push('--ntlm');
+    }
+    curlArgs.push('--user', `${username || ''}:${password || ''}`);
   }
+
   if (authentication.type === AUTH_NETRC) {
-    curl.setOpt(Curl.option.NETRC, CurlNetrc.Required);
+    curlArgs.push('--netrc-optional');
   }
 
-  return { curl, debugTimeline };
-};
-
-const closeReadFunction = (isMultipart: boolean, fd?: number, path?: string) => {
-  if (fd) {
-    fs.closeSync(fd);
-  }
-  // NOTE: multipart files are combined before sending, so this file is deleted after
-  // alt implementation to send one part at a time https://github.com/JCMais/node-libcurl/blob/develop/examples/04-multi.js
-  if (isMultipart && path) {
-    fs.unlink(path, () => {});
-  }
+  return { curlArgs, debugTimeline };
 };
 
 export interface HeaderResult {
@@ -484,6 +524,7 @@ export interface HeaderResult {
   code: number;
   reason: string;
 }
+
 export function _parseHeaders(buffer: Buffer): HeaderResult[] {
   // split on two new lines
   const redirects = buffer.toString('utf8').split(/\r?\n\r?\n|\r\r/g);
@@ -507,27 +548,6 @@ export function _parseHeaders(buffer: Buffer): HeaderResult[] {
     });
 }
 
-// NOTE: legacy, suspicious, could be simplified
-async function waitForStreamToFinish(stream: Readable | Writable) {
-  return new Promise<void>(resolve => {
-    // @ts-expect-error -- access of internal values that are intended to be private.  We should _not_ do this.
-    if (stream._readableState?.finished) {
-      return resolve();
-    }
-
-    // @ts-expect-error -- access of internal values that are intended to be private.  We should _not_ do this.
-    if (stream._writableState?.finished) {
-      return resolve();
-    }
-
-    stream.on('close', () => {
-      resolve();
-    });
-    stream.on('error', () => {
-      resolve();
-    });
-  });
-}
 const parseRequestBody = ({ body, method }: { body: any; method: string }) => {
   const isUrlEncodedForm = body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
   const expectsBody = ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase());
@@ -544,6 +564,7 @@ const parseRequestBody = ({ body, method }: { body: any; method: string }) => {
 
   return undefined;
 };
+
 const parseRequestBodyPath = async (body: any) => {
   const isMultipartForm = body.mimeType === CONTENT_TYPE_FORM_DATA;
   if (!isMultipartForm) {
@@ -556,19 +577,19 @@ const parseRequestBodyPath = async (body: any) => {
 export const getHttpVersion = (preferredHttpVersion: string) => {
   switch (preferredHttpVersion) {
     case 'V1_0': {
-      return { log: 'Using HTTP 1.0', curlHttpVersion: CurlHttpVersion.V1_0 };
+      return { log: 'Using HTTP 1.0', curlFlag: '--http1.0' };
     }
     case 'V1_1': {
-      return { log: 'Using HTTP 1.1', curlHttpVersion: CurlHttpVersion.V1_1 };
+      return { log: 'Using HTTP 1.1', curlFlag: '--http1.1' };
     }
     case 'V2PriorKnowledge': {
-      return { log: 'Using HTTP/2 PriorKnowledge', curlHttpVersion: CurlHttpVersion.V2PriorKnowledge };
+      return { log: 'Using HTTP/2 PriorKnowledge', curlFlag: '--http2-prior-knowledge' };
     }
     case 'V2_0': {
-      return { log: 'Using HTTP/2', curlHttpVersion: CurlHttpVersion.V2_0 };
+      return { log: 'Using HTTP/2', curlFlag: '--http2' };
     }
     case 'v3': {
-      return { log: 'Using HTTP/3', curlHttpVersion: CurlHttpVersion.v3 };
+      return { log: 'Using HTTP/3', curlFlag: '--http3' };
     }
     case 'default': {
       return { log: 'Using default HTTP version' };
