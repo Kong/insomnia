@@ -1612,6 +1612,11 @@ async function renderApp() {
                 path: 'clear-vault-key',
                 action: async args => (await import('./routes/auth.clear-vault-key')).action(args),
               },
+              {
+                path: 'defaultBrowserOauthRedirect',
+                action: async (...args) =>
+                  (await import('./routes/auth.systemBrowserOAuth')).defaultBrowserOAuthRedirect(...args),
+              },
             ],
           },
         ],

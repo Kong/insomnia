@@ -19,6 +19,7 @@ import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
 import * as models from '../../models';
 import type { SegmentEvent } from '../analytics';
 import { trackPageView, trackSegmentEvent } from '../analytics';
+import { authorizeUserInDefaultBrowser, onDefaultBrowserOAuthRedirect } from '../authorizeUserInDefaultBrowser';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { backup, restoreBackup } from '../backup';
 import type { GitServiceAPI } from '../git-service';
@@ -52,6 +53,8 @@ export interface RendererToMainBridgeAPI {
   backup: () => Promise<void>;
   restoreBackup: (version: string) => Promise<void>;
   authorizeUserInWindow: typeof authorizeUserInWindow;
+  authorizeUserInDefaultBrowser: typeof authorizeUserInDefaultBrowser;
+  onDefaultBrowserOAuthRedirect: typeof onDefaultBrowserOAuthRedirect;
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
   writeFile: (options: { path: string; content: string }) => Promise<string>;
@@ -124,6 +127,13 @@ export function registerMainHandlers() {
   ipcMainHandle('authorizeUserInWindow', (_, options: Parameters<typeof authorizeUserInWindow>[0]) => {
     const { url, urlSuccessRegex, urlFailureRegex, sessionId } = options;
     return authorizeUserInWindow({ url, urlSuccessRegex, urlFailureRegex, sessionId });
+  });
+
+  ipcMainHandle('authorizeUserInDefaultBrowser', (_, options: Parameters<typeof authorizeUserInDefaultBrowser>[0]) => {
+    return authorizeUserInDefaultBrowser(options);
+  });
+  ipcMainHandle('onDefaultBrowserOAuthRedirect', (_, options: Parameters<typeof onDefaultBrowserOAuthRedirect>[0]) => {
+    return onDefaultBrowserOAuthRedirect(options);
   });
 
   ipcMainHandle('writeFile', async (_, options: { path: string; content: string }) => {

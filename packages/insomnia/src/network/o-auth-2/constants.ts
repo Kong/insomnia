@@ -32,3 +32,5 @@ export type AuthKeys =
   | 'xResponseId';
 export const PKCE_CHALLENGE_S256 = 'S256';
 export const PKCE_CHALLENGE_PLAIN = 'plain';
+
+export type OAuth2AuthorizationStatusType = 'none' | 'getting_code' | 'getting_token';

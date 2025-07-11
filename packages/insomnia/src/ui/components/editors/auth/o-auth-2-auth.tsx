@@ -1,7 +1,7 @@
 import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useRouteLoaderData } from 'react-router';
 
-import type { AUTH_OAUTH_2 } from '../../../../common/constants';
+import { type AUTH_OAUTH_2, getOauthRedirectUrl } from '../../../../common/constants';
 import { toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
@@ -126,7 +126,24 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: typeof
       label="Redirect URL"
       property="redirectUrl"
       key="redirectUrl"
-      help="This can be whatever you want or need it to be. Insomnia will automatically detect a redirect in the client browser window and extract the code from the redirected URL."
+      help={
+        authentication.useDefaultBrowser
+          ? 'The callback URL is provided by Insomnia and cannot be modified when authorizing via the default browser.'
+          : 'This can be whatever you want or need it to be. Insomnia will automatically detect a redirect in the client browser window and extract the code from the redirected URL.'
+      }
+      disabled={authentication.useDefaultBrowser}
+      overrideValueWhenDisabled={getOauthRedirectUrl()}
+      copyBtn={authentication.useDefaultBrowser}
+    />
+  );
+  const useDefaultBrowser = (
+    <AuthToggleRow
+      label="Using default browser"
+      property="useDefaultBrowser"
+      key="useDefaultBrowser"
+      help="You must use the redirect URL provided by Insomnia when using the default browser. You also need to set the redirect URL in your OAuth 2 provider to match the one provided by Insomnia."
+      onTitle="Click to use built-in browser"
+      offTitle="Click to use default browser"
     />
   );
   const state = <AuthInputRow label="State" property="state" key="state" />;
@@ -182,6 +199,7 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: typeof
     authorizationUrl,
     accessTokenUrl,
     redirectUri,
+    useDefaultBrowser,
     state,
     scope,
     username,
@@ -204,6 +222,7 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
     authorizationUrl,
     accessTokenUrl,
     redirectUri,
+    useDefaultBrowser,
     state,
     scope,
     username,
@@ -222,7 +241,16 @@ const getFieldsForGrantType = (authentication: Extract<RequestAuthentication, { 
   let advanced: ReactNode[] = [];
 
   if (grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
-    basic = [authorizationUrl, accessTokenUrl, clientId, clientSecret, usePkce, pkceMethod, redirectUri];
+    basic = [
+      authorizationUrl,
+      accessTokenUrl,
+      clientId,
+      clientSecret,
+      usePkce,
+      pkceMethod,
+      redirectUri,
+      useDefaultBrowser,
+    ];
 
     advanced = [scope, state, credentialsInBody, tokenPrefix, audience, resource, origin];
   } else if (grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {

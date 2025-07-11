@@ -14,6 +14,8 @@ import type { extractNunjucksTagFromCoords } from '../../templating/utils';
 import { invariant } from '../../utils/invariant';
 
 export type HandleChannels =
+  | 'authorizeUserInDefaultBrowser'
+  | 'onDefaultBrowserOAuthRedirect'
   | 'authorizeUserInWindow'
   | 'backup'
   | 'curl.event.findMany'

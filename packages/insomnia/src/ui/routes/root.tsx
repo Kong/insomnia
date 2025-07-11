@@ -215,6 +215,19 @@ const Root = () => {
         }
         return navigate(`/organization/${params.organizationId}`);
       }
+      if (urlWithoutParams === 'insomnia://system-browser-oauth/redirect') {
+        const { url: redirectUrl } = params;
+        return actionFetcher.submit(
+          {
+            redirectUrl,
+          },
+          {
+            action: '/auth/defaultBrowserOauthRedirect',
+            method: 'POST',
+            encType: 'application/json',
+          },
+        );
+      }
       console.log(`Unknown deep link: ${url}`);
     });
   }, [actionFetcher, navigate]);

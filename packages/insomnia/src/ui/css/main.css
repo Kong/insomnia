@@ -930,7 +930,7 @@ strong {
 .form-control.form-control--inactive textarea,
 .form-control.form-control--inactive .input,
 .form-control.form-control--inactive input,
-.form-control.form-control--inactive .btn,
+.form-control.form-control--inactive .btn:not(.btn--forever-enabled),
 .form-control.form-control--inactive select {
   border-style: dashed;
   opacity: var(--opacity-subtle);

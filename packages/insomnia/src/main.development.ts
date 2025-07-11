@@ -116,7 +116,21 @@ app.on('ready', async () => {
 // Set as default protocol
 const defaultProtocol = `insomnia${isDevelopment() ? 'dev' : ''}`;
 const fullDefaultProtocol = `${defaultProtocol}://`;
-const defaultProtocolSuccessful = app.setAsDefaultProtocolClient(defaultProtocol);
+let defaultProtocolSuccessful: boolean;
+if (isDevelopment()) {
+  // In development, we start the app by running `electron --inspect=5858 .`
+  // So here we register the default protocol client the same way
+
+  // replace `.` with the absolute path
+  const restArgv = process.argv.slice(1).map(arg => (arg === '.' ? path.resolve('.') : arg));
+  defaultProtocolSuccessful = app.setAsDefaultProtocolClient(
+    defaultProtocol,
+    process.execPath, // This is the path to the Electron executable
+    restArgv, // This is the rest of the arguments passed to the Electron app
+  );
+} else {
+  defaultProtocolSuccessful = app.setAsDefaultProtocolClient(defaultProtocol);
+}
 if (defaultProtocolSuccessful) {
   console.log(`[electron client protocol] successfully set default protocol '${fullDefaultProtocol}'`);
 } else {
