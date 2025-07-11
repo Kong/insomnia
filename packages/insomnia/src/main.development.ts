@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import inspector from 'node:inspector';
 import path from 'node:path';
 
 import electron, { app, session } from 'electron';
@@ -139,7 +140,14 @@ if (defaultProtocolSuccessful) {
     console.error(`[electron client protocol] the default application set for '${fullDefaultProtocol}' was not found`);
   }
 }
-
+app.on('quit', () => {
+  if (isDevelopment()) {
+    // stop the inspector if active to unblock electron app exit in development mode
+    if (inspector.url()) {
+      inspector.close();
+    }
+  }
+});
 // Quit when all windows are closed (except on Mac).
 app.on('window-all-closed', () => {
   if (!isMac()) {
