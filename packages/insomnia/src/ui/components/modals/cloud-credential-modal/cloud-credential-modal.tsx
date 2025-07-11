@@ -2,14 +2,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useFetcher } from 'react-router';
 
-import { ENTERPRISE_PLUGINS } from '../../../../common/constants';
+import { FEATURE_NAME_EXTERNAL_VAULT, getBundlePluginByFeature } from '../../../../common/constants';
 import {
   type BaseCloudCredential,
   type CloudProviderCredential,
   type CloudProviderName,
   getProviderDisplayName,
 } from '../../../../models/cloud-credential';
-import { executePluginAction } from '../../../../plugins';
+import { executePluginRouterAction } from '../../../../plugins';
 import { Icon } from '../../icon';
 import { AWSCredentialForm } from './aws-credential-form';
 import { GCPCredentialForm } from './gcp-credential-form';
@@ -64,8 +64,8 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
       const parsedURL = new URL(manulInputUrl);
       const code = parsedURL.searchParams.get('code');
       if (code && typeof code === 'string') {
-        const authResult = await executePluginAction({
-          pluginName: ENTERPRISE_PLUGINS['external-vault'].pluginName,
+        const authResult = await executePluginRouterAction({
+          pluginName: getBundlePluginByFeature(FEATURE_NAME_EXTERNAL_VAULT)?.name || '',
           actionName: 'exchangeCode',
           params: { provider: 'azure', code },
         });

@@ -3,6 +3,9 @@ module.exports = {
   app: {
     getPath: (/** @type {string} */ name) =>
       name === 'temp' ? require('os').tmpdir() : require('path').join(require('os').tmpdir(), 'insomnia-send-request'),
+    getAppPath: () => {
+      return require('node:path').resolve(__dirname, '../plugins');
+    },
   },
   ipcMain: {
     on: () => {

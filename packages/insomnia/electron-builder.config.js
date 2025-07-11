@@ -1,10 +1,11 @@
+const { execSync } = require('child_process');
 const BINARY_PREFIX = 'Insomnia.Core';
 // NOTE: USE_HARD_LINKS
 // https://github.com/electron-userland/electron-builder/issues/4594#issuecomment-574653870
 
 /**
  * @type {import('electron-builder').Configuration}
- * @see https://www.electron.build/configuration/configuration
+ * @see https://www.electron.build/configuration
  */
 const config = {
   npmRebuild: false,
@@ -31,6 +32,11 @@ const config = {
       to: './bin',
       filter: 'yarn-standalone.js',
     },
+    {
+      from: './plugins',
+      to: './plugins',
+      filter: ['**/*'],
+    }
   ],
   extraMetadata: {
     main: 'main.min.js', // Override the main path in package.json

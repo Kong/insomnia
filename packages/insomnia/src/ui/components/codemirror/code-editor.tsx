@@ -19,6 +19,7 @@ import vkBeautify from 'vkbeautify';
 import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
 import * as misc from '../../../common/misc';
 import type { KeyCombination } from '../../../common/settings';
+import { getTemplateTags } from '../../../plugins';
 import { getTagDefinitions } from '../../../templating/index';
 import { type NunjucksParsedTag, type nunjucksTagContextMenuOptions } from '../../../templating/types';
 import { extractNunjucksTagFromCoords } from '../../../templating/utils';
@@ -613,7 +614,7 @@ export const CodeEditor = memo(
           (_, { key, tag, nunjucksTag, needsEnterprisePlan, displayName }) => {
             if (id === key) {
               if (needsEnterprisePlan && !isEnterprisePlan) {
-                // show modal if current user is not an enteprise user and the command is an enterprise feature
+                // show modal if current user is not an enterprise user and the command is an enterprise feature
                 showModal(UpgradeModal, {
                   newPlan: 'enterprise',
                   featureName: displayName,
@@ -725,11 +726,14 @@ export const CodeEditor = memo(
           style={style}
           data-editor-type="text"
           data-testid="CodeEditor"
-          onContextMenu={event => {
+          onContextMenu={async event => {
             if (readOnly || !enableNunjucks) {
               return;
             }
             event.preventDefault();
+            const pluginTemplateTags = (await getTemplateTags()).map(tag => ({
+              templateTag: JSON.parse(JSON.stringify(tag.templateTag)),
+            }));
             const target = event.target as HTMLElement;
             // right click on nunjucks tag
             if (target?.classList?.contains('nunjucks-tag')) {
@@ -737,10 +741,10 @@ export const CodeEditor = memo(
               const nunjucksTag = extractNunjucksTagFromCoords({ left: clientX, top: clientY }, codeMirror);
               if (nunjucksTag) {
                 // show context menu for nunjucks tag
-                window.main.showNunjucksContextMenu({ key: id, nunjucksTag });
+                window.main.showNunjucksContextMenu({ key: id, nunjucksTag, pluginTemplateTags });
               }
             } else {
-              window.main.showNunjucksContextMenu({ key: id });
+              window.main.showNunjucksContextMenu({ key: id, pluginTemplateTags });
             }
           }}
         >
