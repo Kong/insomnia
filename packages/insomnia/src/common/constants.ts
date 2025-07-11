@@ -12,11 +12,7 @@ export const INSOMNIA_GITLAB_REDIRECT_URI = env.INSOMNIA_GITLAB_REDIRECT_URI;
 export const INSOMNIA_GITLAB_CLIENT_ID = env.INSOMNIA_GITLAB_CLIENT_ID;
 export const INSOMNIA_GITLAB_API_URL = env.INSOMNIA_GITLAB_API_URL;
 export const PLAYWRIGHT = env.PLAYWRIGHT;
-export const ENTERPRISE_PLUGINS: Record<string, any> = {
-  'external-vault': {
-    pluginName: 'insomnia-plugin-external-vault',
-  },
-};
+
 // App Stuff
 export const getSkipOnboarding = () => env.INSOMNIA_SKIP_ONBOARDING;
 export const getInsomniaSession = () => env.INSOMNIA_SESSION;
@@ -33,6 +29,7 @@ export const getAppDefaultDarkTheme = () => appConfig.darkTheme;
 export const getAppSynopsis = () => appConfig.synopsis;
 export const getAppId = () => appConfig.appId;
 export const getAppPlatform = () => process.platform;
+export const getAppBundlePlugins = () => appConfig.bundlePlugins;
 export const isMac = () => getAppPlatform() === 'darwin';
 export const isLinux = () => getAppPlatform() === 'linux';
 export const isWindows = () => getAppPlatform() === 'win32';
@@ -365,6 +362,9 @@ export const sortOrderName: Record<SortOrder, string> = {
   [SORT_TYPE_ASC]: 'Requests First',
 };
 
+// feature name constants
+export const FEATURE_NAME_EXTERNAL_VAULT = 'external-vault';
+
 export type DashboardSortOrder = 'name-asc' | 'name-desc' | 'created-asc' | 'created-desc' | 'modified-desc';
 
 export const DASHBOARD_SORT_ORDERS: DashboardSortOrder[] = [
@@ -384,6 +384,11 @@ export const dashboardSortOrderName: Record<DashboardSortOrder, string> = {
 };
 
 export type PreviewMode = 'friendly' | 'source' | 'raw';
+
+export function getBundlePluginByFeature(feature: string) {
+  const bundlePlugins = getAppBundlePlugins();
+  return bundlePlugins.find(p => p.feature === feature);
+}
 
 export function getPreviewModeName(previewMode: PreviewMode, useLong = false) {
   if (previewMode in previewModeMap) {

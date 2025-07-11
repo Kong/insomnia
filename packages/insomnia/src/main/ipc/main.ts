@@ -17,6 +17,7 @@ import iconv from 'iconv-lite';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
 import * as models from '../../models';
+import type { PluginTemplateTag } from '../../templating/types';
 import type { SegmentEvent } from '../analytics';
 import { trackPageView, trackSegmentEvent } from '../analytics';
 import {
@@ -76,7 +77,11 @@ export interface RendererToMainBridgeAPI {
   secretStorage: secretStorageBridgeAPI;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
-  showNunjucksContextMenu: (options: { key: string; nunjucksTag?: { template: string; range: MarkerRange } }) => void;
+  showNunjucksContextMenu: (options: {
+    key: string;
+    nunjucksTag?: { template: string; range: MarkerRange };
+    pluginTemplateTags?: { templateTag: PluginTemplateTag }[];
+  }) => void;
   showContextMenu: (options: {
     key: string;
     menuItems: MenuItemConstructorOptions[];

@@ -9,7 +9,11 @@ import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, shell } from 'ele
 import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
 
 import { fnOrString } from '../../common/misc';
-import { type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '../../templating/types';
+import {
+  type NunjucksParsedTagArg,
+  type NunjucksTagContextMenuAction,
+  type PluginTemplateTag,
+} from '../../templating/types';
 import type { extractNunjucksTagFromCoords } from '../../templating/utils';
 import { invariant } from '../../utils/invariant';
 
@@ -172,8 +176,15 @@ const getTemplateValue = (arg: NunjucksParsedTagArg) => {
 export function registerElectronHandlers() {
   ipcMainOn(
     'show-nunjucks-context-menu',
-    (event, options: { key: string; nunjucksTag: ReturnType<typeof extractNunjucksTagFromCoords> }) => {
-      const { key, nunjucksTag } = options;
+    (
+      event,
+      options: {
+        key: string;
+        nunjucksTag: ReturnType<typeof extractNunjucksTagFromCoords>;
+        pluginTemplateTags?: { templateTag: PluginTemplateTag }[];
+      },
+    ) => {
+      const { key, nunjucksTag, pluginTemplateTags = [] } = options;
       const sendNunjuckTagContextMsg = (type: NunjucksTagContextMenuAction) => {
         event.sender.send('nunjucks-context-menu-command', { key, nunjucksTag: { ...nunjucksTag, type } });
       };
@@ -215,7 +226,7 @@ export function registerElectronHandlers() {
               },
               { type: 'separator' },
             ];
-        const localTemplate: MenuItemConstructorOptions[] = localTemplateTags
+        const localTemplate: MenuItemConstructorOptions[] = [...localTemplateTags, ...pluginTemplateTags]
           // sort alphabetically
           .sort((a, b) => fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)))
           .map(l => {

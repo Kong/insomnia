@@ -7,6 +7,7 @@ export default defineConfig({
     hideSkippedTests: true,
     env: {
       INSOMNIA_DATA_PATH: tmpdir(),
+      INSOMNIA_APP_PATH: tmpdir(),
     },
     exclude: ['src/ui/routes/**.*.tsx'],
     server: {
