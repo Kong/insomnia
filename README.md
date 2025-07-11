@@ -94,6 +94,9 @@ npm test
 
 # Start App with Live Reload
 npm run dev
+
+# Start App with both renderer process live reload and main process auto restart
+npm run dev:autoRestart
 ```
 
 ### Linux
