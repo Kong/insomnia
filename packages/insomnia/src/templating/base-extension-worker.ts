@@ -1,4 +1,4 @@
-import pkg from '../../package.json';
+import packageJson from '../../package.json';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Response } from '../models/response';
@@ -114,10 +114,8 @@ export default class BaseExtension {
       .slice(0, runArgs.length - 1)
       .filter(a => a !== EMPTY_ARG)
       .map(decodeEncoding);
-    const platform = ({ MacIntel: 'darwin', Win32: 'win32' }[globalThis.navigator.platform] || 'linux') as
-      | 'darwin'
-      | 'win32'
-      | 'linux';
+    const platform = ({ MacIntel: 'darwin', Win32: 'win32' }[globalThis.navigator.platform] ||
+      'linux') as NodeJS.Platform;
     // Define a helper context with utils
     const helperContext: PluginTemplateTagContext = {
       app: {
@@ -134,7 +132,7 @@ export default class BaseExtension {
           throw new Error(legacyModeErrorMessage);
         },
         getInfo: () => ({
-          version: pkg.version,
+          version: packageJson.version,
           platform,
         }),
         showSaveDialog: async () => {
