@@ -21,7 +21,7 @@ const templateTagTestCases: Record<string, TemplateTagTestCase[]> = {
   ],
   hash: [
     {
-      tagPrefix: "{% hash 'sha1', 'hex', 'insomnia-test' %}",
+      tagPrefix: "{% hash 'md5', 'hex', 'insomnia-test' %}",
       expectedResult: 'b79b28083768d54575eacc7389e9128624685310',
     },
   ],
