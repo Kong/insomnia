@@ -1,4 +1,3 @@
-import { stat } from 'node:fs/promises';
 import path from 'node:path';
 
 import { type IRuleResult } from '@stoplight/spectral-core';
@@ -54,6 +53,7 @@ import { EnvironmentPicker } from '../components/environment-picker';
 import { Icon } from '../components/icon';
 import { InsomniaAI } from '../components/insomnia-ai-icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
+import { showError } from '../components/modals';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { CertificatesModal } from '../components/modals/workspace-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
@@ -63,7 +63,6 @@ import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useAIContext } from '../context/app/ai-context';
 import { useInsomniaTab } from '../hooks/use-insomnia-tab';
 import { useActiveApiSpecSyncVCSVersion, useGitVCSVersion } from '../hooks/use-vcs-version';
-import { SpectralRunner } from '../worker/spectral-handler';
 import { useRootLoaderData } from './root';
 import type { WorkspaceLoaderData } from './workspace';
 
@@ -89,22 +88,13 @@ export const loader: LoaderFunction = async ({ params }): Promise<LoaderData> =>
 
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
 
-  let rulesetPath = '';
+  const gitRepositoryId = isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
+  // we don't run the lint here because it is expensive and slows first render too much
+  // TODO: add this in once we run this loader outside the renderer
+  const rulesetPath = gitRepositoryId
+    ? path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)
+    : '';
 
-  try {
-    const gitRepositoryId = isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
-
-    const spectralRulesetPath = path.join(
-      process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-      `version-control/git/${gitRepositoryId}/other/.spectral.yaml`,
-    );
-
-    if ((await stat(spectralRulesetPath)).isFile()) {
-      rulesetPath = spectralRulesetPath;
-    }
-  } catch (err) {
-    // Ignore
-  }
   let parsedSpec: OpenAPIV3.Document | undefined;
 
   try {
@@ -137,7 +127,6 @@ const SwaggerUIDiv = ({ text }: { text: string }) => {
     />
   );
 };
-
 interface LintMessage {
   type: 'error' | 'warning' | 'info';
   message: string;
@@ -182,9 +171,10 @@ const Design: FC = () => {
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
   const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
-  const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
 
   const { apiSpec, rulesetPath, parsedSpec } = useLoaderData() as LoaderData;
+
+  const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
 
   const editor = useRef<CodeEditorHandle>(null);
   const { generating, generateTestsFromSpec, access } = useAIContext();
@@ -199,20 +189,19 @@ const Design: FC = () => {
   const lintErrors = lintMessages.filter(message => message.type === 'error');
   const lintWarnings = lintMessages.filter(message => message.type === 'warning');
 
-  const spectralRunnerRef = useRef<SpectralRunner>();
-
   const registerCodeMirrorLint = (rulesetPath: string) => {
     CodeMirror.registerHelper('lint', 'openapi', async (contents: string) => {
-      let runner = spectralRunnerRef.current;
-
-      if (!runner) {
-        runner = new SpectralRunner();
-        spectralRunnerRef.current = runner;
-      }
-
       try {
-        const diagnostics = await runner.runDiagnostics({ contents, rulesetPath });
-        const lintResult = diagnostics.map(({ severity, code, message, range }) => {
+        const { diagnostics, error } = await window.main.lintSpec({ documentContent: contents, rulesetPath });
+        if (error) {
+          console.log('Handled error detected while linting:', error);
+          showError({
+            title: 'Linting Error',
+            message: `An error occurred while linting the OpenAPI specification: ${error}`,
+          });
+          return Promise.reject(error);
+        }
+        const lintResult = diagnostics?.map(({ severity, code, message, range }) => {
           return {
             from: CodeMirror.Pos(range.start.line, range.start.character),
             to: CodeMirror.Pos(range.end.line, range.end.character),
@@ -223,11 +212,16 @@ const Design: FC = () => {
             line: range.start.line,
           };
         });
-        setLintMessages?.(lintResult);
+        setLintMessages?.(lintResult || []);
         return lintResult;
-      } catch (e) {
+      } catch (error) {
         // return a rejected promise so that codemirror do nothing
-        return Promise.reject(e);
+        console.log('Unhandled error while linting:', error);
+        showError({
+          title: 'Linting Error',
+          message: `An error occurred while linting the OpenAPI specification: ${error}`,
+        });
+        return Promise.reject(error);
       }
     });
   };
@@ -241,7 +235,6 @@ const Design: FC = () => {
   useUnmount(() => {
     // delete the helper to avoid it run multiple times when user enter the page next time
     CodeMirror.registerHelper('lint', 'openapi', undefined);
-    spectralRunnerRef.current?.terminate();
   });
 
   const onCodeEditorChange = useMemo(() => {
@@ -980,10 +973,10 @@ const Design: FC = () => {
                         {lintWarnings.length}
                       </div>
                     )}
-                    {lintMessages.length === 0 && apiSpec.contents && (
+                    {apiSpec.contents && (
                       <div className="flex select-none items-center gap-2">
-                        <Icon icon="check-square" className="text-[--color-success]" />
-                        No lint problems
+                        {lintMessages.length === 0 && <Icon icon="check-square" className="text-[--color-success]" />}
+                        {lintMessages.length === 0 ? 'No lint problems' : 'Lint problems detected'}
                       </div>
                     )}
                     <span className="flex-1" />

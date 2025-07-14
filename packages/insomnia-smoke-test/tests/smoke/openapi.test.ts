@@ -10,11 +10,11 @@ test('can render Spectral OpenAPI lint errors', async ({ page }) => {
 
   const codeEditor = page.locator('.pane-one');
   await expect.soft(codeEditor).toContainText('openapi: 3.0.4');
-
+  await page.getByText('No lint problems').click();
   // Cause a lint error
   await page.locator('[data-testid="CodeEditor"] >> text=info').click();
-  await page.locator('textarea').nth(1).press('Tab');
-  // TODO - fix the locator so we don't rely on `.nth(1)` https://linear.app/insomnia/issue/INS-2255/revisit-codemirror-playwright-selectorfill
+  page.keyboard.insertText(' !@#$%^&*(');
+  await page.getByText('Lint problems detected').click();
 
   await page.getByLabel('Toggle lint panel').click();
   await page.getByRole('option', { name: 'oas3-schema must have' }).click();

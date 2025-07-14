@@ -4,8 +4,8 @@ import { useFetcher } from 'react-router';
 
 import type { GitCredentials } from '../../../models/git-credentials';
 import type { GitRepository } from '../../../models/git-repository';
+import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
-import { showAlert } from '../modals';
 
 interface Props {
   uri?: string;
@@ -98,22 +98,13 @@ const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFo
             <span className="text-sm text-[--hl]">{credentials.author.email || 'Signed in'}</span>
           </div>
         </div>
-        <Button
-          type="button"
-          onPress={() => {
-            showAlert({
-              title: 'Sign out of GitLab',
-              message:
-                'Are you sure you want to sign out? You will need to re-authenticate with GitLab to use this feature.',
-              okLabel: 'Sign out',
-              onConfirm: () => {
-                signOutFetcher.submit({}, { action: '/git-credentials/gitlab/sign-out', method: 'POST' });
-              },
-            });
+        <PromptButton
+          onClick={() => {
+            signOutFetcher.submit({}, { action: '/git-credentials/gitlab/sign-out', method: 'POST' });
           }}
         >
-          Sign out
-        </Button>
+          Disconnect
+        </PromptButton>
       </div>
       <TextField autoFocus name="uri" className="flex w-full flex-col gap-1 px-0.5" isRequired>
         <Label className="text-start text-sm font-semibold">Git URI (https, including .git suffix)</Label>

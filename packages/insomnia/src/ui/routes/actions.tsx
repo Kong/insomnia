@@ -36,7 +36,6 @@ import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
-import { SpectralRunner } from '../worker/spectral-handler';
 import { syncNewWorkspaceIfNeeded } from './import';
 
 // Project
@@ -1193,17 +1192,15 @@ export const generateCollectionFromApiSpecAction: ActionFunction = async ({ para
 
   const gitRepositoryId = isGitProject(project) ? project.gitRepositoryId : workspaceMeta?.gitRepositoryId;
 
-  const rulesetPath = path.join(
-    process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-    `version-control/git/${gitRepositoryId}/other/.spectral.yaml`,
-  );
+  const rulesetPath = gitRepositoryId
+    ? path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)
+    : '';
 
-  const spectralRunner = new SpectralRunner();
-
-  const results = (await spectralRunner.runDiagnostics({ contents: apiSpec.contents, rulesetPath })).filter(
-    isLintError,
-  );
-  spectralRunner.terminate();
+  const { diagnostics, error } = await window.main.lintSpec({ documentContent: apiSpec.contents, rulesetPath });
+  if (error) {
+    throw error;
+  }
+  const results = diagnostics?.filter(isLintError);
   if (apiSpec.contents && results && results.length) {
     throw new Error('Error Generating Configuration');
   }
@@ -1238,18 +1235,17 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
 
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
 
+  const gitRepositoryId = workspaceMeta?.gitRepositoryId;
   const isLintError = (result: IRuleResult) => result.severity === 0;
-  const rulesetPath = path.join(
-    process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-    `version-control/git/${workspaceMeta?.gitRepositoryId}/other/.spectral.yaml`,
-  );
+  const rulesetPath = gitRepositoryId
+    ? path.join(window.app.getPath('userData'), `version-control/git/${gitRepositoryId}/other/.spectral.yaml`)
+    : '';
 
-  const spectralRunner = new SpectralRunner();
-
-  const results = (await spectralRunner.runDiagnostics({ contents: apiSpec.contents, rulesetPath })).filter(
-    isLintError,
-  );
-  spectralRunner.terminate();
+  const { diagnostics, error } = await window.main.lintSpec({ documentContent: apiSpec.contents, rulesetPath });
+  if (error) {
+    throw error;
+  }
+  const results = diagnostics?.filter(isLintError);
   if (apiSpec.contents && results && results.length) {
     throw new Error('Error Generating Configuration');
   }
