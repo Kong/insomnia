@@ -27,7 +27,15 @@ const pluginToMainAPI = {
     return await fs.promises.readFile(body.path, { encoding: body.encoding || 'utf8' });
   },
   'nodeOS': async () => {
-    return { arch: os.arch(), platform: os.platform(), release: os.release() };
+    return {
+      arch: os.arch(),
+      platform: os.platform(),
+      release: os.release(),
+      cpus: os.cpus(),
+      hostname: os.hostname(),
+      freemem: os.freemem(),
+      userInfo: os.userInfo(),
+    };
   },
   'decode': async (body: { buffer: Buffer; encoding: 'utf8' }) => {
     return iconv.decode(body.buffer, body.encoding || 'utf8');

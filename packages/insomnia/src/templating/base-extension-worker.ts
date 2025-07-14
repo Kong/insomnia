@@ -173,7 +173,7 @@ export default class BaseExtension {
       util: {
         readFile: async (path: string, encoding?: string) =>
           fetchFromTemplateWorkerDatabase('readFile', { path, encoding }),
-        nodeOS: async () => fetchFromTemplateWorkerDatabase('nodeOS', { nothing: true }),
+        nodeOS: async () => fetchFromTemplateWorkerDatabase('nodeOS', {}),
         decode: async (buffer: Buffer, encoding?: string) =>
           fetchFromTemplateWorkerDatabase('decode', { buffer, encoding }),
         render: (str: string) => templating.render(str, { context: renderContext }),
