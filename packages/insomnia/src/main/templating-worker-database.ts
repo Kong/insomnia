@@ -4,6 +4,7 @@ import type { Request as DBRequest } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Workspace } from '../models/workspace';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
+import { parseGraphQLRequestBody } from '../utils/graph-ql';
 
 export const resolveDbByKey = async (request: Request) => {
   const url = new URL(request.url);
@@ -64,6 +65,10 @@ export const resolveDbByKey = async (request: Request) => {
       purpose: 'send',
       extraInfo: body.extraInfo,
     });
+
+    // TODO: remove this temporary hack to support GraphQL variables in the request body properly
+    parseGraphQLRequestBody(renderResult.request);
+
     const response = await sendCurlAndWriteTimeline(
       renderResult.request,
       clientCertificates,
