@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { arch, platform, release } from 'node:os';
+import os from 'node:os';
 
 import iconv from 'iconv-lite';
 
@@ -106,9 +106,13 @@ export default class BaseExtension {
       util: {
         nodeOS: async () => {
           return {
-            platform: platform(),
-            arch: arch(),
-            release: release(),
+            arch: os.arch(),
+            platform: os.platform(),
+            release: os.release(),
+            cpus: os.cpus(),
+            hostname: os.hostname(),
+            freemem: os.freemem(),
+            userInfo: os.userInfo(),
           };
         },
         readFile: async (path: string, encoding = 'utf8') => {
