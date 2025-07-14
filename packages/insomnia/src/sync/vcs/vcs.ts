@@ -149,6 +149,9 @@ export class VCS {
   }
 
   async remoteBackendProjects({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
+    console.log(
+      `[remoteBackendProjects] Fetching remote workspaces for teamId=${teamId} teamProjectId=${teamProjectId}`,
+    );
     const { projects } = await this._runGraphQL<{ projects: BackendProjectWithTeams[] }>(
       `
         query ($teamId: ID, $teamProjectId: ID) {
@@ -169,6 +172,8 @@ export class VCS {
       },
       'projects',
     );
+
+    console.log(`[remoteBackendProjects] Fetched ${projects.length} remote workspaces`);
 
     return projects.map(backend => ({
       id: backend.id,
