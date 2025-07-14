@@ -1,4 +1,4 @@
-import { getAppPlatform, getAppVersion } from '../common/constants';
+import pkg from '../../package.json';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Response } from '../models/response';
@@ -114,6 +114,10 @@ export default class BaseExtension {
       .slice(0, runArgs.length - 1)
       .filter(a => a !== EMPTY_ARG)
       .map(decodeEncoding);
+    const platform = ({ MacIntel: 'darwin', Win32: 'win32' }[globalThis.navigator.platform] || 'linux') as
+      | 'darwin'
+      | 'win32'
+      | 'linux';
     // Define a helper context with utils
     const helperContext: PluginTemplateTagContext = {
       app: {
@@ -129,7 +133,10 @@ export default class BaseExtension {
         getPath: () => {
           throw new Error(legacyModeErrorMessage);
         },
-        getInfo: () => ({ version: getAppVersion(), platform: getAppPlatform() }),
+        getInfo: () => ({
+          version: pkg.version,
+          platform,
+        }),
         showSaveDialog: async () => {
           throw new Error(legacyModeErrorMessage);
         },

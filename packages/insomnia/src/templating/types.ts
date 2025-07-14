@@ -175,7 +175,7 @@ export interface AppContext {
     options?: Pick<PromptModalOptions, 'label' | 'defaultValue' | 'submitName' | 'inputType'>,
   ) => Promise<string>;
   getPath: (name: string) => string;
-  getInfo: () => { version: string; platform: NodeJS.Platform };
+  getInfo: () => { version: string; platform: 'darwin' | 'win32' | 'linux' };
   showSaveDialog: (options?: { defaultPath?: string }) => Promise<string | null>;
   clipboard: { readText(): string; writeText(text: string): void; clear(): void };
 }
