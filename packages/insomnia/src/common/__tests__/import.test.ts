@@ -150,13 +150,14 @@ describe('importRaw()', () => {
   it('should import an openapi collection to an existing workspace with scope design', async () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'openapi', 'endpoint-security-input.yaml');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
-
+    const disableLogs = console.log;
+    console.log = () => {};
     const scanResult = await importUtil.scanResources([
       {
         contentStr: content,
       },
     ]);
-
+    console.log = disableLogs;
     expect(scanResult[0].type?.id).toBe('openapi3');
     expect(scanResult[0].errors.length).toBe(0);
   });

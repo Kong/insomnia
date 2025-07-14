@@ -212,7 +212,7 @@ export function createWindow(): ElectronBrowserWindow {
       preload: path.join(__dirname, 'preload.js'),
       zoomFactor: getZoomFactor(),
       nodeIntegration: true,
-      nodeIntegrationInWorker: true,
+      nodeIntegrationInWorker: false, // must remain false to ensure the nunjucks web worker sandbox does not have access to Node.js APIs
       webviewTag: true,
       // TODO: enable context isolation
       contextIsolation: false,

@@ -1,22 +1,12 @@
-import crypto from 'node:crypto';
-import fs from 'node:fs';
-import os from 'node:os';
-
 import { format } from 'date-fns';
-import iconv from 'iconv-lite';
 import { JSONPath } from 'jsonpath-plus';
-import { CookieJar } from 'tough-cookie';
-import * as uuid from 'uuid';
 
 import type { CloudProviderCredential, CloudProviderName } from '../../../models/cloud-credential';
-import type { RequestParameter } from '../../../models/request';
 import type { TemplateTag } from '../../../plugins';
 import type { PluginTemplateTag, RenderPurpose } from '../../../templating/types';
 import { invariant } from '../../../utils/invariant';
 import { isBase64String } from '../../../utils/string-check';
-import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../../utils/url/querystring';
 import { fakerFunctions } from './faker-functions';
-
 const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
   {
     templateTag: {
@@ -101,11 +91,12 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           let parsedConfigStr = configStr;
           let secretConfig = {};
           if (isBase64String(configStr)) {
-            parsedConfigStr = (process.type === 'renderer' || process.type === 'worker') ? 
-              // executed in renderer or webworker
-              atob(configStr) : 
-              // executed in Inso(Nodejs)
-              Buffer.from(configStr, 'base64').toString('utf8');
+            parsedConfigStr =
+              process.type === 'renderer' || process.type === 'worker'
+                ? // executed in renderer or webworker
+                  atob(configStr)
+                : // executed in Inso(Nodejs)
+                  Buffer.from(configStr, 'base64').toString('utf8');
           }
           try {
             secretConfig = JSON.parse(parsedConfigStr);
@@ -170,23 +161,29 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         invariant(kind === 'normal' || kind === 'url' || kind === 'hex', 'invalid kind');
         if (action === 'encode') {
           if (kind === 'normal') {
-            return Buffer.from(text, 'utf8').toString('base64');
+            return btoa(new TextEncoder().encode(text).reduce((data, byte) => data + String.fromCharCode(byte), ''));
           }
+
           if (kind === 'hex') {
-            return Buffer.from(text, 'hex').toString('base64');
+            const bytes = new Uint8Array(text.match(/.{1,2}/g).map((byte: string) => parseInt(byte, 16)));
+            return btoa(String.fromCharCode(...bytes));
           }
+
           if (kind === 'url') {
-            return Buffer.from(text, 'utf8')
-              .toString('base64')
-              .replace(/\+/g, '-')
-              .replace(/\//g, '_')
-              .replace(/=/g, '');
+            const base64 = btoa(
+              new TextEncoder().encode(text).reduce((data, byte) => data + String.fromCharCode(byte), ''),
+            );
+            return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
           }
         }
+        const binary = atob(text);
+        const bytes = new Uint8Array([...binary].map(char => char.charCodeAt(0)));
+
         if (kind === 'hex') {
-          return Buffer.from(text, 'base64').toString('hex');
+          return [...bytes].map(byte => byte.toString(16).padStart(2, '0')).join('');
         }
-        return Buffer.from(text, 'base64').toString('utf8');
+
+        return new TextDecoder().decode(bytes);
       },
     },
   },
@@ -259,20 +256,8 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           ],
         },
       ],
-      run(_context, uuidType = 'v4') {
-        switch ((uuidType + '').toLowerCase()) {
-          case '1':
-          case 'v1': {
-            return uuid.v1();
-          }
-          case '4':
-          case 'v4': {
-            return uuid.v4();
-          }
-          default: {
-            throw new Error(`Invalid UUID type "${uuidType}"`);
-          }
-        }
+      run() {
+        return crypto.randomUUID();
       },
     },
   },
@@ -302,15 +287,9 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           type: 'string',
         },
       ],
-      run(_context, fnName: 'arch' | 'cpus', filter) {
-        let value = os[fnName]();
-
-        if (JSONPath && ['userInfo', 'cpus'].includes(fnName)) {
-          try {
-            const results = JSONPath({ json: value, path: filter });
-            value = Array.isArray(results) ? results[0] : results;
-          } catch (err) {}
-        }
+      async run(context, fnName: 'arch') {
+        const os = await context.util.nodeOS();
+        const value = os[fnName];
 
         if (typeof value !== 'string') {
           return JSON.stringify(value);
@@ -350,7 +329,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           placeholder: 'Value to hash',
         },
       ],
-      run(_context, algorithm, encoding, value = '') {
+      async run(_context, algorithm: 'md5' | 'sha1' | 'sha256' | 'sha512', encoding, value = '') {
         if (encoding !== 'hex' && encoding !== 'latin1' && encoding !== 'base64') {
           throw new Error(`Invalid encoding ${encoding}. Choices are hex, latin1, base64`);
         }
@@ -359,10 +338,24 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         if (valueType !== 'string') {
           throw new Error(`Cannot hash value of type "${valueType}"`);
         }
+        const supportedAlgorithm: AlgorithmIdentifier =
+          {
+            md5: 'SHA-1', //MD5 is considered cryptographically broken
+            sha1: 'SHA-1',
+            sha256: 'SHA-256',
+            sha512: 'SHA-512',
+          }[algorithm.toLowerCase()] || 'SHA-256';
+        const buffer = await crypto.subtle.digest(supportedAlgorithm, new TextEncoder().encode(value));
+        const hashArray = Array.from(new Uint8Array(buffer));
 
-        const hash = crypto.createHash(algorithm);
-        hash.update(value || '', 'utf8');
-        return hash.digest(encoding);
+        if (encoding === 'base64') {
+          return btoa(String.fromCharCode.apply(null, hashArray));
+        }
+        if (encoding === 'latin1') {
+          return String.fromCharCode.apply(null, hashArray);
+        }
+        // hex
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
       },
     },
   },
@@ -377,12 +370,12 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           type: 'file',
         },
       ],
-      run(_context, path) {
+      async run(context, path) {
         if (!path) {
           throw new Error('No file selected');
         }
 
-        return fs.readFileSync(path, 'utf8');
+        return await context.util.readFile(path, 'utf8');
       },
     },
   },
@@ -402,7 +395,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           type: 'string',
         },
       ],
-      run(_context, jsonString, filter) {
+      async run(_context, jsonString, filter) {
         let body;
         try {
           body = JSON.parse(jsonString);
@@ -412,7 +405,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
         let results;
         try {
-          results = JSONPath({ json: body, path: filter });
+          results = await JSONPath({ json: body, path: filter });
           if (!Array.isArray(results)) {
             results = [results];
           }
@@ -458,40 +451,12 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         }
 
         const cookieJar = await context.util.models.cookieJar.getOrCreateForParentId(workspace._id);
-
-        return new Promise((resolve, reject) => {
-          let jar;
-          try {
-            // For some reason, fromJSON modifies `cookies`.
-            // Create a copy first just to be sure.
-            const copy = JSON.stringify({ cookies: cookieJar.cookies });
-            jar = CookieJar.fromJSON(copy);
-          } catch (error) {
-            console.log('[cookies] Failed to initialize cookie jar', error);
-            jar = new CookieJar();
-          }
-          jar.rejectPublicSuffixes = false;
-          jar.looseMode = true;
-
-          jar.getCookies(url, {}, (err, cookies) => {
-            if (err) {
-              console.warn(`Failed to find cookie for ${url}`, err);
-            }
-
-            if (!cookies || cookies.length === 0) {
-              console.log(cookies);
-              reject(new Error(`No cookies in store for url "${url}"`));
-            }
-
-            const cookie = cookies.find(cookie => cookie.key === name);
-            if (!cookie) {
-              const names = cookies.map(c => `"${c.key}"`).join(',\n\t');
-              throw new Error(`No cookie with name "${name}".\nChoices are [\n\t${names}\n] for url "${url}"`);
-            } else {
-              resolve(cookie ? cookie.value : null);
-            }
-          });
-        });
+        const found = cookieJar.cookies.find(cookie => cookie.key === name);
+        invariant(
+          found,
+          `No cookie with name "${name}" found in cookie jar for url "${url}"\nChoices are [\n\t${cookieJar.cookies.map(c => c.key)}\n] for`,
+        );
+        return found.value;
       },
     },
   },
@@ -562,8 +527,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         // We do this because we may render the prompt multiple times per request.
         // We cache it under the requestId so it only prompts once. We then clear
         // the cache in a response hook when the request is sent.
-        const titleHash = crypto.createHash('md5').update(title).digest('hex');
-        const storageKey = explicitStorageKey || `${context.meta.requestId}.${titleHash}`;
+        const storageKey = explicitStorageKey || `${context.meta.requestId}.${title}`;
         const cachedValue = await context.store.getItem(storageKey);
 
         // Directly return cached value if using explicitly defined storage key
@@ -806,7 +770,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             throw new Error(bodyBuffer);
           }
           try {
-            return iconv.decode(bodyBuffer, charset);
+            return context.util.decode(bodyBuffer, charset);
           } catch (err) {
             console.warn('[response] Failed to decode body', err);
             return bodyBuffer.toString();
@@ -831,7 +795,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             throw new Error(bodyBuffer);
           }
           try {
-            body = iconv.decode(bodyBuffer, charset);
+            body = await context.util.decode(bodyBuffer, charset);
           } catch (err) {
             console.warn('[response] Failed to decode body', err);
             body = bodyBuffer.toString();
@@ -848,7 +812,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             }
 
             try {
-              results = JSONPath({ json: bodyJSON, path: sanitizedFilter });
+              results = await JSONPath({ json: bodyJSON, path: sanitizedFilter });
               if (!Array.isArray(results)) {
                 results = [results];
               }
@@ -1024,21 +988,18 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         if (!workspace) {
           throw new Error(`Workspace not found for ${meta.workspaceId}`);
         }
-        const params: RequestParameter[] = [];
+
         if (attribute === 'url') {
-          for (const p of request.parameters) {
-            params.push({
-              name: (await context.util.render(p.name)) || '',
-              value: (await context.util.render(p.value)) || '',
-            });
-          }
           const rendered = await context.util.render(request.url);
-          return rendered
-            ? smartEncodeUrl(
-                joinUrlAndQueryString(rendered, buildQueryStringFromParams(params)),
-                request.settingEncodeUrl,
-              )
-            : '';
+          const url = new URL(rendered || '', 'http://localhost');
+          for (const p of request.parameters) {
+            const name = await context.util.render(p.name);
+            const value = await context.util.render(p.value);
+            if (name && value) {
+              url.searchParams.append(name, value);
+            }
+          }
+          return url;
         }
         if (attribute === 'cookie') {
           if (!name) {
@@ -1046,51 +1007,13 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           }
 
           const cookieJar = await context.util.models.cookieJar.getOrCreateForParentId(workspace._id);
-          for (const p of request.parameters) {
-            params.push({
-              name: (await context.util.render(p.name)) || '',
-              value: (await context.util.render(p.value)) || '',
-            });
-          }
-          const rendered = await context.util.render(request.url);
-          const url = rendered
-            ? smartEncodeUrl(
-                joinUrlAndQueryString(rendered, buildQueryStringFromParams(params)),
-                request.settingEncodeUrl,
-              )
-            : '';
-          return new Promise((resolve, reject) => {
-            let jar;
-            try {
-              // For some reason, fromJSON modifies `cookies`.
-              // Create a copy first just to be sure.
-              const copy = JSON.stringify({ cookies: cookieJar.cookies });
-              jar = CookieJar.fromJSON(copy);
-            } catch (error) {
-              console.log('[cookies] Failed to initialize cookie jar', error);
-              jar = new CookieJar();
-            }
-            jar.rejectPublicSuffixes = false;
-            jar.looseMode = true;
 
-            jar.getCookies(url, {}, (err, cookies) => {
-              if (err) {
-                console.warn(`Failed to find cookie for ${url}`, err);
-              }
-
-              if (!cookies || cookies.length === 0) {
-                reject(new Error(`No cookies in store for url "${url}"`));
-              }
-
-              const cookie = cookies.find(cookie => cookie.key === name);
-              if (!cookie) {
-                const names = cookies.map(c => `"${c.key}"`).join(',\n\t');
-                throw new Error(`No cookie with name "${name}".\nChoices are [\n\t${names}\n] for url "${url}"`);
-              } else {
-                resolve(cookie ? cookie.value : null);
-              }
-            });
-          });
+          const found = cookieJar.cookies.find(cookie => cookie.key === name);
+          invariant(
+            found,
+            `No cookie with name "${name}" found in cookie jar for url "${request.url}"\nChoices are [\n\t${cookieJar.cookies.map(c => c.key)}\n] for`,
+          );
+          return found.value;
         }
         if (attribute === 'parameter') {
           if (!name) {

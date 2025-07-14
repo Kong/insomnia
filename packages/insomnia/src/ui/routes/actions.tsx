@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import type { IRuleResult } from '@stoplight/spectral-core';
+import { type IRuleResult } from '@stoplight/spectral-core';
 import { generate, runTests, type Test } from 'insomnia-testing';
 import type { TestResults } from 'insomnia-testing/src/run/entities';
 import { type ActionFunction, redirect } from 'react-router';

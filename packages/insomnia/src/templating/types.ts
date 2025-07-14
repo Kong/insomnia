@@ -200,6 +200,13 @@ export interface PluginTemplateTagContext {
   meta: { requestId?: string; workspaceId?: string };
   renderPurpose?: RenderPurpose;
   util: {
+    nodeOS: () => Promise<{
+      arch: string;
+      platform: NodeJS.Platform;
+      release: string;
+    }>;
+    readFile: (path: string, encoding?: string) => Promise<string | Buffer>;
+    decode: (buffer: Buffer, encoding?: string) => Promise<string>;
     render: (str: string) => string | Promise<string | null>;
     cloudService: {
       getExternalVault: (options: any) => Promise<string>;
