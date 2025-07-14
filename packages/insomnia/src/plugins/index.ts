@@ -173,9 +173,12 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
           continue;
         }
 
+        const settings = await models.settings.get();
+        const pluginsAreRestrictedToRunInWorker = settings?.pluginsAllowElevatedAccess === false;
         const isExecutedInApp = process.type === 'renderer' || process.type === 'worker' || process.type === 'browser';
+        const isBundlePlugin = pluginBasePath.startsWith(bundlePluginPath);
         // Validate bundle plugin checksum for production builds
-        if (isDevelopment() && pluginBasePath.startsWith(bundlePluginPath) && isExecutedInApp) {
+        if (!isDevelopment() && isBundlePlugin && isExecutedInApp && pluginsAreRestrictedToRunInWorker) {
           let pluginChecksum = null;
           const appBundlePlugins = getAppBundlePlugins();
           const { name: pluginName, version: pluginVersion } = pluginJson;

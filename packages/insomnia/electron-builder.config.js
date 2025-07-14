@@ -1,4 +1,3 @@
-const { execSync } = require('child_process');
 const BINARY_PREFIX = 'Insomnia.Core';
 // NOTE: USE_HARD_LINKS
 // https://github.com/electron-userland/electron-builder/issues/4594#issuecomment-574653870
@@ -32,6 +31,7 @@ const config = {
       to: './bin',
       filter: 'yarn-standalone.js',
     },
+    // include bundle plugins as extra resources
     {
       from: './plugins',
       to: './plugins',
