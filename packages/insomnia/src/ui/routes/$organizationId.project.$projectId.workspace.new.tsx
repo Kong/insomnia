@@ -9,11 +9,11 @@ import * as models from '../../models';
 import type { MockServer } from '../../models/mock-server';
 import { isGitProject } from '../../models/project';
 import { isCollection, isEnvironment, scopeToActivity } from '../../models/workspace';
+import { safeToUseInsomniaFileNameWithExt } from '../../sync/git/insomnia-filename';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
-import { safeToUseInsomniaFileNameWithExt } from './actions';
 
 export async function action({ request, params }: ActionFunctionArgs) {
   const { organizationId, projectId } = params;

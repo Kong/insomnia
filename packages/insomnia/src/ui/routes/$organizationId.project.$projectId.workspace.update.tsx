@@ -4,8 +4,8 @@ import { type ActionFunctionArgs } from 'react-router';
 
 import * as models from '../../models';
 import { isGitProject } from '../../models/project';
+import { safeToUseInsomniaFileNameWithExt } from '../../sync/git/insomnia-filename';
 import { invariant } from '../../utils/invariant';
-import { safeToUseInsomniaFileNameWithExt } from './actions';
 
 export async function action({ request }: ActionFunctionArgs) {
   const patch = await request.json();
