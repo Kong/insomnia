@@ -675,18 +675,30 @@ async function renderApp() {
                                       },
                                       {
                                         path: 'new',
-                                        action: async (...args) =>
-                                          (await import('./routes/actions')).createMockRouteAction(...args),
+                                        action: async args =>
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.new'
+                                            )
+                                          ).action(args),
                                       },
                                       {
                                         path: ':mockRouteId/update',
-                                        action: async (...args) =>
-                                          (await import('./routes/actions')).updateMockRouteAction(...args),
+                                        action: async args =>
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update'
+                                            )
+                                          ).action(args),
                                       },
                                       {
                                         path: ':mockRouteId/delete',
-                                        action: async (...args) =>
-                                          (await import('./routes/actions')).deleteMockRouteAction(...args),
+                                        action: async args =>
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.delete'
+                                            )
+                                          ).action(args),
                                       },
                                     ],
                                   },
