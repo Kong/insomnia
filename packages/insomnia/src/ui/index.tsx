@@ -733,18 +733,30 @@ async function renderApp() {
                                 children: [
                                   {
                                     path: 'new',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).createNewClientCertificateAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.clientcert.new'
+                                        )
+                                      ).action(args),
                                   },
                                   {
                                     path: 'update',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).updateClientCertificateAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.clientcert.update'
+                                        )
+                                      ).action(args),
                                   },
                                   {
                                     path: 'delete',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).deleteClientCertificateAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.clientcert.delete'
+                                        )
+                                      ).action(args),
                                   },
                                 ],
                               },

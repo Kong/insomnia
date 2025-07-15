@@ -23,30 +23,6 @@ export function safeToUseInsomniaFileNameWithExt(fileName: string) {
   return `${safeToUseInsomniaFileName(fileName)}.yaml`;
 }
 
-export const createNewClientCertificateAction: ActionFunction = async ({ request }) => {
-  const patch = await request.json();
-  const certificate = await models.clientCertificate.create(patch);
-  return {
-    certificate,
-  };
-};
-
-export const updateClientCertificateAction: ActionFunction = async ({ request }) => {
-  const patch = await request.json();
-  const clientCertificate = await models.clientCertificate.getById(patch._id);
-  invariant(clientCertificate, 'CA Certificate not found');
-  await models.clientCertificate.update(clientCertificate, patch);
-  return null;
-};
-
-export const deleteClientCertificateAction: ActionFunction = async ({ request }) => {
-  const { _id } = await request.json();
-  const clientCertificate = await models.clientCertificate.getById(_id);
-  invariant(clientCertificate, 'CA Certificate not found');
-  await models.clientCertificate.remove(clientCertificate);
-  return null;
-};
-
 export const updateSettingsAction: ActionFunction = async ({ request }) => {
   const patch = await request.json();
   if ('enableAnalytics' in patch && !patch.enableAnalytics) {
