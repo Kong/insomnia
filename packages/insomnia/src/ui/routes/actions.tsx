@@ -23,29 +23,6 @@ export function safeToUseInsomniaFileNameWithExt(fileName: string) {
   return `${safeToUseInsomniaFileName(fileName)}.yaml`;
 }
 
-export const createNewCaCertificateAction: ActionFunction = async ({ request }) => {
-  const patch = await request.json();
-  await models.caCertificate.create(patch);
-  return null;
-};
-
-export const updateCaCertificateAction: ActionFunction = async ({ request }) => {
-  const patch = await request.json();
-  const caCertificate = await models.caCertificate.getById(patch._id);
-  invariant(caCertificate, 'CA Certificate not found');
-  await models.caCertificate.update(caCertificate, patch);
-  return null;
-};
-
-export const deleteCaCertificateAction: ActionFunction = async ({ params }) => {
-  const { workspaceId } = params;
-  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-  const caCertificate = await models.caCertificate.findByParentId(workspaceId);
-  invariant(caCertificate, 'CA Certificate not found');
-  await models.caCertificate.removeWhere(workspaceId);
-  return null;
-};
-
 export const createNewClientCertificateAction: ActionFunction = async ({ request }) => {
   const patch = await request.json();
   const certificate = await models.clientCertificate.create(patch);
