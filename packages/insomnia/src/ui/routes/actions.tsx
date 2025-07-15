@@ -23,23 +23,6 @@ export function safeToUseInsomniaFileNameWithExt(fileName: string) {
   return `${safeToUseInsomniaFileName(fileName)}.yaml`;
 }
 
-export const updateCookieJarAction: ActionFunction = async ({ request, params }) => {
-  const { workspaceId } = params;
-  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-
-  const { cookieJarId, patch } = await request.json();
-
-  invariant(typeof cookieJarId === 'string', 'Cookie Jar ID is required');
-
-  const cookieJar = await models.cookieJar.getById(cookieJarId);
-
-  invariant(cookieJar, 'Cookie Jar not found');
-
-  const updatedCookieJar = await models.cookieJar.update(cookieJar, patch);
-
-  return updatedCookieJar;
-};
-
 export const createNewCaCertificateAction: ActionFunction = async ({ request }) => {
   const patch = await request.json();
   await models.caCertificate.create(patch);

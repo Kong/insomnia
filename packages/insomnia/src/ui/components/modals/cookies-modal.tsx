@@ -67,7 +67,7 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
     updateCookieJarFetcher.submit(JSON.stringify({ patch, cookieJarId }), {
       encType: 'application/json',
       method: 'post',
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cookieJar/update`,
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/update-cookie-jar`,
     });
 
     setFilteredCookies(chunkArray(patch.cookies));

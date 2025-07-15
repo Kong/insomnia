@@ -796,14 +796,13 @@ async function renderApp() {
                                 ],
                               },
                               {
-                                path: 'cookieJar',
-                                children: [
-                                  {
-                                    path: 'update',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).updateCookieJarAction(...args),
-                                  },
-                                ],
+                                path: 'update-cookie-jar',
+                                action: async args =>
+                                  (
+                                    await import(
+                                      './routes/$organizationId.project.$projectId.workspace.$workspaceId.update-cookie-jar'
+                                    )
+                                  ).action(args),
                               },
                               {
                                 path: 'test/*',
