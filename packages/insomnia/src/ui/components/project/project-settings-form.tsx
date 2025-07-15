@@ -30,7 +30,7 @@ import {
   isRemoteProject,
   type Project,
 } from '../../../models/project';
-import type { UpdateProjectActionResult } from '../../routes/actions';
+import type { UpdateProjectActionResult } from '../../routes/$organizationId.project.$projectId.update';
 import type { InitGitCloneResult } from '../../routes/git-project-actions';
 import type { StorageRules } from '../../routes/organization';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../../routes/project';

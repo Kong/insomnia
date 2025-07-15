@@ -266,10 +266,6 @@ async function renderApp() {
                     action: async (...args) => (await import('./routes/project')).syncProjectsAction(...args),
                   },
                   {
-                    path: 'ai/access',
-                    action: async (...args) => (await import('./routes/actions')).accessAIApiAction(...args),
-                  },
-                  {
                     path: 'collaborators',
                     loader: async (...args) => (await import('./routes/invite')).collaboratorsListLoader(...args),
                   },
@@ -629,13 +625,21 @@ async function renderApp() {
                                 children: [
                                   {
                                     path: 'update',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).updateApiSpecAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.spec.update'
+                                        )
+                                      ).action(args),
                                   },
                                   {
                                     path: 'generate-request-collection',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).generateCollectionFromApiSpecAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection'
+                                        )
+                                      ).action(args),
                                   },
                                 ],
                               },
@@ -908,26 +912,6 @@ async function renderApp() {
                                             ],
                                           },
                                         ],
-                                      },
-                                    ],
-                                  },
-                                ],
-                              },
-                              {
-                                path: 'ai',
-                                children: [
-                                  {
-                                    path: 'generate',
-                                    children: [
-                                      {
-                                        path: 'collection-and-tests',
-                                        action: async (...args) =>
-                                          (await import('./routes/actions')).generateCollectionAndTestsAction(...args),
-                                      },
-                                      {
-                                        path: 'tests',
-                                        action: async (...args) =>
-                                          (await import('./routes/actions')).generateTestsAction(...args),
                                       },
                                     ],
                                   },

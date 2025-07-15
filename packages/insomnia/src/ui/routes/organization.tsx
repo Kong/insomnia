@@ -6,7 +6,6 @@ import {
   MenuItem,
   MenuTrigger,
   Popover,
-  ProgressBar,
   ToggleButton,
   Tooltip,
   TooltipTrigger,
@@ -56,14 +55,12 @@ import { HeaderInviteButton } from '../components/header-invite-button';
 import { HeaderUserButton } from '../components/header-user-button';
 import { Hotkey } from '../components/hotkey';
 import { Icon } from '../components/icon';
-import { InsomniaAI } from '../components/insomnia-ai-icon';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { showAlert, showModal } from '../components/modals';
 import { SettingsModal, showSettingsModal } from '../components/modals/settings-modal';
 import { OrganizationAvatar } from '../components/organization-avatar';
 import { PresentUsers } from '../components/present-users';
 import { Toast } from '../components/toast';
-import { useAIContext } from '../context/app/ai-context';
 import { InsomniaEventStreamProvider } from '../context/app/insomnia-event-stream-context';
 import { InsomniaTabProvider } from '../context/app/insomnia-tab-context';
 import { RunnerProvider } from '../context/app/runner-context';
@@ -661,8 +658,6 @@ const OrganizationRoute = () => {
   const [isOrganizationSidebarOpen, setIsOganizationSidebarOpen] = useLocalStorage('organizationSidebarOpen', true);
   const [isMinimal, setIsMinimal] = useLocalStorage('isMinimal', false);
 
-  const { generating: loadingAI, progress: loadingAIProgress } = useAIContext();
-
   return (
     <InsomniaEventStreamProvider>
       <InsomniaTabProvider>
@@ -674,7 +669,7 @@ const OrganizationRoute = () => {
               <header className="grid grid-cols-3 items-center border-b border-solid border-[--hl-md] [grid-area:Header]">
                 <div className="flex items-center gap-2">
                   <div className="flex w-[50px] shrink-0 justify-center py-2">
-                    <InsomniaLogo loading={loadingAI} />
+                    <InsomniaLogo />
                   </div>
                   {!user ? <GitHubStarsButton /> : null}
                 </div>
@@ -1006,36 +1001,6 @@ const OrganizationRoute = () => {
                 </div>
                 <div className="flex flex-shrink flex-grow basis-1/3 justify-end">
                   <div className="divide flex items-center gap-2">
-                    {loadingAI && (
-                      <ProgressBar
-                        className="flex h-full items-center gap-2"
-                        value={loadingAIProgress.progress}
-                        maxValue={loadingAIProgress.total}
-                        minValue={0}
-                        aria-label="AI generation"
-                      >
-                        {({ percentage }) => (
-                          <TooltipTrigger>
-                            <Button className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
-                              <InsomniaAI className="w-4 animate-pulse text-[--color-font]" />
-                              <div className="h-1 w-32 rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-40">
-                                <div
-                                  className="h-1 rounded-full bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100"
-                                  style={{ width: percentage + '%' }}
-                                />
-                              </div>
-                            </Button>
-                            <Tooltip
-                              placement="top"
-                              offset={8}
-                              className="flex max-h-[85vh] min-w-max select-none items-center gap-2 overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
-                            >
-                              Generating tests with Insomnia AI
-                            </Tooltip>
-                          </TooltipTrigger>
-                        )}
-                      </ProgressBar>
-                    )}
                     {!isMinimal && (
                       <NetworkAndSyncIndicator
                         user={user}

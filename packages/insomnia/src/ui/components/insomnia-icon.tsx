@@ -1,11 +1,6 @@
 import React from 'react';
 
-export const InsomniaLogo = ({
-  loading,
-  ...props
-}: {
-  loading?: boolean;
-} & React.SVGProps<SVGSVGElement>) => (
+export const InsomniaLogo = ({ ...props }: {} & React.SVGProps<SVGSVGElement>) => (
   <svg
     viewBox="0 0 128 128"
     width="28px"
@@ -35,9 +30,7 @@ export const InsomniaLogo = ({
       d="M16.181 5.61c6.29 0 11.39 5.1 11.39 11.39 0 6.291-5.1 11.39-11.39 11.39-6.291 0-11.39-5.099-11.39-11.39 0-1.537.305-3.004.857-4.341a4.43 4.43 0 106.191-6.192 11.362 11.362 0 014.342-.857z"
       fill="url(#_Linear1)"
       transform="translate(-448 -236) translate(448.128 232.136) scale(3.99198)"
-    >
-      {loading && <animate attributeName="opacity" values="0.4;1;0.4" dur="4s" repeatCount="indefinite" />}
-    </path>
+    />
     <defs>
       <linearGradient
         id="_Linear1"
