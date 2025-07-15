@@ -358,8 +358,8 @@ async function renderApp() {
                           },
                           {
                             path: 'move-workspace',
-                            action: async (...args) =>
-                              (await import('./routes/actions')).moveWorkspaceIntoProjectAction(...args),
+                            action: async args =>
+                              (await import('./routes/$organizationId.project.$projectId.move-workspace')).action(args),
                           },
                           {
                             path: 'update',
@@ -1127,8 +1127,12 @@ async function renderApp() {
                           },
                           {
                             path: ':workspaceId/update-meta',
-                            action: async (...args) =>
-                              (await import('./routes/actions')).updateWorkspaceMetaAction(...args),
+                            action: async args =>
+                              (
+                                await import(
+                                  './routes/$organizationId.project.$projectId.workspace.$workspaceId.update-meta'
+                                )
+                              ).action(args),
                           },
                         ],
                       },
