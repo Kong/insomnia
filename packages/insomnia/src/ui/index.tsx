@@ -1175,8 +1175,12 @@ async function renderApp() {
                               },
                               {
                                 path: 'toggle-expand-all',
-                                action: async (...args) =>
-                                  (await import('./routes/actions')).toggleExpandAllRequestGroupsAction(...args),
+                                action: async args =>
+                                  (
+                                    await import(
+                                      './routes/$organizationId.project.$projectId.workspace.$workspaceId.toggle-expand-all'
+                                    )
+                                  ).action(args),
                               },
                             ],
                           },
