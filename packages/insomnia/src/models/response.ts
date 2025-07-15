@@ -4,6 +4,7 @@ import zlib from 'node:zlib';
 
 import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
 import { database as db, type Query } from '../common/database';
+import { readResponseFromFile } from '../main/network/curl-output-parse';
 import type { ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as requestOperations from '../models/helpers/request-operations';
 import { deserializeNDJSON } from '../utils/ndjson';
@@ -247,6 +248,10 @@ export const getBodyBuffer = async (
     return Buffer.alloc(0);
   }
   try {
+    if (response?.bodyPath.endsWith('.traceresponse')) {
+      const output = await readResponseFromFile(response?.bodyPath);
+      return `${output}`;
+    }
     const rawBuffer = await fs.promises.readFile(response?.bodyPath);
     if (response?.bodyCompression === 'zip') {
       return new Promise((resolve, reject) =>

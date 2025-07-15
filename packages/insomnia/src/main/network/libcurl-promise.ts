@@ -33,6 +33,7 @@ import {
 } from '../../common/constants';
 import { describeByteSize, hasAuthHeader } from '../../common/misc';
 import type { ClientCertificate } from '../../models/client-certificate';
+import type { Cookie } from '../../models/cookie-jar';
 import type { RequestHeader } from '../../models/request';
 import type { ResponseHeader } from '../../models/response';
 import { buildMultipart } from './multipart';
@@ -50,7 +51,7 @@ export interface CurlRequestOptions {
   noDecompress?: boolean;
 }
 interface RequestUsedHere {
-  headers: any;
+  headers: { name: string; value: string }[];
   method: string;
   body: { mimeType?: string | null };
   authentication: Record<string, any>;
@@ -58,9 +59,10 @@ interface RequestUsedHere {
   settingRebuildPath: boolean;
   settingSendCookies: boolean;
   url: string;
-  cookieJar: any;
+  cookieJar: { cookies: Cookie[] };
   cookies: { name: string; value: string }[];
   suppressUserAgent: boolean;
+  parameters: { name: string; value: string }[];
 }
 interface SettingsUsedHere {
   preferredHttpVersion: string;

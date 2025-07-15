@@ -843,10 +843,10 @@ export async function sendCurlAndWriteTimeline(
   };
 
   // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
-  const nodejsCurlRequest =
-    process.type === 'renderer'
-      ? cancellableCurlRequest
-      : (await import('../main/network/libcurl-promise')).curlRequest;
+  const nodejsCurlRequest = (await import('../main/network/curl-process')).curlRequest;
+  // process.type === 'renderer'
+  //   ? cancellableCurlRequest
+  //   : (await import('../main/network/libcurl-promise')).curlRequest;
   const output = await nodejsCurlRequest(requestOptions);
 
   if ('error' in output) {
