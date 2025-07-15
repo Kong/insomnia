@@ -85,7 +85,6 @@ export class VCS {
 
   async setBackendProject(backendProject: BackendProject) {
     this._backendProject = backendProject;
-    console.log(`[sync] Activated project ${backendProject.id}`);
     // Store it because it might not be yet
     await this._storeBackendProject(backendProject);
   }
