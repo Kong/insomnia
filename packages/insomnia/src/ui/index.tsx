@@ -803,8 +803,12 @@ async function renderApp() {
                                       },
                                       {
                                         path: 'new',
-                                        action: async (...args) =>
-                                          (await import('./routes/actions')).createNewTestSuiteAction(...args),
+                                        action: async args =>
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.new'
+                                            )
+                                          ).action(args),
                                       },
                                       {
                                         path: ':testSuiteId',
