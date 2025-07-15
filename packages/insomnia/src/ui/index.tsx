@@ -878,18 +878,30 @@ async function renderApp() {
                                                 children: [
                                                   {
                                                     path: 'delete',
-                                                    action: async (...args) =>
-                                                      (await import('./routes/actions')).deleteTestAction(...args),
+                                                    action: async args =>
+                                                      (
+                                                        await import(
+                                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId.test.$testId.delete'
+                                                        )
+                                                      ).action(args),
                                                   },
                                                   {
                                                     path: 'update',
-                                                    action: async (...args) =>
-                                                      (await import('./routes/actions')).updateTestAction(...args),
+                                                    action: async args =>
+                                                      (
+                                                        await import(
+                                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId.test.$testId.update'
+                                                        )
+                                                      ).action(args),
                                                   },
                                                   {
                                                     path: 'run',
-                                                    action: async (...args) =>
-                                                      (await import('./routes/actions')).runTestAction(...args),
+                                                    action: async args =>
+                                                      (
+                                                        await import(
+                                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId.test.$testId.run'
+                                                        )
+                                                      ).action(args),
                                                   },
                                                 ],
                                               },
