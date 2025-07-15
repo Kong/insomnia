@@ -190,7 +190,7 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
           >
             <Label className="col-span-4">
               Server Address:
-              <HelpTooltip className="sapce-left ml-2">
+              <HelpTooltip className="space-left ml-2">
                 HashiCorp on-prem server address like https://localhost:8200
               </HelpTooltip>
             </Label>

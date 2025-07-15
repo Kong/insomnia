@@ -41,7 +41,7 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
   // const { accessKeyId, secretAccessKey, sessionToken, region } = credentials! as AWSTemporaryCredential;
   const [hideValueItemNames, setHideValueItemNames] = useState(['accessKeyId', 'secretAccessKey', 'sessionToken']);
   const [credentialFilePath, setCredentialFilePath] = useState(
-    type === AWSCredentialType.file ? credentials.filePath : '',
+    type === AWSCredentialType.file || type === AWSCredentialType.sso ? credentials.filePath : '',
   );
   const [configFilePath, setConfigFilePath] = useState(
     type === AWSCredentialType.sso ? credentials.configFilePath : '',

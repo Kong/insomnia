@@ -301,7 +301,7 @@ export async function render<T>(
         const currentProcessIsRendererAndPluginsAreRestricted =
           process.type === 'renderer' && pluginsAreRestrictedToRunInWorker;
         const renderFork = async (renderInput: RenderInputType) => {
-          const inputIsEnterprisePluginTag = await isPreBundlePluginTemplateTag(input as string);
+          const inputIsEnterprisePluginTag = await isPreBundlePluginTemplateTag(renderInput.input);
           return currentProcessIsRendererAndPluginsAreRestricted && !inputIsEnterprisePluginTag
             ? (await import('../ui/worker/templating-handler')).renderInWorker(renderInput)
             : renderInThisProcess(renderInput);

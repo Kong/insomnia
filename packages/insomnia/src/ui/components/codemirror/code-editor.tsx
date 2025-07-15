@@ -732,6 +732,7 @@ export const CodeEditor = memo(
             }
             event.preventDefault();
             const pluginTemplateTags = (await getTemplateTags()).map(tag => ({
+              // Skip unsupported objects like functions in template tag to send in IPC
               templateTag: JSON.parse(JSON.stringify(tag.templateTag)),
             }));
             const target = event.target as HTMLElement;
