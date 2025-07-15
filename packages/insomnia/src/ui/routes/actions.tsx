@@ -19,7 +19,6 @@ import { getInsomniaV5DataExport, importInsomniaV5Data } from '../../common/inso
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import { EnvironmentType } from '../../models/environment';
-import type { OauthProviderName } from '../../models/git-credentials';
 import { getById, update } from '../../models/helpers/request-operations';
 import type { MockServer } from '../../models/mock-server';
 import { isGitProject, isRemoteProject, type Project } from '../../models/project';
@@ -39,27 +38,6 @@ import { SegmentEvent } from '../analytics';
 import { syncNewWorkspaceIfNeeded } from './import';
 
 // Project
-
-export const moveProjectAction: ActionFunction = async ({ request, params }) => {
-  const { projectId } = params as { projectId: string };
-  const formData = await request.formData();
-
-  const organizationId = formData.get('organizationId');
-
-  invariant(typeof organizationId === 'string', 'Organization ID is required');
-  invariant(typeof projectId === 'string', 'Project ID is required');
-
-  const project = await models.project.getById(projectId);
-  invariant(project, 'Project not found');
-
-  await models.project.update(project, {
-    parentId: organizationId,
-    // We move a project to another organization as local no matter what it was before
-    remoteId: null,
-  });
-
-  return null;
-};
 
 export function safeToUseInsomniaFileName(fileName: string) {
   const fileNameWithoutExt = fileName.replace('.yaml', '').replace('.yml', '');

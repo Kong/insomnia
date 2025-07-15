@@ -353,7 +353,8 @@ async function renderApp() {
                           },
                           {
                             path: 'move',
-                            action: async (...args) => (await import('./routes/actions')).moveProjectAction(...args),
+                            action: async args =>
+                              (await import('./routes/$organizationId.project.$projectId.move')).action(args),
                           },
                           {
                             path: 'move-workspace',
