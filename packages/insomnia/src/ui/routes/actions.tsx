@@ -21,16 +21,6 @@ export function safeToUseInsomniaFileNameWithExt(fileName: string) {
   return `${safeToUseInsomniaFileName(fileName)}.yaml`;
 }
 
-export const updateMockServerAction: ActionFunction = async ({ request, params }) => {
-  const { workspaceId } = params;
-  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-  const patch = await request.json();
-  const mockServer = await models.mockServer.getByParentId(workspaceId);
-  invariant(mockServer, 'Mock server not found');
-  await models.mockServer.update(mockServer, patch);
-  return null;
-};
-
 export const toggleExpandAllRequestGroupsAction: ActionFunction = async ({ params, request }) => {
   const { workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
