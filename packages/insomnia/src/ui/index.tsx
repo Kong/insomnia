@@ -1106,13 +1106,15 @@ async function renderApp() {
                           },
                           {
                             path: 'new',
-                            action: async (...args) =>
-                              (await import('./routes/actions')).createNewWorkspaceAction(...args),
+                            action: async args =>
+                              (await import('./routes/$organizationId.project.$projectId.workspace.new')).action(args),
                           },
                           {
                             path: 'delete',
-                            action: async (...args) =>
-                              (await import('./routes/actions')).deleteWorkspaceAction(...args),
+                            action: async args =>
+                              (await import('./routes/$organizationId.project.$projectId.workspace.delete')).action(
+                                args,
+                              ),
                           },
                           {
                             path: 'update',
