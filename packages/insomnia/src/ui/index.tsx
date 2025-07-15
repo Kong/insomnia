@@ -741,33 +741,57 @@ async function renderApp() {
                                 children: [
                                   {
                                     path: 'update',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).updateEnvironment(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.environment.update'
+                                        )
+                                      ).action(args),
                                   },
                                   {
                                     path: 'delete',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).deleteEnvironmentAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.environment.delete'
+                                        )
+                                      ).action(args),
                                   },
                                   {
                                     path: 'create',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).createEnvironmentAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.environment.create'
+                                        )
+                                      ).action(args),
                                   },
                                   {
                                     path: 'duplicate',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).duplicateEnvironmentAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.environment.duplicate'
+                                        )
+                                      ).action(args),
                                   },
                                   {
                                     path: 'set-active',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).setActiveEnvironmentAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active'
+                                        )
+                                      ).action(args),
                                   },
                                   {
                                     path: 'set-active-global',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).setActiveGlobalEnvironmentAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active-global'
+                                        )
+                                      ).action(args),
                                   },
                                 ],
                               },

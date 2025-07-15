@@ -2,7 +2,6 @@ import { type ActionFunction, redirect } from 'react-router';
 
 import { database } from '../../common/database';
 import * as models from '../../models';
-import { EnvironmentType } from '../../models/environment';
 import { getById, update } from '../../models/helpers/request-operations';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { isRequestGroupMeta } from '../../models/request-group-meta';
@@ -23,125 +22,6 @@ export function safeToUseInsomniaFileName(fileName: string) {
 export function safeToUseInsomniaFileNameWithExt(fileName: string) {
   return `${safeToUseInsomniaFileName(fileName)}.yaml`;
 }
-
-export const createEnvironmentAction: ActionFunction = async ({ params, request }) => {
-  const { workspaceId } = params;
-  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-
-  const { isPrivate, environmentType = EnvironmentType.KVPAIR } = await request.json();
-
-  const baseEnvironment = await models.environment.getByParentId(workspaceId);
-
-  invariant(baseEnvironment, 'Base environment not found');
-
-  const environment = await models.environment.create({
-    parentId: baseEnvironment._id,
-    environmentType,
-    isPrivate,
-  });
-
-  return environment;
-};
-
-export const updateEnvironment: ActionFunction = async ({ request, params }) => {
-  const { workspaceId } = params;
-  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-
-  const { environmentId, patch } = await request.json();
-
-  invariant(typeof environmentId === 'string', 'Environment ID is required');
-
-  const environment = await models.environment.getById(environmentId);
-
-  invariant(environment, 'Environment not found');
-  invariant(typeof name === 'string', 'Name is required');
-
-  const baseEnvironment = await models.environment.getByParentId(workspaceId);
-
-  invariant(baseEnvironment, 'Base environment not found');
-
-  const updatedEnvironment = await models.environment.update(environment, patch);
-
-  return updatedEnvironment;
-};
-
-export const deleteEnvironmentAction: ActionFunction = async ({ request, params }) => {
-  const { workspaceId } = params;
-  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-
-  const formData = await request.formData();
-
-  const environmentId = formData.get('environmentId');
-  invariant(typeof environmentId === 'string', 'Environment ID is required');
-
-  const environment = await models.environment.getById(environmentId);
-
-  const baseEnvironment = await models.environment.getByParentId(workspaceId);
-
-  invariant(environment?._id !== baseEnvironment?._id, 'Cannot delete base environment');
-
-  invariant(environment, 'Environment not found');
-
-  await models.environment.remove(environment);
-
-  return null;
-};
-
-export const duplicateEnvironmentAction: ActionFunction = async ({ request, params }) => {
-  const { workspaceId } = params;
-  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-
-  const formData = await request.formData();
-
-  const environmentId = formData.get('environmentId');
-
-  invariant(typeof environmentId === 'string', 'Environment ID is required');
-
-  const environment = await models.environment.getById(environmentId);
-  invariant(environment, 'Environment not found');
-
-  const newEnvironment = await models.environment.duplicate(environment);
-
-  return newEnvironment;
-};
-
-export const setActiveEnvironmentAction: ActionFunction = async ({ request, params }) => {
-  const { workspaceId } = params;
-  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-
-  const formData = await request.formData();
-
-  const environmentId = formData.get('environmentId');
-
-  invariant(typeof environmentId === 'string', 'Environment ID is required');
-
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-
-  invariant(workspaceMeta, 'Workspace meta not found');
-
-  await models.workspaceMeta.update(workspaceMeta, { activeEnvironmentId: environmentId || null });
-
-  return null;
-};
-
-export const setActiveGlobalEnvironmentAction: ActionFunction = async ({ request, params }) => {
-  const { workspaceId } = params;
-  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-
-  const formData = await request.formData();
-
-  const environmentId = formData.get('environmentId');
-
-  invariant(typeof environmentId === 'string', 'Environment ID is required');
-
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-
-  invariant(workspaceMeta, 'Workspace meta not found');
-
-  await models.workspaceMeta.update(workspaceMeta, { activeGlobalEnvironmentId: environmentId || null });
-
-  return null;
-};
 
 export const updateCookieJarAction: ActionFunction = async ({ request, params }) => {
   const { workspaceId } = params;
