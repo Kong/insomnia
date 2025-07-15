@@ -191,7 +191,7 @@ async function renderApp() {
           },
           {
             path: 'settings/update',
-            action: async (...args) => (await import('./routes/actions')).updateSettingsAction(...args),
+            action: async args => (await import('./routes/settings.update')).action(args),
           },
           {
             path: 'untracked-projects',
@@ -505,8 +505,12 @@ async function renderApp() {
                                 children: [
                                   {
                                     path: 'reorder',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).reorderCollectionAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.reorder'
+                                        )
+                                      ).action(args),
                                   },
                                   {
                                     path: 'request-group/:requestGroupId',

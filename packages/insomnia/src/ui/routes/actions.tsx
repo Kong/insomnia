@@ -2,11 +2,9 @@ import { type ActionFunction, redirect } from 'react-router';
 
 import { database } from '../../common/database';
 import * as models from '../../models';
-import { getById, update } from '../../models/helpers/request-operations';
-import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
+import { isRequestGroup } from '../../models/request-group';
 import { isRequestGroupMeta } from '../../models/request-group-meta';
 import { invariant } from '../../utils/invariant';
-import { SegmentEvent } from '../analytics';
 
 export function safeToUseInsomniaFileName(fileName: string) {
   const fileNameWithoutExt = fileName.replace('.yaml', '').replace('.yml', '');
@@ -22,55 +20,6 @@ export function safeToUseInsomniaFileName(fileName: string) {
 export function safeToUseInsomniaFileNameWithExt(fileName: string) {
   return `${safeToUseInsomniaFileName(fileName)}.yaml`;
 }
-
-export const updateSettingsAction: ActionFunction = async ({ request }) => {
-  const patch = await request.json();
-  if ('enableAnalytics' in patch && !patch.enableAnalytics) {
-    window.main.trackSegmentEvent({ event: SegmentEvent.analyticsDisabled });
-  }
-  await models.settings.patch(patch);
-  return null;
-};
-
-const getCollectionItem = async (id: string) => {
-  let item;
-  if (isRequestGroupId(id)) {
-    item = await models.requestGroup.getById(id);
-  } else {
-    item = await getById(id);
-  }
-
-  invariant(item, 'Item not found');
-
-  return item;
-};
-
-export const reorderCollectionAction: ActionFunction = async ({ request, params }) => {
-  const { workspaceId } = params;
-  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-  const { id, targetId, dropPosition, metaSortKey } = await request.json();
-  invariant(typeof id === 'string', 'ID is required');
-  invariant(typeof targetId === 'string', 'Target ID is required');
-  invariant(typeof dropPosition === 'string', 'Drop position is required');
-  invariant(typeof metaSortKey === 'number', 'MetaSortKey position is required');
-
-  if (id === targetId) {
-    return null;
-  }
-
-  const item = await getCollectionItem(id);
-  const targetItem = await getCollectionItem(targetId);
-
-  const parentId = dropPosition === 'after' && isRequestGroup(targetItem) ? targetItem._id : targetItem.parentId;
-
-  if (isRequestGroup(item)) {
-    await models.requestGroup.update(item, { parentId, metaSortKey });
-  } else {
-    await update(item, { parentId, metaSortKey });
-  }
-
-  return null;
-};
 
 export const createMockRouteAction: ActionFunction = async ({ request, params }) => {
   const { organizationId, projectId, workspaceId } = params;
