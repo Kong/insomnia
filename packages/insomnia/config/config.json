@@ -16,8 +16,8 @@
   },
   "bundlePlugins": [
     {
-      "name": "@kong/plugin-poc-external-vault",
-      "version": "0.0.1-alpha.2",
+      "name": "@kong/insomina-plugin-external-vault",
+      "version": "0.0.1-alpha.1",
       "feature": "external-vault"
     }
   ],
