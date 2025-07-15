@@ -903,8 +903,10 @@ async function renderApp() {
                               },
                               {
                                 path: 'duplicate',
-                                action: async (...args) =>
-                                  (await import('./routes/actions')).duplicateWorkspaceAction(...args),
+                                action: async args =>
+                                  (await import('./routes/$organizationId.project.$projectId.workspace.move')).action(
+                                    args,
+                                  ),
                               },
                               {
                                 path: 'git',
@@ -1118,8 +1120,10 @@ async function renderApp() {
                           },
                           {
                             path: 'update',
-                            action: async (...args) =>
-                              (await import('./routes/actions')).updateWorkspaceAction(...args),
+                            action: async args =>
+                              (await import('./routes/$organizationId.project.$projectId.workspace.update')).action(
+                                args,
+                              ),
                           },
                           {
                             path: ':workspaceId/update-meta',
