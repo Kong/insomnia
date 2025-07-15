@@ -64,7 +64,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
           registry-url: 'https://npm.pkg.github.com'
-          scope: '@kong-insomnia'
+          scope: '@kong'
 
       - name: Install packages
         run: npm ci
