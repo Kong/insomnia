@@ -326,7 +326,7 @@ async function renderApp() {
                       },
                       {
                         path: 'new',
-                        action: async (...args) => (await import('./routes/actions')).createNewProjectAction(...args),
+                        action: async args => (await import('./routes/$organizationId.project.new')).action(args),
                       },
                       {
                         path: ':projectId',
