@@ -188,11 +188,7 @@ export default class BaseExtension {
         decode: async (buffer: Buffer, encoding?: string) =>
           fetchFromTemplateWorkerDatabase('decode', { buffer, encoding }),
         render: (str: string) => templating.render(str, { context: renderContext }),
-        openInBrowser: (url: string) =>
-          fetch('insomnia-templating-worker-database://openInBrowser', {
-            method: 'post',
-            body: JSON.stringify({ url }),
-          }),
+        openInBrowser: (url: string) => fetchFromTemplateWorkerDatabase('openInBrowser', { url }),
         models: {
           request: {
             getById: async (id: string) => fetchFromTemplateWorkerDatabase('request.getById', { id }),
@@ -205,24 +201,9 @@ export default class BaseExtension {
             },
           },
           cloudCredential: {
-            getById: async (id: string) => {
-              const resp = await fetch('insomnia-templating-worker-database://cloudCredential.getById', {
-                method: 'post',
-                body: JSON.stringify({ id }),
-              });
-
-              const cloudCredential = await resp.json();
-              return cloudCredential;
-            },
-            update: async (originCredential: CloudProviderCredential, patch: Partial<CloudProviderCredential>) => {
-              const resp = await fetch('insomnia-templating-worker-database://cloudCredential.update', {
-                method: 'post',
-                body: JSON.stringify({ originCredential, patch }),
-              });
-
-              const updated = await resp.json();
-              return updated;
-            },
+            getById: async (id: string) => fetchFromTemplateWorkerDatabase('cloudCredential.getById', { id }),
+            update: async (originCredential: CloudProviderCredential, patch: Partial<CloudProviderCredential>) =>
+              fetchFromTemplateWorkerDatabase('cloudCredential.update', { originCredential, patch }),
           },
           workspace: {
             getById: async (id: string) => fetchFromTemplateWorkerDatabase('workspace.getById', { id }),
@@ -244,14 +225,7 @@ export default class BaseExtension {
             ) => fetchFromTemplateWorkerDatabase('response.getBodyBuffer', { response, readFailureValue }),
           },
           settings: {
-            getSettings: async () => {
-              const resp = await fetch('insomnia-templating-worker-database://settings.getSettings', {
-                method: 'post',
-              });
-
-              const latest = await resp.json();
-              return latest;
-            },
+            getSettings: async () => fetchFromTemplateWorkerDatabase('settings.getSettings', {}),
           },
         },
       },
