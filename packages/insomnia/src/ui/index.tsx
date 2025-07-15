@@ -348,7 +348,8 @@ async function renderApp() {
                           },
                           {
                             path: 'delete',
-                            action: async (...args) => (await import('./routes/actions')).deleteProjectAction(...args),
+                            action: async args =>
+                              (await import('./routes/$organizationId.project.$projectId.delete')).action(args),
                           },
                           {
                             path: 'move',
@@ -361,7 +362,8 @@ async function renderApp() {
                           },
                           {
                             path: 'update',
-                            action: async (...args) => (await import('./routes/actions')).updateProjectAction(...args),
+                            action: async args =>
+                              (await import('./routes/$organizationId.project.$projectId.update')).action(args),
                           },
                           {
                             path: 'git',
