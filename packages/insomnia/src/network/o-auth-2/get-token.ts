@@ -114,11 +114,14 @@ export const getOAuth2Token = async (
   if (authentication.grantType === 'authorization_code') {
     invariant(authentication.authorizationUrl, 'Invalid authorization URL');
 
+    // default to S256 if usePkce is true and pkceMethod is not defined
+    const pkceMethod =
+      authentication.usePkce && !authentication.pkceMethod ? PKCE_CHALLENGE_S256 : authentication.pkceMethod;
     const codeVerifier = authentication.usePkce ? encodePKCE(crypto.randomBytes(32)) : '';
-    const usePkceAnd256 = authentication.usePkce && authentication.pkceMethod === PKCE_CHALLENGE_S256;
-    const codeChallenge = usePkceAnd256
-      ? encodePKCE(crypto.createHash('sha256').update(codeVerifier).digest())
-      : codeVerifier;
+    const codeChallenge =
+      authentication.usePkce && pkceMethod === PKCE_CHALLENGE_S256
+        ? encodePKCE(crypto.createHash('sha256').update(codeVerifier).digest())
+        : codeVerifier;
     const authCodeUrl = new URL(authentication.authorizationUrl);
     const responseType: OAuth2ResponseType = 'code';
     [
@@ -132,7 +135,7 @@ export const getOAuth2Token = async (
       ...(codeChallenge
         ? [
             { name: 'code_challenge', value: codeChallenge },
-            { name: 'code_challenge_method', value: authentication.pkceMethod },
+            { name: 'code_challenge_method', value: pkceMethod },
           ]
         : []),
     ].forEach(p => p.value && authCodeUrl.searchParams.append(p.name, p.value));
