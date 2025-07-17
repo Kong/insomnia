@@ -37,8 +37,8 @@ const Organization = lazy(() => import('./routes/organization'));
 const Project = lazy(() => import('./routes/project'));
 const Workspace = lazy(() => import('./routes/workspace'));
 const UnitTest = lazy(() => import('./routes/unit-test'));
-const Debug = lazy(() => import('./routes/debug'));
-const Design = lazy(() => import('./routes/design'));
+const Debug = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.debug'));
+const Design = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.spec'));
 const MockServer = lazy(() => import('./routes/mock-server'));
 const Environments = lazy(() => import('./routes/environments'));
 
@@ -496,7 +496,12 @@ async function renderApp() {
                             children: [
                               {
                                 path: `${ACTIVITY_DEBUG}/*`,
-                                loader: async (...args) => (await import('./routes/debug')).loader(...args),
+                                loader: async (...args) =>
+                                  (
+                                    await import(
+                                      './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug'
+                                    )
+                                  ).loader(...args),
                                 element: (
                                   <Suspense fallback={<AppLoadingIndicator />}>
                                     <Debug />
@@ -619,8 +624,13 @@ async function renderApp() {
                                 ],
                               },
                               {
-                                path: `${ACTIVITY_SPEC}`,
-                                loader: async (...args) => (await import('./routes/design')).loader(...args),
+                                path: 'spec',
+                                loader: async (...args) =>
+                                  (
+                                    await import(
+                                      './routes/$organizationId.project.$projectId.workspace.$workspaceId.spec'
+                                    )
+                                  ).loader(...args),
                                 element: (
                                   <Suspense fallback={<AppLoadingIndicator />}>
                                     <Design />
