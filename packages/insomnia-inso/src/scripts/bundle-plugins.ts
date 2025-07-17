@@ -7,30 +7,30 @@ import { resolve } from 'node:path';
 const appPluginDir = resolve(__dirname, '../../../insomnia/plugins');
 const insoPluginDir = resolve(__dirname, '../../plugins');
 
-if (require.main === module) {
-  process.nextTick(async () => {
-    try {
-      // remove existing bundle plugins directory
-      await rm(insoPluginDir, { recursive: true, force: true });
-      // Recreate empty
-      await mkdir(insoPluginDir, { recursive: true });
-      // Check if app plugin directory exists
-      if (!existsSync(appPluginDir)) {
-        console.log(`Source plugins directory not found at ${appPluginDir}. Creating and bundle plugins`);
+const insoBundlePlugin = async () => {
+  try {
+    // remove existing bundle plugins directory
+    await rm(insoPluginDir, { recursive: true, force: true });
+    // Recreate empty
+    await mkdir(insoPluginDir, { recursive: true });
+    // Check if app plugin directory exists
+    if (!existsSync(appPluginDir)) {
+      console.log(`Source plugins directory not found at ${appPluginDir}. Creating and bundle plugins`);
 
-        execSync('npm run bundle-plugins', {
-          stdio: 'inherit',
-          cwd: resolve(appPluginDir, '../'),
-        });
-      }
-      // Copy plugins from app to inso directory
-      console.log(`Copying plugins from ${appPluginDir} to ${insoPluginDir}`);
-      await cp(appPluginDir, insoPluginDir, {
-        recursive: true,
+      execSync('npm run bundle-plugins', {
+        stdio: 'inherit',
+        cwd: resolve(appPluginDir, '../'),
       });
-    } catch (err) {
-      console.log('[bundle-plugin] ERROR:', err);
-      process.exit(1);
     }
-  });
-}
+    // Copy plugins from app to inso directory
+    console.log(`Copying plugins from ${appPluginDir} to ${insoPluginDir}`);
+    await cp(appPluginDir, insoPluginDir, {
+      recursive: true,
+    });
+  } catch (err) {
+    console.log('[bundle-plugin] ERROR:', err);
+    process.exit(1);
+  }
+};
+
+insoBundlePlugin();
