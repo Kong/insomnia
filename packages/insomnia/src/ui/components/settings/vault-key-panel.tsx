@@ -110,7 +110,7 @@ export const VaultKeyPanel = () => {
       if (vaultKeyFetcher.data.error.toLowerCase().includes('conflict')) {
         // get vault salt from server
         vaultSaltFetcher.submit('', {
-          action: '/auth/updateVaultSalt',
+          action: '/auth/update-vault-salt',
           method: 'POST',
         });
         showModal(AskModal, {
@@ -132,7 +132,7 @@ export const VaultKeyPanel = () => {
   const generateVaultKey = async () => {
     setGenerating(true);
     vaultKeyFetcher.submit('', {
-      action: '/auth/createVaultKey',
+      action: '/auth/create-vault-key',
       method: 'POST',
     });
   };

@@ -225,7 +225,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
                   sessionId: event.sessionId,
                 },
                 {
-                  action: '/auth/clearVaultKey',
+                  action: '/auth/clear-vault-key',
                   method: 'POST',
                   encType: 'application/json',
                 },
