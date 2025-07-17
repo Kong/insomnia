@@ -35,7 +35,7 @@ import { initializeSentry } from './sentry';
 const Organization = lazy(() => import('./routes/organization'));
 const Project = lazy(() => import('./routes/project'));
 const Workspace = lazy(() => import('./routes/workspace'));
-const UnitTest = lazy(() => import('./routes/unit-test'));
+const UnitTest = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.unit-test'));
 const Debug = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.debug'));
 const Design = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.spec'));
 const MockServer = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server'));
@@ -929,7 +929,12 @@ async function renderApp() {
                               },
                               {
                                 path: 'test/*',
-                                loader: async (...args) => (await import('./routes/unit-test')).loader(...args),
+                                loader: async (...args) =>
+                                  (
+                                    await import(
+                                      './routes/$organizationId.project.$projectId.workspace.$workspaceId.unit-test'
+                                    )
+                                  ).loader(...args),
                                 element: (
                                   <Suspense fallback={<AppLoadingIndicator />}>
                                     <UnitTest />
