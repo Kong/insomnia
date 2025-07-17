@@ -1583,6 +1583,10 @@ export class VCS {
   async _hasBlob(blobId: string) {
     return this._store.hasItem(`/projects/${this._backendProjectId()}/blobs/${blobId.slice(0, 2)}/${blobId.slice(2)}`);
   }
+
+  getActiveBackendProject() {
+    return this._backendProject;
+  }
 }
 
 /** Generate snapshot ID from hashing parent, backendProject, and state together */

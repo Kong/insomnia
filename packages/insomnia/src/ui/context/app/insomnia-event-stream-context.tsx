@@ -1,9 +1,10 @@
 import React, { createContext, type FC, type PropsWithChildren, useContext, useEffect, useState } from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
+import { useFetcher, useParams, useRevalidator, useRouteLoaderData } from 'react-router';
 import { useLatest } from 'react-use';
 
 import { CDN_INVALIDATION_TTL } from '../../../common/constants';
 import type { Organization } from '../../../models/organization';
+import { VCSInstance } from '../../../sync/vcs/insomnia-sync';
 import { insomniaFetch } from '../../../ui/insomniaFetch';
 import { avatarImageCache } from '../../hooks/image-cache';
 import type { ProjectIdLoaderData } from '../../routes/project';
@@ -75,6 +76,22 @@ interface UserPresenceEvent extends UserPresence {
   type: 'PresentUserLeave' | 'PresentStateChanged' | 'OrganizationChanged' | 'StorageRuleChanged';
 }
 
+const isSameWorkspaceWithRemote = (workspaceId: string | undefined, remoteWorkspaceId: string | undefined) => {
+  if (!workspaceId || !remoteWorkspaceId) {
+    return false;
+  }
+  const vcs = VCSInstance();
+  const currentBackendProject = vcs.getActiveBackendProject();
+  if (
+    currentBackendProject &&
+    currentBackendProject?.id === remoteWorkspaceId &&
+    currentBackendProject.rootDocumentId === workspaceId
+  ) {
+    return true;
+  }
+  return false;
+};
+
 export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children }) => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
@@ -128,6 +145,8 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
 
     updatePresence();
   }, [organizationId, remoteId, userSession.id, workspaceId]);
+
+  const { revalidate } = useRevalidator();
 
   useEffect(() => {
     const sessionId = userSession.id;
@@ -203,16 +222,11 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               event.type === 'FileDeleted' &&
               event.team === organizationId &&
               latestRemoteId.current &&
-              event.project === latestRemoteId.current
+              event.project === latestRemoteId.current &&
+              // we don't need to revalidate if the user is in workspace page
+              !latestWorkspaceId.current
             ) {
-              const submit = syncProjectsFetcher.submit;
-              submit(
-                {},
-                {
-                  action: `/organization/${organizationId}/sync-projects`,
-                  method: 'POST',
-                },
-              );
+              revalidate();
             } else if (event.type === 'VaultKeyChanged') {
               const accountId = userSession.accountId;
               const organizations = JSON.parse(
@@ -231,19 +245,25 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
                 },
               );
             } else if (
-              ['BranchDeleted', 'FileChanged'].includes(event.type) &&
+              (event.type === 'FileChanged' || event.type === 'BranchDeleted') &&
               event.team === organizationId &&
               latestRemoteId.current &&
               event.project === latestRemoteId.current
             ) {
-              const submit = syncDataFetcher.submit;
-              submit(
-                {},
-                {
-                  method: 'POST',
-                  action: `/organization/${organizationId}/project/${latestProjectId.current}/workspace/${latestWorkspaceId.current}/insomnia-sync/sync-data`,
-                },
-              );
+              // If the file changed is the current workspace, we need to sync it
+              if (isSameWorkspaceWithRemote(latestWorkspaceId.current, event.file)) {
+                const submit = syncDataFetcher.submit;
+                submit(
+                  {},
+                  {
+                    method: 'POST',
+                    action: `/organization/${organizationId}/project/${latestProjectId.current}/workspace/${latestWorkspaceId.current}/insomnia-sync/sync-data`,
+                  },
+                );
+              } else if (event.type === 'FileChanged' && !latestWorkspaceId.current) {
+                // FileChanged could be a new file has been added, we need to revalidate the workspace list
+                revalidate();
+              }
             }
           } catch (e) {
             console.log('[sse] Error parsing response from SSE', e);
@@ -264,6 +284,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
     latestRemoteId,
     latestWorkspaceId,
     organizationId,
+    revalidate,
     syncDataFetcher.submit,
     syncOrganizationsFetcher.submit,
     syncProjectsFetcher.submit,
