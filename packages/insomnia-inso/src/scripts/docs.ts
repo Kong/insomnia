@@ -1,7 +1,7 @@
+import fs from 'node:fs';
 import path from 'node:path';
 
-import * as commander from 'commander';
-import fs from 'fs';
+import type * as commander from 'commander';
 
 import { version } from '../../package.json';
 
