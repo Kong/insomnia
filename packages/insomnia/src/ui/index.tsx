@@ -945,7 +945,11 @@ async function renderApp() {
                                     index: true,
                                     element: <Outlet />,
                                     loader: async (...args) =>
-                                      (await import('./routes/test-suite')).indexLoader(...args),
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId'
+                                        )
+                                      ).indexLoader(...args),
                                   },
                                   {
                                     path: 'test-suite',
@@ -954,7 +958,11 @@ async function renderApp() {
                                         index: true,
                                         element: <Outlet />,
                                         loader: async (...args) =>
-                                          (await import('./routes/test-suite')).indexLoader(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId'
+                                            )
+                                          ).indexLoader(...args),
                                       },
                                       {
                                         path: 'new',
@@ -970,13 +978,21 @@ async function renderApp() {
                                         id: ':testSuiteId',
                                         element: <Outlet />,
                                         loader: async (...args) =>
-                                          (await import('./routes/test-suite')).loader(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId'
+                                            )
+                                          ).loader(...args),
                                         children: [
                                           {
                                             index: true,
                                             element: <Outlet />,
                                             loader: async (...args) =>
-                                              (await import('./routes/test-results')).indexLoader(...args),
+                                              (
+                                                await import(
+                                                  './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId.test-result.$testResultId'
+                                                )
+                                              ).indexLoader(...args),
                                           },
                                           {
                                             path: 'test-result',
@@ -985,7 +1001,11 @@ async function renderApp() {
                                                 path: ':testResultId',
                                                 id: ':testResultId',
                                                 loader: async (...args) =>
-                                                  (await import('./routes/test-results')).loader(...args),
+                                                  (
+                                                    await import(
+                                                      './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId.test-result.$testResultId'
+                                                    )
+                                                  ).loader(...args),
                                               },
                                             ],
                                           },
