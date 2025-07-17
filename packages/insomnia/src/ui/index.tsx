@@ -260,6 +260,11 @@ async function renderApp() {
                           (await import('./routes/$organizationId.git')).initGitCloneAction(...args),
                       },
                       {
+                        path: 'remote-branches',
+                        action: async (...args) =>
+                          (await import('./routes/git-project-actions')).fetchRemoteBranchesAction(...args),
+                      },
+                      {
                         path: 'clone',
                         action: async (...args) =>
                           (await import('./routes/$organizationId.git')).cloneGitRepoAction(...args),

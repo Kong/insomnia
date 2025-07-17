@@ -3,9 +3,11 @@ import path from 'node:path';
 import * as git from 'isomorphic-git';
 import { parse, stringify } from 'yaml';
 
+import type { GitRepository } from '../../models/git-repository';
 import type { MergeConflict } from '../types';
 import { httpClient } from './http-client';
 import { convertToPosixSep } from './path-sep';
+import { shallowClone } from './shallow-clone';
 import { getAuthorFromGitRepository, gitCallbacks } from './utils';
 
 export interface GitAuthor {
@@ -1065,6 +1067,37 @@ function assertIsPromiseFsClient(fs: git.FsClient): asserts fs is git.PromiseFsC
   if (!('promises' in fs)) {
     throw new Error('Expected fs to be of PromiseFsClient');
   }
+}
+
+export async function fetchRemoteBranches({ uri, credentials }: { uri: string; credentials?: GitCredentials | null }) {
+  const [mainRef] = await git.listServerRefs({
+    ...gitCallbacks(credentials),
+    http: httpClient,
+    url: uri,
+    prefix: 'HEAD',
+    symrefs: true,
+  });
+
+  const remoteRefs = await git.listServerRefs({
+    ...gitCallbacks(credentials),
+    http: httpClient,
+    url: uri,
+    prefix: 'refs/heads/',
+    symrefs: true,
+  });
+
+  const defaultBranch = mainRef?.target?.replace('refs/heads/', '') || 'main';
+
+  const remoteBranches = remoteRefs
+    .filter(b => b.ref !== 'HEAD')
+    .map(b => b.ref.replace('refs/heads/', ''))
+    .sort((a, b) => {
+      if (a === defaultBranch) return -1;
+      if (b === defaultBranch) return 1;
+      return a.localeCompare(b);
+    });
+
+  return remoteBranches;
 }
 
 export default new GitVCS();

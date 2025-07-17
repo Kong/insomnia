@@ -126,6 +126,11 @@ export const ProjectSettingsForm: FC<Props> = ({
       ? initCloneGitRepositoryFetcher.data.files
       : [];
 
+  const remoteBranches =
+    initCloneGitRepositoryFetcher.data && 'remoteBranches' in initCloneGitRepositoryFetcher.data
+      ? initCloneGitRepositoryFetcher.data.remoteBranches
+      : [];
+
   useEffect(() => {
     if (upsertProjectFetcher.data && upsertProjectFetcher.data.success && onSuccessUpdate) {
       onSuccessUpdate();
@@ -393,6 +398,18 @@ export const ProjectSettingsForm: FC<Props> = ({
                 </span>
                 <p className="p-2 text-center font-bold text-[--color-font]">Loading Insomnia files from repository</p>
               </div>
+            </div>
+          )}
+          {remoteBranches.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <Heading className="text-base">Remote branches</Heading>
+              <select>
+                {remoteBranches.map(branch => (
+                  <option key={branch} value={branch}>
+                    {branch}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
           {insomniaFiles.length === 0 && initCloneGitRepositoryFetcher.state === 'idle' && (

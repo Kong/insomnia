@@ -70,6 +70,7 @@ const secretStorage: secretStorageBridgeAPI = {
 const git: GitServiceAPI = {
   loadGitRepository: options => ipcRenderer.invoke('git.loadGitRepository', options),
   getGitBranches: options => ipcRenderer.invoke('git.getGitBranches', options),
+  fetchGitRemoteBranches: options => ipcRenderer.invoke('git.fetchGitRemoteBranches', options),
   gitFetchAction: options => ipcRenderer.invoke('git.gitFetchAction', options),
   gitLogLoader: options => ipcRenderer.invoke('git.gitLogLoader', options),
   gitChangesLoader: options => ipcRenderer.invoke('git.gitChangesLoader', options),

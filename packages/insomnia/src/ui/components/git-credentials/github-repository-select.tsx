@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button as ComboButton, ComboBox, Input, ListBox, ListBoxItem, Popover } from 'react-aria-components';
+import { useFetcher, useParams } from 'react-router';
 
 import { getAppWebsiteBaseURL } from '../../../common/constants';
 import { isGitHubAppUserToken } from '../github-app-config-link';
@@ -14,6 +15,30 @@ export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: st
   const [selectedRepository, setSelectedRepository] = useState<GitHubRepository | null>(null);
   const [cannotFindRepository, setCannotFindRepository] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+
+  const params = useParams<{ organizationId: string }>();
+  const { organizationId } = params;
+  const remoteBranchesFetcher = useFetcher<{ branches: string[] }>({ key: selectedRepository?.clone_url || '' });
+
+  useEffect(() => {
+    if (selectedRepository && remoteBranchesFetcher.state === 'idle' && !remoteBranchesFetcher.data) {
+      remoteBranchesFetcher.submit(
+        {
+          uri: selectedRepository.clone_url,
+          provider: 'github',
+        },
+        {
+          method: 'POST',
+          encType: 'application/json',
+          action: `/organization/${organizationId}/git/remote-branches`,
+        },
+      );
+    }
+  }, [organizationId, remoteBranchesFetcher, selectedRepository]);
+
+  console.log('remoteBranchesFetcher', remoteBranchesFetcher);
+
+  const remoteBranches = remoteBranchesFetcher.data?.branches || [];
 
   const getRepositories = async () => {
     setLoading(true);
@@ -134,6 +159,15 @@ export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: st
             </div>
           )}
         </>
+      )}
+      {selectedRepository && remoteBranches.length > 0 && (
+        <select>
+          {remoteBranches.map(branch => (
+            <option key={branch} value={branch}>
+              {branch}
+            </option>
+          ))}
+        </select>
       )}
       {cannotFindRepository && (
         <div className="text-sm text-red-500">
