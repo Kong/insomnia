@@ -21,7 +21,6 @@ import type { MockRoute } from '../../models/mock-route';
 import type { MockServer } from '../../models/mock-server';
 import type { Request, RequestHeader } from '../../models/request';
 import type { Response } from '../../models/response';
-import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
 import { Dropdown, DropdownItem, ItemContent } from '../components/base/dropdown';
 import { CodeEditor } from '../components/codemirror/code-editor';
@@ -33,7 +32,8 @@ import { AlertModal } from '../components/modals/alert-modal';
 import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
 import { SvgIcon } from '../components/svg-icon';
-import type { MockServerLoaderData } from './mock-server';
+import { insomniaFetch } from '../insomniaFetch';
+import type { MockServerLoaderData } from './$organizationId.project.$projectId.workspace.$workspaceId.mock-server';
 import { useRootLoaderData } from './root';
 
 export interface MockRouteLoaderData {

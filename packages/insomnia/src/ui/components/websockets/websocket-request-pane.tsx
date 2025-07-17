@@ -21,7 +21,7 @@ import {
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import type { WebSocketRequestLoaderData } from '../../routes/request';
+import type { WebSocketRequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRootLoaderData } from '../../routes/root';
 import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';
 import { OneLineEditor } from '../codemirror/one-line-editor';

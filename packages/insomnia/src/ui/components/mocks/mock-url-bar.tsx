@@ -6,7 +6,10 @@ import { useInterval } from 'react-use';
 import { getMockServiceBinURL, HTTP_METHODS } from '../../../common/constants';
 import * as models from '../../../models';
 import { useTimeoutWhen } from '../../hooks/useTimeoutWhen';
-import { type MockRouteLoaderData, useMockRoutePatcher } from '../../routes/mock-route';
+import {
+  type MockRouteLoaderData,
+  useMockRoutePatcher,
+} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route';
 import { useRootLoaderData } from '../../routes/root';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import type { OneLineEditorHandle } from '../codemirror/one-line-editor';

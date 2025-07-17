@@ -19,8 +19,8 @@ import {
 import { getOAuth2Token } from '../../../../network/o-auth-2/get-token';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/get-token';
 import { useNunjucks } from '../../../context/nunjucks/use-nunjucks';
-import type { RequestLoaderData } from '../../../routes/request';
-import type { RequestGroupLoaderData } from '../../../routes/request-group';
+import type { RequestLoaderData } from '../../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import type { RequestGroupLoaderData } from '../../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { Link } from '../../base/link';
 import { showModal } from '../../modals';
 import { ResponseDebugModal } from '../../modals/response-debug-modal';

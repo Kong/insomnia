@@ -3,7 +3,10 @@ import { useParams, useRouteLoaderData } from 'react-router';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import type { RequestHeader } from '../../../models/request';
-import { type MockRouteLoaderData, useMockRoutePatcher } from '../../routes/mock-route';
+import {
+  type MockRouteLoaderData,
+  useMockRoutePatcher,
+} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 

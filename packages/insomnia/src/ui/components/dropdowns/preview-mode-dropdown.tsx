@@ -10,7 +10,7 @@ import * as models from '../../../models';
 import { isRequest } from '../../../models/request';
 import { isResponse } from '../../../models/response';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
-import type { RequestLoaderData } from '../../routes/request';
+import type { RequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 
 interface Props {
