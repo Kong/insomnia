@@ -141,6 +141,10 @@ export function registerMainHandlers() {
       }
       lintProcess = utilityProcess.fork(path.join(__dirname, 'main/lint-process.mjs'));
 
+      lintProcess.on('exit', code => {
+        console.log('[lint-process] exited with code:', code);
+        resolve({ diagnostics: [] });
+      });
       lintProcess.on('message', msg => {
         resolve(msg);
         lintProcess?.kill();
