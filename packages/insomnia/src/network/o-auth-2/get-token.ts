@@ -213,9 +213,9 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   const requestGroups = (
     await db.withAncestors<Request | RequestGroup>(activeRequest, [models.requestGroup.type])
   ).filter(isRequestGroup) as RequestGroup[];
-  const closestFolderAuth = requestGroups.find(
-    ({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication),
-  );
+  const closestFolderAuth = [...requestGroups]
+    .reverse()
+    .find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
   const isRequestAuthEnabled =
     getAuthObjectOrNull(activeRequest?.authentication) && isAuthEnabled(activeRequest?.authentication);
   const closestAuthId = isRequestAuthEnabled ? requestId : closestFolderAuth?._id || requestId;

@@ -72,9 +72,9 @@ export const getOrInheritAuthentication = ({
     return request.authentication;
   }
   const hasParentFolders = requestGroups.length > 0;
-  const closestParentFolderWithAuth = requestGroups.find(
-    ({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication),
-  );
+  const closestParentFolderWithAuth = [...requestGroups]
+    .reverse()
+    .find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
   const closestAuth = getAuthObjectOrNull(closestParentFolderWithAuth?.authentication);
   const shouldCheckFolderAuth = hasParentFolders && closestAuth;
   if (shouldCheckFolderAuth) {
