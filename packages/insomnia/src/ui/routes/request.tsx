@@ -702,7 +702,7 @@ export const sendActionImplementation = async (options: {
     iterationCount,
     runtime,
   });
-  if ('error' in postMutatedContext) {
+  if ('error' in postMutatedContext && postMutatedContext.error.includes("Executing script timeout")) {
     throw {
       response: await responseTransform(
         response,
@@ -832,7 +832,6 @@ export const deleteAllResponsesAction: ActionFunction = async ({ params }) => {
   }
   return null;
 };
-
 export const deleteResponseAction: ActionFunction = async ({ request, params }) => {
   const { workspaceId, requestId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');
