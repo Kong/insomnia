@@ -24,27 +24,27 @@ const authString = `${registryUrl.replace(/(^\w+:|^)/, '')}:_authToken=${NODE_AU
 
 const execFilePromise = promisify(execFile);
 
-if (require.main === module) {
-  process.nextTick(async () => {
-    try {
-      // remove existing bundle plugins directory
-      await rm(bundlePluginsDir, { recursive: true, force: true });
-      // Recreate empty
-      await mkdir(bundlePluginsDir, { recursive: true });
-      for (const bundlePlugin of bundlePlugins) {
-        await installPlugin(bundlePlugin);
-      }
-    } catch (err) {
-      console.log('[Bundle Plugin] Failed to bundle plugins:', err);
-      if (process.env.GITHUB_ACTIONS === 'true') {
-        // execute in Github Actions
-        process.exit(1);
-      } else {
-        process.exit(0);
-      }
+const bundlePlugin = async () => {
+  try {
+    // remove existing bundle plugins directory
+    await rm(bundlePluginsDir, { recursive: true, force: true });
+    // Recreate empty
+    await mkdir(bundlePluginsDir, { recursive: true });
+    for (const bundlePlugin of bundlePlugins) {
+      await installPlugin(bundlePlugin);
     }
-  });
-}
+  } catch (err) {
+    console.log('[Bundle Plugin] Failed to bundle plugins:', err);
+    if (process.env.GITHUB_ACTIONS === 'true') {
+      // execute in Github Actions
+      process.exit(1);
+    } else {
+      process.exit(0);
+    }
+  }
+};
+// main entry point
+bundlePlugin();
 
 export async function runYarnCommand(args: string[], cwd?: string) {
   const { stdout, stderr } = await execFilePromise(process.execPath, ['--no-deprecation', yarnPath, ...args], {
