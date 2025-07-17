@@ -174,7 +174,7 @@ async function renderApp() {
           },
           {
             path: 'remote-files',
-            loader: async (...args) => (await import('./routes/commands')).remoteFilesLoader(...args),
+            loader: async args => (await import('./routes/remote-files')).loader(args),
           },
           {
             path: 'import',
