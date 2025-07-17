@@ -1,13 +1,9 @@
 import * as srp from '@getinsomnia/srp-js';
-import { ipcRenderer } from 'electron';
-import { type ActionFunction } from 'react-router';
 
-import { userSession as sessionModel } from '../../models';
-import { removeAllSecrets } from '../../models/environment';
-import type { UserSession } from '../../models/user-session';
-import { base64encode, saveVaultKeyIfNecessary } from '../../utils/vault';
-import type { ToastNotification } from '../components/toast';
-import { insomniaFetch } from '../insomniaFetch';
+import { userSession as sessionModel } from '../models';
+import type { UserSession } from '../models/user-session';
+import { base64encode, saveVaultKeyIfNecessary } from '../utils/vault';
+import { insomniaFetch } from './insomniaFetch';
 
 const { Buffer, Client, generateAES256Key, getRandomHex, params, srpGenKey } = srp;
 interface FetchError {
@@ -46,7 +42,7 @@ export const saveVaultKey = async (accountId: string, vaultKey: string) => {
   await saveVaultKeyIfNecessary(accountId, vaultKey);
 };
 
-const createVaultKey = async (type: 'create' | 'reset' = 'create') => {
+export const createVaultKey = async (type: 'create' | 'reset' = 'create') => {
   const userSession = await sessionModel.getOrCreate();
   const { accountId, id: sessionId } = userSession;
 
@@ -139,85 +135,4 @@ export const validateVaultKey = async (session: UserSession, vaultKey: string, v
   srpClient.checkM2(Buffer.from(srpM2, 'hex'));
   const srpK = srpClient.computeK().toString('hex');
   return srpK;
-};
-
-export const createVaultKeyAction: ActionFunction = async () => {
-  return createVaultKey('create');
-};
-
-export const resetVaultKeyAction: ActionFunction = async () => {
-  return createVaultKey('reset');
-};
-
-export const updateVaultSaltAction: ActionFunction = async () => {
-  const userSession = await sessionModel.getOrCreate();
-  const { id: sessionId } = userSession;
-  const { salt: vaultSalt } = await insomniaFetch<{
-    salt?: string;
-    error?: string;
-  }>({
-    method: 'GET',
-    path: '/v1/user/vault',
-    sessionId,
-  });
-  if (vaultSalt) {
-    await sessionModel.update(userSession, { vaultSalt });
-  }
-  return vaultSalt;
-};
-
-export const clearVaultKeyAction: ActionFunction = async ({ request }) => {
-  const { organizations = [], sessionId: resetVaultClientSessionId } = await request.json();
-
-  const userSession = await sessionModel.getOrCreate();
-  const { id: sessionId } = userSession;
-  const { salt: newVaultSalt } =
-    (await insomniaFetch<{
-      salt?: string;
-      error?: string;
-    }>({
-      method: 'GET',
-      path: '/v1/user/vault',
-      sessionId,
-    }).catch(error => {
-      console.error(`failed to get vault salt ${error.toString()}`);
-    })) || {};
-  // User on other device has reset the vault key.
-  if (resetVaultClientSessionId !== sessionId) {
-    // remove all secret environment variables
-    await removeAllSecrets(organizations);
-    // Update vault salt and delelte vault key from session
-    sessionModel.update(userSession, { vaultSalt: newVaultSalt, vaultKey: '' });
-    // show notification
-    const notification: ToastNotification = {
-      key: 'Vault key reset',
-      message: 'Your vault key has been reset, all you local secrets have been deleted.',
-    };
-    ipcRenderer.emit('show-notification', null, notification);
-    return true;
-  }
-  return false;
-};
-
-export const validateVaultKeyAction: ActionFunction = async ({ request }) => {
-  const { vaultKey, saveVaultKey: saveVaultKeyLocally = false } = await request.json();
-  const userSession = await sessionModel.getOrCreate();
-  const { vaultSalt, accountId } = userSession;
-
-  if (!vaultSalt) {
-    return { error: 'Please generate a vault key from preference first' };
-  }
-
-  try {
-    const validateResult = await validateVaultKey(userSession, vaultKey, vaultSalt);
-    if (!validateResult) {
-      return { error: 'Invalid vault key, please check and input again' };
-    }
-    if (saveVaultKeyLocally) {
-      await saveVaultKey(accountId, vaultKey);
-    }
-    return { vaultKey, srpK: validateResult };
-  } catch (error) {
-    return { error: error.toString() };
-  }
 };

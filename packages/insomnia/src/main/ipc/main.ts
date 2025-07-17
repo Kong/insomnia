@@ -12,6 +12,7 @@ import {
   shell,
   utilityProcess,
 } from 'electron';
+import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
@@ -73,7 +74,7 @@ export interface RendererToMainBridgeAPI {
   lintSpec: (options: {
     documentContent: string;
     rulesetPath: string;
-  }) => Promise<{ diagnostics?: ISpectralDiagnostic[]; error?: string }>;
+  }) => Promise<{ diagnostics?: ISpectralDiagnostic[]; error?: string; cancelled?: boolean }>;
   database: {
     caCertificate: {
       create: (options: { parentId: string; path: string }) => Promise<string>;
@@ -130,6 +131,7 @@ export function registerMainHandlers() {
       throw new Error(err);
     }
   });
+
   ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
     const { documentContent, rulesetPath } = options;
     return new Promise((resolve, reject) => {
@@ -139,20 +141,28 @@ export function registerMainHandlers() {
       if (lintProcess) {
         lintProcess.kill();
       }
+
       lintProcess = utilityProcess.fork(path.join(__dirname, 'main/lint-process.mjs'));
 
-      lintProcess.on('message', msg => {
-        resolve(msg);
-        lintProcess?.kill();
-        lintProcess = null;
+      let process: UtilityProcess | null = lintProcess!;
+
+      process.on('exit', code => {
+        console.log('[lint-process] exited with code:', code);
+        resolve({ cancelled: true });
       });
 
-      lintProcess.on('error', err => {
+      process.on('message', msg => {
+        resolve(msg);
+        process?.kill();
+        process = null;
+      });
+
+      process.on('error', err => {
         console.error('[lint-process] error:', err);
         reject({ error: err.toString() });
       });
 
-      lintProcess.postMessage({ documentContent, rulesetPath });
+      process.postMessage({ documentContent, rulesetPath });
     });
   });
 

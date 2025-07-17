@@ -22,7 +22,7 @@ import type { MockServer } from '../../../models/mock-server';
 import { isGitProject, type Project } from '../../../models/project';
 import { isRequest } from '../../../models/request';
 import { isEnvironment, isMockServer, isScratchpad, type Workspace } from '../../../models/workspace';
-import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../routes/actions';
+import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
 import type { GetRepositoryDirectoryTreeResult } from '../../routes/git-project-actions';
 import {
   DEFAULT_STORAGE_RULES,

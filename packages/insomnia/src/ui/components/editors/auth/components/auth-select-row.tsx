@@ -5,8 +5,8 @@ import { toKebabCase } from '../../../../../common/misc';
 import type { RequestAuthentication } from '../../../../../models/request';
 import { getAuthObjectOrNull } from '../../../../../network/authentication';
 import { useRequestGroupPatcher, useRequestPatcher } from '../../../../hooks/use-request';
-import type { RequestLoaderData } from '../../../../routes/request';
-import type { RequestGroupLoaderData } from '../../../../routes/request-group';
+import type { RequestLoaderData } from '../../../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import type { RequestGroupLoaderData } from '../../../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { AuthRow } from './auth-row';
 
 interface Props {

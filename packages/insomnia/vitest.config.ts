@@ -8,6 +8,7 @@ export default defineConfig({
     env: {
       INSOMNIA_DATA_PATH: tmpdir(),
     },
+    exclude: ['src/ui/routes/**.*.tsx'],
     server: {
       deps: {
         inline: ['tinykeys'],

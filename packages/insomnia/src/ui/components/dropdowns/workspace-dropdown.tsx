@@ -30,12 +30,9 @@ import { getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { invariant } from '../../../utils/invariant';
 import { SegmentEvent } from '../../analytics';
-import { useAIContext } from '../../context/app/ai-context';
-import { useRootLoaderData } from '../../routes/root';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
-import { InsomniaAI } from '../insomnia-ai-icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showError, showPrompt } from '../modals';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
@@ -50,7 +47,6 @@ export const WorkspaceDropdown: FC<{}> = () => {
     workspaceId: string;
   }>();
   invariant(organizationId, 'Expected organizationId');
-  const { userSession } = useRootLoaderData();
   const { activeWorkspace, activeWorkspaceMeta, activeProject, activeMockServer } = useRouteLoaderData(
     ':workspaceId',
   ) as WorkspaceLoaderData;
@@ -70,8 +66,6 @@ export const WorkspaceDropdown: FC<{}> = () => {
   useEffect(() => {
     setIsDuplicateModalOpen(false);
   }, [workspaceId]);
-
-  const { access, generateTests } = useAIContext();
 
   useDocBodyKeyboardShortcuts({
     workspace_showSettings: () => setIsSettingsModalOpen(true),
@@ -289,20 +283,6 @@ export const WorkspaceDropdown: FC<{}> = () => {
           icon: <Icon icon="trash" />,
           action: () => setIsDeleteRemoteWorkspaceModalOpen(true),
         },
-        ...(userSession.id && access.enabled && activeWorkspace.scope === 'design'
-          ? [
-              {
-                id: 'insomnia-ai/generate-test-suite',
-                name: 'Auto-generate Tests For Collection',
-                action: generateTests,
-                icon: (
-                  <span className="flex items-center px-[--padding-xs] py-0">
-                    <InsomniaAI />
-                  </span>
-                ),
-              },
-            ]
-          : []),
       ],
     },
     ...(actionPlugins.length > 0

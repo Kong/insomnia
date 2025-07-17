@@ -1,7 +1,7 @@
 import React, { type FunctionComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 
-import type { GrpcRequestState } from '../../routes/debug';
+import type { GrpcRequestState } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug';
 import { CodeEditor } from '../codemirror/code-editor';
 import { GrpcStatusTag } from '../tags/grpc-status-tag';
 import { Pane, PaneBody, PaneHeader } from './pane';

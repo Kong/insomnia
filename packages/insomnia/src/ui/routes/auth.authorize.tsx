@@ -9,7 +9,7 @@ import { SegmentEvent } from '../analytics';
 import { getLoginUrl, submitAuthCode } from '../auth-session-provider';
 import { Icon } from '../components/icon';
 import { insomniaFetch } from '../insomniaFetch';
-import { validateVaultKey } from './auth.vaultKey';
+import { validateVaultKey } from '../vault-key';
 
 export const action: ActionFunction = async ({ request }) => {
   const data = await request.json();

@@ -7,7 +7,7 @@ import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE } from '..
 import type { CurlEvent, CurlMessageEvent } from '../../../main/network/curl';
 import type { WebSocketEvent, WebSocketMessageEvent } from '../../../main/network/websocket';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
-import type { RequestLoaderData } from '../../routes/request';
+import type { RequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { CodeEditor } from '../codemirror/code-editor';
 import { showError } from '../modals';
 import { WebSocketPreviewModeDropdown } from './websocket-preview-dropdown';

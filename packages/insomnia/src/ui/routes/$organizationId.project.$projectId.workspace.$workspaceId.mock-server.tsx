@@ -42,7 +42,11 @@ import { OrganizationTabList } from '../components/tabs/tab-list';
 import { formatMethodName } from '../components/tags/method-tag';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useInsomniaTab } from '../hooks/use-insomnia-tab';
-import { MockRouteResponse, MockRouteRoute, useMockRoutePatcher } from './mock-route';
+import {
+  MockRouteResponse,
+  MockRouteRoute,
+  useMockRoutePatcher,
+} from './$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route';
 import { useRootLoaderData } from './root';
 import type { WorkspaceLoaderData } from './workspace';
 export interface MockServerLoaderData {

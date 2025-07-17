@@ -9,8 +9,8 @@ import {
   SIGNATURE_METHOD_PLAINTEXT,
   SIGNATURE_METHOD_RSA_SHA1,
 } from '../../../../network/o-auth-1/constants';
-import type { RequestLoaderData } from '../../../routes/request';
-import type { RequestGroupLoaderData } from '../../../routes/request-group';
+import type { RequestLoaderData } from '../../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import type { RequestGroupLoaderData } from '../../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { AuthInputRow } from './components/auth-input-row';
 import { AuthPrivateKeyRow } from './components/auth-private-key-row';
 import { AuthSelectRow } from './components/auth-select-row';

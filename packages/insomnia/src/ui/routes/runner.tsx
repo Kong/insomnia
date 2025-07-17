@@ -56,13 +56,13 @@ import { getTimeAndUnit } from '../components/tags/time-tag';
 import { ResponseTimelineViewer } from '../components/viewers/response-timeline-viewer';
 import { useRunnerContext } from '../context/app/runner-context';
 import { useRunnerRequestList } from '../hooks/use-runner-request-list';
-import type { OrganizationLoaderData } from './organization';
 import {
   type CollectionRunnerContext,
   defaultSendActionRuntime,
   type RunnerSource,
   sendActionImplementation,
-} from './request';
+} from './$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import type { OrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 
 const inputStyle =

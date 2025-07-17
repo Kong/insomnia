@@ -11,7 +11,10 @@ import type { Response } from '../../../models/response';
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import { isWebSocketResponse, type WebSocketResponse } from '../../../models/websocket-response';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
-import type { RequestLoaderData, WebSocketRequestLoaderData } from '../../routes/request';
+import type {
+  RequestLoaderData,
+  WebSocketRequestLoaderData,
+} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';

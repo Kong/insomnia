@@ -7,7 +7,6 @@ import { createMemoryRouter, matchPath, Outlet, RouterProvider } from 'react-rou
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from '../account/session';
 import {
   ACTIVITY_DEBUG,
-  ACTIVITY_SPEC,
   getInsomniaSession,
   getInsomniaVaultKey,
   getInsomniaVaultSalt,
@@ -36,10 +35,10 @@ import { initializeSentry } from './sentry';
 const Organization = lazy(() => import('./routes/organization'));
 const Project = lazy(() => import('./routes/project'));
 const Workspace = lazy(() => import('./routes/workspace'));
-const UnitTest = lazy(() => import('./routes/unit-test'));
-const Debug = lazy(() => import('./routes/debug'));
-const Design = lazy(() => import('./routes/design'));
-const MockServer = lazy(() => import('./routes/mock-server'));
+const UnitTest = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.unit-test'));
+const Debug = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.debug'));
+const Design = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.spec'));
+const MockServer = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server'));
 const Environments = lazy(() => import('./routes/environments'));
 
 initializeSentry();
@@ -174,7 +173,7 @@ async function renderApp() {
           },
           {
             path: 'remote-files',
-            loader: async (...args) => (await import('./routes/commands')).remoteFilesLoader(...args),
+            loader: async args => (await import('./routes/remote-files')).loader(args),
           },
           {
             path: 'import',
@@ -191,7 +190,7 @@ async function renderApp() {
           },
           {
             path: 'settings/update',
-            action: async (...args) => (await import('./routes/actions')).updateSettingsAction(...args),
+            action: async args => (await import('./routes/settings.update')).action(args),
           },
           {
             path: 'untracked-projects',
@@ -266,10 +265,6 @@ async function renderApp() {
                     action: async (...args) => (await import('./routes/project')).syncProjectsAction(...args),
                   },
                   {
-                    path: 'ai/access',
-                    action: async (...args) => (await import('./routes/actions')).accessAIApiAction(...args),
-                  },
-                  {
                     path: 'collaborators',
                     loader: async (...args) => (await import('./routes/invite')).collaboratorsListLoader(...args),
                   },
@@ -326,7 +321,7 @@ async function renderApp() {
                       },
                       {
                         path: 'new',
-                        action: async (...args) => (await import('./routes/actions')).createNewProjectAction(...args),
+                        action: async args => (await import('./routes/$organizationId.project.new')).action(args),
                       },
                       {
                         path: ':projectId',
@@ -348,20 +343,23 @@ async function renderApp() {
                           },
                           {
                             path: 'delete',
-                            action: async (...args) => (await import('./routes/actions')).deleteProjectAction(...args),
+                            action: async args =>
+                              (await import('./routes/$organizationId.project.$projectId.delete')).action(args),
                           },
                           {
                             path: 'move',
-                            action: async (...args) => (await import('./routes/actions')).moveProjectAction(...args),
+                            action: async args =>
+                              (await import('./routes/$organizationId.project.$projectId.move')).action(args),
                           },
                           {
                             path: 'move-workspace',
-                            action: async (...args) =>
-                              (await import('./routes/actions')).moveWorkspaceIntoProjectAction(...args),
+                            action: async args =>
+                              (await import('./routes/$organizationId.project.$projectId.move-workspace')).action(args),
                           },
                           {
                             path: 'update',
-                            action: async (...args) => (await import('./routes/actions')).updateProjectAction(...args),
+                            action: async args =>
+                              (await import('./routes/$organizationId.project.$projectId.update')).action(args),
                           },
                           {
                             path: 'git',
@@ -497,7 +495,12 @@ async function renderApp() {
                             children: [
                               {
                                 path: `${ACTIVITY_DEBUG}/*`,
-                                loader: async (...args) => (await import('./routes/debug')).loader(...args),
+                                loader: async (...args) =>
+                                  (
+                                    await import(
+                                      './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug'
+                                    )
+                                  ).loader(...args),
                                 element: (
                                   <Suspense fallback={<AppLoadingIndicator />}>
                                     <Debug />
@@ -506,97 +509,171 @@ async function renderApp() {
                                 children: [
                                   {
                                     path: 'reorder',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).reorderCollectionAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.reorder'
+                                        )
+                                      ).action(args),
                                   },
                                   {
                                     path: 'request-group/:requestGroupId',
                                     id: 'request-group/:requestGroupId',
-                                    loader: async (...args) => (await import('./routes/request-group')).loader(...args),
+                                    loader: async (...args) =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId'
+                                        )
+                                      ).loader(...args),
                                     element: <Outlet />,
                                   },
                                   {
                                     path: 'request/:requestId',
                                     id: 'request/:requestId',
-                                    loader: async (...args) => (await import('./routes/request')).loader(...args),
+                                    loader: async (...args) =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                        )
+                                      ).loader(...args),
                                     element: <Outlet />,
                                     children: [
                                       {
                                         path: 'send',
                                         action: async (...args) =>
-                                          (await import('./routes/request')).sendAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                            )
+                                          ).sendAction(...args),
                                       },
                                       {
                                         path: 'connect',
                                         action: async (...args) =>
-                                          (await import('./routes/request')).connectAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                            )
+                                          ).connectAction(...args),
                                       },
                                       {
                                         path: 'duplicate',
                                         action: async (...args) =>
-                                          (await import('./routes/request')).duplicateRequestAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                            )
+                                          ).duplicateRequestAction(...args),
                                       },
                                       {
                                         path: 'update',
                                         action: async (...args) =>
-                                          (await import('./routes/request')).updateRequestAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                            )
+                                          ).updateRequestAction(...args),
                                       },
                                       {
                                         path: 'update-meta',
                                         action: async (...args) =>
-                                          (await import('./routes/request')).updateRequestMetaAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                            )
+                                          ).updateRequestMetaAction(...args),
                                       },
                                       {
                                         path: 'response/delete-all',
                                         action: async (...args) =>
-                                          (await import('./routes/request')).deleteAllResponsesAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                            )
+                                          ).deleteAllResponsesAction(...args),
                                       },
                                       {
                                         path: 'response/delete',
                                         action: async (...args) =>
-                                          (await import('./routes/request')).deleteResponseAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                            )
+                                          ).deleteResponseAction(...args),
                                       },
                                     ],
                                   },
                                   {
                                     path: 'request/new',
                                     action: async (...args) =>
-                                      (await import('./routes/request')).createRequestAction(...args),
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                        )
+                                      ).createRequestAction(...args),
                                   },
                                   {
                                     path: 'request/new-mock-send',
                                     action: async (...args) =>
-                                      (await import('./routes/request')).createAndSendToMockbinAction(...args),
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                        )
+                                      ).createAndSendToMockbinAction(...args),
                                   },
                                   {
                                     path: 'request/delete',
                                     action: async (...args) =>
-                                      (await import('./routes/request')).deleteRequestAction(...args),
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                        )
+                                      ).deleteRequestAction(...args),
                                   },
                                   {
                                     path: 'request-group/new',
                                     action: async (...args) =>
-                                      (await import('./routes/request-group')).createRequestGroupAction(...args),
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId'
+                                        )
+                                      ).createRequestGroupAction(...args),
                                   },
                                   {
                                     path: 'request-group/delete',
                                     action: async (...args) =>
-                                      (await import('./routes/request-group')).deleteRequestGroupAction(...args),
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId'
+                                        )
+                                      ).deleteRequestGroupAction(...args),
                                   },
                                   {
                                     path: 'request-group/:requestGroupId/update',
                                     action: async (...args) =>
-                                      (await import('./routes/request-group')).updateRequestGroupAction(...args),
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId'
+                                        )
+                                      ).updateRequestGroupAction(...args),
                                   },
                                   {
                                     path: 'request-group/duplicate',
                                     action: async (...args) =>
-                                      (await import('./routes/request-group')).duplicateRequestGroupAction(...args),
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId'
+                                        )
+                                      ).duplicateRequestGroupAction(...args),
                                   },
                                   {
                                     path: 'request-group/:requestGroupId/update-meta',
                                     action: async (...args) =>
-                                      (await import('./routes/request-group')).updateRequestGroupMetaAction(...args),
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId'
+                                        )
+                                      ).updateRequestGroupMetaAction(...args),
                                   },
                                   {
                                     path: 'runner',
@@ -616,8 +693,13 @@ async function renderApp() {
                                 ],
                               },
                               {
-                                path: `${ACTIVITY_SPEC}`,
-                                loader: async (...args) => (await import('./routes/design')).loader(...args),
+                                path: 'spec',
+                                loader: async (...args) =>
+                                  (
+                                    await import(
+                                      './routes/$organizationId.project.$projectId.workspace.$workspaceId.spec'
+                                    )
+                                  ).loader(...args),
                                 element: (
                                   <Suspense fallback={<AppLoadingIndicator />}>
                                     <Design />
@@ -626,31 +708,39 @@ async function renderApp() {
                                 children: [
                                   {
                                     path: 'update',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).updateApiSpecAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.spec.update'
+                                        )
+                                      ).action(args),
                                   },
                                   {
                                     path: 'generate-request-collection',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).generateCollectionFromApiSpecAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection'
+                                        )
+                                      ).action(args),
                                   },
                                 ],
                               },
                               {
                                 path: 'mock-server/*',
                                 id: 'mock-server',
-                                loader: async (...args) => (await import('./routes/mock-server')).loader(...args),
+                                loader: async (...args) =>
+                                  (
+                                    await import(
+                                      './routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server'
+                                    )
+                                  ).loader(...args),
                                 element: (
                                   <Suspense fallback={<AppLoadingIndicator />}>
                                     <MockServer />
                                   </Suspense>
                                 ),
                                 children: [
-                                  {
-                                    path: 'update',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).updateMockServerAction(...args),
-                                  },
                                   {
                                     path: 'mock-route',
                                     id: 'mock-route',
@@ -659,23 +749,39 @@ async function renderApp() {
                                         path: ':mockRouteId',
                                         id: ':mockRouteId',
                                         loader: async (...args) =>
-                                          (await import('./routes/mock-route')).loader(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route'
+                                            )
+                                          ).loader(...args),
                                         element: <Outlet />,
                                       },
                                       {
                                         path: 'new',
-                                        action: async (...args) =>
-                                          (await import('./routes/actions')).createMockRouteAction(...args),
+                                        action: async args =>
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.new'
+                                            )
+                                          ).action(args),
                                       },
                                       {
                                         path: ':mockRouteId/update',
-                                        action: async (...args) =>
-                                          (await import('./routes/actions')).updateMockRouteAction(...args),
+                                        action: async args =>
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update'
+                                            )
+                                          ).action(args),
                                       },
                                       {
                                         path: ':mockRouteId/delete',
-                                        action: async (...args) =>
-                                          (await import('./routes/actions')).deleteMockRouteAction(...args),
+                                        action: async args =>
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.delete'
+                                            )
+                                          ).action(args),
                                       },
                                     ],
                                   },
@@ -694,18 +800,30 @@ async function renderApp() {
                                 children: [
                                   {
                                     path: 'new',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).createNewCaCertificateAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.cacert.new'
+                                        )
+                                      ).action(args),
                                   },
                                   {
                                     path: 'update',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).updateCaCertificateAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.cacert.update'
+                                        )
+                                      ).action(args),
                                   },
                                   {
                                     path: 'delete',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).deleteCaCertificateAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.cacert.delete'
+                                        )
+                                      ).action(args),
                                   },
                                 ],
                               },
@@ -714,18 +832,30 @@ async function renderApp() {
                                 children: [
                                   {
                                     path: 'new',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).createNewClientCertificateAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.clientcert.new'
+                                        )
+                                      ).action(args),
                                   },
                                   {
                                     path: 'update',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).updateClientCertificateAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.clientcert.update'
+                                        )
+                                      ).action(args),
                                   },
                                   {
                                     path: 'delete',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).deleteClientCertificateAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.clientcert.delete'
+                                        )
+                                      ).action(args),
                                   },
                                 ],
                               },
@@ -734,49 +864,77 @@ async function renderApp() {
                                 children: [
                                   {
                                     path: 'update',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).updateEnvironment(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.environment.update'
+                                        )
+                                      ).action(args),
                                   },
                                   {
                                     path: 'delete',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).deleteEnvironmentAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.environment.delete'
+                                        )
+                                      ).action(args),
                                   },
                                   {
                                     path: 'create',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).createEnvironmentAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.environment.create'
+                                        )
+                                      ).action(args),
                                   },
                                   {
                                     path: 'duplicate',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).duplicateEnvironmentAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.environment.duplicate'
+                                        )
+                                      ).action(args),
                                   },
                                   {
                                     path: 'set-active',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).setActiveEnvironmentAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active'
+                                        )
+                                      ).action(args),
                                   },
                                   {
                                     path: 'set-active-global',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).setActiveGlobalEnvironmentAction(...args),
+                                    action: async args =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active-global'
+                                        )
+                                      ).action(args),
                                   },
                                 ],
                               },
                               {
-                                path: 'cookieJar',
-                                children: [
-                                  {
-                                    path: 'update',
-                                    action: async (...args) =>
-                                      (await import('./routes/actions')).updateCookieJarAction(...args),
-                                  },
-                                ],
+                                path: 'update-cookie-jar',
+                                action: async args =>
+                                  (
+                                    await import(
+                                      './routes/$organizationId.project.$projectId.workspace.$workspaceId.update-cookie-jar'
+                                    )
+                                  ).action(args),
                               },
                               {
                                 path: 'test/*',
-                                loader: async (...args) => (await import('./routes/unit-test')).loader(...args),
+                                loader: async (...args) =>
+                                  (
+                                    await import(
+                                      './routes/$organizationId.project.$projectId.workspace.$workspaceId.unit-test'
+                                    )
+                                  ).loader(...args),
                                 element: (
                                   <Suspense fallback={<AppLoadingIndicator />}>
                                     <UnitTest />
@@ -787,7 +945,11 @@ async function renderApp() {
                                     index: true,
                                     element: <Outlet />,
                                     loader: async (...args) =>
-                                      (await import('./routes/test-suite')).indexLoader(...args),
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId'
+                                        )
+                                      ).indexLoader(...args),
                                   },
                                   {
                                     path: 'test-suite',
@@ -796,25 +958,41 @@ async function renderApp() {
                                         index: true,
                                         element: <Outlet />,
                                         loader: async (...args) =>
-                                          (await import('./routes/test-suite')).indexLoader(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId'
+                                            )
+                                          ).indexLoader(...args),
                                       },
                                       {
                                         path: 'new',
-                                        action: async (...args) =>
-                                          (await import('./routes/actions')).createNewTestSuiteAction(...args),
+                                        action: async args =>
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.new'
+                                            )
+                                          ).action(args),
                                       },
                                       {
                                         path: ':testSuiteId',
                                         id: ':testSuiteId',
                                         element: <Outlet />,
                                         loader: async (...args) =>
-                                          (await import('./routes/test-suite')).loader(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId'
+                                            )
+                                          ).loader(...args),
                                         children: [
                                           {
                                             index: true,
                                             element: <Outlet />,
                                             loader: async (...args) =>
-                                              (await import('./routes/test-results')).indexLoader(...args),
+                                              (
+                                                await import(
+                                                  './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId.test-result.$testResultId'
+                                                )
+                                              ).indexLoader(...args),
                                           },
                                           {
                                             path: 'test-result',
@@ -823,50 +1001,82 @@ async function renderApp() {
                                                 path: ':testResultId',
                                                 id: ':testResultId',
                                                 loader: async (...args) =>
-                                                  (await import('./routes/test-results')).loader(...args),
+                                                  (
+                                                    await import(
+                                                      './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId.test-result.$testResultId'
+                                                    )
+                                                  ).loader(...args),
                                               },
                                             ],
                                           },
                                           {
                                             path: 'delete',
-                                            action: async (...args) =>
-                                              (await import('./routes/actions')).deleteTestSuiteAction(...args),
+                                            action: async args =>
+                                              (
+                                                await import(
+                                                  './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId.delete'
+                                                )
+                                              ).action(args),
                                           },
                                           {
                                             path: 'update',
-                                            action: async (...args) =>
-                                              (await import('./routes/actions')).updateTestSuiteAction(...args),
+                                            action: async args =>
+                                              (
+                                                await import(
+                                                  './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId.update'
+                                                )
+                                              ).action(args),
                                           },
                                           {
                                             path: 'run-all-tests',
-                                            action: async (...args) =>
-                                              (await import('./routes/actions')).runAllTestsAction(...args),
+                                            action: async args =>
+                                              (
+                                                await import(
+                                                  './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId.run-all-tests'
+                                                )
+                                              ).action(args),
                                           },
                                           {
                                             path: 'test',
                                             children: [
                                               {
                                                 path: 'new',
-                                                action: async (...args) =>
-                                                  (await import('./routes/actions')).createNewTestAction(...args),
+                                                action: async args =>
+                                                  (
+                                                    await import(
+                                                      './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId.test.new'
+                                                    )
+                                                  ).action(args),
                                               },
                                               {
                                                 path: ':testId',
                                                 children: [
                                                   {
                                                     path: 'delete',
-                                                    action: async (...args) =>
-                                                      (await import('./routes/actions')).deleteTestAction(...args),
+                                                    action: async args =>
+                                                      (
+                                                        await import(
+                                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId.test.$testId.delete'
+                                                        )
+                                                      ).action(args),
                                                   },
                                                   {
                                                     path: 'update',
-                                                    action: async (...args) =>
-                                                      (await import('./routes/actions')).updateTestAction(...args),
+                                                    action: async args =>
+                                                      (
+                                                        await import(
+                                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId.test.$testId.update'
+                                                        )
+                                                      ).action(args),
                                                   },
                                                   {
                                                     path: 'run',
-                                                    action: async (...args) =>
-                                                      (await import('./routes/actions')).runTestAction(...args),
+                                                    action: async args =>
+                                                      (
+                                                        await import(
+                                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId.test.$testId.run'
+                                                        )
+                                                      ).action(args),
                                                   },
                                                 ],
                                               },
@@ -879,29 +1089,11 @@ async function renderApp() {
                                 ],
                               },
                               {
-                                path: 'ai',
-                                children: [
-                                  {
-                                    path: 'generate',
-                                    children: [
-                                      {
-                                        path: 'collection-and-tests',
-                                        action: async (...args) =>
-                                          (await import('./routes/actions')).generateCollectionAndTestsAction(...args),
-                                      },
-                                      {
-                                        path: 'tests',
-                                        action: async (...args) =>
-                                          (await import('./routes/actions')).generateTestsAction(...args),
-                                      },
-                                    ],
-                                  },
-                                ],
-                              },
-                              {
                                 path: 'duplicate',
-                                action: async (...args) =>
-                                  (await import('./routes/actions')).duplicateWorkspaceAction(...args),
+                                action: async args =>
+                                  (await import('./routes/$organizationId.project.$projectId.workspace.move')).action(
+                                    args,
+                                  ),
                               },
                               {
                                 path: 'git',
@@ -1096,30 +1288,42 @@ async function renderApp() {
                               },
                               {
                                 path: 'toggle-expand-all',
-                                action: async (...args) =>
-                                  (await import('./routes/actions')).toggleExpandAllRequestGroupsAction(...args),
+                                action: async args =>
+                                  (
+                                    await import(
+                                      './routes/$organizationId.project.$projectId.workspace.$workspaceId.toggle-expand-all'
+                                    )
+                                  ).action(args),
                               },
                             ],
                           },
                           {
                             path: 'new',
-                            action: async (...args) =>
-                              (await import('./routes/actions')).createNewWorkspaceAction(...args),
+                            action: async args =>
+                              (await import('./routes/$organizationId.project.$projectId.workspace.new')).action(args),
                           },
                           {
                             path: 'delete',
-                            action: async (...args) =>
-                              (await import('./routes/actions')).deleteWorkspaceAction(...args),
+                            action: async args =>
+                              (await import('./routes/$organizationId.project.$projectId.workspace.delete')).action(
+                                args,
+                              ),
                           },
                           {
                             path: 'update',
-                            action: async (...args) =>
-                              (await import('./routes/actions')).updateWorkspaceAction(...args),
+                            action: async args =>
+                              (await import('./routes/$organizationId.project.$projectId.workspace.update')).action(
+                                args,
+                              ),
                           },
                           {
                             path: ':workspaceId/update-meta',
-                            action: async (...args) =>
-                              (await import('./routes/actions')).updateWorkspaceMetaAction(...args),
+                            action: async args =>
+                              (
+                                await import(
+                                  './routes/$organizationId.project.$projectId.workspace.$workspaceId.update-meta'
+                                )
+                              ).action(args),
                           },
                         ],
                       },
@@ -1166,24 +1370,24 @@ async function renderApp() {
                 element: <Authorize />,
               },
               {
-                path: 'updateVaultSalt',
-                action: async (...args) => (await import('./routes/auth.vaultKey')).updateVaultSaltAction(...args),
+                path: 'update-vault-salt',
+                action: async args => (await import('./routes/auth.update-vault-salt')).action(args),
               },
               {
-                path: 'createVaultKey',
-                action: async (...args) => (await import('./routes/auth.vaultKey')).createVaultKeyAction(...args),
+                path: 'create-vault-key',
+                action: async args => (await import('./routes/auth.create-vault-key')).action(args),
               },
               {
-                path: 'validateVaultKey',
-                action: async (...args) => (await import('./routes/auth.vaultKey')).validateVaultKeyAction(...args),
+                path: 'validate-vault-key',
+                action: async args => (await import('./routes/auth.validate-vault-key')).action(args),
               },
               {
-                path: 'resetVaultKey',
-                action: async (...args) => (await import('./routes/auth.vaultKey')).resetVaultKeyAction(...args),
+                path: 'reset-vault-key',
+                action: async args => (await import('./routes/auth.reset-vault-key')).action(args),
               },
               {
-                path: 'clearVaultKey',
-                action: async (...args) => (await import('./routes/auth.vaultKey')).clearVaultKeyAction(...args),
+                path: 'clear-vault-key',
+                action: async args => (await import('./routes/auth.clear-vault-key')).action(args),
               },
             ],
           },
