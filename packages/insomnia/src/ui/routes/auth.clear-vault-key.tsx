@@ -1,4 +1,4 @@
-import { ipcRenderer } from 'electron/renderer';
+import { ipcRenderer } from 'electron';
 import type { ActionFunctionArgs } from 'react-router';
 
 import { userSession as sessionModel } from '../../models';
