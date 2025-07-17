@@ -13,7 +13,10 @@ import type { Response } from '../../../models/response';
 import type { WebSocketResponse } from '../../../models/websocket-response';
 import { deserializeNDJSON } from '../../../utils/ndjson';
 import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
-import type { RequestLoaderData, WebSocketRequestLoaderData } from '../../routes/request';
+import type {
+  RequestLoaderData,
+  WebSocketRequestLoaderData,
+} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';

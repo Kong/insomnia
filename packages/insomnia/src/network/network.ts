@@ -47,7 +47,10 @@ import * as plugins from '../plugins/index';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '../templating/types';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
-import { defaultSendActionRuntime, type SendActionRuntime } from '../ui/routes/request';
+import {
+  defaultSendActionRuntime,
+  type SendActionRuntime,
+} from '../ui/routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { invariant } from '../utils/invariant';
 import { serializeNDJSON } from '../utils/ndjson';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../utils/url/querystring';

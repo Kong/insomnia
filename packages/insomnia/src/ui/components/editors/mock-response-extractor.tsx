@@ -13,7 +13,7 @@ import {
   useMockRoutePatcher,
 } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route';
 import type { OrganizationLoaderData } from '../../routes/organization';
-import type { RequestLoaderData } from '../../routes/request';
+import type { RequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';

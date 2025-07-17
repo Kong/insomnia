@@ -519,91 +519,161 @@ async function renderApp() {
                                   {
                                     path: 'request-group/:requestGroupId',
                                     id: 'request-group/:requestGroupId',
-                                    loader: async (...args) => (await import('./routes/request-group')).loader(...args),
+                                    loader: async (...args) =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId'
+                                        )
+                                      ).loader(...args),
                                     element: <Outlet />,
                                   },
                                   {
                                     path: 'request/:requestId',
                                     id: 'request/:requestId',
-                                    loader: async (...args) => (await import('./routes/request')).loader(...args),
+                                    loader: async (...args) =>
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                        )
+                                      ).loader(...args),
                                     element: <Outlet />,
                                     children: [
                                       {
                                         path: 'send',
                                         action: async (...args) =>
-                                          (await import('./routes/request')).sendAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                            )
+                                          ).sendAction(...args),
                                       },
                                       {
                                         path: 'connect',
                                         action: async (...args) =>
-                                          (await import('./routes/request')).connectAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                            )
+                                          ).connectAction(...args),
                                       },
                                       {
                                         path: 'duplicate',
                                         action: async (...args) =>
-                                          (await import('./routes/request')).duplicateRequestAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                            )
+                                          ).duplicateRequestAction(...args),
                                       },
                                       {
                                         path: 'update',
                                         action: async (...args) =>
-                                          (await import('./routes/request')).updateRequestAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                            )
+                                          ).updateRequestAction(...args),
                                       },
                                       {
                                         path: 'update-meta',
                                         action: async (...args) =>
-                                          (await import('./routes/request')).updateRequestMetaAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                            )
+                                          ).updateRequestMetaAction(...args),
                                       },
                                       {
                                         path: 'response/delete-all',
                                         action: async (...args) =>
-                                          (await import('./routes/request')).deleteAllResponsesAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                            )
+                                          ).deleteAllResponsesAction(...args),
                                       },
                                       {
                                         path: 'response/delete',
                                         action: async (...args) =>
-                                          (await import('./routes/request')).deleteResponseAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                            )
+                                          ).deleteResponseAction(...args),
                                       },
                                     ],
                                   },
                                   {
                                     path: 'request/new',
                                     action: async (...args) =>
-                                      (await import('./routes/request')).createRequestAction(...args),
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                        )
+                                      ).createRequestAction(...args),
                                   },
                                   {
                                     path: 'request/new-mock-send',
                                     action: async (...args) =>
-                                      (await import('./routes/request')).createAndSendToMockbinAction(...args),
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                        )
+                                      ).createAndSendToMockbinAction(...args),
                                   },
                                   {
                                     path: 'request/delete',
                                     action: async (...args) =>
-                                      (await import('./routes/request')).deleteRequestAction(...args),
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                        )
+                                      ).deleteRequestAction(...args),
                                   },
                                   {
                                     path: 'request-group/new',
                                     action: async (...args) =>
-                                      (await import('./routes/request-group')).createRequestGroupAction(...args),
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId'
+                                        )
+                                      ).createRequestGroupAction(...args),
                                   },
                                   {
                                     path: 'request-group/delete',
                                     action: async (...args) =>
-                                      (await import('./routes/request-group')).deleteRequestGroupAction(...args),
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId'
+                                        )
+                                      ).deleteRequestGroupAction(...args),
                                   },
                                   {
                                     path: 'request-group/:requestGroupId/update',
                                     action: async (...args) =>
-                                      (await import('./routes/request-group')).updateRequestGroupAction(...args),
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId'
+                                        )
+                                      ).updateRequestGroupAction(...args),
                                   },
                                   {
                                     path: 'request-group/duplicate',
                                     action: async (...args) =>
-                                      (await import('./routes/request-group')).duplicateRequestGroupAction(...args),
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId'
+                                        )
+                                      ).duplicateRequestGroupAction(...args),
                                   },
                                   {
                                     path: 'request-group/:requestGroupId/update-meta',
                                     action: async (...args) =>
-                                      (await import('./routes/request-group')).updateRequestGroupMetaAction(...args),
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId'
+                                        )
+                                      ).updateRequestGroupMetaAction(...args),
                                   },
                                   {
                                     path: 'runner',

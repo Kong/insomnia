@@ -62,7 +62,7 @@ import {
   defaultSendActionRuntime,
   type RunnerSource,
   sendActionImplementation,
-} from './request';
+} from './$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRootLoaderData } from './root';
 
 const inputStyle =

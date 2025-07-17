@@ -117,8 +117,12 @@ import {
   useRequestMetaPatcher,
   useRequestPatcher,
 } from '../hooks/use-request';
-import type { GrpcRequestLoaderData, RequestLoaderData, WebSocketRequestLoaderData } from './request';
-import type { RequestGroupLoaderData } from './request-group';
+import type {
+  GrpcRequestLoaderData,
+  RequestLoaderData,
+  WebSocketRequestLoaderData,
+} from './$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import type { RequestGroupLoaderData } from './$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { useRootLoaderData } from './root';
 import Runner from './runner';
 import type { Child, WorkspaceLoaderData } from './workspace';

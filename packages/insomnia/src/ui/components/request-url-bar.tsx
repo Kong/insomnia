@@ -18,7 +18,11 @@ import { useReadyState } from '../hooks/use-ready-state';
 import { useRequestPatcher } from '../hooks/use-request';
 import { useRequestMetaPatcher } from '../hooks/use-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
-import type { ConnectActionParams, RequestLoaderData, SendActionParams } from '../routes/request';
+import type {
+  ConnectActionParams,
+  RequestLoaderData,
+  SendActionParams,
+} from '../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRootLoaderData } from '../routes/root';
 import type { WorkspaceLoaderData } from '../routes/workspace';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
