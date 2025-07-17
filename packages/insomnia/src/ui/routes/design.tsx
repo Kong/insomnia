@@ -192,7 +192,13 @@ const Design: FC = () => {
   const registerCodeMirrorLint = (rulesetPath: string) => {
     CodeMirror.registerHelper('lint', 'openapi', async (contents: string) => {
       try {
-        const { diagnostics, error } = await window.main.lintSpec({ documentContent: contents, rulesetPath });
+        const { diagnostics, error, cancelled } = await window.main.lintSpec({
+          documentContent: contents,
+          rulesetPath,
+        });
+        if (cancelled) {
+          return;
+        }
         if (error) {
           console.log('Handled error detected while linting:', error);
           showError({
