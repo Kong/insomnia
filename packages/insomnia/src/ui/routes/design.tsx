@@ -51,7 +51,6 @@ import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { EnvironmentPicker } from '../components/environment-picker';
 import { Icon } from '../components/icon';
-import { InsomniaAI } from '../components/insomnia-ai-icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showError } from '../components/modals';
 import { CookiesModal } from '../components/modals/cookies-modal';
@@ -60,7 +59,6 @@ import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-e
 import { OrganizationTabList } from '../components/tabs/tab-list';
 import { formatMethodName } from '../components/tags/method-tag';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
-import { useAIContext } from '../context/app/ai-context';
 import { useInsomniaTab } from '../hooks/use-insomnia-tab';
 import { useActiveApiSpecSyncVCSVersion, useGitVCSVersion } from '../hooks/use-vcs-version';
 import { useRootLoaderData } from './root';
@@ -177,7 +175,6 @@ const Design: FC = () => {
   const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
 
   const editor = useRef<CodeEditorHandle>(null);
-  const { generating, generateTestsFromSpec, access } = useAIContext();
   const updateApiSpecFetcher = useFetcher();
   const generateRequestCollectionFetcher = useFetcher();
   const [isLintPaneOpen, setIsLintPaneOpen] = useState(false);
@@ -353,13 +350,6 @@ const Design: FC = () => {
   });
 
   const specActionList: SpecActionItem[] = [
-    {
-      id: 'ai-generate-tests-in-collection',
-      name: 'Generate tests',
-      action: generateTestsFromSpec,
-      isDisabled: !access.enabled || generating,
-      icon: <InsomniaAI className="w-3" />,
-    },
     {
       id: 'generate-request-collection',
       name: 'Generate collection',
