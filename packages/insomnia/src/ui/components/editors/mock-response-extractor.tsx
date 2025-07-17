@@ -8,7 +8,10 @@ import { useFetcher, useRouteLoaderData } from 'react-router';
 import { getContentTypeName, getMimeTypeFromContentType } from '../../../common/constants';
 import type { ResponseHeader } from '../../../models/response';
 import { invariant } from '../../../utils/invariant';
-import { isInMockContentTypeList, useMockRoutePatcher } from '../../routes/mock-route';
+import {
+  isInMockContentTypeList,
+  useMockRoutePatcher,
+} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route';
 import type { OrganizationLoaderData } from '../../routes/organization';
 import type { RequestLoaderData } from '../../routes/request';
 import type { WorkspaceLoaderData } from '../../routes/workspace';

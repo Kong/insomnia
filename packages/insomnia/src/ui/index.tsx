@@ -7,7 +7,6 @@ import { createMemoryRouter, matchPath, Outlet, RouterProvider } from 'react-rou
 import { migrateFromLocalStorage, type SessionData, setSessionData, setVaultSessionData } from '../account/session';
 import {
   ACTIVITY_DEBUG,
-  ACTIVITY_SPEC,
   getInsomniaSession,
   getInsomniaVaultKey,
   getInsomniaVaultSalt,
@@ -39,7 +38,7 @@ const Workspace = lazy(() => import('./routes/workspace'));
 const UnitTest = lazy(() => import('./routes/unit-test'));
 const Debug = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.debug'));
 const Design = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.spec'));
-const MockServer = lazy(() => import('./routes/mock-server'));
+const MockServer = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server'));
 const Environments = lazy(() => import('./routes/environments'));
 
 initializeSentry();
@@ -660,7 +659,12 @@ async function renderApp() {
                               {
                                 path: 'mock-server/*',
                                 id: 'mock-server',
-                                loader: async (...args) => (await import('./routes/mock-server')).loader(...args),
+                                loader: async (...args) =>
+                                  (
+                                    await import(
+                                      './routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server'
+                                    )
+                                  ).loader(...args),
                                 element: (
                                   <Suspense fallback={<AppLoadingIndicator />}>
                                     <MockServer />
@@ -675,7 +679,11 @@ async function renderApp() {
                                         path: ':mockRouteId',
                                         id: ':mockRouteId',
                                         loader: async (...args) =>
-                                          (await import('./routes/mock-route')).loader(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route'
+                                            )
+                                          ).loader(...args),
                                         element: <Outlet />,
                                       },
                                       {
