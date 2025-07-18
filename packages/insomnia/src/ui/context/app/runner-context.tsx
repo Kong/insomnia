@@ -1,4 +1,12 @@
-import React, { createContext, type FC, type PropsWithChildren, useCallback, useContext, useEffect } from 'react';
+import React, {
+  createContext,
+  type FC,
+  type PropsWithChildren,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+} from 'react';
 import type { Selection } from 'react-aria-components';
 
 import type { UploadDataType } from '../../components/modals/upload-runner-data-modal';
@@ -85,17 +93,16 @@ export const RunnerProvider: FC<PropsWithChildren> = ({ children }) => {
     };
   }, [handleTabClose]);
 
-  return (
-    <RunnerContext.Provider
-      value={{
-        runnerStateMap: runnerState,
-        runnerStateRef,
-        updateRunnerState,
-      }}
-    >
-      {children}
-    </RunnerContext.Provider>
+  const context = useMemo(
+    () => ({
+      runnerStateMap: runnerState,
+      runnerStateRef,
+      updateRunnerState,
+    }),
+    [runnerState, runnerStateRef, updateRunnerState],
   );
+
+  return <RunnerContext.Provider value={context}>{children}</RunnerContext.Provider>;
 };
 
 export const useRunnerContext = () => useContext(RunnerContext);

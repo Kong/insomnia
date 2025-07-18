@@ -1,4 +1,4 @@
-import React, { createContext, type FC, type PropsWithChildren, useContext } from 'react';
+import React, { createContext, type FC, type PropsWithChildren, useContext, useMemo } from 'react';
 
 interface Props {
   disable?: boolean;
@@ -11,7 +11,8 @@ interface NunjucksEnabledState {
 const NunjucksEnabledContext = createContext<NunjucksEnabledState | undefined>(undefined);
 
 export const NunjucksEnabledProvider: FC<PropsWithChildren<Props>> = ({ disable, children }) => {
-  return <NunjucksEnabledContext.Provider value={{ enabled: !disable }}>{children}</NunjucksEnabledContext.Provider>;
+  const context = useMemo(() => ({ enabled: !disable }), [disable]);
+  return <NunjucksEnabledContext.Provider value={context}>{children}</NunjucksEnabledContext.Provider>;
 };
 
 export const useNunjucksEnabled = () => {

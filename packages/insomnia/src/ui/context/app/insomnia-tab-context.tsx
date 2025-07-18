@@ -1,4 +1,4 @@
-import React, { createContext, type FC, type PropsWithChildren, useCallback, useContext, useRef } from 'react';
+import React, { createContext, type FC, type PropsWithChildren, useCallback, useContext, useMemo, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useLocalStorage } from 'react-use';
 
@@ -421,30 +421,46 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     [organizationId, updateInsomniaTabs],
   );
 
-  return (
-    <InsomniaTabContext.Provider
-      value={{
-        currentOrgTabs: appTabs?.[organizationId] || { tabList: [], activeTabId: '' },
-        closeTabById,
-        closeAllTabsUnderWorkspace,
-        closeAllTabsUnderProject,
-        closeAllTabs,
-        closeOtherTabs,
-        batchCloseTabs,
-        addTab,
-        updateTabById,
-        changeActiveTab,
-        updateProjectName,
-        updateWorkspaceName,
-        batchUpdateTabs,
-        appTabsRef,
-        moveBefore,
-        moveAfter,
-      }}
-    >
-      {children}
-    </InsomniaTabContext.Provider>
+  const context = useMemo(
+    () => ({
+      currentOrgTabs: appTabs?.[organizationId] || { tabList: [], activeTabId: '' },
+      closeTabById,
+      closeAllTabsUnderWorkspace,
+      closeAllTabsUnderProject,
+      closeAllTabs,
+      closeOtherTabs,
+      batchCloseTabs,
+      addTab,
+      updateTabById,
+      changeActiveTab,
+      updateProjectName,
+      updateWorkspaceName,
+      batchUpdateTabs,
+      appTabsRef,
+      moveBefore,
+      moveAfter,
+    }),
+    [
+      addTab,
+      appTabs,
+      batchCloseTabs,
+      batchUpdateTabs,
+      changeActiveTab,
+      closeAllTabs,
+      closeAllTabsUnderProject,
+      closeAllTabsUnderWorkspace,
+      closeOtherTabs,
+      closeTabById,
+      moveAfter,
+      moveBefore,
+      organizationId,
+      updateProjectName,
+      updateTabById,
+      updateWorkspaceName,
+    ],
   );
+
+  return <InsomniaTabContext.Provider value={context}>{children}</InsomniaTabContext.Provider>;
 };
 
 export const useInsomniaTabContext = () => useContext(InsomniaTabContext);

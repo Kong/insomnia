@@ -111,6 +111,7 @@ export default tseslint.config(
       'react/jsx-uses-react': 'error',
       'react/jsx-uses-vars': 'error',
       'react/jsx-indent-props': ['error', 2],
+      'react/jsx-no-constructed-context-values': 'error',
       'react/prop-types': 'off',
       'react/function-component-definition': [
         'error',
