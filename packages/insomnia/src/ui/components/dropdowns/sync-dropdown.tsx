@@ -18,7 +18,6 @@ import type { Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import type { SyncDataLoaderData } from '../../routes/$organizationId.project.$projectId.remote-collections';
 import { Icon } from '../icon';
-import { showError } from '../modals';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { SyncBranchesModal } from '../modals/sync-branches-modal';
 import { SyncHistoryModal } from '../modals/sync-history-modal';
@@ -44,6 +43,7 @@ export const SyncDropdown: FC<Props> = () => {
   const [isSyncStagingModalOpen, setIsSyncStagingModalOpen] = useState(false);
   const [isSyncBranchesModalOpen, setIsSyncBranchesModalOpen] = useState(false);
   const [isWindowFocused, setIsWindowFocused] = useState(true);
+  const [operationError, setOperationError] = useState<string | null>(null);
 
   const pushFetcher = useFetcher();
   const pullFetcher = useFetcher();
@@ -97,10 +97,7 @@ export const SyncDropdown: FC<Props> = () => {
 
   useEffect(() => {
     if (error) {
-      showError({
-        title: 'Sync Error',
-        message: error,
-      });
+      setOperationError(error);
     }
   }, [error]);
 
@@ -269,6 +266,17 @@ export const SyncDropdown: FC<Props> = () => {
 
   return (
     <Fragment>
+      {operationError && (
+        <div className="flex gap-2 bg-[rgba(var(--color-warning-rgb),0.5)] px-4 py-2 text-sm">
+          <div className="flex items-center gap-2">
+            <Icon icon="triangle-exclamation" />
+            <span>{operationError}</span>
+          </div>
+          <Button onPress={() => setOperationError(null)} className="ml-auto">
+            <Icon icon="xmark" className="mt-0.5" />
+          </Button>
+        </div>
+      )}
       <MenuTrigger>
         <TooltipTrigger delay={0}>
           <Button
@@ -287,7 +295,7 @@ export const SyncDropdown: FC<Props> = () => {
               pullCount={pullCount}
               isPushing={isPushing}
               pushCount={pushCount}
-              operationSucceed={!syncError && !isSyncing && !isPulling && !isPushing}
+              operationSucceed={operationError === null}
             />
           </Button>
           <Tooltip
