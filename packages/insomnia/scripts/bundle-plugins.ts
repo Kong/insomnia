@@ -16,13 +16,9 @@ const yarnPath = path.resolve(__dirname, '..', 'bin', 'yarn-standalone.js');
 const executeInGithubActions = process.env.GITHUB_ACTIONS === 'true';
 const NPM_REGISTRY = 'https://registry.npmjs.org/';
 const NODE_AUTH_TOKEN = process.env.NODE_AUTH_TOKEN || '';
-if (!NODE_AUTH_TOKEN) {
-  if (executeInGithubActions) {
-    throw new Error('[Bundle Plugin] NODE_AUTH_TOKEN environment variable is not set');
-  } else {
-    console.warn('[Bundle Plugin] NODE_AUTH_TOKEN environment variable is not set, skipping plugin installation');
-    process.exit(0);
-  }
+if (!NODE_AUTH_TOKEN && !executeInGithubActions) {
+  console.warn('[Bundle Plugin] NODE_AUTH_TOKEN environment variable is not set, skipping plugin installation');
+  process.exit(0);
 }
 const PLUGIN_NPM_REGISTRY = process.env.PLUGIN_NPM_REGISTRY || 'https://npm.pkg.github.com/';
 const registryUrl = PLUGIN_NPM_REGISTRY.endsWith('/') ? PLUGIN_NPM_REGISTRY : `${PLUGIN_NPM_REGISTRY}/`;
@@ -145,19 +141,28 @@ export async function installPluginToTmpDir(name: string) {
   const { scope, name: pluginName } = parsePackageName(name);
   try {
     const tmpDir = await mkdtemp(path.resolve(tmpdir(), `${pluginName}-${Date.now()}`));
-    const npmrcPath = path.resolve(tmpDir, '.npmrc');
+    const tempNpmrcPath = path.resolve(tmpDir, '.npmrc');
 
     await writeFile(
       path.resolve(tmpDir, 'package.json'),
       JSON.stringify({ license: 'ISC', workspaces: [] }, null, 2),
       'utf-8',
     );
-    // Generate the npmrc file in the temporary directory
-    await writeFile(
-      npmrcPath,
-      `registry = "${NPM_REGISTRY}"\n${scope}:registry = "${PLUGIN_NPM_REGISTRY}"\n${authString}`,
-      'utf-8',
-    );
+
+    if (executeInGithubActions) {
+      // Copy from https://github.com/actions/setup-node/blob/7e24a656e1c7a0d6f3eaef8d8e84ae379a5b035b/src/authutil.ts#L48
+      const npmrc: string = path.resolve(process.env['RUNNER_TEMP'] || process.cwd(), '.npmrc');
+      // Use the existing .npmrc file created by the Setup Node step
+      await cp(npmrc, tempNpmrcPath);
+    } else {
+      // Generate the npmrc file in the temporary directory
+      await writeFile(
+        tempNpmrcPath,
+        `registry = "${NPM_REGISTRY}"\n${scope}:registry = "${PLUGIN_NPM_REGISTRY}"\n${authString}`,
+        'utf-8',
+      );
+    }
+
     console.log(`[plugins] Installing plugin into temp dir: ${tmpDir}`);
 
     await runYarnCommand(
@@ -177,7 +182,7 @@ export async function installPluginToTmpDir(name: string) {
       ],
       tmpDir,
     );
-    await rm(npmrcPath, { recursive: true, force: true });
+    await rm(tempNpmrcPath, { recursive: true, force: true });
     // Check if the plugin was installed successfully
     const pluginDir = path.resolve(tmpDir, scope || pluginName);
     const pluginExists = await stat(pluginDir)
