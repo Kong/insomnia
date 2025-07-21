@@ -8,7 +8,6 @@ import {
   MenuSection,
   MenuTrigger,
   Popover,
-  Separator,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
@@ -38,7 +37,7 @@ import { GitProjectMigrationModal } from '../modals/git-project-migration-modal'
 import { GitProjectStagingModal } from '../modals/git-project-staging-modal';
 import { GitProjectRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { SyncMergeModal } from '../modals/sync-merge-modal';
-
+import { ProjectBranchName } from './project-branch-name';
 interface Props {
   gitRepository: GitRepository | null;
 }
@@ -65,6 +64,8 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
   const loadingFetch = gitFetchFetcher.state === 'loading';
 
   const [isPulling, setIsPulling] = useState(false);
+  const [isOperationSucceed, setIsOperationSucceed] = useState(false);
+  const [operationError, setOperationError] = useState<string | null>(null);
 
   useEffect(() => {
     if (gitRepository?.uri && gitRepository?._id && gitRepoDataFetcher.state === 'idle' && !gitRepoDataFetcher.data) {
@@ -130,10 +131,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
   useEffect(() => {
     const errors = [...(gitPushFetcher.data?.errors ?? [])];
     if (errors.length > 0) {
-      showModal(AlertModal, {
-        title: 'Push Failed',
-        message: errors.join('\n'),
-      });
+      setOperationError(errors.join('\n'));
     }
   }, [gitPushFetcher.data?.errors]);
 
@@ -142,20 +140,14 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
       gitRepoDataFetcher.data && 'errors' in gitRepoDataFetcher.data ? gitRepoDataFetcher.data.errors : [];
     const errors = [...gitRepoDataErrors];
     if (errors.length > 0) {
-      showModal(AlertModal, {
-        title: 'Loading of Git Repository Failed',
-        message: errors.join('\n'),
-      });
+      setOperationError(errors.join('\n'));
     }
   }, [gitRepoDataFetcher.data]);
 
   useEffect(() => {
     const errors = [...(gitCheckoutFetcher.data?.errors ?? [])];
     if (errors.length > 0) {
-      showModal(AlertModal, {
-        title: 'Checkout Failed',
-        message: errors.join('\n'),
-      });
+      setOperationError(errors.join('\n'));
     }
   }, [gitCheckoutFetcher.data?.errors]);
 
@@ -180,11 +172,13 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
     icon = ['fab', 'gitlab'];
   }
 
-  const isLoading =
-    gitFetchFetcher.state === 'loading' ||
-    gitCheckoutFetcher.state === 'loading' ||
-    gitPushFetcher.state === 'loading' ||
-    isPulling;
+  const isPushing = gitPushFetcher.state !== 'idle';
+  const isFetching = gitFetchFetcher.state !== 'idle';
+  const isCheckingOut = gitCheckoutFetcher.state !== 'idle';
+
+  const isSyncing = isFetching || isCheckingOut;
+
+  const isGitSyncDropdownDisabled = isSyncing || isPulling || isPushing;
 
   const isSynced = Boolean(gitRepository?.uri && gitRepoDataFetcher.data && !('errors' in gitRepoDataFetcher.data));
 
@@ -221,6 +215,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
               await pullFromGitRemote({ projectId })
                 .then(result => {
                   if ('errors' in result && result.errors) {
+                    setOperationError(result.errors.join('\n'));
                     showModal(AlertModal, {
                       title: 'Pull Failed',
                       message: (
@@ -254,6 +249,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
                       },
                     });
                   }
+                  setIsOperationSucceed(true);
                 })
                 .finally(() => {
                   setIsPulling(false);
@@ -261,6 +257,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
                 });
             } catch (err) {
               const message = err instanceof Error ? err.message : 'An error occurred while pulling';
+              setOperationError(message);
               showModal(AlertModal, {
                 title: 'Pull Failed',
                 message: (
@@ -388,6 +385,17 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
 
   return (
     <>
+      {operationError && (
+        <div className="flex gap-2 bg-[rgba(var(--color-warning-rgb),0.5)] px-4 py-2 text-sm">
+          <div className="flex items-center gap-2">
+            <Icon icon="triangle-exclamation" />
+            <span>{operationError}</span>
+          </div>
+          <Button onPress={() => setOperationError(null)} className="ml-auto">
+            <Icon icon="xmark" className="mt-0.5" />
+          </Button>
+        </div>
+      )}
       <MenuTrigger>
         <TooltipTrigger
           delay={0}
@@ -404,24 +412,23 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
           }}
         >
           <Button
-            isDisabled={isLoading}
+            isDisabled={isGitSyncDropdownDisabled}
             data-testid="git-dropdown"
             aria-label="Git Sync"
-            className={`flex h-[--line-height-sm] w-full items-center gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all ${isLoading ? 'animate-pulse' : 'hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]'}`}
+            className="flex h-[--line-height-sm] w-full items-center gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:opacity-100 aria-pressed:bg-[--hl-sm]"
           >
-            <Icon icon={icon} className="size-4" />
-            <Separator orientation="vertical" className="h-5 border border-solid border-[--hl-sm] bg-[--color-bg]" />
-            <div className="relative flex items-center">
-              <Icon icon={isLoading ? 'spinner' : 'code-branch'} className={`size-4 ${isLoading && 'animate-spin'}`} />
-              {pendingChangesCount > 0 && (
-                <div className="absolute -bottom-2 -right-1 h-[12px] min-w-[12px] bg-[--color-surprise] px-[4px] text-center font-semibold text-[--color-font-surprise] [border-radius:20px] [font-size:6px] [line-height:12px]">
-                  {pendingChangesCount}
-                </div>
-              )}
-            </div>
-            <span className="flex-1 truncate">
-              {isSynced ? currentBranch : gitRepoDataFetcher.state !== 'idle' ? 'Syncing...' : 'Not synced'}
-            </span>
+            <ProjectBranchName
+              icon={icon}
+              name={isSynced ? currentBranch : gitRepoDataFetcher.state !== 'idle' ? 'Syncing...' : 'Not synced'}
+              isSyncing={isSyncing}
+              pendingChangesCount={pendingChangesCount}
+              operationSucceed={isOperationSucceed}
+              isPulling={isPulling}
+              isPushing={isPushing}
+              showSyncStatus={false}
+              // This is a temporary view for Git Project Sync, it will be removed in the future
+              temporaryGitSyncView={true}
+            />
           </Button>
           <Tooltip
             offset={8}
