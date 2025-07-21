@@ -13,10 +13,16 @@ const bundlePlugins: string[] =
   }) || [];
 const bundlePluginsDir = path.resolve(__dirname, '..', 'plugins');
 const yarnPath = path.resolve(__dirname, '..', 'bin', 'yarn-standalone.js');
+const executeInGithubActions = process.env.GITHUB_ACTIONS === 'true';
 const NPM_REGISTRY = 'https://registry.npmjs.org/';
 const NODE_AUTH_TOKEN = process.env.NODE_AUTH_TOKEN || '';
 if (!NODE_AUTH_TOKEN) {
-  throw new Error('[Bundle Plugin] NODE_AUTH_TOKEN environment variable is not set');
+  if (executeInGithubActions) {
+    throw new Error('[Bundle Plugin] NODE_AUTH_TOKEN environment variable is not set');
+  } else {
+    console.warn('[Bundle Plugin] NODE_AUTH_TOKEN environment variable is not set, skipping plugin installation');
+    process.exit(0);
+  }
 }
 const PLUGIN_NPM_REGISTRY = process.env.PLUGIN_NPM_REGISTRY || 'https://npm.pkg.github.com/';
 const registryUrl = PLUGIN_NPM_REGISTRY.endsWith('/') ? PLUGIN_NPM_REGISTRY : `${PLUGIN_NPM_REGISTRY}/`;
@@ -35,10 +41,11 @@ const bundlePlugin = async () => {
     }
   } catch (err) {
     console.log('[Bundle Plugin] Failed to bundle plugins:', err);
-    if (process.env.GITHUB_ACTIONS === 'true') {
+    if (executeInGithubActions) {
       // execute in Github Actions
       process.exit(1);
     } else {
+      console.warn('[Bundle Plugin] NODE_AUTH_TOKEN environment variable is not set, skipping plugin installation');
       process.exit(0);
     }
   }
