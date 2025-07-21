@@ -1,4 +1,5 @@
-import { exportWorkspacesHAR } from '../../common/export';
+import { exportWorkspacesHAR } from 'insomnia/src/ui/components/settings/import-export';
+
 import { fetchImportContentFromURI, importResourcesToProject, scanResources } from '../../common/import';
 import { getInsomniaV5DataExport } from '../../common/insomnia-v5';
 import * as models from '../../models';

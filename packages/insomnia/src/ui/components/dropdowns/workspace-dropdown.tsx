@@ -1,4 +1,8 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
+import {
+  exportGlobalEnvironmentToFile,
+  exportMockServerToFile,
+} from 'insomnia/src/ui/components/settings/import-export';
 import React, { type FC, type ReactNode, useCallback, useEffect, useState } from 'react';
 import {
   Button,
@@ -18,7 +22,6 @@ import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-ro
 
 import { getProductName } from '../../../common/constants';
 import { database as db } from '../../../common/database';
-import { exportGlobalEnvironmentToFile, exportMockServerToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { PlatformKeyCombinations } from '../../../common/settings';
 import { isRemoteProject } from '../../../models/project';

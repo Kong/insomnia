@@ -1,8 +1,8 @@
+import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/ui/components/settings/import-export';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
-import { exportRequestsHAR, exportWorkspacesHAR } from '../export';
 describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   beforeEach(async () => {
     await models.project.all();

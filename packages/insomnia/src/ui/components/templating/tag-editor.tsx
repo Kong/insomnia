@@ -1,5 +1,6 @@
 import classnames from 'classnames';
 import clone from 'clone';
+import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useMount } from 'react-use';
@@ -24,7 +25,6 @@ import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dr
 import { FileInputButton } from '../base/file-input-button';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
-import { localTemplateTags } from './local-template-tags';
 
 interface Props {
   defaultValue: string;
