@@ -39,6 +39,7 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
     onChange(newConfig as unknown as HashiCorpSecretConfig);
   };
 
+  // TODO(Kent): Fetch the creds from the loader
   const getCredentialData = async (credentialId: string) => {
     const providerCredential = await models.cloudCredential.getById(credentialId);
     if (providerCredential) {
