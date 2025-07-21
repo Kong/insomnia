@@ -39,7 +39,9 @@ const UnitTest = lazy(() => import('./routes/$organizationId.project.$projectId.
 const Debug = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.debug'));
 const Design = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.spec'));
 const MockServer = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server'));
-const Environments = lazy(() => import('./routes/environments'));
+const Environments = lazy(
+  () => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.environment'),
+);
 
 initializeSentry();
 initializeLogging();
