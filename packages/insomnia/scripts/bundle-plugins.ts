@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { cp, mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
@@ -15,14 +15,14 @@ const bundlePluginsDir = path.resolve(__dirname, '..', 'plugins');
 const yarnPath = path.resolve(__dirname, '..', 'bin', 'yarn-standalone.js');
 const executeInGithubActions = process.env.GITHUB_ACTIONS === 'true';
 const NPM_REGISTRY = 'https://registry.npmjs.org/';
-const NODE_AUTH_TOKEN = process.env.NODE_AUTH_TOKEN || '';
-if (!NODE_AUTH_TOKEN && !executeInGithubActions) {
-  console.warn('[Bundle Plugin] NODE_AUTH_TOKEN environment variable is not set, skipping plugin installation');
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
+if (!GITHUB_TOKEN && !executeInGithubActions) {
+  console.warn('[Bundle Plugin] GITHUB_TOKEN environment variable is not set, skipping plugin installation');
   process.exit(0);
 }
 const PLUGIN_NPM_REGISTRY = process.env.PLUGIN_NPM_REGISTRY || 'https://npm.pkg.github.com/';
 const registryUrl = PLUGIN_NPM_REGISTRY.endsWith('/') ? PLUGIN_NPM_REGISTRY : `${PLUGIN_NPM_REGISTRY}/`;
-const authString = `${registryUrl.replace(/(^\w+:|^)/, '')}:_authToken=${NODE_AUTH_TOKEN}`;
+const authString = `${registryUrl.replace(/(^\w+:|^)/, '')}:_authToken=${GITHUB_TOKEN}`;
 
 const execFilePromise = promisify(execFile);
 
@@ -54,7 +54,7 @@ export async function runYarnCommand(args: string[], cwd?: string) {
     cwd,
     env: {
       NODE_ENV: 'production',
-      PLUGIN_NPM_REGISTRY: process.env.PLUGIN_NPM_REGISTRY || 'https://registry.npmjs.org/',
+      NODE_AUTH_TOKEN: process.env.NODE_AUTH_TOKEN || '',
     },
     timeout: 5 * 60 * 1000, // 5 minutes
     maxBuffer: 1024 * 1024, // 1MB buffer
@@ -148,16 +148,14 @@ export async function installPluginToTmpDir(name: string) {
       JSON.stringify({ license: 'ISC', workspaces: [] }, null, 2),
       'utf-8',
     );
-
+    // NPM_CONFIG_USERCONFIG is set in Github Actions by the Setup Node step
     const NPM_CONFIG_USERCONFIG = process.env.NPM_CONFIG_USERCONFIG;
     if (executeInGithubActions && NPM_CONFIG_USERCONFIG) {
+      // Execute in Github Actions
       // Use the existing .npmrc file created by the Setup Node step
-      // read and log the contents of the npmrc file
-      console.log(`Contents of npmrc file: ${await readFile(NPM_CONFIG_USERCONFIG)}`);
-      // Copy the existing .npmrc file to the temporary directory
       await cp(NPM_CONFIG_USERCONFIG, tempNpmrcPath);
     } else {
-      // Generate the npmrc file in the temporary directory
+      // Generate the npmrc file in the temporary directory when executed locally
       await writeFile(
         tempNpmrcPath,
         `registry = "${NPM_REGISTRY}"\n${scope}:registry = "${PLUGIN_NPM_REGISTRY}"\n${authString}`,
@@ -166,8 +164,6 @@ export async function installPluginToTmpDir(name: string) {
     }
 
     console.log(`[plugins] Installing plugin into temp dir: ${tmpDir}`);
-
-    console.log(`yarn config ${await runYarnCommand(['config', 'list'])}`);
 
     await runYarnCommand(
       [
