@@ -30,9 +30,9 @@ import {
   isRemoteProject,
   type Project,
 } from '../../../models/project';
+import type { StorageRules } from '../../organization-utils';
 import type { UpdateProjectActionResult } from '../../routes/$organizationId.project.$projectId.update';
 import type { InitGitCloneResult } from '../../routes/git-project-actions';
-import type { StorageRules } from '../../routes/organization';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../../routes/project';
 import { ErrorBoundary } from '../error-boundary';
 import { CustomRepositorySettingsFormGroup } from '../git-credentials/custom-repository-settings-form';

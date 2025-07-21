@@ -11,11 +11,9 @@ import {
   TooltipTrigger,
 } from 'react-aria-components';
 import {
-  type ActionFunction,
-  type LoaderFunction,
+  type LoaderFunctionArgs,
   NavLink,
   Outlet,
-  redirect,
   useFetcher,
   useLoaderData,
   useLocation,
@@ -25,28 +23,11 @@ import {
 } from 'react-router';
 import { useLocalStorage } from 'react-use';
 
-import * as session from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
-import { database } from '../../common/database';
 import { userSession } from '../../models';
-import { updateLocalProjectToRemote } from '../../models/helpers/project';
-import {
-  findPersonalOrganization,
-  isOwnerOfOrganization,
-  isPersonalOrganization,
-  isScratchpadOrganizationId,
-  type Organization,
-} from '../../models/organization';
-import { type Project, type as ProjectType } from '../../models/project';
+import { isOwnerOfOrganization, isPersonalOrganization, type Organization } from '../../models/organization';
 import type { Settings } from '../../models/settings';
 import { isScratchpad } from '../../models/workspace';
-import { VCSInstance } from '../../sync/vcs/insomnia-sync';
-import {
-  migrateProjectsIntoOrganization,
-  shouldMigrateProjectUnderOrganization,
-} from '../../sync/vcs/migrate-projects-into-organization';
-import { insomniaFetch } from '../../ui/insomniaFetch';
-import { invariant } from '../../utils/invariant';
 import { AsyncTask, getInitialRouteForOrganization } from '../../utils/router';
 import { getLoginUrl } from '../auth-session-provider';
 import { CommandPalette } from '../components/command-palette';
@@ -65,263 +46,10 @@ import { InsomniaEventStreamProvider } from '../context/app/insomnia-event-strea
 import { InsomniaTabProvider } from '../context/app/insomnia-tab-context';
 import { RunnerProvider } from '../context/app/runner-context';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
-import { syncProjects } from './project';
+import { type CurrentPlan, sortOrganizations, type UserProfileResponse } from '../organization-utils';
 import { useRootLoaderData } from './root';
 import type { UntrackedProjectsLoaderData } from './untracked-projects';
 import type { WorkspaceLoaderData } from './workspace';
-
-export interface OrganizationsResponse {
-  start: number;
-  limit: number;
-  length: number;
-  total: number;
-  next: string;
-  organizations: Organization[];
-}
-
-export interface UserProfileResponse {
-  id: string;
-  email: string;
-  name: string;
-  picture: string;
-  bio: string;
-  github: string;
-  linkedin: string;
-  twitter: string;
-  identities: any;
-  given_name: string;
-  family_name: string;
-}
-
-export type PersonalPlanType = 'free' | 'individual' | 'team' | 'enterprise' | 'enterprise-member';
-export const formatCurrentPlanType = (type: PersonalPlanType) => {
-  switch (type) {
-    case 'free': {
-      return 'Hobby';
-    }
-    case 'individual': {
-      return 'Individual';
-    }
-    case 'team': {
-      return 'Pro';
-    }
-    case 'enterprise': {
-      return 'Enterprise';
-    }
-    case 'enterprise-member': {
-      return 'Enterprise Member';
-    }
-    default: {
-      return 'Free';
-    }
-  }
-};
-type PaymentSchedules = 'month' | 'year';
-
-export interface CurrentPlan {
-  isActive: boolean;
-  period: PaymentSchedules;
-  planId: string;
-  price: number;
-  quantity: number;
-  type: PersonalPlanType;
-  planName: string;
-}
-
-function sortOrganizations(accountId: string, organizations: Organization[]): Organization[] {
-  const home = organizations.find(
-    organization =>
-      isPersonalOrganization(organization) &&
-      isOwnerOfOrganization({
-        organization,
-        accountId,
-      }),
-  );
-  const myOrgs = organizations
-    .filter(
-      organization =>
-        !isPersonalOrganization(organization) &&
-        isOwnerOfOrganization({
-          organization,
-          accountId,
-        }),
-    )
-    .sort((a, b) => a.name.localeCompare(b.name));
-  const notMyOrgs = organizations
-    .filter(
-      organization =>
-        !isOwnerOfOrganization({
-          organization,
-          accountId,
-        }),
-    )
-    .sort((a, b) => a.name.localeCompare(b.name));
-  return [...(home ? [home] : []), ...myOrgs, ...notMyOrgs];
-}
-
-async function syncOrganizations(sessionId: string, accountId: string) {
-  try {
-    const [organizationsResult, user, currentPlan] = await Promise.all([
-      insomniaFetch<OrganizationsResponse | void>({
-        method: 'GET',
-        path: '/v1/organizations',
-        sessionId,
-      }),
-      insomniaFetch<UserProfileResponse | void>({
-        method: 'GET',
-        path: '/v1/user/profile',
-        sessionId,
-      }),
-      insomniaFetch<CurrentPlan | void>({
-        method: 'GET',
-        path: '/v1/billing/current-plan',
-        sessionId,
-      }),
-    ]);
-
-    invariant(organizationsResult && organizationsResult.organizations, 'Failed to load organizations');
-    invariant(user && user.id, 'Failed to load user');
-    invariant(currentPlan && currentPlan.planId, 'Failed to load current plan');
-
-    const { organizations } = organizationsResult;
-
-    invariant(accountId, 'Account ID is not defined');
-
-    localStorage.setItem(`${accountId}:organizations`, JSON.stringify(sortOrganizations(accountId, organizations)));
-    localStorage.setItem(`${accountId}:user`, JSON.stringify(user));
-    localStorage.setItem(`${accountId}:currentPlan`, JSON.stringify(currentPlan));
-  } catch (error) {
-    console.log('[organization] Failed to load Organizations', error);
-  }
-}
-
-interface SyncOrgsAndProjectsActionRequest {
-  organizationId: string;
-  asyncTaskList: AsyncTask[];
-  projectId?: string;
-}
-
-// this action is used to run task that we dont want to block the UI
-export const syncOrgsAndProjectsAction: ActionFunction = async ({ request }) => {
-  try {
-    const {
-      organizationId,
-      projectId,
-      asyncTaskList = [],
-    } = (await request.json()) as SyncOrgsAndProjectsActionRequest;
-    const { id: sessionId, accountId } = await userSession.getOrCreate();
-
-    const taskPromiseList = [];
-    if (asyncTaskList.includes(AsyncTask.SyncOrganization)) {
-      invariant(sessionId, 'sessionId is required');
-      invariant(accountId, 'accountId is required');
-      taskPromiseList.push(syncOrganizations(sessionId, accountId));
-    }
-
-    if (asyncTaskList.includes(AsyncTask.MigrateProjects)) {
-      const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
-      invariant(organizations, 'Failed to fetch organizations.');
-      const personalOrganization = findPersonalOrganization(organizations, accountId);
-      invariant(personalOrganization, 'personalOrganization is required');
-      invariant(personalOrganization.id, 'personalOrganizationId is required');
-      invariant(sessionId, 'sessionId is required');
-      taskPromiseList.push(migrateProjectsUnderOrganization(personalOrganization.id, sessionId));
-    }
-
-    if (asyncTaskList.includes(AsyncTask.SyncProjects)) {
-      invariant(organizationId, 'organizationId is required');
-      taskPromiseList.push(syncProjects(organizationId));
-    }
-
-    await Promise.all(taskPromiseList);
-
-    // When user switch to a new organization, there is no project in db cache, we need to redirect to the first project after sync project
-    if (!projectId && asyncTaskList.includes(AsyncTask.SyncProjects)) {
-      const firstProject = await database.getWhere<Project>(ProjectType, { parentId: organizationId });
-      if (firstProject?._id) {
-        return redirect(`/organization/${organizationId}/project/${firstProject?._id}`);
-      }
-    }
-
-    return {};
-  } catch (error) {
-    console.log('Failed to run async task', error);
-    return {
-      error: error.message,
-    };
-  }
-};
-
-async function migrateProjectsUnderOrganization(personalOrganizationId: string, sessionId: string) {
-  if (await shouldMigrateProjectUnderOrganization()) {
-    await migrateProjectsIntoOrganization({
-      personalOrganizationId,
-    });
-
-    const preferredProjectType = localStorage.getItem('prefers-project-type');
-    if (preferredProjectType === 'remote') {
-      const localProjects = await database.find<Project>('Project', {
-        parentId: personalOrganizationId,
-        remoteId: null,
-      });
-
-      // If any of those fail projects will still be under the organization as local projects
-      for (const project of localProjects) {
-        updateLocalProjectToRemote({
-          project,
-          organizationId: personalOrganizationId,
-          sessionId,
-          vcs: VCSInstance(),
-        });
-      }
-    }
-  }
-}
-
-export const indexLoader: LoaderFunction = async () => {
-  const { id: sessionId, accountId } = await userSession.getOrCreate();
-  if (sessionId) {
-    await syncOrganizations(sessionId, accountId);
-
-    const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
-    invariant(organizations, 'Failed to fetch organizations.');
-
-    const personalOrganization = findPersonalOrganization(organizations, accountId);
-    invariant(
-      personalOrganization,
-      'Failed to find personal organization your account appears to be in an invalid state. Please contact support if this is a recurring issue.',
-    );
-    const personalOrganizationId = personalOrganization.id;
-    await migrateProjectsUnderOrganization(personalOrganizationId, sessionId);
-
-    const specificOrgRedirectAfterAuthorize = window.localStorage.getItem('specificOrgRedirectAfterAuthorize');
-    if (specificOrgRedirectAfterAuthorize && specificOrgRedirectAfterAuthorize !== '') {
-      window.localStorage.removeItem('specificOrgRedirectAfterAuthorize');
-      return redirect(`/organization/${specificOrgRedirectAfterAuthorize}`);
-    }
-
-    if (personalOrganization) {
-      return redirect(`/organization/${personalOrganizationId}`);
-    }
-
-    if (organizations.length > 0) {
-      return redirect(`/organization/${organizations[0].id}`);
-    }
-  }
-
-  await session.logout();
-  return redirect('/auth/login');
-};
-
-export const syncOrganizationsAction: ActionFunction = async () => {
-  const { id: sessionId, accountId } = await userSession.getOrCreate();
-
-  if (sessionId) {
-    await syncOrganizations(sessionId, accountId);
-  }
-
-  return null;
-};
 
 export interface OrganizationLoaderData {
   organizations: Organization[];
@@ -329,7 +57,7 @@ export interface OrganizationLoaderData {
   currentPlan?: CurrentPlan;
 }
 
-export const loader: LoaderFunction = async () => {
+export async function loader(_args: LoaderFunctionArgs) {
   const { id, accountId } = await userSession.getOrCreate();
   if (id) {
     const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
@@ -347,7 +75,7 @@ export const loader: LoaderFunction = async () => {
     user: undefined,
     currentPlan: undefined,
   };
-};
+}
 
 export interface FeatureStatus {
   enabled: boolean;
@@ -367,136 +95,10 @@ export interface Billing {
   accessDenied: boolean;
 }
 
-export const DEFAULT_STORAGE_RULES = {
-  enableCloudSync: true,
-  enableLocalVault: true,
-  enableGitSync: true,
-  isOverridden: false,
-};
-
-export interface StorageRules {
-  enableCloudSync: boolean;
-  enableLocalVault: boolean;
-  enableGitSync: boolean;
-  isOverridden: boolean;
-}
-
 export interface OrganizationFeatureLoaderData {
   featuresPromise: Promise<FeatureList>;
   billingPromise: Promise<Billing>;
 }
-export interface OrganizationStorageLoaderData {
-  storagePromise: Promise<StorageRules>;
-}
-
-// Create an in-memory storage to store the storage rules
-export const inMemoryStorageRuleCache: Map<string, StorageRules> = new Map<string, StorageRules>();
-
-export const organizationStorageLoader: LoaderFunction = async ({ params }): Promise<OrganizationStorageLoaderData> => {
-  const { organizationId } = params as { organizationId: string };
-  return {
-    storagePromise: fetchAndCacheOrganizationStorageRule(organizationId),
-  };
-};
-
-export const syncOrganizationStorageRuleAction: ActionFunction = async ({ params }) => {
-  const { organizationId } = params;
-  await fetchAndCacheOrganizationStorageRule(organizationId, true);
-  return null;
-};
-
-export async function fetchAndCacheOrganizationStorageRule(
-  organizationId: string | undefined,
-  forceFetch = false,
-): Promise<StorageRules> {
-  invariant(organizationId, 'Organization ID is required');
-
-  if (isScratchpadOrganizationId(organizationId)) {
-    return {
-      enableCloudSync: false,
-      enableLocalVault: true,
-      enableGitSync: false,
-      isOverridden: false,
-    };
-  }
-  if (!forceFetch) {
-    const storageRules = inMemoryStorageRuleCache.get(organizationId);
-    if (storageRules) {
-      return storageRules;
-    }
-  }
-  const { id: sessionId } = await userSession.getOrCreate();
-
-  // Otherwise fetch from the API
-  return await insomniaFetch<StorageRules>({
-    method: 'GET',
-    path: `/v1/organizations/${organizationId}/storage-rule`,
-    sessionId,
-    onlyResolveOnSuccess: true,
-  }).then(
-    res => {
-      if (res) {
-        inMemoryStorageRuleCache.set(organizationId, res);
-      }
-      return res || DEFAULT_STORAGE_RULES;
-    },
-    err => {
-      console.log('[storageRule] Failed to load storage rules', err.message);
-      return DEFAULT_STORAGE_RULES;
-    },
-  );
-}
-
-export const organizationPermissionsLoader: LoaderFunction = async ({
-  params,
-}): Promise<OrganizationFeatureLoaderData> => {
-  const { organizationId } = params as { organizationId: string };
-  const { id: sessionId, accountId } = await userSession.getOrCreate();
-  const fallbackFeatures = {
-    gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
-    orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
-  };
-
-  // If network unreachable assume user has paid for the current period
-  const fallbackBilling = {
-    isActive: true,
-    expirationWarningMessage: '',
-    expirationErrorMessage: '',
-    accessDenied: false,
-  };
-
-  if (isScratchpadOrganizationId(organizationId)) {
-    return {
-      featuresPromise: Promise.resolve(fallbackFeatures),
-      billingPromise: Promise.resolve(fallbackBilling),
-    };
-  }
-
-  const organizations = JSON.parse(localStorage.getItem(`${accountId}:organizations`) || '[]') as Organization[];
-  const organization = organizations.find(o => o.id === organizationId);
-
-  if (!organization) {
-    throw redirect('/organization');
-  }
-
-  try {
-    const featuresResponse = insomniaFetch<{ features: FeatureList; billing: Billing } | undefined>({
-      method: 'GET',
-      path: `/v1/organizations/${organizationId}/features`,
-      sessionId,
-    });
-
-    return {
-      featuresPromise: featuresResponse.then(res => res?.features || fallbackFeatures),
-      billingPromise: featuresResponse.then(res => res?.billing || fallbackBilling),
-    };
-  } catch (err) {
-    return {
-      featuresPromise: Promise.resolve(fallbackFeatures),
-      billingPromise: Promise.resolve(fallbackBilling),
-    };
-  }
-};
 
 export const useOrganizationLoaderData = () => {
   return useRouteLoaderData('/organization') as OrganizationLoaderData;
@@ -508,6 +110,7 @@ interface IndicatorProps {
   settings: Settings;
   sync: () => void;
 }
+
 const NetworkAndSyncIndicator = ({ user, asyncTaskStatus, settings, sync }: IndicatorProps) => {
   const [status, setStatus] = useState<'online' | 'offline'>('online');
   const navigate = useNavigate();
@@ -589,7 +192,7 @@ const NetworkAndSyncIndicator = ({ user, asyncTaskStatus, settings, sync }: Indi
   );
 };
 
-const OrganizationRoute = () => {
+const Component = () => {
   const { userSession, settings } = useRootLoaderData();
   const { billing } = useOrganizationPermissions();
 
@@ -627,7 +230,7 @@ const OrganizationRoute = () => {
         asyncTaskList,
       },
       {
-        action: '/organization/sync-orgs-and-projects',
+        action: '/organization/sync-organizations-and-projects',
         method: 'POST',
         encType: 'application/json',
       },
@@ -1058,4 +661,4 @@ const OrganizationRoute = () => {
   );
 };
 
-export default OrganizationRoute;
+export default Component;

@@ -47,10 +47,7 @@ import * as plugins from '../plugins/index';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '../templating/types';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
-import {
-  defaultSendActionRuntime,
-  type SendActionRuntime,
-} from '../ui/routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { type SendActionRuntime } from '../ui/routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { invariant } from '../utils/invariant';
 import { serializeNDJSON } from '../utils/ndjson';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../utils/url/querystring';
@@ -776,7 +773,7 @@ export const tryToTransformRequestWithPlugins = async (renderResult: {
   const { request, context } = renderResult;
   try {
     return await _applyRequestPluginHooks(request, context);
-  } catch (err) {
+  } catch {
     throw new Error(`Failed to transform request with plugins: ${request._id}`);
   }
 };
@@ -999,7 +996,7 @@ export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any;
   }
   try {
     return new URL(location.value, finalUrl).toString();
-  } catch (error) {
+  } catch {
     return finalUrl;
   }
 };
@@ -1066,3 +1063,8 @@ async function _applyResponsePluginHooks(
     };
   }
 }
+export const defaultSendActionRuntime = {
+  appendTimeline: async (timelinePath: string, logs: string[]) => {
+    await fs.promises.appendFile(timelinePath, logs.join('\n'));
+  },
+};

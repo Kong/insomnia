@@ -1,5 +1,4 @@
 import { createWriteStream } from 'node:fs';
-import fs from 'node:fs';
 import path from 'node:path';
 
 import * as contentDisposition from 'content-disposition';
@@ -49,6 +48,7 @@ import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from 
 import { isWebSocketResponse, type WebSocketResponse } from '../../models/websocket-response';
 import { getAuthHeader } from '../../network/authentication';
 import {
+  defaultSendActionRuntime,
   fetchRequestData,
   responseTransform,
   sendCurlAndWriteTimeline,
@@ -86,12 +86,6 @@ export interface RequestLoaderData {
   requestVersions: RequestVersion[];
   mockServerAndRoutes: (MockServer & { routes: MockRoute[] })[];
 }
-
-export const defaultSendActionRuntime = {
-  appendTimeline: async (timelinePath: string, logs: string[]) => {
-    await fs.promises.appendFile(timelinePath, logs.join('\n'));
-  },
-};
 
 export const loader: LoaderFunction = async ({
   params,

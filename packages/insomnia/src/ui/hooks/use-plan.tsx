@@ -1,12 +1,13 @@
-import { useParams, useRouteLoaderData } from 'react-router';
+import { useParams } from 'react-router';
 
 import { isOwnerOfOrganization } from '../../models/organization';
-import { formatCurrentPlanType, type OrganizationLoaderData } from '../routes/organization';
+import { formatCurrentPlanType } from '../organization-utils';
+import { useOrganizationLoaderData } from '../routes/organization';
 import { useRootLoaderData } from '../routes/root';
 
 export const usePlanData = () => {
   const { organizationId } = useParams<{ organizationId: string }>();
-  const { currentPlan, organizations } = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  const { currentPlan, organizations } = useOrganizationLoaderData();
   const { userSession } = useRootLoaderData();
   const currentOrg = organizations.find(organization => organization.id === organizationId);
   const accountId = userSession.accountId;

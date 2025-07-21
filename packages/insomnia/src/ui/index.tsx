@@ -39,7 +39,9 @@ const UnitTest = lazy(() => import('./routes/$organizationId.project.$projectId.
 const Debug = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.debug'));
 const Design = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.spec'));
 const MockServer = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server'));
-const Environments = lazy(() => import('./routes/environments'));
+const Environments = lazy(
+  () => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.environment'),
+);
 
 initializeSentry();
 initializeLogging();
@@ -180,11 +182,11 @@ async function renderApp() {
             children: [
               {
                 path: 'scan',
-                action: async (...args) => (await import('./routes/import')).scanForResourcesAction(...args),
+                action: async args => (await import('./routes/import.scan')).action(args),
               },
               {
                 path: 'resources',
-                action: async (...args) => (await import('./routes/import')).importResourcesAction(...args),
+                action: async args => (await import('./routes/import.resources')).action(args),
               },
             ],
           },
@@ -216,7 +218,7 @@ async function renderApp() {
           {
             path: 'organization',
             id: '/organization',
-            loader: async (...args) => (await import('./routes/organization')).loader(...args),
+            loader: async args => (await import('./routes/organization')).loader(args),
             element: (
               <Suspense fallback={<AppLoadingIndicator />}>
                 <Organization />
@@ -228,15 +230,16 @@ async function renderApp() {
             children: [
               {
                 index: true,
-                loader: async (...args) => (await import('./routes/organization')).indexLoader(...args),
+                loader: async args => (await import('./routes/organization._index')).loader(args),
               },
               {
                 path: 'sync',
-                action: async (...args) => (await import('./routes/organization')).syncOrganizationsAction(...args),
+                action: async args => (await import('./routes/organization.sync')).action(args),
               },
               {
-                path: 'sync-orgs-and-projects',
-                action: async (...args) => (await import('./routes/organization')).syncOrgsAndProjectsAction(...args),
+                path: 'sync-organizations-and-projects',
+                action: async args =>
+                  (await import('./routes/organization.sync-organizations-and-projects')).action(args),
               },
               {
                 path: ':organizationId',
@@ -263,19 +266,13 @@ async function renderApp() {
                   },
                   {
                     path: 'permissions',
-                    loader: async (...args) =>
-                      (await import('./routes/organization')).organizationPermissionsLoader(...args),
+                    loader: async args => (await import('./routes/$organizationId.permissions')).loader(args),
                     shouldRevalidate: data => data.currentParams.organizationId !== data.nextParams.organizationId,
                   },
                   {
-                    path: 'storage-rule',
-                    loader: async (...args) =>
-                      (await import('./routes/organization')).organizationStorageLoader(...args),
-                  },
-                  {
-                    path: 'sync-storage-rule',
-                    action: async (...args) =>
-                      (await import('./routes/organization')).syncOrganizationStorageRuleAction(...args),
+                    path: 'storage-rules',
+                    loader: async args => (await import('./routes/$organizationId.storage-rules')).loader(args),
+                    action: async args => (await import('./routes/$organizationId.storage-rules')).action(args),
                   },
                   {
                     path: 'sync-projects',

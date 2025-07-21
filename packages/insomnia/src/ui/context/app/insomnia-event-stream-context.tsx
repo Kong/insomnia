@@ -186,7 +186,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               submit(
                 {},
                 {
-                  action: `/organization/${orgId}/sync-storage-rule`,
+                  action: `/organization/${orgId}/storage-rules`,
                   method: 'POST',
                 },
               );
