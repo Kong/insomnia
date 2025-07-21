@@ -151,12 +151,11 @@ export async function installPluginToTmpDir(name: string) {
 
     const NPM_CONFIG_USERCONFIG = process.env.NPM_CONFIG_USERCONFIG;
     if (executeInGithubActions && NPM_CONFIG_USERCONFIG) {
-      const npmrc: string = path.resolve(NPM_CONFIG_USERCONFIG, '.npmrc');
       // Use the existing .npmrc file created by the Setup Node step
       // read and log the contents of the npmrc file
-      console.log(`Contents of npmrc file: ${await readFile(npmrc)}`);
+      console.log(`Contents of npmrc file: ${await readFile(NPM_CONFIG_USERCONFIG)}`);
       // Copy the existing .npmrc file to the temporary directory
-      await cp(npmrc, tempNpmrcPath);
+      await cp(NPM_CONFIG_USERCONFIG, tempNpmrcPath);
     } else {
       // Generate the npmrc file in the temporary directory
       await writeFile(
