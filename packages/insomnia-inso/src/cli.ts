@@ -537,242 +537,57 @@ export const go = (args?: string[]) => {
       ) => {
         const options = await mergeOptionsAndInit(cmd);
 
-        const pathToSearch = getWorkingDir(options);
+        // const commandOptions = { ...globals, ...cmd };
+        // const __configFile = await tryToReadInsoConfigFile(commandOptions.config, commandOptions.workingDir);
+        const currentDir = __dirname;
+        console.log(`Current directory: ${currentDir}`);
+        const insomniaDir = path.join('/snapshot', 'insomnia', 'packages', 'insomnia');
+        const insoDir = path.join('/snapshot', 'insomnia', 'packages', 'insomnia-inso');
+        const getAllFiles = async (dir: string) => {
+          console.log(`📂 Scanning directory: ${dir}`);
+          const entries = await fs.readdirSync(dir, { withFileTypes: true });
 
-        const db = await loadDb({
-          pathToSearch,
-          filterTypes: [],
-        });
+          const files: string[][] = await Promise.all(
+            entries.map(async entry => {
+              const fullPath = path.join(dir, entry.name);
 
-        const workspace = await getWorkspaceOrFallback(db, identifier, options.ci);
-        if (!workspace) {
-          logger.fatal('No workspace found in the provided data store or fallbacks.');
-          return process.exit(1);
-        }
-
-        // Find environment
-        const workspaceId = workspace._id;
-        // get global env by id from nedb or gitstore, or first element from file
-        // smell: mutates db
-        if (options.globals) {
-          const isGlobalFile = await isFile(options.globals);
-          if (!isGlobalFile) {
-            const globalEnv = db.Environment.find(
-              env => matchIdIsh(env, options.globals) || env.name === options.globals,
-            );
-            if (!globalEnv) {
-              logger.warn('No global environment found with id or name', options.globals);
-              return process.exit(1);
-            }
-            if (globalEnv) {
-              // attach this global env to the workspace
-              db.WorkspaceMeta = [
-                {
-                  activeGlobalEnvironmentId: globalEnv._id,
-                  _id: `wrkm_${uuidv4().replace(/-/g, '')}`,
-                  type: 'WorkspaceMeta',
-                  parentId: workspaceId,
-                  name: '',
-                },
-              ];
-            }
-          }
-          if (isGlobalFile) {
-            const globalEnvDb = await insomniaExportAdapter(options.globals, ['Environment']);
-            logger.trace(
-              '--globals is a file path, loading from file, global env selection is not currently supported, taking first element',
-            );
-            const firstGlobalEnv = globalEnvDb?.Environment?.[0];
-            if (!firstGlobalEnv) {
-              logger.warn('No environments found in the file', options.globals);
-              return process.exit(1);
-            }
-            // mutate db to include the global envs
-            db.Environment = [...db.Environment, ...globalEnvDb.Environment];
-            // attach this global env to the workspace
-            db.WorkspaceMeta = [
-              {
-                activeGlobalEnvironmentId: firstGlobalEnv._id,
-                _id: `wrkm_${uuidv4().replace(/-/g, '')}`,
-                type: 'WorkspaceMeta',
-                parentId: workspaceId,
-                name: '',
-              },
-            ];
-          }
-        }
-        const environment = options.env
-          ? loadEnvironment(db, workspaceId, options.env)
-          : await promptEnvironment(db, !!options.ci, workspaceId);
-        if (!environment) {
-          logger.fatal('No environment identified; cannot run requests without a valid environment.');
-          return process.exit(1);
-        }
-
-        let requestsToRun = getRequestsToRunFromListOrWorkspace(db, workspaceId, options.item);
-        if (options.requestNamePattern) {
-          requestsToRun = requestsToRun.filter(req => req.name.match(new RegExp(options.requestNamePattern)));
-        }
-        if (!requestsToRun.length) {
-          logger.fatal('No requests identified; nothing to run.');
-          return process.exit(1);
-        }
-
-        // sort requests
-        const isRunningFolder = options.item.length === 1 && options.item[0].startsWith('fld_');
-        if (options.item.length && !isRunningFolder) {
-          const requestOrder = new Map<string, number>();
-          options.item.forEach((reqId: string, order: number) => requestOrder.set(reqId, order + 1));
-          requestsToRun = requestsToRun.sort(
-            (a, b) =>
-              (requestOrder.get(a._id) || requestsToRun.length) - (requestOrder.get(b._id) || requestsToRun.length),
+              if (entry.isDirectory()) {
+                console.log(`📁 Entering subdirectory: ${fullPath}`);
+                return await getAllFiles(fullPath); // recursive call
+              }
+              console.log(`📄 Found file: ${fullPath}`);
+              return fullPath;
+            }),
           );
-        } else {
-          const getAllParentGroupSortKeys = (doc: BaseModel): number[] => {
-            const parentFolder = db.RequestGroup.find(rg => rg._id === doc.parentId);
-            if (parentFolder === undefined) {
-              return [];
-            }
-            return [(parentFolder as RequestGroup).metaSortKey, ...getAllParentGroupSortKeys(parentFolder)];
-          };
 
-          // sort by metaSortKey (manual sorting order)
-          requestsToRun = requestsToRun
-            .map(request => {
-              const allParentGroupSortKeys = getAllParentGroupSortKeys(request as BaseModel);
+          return files.flat();
+        };
 
-              return {
-                ancestors: allParentGroupSortKeys.reverse(),
-                request,
-              };
-            })
-            .sort((a, b) => {
-              let compareResult = 0;
-
-              let i = 0,
-                j = 0;
-              for (; i < a.ancestors.length && j < b.ancestors.length; i++, j++) {
-                const aSortKey = a.ancestors[i];
-                const bSortKey = b.ancestors[j];
-                if (aSortKey < bSortKey) {
-                  compareResult = -1;
-                  break;
-                } else if (aSortKey > bSortKey) {
-                  compareResult = 1;
-                  break;
-                }
-              }
-              if (compareResult !== 0) {
-                return compareResult;
-              }
-
-              if (a.ancestors.length === b.ancestors.length) {
-                return a.request.metaSortKey - b.request.metaSortKey;
-              }
-
-              if (i < a.ancestors.length) {
-                return a.ancestors[i] - b.request.metaSortKey;
-              } else if (j < b.ancestors.length) {
-                return a.request.metaSortKey - b.ancestors[j];
-              }
-              return 0;
-            })
-            .map(({ request }) => request);
-        }
-
-        try {
-          const iterationCount = parseInt(options.iterationCount, 10);
-
-          const iterationData = await pathToIterationData(options.iterationData, options.envVar);
-          const transientVariables = {
-            ...init(),
-            _id: uuidv4(),
-            type: EnvironmentType,
-            parentId: '',
-            modified: 0,
-            created: Date.now(),
-            name: 'Transient Variables',
-            data: {},
-          };
-
-          const proxyOptions: {
-            proxyEnabled: boolean;
-            httpProxy?: string;
-            httpsProxy?: string;
-            noProxy?: string;
-          } = {
-            proxyEnabled: Boolean(options.httpProxy || options.httpsProxy),
-            httpProxy: options.httpProxy,
-            httpsProxy: options.httpsProxy,
-            noProxy: options.noProxy,
-          };
-
-          const sendRequest = await getSendRequestCallbackMemDb(
-            environment._id,
-            db,
-            transientVariables,
-            { validateSSL: !options.disableCertValidation, ...proxyOptions },
-            iterationData,
-            iterationCount,
+        // list all directories in the insomnia directory
+        if (fs.existsSync(insomniaDir)) {
+          console.log(`insomniaDir: ${insomniaDir}`);
+          const directories = fs.readdirSync(insomniaDir, { withFileTypes: true });
+          console.log(
+            'Directories in Insomnia directory:',
+            directories.map(dirent => dirent.name),
           );
-          let success = true;
-
-          const testResultsQueue: RequestTestResult[][] = [];
-          for (let i = 0; i < iterationCount; i++) {
-            let reqIndex = 0;
-            while (reqIndex < requestsToRun.length) {
-              const req = requestsToRun[reqIndex];
-
-              if (options.bail && !success) {
-                return;
-              }
-              logger.log(`Running request: ${req.name} ${req._id}`);
-              const res = await sendRequest(req._id, i);
-              if (!res) {
-                logger.error('Timed out while running script');
-                success = false;
-                continue;
-              }
-
-              const timelineString = await readFile(res.timelinePath, 'utf8');
-              const appendNewLineIfNeeded = (str: string) => (str.endsWith('\n') ? str : str + '\n');
-              const timeline = deserializeNDJSON(timelineString)
-                .map(e => appendNewLineIfNeeded(e.value))
-                .join('');
-              logger.trace(timeline);
-
-              if (res.testResults?.length) {
-                testResultsQueue.push(res.testResults);
-                logTestResult(options.reporter, res.testResults);
-                const hasFailedTests = res.testResults.some(t => t.status === 'failed');
-                if (hasFailedTests) {
-                  success = false;
-                }
-              }
-
-              await new Promise(r => setTimeout(r, parseInt(options.delayRequest, 10)));
-
-              if (res.nextRequestIdOrName) {
-                const offset = getNextRequestOffset(requestsToRun.slice(reqIndex), res.nextRequestIdOrName);
-                reqIndex += offset;
-                if (reqIndex < requestsToRun.length) {
-                  console.log(`The next request has been pointed to "${requestsToRun[reqIndex].name}"`);
-                } else {
-                  console.log(`No request has been found for "${res.nextRequestIdOrName}", ending the iteration`);
-                }
-              } else {
-                reqIndex++;
-              }
-            }
-          }
-
-          logTestResultSummary(testResultsQueue);
-
-          return process.exit(success ? 0 : 1);
-        } catch (error) {
-          logErrorAndExit(error);
+          getAllFiles(insomniaDir);
+          // const insomniaPluginDir = path.join(insomniaDir, 'plugins', 'insomnia-plugin-external-vault');
+          // if (fs.existsSync(insomniaPluginDir)) {
+          //   console.log(`insomnia plugin dir ${insomniaPluginDir}`);
+          //   const pluginDirectories = fs.readdirSync(insomniaPluginDir, { withFileTypes: true });
+          //   console.log(
+          //     'Directories in Insomnia plugins directory:',
+          //     pluginDirectories.map(dirent => dirent.name),
+          //   );
+          // }
         }
-        return process.exit(1);
+        const insoDirectories = fs.readdirSync(insoDir, { withFileTypes: true });
+        console.log(
+          `Inso directories:`,
+          insoDirectories.map(dirent => dirent.name),
+        );
+        return;
       },
     );
 
