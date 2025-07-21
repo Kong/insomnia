@@ -37,9 +37,10 @@ import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
-import { showError, showPrompt } from '../modals';
+import { showError, showModal } from '../modals';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { ImportModal } from '../modals/import-modal';
+import { PromptModal } from '../modals/prompt-modal';
 import { WorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
 import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
 
@@ -234,7 +235,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
           name: 'Rename',
           icon: <Icon icon="pen-to-square" />,
           action: () =>
-            showPrompt({
+            showModal(PromptModal, {
               title: `Rename ${getWorkspaceLabel(activeWorkspace).singular}`,
               defaultValue: activeWorkspace.name,
               submitName: 'Rename',

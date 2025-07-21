@@ -27,7 +27,8 @@ import {
 } from '../../routes/git-actions';
 import { ConfigLink } from '../github-app-config-link';
 import { Icon } from '../icon';
-import { showAlert, showModal } from '../modals';
+import { showModal } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
 import { GitBranchesModal } from '../modals/git-branches-modal';
 import { GitLogModal } from '../modals/git-log-modal';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
@@ -97,7 +98,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
   useEffect(() => {
     const errors = [...(gitPushFetcher.data?.errors ?? [])];
     if (errors.length > 0) {
-      showAlert({
+      showModal(AlertModal, {
         title: 'Push Failed',
         message: (
           <>
@@ -118,7 +119,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
         // user just clicked 'Reset'
         return;
       }
-      showAlert({
+      showModal(AlertModal, {
         title: 'Loading of Git Repository Failed',
         message: errors.join('\n'),
       });
@@ -128,7 +129,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
   useEffect(() => {
     const errors = [...(gitCheckoutFetcher.data?.errors ?? [])];
     if (errors.length > 0) {
-      showAlert({
+      showModal(AlertModal, {
         title: 'Checkout Failed',
         message: errors.join('\n'),
       });
@@ -198,7 +199,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
               await pullFromGitRemote({ projectId, workspaceId })
                 .then(result => {
                   if ('errors' in result && result.errors) {
-                    showAlert({
+                    showModal(AlertModal, {
                       title: 'Pull Failed',
                       message: (
                         <>
@@ -239,7 +240,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
                 });
             } catch (err) {
               const errorMessage = err instanceof Error ? err.message : 'An error occurred while pulling';
-              showAlert({
+              showModal(AlertModal, {
                 title: 'Pull Failed',
                 message: (
                   <>

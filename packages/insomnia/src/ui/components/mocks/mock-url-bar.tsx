@@ -15,9 +15,10 @@ import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemConte
 import type { OneLineEditorHandle } from '../codemirror/one-line-editor';
 import { Icon } from '../icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
-import { showModal, showPrompt } from '../modals';
+import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
+import { PromptModal } from '../modals/prompt-modal';
 
 export const MockUrlBar = ({
   onPathUpdate,
@@ -174,7 +175,7 @@ export const MockUrlBar = ({
                 icon="clock-o"
                 label="Send After Delay"
                 onClick={() =>
-                  showPrompt({
+                  showModal(PromptModal, {
                     inputType: 'decimal',
                     title: 'Send After Delay',
                     label: 'Delay in seconds',
@@ -191,7 +192,7 @@ export const MockUrlBar = ({
                 icon="repeat"
                 label="Repeat on Interval"
                 onClick={() =>
-                  showPrompt({
+                  showModal(PromptModal, {
                     inputType: 'decimal',
                     title: 'Send on Interval',
                     label: 'Interval in seconds',

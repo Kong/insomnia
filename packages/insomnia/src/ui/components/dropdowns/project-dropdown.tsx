@@ -7,7 +7,8 @@ import type { GitRepository } from '../../../models/git-repository';
 import { getProjectStorageTypeLabel, isGitProject, isRemoteProject, type Project } from '../../../models/project';
 import type { StorageRules } from '../../organization-utils';
 import { Icon } from '../icon';
-import { showAlert, showModal } from '../modals';
+import { showModal } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
 import { AskModal } from '../modals/ask-modal';
 import { ProjectModal } from '../modals/project-modal';
 
@@ -78,7 +79,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
 
   useEffect(() => {
     if (deleteProjectFetcher.data && deleteProjectFetcher.data.error && deleteProjectFetcher.state === 'idle') {
-      showAlert({
+      showModal(AlertModal, {
         title: 'Could not delete project',
         message: deleteProjectFetcher.data.error,
       });
@@ -87,7 +88,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId, storageRul
 
   useEffect(() => {
     if (updateProjectFetcher.data && updateProjectFetcher.data.error && updateProjectFetcher.state === 'idle') {
-      showAlert({
+      showModal(AlertModal, {
         title: 'Could not update project',
         message: updateProjectFetcher.data.error,
       });

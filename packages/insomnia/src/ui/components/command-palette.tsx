@@ -34,7 +34,8 @@ import type { RootLoaderData } from '../routes/root';
 import { AvatarGroup } from './avatar';
 import { Icon } from './icon';
 import { useDocBodyKeyboardShortcuts } from './keydown-binder';
-import { showAlert } from './modals';
+import { showModal } from './modals';
+import { AlertModal } from './modals/alert-modal';
 import { getMethodShortHand } from './tags/method-tag';
 
 export const CommandPalette = memo(function CommandPalette({ style = {} }: { style?: React.CSSProperties }) {
@@ -412,7 +413,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   useEffect(() => {
     if (pullFileFetcher.state === 'idle' && prevPullFetcherState.current !== 'idle') {
       if (pullFileFetcher.data?.error) {
-        showAlert({
+        showModal(AlertModal, {
           title: 'Error',
           message: pullFileFetcher.data.error,
         });

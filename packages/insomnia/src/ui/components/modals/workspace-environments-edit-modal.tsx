@@ -37,7 +37,8 @@ import { EnvironmentEditor, type EnvironmentEditorHandle, type EnvironmentInfo }
 import { EnvironmentKVEditor } from '../editors/environment-key-value-editor/key-value-editor';
 import { handleToggleEnvironmentType } from '../editors/environment-utils';
 import { Icon } from '../icon';
-import { showAlert } from '.';
+import { showModal } from '.';
+import { AlertModal } from './alert-modal';
 
 export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => void }) => {
   const { organizationId, projectId, workspaceId } = useParams<{
@@ -99,7 +100,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
       name: 'Delete',
       icon: 'trash',
       action: async (environment: Environment) => {
-        showAlert({
+        showModal(AlertModal, {
           title: 'Delete Environment',
           message: `Are you sure you want to delete "${environment.name}"?`,
           addCancel: true,

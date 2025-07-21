@@ -43,7 +43,8 @@ import { EnvironmentKVEditor } from '../components/editors/environment-key-value
 import { handleToggleEnvironmentType } from '../components/editors/environment-utils';
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
-import { showAlert } from '../components/modals';
+import { showModal } from '../components/modals';
+import { AlertModal } from '../components/modals/alert-modal';
 import { InputVaultKeyModal } from '../components/modals/input-vault-key-modal';
 import { OrganizationTabList } from '../components/tabs/tab-list';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
@@ -117,7 +118,7 @@ const Environments = () => {
       name: 'Delete',
       icon: 'trash',
       action: async (environment: Environment) => {
-        showAlert({
+        showModal(AlertModal, {
           title: 'Delete Environment',
           message: `Are you sure you want to delete "${environment.name}"?`,
           addCancel: true,

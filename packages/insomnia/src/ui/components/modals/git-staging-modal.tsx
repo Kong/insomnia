@@ -20,7 +20,8 @@ import type { GitChangesLoaderData, GitDiffResult } from '../../routes/git-actio
 import { DiffEditor } from '../diff-view-editor';
 import { ConfigLink } from '../github-app-config-link';
 import { Icon } from '../icon';
-import { showAlert } from '.';
+import { showModal } from '.';
+import { AlertModal } from './alert-modal';
 
 export const GitStagingModal: FC<{ onClose: () => void }> = ({ onClose }) => {
   const { organizationId, projectId, workspaceId } = useParams() as {
@@ -77,7 +78,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({ onClose }) => {
   }
 
   function undoUnstagedChanges(paths: string[]) {
-    showAlert({
+    showModal(AlertModal, {
       message:
         'Are you sure you want to undo your changes? This action cannot be undone and will revert all changes made since the last commit that are unstaged.',
       title: 'Undo changes',

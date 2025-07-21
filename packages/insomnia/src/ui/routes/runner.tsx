@@ -46,7 +46,8 @@ import { Dropdown, DropdownItem, ItemContent } from '../components/base/dropdown
 import { ErrorBoundary } from '../components/error-boundary';
 import { HelpTooltip } from '../components/help-tooltip';
 import { Icon } from '../components/icon';
-import { showAlert } from '../components/modals';
+import { showModal } from '../components/modals';
+import { AlertModal } from '../components/modals/alert-modal';
 import { CLIPreviewModal } from '../components/modals/cli-preview-modal';
 import { UploadDataModal, type UploadDataType } from '../components/modals/upload-runner-data-modal';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
@@ -361,7 +362,7 @@ export const Runner: FC<{}> = () => {
   }, [executionResult, errorMsg]);
 
   const showErrorAlert = (error: string) => {
-    showAlert({
+    showModal(AlertModal, {
       title: 'Unexpected Runner Failure',
       message: (
         <div>

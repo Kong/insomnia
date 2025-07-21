@@ -29,9 +29,11 @@ import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemConte
 import { OneLineEditor, type OneLineEditorHandle } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
+import { showModal } from './modals';
+import { AlertModal } from './modals/alert-modal';
 import { GenerateCodeModal } from './modals/generate-code-modal';
-import { showAlert, showModal, showPrompt } from './modals/index';
 import { InputVaultKeyModal } from './modals/input-vault-key-modal';
+import { PromptModal } from './modals/prompt-modal';
 import { VariableMissingErrorModal } from './modals/variable-missing-error-modal';
 
 interface Props {
@@ -61,7 +63,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
         setUndefinedEnvironmentVariables(searchParams.get('undefinedEnvironmentVariables')!);
       } else {
         // only for request render error
-        showAlert({
+        showModal(AlertModal, {
           title: 'Unexpected Request Failure',
           message: (
             <div>
@@ -199,7 +201,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
         try {
           send({ requestId, shouldPromptForPathAfterResponse, ignoreUndefinedEnvVariable });
         } catch (err) {
-          showAlert({
+          showModal(AlertModal, {
             title: 'Unexpected Request Failure',
             message: (
               <div>
@@ -362,7 +364,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                           icon="clock-o"
                           label="Send After Delay"
                           onClick={() =>
-                            showPrompt({
+                            showModal(PromptModal, {
                               inputType: 'decimal',
                               title: 'Send After Delay',
                               label: 'Delay in seconds',
@@ -379,7 +381,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                           icon="repeat"
                           label="Repeat on Interval"
                           onClick={() =>
-                            showPrompt({
+                            showModal(PromptModal, {
                               inputType: 'decimal',
                               title: 'Send on Interval',
                               label: 'Interval in seconds',

@@ -23,7 +23,8 @@ import { insomniaFetch } from '../../../insomniaFetch';
 import type { Collaborator, CollaboratorsListLoaderResult } from '../../../routes/invite';
 import { PromptButton } from '../../base/prompt-button';
 import { Icon } from '../../icon';
-import { showAlert } from '../index';
+import { AlertModal } from '../alert-modal';
+import { showModal } from '../index';
 import { InviteForm } from './invite-form';
 import { OrganizationMemberRolesSelector, type Role, SELECTOR_TYPE } from './organization-member-roles-selector';
 
@@ -358,7 +359,7 @@ const MemberListItem: FC<{
             isDisabled={reinviting}
             onPress={async () => {
               if (!permissionRef.current['update:membership']) {
-                showAlert({
+                showModal(AlertModal, {
                   title: 'Permission required',
                   message: "You don't have permission to make this action, please contact the organization owner.",
                 });
@@ -429,7 +430,7 @@ const MemberListItem: FC<{
               className="pressed:bg-opacity-40 flex min-w-[70px] cursor-pointer items-center justify-center gap-2 rounded-sm bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 bg-clip-padding p-1 text-sm text-[--color-font-surprise] outline-none transition-all hover:bg-opacity-80 focus-visible:ring-2 focus-visible:ring-white/75"
               onPress={() => {
                 if (!permissionRef.current['own:organization']) {
-                  showAlert({
+                  showModal(AlertModal, {
                     title: 'Permission required',
                     message: "You don't have permission to make this action, please contact the organization owner.",
                   });
@@ -452,7 +453,7 @@ const MemberListItem: FC<{
           disabled={memberRoleName === 'owner' || isCurrentUser}
           onClick={() => {
             if (!permissionRef.current['delete:membership']) {
-              showAlert({
+              showModal(AlertModal, {
                 title: 'Permission required',
                 message: "You don't have permission to make this action, please contact the organization owner.",
               });

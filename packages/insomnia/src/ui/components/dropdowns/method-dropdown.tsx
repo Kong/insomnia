@@ -3,7 +3,8 @@ import { Button } from 'react-aria-components';
 
 import { HTTP_METHODS } from '../../../common/constants';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
-import { showPrompt } from '../modals/index';
+import { showModal } from '../modals/index';
+import { PromptModal } from '../modals/prompt-modal';
 
 const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
 
@@ -20,7 +21,7 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({ method, onCha
   const [recent, setRecent] = useState(parsedLocalStorageHttpMethods);
 
   const handleSetCustomMethod = useCallback(() => {
-    showPrompt({
+    showModal(PromptModal, {
       defaultValue: method,
       title: 'HTTP Method',
       submitName: 'Done',

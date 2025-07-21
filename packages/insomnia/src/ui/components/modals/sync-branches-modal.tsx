@@ -15,7 +15,8 @@ import { useFetcher, useParams } from 'react-router';
 
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
-import { showAlert } from '.';
+import { showModal } from '.';
+import { AlertModal } from './alert-modal';
 
 const LocalBranchItem = ({
   branch,
@@ -43,7 +44,7 @@ const LocalBranchItem = ({
     ) {
       const error: string =
         checkoutBranchFetcher.data.error || 'An unexpected error occurred while checking out the branch.';
-      showAlert({
+      showModal(AlertModal, {
         title: 'Error while checking out branch.',
         message: error,
       });
@@ -58,7 +59,7 @@ const LocalBranchItem = ({
       mergeBranchFetcher.state === 'idle'
     ) {
       const error: string = mergeBranchFetcher.data.error || 'An unexpected error occurred while merging the branches.';
-      showAlert({
+      showModal(AlertModal, {
         title: 'Error while merging branches.',
         message: error,
       });
@@ -73,7 +74,7 @@ const LocalBranchItem = ({
       deleteBranchFetcher.state === 'idle'
     ) {
       const error: string = deleteBranchFetcher.data.error || 'An unexpected error occurred while deleting the branch.';
-      showAlert({
+      showModal(AlertModal, {
         title: 'Error while deleting branch',
         message: error,
       });
@@ -183,7 +184,7 @@ const RemoteBranchItem = ({
       pullBranchFetcher.state === 'idle'
     ) {
       const error: string = pullBranchFetcher.data.error || 'An unexpected error occurred while pulling the branch.';
-      showAlert({
+      showModal(AlertModal, {
         title: 'Error while pulling branch.',
         message: error,
       });
@@ -198,7 +199,7 @@ const RemoteBranchItem = ({
       deleteBranchFetcher.state === 'idle'
     ) {
       const error: string = deleteBranchFetcher.data.error || 'An unexpected error occurred while deleting the branch.';
-      showAlert({
+      showModal(AlertModal, {
         title: 'Error while deleting branch.',
         message: error,
       });

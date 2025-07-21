@@ -17,9 +17,10 @@ import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
-import { showError, showModal, showPrompt } from '../modals';
+import { showError, showModal } from '../modals';
 import { AskModal } from '../modals/ask-modal';
 import { PasteCurlModal } from '../modals/paste-curl-modal';
+import { PromptModal } from '../modals/prompt-modal';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 interface Props extends Partial<DropdownProps> {
   requestGroup: RequestGroup;
@@ -66,7 +67,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
   };
 
   const handleRequestGroupDuplicate = () => {
-    showPrompt({
+    showModal(PromptModal, {
       title: 'Duplicate Folder',
       defaultValue: requestGroup.name,
       submitName: 'Create',
@@ -214,7 +215,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
           name: 'New Folder',
           icon: 'folder',
           action: () =>
-            showPrompt({
+            showModal(PromptModal, {
               title: 'New Folder',
               defaultValue: 'My Folder',
               submitName: 'Create',

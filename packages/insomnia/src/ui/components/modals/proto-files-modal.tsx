@@ -18,7 +18,8 @@ import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { type ExpandedProtoDirectory, ProtoFileList } from '../proto-file/proto-file-list';
 import { AsyncButton } from '../themed-button';
-import { showAlert, showError } from '.';
+import { showError, showModal } from '.';
+import { AlertModal } from './alert-modal';
 const tryToSelectFilePath = async () => {
   try {
     const { filePath, canceled } = await selectFileOrFolder({ itemTypes: ['file'], extensions: ['proto'] });
@@ -156,7 +157,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
 
       // Show warning if no files found
       if (!createdDir) {
-        showAlert({
+        showModal(AlertModal, {
           title: 'No files found',
           message: `No .proto files were found under ${filePath}.`,
         });
@@ -226,7 +227,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
   };
 
   const handleDeleteDirectory = (protoDirectory: ProtoDirectory) => {
-    showAlert({
+    showModal(AlertModal, {
       title: `Delete ${protoDirectory.name}`,
       message: (
         <span>
@@ -242,7 +243,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
     });
   };
   const handleDeleteFile = (protoFile: ProtoFile) => {
-    showAlert({
+    showModal(AlertModal, {
       title: `Delete ${protoFile.name}`,
       message: (
         <span>

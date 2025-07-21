@@ -19,7 +19,7 @@ import { isRequest } from 'insomnia/src/models/request';
 import { isScratchpad, isWorkspace, type Workspace } from 'insomnia/src/models/workspace';
 import { SegmentEvent } from 'insomnia/src/ui/analytics';
 import { Icon } from 'insomnia/src/ui/components/icon';
-import { showAlert, showError, showModal } from 'insomnia/src/ui/components/modals';
+import { showError, showModal } from 'insomnia/src/ui/components/modals';
 import { AskModal } from 'insomnia/src/ui/components/modals/ask-modal';
 import { ExportRequestsModal } from 'insomnia/src/ui/components/modals/export-requests-modal';
 import { ImportModal } from 'insomnia/src/ui/components/modals/import-modal';
@@ -33,6 +33,8 @@ import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';
 import { useRouteLoaderData } from 'react-router';
+
+import { AlertModal } from '../modals/alert-modal';
 
 const getDocWithDescendants =
   (includePrivateDocs = false) =>
@@ -205,7 +207,7 @@ async function writeExportedFileToFileSystem(filename: string, data: string) {
 
 export const exportProjectToFile = (activeProjectName: string, workspacesForActiveProject: Workspace[]) => {
   if (!workspacesForActiveProject.length) {
-    showAlert({
+    showModal(AlertModal, {
       title: 'Cannot export',
       message: (
         <>
@@ -738,14 +740,14 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                 dirPath,
               }));
           } catch (e) {
-            showAlert({
+            showModal(AlertModal, {
               title: 'Export Failed',
               message: 'An error occurred while exporting data. Please try again.',
             });
             console.error(e);
           }
 
-          showAlert({
+          showModal(AlertModal, {
             title: 'Export Complete',
             message: 'All your data have been successfully exported',
           });
@@ -805,14 +807,14 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                       dirPath,
                     }));
                 } catch (e) {
-                  showAlert({
+                  showModal(AlertModal, {
                     title: 'Export Failed',
                     message: 'An error occurred while exporting data. Please try again.',
                   });
                   console.error(e);
                 }
 
-                showAlert({
+                showModal(AlertModal, {
                   title: 'Export Complete',
                   message: 'All your data have been successfully exported',
                 });
