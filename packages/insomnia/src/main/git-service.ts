@@ -1451,7 +1451,14 @@ export const checkoutGitBranchAction = async ({
   const cachedGitLastCommitTime = author ? author.timestamp * 1000 : Date.now();
 
   const { hasUncommittedChanges } = await getGitChanges(GitVCS);
-  const hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
+
+  let hasUnpushedChanges = false;
+  try {
+    hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
+  } catch (err) {
+    console.error('Error checking for unpushed changes', err);
+    hasUnpushedChanges = false;
+  }
 
   await models.gitRepository.update(gitRepository, {
     cachedGitLastCommitTime,
@@ -1576,6 +1583,14 @@ export const pushToGitRemoteAction = async ({
     canPush = await GitVCS.canPush(gitRepository.credentials);
   } catch (err) {
     if (err instanceof Errors.HttpError) {
+      if (err.data.statusCode === 401 || err.data.statusCode === 403) {
+        // If we get a 401 or 403, it means that the user does not have permissions to push to this repository
+        return {
+          errors: [`${err.data.statusMessage}, it seems that you do not have permissions to push to this repository.`],
+          gitRepository,
+        };
+      }
+
       return {
         errors: [`${err.message}, ${err.data.response}`],
         gitRepository,
