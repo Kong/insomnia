@@ -1,10 +1,8 @@
 import { database } from '../common/database';
-import { VCSInstance } from '../sync/vcs/insomnia-sync';
 import {
   migrateProjectsIntoOrganization,
   shouldMigrateProjectUnderOrganization,
 } from '../sync/vcs/migrate-projects-into-organization';
-import { insomniaFetch } from '../ui/insomniaFetch';
 import { invariant } from '../utils/invariant';
 import { userSession } from '.';
 import { updateLocalProjectToRemote } from './helpers/project';
@@ -133,6 +131,7 @@ export function sortOrganizations(accountId: string, organizations: Organization
 }
 
 export async function syncOrganizations(sessionId: string, accountId: string) {
+  const { insomniaFetch } = await import('../ui/insomniaFetch');
   try {
     const [organizationsResult, user, currentPlan] = await Promise.all([
       insomniaFetch<OrganizationsResponse | void>({
@@ -180,6 +179,8 @@ export async function migrateProjectsUnderOrganization(personalOrganizationId: s
         parentId: personalOrganizationId,
         remoteId: null,
       });
+
+      const { VCSInstance } = await import('../sync/vcs/insomnia-sync');
 
       // If any of those fail projects will still be under the organization as local projects
       for (const project of localProjects) {
@@ -229,6 +230,7 @@ export async function fetchAndCacheOrganizationStorageRule(
   }
   const { id: sessionId } = await userSession.getOrCreate();
 
+  const { insomniaFetch } = await import('../ui/insomniaFetch');
   // Otherwise fetch from the API
   return await insomniaFetch<StorageRules>({
     method: 'GET',
