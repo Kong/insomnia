@@ -13,23 +13,20 @@ import {
   RadioGroup,
   TextField,
 } from 'react-aria-components';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
+import { useFetcher, useParams } from 'react-router';
 
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import * as models from '../../../models/index';
 import type { MockServer } from '../../../models/mock-server';
+import { fetchAndCacheOrganizationStorageRule } from '../../../models/organization';
+import { DEFAULT_STORAGE_RULES, type StorageRules } from '../../../models/organization';
 import { isGitProject, type Project } from '../../../models/project';
 import { isRequest } from '../../../models/request';
 import { isEnvironment, isMockServer, isScratchpad, type Workspace } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
 import type { GetRepositoryDirectoryTreeResult } from '../../routes/git-project-actions';
-import {
-  DEFAULT_STORAGE_RULES,
-  fetchAndCacheOrganizationStorageRule,
-  type OrganizationLoaderData,
-  type StorageRules,
-} from '../../routes/organization';
+import { useOrganizationLoaderData } from '../../routes/organization';
 import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
@@ -49,7 +46,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
     projectId: string;
     workspaceId: string;
   };
-  const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  const { currentPlan } = useOrganizationLoaderData();
   const [orgStorageRules, setOrgStorageRules] = useState<StorageRules>(DEFAULT_STORAGE_RULES);
   const [description, setDescription] = useState<string>(workspace.description);
   useEffect(() => {

@@ -20,11 +20,11 @@ import {
 } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';
 
+import type { StorageRules } from '../../../models/organization';
 import { isGitProject, type Project } from '../../../models/project';
 import { type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
 import type { GetRepositoryDirectoryTreeResult } from '../../routes/git-project-actions';
-import type { StorageRules } from '../../routes/organization';
 import { Icon } from '../icon';
 
 const titleByScope: Record<WorkspaceScope, string> = {

@@ -2,6 +2,7 @@ import type { ActionFunctionArgs } from 'react-router';
 
 import { importResourcesToProject, importResourcesToWorkspace } from '../../common/import';
 import * as models from '../../models';
+import { fetchAndCacheOrganizationStorageRule } from '../../models/organization';
 import { isRemoteProject } from '../../models/project';
 import type { Workspace } from '../../models/workspace';
 import {
@@ -10,7 +11,6 @@ import {
 } from '../../sync/vcs/initialize-backend-project';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { invariant } from '../../utils/invariant';
-import { fetchAndCacheOrganizationStorageRule } from './organization';
 
 export interface ImportResourcesActionResult {
   errors?: string[];
@@ -47,7 +47,7 @@ export async function action({ request }: ActionFunctionArgs) {
 // The reason why we put this function here is because this function indirectly depends on some modules that can only run in a browser environment.
 // If we put this function in import.ts which is depended by Inso CLI, Inso CLI will fail to build because it doesn't have access to the browser environment.
 // So we put this function here and pass it to importResourcesToProject func to avoid the dependency issue.
-async function syncNewWorkspaceIfNeeded(newWorkspace: Workspace) {
+export async function syncNewWorkspaceIfNeeded(newWorkspace: Workspace) {
   const project = await models.project.getById(newWorkspace.parentId);
   invariant(project, 'Project not found');
   const userSession = await models.userSession.getOrCreate();

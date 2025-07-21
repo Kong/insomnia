@@ -6,7 +6,7 @@ import * as models from '../../models';
 import type { Project } from '../../models/project';
 import { scopeToActivity } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
-import { syncNewWorkspaceIfNeeded } from './import';
+import { syncNewWorkspaceIfNeeded } from './import.resources';
 
 /** Duplicate workspace to other project and automatically sync to cloud if needed  */
 export async function action({ request, params }: ActionFunctionArgs) {

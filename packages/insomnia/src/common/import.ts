@@ -7,6 +7,7 @@ import { type GrpcRequest, isGrpcRequest } from '../models/grpc-request';
 import { type BaseModel, getModel, userSession } from '../models/index';
 import * as models from '../models/index';
 import { isMockRoute, type MockRoute } from '../models/mock-route';
+import type { CurrentPlan } from '../models/organization';
 import { isGitProject } from '../models/project';
 import { isRequest, type Request } from '../models/request';
 import { isRequestGroup } from '../models/request-group';
@@ -14,7 +15,6 @@ import { isUnitTest, type UnitTest } from '../models/unit-test';
 import { isUnitTestSuite, type UnitTestSuite } from '../models/unit-test-suite';
 import { isWebSocketRequest, type WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
-import type { CurrentPlan } from '../ui/routes/organization';
 import { convert, type InsomniaImporter } from '../utils/importers/convert';
 import type { ImportEntry } from '../utils/importers/entities';
 import { id as postmanEnvImporterId } from '../utils/importers/importers/postman-env';
@@ -77,7 +77,7 @@ export async function getFilesFromPostmanExportedDataDump(filePath: string): Pro
   let res;
   try {
     res = await window.main.extractJsonFileFromPostmanDataDumpArchive(filePath);
-  } catch (err) {
+  } catch {
     throw new Error('Extract failed');
   }
   if (res && res.data) {

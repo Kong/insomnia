@@ -201,7 +201,7 @@ async function renderApp() {
           {
             path: 'organization',
             id: '/organization',
-            loader: async (...args) => (await import('./routes/organization')).loader(...args),
+            loader: async args => (await import('./routes/organization')).loader(args),
             element: (
               <Suspense fallback={<AppLoadingIndicator />}>
                 <Organization />
@@ -213,15 +213,16 @@ async function renderApp() {
             children: [
               {
                 index: true,
-                loader: async (...args) => (await import('./routes/organization')).indexLoader(...args),
+                loader: async args => (await import('./routes/organization._index')).loader(args),
               },
               {
                 path: 'sync',
-                action: async (...args) => (await import('./routes/organization')).syncOrganizationsAction(...args),
+                action: async args => (await import('./routes/organization.sync')).action(args),
               },
               {
-                path: 'sync-orgs-and-projects',
-                action: async (...args) => (await import('./routes/organization')).syncOrgsAndProjectsAction(...args),
+                path: 'sync-organizations-and-projects',
+                action: async args =>
+                  (await import('./routes/organization.sync-organizations-and-projects')).action(args),
               },
               {
                 path: ':organizationId',
@@ -248,19 +249,13 @@ async function renderApp() {
                   },
                   {
                     path: 'permissions',
-                    loader: async (...args) =>
-                      (await import('./routes/organization')).organizationPermissionsLoader(...args),
+                    loader: async args => (await import('./routes/$organizationId.permissions')).loader(args),
                     shouldRevalidate: data => data.currentParams.organizationId !== data.nextParams.organizationId,
                   },
                   {
-                    path: 'storage-rule',
-                    loader: async (...args) =>
-                      (await import('./routes/organization')).organizationStorageLoader(...args),
-                  },
-                  {
-                    path: 'sync-storage-rule',
-                    action: async (...args) =>
-                      (await import('./routes/organization')).syncOrganizationStorageRuleAction(...args),
+                    path: 'storage-rules',
+                    loader: async args => (await import('./routes/$organizationId.storage-rules')).loader(args),
+                    action: async args => (await import('./routes/$organizationId.storage-rules')).action(args),
                   },
                   {
                     path: 'sync-projects',

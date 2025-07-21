@@ -29,7 +29,6 @@ import {
   useLoaderData,
   useNavigate,
   useParams,
-  useRouteLoaderData,
 } from 'react-router';
 import { useLocalStorage } from 'react-use';
 
@@ -52,7 +51,12 @@ import type { GitRepository } from '../../models/git-repository';
 import { sortProjects } from '../../models/helpers/project';
 import type { MockServer } from '../../models/mock-server';
 import type { Organization } from '../../models/organization';
-import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../../models/organization';
+import {
+  DEFAULT_STORAGE_RULES,
+  isOwnerOfOrganization,
+  isPersonalOrganization,
+  isScratchpadOrganizationId,
+} from '../../models/organization';
 import {
   getProjectStorageTypeLabel,
   isGitProject,
@@ -87,12 +91,8 @@ import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
 import { useLoaderDeferData } from '../hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
-import {
-  DEFAULT_STORAGE_RULES,
-  type OrganizationLoaderData,
-  type OrganizationStorageLoaderData,
-  useOrganizationLoaderData,
-} from './organization';
+import { type OrganizationStorageLoaderData } from './$organizationId.storage-rules';
+import { useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 
 interface TeamProject {
@@ -251,7 +251,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
 
   try {
     await syncProjects(organizationId);
-  } catch (err) {
+  } catch {
     console.log('[project] Could not fetch remote projects.');
   }
   const initialOrganizationRoute = await getInitialRouteForOrganization({ organizationId });
@@ -336,7 +336,7 @@ async function getAllLocalFiles({ projectId }: { projectId: string }) {
         spec = result.contents;
         specFormat = result.format;
         specFormatVersion = result.formatVersion;
-      } catch (err) {
+      } catch {
         // Assume there is no spec
         // TODO: Check for parse errors if it's an invalid spec
       }
@@ -512,7 +512,7 @@ const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
         sessionId: '',
       });
       window.localStorage.setItem('learning-feature-last-fetch', Date.now().toString());
-    } catch (err) {
+    } catch {
       console.log('[project] Could not fetch learning feature data.');
     }
   }
@@ -670,7 +670,7 @@ const ProjectRoute: FC = () => {
     )
     .map(f => f.formData?.get('backendProjectId'));
 
-  const { organizations } = useOrganizationLoaderData();
+  const { organizations, currentPlan } = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
   const storageRuleFetcher = useFetcher<OrganizationStorageLoaderData>({ key: `storage-rule:${organizationId}` });
   const createNewWorkspaceFetcher = useFetcher<{ error?: string }>();
@@ -680,11 +680,9 @@ const ProjectRoute: FC = () => {
     if (!isScratchpadOrganizationId(organizationId)) {
       const load = storageRuleFetcher.load;
       // file://./organization.tsx#organizationStorageLoader
-      load(`/organization/${organizationId}/storage-rule`);
+      load(`/organization/${organizationId}/storage-rules`);
     }
   }, [organizationId, storageRuleFetcher.load]);
-
-  const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
 
   const { storagePromise } = storageRuleFetcher.data || {};
 

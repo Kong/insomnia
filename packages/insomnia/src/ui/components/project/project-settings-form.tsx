@@ -23,6 +23,7 @@ import { useFetcher, useParams } from 'react-router';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
 import type { GitRepository } from '../../../models/git-repository';
+import type { StorageRules } from '../../../models/organization';
 import {
   getDefaultProjectStorageType,
   getProjectStorageTypeLabel,
@@ -32,7 +33,6 @@ import {
 } from '../../../models/project';
 import type { UpdateProjectActionResult } from '../../routes/$organizationId.project.$projectId.update';
 import type { InitGitCloneResult } from '../../routes/git-project-actions';
-import type { StorageRules } from '../../routes/organization';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../../routes/project';
 import { ErrorBoundary } from '../error-boundary';
 import { CustomRepositorySettingsFormGroup } from '../git-credentials/custom-repository-settings-form';
