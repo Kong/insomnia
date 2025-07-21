@@ -94521,10 +94521,8 @@ function envReplace(value, env = process.env) {
     if (esc.length && esc.length % 2) {
       return match;
     }
-    console.log(JSON.stringify(env));
-    console.log(`envVarName: ${envVarName} match ${match}`);
     if (undefined === env[envVarName]) {
-      throw new Error('Failed to replace env in config: ' + match);
+      throw new Error('Failed to replace env in config: ' + match + JSON.stringify(env) + `envVarName: ${envVarName}`);
     }
     return env[envVarName] || '';
   });
