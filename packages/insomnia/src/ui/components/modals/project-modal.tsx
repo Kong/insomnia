@@ -3,7 +3,7 @@ import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-compone
 import { useNavigation } from 'react-router';
 
 import type { GitRepository } from '../../../models/git-repository';
-import type { StorageRules } from '../../../models/organization';
+import type { StorageRules } from '../../organization-utils';
 import type { Project } from '../../../models/project';
 import { Icon } from '../icon';
 import { ProjectSettingsForm } from '../project/project-settings-form';

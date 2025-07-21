@@ -1,6 +1,6 @@
 import type { LoaderFunctionArgs } from 'react-router';
 
-import { fetchAndCacheOrganizationStorageRule, type StorageRules } from '../../models/organization';
+import { fetchAndCacheOrganizationStorageRule, type StorageRules } from '../organization-utils';
 
 export interface OrganizationStorageLoaderData {
   storagePromise: Promise<StorageRules>;

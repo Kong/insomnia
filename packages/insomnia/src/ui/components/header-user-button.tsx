@@ -3,7 +3,7 @@ import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-compone
 import { useFetcher } from 'react-router';
 
 import { getAppWebsiteBaseURL } from '../../common/constants';
-import type { CurrentPlan, PersonalPlanType, UserProfileResponse } from '../../models/organization';
+import type { CurrentPlan, PersonalPlanType, UserProfileResponse } from '../organization-utils';
 import { Avatar } from './avatar';
 import { Icon } from './icon';
 

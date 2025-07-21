@@ -51,12 +51,8 @@ import type { GitRepository } from '../../models/git-repository';
 import { sortProjects } from '../../models/helpers/project';
 import type { MockServer } from '../../models/mock-server';
 import type { Organization } from '../../models/organization';
-import {
-  DEFAULT_STORAGE_RULES,
-  isOwnerOfOrganization,
-  isPersonalOrganization,
-  isScratchpadOrganizationId,
-} from '../../models/organization';
+import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../../models/organization';
+import { DEFAULT_STORAGE_RULES } from '../organization-utils';
 import {
   getProjectStorageTypeLabel,
   isGitProject,

@@ -2,7 +2,7 @@ import type { ActionFunctionArgs } from 'react-router';
 
 import { importResourcesToProject, importResourcesToWorkspace } from '../../common/import';
 import * as models from '../../models';
-import { fetchAndCacheOrganizationStorageRule } from '../../models/organization';
+import { fetchAndCacheOrganizationStorageRule } from '../organization-utils';
 import { isRemoteProject } from '../../models/project';
 import type { Workspace } from '../../models/workspace';
 import {

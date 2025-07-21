@@ -2,12 +2,8 @@ import { type ActionFunctionArgs, redirect } from 'react-router';
 
 import { database } from '../../common/database';
 import { project, userSession } from '../../models';
-import {
-  findPersonalOrganization,
-  migrateProjectsUnderOrganization,
-  type Organization,
-  syncOrganizations,
-} from '../../models/organization';
+import { findPersonalOrganization, type Organization } from '../../models/organization';
+import { migrateProjectsUnderOrganization, syncOrganizations } from '../organization-utils';
 import type { Project } from '../../models/project';
 import { invariant } from '../../utils/invariant';
 import { AsyncTask } from '../../utils/router';

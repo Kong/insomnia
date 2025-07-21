@@ -23,7 +23,7 @@ import { useFetcher, useParams } from 'react-router';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
 import type { GitRepository } from '../../../models/git-repository';
-import type { StorageRules } from '../../../models/organization';
+import type { StorageRules } from '../../organization-utils';
 import {
   getDefaultProjectStorageType,
   getProjectStorageTypeLabel,

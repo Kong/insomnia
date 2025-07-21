@@ -2,12 +2,8 @@ import { type LoaderFunctionArgs, redirect } from 'react-router';
 
 import * as session from '../../account/session';
 import { userSession } from '../../models';
-import {
-  findPersonalOrganization,
-  migrateProjectsUnderOrganization,
-  type Organization,
-  syncOrganizations,
-} from '../../models/organization';
+import { findPersonalOrganization, type Organization } from '../../models/organization';
+import { migrateProjectsUnderOrganization, syncOrganizations } from '../organization-utils';
 import { invariant } from '../../utils/invariant';
 
 export async function loader(_args: LoaderFunctionArgs) {

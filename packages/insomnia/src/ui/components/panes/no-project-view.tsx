@@ -1,6 +1,6 @@
 import React, { type FC } from 'react';
 
-import type { StorageRules } from '../../../models/organization';
+import type { StorageRules } from '../../organization-utils';
 import { ProjectSettingsForm } from '../project/project-settings-form';
 
 interface Props {

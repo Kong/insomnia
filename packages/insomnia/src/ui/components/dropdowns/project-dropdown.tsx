@@ -4,7 +4,7 @@ import { Button, Menu, MenuItem, MenuTrigger, Popover, Tooltip, TooltipTrigger }
 import { useFetcher } from 'react-router';
 
 import type { GitRepository } from '../../../models/git-repository';
-import type { StorageRules } from '../../../models/organization';
+import type { StorageRules } from '../../organization-utils';
 import { getProjectStorageTypeLabel, isGitProject, isRemoteProject, type Project } from '../../../models/project';
 import { Icon } from '../icon';
 import { showAlert, showModal } from '../modals';

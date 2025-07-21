@@ -20,7 +20,7 @@ import {
 } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';
 
-import type { StorageRules } from '../../../models/organization';
+import type { StorageRules } from '../../organization-utils';
 import { isGitProject, type Project } from '../../../models/project';
 import { type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';

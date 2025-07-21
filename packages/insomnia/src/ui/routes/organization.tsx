@@ -25,14 +25,8 @@ import { useLocalStorage } from 'react-use';
 
 import { getAppWebsiteBaseURL } from '../../common/constants';
 import { userSession } from '../../models';
-import {
-  type CurrentPlan,
-  isOwnerOfOrganization,
-  isPersonalOrganization,
-  type Organization,
-  sortOrganizations,
-  type UserProfileResponse,
-} from '../../models/organization';
+import { isOwnerOfOrganization, isPersonalOrganization, type Organization } from '../../models/organization';
+import { type CurrentPlan, sortOrganizations, type UserProfileResponse } from '../organization-utils';
 import type { Settings } from '../../models/settings';
 import { isScratchpad } from '../../models/workspace';
 import { AsyncTask, getInitialRouteForOrganization } from '../../utils/router';

@@ -7,7 +7,7 @@ import { type GrpcRequest, isGrpcRequest } from '../models/grpc-request';
 import { type BaseModel, getModel, userSession } from '../models/index';
 import * as models from '../models/index';
 import { isMockRoute, type MockRoute } from '../models/mock-route';
-import type { CurrentPlan } from '../models/organization';
+import type { CurrentPlan } from '../ui/organization-utils';
 import { isGitProject } from '../models/project';
 import { isRequest, type Request } from '../models/request';
 import { isRequestGroup } from '../models/request-group';
