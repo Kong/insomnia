@@ -7,7 +7,7 @@
 [![license](https://img.shields.io/github/license/Kong/insomnia.svg)](LICENSE)
 ![Twitter Follow](https://img.shields.io/twitter/follow/GetInsomnia?style=social)
 
-Insomnia is an open-source, cross-platform API client for GraphQL, REST, WebSockets, Server-sent events (SSE), gRPC and any other HTTP compatible protocol.
+Insomnia is an open-source, cross-platform API client for GraphQL, REST, WebSockets, Server-Sent Events (SSE), gRPC and any other HTTP compatible protocol.
 
 With Insomnia you can:
 
@@ -49,7 +49,7 @@ You can [compare all subscription plans](https://insomnia.rest/pricing) and get 
 
 ## Why does Insomnia require an account?
 
-Insomnia does not require an account if you decide to use the local **Scratch Pad**, but to access most capabilities of the product we require an account. Your account data is securely stored in compliance with ISO27001, SOC 2 Type II, ISO27018, Gold CSA STAR regulations and in accordance to our terms of service and privacy policy.
+Insomnia does not require an account if you decide to use the local **Scratch Pad**, but to access most capabilities of the product we require an account. Your account data is securely stored in compliance with ISO27001, SOC 2 Type II, ISO27018, Gold CSA STAR regulations and in accordance with our terms of service and privacy policy.
 
 We require an account to sustainably build and improve the product, and to make sure we can continue to offer the many core capabilities in a free and open-source distribution. While open source software is free to use, it is unfortunately not free to build, and our ability to continue working on Insomnia is dependent on our ability to convert a subset of free users (that need premium features) to become paying customers of our product.
 
