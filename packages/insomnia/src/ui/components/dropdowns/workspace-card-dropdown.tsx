@@ -16,7 +16,9 @@ import type { Workspace } from '../../../models/workspace';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
 import type { DocumentAction } from '../../../plugins';
 import { getDocumentActions } from '../../../plugins';
-import * as pluginContexts from '../../../plugins/context';
+import * as pluginApp from '../../../plugins/context/app';
+import * as pluginData from '../../../plugins/context/data';
+import * as pluginStore from '../../../plugins/context/store';
 import { SegmentEvent } from '../../analytics';
 import { useLoadingRecord } from '../../hooks/use-loading-record';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -55,9 +57,9 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
 
       try {
         const context = {
-          ...pluginContexts.app.init(),
-          ...pluginContexts.data.init(project._id),
-          ...pluginContexts.store.init(p.plugin),
+          ...pluginApp.init(),
+          ...pluginData.init(project._id),
+          ...pluginStore.init(p.plugin),
         };
         await p.action(context, parseApiSpec(apiSpec?.contents || ''));
       } catch (err) {

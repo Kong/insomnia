@@ -11,7 +11,9 @@ import type { Response } from '../models/response';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import { getAuthHeader } from '../network/authentication';
 import * as plugins from '../plugins';
-import * as pluginContexts from '../plugins/context/index';
+import * as pluginApp from '../plugins/context/app';
+import * as pluginRequest from '../plugins/context/request';
+import * as pluginStore from '../plugins/context/store';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest } from '../templating/types';
 import { parseGraphQLReqeustBody } from '../utils/graph-ql';
@@ -187,9 +189,9 @@ async function _applyRequestPluginHooks(
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
     newRenderedRequest = clone(newRenderedRequest);
     const context = {
-      ...(pluginContexts.app.init() as Record<string, any>),
-      ...(pluginContexts.request.init(newRenderedRequest, renderedContext) as Record<string, any>),
-      ...(pluginContexts.store.init(plugin) as Record<string, any>),
+      ...(pluginApp.init() as Record<string, any>),
+      ...(pluginRequest.init(newRenderedRequest, renderedContext) as Record<string, any>),
+      ...(pluginStore.init(plugin) as Record<string, any>),
     };
 
     try {

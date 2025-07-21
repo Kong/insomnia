@@ -13,12 +13,13 @@ import { isRequest, type Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import type { SocketIORequest } from '../../../models/socket-io-request';
 import { incrementDeletedRequests } from '../../../models/stats';
-// Plugin action related imports
-// Plugin action related imports
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
-import * as pluginContexts from '../../../plugins/context/index';
+import * as pluginApp from '../../../plugins/context/app';
+import * as pluginData from '../../../plugins/context/data';
+import * as pluginNetwork from '../../../plugins/context/network';
+import * as pluginStore from '../../../plugins/context/store';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { useRootLoaderData } from '../../routes/root';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
@@ -96,10 +97,10 @@ export const RequestActionsDropdown = ({
   const handlePluginClick = async ({ plugin, action }: RequestAction) => {
     try {
       const context = {
-        ...pluginContexts.app.init(),
-        ...pluginContexts.data.init(activeProject._id),
-        ...pluginContexts.store.init(plugin),
-        ...pluginContexts.network.init(),
+        ...pluginApp.init(),
+        ...pluginData.init(activeProject._id),
+        ...pluginStore.init(plugin),
+        ...pluginNetwork.init(),
       };
       await action(context, {
         request,

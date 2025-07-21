@@ -1,14 +1,13 @@
+import { getAppPlatform, getAppVersion } from 'insomnia/src/common/constants';
+import type { AppContext, RenderPurpose } from 'insomnia/src/templating/types';
+import { HtmlElementWrapper } from 'insomnia/src/ui/components/html-element-wrapper';
+import { showModal } from 'insomnia/src/ui/components/modals';
+import { AlertModal } from 'insomnia/src/ui/components/modals/alert-modal';
+import { PromptModal } from 'insomnia/src/ui/components/modals/prompt-modal';
+import { WrapperModal } from 'insomnia/src/ui/components/modals/wrapper-modal';
+import { invariant } from 'insomnia/src/utils/invariant';
 import React from 'react';
 import type ReactDOM from 'react-dom';
-
-import { getAppPlatform, getAppVersion } from '../../common/constants';
-import type { AppContext, RenderPurpose } from '../../templating/types';
-import { HtmlElementWrapper } from '../../ui/components/html-element-wrapper';
-import { showModal } from '../../ui/components/modals';
-import { AlertModal } from '../../ui/components/modals/alert-modal';
-import { PromptModal } from '../../ui/components/modals/prompt-modal';
-import { WrapperModal } from '../../ui/components/modals/wrapper-modal';
-import { invariant } from '../../utils/invariant';
 
 export interface PrivateProperties {
   loadRendererModules: () => Promise<

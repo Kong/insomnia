@@ -10,7 +10,10 @@ import type { Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
-import * as pluginContexts from '../../../plugins/context/index';
+import * as pluginApp from '../../../plugins/context/app';
+import * as pluginData from '../../../plugins/context/data';
+import * as pluginNetwork from '../../../plugins/context/network';
+import * as pluginStore from '../../../plugins/context/store';
 import type { CreateRequestType } from '../../hooks/use-request';
 import { useRootLoaderData } from '../../routes/root';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
@@ -113,10 +116,10 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
 
     try {
       const context = {
-        ...(pluginContexts.app.init() as Record<string, any>),
-        ...pluginContexts.data.init(activeProject._id),
-        ...(pluginContexts.store.init(plugin) as Record<string, any>),
-        ...(pluginContexts.network.init() as Record<string, any>),
+        ...(pluginApp.init() as Record<string, any>),
+        ...pluginData.init(activeProject._id),
+        ...(pluginStore.init(plugin) as Record<string, any>),
+        ...(pluginNetwork.init() as Record<string, any>),
       };
       const requests = await models.request.findByParentId(requestGroup._id);
       requests.sort((a, b) => a.metaSortKey - b.metaSortKey);

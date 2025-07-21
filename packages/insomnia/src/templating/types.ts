@@ -10,7 +10,7 @@ import type { getBodyBuffer, getLatestForRequest } from '../models/response';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace } from '../models/workspace';
-import type { PluginStore } from '../plugins/context';
+import type { PluginStore } from '../plugins/context/store';
 import type { PromptModalOptions } from '../ui/components/modals/prompt-modal';
 import type { extractNunjucksTagFromCoords } from './utils';
 

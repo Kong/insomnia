@@ -30,7 +30,10 @@ import { isRequestGroup } from '../../../models/request-group';
 import { isScratchpad, type Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
-import * as pluginContexts from '../../../plugins/context';
+import * as pluginApp from '../../../plugins/context/app';
+import * as pluginData from '../../../plugins/context/data';
+import * as pluginNetwork from '../../../plugins/context/network';
+import * as pluginStore from '../../../plugins/context/store';
 import { invariant } from '../../../utils/invariant';
 import { SegmentEvent } from '../../analytics';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
@@ -80,10 +83,10 @@ export const WorkspaceDropdown: FC<{}> = () => {
       setLoadingActions({ ...loadingActions, [label]: true });
       try {
         const context = {
-          ...(pluginContexts.app.init() as Record<string, any>),
-          ...pluginContexts.data.init(activeProject._id),
-          ...(pluginContexts.store.init(plugin) as Record<string, any>),
-          ...(pluginContexts.network.init() as Record<string, any>),
+          ...(pluginApp.init() as Record<string, any>),
+          ...pluginData.init(activeProject._id),
+          ...(pluginStore.init(plugin) as Record<string, any>),
+          ...(pluginNetwork.init() as Record<string, any>),
         };
 
         const docs = await db.withDescendants(workspace);

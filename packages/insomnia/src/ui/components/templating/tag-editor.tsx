@@ -15,7 +15,7 @@ import { isRequest, type Request } from '../../../models/request';
 import { isRequestGroup, type RequestGroup } from '../../../models/request-group';
 import type { Workspace } from '../../../models/workspace';
 import * as plugins from '../../../plugins';
-import * as pluginContexts from '../../../plugins/context';
+import * as pluginStore from '../../../plugins/context/store';
 import * as templating from '../../../templating';
 import type { NunjucksParsedTag, NunjucksParsedTagArg } from '../../../templating/types';
 import { sanitizeStrForWin32 } from '../../../templating/utils';
@@ -529,7 +529,7 @@ export const TagEditor: FC<Props> = props => {
                       return templateTag.name === state.activeTagData?.name;
                     });
                     if (activeTemplateTag) {
-                      await action.run(pluginContexts.store.init(activeTemplateTag.plugin));
+                      await action.run(pluginStore.init(activeTemplateTag.plugin));
                     }
                     update(state.tagDefinitions, state.activeTagDefinition, state.activeTagData, true);
                   }}
