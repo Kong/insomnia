@@ -65,7 +65,7 @@ jobs:
           npm run package -w insomnia-inso
         env:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
-          NODE_AUTH_TOKEN: test
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Inso binary e2e tests
         run: npm run test:binary -w insomnia-inso

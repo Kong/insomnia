@@ -94522,7 +94522,7 @@ function envReplace(value, env = process.env) {
       return match;
     }
     if (undefined === env[envVarName]) {
-      throw new Error('Failed to replace env in config: ' + match + JSON.stringify(env) + `envVarName: ${envVarName}`);
+      throw new Error('Failed to replace env in config: ' + match);
     }
     return env[envVarName] || '';
   });
