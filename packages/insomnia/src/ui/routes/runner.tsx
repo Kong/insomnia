@@ -38,6 +38,7 @@ import * as models from '../../models';
 import type { UserUploadEnvironment } from '../../models/environment';
 import type { RunnerResultPerRequest, RunnerTestResult } from '../../models/runner-test-result';
 import { cancelRequestById } from '../../network/cancellation';
+import { defaultSendActionRuntime } from '../../network/network';
 import { moveAfter, moveBefore } from '../../utils';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
@@ -58,7 +59,6 @@ import { useRunnerContext } from '../context/app/runner-context';
 import { useRunnerRequestList } from '../hooks/use-runner-request-list';
 import {
   type CollectionRunnerContext,
-  defaultSendActionRuntime,
   type RunnerSource,
   sendActionImplementation,
 } from './$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
