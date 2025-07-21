@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { cp, mkdir, mkdtemp, readdir, rm, stat, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
@@ -149,10 +149,13 @@ export async function installPluginToTmpDir(name: string) {
       'utf-8',
     );
 
-    if (executeInGithubActions) {
-      // Copy from https://github.com/actions/setup-node/blob/7e24a656e1c7a0d6f3eaef8d8e84ae379a5b035b/src/authutil.ts#L48
-      const npmrc: string = path.resolve(process.env['RUNNER_TEMP'] || process.cwd(), '.npmrc');
+    const NPM_CONFIG_USERCONFIG = process.env.NPM_CONFIG_USERCONFIG;
+    if (executeInGithubActions && NPM_CONFIG_USERCONFIG) {
+      const npmrc: string = path.resolve(NPM_CONFIG_USERCONFIG, '.npmrc');
       // Use the existing .npmrc file created by the Setup Node step
+      // read and log the contents of the npmrc file
+      console.log(`Contents of npmrc file: ${await readFile(npmrc)}`);
+      // Copy the existing .npmrc file to the temporary directory
       await cp(npmrc, tempNpmrcPath);
     } else {
       // Generate the npmrc file in the temporary directory
