@@ -31,7 +31,6 @@ jobs:
           cache-dependency-path: package-lock.json
           registry-url: 'https://npm.pkg.github.com'
           scope: '@kong'
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install packages
         run: npm ci
@@ -66,6 +65,7 @@ jobs:
           npm run package -w insomnia-inso
         env:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Inso binary e2e tests
         run: npm run test:binary -w insomnia-inso
