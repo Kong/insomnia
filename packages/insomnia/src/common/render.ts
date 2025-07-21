@@ -300,12 +300,11 @@ export async function render<T>(
         const pluginsAreRestrictedToRunInWorker = settings?.pluginsAllowElevatedAccess === false;
         const currentProcessIsRendererAndPluginsAreRestricted =
           process.type === 'renderer' && pluginsAreRestrictedToRunInWorker;
-        const renderFork = async (renderInput: RenderInputType) => {
-          const inputIsEnterprisePluginTag = await isPreBundlePluginTemplateTag(renderInput.input);
-          return currentProcessIsRendererAndPluginsAreRestricted && !inputIsEnterprisePluginTag
-            ? (await import('../ui/worker/templating-handler')).renderInWorker(renderInput)
-            : renderInThisProcess(renderInput);
-        };
+        const inputIsEnterprisePluginTag = await isPreBundlePluginTemplateTag(input);
+        const shouldUseWorker = currentProcessIsRendererAndPluginsAreRestricted && !inputIsEnterprisePluginTag;
+        const renderFork = shouldUseWorker
+          ? (await import('../ui/worker/templating-handler')).renderInWorker
+          : renderInThisProcess;
 
         // @ts-expect-error -- TSCONVERSION
         input = await renderFork({ input, context, path, ignoreUndefinedEnvVariable });

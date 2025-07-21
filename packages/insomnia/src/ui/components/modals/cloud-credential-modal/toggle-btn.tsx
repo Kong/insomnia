@@ -1,6 +1,8 @@
 import React from 'react';
 import { Button } from 'react-aria-components';
 
+// TODO(Kent): use import { ToggleButton } from 'react-aria-components'; inline instead of this component
+
 export const ToggleBtn = (props: { isHidden: boolean; onShowHideInput: () => void }) => {
   const { isHidden, onShowHideInput } = props;
   return (

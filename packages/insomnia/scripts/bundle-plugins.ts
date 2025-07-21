@@ -54,6 +54,7 @@ export async function runYarnCommand(args: string[], cwd?: string) {
     cwd,
     env: {
       NODE_ENV: 'production',
+      // https://github.com/actions/setup-node#:~:text=in%20from%20env.-,NODE_AUTH_TOKEN,-.%0A%20%20%20%20%23%20Default
       NODE_AUTH_TOKEN: process.env.NODE_AUTH_TOKEN || '',
     },
     timeout: 5 * 60 * 1000, // 5 minutes
