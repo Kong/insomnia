@@ -35,7 +35,7 @@ export const ProjectBranchName = ({
   showSyncStatus = true,
   temporaryGitSyncView = false,
 }: Props) => {
-  const [state, setState] = useState<PromptState>('success');
+  const [state, setState] = useState<PromptState>('default');
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
