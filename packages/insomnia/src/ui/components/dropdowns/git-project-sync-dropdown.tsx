@@ -27,10 +27,8 @@ import {
   pullFromGitRemote,
   type PushToGitRemoteResult,
 } from '../../routes/$organizationId.project.$projectId.git';
-import { ConfigLink } from '../github-app-config-link';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
-import { AlertModal } from '../modals/alert-modal';
 import { GitProjectBranchesModal } from '../modals/git-project-branches-modal';
 import { GitProjectLogModal } from '../modals/git-project-log-modal';
 import { GitProjectMigrationModal } from '../modals/git-project-migration-modal';
@@ -216,16 +214,6 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
                 .then(result => {
                   if ('errors' in result && result.errors) {
                     setOperationError(result.errors.join('\n'));
-                    showModal(AlertModal, {
-                      title: 'Pull Failed',
-                      message: (
-                        <>
-                          {result.errors.join('\n')}
-                          <ConfigLink {...{ gitRepository, errors: [result.errors.join('\n')] }} />
-                        </>
-                      ),
-                      bodyClassName: 'whitespace-break-spaces',
-                    });
                   }
                   if ('conflicts' in result) {
                     showModal(SyncMergeModal, {
@@ -258,16 +246,6 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
             } catch (err) {
               const message = err instanceof Error ? err.message : 'An error occurred while pulling';
               setOperationError(message);
-              showModal(AlertModal, {
-                title: 'Pull Failed',
-                message: (
-                  <>
-                    {message}
-                    <ConfigLink {...{ gitRepository, errors: [message] }} />
-                  </>
-                ),
-                bodyClassName: 'whitespace-break-spaces',
-              });
             }
           },
         },
