@@ -36,12 +36,12 @@ const bundlePlugin = async () => {
       await installPlugin(bundlePlugin);
     }
   } catch (err) {
-    console.log('[Bundle Plugin] Failed to bundle plugins:', err);
     if (executeInGithubActions) {
+      console.log('[Bundle Plugin] Failed to bundle plugins:', err);
       // execute in Github Actions
       process.exit(1);
     } else {
-      console.warn('[Bundle Plugin] NODE_AUTH_TOKEN environment variable is not set, skipping plugin installation');
+      console.log('[Bundle Plugin] Skipping plugin installation due to bundle plugin errors: ', err);
       process.exit(0);
     }
   }
