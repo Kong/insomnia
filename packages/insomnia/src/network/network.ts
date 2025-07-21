@@ -1007,7 +1007,7 @@ async function _applyRequestPluginHooks(renderedRequest: RenderedRequest, render
 
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
     const context = {
-      ...(pluginContexts.app.init('no-render') as Record<string, any>),
+      ...(pluginContexts.app.init() as Record<string, any>),
       ...pluginContexts.data.init(renderedContext.getProjectId()),
       ...(pluginContexts.store.init(plugin) as Record<string, any>),
       ...(pluginContexts.request.init(newRenderedRequest, renderedContext) as Record<string, any>),
@@ -1035,7 +1035,7 @@ async function _applyResponsePluginHooks(
     const newRequest = clone(renderedRequest);
     for (const { plugin, hook } of await plugins.getResponseHooks()) {
       const context = {
-        ...(pluginContexts.app.init('no-render') as Record<string, any>),
+        ...(pluginContexts.app.init() as Record<string, any>),
         ...pluginContexts.data.init(renderedContext.getProjectId()),
         ...(pluginContexts.store.init(plugin) as Record<string, any>),
         ...(pluginContexts.response.init(newResponse) as Record<string, any>),

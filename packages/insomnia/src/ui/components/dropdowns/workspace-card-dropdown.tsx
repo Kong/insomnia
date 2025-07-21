@@ -55,7 +55,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
 
       try {
         const context = {
-          ...pluginContexts.app.init('no-render'),
+          ...pluginContexts.app.init(),
           ...pluginContexts.data.init(project._id),
           ...pluginContexts.store.init(p.plugin),
         };

@@ -19,18 +19,17 @@ export interface PrivateProperties {
     | {}
   >;
 }
+const isRenderer = process.type === 'renderer';
 
 export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContext; __private: PrivateProperties } => ({
   app: {
     alert: (title: string, message?: string) => {
-      const sendOrNoRender = renderPurpose === 'send' || renderPurpose === 'no-render';
-      if (sendOrNoRender) {
+      if (isRenderer) {
         return showModal(AlertModal, { title, message });
       }
     },
     dialog: (title, body, options = {}) => {
-      const sendOrNoRender = renderPurpose === 'send' || renderPurpose === 'no-render';
-      if (sendOrNoRender) {
+      if (isRenderer) {
         showModal(WrapperModal, {
           ...options,
           title,
@@ -39,8 +38,7 @@ export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContex
       }
     },
     prompt: (title, options = {}) => {
-      const sendOrNoRender = renderPurpose === 'send' || renderPurpose === 'no-render';
-      if (!sendOrNoRender) {
+      if (!isRenderer) {
         return Promise.resolve(options.defaultValue || '');
       }
       // This custom promise converts the prompt modal from being callback-based to reject when the modal is cancelled and resolve when the modal is submitted and hidden

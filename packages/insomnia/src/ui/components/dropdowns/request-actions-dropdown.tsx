@@ -96,7 +96,7 @@ export const RequestActionsDropdown = ({
   const handlePluginClick = async ({ plugin, action }: RequestAction) => {
     try {
       const context = {
-        ...pluginContexts.app.init('no-render'),
+        ...pluginContexts.app.init(),
         ...pluginContexts.data.init(activeProject._id),
         ...pluginContexts.store.init(plugin),
         ...pluginContexts.network.init(),

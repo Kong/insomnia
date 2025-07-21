@@ -80,7 +80,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
       setLoadingActions({ ...loadingActions, [label]: true });
       try {
         const context = {
-          ...(pluginContexts.app.init('no-render') as Record<string, any>),
+          ...(pluginContexts.app.init() as Record<string, any>),
           ...pluginContexts.data.init(activeProject._id),
           ...(pluginContexts.store.init(plugin) as Record<string, any>),
           ...(pluginContexts.network.init() as Record<string, any>),

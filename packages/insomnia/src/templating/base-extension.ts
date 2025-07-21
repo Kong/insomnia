@@ -96,7 +96,7 @@ export default class BaseExtension {
       .map(decodeEncoding);
     // Define a helper context with utils
     const helperContext: PluginTemplateTagContext = {
-      ...pluginContexts.app.init(renderPurpose),
+      ...pluginContexts.app.init(),
       // @ts-expect-error -- TSCONVERSION
       ...pluginContexts.store.init(this._plugin),
       ...pluginContexts.network.init(),
