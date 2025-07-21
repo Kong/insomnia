@@ -126,6 +126,10 @@ const pluginToMainAPI = {
     );
     return await models.response.create({ ...response, bodyCompression: null }, settings.maxHistoryResponses);
   },
+  // TODO(Kent): Rename this to something more reusable, which can be run by plugins in both inso and app contexts.
+  // insomniaFetch only for renderer/webworker and is intercepted in devtools
+  // network/curlRequest is for renderer and requests appear in the UI
+  // sendRequest which is used inso and tests
   'network.nodeCurlRequest': async (body: {
     options: {
       request: Pick<DBRequest, 'url' | 'method' | 'headers'> & Partial<Pick<DBRequest, 'body' | 'authentication'>>;
