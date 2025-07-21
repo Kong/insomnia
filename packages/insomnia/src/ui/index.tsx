@@ -182,11 +182,11 @@ async function renderApp() {
             children: [
               {
                 path: 'scan',
-                action: async (...args) => (await import('./routes/import')).scanForResourcesAction(...args),
+                action: async args => (await import('./routes/import.scan')).action(args),
               },
               {
                 path: 'resources',
-                action: async (...args) => (await import('./routes/import')).importResourcesAction(...args),
+                action: async args => (await import('./routes/import.resources')).action(args),
               },
             ],
           },
