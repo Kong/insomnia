@@ -8,7 +8,6 @@ import {
   MenuSection,
   MenuTrigger,
   Popover,
-  Separator,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
@@ -24,6 +23,7 @@ import { GitRepositorySettingsModal } from '../modals/git-repository-settings-mo
 import { SyncBranchesModal } from '../modals/sync-branches-modal';
 import { SyncHistoryModal } from '../modals/sync-history-modal';
 import { SyncStagingModal } from '../modals/sync-staging-modal';
+import { ProjectBranchName } from './project-branch-name';
 
 interface Props {
   workspace: Workspace;
@@ -256,49 +256,39 @@ export const SyncDropdown: FC<Props> = () => {
     },
   ];
 
-  const isSyncing =
-    checkoutFetcher.state !== 'idle' ||
-    pullFetcher.state !== 'idle' ||
-    pushFetcher.state !== 'idle' ||
-    rollbackFetcher.state !== 'idle';
+  const isPulling = pullFetcher.state !== 'idle';
+  const isPushing = pushFetcher.state !== 'idle';
+  const isRollingBack = rollbackFetcher.state !== 'idle';
+  const isCheckingOut = checkoutFetcher.state !== 'idle';
+  const isSyncing = isRollingBack || isCheckingOut;
 
   const allSyncMenuActionList = [...localBranchesActionList, ...syncMenuActionList];
   const syncError =
     syncDataLoaderFetcher.data && 'error' in syncDataLoaderFetcher.data ? syncDataLoaderFetcher.data.error : null;
+  const isGitDropdownDisabled = isSyncing || isPulling || isPushing;
 
   return (
     <Fragment>
       <MenuTrigger>
         <TooltipTrigger delay={0}>
           <Button
-            isDisabled={isSyncing}
+            isDisabled={isGitDropdownDisabled}
             data-testid="git-dropdown"
             aria-label="Git Sync"
-            className={`flex h-[--line-height-sm] w-full items-center gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all ${isSyncing ? 'animate-pulse' : 'hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]'}`}
+            className="flex h-[--line-height-sm] w-full items-center gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:opacity-100 aria-pressed:bg-[--hl-sm]"
           >
-            <Icon icon="earth-americas" className="size-4" />
-            <Separator orientation="vertical" className="h-4 border border-solid border-[--hl-sm] bg-[--color-bg]" />
-            <div className="relative">
-              <Icon icon={isSyncing ? 'spinner' : 'code-branch'} className={`size-4 ${isSyncing && 'animate-spin'}`} />
-              {canCreateSnapshot && !isSyncing && (
-                <div className="absolute -bottom-1 -right-1 size-[10px] rounded-full bg-[--color-surprise]" />
-              )}
-            </div>
-            <span className={`flex-1 truncate ${syncError ? 'text-[--color-warning]' : ''}`}>
-              {syncError ? 'Error syncing with Insomnia Cloud' : currentBranch}
-            </span>
-            {!syncError && (
-              <div className="flex flex-shrink-0 items-center gap-1.5 text-xs text-[--color-font-secondary]">
-                <div className="flex items-center gap-0.5">
-                  <span>{pullCount}</span>
-                  <Icon icon="arrow-down" className="w-2" />
-                </div>
-                <div className="flex items-center gap-0.5">
-                  <span>{pushCount}</span>
-                  <Icon icon="arrow-up" className="w-2" />
-                </div>
-              </div>
-            )}
+            <ProjectBranchName
+              icon="earth-americas"
+              name={syncError ? 'Error syncing with Insomnia Cloud' : currentBranch}
+              hasPendingChanges={canCreateSnapshot}
+              showSyncStatus={syncError === null}
+              isSyncing={isSyncing}
+              isPulling={isPulling}
+              pullCount={pullCount}
+              isPushing={isPushing}
+              pushCount={pushCount}
+              operationSucceed={!syncError && !isSyncing && !isPulling && !isPushing}
+            />
           </Button>
           <Tooltip
             offset={8}
