@@ -26,7 +26,6 @@ import { useLocalStorage } from 'react-use';
 import { getAppWebsiteBaseURL } from '../../common/constants';
 import { userSession } from '../../models';
 import { isOwnerOfOrganization, isPersonalOrganization, type Organization } from '../../models/organization';
-import { type CurrentPlan, sortOrganizations, type UserProfileResponse } from '../organization-utils';
 import type { Settings } from '../../models/settings';
 import { isScratchpad } from '../../models/workspace';
 import { AsyncTask, getInitialRouteForOrganization } from '../../utils/router';
@@ -47,6 +46,7 @@ import { InsomniaEventStreamProvider } from '../context/app/insomnia-event-strea
 import { InsomniaTabProvider } from '../context/app/insomnia-tab-context';
 import { RunnerProvider } from '../context/app/runner-context';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
+import { type CurrentPlan, sortOrganizations, type UserProfileResponse } from '../organization-utils';
 import { useRootLoaderData } from './root';
 import type { UntrackedProjectsLoaderData } from './untracked-projects';
 import type { WorkspaceLoaderData } from './workspace';

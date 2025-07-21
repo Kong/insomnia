@@ -2,7 +2,6 @@ import type { ActionFunctionArgs } from 'react-router';
 
 import { importResourcesToProject, importResourcesToWorkspace } from '../../common/import';
 import * as models from '../../models';
-import { fetchAndCacheOrganizationStorageRule } from '../organization-utils';
 import { isRemoteProject } from '../../models/project';
 import type { Workspace } from '../../models/workspace';
 import {
@@ -11,6 +10,7 @@ import {
 } from '../../sync/vcs/initialize-backend-project';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { invariant } from '../../utils/invariant';
+import { fetchAndCacheOrganizationStorageRule } from '../organization-utils';
 
 export interface ImportResourcesActionResult {
   errors?: string[];

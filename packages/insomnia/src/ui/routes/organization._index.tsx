@@ -3,8 +3,8 @@ import { type LoaderFunctionArgs, redirect } from 'react-router';
 import * as session from '../../account/session';
 import { userSession } from '../../models';
 import { findPersonalOrganization, type Organization } from '../../models/organization';
-import { migrateProjectsUnderOrganization, syncOrganizations } from '../organization-utils';
 import { invariant } from '../../utils/invariant';
+import { migrateProjectsUnderOrganization, syncOrganizations } from '../organization-utils';
 
 export async function loader(_args: LoaderFunctionArgs) {
   const { id: sessionId, accountId } = await userSession.getOrCreate();

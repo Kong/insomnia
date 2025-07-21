@@ -52,7 +52,6 @@ import { sortProjects } from '../../models/helpers/project';
 import type { MockServer } from '../../models/mock-server';
 import type { Organization } from '../../models/organization';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../../models/organization';
-import { DEFAULT_STORAGE_RULES } from '../organization-utils';
 import {
   getProjectStorageTypeLabel,
   isGitProject,
@@ -87,6 +86,7 @@ import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
 import { useLoaderDeferData } from '../hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
+import { DEFAULT_STORAGE_RULES } from '../organization-utils';
 import { type OrganizationStorageLoaderData } from './$organizationId.storage-rules';
 import { useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';

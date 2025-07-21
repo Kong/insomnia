@@ -23,7 +23,6 @@ import { useFetcher, useParams } from 'react-router';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
 import type { GitRepository } from '../../../models/git-repository';
-import type { StorageRules } from '../../organization-utils';
 import {
   getDefaultProjectStorageType,
   getProjectStorageTypeLabel,
@@ -31,6 +30,7 @@ import {
   isRemoteProject,
   type Project,
 } from '../../../models/project';
+import type { StorageRules } from '../../organization-utils';
 import type { UpdateProjectActionResult } from '../../routes/$organizationId.project.$projectId.update';
 import type { InitGitCloneResult } from '../../routes/git-project-actions';
 import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../../routes/project';
