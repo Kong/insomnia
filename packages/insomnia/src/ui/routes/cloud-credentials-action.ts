@@ -1,4 +1,4 @@
-import { type ActionFunction, type LoaderFunction, redirect } from 'react-router';
+import { type ActionFunction } from 'react-router';
 
 import { FEATURE_NAME_EXTERNAL_VAULT, getBundlePluginByFeature } from '../../common/constants';
 import * as models from '../../models';

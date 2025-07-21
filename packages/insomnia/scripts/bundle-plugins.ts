@@ -165,6 +165,8 @@ export async function installPluginToTmpDir(name: string) {
 
     console.log(`[plugins] Installing plugin into temp dir: ${tmpDir}`);
 
+    console.log(`yarn config ${await runYarnCommand(['config', 'list'])}`);
+
     await runYarnCommand(
       [
         'add',
