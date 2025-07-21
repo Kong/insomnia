@@ -23,6 +23,11 @@ import { applyColorScheme } from '../plugins/misc';
 import { invariant } from '../utils/invariant';
 import { getInitialEntry } from '../utils/router';
 import { AppLoadingIndicator } from './components/app-loading-indicator';
+import { HtmlElementWrapper } from './components/html-element-wrapper';
+import { showModal } from './components/modals';
+import { AlertModal } from './components/modals/alert-modal';
+import { PromptModal } from './components/modals/prompt-modal';
+import { WrapperModal } from './components/modals/wrapper-modal';
 import Auth from './routes/auth';
 import Authorize from './routes/auth.authorize';
 import Login from './routes/auth.login';
@@ -31,7 +36,6 @@ import Onboarding from './routes/onboarding';
 import { Migrate } from './routes/onboarding.migrate';
 import Root from './routes/root';
 import { initializeSentry } from './sentry';
-
 const Organization = lazy(() => import('./routes/organization'));
 const Project = lazy(() => import('./routes/project'));
 const Workspace = lazy(() => import('./routes/workspace'));
@@ -50,6 +54,19 @@ document.body.setAttribute('data-platform', process.platform);
 document.title = getProductName();
 
 try {
+  window.showAlert = options => showModal(AlertModal, options);
+  window.showPrompt = options =>
+    showModal(PromptModal, {
+      ...options,
+      title: options?.title || '',
+    });
+  window.showWrapper = options =>
+    showModal(WrapperModal, {
+      ...options,
+      title: options?.title || '',
+      body: <HtmlElementWrapper el={options?.body} onUnmount={options?.onHide} />,
+    });
+
   // In order to run playwight tests that simulate a logged in user
   // we need to inject state into localStorage
   const skipOnboarding = getSkipOnboarding();

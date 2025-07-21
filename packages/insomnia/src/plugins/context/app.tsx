@@ -1,12 +1,7 @@
 import { getAppPlatform, getAppVersion } from 'insomnia/src/common/constants';
 import type { AppContext, RenderPurpose } from 'insomnia/src/templating/types';
-import { HtmlElementWrapper } from 'insomnia/src/ui/components/html-element-wrapper';
-import { showModal } from 'insomnia/src/ui/components/modals';
-import { AlertModal } from 'insomnia/src/ui/components/modals/alert-modal';
-import { PromptModal } from 'insomnia/src/ui/components/modals/prompt-modal';
-import { WrapperModal } from 'insomnia/src/ui/components/modals/wrapper-modal';
 import { invariant } from 'insomnia/src/utils/invariant';
-import React from 'react';
+import type React from 'react';
 import type ReactDOM from 'react-dom';
 
 export interface PrivateProperties {
@@ -18,21 +13,22 @@ export interface PrivateProperties {
     | {}
   >;
 }
+// TODO: consider how this would work in a webworker context
 const isRenderer = process.type === 'renderer';
 
 export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContext; __private: PrivateProperties } => ({
   app: {
     alert: (title: string, message?: string) => {
       if (isRenderer) {
-        return showModal(AlertModal, { title, message });
+        return window.showAlert({ title, message });
       }
     },
     dialog: (title, body, options = {}) => {
       if (isRenderer) {
-        showModal(WrapperModal, {
+        window.showWrapper({
           ...options,
           title,
-          body: <HtmlElementWrapper el={body} onUnmount={options.onHide} />,
+          body,
         });
       }
     },
@@ -43,7 +39,7 @@ export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContex
       // This custom promise converts the prompt modal from being callback-based to reject when the modal is cancelled and resolve when the modal is submitted and hidden
       return new Promise<string>((resolve, reject) => {
         let selected: string | null = null;
-        showModal(PromptModal, {
+        window.showPrompt({
           ...options,
           title,
           onComplete: (value: string) => {
