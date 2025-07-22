@@ -323,7 +323,9 @@ async function renderApp() {
                           {
                             path: 'roles',
                             action: async (...args) =>
-                              (await import('./routes/$organizationId.collaborators')).updateMemberRoleAction(...args),
+                              (await import('./routes/$organizationId.members.$userId.roles')).updateMemberRoleAction(
+                                ...args,
+                              ),
                           },
                         ],
                       },
