@@ -2,8 +2,8 @@ import React from 'react';
 import { useParams, useRouteLoaderData } from 'react-router';
 
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
+import type { ProjectIdLoaderData } from '../routes/$organizationId.project';
 import type { WorkspaceLoaderData } from '../routes/$organizationId.project.$projectId.workspace';
-import type { ProjectIdLoaderData } from '../routes/project';
 import { useRootLoaderData } from '../routes/root';
 import { AvatarGroup } from './avatar';
 

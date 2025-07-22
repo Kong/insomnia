@@ -37,7 +37,7 @@ import { Migrate } from './routes/onboarding.migrate';
 import Root from './routes/root';
 import { initializeSentry } from './sentry';
 const Organization = lazy(() => import('./routes/organization'));
-const Project = lazy(() => import('./routes/project'));
+const Project = lazy(() => import('./routes/$organizationId.project'));
 const Workspace = lazy(() => import('./routes/$organizationId.project.$projectId.workspace'));
 const UnitTest = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.unit-test'));
 const Debug = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.debug'));
@@ -247,7 +247,7 @@ async function renderApp() {
                 children: [
                   {
                     index: true,
-                    loader: async (...args) => (await import('./routes/project')).indexLoader(...args),
+                    loader: async (...args) => (await import('./routes/$organizationId.project')).indexLoader(...args),
                   },
                   {
                     path: 'git',
@@ -276,7 +276,8 @@ async function renderApp() {
                   },
                   {
                     path: 'sync-projects',
-                    action: async (...args) => (await import('./routes/project')).syncProjectsAction(...args),
+                    action: async (...args) =>
+                      (await import('./routes/$organizationId.project')).syncProjectsAction(...args),
                   },
                   {
                     path: 'collaborators',
@@ -326,7 +327,7 @@ async function renderApp() {
                     children: [
                       {
                         index: true,
-                        loader: async (...args) => (await import('./routes/project')).loader(...args),
+                        loader: async (...args) => (await import('./routes/$organizationId.project')).loader(...args),
                         element: (
                           <Suspense fallback={<AppLoadingIndicator />}>
                             <Project />
@@ -340,11 +341,13 @@ async function renderApp() {
                       {
                         path: ':projectId',
                         id: '/project/:projectId',
-                        loader: async (...args) => (await import('./routes/project')).projectIdLoader(...args),
+                        loader: async (...args) =>
+                          (await import('./routes/$organizationId.project')).projectIdLoader(...args),
                         children: [
                           {
                             index: true,
-                            loader: async (...args) => (await import('./routes/project')).loader(...args),
+                            loader: async (...args) =>
+                              (await import('./routes/$organizationId.project')).loader(...args),
                             element: (
                               <Suspense fallback={<AppLoadingIndicator />}>
                                 <Project />
@@ -353,7 +356,8 @@ async function renderApp() {
                           },
                           {
                             path: 'list-workspaces',
-                            loader: async (...args) => (await import('./routes/project')).listWorkspacesLoader(...args),
+                            loader: async (...args) =>
+                              (await import('./routes/$organizationId.project')).listWorkspacesLoader(...args),
                           },
                           {
                             path: 'delete',

@@ -15,7 +15,12 @@ import {
 import { useFetcher, useParams } from 'react-router';
 
 import type { WorkspaceScope } from '../../../models/workspace';
-import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../../routes/project';
+import {
+  scopeToBgColorMap,
+  scopeToIconMap,
+  scopeToLabelMap,
+  scopeToTextColorMap,
+} from '../../routes/$organizationId.project';
 import { Icon } from '../icon';
 
 export const GitProjectMigrationModal: FC<{
