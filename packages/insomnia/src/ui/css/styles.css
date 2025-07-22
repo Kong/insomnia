@@ -163,3 +163,24 @@ table.json-diff-viewer {
 .monaco-editor .margin {
   margin: 0;
 }
+
+::view-transition-new(toast):only-child {
+  animation: slideIn 400ms ease-out;
+}
+
+::view-transition-old(toast):only-child {
+  animation: slideOut 400ms ease-in;
+}
+
+@keyframes slideIn {
+  from {
+    translate: 100% 0;
+    opacity: 0;
+  }
+}
+@keyframes slideOut {
+  to {
+    translate: 100% 0;
+    opacity: 0;
+  }
+}
