@@ -1,26 +1,414 @@
+import { mkdir, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+
+import { format } from 'date-fns';
+import { getProductName } from 'insomnia/src/common/constants';
+import { database } from 'insomnia/src/common/database';
+import { getWorkspaceLabel } from 'insomnia/src/common/get-workspace-label';
+import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/common/har';
+import { getInsomniaV5DataExport } from 'insomnia/src/common/insomnia-v5';
+import { isNotNullOrUndefined } from 'insomnia/src/common/misc';
+import { strings } from 'insomnia/src/common/strings';
+import { type Environment } from 'insomnia/src/models/environment';
+import * as requestOperations from 'insomnia/src/models/helpers/request-operations';
+import * as models from 'insomnia/src/models/index';
+import { type BaseModel, environment } from 'insomnia/src/models/index';
+import { isScratchpadOrganizationId, type Organization } from 'insomnia/src/models/organization';
+import type { Project } from 'insomnia/src/models/project';
+import { isScratchpad, type Workspace } from 'insomnia/src/models/workspace';
+import { SegmentEvent } from 'insomnia/src/ui/analytics';
+import { Icon } from 'insomnia/src/ui/components/icon';
+import { showError, showModal } from 'insomnia/src/ui/components/modals';
+import { AskModal } from 'insomnia/src/ui/components/modals/ask-modal';
+import { ExportRequestsModal } from 'insomnia/src/ui/components/modals/export-requests-modal';
+import { ImportModal } from 'insomnia/src/ui/components/modals/import-modal';
+import { SelectModal } from 'insomnia/src/ui/components/modals/select-modal';
+import { useOrganizationLoaderData } from 'insomnia/src/ui/routes/organization';
+import type { ListWorkspacesLoaderData } from 'insomnia/src/ui/routes/project';
+import { useRootLoaderData } from 'insomnia/src/ui/routes/root';
+import type { UntrackedProjectsLoaderData } from 'insomnia/src/ui/routes/untracked-projects';
+import type { WorkspaceLoaderData } from 'insomnia/src/ui/routes/workspace';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';
 import { useRouteLoaderData } from 'react-router';
 
-import { getProductName } from '../../../common/constants';
-import { exportAllData, exportProjectToFile } from '../../../common/export';
-import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import { isNotNullOrUndefined } from '../../../common/misc';
-import { strings } from '../../../common/strings';
-import { isScratchpadOrganizationId, type Organization } from '../../../models/organization';
-import type { Project } from '../../../models/project';
-import { isScratchpad, type Workspace } from '../../../models/workspace';
-import { SegmentEvent } from '../../analytics';
-import { useOrganizationLoaderData } from '../../routes/organization';
-import type { ListWorkspacesLoaderData } from '../../routes/project';
-import { useRootLoaderData } from '../../routes/root';
-import type { UntrackedProjectsLoaderData } from '../../routes/untracked-projects';
-import type { WorkspaceLoaderData } from '../../routes/workspace';
-import { Icon } from '../icon';
-import { showAlert } from '../modals';
-import { ExportRequestsModal } from '../modals/export-requests-modal';
-import { ImportModal } from '../modals/import-modal';
+import { AlertModal } from '../modals/alert-modal';
+
+const VALUE_YAML = 'yaml';
+const VALUE_HAR = 'har';
+
+export type SelectedFormat = typeof VALUE_HAR | typeof VALUE_YAML;
+
+const showSelectExportTypeModal = ({ onDone }: { onDone: (selectedFormat: SelectedFormat) => Promise<void> }) => {
+  const options = [
+    {
+      name: 'Insomnia v5',
+      value: VALUE_YAML,
+    },
+    {
+      name: 'HAR – HTTP Archive Format',
+      value: VALUE_HAR,
+    },
+  ];
+
+  let lastFormat = window.localStorage.getItem('insomnia.lastExportFormat');
+  if (lastFormat === 'json') {
+    window.localStorage.setItem('insomnia.lastExportFormat', VALUE_YAML);
+    lastFormat = VALUE_YAML;
+  }
+
+  const defaultValue = options.find(({ value }) => value === lastFormat) ? lastFormat : VALUE_YAML;
+
+  showModal(SelectModal, {
+    title: 'Select Export Type',
+    value: defaultValue,
+    options,
+    message: 'Which format would you like to export as?',
+    onDone: async selectedFormat => {
+      if (selectedFormat) {
+        window.localStorage.setItem('insomnia.lastExportFormat', selectedFormat);
+        await onDone(selectedFormat as SelectedFormat);
+      }
+    },
+  });
+};
+
+const showExportPrivateEnvironmentsModal = async () => {
+  return new Promise<boolean>(resolve => {
+    showModal(AskModal, {
+      title: 'Export Private Environments?',
+      message: 'Do you want to include private environments in your export?',
+      onDone: async (isYes: boolean) => {
+        if (isYes) {
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      },
+    });
+  });
+};
+
+const showSaveExportedFileDialog = async ({
+  exportedFileNamePrefix,
+  selectedFormat,
+}: {
+  exportedFileNamePrefix: string;
+  selectedFormat: SelectedFormat;
+}) => {
+  const date = format(Date.now(), 'yyyy-MM-dd');
+  const name = exportedFileNamePrefix.replace(/ /g, '-');
+  const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
+  const dir = lastDir || window.app.getPath('desktop');
+  const options = {
+    title: 'Export Insomnia Data',
+    buttonLabel: 'Export',
+    defaultPath: `${path.join(dir, `${name}_${date}`)}.${selectedFormat}`,
+  };
+  const { filePath } = await window.dialog.showSaveDialog(options);
+  return filePath || null;
+};
+
+const showSaveExportedFolderDialog = async () => {
+  const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
+  const dir = lastDir || window.app.getPath('desktop');
+  const options = {
+    title: 'Export Insomnia Data',
+    buttonLabel: 'Export',
+    properties: ['openDirectory'],
+    defaultPath: dir,
+  } satisfies Electron.OpenDialogOptions;
+  const { filePaths } = await window.dialog.showOpenDialog(options);
+  const filePath = filePaths[0];
+
+  return filePath || null;
+};
+
+async function writeExportedFileToFileSystem(filename: string, data: string) {
+  // Remember last exported path
+  window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
+  await writeFile(filename, data);
+}
+
+export const exportProjectToFile = (activeProjectName: string, workspacesForActiveProject: Workspace[]) => {
+  if (!workspacesForActiveProject.length) {
+    showModal(AlertModal, {
+      title: 'Cannot export',
+      message: (
+        <>
+          There are no workspaces to export in the <strong>{activeProjectName}</strong>{' '}
+          {strings.project.singular.toLowerCase()}.
+        </>
+      ),
+    });
+    return;
+  }
+
+  showSelectExportTypeModal({
+    onDone: async selectedFormat => {
+      const baseEnvironments = await database.find<Environment>(environment.type, {
+        parentId: { $in: workspacesForActiveProject.map(w => w._id) },
+      });
+
+      const subEnvironments = await database.find<Environment>(environment.type, {
+        parentId: { $in: baseEnvironments.map(w => w._id) },
+      });
+      const shouldPrompt = subEnvironments.some(e => e.isPrivate);
+      let shouldExportPrivateEnvironments = false;
+      if (shouldPrompt) {
+        shouldExportPrivateEnvironments = await showExportPrivateEnvironmentsModal();
+      }
+
+      try {
+        switch (selectedFormat) {
+          case VALUE_HAR: {
+            const fileName = await showSaveExportedFileDialog({
+              exportedFileNamePrefix: activeProjectName,
+              selectedFormat,
+            });
+
+            if (!fileName) {
+              return;
+            }
+            const stringifiedExport = await exportWorkspacesHAR(
+              workspacesForActiveProject,
+              shouldExportPrivateEnvironments,
+            );
+
+            await writeExportedFileToFileSystem(fileName, stringifiedExport);
+
+            break;
+          }
+
+          case VALUE_YAML: {
+            const dirPath = await showSaveExportedFolderDialog();
+            if (!dirPath) {
+              return;
+            }
+
+            if (!dirPath) {
+              return;
+            }
+
+            const projectName = activeProjectName.replace(/ /g, '-');
+            const insomniaProjectExportFolder = path.join(dirPath, `insomnia-export.${projectName}.${Date.now()}`);
+            await mkdir(insomniaProjectExportFolder);
+
+            for (const workspace of workspacesForActiveProject) {
+              const workspaceName = workspace.name.replace(/ /g, '-');
+              const fileName = path.join(insomniaProjectExportFolder, `${workspaceName}-${workspace._id}.yaml`);
+              const stringifiedExport = await getInsomniaV5DataExport({
+                workspaceId: workspace._id,
+                includePrivateEnvironments: shouldExportPrivateEnvironments,
+              });
+              await writeExportedFileToFileSystem(fileName, stringifiedExport);
+            }
+            break;
+          }
+
+          default: {
+            throw new Error(`selected export format "${selectedFormat}" is invalid`);
+          }
+        }
+        window.main.trackSegmentEvent({ event: SegmentEvent.exportCompleted });
+      } catch (err) {
+        showError({
+          title: 'Export Failed',
+          error: err,
+          message: 'Export failed due to an unexpected error',
+        });
+        return;
+      }
+    },
+  });
+};
+
+export const exportMockServerToFile = async (workspace: Workspace) => {
+  const fileName = await showSaveExportedFileDialog({
+    exportedFileNamePrefix: workspace.name,
+    selectedFormat: 'yaml',
+  });
+  if (!fileName) {
+    return;
+  }
+
+  try {
+    const stringifiedExport = await getInsomniaV5DataExport({
+      workspaceId: workspace._id,
+      includePrivateEnvironments: false,
+    });
+    await writeExportedFileToFileSystem(fileName, stringifiedExport);
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.dataExport,
+      properties: { type: 'yaml', scope: 'mock-server' },
+    });
+  } catch (err) {
+    showError({
+      title: 'Export Failed',
+      error: err,
+      message: 'Export failed due to an unexpected error',
+    });
+    return;
+  }
+};
+
+export const exportGlobalEnvironmentToFile = async (workspace: Workspace) => {
+  const fileName = await showSaveExportedFileDialog({
+    exportedFileNamePrefix: workspace.name,
+    selectedFormat: 'yaml',
+  });
+  if (!fileName) {
+    return;
+  }
+
+  const baseEnvironments = await database.find<Environment>(environment.type, {
+    parentId: workspace._id,
+  });
+
+  const subEnvironments = await database.find<Environment>(environment.type, {
+    parentId: { $in: baseEnvironments.map(w => w._id) },
+  });
+  const shouldPrompt = subEnvironments.some(e => e.isPrivate);
+  let shouldExportPrivateEnvironments = false;
+  if (shouldPrompt) {
+    shouldExportPrivateEnvironments = await showExportPrivateEnvironmentsModal();
+  }
+
+  try {
+    const stringifiedExport = await getInsomniaV5DataExport({
+      workspaceId: workspace._id,
+      includePrivateEnvironments: shouldExportPrivateEnvironments,
+    });
+    await writeExportedFileToFileSystem(fileName, stringifiedExport);
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.dataExport,
+      properties: { type: 'yaml', scope: 'environment' },
+    });
+  } catch (err) {
+    showError({
+      title: 'Export Failed',
+      error: err,
+      message: 'Export failed due to an unexpected error',
+    });
+    return;
+  }
+};
+
+export const exportRequestsToFile = (workspaceId: string, requestIds: string[]) => {
+  showSelectExportTypeModal({
+    onDone: async selectedFormat => {
+      const requests: BaseModel[] = [];
+      for (const requestId of requestIds) {
+        const request = await requestOperations.getById(requestId);
+        if (request) {
+          requests.push(request);
+        }
+      }
+      const [baseEnvironment] = await database.find<Environment>(environment.type, {
+        parentId: workspaceId,
+      });
+
+      const subEnvironments = await database.find<Environment>(environment.type, {
+        parentId: baseEnvironment?._id,
+      });
+      const shouldPrompt = subEnvironments.some(e => e.isPrivate);
+      let shouldExportPrivateEnvironments = false;
+      if (shouldPrompt) {
+        shouldExportPrivateEnvironments = await showExportPrivateEnvironmentsModal();
+      }
+      const fileName = await showSaveExportedFileDialog({
+        exportedFileNamePrefix: 'Insomnia',
+        selectedFormat,
+      });
+
+      if (!fileName) {
+        return;
+      }
+
+      let stringifiedExport = '';
+
+      try {
+        switch (selectedFormat) {
+          case VALUE_HAR: {
+            stringifiedExport = await exportRequestsHAR(requests, shouldExportPrivateEnvironments);
+            break;
+          }
+
+          case VALUE_YAML: {
+            stringifiedExport = await getInsomniaV5DataExport({
+              workspaceId,
+              includePrivateEnvironments: shouldExportPrivateEnvironments,
+              requestIds,
+            });
+            break;
+          }
+
+          default: {
+            throw new Error(`selected export format "${selectedFormat}" is invalid`);
+          }
+        }
+        await writeExportedFileToFileSystem(fileName, stringifiedExport);
+        window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: selectedFormat } });
+      } catch (err) {
+        showError({
+          title: 'Export Failed',
+          error: err,
+          message: 'Export failed due to an unexpected error',
+        });
+        return;
+      }
+    },
+  });
+};
+
+export async function exportWorkspaceData({
+  workspace,
+  dirPath,
+  includePrivateEnvironments,
+}: {
+  workspace: Workspace;
+  dirPath: string;
+  includePrivateEnvironments: boolean;
+}) {
+  const insomniaExport = await getInsomniaV5DataExport({ workspaceId: workspace._id, includePrivateEnvironments });
+
+  try {
+    const workspaceName = workspace.name.replace(/ /g, '-');
+    const filePath = path.join(dirPath, `${workspaceName}-${workspace._id}.yaml`);
+    await writeExportedFileToFileSystem(filePath, insomniaExport);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function exportAllData({ dirPath }: { dirPath: string }): Promise<void> {
+  const workspaces = await database.find<Workspace>(models.workspace.type);
+
+  const baseEnvironments = await database.find<Environment>(environment.type, {
+    parentId: { $in: workspaces.map(w => w._id) },
+  });
+
+  const subEnvironments = await database.find<Environment>(environment.type, {
+    parentId: { $in: baseEnvironments.map(w => w._id) },
+  });
+  const shouldPrompt = subEnvironments.some(e => e.isPrivate);
+  let includePrivateEnvironments = false;
+  if (shouldPrompt) {
+    includePrivateEnvironments = await showExportPrivateEnvironmentsModal();
+  }
+
+  const insomniaExportFolder = path.join(dirPath, `insomnia-export.${Date.now()}`);
+  await mkdir(insomniaExportFolder);
+
+  for (const workspace of workspaces) {
+    await exportWorkspaceData({
+      workspace,
+      dirPath: insomniaExportFolder,
+      includePrivateEnvironments,
+    });
+  }
+}
 
 const UntrackedProject = ({
   project,
@@ -278,14 +666,14 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                 dirPath,
               }));
           } catch (e) {
-            showAlert({
+            showModal(AlertModal, {
               title: 'Export Failed',
               message: 'An error occurred while exporting data. Please try again.',
             });
             console.error(e);
           }
 
-          showAlert({
+          showModal(AlertModal, {
             title: 'Export Complete',
             message: 'All your data have been successfully exported',
           });
@@ -345,14 +733,14 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                       dirPath,
                     }));
                 } catch (e) {
-                  showAlert({
+                  showModal(AlertModal, {
                     title: 'Export Failed',
                     message: 'An error occurred while exporting data. Please try again.',
                   });
                   console.error(e);
                 }
 
-                showAlert({
+                showModal(AlertModal, {
                   title: 'Export Complete',
                   message: 'All your data have been successfully exported',
                 });

@@ -17,8 +17,9 @@ import type { OrganizationLoaderData } from '../../routes/organization';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
-import { showModal, showPrompt } from '../modals';
+import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
+import { PromptModal } from '../modals/prompt-modal';
 
 export const MockResponseExtractor = () => {
   // file://./../../routes/request.tsx#loader
@@ -111,7 +112,7 @@ If you want to create a self-hosted mock server route from a request response in
               }
               // Create new mock server and route
               if (!selectedMockServer) {
-                showPrompt({
+                showModal(PromptModal, {
                   title: 'Create Mock Route',
                   defaultValue: path,
                   label: 'Name',
@@ -144,7 +145,7 @@ If you want to create a self-hosted mock server route from a request response in
               }
               // Create new mock route
               if (!selectedMockRoute) {
-                showPrompt({
+                showModal(PromptModal, {
                   title: 'Create Mock Route',
                   defaultValue: path,
                   label: 'Name',

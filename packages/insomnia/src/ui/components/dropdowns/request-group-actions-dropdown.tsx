@@ -10,16 +10,20 @@ import type { Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
-import * as pluginContexts from '../../../plugins/context/index';
+import * as pluginApp from '../../../plugins/context/app';
+import * as pluginData from '../../../plugins/context/data';
+import * as pluginNetwork from '../../../plugins/context/network';
+import * as pluginStore from '../../../plugins/context/store';
 import type { CreateRequestType } from '../../hooks/use-request';
 import { useRootLoaderData } from '../../routes/root';
 import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
-import { showError, showModal, showPrompt } from '../modals';
+import { showError, showModal } from '../modals';
 import { AskModal } from '../modals/ask-modal';
 import { PasteCurlModal } from '../modals/paste-curl-modal';
+import { PromptModal } from '../modals/prompt-modal';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 interface Props extends Partial<DropdownProps> {
   requestGroup: RequestGroup;
@@ -66,7 +70,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
   };
 
   const handleRequestGroupDuplicate = () => {
-    showPrompt({
+    showModal(PromptModal, {
       title: 'Duplicate Folder',
       defaultValue: requestGroup.name,
       submitName: 'Create',
@@ -112,10 +116,10 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
 
     try {
       const context = {
-        ...(pluginContexts.app.init('no-render') as Record<string, any>),
-        ...pluginContexts.data.init(activeProject._id),
-        ...(pluginContexts.store.init(plugin) as Record<string, any>),
-        ...(pluginContexts.network.init() as Record<string, any>),
+        ...(pluginApp.init() as Record<string, any>),
+        ...pluginData.init(activeProject._id),
+        ...(pluginStore.init(plugin) as Record<string, any>),
+        ...(pluginNetwork.init() as Record<string, any>),
       };
       const requests = await models.request.findByParentId(requestGroup._id);
       requests.sort((a, b) => a.metaSortKey - b.metaSortKey);
@@ -214,7 +218,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
           name: 'New Folder',
           icon: 'folder',
           action: () =>
-            showPrompt({
+            showModal(PromptModal, {
               title: 'New Folder',
               defaultValue: 'My Folder',
               submitName: 'Create',

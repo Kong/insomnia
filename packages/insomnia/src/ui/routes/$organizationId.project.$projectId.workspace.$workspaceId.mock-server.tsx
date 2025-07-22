@@ -33,9 +33,10 @@ import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dr
 import { EditableInput } from '../components/editable-input';
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
-import { showModal, showPrompt } from '../components/modals';
+import { showModal } from '../components/modals';
 import { AlertModal } from '../components/modals/alert-modal';
 import { AskModal } from '../components/modals/ask-modal';
+import { PromptModal } from '../components/modals/prompt-modal';
 import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { SvgIcon } from '../components/svg-icon';
 import { OrganizationTabList } from '../components/tabs/tab-list';
@@ -97,7 +98,7 @@ const MockServerRoute = () => {
       name: 'Rename',
       icon: 'edit',
       action: id => {
-        showPrompt({
+        showModal(PromptModal, {
           title: 'Rename mock route',
           defaultValue: mockRoutes.find(s => s._id === id)?.name,
           submitName: 'Rename',
@@ -255,7 +256,7 @@ const MockServerRoute = () => {
             <Button
               className="flex items-center justify-center gap-2 rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
               onPress={() => {
-                showPrompt({
+                showModal(PromptModal, {
                   title: 'New mock route',
                   defaultValue: '/',
                   submitName: 'Create',

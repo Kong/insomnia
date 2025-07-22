@@ -30,7 +30,8 @@ import {
 } from '../../routes/git-project-actions';
 import { ConfigLink } from '../github-app-config-link';
 import { Icon } from '../icon';
-import { showAlert, showModal } from '../modals';
+import { showModal } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
 import { GitProjectBranchesModal } from '../modals/git-project-branches-modal';
 import { GitProjectLogModal } from '../modals/git-project-log-modal';
 import { GitProjectMigrationModal } from '../modals/git-project-migration-modal';
@@ -129,7 +130,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
   useEffect(() => {
     const errors = [...(gitPushFetcher.data?.errors ?? [])];
     if (errors.length > 0) {
-      showAlert({
+      showModal(AlertModal, {
         title: 'Push Failed',
         message: errors.join('\n'),
       });
@@ -141,7 +142,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
       gitRepoDataFetcher.data && 'errors' in gitRepoDataFetcher.data ? gitRepoDataFetcher.data.errors : [];
     const errors = [...gitRepoDataErrors];
     if (errors.length > 0) {
-      showAlert({
+      showModal(AlertModal, {
         title: 'Loading of Git Repository Failed',
         message: errors.join('\n'),
       });
@@ -151,7 +152,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
   useEffect(() => {
     const errors = [...(gitCheckoutFetcher.data?.errors ?? [])];
     if (errors.length > 0) {
-      showAlert({
+      showModal(AlertModal, {
         title: 'Checkout Failed',
         message: errors.join('\n'),
       });
@@ -220,7 +221,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
               await pullFromGitRemote({ projectId })
                 .then(result => {
                   if ('errors' in result && result.errors) {
-                    showAlert({
+                    showModal(AlertModal, {
                       title: 'Pull Failed',
                       message: (
                         <>
@@ -260,7 +261,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
                 });
             } catch (err) {
               const message = err instanceof Error ? err.message : 'An error occurred while pulling';
-              showAlert({
+              showModal(AlertModal, {
                 title: 'Pull Failed',
                 message: (
                   <>

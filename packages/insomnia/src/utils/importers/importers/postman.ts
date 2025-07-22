@@ -1,7 +1,8 @@
-import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML } from '../../../common/constants';
-import type { AuthTypeOAuth2 } from '../../../models/request';
-import { forceBracketNotation } from '../../../templating/utils';
-import { fakerFunctions } from '../../../ui/components/templating/faker-functions';
+import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT, CONTENT_TYPE_XML } from 'insomnia/src/common/constants';
+import type { AuthTypeOAuth2 } from 'insomnia/src/models/request';
+import { fakerFunctions } from 'insomnia/src/templating/faker-functions';
+import { forceBracketNotation } from 'insomnia/src/templating/utils';
+
 import type { Converter, ImportRequest, Parameter, PathParameters } from '../entities';
 import type {
   Auth as V200Auth,

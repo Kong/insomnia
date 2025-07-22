@@ -43,7 +43,12 @@ import type { Settings } from '../models/settings';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
-import * as pluginContexts from '../plugins/context/index';
+import * as pluginApp from '../plugins/context/app';
+import * as pluginData from '../plugins/context/data';
+import * as pluginNetwork from '../plugins/context/network';
+import * as pluginRequest from '../plugins/context/request';
+import * as pluginResponse from '../plugins/context/response';
+import * as pluginStore from '../plugins/context/store';
 import * as plugins from '../plugins/index';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '../templating/types';
@@ -1007,11 +1012,11 @@ async function _applyRequestPluginHooks(renderedRequest: RenderedRequest, render
 
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
     const context = {
-      ...(pluginContexts.app.init('no-render') as Record<string, any>),
-      ...pluginContexts.data.init(renderedContext.getProjectId()),
-      ...(pluginContexts.store.init(plugin) as Record<string, any>),
-      ...(pluginContexts.request.init(newRenderedRequest, renderedContext) as Record<string, any>),
-      ...(pluginContexts.network.init() as Record<string, any>),
+      ...(pluginApp.init() as Record<string, any>),
+      ...pluginData.init(renderedContext.getProjectId()),
+      ...(pluginStore.init(plugin) as Record<string, any>),
+      ...(pluginRequest.init(newRenderedRequest, renderedContext) as Record<string, any>),
+      ...(pluginNetwork.init() as Record<string, any>),
     };
 
     try {
@@ -1033,14 +1038,15 @@ async function _applyResponsePluginHooks(
   try {
     const newResponse = clone(response);
     const newRequest = clone(renderedRequest);
+
     for (const { plugin, hook } of await plugins.getResponseHooks()) {
       const context = {
-        ...(pluginContexts.app.init('no-render') as Record<string, any>),
-        ...pluginContexts.data.init(renderedContext.getProjectId()),
-        ...(pluginContexts.store.init(plugin) as Record<string, any>),
-        ...(pluginContexts.response.init(newResponse) as Record<string, any>),
-        ...(pluginContexts.request.init(newRequest, renderedContext, true) as Record<string, any>),
-        ...(pluginContexts.network.init() as Record<string, any>),
+        ...(pluginApp.init() as Record<string, any>),
+        ...pluginData.init(renderedContext.getProjectId()),
+        ...(pluginStore.init(plugin) as Record<string, any>),
+        ...(pluginResponse.init(newResponse) as Record<string, any>),
+        ...(pluginRequest.init(newRequest, renderedContext, true) as Record<string, any>),
+        ...(pluginNetwork.init() as Record<string, any>),
       };
 
       try {

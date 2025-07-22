@@ -1,10 +1,13 @@
+import {
+  exportGlobalEnvironmentToFile,
+  exportMockServerToFile,
+} from 'insomnia/src/ui/components/settings/import-export';
 import React, { type FC, Fragment, useCallback, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';
 
 import { parseApiSpec } from '../../../common/api-specs';
 import { getProductName } from '../../../common/constants';
-import { exportGlobalEnvironmentToFile, exportMockServerToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { ApiSpec } from '../../../models/api-spec';
 import type { MockServer } from '../../../models/mock-server';
@@ -13,14 +16,17 @@ import type { Workspace } from '../../../models/workspace';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
 import type { DocumentAction } from '../../../plugins';
 import { getDocumentActions } from '../../../plugins';
-import * as pluginContexts from '../../../plugins/context';
+import * as pluginApp from '../../../plugins/context/app';
+import * as pluginData from '../../../plugins/context/data';
+import * as pluginStore from '../../../plugins/context/store';
 import { SegmentEvent } from '../../analytics';
 import { useLoadingRecord } from '../../hooks/use-loading-record';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Icon } from '../icon';
-import { showError, showPrompt } from '../modals';
+import { showError, showModal } from '../modals';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { ImportModal } from '../modals/import-modal';
+import { PromptModal } from '../modals/prompt-modal';
 import { WorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
 import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
 import { SvgIcon } from '../svg-icon';
@@ -51,9 +57,9 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
 
       try {
         const context = {
-          ...pluginContexts.app.init('no-render'),
-          ...pluginContexts.data.init(project._id),
-          ...pluginContexts.store.init(p.plugin),
+          ...pluginApp.init(),
+          ...pluginData.init(project._id),
+          ...pluginStore.init(p.plugin),
         };
         await p.action(context, parseApiSpec(apiSpec?.contents || ''));
       } catch (err) {
@@ -123,7 +129,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
             label="Rename"
             icon="pen-to-square"
             onClick={() => {
-              showPrompt({
+              showModal(PromptModal, {
                 title: `Rename ${getWorkspaceLabel(workspace).singular}`,
                 defaultValue: workspaceName,
                 submitName: 'Rename',

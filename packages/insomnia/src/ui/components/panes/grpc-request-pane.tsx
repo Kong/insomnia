@@ -34,7 +34,8 @@ import { GrpcMethodDropdown } from '../dropdowns/grpc-method-dropdown/grpc-metho
 import { ErrorBoundary } from '../error-boundary';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
-import { showAlert, showError, showModal } from '../modals';
+import { showError, showModal } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
 import { ErrorModal } from '../modals/error-modal';
 import { ProtoFilesModal } from '../modals/proto-files-modal';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
@@ -167,7 +168,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
             error: err,
           });
         } else {
-          showAlert({
+          showModal(AlertModal, {
             title: 'Unexpected Request Failure',
             message: (
               <div>

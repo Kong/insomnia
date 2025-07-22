@@ -32,7 +32,8 @@ import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
 import { MarkdownEditor } from '../markdown-editor';
-import { showAlert, showModal } from '../modals';
+import { showModal } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { Pane } from '../panes/pane';
@@ -115,7 +116,7 @@ const WebSocketRequestForm: FC<FormProps> = ({ request, previewMode, environment
           error: err,
         });
       } else {
-        showAlert({
+        showModal(AlertModal, {
           title: 'Unexpected Request Failure',
           message: (
             <div>

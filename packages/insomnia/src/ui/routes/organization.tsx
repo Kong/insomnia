@@ -37,7 +37,8 @@ import { HeaderUserButton } from '../components/header-user-button';
 import { Hotkey } from '../components/hotkey';
 import { Icon } from '../components/icon';
 import { InsomniaLogo } from '../components/insomnia-icon';
-import { showAlert, showModal } from '../components/modals';
+import { showModal } from '../components/modals';
+import { AlertModal } from '../components/modals/alert-modal';
 import { SettingsModal, showSettingsModal } from '../components/modals/settings-modal';
 import { OrganizationAvatar } from '../components/organization-avatar';
 import { PresentUsers } from '../components/present-users';
@@ -421,7 +422,7 @@ const Component = () => {
 
                             if (currentPlan.type === 'enterprise-member') {
                               // If user has a team or enterprise member plan show them an alert
-                              showAlert({
+                              showModal(AlertModal, {
                                 title: 'Cannot create new organization.',
                                 message:
                                   'Your Insomnia account is tied to the enterprise corporate account. Please ask the owner of the enterprise billing to create one for you.',

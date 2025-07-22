@@ -1,11 +1,11 @@
 import { format } from 'date-fns';
+import type { TemplateTag } from 'insomnia/src/plugins';
+import type { PluginTemplateTag, RenderPurpose } from 'insomnia/src/templating/types';
+import { invariant } from 'insomnia/src/utils/invariant';
 import { JSONPath } from 'jsonpath-plus';
 
-import type { CloudProviderCredential, CloudProviderName } from '../../../models/cloud-credential';
-import type { TemplateTag } from '../../../plugins';
-import type { PluginTemplateTag, RenderPurpose } from '../../../templating/types';
-import { invariant } from '../../../utils/invariant';
-import { isBase64String } from '../../../utils/string-check';
+import type { CloudProviderCredential, CloudProviderName } from '../models/cloud-credential';
+import { isBase64String } from '../utils/string-check';
 import { fakerFunctions } from './faker-functions';
 const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
   {

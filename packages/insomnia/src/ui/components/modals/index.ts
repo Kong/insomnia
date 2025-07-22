@@ -1,8 +1,6 @@
 import { invariant } from '../../../utils/invariant';
 import type { ModalProps } from '../base/modal';
-import { AlertModal, type AlertModalOptions } from './alert-modal';
 import { ErrorModal, type ErrorModalOptions } from './error-modal';
-import { PromptModal, type PromptModalOptions } from './prompt-modal';
 
 interface ModalHandle {
   show: (options: any) => void;
@@ -45,14 +43,6 @@ export function showModal<
   const modalHandle = getModalComponentHandle(name) as unknown as GetRefHandleFromProps<TModalProps>;
 
   return modalHandle.show(config);
-}
-
-export function showPrompt(options: PromptModalOptions) {
-  return showModal(PromptModal, options);
-}
-
-export function showAlert(config: AlertModalOptions) {
-  return showModal(AlertModal, config);
 }
 
 export function showError(config: ErrorModalOptions) {
