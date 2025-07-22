@@ -4,8 +4,9 @@ import clone from 'clone';
 import type * as Har from 'har-format';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
+import type { BaseModel } from '../models';
 import * as models from '../models';
-import type { Request } from '../models/request';
+import { isRequest, type Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Response } from '../models/response';
 import { isWorkspace, type Workspace } from '../models/workspace';
@@ -24,6 +25,81 @@ import { database } from './database';
 import { filterHeaders, getSetCookieHeaders, hasAuthHeader } from './misc';
 import { getRenderedRequestAndContext } from './render';
 
+const getDocWithDescendants =
+  (includePrivateDocs = false) =>
+  async (parentDoc: BaseModel | null) => {
+    const docs = await database.withDescendants(parentDoc);
+    return docs.filter(
+      // Don't include if private, except if we want to
+      doc => !doc?.isPrivate || includePrivateDocs,
+    );
+  };
+
+export async function exportWorkspacesHAR(workspaces: Workspace[], includePrivateDocs = false) {
+  const promises = workspaces.map(getDocWithDescendants(includePrivateDocs));
+  const docs = (await Promise.all(promises)).flat();
+  const requests = docs.filter(isRequest);
+  return exportRequestsHAR(requests, includePrivateDocs);
+}
+
+export async function exportRequestsHAR(requests: BaseModel[], includePrivateDocs = false) {
+  const workspaces: BaseModel[] = [];
+  const mapRequestIdToWorkspace: Record<string, any> = {};
+  const workspaceLookup: Record<string, any> = {};
+
+  for (const request of requests) {
+    const ancestors: BaseModel[] = await database.withAncestors(request, [
+      models.workspace.type,
+      models.requestGroup.type,
+    ]);
+    const workspace = ancestors.find(isWorkspace);
+    mapRequestIdToWorkspace[request._id] = workspace;
+
+    if (workspace == null || workspace._id in workspaceLookup) {
+      continue;
+    }
+
+    workspaceLookup[workspace._id] = true;
+    workspaces.push(workspace);
+  }
+
+  const mapWorkspaceIdToEnvironmentId: Record<string, any> = {};
+
+  for (const workspace of workspaces) {
+    const workspaceMeta = await models.workspaceMeta.getByParentId(workspace._id);
+    let environmentId = workspaceMeta ? workspaceMeta.activeEnvironmentId : null;
+    const environment = await models.environment.getById(environmentId || 'n/a');
+
+    if (!environment || (environment.isPrivate && !includePrivateDocs)) {
+      environmentId = 'n/a';
+    }
+
+    mapWorkspaceIdToEnvironmentId[workspace._id] = environmentId;
+  }
+
+  requests = requests.sort((a: Record<string, any>, b: Record<string, any>) =>
+    a.metaSortKey < b.metaSortKey ? -1 : 1,
+  );
+  const harRequests: ExportRequest[] = [];
+
+  for (const request of requests) {
+    const workspace = mapRequestIdToWorkspace[request._id];
+
+    if (workspace == null) {
+      // Workspace not found for request, so don't export it.
+      continue;
+    }
+
+    const environmentId = mapWorkspaceIdToEnvironmentId[workspace._id];
+    harRequests.push({
+      requestId: request._id,
+      environmentId: environmentId,
+    });
+  }
+
+  const data = await exportHar(harRequests);
+  return JSON.stringify(data, null, '\t');
+}
 export interface ExportRequest {
   requestId: string;
   environmentId: string | null;

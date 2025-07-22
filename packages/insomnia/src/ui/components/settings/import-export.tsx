@@ -3,9 +3,9 @@ import path from 'node:path';
 
 import { format } from 'date-fns';
 import { getProductName } from 'insomnia/src/common/constants';
-import { database, database as db } from 'insomnia/src/common/database';
+import { database } from 'insomnia/src/common/database';
 import { getWorkspaceLabel } from 'insomnia/src/common/get-workspace-label';
-import * as har from 'insomnia/src/common/har';
+import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/common/har';
 import { getInsomniaV5DataExport } from 'insomnia/src/common/insomnia-v5';
 import { isNotNullOrUndefined } from 'insomnia/src/common/misc';
 import { strings } from 'insomnia/src/common/strings';
@@ -15,8 +15,7 @@ import * as models from 'insomnia/src/models/index';
 import { type BaseModel, environment } from 'insomnia/src/models/index';
 import { isScratchpadOrganizationId, type Organization } from 'insomnia/src/models/organization';
 import type { Project } from 'insomnia/src/models/project';
-import { isRequest } from 'insomnia/src/models/request';
-import { isScratchpad, isWorkspace, type Workspace } from 'insomnia/src/models/workspace';
+import { isScratchpad, type Workspace } from 'insomnia/src/models/workspace';
 import { SegmentEvent } from 'insomnia/src/ui/analytics';
 import { Icon } from 'insomnia/src/ui/components/icon';
 import { showError, showModal } from 'insomnia/src/ui/components/modals';
@@ -35,79 +34,6 @@ import { useFetcher, useParams } from 'react-router';
 import { useRouteLoaderData } from 'react-router';
 
 import { AlertModal } from '../modals/alert-modal';
-
-const getDocWithDescendants =
-  (includePrivateDocs = false) =>
-  async (parentDoc: BaseModel | null) => {
-    const docs = await db.withDescendants(parentDoc);
-    return docs.filter(
-      // Don't include if private, except if we want to
-      doc => !doc?.isPrivate || includePrivateDocs,
-    );
-  };
-
-export async function exportWorkspacesHAR(workspaces: Workspace[], includePrivateDocs = false) {
-  const promises = workspaces.map(getDocWithDescendants(includePrivateDocs));
-  const docs = (await Promise.all(promises)).flat();
-  const requests = docs.filter(isRequest);
-  return exportRequestsHAR(requests, includePrivateDocs);
-}
-
-export async function exportRequestsHAR(requests: BaseModel[], includePrivateDocs = false) {
-  const workspaces: BaseModel[] = [];
-  const mapRequestIdToWorkspace: Record<string, any> = {};
-  const workspaceLookup: Record<string, any> = {};
-
-  for (const request of requests) {
-    const ancestors: BaseModel[] = await db.withAncestors(request, [models.workspace.type, models.requestGroup.type]);
-    const workspace = ancestors.find(isWorkspace);
-    mapRequestIdToWorkspace[request._id] = workspace;
-
-    if (workspace == null || workspace._id in workspaceLookup) {
-      continue;
-    }
-
-    workspaceLookup[workspace._id] = true;
-    workspaces.push(workspace);
-  }
-
-  const mapWorkspaceIdToEnvironmentId: Record<string, any> = {};
-
-  for (const workspace of workspaces) {
-    const workspaceMeta = await models.workspaceMeta.getByParentId(workspace._id);
-    let environmentId = workspaceMeta ? workspaceMeta.activeEnvironmentId : null;
-    const environment = await models.environment.getById(environmentId || 'n/a');
-
-    if (!environment || (environment.isPrivate && !includePrivateDocs)) {
-      environmentId = 'n/a';
-    }
-
-    mapWorkspaceIdToEnvironmentId[workspace._id] = environmentId;
-  }
-
-  requests = requests.sort((a: Record<string, any>, b: Record<string, any>) =>
-    a.metaSortKey < b.metaSortKey ? -1 : 1,
-  );
-  const harRequests: har.ExportRequest[] = [];
-
-  for (const request of requests) {
-    const workspace = mapRequestIdToWorkspace[request._id];
-
-    if (workspace == null) {
-      // Workspace not found for request, so don't export it.
-      continue;
-    }
-
-    const environmentId = mapWorkspaceIdToEnvironmentId[workspace._id];
-    harRequests.push({
-      requestId: request._id,
-      environmentId: environmentId,
-    });
-  }
-
-  const data = await har.exportHar(harRequests);
-  return JSON.stringify(data, null, '\t');
-}
 
 const VALUE_YAML = 'yaml';
 const VALUE_HAR = 'har';

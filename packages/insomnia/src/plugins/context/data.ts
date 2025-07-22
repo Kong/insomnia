@@ -1,7 +1,15 @@
+import { exportWorkspacesHAR } from '../../common/har';
 import { fetchImportContentFromURI, importResourcesToProject, scanResources } from '../../common/import';
 import { getInsomniaV5DataExport } from '../../common/insomnia-v5';
 import * as models from '../../models';
 import type { Workspace } from '../../models/workspace';
+
+interface InsomniaExport {
+  workspace?: Workspace;
+  includePrivate?: boolean;
+}
+
+type HarExport = Omit<InsomniaExport, 'format'>;
 
 const getWorkspaces = (activeProjectId?: string) => {
   if (activeProjectId) {
@@ -76,6 +84,9 @@ export const init = (activeProjectId?: string) => ({
 
         return allInsomniaExports;
       },
+
+      har: async ({ workspace, includePrivate }: HarExport = {}) =>
+        exportWorkspacesHAR(workspace ? [workspace] : await getWorkspaces(activeProjectId), Boolean(includePrivate)),
     },
   },
 });
