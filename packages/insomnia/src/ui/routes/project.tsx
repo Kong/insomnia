@@ -397,6 +397,11 @@ async function getAllRemoteFiles({ projectId, organizationId }: { projectId: str
     invariant(project, 'Project not found');
 
     const remoteId = project.remoteId;
+    console.log(
+      '[getAllRemoteFiles] start fetching remote backend workspaces for project',
+      projectId,
+      `remoteId: ${remoteId}`,
+    );
     if (!remoteId) {
       return [];
     }
@@ -407,7 +412,9 @@ async function getAllRemoteFiles({ projectId, organizationId }: { projectId: str
       // Remote backend projects are fetched from the backend since they are not stored locally
       vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId }),
     ]);
-
+    console.log(
+      `[getAllRemoteFiles] found allPulledBackendProjectsForRemoteId: ${allPulledBackendProjectsForRemoteId.length} and allFetchedRemoteBackendProjectsForRemoteId: ${allFetchedRemoteBackendProjectsForRemoteId.length} for remoteId: ${remoteId}`,
+    );
     // Get all workspaces that are connected to backend projects and under the current project
     const workspacesWithBackendProjects = await database.find<Workspace>(models.workspace.type, {
       _id: {
@@ -417,12 +424,12 @@ async function getAllRemoteFiles({ projectId, organizationId }: { projectId: str
       },
       parentId: project._id,
     });
-
+    console.log(`[getAllRemoteFiles] found workspacesWithBackendProjects: ${workspacesWithBackendProjects.length}`);
     // Get the list of remote backend projects that we need to pull
     const backendProjectsToPull = allFetchedRemoteBackendProjectsForRemoteId.filter(
       p => !workspacesWithBackendProjects.find(w => w._id === p.rootDocumentId),
     );
-
+    console.log(`[getAllRemoteFiles] get ${backendProjectsToPull.length} unsynced files`);
     return backendProjectsToPull.map(backendProject => {
       const file: InsomniaFile = {
         id: backendProject.rootDocumentId,
@@ -595,7 +602,7 @@ export const loader: LoaderFunction = async ({ params }) => {
 
   const project = await models.project.getById(projectId);
   invariant(project, `Project was not found ${projectId}`);
-
+  console.log('[project loader] Loading project:', project.name, projectId);
   const [localFiles, organizationProjects = []] = await Promise.all([
     getAllLocalFiles({ projectId }),
     getProjectsWithGitRepositories({ organizationId }),
@@ -652,6 +659,12 @@ const ProjectRoute: FC = () => {
   };
   const [learningFeature] = useLoaderDeferData<LearningFeature>(learningFeaturePromise);
   const [remoteFiles] = useLoaderDeferData<InsomniaFile[]>(remoteFilesPromise, projectId);
+
+  useEffect(() => {
+    if (activeProject?.remoteId && remoteFiles) {
+      console.log('[remote files] remote files loaded for project ui', remoteFiles.length);
+    }
+  }, [activeProject?.remoteId, remoteFiles]);
   const [checkAllProjectSyncStatus] = useLoaderDeferData<Record<string, boolean>>(projectsSyncStatusPromise);
 
   const allFiles = useMemo(() => {
