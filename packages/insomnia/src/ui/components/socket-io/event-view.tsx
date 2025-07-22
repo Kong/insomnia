@@ -5,7 +5,7 @@ import { CONTENT_TYPE_JSON } from '../../../common/constants';
 import type { SocketIOEvent, SocketIOMessageEvent } from '../../../main/network/socket-io';
 import * as models from '../../../models';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
-import type { RequestLoaderData } from '../../routes/request';
+import type { RequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { SocketIOBodyContent } from './body-tab-pane';
 
 interface Props<T> {

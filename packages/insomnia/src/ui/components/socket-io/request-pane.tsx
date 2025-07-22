@@ -10,7 +10,7 @@ import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../..
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import type { SocketIORequestLoaderData } from '../../routes/request';
+import type { SocketIORequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRootLoaderData } from '../../routes/root';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 import { readOnlyWebsocketPairs, RequestHeadersEditor } from '../editors/request-headers-editor';
