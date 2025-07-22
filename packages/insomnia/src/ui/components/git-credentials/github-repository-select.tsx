@@ -20,6 +20,8 @@ export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: st
   const { organizationId } = params;
   const remoteBranchesFetcher = useFetcher<{ branches: string[] }>({ key: selectedRepository?.clone_url || '' });
 
+  const isLoadingRemoteBranches = remoteBranchesFetcher.state !== 'idle';
+
   useEffect(() => {
     if (selectedRepository && remoteBranchesFetcher.state === 'idle' && !remoteBranchesFetcher.data) {
       remoteBranchesFetcher.submit(
@@ -160,15 +162,52 @@ export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: st
           )}
         </>
       )}
-      {selectedRepository && remoteBranches.length > 0 && (
-        <select>
-          {remoteBranches.map(branch => (
-            <option key={branch} value={branch}>
-              {branch}
-            </option>
-          ))}
-        </select>
-      )}
+      <ComboBox
+        key={selectedRepository?.clone_url || 'branch-select'}
+        aria-label="Branch to clone"
+        allowsCustomValue={false}
+        className="w-full"
+        defaultSelectedKey={remoteBranches[0] || 'main'}
+        isDisabled={remoteBranches.length === 0 || loading || isLoadingRemoteBranches}
+        items={remoteBranches.map(branch => ({
+          id: branch,
+          name: branch,
+        }))}
+      >
+        <div className="group flex items-center gap-2 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] transition-colors focus:outline-none focus:ring-1 focus:ring-[--hl-md]">
+          <Input
+            name="branch"
+            aria-label="Search branches"
+            placeholder={isLoadingRemoteBranches ? 'Fetching remote branches...' : 'Select a branch...'}
+            className="w-full py-1 pl-2 pr-7 placeholder:italic"
+          />
+          <ComboButton
+            type="button"
+            className="m-2 flex aspect-square items-center justify-center gap-2 truncate rounded-sm !border-none text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          >
+            <Icon icon="caret-down" className="w-5 flex-shrink-0" />
+          </ComboButton>
+        </div>
+        <Popover
+          className="grid w-[--trigger-width] min-w-max select-none grid-flow-col divide-x divide-solid divide-[--hl-md] overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-sm shadow-lg focus:outline-none"
+          placement="bottom start"
+          offset={8}
+        >
+          <ListBox<{
+            id: string;
+            name: string;
+          }> className="flex min-w-max select-none flex-col p-2 text-sm focus:outline-none">
+            {item => (
+              <ListBoxItem
+                textValue={item.name}
+                className="text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap rounded bg-transparent px-[--padding-md] text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-selected:bg-[--hl-sm] aria-selected:font-bold data-[focused]:bg-[--hl-xs]"
+              >
+                <span className="truncate">{item.name}</span>
+              </ListBoxItem>
+            )}
+          </ListBox>
+        </Popover>
+      </ComboBox>
       {cannotFindRepository && (
         <div className="text-sm text-red-500">
           <Icon icon="warning" /> Repository information could not be retrieved. Please <code>Reset</code> and select a
