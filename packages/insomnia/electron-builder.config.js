@@ -86,7 +86,7 @@ const config = {
       },
       {
         target: 'squirrel',
-      }
+      },
     ],
     signtoolOptions: {
       sign: './customSign.js',
