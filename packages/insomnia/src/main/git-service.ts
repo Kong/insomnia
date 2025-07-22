@@ -1871,6 +1871,35 @@ export const unstageChangesAction = async ({
   }
 };
 
+export const resetToHeadIndexAction = async ({
+  projectId,
+  workspaceId,
+  relativeHeadIndex,
+  mode,
+}: {
+  projectId: string;
+  workspaceId?: string;
+  relativeHeadIndex: `HEAD~${number}`;
+  mode: 'soft' | 'hard';
+}): Promise<{
+  errors?: string[];
+}> => {
+  try {
+    await getGitRepository({ workspaceId, projectId });
+
+    await GitVCS.reset({
+      relativeHeadIndex,
+      mode,
+    });
+    return {};
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'Error while resetting changes';
+    return {
+      errors: [errorMessage],
+    };
+  }
+};
+
 function getPreviewItemName(previewDiffItem: { before: string; after: string }) {
   let prevName = '';
   let nextName = '';
@@ -2412,6 +2441,7 @@ export interface GitServiceAPI {
   gitStatus: typeof gitStatusAction;
   stageChanges: typeof stageChangesAction;
   unstageChanges: typeof unstageChangesAction;
+  resetToHeadIndexAction: typeof resetToHeadIndexAction;
   diffFileLoader: typeof diffFileLoader;
   getRepositoryDirectoryTree: typeof getRepositoryDirectoryTree;
   migrateLegacyInsomniaFolderToFile: typeof migrateLegacyInsomniaFolderToFile;
@@ -2482,6 +2512,9 @@ export const registerGitServiceAPI = () => {
   );
   ipcMainHandle('git.unstageChanges', (_, options: Parameters<typeof unstageChangesAction>[0]) =>
     unstageChangesAction(options),
+  );
+  ipcMainHandle('git.resetToHeadIndexAction', (_, options: Parameters<typeof resetToHeadIndexAction>[0]) =>
+    resetToHeadIndexAction(options),
   );
   ipcMainHandle('git.diffFileLoader', (_, options: Parameters<typeof diffFileLoader>[0]) => diffFileLoader(options));
   ipcMainHandle('git.getRepositoryDirectoryTree', (_, options: Parameters<typeof getRepositoryDirectoryTree>[0]) =>

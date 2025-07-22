@@ -91,6 +91,7 @@ const git: GitServiceAPI = {
   gitStatus: options => ipcRenderer.invoke('git.gitStatus', options),
   stageChanges: options => ipcRenderer.invoke('git.stageChanges', options),
   unstageChanges: options => ipcRenderer.invoke('git.unstageChanges', options),
+  resetToHeadIndexAction: options => ipcRenderer.invoke('git.resetToHeadIndexAction', options),
   diffFileLoader: options => ipcRenderer.invoke('git.diffFileLoader', options),
   getRepositoryDirectoryTree: options => ipcRenderer.invoke('git.getRepositoryDirectoryTree', options),
   migrateLegacyInsomniaFolderToFile: options => ipcRenderer.invoke('git.migrateLegacyInsomniaFolderToFile', options),

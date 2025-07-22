@@ -70,6 +70,7 @@ export type HandleChannels =
   | 'git.gitStatus'
   | 'git.stageChanges'
   | 'git.unstageChanges'
+  | 'git.resetToHeadIndexAction'
   | 'git.diffFileLoader'
   | 'git.getRepositoryDirectoryTree'
   | 'git.migrateLegacyInsomniaFolderToFile'

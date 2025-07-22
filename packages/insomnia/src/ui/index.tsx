@@ -449,6 +449,11 @@ async function renderApp() {
                                   (await import('./routes/git-project-actions')).unstageChangesAction(...args),
                               },
                               {
+                                path: 'resetToHeadIndexAction',
+                                action: async (...args) =>
+                                  (await import('./routes/git-project-actions')).resetToHeadIndexAction(...args),
+                              },
+                              {
                                 path: 'discard',
                                 action: async (...args) =>
                                   (await import('./routes/git-project-actions')).discardChangesAction(...args),
