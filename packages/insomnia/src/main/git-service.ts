@@ -279,6 +279,7 @@ export const gitFetchAction = async ({ projectId, workspaceId }: { projectId: st
 
     return {
       errors: [],
+      success: true,
     };
   } catch (e) {
     console.error(e);
@@ -1393,7 +1394,14 @@ export const createNewGitBranchAction = async ({
     });
 
     const { hasUncommittedChanges } = await getGitChanges(GitVCS);
-    const hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
+
+    let hasUnpushedChanges = false;
+    try {
+      hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
+    } catch (err) {
+      console.error('Error checking for unpushed changes', err);
+      hasUnpushedChanges = false;
+    }
 
     await models.gitRepository.update(gitRepository, {
       hasUncommittedChanges,
@@ -1417,6 +1425,7 @@ export const createNewGitBranchAction = async ({
 
 export interface CheckoutGitBranchResult {
   errors?: string[];
+  success?: boolean;
 }
 
 export const checkoutGitBranchAction = async ({
@@ -1439,7 +1448,15 @@ export const checkoutGitBranchAction = async ({
         errors: [`${err.message}, ${err.data.response}`],
       };
     }
+
+    if (err instanceof Errors.CheckoutConflictError) {
+      return {
+        errors: [`${err.message} - Please commit or discard your changes before switching branches.`],
+      };
+    }
+
     const errorMessage = err instanceof Error ? err.message : err;
+
     return {
       errors: [errorMessage],
     };
@@ -1469,7 +1486,9 @@ export const checkoutGitBranchAction = async ({
   });
 
   await database.flushChanges(bufferId);
-  return {};
+  return {
+    success: true,
+  };
 };
 
 export const mergeGitBranch = async ({
@@ -1562,6 +1581,7 @@ export const deleteGitBranchAction = async ({
 
 export interface PushToGitRemoteResult {
   errors?: string[];
+  success?: boolean;
   gitRepository?: GitRepository;
 }
 
@@ -1659,7 +1679,9 @@ export const pushToGitRemoteAction = async ({
     };
   }
 
-  return {};
+  return {
+    success: true,
+  };
 };
 
 export async function pullFromGitRemote({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) {
