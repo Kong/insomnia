@@ -289,7 +289,7 @@ async function renderApp() {
                   {
                     path: 'collaborators-search',
                     loader: async (...args) =>
-                      (await import('./routes/$organizationId.collaborators')).collaboratorSearchLoader(...args),
+                      (await import('./routes/$organizationId.collaborators-search')).collaboratorSearchLoader(...args),
                   },
                   {
                     path: 'invites',
@@ -298,14 +298,16 @@ async function renderApp() {
                         path: ':invitationId',
                         id: ':invitationId',
                         action: async (...args) =>
-                          (await import('./routes/$organizationId.collaborators')).updateInvitationRoleAction(...args),
+                          (
+                            await import('./routes/$organizationId.collaborators.invites.$invitationId')
+                          ).updateInvitationRoleAction(...args),
                         children: [
                           {
                             path: 'reinvite',
                             action: async (...args) =>
-                              (await import('./routes/$organizationId.collaborators')).reinviteCollaboratorAction(
-                                ...args,
-                              ),
+                              (
+                                await import('./routes/$organizationId.collaborators.invites.$invitationId.reinvite')
+                              ).reinviteCollaboratorAction(...args),
                           },
                         ],
                       },
