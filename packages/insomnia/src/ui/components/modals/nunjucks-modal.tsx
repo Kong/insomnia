@@ -95,6 +95,7 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
       <ModalHeader>Edit {title}</ModalHeader>
       <ModalBody className="pad">
         <form
+          className="px-2"
           onSubmit={event => {
             event.preventDefault();
             modalRef.current?.hide();
