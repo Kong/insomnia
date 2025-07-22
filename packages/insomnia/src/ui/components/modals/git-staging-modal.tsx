@@ -16,7 +16,7 @@ import {
 import { useFetcher, useParams } from 'react-router';
 
 import type { GitRepository } from '../../../models/git-repository';
-import type { GitChangesLoaderData, GitDiffResult } from '../../routes/git-actions';
+import type { GitChangesLoaderData, GitDiffResult } from '../../routes/$organizationId.project.$projectId.git-actions';
 import { DiffEditor } from '../diff-view-editor';
 import { ConfigLink } from '../github-app-config-link';
 import { Icon } from '../icon';

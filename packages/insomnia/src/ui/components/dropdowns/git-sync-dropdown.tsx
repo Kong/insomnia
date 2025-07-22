@@ -24,7 +24,7 @@ import {
   type GitStatusResult,
   pullFromGitRemote,
   type PushToGitRemoteResult,
-} from '../../routes/git-actions';
+} from '../../routes/$organizationId.project.$projectId.git-actions';
 import { ConfigLink } from '../github-app-config-link';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
