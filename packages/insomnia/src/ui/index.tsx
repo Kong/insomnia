@@ -283,11 +283,13 @@ async function renderApp() {
                   },
                   {
                     path: 'collaborators',
-                    loader: async (...args) => (await import('./routes/invite')).collaboratorsListLoader(...args),
+                    loader: async (...args) =>
+                      (await import('./routes/collaborators')).collaboratorsListLoader(...args),
                   },
                   {
                     path: 'collaborators-search',
-                    loader: async (...args) => (await import('./routes/invite')).collaboratorSearchLoader(...args),
+                    loader: async (...args) =>
+                      (await import('./routes/collaborators')).collaboratorSearchLoader(...args),
                   },
                   {
                     path: 'invites',
@@ -296,12 +298,12 @@ async function renderApp() {
                         path: ':invitationId',
                         id: ':invitationId',
                         action: async (...args) =>
-                          (await import('./routes/invite')).updateInvitationRoleAction(...args),
+                          (await import('./routes/collaborators')).updateInvitationRoleAction(...args),
                         children: [
                           {
                             path: 'reinvite',
                             action: async (...args) =>
-                              (await import('./routes/invite')).reinviteCollaboratorAction(...args),
+                              (await import('./routes/collaborators')).reinviteCollaboratorAction(...args),
                           },
                         ],
                       },
@@ -317,7 +319,7 @@ async function renderApp() {
                           {
                             path: 'roles',
                             action: async (...args) =>
-                              (await import('./routes/invite')).updateMemberRoleAction(...args),
+                              (await import('./routes/collaborators')).updateMemberRoleAction(...args),
                           },
                         ],
                       },
