@@ -24,7 +24,7 @@ import { isGitProject, type Project } from '../../../models/project';
 import { type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
 import type { StorageRules } from '../../organization-utils';
-import type { GetRepositoryDirectoryTreeResult } from '../../routes/git-project-actions';
+import type { GetRepositoryDirectoryTreeResult } from '../../routes/$organizationId.project.$projectId.git';
 import { Icon } from '../icon';
 
 const titleByScope: Record<WorkspaceScope, string> = {

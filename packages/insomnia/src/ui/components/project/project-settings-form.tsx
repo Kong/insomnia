@@ -31,6 +31,7 @@ import {
   type Project,
 } from '../../../models/project';
 import type { StorageRules } from '../../organization-utils';
+import type { InitGitCloneResult } from '../../routes/$organizationId.git';
 import {
   scopeToBgColorMap,
   scopeToIconMap,
@@ -38,7 +39,6 @@ import {
   scopeToTextColorMap,
 } from '../../routes/$organizationId.project';
 import type { UpdateProjectActionResult } from '../../routes/$organizationId.project.$projectId.update';
-import type { InitGitCloneResult } from '../../routes/git-project-actions';
 import { ErrorBoundary } from '../error-boundary';
 import { CustomRepositorySettingsFormGroup } from '../git-credentials/custom-repository-settings-form';
 import { GitHubRepositorySetupFormGroup } from '../git-credentials/github-repository-settings-form';

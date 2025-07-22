@@ -388,95 +388,129 @@ async function renderApp() {
                                 path: 'clone',
                                 action: async (...args) =>
                                   (
-                                    await import('./routes/$organizationId.project.$projectId.git-actions')
+                                    await import(
+                                      './routes/$organizationId.project.$projectId.workspace.$workspaceId.git'
+                                    )
                                   ).cloneGitRepoAction(...args),
                               },
                               {
                                 path: 'repo',
                                 loader: async (...args) =>
-                                  (await import('./routes/git-project-actions')).gitRepoLoader(...args),
+                                  (await import('./routes/$organizationId.project.$projectId.git')).gitRepoLoader(
+                                    ...args,
+                                  ),
                               },
                               {
                                 path: 'changes',
                                 loader: async (...args) =>
-                                  (await import('./routes/git-project-actions')).gitChangesLoader(...args),
+                                  (await import('./routes/$organizationId.project.$projectId.git')).gitChangesLoader(
+                                    ...args,
+                                  ),
                               },
                               {
                                 path: 'log',
                                 loader: async (...args) =>
-                                  (await import('./routes/git-project-actions')).gitLogLoader(...args),
+                                  (await import('./routes/$organizationId.project.$projectId.git')).gitLogLoader(
+                                    ...args,
+                                  ),
                               },
                               {
                                 path: 'branches',
                                 loader: async (...args) =>
-                                  (await import('./routes/git-project-actions')).gitBranchesLoader(...args),
+                                  (await import('./routes/$organizationId.project.$projectId.git')).gitBranchesLoader(
+                                    ...args,
+                                  ),
                               },
                               {
                                 path: 'status',
                                 action: async (...args) =>
-                                  (await import('./routes/git-project-actions')).gitStatusAction(...args),
+                                  (await import('./routes/$organizationId.project.$projectId.git')).gitStatusAction(
+                                    ...args,
+                                  ),
                               },
                               {
                                 path: 'commit',
                                 action: async (...args) =>
-                                  (await import('./routes/git-project-actions')).commitToGitRepoAction(...args),
+                                  (
+                                    await import('./routes/$organizationId.project.$projectId.git')
+                                  ).commitToGitRepoAction(...args),
                               },
                               {
                                 path: 'commit-and-push',
                                 action: async (...args) =>
-                                  (await import('./routes/git-project-actions')).commitAndPushToGitRepoAction(...args),
+                                  (
+                                    await import('./routes/$organizationId.project.$projectId.git')
+                                  ).commitAndPushToGitRepoAction(...args),
                               },
                               {
                                 path: 'fetch',
                                 action: async (...args) =>
-                                  (await import('./routes/git-project-actions')).gitFetchAction(...args),
+                                  (await import('./routes/$organizationId.project.$projectId.git')).gitFetchAction(
+                                    ...args,
+                                  ),
                               },
                               {
                                 path: 'update',
                                 action: async (...args) =>
-                                  (await import('./routes/git-project-actions')).updateGitRepoAction(...args),
+                                  (await import('./routes/$organizationId.project.$projectId.git')).updateGitRepoAction(
+                                    ...args,
+                                  ),
                               },
                               {
                                 path: 'reset',
                                 action: async (...args) =>
-                                  (await import('./routes/git-project-actions')).resetGitRepoAction(...args),
+                                  (await import('./routes/$organizationId.project.$projectId.git')).resetGitRepoAction(
+                                    ...args,
+                                  ),
                               },
                               {
                                 path: 'push',
                                 action: async (...args) =>
-                                  (await import('./routes/git-project-actions')).pushToGitRemoteAction(...args),
+                                  (
+                                    await import('./routes/$organizationId.project.$projectId.git')
+                                  ).pushToGitRemoteAction(...args),
                               },
                               {
                                 path: 'stage',
                                 action: async (...args) =>
-                                  (await import('./routes/git-project-actions')).stageChangesAction(...args),
+                                  (await import('./routes/$organizationId.project.$projectId.git')).stageChangesAction(
+                                    ...args,
+                                  ),
                               },
                               {
                                 path: 'unstage',
                                 action: async (...args) =>
-                                  (await import('./routes/git-project-actions')).unstageChangesAction(...args),
+                                  (
+                                    await import('./routes/$organizationId.project.$projectId.git')
+                                  ).unstageChangesAction(...args),
                               },
                               {
                                 path: 'discard',
                                 action: async (...args) =>
-                                  (await import('./routes/git-project-actions')).discardChangesAction(...args),
+                                  (
+                                    await import('./routes/$organizationId.project.$projectId.git')
+                                  ).discardChangesAction(...args),
                               },
                               {
                                 path: 'diff',
                                 loader: async (...args) =>
-                                  (await import('./routes/git-project-actions')).diffFileLoader(...args),
+                                  (await import('./routes/$organizationId.project.$projectId.git')).diffFileLoader(
+                                    ...args,
+                                  ),
                               },
                               {
                                 path: 'repository-tree',
                                 loader: async (...args) =>
-                                  (await import('./routes/git-project-actions')).getRepositoryDirectoryTree(...args),
+                                  (
+                                    await import('./routes/$organizationId.project.$projectId.git')
+                                  ).getRepositoryDirectoryTree(...args),
                               },
                               {
                                 path: 'migrate-legacy-insomnia-folder-to-file',
                                 action: async (...args) =>
-                                  (await import('./routes/git-project-actions')).migrateLegacyInsomniaFolderToFile(
-                                    ...args,
-                                  ),
+                                  (
+                                    await import('./routes/$organizationId.project.$projectId.git')
+                                  ).migrateLegacyInsomniaFolderToFile(...args),
                               },
                               {
                                 path: 'branch',
@@ -484,17 +518,23 @@ async function renderApp() {
                                   {
                                     path: 'new',
                                     action: async (...args) =>
-                                      (await import('./routes/git-project-actions')).createNewGitBranchAction(...args),
+                                      (
+                                        await import('./routes/$organizationId.project.$projectId.git')
+                                      ).createNewGitBranchAction(...args),
                                   },
                                   {
                                     path: 'delete',
                                     action: async (...args) =>
-                                      (await import('./routes/git-project-actions')).deleteGitBranchAction(...args),
+                                      (
+                                        await import('./routes/$organizationId.project.$projectId.git')
+                                      ).deleteGitBranchAction(...args),
                                   },
                                   {
                                     path: 'checkout',
                                     action: async (...args) =>
-                                      (await import('./routes/git-project-actions')).checkoutGitBranchAction(...args),
+                                      (
+                                        await import('./routes/$organizationId.project.$projectId.git')
+                                      ).checkoutGitBranchAction(...args),
                                   },
                                 ],
                               },
@@ -1148,105 +1188,135 @@ async function renderApp() {
                                     path: 'repo',
                                     loader: async (...args) =>
                                       (
-                                        await import('./routes/$organizationId.project.$projectId.git-actions')
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.git'
+                                        )
                                       ).gitRepoLoader(...args),
                                   },
                                   {
                                     path: 'changes',
                                     loader: async (...args) =>
                                       (
-                                        await import('./routes/$organizationId.project.$projectId.git-actions')
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.git'
+                                        )
                                       ).gitChangesLoader(...args),
                                   },
                                   {
                                     path: 'log',
                                     loader: async (...args) =>
                                       (
-                                        await import('./routes/$organizationId.project.$projectId.git-actions')
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.git'
+                                        )
                                       ).gitLogLoader(...args),
                                   },
                                   {
                                     path: 'branches',
                                     loader: async (...args) =>
                                       (
-                                        await import('./routes/$organizationId.project.$projectId.git-actions')
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.git'
+                                        )
                                       ).gitBranchesLoader(...args),
                                   },
                                   {
                                     path: 'status',
                                     action: async (...args) =>
                                       (
-                                        await import('./routes/$organizationId.project.$projectId.git-actions')
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.git'
+                                        )
                                       ).gitStatusAction(...args),
                                   },
                                   {
                                     path: 'commit',
                                     action: async (...args) =>
                                       (
-                                        await import('./routes/$organizationId.project.$projectId.git-actions')
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.git'
+                                        )
                                       ).commitToGitRepoAction(...args),
                                   },
                                   {
                                     path: 'commit-and-push',
                                     action: async (...args) =>
                                       (
-                                        await import('./routes/$organizationId.project.$projectId.git-actions')
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.git'
+                                        )
                                       ).commitAndPushToGitRepoAction(...args),
                                   },
                                   {
                                     path: 'fetch',
                                     action: async (...args) =>
                                       (
-                                        await import('./routes/$organizationId.project.$projectId.git-actions')
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.git'
+                                        )
                                       ).gitFetchAction(...args),
                                   },
                                   {
                                     path: 'update',
                                     action: async (...args) =>
                                       (
-                                        await import('./routes/$organizationId.project.$projectId.git-actions')
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.git'
+                                        )
                                       ).updateGitRepoAction(...args),
                                   },
                                   {
                                     path: 'reset',
                                     action: async (...args) =>
                                       (
-                                        await import('./routes/$organizationId.project.$projectId.git-actions')
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.git'
+                                        )
                                       ).resetGitRepoAction(...args),
                                   },
                                   {
                                     path: 'push',
                                     action: async (...args) =>
                                       (
-                                        await import('./routes/$organizationId.project.$projectId.git-actions')
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.git'
+                                        )
                                       ).pushToGitRemoteAction(...args),
                                   },
                                   {
                                     path: 'stage',
                                     action: async (...args) =>
                                       (
-                                        await import('./routes/$organizationId.project.$projectId.git-actions')
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.git'
+                                        )
                                       ).stageChangesAction(...args),
                                   },
                                   {
                                     path: 'unstage',
                                     action: async (...args) =>
                                       (
-                                        await import('./routes/$organizationId.project.$projectId.git-actions')
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.git'
+                                        )
                                       ).unstageChangesAction(...args),
                                   },
                                   {
                                     path: 'discard',
                                     action: async (...args) =>
                                       (
-                                        await import('./routes/$organizationId.project.$projectId.git-actions')
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.git'
+                                        )
                                       ).discardChangesAction(...args),
                                   },
                                   {
                                     path: 'diff',
                                     loader: async (...args) =>
                                       (
-                                        await import('./routes/$organizationId.project.$projectId.git-actions')
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.git'
+                                        )
                                       ).diffFileLoader(...args),
                                   },
                                   {
@@ -1256,21 +1326,27 @@ async function renderApp() {
                                         path: 'new',
                                         action: async (...args) =>
                                           (
-                                            await import('./routes/$organizationId.project.$projectId.git-actions')
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.git'
+                                            )
                                           ).createNewGitBranchAction(...args),
                                       },
                                       {
                                         path: 'delete',
                                         action: async (...args) =>
                                           (
-                                            await import('./routes/$organizationId.project.$projectId.git-actions')
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.git'
+                                            )
                                           ).deleteGitBranchAction(...args),
                                       },
                                       {
                                         path: 'checkout',
                                         action: async (...args) =>
                                           (
-                                            await import('./routes/$organizationId.project.$projectId.git-actions')
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.git'
+                                            )
                                           ).checkoutGitBranchAction(...args),
                                       },
                                     ],

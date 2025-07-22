@@ -15,7 +15,7 @@ import {
 } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';
 
-import type { GitChangesLoaderData, GitDiffResult } from '../../routes/git-project-actions';
+import type { GitChangesLoaderData, GitDiffResult } from '../../routes/$organizationId.project.$projectId.git';
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 import { showModal } from '.';
