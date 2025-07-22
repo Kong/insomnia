@@ -7,9 +7,9 @@ import type { Organization } from '../../../models/organization';
 import { VCSInstance } from '../../../sync/vcs/insomnia-sync';
 import { insomniaFetch } from '../../../ui/insomniaFetch';
 import { avatarImageCache } from '../../hooks/image-cache';
+import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace';
 import type { ProjectIdLoaderData } from '../../routes/project';
 import { useRootLoaderData } from '../../routes/root';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace';
 
 const InsomniaEventStreamContext = createContext<{
   presence: UserPresence[];
