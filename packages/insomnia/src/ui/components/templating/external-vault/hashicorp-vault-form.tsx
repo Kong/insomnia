@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useFetcher } from 'react-router';
 
-import * as models from '../../../../models';
-import { type HashiCorpCredentials, HashiCorpCredentialType } from '../../../../models/cloud-credential';
+import { HashiCorpCredentialType } from '../../../../models/cloud-credential';
 import type { NunjucksParsedTag } from '../../../../templating/types';
 import { HelpTooltip } from '../../help-tooltip';
 import {
@@ -30,7 +30,8 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
   // cloud secret config
   const { organizationId, projectId, appName, version: cloudSecretVersion } = formData as HCPSecretConfig;
   const credentialId = activeTagData.args[1].value as string;
-  const [credentialType, setCredentialType] = useState<HashiCorpCredentialType>();
+  const credentialDataFetcher = useFetcher();
+  const credentialType = credentialDataFetcher.data?.credentials.type;
   const handleOnChange = (name: KeysOfUnion<HashiCorpSecretConfig>, newValue: string) => {
     const newConfig = {
       ...formData,
@@ -39,19 +40,12 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
     onChange(newConfig as unknown as HashiCorpSecretConfig);
   };
 
-  // TODO(Kent): Fetch the creds from the loader
-  const getCredentialData = async (credentialId: string) => {
-    const providerCredential = await models.cloudCredential.getById(credentialId);
-    if (providerCredential) {
-      const { credentials } = providerCredential;
-      setCredentialType((credentials as HashiCorpCredentials).type);
-    }
-  };
-
   useEffect(() => {
     if (credentialId) {
-      getCredentialData(credentialId);
+      credentialDataFetcher.load(`/cloud-credential/${credentialId}`);
     }
+    // Omit credentialDataFetcher from the dependency array to avoid infinite re-renders
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [credentialId]);
   return (
     <>

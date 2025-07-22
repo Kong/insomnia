@@ -14,7 +14,6 @@ import {
 } from '../../../../models/cloud-credential';
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
-import { ToggleBtn } from './toggle-btn';
 
 type HashiCorpOnPremCredential = VaultAppRoleCredential | VaultTokenCredential;
 export interface HashiCorpCredentialFormProps {
@@ -222,10 +221,16 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
                   name="access_token"
                   placeholder="Authentication Token"
                 />
-                <ToggleBtn
-                  isHidden={hideValueItemNames.includes('access_token')}
-                  onShowHideInput={() => showOrHideItemValue('access_token')}
-                />
+                <Button
+                  className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  onPress={() => showOrHideItemValue('access_token')}
+                >
+                  {hideValueItemNames.includes('access_token') ? (
+                    <i className="fa fa-eye-slash" />
+                  ) : (
+                    <i className="fa fa-eye" />
+                  )}
+                </Button>
               </div>
             </TextField>
           )}
@@ -254,10 +259,16 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
                     name="secret_id"
                     placeholder="Secret Id"
                   />
-                  <ToggleBtn
-                    isHidden={hideValueItemNames.includes('secret_id')}
-                    onShowHideInput={() => showOrHideItemValue('secret_id')}
-                  />
+                  <Button
+                    className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                    onPress={() => showOrHideItemValue('secret_id')}
+                  >
+                    {hideValueItemNames.includes('secret_id') ? (
+                      <i className="fa fa-eye-slash" />
+                    ) : (
+                      <i className="fa fa-eye" />
+                    )}
+                  </Button>
                 </div>
               </TextField>
             </>
@@ -286,10 +297,16 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
                 name="client_secret"
                 placeholder="Client Secret"
               />
-              <ToggleBtn
-                isHidden={hideValueItemNames.includes('client_secret')}
-                onShowHideInput={() => showOrHideItemValue('client_secret')}
-              />
+              <Button
+                className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                onPress={() => showOrHideItemValue('client_secret')}
+              >
+                {hideValueItemNames.includes('client_secret') ? (
+                  <i className="fa fa-eye-slash" />
+                ) : (
+                  <i className="fa fa-eye" />
+                )}
+              </Button>
             </div>
           </TextField>
         </>

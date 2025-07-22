@@ -198,6 +198,12 @@ async function renderApp() {
             path: 'cloud-credential',
             children: [
               {
+                path: ':cloudCredentialId',
+                id: '/cloud-credential/:cloudCredentialId',
+                loader: async (...args) =>
+                  (await import('./routes/cloud-credentials-action')).getCloudCredentialAction(...args),
+              },
+              {
                 path: 'new',
                 action: async (...args) =>
                   (await import('./routes/cloud-credentials-action')).createCloudCredentialAction(...args),
