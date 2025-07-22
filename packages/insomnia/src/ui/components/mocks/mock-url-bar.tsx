@@ -9,7 +9,7 @@ import { useTimeoutWhen } from '../../hooks/useTimeoutWhen';
 import {
   type MockRouteLoaderData,
   useMockRoutePatcher,
-} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route';
+} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 import { useRootLoaderData } from '../../routes/root';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import type { OneLineEditorHandle } from '../codemirror/one-line-editor';

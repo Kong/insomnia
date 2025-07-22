@@ -31,7 +31,7 @@ import {
 import { isRemoteProject } from '../../../models/project';
 import { responseTagRegex } from '../../../templating/utils';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
-import type { WorkspaceLoaderData } from '../../routes/workspace';
+import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { EditableInput } from '../editable-input';
 import { EnvironmentEditor, type EnvironmentEditorHandle, type EnvironmentInfo } from '../editors/environment-editor';
 import { EnvironmentKVEditor } from '../editors/environment-key-value-editor/key-value-editor';

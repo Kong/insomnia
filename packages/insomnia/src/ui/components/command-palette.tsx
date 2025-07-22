@@ -27,8 +27,13 @@ import { isRequest } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import { isWebSocketRequest } from '../../models/websocket-request';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
+import {
+  scopeToBgColorMap,
+  scopeToIconMap,
+  scopeToLabelMap,
+  scopeToTextColorMap,
+} from '../routes/$organizationId.project.$projectId';
 import type { LoaderResult } from '../routes/commands';
-import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../routes/project';
 import type { RemoteFilesLoaderResult } from '../routes/remote-files';
 import type { RootLoaderData } from '../routes/root';
 import { AvatarGroup } from './avatar';

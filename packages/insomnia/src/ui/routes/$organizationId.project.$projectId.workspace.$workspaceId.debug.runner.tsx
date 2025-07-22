@@ -30,7 +30,6 @@ import { useInterval } from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 
 import { type RequestContext } from '../../../../insomnia-scripting-environment/src/objects';
-import { Tooltip } from '../../../src/ui/components/tooltip';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../common/constants';
 import type { ResponseTimelineEntry } from '../../main/network/libcurl-promise';
 import type { TimingStep } from '../../main/network/request-timing';
@@ -55,6 +54,7 @@ import { RunnerResultHistoryPane } from '../components/panes/runner-result-histo
 import { RunnerTestResultPane } from '../components/panes/runner-test-result-pane';
 import { ResponseTimer } from '../components/response-timer';
 import { getTimeAndUnit } from '../components/tags/time-tag';
+import { Tooltip } from '../components/tooltip';
 import { ResponseTimelineViewer } from '../components/viewers/response-timeline-viewer';
 import { useRunnerContext } from '../context/app/runner-context';
 import { useRunnerRequestList } from '../hooks/use-runner-request-list';

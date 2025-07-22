@@ -20,7 +20,7 @@ import { debounce } from '../../../../common/misc';
 import { invariant } from '../../../../utils/invariant';
 import { SegmentEvent } from '../../../analytics';
 import { insomniaFetch } from '../../../insomniaFetch';
-import type { Collaborator, CollaboratorsListLoaderResult } from '../../../routes/invite';
+import type { Collaborator, CollaboratorsListLoaderResult } from '../../../routes/$organizationId.collaborators';
 import { PromptButton } from '../../base/prompt-button';
 import { Icon } from '../../icon';
 import { AlertModal } from '../alert-modal';

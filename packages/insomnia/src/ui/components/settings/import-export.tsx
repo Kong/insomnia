@@ -24,15 +24,15 @@ import { ExportRequestsModal } from 'insomnia/src/ui/components/modals/export-re
 import { ImportModal } from 'insomnia/src/ui/components/modals/import-modal';
 import { SelectModal } from 'insomnia/src/ui/components/modals/select-modal';
 import { useOrganizationLoaderData } from 'insomnia/src/ui/routes/organization';
-import type { ListWorkspacesLoaderData } from 'insomnia/src/ui/routes/project';
 import { useRootLoaderData } from 'insomnia/src/ui/routes/root';
 import type { UntrackedProjectsLoaderData } from 'insomnia/src/ui/routes/untracked-projects';
-import type { WorkspaceLoaderData } from 'insomnia/src/ui/routes/workspace';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';
 import { useRouteLoaderData } from 'react-router';
 
+import type { ListWorkspacesLoaderData } from '../../routes/$organizationId.project.$projectId';
+import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { AlertModal } from '../modals/alert-modal';
 
 const VALUE_YAML = 'yaml';

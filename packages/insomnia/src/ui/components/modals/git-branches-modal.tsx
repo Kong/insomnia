@@ -21,7 +21,7 @@ import {
   type GitBranchesLoaderData,
   type GitChangesLoaderData,
   mergeGitBranch,
-} from '../../routes/git-actions';
+} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.git';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
 import { showModal } from '.';

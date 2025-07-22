@@ -3,11 +3,11 @@ import { getInterpolator } from './interpolator';
 
 /**
  * Represents an environment object that stores key-value pairs and provides methods to interact with them.
- * 
+ *
  * The `Environment` class allows for the creation of an environment with a name and an optional set of initial key-value pairs.
  * It provides methods to manage variables, retrieve values, and replace placeholders in strings using the stored variables.
  * `insomnia.environment`, `insomnia.globals` and `insomnia.baseEnvironment` are instances of this class.
- * 
+ *
  * ### Example Usage
  * ```javascript
  * const env = new Environment('Development', { apiUrl: 'https://api.example.com' });
@@ -18,13 +18,13 @@ import { getInterpolator } from './interpolator';
  * env.unset('token');
  * console.log(env.has('token')); // Output: false
  * ```
- * 
+ *
  * #### Features:
  * - Store and manage key-value pairs.
  * - Replace placeholders in strings with environment variable values.
  * - Convert the environment to a plain JavaScript object.
  * - Clear all stored variables.
- * 
+ *
  * @class Environment
  */
 export class Environment {
@@ -41,7 +41,7 @@ export class Environment {
    * Initializes the environment with a name and a key-value store derived from the provided JSON object.
    *
    * @param name - The name of the environment.
-   * @param jsonObject - An optional object containing key-value pairs to initialize the environment. 
+   * @param jsonObject - An optional object containing key-value pairs to initialize the environment.
    *                     If undefined, an empty key-value store will be created.
    */
   constructor(name: string, jsonObject: object | undefined) {
@@ -113,7 +113,7 @@ export class Environment {
 
   /**
    * Replaces placeholders in the given template string with values from the environment object.
-   * 
+   *
    * It supports following placeholders:
    * - `insomnia.environment.replaceIn("My id is {{$randomUUID}}")`, which generates a random UUID.
    * - `insomnia.environment.replaceIn("Visiting URL: {{urlValueFromEnvironment}}")`, which replaces `urlValueFromEnvironment` with the value of that variable in the active environment.
@@ -127,7 +127,7 @@ export class Environment {
 
   /**
    * Converts the key-value pairs stored in the current instance into a plain JavaScript object.
-   * 
+   *
    * @returns {Record<string, any>} A plain object representation of the key-value pairs.
    */
   toObject = () => {
@@ -144,11 +144,11 @@ function mergeFolderLevelVars(folderLevelVars: Environment[]) {
 }
 
 /**
- * The `Variables` class provides a hierarchical structure for managing environment variables 
- * across different scopes such as global, collection, environment, iteration data, folder-level, 
- * and local variables. It offers methods to check for variable existence, retrieve values, set 
+ * The `Variables` class provides a hierarchical structure for managing environment variables
+ * across different scopes such as global, collection, environment, iteration data, folder-level,
+ * and local variables. It offers methods to check for variable existence, retrieve values, set
  * local variables, replace placeholders in strings, and consolidate variables into a single object.
- * 
+ *
  * ### Scopes
  * The class supports the following scopes:
  * - **Base Global Variables**: Default global variables.
@@ -171,7 +171,7 @@ function mergeFolderLevelVars(folderLevelVars: Environment[]) {
  *   folderLevelVars: folderVars,
  *   localVars: localEnv,
  * });
- * 
+ *
  * const hasVariable = variables.has('myVariable');
  * const variableValue = variables.get('myVariable');
  * variables.set('myVariable', 'newValue');
@@ -256,7 +256,7 @@ export class Variables {
 
   /**
    * Retrieves the value of a variable by searching through the variable hierarchy.
-   * 
+   *
    * The method searches for the variable in the following order of precedence:
    * 1. Local variables
    * 2. Folder-level variables
@@ -265,9 +265,9 @@ export class Variables {
    * 5. Collection variables
    * 6. Global variables
    * 7. Base global variables
-   * 
+   *
    * Returns the first value found in the hierarchy.
-   * 
+   *
    * @param variableName - The name of the variable to retrieve
    * @returns The value of the variable if found, otherwise undefined
    */
@@ -310,11 +310,11 @@ export class Variables {
 
   /**
    * Replaces placeholders in the given template string with values from the current environment context.
-   * 
+   *
    * It supports following placeholders:
    * - `insomnia.variables.replaceIn("My id is {{$randomUUID}}")`, which generates a random UUID.
    * - `insomnia.variables.replaceIn("Visiting URL: {{urlValueFromEnvironment}}")`, which replaces `urlValueFromEnvironment` with the value of that variable in the active environment.
-   * 
+   *
    * @param template - The template string containing placeholders to be replaced.
    * @returns The rendered string with placeholders replaced by their corresponding values.
    */
@@ -326,7 +326,7 @@ export class Variables {
   /**
    * Converts the current environment variables into a single consolidated object.
    *
-   * This method aggregates various levels of variables including global, collection, 
+   * This method aggregates various levels of variables including global, collection,
    * environment, iteration data, folder-level, and local variables.
    *
    * @returns {Record<string, any>} A consolidated object containing all environment variables.
@@ -374,11 +374,11 @@ export class Variables {
 export class Vault extends Environment {
   /**
    * Constructs an instance of the Vault class.
-   * 
+   *
    * @param name - The name associated with the environment.
    * @param jsonObject - An optional JSON object representing the vault's data.
    * @param enableVaultInScripts - A boolean flag indicating whether vault access is enabled in scripts.
-   * 
+   *
    * @throws Will throw an error if `enableVaultInScripts` is `false` and an attempt is made to get or set a property.
    */
   constructor(name: string, jsonObject: object | undefined, enableVaultInScripts: boolean) {

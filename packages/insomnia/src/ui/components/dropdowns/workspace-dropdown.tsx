@@ -36,7 +36,7 @@ import * as pluginNetwork from '../../../plugins/context/network';
 import * as pluginStore from '../../../plugins/context/store';
 import { invariant } from '../../../utils/invariant';
 import { SegmentEvent } from '../../analytics';
-import type { WorkspaceLoaderData } from '../../routes/workspace';
+import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';

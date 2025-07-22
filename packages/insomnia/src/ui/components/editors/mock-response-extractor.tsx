@@ -8,13 +8,13 @@ import { useFetcher, useRouteLoaderData } from 'react-router';
 import { getContentTypeName, getMimeTypeFromContentType } from '../../../common/constants';
 import type { ResponseHeader } from '../../../models/response';
 import { invariant } from '../../../utils/invariant';
+import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import type { RequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import {
   isInMockContentTypeList,
   useMockRoutePatcher,
-} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route';
+} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 import type { OrganizationLoaderData } from '../../routes/organization';
-import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
@@ -27,7 +27,7 @@ export const MockResponseExtractor = () => {
   const { activeResponse } = requestLoaderData;
   let { mockServerAndRoutes } = requestLoaderData;
 
-  // file://./../../routes/workspace.tsx#workspaceLoader
+  // file://./../../routes/$organizationId.project.$projectId.workspace.tsx#workspaceLoader
   const { activeProject, activeWorkspace } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const isLocalProject = !activeProject?.remoteId;
   const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;

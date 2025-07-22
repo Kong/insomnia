@@ -119,6 +119,7 @@ import {
   useRequestMetaPatcher,
   useRequestPatcher,
 } from '../hooks/use-request';
+import type { Child, WorkspaceLoaderData } from './$organizationId.project.$projectId.workspace.$workspaceId';
 import type {
   GrpcRequestLoaderData,
   RequestLoaderData,
@@ -126,9 +127,8 @@ import type {
   WebSocketRequestLoaderData,
 } from './$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import type { RequestGroupLoaderData } from './$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
+import Runner from './$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 import { useRootLoaderData } from './root';
-import Runner from './runner';
-import type { Child, WorkspaceLoaderData } from './workspace';
 
 export interface GrpcMessage {
   id: string;

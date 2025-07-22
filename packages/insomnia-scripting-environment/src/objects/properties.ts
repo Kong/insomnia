@@ -350,7 +350,7 @@ export class PropertyList<T extends Property> {
     for (let i = this.list.length - 1; i >= 0; i--) {
       const record = this.list[i] as Record<string, any>;
       if (record[indexFieldName] === id) {
-        if ("valueOf" in this.list[i] && typeof this.list[i].valueOf === 'function') {
+        if ('valueOf' in this.list[i] && typeof this.list[i].valueOf === 'function') {
           return this.list[i].valueOf();
         }
         return this.list[i];

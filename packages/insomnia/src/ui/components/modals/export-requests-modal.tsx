@@ -10,7 +10,10 @@ import type { RequestGroup } from '../../../models/request-group';
 import { isSocketIORequest, type SocketIORequest } from '../../../models/socket-io-request';
 import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
 import { SegmentEvent } from '../../analytics';
-import type { Child, WorkspaceLoaderData } from '../../routes/workspace';
+import type {
+  Child,
+  WorkspaceLoaderData,
+} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { Icon } from '../icon';
 import { getMethodShortHand } from '../tags/method-tag';
 

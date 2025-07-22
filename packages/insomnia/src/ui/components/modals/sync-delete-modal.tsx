@@ -6,7 +6,7 @@ import { strings } from '../../../common/strings';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import type { VCS } from '../../../sync/vcs/vcs';
 import { Button } from '../../components/themed-button';
-import type { WorkspaceLoaderData } from '../../routes/workspace';
+import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';

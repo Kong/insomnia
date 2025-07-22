@@ -3,8 +3,8 @@ import { useRouteLoaderData } from 'react-router';
 
 import { isGitProject, isRemoteProject } from '../../../models/project';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
+import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRootLoaderData } from '../../routes/root';
-import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { GitProjectSyncDropdown } from './git-project-sync-dropdown';
 import { GitSyncDropdown } from './git-sync-dropdown';
 import { LocalProjectBar } from './local-project-bar';

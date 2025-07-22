@@ -7,7 +7,7 @@ import type { Project } from '../../models/project';
 import { invariant } from '../../utils/invariant';
 import { AsyncTask } from '../../utils/router';
 import { migrateProjectsUnderOrganization, syncOrganizations } from '../organization-utils';
-import { syncProjects } from './project';
+import { syncProjects } from './$organizationId.project.$projectId';
 
 interface SyncOrgsAndProjectsActionRequest {
   organizationId: string;
