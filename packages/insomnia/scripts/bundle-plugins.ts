@@ -18,6 +18,7 @@ const NPM_REGISTRY = 'https://registry.npmjs.org/';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
 if (!GITHUB_TOKEN && !executeInGithubActions) {
   console.warn('[Bundle Plugin] GITHUB_TOKEN environment variable is not set, skipping plugin installation');
+  // return 0 exit code (success) in order to skip if no token present
   process.exit(0);
 }
 const PLUGIN_NPM_REGISTRY = process.env.PLUGIN_NPM_REGISTRY || 'https://npm.pkg.github.com/';
