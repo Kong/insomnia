@@ -1,4 +1,5 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
+import { format } from 'date-fns';
 import React, { type FC, Fragment, useCallback, useEffect, useState } from 'react';
 import {
   Button,
@@ -8,6 +9,7 @@ import {
   MenuSection,
   MenuTrigger,
   Popover,
+  Separator,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
@@ -22,7 +24,7 @@ import { GitRepositorySettingsModal } from '../modals/git-repository-settings-mo
 import { SyncBranchesModal } from '../modals/sync-branches-modal';
 import { SyncHistoryModal } from '../modals/sync-history-modal';
 import { SyncStagingModal } from '../modals/sync-staging-modal';
-import { ProjectBranchName } from './project-branch-name';
+import { showToast } from '../toast-notification';
 
 interface Props {
   workspace: Workspace;
@@ -30,6 +32,7 @@ interface Props {
 }
 
 const ONE_MINUTE_IN_MS = 1000 * 60;
+const cloudSyncIcon = 'earth-americas';
 
 export const SyncDropdown: FC<Props> = () => {
   const { organizationId, projectId, workspaceId } = useParams<{
@@ -85,21 +88,72 @@ export const SyncDropdown: FC<Props> = () => {
     };
   }, [triggerSync]);
 
+  useEffect(() => {
+    if (checkoutFetcher.data && 'error' in checkoutFetcher.data && checkoutFetcher.data.error) {
+      setOperationError(checkoutFetcher.data.error);
+      showToast({
+        icon: cloudSyncIcon,
+        title: `Checkout failed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        status: 'error',
+      });
+    } else if (checkoutFetcher.data && 'success' in checkoutFetcher.data && checkoutFetcher.data.success) {
+      showToast({
+        icon: cloudSyncIcon,
+        title: `Checkout completed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        status: 'success',
+      });
+    }
+  }, [checkoutFetcher.data]);
+
+  useEffect(() => {
+    if (pushFetcher.data && 'error' in pushFetcher.data && pushFetcher.data.error) {
+      setOperationError(pushFetcher.data.error);
+      showToast({ icon: cloudSyncIcon, title: `Push failed, ${format(new Date(), 'HH:mm:ss aa')}`, status: 'error' });
+    } else if (pushFetcher.data && 'success' in pushFetcher.data && pushFetcher.data.success) {
+      showToast({
+        icon: cloudSyncIcon,
+        title: `Push completed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        status: 'success',
+      });
+    }
+  }, [pushFetcher.data]);
+
+  useEffect(() => {
+    if (pullFetcher.data && 'error' in pullFetcher.data && pullFetcher.data.error) {
+      setOperationError(pullFetcher.data.error);
+      showToast({ icon: cloudSyncIcon, title: `Pull failed, ${format(new Date(), 'HH:mm:ss aa')}`, status: 'error' });
+    } else if (pullFetcher.data && 'success' in pullFetcher.data && pullFetcher.data.success) {
+      showToast({
+        icon: cloudSyncIcon,
+        title: `Pull completed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        status: 'success',
+      });
+    }
+  }, [pullFetcher.data]);
+
+  useEffect(() => {
+    if (rollbackFetcher.data && 'error' in rollbackFetcher.data && rollbackFetcher.data.error) {
+      setOperationError(rollbackFetcher.data.error);
+      showToast({
+        icon: cloudSyncIcon,
+        title: `Rollback failed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        status: 'error',
+      });
+    } else if (rollbackFetcher.data && 'success' in rollbackFetcher.data && rollbackFetcher.data.success) {
+      showToast({
+        icon: cloudSyncIcon,
+        title: `Rollback completed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        status: 'success',
+      });
+    }
+  }, [rollbackFetcher.data]);
+
   useInterval(
     () => {
       triggerSync();
     },
     isWindowFocused ? ONE_MINUTE_IN_MS : null,
   );
-
-  const error =
-    checkoutFetcher.data?.error || pullFetcher.data?.error || pushFetcher.data?.error || rollbackFetcher.data?.error;
-
-  useEffect(() => {
-    if (error) {
-      setOperationError(error);
-    }
-  }, [error]);
 
   let syncData: Extract<SyncDataLoaderData, { historyCount: number }> = {
     status: {
@@ -157,6 +211,8 @@ export const SyncDropdown: FC<Props> = () => {
     icon: 'code-branch',
     isActive: branch === currentBranch,
     action: () => {
+      setOperationError(null);
+      showToast({ icon: cloudSyncIcon, title: `Checking out branch ${branch}, ${format(new Date(), 'HH:mm:ss aa')}` });
       checkoutFetcher.submit(
         {
           branch,
@@ -195,6 +251,9 @@ export const SyncDropdown: FC<Props> = () => {
       icon: 'undo',
       isDisabled: historyCount === 0 || rollbackFetcher.state !== 'idle' || !canCreateSnapshot,
       action: () => {
+        setOperationError(null);
+        showToast({ icon: cloudSyncIcon, title: `Rollback started, ${format(new Date(), 'HH:mm:ss aa')}` });
+
         rollbackFetcher.submit(
           {},
           {
@@ -222,6 +281,12 @@ export const SyncDropdown: FC<Props> = () => {
       icon: pullFetcher.state !== 'idle' ? 'refresh' : 'cloud-download',
       isDisabled: behind === 0 || pullFetcher.state !== 'idle',
       action: () => {
+        setOperationError(null);
+        showToast({
+          icon: cloudSyncIcon,
+          title: `Pull failed, ${format(new Date(), 'HH:mm:ss aa')}`,
+          status: 'error',
+        });
         pullFetcher.submit(
           {},
           {
@@ -242,6 +307,9 @@ export const SyncDropdown: FC<Props> = () => {
       icon: pushFetcher.state !== 'idle' ? 'refresh' : 'cloud-upload',
       isDisabled: ahead === 0 || pushFetcher.state !== 'idle',
       action: () => {
+        setOperationError(null);
+        showToast({ icon: cloudSyncIcon, title: `Push started, ${format(new Date(), 'HH:mm:ss aa')}` });
+
         pushFetcher.submit(
           {},
           {
@@ -267,7 +335,7 @@ export const SyncDropdown: FC<Props> = () => {
   return (
     <Fragment>
       {operationError && (
-        <div className="flex gap-2 bg-[rgba(var(--color-warning-rgb),0.5)] px-4 py-2 text-sm">
+        <div className="flex gap-2 bg-[rgba(var(--color-danger-rgb),1)] px-2 py-1 text-xs text-[--color-font-danger]">
           <div className="flex items-center gap-2">
             <Icon icon="triangle-exclamation" />
             <span>{operationError}</span>
@@ -285,18 +353,26 @@ export const SyncDropdown: FC<Props> = () => {
             aria-label="Git Sync"
             className="flex h-[--line-height-sm] w-full items-center gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:opacity-100 aria-pressed:bg-[--hl-sm]"
           >
-            <ProjectBranchName
-              icon="earth-americas"
-              name={syncError ? 'Error syncing with Insomnia Cloud' : currentBranch}
-              hasPendingChanges={canCreateSnapshot}
-              showSyncStatus={syncError === null}
-              isSyncing={isSyncing}
-              isPulling={isPulling}
-              pullCount={pullCount}
-              isPushing={isPushing}
-              pushCount={pushCount}
-              operationSucceed={operationError === null}
-            />
+            <Icon icon="earth-americas" className="size-4" />
+            <Separator orientation="vertical" className="h-4 border border-solid border-[--hl-sm] bg-[--color-bg]" />
+            <div className="relative flex items-center">
+              <Icon icon="code-branch" className="size-4" />
+              {canCreateSnapshot && (
+                <div className="absolute -bottom-1 -right-1 size-[10px] rounded-full bg-[--color-surprise]" />
+              )}
+            </div>
+            <span className="flex-1 truncate">{syncError ? 'Error syncing with Insomnia Cloud' : currentBranch}</span>
+            <div className="flex flex-shrink-0 items-center gap-1.5 text-xs text-[--color-font-secondary]">
+              {isSyncing && <Icon icon="spinner" className="w-3 animate-spin" />}
+              <div className="flex items-center gap-0.5 overflow-hidden">
+                <span>{pullCount}</span>
+                <Icon icon="arrow-down" className={`w-2 ${isPulling && 'animate-down-loop'}`} />
+              </div>
+              <div className="flex items-center gap-0.5 overflow-hidden">
+                <span>{pushCount}</span>
+                <Icon icon="arrow-up" className={`w-2 ${isPushing && 'animate-up-loop'}`} />
+              </div>
+            </div>
           </Button>
           <Tooltip
             offset={8}
