@@ -708,15 +708,27 @@ async function renderApp() {
                                   {
                                     path: 'runner',
                                     loader: async (...args) =>
-                                      (await import('./routes/runner')).collectionRunnerStatusLoader(...args),
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.runner'
+                                        )
+                                      ).collectionRunnerStatusLoader(...args),
                                     element: <Outlet />,
                                     action: async (...args) =>
-                                      (await import('./routes/runner')).runCollectionAction(...args),
+                                      (
+                                        await import(
+                                          './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.runner'
+                                        )
+                                      ).runCollectionAction(...args),
                                     children: [
                                       {
                                         path: 'run',
                                         action: async (...args) =>
-                                          (await import('./routes/runner')).runCollectionAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.runner'
+                                            )
+                                          ).runCollectionAction(...args),
                                       },
                                     ],
                                   },

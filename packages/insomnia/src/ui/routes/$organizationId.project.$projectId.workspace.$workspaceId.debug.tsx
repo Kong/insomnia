@@ -127,8 +127,8 @@ import type {
   WebSocketRequestLoaderData,
 } from './$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import type { RequestGroupLoaderData } from './$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
+import Runner from './$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 import { useRootLoaderData } from './root';
-import Runner from './runner';
 
 export interface GrpcMessage {
   id: string;
