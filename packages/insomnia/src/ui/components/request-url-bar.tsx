@@ -24,7 +24,7 @@ import type {
   SendActionParams,
 } from '../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRootLoaderData } from '../routes/root';
-import type { WorkspaceLoaderData } from '../routes/workspace';
+import type { WorkspaceLoaderData } from '../routes/$organizationId.project.$projectId.workspace';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
 import { OneLineEditor, type OneLineEditorHandle } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';

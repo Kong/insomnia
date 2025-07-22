@@ -7,7 +7,7 @@ import type { RequestGroup } from '../../../models/request-group';
 import { invariant } from '../../../utils/invariant';
 import { useRequestGroupPatcher } from '../../hooks/use-request';
 import type { ListWorkspacesLoaderData } from '../../routes/project';
-import { revalidateWorkspaceActiveRequestByFolder } from '../../routes/workspace';
+import { revalidateWorkspaceActiveRequestByFolder } from '../../routes/$organizationId.project.$projectId.workspace';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';

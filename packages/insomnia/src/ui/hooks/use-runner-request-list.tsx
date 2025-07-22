@@ -6,7 +6,7 @@ import { isRequestGroup } from '../../models/request-group';
 import { invariant } from '../../utils/invariant';
 import { useRunnerContext } from '../context/app/runner-context';
 import type { RequestRow } from '../routes/runner';
-import type { Child, WorkspaceLoaderData } from '../routes/workspace';
+import type { Child, WorkspaceLoaderData } from '../routes/$organizationId.project.$projectId.workspace';
 
 export const useRunnerRequestList = (organizationId: string, targetFolderId: string, runnerId: string) => {
   const { collection } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;

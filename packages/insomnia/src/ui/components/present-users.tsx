@@ -4,7 +4,7 @@ import { useParams, useRouteLoaderData } from 'react-router';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
 import type { ProjectIdLoaderData } from '../routes/project';
 import { useRootLoaderData } from '../routes/root';
-import type { WorkspaceLoaderData } from '../routes/workspace';
+import type { WorkspaceLoaderData } from '../routes/$organizationId.project.$projectId.workspace';
 import { AvatarGroup } from './avatar';
 
 export const PresentUsers = () => {

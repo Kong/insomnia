@@ -12,7 +12,7 @@ import { isWebSocketRequest, type WebSocketRequest } from '../../../models/webso
 import { invariant } from '../../../utils/invariant';
 import { useRequestPatcher } from '../../hooks/use-request';
 import type { ListWorkspacesLoaderData } from '../../routes/project';
-import { revalidateWorkspaceActiveRequest } from '../../routes/workspace';
+import { revalidateWorkspaceActiveRequest } from '../../routes/$organizationId.project.$projectId.workspace';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
