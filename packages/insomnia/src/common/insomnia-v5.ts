@@ -9,6 +9,7 @@ import type { MockRoute } from '../models/mock-route';
 import type { MockServer } from '../models/mock-server';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
+import type { SocketIORequest } from '../models/socket-io-request';
 import type { UnitTest } from '../models/unit-test';
 import type { UnitTestSuite } from '../models/unit-test-suite';
 import type { WebSocketRequest } from '../models/websocket-request';
@@ -32,10 +33,12 @@ import {
   type Insomnia_GRPCRequest,
   type Insomnia_Request,
   type Insomnia_RequestGroup,
+  type Insomnia_SocketIORequest,
   type Insomnia_WebsocketRequest,
   type InsomniaFile,
   InsomniaFileSchema,
   type Meta,
+  SocketIORequestSchema,
   WebsocketRequestSchema,
 } from './import-v5-parser';
 
@@ -280,9 +283,11 @@ function getTestSuites(file: InsomniaFile): (UnitTestSuite | UnitTest)[] {
   return [];
 }
 
-function getCollection(file: InsomniaFile): (Request | WebSocketRequest | GrpcRequest | RequestGroup)[] {
+function getCollection(
+  file: InsomniaFile,
+): (Request | WebSocketRequest | SocketIORequest | GrpcRequest | RequestGroup)[] {
   if (file.type === 'collection.insomnia.rest/5.0' || file.type === 'spec.insomnia.rest/5.0') {
-    const resources: (Request | WebSocketRequest | GrpcRequest | RequestGroup)[] = [];
+    const resources: (Request | WebSocketRequest | SocketIORequest | GrpcRequest | RequestGroup)[] = [];
 
     function walkCollection(
       collection: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'],
@@ -395,6 +400,34 @@ function getCollection(file: InsomniaFile): (Request | WebSocketRequest | GrpcRe
             };
 
             resources.push(websocketRequest);
+          } else {
+            const socketIORequest = SocketIORequestSchema.safeParse(item);
+            if (socketIORequest.success) {
+              const data = socketIORequest.data;
+              const socketIO: WithExportType<SocketIORequest> = {
+                ...mapMetaToInsomniaMeta(
+                  data.meta || {
+                    id: '__SOCKET_IO_REQUEST_ID__',
+                  },
+                ),
+                type: 'SocketIORequest',
+                _type: EXPORT_TYPE_REQUEST,
+                name: item.name || 'Imported Socket.IO Request',
+                parentId,
+                url: data.url,
+                authentication: data.authentication || {},
+                metaSortKey: item.meta?.sortKey ?? 0,
+                headers: data.headers || [],
+                parameters: data.parameters || [],
+                settingEncodeUrl: data.settings.encodeUrl,
+                settingSendCookies: data.settings.cookies.send,
+                settingStoreCookies: data.settings.cookies.store,
+                pathParameters: data.pathParameters || [],
+                eventListeners: data.eventListeners || [],
+              };
+
+              resources.push(socketIO);
+            }
           }
         }
       });
@@ -467,7 +500,7 @@ export async function getInsomniaV5DataExport({
     });
 
     function getCollectionFromResources(
-      resources: (Request | RequestGroup | WebSocketRequest | GrpcRequest)[],
+      resources: (Request | RequestGroup | WebSocketRequest | GrpcRequest | SocketIORequest)[],
       parentId: string,
     ): Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'] {
       const collection: Extract<InsomniaFile, { type: 'collection.insomnia.rest/5.0' }>['collection'] = [];
@@ -564,6 +597,31 @@ export async function getInsomniaV5DataExport({
               pathParameters: resource.pathParameters,
             };
             collection.push(webSocketRequest);
+          } else if (models.socketIORequest.isSocketIORequest(resource)) {
+            const socketIORequest: Insomnia_SocketIORequest = {
+              url: resource.url,
+              name: resource.name,
+              meta: {
+                id: resource._id,
+                created: resource.created,
+                modified: resource.modified,
+                isPrivate: resource.isPrivate,
+                description: resource.description,
+                sortKey: resource.metaSortKey,
+              },
+              settings: {
+                encodeUrl: resource.settingEncodeUrl,
+                cookies: {
+                  send: resource.settingSendCookies,
+                  store: resource.settingStoreCookies,
+                },
+              },
+              authentication: resource.authentication,
+              headers: resource.headers,
+              parameters: resource.parameters,
+              pathParameters: resource.pathParameters,
+            };
+            collection.push(socketIORequest);
           } else if (models.grpcRequest.isGrpcRequest(resource)) {
             const grpcRequest: Insomnia_GRPCRequest = {
               url: resource.url,
@@ -748,7 +806,8 @@ export async function getInsomniaV5DataExport({
               models.requestGroup.isRequestGroup(resource) ||
               models.request.isRequest(resource) ||
               models.webSocketRequest.isWebSocketRequest(resource) ||
-              models.grpcRequest.isGrpcRequest(resource),
+              models.grpcRequest.isGrpcRequest(resource) ||
+              models.socketIORequest.isSocketIORequest(resource),
           ),
           workspace._id,
         ),

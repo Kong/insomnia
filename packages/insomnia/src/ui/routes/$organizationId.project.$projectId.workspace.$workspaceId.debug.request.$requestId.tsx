@@ -44,6 +44,9 @@ import { isRequestMeta, type RequestMeta } from '../../models/request-meta';
 import type { RequestVersion } from '../../models/request-version';
 import type { Response } from '../../models/response';
 import type { ResponseInfo, RunnerResultPerRequestPerIteration } from '../../models/runner-test-result';
+import type { SocketIOPayload } from '../../models/socket-io-payload';
+import { isSocketIORequest, isSocketIORequestId, type SocketIORequest } from '../../models/socket-io-request';
+import type { SocketIOResponse } from '../../models/socket-io-response';
 import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '../../models/websocket-request';
 import { isWebSocketResponse, type WebSocketResponse } from '../../models/websocket-response';
 import { getAuthHeader } from '../../network/authentication';
@@ -71,6 +74,15 @@ export interface WebSocketRequestLoaderData {
   responses: WebSocketResponse[];
   requestVersions: RequestVersion[];
 }
+
+export interface SocketIORequestLoaderData {
+  activeRequest: SocketIORequest;
+  activeRequestMeta: RequestMeta;
+  activeResponse: null;
+  responses: SocketIOResponse[];
+  requestVersions: RequestVersion[];
+  requestPayload: SocketIOPayload;
+}
 export interface GrpcRequestLoaderData {
   activeRequest: GrpcRequest;
   activeRequestMeta: GrpcRequestMeta;
@@ -87,9 +99,20 @@ export interface RequestLoaderData {
   mockServerAndRoutes: (MockServer & { routes: MockRoute[] })[];
 }
 
+const getResponseModelName = (request: Request | WebSocketRequest | SocketIORequest | GrpcRequest) => {
+  const isGraphqlWsRequest = isGraphqlSubscriptionRequest(request);
+  if (isWebSocketRequest(request) || isGraphqlWsRequest) {
+    return 'webSocketResponse';
+  }
+  if (isSocketIORequest(request)) {
+    return 'socketIOResponse';
+  }
+  return 'response';
+};
+
 export const loader: LoaderFunction = async ({
   params,
-}): Promise<RequestLoaderData | WebSocketRequestLoaderData | GrpcRequestLoaderData> => {
+}): Promise<RequestLoaderData | WebSocketRequestLoaderData | GrpcRequestLoaderData | SocketIORequestLoaderData> => {
   const { organizationId, projectId, requestId, workspaceId } = params;
   invariant(requestId, 'Request ID is required');
   invariant(workspaceId, 'Workspace ID is required');
@@ -116,13 +139,18 @@ export const loader: LoaderFunction = async ({
   const { filterResponsesByEnv } = await models.settings.get();
   const isGraphqlWsRequest = isGraphqlSubscriptionRequest(activeRequest);
 
-  const responseModelName = isWebSocketRequestId(requestId) || isGraphqlWsRequest ? 'webSocketResponse' : 'response';
+  const responseModelName = getResponseModelName(activeRequest);
+
   const activeResponse = activeRequestMeta.activeResponseId
     ? await models[responseModelName].getById(activeRequestMeta.activeResponseId)
     : await models[responseModelName].getLatestForRequest(requestId, activeWorkspaceMeta.activeEnvironmentId);
-  const allResponses = (await models[responseModelName].findByParentId(requestId)) as (Response | WebSocketResponse)[];
+  const allResponses = (await models[responseModelName].findByParentId(requestId)) as (
+    | Response
+    | WebSocketResponse
+    | SocketIOResponse
+  )[];
   const filteredResponses = allResponses.filter(
-    (r: Response | WebSocketResponse) => r.environmentId === activeWorkspaceMeta.activeEnvironmentId,
+    (r: Response | WebSocketResponse | SocketIOResponse) => r.environmentId === activeWorkspaceMeta.activeEnvironmentId,
   );
   const responses = (filterResponsesByEnv ? filteredResponses : allResponses).sort((a: BaseModel, b: BaseModel) =>
     a.created > b.created ? -1 : 1,
@@ -158,6 +186,19 @@ export const loader: LoaderFunction = async ({
       requestVersions: [],
       mockServerAndRoutes,
     } as RequestLoaderData | WebSocketRequestLoaderData;
+  }
+
+  if (isSocketIORequest(activeRequest)) {
+    const socketIOPayload = await models.socketIOPayload.getByParentId(requestId);
+    return {
+      activeRequest,
+      activeRequestMeta,
+      activeResponse,
+      responses,
+      requestVersions: await models.requestVersion.findByParentId(requestId),
+      mockServerAndRoutes,
+      requestPayload: socketIOPayload,
+    } as SocketIORequestLoaderData;
   }
   return {
     activeRequest,
@@ -235,6 +276,16 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
         headers: defaultHeaders,
       })
     )._id;
+  }
+  if (requestType === 'SocketIO') {
+    activeRequestId = (
+      await models.socketIORequest.create({
+        parentId: parentId || workspaceId,
+        name: 'New Socket.IO Request',
+        headers: defaultHeaders,
+      })
+    )._id;
+    await models.socketIOPayload.create({ parentId: activeRequestId });
   }
   if (requestType === 'From Curl') {
     if (!req) {
@@ -363,6 +414,7 @@ export interface ConnectActionParams {
   authentication: RequestAuthentication;
   cookieJar: CookieJar;
   suppressUserAgent: boolean;
+  query?: Record<string, string>;
 }
 export const connectAction: ActionFunction = async ({ request, params }) => {
   const { requestId, workspaceId } = params;
@@ -417,6 +469,16 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
       authentication: rendered.authentication,
       cookieJar: rendered.cookieJar,
       suppressUserAgent: rendered.suppressUserAgent,
+    });
+  }
+  if (isSocketIORequest(req)) {
+    window.main.socketIO.open({
+      requestId,
+      workspaceId,
+      url: rendered.url,
+      headers: rendered.headers,
+      cookieJar: rendered.cookieJar,
+      query: rendered.query || {},
     });
   }
   // HACK: even more elaborate hack to get the request to update
@@ -821,6 +883,8 @@ export const deleteAllResponsesAction: ActionFunction = async ({ params }) => {
   invariant(workspaceMeta, 'Active workspace meta not found');
   if (isWebSocketRequestId(requestId)) {
     await models.webSocketResponse.removeForRequest(requestId, workspaceMeta.activeEnvironmentId);
+  } else if (isSocketIORequestId(requestId)) {
+    await models.socketIOResponse.removeForRequest(requestId, workspaceMeta.activeEnvironmentId);
   } else {
     await models.response.removeForRequest(requestId, workspaceMeta.activeEnvironmentId);
   }
@@ -846,6 +910,15 @@ export const deleteResponseAction: ActionFunction = async ({ request, params }) 
       await models.requestVersion.restore(response.requestVersionId);
     }
     await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: response?._id || null });
+  } else if (isSocketIORequestId(requestId)) {
+    const res = await models.socketIOResponse.getById(responseId);
+    invariant(res, 'Response not found');
+    await models.socketIOResponse.remove(res);
+    const response = await models.socketIOResponse.getLatestForRequest(requestId, workspaceMeta.activeEnvironmentId);
+    if (response?.requestVersionId) {
+      await models.requestVersion.restore(response.requestVersionId);
+    }
+    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: response?._id || null });
   } else {
     const res = await models.response.getById(responseId);
     invariant(res, 'Response not found');
@@ -857,5 +930,13 @@ export const deleteResponseAction: ActionFunction = async ({ request, params }) 
     await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: response?._id || null });
   }
 
+  return null;
+};
+
+export const updatePayloadAction: ActionFunction = async ({ request, params }) => {
+  const { requestId } = params;
+  invariant(typeof requestId === 'string', 'Request ID is required');
+  const patch = (await request.json()) as Partial<SocketIOPayload>;
+  await models.socketIOPayload.updateOrCreateByParentId(requestId, patch);
   return null;
 };

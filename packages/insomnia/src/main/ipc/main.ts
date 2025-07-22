@@ -33,6 +33,7 @@ import {
   type TimingStep,
   updateLatestStepName,
 } from '../network/request-timing';
+import type { SocketIOBridgeAPI } from '../network/socket-io';
 import type { WebSocketBridgeAPI } from '../network/websocket';
 import type { cloudServiceBridgeAPI } from './cloud-service-integration/cloud-service-register';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
@@ -60,6 +61,7 @@ export interface RendererToMainBridgeAPI {
   curlRequest: typeof curlRequest;
   on: (channel: RendererOnChannels, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
   webSocket: WebSocketBridgeAPI;
+  socketIO: SocketIOBridgeAPI;
   grpc: gRPCBridgeAPI;
   curl: CurlBridgeAPI;
   git: GitServiceAPI;

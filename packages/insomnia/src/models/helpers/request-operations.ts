@@ -1,24 +1,33 @@
 import { type GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../grpc-request';
 import * as models from '../index';
 import type { Request } from '../request';
+import { isSocketIORequest, isSocketIORequestId, type SocketIORequest } from '../socket-io-request';
 import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '../websocket-request';
 
-export function getById(requestId: string): Promise<Request | GrpcRequest | WebSocketRequest | null> {
+export function getById(requestId: string): Promise<Request | GrpcRequest | WebSocketRequest | SocketIORequest | null> {
   if (isGrpcRequestId(requestId)) {
     return models.grpcRequest.getById(requestId);
   }
   if (isWebSocketRequestId(requestId)) {
     return models.webSocketRequest.getById(requestId);
   }
+
+  if (isSocketIORequestId(requestId)) {
+    return models.socketIORequest.getById(requestId);
+  }
   return models.request.getById(requestId);
 }
 
-export function remove(request: Request | GrpcRequest | WebSocketRequest) {
+export function remove(request: Request | GrpcRequest | WebSocketRequest | SocketIORequest) {
   if (isGrpcRequest(request)) {
     return models.grpcRequest.remove(request);
   }
   if (isWebSocketRequest(request)) {
     return models.webSocketRequest.remove(request);
+  }
+
+  if (isSocketIORequest(request)) {
+    return models.socketIORequest.remove(request);
   }
   return models.request.remove(request);
 }

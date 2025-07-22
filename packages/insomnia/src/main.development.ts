@@ -21,6 +21,7 @@ import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
 import { registerSecretStorageHandlers } from './main/ipc/secret-storage';
 import { registerCurlHandlers } from './main/network/curl';
+import { registerSocketIOHandlers } from './main/network/socket-io';
 import { registerWebSocketHandlers } from './main/network/websocket';
 import { watchProxySettings } from './main/proxy';
 import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
@@ -73,6 +74,7 @@ app.on('ready', async () => {
   registergRPCHandlers();
   registerGitServiceAPI();
   registerWebSocketHandlers();
+  registerSocketIOHandlers();
   registerCurlHandlers();
   registerSecretStorageHandlers();
   registerCloudServiceHandlers();

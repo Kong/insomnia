@@ -615,6 +615,15 @@ async function renderApp() {
                                             )
                                           ).deleteResponseAction(...args),
                                       },
+                                      {
+                                        path: 'update-payload',
+                                        action: async (...args) =>
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId'
+                                            )
+                                          ).updatePayloadAction(...args),
+                                      },
                                     ],
                                   },
                                   {

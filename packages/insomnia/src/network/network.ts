@@ -40,6 +40,7 @@ import {
 } from '../models/request';
 import { isRequestGroup, type RequestGroup } from '../models/request-group';
 import type { Settings } from '../models/settings';
+import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
@@ -61,7 +62,7 @@ export const getOrInheritAuthentication = ({
   request,
   requestGroups,
 }: {
-  request: Request | WebSocketRequest;
+  request: Request | WebSocketRequest | SocketIORequest;
   requestGroups: RequestGroup[];
 }): RequestAuthentication | {} => {
   const hasValidAuth = getAuthObjectOrNull(request.authentication) && isAuthEnabled(request.authentication);

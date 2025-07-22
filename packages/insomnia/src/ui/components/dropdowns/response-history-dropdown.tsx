@@ -8,6 +8,7 @@ import { decompressObject } from '../../../common/misc';
 import * as models from '../../../models/index';
 import { isRequest, type Request } from '../../../models/request';
 import type { Response } from '../../../models/response';
+import { isSocketIOResponse, type SocketIOResponse } from '../../../models/socket-io-response';
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import { isWebSocketResponse, type WebSocketResponse } from '../../../models/websocket-response';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
@@ -24,7 +25,11 @@ import { TimeTag } from '../tags/time-tag';
 import { URLTag } from '../tags/url-tag';
 import { TimeFromNow } from '../time-from-now';
 
-export const ResponseHistoryDropdown = ({ activeResponse }: { activeResponse: Response | WebSocketResponse }) => {
+export const ResponseHistoryDropdown = ({
+  activeResponse,
+}: {
+  activeResponse: Response | WebSocketResponse | SocketIOResponse;
+}) => {
   const { requestId } = useParams() as { requestId: string };
   const dropdownRef = useRef<DropdownHandle>(null);
   const patchRequestMeta = useRequestMetaPatcher();
@@ -54,6 +59,10 @@ export const ResponseHistoryDropdown = ({ activeResponse }: { activeResponse: Re
         window.main.webSocket.close({ requestId });
       }
 
+      if (isSocketIOResponse(activeResponse)) {
+        window.main.socketIO.close({ requestId });
+      }
+
       if (activeResponse.requestVersionId) {
         await models.requestVersion.restore(activeResponse.requestVersionId);
       }
@@ -66,6 +75,8 @@ export const ResponseHistoryDropdown = ({ activeResponse }: { activeResponse: Re
   const handleDeleteResponses = useCallback(async () => {
     if (isWebSocketResponse(activeResponse)) {
       window.main.webSocket.close({ requestId });
+    } else if (isSocketIOResponse(activeResponse)) {
+      window.main.socketIO.close({ requestId });
     }
     fetcher.submit(
       {},
@@ -81,6 +92,8 @@ export const ResponseHistoryDropdown = ({ activeResponse }: { activeResponse: Re
     if (activeResponse) {
       if (isWebSocketResponse(activeResponse)) {
         window.main.webSocket.close({ requestId });
+      } else if (isSocketIOResponse(activeResponse)) {
+        window.main.socketIO.close({ requestId });
       }
     }
     fetcher.submit(
@@ -122,12 +135,14 @@ export const ResponseHistoryDropdown = ({ activeResponse }: { activeResponse: Re
           onClick={() => handleSetActiveResponse(requestId, response)}
           label={
             <div className="leading-10">
-              <StatusTag
-                small
-                statusCode={response.statusCode}
-                statusMessage={response.statusMessage || undefined}
-                tooltipDelay={1000}
-              />
+              {!isSocketIOResponse(response) && (
+                <StatusTag
+                  small
+                  statusCode={response.statusCode}
+                  statusMessage={response.statusMessage || undefined}
+                  tooltipDelay={1000}
+                />
+              )}
               <URLTag
                 small
                 url={request?.url || ''}
@@ -135,7 +150,7 @@ export const ResponseHistoryDropdown = ({ activeResponse }: { activeResponse: Re
                 tooltipDelay={1000}
               />
               <TimeTag milliseconds={response.elapsedTime} small tooltipDelay={1000} />
-              {!isWebSocketResponse(response) && (
+              {!isWebSocketResponse(response) && !isSocketIOResponse(response) && (
                 <SizeTag
                   bytesRead={response.bytesRead}
                   bytesContent={response.bytesContent}

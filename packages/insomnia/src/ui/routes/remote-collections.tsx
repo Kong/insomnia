@@ -11,6 +11,7 @@ import type { MockRoute } from '../../models/mock-route';
 import type { MockServer } from '../../models/mock-server';
 import type { Request } from '../../models/request';
 import type { RequestGroup } from '../../models/request-group';
+import type { SocketIORequest } from '../../models/socket-io-request';
 import type { UnitTest } from '../../models/unit-test';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import type { WebSocketRequest } from '../../models/websocket-request';
@@ -51,6 +52,7 @@ async function getSyncItems({ workspaceId }: { workspaceId: string }) {
     | ApiSpec
     | Request
     | WebSocketRequest
+    | SocketIORequest
     | GrpcRequest
     | RequestGroup
     | UnitTestSuite
@@ -84,11 +86,15 @@ async function getSyncItems({ workspaceId }: { workspaceId: string }) {
   const wsReqs = await database.find(models.webSocketRequest.type, {
     parentId: { $in: listOfParentIds },
   });
-  const allRequests = [...reqs, ...reqGroups, ...grpcReqs, ...wsReqs] as (
+  const socketIOReqs = await database.find(models.socketIORequest.type, {
+    parentId: { $in: listOfParentIds },
+  });
+  const allRequests = [...reqs, ...reqGroups, ...grpcReqs, ...wsReqs, ...socketIOReqs] as (
     | Request
     | RequestGroup
     | GrpcRequest
     | WebSocketRequest
+    | SocketIORequest
   )[];
   const testSuites = await models.unitTestSuite.findByParentId(workspaceId);
   const tests = await database.find<UnitTest>(models.unitTest.type, {

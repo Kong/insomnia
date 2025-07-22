@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 
-import React, { type FC, useEffect, useState } from 'react';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useRouteLoaderData } from 'react-router';
@@ -8,13 +8,17 @@ import { useRouteLoaderData } from 'react-router';
 import { getSetCookieHeaders } from '../../../common/misc';
 import type { CurlEvent } from '../../../main/network/curl';
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
+import type { SocketIOEvent } from '../../../main/network/socket-io';
 import type { WebSocketEvent } from '../../../main/network/websocket';
 import type { Response } from '../../../models/response';
+import { isSocketIOResponse, type SocketIOResponse } from '../../../models/socket-io-response';
 import type { WebSocketResponse } from '../../../models/websocket-response';
 import { deserializeNDJSON } from '../../../utils/ndjson';
+import { useReadyState } from '../../hooks/use-ready-state';
 import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
 import type {
   RequestLoaderData,
+  SocketIORequestLoaderData,
   WebSocketRequestLoaderData,
 } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
@@ -22,6 +26,7 @@ import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
 import { Pane, PaneHeader } from '../panes/pane';
 import { PlaceholderResponsePane } from '../panes/placeholder-response-pane';
+import { SocketIOEventView } from '../socket-io/event-view';
 import { SvgIcon } from '../svg-icon';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
@@ -34,7 +39,10 @@ import { EventLogView } from './event-log-view';
 import { EventView } from './event-view';
 
 export const RealtimeResponsePane: FC<{ requestId: string }> = () => {
-  const { activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData | WebSocketRequestLoaderData;
+  const { activeResponse } = useRouteLoaderData('request/:requestId') as
+    | RequestLoaderData
+    | WebSocketRequestLoaderData
+    | SocketIORequestLoaderData;
 
   if (!activeResponse) {
     return (
@@ -47,16 +55,33 @@ export const RealtimeResponsePane: FC<{ requestId: string }> = () => {
   return <RealtimeActiveResponsePane response={activeResponse} />;
 };
 
-const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }> = ({ response }) => {
-  const [selectedEvent, setSelectedEvent] = useState<CurlEvent | WebSocketEvent | null>(null);
+const RealtimeActiveResponsePane: FC<{
+  response: WebSocketResponse | Response | SocketIOResponse;
+}> = ({ response }) => {
+  const [selectedEvent, setSelectedEvent] = useState<CurlEvent | WebSocketEvent | SocketIOEvent | null>(null);
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const [clearEventsBefore, setClearEventsBefore] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [eventType, setEventType] = useState<CurlEvent['type']>();
-  const protocol = response.type === 'WebSocketResponse' ? 'webSocket' : 'curl';
-  const allEvents = useRealtimeConnectionEvents({ responseId: response._id, protocol });
-  const handleSelection = (event: CurlEvent | WebSocketEvent) => {
-    setSelectedEvent((selected: CurlEvent | WebSocketEvent | null) => (selected?._id === event._id ? null : event));
+
+  const protocol = useMemo(() => {
+    if (isSocketIOResponse(response)) {
+      return 'socketIO';
+    }
+    return response.type === 'WebSocketResponse' ? 'webSocket' : 'curl';
+  }, [response]);
+
+  const allEvents = useRealtimeConnectionEvents({ responseId: response._id, protocol }) as (
+    | CurlEvent
+    | WebSocketEvent
+    | SocketIOEvent
+  )[];
+  const requestId = response.parentId;
+  const readyState = useReadyState({ requestId: requestId, protocol });
+  const handleSelection = (event: CurlEvent | WebSocketEvent | SocketIOEvent) => {
+    setSelectedEvent((selected: CurlEvent | WebSocketEvent | SocketIOEvent | null) =>
+      selected?._id === event._id ? null : event,
+    );
   };
 
   const events = allEvents.filter(event => {
@@ -119,14 +144,22 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
     };
   }, [response.timelinePath, events.length]);
 
-  const cookieHeaders = getSetCookieHeaders(response.headers);
+  const cookieHeaders = !isSocketIOResponse(response) ? getSetCookieHeaders(response.headers) : [];
   return (
     <Pane type="response">
       <PaneHeader className="row-spaced">
         <div className="no-wrap scrollable scrollable--no-bars pad-left">
-          <StatusTag statusCode={response.statusCode} statusMessage={response.statusMessage} />
-          <TimeTag milliseconds={response.elapsedTime} steps={[]} />
-          <SizeTag bytesRead={0} bytesContent={0} />
+          {isSocketIOResponse(response) ? (
+            <div className={`${readyState ? 'bg-success' : 'bg-danger'} px-2 py-1`}>
+              {readyState ? 'Connected' : 'Disconnected'}
+            </div>
+          ) : (
+            <>
+              <StatusTag statusCode={response.statusCode} statusMessage={response.statusMessage} />
+              <TimeTag milliseconds={response.elapsedTime} steps={[]} />
+              <SizeTag bytesRead={0} bytesContent={0} />
+            </>
+          )}
         </div>
         <ResponseHistoryDropdown activeResponse={response} />
       </PaneHeader>
@@ -141,28 +174,32 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
           >
             Events
           </Tab>
-          <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
-            id="headers"
-          >
-            Headers
-            {response.headers.length > 0 && (
-              <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
-                {response.headers.length}
-              </span>
-            )}
-          </Tab>
-          <Tab
-            className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
-            id="cookies"
-          >
-            Cookies
-            {cookieHeaders.length > 0 && (
-              <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
-                {cookieHeaders.length}
-              </span>
-            )}
-          </Tab>
+          {!isSocketIOResponse(response) && (
+            <>
+              <Tab
+                className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                id="headers"
+              >
+                Headers
+                {response.headers.length > 0 && (
+                  <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+                    {response.headers.length}
+                  </span>
+                )}
+              </Tab>
+              <Tab
+                className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                id="cookies"
+              >
+                Cookies
+                {cookieHeaders.length > 0 && (
+                  <span className="shadow-small flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-[--hl-md] p-2 text-xs">
+                    {cookieHeaders.length}
+                  </span>
+                )}
+              </Tab>
+            </>
+          )}
           <Tab
             className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
             id="timeline"
@@ -235,7 +272,11 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
                     <PanelResizeHandle className={'h-[1px] w-full bg-[--hl-md]'} />
                     <Panel minSize={10} defaultSize={50}>
                       <div className="h-full flex-1 border-t border-[var(--hl-md)]">
-                        <EventView key={selectedEvent._id} event={selectedEvent} />
+                        {isSocketIOResponse(response) ? (
+                          <SocketIOEventView key={selectedEvent._id} event={selectedEvent as SocketIOEvent} />
+                        ) : (
+                          <EventView key={selectedEvent._id} event={selectedEvent} />
+                        )}
                       </div>
                     </Panel>
                   </>
@@ -244,20 +285,24 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
             )}
           </PanelGroup>
         </TabPanel>
-        <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="headers">
-          <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
-            <ResponseHeadersViewer headers={response.headers} />
-          </ErrorBoundary>
-        </TabPanel>
-        <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="cookies">
-          <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
-            <ResponseCookiesViewer
-              cookiesSent={response.settingSendCookies}
-              cookiesStored={response.settingStoreCookies}
-              headers={cookieHeaders}
-            />
-          </ErrorBoundary>
-        </TabPanel>
+        {!isSocketIOResponse(response) && (
+          <>
+            <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="headers">
+              <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
+                <ResponseHeadersViewer headers={response.headers} />
+              </ErrorBoundary>
+            </TabPanel>
+            <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="cookies">
+              <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
+                <ResponseCookiesViewer
+                  cookiesSent={response.settingSendCookies}
+                  cookiesStored={response.settingStoreCookies}
+                  headers={cookieHeaders}
+                />
+              </ErrorBoundary>
+            </TabPanel>
+          </>
+        )}
         <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="timeline">
           <ResponseTimelineViewer key={response._id} timeline={timeline} pinToBottom={true} />
         </TabPanel>
