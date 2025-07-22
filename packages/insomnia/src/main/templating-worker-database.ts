@@ -141,7 +141,7 @@ const pluginToMainAPI = {
     const settingFollowRedirects = settings?.followRedirects ? 'on' : 'off';
     const { request: originRequest, caCertficatePath = null } = body.options;
     const response = await curlRequest({
-      requestId: `cloud-service-integration-${requestId}`,
+      requestId: `network-curl-request-${requestId}`,
       req: {
         authentication: {},
         body: {},

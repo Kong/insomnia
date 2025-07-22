@@ -13,7 +13,6 @@ import {
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 import { FilePicker } from './file-picker';
-import { ToggleBtn } from './toggle-btn';
 
 export interface AWSCredentialFormProps {
   data?: CloudProviderCredential;
@@ -182,10 +181,16 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
                     name="accessKeyId"
                     placeholder="Access Key Id"
                   />
-                  <ToggleBtn
-                    isHidden={hideValueItemNames.includes('accessKeyId')}
-                    onShowHideInput={() => showOrHideItemValue('accessKeyId')}
-                  />
+                  <Button
+                    className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                    onPress={() => showOrHideItemValue('accessKeyId')}
+                  >
+                    {hideValueItemNames.includes('accessKeyId') ? (
+                      <i className="fa fa-eye-slash" />
+                    ) : (
+                      <i className="fa fa-eye" />
+                    )}
+                  </Button>
                 </div>
               </TextField>
               <TextField
@@ -201,10 +206,16 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
                     name="secretAccessKey"
                     placeholder="Secret Access Key"
                   />
-                  <ToggleBtn
-                    isHidden={hideValueItemNames.includes('secretAccessKey')}
-                    onShowHideInput={() => showOrHideItemValue('secretAccessKey')}
-                  />
+                  <Button
+                    className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                    onPress={() => showOrHideItemValue('secretAccessKey')}
+                  >
+                    {hideValueItemNames.includes('secretAccessKey') ? (
+                      <i className="fa fa-eye-slash" />
+                    ) : (
+                      <i className="fa fa-eye" />
+                    )}
+                  </Button>
                 </div>
               </TextField>
               <TextField
@@ -220,10 +231,16 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
                     name="sessionToken"
                     placeholder="AWS Secret Token"
                   />
-                  <ToggleBtn
-                    isHidden={hideValueItemNames.includes('sessionToken')}
-                    onShowHideInput={() => showOrHideItemValue('sessionToken')}
-                  />
+                  <Button
+                    className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                    onPress={() => showOrHideItemValue('sessionToken')}
+                  >
+                    {hideValueItemNames.includes('sessionToken') ? (
+                      <i className="fa fa-eye-slash" />
+                    ) : (
+                      <i className="fa fa-eye" />
+                    )}
+                  </Button>
                 </div>
               </TextField>
             </>
