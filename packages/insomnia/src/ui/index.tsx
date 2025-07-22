@@ -257,12 +257,12 @@ async function renderApp() {
                       {
                         path: 'init-clone',
                         action: async (...args) =>
-                          (await import('./routes/git-project-actions')).initGitCloneAction(...args),
+                          (await import('./routes/$organizationId.git')).initGitCloneAction(...args),
                       },
                       {
                         path: 'clone',
                         action: async (...args) =>
-                          (await import('./routes/git-project-actions')).cloneGitRepoAction(...args),
+                          (await import('./routes/$organizationId.git')).cloneGitRepoAction(...args),
                       },
                     ],
                   },
