@@ -15,7 +15,7 @@ coverage
 build/Release
 node_modules/
 **/node_modules/
-packages/**/plugins
+packages/insomnia/plugins
 .npm
 .eslintcache
 .node_repl_history

@@ -1,4 +1,3 @@
-import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -17,9 +16,6 @@ import type { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace } from '../models/workspace';
 import type { PluginTemplateTag } from '../templating/types';
 import { showError } from '../ui/components/modals/index';
-import { insomniaFetch } from '../ui/insomniaFetch';
-import { isValidJSONString } from '../utils/string-check';
-import { buildQueryStringFromParams } from '../utils/url/querystring';
 import * as pluginContexts from './context';
 import type { PluginTheme } from './misc';
 import themes from './themes';
@@ -152,7 +148,6 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
         const safeModulePath = path.resolve(modulePath);
         // Base directory we're processing from `allPaths`
         const pluginBasePath = p;
-        const bundlePluginPath = getPreBundlePluginPath();
 
         // Check if the resolved module path is inside the base plugin path (to prevent directory traversal)
         if (!safeModulePath.startsWith(pluginBasePath)) {
