@@ -378,6 +378,7 @@ export const TagEditor: FC<Props> = props => {
             const modelName = typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown';
             let targetDoc = state.allDocs[modelName];
             const modelFilterFunc = argDefinition.modelFilter;
+            // modelFilterFunc is an optional function that filters the doc display in the dropdown based on tagData
             if (modelFilterFunc && typeof modelFilterFunc === 'function') {
               targetDoc = targetDoc.filter(doc => modelFilterFunc(doc, activeTagData.args));
             }
