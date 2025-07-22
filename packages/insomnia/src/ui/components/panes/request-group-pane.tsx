@@ -7,7 +7,7 @@ import type { Settings } from '../../../models/settings';
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { useRequestGroupPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace';
+import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import type { RequestGroupLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { EnvironmentEditor, type EnvironmentEditorHandle } from '../editors/environment-editor';

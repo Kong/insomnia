@@ -13,7 +13,7 @@ import { getAuthObjectOrNull } from '../../../network/authentication';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace';
+import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import type { RequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';

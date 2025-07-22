@@ -24,7 +24,7 @@ import { cancelRequestById } from '../../../network/cancellation';
 import { insomniaFetch } from '../../../ui/insomniaFetch';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { useExecutionState } from '../../hooks/use-execution-state';
-import type { MockRouteLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route';
+import type { MockRouteLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 import { useRootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { CodeEditor } from '../codemirror/code-editor';

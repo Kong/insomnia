@@ -50,7 +50,7 @@ import { OrganizationTabList } from '../components/tabs/tab-list';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useInsomniaTab } from '../hooks/use-insomnia-tab';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
-import type { WorkspaceLoaderData } from './$organizationId.project.$projectId.workspace';
+import type { WorkspaceLoaderData } from './$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRootLoaderData } from './root';
 
 const Environments = () => {

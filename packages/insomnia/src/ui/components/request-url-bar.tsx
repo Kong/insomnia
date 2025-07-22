@@ -18,7 +18,7 @@ import { useReadyState } from '../hooks/use-ready-state';
 import { useRequestPatcher } from '../hooks/use-request';
 import { useRequestMetaPatcher } from '../hooks/use-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
-import type { WorkspaceLoaderData } from '../routes/$organizationId.project.$projectId.workspace';
+import type { WorkspaceLoaderData } from '../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import type {
   ConnectActionParams,
   RequestLoaderData,

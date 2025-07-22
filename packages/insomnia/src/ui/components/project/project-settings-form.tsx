@@ -37,7 +37,7 @@ import {
   scopeToIconMap,
   scopeToLabelMap,
   scopeToTextColorMap,
-} from '../../routes/$organizationId.project';
+} from '../../routes/$organizationId.project.$projectId';
 import type { UpdateProjectActionResult } from '../../routes/$organizationId.project.$projectId.update';
 import { ErrorBoundary } from '../error-boundary';
 import { CustomRepositorySettingsFormGroup } from '../git-credentials/custom-repository-settings-form';

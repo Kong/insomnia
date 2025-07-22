@@ -43,12 +43,12 @@ import { OrganizationTabList } from '../components/tabs/tab-list';
 import { formatMethodName } from '../components/tags/method-tag';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useInsomniaTab } from '../hooks/use-insomnia-tab';
-import type { WorkspaceLoaderData } from './$organizationId.project.$projectId.workspace';
+import type { WorkspaceLoaderData } from './$organizationId.project.$projectId.workspace.$workspaceId';
 import {
   MockRouteResponse,
   MockRouteRoute,
   useMockRoutePatcher,
-} from './$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route';
+} from './$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 import { useRootLoaderData } from './root';
 export interface MockServerLoaderData {
   mockServerId: string;

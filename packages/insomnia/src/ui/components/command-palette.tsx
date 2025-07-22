@@ -32,7 +32,7 @@ import {
   scopeToIconMap,
   scopeToLabelMap,
   scopeToTextColorMap,
-} from '../routes/$organizationId.project';
+} from '../routes/$organizationId.project.$projectId';
 import type { LoaderResult } from '../routes/commands';
 import type { RemoteFilesLoaderResult } from '../routes/remote-files';
 import type { RootLoaderData } from '../routes/root';

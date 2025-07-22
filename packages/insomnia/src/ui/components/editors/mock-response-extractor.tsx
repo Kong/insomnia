@@ -8,12 +8,12 @@ import { useFetcher, useRouteLoaderData } from 'react-router';
 import { getContentTypeName, getMimeTypeFromContentType } from '../../../common/constants';
 import type { ResponseHeader } from '../../../models/response';
 import { invariant } from '../../../utils/invariant';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace';
+import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import type { RequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import {
   isInMockContentTypeList,
   useMockRoutePatcher,
-} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route';
+} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 import type { OrganizationLoaderData } from '../../routes/organization';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';

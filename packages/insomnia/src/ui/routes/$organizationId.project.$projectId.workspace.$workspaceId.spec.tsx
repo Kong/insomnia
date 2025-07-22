@@ -61,7 +61,7 @@ import { formatMethodName } from '../components/tags/method-tag';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useInsomniaTab } from '../hooks/use-insomnia-tab';
 import { useActiveApiSpecSyncVCSVersion, useGitVCSVersion } from '../hooks/use-vcs-version';
-import type { WorkspaceLoaderData } from './$organizationId.project.$projectId.workspace';
+import type { WorkspaceLoaderData } from './$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRootLoaderData } from './root';
 
 interface LoaderData {

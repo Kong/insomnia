@@ -23,7 +23,7 @@ import { setDefaultProtocol } from '../../../utils/url/protocol';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace';
+import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import type { GrpcRequestState } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug';
 import type { GrpcRequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRootLoaderData } from '../../routes/root';

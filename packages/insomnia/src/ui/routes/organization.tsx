@@ -48,7 +48,7 @@ import { InsomniaTabProvider } from '../context/app/insomnia-tab-context';
 import { RunnerProvider } from '../context/app/runner-context';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
 import { type CurrentPlan, sortOrganizations, type UserProfileResponse } from '../organization-utils';
-import type { WorkspaceLoaderData } from './$organizationId.project.$projectId.workspace';
+import type { WorkspaceLoaderData } from './$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRootLoaderData } from './root';
 import type { UntrackedProjectsLoaderData } from './untracked-projects';
 

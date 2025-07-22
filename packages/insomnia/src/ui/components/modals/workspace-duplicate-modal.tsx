@@ -9,7 +9,11 @@ import { sortProjects } from '../../../models/helpers/project';
 import * as models from '../../../models/index';
 import type { Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
-import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '../../routes/$organizationId.project';
+import {
+  scopeToBgColorMap,
+  scopeToIconMap,
+  scopeToTextColorMap,
+} from '../../routes/$organizationId.project.$projectId';
 import { useOrganizationLoaderData } from '../../routes/organization';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';

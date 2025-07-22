@@ -12,7 +12,7 @@ import { isSocketIOResponse, type SocketIOResponse } from '../../../models/socke
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import { isWebSocketResponse, type WebSocketResponse } from '../../../models/websocket-response';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace';
+import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import type {
   RequestLoaderData,
   WebSocketRequestLoaderData,

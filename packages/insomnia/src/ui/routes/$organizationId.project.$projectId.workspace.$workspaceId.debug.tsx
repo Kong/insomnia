@@ -119,7 +119,7 @@ import {
   useRequestMetaPatcher,
   useRequestPatcher,
 } from '../hooks/use-request';
-import type { Child, WorkspaceLoaderData } from './$organizationId.project.$projectId.workspace';
+import type { Child, WorkspaceLoaderData } from './$organizationId.project.$projectId.workspace.$workspaceId';
 import type {
   GrpcRequestLoaderData,
   RequestLoaderData,

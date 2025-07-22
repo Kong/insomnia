@@ -5,7 +5,7 @@ import { getRenderContext, getRenderContextAncestors, render } from '../../../co
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 import type { HandleRender, RenderContextOptions } from '../../../templating/types';
 import { getKeys } from '../../../templating/utils';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace';
+import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import type { RequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 let getRenderContextPromiseCache: any = {};
 

@@ -20,7 +20,7 @@ import {
   scopeToIconMap,
   scopeToLabelMap,
   scopeToTextColorMap,
-} from '../../routes/$organizationId.project';
+} from '../../routes/$organizationId.project.$projectId';
 import { Icon } from '../icon';
 
 export const GitProjectMigrationModal: FC<{

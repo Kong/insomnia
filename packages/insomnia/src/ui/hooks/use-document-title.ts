@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useRouteLoaderData } from 'react-router';
 
 import { getProductName } from '../../common/constants';
-import type { WorkspaceLoaderData } from '../routes/$organizationId.project.$projectId.workspace';
+import type { WorkspaceLoaderData } from '../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import type { RequestLoaderData } from '../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 export const useDocumentTitle = () => {
   const { activeWorkspace, activeEnvironment, activeProject } = useRouteLoaderData(

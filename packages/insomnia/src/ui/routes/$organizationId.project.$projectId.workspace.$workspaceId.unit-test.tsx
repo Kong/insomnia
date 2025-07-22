@@ -51,7 +51,7 @@ import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-e
 import { OrganizationTabList } from '../components/tabs/tab-list';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useInsomniaTab } from '../hooks/use-insomnia-tab';
-import type { WorkspaceLoaderData } from './$organizationId.project.$projectId.workspace';
+import type { WorkspaceLoaderData } from './$organizationId.project.$projectId.workspace.$workspaceId';
 import TestSuiteRoute from './$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId';
 import { TestRunStatus } from './$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId.test-result.$testResultId';
 import { useRootLoaderData } from './root';

@@ -37,8 +37,8 @@ import { Migrate } from './routes/onboarding.migrate';
 import Root from './routes/root';
 import { initializeSentry } from './sentry';
 const Organization = lazy(() => import('./routes/organization'));
-const Project = lazy(() => import('./routes/$organizationId.project'));
-const Workspace = lazy(() => import('./routes/$organizationId.project.$projectId.workspace'));
+const Project = lazy(() => import('./routes/$organizationId.project.$projectId'));
+const Workspace = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId'));
 const UnitTest = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.unit-test'));
 const Debug = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.debug'));
 const Design = lazy(() => import('./routes/$organizationId.project.$projectId.workspace.$workspaceId.spec'));
@@ -279,7 +279,7 @@ async function renderApp() {
                   {
                     path: 'sync-projects',
                     action: async (...args) =>
-                      (await import('./routes/$organizationId.project')).syncProjectsAction(...args),
+                      (await import('./routes/$organizationId.project.$projectId')).syncProjectsAction(...args),
                   },
                   {
                     path: 'collaborators',
@@ -337,7 +337,8 @@ async function renderApp() {
                     children: [
                       {
                         index: true,
-                        loader: async (...args) => (await import('./routes/$organizationId.project')).loader(...args),
+                        loader: async (...args) =>
+                          (await import('./routes/$organizationId.project.$projectId')).loader(...args),
                         element: (
                           <Suspense fallback={<AppLoadingIndicator />}>
                             <Project />
@@ -352,12 +353,12 @@ async function renderApp() {
                         path: ':projectId',
                         id: '/project/:projectId',
                         loader: async (...args) =>
-                          (await import('./routes/$organizationId.project')).projectIdLoader(...args),
+                          (await import('./routes/$organizationId.project.$projectId')).projectIdLoader(...args),
                         children: [
                           {
                             index: true,
                             loader: async (...args) =>
-                              (await import('./routes/$organizationId.project')).loader(...args),
+                              (await import('./routes/$organizationId.project.$projectId')).loader(...args),
                             element: (
                               <Suspense fallback={<AppLoadingIndicator />}>
                                 <Project />
@@ -367,7 +368,9 @@ async function renderApp() {
                           {
                             path: 'list-workspaces',
                             loader: async (...args) =>
-                              (await import('./routes/$organizationId.project')).listWorkspacesLoader(...args),
+                              (await import('./routes/$organizationId.project.$projectId')).listWorkspacesLoader(
+                                ...args,
+                              ),
                           },
                           {
                             path: 'delete',
@@ -557,9 +560,9 @@ async function renderApp() {
                             path: ':workspaceId',
                             id: ':workspaceId',
                             loader: async (...args) =>
-                              (await import('./routes/$organizationId.project.$projectId.workspace')).workspaceLoader(
-                                ...args,
-                              ),
+                              (
+                                await import('./routes/$organizationId.project.$projectId.workspace.$workspaceId')
+                              ).workspaceLoader(...args),
                             element: (
                               <Suspense fallback={<AppLoadingIndicator />}>
                                 <Workspace />
@@ -845,7 +848,7 @@ async function renderApp() {
                                         loader: async (...args) =>
                                           (
                                             await import(
-                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route'
+                                              './routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId'
                                             )
                                           ).loader(...args),
                                         element: <Outlet />,

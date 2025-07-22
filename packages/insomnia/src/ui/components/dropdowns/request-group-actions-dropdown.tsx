@@ -15,7 +15,7 @@ import * as pluginData from '../../../plugins/context/data';
 import * as pluginNetwork from '../../../plugins/context/network';
 import * as pluginStore from '../../../plugins/context/store';
 import type { CreateRequestType } from '../../hooks/use-request';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace';
+import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRootLoaderData } from '../../routes/root';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';

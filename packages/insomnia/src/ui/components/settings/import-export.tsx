@@ -23,7 +23,6 @@ import { AskModal } from 'insomnia/src/ui/components/modals/ask-modal';
 import { ExportRequestsModal } from 'insomnia/src/ui/components/modals/export-requests-modal';
 import { ImportModal } from 'insomnia/src/ui/components/modals/import-modal';
 import { SelectModal } from 'insomnia/src/ui/components/modals/select-modal';
-import type { WorkspaceLoaderData } from 'insomnia/src/ui/routes/$organizationId.project.$projectId.workspace';
 import { useOrganizationLoaderData } from 'insomnia/src/ui/routes/organization';
 import { useRootLoaderData } from 'insomnia/src/ui/routes/root';
 import type { UntrackedProjectsLoaderData } from 'insomnia/src/ui/routes/untracked-projects';
@@ -32,7 +31,8 @@ import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } f
 import { useFetcher, useParams } from 'react-router';
 import { useRouteLoaderData } from 'react-router';
 
-import type { ListWorkspacesLoaderData } from '../../routes/$organizationId.project';
+import type { ListWorkspacesLoaderData } from '../../routes/$organizationId.project.$projectId';
+import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { AlertModal } from '../modals/alert-modal';
 
 const VALUE_YAML = 'yaml';
