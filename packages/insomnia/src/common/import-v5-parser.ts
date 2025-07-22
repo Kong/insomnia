@@ -401,6 +401,13 @@ export const WebsocketRequestSchema = z.object({
   }).optional(),
 });
 
+export const SocketIOEventListenerSchema = z.object({
+  id: z.string(),
+  eventName: z.string().optional().default(''),
+  desc: z.string().optional().default(''),
+  isOpen: z.boolean().optional().default(false),
+});
+
 export const SocketIORequestSchema = z.object({
   name: z.string().optional().default(''),
   url: z.string().optional().default(''),
