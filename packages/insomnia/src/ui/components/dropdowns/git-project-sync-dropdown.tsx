@@ -1,5 +1,6 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import React, { type FC, useEffect, useState } from 'react';
+import { format } from 'date-fns';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
 import {
   Button,
   Collection,
@@ -8,6 +9,7 @@ import {
   MenuSection,
   MenuTrigger,
   Popover,
+  Separator,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
@@ -35,7 +37,7 @@ import { GitProjectMigrationModal } from '../modals/git-project-migration-modal'
 import { GitProjectStagingModal } from '../modals/git-project-staging-modal';
 import { GitProjectRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { SyncMergeModal } from '../modals/sync-merge-modal';
-import { ProjectBranchName } from './project-branch-name';
+import { showToast } from '../toast-notification';
 interface Props {
   gitRepository: GitRepository | null;
 }
@@ -56,14 +58,22 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
   const gitCheckoutFetcher = useFetcher();
   const gitRepoDataFetcher = useFetcher<GitRepoLoaderData>();
   const gitFetchFetcher = useFetcher<GitFetchLoaderData>();
+  const gitIntervalFetchFetcher = useFetcher<GitFetchLoaderData>();
   const gitStatusFetcher = useFetcher<GitStatusResult>();
 
-  const loadingPush = gitPushFetcher.state === 'loading';
-  const loadingFetch = gitFetchFetcher.state === 'loading';
-
   const [isPulling, setIsPulling] = useState(false);
-  const [isOperationSucceed, setIsOperationSucceed] = useState(false);
   const [operationError, setOperationError] = useState<string | null>(null);
+
+  const providerName = getOauth2FormatName(gitRepository?.credentials);
+
+  const icon: IconProp = useMemo(() => {
+    if (providerName === 'github') {
+      return ['fab', 'github'];
+    } else if (providerName === 'gitlab') {
+      return ['fab', 'gitlab'];
+    }
+    return ['fab', 'git-alt'];
+  }, [providerName]);
 
   useEffect(() => {
     if (gitRepository?.uri && gitRepository?._id && gitRepoDataFetcher.state === 'idle' && !gitRepoDataFetcher.data) {
@@ -129,9 +139,20 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
   useEffect(() => {
     const errors = [...(gitPushFetcher.data?.errors ?? [])];
     if (errors.length > 0) {
+      showToast({
+        icon,
+        title: `Push failed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        status: 'error',
+      });
       setOperationError(errors.join('\n'));
+    } else if (gitPushFetcher.data && 'success' in gitPushFetcher.data && gitPushFetcher.data.success) {
+      showToast({
+        icon,
+        title: `Push completed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        status: 'success',
+      });
     }
-  }, [gitPushFetcher.data?.errors]);
+  }, [gitPushFetcher.data, icon]);
 
   useEffect(() => {
     const gitRepoDataErrors =
@@ -146,10 +167,45 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
     const errors = [...(gitCheckoutFetcher.data?.errors ?? [])];
     if (errors.length > 0) {
       setOperationError(errors.join('\n'));
+      showToast({
+        icon,
+        title: `Checkout failed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        status: 'error',
+      });
+    } else if (gitCheckoutFetcher.data && 'success' in gitCheckoutFetcher.data && gitCheckoutFetcher.data.success) {
+      showToast({
+        icon,
+        title: `Checkout completed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        status: 'success',
+      });
     }
-  }, [gitCheckoutFetcher.data?.errors]);
+  }, [gitCheckoutFetcher.data, icon]);
+
+  useEffect(() => {
+    const errors = [...(gitFetchFetcher.data?.errors ?? [])];
+    if (errors.length > 0) {
+      setOperationError(errors.join('\n'));
+      showToast({
+        icon,
+        title: `Fetch failed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        status: 'error',
+      });
+    } else if (gitFetchFetcher.data && 'success' in gitFetchFetcher.data && gitFetchFetcher.data.success) {
+      showToast({
+        icon,
+        title: `Fetch completed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        status: 'success',
+      });
+    }
+  }, [gitFetchFetcher.data, icon]);
 
   async function handlePush({ force }: { force: boolean }) {
+    setOperationError(null);
+    showToast({
+      icon,
+      title: `Push started, ${format(new Date(), 'HH:mm:ss aa')}`,
+    });
+
     gitPushFetcher.submit(
       {
         force: `${force}`,
@@ -159,15 +215,6 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
         method: 'post',
       },
     );
-  }
-
-  let icon: IconProp = ['fab', 'git-alt'];
-  const providerName = getOauth2FormatName(gitRepository?.credentials);
-  if (providerName === 'github') {
-    icon = ['fab', 'github'];
-  }
-  if (providerName === 'gitlab') {
-    icon = ['fab', 'gitlab'];
   }
 
   const isPushing = gitPushFetcher.state !== 'idle';
@@ -210,48 +257,67 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
           action: async () => {
             try {
               setIsPulling(true);
-              await pullFromGitRemote({ projectId })
-                .then(result => {
-                  if ('errors' in result && result.errors) {
-                    setOperationError(result.errors.join('\n'));
-                  }
-                  if ('conflicts' in result) {
-                    showModal(SyncMergeModal, {
-                      conflicts: result.conflicts,
-                      labels: result.labels,
-                      handleDone: (conflicts?: MergeConflict[]) => {
-                        if (Array.isArray(conflicts) && conflicts.length > 0) {
-                          setIsPulling(true);
-                          continueMerge({
-                            projectId,
-                            handledMergeConflicts: conflicts,
-                            commitMessage: result.commitMessage,
-                            commitParent: result.commitParent,
-                          }).finally(() => {
-                            setIsPulling(false);
-                            revalidate();
-                          });
-                        } else {
-                          // user aborted merge, do nothing
-                        }
-                      },
-                    });
-                  }
-                  setIsOperationSucceed(true);
-                })
-                .finally(() => {
-                  setIsPulling(false);
-                  revalidate();
+              setOperationError(null);
+              showToast({
+                icon,
+                title: `Pull started, ${format(new Date(), 'HH:mm:ss aa')}`,
+              });
+
+              const pullResult = await pullFromGitRemote({ projectId });
+
+              if ('errors' in pullResult && pullResult.errors) {
+                showToast({
+                  icon,
+                  title: `Pull failed, ${format(new Date(), 'HH:mm:ss aa')}`,
+                  status: 'error',
                 });
+                setOperationError(pullResult.errors.join('\n'));
+                setIsPulling(false);
+              } else if ('conflicts' in pullResult) {
+                showModal(SyncMergeModal, {
+                  conflicts: pullResult.conflicts,
+                  labels: pullResult.labels,
+                  handleDone: (conflicts?: MergeConflict[]) => {
+                    if (Array.isArray(conflicts) && conflicts.length > 0) {
+                      setIsPulling(true);
+                      continueMerge({
+                        projectId,
+                        handledMergeConflicts: conflicts,
+                        commitMessage: pullResult.commitMessage,
+                        commitParent: pullResult.commitParent,
+                      }).finally(() => {
+                        setIsPulling(false);
+                        revalidate();
+                      });
+                    } else {
+                      // user aborted merge, do nothing
+                    }
+                  },
+                });
+              } else {
+                setIsPulling(false);
+                showToast({
+                  icon,
+                  title: `Pull completed, ${format(new Date(), 'HH:mm:ss aa')}`,
+                  status: 'success',
+                });
+                revalidate();
+              }
             } catch (err) {
               const message = err instanceof Error ? err.message : 'An error occurred while pulling';
               setOperationError(message);
+
+              showToast({
+                icon,
+                title: `Pull failed, ${format(new Date(), 'HH:mm:ss aa')}`,
+                status: 'error',
+              });
             }
           },
         },
         {
           id: 'push',
-          icon: loadingPush ? 'refresh' : 'cloud-upload',
+          icon: 'cloud-upload',
           label: 'Push',
           isDisabled: false,
           action: () => handlePush({ force: false }),
@@ -265,10 +331,15 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
         },
         {
           id: 'fetch',
-          icon: loadingFetch ? 'refresh' : 'refresh',
+          icon: 'refresh',
           isDisabled: false,
           label: 'Fetch',
           action: () => {
+            setOperationError(null);
+            showToast({
+              icon,
+              title: `Fetch started, ${format(new Date(), 'HH:mm:ss aa')}`,
+            });
             gitFetchFetcher.submit(
               {},
               {
@@ -316,7 +387,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
 
   useInterval(
     () => {
-      gitFetchFetcher.submit(
+      gitIntervalFetchFetcher.submit(
         {},
         {
           action: `/organization/${organizationId}/project/${projectId}/git/fetch`,
@@ -343,6 +414,11 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
         isActive: branch === currentBranch,
         icon: 'code-branch',
         action: async () => {
+          setOperationError(null);
+          // defaultToast({ message: `Switching to branch ${branch}, ${format(new Date(), 'HH:mm:ss aa')}` });
+          showToast({
+            title: `Switching to branch ${branch}, ${format(new Date(), 'HH:mm:ss aa')}`,
+          });
           // file://./../../routes/git-actions.tsx#gitCheckoutAction
           gitCheckoutFetcher.submit(
             {
@@ -364,7 +440,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
   return (
     <>
       {operationError && (
-        <div className="flex gap-2 bg-[rgba(var(--color-warning-rgb),0.5)] px-4 py-2 text-sm">
+        <div className="flex gap-2 bg-[rgba(var(--color-danger-rgb),1)] px-2 py-1 text-xs text-[--color-font-danger]">
           <div className="flex items-center gap-2">
             <Icon icon="triangle-exclamation" />
             <span>{operationError}</span>
@@ -395,18 +471,32 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
             aria-label="Git Sync"
             className="flex h-[--line-height-sm] w-full items-center gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:opacity-100 aria-pressed:bg-[--hl-sm]"
           >
-            <ProjectBranchName
-              icon={icon}
-              name={isSynced ? currentBranch : gitRepoDataFetcher.state !== 'idle' ? 'Syncing...' : 'Not synced'}
-              isSyncing={isSyncing}
-              pendingChangesCount={pendingChangesCount}
-              operationSucceed={isOperationSucceed}
-              isPulling={isPulling}
-              isPushing={isPushing}
-              showSyncStatus={false}
-              // This is a temporary view for Git Project Sync, it will be removed in the future
-              temporaryGitSyncView={true}
-            />
+            <Icon icon={icon} className="size-4" />
+            <Separator orientation="vertical" className="h-4 border border-solid border-[--hl-sm] bg-[--color-bg]" />
+            <div className="relative flex items-center">
+              <Icon icon="code-branch" className="size-4" />
+              {pendingChangesCount > 0 && (
+                <div className="absolute -bottom-2 -right-1 h-[12px] min-w-[12px] bg-[--color-surprise] px-[4px] text-center font-semibold text-[--color-font-surprise] [border-radius:20px] [font-size:6px] [line-height:12px]">
+                  {pendingChangesCount}
+                </div>
+              )}
+            </div>
+            <span className="flex-1 truncate">
+              {isSynced ? currentBranch : gitRepoDataFetcher.state !== 'idle' ? 'Syncing...' : 'Not synced'}
+            </span>
+            <div className="flex flex-shrink-0 items-center gap-1.5 text-xs text-[--color-font-secondary]">
+              {isSyncing && <Icon icon="spinner" className="w-3 animate-spin" />}
+              {isPulling && (
+                <div className="flex items-center gap-0.5 overflow-hidden">
+                  <Icon icon="arrow-down" className="animate-down-loop w-2" />
+                </div>
+              )}
+              {isPushing && (
+                <div className="flex items-center gap-0.5 overflow-hidden">
+                  <Icon icon="arrow-up" className="animate-up-loop w-2" />
+                </div>
+              )}
+            </div>
           </Button>
           <Tooltip
             offset={8}
