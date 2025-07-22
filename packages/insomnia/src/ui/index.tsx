@@ -150,66 +150,43 @@ async function renderApp() {
           },
           {
             path: 'git-credentials',
-            loader: async (...args) =>
-              (await import('./routes/$organizationId.project.$projectId.git-actions')).loadGitCredentials(...args),
+            loader: async (...args) => (await import('./routes/git-credentials')).loadGitCredentials(...args),
             children: [
               {
                 path: 'github',
-                loader: async (...args) =>
-                  (await import('./routes/$organizationId.project.$projectId.git-actions')).loadGitHubCredentials(
-                    ...args,
-                  ),
+                loader: async (...args) => (await import('./routes/git-credentials')).loadGitHubCredentials(...args),
                 children: [
                   {
                     path: 'init-sign-in',
-                    action: async (...args) =>
-                      (await import('./routes/$organizationId.project.$projectId.git-actions')).initSignInToGitHub(
-                        ...args,
-                      ),
+                    action: async (...args) => (await import('./routes/git-credentials')).initSignInToGitHub(...args),
                   },
                   {
                     path: 'complete-sign-in',
                     action: async (...args) =>
-                      (await import('./routes/$organizationId.project.$projectId.git-actions')).completeSignInToGitHub(
-                        ...args,
-                      ),
+                      (await import('./routes/git-credentials')).completeSignInToGitHub(...args),
                   },
                   {
                     path: 'sign-out',
-                    action: async (...args) =>
-                      (await import('./routes/$organizationId.project.$projectId.git-actions')).signOutOfGitHub(
-                        ...args,
-                      ),
+                    action: async (...args) => (await import('./routes/git-credentials')).signOutOfGitHub(...args),
                   },
                 ],
               },
               {
                 path: 'gitlab',
-                loader: async (...args) =>
-                  (await import('./routes/$organizationId.project.$projectId.git-actions')).loadGitLabCredentials(
-                    ...args,
-                  ),
+                loader: async (...args) => (await import('./routes/git-credentials')).loadGitLabCredentials(...args),
                 children: [
                   {
                     path: 'init-sign-in',
-                    action: async (...args) =>
-                      (await import('./routes/$organizationId.project.$projectId.git-actions')).initSignInToGitLab(
-                        ...args,
-                      ),
+                    action: async (...args) => (await import('./routes/git-credentials')).initSignInToGitLab(...args),
                   },
                   {
                     path: 'complete-sign-in',
                     action: async (...args) =>
-                      (await import('./routes/$organizationId.project.$projectId.git-actions')).completeSignInToGitLab(
-                        ...args,
-                      ),
+                      (await import('./routes/git-credentials')).completeSignInToGitLab(...args),
                   },
                   {
                     path: 'sign-out',
-                    action: async (...args) =>
-                      (await import('./routes/$organizationId.project.$projectId.git-actions')).signOutOfGitLab(
-                        ...args,
-                      ),
+                    action: async (...args) => (await import('./routes/git-credentials')).signOutOfGitLab(...args),
                   },
                 ],
               },
