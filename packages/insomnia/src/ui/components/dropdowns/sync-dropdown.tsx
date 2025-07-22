@@ -17,7 +17,7 @@ import { useInterval } from 'react-use';
 
 import type { Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
-import type { SyncDataLoaderData } from '../../routes/remote-collections';
+import type { SyncDataLoaderData } from '../../routes/$organizationId.project.$projectId.remote-collections';
 import { Icon } from '../icon';
 import { showError } from '../modals';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';

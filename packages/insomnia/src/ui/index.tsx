@@ -1231,39 +1231,55 @@ async function renderApp() {
                                   {
                                     path: 'sync-data',
                                     action: async (...args) =>
-                                      (await import('./routes/remote-collections')).syncDataAction(...args),
+                                      (
+                                        await import('./routes/$organizationId.project.$projectId.remote-collections')
+                                      ).syncDataAction(...args),
                                     loader: async (...args) =>
-                                      (await import('./routes/remote-collections')).syncDataLoader(...args),
+                                      (
+                                        await import('./routes/$organizationId.project.$projectId.remote-collections')
+                                      ).syncDataLoader(...args),
                                   },
                                   {
                                     path: 'stage',
                                     action: async (...args) =>
-                                      (await import('./routes/remote-collections')).stageChangesAction(...args),
+                                      (
+                                        await import('./routes/$organizationId.project.$projectId.remote-collections')
+                                      ).stageChangesAction(...args),
                                   },
                                   {
                                     path: 'unstage',
                                     action: async (...args) =>
-                                      (await import('./routes/remote-collections')).unstageChangesAction(...args),
+                                      (
+                                        await import('./routes/$organizationId.project.$projectId.remote-collections')
+                                      ).unstageChangesAction(...args),
                                   },
                                   {
                                     path: 'pull',
                                     action: async (...args) =>
-                                      (await import('./routes/remote-collections')).pullFromRemoteAction(...args),
+                                      (
+                                        await import('./routes/$organizationId.project.$projectId.remote-collections')
+                                      ).pullFromRemoteAction(...args),
                                   },
                                   {
                                     path: 'push',
                                     action: async (...args) =>
-                                      (await import('./routes/remote-collections')).pushToRemoteAction(...args),
+                                      (
+                                        await import('./routes/$organizationId.project.$projectId.remote-collections')
+                                      ).pushToRemoteAction(...args),
                                   },
                                   {
                                     path: 'rollback',
                                     action: async (...args) =>
-                                      (await import('./routes/remote-collections')).rollbackChangesAction(...args),
+                                      (
+                                        await import('./routes/$organizationId.project.$projectId.remote-collections')
+                                      ).rollbackChangesAction(...args),
                                   },
                                   {
                                     path: 'restore',
                                     action: async (...args) =>
-                                      (await import('./routes/remote-collections')).restoreChangesAction(...args),
+                                      (
+                                        await import('./routes/$organizationId.project.$projectId.remote-collections')
+                                      ).restoreChangesAction(...args),
                                   },
                                   {
                                     path: 'branch',
@@ -1271,46 +1287,74 @@ async function renderApp() {
                                       {
                                         path: 'checkout',
                                         action: async (...args) =>
-                                          (await import('./routes/remote-collections')).checkoutBranchAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.remote-collections'
+                                            )
+                                          ).checkoutBranchAction(...args),
                                       },
                                       {
                                         path: 'create',
                                         action: async (...args) =>
-                                          (await import('./routes/remote-collections')).createBranchAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.remote-collections'
+                                            )
+                                          ).createBranchAction(...args),
                                       },
                                       {
                                         path: 'fetch',
                                         action: async (...args) =>
-                                          (await import('./routes/remote-collections')).fetchRemoteBranchAction(
-                                            ...args,
-                                          ),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.remote-collections'
+                                            )
+                                          ).fetchRemoteBranchAction(...args),
                                       },
                                       {
                                         path: 'delete',
                                         action: async (...args) =>
-                                          (await import('./routes/remote-collections')).deleteBranchAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.remote-collections'
+                                            )
+                                          ).deleteBranchAction(...args),
                                       },
                                       {
                                         path: 'merge',
                                         action: async (...args) =>
-                                          (await import('./routes/remote-collections')).mergeBranchAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.remote-collections'
+                                            )
+                                          ).mergeBranchAction(...args),
                                       },
                                       {
                                         path: 'create-snapshot',
                                         action: async (...args) =>
-                                          (await import('./routes/remote-collections')).createSnapshotAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.remote-collections'
+                                            )
+                                          ).createSnapshotAction(...args),
                                       },
                                       {
                                         path: 'create-snapshot-and-push',
                                         action: async (...args) =>
-                                          (await import('./routes/remote-collections')).createSnapshotAndPushAction(
-                                            ...args,
-                                          ),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.remote-collections'
+                                            )
+                                          ).createSnapshotAndPushAction(...args),
                                       },
                                       {
                                         path: 'rollback',
                                         action: async (...args) =>
-                                          (await import('./routes/remote-collections')).rollbackChangesAction(...args),
+                                          (
+                                            await import(
+                                              './routes/$organizationId.project.$projectId.remote-collections'
+                                            )
+                                          ).rollbackChangesAction(...args),
                                       },
                                     ],
                                   },
@@ -1359,12 +1403,17 @@ async function renderApp() {
                       },
                       {
                         path: ':projectId/remote-collections',
-                        loader: async (...args) => (await import('./routes/remote-collections')).remoteLoader(...args),
+                        loader: async (...args) =>
+                          (await import('./routes/$organizationId.project.$projectId.remote-collections')).remoteLoader(
+                            ...args,
+                          ),
                         children: [
                           {
                             path: 'pull',
                             action: async (...args) =>
-                              (await import('./routes/remote-collections')).pullRemoteCollectionAction(...args),
+                              (
+                                await import('./routes/$organizationId.project.$projectId.remote-collections')
+                              ).pullRemoteCollectionAction(...args),
                           },
                         ],
                       },
