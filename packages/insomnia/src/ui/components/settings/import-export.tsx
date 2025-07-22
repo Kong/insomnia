@@ -12,6 +12,7 @@ import { isScratchpadOrganizationId, type Organization } from '../../../models/o
 import type { Project } from '../../../models/project';
 import { isScratchpad, type Workspace } from '../../../models/workspace';
 import { SegmentEvent } from '../../analytics';
+import { useOrganizationPermissions } from '../../hooks/use-organization-features';
 import { useOrganizationLoaderData } from '../../routes/organization';
 import type { ListWorkspacesLoaderData } from '../../routes/project';
 import { useRootLoaderData } from '../../routes/root';
@@ -20,7 +21,8 @@ import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { Icon } from '../icon';
 import { showAlert } from '../modals';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
-import { ImportModal } from '../modals/import-modal';
+import { ImportModal } from '../modals/import-modal/import-modal';
+import { OrgImportModal } from '../modals/import-modal/org-import-modal';
 
 const UntrackedProject = ({
   project,
@@ -216,6 +218,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const organizationData = useOrganizationLoaderData();
   const organizations = organizationData?.organizations || [];
 
+  const { features } = useOrganizationPermissions();
+
   const untrackedProjectsFetcher = useFetcher<UntrackedProjectsLoaderData>();
 
   useEffect(() => {
@@ -242,8 +246,11 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined) || [];
   const projectName = projectLoaderData?.activeProject?.name ?? getProductName();
   const projects = projectLoaderData?.projects || [];
+  const organizationName =
+    organizationData?.organizations.find(org => org.id === organizationId)?.display_name || 'Organization';
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isOrgImportModalOpen, setIsOrgImportModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const handleExportProjectToFile = () => {
@@ -254,7 +261,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const isScratchPadWorkspace = isScratchpad(workspaceData?.activeWorkspace);
   const hasUntrackedWorkspaces = untrackedWorkspaces.length > 0;
   const hasUntrackedProjects = untrackedProjects.length > 0;
-  const showImportToProject = !isScratchPadWorkspace;
+  const showImportButtons = !isScratchPadWorkspace;
   if (!isScratchPadWorkspace && !isLoggedIn) {
     return (
       <Button
@@ -376,7 +383,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
             </Button>
           </div>
         </div>
-        {showImportToProject && (
+        {showImportButtons && (
           <div className="flex flex-col gap-2 rounded-md border border-solid border-[--hl-md] p-4">
             <Heading className="flex items-center gap-2 text-lg font-bold">
               <Icon icon="file-import" /> Import
@@ -390,6 +397,17 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                 <Icon icon="file-import" />
                 {`Import to the "${projectName}" ${strings.project.singular}`}
               </Button>
+
+              {features.bulkImport.enabled && (
+                <Button
+                  className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  isDisabled={workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace)}
+                  onPress={() => setIsOrgImportModalOpen(true)}
+                >
+                  <Icon icon="file-import" />
+                  {`Import projects to the "${organizationName}" ${strings.organization.singular}`}
+                </Button>
+              )}
             </div>
           </div>
         )}
@@ -450,6 +468,9 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           defaultProjectId={projectId}
           defaultWorkspaceId={workspaceId}
         />
+      )}
+      {isOrgImportModalOpen && (
+        <OrgImportModal onHide={() => setIsOrgImportModalOpen(false)} organizationId={organizationId} />
       )}
       {isExportModalOpen && workspaceData?.activeWorkspace && (
         <ExportRequestsModal

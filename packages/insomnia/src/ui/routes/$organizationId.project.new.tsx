@@ -6,11 +6,16 @@ import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { insomniaFetch } from '../insomniaFetch';
 
+export interface CreateProjectActionResult {
+  id?: string;
+  error?: string;
+}
+
 export async function action({ request, params }: ActionFunctionArgs) {
   const { organizationId } = params;
 
   invariant(organizationId, 'Organization ID is required');
-  const newProjectData = (await request.json()) as {
+  const { withRedirect = true, ...newProjectData } = (await request.json()) as {
     name: string;
     storageType: 'local' | 'remote' | 'git';
     authorName: string;
@@ -20,6 +25,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     password: string;
     token: string;
     oauth2format: OauthProviderName;
+    withRedirect?: boolean;
   };
 
   const user = await models.userSession.getOrCreate();
@@ -39,7 +45,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
       },
     });
 
-    return redirect(`/organization/${organizationId}/project/${project._id}`);
+    return withRedirect ? redirect(`/organization/${organizationId}/project/${project._id}`) : { id: project._id };
   }
 
   if (newProjectData.storageType === 'git') {
@@ -61,7 +67,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
       },
     });
 
-    return redirect(`/organization/${organizationId}/project/${projectId}`);
+    return withRedirect ? redirect(`/organization/${organizationId}/project/${projectId}`) : { id: projectId };
   }
 
   try {
@@ -118,7 +124,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
       parentId: organizationId,
     });
 
-    return redirect(`/organization/${organizationId}/project/${project._id}`);
+    return withRedirect ? redirect(`/organization/${organizationId}/project/${project._id}`) : { id: project._id };
   } catch (err) {
     console.log(err);
     return {

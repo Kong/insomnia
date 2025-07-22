@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useFetcher, useParams } from 'react-router';
 
 import { isScratchpadOrganizationId } from '../../models/organization';
+import { fallbackBilling, fallbackFeatures } from '../routes/$organizationId.permissions';
 import type { OrganizationFeatureLoaderData } from '../routes/organization';
 import { useLoaderDeferData } from './use-loader-defer-data';
 
@@ -24,20 +25,9 @@ export function useOrganizationPermissions() {
 
   const { featuresPromise, billingPromise } = permissionsFetcher.data || {};
   // Features and billing return a promise using react-router's defer() so we need to wait for the data to be available.
-  const [
-    features = {
-      gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
-    },
-  ] = useLoaderDeferData(featuresPromise);
+  const [features = fallbackFeatures] = useLoaderDeferData(featuresPromise);
 
-  const [
-    billing = {
-      isActive: true,
-      expirationErrorMessage: '',
-      expirationWarningMessage: '',
-      accessDenied: false,
-    },
-  ] = useLoaderDeferData(billingPromise);
+  const [billing = fallbackBilling] = useLoaderDeferData(billingPromise);
 
   return { features, billing };
 }

@@ -90,7 +90,7 @@ import { AskModal } from '../components/modals/ask-modal';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { ErrorModal } from '../components/modals/error-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
-import { ImportModal } from '../components/modals/import-modal';
+import { ImportModal } from '../components/modals/import-modal/import-modal';
 import { PasteCurlModal } from '../components/modals/paste-curl-modal';
 import { PromptModal } from '../components/modals/prompt-modal';
 import { RequestSettingsModal } from '../components/modals/request-settings-modal';

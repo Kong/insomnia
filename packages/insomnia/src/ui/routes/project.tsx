@@ -76,7 +76,7 @@ import { WorkspaceCardDropdown } from '../components/dropdowns/workspace-card-dr
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
 import { GitRepositoryCloneModal } from '../components/modals/git-repository-settings-modal/git-repo-clone-modal';
-import { ImportModal } from '../components/modals/import-modal';
+import { ImportModal } from '../components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '../components/modals/new-workspace-modal';
 import { ProjectModal } from '../components/modals/project-modal';
 import { NoProjectView } from '../components/panes/no-project-view';

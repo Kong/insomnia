@@ -56,6 +56,7 @@ export interface RendererToMainBridgeAPI {
   installPlugin: typeof installPlugin;
   writeFile: (options: { path: string; content: string }) => Promise<string>;
   readFile: (options: { path: string; encoding?: string }) => Promise<{ content: string; encoding: string }>;
+  readDir: (options: { path: string }) => Promise<{ type: 'file' | 'directory'; name: string; path: string }[]>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
   on: (channel: RendererOnChannels, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
@@ -193,6 +194,22 @@ export function registerMainHandlers() {
       content: iconv.decode(contentBuffer, defaultEncoding),
       encoding: defaultEncoding,
     };
+  });
+
+  ipcMainHandle('readDir', async (_, options: { path: string }) => {
+    try {
+      const files = await fs.promises.readdir(options.path);
+      return files.map(file => {
+        const filePath = path.join(options.path, file);
+        return {
+          type: fs.statSync(filePath).isDirectory() ? 'directory' : 'file',
+          name: file,
+          path: filePath,
+        };
+      });
+    } catch (err) {
+      throw new Error(`Failed to read directory: ${err}`);
+    }
   });
 
   ipcMainHandle('curlRequest', (_, options: Parameters<typeof curlRequest>[0]) => {

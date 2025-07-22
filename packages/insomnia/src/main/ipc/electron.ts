@@ -41,6 +41,7 @@ export type HandleChannels =
   | 'socketIO.event.findMany'
   | 'writeFile'
   | 'readFile'
+  | 'readDir'
   | 'extractJsonFileFromPostmanDataDumpArchive'
   | 'secretStorage.setSecret'
   | 'secretStorage.getSecret'

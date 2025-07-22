@@ -5,21 +5,23 @@ import { isScratchpadOrganizationId, type Organization } from '../../models/orga
 import { insomniaFetch } from '../insomniaFetch';
 import type { Billing, FeatureList } from './organization';
 
+export const fallbackFeatures = Object.freeze<FeatureList>({
+  bulkImport: { enabled: false, reason: 'Insomnia API unreachable' },
+  gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
+  orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
+});
+
+// If network unreachable assume user has paid for the current period
+export const fallbackBilling = Object.freeze<Billing>({
+  isActive: true,
+  expirationWarningMessage: '',
+  expirationErrorMessage: '',
+  accessDenied: false,
+});
+
 export async function loader({ params }: LoaderFunctionArgs) {
   const { organizationId } = params as { organizationId: string };
   const { id: sessionId, accountId } = await userSession.getOrCreate();
-  const fallbackFeatures = {
-    gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
-    orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
-  };
-
-  // If network unreachable assume user has paid for the current period
-  const fallbackBilling = {
-    isActive: true,
-    expirationWarningMessage: '',
-    expirationErrorMessage: '',
-    accessDenied: false,
-  };
 
   if (isScratchpadOrganizationId(organizationId)) {
     return {

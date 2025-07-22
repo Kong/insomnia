@@ -1233,6 +1233,9 @@ button {
 .text-danger {
   color: var(--color-danger);
 }
+.text-success {
+  color: var(--color-success);
+}
 .bg-info,
 .bg-http-method-OPTIONS,
 .bg-http-method-HEAD {

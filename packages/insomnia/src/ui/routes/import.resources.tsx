@@ -18,30 +18,37 @@ export interface ImportResourcesActionResult {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const formData = await request.formData();
-  const organizationId = formData.get('organizationId');
-  const projectId = formData.get('projectId');
-  const workspaceId = formData.get('workspaceId');
+  try {
+    const formData = await request.formData();
+    const organizationId = formData.get('organizationId');
+    const projectId = formData.get('projectId');
+    const workspaceId = formData.get('workspaceId');
 
-  invariant(typeof organizationId === 'string', 'OrganizationId is required.');
-  invariant(typeof projectId === 'string', 'ProjectId is required.');
+    invariant(typeof organizationId === 'string', 'OrganizationId is required.');
+    invariant(typeof projectId === 'string', 'ProjectId is required.');
 
-  const project = await models.project.getById(projectId);
-  invariant(project, 'Project not found.');
-  if (typeof workspaceId === 'string' && workspaceId) {
-    await importResourcesToWorkspace({
-      workspaceId: workspaceId,
+    const project = await models.project.getById(projectId);
+    invariant(project, 'Project not found.');
+    if (typeof workspaceId === 'string' && workspaceId) {
+      await importResourcesToWorkspace({
+        workspaceId: workspaceId,
+      });
+
+      // TODO: find more elegant way to wait for import to finish
+      return { done: true };
+    }
+
+    await importResourcesToProject({
+      projectId: project._id,
+      syncNewWorkspaceIfNeeded,
     });
-
-    // TODO: find more elegant way to wait for import to finish
     return { done: true };
+  } catch (error) {
+    return {
+      errors: [error instanceof Error ? error.message : 'An unknown error occurred'],
+      done: false,
+    };
   }
-
-  await importResourcesToProject({
-    projectId: project._id,
-    syncNewWorkspaceIfNeeded,
-  });
-  return { done: true };
 }
 
 // The reason why we put this function here is because this function indirectly depends on some modules that can only run in a browser environment.
