@@ -2,6 +2,7 @@ import { type ActionFunction, redirect } from 'react-router';
 
 import type { WorkspaceScope } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
+import type { GitCredentials } from '../../sync/git/git-vcs';
 
 export type InitGitCloneResult =
   | {
@@ -77,4 +78,21 @@ export const cloneGitRepoAction: ActionFunction = async ({ request, params }): P
   invariant(projectId, 'Project ID is required');
 
   return redirect(`/organization/${organizationId}/project/${projectId}`);
+};
+
+export const fetchRemoteBranchesAction: ActionFunction = async ({ request }) => {
+  const data = (await request.json()) as {
+    uri: string;
+    token: string;
+    provider: 'github' | 'gitlab';
+  };
+
+  const { uri, provider } = data;
+
+  const credentials = {
+    oauth2format: provider,
+    token: data.token,
+  } as GitCredentials;
+
+  return window.main.git.fetchGitRemoteBranches({ uri, credentials });
 };

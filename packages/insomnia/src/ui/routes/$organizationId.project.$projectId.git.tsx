@@ -1,9 +1,9 @@
-import { type ActionFunction, type LoaderFunction } from 'react-router';
+import { redirect, type ActionFunction, type LoaderFunction } from 'react-router';
 
 import * as models from '../../models';
 import type { GitRepository } from '../../models/git-repository';
 import type { WorkspaceScope } from '../../models/workspace';
-import type { GitCredentials, GitLogEntry } from '../../sync/git/git-vcs';
+import type { GitLogEntry } from '../../sync/git/git-vcs';
 import type { MergeConflict } from '../../sync/types';
 import { invariant } from '../../utils/invariant';
 
@@ -145,23 +145,6 @@ export const initGitCloneAction: ActionFunction = async ({ request, params }) =>
   return {
     files: initCloneResult.files,
   };
-};
-
-export const fetchRemoteBranchesAction: ActionFunction = async ({ request }) => {
-  const data = (await request.json()) as {
-    uri: string;
-    token: string;
-    provider: 'github' | 'gitlab';
-  };
-
-  const { uri, provider } = data;
-
-  const credentials = {
-    oauth2format: provider,
-    token: data.token,
-  } as GitCredentials;
-
-  return window.main.git.fetchGitRemoteBranches({ uri, credentials });
 };
 
 type CloneGitActionResult =
