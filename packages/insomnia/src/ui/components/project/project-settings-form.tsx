@@ -97,6 +97,7 @@ export const ProjectSettingsForm: FC<Props> = ({
     authorName?: string;
     authorEmail?: string;
     uri?: string;
+    ref?: string;
     username?: string;
     password?: string;
     token?: string;
@@ -126,11 +127,6 @@ export const ProjectSettingsForm: FC<Props> = ({
       ? initCloneGitRepositoryFetcher.data.files
       : [];
 
-  const remoteBranches =
-    initCloneGitRepositoryFetcher.data && 'remoteBranches' in initCloneGitRepositoryFetcher.data
-      ? initCloneGitRepositoryFetcher.data.remoteBranches
-      : [];
-
   useEffect(() => {
     if (upsertProjectFetcher.data && upsertProjectFetcher.data.success && onSuccessUpdate) {
       onSuccessUpdate();
@@ -149,7 +145,7 @@ export const ProjectSettingsForm: FC<Props> = ({
     }
   }, [storageRules, project]);
 
-  const onGitRepoFormSubmit = (gitRepositoryPatch: Partial<GitRepository>) => {
+  const onGitRepoFormSubmit = (gitRepositoryPatch: Partial<GitRepository & { ref?: string }>) => {
     const { author, credentials, created, modified, isPrivate, needsFullClone, uriNeedsMigration, ...repoPatch } =
       gitRepositoryPatch;
 
@@ -159,6 +155,7 @@ export const ProjectSettingsForm: FC<Props> = ({
       authorName: author?.name || '',
       authorEmail: author?.email || '',
       uri: repoPatch.uri,
+      ref: repoPatch.ref,
     });
 
     initCloneGitRepositoryFetcher.submit(
@@ -398,18 +395,6 @@ export const ProjectSettingsForm: FC<Props> = ({
                 </span>
                 <p className="p-2 text-center font-bold text-[--color-font]">Loading Insomnia files from repository</p>
               </div>
-            </div>
-          )}
-          {remoteBranches.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <Heading className="text-base">Remote branches</Heading>
-              <select>
-                {remoteBranches.map(branch => (
-                  <option key={branch} value={branch}>
-                    {branch}
-                  </option>
-                ))}
-              </select>
             </div>
           )}
           {insomniaFiles.length === 0 && initCloneGitRepositoryFetcher.state === 'idle' && (

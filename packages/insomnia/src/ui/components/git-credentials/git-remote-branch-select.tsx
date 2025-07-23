@@ -32,7 +32,7 @@ export const GitRemoteBranchSelect = ({ url, isDisabled }: { url: string; isDisa
   const isComboboxDisabled = remoteBranches.length === 0 || isLoadingRemoteBranches || !url || isDisabled;
 
   return (
-    <Label className="flex flex-col gap-1">
+    <Label className="flex flex-col">
       <span className="text-sm font-semibold">Branch</span>
       <div className="flex items-center gap-2">
         <ComboBox
