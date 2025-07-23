@@ -465,8 +465,15 @@ const OrgImportList = ({
 
             // For each directory, collect the files inside
             const filePaths = await project.folder.getFilePaths();
-            scanFormData.append('filePaths', JSON.stringify(filePaths));
+            const archiveFileIndex = filePaths.findIndex(
+              filePath => filePath.endsWith('/archive.json') || filePath.endsWith('\\archive.json'),
+            );
 
+            if (archiveFileIndex >= 0) {
+              scanFormData.append('postmanArchiveFile', filePaths[archiveFileIndex]);
+              filePaths.splice(archiveFileIndex, 1);
+            }
+            scanFormData.append('filePaths', JSON.stringify(filePaths));
             // await sleep(1);
 
             // Scan resources, it's stored in the memory for the next step

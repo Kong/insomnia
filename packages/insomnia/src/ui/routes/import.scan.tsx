@@ -110,7 +110,8 @@ export async function action({ request }: ActionFunctionArgs) {
       ];
     }
 
-    const result = await scanResources(contentList);
+    const postmanArchiveFile = formData.get('postmanArchiveFile') as string | null;
+    const result = await scanResources(contentList, postmanArchiveFile);
 
     return result;
   } catch (err) {

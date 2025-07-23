@@ -111,7 +111,25 @@ interface ResourceCacheType {
 
 let resourceCacheList: ResourceCacheType[] = [];
 
-export async function scanResources(importEntries: ImportEntry[]): Promise<ScanResult[]> {
+export async function scanResources(
+  importEntries: ImportEntry[],
+  postmanArchiveFile?: string | null,
+): Promise<ScanResult[]> {
+  let postmanArchiveJsonData: { environment?: Record<string, boolean> } | null = null;
+  if (postmanArchiveFile) {
+    try {
+      const postmanArchiveFileContent = await window.main.readFile({ path: postmanArchiveFile });
+      postmanArchiveJsonData = JSON.parse(postmanArchiveFileContent.content);
+    } catch (err) {
+      return [
+        {
+          oriFileName: postmanArchiveFile,
+          errors: ['Failed to parse archive.json file'],
+        },
+      ];
+    }
+  }
+
   resourceCacheList = [];
   const results = await Promise.allSettled(
     importEntries.map(async importEntry => {
@@ -135,6 +153,20 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
             },
           };
         } else {
+          // When a postman environment is uncompressed, there's not identifier for us to identify it as a postman environment.
+          // Use the archive.json file to check and set a identifier for it
+          if (postmanArchiveJsonData) {
+            try {
+              const jsonData = JSON.parse(importEntry.contentStr);
+              if (postmanArchiveJsonData.environment?.[jsonData.id]) {
+                jsonData._postman_variable_scope = 'environment';
+                importEntry.contentStr = JSON.stringify(jsonData);
+              }
+            } catch (error) {
+              // It's not a valid JSON, shouldn't be a postman environment
+            }
+          }
+
           result = (await convert(importEntry)) as unknown as ConvertResult;
         }
       } catch (err: unknown) {
