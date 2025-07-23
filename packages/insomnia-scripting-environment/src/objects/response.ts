@@ -1,5 +1,5 @@
-import Ajv from 'ajv';
-import deepEqual from 'deep-equal';
+import { Ajv, type ErrorObject } from 'ajv';
+import * as chai from 'chai';
 import { RESPONSE_CODE_REASONS } from 'insomnia/src/common/constants';
 import { readCurlResponse } from 'insomnia/src/models/response';
 import type { sendCurlAndWriteTimelineError, sendCurlAndWriteTimelineResponse } from 'insomnia/src/network/network';
@@ -199,66 +199,153 @@ export class Response extends Property {
   // insomnia.response.to.have.status(200);
   // insomnia.response.to.not.have.status(200);
   get to() {
-    type valueType = boolean | number | string | object | undefined;
+    const respAssertion = new chai.Assertion(this);
 
-    const verify = (got: valueType, expected: valueType, checkEquality = true) => {
-      if (['boolean', 'number', 'string', 'undefined'].includes(typeof got)) {
-        if ((checkEquality && expected === got) || (!checkEquality && expected !== got)) {
-          return;
+    chai.use((_chai, utils) => {
+      utils.addProperty(chai.Assertion.prototype, 'withBody', () => {
+        const resp: Response = utils.flag(respAssertion, 'object');
+        const negate: boolean = utils.flag(respAssertion, 'negate');
+
+        let respBody: object | undefined | string = undefined;
+
+        try {
+          respBody = resp.body ? resp.json() : undefined;
+        } catch (e) {
+          respBody = resp.body;
         }
-      } else if (
-        (checkEquality && deepEqual(got, expected, { strict: true })) ||
-        (!checkEquality && !deepEqual(got, expected, { strict: true }))
-      ) {
-        return;
-      }
-      throw new Error(`"${got}" is not equal to the expected value: "${expected}"`);
-    };
-    const haveStatus = (expected: number | string, checkEquality: boolean) => {
-      if (typeof expected === 'string') {
-        verify(this.status, expected, checkEquality);
-      } else {
-        verify(this.code, expected, checkEquality);
-      }
-    };
-    const haveHeader = (expected: string, checkEquality: boolean) =>
-      verify(this.headers.toObject().find(header => header.key === expected) !== undefined, checkEquality);
-    const haveBody = (expected: string, checkEquality: boolean) => verify(this.text(), expected, checkEquality);
-    const haveJsonBody = (expected: object, checkEquality: boolean) => verify(this.json(), expected, checkEquality);
-    const haveJsonSchema = (expected: object, checkEquality: boolean) => {
-      const ajv = new Ajv();
 
-      try {
-        const jsonBody = JSON.parse(this.body);
-        const schemaMatched = ajv.validate(expected, jsonBody);
-        if ((schemaMatched && checkEquality) || (!schemaMatched && !checkEquality)) {
-          return;
+        if (negate) {
+          new chai.Assertion(respBody === undefined || respBody === null || respBody === '').to.equal(true);
+        } else {
+          new chai.Assertion(respBody).to.exist.and.not.equal('');
         }
-      } catch (e) {
-        throw new Error(`Failed to verify response body schema, response could not be a valid json: "${e}"`);
-      }
-      throw new Error("Response's schema is not equal to the expected value");
-    };
+      });
 
-    return {
-      // follows extend chai's chains for compatibility
-      have: {
-        status: (expected: number | string) => haveStatus(expected, true),
-        header: (expected: string) => haveHeader(expected, true),
-        body: (expected: string) => haveBody(expected, true),
-        jsonBody: (expected: object) => haveJsonBody(expected, true),
-        jsonSchema: (expected: object) => haveJsonSchema(expected, true),
-      },
-      not: {
-        have: {
-          status: (expected: number | string) => haveStatus(expected, false),
-          header: (expected: string) => haveHeader(expected, false),
-          body: (expected: string) => haveBody(expected, false),
-          jsonBody: (expected: object) => haveJsonBody(expected, false),
-          jsonSchema: (expected: object) => haveJsonSchema(expected, false),
-        },
-      },
-    };
+      utils.addProperty(chai.Assertion.prototype, 'error', () => {
+        const resp: Response = utils.flag(respAssertion, 'object');
+        const negate: boolean = utils.flag(respAssertion, 'negate');
+
+        if (negate) {
+          new chai.Assertion(resp.code).to.be.not.within(400, 500);
+        } else {
+          new chai.Assertion(resp.code).to.be.within(400, 500);
+        }
+      });
+
+      utils.addProperty(chai.Assertion.prototype, 'ok', () => {
+        const resp: Response = utils.flag(respAssertion, 'object');
+        const negate: boolean = utils.flag(respAssertion, 'negate');
+
+        if (negate) {
+          new chai.Assertion(resp.code).to.not.equal(200);
+        } else {
+          new chai.Assertion(resp.code).to.equal(200);
+        }
+      });
+
+      utils.addProperty(chai.Assertion.prototype, 'json', () => {
+        const resp = utils.flag(respAssertion, 'object');
+        const negate: boolean = utils.flag(respAssertion, 'negate');
+
+        let respBody: object | undefined | string = undefined;
+        try {
+          respBody = resp.body ? resp.json() : undefined;
+        } catch (e) {
+          respBody = resp.body;
+        }
+
+        if (negate) {
+          new chai.Assertion(respBody).to.be.not.an('object');
+        } else {
+          new chai.Assertion(respBody).to.be.an('object');
+        }
+      });
+
+      utils.addMethod(chai.Assertion.prototype, 'status', (val: number) => {
+        const resp: Response = utils.flag(respAssertion, 'object');
+        const negate: boolean = utils.flag(respAssertion, 'negate');
+
+        if (negate) {
+          new chai.Assertion(resp.code).to.not.equal(val);
+        } else {
+          new chai.Assertion(resp.code).to.equal(val);
+        }
+      });
+
+      utils.addMethod(chai.Assertion.prototype, 'header', (headerName: string) => {
+        const resp: Response = utils.flag(respAssertion, 'object');
+        const negate: boolean = utils.flag(respAssertion, 'negate');
+
+        if (negate) {
+          new chai.Assertion(resp.headers.get(headerName)).to.not.exist;
+        } else {
+          new chai.Assertion(resp.headers.get(headerName)).to.exist;
+        }
+      });
+
+      utils.addMethod(chai.Assertion.prototype, 'body', (bodyContent: string) => {
+        const resp: Response = utils.flag(respAssertion, 'object');
+        const negate: boolean = utils.flag(respAssertion, 'negate');
+
+        if (negate) {
+          new chai.Assertion(resp.body).to.not.equal(bodyContent);
+        } else {
+          new chai.Assertion(resp.body).to.equal(bodyContent);
+        }
+      });
+
+      utils.addMethod(chai.Assertion.prototype, 'jsonBody', (val: string) => {
+        const resp: Response = utils.flag(respAssertion, 'object');
+        const negate: boolean = utils.flag(respAssertion, 'negate');
+
+        let respBody: object | undefined = undefined;
+        try {
+          respBody = resp.body ? resp.json() : {};
+        } catch (e) {
+          respBody = {};
+        }
+
+        if (negate) {
+          new chai.Assertion(respBody).to.not.have.property(val);
+        } else {
+          new chai.Assertion(respBody).to.have.property(val);
+        }
+      });
+
+      utils.addMethod(chai.Assertion.prototype, 'jsonSchema', (schema: object, options?: object) => {
+        const resp: Response = utils.flag(respAssertion, 'object');
+        const negate: boolean = utils.flag(respAssertion, 'negate');
+
+        let respBody: object | undefined = undefined;
+        try {
+          respBody = resp.body ? resp.json() : {};
+        } catch (e) {
+          respBody = {};
+        }
+
+        const ajv = new Ajv(options);
+        const validate = ajv.compile(schema);
+        if (validate(respBody)) {
+          if (negate) {
+            new chai.Assertion(true, 'expected schema does match the response body').to.be.false;
+          } else {
+            new chai.Assertion(true).to.be.true;
+          }
+        } else {
+          const errorMsg = validate.errors?.reduce((acc: string, error: ErrorObject) => {
+            return `${acc}\n${error.instancePath}: ${error.message}`;
+          }, '');
+
+          if (negate) {
+            new chai.Assertion(errorMsg, 'expected schema does match the response body').to.not.equal('');
+          } else {
+            new chai.Assertion(errorMsg, `expected schema not match ${errorMsg}`).to.equal('');
+          }
+        }
+      });
+    });
+
+    return respAssertion;
   }
 }
 
