@@ -191,6 +191,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
 
+    const bufferId = await database.bufferChanges();
     const fsClient = await getGitFSClient({ gitRepositoryId: gitRepository._id, projectId, workspaceId });
 
     if (GitVCS.isInitializedForRepo(gitRepository._id) && !gitRepository.needsFullClone) {
@@ -242,6 +243,8 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
     if (!workspaceId) {
       legacyInsomniaWorkspace = await containsLegacyInsomniaDir({ fsClient });
     }
+
+    await database.flushChanges(bufferId);
 
     return {
       branch: await GitVCS.getCurrentBranch(),
@@ -830,6 +833,7 @@ export const cloneGitRepoAction = async ({
           directory: GIT_CLONE_DIR,
           fs: fsClient,
           gitDirectory: GIT_INTERNAL_DIR,
+          ref,
         });
 
         await models.gitRepository.update(gitRepository, {
@@ -854,7 +858,10 @@ export const cloneGitRepoAction = async ({
         await migrateLegacyInsomniaFolderToFile({ projectId: project._id });
       }
 
-      await models.gitRepository.update(gitRepository, {
+      const updateRepository = await models.gitRepository.getById(gitRepository._id);
+      invariant(updateRepository, 'Git Repository not found');
+
+      await models.gitRepository.update(updateRepository, {
         cachedGitLastCommitTime: Date.now(),
         cachedGitRepositoryBranch: await GitVCS.getCurrentBranch(),
       });

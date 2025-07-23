@@ -3,11 +3,9 @@ import path from 'node:path';
 import * as git from 'isomorphic-git';
 import { parse, stringify } from 'yaml';
 
-import type { GitRepository } from '../../models/git-repository';
 import type { MergeConflict } from '../types';
 import { httpClient } from './http-client';
 import { convertToPosixSep } from './path-sep';
-import { shallowClone } from './shallow-clone';
 import { getAuthorFromGitRepository, gitCallbacks } from './utils';
 
 export interface GitAuthor {
@@ -80,6 +78,7 @@ interface InitFromCloneOptions {
   directory: string;
   fs: git.FsClient;
   gitDirectory: string;
+  ref?: string;
   repoId: string;
 }
 
@@ -104,7 +103,7 @@ function getInsomniaFileName(blob: void | Uint8Array | undefined): string {
   try {
     const parsed = parse(Buffer.from(blob).toString('utf-8'));
     return parsed?.fileName || parsed?.name || '';
-  } catch (e) {
+  } catch {
     // If the document couldn't be parsed as yaml return an empty string
     return '';
   }
@@ -160,7 +159,7 @@ export class GitVCS {
         });
 
         defaultBranch = mainRef?.target?.replace('refs/heads/', '') || 'main';
-      } catch (err) {
+      } catch {
         // Ignore error
       }
 
@@ -176,13 +175,13 @@ export class GitVCS {
       });
 
       return remoteOriginURI;
-    } catch (err) {
+    } catch {
       // Ignore error
       return this._baseOpts.uri || '';
     }
   }
 
-  async initFromClone({ repoId, url, gitCredentials, directory, fs, gitDirectory }: InitFromCloneOptions) {
+  async initFromClone({ repoId, url, gitCredentials, directory, fs, gitDirectory, ref }: InitFromCloneOptions) {
     this._baseOpts = {
       ...this._baseOpts,
       ...gitCallbacks(gitCredentials),
@@ -196,7 +195,7 @@ export class GitVCS {
       await git.clone({
         ...this._baseOpts,
         url,
-        singleBranch: true,
+        ...(ref ? { ref } : {}),
       });
     } catch (err) {
       // If we there is a checkout conflict we only want to clone the repo
@@ -204,11 +203,12 @@ export class GitVCS {
         await git.clone({
           ...this._baseOpts,
           url,
-          singleBranch: true,
+          ...(ref ? { ref } : {}),
           noCheckout: true,
         });
       }
     }
+
     console.log(`[git] Cloned repo to ${gitDirectory} from ${url}`);
   }
 
@@ -368,7 +368,7 @@ export class GitVCS {
 
           try {
             return Buffer.from(blob).toString('utf-8');
-          } catch (e) {
+          } catch {
             return null;
           }
         });
@@ -976,6 +976,7 @@ export class GitVCS {
       await git.checkout({
         ...this._baseOpts,
         ref: branch,
+
         remote: 'origin',
       });
       const branches = await this.listBranches();
@@ -988,7 +989,7 @@ export class GitVCS {
   async repoExists() {
     try {
       await git.getConfig({ ...this._baseOpts, path: '' });
-    } catch (err) {
+    } catch {
       return false;
     }
 
