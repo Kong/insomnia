@@ -1,8 +1,8 @@
 import { type ActionFunction, redirect } from 'react-router';
 
 import type { WorkspaceScope } from '../../models/workspace';
-import { invariant } from '../../utils/invariant';
 import type { GitCredentials } from '../../sync/git/git-vcs';
+import { invariant } from '../../utils/invariant';
 
 export type InitGitCloneResult =
   | {
