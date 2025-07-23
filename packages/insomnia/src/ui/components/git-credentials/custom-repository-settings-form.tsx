@@ -5,6 +5,7 @@ import { docsGitAccessToken } from '../../../common/documentation';
 import type { GitRepository } from '../../../models/git-repository';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
+import { GitRemoteBranchSelect } from './git-remote-branch-select';
 
 export interface Props {
   gitRepository?: Partial<GitRepository> | null;
@@ -110,6 +111,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
           />
         </TextField>
       </div>
+      <GitRemoteBranchSelect url={uri || ''} isDisabled={Boolean(uri)} />
     </form>
   );
 };
