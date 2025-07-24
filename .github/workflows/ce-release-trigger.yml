@@ -1,5 +1,5 @@
 name: CE-Release-trigger
-run-name: Trigger CE Release (${{ github.event.inputs.version}}) by @{{ github.actor }}
+run-name: Trigger CE Release (${{ github.event.inputs.version}}) by @${{ github.actor }}
 
 on:
   workflow_dispatch:
