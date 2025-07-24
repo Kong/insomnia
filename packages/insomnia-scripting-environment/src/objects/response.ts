@@ -60,15 +60,7 @@ export class Response extends Property {
     this.originalRequest = options.originalRequest;
     this.responseTime = options.responseTime;
     this.stream = options.stream;
-    const detectedStatus = options.reason || RESPONSE_CODE_REASONS[options.code];
-    if (!detectedStatus) {
-      throw new Error(
-        `Response constructor: reason or code field must be set in the options(reason: ${options.reason}, code:${options.code})`,
-      );
-    } else {
-      this.status = detectedStatus;
-    }
-
+    this.status = options.reason || RESPONSE_CODE_REASONS[options.code]|| "";
     this.bytesRead = options.bytesRead || 0;
   }
 
