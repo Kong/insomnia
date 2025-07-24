@@ -63,6 +63,26 @@ type VCSAction =
   | 'setup'
   | 'clone';
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    const message = error.message || '';
+
+    // Check for network-related errors
+    if (
+      message.includes('net::ERR_UNEXPECTED') ||
+      message.includes('net::ERR_INTERNET_DISCONNECTED') ||
+      message.includes('net::ERR_NAME_NOT_RESOLVED')
+    ) {
+      return 'A network error occurred.';
+    }
+
+    // Default fallback
+    return message;
+  }
+
+  // Non-Error objects
+  return 'Unknown Error';
+}
 export function vcsSegmentEventProperties(type: 'git', action: VCSAction, error?: string) {
   return { type, action, error };
 }
@@ -1301,7 +1321,7 @@ export const commitAndPushToGitRepoAction = async ({
         errors: [`${err.message}, ${err.data.response}`],
       };
     }
-    const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+    const errorMessage = getErrorMessage(err);
 
     return { errors: [errorMessage] };
   }
@@ -1350,7 +1370,7 @@ export const commitAndPushToGitRepoAction = async ({
         errors: [`${err.message}, ${err.data.response}`],
       };
     }
-    const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+    const errorMessage = getErrorMessage(err);
 
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'push', errorMessage),
@@ -1537,7 +1557,7 @@ export const mergeGitBranch = async ({
     if (err instanceof MergeConflictError) {
       return err.data;
     }
-    let errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+    let errorMessage = getErrorMessage(err);
 
     if (err instanceof Errors.HttpError) {
       errorMessage = `${err.message}, ${err.data.response}`;
@@ -1574,7 +1594,7 @@ export const deleteGitBranchAction = async ({
     });
     return {};
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    const errorMessage = getErrorMessage(err);
     return { errors: [errorMessage] };
   }
 };
@@ -1616,7 +1636,7 @@ export const pushToGitRemoteAction = async ({
         gitRepository,
       };
     }
-    const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+    const errorMessage = getErrorMessage(err);
 
     return { errors: [errorMessage], gitRepository };
   }
@@ -1666,7 +1686,7 @@ export const pushToGitRemoteAction = async ({
         gitRepository,
       };
     }
-    const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+    const errorMessage = getErrorMessage(err);
 
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'push', errorMessage),
@@ -1712,7 +1732,7 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
       return err.data;
     }
 
-    let errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+    let errorMessage = getErrorMessage(err);
 
     if (err instanceof Errors.HttpError) {
       errorMessage = `${err.message}, ${err.data.response}`;
