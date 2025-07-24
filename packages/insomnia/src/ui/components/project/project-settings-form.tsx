@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Button,
   Cell,
+  Checkbox,
   Column,
   Heading,
   Input,
@@ -90,6 +91,7 @@ export const ProjectSettingsForm: FC<Props> = ({
     'project',
   );
   const [selectedTab, setTab] = useState<OauthProviderName>('github');
+
   const [error, setError] = useState<string | null>(null);
 
   const [projectData, setProjectData] = useState<{
@@ -102,6 +104,7 @@ export const ProjectSettingsForm: FC<Props> = ({
     password?: string;
     token?: string;
     oauth2format?: OauthProviderName;
+    connectRepositoryLater?: boolean;
   }>({
     name: project?.name || defaultProjectName,
     authorName: gitRepository?.author?.name || '',
@@ -318,69 +321,102 @@ export const ProjectSettingsForm: FC<Props> = ({
 
       {activeView === 'git-clone' && (
         <>
-          <ErrorBoundary>
-            <Tabs
-              selectedKey={selectedTab}
-              onSelectionChange={key => {
-                setTab(key as OauthProviderName);
-              }}
-              aria-label="Git repository settings tabs"
-              className="mt-4 flex h-full w-full flex-col"
+          <Label className="flex items-center gap-2">
+            <Checkbox
+              slot={null}
+              isSelected={projectData.connectRepositoryLater}
+              onChange={isSelected => setProjectData(prev => ({ ...prev, connectRepositoryLater: isSelected }))}
+              className="group flex h-full items-center p-0"
             >
-              <TabList
-                className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
-                aria-label="Request pane tabs"
+              <div className="flex h-4 w-4 items-center justify-center rounded ring-1 ring-[--hl-sm] transition-colors group-focus:ring-2 group-data-[selected]:bg-[--hl-xs]">
+                <Icon
+                  icon="check"
+                  className="h-3 w-3 opacity-0 group-data-[selected]:text-[--color-success] group-data-[indeterminate]:opacity-100 group-data-[selected]:opacity-100"
+                />
+              </div>
+            </Checkbox>
+            <span className="text-sm text-[--hl]">Connect repository later</span>
+          </Label>
+          {projectData.connectRepositoryLater ? (
+            <div className="flex h-full w-full flex-col items-center justify-center rounded-sm border border-dashed border-[--hl-sm] p-4">
+              <p className="text-sm text-[--hl]">You can connect a repository later.</p>
+            </div>
+          ) : (
+            <ErrorBoundary>
+              <Tabs
+                selectedKey={selectedTab}
+                onSelectionChange={key => {
+                  setTab(key as OauthProviderName);
+                }}
+                aria-label="Git repository settings tabs"
+                className="mt-4 flex h-full w-full flex-col"
               >
-                <Tab
-                  className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
-                  id="github"
+                <TabList
+                  className="flex h-[--line-height-sm] w-full flex-shrink-0 items-center overflow-x-auto border-b border-solid border-b-[--hl-md] bg-[--color-bg]"
+                  aria-label="Request pane tabs"
                 >
-                  <div className="flex items-center gap-2">
-                    <i className="fa fa-github" /> GitHub
-                  </div>
-                </Tab>
-                <Tab
-                  className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
-                  id="gitlab"
+                  <Tab
+                    className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                    id="github"
+                  >
+                    <div className="flex items-center gap-2">
+                      <i className="fa fa-github" /> GitHub
+                    </div>
+                  </Tab>
+                  <Tab
+                    className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                    id="gitlab"
+                  >
+                    <div className="flex items-center gap-2">
+                      <i className="fa fa-gitlab" /> GitLab
+                    </div>
+                  </Tab>
+                  <Tab
+                    className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
+                    id="custom"
+                  >
+                    <div className="flex items-center gap-2">
+                      <i className="fa fa-code-fork" /> Git
+                    </div>
+                  </Tab>
+                </TabList>
+                <TabPanel className="h-full w-full overflow-y-auto py-2" id="github">
+                  <GitHubRepositorySetupFormGroup onSubmit={onGitRepoFormSubmit} />
+                </TabPanel>
+                <TabPanel className="h-full w-full overflow-y-auto py-2" id="gitlab">
+                  <GitLabRepositorySetupFormGroup onSubmit={onGitRepoFormSubmit} />
+                </TabPanel>
+                <TabPanel className="h-full w-full overflow-y-auto py-2" id="custom">
+                  <CustomRepositorySettingsFormGroup onSubmit={onGitRepoFormSubmit} />
+                </TabPanel>
+              </Tabs>
+            </ErrorBoundary>
+          )}
+          <div className="flex w-full items-center justify-end gap-2 pb-10">
+            <div className="flex items-center gap-2">
+              <Button
+                onPress={() => setActiveView('project')}
+                className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] px-4 py-2 text-sm text-[--color-font] transition-colors hover:bg-[--hl-xs] aria-pressed:bg-[--hl-xs]"
+              >
+                Back
+              </Button>
+              {projectData.connectRepositoryLater ? (
+                <Button
+                  onPress={onUpsertProject}
+                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
                 >
-                  <div className="flex items-center gap-2">
-                    <i className="fa fa-gitlab" /> GitLab
-                  </div>
-                </Tab>
-                <Tab
-                  className="flex h-full flex-shrink-0 cursor-pointer select-none items-center justify-between gap-2 px-3 py-1 text-[--hl] outline-none transition-colors duration-300 hover:bg-[--hl-sm] hover:text-[--color-font] focus:bg-[--hl-sm] aria-selected:bg-[--hl-xs] aria-selected:text-[--color-font] aria-selected:hover:bg-[--hl-sm] aria-selected:focus:bg-[--hl-sm]"
-                  id="custom"
+                  {project ? 'Update' : 'Create'}
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  form={selectedTab}
+                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
                 >
-                  <div className="flex items-center gap-2">
-                    <i className="fa fa-code-fork" /> Git
-                  </div>
-                </Tab>
-              </TabList>
-              <TabPanel className="h-full w-full overflow-y-auto py-2" id="github">
-                <GitHubRepositorySetupFormGroup onSubmit={onGitRepoFormSubmit} />
-              </TabPanel>
-              <TabPanel className="h-full w-full overflow-y-auto py-2" id="gitlab">
-                <GitLabRepositorySetupFormGroup onSubmit={onGitRepoFormSubmit} />
-              </TabPanel>
-              <TabPanel className="h-full w-full overflow-y-auto py-2" id="custom">
-                <CustomRepositorySettingsFormGroup onSubmit={onGitRepoFormSubmit} />
-              </TabPanel>
-            </Tabs>
-          </ErrorBoundary>
-          <div className="flex items-center justify-end gap-2 pb-10">
-            <Button
-              onPress={() => setActiveView('project')}
-              className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] px-4 py-2 text-sm text-[--color-font] transition-colors hover:bg-[--hl-xs] aria-pressed:bg-[--hl-xs]"
-            >
-              Back
-            </Button>
-            <Button
-              type="submit"
-              form={selectedTab}
-              className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
-            >
-              Clone
-            </Button>
+                  Clone
+                </Button>
+              )}
+            </div>
           </div>
         </>
       )}
