@@ -22,7 +22,7 @@
     "build:main.min.js": "cross-env NODE_ENV=development esr esbuild.main.ts",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "package": "npm run build && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js",
-    "package:windows:unpacked": "npm run build && npm run bundle-plugins && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --win squirrel nsis --dir",
+    "package:windows:unpacked": "npm run build && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --win squirrel nsis --dir",
     "package:windows:dist": "cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --win squirrel nsis --prepackaged ./dist/win-unpacked",
     "start": "npx -y concurrently -n browser,main --kill-others \"npm run start:dev-server\" \"npm run start:electron\"",
     "start:autoRestart": "npx -y concurrently -n browser,main --kill-others \"npm run start:dev-server\" \"npm run start:electron:autoRestart\"",
@@ -193,7 +193,7 @@
     "zod": "^3.25.75"
   },
   "optionalDependencies": {
-    "@kong/insomina-plugin-external-vault": "0.0.1-alpha.2"
+    "@kong/insomnia-plugin-external-vault": "0.0.1-alpha.2"
   },
   "dev": {
     "dev-server-port": 3334
