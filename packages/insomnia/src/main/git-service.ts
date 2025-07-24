@@ -26,10 +26,12 @@ import type { GitRepository } from '../models/git-repository';
 import { isWorkspace, type WorkspaceScope, WorkspaceScopeKeys } from '../models/workspace';
 import { fsClient } from '../sync/git/fs-client';
 import GitVCS, {
+  fetchRemoteBranches,
   GIT_CLONE_DIR,
   GIT_INSOMNIA_DIR,
   GIT_INSOMNIA_DIR_NAME,
   GIT_INTERNAL_DIR,
+  type GitCredentials,
   MergeConflictError,
 } from '../sync/git/git-vcs';
 import { MemClient } from '../sync/git/mem-client';
@@ -189,6 +191,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
 
+    const bufferId = await database.bufferChanges();
     const fsClient = await getGitFSClient({ gitRepositoryId: gitRepository._id, projectId, workspaceId });
 
     if (GitVCS.isInitializedForRepo(gitRepository._id) && !gitRepository.needsFullClone) {
@@ -240,6 +243,8 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
     if (!workspaceId) {
       legacyInsomniaWorkspace = await containsLegacyInsomniaDir({ fsClient });
     }
+
+    await database.flushChanges(bufferId);
 
     return {
       branch: await GitVCS.getCurrentBranch(),
@@ -591,6 +596,7 @@ export const initGitRepoCloneAction = async ({
   token,
   username,
   oauth2format,
+  ref,
 }: {
   organizationId: string;
   uri: string;
@@ -599,6 +605,7 @@ export const initGitRepoCloneAction = async ({
   token: string;
   username: string;
   oauth2format?: string;
+  ref?: string;
 }): Promise<
   | {
       files: {
@@ -647,6 +654,7 @@ export const initGitRepoCloneAction = async ({
 
   try {
     await shallowClone({
+      ref,
       fsClient: inMemoryFsClient,
       gitRepository: repoSettingsPatch as GitRepository,
     });
@@ -701,6 +709,7 @@ export const cloneGitRepoAction = async ({
   token,
   username,
   oauth2format,
+  ref,
 }: {
   organizationId: string;
   projectId?: string;
@@ -712,6 +721,7 @@ export const cloneGitRepoAction = async ({
   token: string;
   username: string;
   oauth2format?: string;
+  ref?: string;
 }) => {
   try {
     if (!projectId) {
@@ -750,6 +760,7 @@ export const cloneGitRepoAction = async ({
 
       try {
         await shallowClone({
+          ref,
           fsClient: inMemoryFsClient,
           gitRepository: repoSettingsPatch as GitRepository,
         });
@@ -822,6 +833,7 @@ export const cloneGitRepoAction = async ({
           directory: GIT_CLONE_DIR,
           fs: fsClient,
           gitDirectory: GIT_INTERNAL_DIR,
+          ref,
         });
 
         await models.gitRepository.update(gitRepository, {
@@ -846,7 +858,10 @@ export const cloneGitRepoAction = async ({
         await migrateLegacyInsomniaFolderToFile({ projectId: project._id });
       }
 
-      await models.gitRepository.update(gitRepository, {
+      const updateRepository = await models.gitRepository.getById(gitRepository._id);
+      invariant(updateRepository, 'Git Repository not found');
+
+      await models.gitRepository.update(updateRepository, {
         cachedGitLastCommitTime: Date.now(),
         cachedGitRepositoryBranch: await GitVCS.getCurrentBranch(),
       });
@@ -900,6 +915,7 @@ export const cloneGitRepoAction = async ({
     const providerName = getOauth2FormatName(repoSettingsPatch.credentials);
     try {
       await shallowClone({
+        ref,
         fsClient: inMemoryFsClient,
         gitRepository: repoSettingsPatch as GitRepository,
       });
@@ -1089,6 +1105,7 @@ export const updateGitRepoAction = async ({
   oauth2format,
   username,
   token,
+  ref,
 }: {
   projectId: string;
   workspaceId?: string;
@@ -1098,6 +1115,7 @@ export const updateGitRepoAction = async ({
   oauth2format?: string;
   username: string;
   token: string;
+  ref?: string;
 }) => {
   try {
     let gitRepositoryId: string | null | undefined = null;
@@ -1178,6 +1196,7 @@ export const updateGitRepoAction = async ({
       gitDirectory: GIT_INTERNAL_DIR,
       gitCredentials: gitRepository.credentials,
       legacyDiff: Boolean(workspaceId),
+      ref,
     });
 
     await GitVCS.setAuthor();
@@ -1703,6 +1722,26 @@ export const pushToGitRemoteAction = async ({
     success: true,
   };
 };
+
+export async function fetchGitRemoteBranches({
+  uri,
+  credentials,
+}: {
+  uri: string;
+  credentials?: GitCredentials;
+}): Promise<{ branches: string[]; errors?: string[] }> {
+  try {
+    const branches = await fetchRemoteBranches({
+      uri: parseGitToHttpsURL(uri),
+      credentials,
+    });
+
+    return { branches };
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Error while fetching remote branches';
+    return { branches: [], errors: [errorMessage] };
+  }
+}
 
 export async function pullFromGitRemote({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) {
   try {
@@ -2472,7 +2511,7 @@ export interface GitServiceAPI {
   diffFileLoader: typeof diffFileLoader;
   getRepositoryDirectoryTree: typeof getRepositoryDirectoryTree;
   migrateLegacyInsomniaFolderToFile: typeof migrateLegacyInsomniaFolderToFile;
-
+  fetchGitRemoteBranches: typeof fetchGitRemoteBranches;
   initSignInToGitHub: typeof initSignInToGitHub;
   completeSignInToGitHub: typeof completeSignInToGitHub;
   signOutOfGitHub: typeof signOutOfGitHub;
@@ -2489,6 +2528,9 @@ export const registerGitServiceAPI = () => {
     loadGitRepository(options),
   );
   ipcMainHandle('git.getGitBranches', (_, options: Parameters<typeof getGitBranches>[0]) => getGitBranches(options));
+  ipcMainHandle('git.fetchGitRemoteBranches', (_, options: Parameters<typeof fetchGitRemoteBranches>[0]) =>
+    fetchGitRemoteBranches(options),
+  );
   ipcMainHandle('git.gitFetchAction', (_, options: Parameters<typeof gitFetchAction>[0]) => gitFetchAction(options));
   ipcMainHandle('git.gitLogLoader', (_, options: Parameters<typeof gitLogLoader>[0]) => gitLogLoader(options));
   ipcMainHandle('git.gitChangesLoader', (_, options: Parameters<typeof gitChangesLoader>[0]) =>

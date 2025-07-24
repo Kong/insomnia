@@ -97,6 +97,7 @@ export const ProjectSettingsForm: FC<Props> = ({
     authorName?: string;
     authorEmail?: string;
     uri?: string;
+    ref?: string;
     username?: string;
     password?: string;
     token?: string;
@@ -144,7 +145,7 @@ export const ProjectSettingsForm: FC<Props> = ({
     }
   }, [storageRules, project]);
 
-  const onGitRepoFormSubmit = (gitRepositoryPatch: Partial<GitRepository>) => {
+  const onGitRepoFormSubmit = (gitRepositoryPatch: Partial<GitRepository & { ref?: string }>) => {
     const { author, credentials, created, modified, isPrivate, needsFullClone, uriNeedsMigration, ...repoPatch } =
       gitRepositoryPatch;
 
@@ -154,6 +155,7 @@ export const ProjectSettingsForm: FC<Props> = ({
       authorName: author?.name || '',
       authorEmail: author?.email || '',
       uri: repoPatch.uri,
+      ref: repoPatch.ref,
     });
 
     initCloneGitRepositoryFetcher.submit(

@@ -68,6 +68,7 @@ interface InitOptions {
   gitCredentials?: GitCredentials | null;
   uri?: string;
   repoId: string;
+  ref?: string;
   // If enabled git-vcs will only diff files inside a .insomnia directory
   legacyDiff?: boolean;
 }
@@ -78,6 +79,7 @@ interface InitFromCloneOptions {
   directory: string;
   fs: git.FsClient;
   gitDirectory: string;
+  ref?: string;
   repoId: string;
 }
 
@@ -102,7 +104,7 @@ function getInsomniaFileName(blob: void | Uint8Array | undefined): string {
   try {
     const parsed = parse(Buffer.from(blob).toString('utf-8'));
     return parsed?.fileName || parsed?.name || '';
-  } catch (e) {
+  } catch {
     // If the document couldn't be parsed as yaml return an empty string
     return '';
   }
@@ -120,13 +122,14 @@ interface BaseOpts {
   uri: string;
   repoId: string;
   legacyDiff?: boolean;
+  ref?: string;
 }
 
 export class GitVCS {
   // @ts-expect-error -- TSCONVERSION not initialized with required properties
   _baseOpts: BaseOpts = gitCallbacks();
 
-  async init({ directory, fs, gitDirectory, gitCredentials, uri = '', repoId, legacyDiff = false }: InitOptions) {
+  async init({ directory, fs, gitDirectory, gitCredentials, uri = '', repoId, legacyDiff = false, ref }: InitOptions) {
     this._baseOpts = {
       ...this._baseOpts,
       dir: directory,
@@ -137,6 +140,7 @@ export class GitVCS {
       uri,
       repoId,
       legacyDiff,
+      ref,
     };
 
     if (await this.repoExists()) {
@@ -158,7 +162,7 @@ export class GitVCS {
         });
 
         defaultBranch = mainRef?.target?.replace('refs/heads/', '') || 'main';
-      } catch (err) {
+      } catch {
         // Ignore error
       }
 
@@ -174,13 +178,13 @@ export class GitVCS {
       });
 
       return remoteOriginURI;
-    } catch (err) {
+    } catch {
       // Ignore error
       return this._baseOpts.uri || '';
     }
   }
 
-  async initFromClone({ repoId, url, gitCredentials, directory, fs, gitDirectory }: InitFromCloneOptions) {
+  async initFromClone({ repoId, url, gitCredentials, directory, fs, gitDirectory, ref }: InitFromCloneOptions) {
     this._baseOpts = {
       ...this._baseOpts,
       ...gitCallbacks(gitCredentials),
@@ -190,11 +194,14 @@ export class GitVCS {
       http: httpClient,
       repoId,
     };
+
+    const initRef = ref || this._baseOpts.ref;
+
     try {
       await git.clone({
         ...this._baseOpts,
         url,
-        singleBranch: true,
+        ...(initRef ? { ref: initRef } : {}),
       });
     } catch (err) {
       // If we there is a checkout conflict we only want to clone the repo
@@ -202,11 +209,12 @@ export class GitVCS {
         await git.clone({
           ...this._baseOpts,
           url,
-          singleBranch: true,
+          ...(initRef ? { ref: initRef } : {}),
           noCheckout: true,
         });
       }
     }
+
     console.log(`[git] Cloned repo to ${gitDirectory} from ${url}`);
   }
 
@@ -366,7 +374,7 @@ export class GitVCS {
 
           try {
             return Buffer.from(blob).toString('utf-8');
-          } catch (e) {
+          } catch {
             return null;
           }
         });
@@ -974,6 +982,7 @@ export class GitVCS {
       await git.checkout({
         ...this._baseOpts,
         ref: branch,
+
         remote: 'origin',
       });
       const branches = await this.listBranches();
@@ -986,7 +995,7 @@ export class GitVCS {
   async repoExists() {
     try {
       await git.getConfig({ ...this._baseOpts, path: '' });
-    } catch (err) {
+    } catch {
       return false;
     }
 
@@ -1065,6 +1074,37 @@ function assertIsPromiseFsClient(fs: git.FsClient): asserts fs is git.PromiseFsC
   if (!('promises' in fs)) {
     throw new Error('Expected fs to be of PromiseFsClient');
   }
+}
+
+export async function fetchRemoteBranches({ uri, credentials }: { uri: string; credentials?: GitCredentials | null }) {
+  const [mainRef] = await git.listServerRefs({
+    ...gitCallbacks(credentials),
+    http: httpClient,
+    url: uri,
+    prefix: 'HEAD',
+    symrefs: true,
+  });
+
+  const remoteRefs = await git.listServerRefs({
+    ...gitCallbacks(credentials),
+    http: httpClient,
+    url: uri,
+    prefix: 'refs/heads/',
+    symrefs: true,
+  });
+
+  const defaultBranch = mainRef?.target?.replace('refs/heads/', '') || 'main';
+
+  const remoteBranches = remoteRefs
+    .filter(b => b.ref !== 'HEAD')
+    .map(b => b.ref.replace('refs/heads/', ''))
+    .sort((a, b) => {
+      if (a === defaultBranch) return -1;
+      if (b === defaultBranch) return 1;
+      return a.localeCompare(b);
+    });
+
+  return remoteBranches;
 }
 
 export default new GitVCS();
