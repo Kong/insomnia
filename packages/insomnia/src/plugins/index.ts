@@ -238,19 +238,24 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
   return plugins;
 }
 
+// dynamic import bundle plugin if exists
 export function getBundlePlugins(pluginMap: Record<string, Plugin>) {
   const bundlePlugins = getAppBundlePlugins();
   bundlePlugins.forEach(p => {
     const { name: pluginName, version: pluginVersion, feature } = p;
     try {
-      const isExecuteInInso = !process.type;
-      //FIXME Hard-cord path here
-      const requirePackage = isExecuteInInso
-        ? `${path.join(__dirname, '../', '../', '../', 'node_modules', pluginName.split('/')[0], pluginName.split('/')[1])}`
-        : pluginName;
-      console.log(`__dirname: ${__dirname}`);
-      console.log(`[plugin] Loading bundled plugin ${pluginName} from ${requirePackage}`);
-      const module = global.require(requirePackage);
+      const isExecutedInInso = !process.type;
+      // In Insomnia, the packagePath is just the pluginName
+      let bundlePluginPath = pluginName;
+      if (isExecutedInInso) {
+        // When executed in Inso, the __dirname points to <packageRoot>/packages/insomnia-inso/dist
+        // The bundle plugin module is placed under <packageRoot>/node_module
+        const rootNodeModuleDir = path.resolve(__dirname, '..', '..', '..', 'node_modules');
+        // use require.resolve to reliably get the absolute path to the plugin's entry point
+        bundlePluginPath = require.resolve(pluginName, { paths: [rootNodeModuleDir] });
+      }
+      console.log(`[plugin] Loading bundled plugin ${pluginName} from ${bundlePluginPath}`);
+      const module = global.require(bundlePluginPath);
       pluginMap[pluginName] = {
         name: pluginName,
         description: `Insomnia bundled plugin for ${feature}`,
