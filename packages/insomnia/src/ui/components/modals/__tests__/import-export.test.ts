@@ -1,8 +1,10 @@
+import { exportRequestsHAR, exportWorkspacesHAR } from 'insomnia/src/common/har';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { database as db } from '../../common/database';
-import * as models from '../../models';
-import { exportRequestsHAR, exportWorkspacesHAR } from '../export';
+import { database as db } from '../../../../common/database';
+import * as models from '../../../../models';
+
+// @vitest-environment jsdom
 describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   beforeEach(async () => {
     await models.project.all();

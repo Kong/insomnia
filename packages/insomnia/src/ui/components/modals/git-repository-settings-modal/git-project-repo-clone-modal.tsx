@@ -14,7 +14,8 @@ import { CustomRepositorySettingsFormGroup } from '../../git-credentials/custom-
 import { GitHubRepositorySetupFormGroup } from '../../git-credentials/github-repository-settings-form';
 import { GitLabRepositorySetupFormGroup } from '../../git-credentials/gitlab-repository-settings-form';
 import { HelpTooltip } from '../../help-tooltip';
-import { showAlert } from '..';
+import { showModal } from '..';
+import { AlertModal } from '../alert-modal';
 
 export const GitProjectRepositoryCloneModal = (props: ModalProps) => {
   const { organizationId } = useParams() as { organizationId: string };
@@ -52,7 +53,7 @@ export const GitProjectRepositoryCloneModal = (props: ModalProps) => {
     if (errors && errors.length) {
       const errorMessage = errors.map(e => (e instanceof Error ? e.message : typeof e === 'string' && e)).join(', ');
 
-      showAlert({
+      showModal(AlertModal, {
         title: 'Error Cloning Repository',
         message: errorMessage,
       });

@@ -89,6 +89,7 @@
     "oauth-1.0a": "^2.2.6",
     "papaparse": "^5.5.2",
     "shell-quote": "^1.8.2",
+    "socket.io-client": "^4.8.1",
     "swagger-ui-dist": "^5.21.0",
     "tough-cookie": "^4.1.4",
     "uuid": "^9.0.1",

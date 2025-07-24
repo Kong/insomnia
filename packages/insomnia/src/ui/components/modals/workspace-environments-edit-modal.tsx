@@ -31,13 +31,14 @@ import {
 import { isRemoteProject } from '../../../models/project';
 import { responseTagRegex } from '../../../templating/utils';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
-import type { WorkspaceLoaderData } from '../../routes/workspace';
+import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { EditableInput } from '../editable-input';
 import { EnvironmentEditor, type EnvironmentEditorHandle, type EnvironmentInfo } from '../editors/environment-editor';
 import { EnvironmentKVEditor } from '../editors/environment-key-value-editor/key-value-editor';
 import { handleToggleEnvironmentType } from '../editors/environment-utils';
 import { Icon } from '../icon';
-import { showAlert } from '.';
+import { showModal } from '.';
+import { AlertModal } from './alert-modal';
 
 export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => void }) => {
   const { organizationId, projectId, workspaceId } = useParams<{
@@ -99,7 +100,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
       name: 'Delete',
       icon: 'trash',
       action: async (environment: Environment) => {
-        showAlert({
+        showModal(AlertModal, {
           title: 'Delete Environment',
           message: `Are you sure you want to delete "${environment.name}"?`,
           addCancel: true,

@@ -3,7 +3,8 @@ import React from 'react';
 import type { Key } from 'react-aria-components';
 import { Button, Menu, MenuItem, MenuTrigger, Popover, Text } from 'react-aria-components';
 
-import { showAlert } from '..';
+import { showModal } from '..';
+import { AlertModal } from '../alert-modal';
 
 export interface Role {
   id: string;
@@ -111,7 +112,7 @@ export const OrganizationMemberRolesSelector = (props: Props) => {
       });
 
       if (!allow) {
-        showAlert({
+        showModal(AlertModal, {
           title,
           message,
         });

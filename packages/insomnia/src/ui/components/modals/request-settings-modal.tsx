@@ -7,11 +7,12 @@ import * as models from '../../../models';
 import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isScratchpadOrganizationId } from '../../../models/organization';
 import { isRequest, type Request } from '../../../models/request';
+import type { SocketIORequest } from '../../../models/socket-io-request';
 import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
 import { invariant } from '../../../utils/invariant';
 import { useRequestPatcher } from '../../hooks/use-request';
-import type { ListWorkspacesLoaderData } from '../../routes/project';
-import { revalidateWorkspaceActiveRequest } from '../../routes/workspace';
+import type { ListWorkspacesLoaderData } from '../../routes/$organizationId.project.$projectId';
+import { revalidateWorkspaceActiveRequest } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -19,7 +20,7 @@ import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 
 export interface RequestSettingsModalOptions {
-  request: Request | GrpcRequest | WebSocketRequest;
+  request: Request | GrpcRequest | WebSocketRequest | SocketIORequest;
 }
 
 export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSettingsModalOptions) => {

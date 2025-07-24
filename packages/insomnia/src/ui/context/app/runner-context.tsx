@@ -4,7 +4,7 @@ import type { Selection } from 'react-aria-components';
 import type { UploadDataType } from '../../components/modals/upload-runner-data-modal';
 import uiEventBus from '../../eventBus';
 import useStateRef from '../../hooks/use-state-ref';
-import type { RequestRow } from '../../routes/runner';
+import type { RequestRow } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 
 interface RunnerState {
   selectedKeys: Selection;

@@ -8,7 +8,9 @@ import * as models from '../models/index';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Workspace } from '../models/workspace';
-import * as pluginContexts from '../plugins/context';
+import * as pluginApp from '../plugins/context/app';
+import * as pluginNetwork from '../plugins/context/network';
+import * as pluginStore from '../plugins/context/store';
 import type { Plugin } from '../plugins/index';
 import * as templating from './index';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
@@ -96,10 +98,10 @@ export default class BaseExtension {
       .map(decodeEncoding);
     // Define a helper context with utils
     const helperContext: PluginTemplateTagContext = {
-      ...pluginContexts.app.init(renderPurpose),
+      ...pluginApp.init(),
       // @ts-expect-error -- TSCONVERSION
-      ...pluginContexts.store.init(this._plugin),
-      ...pluginContexts.network.init(),
+      ...pluginStore.init(this._plugin),
+      ...pluginNetwork.init(),
       context: renderContext,
       meta: renderMeta,
       renderPurpose,

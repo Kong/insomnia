@@ -7,9 +7,10 @@ import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Response } from '../models/response';
 import type { getBodyBuffer, getLatestForRequest } from '../models/response';
+import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace } from '../models/workspace';
-import type { PluginStore } from '../plugins/context';
+import type { PluginStore } from '../plugins/context/store';
 import type { PromptModalOptions } from '../ui/components/modals/prompt-modal';
 import type { extractNunjucksTagFromCoords } from './utils';
 
@@ -46,10 +47,17 @@ export interface BaseRenderContextOptions {
   extraInfo?: { requestChain: string[] };
   ignoreUndefinedEnvVariable?: boolean;
 }
-export type RenderContextAncestor = Request | GrpcRequest | WebSocketRequest | RequestGroup | Workspace | Project;
+export type RenderContextAncestor =
+  | Request
+  | GrpcRequest
+  | WebSocketRequest
+  | SocketIORequest
+  | RequestGroup
+  | Workspace
+  | Project;
 
 export type RenderContextOptions = BaseRenderContextOptions &
-  Partial<BaseRenderContextOptions & { request: Request | GrpcRequest | WebSocketRequest }> & {
+  Partial<BaseRenderContextOptions & { request: Request | GrpcRequest | WebSocketRequest | SocketIORequest }> & {
     ancestors?: RenderContextAncestor[];
   };
 

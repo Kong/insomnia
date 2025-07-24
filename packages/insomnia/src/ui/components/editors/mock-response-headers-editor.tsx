@@ -6,7 +6,7 @@ import type { RequestHeader } from '../../../models/request';
 import {
   type MockRouteLoaderData,
   useMockRoutePatcher,
-} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route';
+} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 

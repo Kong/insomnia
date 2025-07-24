@@ -4,6 +4,7 @@ import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { docsTemplateTags } from '../../../common/documentation';
 import type { GrpcRequest } from '../../../models/grpc-request';
 import type { Request } from '../../../models/request';
+import type { SocketIORequest } from '../../../models/socket-io-request';
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import type { RenderError } from '../../../templating/render-error';
 import { Link } from '../base/link';
@@ -12,7 +13,7 @@ import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 export interface RequestRenderErrorModalOptions {
   error: RenderError | null;
-  request: Request | WebSocketRequest | GrpcRequest | null;
+  request: Request | WebSocketRequest | SocketIORequest | GrpcRequest | null;
 }
 export interface RequestRenderErrorModalHandle {
   show: (options: RequestRenderErrorModalOptions) => void;

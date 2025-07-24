@@ -15,7 +15,7 @@ import { getCurrentSessionId } from '../../../../account/session';
 import { debounce } from '../../../../common/misc';
 import { SegmentEvent } from '../../../analytics';
 import { insomniaFetch } from '../../../insomniaFetch';
-import type { CollaboratorSearchLoaderResult } from '../../../routes/invite';
+import type { CollaboratorSearchLoaderResult } from '../../../routes/$organizationId.collaborators-search';
 import { Icon } from '../../icon';
 import { startInvite } from './encryption';
 import { OrganizationMemberRolesSelector, type Role, SELECTOR_TYPE } from './organization-member-roles-selector';

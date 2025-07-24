@@ -10,6 +10,8 @@ import {
   EXPORT_TYPE_REQUEST,
   EXPORT_TYPE_REQUEST_GROUP,
   EXPORT_TYPE_RUNNER_TEST_RESULT,
+  EXPORT_TYPE_SOCKETIO_PAYLOAD,
+  EXPORT_TYPE_SOCKETIO_REQUEST,
   EXPORT_TYPE_UNIT_TEST,
   EXPORT_TYPE_UNIT_TEST_SUITE,
   EXPORT_TYPE_WEBSOCKET_PAYLOAD,
@@ -42,6 +44,9 @@ import * as _requestVersion from './request-version';
 import * as _response from './response';
 import * as _runnerTestResult from './runner-test-result';
 import * as _settings from './settings';
+import * as _socketIOPayload from './socket-io-payload';
+import * as _socketIORequest from './socket-io-request';
+import * as _socketIoResponse from './socket-io-response';
 import * as _stats from './stats';
 import * as _unitTest from './unit-test';
 import * as _unitTestResult from './unit-test-result';
@@ -97,6 +102,9 @@ export const grpcRequest = _grpcRequest;
 export const grpcRequestMeta = _grpcRequestMeta;
 export const webSocketPayload = _webSocketPayload;
 export const webSocketRequest = _webSocketRequest;
+export const socketIORequest = _socketIORequest;
+export const socketIOPayload = _socketIOPayload;
+export const socketIOResponse = _socketIoResponse;
 export const webSocketResponse = _webSocketResponse;
 export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
@@ -142,6 +150,9 @@ export function all() {
     webSocketRequest,
     webSocketResponse,
     userSession,
+    socketIORequest,
+    socketIOPayload,
+    socketIOResponse,
   ] as const;
 }
 
@@ -231,6 +242,8 @@ export const MODELS_BY_EXPORT_TYPE: Record<string, any> = {
   [EXPORT_TYPE_REQUEST]: request,
   [EXPORT_TYPE_WEBSOCKET_PAYLOAD]: webSocketPayload,
   [EXPORT_TYPE_WEBSOCKET_REQUEST]: webSocketRequest,
+  [EXPORT_TYPE_SOCKETIO_PAYLOAD]: socketIOPayload,
+  [EXPORT_TYPE_SOCKETIO_REQUEST]: socketIORequest,
   [EXPORT_TYPE_MOCK_SERVER]: mockServer,
   [EXPORT_TYPE_MOCK_ROUTE]: mockRoute,
   [EXPORT_TYPE_GRPC_REQUEST]: grpcRequest,

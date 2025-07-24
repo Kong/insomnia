@@ -29,7 +29,6 @@ import {
   useLoaderData,
   useNavigate,
   useParams,
-  useRouteLoaderData,
 } from 'react-router';
 import { useLocalStorage } from 'react-use';
 
@@ -64,9 +63,7 @@ import {
 import { isDesign, scopeToActivity, type Workspace, type WorkspaceScope } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
-import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
-import { getInitialRouteForOrganization } from '../../utils/router';
 import { SegmentEvent } from '../analytics';
 import { AvatarGroup } from '../components/avatar';
 import { CloudSyncProjectBar } from '../components/dropdowns/cloud-sync-project-bar';
@@ -87,12 +84,10 @@ import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
 import { useLoaderDeferData } from '../hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
-import {
-  DEFAULT_STORAGE_RULES,
-  type OrganizationLoaderData,
-  type OrganizationStorageLoaderData,
-  useOrganizationLoaderData,
-} from './organization';
+import { insomniaFetch } from '../insomniaFetch';
+import { DEFAULT_STORAGE_RULES } from '../organization-utils';
+import { type OrganizationStorageLoaderData } from './$organizationId.storage-rules';
+import { useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 
 interface TeamProject {
@@ -245,19 +240,6 @@ export const syncProjectsAction: ActionFunction = async ({ params }) => {
   return null;
 };
 
-export const indexLoader: LoaderFunction = async ({ params }) => {
-  const { organizationId } = params;
-  invariant(organizationId, 'Organization ID is required');
-
-  try {
-    await syncProjects(organizationId);
-  } catch (err) {
-    console.log('[project] Could not fetch remote projects.');
-  }
-  const initialOrganizationRoute = await getInitialRouteForOrganization({ organizationId });
-  return redirect(initialOrganizationRoute);
-};
-
 export interface InsomniaFile {
   id: string;
   name: string;
@@ -336,7 +318,7 @@ async function getAllLocalFiles({ projectId }: { projectId: string }) {
         spec = result.contents;
         specFormat = result.format;
         specFormatVersion = result.formatVersion;
-      } catch (err) {
+      } catch {
         // Assume there is no spec
         // TODO: Check for parse errors if it's an invalid spec
       }
@@ -401,6 +383,11 @@ async function getAllRemoteFiles({ projectId, organizationId }: { projectId: str
     invariant(project, 'Project not found');
 
     const remoteId = project.remoteId;
+    console.log(
+      '[getAllRemoteFiles] start fetching remote backend workspaces for project',
+      projectId,
+      `remoteId: ${remoteId}`,
+    );
     if (!remoteId) {
       return [];
     }
@@ -411,7 +398,9 @@ async function getAllRemoteFiles({ projectId, organizationId }: { projectId: str
       // Remote backend projects are fetched from the backend since they are not stored locally
       vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId }),
     ]);
-
+    console.log(
+      `[getAllRemoteFiles] found allPulledBackendProjectsForRemoteId: ${allPulledBackendProjectsForRemoteId.length} and allFetchedRemoteBackendProjectsForRemoteId: ${allFetchedRemoteBackendProjectsForRemoteId.length} for remoteId: ${remoteId}`,
+    );
     // Get all workspaces that are connected to backend projects and under the current project
     const workspacesWithBackendProjects = await database.find<Workspace>(models.workspace.type, {
       _id: {
@@ -421,12 +410,12 @@ async function getAllRemoteFiles({ projectId, organizationId }: { projectId: str
       },
       parentId: project._id,
     });
-
+    console.log(`[getAllRemoteFiles] found workspacesWithBackendProjects: ${workspacesWithBackendProjects.length}`);
     // Get the list of remote backend projects that we need to pull
     const backendProjectsToPull = allFetchedRemoteBackendProjectsForRemoteId.filter(
       p => !workspacesWithBackendProjects.find(w => w._id === p.rootDocumentId),
     );
-
+    console.log(`[getAllRemoteFiles] get ${backendProjectsToPull.length} unsynced files`);
     return backendProjectsToPull.map(backendProject => {
       const file: InsomniaFile = {
         id: backendProject.rootDocumentId,
@@ -512,7 +501,7 @@ const getLearningFeature = async (fallbackLearningFeature: LearningFeature) => {
         sessionId: '',
       });
       window.localStorage.setItem('learning-feature-last-fetch', Date.now().toString());
-    } catch (err) {
+    } catch {
       console.log('[project] Could not fetch learning feature data.');
     }
   }
@@ -599,7 +588,7 @@ export const loader: LoaderFunction = async ({ params }) => {
 
   const project = await models.project.getById(projectId);
   invariant(project, `Project was not found ${projectId}`);
-
+  console.log('[project loader] Loading project:', project.name, projectId);
   const [localFiles, organizationProjects = []] = await Promise.all([
     getAllLocalFiles({ projectId }),
     getProjectsWithGitRepositories({ organizationId }),
@@ -656,6 +645,12 @@ const ProjectRoute: FC = () => {
   };
   const [learningFeature] = useLoaderDeferData<LearningFeature>(learningFeaturePromise);
   const [remoteFiles] = useLoaderDeferData<InsomniaFile[]>(remoteFilesPromise, projectId);
+
+  useEffect(() => {
+    if (activeProject?.remoteId && remoteFiles) {
+      console.log('[remote files] remote files loaded for project ui', remoteFiles.length);
+    }
+  }, [activeProject?.remoteId, remoteFiles]);
   const [checkAllProjectSyncStatus] = useLoaderDeferData<Record<string, boolean>>(projectsSyncStatusPromise);
 
   const allFiles = useMemo(() => {
@@ -670,7 +665,7 @@ const ProjectRoute: FC = () => {
     )
     .map(f => f.formData?.get('backendProjectId'));
 
-  const { organizations } = useOrganizationLoaderData();
+  const { organizations, currentPlan } = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
   const storageRuleFetcher = useFetcher<OrganizationStorageLoaderData>({ key: `storage-rule:${organizationId}` });
   const createNewWorkspaceFetcher = useFetcher<{ error?: string }>();
@@ -680,11 +675,9 @@ const ProjectRoute: FC = () => {
     if (!isScratchpadOrganizationId(organizationId)) {
       const load = storageRuleFetcher.load;
       // file://./organization.tsx#organizationStorageLoader
-      load(`/organization/${organizationId}/storage-rule`);
+      load(`/organization/${organizationId}/storage-rules`);
     }
   }, [organizationId, storageRuleFetcher.load]);
-
-  const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
 
   const { storagePromise } = storageRuleFetcher.data || {};
 

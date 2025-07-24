@@ -8,7 +8,8 @@ import { documentationLinks } from '../../common/documentation';
 import { selectFileOrFolder } from '../../common/select-file-or-folder';
 import { blankSpec as emptySpec, petStoreSpec, todoSpec } from './example-openapi-specs';
 import { Icon } from './icon';
-import { showPrompt } from './modals';
+import { showModal } from './modals';
+import { PromptModal } from './modals/prompt-modal';
 
 interface Props {
   onImport: (contents: string) => void;
@@ -68,7 +69,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
       name: 'Import URL',
       icon: 'link',
       action: async () => {
-        showPrompt({
+        showModal(PromptModal, {
           title: 'Import document from URL',
           submitName: 'Fetch and Import',
           label: 'URL',

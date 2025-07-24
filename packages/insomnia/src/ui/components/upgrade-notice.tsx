@@ -2,7 +2,7 @@ import React from 'react';
 import { Button, Heading } from 'react-aria-components';
 
 import { getAppWebsiteBaseURL } from '../../common/constants';
-import type { PersonalPlanType } from '../routes/organization';
+import type { PersonalPlanType } from '../organization-utils';
 import { InsomniaLogo } from './insomnia-icon';
 
 type UpgradePlanType = Exclude<PersonalPlanType, 'free' | 'individual'>;

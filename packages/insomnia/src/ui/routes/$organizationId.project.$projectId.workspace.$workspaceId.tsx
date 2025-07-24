@@ -21,6 +21,7 @@ import type { Request } from '../../models/request';
 import { isRequestGroup, type RequestGroup } from '../../models/request-group';
 import type { RequestGroupMeta } from '../../models/request-group-meta';
 import type { RequestMeta } from '../../models/request-meta';
+import type { SocketIORequest } from '../../models/socket-io-request';
 import type { WebSocketRequest } from '../../models/websocket-request';
 import type { Workspace } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
@@ -53,7 +54,7 @@ export interface WorkspaceLoaderData {
   collection: Collection;
 }
 export interface Child {
-  doc: Request | GrpcRequest | WebSocketRequest | RequestGroup;
+  doc: Request | GrpcRequest | WebSocketRequest | RequestGroup | SocketIORequest;
   children: Child[];
   collapsed: boolean;
   hidden: boolean;
@@ -163,11 +164,13 @@ export const workspaceLoader: LoaderFunction = async ({ request, params }): Prom
     parentId: { $in: listOfParentIds },
   })) as GrpcRequest[];
   const wsReqs = await database.find(models.webSocketRequest.type, { parentId: { $in: listOfParentIds } });
-  const allRequests = [...reqs, ...reqGroups, ...grpcReqs, ...wsReqs] as (
+  const socketIORequests = await database.find(models.socketIORequest.type, { parentId: { $in: listOfParentIds } });
+  const allRequests = [...reqs, ...reqGroups, ...grpcReqs, ...wsReqs, ...socketIORequests] as (
     | Request
     | RequestGroup
     | GrpcRequest
     | WebSocketRequest
+    | SocketIORequest
   )[];
 
   const requestMetas = await database.find(models.requestMeta.type, { parentId: { $in: reqs.map(r => r._id) } });

@@ -1,9 +1,9 @@
 import { format } from 'date-fns';
+import type { TemplateTag } from 'insomnia/src/plugins';
+import type { PluginTemplateTag } from 'insomnia/src/templating/types';
+import { invariant } from 'insomnia/src/utils/invariant';
 import { JSONPath } from 'jsonpath-plus';
 
-import type { TemplateTag } from '../../../plugins';
-import type { PluginTemplateTag } from '../../../templating/types';
-import { invariant } from '../../../utils/invariant';
 import { fakerFunctions } from './faker-functions';
 const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
   {

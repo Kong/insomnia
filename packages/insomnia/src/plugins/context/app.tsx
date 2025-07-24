@@ -1,14 +1,8 @@
-import React from 'react';
+import { getAppPlatform, getAppVersion } from 'insomnia/src/common/constants';
+import type { AppContext, RenderPurpose } from 'insomnia/src/templating/types';
+import { invariant } from 'insomnia/src/utils/invariant';
+import type React from 'react';
 import type ReactDOM from 'react-dom';
-
-import { getAppPlatform, getAppVersion } from '../../common/constants';
-import type { AppContext, RenderPurpose } from '../../templating/types';
-import { HtmlElementWrapper } from '../../ui/components/html-element-wrapper';
-import { showModal } from '../../ui/components/modals';
-import { AlertModal } from '../../ui/components/modals/alert-modal';
-import { PromptModal } from '../../ui/components/modals/prompt-modal';
-import { WrapperModal } from '../../ui/components/modals/wrapper-modal';
-import { invariant } from '../../utils/invariant';
 
 export interface PrivateProperties {
   loadRendererModules: () => Promise<
@@ -19,34 +13,33 @@ export interface PrivateProperties {
     | {}
   >;
 }
+// TODO: consider how this would work in a webworker context
+const isRenderer = process.type === 'renderer';
 
 export const init = (renderPurpose: RenderPurpose = 'general'): { app: AppContext; __private: PrivateProperties } => ({
   app: {
     alert: (title: string, message?: string) => {
-      const sendOrNoRender = renderPurpose === 'send' || renderPurpose === 'no-render';
-      if (sendOrNoRender) {
-        return showModal(AlertModal, { title, message });
+      if (isRenderer) {
+        return window.showAlert({ title, message });
       }
     },
     dialog: (title, body, options = {}) => {
-      const sendOrNoRender = renderPurpose === 'send' || renderPurpose === 'no-render';
-      if (sendOrNoRender) {
-        showModal(WrapperModal, {
+      if (isRenderer) {
+        window.showWrapper({
           ...options,
           title,
-          body: <HtmlElementWrapper el={body} onUnmount={options.onHide} />,
+          body,
         });
       }
     },
     prompt: (title, options = {}) => {
-      const sendOrNoRender = renderPurpose === 'send' || renderPurpose === 'no-render';
-      if (!sendOrNoRender) {
+      if (!isRenderer) {
         return Promise.resolve(options.defaultValue || '');
       }
       // This custom promise converts the prompt modal from being callback-based to reject when the modal is cancelled and resolve when the modal is submitted and hidden
       return new Promise<string>((resolve, reject) => {
         let selected: string | null = null;
-        showModal(PromptModal, {
+        window.showPrompt({
           ...options,
           title,
           onComplete: (value: string) => {
