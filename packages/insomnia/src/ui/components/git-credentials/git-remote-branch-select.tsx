@@ -2,8 +2,8 @@ import React, { useDeferredValue, useEffect } from 'react';
 import { Button, ComboBox, Input, Label, ListBox, ListBoxItem, Popover } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';
 
-import { Icon } from '../icon';
 import type { GitCredentials } from '../../../sync/git/git-vcs';
+import { Icon } from '../icon';
 
 export const GitRemoteBranchSelect = ({
   url,
@@ -35,7 +35,7 @@ export const GitRemoteBranchSelect = ({
         },
       );
     }
-  }, [organizationId, remoteBranchesFetcher, uri]);
+  }, [organizationId, remoteBranchesFetcher, uri, credentials]);
 
   const remoteBranches = remoteBranchesFetcher.data?.branches || [];
 
