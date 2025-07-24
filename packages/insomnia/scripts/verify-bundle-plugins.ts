@@ -11,14 +11,18 @@ const isModuleInstalled = (moduleName: string) => {
 
 export const verifyBundlePlugins = () => {
   const executeInGithubActions = process.env.GITHUB_ACTIONS === 'true';
-
-  const missingBundlePlugin = bundlePlugins.find(p => !isModuleInstalled(p.name));
-  if (missingBundlePlugin) {
-    if (executeInGithubActions) {
+  if (executeInGithubActions) {
+    console.log('[NPM Install] Verifying bundle plugins...');
+    const missingBundlePlugin = bundlePlugins.find(p => !isModuleInstalled(p.name));
+    if (missingBundlePlugin) {
       // execute in Github Actions
-      console.log('[build] ERROR:', `Required bundle plugins ${missingBundlePlugin.name} is not installed.`);
+      console.error(
+        '[npm install] ERROR:',
+        `Required bundle plugin module ${missingBundlePlugin.name} is not installed.`,
+      );
       process.exit(1);
     }
-    console.log('[build] Warning:', `Required bundle plugins ${missingBundlePlugin.name} is not installed.`);
   }
 };
+
+verifyBundlePlugins();

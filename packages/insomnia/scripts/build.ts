@@ -5,13 +5,11 @@ import path from 'node:path';
 import * as vite from 'vite';
 
 import buildMainAndPreload from '../esbuild.main';
-import { verifyBundlePlugins } from './verify-bundle-plugins';
 
 // Start build if ran from CLI
 if (require.main === module) {
   process.nextTick(async () => {
     try {
-      verifyBundlePlugins();
       await module.exports.start();
     } catch (err) {
       console.log('[build] ERROR:', err);
