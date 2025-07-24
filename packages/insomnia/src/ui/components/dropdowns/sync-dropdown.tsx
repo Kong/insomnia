@@ -1,5 +1,4 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
-import { format } from 'date-fns';
 import React, { type FC, Fragment, useCallback, useEffect, useState } from 'react';
 import {
   Button,
@@ -93,13 +92,13 @@ export const SyncDropdown: FC<Props> = () => {
       setOperationError(checkoutFetcher.data.error);
       showToast({
         icon: cloudSyncIcon,
-        title: `Checkout failed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        title: `Checkout failed`,
         status: 'error',
       });
     } else if (checkoutFetcher.data && 'success' in checkoutFetcher.data && checkoutFetcher.data.success) {
       showToast({
         icon: cloudSyncIcon,
-        title: `Checkout completed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        title: `Checkout completed`,
         status: 'success',
       });
     }
@@ -108,11 +107,11 @@ export const SyncDropdown: FC<Props> = () => {
   useEffect(() => {
     if (pushFetcher.data && 'error' in pushFetcher.data && pushFetcher.data.error) {
       setOperationError(pushFetcher.data.error);
-      showToast({ icon: cloudSyncIcon, title: `Push failed, ${format(new Date(), 'HH:mm:ss aa')}`, status: 'error' });
+      showToast({ icon: cloudSyncIcon, title: `Push failed` });
     } else if (pushFetcher.data && 'success' in pushFetcher.data && pushFetcher.data.success) {
       showToast({
         icon: cloudSyncIcon,
-        title: `Push completed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        title: `Push completed`,
         status: 'success',
       });
     }
@@ -121,11 +120,11 @@ export const SyncDropdown: FC<Props> = () => {
   useEffect(() => {
     if (pullFetcher.data && 'error' in pullFetcher.data && pullFetcher.data.error) {
       setOperationError(pullFetcher.data.error);
-      showToast({ icon: cloudSyncIcon, title: `Pull failed, ${format(new Date(), 'HH:mm:ss aa')}`, status: 'error' });
+      showToast({ icon: cloudSyncIcon, title: `Pull failed` });
     } else if (pullFetcher.data && 'success' in pullFetcher.data && pullFetcher.data.success) {
       showToast({
         icon: cloudSyncIcon,
-        title: `Pull completed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        title: `Pull completed`,
         status: 'success',
       });
     }
@@ -136,13 +135,13 @@ export const SyncDropdown: FC<Props> = () => {
       setOperationError(rollbackFetcher.data.error);
       showToast({
         icon: cloudSyncIcon,
-        title: `Rollback failed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        title: `Rollback failed`,
         status: 'error',
       });
     } else if (rollbackFetcher.data && 'success' in rollbackFetcher.data && rollbackFetcher.data.success) {
       showToast({
         icon: cloudSyncIcon,
-        title: `Rollback completed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        title: `Rollback completed`,
         status: 'success',
       });
     }
@@ -212,7 +211,7 @@ export const SyncDropdown: FC<Props> = () => {
     isActive: branch === currentBranch,
     action: () => {
       setOperationError(null);
-      showToast({ icon: cloudSyncIcon, title: `Checking out branch ${branch}, ${format(new Date(), 'HH:mm:ss aa')}` });
+      showToast({ icon: cloudSyncIcon, title: `Checking out branch ${branch}` });
       checkoutFetcher.submit(
         {
           branch,
@@ -252,7 +251,7 @@ export const SyncDropdown: FC<Props> = () => {
       isDisabled: historyCount === 0 || rollbackFetcher.state !== 'idle' || !canCreateSnapshot,
       action: () => {
         setOperationError(null);
-        showToast({ icon: cloudSyncIcon, title: `Rollback started, ${format(new Date(), 'HH:mm:ss aa')}` });
+        showToast({ icon: cloudSyncIcon, title: `Rollback started` });
 
         rollbackFetcher.submit(
           {},
@@ -284,7 +283,7 @@ export const SyncDropdown: FC<Props> = () => {
         setOperationError(null);
         showToast({
           icon: cloudSyncIcon,
-          title: `Pull failed, ${format(new Date(), 'HH:mm:ss aa')}`,
+          title: `Pull failed`,
           status: 'error',
         });
         pullFetcher.submit(
@@ -308,7 +307,7 @@ export const SyncDropdown: FC<Props> = () => {
       isDisabled: ahead === 0 || pushFetcher.state !== 'idle',
       action: () => {
         setOperationError(null);
-        showToast({ icon: cloudSyncIcon, title: `Push started, ${format(new Date(), 'HH:mm:ss aa')}` });
+        showToast({ icon: cloudSyncIcon, title: `Push started` });
 
         pushFetcher.submit(
           {},

@@ -1,5 +1,4 @@
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
-import { format } from 'date-fns';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 import {
   Button,
@@ -141,14 +140,14 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
     if (errors.length > 0) {
       showToast({
         icon,
-        title: `Push failed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        title: `Push failed`,
         status: 'error',
       });
       setOperationError(errors.join('\n'));
     } else if (gitPushFetcher.data && 'success' in gitPushFetcher.data && gitPushFetcher.data.success) {
       showToast({
         icon,
-        title: `Push completed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        title: `Push completed`,
         status: 'success',
       });
     }
@@ -169,13 +168,13 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
       setOperationError(errors.join('\n'));
       showToast({
         icon,
-        title: `Checkout failed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        title: `Checkout failed`,
         status: 'error',
       });
     } else if (gitCheckoutFetcher.data && 'success' in gitCheckoutFetcher.data && gitCheckoutFetcher.data.success) {
       showToast({
         icon,
-        title: `Checkout completed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        title: `Checkout completed`,
         status: 'success',
       });
     }
@@ -187,13 +186,13 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
       setOperationError(errors.join('\n'));
       showToast({
         icon,
-        title: `Fetch failed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        title: `Fetch failed`,
         status: 'error',
       });
     } else if (gitFetchFetcher.data && 'success' in gitFetchFetcher.data && gitFetchFetcher.data.success) {
       showToast({
         icon,
-        title: `Fetch completed, ${format(new Date(), 'HH:mm:ss aa')}`,
+        title: `Fetch completed`,
         status: 'success',
       });
     }
@@ -203,7 +202,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
     setOperationError(null);
     showToast({
       icon,
-      title: `Push started, ${format(new Date(), 'HH:mm:ss aa')}`,
+      title: `Push started`,
     });
 
     gitPushFetcher.submit(
@@ -260,7 +259,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
               setOperationError(null);
               showToast({
                 icon,
-                title: `Pull started, ${format(new Date(), 'HH:mm:ss aa')}`,
+                title: `Pull started`,
               });
 
               const pullResult = await pullFromGitRemote({ projectId });
@@ -268,7 +267,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
               if ('errors' in pullResult && pullResult.errors) {
                 showToast({
                   icon,
-                  title: `Pull failed, ${format(new Date(), 'HH:mm:ss aa')}`,
+                  title: `Pull failed`,
                   status: 'error',
                 });
                 setOperationError(pullResult.errors.join('\n'));
@@ -298,7 +297,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
                 setIsPulling(false);
                 showToast({
                   icon,
-                  title: `Pull completed, ${format(new Date(), 'HH:mm:ss aa')}`,
+                  title: `Pull completed`,
                   status: 'success',
                 });
                 revalidate();
@@ -309,7 +308,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
 
               showToast({
                 icon,
-                title: `Pull failed, ${format(new Date(), 'HH:mm:ss aa')}`,
+                title: `Pull failed`,
                 status: 'error',
               });
             }
@@ -338,7 +337,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
             setOperationError(null);
             showToast({
               icon,
-              title: `Fetch started, ${format(new Date(), 'HH:mm:ss aa')}`,
+              title: `Fetch started`,
             });
             gitFetchFetcher.submit(
               {},
@@ -415,9 +414,8 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
         icon: 'code-branch',
         action: async () => {
           setOperationError(null);
-          // defaultToast({ message: `Switching to branch ${branch}, ${format(new Date(), 'HH:mm:ss aa')}` });
           showToast({
-            title: `Switching to branch ${branch}, ${format(new Date(), 'HH:mm:ss aa')}`,
+            title: `Switching to branch ${branch}`,
           });
           // file://./../../routes/git-actions.tsx#gitCheckoutAction
           gitCheckoutFetcher.submit(
