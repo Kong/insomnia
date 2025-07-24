@@ -74,6 +74,10 @@ test('Critical Path For Template Tags Interactions', async ({ page, app }) => {
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   await page.getByLabel('Template Tag Collection').click();
 
+  await page.getByTestId('settings-button').click();
+  await page.getByTestId('dataFolders').fill(getFixturePath('files/template-file.txt'));
+  await page.locator('.app').press('Escape');
+
   // test common template tags
   await page.getByLabel('Request Collection').getByTestId('Common Tag').press('Enter');
   await page.getByText('Body', { exact: true }).click();

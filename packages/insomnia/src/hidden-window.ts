@@ -37,7 +37,7 @@ window.bridge.onmessage(async (data, callback) => {
     const result = await window.bridge.Promise.race([timeoutPromise, runScript(data)]);
     callback(result);
   } catch (err) {
-    const errMessage = err.message ? `Error: ${err.message};` : err;
+    const errMessage = err.message ? `Error from Pre-request or after-response script:\n${err.message};` : err;
     const errStack = err.stack ? `Stack: ${err.stack};` : '';
     const fullErrMessage = `${errMessage}\n${errStack}`;
     Sentry.captureException(errMessage, {

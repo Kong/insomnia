@@ -20,6 +20,7 @@ import { CheckForUpdatesButton } from '../check-for-updates-button';
 import { BooleanSetting } from './boolean-setting';
 import { EnumSetting } from './enum-setting';
 import { NumberSetting } from './number-setting';
+import { TextArraySetting } from './text-array-setting';
 import { TextSetting } from './text-setting';
 import { VaultKeyPanel } from './vault-key-panel';
 
@@ -241,6 +242,15 @@ export const General: FC = () => {
         />
       </div>
       {isLoggedIn && <VaultKeyPanel />}
+
+      <div className="form-row pad-top-sm">
+        <TextArraySetting
+          label="What folders can Insomnia access?"
+          setting="dataFolders"
+          help="This allows you to control what folders Insomnia (and scripts within Insomnia) can read/write to."
+          placeholder=""
+        />
+      </div>
 
       {updatesSupported() && (
         <Fragment>

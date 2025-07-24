@@ -157,4 +157,5 @@ export interface Settings {
   enableVaultInScripts: boolean;
   saveVaultKeyToOSSecretManager: boolean;
   vaultSecretCacheDuration: number;
+  dataFolders: string[];
 }
