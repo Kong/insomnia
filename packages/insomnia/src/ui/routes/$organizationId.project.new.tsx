@@ -23,6 +23,7 @@ type CreateProjectData =
       password: string;
       token: string;
       oauth2format?: OauthProviderName;
+      connectRepositoryLater: boolean;
     };
 
 export const createProject = async (organizationId: string, newProjectData: CreateProjectData) => {
@@ -40,7 +41,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
       return project._id;
     }
 
-    if (newProjectData.storageType === 'git') {
+    if (newProjectData.storageType === 'git' && !newProjectData.connectRepositoryLater) {
       const { projectId, errors } = await window.main.git.cloneGitRepo({
         organizationId,
         ...newProjectData,
