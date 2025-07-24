@@ -34,9 +34,8 @@ jobs:
 
       - name: Install packages
         run: npm ci
-        # FIXME test error
-        # env: 
-        #   NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env: 
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install node version of node-libcurl for inso tests
         run: node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
