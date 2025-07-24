@@ -27,6 +27,7 @@ import {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../components/modals/settings-modal';
+import { Toaster } from '../components/toast-notification';
 import { AppHooks } from '../containers/app-hooks';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import Modals from './modals';
@@ -314,6 +315,7 @@ const Root = () => {
       <ErrorBoundary>
         <div className="app">
           <Outlet />
+          <Toaster />
         </div>
         <Modals />
         <AppHooks />

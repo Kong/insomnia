@@ -63,6 +63,26 @@ type VCSAction =
   | 'setup'
   | 'clone';
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    const message = error.message || '';
+
+    // Check for network-related errors
+    if (
+      message.includes('net::ERR_UNEXPECTED') ||
+      message.includes('net::ERR_INTERNET_DISCONNECTED') ||
+      message.includes('net::ERR_NAME_NOT_RESOLVED')
+    ) {
+      return 'A network error occurred.';
+    }
+
+    // Default fallback
+    return message;
+  }
+
+  // Non-Error objects
+  return 'Unknown Error';
+}
 export function vcsSegmentEventProperties(type: 'git', action: VCSAction, error?: string) {
   return { type, action, error };
 }
@@ -279,6 +299,7 @@ export const gitFetchAction = async ({ projectId, workspaceId }: { projectId: st
 
     return {
       errors: [],
+      success: true,
     };
   } catch (e) {
     console.error(e);
@@ -1300,7 +1321,7 @@ export const commitAndPushToGitRepoAction = async ({
         errors: [`${err.message}, ${err.data.response}`],
       };
     }
-    const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+    const errorMessage = getErrorMessage(err);
 
     return { errors: [errorMessage] };
   }
@@ -1349,7 +1370,7 @@ export const commitAndPushToGitRepoAction = async ({
         errors: [`${err.message}, ${err.data.response}`],
       };
     }
-    const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+    const errorMessage = getErrorMessage(err);
 
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'push', errorMessage),
@@ -1393,7 +1414,14 @@ export const createNewGitBranchAction = async ({
     });
 
     const { hasUncommittedChanges } = await getGitChanges(GitVCS);
-    const hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
+
+    let hasUnpushedChanges = false;
+    try {
+      hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
+    } catch (err) {
+      console.error('Error checking for unpushed changes', err);
+      hasUnpushedChanges = false;
+    }
 
     await models.gitRepository.update(gitRepository, {
       hasUncommittedChanges,
@@ -1417,6 +1445,7 @@ export const createNewGitBranchAction = async ({
 
 export interface CheckoutGitBranchResult {
   errors?: string[];
+  success?: boolean;
 }
 
 export const checkoutGitBranchAction = async ({
@@ -1439,7 +1468,15 @@ export const checkoutGitBranchAction = async ({
         errors: [`${err.message}, ${err.data.response}`],
       };
     }
+
+    if (err instanceof Errors.CheckoutConflictError) {
+      return {
+        errors: [`${err.message} - Please commit or discard your changes before switching branches.`],
+      };
+    }
+
     const errorMessage = err instanceof Error ? err.message : err;
+
     return {
       errors: [errorMessage],
     };
@@ -1451,7 +1488,14 @@ export const checkoutGitBranchAction = async ({
   const cachedGitLastCommitTime = author ? author.timestamp * 1000 : Date.now();
 
   const { hasUncommittedChanges } = await getGitChanges(GitVCS);
-  const hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
+
+  let hasUnpushedChanges = false;
+  try {
+    hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
+  } catch (err) {
+    console.error('Error checking for unpushed changes', err);
+    hasUnpushedChanges = false;
+  }
 
   await models.gitRepository.update(gitRepository, {
     cachedGitLastCommitTime,
@@ -1462,7 +1506,9 @@ export const checkoutGitBranchAction = async ({
   });
 
   await database.flushChanges(bufferId);
-  return {};
+  return {
+    success: true,
+  };
 };
 
 export const mergeGitBranch = async ({
@@ -1511,7 +1557,7 @@ export const mergeGitBranch = async ({
     if (err instanceof MergeConflictError) {
       return err.data;
     }
-    let errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+    let errorMessage = getErrorMessage(err);
 
     if (err instanceof Errors.HttpError) {
       errorMessage = `${err.message}, ${err.data.response}`;
@@ -1548,13 +1594,14 @@ export const deleteGitBranchAction = async ({
     });
     return {};
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    const errorMessage = getErrorMessage(err);
     return { errors: [errorMessage] };
   }
 };
 
 export interface PushToGitRemoteResult {
   errors?: string[];
+  success?: boolean;
   gitRepository?: GitRepository;
 }
 
@@ -1576,12 +1623,20 @@ export const pushToGitRemoteAction = async ({
     canPush = await GitVCS.canPush(gitRepository.credentials);
   } catch (err) {
     if (err instanceof Errors.HttpError) {
+      if (err.data.statusCode === 401 || err.data.statusCode === 403) {
+        // If we get a 401 or 403, it means that the user does not have permissions to push to this repository
+        return {
+          errors: [`${err.data.statusMessage}, it seems that you do not have permissions to push to this repository.`],
+          gitRepository,
+        };
+      }
+
       return {
         errors: [`${err.message}, ${err.data.response}`],
         gitRepository,
       };
     }
-    const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+    const errorMessage = getErrorMessage(err);
 
     return { errors: [errorMessage], gitRepository };
   }
@@ -1631,7 +1686,7 @@ export const pushToGitRemoteAction = async ({
         gitRepository,
       };
     }
-    const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+    const errorMessage = getErrorMessage(err);
 
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'push', errorMessage),
@@ -1644,7 +1699,9 @@ export const pushToGitRemoteAction = async ({
     };
   }
 
-  return {};
+  return {
+    success: true,
+  };
 };
 
 export async function pullFromGitRemote({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) {
@@ -1675,7 +1732,7 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
       return err.data;
     }
 
-    let errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+    let errorMessage = getErrorMessage(err);
 
     if (err instanceof Errors.HttpError) {
       errorMessage = `${err.message}, ${err.data.response}`;
