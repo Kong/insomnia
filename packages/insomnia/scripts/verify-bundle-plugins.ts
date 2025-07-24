@@ -2,7 +2,6 @@ import { bundlePlugins } from '../config/config.json';
 
 const isModuleInstalled = (moduleName: string) => {
   try {
-    console.log(moduleName);
     require.resolve(moduleName);
     return true;
   } catch (e) {
