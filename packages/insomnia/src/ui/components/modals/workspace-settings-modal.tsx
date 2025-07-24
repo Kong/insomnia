@@ -25,7 +25,7 @@ import { isEnvironment, isMockServer, isScratchpad, type Workspace } from '../..
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
 import { fetchAndCacheOrganizationStorageRule } from '../../organization-utils';
 import { DEFAULT_STORAGE_RULES, type StorageRules } from '../../organization-utils';
-import type { GetRepositoryDirectoryTreeResult } from '../../routes/git-project-actions';
+import type { GetRepositoryDirectoryTreeResult } from '../../routes/$organizationId.project.$projectId.git';
 import { useOrganizationLoaderData } from '../../routes/organization';
 import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';

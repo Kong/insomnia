@@ -26,10 +26,12 @@ import type { GitRepository } from '../models/git-repository';
 import { isWorkspace, type WorkspaceScope, WorkspaceScopeKeys } from '../models/workspace';
 import { fsClient } from '../sync/git/fs-client';
 import GitVCS, {
+  fetchRemoteBranches,
   GIT_CLONE_DIR,
   GIT_INSOMNIA_DIR,
   GIT_INSOMNIA_DIR_NAME,
   GIT_INTERNAL_DIR,
+  type GitCredentials,
   MergeConflictError,
 } from '../sync/git/git-vcs';
 import { MemClient } from '../sync/git/mem-client';
@@ -63,6 +65,26 @@ type VCSAction =
   | 'setup'
   | 'clone';
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    const message = error.message || '';
+
+    // Check for network-related errors
+    if (
+      message.includes('net::ERR_UNEXPECTED') ||
+      message.includes('net::ERR_INTERNET_DISCONNECTED') ||
+      message.includes('net::ERR_NAME_NOT_RESOLVED')
+    ) {
+      return 'A network error occurred.';
+    }
+
+    // Default fallback
+    return message;
+  }
+
+  // Non-Error objects
+  return 'Unknown Error';
+}
 export function vcsSegmentEventProperties(type: 'git', action: VCSAction, error?: string) {
   return { type, action, error };
 }
@@ -169,6 +191,7 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
   try {
     const gitRepository = await getGitRepository({ workspaceId, projectId });
 
+    const bufferId = await database.bufferChanges();
     const fsClient = await getGitFSClient({ gitRepositoryId: gitRepository._id, projectId, workspaceId });
 
     if (GitVCS.isInitializedForRepo(gitRepository._id) && !gitRepository.needsFullClone) {
@@ -220,6 +243,8 @@ export async function loadGitRepository({ projectId, workspaceId }: { projectId:
     if (!workspaceId) {
       legacyInsomniaWorkspace = await containsLegacyInsomniaDir({ fsClient });
     }
+
+    await database.flushChanges(bufferId);
 
     return {
       branch: await GitVCS.getCurrentBranch(),
@@ -279,6 +304,7 @@ export const gitFetchAction = async ({ projectId, workspaceId }: { projectId: st
 
     return {
       errors: [],
+      success: true,
     };
   } catch (e) {
     console.error(e);
@@ -570,6 +596,7 @@ export const initGitRepoCloneAction = async ({
   token,
   username,
   oauth2format,
+  ref,
 }: {
   organizationId: string;
   uri: string;
@@ -578,6 +605,7 @@ export const initGitRepoCloneAction = async ({
   token: string;
   username: string;
   oauth2format?: string;
+  ref?: string;
 }): Promise<
   | {
       files: {
@@ -626,6 +654,7 @@ export const initGitRepoCloneAction = async ({
 
   try {
     await shallowClone({
+      ref,
       fsClient: inMemoryFsClient,
       gitRepository: repoSettingsPatch as GitRepository,
     });
@@ -680,6 +709,7 @@ export const cloneGitRepoAction = async ({
   token,
   username,
   oauth2format,
+  ref,
 }: {
   organizationId: string;
   projectId?: string;
@@ -691,6 +721,7 @@ export const cloneGitRepoAction = async ({
   token: string;
   username: string;
   oauth2format?: string;
+  ref?: string;
 }) => {
   try {
     if (!projectId) {
@@ -729,6 +760,7 @@ export const cloneGitRepoAction = async ({
 
       try {
         await shallowClone({
+          ref,
           fsClient: inMemoryFsClient,
           gitRepository: repoSettingsPatch as GitRepository,
         });
@@ -801,6 +833,7 @@ export const cloneGitRepoAction = async ({
           directory: GIT_CLONE_DIR,
           fs: fsClient,
           gitDirectory: GIT_INTERNAL_DIR,
+          ref,
         });
 
         await models.gitRepository.update(gitRepository, {
@@ -825,7 +858,10 @@ export const cloneGitRepoAction = async ({
         await migrateLegacyInsomniaFolderToFile({ projectId: project._id });
       }
 
-      await models.gitRepository.update(gitRepository, {
+      const updateRepository = await models.gitRepository.getById(gitRepository._id);
+      invariant(updateRepository, 'Git Repository not found');
+
+      await models.gitRepository.update(updateRepository, {
         cachedGitLastCommitTime: Date.now(),
         cachedGitRepositoryBranch: await GitVCS.getCurrentBranch(),
       });
@@ -879,6 +915,7 @@ export const cloneGitRepoAction = async ({
     const providerName = getOauth2FormatName(repoSettingsPatch.credentials);
     try {
       await shallowClone({
+        ref,
         fsClient: inMemoryFsClient,
         gitRepository: repoSettingsPatch as GitRepository,
       });
@@ -1068,6 +1105,7 @@ export const updateGitRepoAction = async ({
   oauth2format,
   username,
   token,
+  ref,
 }: {
   projectId: string;
   workspaceId?: string;
@@ -1077,6 +1115,7 @@ export const updateGitRepoAction = async ({
   oauth2format?: string;
   username: string;
   token: string;
+  ref?: string;
 }) => {
   try {
     let gitRepositoryId: string | null | undefined = null;
@@ -1157,6 +1196,7 @@ export const updateGitRepoAction = async ({
       gitDirectory: GIT_INTERNAL_DIR,
       gitCredentials: gitRepository.credentials,
       legacyDiff: Boolean(workspaceId),
+      ref,
     });
 
     await GitVCS.setAuthor();
@@ -1300,7 +1340,7 @@ export const commitAndPushToGitRepoAction = async ({
         errors: [`${err.message}, ${err.data.response}`],
       };
     }
-    const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+    const errorMessage = getErrorMessage(err);
 
     return { errors: [errorMessage] };
   }
@@ -1349,7 +1389,7 @@ export const commitAndPushToGitRepoAction = async ({
         errors: [`${err.message}, ${err.data.response}`],
       };
     }
-    const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+    const errorMessage = getErrorMessage(err);
 
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'push', errorMessage),
@@ -1393,7 +1433,14 @@ export const createNewGitBranchAction = async ({
     });
 
     const { hasUncommittedChanges } = await getGitChanges(GitVCS);
-    const hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
+
+    let hasUnpushedChanges = false;
+    try {
+      hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
+    } catch (err) {
+      console.error('Error checking for unpushed changes', err);
+      hasUnpushedChanges = false;
+    }
 
     await models.gitRepository.update(gitRepository, {
       hasUncommittedChanges,
@@ -1417,6 +1464,7 @@ export const createNewGitBranchAction = async ({
 
 export interface CheckoutGitBranchResult {
   errors?: string[];
+  success?: boolean;
 }
 
 export const checkoutGitBranchAction = async ({
@@ -1439,7 +1487,15 @@ export const checkoutGitBranchAction = async ({
         errors: [`${err.message}, ${err.data.response}`],
       };
     }
+
+    if (err instanceof Errors.CheckoutConflictError) {
+      return {
+        errors: [`${err.message} - Please commit or discard your changes before switching branches.`],
+      };
+    }
+
     const errorMessage = err instanceof Error ? err.message : err;
+
     return {
       errors: [errorMessage],
     };
@@ -1451,7 +1507,14 @@ export const checkoutGitBranchAction = async ({
   const cachedGitLastCommitTime = author ? author.timestamp * 1000 : Date.now();
 
   const { hasUncommittedChanges } = await getGitChanges(GitVCS);
-  const hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
+
+  let hasUnpushedChanges = false;
+  try {
+    hasUnpushedChanges = await GitVCS.canPush(gitRepository.credentials);
+  } catch (err) {
+    console.error('Error checking for unpushed changes', err);
+    hasUnpushedChanges = false;
+  }
 
   await models.gitRepository.update(gitRepository, {
     cachedGitLastCommitTime,
@@ -1462,7 +1525,9 @@ export const checkoutGitBranchAction = async ({
   });
 
   await database.flushChanges(bufferId);
-  return {};
+  return {
+    success: true,
+  };
 };
 
 export const mergeGitBranch = async ({
@@ -1511,7 +1576,7 @@ export const mergeGitBranch = async ({
     if (err instanceof MergeConflictError) {
       return err.data;
     }
-    let errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+    let errorMessage = getErrorMessage(err);
 
     if (err instanceof Errors.HttpError) {
       errorMessage = `${err.message}, ${err.data.response}`;
@@ -1548,13 +1613,14 @@ export const deleteGitBranchAction = async ({
     });
     return {};
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    const errorMessage = getErrorMessage(err);
     return { errors: [errorMessage] };
   }
 };
 
 export interface PushToGitRemoteResult {
   errors?: string[];
+  success?: boolean;
   gitRepository?: GitRepository;
 }
 
@@ -1576,12 +1642,20 @@ export const pushToGitRemoteAction = async ({
     canPush = await GitVCS.canPush(gitRepository.credentials);
   } catch (err) {
     if (err instanceof Errors.HttpError) {
+      if (err.data.statusCode === 401 || err.data.statusCode === 403) {
+        // If we get a 401 or 403, it means that the user does not have permissions to push to this repository
+        return {
+          errors: [`${err.data.statusMessage}, it seems that you do not have permissions to push to this repository.`],
+          gitRepository,
+        };
+      }
+
       return {
         errors: [`${err.message}, ${err.data.response}`],
         gitRepository,
       };
     }
-    const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+    const errorMessage = getErrorMessage(err);
 
     return { errors: [errorMessage], gitRepository };
   }
@@ -1631,7 +1705,7 @@ export const pushToGitRemoteAction = async ({
         gitRepository,
       };
     }
-    const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+    const errorMessage = getErrorMessage(err);
 
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'push', errorMessage),
@@ -1644,8 +1718,30 @@ export const pushToGitRemoteAction = async ({
     };
   }
 
-  return {};
+  return {
+    success: true,
+  };
 };
+
+export async function fetchGitRemoteBranches({
+  uri,
+  credentials,
+}: {
+  uri: string;
+  credentials?: GitCredentials;
+}): Promise<{ branches: string[]; errors?: string[] }> {
+  try {
+    const branches = await fetchRemoteBranches({
+      uri: parseGitToHttpsURL(uri),
+      credentials,
+    });
+
+    return { branches };
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Error while fetching remote branches';
+    return { branches: [], errors: [errorMessage] };
+  }
+}
 
 export async function pullFromGitRemote({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) {
   try {
@@ -1675,7 +1771,7 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
       return err.data;
     }
 
-    let errorMessage = err instanceof Error ? err.message : 'Unknown Error';
+    let errorMessage = getErrorMessage(err);
 
     if (err instanceof Errors.HttpError) {
       errorMessage = `${err.message}, ${err.data.response}`;
@@ -2415,7 +2511,7 @@ export interface GitServiceAPI {
   diffFileLoader: typeof diffFileLoader;
   getRepositoryDirectoryTree: typeof getRepositoryDirectoryTree;
   migrateLegacyInsomniaFolderToFile: typeof migrateLegacyInsomniaFolderToFile;
-
+  fetchGitRemoteBranches: typeof fetchGitRemoteBranches;
   initSignInToGitHub: typeof initSignInToGitHub;
   completeSignInToGitHub: typeof completeSignInToGitHub;
   signOutOfGitHub: typeof signOutOfGitHub;
@@ -2432,6 +2528,9 @@ export const registerGitServiceAPI = () => {
     loadGitRepository(options),
   );
   ipcMainHandle('git.getGitBranches', (_, options: Parameters<typeof getGitBranches>[0]) => getGitBranches(options));
+  ipcMainHandle('git.fetchGitRemoteBranches', (_, options: Parameters<typeof fetchGitRemoteBranches>[0]) =>
+    fetchGitRemoteBranches(options),
+  );
   ipcMainHandle('git.gitFetchAction', (_, options: Parameters<typeof gitFetchAction>[0]) => gitFetchAction(options));
   ipcMainHandle('git.gitLogLoader', (_, options: Parameters<typeof gitLogLoader>[0]) => gitLogLoader(options));
   ipcMainHandle('git.gitChangesLoader', (_, options: Parameters<typeof gitChangesLoader>[0]) =>

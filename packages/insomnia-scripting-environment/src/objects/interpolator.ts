@@ -1,4 +1,4 @@
-import { fakerFunctions } from 'insomnia/src/ui/components/templating/faker-functions';
+import { fakerFunctions } from 'insomnia/src/templating/faker-functions';
 import { configure, type ConfigureOptions, type Environment as NunjuncksEnv } from 'nunjucks';
 
 /** @ignore */

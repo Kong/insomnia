@@ -43,18 +43,18 @@ import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showModal } from '../components/modals';
-import { showPrompt } from '../components/modals';
 import { AskModal } from '../components/modals/ask-modal';
 import { CookiesModal } from '../components/modals/cookies-modal';
+import { PromptModal } from '../components/modals/prompt-modal';
 import { CertificatesModal } from '../components/modals/workspace-certificates-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { OrganizationTabList } from '../components/tabs/tab-list';
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useInsomniaTab } from '../hooks/use-insomnia-tab';
+import type { WorkspaceLoaderData } from './$organizationId.project.$projectId.workspace.$workspaceId';
 import TestSuiteRoute from './$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId';
 import { TestRunStatus } from './$organizationId.project.$projectId.workspace.$workspaceId.test-suite.$testSuiteId.test-result.$testResultId';
 import { useRootLoaderData } from './root';
-import type { WorkspaceLoaderData } from './workspace';
 
 interface LoaderData {
   unitTestSuites: UnitTestSuite[];
@@ -168,7 +168,7 @@ const TestRoute: FC = () => {
       name: 'Rename',
       icon: 'edit',
       action: suiteId => {
-        showPrompt({
+        showModal(PromptModal, {
           title: 'Rename test suite',
           defaultValue: unitTestSuites.find(s => s._id === suiteId)?.name,
           submitName: 'Rename',

@@ -130,6 +130,7 @@ export const initGitCloneAction: ActionFunction = async ({ request, params }) =>
     uri: string;
     username: string;
     oauth2format: string;
+    ref?: string;
   };
 
   const initCloneResult = await window.main.git.initGitRepoClone({
@@ -164,6 +165,7 @@ export const cloneGitRepoAction: ActionFunction = async ({ request, params }): P
     uri: string;
     username: string;
     oauth2format: string;
+    ref?: string;
   };
 
   const { errors, projectId } = await window.main.git.cloneGitRepo({
@@ -193,6 +195,7 @@ export const updateGitRepoAction: ActionFunction = async ({ request, params }) =
     uri: string;
     username: string;
     oauth2format: string;
+    ref?: string;
   };
 
   return window.main.git.updateGitRepo({
@@ -276,11 +279,14 @@ export const checkoutGitBranchAction: ActionFunction = async ({
   const formData = await request.formData();
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch is required');
-
-  return window.main.git.checkoutGitBranch({
-    branch,
-    projectId,
-  });
+  try {
+    return await window.main.git.checkoutGitBranch({
+      branch,
+      projectId,
+    });
+  } catch (error) {
+    return { errors: [`${error.message}`] };
+  }
 };
 
 export const mergeGitBranch = async ({

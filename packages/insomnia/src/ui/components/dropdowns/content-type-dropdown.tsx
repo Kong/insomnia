@@ -33,7 +33,8 @@ import { SegmentEvent } from '../../analytics';
 import { useRequestPatcher } from '../../hooks/use-request';
 import type { RequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { Icon } from '../icon';
-import { showAlert } from '../modals/index';
+import { showModal } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
 
 const EMPTY_MIME_TYPE = null;
 
@@ -141,7 +142,7 @@ export const ContentTypeDropdown: FC = () => {
     const willPreserveForm = isFormUrlEncoded && willBeMultipart;
 
     if (!isEmpty && !willPreserveText && !willPreserveForm) {
-      showAlert({
+      showModal(AlertModal, {
         title: 'Switch Body Type?',
         message: 'Current body will be lost. Are you sure you want to continue?',
         addCancel: true,

@@ -63,9 +63,7 @@ import {
 import { isDesign, scopeToActivity, type Workspace, type WorkspaceScope } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
-import { insomniaFetch } from '../../ui/insomniaFetch';
 import { invariant } from '../../utils/invariant';
-import { getInitialRouteForOrganization } from '../../utils/router';
 import { SegmentEvent } from '../analytics';
 import { AvatarGroup } from '../components/avatar';
 import { CloudSyncProjectBar } from '../components/dropdowns/cloud-sync-project-bar';
@@ -86,6 +84,7 @@ import { TimeFromNow } from '../components/time-from-now';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
 import { useLoaderDeferData } from '../hooks/use-loader-defer-data';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
+import { insomniaFetch } from '../insomniaFetch';
 import { DEFAULT_STORAGE_RULES } from '../organization-utils';
 import { type OrganizationStorageLoaderData } from './$organizationId.storage-rules';
 import { useOrganizationLoaderData } from './organization';
@@ -239,19 +238,6 @@ export const syncProjectsAction: ActionFunction = async ({ params }) => {
   await syncProjects(organizationId);
 
   return null;
-};
-
-export const indexLoader: LoaderFunction = async ({ params }) => {
-  const { organizationId } = params;
-  invariant(organizationId, 'Organization ID is required');
-
-  try {
-    await syncProjects(organizationId);
-  } catch {
-    console.log('[project] Could not fetch remote projects.');
-  }
-  const initialOrganizationRoute = await getInitialRouteForOrganization({ organizationId });
-  return redirect(initialOrganizationRoute);
 };
 
 export interface InsomniaFile {

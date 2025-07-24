@@ -85,7 +85,7 @@ import { EnvironmentPicker } from '../components/environment-picker';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
-import { showModal, showPrompt } from '../components/modals';
+import { showModal } from '../components/modals';
 import { AskModal } from '../components/modals/ask-modal';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { ErrorModal } from '../components/modals/error-modal';
@@ -119,6 +119,7 @@ import {
   useRequestMetaPatcher,
   useRequestPatcher,
 } from '../hooks/use-request';
+import type { Child, WorkspaceLoaderData } from './$organizationId.project.$projectId.workspace.$workspaceId';
 import type {
   GrpcRequestLoaderData,
   RequestLoaderData,
@@ -126,9 +127,8 @@ import type {
   WebSocketRequestLoaderData,
 } from './$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import type { RequestGroupLoaderData } from './$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
+import Runner from './$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 import { useRootLoaderData } from './root';
-import Runner from './runner';
-import type { Child, WorkspaceLoaderData } from './workspace';
 
 export interface GrpcMessage {
   id: string;
@@ -441,7 +441,7 @@ export const Debug: FC = () => {
     },
     request_showCreateFolder: () => {
       const parentId = activeRequest ? activeRequest.parentId : workspaceId;
-      showPrompt({
+      showModal(PromptModal, {
         title: 'New Folder',
         defaultValue: 'My Folder',
         submitName: 'Create',
@@ -632,7 +632,7 @@ export const Debug: FC = () => {
           icon: 'folder',
           hint: hotKeyRegistry.request_showCreateFolder,
           action: () =>
-            showPrompt({
+            showModal(PromptModal, {
               title: 'New Folder',
               defaultValue: 'My Folder',
               submitName: 'Create',

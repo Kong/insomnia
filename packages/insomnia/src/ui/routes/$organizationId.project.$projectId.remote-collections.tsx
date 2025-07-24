@@ -386,7 +386,10 @@ export const checkoutBranchAction: ActionFunction = async ({ request, params }) 
     };
   }
 
-  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
+  return {
+    error: null,
+    success: true,
+  };
 };
 
 export const mergeBranchAction: ActionFunction = async ({ request, params }) => {
@@ -471,7 +474,7 @@ export const deleteBranchAction: ActionFunction = async ({ params, request }) =>
 };
 
 export const pullFromRemoteAction: ActionFunction = async ({ params }) => {
-  const { organizationId, projectId, workspaceId } = params;
+  const { projectId, workspaceId } = params;
   invariant(typeof projectId === 'string', 'Project Id is required');
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
   const project = await models.project.getById(projectId);
@@ -507,7 +510,10 @@ export const pullFromRemoteAction: ActionFunction = async ({ params }) => {
     };
   }
 
-  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
+  return {
+    error: null,
+    success: true,
+  };
 };
 
 export const fetchRemoteBranchAction: ActionFunction = async ({ request, params }) => {
@@ -580,11 +586,14 @@ export const pushToRemoteAction: ActionFunction = async ({ params }) => {
     };
   }
 
-  return null;
+  return {
+    error: null,
+    success: true,
+  };
 };
 
 export const rollbackChangesAction: ActionFunction = async ({ params }) => {
-  const { organizationId, projectId, workspaceId } = params;
+  const { workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
   try {
     const vcs = VCSInstance();
@@ -599,7 +608,10 @@ export const rollbackChangesAction: ActionFunction = async ({ params }) => {
     };
   }
 
-  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
+  return {
+    error: null,
+    success: true,
+  };
 };
 
 export const restoreChangesAction: ActionFunction = async ({ request, params }) => {

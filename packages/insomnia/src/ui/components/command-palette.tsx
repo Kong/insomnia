@@ -27,14 +27,20 @@ import { isRequest } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import { isWebSocketRequest } from '../../models/websocket-request';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
+import {
+  scopeToBgColorMap,
+  scopeToIconMap,
+  scopeToLabelMap,
+  scopeToTextColorMap,
+} from '../routes/$organizationId.project.$projectId';
 import type { LoaderResult } from '../routes/commands';
-import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../routes/project';
 import type { RemoteFilesLoaderResult } from '../routes/remote-files';
 import type { RootLoaderData } from '../routes/root';
 import { AvatarGroup } from './avatar';
 import { Icon } from './icon';
 import { useDocBodyKeyboardShortcuts } from './keydown-binder';
-import { showAlert } from './modals';
+import { showModal } from './modals';
+import { AlertModal } from './modals/alert-modal';
 import { getMethodShortHand } from './tags/method-tag';
 
 export const CommandPalette = memo(function CommandPalette({ style = {} }: { style?: React.CSSProperties }) {
@@ -412,7 +418,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
   useEffect(() => {
     if (pullFileFetcher.state === 'idle' && prevPullFetcherState.current !== 'idle') {
       if (pullFileFetcher.data?.error) {
-        showAlert({
+        showModal(AlertModal, {
           title: 'Error',
           message: pullFileFetcher.data.error,
         });

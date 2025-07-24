@@ -61,7 +61,7 @@ const Avatar = ({ src }: { src: string }) => {
 
 interface GitHubRepositoryFormProps {
   uri?: string;
-  onSubmit: (args: Partial<GitRepository>) => void;
+  onSubmit: (args: Partial<GitRepository & { ref?: string }>) => void;
   credentials: GitCredentials;
 }
 
@@ -77,12 +77,14 @@ const GitHubRepositoryForm = ({ uri, credentials, onSubmit }: GitHubRepositoryFo
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const uri = formData.get('uri') as string;
+        const ref = formData.get('branch') as string;
         if (!uri) {
           setError('Please select a repository');
           return;
         }
         onSubmit({
           uri,
+          ref,
           credentials: {
             oauth2format: 'github',
             password: '',

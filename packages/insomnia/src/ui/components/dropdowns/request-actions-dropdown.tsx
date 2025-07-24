@@ -13,20 +13,22 @@ import { isRequest, type Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import type { SocketIORequest } from '../../../models/socket-io-request';
 import { incrementDeletedRequests } from '../../../models/stats';
-// Plugin action related imports
-// Plugin action related imports
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
-import * as pluginContexts from '../../../plugins/context/index';
+import * as pluginApp from '../../../plugins/context/app';
+import * as pluginData from '../../../plugins/context/data';
+import * as pluginNetwork from '../../../plugins/context/network';
+import * as pluginStore from '../../../plugins/context/store';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { useRootLoaderData } from '../../routes/root';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
-import { showError, showModal, showPrompt } from '../modals';
+import { showError, showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { AskModal } from '../modals/ask-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
+import { PromptModal } from '../modals/prompt-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 
 interface Props {
@@ -74,7 +76,7 @@ export const RequestActionsDropdown = ({
       return;
     }
 
-    showPrompt({
+    showModal(PromptModal, {
       title: 'Duplicate Request',
       defaultValue: request.name,
       submitName: 'Create',
@@ -95,10 +97,10 @@ export const RequestActionsDropdown = ({
   const handlePluginClick = async ({ plugin, action }: RequestAction) => {
     try {
       const context = {
-        ...pluginContexts.app.init('no-render'),
-        ...pluginContexts.data.init(activeProject._id),
-        ...pluginContexts.store.init(plugin),
-        ...pluginContexts.network.init(),
+        ...pluginApp.init(),
+        ...pluginData.init(activeProject._id),
+        ...pluginStore.init(plugin),
+        ...pluginNetwork.init(),
       };
       await action(context, {
         request,

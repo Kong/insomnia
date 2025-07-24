@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { type PluginTemplateTagContext } from '../../../../templating/types';
-import { invariant } from '../../../../utils/invariant';
+import { invariant } from '../../utils/invariant';
 import { localTemplateTags } from '../local-template-tags';
+import { type PluginTemplateTagContext } from '../types';
 describe('base64 tag', () => {
   describe('encoder', () => {
     const base64EncoderTag = localTemplateTags.find(p => p.templateTag.name === 'base64')?.templateTag;

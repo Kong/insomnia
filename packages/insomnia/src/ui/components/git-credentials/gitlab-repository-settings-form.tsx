@@ -6,6 +6,7 @@ import type { GitCredentials } from '../../../models/git-credentials';
 import type { GitRepository } from '../../../models/git-repository';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
+import { GitRemoteBranchSelect } from './git-remote-branch-select';
 
 interface Props {
   uri?: string;
@@ -67,7 +68,7 @@ interface GitLabRepositoryFormProps {
 
 const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFormProps) => {
   const [error, setError] = useState('');
-
+  const [gitlabUri, setGitlabUri] = useState(uri || '');
   const signOutFetcher = useFetcher();
 
   return (
@@ -111,11 +112,22 @@ const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFo
         <Input
           type="url"
           defaultValue={uri}
+          onChange={e => setGitlabUri(e.currentTarget.value)}
           disabled={Boolean(uri)}
-          placeholder="https://github.com/org/repo.git"
+          placeholder="https://gitlab.com/org/repo.git"
           className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
         />
       </TextField>
+      <GitRemoteBranchSelect
+        credentials={{
+          oauth2format: 'gitlab',
+          token: '',
+          password: '',
+          username: '',
+        }}
+        url={gitlabUri || ''}
+        isDisabled={Boolean(uri)}
+      />
       {error && (
         <p className="notice error margin-bottom-sm">
           <button className="pull-right icon" onClick={() => setError('')}>

@@ -27,7 +27,7 @@ import { CodeEditor } from '../components/codemirror/code-editor';
 import { MockResponseHeadersEditor } from '../components/editors/mock-response-headers-editor';
 import { MockResponsePane } from '../components/mocks/mock-response-pane';
 import { MockUrlBar } from '../components/mocks/mock-url-bar';
-import { showAlert, showModal } from '../components/modals';
+import { showModal } from '../components/modals';
 import { AlertModal } from '../components/modals/alert-modal';
 import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
@@ -216,7 +216,7 @@ export const MockRouteRoute = () => {
     const compoundId = mockRoute.parentId + pathInput;
     const error = await upsertBinOnRemoteFromResponse(compoundId);
     if (error) {
-      showAlert({
+      showModal(AlertModal, {
         title: 'Network error',
         message: (
           <div>
