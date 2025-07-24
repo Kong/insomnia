@@ -1,15 +1,16 @@
 import classnames from 'classnames';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type DirectoryDropItem, OverlayContainer, useDrop } from 'react-aria';
-import { useFetcher, useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 import { database } from '../../../../common/database';
 import type { ScanResult } from '../../../../common/import';
 import { selectFileOrFolder } from '../../../../common/select-file-or-folder';
 import * as models from '../../../../models';
 import type { Project } from '../../../../models/project';
-import type { CreateProjectActionResult } from '../../../routes/$organizationId.project.new';
-import type { ImportResourcesActionResult } from '../../../routes/import.resources';
+import { createProject } from '../../../routes/$organizationId.project.new';
+import { importScannedResources } from '../../../routes/import.resources';
+import { scanImportResources } from '../../../routes/import.scan';
 import { useOrganizationLoaderData } from '../../../routes/organization';
 import { Checkbox } from '../../base/checkbox';
 import { Modal, type ModalHandle } from '../../base/modal';
@@ -175,7 +176,7 @@ const FileField = ({
   );
 };
 
-export const OrgImportResourceForm = ({
+export const ImportProjectsResourceForm = ({
   onConfirm,
 }: {
   onConfirm: (importForm: { rootFolder: RootFolder; skipExisting: boolean }) => void;
@@ -234,6 +235,7 @@ enum ImportStatus {
 
 // Project import item
 interface ProjectImportItem {
+  key: string;
   id?: string;
   name: string;
   status: ImportStatus;
@@ -313,7 +315,7 @@ const ProjectItem = ({ project }: { project: ProjectImportItem }) => {
   );
 
   return (
-    <div key={project.id} className="rounded-[var(--radius-md)] border border-solid border-[color:var(--hl-md)]">
+    <div className="rounded-[var(--radius-md)] border border-solid border-[color:var(--hl-md)]">
       <div
         className="flex cursor-pointer items-center justify-between p-3"
         onClick={() => extendable && setExpanded(!expanded)}
@@ -350,7 +352,7 @@ const ProjectItem = ({ project }: { project: ProjectImportItem }) => {
   );
 };
 
-const OrgImportList = ({
+const ImportProjectsList = ({
   organizationId,
   rootFolder,
   skipExisting,
@@ -365,187 +367,139 @@ const OrgImportList = ({
   const [uiStatus, setUiStatus] = useState<'loading' | 'importing' | 'error' | 'complete'>('loading');
   const [error, setError] = useState<string | null>(null);
 
-  // https://deepwiki.com/search/did-not-find-corresponding-fet_7e78751d-6bce-4a34-8d9d-34f44471b8b7
-  const createProjectFetcher = useFetcher<CreateProjectActionResult>({
-    // key: 'createProject',
-  });
-  const createProjectFetcherRef = useRef(createProjectFetcher);
-  createProjectFetcherRef.current = createProjectFetcher;
-  const scanResourcesFetcher = useFetcher<ScanResult[]>({
-    // key: 'scanResources',
-  });
-  const scanResourcesFetcherRef = useRef(scanResourcesFetcher);
-  scanResourcesFetcherRef.current = scanResourcesFetcher;
-  const importFetcher = useFetcher<ImportResourcesActionResult>({
-    // key: 'importResources',
-  });
-  const importFetcherRef = useRef(importFetcher);
-  importFetcherRef.current = importFetcher;
+  // Due to this issue: https://github.com/remix-run/react-router/issues/13712, currently use functions to handle the import process.
+  // After the issue is resolved, we can use fetcher to handle the import process.
+  const handleImport = useCallback(async (rootFolder: RootFolder, organizationId: string, skipExisting?: boolean) => {
+    try {
+      if (!rootFolder) {
+        // Should never happen, but just in case
+        throw new Error('Root folder is not set');
+      }
 
-  const handleImport = useCallback(
-    async (rootFolder: RootFolder, organizationId: string, skipExisting?: boolean) => {
-      try {
-        if (!rootFolder) {
-          // Should never happen, but just in case
-          throw new Error('Root folder is not set');
-        }
+      // Only necessary if skipExisting is true
+      const existingProjects = skipExisting
+        ? await database.find<Project>(models.project.type, {
+            parentId: organizationId,
+          })
+        : [];
 
-        // Only necessary if skipExisting is true
-        const existingProjects = skipExisting
-          ? await database.find<Project>(models.project.type, {
-              parentId: organizationId,
-            })
-          : [];
+      // Load projects from the root folder
+      const projectItems: ProjectImportItem[] = (await rootFolder.getProjectFolders()).map((projectFolder, i) => ({
+        key: `${organizationId}-${i}-${projectFolder.name}`,
+        name: projectFolder.name,
+        status:
+          skipExisting && existingProjects.find(p => p.name === projectFolder.name)
+            ? ImportStatus.SKIPPED
+            : ImportStatus.PENDING,
+        scanResults: [],
+        expanded: false,
+        folder: projectFolder,
+      }));
 
-        // Load projects from the root folder
-        const projectItems: ProjectImportItem[] = (await rootFolder.getProjectFolders()).map(projectFolder => ({
-          name: projectFolder.name,
-          status:
-            skipExisting && existingProjects.find(p => p.name === projectFolder.name)
-              ? ImportStatus.SKIPPED
-              : ImportStatus.PENDING,
-          scanResults: [],
-          expanded: false,
-          folder: projectFolder,
-        }));
+      // Sort project items by name
+      projectItems.sort((a, b) => a.name.localeCompare(b.name));
+      setProjectItems(projectItems);
 
-        // Sort project items by name
-        projectItems.sort((a, b) => a.name.localeCompare(b.name));
-        setProjectItems(projectItems);
+      if (projectItems.length === 0) {
+        throw new Error('No projects found in the selected directory');
+      }
 
-        if (projectItems.length === 0) {
-          throw new Error('No projects found in the selected directory');
-        }
+      // Start import process for the projects
+      setUiStatus('importing');
 
-        // Start import process for the projects
-        setUiStatus('importing');
+      const startImportForProject = async (project: ProjectImportItem) => {
+        const projectIndex = projectItems.indexOf(project);
 
-        const startImportForProject = async (project: ProjectImportItem) => {
-          const projectIndex = projectItems.indexOf(project);
-
-          const updateProjectItem = (updates: Partial<ProjectImportItem>) => {
-            setProjectItems(prevItems => {
-              const newItems = [...prevItems];
-              newItems[projectIndex] = { ...newItems[projectIndex], ...updates };
-              return newItems;
-            });
-          };
-
-          try {
-            // Update status to CREATING
-            updateProjectItem({ status: ImportStatus.CREATING });
-
-            await createProjectFetcher.submit(
-              {
-                storageType: 'remote',
-                name: project.name,
-                withRedirect: false,
-              },
-              {
-                action: `/organization/${organizationId}/project/new`,
-                method: 'POST',
-                encType: 'application/json',
-              },
-            );
-
-            // Could only get the created project ID from the fetcher ref currently, could be improved after react-router solves
-            // See https://github.com/orgs/remix-run/projects/5?pane=issue&itemId=62177552
-            const createdProjectId = createProjectFetcherRef.current.data?.id;
-
-            if (!createdProjectId) {
-              throw new Error(createProjectFetcherRef.current.data?.error || 'Project creation failed');
-            }
-
-            console.debug('[Bulk Project Import] Created project ID:', createdProjectId);
-            updateProjectItem({ status: ImportStatus.IMPORTING, id: createdProjectId });
-
-            // Scan resources for the project files
-            const scanFormData = new FormData();
-            scanFormData.append('importFrom', 'file');
-
-            // For each directory, collect the files inside
-            const filePaths = await project.folder.getFilePaths();
-            const archiveFileIndex = filePaths.findIndex(
-              filePath => filePath.endsWith('/archive.json') || filePath.endsWith('\\archive.json'),
-            );
-
-            if (archiveFileIndex >= 0) {
-              scanFormData.append('postmanArchiveFile', filePaths[archiveFileIndex]);
-              filePaths.splice(archiveFileIndex, 1);
-            }
-            scanFormData.append('filePaths', JSON.stringify(filePaths));
-            // await sleep(1);
-
-            // Scan resources, it's stored in the memory for the next step
-            await scanResourcesFetcher.submit(scanFormData, {
-              method: 'post',
-              action: '/import/scan',
-              encType: 'multipart/form-data',
-            });
-
-            // This is for displaying the scan results in the UI
-            const scanResults = scanResourcesFetcherRef.current.data;
-
-            if (!scanResults?.length) {
-              console.warn('[Bulk Project Import] No scan results found, skipping import for this project');
-              updateProjectItem({
-                status: ImportStatus.SUCCESS,
-                scanResults: [],
-              });
-              return;
-            }
-
-            console.log(scanResults);
-
-            updateProjectItem({
-              scanResults,
-            });
-
-            const importFormData = new FormData();
-            importFormData.append('organizationId', organizationId);
-            importFormData.append('projectId', createdProjectId);
-
-            // Submit import request
-            await importFetcher.submit(importFormData, {
-              method: 'post',
-              action: '/import/resources',
-              encType: 'multipart/form-data',
-            });
-
-            // Wait for import to complete
-            if (importFetcher.data?.errors?.length) {
-              throw new Error('Import failed', { cause: importFetcher.data.errors });
-            }
-
-            console.debug('[Bulk Project Import] Import completed successfully for project:', project.name);
-            updateProjectItem({
-              status: ImportStatus.SUCCESS,
-            });
-          } catch (error) {
-            console.error('[Bulk Project Import] Import error:', project.name, error);
-            updateProjectItem({
-              status: ImportStatus.FAIL,
-              error: error instanceof Error ? error.message : String(error),
-            });
-          }
+        const updateProjectItem = (updates: Partial<ProjectImportItem>) => {
+          setProjectItems(prevItems => {
+            const newItems = [...prevItems];
+            newItems[projectIndex] = { ...newItems[projectIndex], ...updates };
+            return newItems;
+          });
         };
 
-        // Start the import process for each project
-        for await (const project of projectItems) {
-          if (project.status === ImportStatus.PENDING) {
-            await startImportForProject(project);
-          }
-        }
+        try {
+          updateProjectItem({ status: ImportStatus.CREATING });
 
-        setUiStatus('complete');
-      } catch (error) {
-        console.error('[Bulk Project Import] Import error:', error);
-        setError(error instanceof Error ? error.message : String(error));
-        setUiStatus('error');
+          const createdProjectId = await createProject(organizationId, {
+            storageType: 'remote',
+            name: project.name,
+          });
+
+          if (!createdProjectId) {
+            throw new Error('Project creation failed');
+          }
+          console.debug('[Bulk Project Import] Created project ID:', createdProjectId);
+
+          updateProjectItem({ status: ImportStatus.IMPORTING, id: createdProjectId });
+
+          const filePaths = await project.folder.getFilePaths();
+          // Use archive.json to identify Postman environment files
+          const archiveFileIndex = filePaths.findIndex(
+            filePath => filePath.endsWith('/archive.json') || filePath.endsWith('\\archive.json'),
+          );
+
+          let postmanArchiveFile: string | null = null;
+          if (archiveFileIndex >= 0) {
+            postmanArchiveFile = filePaths[archiveFileIndex];
+            filePaths.splice(archiveFileIndex, 1);
+          }
+
+          const scanResults = await scanImportResources({
+            source: 'file',
+            filePaths,
+            postmanArchiveFile,
+          });
+
+          if (!scanResults?.length) {
+            console.warn('[Bulk Project Import] No scan results found, skipping import for this project');
+            updateProjectItem({
+              status: ImportStatus.SUCCESS,
+              scanResults: [],
+            });
+            return;
+          }
+
+          updateProjectItem({
+            scanResults,
+          });
+
+          const importFormData = new FormData();
+          importFormData.append('organizationId', organizationId);
+          importFormData.append('projectId', createdProjectId);
+
+          await importScannedResources({
+            organizationId,
+            projectId: createdProjectId,
+          });
+
+          console.debug('[Bulk Project Import] Import completed successfully for project:', project.name);
+          updateProjectItem({
+            status: ImportStatus.SUCCESS,
+          });
+        } catch (error) {
+          console.error('[Bulk Project Import] Import error:', project.name, error);
+          updateProjectItem({
+            status: ImportStatus.FAIL,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      };
+
+      // Start the import process for each project
+      for await (const project of projectItems) {
+        if (project.status === ImportStatus.PENDING) {
+          await startImportForProject(project);
+        }
       }
-    },
-    [createProjectFetcher, importFetcher, scanResourcesFetcher],
-  );
+
+      setUiStatus('complete');
+    } catch (error) {
+      console.error('[Bulk Project Import] Import error:', error);
+      setError(error instanceof Error ? error.message : String(error));
+      setUiStatus('error');
+    }
+  }, []);
 
   const firstRef = useRef(true);
   // Load projects from the root folder
@@ -601,7 +555,7 @@ const OrgImportList = ({
 
       <div className="mb-4 flex max-h-[50vh] flex-col gap-2 overflow-y-auto">
         {projectItems.map(project => (
-          <ProjectItem key={project.id} project={project} />
+          <ProjectItem key={project.key} project={project} />
         ))}
       </div>
 
@@ -621,9 +575,9 @@ const OrgImportList = ({
 };
 
 /**
- * OrgImportModal component for importing projects into an organization.
+ * Component for importing projects into an organization.
  */
-export const OrgImportModal = ({ organizationId, onHide }: { organizationId: string; onHide: () => void }) => {
+export const ImportProjectsModal = ({ organizationId, onHide }: { organizationId: string; onHide: () => void }) => {
   const [rootFolder, setRootFolder] = useState<RootFolder | null>(null);
   const [skipExisting, setSkipExisting] = useState<boolean>(false);
   const modalRef = useRef<ModalHandle>(null);
@@ -644,7 +598,7 @@ export const OrgImportModal = ({ organizationId, onHide }: { organizationId: str
     onHide();
     // If there's no projectId in the URL params, that means the current url is `organization/:organizationId/project`, the loader will always return a empty project list.
     // So we need to navigate to the first project in the imported list.
-    if (params.organizationId && !params.projectId && projectItems.length > 0) {
+    if (params.organizationId && !params.projectId && projectItems?.[0]?.id) {
       navigate(`/organization/${params.organizationId}/project/${projectItems[0].id}`);
     }
   };
@@ -659,14 +613,14 @@ export const OrgImportModal = ({ organizationId, onHide }: { organizationId: str
       >
         <ModalHeader hideCloseButton={!!rootFolder}>Import projects to "{organizationName}" Organization</ModalHeader>
         {!rootFolder ? (
-          <OrgImportResourceForm
+          <ImportProjectsResourceForm
             onConfirm={({ rootFolder, skipExisting }) => {
               setRootFolder(rootFolder);
               setSkipExisting(skipExisting);
             }}
           />
         ) : (
-          <OrgImportList
+          <ImportProjectsList
             organizationId={organizationId}
             rootFolder={rootFolder}
             skipExisting={skipExisting}

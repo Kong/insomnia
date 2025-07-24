@@ -17,31 +17,44 @@ export interface ImportResourcesActionResult {
   done: boolean;
 }
 
-export async function action({ request }: ActionFunctionArgs) {
-  try {
-    const formData = await request.formData();
-    const organizationId = formData.get('organizationId');
-    const projectId = formData.get('projectId');
-    const workspaceId = formData.get('workspaceId');
+export const importScannedResources = async ({
+  organizationId,
+  projectId,
+  workspaceId,
+}: {
+  organizationId: string;
+  projectId: string;
+  workspaceId?: string;
+}) => {
+  invariant(organizationId && typeof organizationId === 'string', 'OrganizationId is required.');
+  invariant(projectId && typeof projectId === 'string', 'ProjectId is required.');
 
-    invariant(typeof organizationId === 'string', 'OrganizationId is required.');
-    invariant(typeof projectId === 'string', 'ProjectId is required.');
+  const project = await models.project.getById(projectId);
+  invariant(project, 'Project not found.');
 
-    const project = await models.project.getById(projectId);
-    invariant(project, 'Project not found.');
-    if (typeof workspaceId === 'string' && workspaceId) {
-      await importResourcesToWorkspace({
-        workspaceId: workspaceId,
-      });
-
-      // TODO: find more elegant way to wait for import to finish
-      return { done: true };
-    }
-
+  if (typeof workspaceId === 'string' && workspaceId) {
+    await importResourcesToWorkspace({
+      workspaceId: workspaceId,
+    });
+  } else {
     await importResourcesToProject({
       projectId: project._id,
       syncNewWorkspaceIfNeeded,
     });
+  }
+};
+
+export async function action({ request }: ActionFunctionArgs) {
+  try {
+    const formData = await request.formData();
+
+    await importScannedResources({
+      organizationId: formData.get('organizationId') as string,
+      projectId: formData.get('projectId') as string,
+      workspaceId: formData.get('workspaceId') as string | undefined,
+    });
+
+    // TODO: find more elegant way to wait for import to finish
     return { done: true };
   } catch (error) {
     return {

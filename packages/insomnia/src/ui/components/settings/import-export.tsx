@@ -22,7 +22,7 @@ import { Icon } from '../icon';
 import { showAlert } from '../modals';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { ImportModal } from '../modals/import-modal/import-modal';
-import { OrgImportModal } from '../modals/import-modal/org-import-modal';
+import { ImportProjectsModal } from '../modals/import-modal/import-projects-modal';
 
 const UntrackedProject = ({
   project,
@@ -250,7 +250,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     organizationData?.organizations.find(org => org.id === organizationId)?.display_name || 'Organization';
 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [isOrgImportModalOpen, setIsOrgImportModalOpen] = useState(false);
+  const [isImportProjectsModalOpen, setIsImportProjectsModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const handleExportProjectToFile = () => {
@@ -402,7 +402,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                 <Button
                   className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                   isDisabled={workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace)}
-                  onPress={() => setIsOrgImportModalOpen(true)}
+                  onPress={() => setIsImportProjectsModalOpen(true)}
                 >
                   <Icon icon="file-import" />
                   {`Import projects to the "${organizationName}" ${strings.organization.singular}`}
@@ -469,8 +469,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           defaultWorkspaceId={workspaceId}
         />
       )}
-      {isOrgImportModalOpen && (
-        <OrgImportModal onHide={() => setIsOrgImportModalOpen(false)} organizationId={organizationId} />
+      {isImportProjectsModalOpen && (
+        <ImportProjectsModal onHide={() => setIsImportProjectsModalOpen(false)} organizationId={organizationId} />
       )}
       {isExportModalOpen && workspaceData?.activeWorkspace && (
         <ExportRequestsModal

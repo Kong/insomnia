@@ -1407,6 +1407,8 @@ async function renderApp() {
 
   // Store the last location in local storage
   router.subscribe(({ location, navigation }) => {
+    console.log('[Router location]', location.pathname, location.key, location.search);
+
     const match = matchPath(
       {
         path: '/organization/:organizationId',
