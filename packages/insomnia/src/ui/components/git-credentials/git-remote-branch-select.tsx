@@ -14,11 +14,11 @@ export const GitRemoteBranchSelect = ({
   isDisabled: boolean;
   credentials: GitCredentials;
 }) => {
-  const remoteBranchesFetcher = useFetcher<{ branches: string[] }>({ key: url || 'branch-select' });
+  const uri = useDeferredValue(url);
+  const remoteBranchesFetcher = useFetcher<{ branches: string[] }>({ key: `branch-select:${uri}` });
   const { organizationId } = useParams<{ organizationId: string }>();
 
   const isLoadingRemoteBranches = remoteBranchesFetcher.state !== 'idle';
-  const uri = useDeferredValue(url);
 
   useEffect(() => {
     if (uri && remoteBranchesFetcher.state === 'idle' && !remoteBranchesFetcher.data) {
