@@ -1160,7 +1160,7 @@ export const updateGitRepoAction = async ({
     }
 
     async function setupGitRepository() {
-      if (gitRepositoryId) {
+      if (gitRepositoryId && gitRepositoryId !== 'empty') {
         const gitRepository = await models.gitRepository.getById(gitRepositoryId);
         invariant(gitRepository, 'GitRepository not found');
         await models.gitRepository.update(gitRepository, repoSettingsPatch);
@@ -1235,7 +1235,7 @@ export const resetGitRepoAction = async ({ projectId, workspaceId }: { projectId
     const project = await models.project.getById(projectId);
     invariant(project, 'Project not found');
     await models.project.update(project, {
-      gitRepositoryId: undefined,
+      gitRepositoryId: 'empty',
     });
   }
 
