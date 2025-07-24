@@ -277,11 +277,15 @@ export const checkoutGitBranchAction: ActionFunction = async ({
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch is required');
 
-  return window.main.git.checkoutGitBranch({
-    branch,
-    projectId,
-    workspaceId,
-  });
+  try {
+    return await window.main.git.checkoutGitBranch({
+      branch,
+      projectId,
+      workspaceId,
+    });
+  } catch (error) {
+    return { errors: [`${error.message}`] };
+  }
 };
 
 export const mergeGitBranch = async ({
