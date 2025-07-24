@@ -16,6 +16,7 @@ import { Property, PropertyBase, PropertyList } from './properties';
 import { ProxyConfig, type ProxyConfigOptions } from './proxy-configs';
 import type { Url } from './urls';
 import { QueryParam, toUrlObject } from './urls';
+import { getGlobalSettings } from './utils';
 import type { Variable, VariableList } from './variables';
 
 export type RequestBodyMode = undefined | 'formdata' | 'urlencoded' | 'raw' | 'file' | 'graphql';
@@ -211,6 +212,18 @@ export class RequestBody extends PropertyBase {
   }
 
   update(opts: RequestBodyOptions) {
+    if (opts.mode === 'file' || opts.file) {
+      const settings = getGlobalSettings();
+      const dataFolder = settings?.dataFolder.trim() || '';
+      const allowed = dataFolder !== '' && opts.file?.startsWith(dataFolder);
+
+      if (!allowed) {
+        throw new Error(
+          `insomnia.request.body.update: Accessing file in "${opts.file}" was rejected, please set the directory as the data folder in preferences`,
+        );
+      }
+    }
+
     const transformedOpts = getClassFields(opts);
     this.mode = transformedOpts.mode;
     this.file = transformedOpts.file;

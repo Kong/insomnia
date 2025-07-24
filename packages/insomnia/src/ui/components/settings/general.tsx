@@ -241,6 +241,15 @@ export const General: FC = () => {
       </div>
       {isLoggedIn && <VaultKeyPanel />}
 
+      <div className="form-row pad-top-sm">
+        <TextSetting
+          label="Data Folder"
+          setting="dataFolder"
+          help="The data folder which can be accessed by scripts."
+          placeholder=""
+        />
+      </div>
+
       {updatesSupported() && (
         <Fragment>
           <h2 className="sticky left-0 top-0 z-10 bg-[--color-bg] pb-2 pt-5 text-lg font-bold">Software Updates</h2>
