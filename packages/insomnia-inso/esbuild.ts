@@ -1,5 +1,7 @@
 import { build, type BuildOptions, context } from 'esbuild';
 
+import { verifyBundlePlugins } from '../insomnia/scripts/verify-bundle-plugins';
+
 const isProd = Boolean(process.env.NODE_ENV === 'production');
 const watch = Boolean(process.env.ESBUILD_WATCH);
 const version = process.env.VERSION || 'dev';
@@ -44,5 +46,8 @@ if (watch) {
   }
   watch();
 } else {
+  if (isProd) {
+    verifyBundlePlugins();
+  }
   build(config);
 }

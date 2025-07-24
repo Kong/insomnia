@@ -20,11 +20,13 @@
     "inso": "bin/inso"
   },
   "pkg": {
-    "assets": "plugins/**/*"
+    "scripts": [
+      "../../node_modules/@kong/**/*.json",
+      "../../node_modules/@kong/**/*.js"
+    ]
   },
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
-    "bundle-plugins": "rm -rf plugins && npm run bundle-plugins --prefix ../insomnia && mv ../insomnia/plugins plugins",
     "test:unit": "cross-env NO_COLOR=1 vitest run --exclude '**/cli.test.ts'",
     "test:bundle": "vitest cli.test.ts -t \"inso dev bundle\"",
     "test:binary": "vitest cli.test.ts -t \"inso packaged binary\"",
@@ -32,7 +34,7 @@
     "build": "esr esbuild.ts",
     "build:production": "cross-env NODE_ENV=production esr esbuild.ts",
     "start": "ESBUILD_WATCH=true esr esbuild.ts",
-    "prepackage": "npm run build:production && rm -rf binaries/inso && npm run bundle-plugins",
+    "prepackage": "npm run build:production && rm -rf binaries/inso",
     "package": "npx -y @yao-pkg/pkg@6.3.2 . --output binaries/inso --targets host",
     "postpackage": "node src/scripts/verify-pkg.js",
     "artifacts": "esr src/scripts/artifacts.ts"
@@ -57,5 +59,8 @@
     "picocolors": "^1.1.1",
     "string-argv": "^0.3.2",
     "yaml": "^2.7.1"
+  },
+  "optionalDependencies": {
+    "@kong/insomina-plugin-external-vault": "0.0.1-alpha.2"
   }
 }

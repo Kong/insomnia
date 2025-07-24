@@ -31,12 +31,6 @@ const config = {
       to: './bin',
       filter: 'yarn-standalone.js',
     },
-    // include bundle plugins as extra resources
-    {
-      from: './plugins',
-      to: './plugins',
-      filter: ['**/*'],
-    }
   ],
   extraMetadata: {
     main: 'main.min.js', // Override the main path in package.json

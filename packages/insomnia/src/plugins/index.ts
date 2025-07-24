@@ -4,7 +4,7 @@ import path from 'node:path';
 import electron from 'electron';
 
 import type { ParsedApiSpec } from '../common/api-specs';
-import { getAppBundlePlugins, isDevelopment } from '../common/constants';
+import { getAppBundlePlugins } from '../common/constants';
 import { database as db } from '../common/database';
 import type { PluginConfigMap } from '../common/settings';
 import * as models from '../models';
@@ -26,6 +26,7 @@ export interface Plugin {
   version: string;
   directory: string;
   config: { disabled: boolean };
+  isBundlePlugin?: boolean;
   module: {
     templateTags?: PluginTemplateTag[];
     requestHooks?: ((requestContext: any) => void)[];
@@ -219,12 +220,10 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
       process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'),
       'plugins',
     );
-    // pre-bundle plugins under app path
-    const preBundlePluginPath = getPreBundlePluginPath();
-    fs.mkdirSync(pluginPath, { recursive: true });
 
     // Also look in node_modules folder in each directory
-    const basePaths = [pluginPath, preBundlePluginPath, ...extraPaths];
+    // const basePaths = [pluginPath, preBundlePluginPath, ...extraPaths];
+    const basePaths = [pluginPath, ...extraPaths];
     const extendedPaths = basePaths.map(p => path.resolve(p, 'node_modules'));
     const allPaths = [...basePaths, ...extendedPaths];
 
@@ -232,18 +231,39 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
     const pluginMap: Record<string, Plugin> = {};
 
     await traversePluginPath(pluginMap, allPaths, allConfigs);
+    await getBundlePlugins(pluginMap);
     plugins = Object.keys(pluginMap).map(name => pluginMap[name]);
   }
 
   return plugins;
 }
 
-export function getPreBundlePluginPath() {
-  const pluginDirRelativePath = isDevelopment() ? './plugins' : '../plugins';
-  return path.resolve(
-    process.env['INSOMNIA_APP_PATH'] || (process.type === 'renderer' ? window : electron).app.getAppPath(),
-    pluginDirRelativePath,
-  );
+export function getBundlePlugins(pluginMap: Record<string, Plugin>) {
+  const bundlePlugins = getAppBundlePlugins();
+  bundlePlugins.forEach(p => {
+    const { name: pluginName, version: pluginVersion, feature } = p;
+    try {
+      const isExecuteInInso = !process.type;
+      //FIXME Hard-cord path here
+      const requirePackage = isExecuteInInso
+        ? `${path.join(__dirname, '../', '../', '../', 'node_modules', pluginName.split('/')[0], pluginName.split('/')[1])}`
+        : pluginName;
+      console.log(`__dirname: ${__dirname}`);
+      console.log(`[plugin] Loading bundled plugin ${pluginName} from ${requirePackage}`);
+      const module = global.require(requirePackage);
+      pluginMap[pluginName] = {
+        name: pluginName,
+        description: `Insomnia bundled plugin for ${feature}`,
+        version: pluginVersion || 'unknown',
+        directory: '',
+        config: { disabled: false },
+        isBundlePlugin: true,
+        module: module,
+      };
+    } catch (err) {
+      console.error(`[plugin] Failed to load bundled plugin ${pluginName}`, err);
+    }
+  });
 }
 
 export async function reloadPlugins() {
@@ -255,8 +275,7 @@ export async function getActivePlugins(): Promise<Plugin[]> {
 }
 
 export async function getActiveBundlePlugins(): Promise<Plugin[]> {
-  const preBundlePluginPath = getPreBundlePluginPath();
-  return (await getActivePlugins()).filter(p => p.directory.startsWith(preBundlePluginPath));
+  return (await getActivePlugins()).filter(p => p.isBundlePlugin);
 }
 
 export async function getRequestGroupActions(): Promise<RequestGroupAction[]> {
@@ -348,15 +367,14 @@ export async function isPreBundlePluginTemplateTag(input: string) {
   if (!input.includes('{%')) {
     return false;
   }
-  const bunelPluginNames = getAppBundlePlugins().map(p => p.name);
-  const activePlugins = await getActiveBundlePlugins();
-  return activePlugins
-    .filter(plugin => bunelPluginNames.includes(plugin.name))
-    .some(plugin => {
-      const templateTags = plugin.module.templateTags || [];
-      const tagNames = templateTags.map(tt => tt.name);
-      return tagNames.some(tagName => input.match(new RegExp(`^{% *${tagName} *.+`)));
-    });
+  // const bunelPluginNames = getAppBundlePlugins().map(p => p.name);
+  // const activePlugins = await getActiveBundlePlugins();
+  const activeBundlePlugins = await getActiveBundlePlugins();
+  return activeBundlePlugins.some(plugin => {
+    const templateTags = plugin.module.templateTags || [];
+    const tagNames = templateTags.map(tt => tt.name);
+    return tagNames.some(tagName => input.match(new RegExp(`^{% *${tagName} *.+`)));
+  });
 }
 
 export async function getPluginRouterActions(): Promise<PluginAction[]> {

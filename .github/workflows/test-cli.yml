@@ -34,6 +34,8 @@ jobs:
 
       - name: Install packages
         run: npm ci
+        env: 
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install node version of node-libcurl for inso tests
         run: node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
@@ -65,7 +67,6 @@ jobs:
           npm run package -w insomnia-inso
         env:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Inso binary e2e tests
         run: npm run test:binary -w insomnia-inso
