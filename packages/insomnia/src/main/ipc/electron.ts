@@ -53,6 +53,7 @@ export type HandleChannels =
   | 'cloudService.openAuthUrl'
   | 'git.loadGitRepository'
   | 'git.getGitBranches'
+  | 'git.fetchGitRemoteBranches'
   | 'git.gitFetchAction'
   | 'git.gitLogLoader'
   | 'git.gitChangesLoader'

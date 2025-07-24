@@ -5,6 +5,7 @@ import { docsGitAccessToken } from '../../../common/documentation';
 import type { GitRepository } from '../../../models/git-repository';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
+import { GitRemoteBranchSelect } from './git-remote-branch-select';
 
 export interface Props {
   gitRepository?: Partial<GitRepository> | null;
@@ -15,13 +16,19 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
   const linkIcon = <i className="fa fa-external-link-square" />;
   const defaultValues = gitRepository || {
     uri: '',
-    credentials: { username: '', token: '' },
+    credentials: { username: '', password: '' },
     author: { name: '', email: '' },
   };
 
-  const uri = defaultValues.uri;
+  const [credentials, setCredentials] = React.useState({
+    username: defaultValues.credentials?.username || '',
+    password:
+      defaultValues.credentials && 'password' in defaultValues.credentials ? defaultValues.credentials.password : '',
+  });
+
+  const [uri, setUri] = React.useState(defaultValues.uri || '');
+
   const author = defaultValues.author;
-  const credentials = defaultValues?.credentials || { username: '', token: '' };
 
   return (
     <form
@@ -49,6 +56,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
           type="url"
           autoFocus
           defaultValue={uri}
+          onChange={e => setUri(e.currentTarget.value)}
           disabled={Boolean(uri)}
           placeholder="https://github.com/org/repo.git"
           className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
@@ -81,6 +89,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
             placeholder="MyUser"
             disabled={Boolean(uri)}
             defaultValue={credentials?.username}
+            onChange={e => setCredentials({ ...credentials, username: e.currentTarget.value })}
             className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
           />
         </TextField>
@@ -104,12 +113,21 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({ gi
           <Input
             type="password"
             disabled={Boolean(uri)}
-            defaultValue={'token' in credentials ? credentials?.token : ''}
+            onChange={e => setCredentials({ ...credentials, password: e.currentTarget.value })}
+            defaultValue={'password' in credentials ? credentials?.password : ''}
             placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"
             className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
           />
         </TextField>
       </div>
+      <GitRemoteBranchSelect
+        credentials={{
+          password: credentials.password,
+          username: credentials.username,
+        }}
+        url={uri || ''}
+        isDisabled={Boolean(uri)}
+      />
     </form>
   );
 };

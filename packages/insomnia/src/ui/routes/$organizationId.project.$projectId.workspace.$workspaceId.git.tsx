@@ -187,6 +187,7 @@ export const updateGitRepoAction: ActionFunction = async ({ request, params }) =
     uri: string;
     username: string;
     oauth2format: string;
+    ref?: string; // Optional ref for shallow clone
   };
 
   return window.main.git.updateGitRepo({
