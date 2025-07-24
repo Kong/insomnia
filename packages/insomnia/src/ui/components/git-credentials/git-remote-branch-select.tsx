@@ -3,8 +3,17 @@ import { Button, ComboBox, Input, Label, ListBox, ListBoxItem, Popover } from 'r
 import { useFetcher, useParams } from 'react-router';
 
 import { Icon } from '../icon';
+import type { GitCredentials } from '../../../sync/git/git-vcs';
 
-export const GitRemoteBranchSelect = ({ url, isDisabled }: { url: string; isDisabled: boolean }) => {
+export const GitRemoteBranchSelect = ({
+  url,
+  isDisabled,
+  credentials,
+}: {
+  url: string;
+  isDisabled: boolean;
+  credentials: GitCredentials;
+}) => {
   const remoteBranchesFetcher = useFetcher<{ branches: string[] }>({ key: url || 'branch-select' });
   const { organizationId } = useParams<{ organizationId: string }>();
 
@@ -14,9 +23,10 @@ export const GitRemoteBranchSelect = ({ url, isDisabled }: { url: string; isDisa
   useEffect(() => {
     if (uri && remoteBranchesFetcher.state === 'idle' && !remoteBranchesFetcher.data) {
       remoteBranchesFetcher.submit(
+        // @ts-expect-error credentials is not defined in the type, but it is used here
         {
           uri,
-          provider: 'github',
+          credentials,
         },
         {
           method: 'POST',
@@ -84,14 +94,15 @@ export const GitRemoteBranchSelect = ({ url, isDisabled }: { url: string; isDisa
         <Button
           type="button"
           isDisabled={isComboboxDisabled}
-          className="m-2 flex aspect-square size-[--line-height-xs] items-center justify-center gap-2 truncate rounded-sm border border-solid border-[--hl-sm] p-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+          className="m-2 flex aspect-square size-[--line-height-xs] items-center justify-center gap-2 truncate rounded-sm border border-solid border-[--hl-sm] p-2 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:opacity-30 aria-pressed:bg-[--hl-sm]"
           aria-label="Refresh repositories"
           onPress={() => {
-            if (uri && remoteBranchesFetcher.state === 'idle' && !remoteBranchesFetcher.data) {
+            if (uri && remoteBranchesFetcher.state === 'idle') {
               remoteBranchesFetcher.submit(
+                // @ts-expect-error credentials is not defined in the type, but it is used here
                 {
                   uri,
-                  provider: 'github',
+                  credentials,
                 },
                 {
                   method: 'POST',

@@ -1105,6 +1105,7 @@ export const updateGitRepoAction = async ({
   oauth2format,
   username,
   token,
+  ref,
 }: {
   projectId: string;
   workspaceId?: string;
@@ -1114,6 +1115,7 @@ export const updateGitRepoAction = async ({
   oauth2format?: string;
   username: string;
   token: string;
+  ref?: string;
 }) => {
   try {
     let gitRepositoryId: string | null | undefined = null;
@@ -1194,6 +1196,7 @@ export const updateGitRepoAction = async ({
       gitDirectory: GIT_INTERNAL_DIR,
       gitCredentials: gitRepository.credentials,
       legacyDiff: Boolean(workspaceId),
+      ref,
     });
 
     await GitVCS.setAuthor();

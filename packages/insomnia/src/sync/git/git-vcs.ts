@@ -68,6 +68,7 @@ interface InitOptions {
   gitCredentials?: GitCredentials | null;
   uri?: string;
   repoId: string;
+  ref?: string;
   // If enabled git-vcs will only diff files inside a .insomnia directory
   legacyDiff?: boolean;
 }
@@ -121,13 +122,14 @@ interface BaseOpts {
   uri: string;
   repoId: string;
   legacyDiff?: boolean;
+  ref?: string;
 }
 
 export class GitVCS {
   // @ts-expect-error -- TSCONVERSION not initialized with required properties
   _baseOpts: BaseOpts = gitCallbacks();
 
-  async init({ directory, fs, gitDirectory, gitCredentials, uri = '', repoId, legacyDiff = false }: InitOptions) {
+  async init({ directory, fs, gitDirectory, gitCredentials, uri = '', repoId, legacyDiff = false, ref }: InitOptions) {
     this._baseOpts = {
       ...this._baseOpts,
       dir: directory,
@@ -138,6 +140,7 @@ export class GitVCS {
       uri,
       repoId,
       legacyDiff,
+      ref,
     };
 
     if (await this.repoExists()) {
@@ -191,11 +194,14 @@ export class GitVCS {
       http: httpClient,
       repoId,
     };
+
+    const initRef = ref || this._baseOpts.ref;
+
     try {
       await git.clone({
         ...this._baseOpts,
         url,
-        ...(ref ? { ref } : {}),
+        ...(initRef ? { ref: initRef } : {}),
       });
     } catch (err) {
       // If we there is a checkout conflict we only want to clone the repo
@@ -203,7 +209,7 @@ export class GitVCS {
         await git.clone({
           ...this._baseOpts,
           url,
-          ...(ref ? { ref } : {}),
+          ...(initRef ? { ref: initRef } : {}),
           noCheckout: true,
         });
       }

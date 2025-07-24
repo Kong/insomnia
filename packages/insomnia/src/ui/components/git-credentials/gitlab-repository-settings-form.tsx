@@ -118,7 +118,16 @@ const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFo
           className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
         />
       </TextField>
-      <GitRemoteBranchSelect url={gitlabUri || ''} isDisabled={Boolean(uri)} />
+      <GitRemoteBranchSelect
+        credentials={{
+          oauth2format: 'gitlab',
+          token: '',
+          password: '',
+          username: '',
+        }}
+        url={gitlabUri || ''}
+        isDisabled={Boolean(uri)}
+      />
       {error && (
         <p className="notice error margin-bottom-sm">
           <button className="pull-right icon" onClick={() => setError('')}>

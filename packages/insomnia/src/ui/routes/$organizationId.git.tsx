@@ -83,16 +83,10 @@ export const cloneGitRepoAction: ActionFunction = async ({ request, params }): P
 export const fetchRemoteBranchesAction: ActionFunction = async ({ request }) => {
   const data = (await request.json()) as {
     uri: string;
-    token: string;
-    provider: 'github' | 'gitlab';
+    credentials: GitCredentials;
   };
 
-  const { uri, provider } = data;
-
-  const credentials = {
-    oauth2format: provider,
-    token: data.token,
-  } as GitCredentials;
+  const { uri, credentials } = data;
 
   return window.main.git.fetchGitRemoteBranches({ uri, credentials });
 };

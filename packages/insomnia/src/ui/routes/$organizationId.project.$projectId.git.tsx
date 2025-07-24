@@ -1,4 +1,4 @@
-import { type ActionFunction, type LoaderFunction,redirect } from 'react-router';
+import { type ActionFunction, type LoaderFunction, redirect } from 'react-router';
 
 import * as models from '../../models';
 import type { GitRepository } from '../../models/git-repository';
@@ -195,6 +195,7 @@ export const updateGitRepoAction: ActionFunction = async ({ request, params }) =
     uri: string;
     username: string;
     oauth2format: string;
+    ref?: string;
   };
 
   return window.main.git.updateGitRepo({

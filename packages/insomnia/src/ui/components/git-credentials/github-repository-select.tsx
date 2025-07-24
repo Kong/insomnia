@@ -151,7 +151,18 @@ export const GitHubRepositorySelect = ({ uri, token }: { uri?: string; token: st
           <Icon icon="warning" /> You do not have write access to this repository
         </div>
       )}
-      {!uri && <GitRemoteBranchSelect isDisabled={loading} url={selectedRepository?.clone_url || ''} />}
+      {!uri && (
+        <GitRemoteBranchSelect
+          credentials={{
+            oauth2format: 'github',
+            token: '',
+            password: '',
+            username: '',
+          }}
+          isDisabled={loading}
+          url={selectedRepository?.clone_url || ''}
+        />
+      )}
     </div>
   );
 };
