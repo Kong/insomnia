@@ -207,32 +207,36 @@ export async function action({ request, params }: ActionFunctionArgs) {
         }
       }
 
-      const { errors } = await window.main.git.cloneGitRepo({
-        organizationId,
-        cloneIntoProjectId: project._id,
-        ...projectData,
-      });
+      if (projectData.connectRepositoryLater) {
+        await models.project.update(project, { name, gitRepositoryId: 'empty' });
+      } else {
+        const { errors } = await window.main.git.cloneGitRepo({
+          organizationId,
+          cloneIntoProjectId: project._id,
+          ...projectData,
+        });
 
-      const projectWorkspaces = await models.workspace.findByParentId(project._id);
-      const bufferId = await database.bufferChanges();
-      const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
-        parentId: { $in: projectWorkspaces.map(w => w._id) },
-      });
+        const projectWorkspaces = await models.workspace.findByParentId(project._id);
+        const bufferId = await database.bufferChanges();
+        const workspaceMetas = await database.find<WorkspaceMeta>(models.workspaceMeta.type, {
+          parentId: { $in: projectWorkspaces.map(w => w._id) },
+        });
 
-      for (const workspaceMeta of workspaceMetas) {
-        if (!workspaceMeta.gitFilePath) {
-          await models.workspaceMeta.update(workspaceMeta, {
-            gitFilePath: `insomnia.${workspaceMeta.parentId}.yaml`,
-          });
+        for (const workspaceMeta of workspaceMetas) {
+          if (!workspaceMeta.gitFilePath) {
+            await models.workspaceMeta.update(workspaceMeta, {
+              gitFilePath: `insomnia.${workspaceMeta.parentId}.yaml`,
+            });
+          }
         }
-      }
 
-      await database.flushChanges(bufferId);
+        await database.flushChanges(bufferId);
 
-      if (errors) {
-        return {
-          error: errors.join(', '),
-        };
+        if (errors) {
+          return {
+            error: errors.join(', '),
+          };
+        }
       }
 
       return {
