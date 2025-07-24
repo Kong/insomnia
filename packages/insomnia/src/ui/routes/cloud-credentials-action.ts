@@ -75,6 +75,7 @@ export const updateCloudCredentialAction: ActionFunction = async ({ request, par
       patch.credentials['expires_at'] = expires_at;
     }
     await models.cloudCredential.update(originCredential, patch);
+    return result;
   }
   return { error: 'Unexpected response from ' + provider };
 };
