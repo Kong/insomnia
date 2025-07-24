@@ -17,7 +17,7 @@
   "author": "Kong <office@konghq.com>",
   "main": "src/main.min.js",
   "scripts": {
-    "build": "NODE_OPTIONS='--max-old-space-size=8192' esr --cache ./scripts/build.ts --noErrorTruncation",
+    "build": "esr --cache ./scripts/build.ts --noErrorTruncation",
     "generate:schema": "esr ./src/schema.ts",
     "build:main.min.js": "cross-env NODE_ENV=development esr esbuild.main.ts",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
