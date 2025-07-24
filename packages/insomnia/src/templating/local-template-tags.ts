@@ -92,7 +92,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           let secretConfig = {};
           if (isBase64String(configStr)) {
             parsedConfigStr =
-              process.type === 'renderer' || process.type === 'worker'
+              typeof atob === 'function'
                 ? // executed in renderer or webworker
                   atob(configStr)
                 : // executed in Inso(Nodejs)

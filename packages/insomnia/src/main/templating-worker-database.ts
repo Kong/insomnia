@@ -5,6 +5,7 @@ import iconv from 'iconv-lite';
 
 import { database as db } from '../common/database';
 import * as models from '../models';
+import type { CloudProviderCredential } from '../models/cloud-credential';
 import type { Request as DBRequest } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Response } from '../models/response';
@@ -12,7 +13,7 @@ import type { Workspace } from '../models/workspace';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
 import { getExternalVault } from '../ui/components/templating/external-vault';
 import { cloudServiceProviderAuthentication, getSecret } from './ipc/cloud-service-integration/cloud-service';
-import type { CloudProviderCredential } from '../models/cloud-credential';
+
 export const resolveDbByKey = async (request: Request) => {
   const url = new URL(request.url);
   const body = await request.json();
@@ -21,6 +22,9 @@ export const resolveDbByKey = async (request: Request) => {
     Object.entries(pluginToMainAPI).map(([key, value]) => [key.toLowerCase(), value]),
   );
   const result = await withLowercasedKeys[url.host.toLowerCase()](body);
+  if (result.error) {
+    return new Response(JSON.stringify(result), { status: 500 });
+  }
   return new Response(JSON.stringify(result));
 };
 
@@ -128,9 +132,10 @@ const pluginToMainAPI = {
       },
     };
     try {
-      return await getExternalVault({ cloudServiceContext, provider, providerCredential, secretConfig });
+      const vaultResult = await getExternalVault({ cloudServiceContext, provider, providerCredential, secretConfig });
+      return vaultResult;
     } catch (err) {
-      return new Response(JSON.stringify({ error: err?.message }), { status: 500 });
+      return { error: err?.message };
     }
   },
 };
