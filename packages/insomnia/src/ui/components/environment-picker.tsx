@@ -253,12 +253,12 @@ export const EnvironmentPicker = ({
                   },
                 );
               }}
-              className="flex min-w-max select-none flex-col overflow-y-auto p-2 text-sm empty:p-0 focus:outline-none"
+              className="flex max-h-[fit-content] min-w-max flex-1 select-none flex-col overflow-y-auto p-2 text-sm empty:p-0 focus:outline-none"
             >
               {item => (
                 <ListBoxItem
                   textValue={item.name}
-                  className={`text-md flex h-[--line-height-xs] w-full items-center gap-2 whitespace-nowrap rounded bg-transparent pr-1 text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed ${item.isBase ? 'pl-[--padding-md]' : 'pl-8'}`}
+                  className={`text-md flex h-[--line-height-xs] w-full flex-none items-center gap-2 whitespace-nowrap rounded bg-transparent pr-1 text-[--color-font] transition-colors hover:bg-[--hl-sm] focus:bg-[--hl-xs] focus:outline-none disabled:cursor-not-allowed ${item.isBase ? 'pl-[--padding-md]' : 'pl-8'}`}
                 >
                   {({ isSelected }) => (
                     <Fragment>
@@ -292,7 +292,7 @@ export const EnvironmentPicker = ({
                 </ListBoxItem>
               )}
             </ListBox>
-            <div className="relative flex h-full w-full flex-1 flex-col overflow-hidden">
+            <div className="relative contents w-full overflow-hidden">
               <Heading className="flex h-7 flex-shrink-0 items-center justify-between gap-2 px-3 py-1 text-sm font-bold text-[--hl]">
                 <span>Collection Environments</span>
                 <Button
@@ -326,7 +326,7 @@ export const EnvironmentPicker = ({
                   );
                   uiEventBus.emit('CHANGE_ACTIVE_ENV', workspaceId);
                 }}
-                className="select-none overflow-y-auto p-2 text-sm focus:outline-none"
+                className="max-h-[fit-content] flex-1 select-none overflow-y-auto p-2 text-sm focus:outline-none"
               >
                 {item => (
                   <ListBoxItem
