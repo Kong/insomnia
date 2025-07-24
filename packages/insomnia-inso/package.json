@@ -61,6 +61,6 @@
     "yaml": "^2.7.1"
   },
   "optionalDependencies": {
-    "@kong/insomina-plugin-external-vault": "0.0.1-alpha.2"
+    "@kong/insomnia-plugin-external-vault": "0.0.1-alpha.2"
   }
 }
