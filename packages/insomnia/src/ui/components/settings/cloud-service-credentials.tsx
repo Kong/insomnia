@@ -130,8 +130,7 @@ export const CloudServiceCredentialList = () => {
   if (!isVaultPluginInstalled) {
     return (
       <div className="notice pad info flex flex-col items-center justify-center gap-2">
-        <p>External vault feature could not be enabled because the required plugin is not enabled.</p>
-        <p>Please check your network and reload plugins.</p>
+        <p>External vault feature could not be enabled because the required module is missing.</p>
       </div>
     );
   }
