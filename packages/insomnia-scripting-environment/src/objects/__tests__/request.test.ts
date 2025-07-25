@@ -1,9 +1,11 @@
+import { init } from 'insomnia/src/models/settings';
 import { describe, expect, it } from 'vitest';
 
 import type { Header } from '../headers';
 import { HeaderList } from '../headers';
 import type { RequestBodyOptions } from '../request';
 import { calculatePayloadSize, mergeRequestBody, Request, RequestBody, toScriptRequestBody } from '../request';
+import { initGlobalSettings } from '../utils';
 
 describe('test request and response objects', () => {
   it('test RequestBody methods', () => {
@@ -16,8 +18,18 @@ describe('test request and response objects', () => {
 
     expect(reqBody.toString()).toEqual('urlencodedKey=urlencodedValue');
 
-    reqBody.update({ mode: 'file', file: 'file content here' });
-    expect(reqBody.toString()).toEqual('file content here');
+    initGlobalSettings({
+      ...init(), dataFolder: '/permittedPath',
+      _id: '',
+      type: '',
+      parentId: '',
+      modified: 0,
+      created: 0,
+      isPrivate: false,
+      name: ''
+    });
+    reqBody.update({ mode: 'file', file: '/permittedPath/a/myFile.txt' });
+    expect(reqBody.toString()).toEqual('/permittedPath/a/myFile.txt');
   });
 
   it('test Request methods', () => {
