@@ -130,9 +130,8 @@ export enum UpdateURL {
   windows = 'https://updates.insomnia.rest/updates/win',
 }
 
-// TODO: change this to production version
 // Oauth redirect URL
-export const getOauthRedirectUrl = () => env.OAUTH_REDIRECT_URL || 'https://app.dev.insomnia.moe/oauth/redirect';
+export const getOauthRedirectUrl = () => env.OAUTH_REDIRECT_URL || 'https://app.insomnia.rest/oauth/redirect';
 
 // API
 export const getApiBaseURL = () => env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
