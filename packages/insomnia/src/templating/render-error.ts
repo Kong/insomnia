@@ -1,4 +1,4 @@
-import { get as _get } from 'lodash';
+import { get as _get } from 'es-toolkit/compat';
 export class RenderError extends Error {
   // TODO: unsound definite assignment assertions
   // This is easy to fix, but be careful: extending from Error has especially tricky behavior.
