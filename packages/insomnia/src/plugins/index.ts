@@ -14,6 +14,9 @@ import type { RequestGroup } from '../models/request-group';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace } from '../models/workspace';
+import * as pluginApp from '../plugins/context/app';
+import * as pluginNetwork from '../plugins/context/network';
+import * as pluginStore from '../plugins/context/store';
 import type { PluginTemplateTag } from '../templating/types';
 import type { PluginTheme } from './misc';
 import themes from './themes';
@@ -411,9 +414,9 @@ export async function executePluginRouterAction({
       throw new Error(`Action ${actionName} not found in plugin ${pluginName}`);
     }
     const commonContext = {
-      ...pluginContexts.app.init('no-render'),
-      ...pluginContexts.store.init(plugin),
-      ...pluginContexts.network.init(),
+      ...pluginApp.init('no-render'),
+      ...pluginStore.init(plugin),
+      ...pluginNetwork.init(),
       util: {
         openInBrowser: (url: string) => window.main.openInBrowser(url),
         models: {
