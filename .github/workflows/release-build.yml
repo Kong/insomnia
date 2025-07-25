@@ -68,6 +68,8 @@ jobs:
 
       - name: Install packages
         run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Inso CLI version env var
         shell: bash
@@ -81,7 +83,6 @@ jobs:
         env:
           NODE_OPTIONS: '--max_old_space_size=6144'
           BUILD_TARGETS: AppImage,tar.gz
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Package app (Linux X64 only)
         if: runner.os == 'Linux' && runner.arch == 'X64'
@@ -89,7 +90,6 @@ jobs:
         run: npm run app-package
         env:
           NODE_OPTIONS: '--max_old_space_size=6144'
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # If this step fails its possible apple has new license terms which need to be accepted by logging into https://developer.apple.com/account
       - name: Package app (MacOS only)
@@ -103,15 +103,12 @@ jobs:
           APPLE_TEAM_ID: FX44YY62GV
           CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
           CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # creates unpacked electron-builder contents that can be signed afterwards
       - name: Package unpacked app (Windows only)
         if: runner.os == 'Windows'
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' npm run package:windows:unpacked -w insomnia
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # wraps the Insomnia.exe PE with another PE that will bootstrap particular security
       # features added to Windows 8 in order to stopgap CVE-2025-1353
@@ -119,8 +116,6 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: ./build-secure-wrapper.sh CI
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Move .dll and .exe files to /tosign (PowerShell)
         if: runner.os == 'Windows'
@@ -175,7 +170,6 @@ jobs:
           npm run package -w insomnia-inso
         env:
           VERSION: ${{ env.INSO_VERSION }}
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Code-sign & create Inso CLI installer (macOS only)
         if: runner.os == 'macOS'

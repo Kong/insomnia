@@ -34,12 +34,11 @@
     "watch:app": "cross-env PLAYWRIGHT=1 npm run build:main.min.js -w insomnia && npm run start:dev-server -w insomnia",
     "app-build": "cross-env PLAYWRIGHT=1 npm run build -w insomnia",
     "app-package": "npm run package -w insomnia",
-    "app-bundle-plugins": "npm run bundle-plugins -w insomnia",
     "test:smoke:dev": "npm run test:dev -w insomnia-smoke-test -- --project=Smoke",
     "test:smoke:build": "npm run test:build -w insomnia-smoke-test -- --project=Smoke",
     "test:smoke:package": "npm run test:package -w insomnia-smoke-test -- --project=Smoke",
     "test:crit:package": "npm run test:package -w insomnia-smoke-test -- --project=Critical",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package && npm run verify-bundle-plugins -w insomnia"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",
