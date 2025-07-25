@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 
 interface Props {

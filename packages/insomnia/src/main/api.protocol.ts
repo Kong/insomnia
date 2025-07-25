@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { Readable } from 'node:stream';
 import { parse as urlParse } from 'node:url';
 
@@ -18,6 +19,8 @@ const insomniaStreamScheme = 'insomnia-event-source';
 const httpsScheme = 'https';
 const httpScheme = 'http';
 const templatingWorkerDatabaseInterface = 'insomnia-templating-worker-database';
+
+const fileScheme = 'file';
 
 export async function registerInsomniaProtocols() {
   protocol.registerSchemesAsPrivileged([
@@ -41,6 +44,10 @@ export async function registerInsomniaProtocols() {
     {
       scheme: templatingWorkerDatabaseInterface,
       privileges: { secure: true, standard: true, supportFetchAPI: true },
+    },
+    {
+      scheme: fileScheme,
+      privileges: { secure: true, standard: true, supportFetchAPI: true, stream: true },
     },
   ]);
 
@@ -178,6 +185,15 @@ export async function registerInsomniaProtocols() {
 
   if (!protocol.isProtocolHandled(httpsScheme)) {
     protocol.handle(httpsScheme, async request => {
+      const url = new URL(request.url);
+      if (url.hostname === 'insomnia-app.com') {
+        const rootDir = path.resolve(__dirname, 'client');
+        const filePath = path.join(rootDir, url.pathname.startsWith('/assets') ? url.pathname : 'index.html');
+        console.log(`Loading index for: ${url.pathname} from: ${filePath}`);
+
+        return await net.fetch(`file://${filePath}`, { bypassCustomProtocolHandlers: true });
+      }
+
       return net.fetch(request, { bypassCustomProtocolHandlers: true });
     });
   }

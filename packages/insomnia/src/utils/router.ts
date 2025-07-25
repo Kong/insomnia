@@ -1,4 +1,4 @@
-import { matchPath, type PathMatch } from 'react-router';
+import { href, matchPath, type PathMatch } from 'react-router';
 
 import { database } from '../common/database';
 import * as models from '../models';
@@ -116,7 +116,7 @@ export const getInitialEntry = async () => {
     }
 
     if (hasUserLoggedInBefore) {
-      return '/auth/login';
+      return href('/auth/login');
     }
 
     return '/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug';

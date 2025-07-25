@@ -1,6 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
-import { useFetcher } from 'react-router';
+
+import { useUpdateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.update';
+import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../../common/constants';
 import {
@@ -29,31 +31,33 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
   const [error, setError] = useState('');
   const [manulInputUrl, setManualInputUrl] = useState('');
   const providerDisplayName = getProviderDisplayName(provider);
-  const cloudCredentialFetcher = useFetcher();
-  const isEditing = !!providerCredential;
 
-  const fetchErrorMessage = useMemo(() => {
-    if (
-      cloudCredentialFetcher.data &&
-      'error' in cloudCredentialFetcher.data &&
-      cloudCredentialFetcher.data.error &&
-      cloudCredentialFetcher.state === 'idle'
-    ) {
-      const errorMessage: string =
-        cloudCredentialFetcher.data.error ||
-        `An unexpected error occurred while authenticating with ${getProviderDisplayName(provider)}.`;
-      return errorMessage;
-    }
-    return undefined;
-  }, [cloudCredentialFetcher.data, cloudCredentialFetcher.state, provider]);
+  const updateCloudCredentialsFetcher = useUpdateCloudCredentialActionFetcher();
+  const createCloudCredentialsFetcher = useCreateCloudCredentialActionFetcher();
+  const isEditing = !!providerCredential;
+  const upsertFetcher = isEditing ? updateCloudCredentialsFetcher : createCloudCredentialsFetcher;
+
+  const fetchErrorMessage = upsertFetcher.data && 'error' in upsertFetcher.data ? upsertFetcher.data.error : '';
+
+  const isLoading = upsertFetcher.state !== 'idle';
 
   const handleFormSubmit = (data: BaseCloudCredential & { isAuthenticated?: boolean }) => {
     const { name, credentials, isAuthenticated = false } = data;
-    const formAction = isEditing ? `/cloud-credential/${providerCredential._id}/update` : '/cloud-credential/new';
-    cloudCredentialFetcher.submit(JSON.stringify({ name, credentials, provider, isAuthenticated }), {
-      action: formAction,
-      method: 'post',
-      encType: 'application/json',
+
+    if (isEditing) {
+      return updateCloudCredentialsFetcher.submit({
+        // @ts-expect-error: TODO - @cwangsmv Type inference doesn't work well with BaseCloudCredential
+        patch: { name, credentials, provider },
+        cloudCredentialId: providerCredential._id,
+      });
+    }
+
+    // @ts-expect-error: TODO - @cwangsmv Type inference doesn't work well with BaseCloudCredential
+    return createCloudCredentialsFetcher.submit({
+      name,
+      credentials,
+      provider,
+      isAuthenticated,
     });
   };
 
@@ -94,12 +98,12 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
 
   useEffect(() => {
     // close modal if submit success
-    if (cloudCredentialFetcher.data && !cloudCredentialFetcher.data.error && cloudCredentialFetcher.state === 'idle') {
-      const newCredentialData = cloudCredentialFetcher.data;
+    if (upsertFetcher.data && !('error' in upsertFetcher.data) && upsertFetcher.state === 'idle') {
+      const newCredentialData = upsertFetcher.data;
       onClose(newCredentialData);
       onComplete && onComplete(newCredentialData);
     }
-  }, [cloudCredentialFetcher.data, cloudCredentialFetcher.state, onClose, onComplete]);
+  }, [upsertFetcher.data, upsertFetcher.state, onClose, onComplete]);
 
   return (
     <ModalOverlay
@@ -136,7 +140,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
               {provider === 'aws' && (
                 <AWSCredentialForm
                   data={providerCredential}
-                  isLoading={cloudCredentialFetcher.state !== 'idle'}
+                  isLoading={isLoading}
                   onSubmit={handleFormSubmit}
                   errorMessage={fetchErrorMessage}
                 />
@@ -144,7 +148,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
               {provider === 'gcp' && (
                 <GCPCredentialForm
                   data={providerCredential}
-                  isLoading={cloudCredentialFetcher.state !== 'idle'}
+                  isLoading={isLoading}
                   onSubmit={handleFormSubmit}
                   errorMessage={fetchErrorMessage}
                 />
@@ -152,7 +156,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
               {provider === 'hashicorp' && (
                 <HashiCorpCredentialForm
                   data={providerCredential}
-                  isLoading={cloudCredentialFetcher.state !== 'idle'}
+                  isLoading={isLoading}
                   onSubmit={handleFormSubmit}
                   errorMessage={fetchErrorMessage}
                 />

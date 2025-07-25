@@ -2,8 +2,8 @@ import classnames from 'classnames';
 import React, { type FC, type PropsWithChildren, type ReactNode } from 'react';
 import { useRouteLoaderData } from 'react-router';
 
-import type { RequestLoaderData } from '../../../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import type { RequestGroupLoaderData } from '../../../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
+import type { RequestLoaderData } from '../../../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import type { RequestGroupLoaderData } from '../../../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { HelpTooltip } from '../../../help-tooltip';
 
 interface Props {
@@ -14,8 +14,12 @@ interface Props {
 }
 
 export const AuthRow: FC<PropsWithChildren<Props>> = ({ labelFor, label, help, disabled, children }) => {
-  const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const groupData = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
+  const reqData = useRouteLoaderData(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId',
+  ) as RequestLoaderData;
+  const groupData = useRouteLoaderData(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId',
+  ) as RequestGroupLoaderData;
   const { authentication } = reqData?.activeRequest || groupData.activeRequestGroup;
   const isDisabled = (authentication && 'disabled' in authentication && authentication.disabled) || disabled;
   return (

@@ -1,11 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
+
+import type { GitCredentials } from '~/models/git-repository';
+import { useGitProjectResetActionFetcher } from '~/routes/git.reset';
+import { useGitProjectUpdateActionFetcher } from '~/routes/git.update';
 
 import { docsGitSync } from '../../../../common/documentation';
 import type { GitRepository, OauthProviderName } from '../../../../models/git-repository';
-import type { GitCredentials } from '../../../../sync/git/git-vcs';
 import { Link } from '../../base/link';
 import { Modal, type ModalHandle, type ModalProps } from '../../base/modal';
 import { ModalBody } from '../../base/modal-body';
@@ -37,14 +40,13 @@ export const GitRepositorySettingsModal = ({
 }: ModalProps & {
   gitRepository?: GitRepository;
 }) => {
-  const { organizationId, projectId, workspaceId } = useParams() as {
-    organizationId: string;
+  const { projectId, workspaceId } = useParams() as {
     projectId: string;
     workspaceId: string;
   };
   const modalRef = useRef<ModalHandle>(null);
-  const updateGitRepositoryFetcher = useFetcher();
-  const deleteGitRepositoryFetcher = useFetcher();
+  const updateGitRepositoryFetcher = useGitProjectUpdateActionFetcher();
+  const resetGitRepositoryFetcher = useGitProjectResetActionFetcher();
 
   const [selectedTab, setTab] = useState<OauthProviderName>(getDefaultOAuthProvider(gitRepository?.credentials));
 
@@ -53,21 +55,21 @@ export const GitRepositorySettingsModal = ({
   }, []);
 
   const onSubmit = (gitRepositoryPatch: Partial<GitRepository>) => {
-    const { author, credentials, created, modified, isPrivate, needsFullClone, uriNeedsMigration, ...repoPatch } =
-      gitRepositoryPatch;
+    const { author, credentials, uri } = gitRepositoryPatch;
 
-    updateGitRepositoryFetcher.submit(
-      {
-        ...repoPatch,
-        authorName: author?.name || '',
-        authorEmail: author?.email || '',
-        ...credentials,
+    updateGitRepositoryFetcher.submit({
+      projectId,
+      workspaceId,
+      uri: uri || '',
+      author: {
+        email: author?.email || '',
+        name: author?.name || '',
       },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/update`,
-        method: 'post',
+      credentials: credentials || {
+        password: '',
+        username: '',
       },
-    );
+    });
   };
 
   const isLoading = updateGitRepositoryFetcher.state !== 'idle';
@@ -159,13 +161,10 @@ export const GitRepositorySettingsModal = ({
               className="btn"
               disabled={!hasGitRepository}
               onClick={() => {
-                deleteGitRepositoryFetcher.submit(
-                  {},
-                  {
-                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/reset`,
-                    method: 'post',
-                  },
-                );
+                resetGitRepositoryFetcher.submit({
+                  projectId,
+                  workspaceId,
+                });
               }}
             >
               Reset

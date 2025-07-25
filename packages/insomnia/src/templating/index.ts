@@ -1,8 +1,8 @@
 import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
 import type { Environment } from 'nunjucks';
-import nunjucks from 'nunjucks/browser/nunjucks';
 
 import BaseExtension from './base-extension';
+import { nunjucks } from './nunjucks.client';
 import { extractUndefinedVariableKey, RenderError } from './render-error';
 
 // Some constants

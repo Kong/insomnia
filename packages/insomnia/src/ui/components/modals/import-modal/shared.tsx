@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import React, { type FC, Fragment, type PropsWithChildren, useMemo } from 'react';
 
-import type { ScanResult } from '../../../../common/import';
+import type { ScanResult } from '~/common/import';
 
 export const validImportExtensions = [
   'sh',

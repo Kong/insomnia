@@ -1,7 +1,7 @@
 import { exportRequestsToFile } from 'insomnia/src/ui/components/settings/import-export';
 import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import { Button, Checkbox, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
 
 import { requestGroup } from '../../../models';
 import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
@@ -9,11 +9,12 @@ import { isRequest, type Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import { isSocketIORequest, type SocketIORequest } from '../../../models/socket-io-request';
 import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
+import {
+  type Child,
+  useWorkspaceLoaderFetcher,
+  type WorkspaceLoaderData,
+} from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { SegmentEvent } from '../../analytics';
-import type {
-  Child,
-  WorkspaceLoaderData,
-} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { Icon } from '../icon';
 import { getMethodShortHand } from '../tags/method-tag';
 
@@ -192,7 +193,7 @@ export const ExportRequestsModal = ({
   onClose: () => void;
 }) => {
   const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string };
-  const workspaceFetcher = useFetcher();
+  const workspaceFetcher = useWorkspaceLoaderFetcher();
   const [state, setState] = useState<{
     treeRoot: Node | null;
   }>();
@@ -200,7 +201,11 @@ export const ExportRequestsModal = ({
   useEffect(() => {
     const isIdleAndUninitialized = workspaceFetcher.state === 'idle' && !workspaceFetcher.data;
     if (isIdleAndUninitialized) {
-      workspaceFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceIdToExport}`);
+      workspaceFetcher.load({
+        organizationId,
+        projectId,
+        workspaceId: workspaceIdToExport,
+      });
     }
   }, [organizationId, projectId, workspaceFetcher, workspaceIdToExport]);
   const workspaceLoaderData = workspaceFetcher?.data as WorkspaceLoaderData;

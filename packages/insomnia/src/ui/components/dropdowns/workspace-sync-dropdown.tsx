@@ -1,10 +1,11 @@
 import React, { type FC } from 'react';
 import { useRouteLoaderData } from 'react-router';
 
+import { useRootLoaderData } from '~/root';
+
 import { isGitProject, isRemoteProject } from '../../../models/project';
+import type { WorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
-import { useRootLoaderData } from '../../routes/root';
 import { GitProjectSyncDropdown } from './git-project-sync-dropdown';
 import { GitSyncDropdown } from './git-sync-dropdown';
 import { LocalProjectBar } from './local-project-bar';
@@ -12,7 +13,7 @@ import { SyncDropdown } from './sync-dropdown';
 
 export const WorkspaceSyncDropdown: FC = () => {
   const { activeProject, activeWorkspace, gitRepository, activeWorkspaceMeta } = useRouteLoaderData(
-    ':workspaceId',
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
   ) as WorkspaceLoaderData;
 
   const { userSession } = useRootLoaderData();

@@ -2,9 +2,9 @@ import React, { type FC, type ReactNode, useCallback } from 'react';
 import { useRouteLoaderData } from 'react-router';
 
 import { toKebabCase } from '../../../../../common/misc';
+import type { RequestLoaderData } from '../../../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import type { RequestGroupLoaderData } from '../../../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { useRequestGroupPatcher, useRequestPatcher } from '../../../../hooks/use-request';
-import type { RequestLoaderData } from '../../../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import type { RequestGroupLoaderData } from '../../../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { AuthRow } from './auth-row';
 
 interface Props {
@@ -33,8 +33,12 @@ export const AuthToggleRow: FC<Props> = ({
   offTitle = 'Enable item',
   disabled = false,
 }) => {
-  const reqData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const groupData = useRouteLoaderData('request-group/:requestGroupId') as RequestGroupLoaderData;
+  const reqData = useRouteLoaderData(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId',
+  ) as RequestLoaderData;
+  const groupData = useRouteLoaderData(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId',
+  ) as RequestGroupLoaderData;
   const patchRequestGroup = useRequestGroupPatcher();
   const { authentication, _id } = reqData?.activeRequest || groupData.activeRequestGroup;
   const patchRequest = useRequestPatcher();

@@ -4,8 +4,8 @@ import { useParams } from 'react-router';
 
 import { type ChangeBufferEvent, database } from '../../common/database';
 import type { BaseModel } from '../../models';
-import type { ProjectLoaderData } from '../routes/$organizationId.project.$projectId';
-import type { WorkspaceLoaderData } from '../routes/$organizationId.project.$projectId.workspace.$workspaceId';
+import type { ProjectLoaderData } from '../../routes/organization.$organizationId.project.$projectId._index';
+import type { WorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 // We use this hook to determine if the active request has been updated from the system (not the user typing)
 // For example, by pulling a new version from the remote, switching branches, etc.
 export function useActiveRequestSyncVCSVersion() {
@@ -25,7 +25,9 @@ export function useActiveRequestSyncVCSVersion() {
 // For example, by pulling a new version from the remote, switching branches, etc.
 export function useActiveApiSpecSyncVCSVersion() {
   const [version, setVersion] = useState(0);
-  const { activeApiSpec } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { activeApiSpec } = useRouteLoaderData(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
+  ) as WorkspaceLoaderData;
   useEffect(() => {
     const isRequestUpdatedFromSync = (changes: ChangeBufferEvent<BaseModel>[]) =>
       changes.find(([, doc, fromSync]) => activeApiSpec?._id === doc._id && fromSync);
@@ -38,8 +40,12 @@ export function useActiveApiSpecSyncVCSVersion() {
 // We use this hook to determine if the active workspace has been updated from the Git VCS
 // For example, by pulling a new version from the remote, switching branches, etc.
 export function useGitVCSVersion() {
-  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const projectData = useRouteLoaderData('/project') as ProjectLoaderData;
+  const workspaceData = useRouteLoaderData(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
+  ) as WorkspaceLoaderData;
+  const projectData = useRouteLoaderData(
+    'routes/organization.$organizationId.project.$projectId._index',
+  ) as ProjectLoaderData;
   const gitRepository = workspaceData?.gitRepository || projectData?.activeProjectGitRepository;
 
   return `${gitRepository?.cachedGitLastCommitTime}:${gitRepository?.cachedGitRepositoryBranch}`;

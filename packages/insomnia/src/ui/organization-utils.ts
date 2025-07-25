@@ -1,7 +1,13 @@
 import { database } from '../common/database';
-import { userSession } from '../models';
+import { project, userSession } from '../models';
 import { updateLocalProjectToRemote } from '../models/helpers/project';
-import type { Organization } from '../models/organization';
+import type {
+  CurrentPlan,
+  Organization,
+  OrganizationsResponse,
+  StorageRules,
+  UserProfileResponse,
+} from '../models/organization';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId } from '../models/organization';
 import type { Project } from '../models/project';
 import { VCSInstance } from '../sync/vcs/insomnia-sync';
@@ -14,64 +20,6 @@ import { invariant } from '../utils/invariant';
 
 // Create an in-memory storage to store the storage rules
 const inMemoryStorageRuleCache: Map<string, StorageRules> = new Map<string, StorageRules>();
-
-export interface OrganizationsResponse {
-  start: number;
-  limit: number;
-  length: number;
-  total: number;
-  next: string;
-  organizations: Organization[];
-}
-
-export interface UserProfileResponse {
-  id: string;
-  email: string;
-  name: string;
-  picture: string;
-  bio: string;
-  github: string;
-  linkedin: string;
-  twitter: string;
-  identities: any;
-  given_name: string;
-  family_name: string;
-}
-
-export type PersonalPlanType = 'free' | 'individual' | 'team' | 'enterprise' | 'enterprise-member';
-export const formatCurrentPlanType = (type: PersonalPlanType) => {
-  switch (type) {
-    case 'free': {
-      return 'Hobby';
-    }
-    case 'individual': {
-      return 'Individual';
-    }
-    case 'team': {
-      return 'Pro';
-    }
-    case 'enterprise': {
-      return 'Enterprise';
-    }
-    case 'enterprise-member': {
-      return 'Enterprise Member';
-    }
-    default: {
-      return 'Free';
-    }
-  }
-};
-type PaymentSchedules = 'month' | 'year';
-
-export interface CurrentPlan {
-  isActive: boolean;
-  period: PaymentSchedules;
-  planId: string;
-  price: number;
-  quantity: number;
-  type: PersonalPlanType;
-  planName: string;
-}
 
 export function sortOrganizations(accountId: string, organizations: Organization[]): Organization[] {
   const home = organizations.find(
@@ -173,12 +121,6 @@ export const DEFAULT_STORAGE_RULES = {
   isOverridden: false,
 };
 
-export interface StorageRules {
-  enableCloudSync: boolean;
-  enableLocalVault: boolean;
-  enableGitSync: boolean;
-  isOverridden: boolean;
-}
 export async function fetchAndCacheOrganizationStorageRule(
   organizationId: string | undefined,
   forceFetch = false,
@@ -220,3 +162,109 @@ export async function fetchAndCacheOrganizationStorageRule(
     },
   );
 }
+
+interface TeamProject {
+  id: string;
+  name: string;
+}
+
+async function getAllTeamProjects(organizationId: string) {
+  const { id: sessionId } = await userSession.getOrCreate();
+  if (!sessionId) {
+    return [];
+  }
+
+  console.log('[project] Fetching', organizationId);
+  const response = await insomniaFetch<{
+    data: {
+      id: string;
+      name: string;
+    }[];
+  }>({
+    path: `/v1/organizations/${organizationId}/team-projects`,
+    method: 'GET',
+    sessionId,
+  });
+
+  return response.data as TeamProject[];
+}
+
+async function syncTeamProjects({
+  organizationId,
+  teamProjects,
+}: {
+  teamProjects: TeamProject[];
+  organizationId: string;
+}) {
+  // assumption: api teamProjects is the source of truth for migrated projects
+  // once migrated orgs become the source of truth for projects
+  // its important that migration be completed before this code is run
+  const existingRemoteProjects = await database.find<Project>(project.type, {
+    remoteId: { $in: teamProjects.map(p => p.id) },
+  });
+
+  const existingRemoteProjectsRemoteIds = existingRemoteProjects.map(p => p.remoteId);
+  const remoteProjectsThatNeedToBeCreated = teamProjects.filter(p => !existingRemoteProjectsRemoteIds.includes(p.id));
+
+  // this will create a new project for any remote projects that don't exist in the current organization
+  await Promise.all(
+    remoteProjectsThatNeedToBeCreated.map(async prj => {
+      await project.create({
+        remoteId: prj.id,
+        name: prj.name,
+        parentId: organizationId,
+      });
+    }),
+  );
+
+  const remoteProjectsThatNeedToBeUpdated = await database.find<Project>(project.type, {
+    // Name is not in the list of remote projects
+    name: { $nin: teamProjects.map(p => p.name) },
+    // Remote ID is in the list of remote projects
+    remoteId: { $in: teamProjects.map(p => p.id) },
+  });
+
+  await Promise.all(
+    remoteProjectsThatNeedToBeUpdated.map(async prj => {
+      const remoteProject = teamProjects.find(p => p.id === prj.remoteId);
+      if (remoteProject) {
+        await project.update(prj, {
+          name: remoteProject.name,
+        });
+      }
+    }),
+  );
+
+  // Turn remote projects from the current organization that are not in the list of remote projects into local projects.
+  const removedRemoteProjects = await database.find<Project>(project.type, {
+    // filter by this organization so no legacy data can be accidentally removed, because legacy had null parentId
+    parentId: organizationId,
+    // Remote ID is not in the list of remote projects.
+    // add `$ne: null` condition because if remoteId is already null, we dont need to remove it again.
+    // nedb use append-only format, all updates and deletes actually result in lines added
+    remoteId: {
+      $nin: teamProjects.map(p => p.id),
+      $ne: null,
+    },
+  });
+
+  await Promise.all(
+    removedRemoteProjects.map(async prj => {
+      await project.update(prj, {
+        remoteId: null,
+      });
+    }),
+  );
+}
+
+export const syncProjects = async (organizationId: string) => {
+  const user = await userSession.getOrCreate();
+  const teamProjects = await getAllTeamProjects(organizationId);
+  // ensure we don't sync projects in the wrong place
+  if (Array.isArray(teamProjects) && user.id && !isScratchpadOrganizationId(organizationId)) {
+    await syncTeamProjects({
+      organizationId,
+      teamProjects,
+    });
+  }
+};

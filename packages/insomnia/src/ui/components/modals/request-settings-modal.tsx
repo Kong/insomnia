@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useFetcher, useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
+
+import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
+import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 
 import { isNotNullOrUndefined } from '../../../common/misc';
 import * as models from '../../../models';
@@ -9,10 +12,9 @@ import { isScratchpadOrganizationId } from '../../../models/organization';
 import { isRequest, type Request } from '../../../models/request';
 import type { SocketIORequest } from '../../../models/socket-io-request';
 import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
+import { revalidateWorkspaceActiveRequest } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { invariant } from '../../../utils/invariant';
 import { useRequestPatcher } from '../../hooks/use-request';
-import type { ListWorkspacesLoaderData } from '../../routes/$organizationId.project.$projectId';
-import { revalidateWorkspaceActiveRequest } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -30,11 +32,14 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
     projectId: string;
     workspaceId: string;
   };
-  const workspacesFetcher = useFetcher<ListWorkspacesLoaderData>();
+  const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
     if (isIdleAndUninitialized && !isScratchpadOrganizationId(organizationId)) {
-      workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}/list-workspaces`);
+      workspacesFetcher.load({
+        organizationId,
+        projectId,
+      });
     }
   }, [organizationId, projectId, workspacesFetcher]);
   const projectLoaderData = workspacesFetcher?.data;
@@ -48,14 +53,17 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
     modalRef.current?.show();
   }, []);
 
-  const requestFetcher = useFetcher();
+  const duplicateRequestFetcher = useRequestDuplicateActionFetcher();
   const patchRequest = useRequestPatcher();
   const navigate = useNavigate();
   const duplicateRequest = (r: Partial<Request>) => {
-    requestFetcher.submit(JSON.stringify(r), {
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/duplicate`,
-      method: 'post',
-      encType: 'application/json',
+    duplicateRequestFetcher.submit({
+      organizationId,
+      projectId,
+      workspaceId,
+      requestId: request._id,
+      name: r.name || request.name,
+      parentId: r.parentId,
     });
   };
   async function handleMoveToWorkspace() {

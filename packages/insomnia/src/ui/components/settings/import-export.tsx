@@ -23,20 +23,22 @@ import { AskModal } from 'insomnia/src/ui/components/modals/ask-modal';
 import { ExportRequestsModal } from 'insomnia/src/ui/components/modals/export-requests-modal';
 import { ImportModal } from 'insomnia/src/ui/components/modals/import-modal/import-modal';
 import { SelectModal } from 'insomnia/src/ui/components/modals/select-modal';
-import { useOrganizationLoaderData } from 'insomnia/src/ui/routes/organization';
-import { useRootLoaderData } from 'insomnia/src/ui/routes/root';
-import type { UntrackedProjectsLoaderData } from 'insomnia/src/ui/routes/untracked-projects';
 import React, { type FC, Fragment, useEffect, useState } from 'react';
 import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { href, useParams } from 'react-router';
 import { useRouteLoaderData } from 'react-router';
 
-import { useOrganizationPermissions } from '../../hooks/use-organization-features';
-import { usePlanData } from '../../hooks/use-plan';
-import type { ListWorkspacesLoaderData } from '../../routes/$organizationId.project.$projectId';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
-import { AlertModal } from '../modals/alert-modal';
-import { ImportProjectsModal } from '../modals/import-modal/import-projects-modal';
+import { useRootLoaderData } from '~/root';
+import { useOrganizationLoaderData } from '~/routes/organization';
+import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
+import { useProjectMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.move';
+import { useProjectMoveWorkspaceActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.move-workspace';
+import type { WorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
+import { AlertModal } from '~/ui/components/modals/alert-modal';
+import { ImportProjectsModal } from '~/ui/components/modals/import-modal/import-projects-modal';
+import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
+import { usePlanData } from '~/ui/hooks/use-plan';
 
 const VALUE_YAML = 'yaml';
 const VALUE_HAR = 'har';
@@ -422,7 +424,7 @@ const UntrackedProject = ({
   organizationId: string;
   organizations: Organization[];
 }) => {
-  const moveProjectFetcher = useFetcher();
+  const moveProjectFetcher = useProjectMoveActionFetcher();
   const [selectedOrganizationId, setSelectedOrganizationId] = useState<string | null>(null);
 
   return (
@@ -437,7 +439,10 @@ const UntrackedProject = ({
         </p>
       </div>
       <moveProjectFetcher.Form
-        action={`/organization/${organizationId}/project/${project._id}/move`}
+        action={href(`/organization/:organizationId/project/:projectId/move`, {
+          organizationId,
+          projectId: project._id,
+        })}
         method="POST"
         className="group flex items-center gap-2"
       >
@@ -512,7 +517,7 @@ const UntrackedWorkspace = ({
   organizationId: string;
   projects: Project[];
 }) => {
-  const moveWorkspaceFetcher = useFetcher();
+  const moveWorkspaceFetcher = useProjectMoveWorkspaceActionFetcher();
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
   return (
@@ -524,7 +529,10 @@ const UntrackedWorkspace = ({
         </Heading>
       </div>
       <moveWorkspaceFetcher.Form
-        action={`/organization/${organizationId}/project/${selectedProjectId}/move-workspace`}
+        action={href(`/organization/:organizationId/project/:projectId/move-workspace`, {
+          organizationId,
+          projectId: selectedProjectId || '',
+        })}
         method="POST"
         className="group flex items-center gap-2"
       >
@@ -611,26 +619,31 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   const { features } = useOrganizationPermissions();
   const { isEnterprisePlan } = usePlanData();
 
-  const untrackedProjectsFetcher = useFetcher<UntrackedProjectsLoaderData>();
+  const untrackedProjectsFetcher = useUntrackedProjectsLoaderFetcher();
 
   useEffect(() => {
     const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;
     if (isIdleAndUninitialized) {
-      untrackedProjectsFetcher.load('/untracked-projects');
+      untrackedProjectsFetcher.load();
     }
   }, [untrackedProjectsFetcher, organizationId]);
 
   const untrackedProjects = untrackedProjectsFetcher.data?.untrackedProjects || [];
   const untrackedWorkspaces = untrackedProjectsFetcher.data?.untrackedWorkspaces || [];
 
-  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
+  const workspaceData = useRouteLoaderData(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
+  ) as WorkspaceLoaderData | undefined;
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
   const { workspaceCount, userSession } = useRootLoaderData();
-  const workspacesFetcher = useFetcher<ListWorkspacesLoaderData>();
+  const workspacesFetcher = useProjectListWorkspacesLoaderFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
     if (isIdleAndUninitialized && organizationId && projectId && !isScratchpadOrganizationId(organizationId)) {
-      workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}/list-workspaces`);
+      workspacesFetcher.load({
+        organizationId,
+        projectId,
+      });
     }
   }, [organizationId, projectId, workspacesFetcher]);
   const projectLoaderData = workspacesFetcher?.data;

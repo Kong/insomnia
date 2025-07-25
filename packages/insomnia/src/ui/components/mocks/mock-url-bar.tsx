@@ -1,18 +1,17 @@
 import React, { useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router';
-import { useInterval } from 'react-use';
+import * as reactUse from 'react-use';
+
+import { useRootLoaderData } from '~/root';
+import type { MockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import { useMockRoutePatcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import type { OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { getMockServiceBinURL, HTTP_METHODS } from '../../../common/constants';
 import * as models from '../../../models';
 import { useTimeoutWhen } from '../../hooks/useTimeoutWhen';
-import {
-  type MockRouteLoaderData,
-  useMockRoutePatcher,
-} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
-import { useRootLoaderData } from '../../routes/root';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
-import type { OneLineEditorHandle } from '../codemirror/one-line-editor';
 import { Icon } from '../icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showModal } from '../modals';
@@ -27,7 +26,9 @@ export const MockUrlBar = ({
   onPathUpdate: (path: string) => void;
   onSend: (path: string) => void;
 }) => {
-  const { mockServer, mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
+  const { mockServer, mockRoute } = useRouteLoaderData(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.mock-server.mock-route.$mockRouteId',
+  ) as MockRouteLoaderData;
   const { settings } = useRootLoaderData();
   const { hotKeyRegistry } = settings;
   const patchMockRoute = useMockRoutePatcher();
@@ -41,7 +42,7 @@ export const MockUrlBar = ({
     setCurrentTimeout(undefined);
     onSend(pathInput);
   };
-  useInterval(send, currentInterval ? currentInterval : null);
+  reactUse.useInterval(send, currentInterval ? currentInterval : null);
   useTimeoutWhen(send, currentTimeout, !!currentTimeout);
   useDocBodyKeyboardShortcuts({
     request_focusUrl: () => {

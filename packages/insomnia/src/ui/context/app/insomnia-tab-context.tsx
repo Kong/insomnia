@@ -1,6 +1,6 @@
 import React, { createContext, type FC, type PropsWithChildren, useCallback, useContext, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { useLocalStorage } from 'react-use';
+import * as reactUse from 'react-use';
 
 import { isScratchpadOrganizationId } from '../../../models/organization';
 import type { BaseTab } from '../../components/tabs/tab';
@@ -51,7 +51,7 @@ export const InsomniaTabProvider: FC<PropsWithChildren> = ({ children }) => {
     workspaceId: string;
   };
 
-  const [appTabs, setAppTabs] = useLocalStorage<InsomniaTabs>('insomnia-tabs', {});
+  const [appTabs, setAppTabs] = reactUse.useLocalStorage<InsomniaTabs>('insomnia-tabs', {});
 
   // keep a ref of the appTabs to avoid the function recreated, which will cause the useEffect to run again and cannot delete a tab
   // file: packages/insomnia/src/ui/hooks/tab.ts

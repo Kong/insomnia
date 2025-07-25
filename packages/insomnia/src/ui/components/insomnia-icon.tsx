@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const InsomniaLogo = ({ ...props }: {} & React.SVGProps<SVGSVGElement>) => (
   <svg
     viewBox="0 0 128 128"

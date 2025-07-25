@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import * as os from 'node:os';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 import {
   app,
@@ -82,6 +81,7 @@ export async function createHiddenBrowserWindow() {
     // if window crashed
     const windowWasClosedUnexpectedly = hiddenWindowIsBusy && !isRunning;
     if (windowWasClosedUnexpectedly) {
+      console.log('[main] hidden window was closed unexpectedly');
       hiddenWindowIsBusy = false;
     }
 
@@ -94,11 +94,12 @@ export async function createHiddenBrowserWindow() {
     // if window froze
     const isRunningButUnhealthy = isRunning && !isHealthy;
     if (isRunningButUnhealthy) {
+      console.log('[main] hidden window is busy, stopping it');
       // stop and wait for window close event and sync the map and busy status
       await stopAndWaitForHiddenBrowserWindow(runningHiddenBrowserWindow);
     }
 
-    console.log('[main] hidden window is down, restarting');
+    console.log('[main] hidden window is not running, starting it');
     const hiddenBrowserWindow = new BrowserWindow({
       show: false,
       title: 'HiddenBrowserWindow',
@@ -126,9 +127,8 @@ export async function createHiddenBrowserWindow() {
     });
 
     const hiddenBrowserWindowPath = path.resolve(__dirname, 'hidden-window.html');
-    const hiddenBrowserWindowUrl = process.env.HIDDEN_BROWSER_WINDOW_URL || pathToFileURL(hiddenBrowserWindowPath).href;
-    hiddenBrowserWindow.loadURL(hiddenBrowserWindowUrl);
-    console.log(`[main] Loading ${hiddenBrowserWindowUrl}`);
+    hiddenBrowserWindow.loadFile(hiddenBrowserWindowPath);
+    console.log(`[main] Loading ${hiddenBrowserWindowPath}`);
 
     ipcMain.removeHandler('renderer-listener-ready');
     const hiddenWinListenerReady = new Promise<void>(resolve => {
@@ -254,8 +254,7 @@ export function createWindow(): ElectronBrowserWindow {
   });
 
   // Load the html of the app.
-  const appPath = path.resolve(__dirname, './index.html');
-  const appUrl = process.env.APP_RENDER_URL || pathToFileURL(appPath).href;
+  const appUrl = process.env.APP_RENDER_URL || 'https://insomnia-app.com';
 
   console.log(`[main] Loading ${appUrl}`);
 

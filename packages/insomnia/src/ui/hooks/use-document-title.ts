@@ -2,14 +2,16 @@ import { useEffect } from 'react';
 import { useRouteLoaderData } from 'react-router';
 
 import { getProductName } from '../../common/constants';
-import type { WorkspaceLoaderData } from '../routes/$organizationId.project.$projectId.workspace.$workspaceId';
-import type { RequestLoaderData } from '../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import type { WorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import type { RequestLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 export const useDocumentTitle = () => {
   const { activeWorkspace, activeEnvironment, activeProject } = useRouteLoaderData(
-    ':workspaceId',
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
   ) as WorkspaceLoaderData;
 
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const { activeRequest } = useRouteLoaderData(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId',
+  ) as RequestLoaderData;
 
   // Update document title
   useEffect(() => {

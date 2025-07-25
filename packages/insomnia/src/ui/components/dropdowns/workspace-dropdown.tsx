@@ -3,7 +3,7 @@ import {
   exportGlobalEnvironmentToFile,
   exportMockServerToFile,
 } from 'insomnia/src/ui/components/settings/import-export';
-import React, { type FC, type ReactNode, useCallback, useEffect, useState } from 'react';
+import { type FC, type ReactNode, useCallback, useEffect, useState } from 'react';
 import {
   Button,
   Collection,
@@ -18,7 +18,10 @@ import {
   ModalOverlay,
   Popover,
 } from 'react-aria-components';
-import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router';
+import { href, useNavigate, useParams, useRouteLoaderData } from 'react-router';
+
+import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
+import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 
 import { getProductName } from '../../../common/constants';
 import { database as db } from '../../../common/database';
@@ -34,9 +37,9 @@ import * as pluginApp from '../../../plugins/context/app';
 import * as pluginData from '../../../plugins/context/data';
 import * as pluginNetwork from '../../../plugins/context/network';
 import * as pluginStore from '../../../plugins/context/store';
+import type { WorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { invariant } from '../../../utils/invariant';
 import { SegmentEvent } from '../../analytics';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -55,16 +58,17 @@ export const WorkspaceDropdown: FC<{}> = () => {
   }>();
   invariant(organizationId, 'Expected organizationId');
   const { activeWorkspace, activeWorkspaceMeta, activeProject, activeMockServer } = useRouteLoaderData(
-    ':workspaceId',
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
   ) as WorkspaceLoaderData;
 
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const fetcher = useFetcher();
+
+  const updateWorkspaceFetcher = useWorkspaceUpdateActionFetcher();
   const [isDeleteRemoteWorkspaceModalOpen, setIsDeleteRemoteWorkspaceModalOpen] = useState(false);
-  const deleteWorkspaceFetcher = useFetcher();
+  const deleteWorkspaceFetcher = useWorkspaceDeleteActionFetcher();
   const [actionPlugins, setActionPlugins] = useState<WorkspaceAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const navigate = useNavigate();
@@ -245,14 +249,11 @@ export const WorkspaceDropdown: FC<{}> = () => {
               selectText: true,
               label: 'Name',
               onComplete: name =>
-                fetcher.submit(
-                  { name, workspaceId: activeWorkspace._id },
-                  {
-                    action: `/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/update`,
-                    method: 'post',
-                    encType: 'application/json',
-                  },
-                ),
+                updateWorkspaceFetcher.submit({
+                  organizationId,
+                  projectId: activeWorkspace.parentId,
+                  patch: { name, workspaceId: activeWorkspace._id },
+                }),
             }),
         },
         {
@@ -413,7 +414,10 @@ export const WorkspaceDropdown: FC<{}> = () => {
                     </Button>
                   </div>
                   <deleteWorkspaceFetcher.Form
-                    action={`/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/delete`}
+                    action={href(`/organization/:organizationId/project/:projectId/workspace/delete`, {
+                      organizationId,
+                      projectId: activeWorkspace.parentId,
+                    })}
                     method="POST"
                     className="flex flex-col gap-4"
                   >

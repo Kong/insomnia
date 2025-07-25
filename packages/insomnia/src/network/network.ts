@@ -53,7 +53,6 @@ import * as plugins from '../plugins/index';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '../templating/types';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
-import { type SendActionRuntime } from '../ui/routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { invariant } from '../utils/invariant';
 import { serializeNDJSON } from '../utils/ndjson';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../utils/url/querystring';
@@ -62,6 +61,10 @@ import { cancellableCurlRequest, cancellableRunScript } from './cancellation';
 import { filterClientCertificates } from './certificate';
 import { runScriptConcurrently, type TransformedExecuteScriptContext } from './concurrency';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
+
+export interface SendActionRuntime {
+  appendTimeline: (timelinePath: string, logs: string[]) => Promise<void>;
+}
 
 export const getOrInheritAuthentication = ({
   request,

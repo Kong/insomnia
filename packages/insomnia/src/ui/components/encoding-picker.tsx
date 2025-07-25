@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button, ComboBox, Group, Input, ListBox, ListBoxItem, Popover } from 'react-aria-components';
 
 import { fuzzyMatch } from '../../common/misc';

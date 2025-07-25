@@ -13,6 +13,8 @@ import {
   TextField,
 } from 'react-aria-components';
 
+import { useRootLoaderData } from '~/root';
+
 import { ACCEPTED_NODE_CA_FILE_EXTS, NPM_PACKAGE_BASE, PLUGIN_HUB_BASE } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
 import type { Plugin } from '../../../plugins/index';
@@ -20,7 +22,6 @@ import { getPlugins } from '../../../plugins/index';
 import { reload } from '../../../templating/index';
 import { validatePluginName } from '../../../utils/plugin';
 import { useSettingsPatcher } from '../../hooks/use-request';
-import { useRootLoaderData } from '../../routes/root';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';

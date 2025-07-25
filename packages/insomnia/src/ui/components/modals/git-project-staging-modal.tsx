@@ -13,9 +13,15 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
 
-import type { GitChangesLoaderData, GitDiffResult } from '../../routes/$organizationId.project.$projectId.git';
+import { useGitProjectChangesFetcher } from '~/routes/git.changes';
+import { useGitProjectCommitActionFetcher } from '~/routes/git.commit';
+import { useGitProjectDiffLoaderFetcher } from '~/routes/git.diff';
+import { useGitProjectDiscardActionFetcher } from '~/routes/git.discard';
+import { useGitProjectStageActionFetcher } from '~/routes/git.stage';
+import { useGitProjectUnstageActionFetcher } from '~/routes/git.unstage';
+
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 import { AlertModal } from './alert-modal';
@@ -27,52 +33,34 @@ export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({ onClose })
     projectId: string;
     workspaceId: string;
   };
-  const gitChangesFetcher = useFetcher<GitChangesLoaderData>();
+  const gitChangesFetcher = useGitProjectChangesFetcher();
 
-  const stageChangesFetcher = useFetcher<{
-    errors?: string[];
-  }>();
-  const unstageChangesFetcher = useFetcher<{
-    errors?: string[];
-  }>();
-  const undoUnstagedChangesFetcher = useFetcher<{
-    errors?: string[];
-  }>();
-  const diffChangesFetcher = useFetcher<GitDiffResult>();
+  const stageChangesFetcher = useGitProjectStageActionFetcher();
+  const unstageChangesFetcher = useGitProjectUnstageActionFetcher();
+  const undoUnstagedChangesFetcher = useGitProjectDiscardActionFetcher();
+  const diffChangesFetcher = useGitProjectDiffLoaderFetcher();
+  const commitFetcher = useGitProjectCommitActionFetcher();
 
   function diffChanges({ path, staged }: { path: string; staged: boolean }) {
-    let url = `/organization/${organizationId}/project/${projectId}/git/diff`;
-    const params = new URLSearchParams();
-    params.set('filepath', path);
-    params.set('staged', staged ? 'true' : 'false');
-    url += '?' + params.toString();
-    diffChangesFetcher.load(`${url}`);
+    diffChangesFetcher.load({
+      projectId,
+      filePath: path,
+      staged,
+    });
   }
 
   function stageChanges(paths: string[]) {
-    stageChangesFetcher.submit(
-      {
-        paths,
-      },
-      {
-        method: 'POST',
-        action: `/organization/${organizationId}/project/${projectId}/git/stage`,
-        encType: 'application/json',
-      },
-    );
+    stageChangesFetcher.submit({
+      projectId,
+      paths,
+    });
   }
 
   function unstageChanges(paths: string[]) {
-    unstageChangesFetcher.submit(
-      {
-        paths,
-      },
-      {
-        method: 'POST',
-        action: `/organization/${organizationId}/project/${projectId}/git/unstage`,
-        encType: 'application/json',
-      },
-    );
+    unstageChangesFetcher.submit({
+      projectId,
+      paths,
+    });
   }
 
   function undoUnstagedChanges(paths: string[], filesCount: number) {
@@ -81,16 +69,10 @@ export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({ onClose })
       title: 'Discard changes',
       okLabel: 'Discard',
       onConfirm: () => {
-        undoUnstagedChangesFetcher.submit(
-          {
-            paths,
-          },
-          {
-            method: 'POST',
-            action: `/organization/${organizationId}/project/${projectId}/git/discard`,
-            encType: 'application/json',
-          },
-        );
+        undoUnstagedChangesFetcher.submit({
+          projectId,
+          paths,
+        });
       },
       addCancel: true,
     });
@@ -98,8 +80,9 @@ export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({ onClose })
 
   useEffect(() => {
     if (gitChangesFetcher.state === 'idle' && !gitChangesFetcher.data) {
-      // file://./../../routes/git-actions.tsx#gitChangesLoader
-      gitChangesFetcher.load(`/organization/${organizationId}/project/${projectId}/git/changes`);
+      gitChangesFetcher.load({
+        projectId,
+      });
     }
   }, [organizationId, projectId, workspaceId, gitChangesFetcher]);
 
@@ -112,23 +95,20 @@ export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({ onClose })
     statusNames: {},
   };
 
-  const { Form, formAction, state, data } = useFetcher<{ errors?: string[] }>();
+  const isCommiting = commitFetcher.state !== 'idle';
 
-  const isCreatingSnapshot =
-    state !== 'idle' && formAction === `/organization/${organizationId}/project/${projectId}/git/commit`;
-  const isPushing =
-    state !== 'idle' && formAction === `/organization/${organizationId}/project/${projectId}/git/commit-and-push`;
   const previewDiffItem = diffChangesFetcher.data && 'diff' in diffChangesFetcher.data ? diffChangesFetcher.data : null;
 
   const allChanges = [...changes.staged, ...changes.unstaged];
   const allChangesLength = allChanges.length;
-  const noCommitErrors = data && 'errors' in data && data.errors?.length === 0;
+  const hasNoCommitErrors =
+    commitFetcher.data && 'errors' in commitFetcher.data && commitFetcher.data.errors?.length === 0;
 
   useEffect(() => {
-    if (allChangesLength === 0 && noCommitErrors) {
+    if (allChangesLength === 0 && hasNoCommitErrors) {
       onClose();
     }
-  }, [allChangesLength, onClose, noCommitErrors]);
+  }, [allChangesLength, onClose, hasNoCommitErrors]);
 
   return (
     <ModalOverlay
@@ -165,7 +145,22 @@ export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({ onClose })
               </div>
               <div className="grid h-full gap-2 divide-x divide-solid divide-[--hl-md] overflow-hidden [grid-template-columns:300px_1fr]">
                 <div className="flex flex-1 flex-col gap-4 overflow-hidden">
-                  <Form method="POST" className="flex flex-col gap-2">
+                  <form
+                    onSubmit={e => {
+                      e.preventDefault();
+                      const submitter = e.nativeEvent instanceof SubmitEvent ? e.nativeEvent.submitter : null;
+                      const formData = new FormData(e.currentTarget, submitter);
+                      const message = formData.get('message')?.toString() || '';
+                      const push = Boolean(formData.get('push') === 'true');
+
+                      commitFetcher.submit({
+                        projectId,
+                        message,
+                        push,
+                      });
+                    }}
+                    className="flex flex-col gap-2"
+                  >
                     <TextField className="flex flex-shrink-0 flex-col gap-2">
                       <Label className="font-bold">Message</Label>
                       <TextArea
@@ -180,35 +175,35 @@ export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({ onClose })
                     <div className="flex flex-shrink-0 items-center justify-stretch gap-2">
                       <Button
                         type="submit"
-                        isDisabled={state !== 'idle' || changes.staged.length === 0}
-                        formAction={`/organization/${organizationId}/project/${projectId}/git/commit`}
+                        isDisabled={commitFetcher.state !== 'idle' || changes.staged.length === 0}
                         className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                       >
                         <Icon
-                          icon={isCreatingSnapshot ? 'spinner' : 'check'}
-                          className={`w-5 ${isCreatingSnapshot ? 'animate-spin' : ''}`}
+                          icon={isCommiting ? 'spinner' : 'check'}
+                          className={`w-5 ${isCommiting ? 'animate-spin' : ''}`}
                         />{' '}
                         Commit
                       </Button>
                       <Button
                         type="submit"
-                        isDisabled={state !== 'idle' || changes.staged.length === 0}
-                        formAction={`/organization/${organizationId}/project/${projectId}/git/commit-and-push`}
+                        isDisabled={commitFetcher.state !== 'idle' || changes.staged.length === 0}
+                        name="push"
+                        value="true"
                         className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                       >
                         <Icon
-                          icon={isPushing ? 'spinner' : 'cloud-arrow-up'}
-                          className={`w-5 ${isPushing ? 'animate-spin' : ''}`}
+                          icon={isCommiting ? 'spinner' : 'cloud-arrow-up'}
+                          className={`w-5 ${isCommiting ? 'animate-spin' : ''}`}
                         />{' '}
                         Commit and push
                       </Button>
                     </div>
-                    {data && data.errors && data.errors.length > 0 && (
+                    {commitFetcher.data && commitFetcher.data.errors && commitFetcher.data.errors.length > 0 && (
                       <p className="rounded-sm bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))] bg-opacity-20 p-2 text-sm text-[--color-font-danger]">
-                        <Icon icon="exclamation-triangle" /> {data.errors.join('\n')}
+                        <Icon icon="exclamation-triangle" /> {commitFetcher.data.errors.join('\n')}
                       </p>
                     )}
-                  </Form>
+                  </form>
 
                   <div className="grid auto-rows-auto gap-2 overflow-y-auto">
                     <div className="flex max-h-96 w-full flex-col gap-2 overflow-hidden">
@@ -278,17 +273,6 @@ export const GitProjectStagingModal: FC<{ onClose: () => void }> = ({ onClose })
                                       Unstage change
                                     </Tooltip>
                                   </TooltipTrigger>
-                                  {/* <TooltipTrigger>
-                                    <Button className="cursor-default">
-                                      {'added' in item.entry ? 'U' : 'deleted' in item.entry ? 'D' : 'M'}
-                                    </Button>
-                                    <Tooltip
-                                      offset={8}
-                                      className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                                    >
-                                      {'added' in item.entry ? 'Untracked' : 'deleted' in item.entry ? 'Deleted' : 'Modified'}
-                                    </Tooltip>
-                                  </TooltipTrigger> */}
                                 </div>
                               </GridListItem>
                             );

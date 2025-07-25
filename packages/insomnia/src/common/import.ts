@@ -1,5 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
+import type { CurrentPlan } from '~/models/organization';
+
 import { type ApiSpec, isApiSpec } from '../models/api-spec';
 import { type CookieJar, isCookieJar } from '../models/cookie-jar';
 import { type BaseEnvironment, type Environment, isEnvironment } from '../models/environment';
@@ -15,7 +17,6 @@ import { isUnitTest, type UnitTest } from '../models/unit-test';
 import { isUnitTestSuite, type UnitTestSuite } from '../models/unit-test-suite';
 import { isWebSocketRequest, type WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
-import type { CurrentPlan } from '../ui/organization-utils';
 import { convert, type InsomniaImporter } from '../utils/importers/convert';
 import type { ImportEntry } from '../utils/importers/entities';
 import { id as postmanEnvImporterId } from '../utils/importers/importers/postman-env';

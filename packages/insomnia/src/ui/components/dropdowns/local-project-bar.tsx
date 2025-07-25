@@ -1,5 +1,4 @@
 import type { FC } from 'react';
-import React from 'react';
 import { Button, Separator, Tooltip, TooltipTrigger } from 'react-aria-components';
 
 import { Icon } from '../icon';

@@ -1,12 +1,12 @@
 import { fakerFunctions } from 'insomnia/src/templating/faker-functions';
-import { configure, type ConfigureOptions, type Environment as NunjuncksEnv } from 'nunjucks';
+import nunjucks, { type ConfigureOptions, type Environment as NunjuncksEnv } from 'nunjucks';
 
 /** @ignore */
 class Interpolator {
   private engine: NunjuncksEnv;
 
   constructor(config: ConfigureOptions) {
-    this.engine = configure(config);
+    this.engine = nunjucks.configure(config);
   }
 
   render = (template: string, context: object) => {

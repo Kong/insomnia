@@ -1,6 +1,8 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 
+import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
+
 import { NunjucksEnabledProvider } from '../../context/nunjucks/nunjucks-enabled-context';
 import { CopyButton } from '../base/copy-button';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -8,7 +10,6 @@ import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import { CodeEditor } from '../codemirror/code-editor';
 import { MarkdownEditor } from '../markdown-editor';
 
 const MODES: Record<string, string> = {

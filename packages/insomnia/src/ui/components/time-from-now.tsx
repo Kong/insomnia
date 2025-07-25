@@ -1,6 +1,6 @@
 import { differenceInMinutes, formatDistanceToNowStrict } from 'date-fns';
 import React, { type FC, useState } from 'react';
-import { useInterval } from 'react-use';
+import * as reactUse from 'react-use';
 
 interface Props {
   timestamp: number | Date | string;
@@ -38,7 +38,7 @@ export function getTimeFromNow(timestamp: string | number | Date, titleCase: boo
 function useTimeNowLabel(timestamp: number | Date | string, titleCase?: boolean, intervalSeconds?: number): string {
   const [text, setText] = useState(getTimeFromNow(timestamp, Boolean(titleCase)));
 
-  useInterval(
+  reactUse.useInterval(
     () => {
       const newText = getTimeFromNow(timestamp, Boolean(titleCase));
       setText(newText);

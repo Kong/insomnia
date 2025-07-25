@@ -5,15 +5,16 @@ import React, { type FC, useCallback, useMemo } from 'react';
 import { Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router';
 
+import { useRootLoaderData } from '~/root';
+
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
 import { cancelRequestById } from '../../../network/cancellation';
+import type { RequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { useExecutionState } from '../../hooks/use-execution-state';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
-import type { RequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { useRootLoaderData } from '../../routes/root';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { MockResponseExtractor } from '../editors/mock-response-extractor';
@@ -37,7 +38,7 @@ interface Props {
 }
 export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
   const { activeRequest, activeRequestMeta, activeResponse } = useRouteLoaderData(
-    'request/:requestId',
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId',
   ) as RequestLoaderData;
   const filterHistory = activeRequestMeta.responseFilterHistory || [];
   const filter = activeRequestMeta.responseFilter || '';

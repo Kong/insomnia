@@ -2,6 +2,8 @@ import type { HTTPSnippetClient, HTTPSnippetTarget } from 'httpsnippet';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
 
+import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
+
 import { exportHarWithRequest } from '../../../common/har';
 import type { Request } from '../../../models/request';
 import { CopyButton } from '../base/copy-button';
@@ -11,7 +13,6 @@ import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';
 
 const MODE_MAP: Record<string, string> = {
   c: 'clike',

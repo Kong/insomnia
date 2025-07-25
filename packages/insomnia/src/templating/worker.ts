@@ -1,6 +1,7 @@
-import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
 import type { Environment } from 'nunjucks';
-import nunjucks from 'nunjucks/browser/nunjucks';
+
+import { localTemplateTags } from '~/templating/local-template-tags';
+import { nunjucks } from '~/templating/nunjucks.client';
 
 import type { TemplateTag } from '../plugins';
 import BaseExtensionWorker, { fetchFromTemplateWorkerDatabase } from './base-extension-worker';

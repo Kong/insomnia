@@ -1,8 +1,10 @@
 import React, { useDeferredValue, useEffect } from 'react';
 import { Button, ComboBox, Input, Label, ListBox, ListBoxItem, Popover } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
 
-import type { GitCredentials } from '../../../sync/git/git-vcs';
+import type { GitCredentials } from '~/models/git-repository';
+import { useGitRemoteBranchesActionFetcher } from '~/routes/git.remote-branches';
+
 import { Icon } from '../icon';
 
 export const GitRemoteBranchSelect = ({
@@ -15,25 +17,17 @@ export const GitRemoteBranchSelect = ({
   credentials: GitCredentials;
 }) => {
   const uri = useDeferredValue(url);
-  const remoteBranchesFetcher = useFetcher<{ branches: string[] }>({ key: `branch-select:${uri}` });
-  const { organizationId } = useParams<{ organizationId: string }>();
+  const remoteBranchesFetcher = useGitRemoteBranchesActionFetcher({ key: `branch-select:${uri}` });
+  const { organizationId } = useParams() as { organizationId: string };
 
   const isLoadingRemoteBranches = remoteBranchesFetcher.state !== 'idle';
 
   useEffect(() => {
     if (uri && remoteBranchesFetcher.state === 'idle' && !remoteBranchesFetcher.data) {
-      remoteBranchesFetcher.submit(
-        // @ts-expect-error credentials is not defined in the type, but it is used here
-        {
-          uri,
-          credentials,
-        },
-        {
-          method: 'POST',
-          encType: 'application/json',
-          action: `/organization/${organizationId}/git/remote-branches`,
-        },
-      );
+      remoteBranchesFetcher.submit({
+        uri,
+        credentials,
+      });
     }
   }, [organizationId, remoteBranchesFetcher, uri, credentials]);
 
@@ -98,18 +92,10 @@ export const GitRemoteBranchSelect = ({
           aria-label="Refresh repositories"
           onPress={() => {
             if (uri && remoteBranchesFetcher.state === 'idle') {
-              remoteBranchesFetcher.submit(
-                // @ts-expect-error credentials is not defined in the type, but it is used here
-                {
-                  uri,
-                  credentials,
-                },
-                {
-                  method: 'POST',
-                  encType: 'application/json',
-                  action: `/organization/${organizationId}/git/remote-branches`,
-                },
-              );
+              remoteBranchesFetcher.submit({
+                uri,
+                credentials,
+              });
             }
           }}
         >

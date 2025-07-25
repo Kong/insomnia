@@ -4,7 +4,10 @@ import {
 } from 'insomnia/src/ui/components/settings/import-export';
 import React, { type FC, Fragment, useCallback, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { href, useParams } from 'react-router';
+
+import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
+import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 
 import { parseApiSpec } from '../../../common/api-specs';
 import { getProductName } from '../../../common/constants';
@@ -94,7 +97,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
 
 export const WorkspaceCardDropdown: FC<Props> = props => {
   const { workspace, mockServer, project, gitFilePath } = props;
-  const fetcher = useFetcher();
+  const updateWorkspaceFetcher = useWorkspaceUpdateActionFetcher();
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -102,7 +105,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
   const [isDeleteRemoteWorkspaceModalOpen, setIsDeleteRemoteWorkspaceModalOpen] = useState(false);
   const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string };
 
-  const deleteWorkspaceFetcher = useFetcher();
+  const deleteWorkspaceFetcher = useWorkspaceDeleteActionFetcher();
 
   const workspaceName = workspace.name;
   const projectName = project.name ?? getProductName();
@@ -136,14 +139,14 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                 selectText: true,
                 label: 'Name',
                 onComplete: name =>
-                  fetcher.submit(
-                    { name, workspaceId: workspace._id },
-                    {
-                      action: `/organization/${organizationId}/project/${workspace.parentId}/workspace/update`,
-                      method: 'post',
-                      encType: 'application/json',
+                  updateWorkspaceFetcher.submit({
+                    organizationId,
+                    projectId,
+                    patch: {
+                      name,
+                      workspaceId: workspace._id,
                     },
-                  ),
+                  }),
               });
             }}
           />
@@ -260,7 +263,10 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                     </Button>
                   </div>
                   <deleteWorkspaceFetcher.Form
-                    action={`/organization/${organizationId}/project/${workspace.parentId}/workspace/delete`}
+                    action={href(`/organization/:organizationId/project/:projectId/workspace/delete`, {
+                      organizationId,
+                      projectId: workspace.parentId,
+                    })}
                     method="POST"
                     className="flex flex-col gap-4"
                   >

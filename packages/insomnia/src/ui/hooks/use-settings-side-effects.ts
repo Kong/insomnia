@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect } from 'react';
 
-import { useRootLoaderData } from '../routes/root';
+import { useRootLoaderData } from '~/root';
 
 const updateFontStyle = (key: string, value: string | null) =>
   document?.querySelector('html')?.style.setProperty(key, value);

@@ -1,9 +1,10 @@
 import { useParams } from 'react-router';
 
+import { formatCurrentPlanType, type PersonalPlanType } from '~/models/organization';
+import { useRootLoaderData } from '~/root';
+import { useOrganizationLoaderData } from '~/routes/organization';
+
 import { isOwnerOfOrganization } from '../../models/organization';
-import { formatCurrentPlanType, type PersonalPlanType } from '../organization-utils';
-import { useOrganizationLoaderData } from '../routes/organization';
-import { useRootLoaderData } from '../routes/root';
 
 export const usePlanData = () => {
   let isOwner = false;
@@ -14,10 +15,15 @@ export const usePlanData = () => {
   let isEnterprisePlan = false;
   const { userSession } = useRootLoaderData();
   const { organizationId } = useParams<{ organizationId: string }>();
-  const { currentPlan, organizations } = useOrganizationLoaderData();
+  const organizationData = useOrganizationLoaderData();
   // ensure user has logged in with valid organization
-  if (userSession && Array.isArray(organizations) && organizations.length > 0) {
-    const currentOrg = organizations.find(organization => organization.id === organizationId);
+  if (
+    organizationData &&
+    userSession &&
+    Array.isArray(organizationData.organizations) &&
+    organizationData.organizations.length > 0
+  ) {
+    const currentOrg = organizationData.organizations.find(organization => organization.id === organizationId);
     const accountId = userSession.accountId;
     if (currentOrg && accountId) {
       isOwner = isOwnerOfOrganization({
@@ -25,11 +31,18 @@ export const usePlanData = () => {
         accountId: userSession.accountId,
       });
     }
-    planType = currentPlan?.type || planType;
+    planType = organizationData.currentPlan?.type || planType;
     isFreePlan = planType.includes('free');
     isTeamPlan = planType.includes('team');
     isEnterprisePlan = planType.includes('enterprise');
     planDisplayName = formatCurrentPlanType(planType);
   }
-  return { isOwner, currentPlan, planDisplayName, isFreePlan, isTeamPlan, isEnterprisePlan };
+  return {
+    isOwner,
+    currentPlan: organizationData?.currentPlan,
+    planDisplayName,
+    isFreePlan,
+    isTeamPlan,
+    isEnterprisePlan,
+  };
 };

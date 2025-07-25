@@ -12,22 +12,18 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { useFetcher, useParams, useRevalidator } from 'react-router';
-import { useInterval } from 'react-use';
+import { useParams, useRevalidator } from 'react-router';
+import * as reactUse from 'react-use';
+
+import { useGitProjectCheckoutBranchActionFetcher } from '~/routes/git.branch.checkout';
+import { useGitProjectFetchActionFetcher } from '~/routes/git.fetch';
+import { useGitProjectPushActionFetcher } from '~/routes/git.push';
+import { useGitProjectRepoFetcher } from '~/routes/git.repo';
+import { useGitProjectStatusActionFetcher } from '~/routes/git.status';
 
 import type { GitRepository } from '../../../models/git-repository';
 import { getOauth2FormatName } from '../../../sync/git/utils';
 import type { MergeConflict } from '../../../sync/types';
-import {
-  checkGitCanPush,
-  checkGitChanges,
-  continueMerge,
-  type GitFetchLoaderData,
-  type GitRepoLoaderData,
-  type GitStatusResult,
-  pullFromGitRemote,
-  type PushToGitRemoteResult,
-} from '../../routes/$organizationId.project.$projectId.git';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
 import { GitProjectBranchesModal } from '../modals/git-project-branches-modal';
@@ -53,18 +49,18 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
   const [isGitStagingModalOpen, setIsGitStagingModalOpen] = useState(false);
   const [isMigrationModalOpen, setIsMigrationModalOpen] = useState(false);
 
-  const gitPushFetcher = useFetcher<PushToGitRemoteResult>();
-  const gitCheckoutFetcher = useFetcher();
-  const gitRepoDataFetcher = useFetcher<GitRepoLoaderData>();
-  const gitFetchFetcher = useFetcher<GitFetchLoaderData>();
-  const gitIntervalFetchFetcher = useFetcher<GitFetchLoaderData>();
-  const gitStatusFetcher = useFetcher<GitStatusResult>();
+  const gitPushFetcher = useGitProjectPushActionFetcher();
+  const gitCheckoutFetcher = useGitProjectCheckoutBranchActionFetcher();
+  const gitRepoDataFetcher = useGitProjectRepoFetcher();
+  const gitFetchFetcher = useGitProjectFetchActionFetcher();
+  const gitIntervalFetchFetcher = useGitProjectFetchActionFetcher();
+  const gitStatusFetcher = useGitProjectStatusActionFetcher();
 
   const [isPulling, setIsPulling] = useState(false);
   const [operationError, setOperationError] = useState<string | null>(null);
 
   const providerName = getOauth2FormatName(gitRepository?.credentials);
-
+  const { revalidate } = useRevalidator();
   const icon: IconProp = useMemo(() => {
     if (providerName === 'github') {
       return ['fab', 'github'];
@@ -76,8 +72,9 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
 
   useEffect(() => {
     if (gitRepository?.uri && gitRepository?._id && gitRepoDataFetcher.state === 'idle' && !gitRepoDataFetcher.data) {
-      // file://./../../routes/git-actions.tsx#gitRepoLoader
-      gitRepoDataFetcher.load(`/organization/${organizationId}/project/${projectId}/git/repo`);
+      gitRepoDataFetcher.load({
+        projectId,
+      });
     }
   }, [gitRepoDataFetcher, gitRepository?.uri, gitRepository?._id, organizationId, projectId]);
 
@@ -109,31 +106,11 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
 
   useEffect(() => {
     if (shouldFetchGitRepoStatus) {
-      // file://./../../routes/git-actions.tsx#gitStatusAction
-      gitStatusFetcher.submit(
-        {},
-        {
-          action: `/organization/${organizationId}/project/${projectId}/git/status`,
-          method: 'post',
-        },
-      );
+      gitStatusFetcher.submit({
+        projectId,
+      });
     }
-  }, [gitStatusFetcher, organizationId, projectId, shouldFetchGitRepoStatus]);
-
-  useEffect(() => {
-    // update committed state on unmount
-    // this is a sync action which is responsible for cheaply updating a piece of state representing the existence of a diff
-    // ideally this would not be needed and a diff would be cheaper to find.
-    return () => {
-      checkGitChanges(projectId);
-    };
-  }, [projectId]);
-
-  useEffect(() => {
-    if (shouldFetchGitRepoStatus) {
-      checkGitCanPush(projectId);
-    }
-  }, [gitRepoDataFetcher.data, gitRepository?._id, gitRepository?.uri, projectId, shouldFetchGitRepoStatus]);
+  }, [gitStatusFetcher, projectId, shouldFetchGitRepoStatus]);
 
   useEffect(() => {
     const errors = [...(gitPushFetcher.data?.errors ?? [])];
@@ -155,7 +132,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
 
   useEffect(() => {
     const gitRepoDataErrors =
-      gitRepoDataFetcher.data && 'errors' in gitRepoDataFetcher.data ? gitRepoDataFetcher.data.errors : [];
+      gitRepoDataFetcher.data && 'errors' in gitRepoDataFetcher.data ? (gitRepoDataFetcher.data.errors ?? []) : [];
     const errors = [...gitRepoDataErrors];
     if (errors.length > 0) {
       setOperationError(errors.join('\n'));
@@ -205,15 +182,10 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
       title: `Push started`,
     });
 
-    gitPushFetcher.submit(
-      {
-        force: `${force}`,
-      },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/git/push`,
-        method: 'post',
-      },
-    );
+    gitPushFetcher.submit({
+      projectId,
+      force,
+    });
   }
 
   const isPushing = gitPushFetcher.state !== 'idle';
@@ -230,8 +202,6 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
     gitRepoDataFetcher.data && 'branches' in gitRepoDataFetcher.data
       ? gitRepoDataFetcher.data
       : { branches: [], branch: '' };
-
-  const { revalidate } = useRevalidator();
 
   const currentBranchActions: {
     id: string;
@@ -262,7 +232,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
                 title: `Pull started`,
               });
 
-              const pullResult = await pullFromGitRemote({ projectId });
+              const pullResult = await window.main.git.pullFromGitRemote({ projectId });
 
               if ('errors' in pullResult && pullResult.errors) {
                 showToast({
@@ -279,15 +249,17 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
                   handleDone: (conflicts?: MergeConflict[]) => {
                     if (Array.isArray(conflicts) && conflicts.length > 0) {
                       setIsPulling(true);
-                      continueMerge({
-                        projectId,
-                        handledMergeConflicts: conflicts,
-                        commitMessage: pullResult.commitMessage,
-                        commitParent: pullResult.commitParent,
-                      }).finally(() => {
-                        setIsPulling(false);
-                        revalidate();
-                      });
+                      window.main.git
+                        .continueMerge({
+                          projectId,
+                          handledMergeConflicts: conflicts,
+                          commitMessage: pullResult.commitMessage,
+                          commitParent: pullResult.commitParent,
+                        })
+                        .finally(() => {
+                          setIsPulling(false);
+                          revalidate();
+                        });
                     } else {
                       // user aborted merge, do nothing
                     }
@@ -339,13 +311,9 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
               icon,
               title: `Fetch started`,
             });
-            gitFetchFetcher.submit(
-              {},
-              {
-                action: `/organization/${organizationId}/project/${projectId}/git/fetch`,
-                method: 'post',
-              },
-            );
+            gitFetchFetcher.submit({
+              projectId,
+            });
           },
         },
       ]
@@ -384,15 +352,11 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
         },
       ];
 
-  useInterval(
+  reactUse.useInterval(
     () => {
-      gitIntervalFetchFetcher.submit(
-        {},
-        {
-          action: `/organization/${organizationId}/project/${projectId}/git/fetch`,
-          method: 'post',
-        },
-      );
+      gitIntervalFetchFetcher.submit({
+        projectId,
+      });
     },
     1000 * 60 * 5,
   );
@@ -406,30 +370,25 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
     isDisabled?: boolean;
     isActive: boolean;
     action: () => void;
-  }[] = isSynced
-    ? branches.map(branch => ({
-        id: branch,
-        label: branch,
-        isActive: branch === currentBranch,
-        icon: 'code-branch',
-        action: async () => {
-          setOperationError(null);
-          showToast({
-            title: `Switching to branch ${branch}`,
-          });
-          // file://./../../routes/git-actions.tsx#gitCheckoutAction
-          gitCheckoutFetcher.submit(
-            {
+  }[] =
+    isSynced && branches
+      ? branches.map(branch => ({
+          id: branch,
+          label: branch,
+          isActive: branch === currentBranch,
+          icon: 'code-branch',
+          action: async () => {
+            setOperationError(null);
+            showToast({
+              title: `Switching to branch ${branch}`,
+            });
+            gitCheckoutFetcher.submit({
+              projectId,
               branch,
-            },
-            {
-              action: `/organization/${organizationId}/project/${projectId}/git/branch/checkout`,
-              method: 'post',
-            },
-          );
-        },
-      }))
-    : [];
+            });
+          },
+        }))
+      : [];
 
   const allSyncMenuActionList = [...gitSyncActions, ...branchesActionList, ...currentBranchActions];
 
@@ -470,13 +429,9 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
             onOpenChange={isOpen => {
               const shouldFetchGitRepoStatus = isOpen && gitStatusFetcher.state === 'idle';
               shouldFetchGitRepoStatus &&
-                gitStatusFetcher.submit(
-                  {},
-                  {
-                    action: `/organization/${organizationId}/project/${projectId}/git/status`,
-                    method: 'post',
-                  },
-                );
+                gitStatusFetcher.submit({
+                  projectId,
+                });
             }}
           >
             <Button
@@ -586,7 +541,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
           onHide={() => setIsGitRepoSettingsModalOpen(false)}
         />
       )}
-      {isGitBranchesModalOpen && gitRepository && (
+      {isGitBranchesModalOpen && gitRepository && currentBranch && (
         <GitProjectBranchesModal
           onClose={() => setIsGitBranchesModalOpen(false)}
           currentBranch={currentBranch}

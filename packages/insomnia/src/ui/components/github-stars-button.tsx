@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-aria-components';
-import { useMount, useMountedState } from 'react-use';
+import * as reactUse from 'react-use';
 
 import { getGitHubRestApiUrl } from '../../common/constants';
 import { SegmentEvent } from '../analytics';
@@ -9,7 +9,7 @@ import { Icon } from './icon';
 const LOCALSTORAGE_GITHUB_STARS_KEY = 'insomnia:github-stars';
 
 export const GitHubStarsButton = () => {
-  const isMounted = useMountedState();
+  const isMounted = reactUse.useMountedState();
   const localStorageStars = localStorage.getItem(LOCALSTORAGE_GITHUB_STARS_KEY);
   const initialState = parseInt(localStorageStars || '30000', 10);
   const [starCount, setStarCount] = useState(initialState);
@@ -20,7 +20,7 @@ export const GitHubStarsButton = () => {
 
   const [error, setError] = useState<Error | null>(null);
 
-  useMount(() => {
+  reactUse.useMount(() => {
     if (!isMounted()) {
       return;
     }

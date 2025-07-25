@@ -10,15 +10,20 @@
     "moduleResolution": "node",
     "isolatedModules": true,
     "paths": {
-      "electron": ["../insomnia/send-request/electron"]
+      "~/*": [
+        "../insomnia/src/*"
+      ],
+      "electron": [
+        "../insomnia/send-request/electron"
+      ]
     },
-    /* remove this  once react AlertModal is out of the plugins code path */
-    "jsx": "react",
     /* Transpiling Options */
     "module": "CommonJS",
     "sourceMap": true,
-    /* Runs in the DOM NOTE: this is inconsistent with reality */
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2023",
+      "DOM.Iterable"
+    ],
     /* Strictness */
     "strict": true,
     "noImplicitReturns": true,
@@ -27,7 +32,13 @@
     "noFallthroughCasesInSwitch": true,
     "useUnknownInCatchVariables": false
   },
-  "include": [".eslintrc.js", "esbuild.ts", "package.json", "src", "../insomnia/types"],
+  "include": [
+    ".eslintrc.js",
+    "esbuild.ts",
+    "package.json",
+    "src",
+    "../insomnia/types",
+  ],
   "exclude": [
     "**/*.test.ts",
     "**/__mocks__/*",

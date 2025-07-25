@@ -1,5 +1,3 @@
-import React from 'react';
-
 import type { PlatformKeyCombinations } from '../../../../common/settings';
 import { Hotkey } from '../../hotkey';
 

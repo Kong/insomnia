@@ -13,6 +13,8 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 
+import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+
 import { generateId } from '../../../../common/misc';
 import {
   decryptSecretValue,
@@ -22,7 +24,6 @@ import {
 } from '../../../../models/environment';
 import { base64decode } from '../../../../utils/vault';
 import { PromptButton } from '../../base/prompt-button';
-import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { Icon } from '../../icon';
 import { showModal } from '../../modals';
 import { AskModal } from '../../modals/ask-modal';

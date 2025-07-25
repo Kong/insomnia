@@ -18,13 +18,15 @@ import {
   TreeItem,
   TreeItemContent,
 } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
+
+import type { StorageRules } from '~/models/organization';
+import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
+import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
 
 import { isGitProject, type Project } from '../../../models/project';
 import { type WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
-import type { StorageRules } from '../../organization-utils';
-import type { GetRepositoryDirectoryTreeResult } from '../../routes/$organizationId.project.$projectId.git';
 import { Icon } from '../icon';
 
 const titleByScope: Record<WorkspaceScope, string> = {
@@ -81,20 +83,21 @@ export const NewWorkspaceModal = ({
     mockServerUrl: '',
   });
 
-  const createNewWorkspaceFetcher = useFetcher<{ error?: string }>();
+  const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
 
-  const gitRepoTreeFetcher = useFetcher<GetRepositoryDirectoryTreeResult>();
+  const gitRepoTreeFetcher = useGitProjectRepositoryTreeLoaderFetcher();
 
   useEffect(() => {
     if (isGitProject(project) && isOpen && gitRepoTreeFetcher.state === 'idle' && !gitRepoTreeFetcher.data) {
-      gitRepoTreeFetcher.load(`/organization/${organizationId}/project/${project._id}/git/repository-tree`);
+      gitRepoTreeFetcher.load({ projectId: project._id });
     }
-  }, [gitRepoTreeFetcher, isOpen, organizationId, project]);
+  }, [gitRepoTreeFetcher, isOpen, project]);
 
   const createNewWorkspace = () => {
-    createNewWorkspaceFetcher.submit(workspaceData, {
-      action: `/organization/${organizationId}/project/${project._id}/workspace/new`,
-      method: 'POST',
+    createNewWorkspaceFetcher.submit({
+      organizationId,
+      projectId: project._id,
+      ...workspaceData,
     });
   };
 

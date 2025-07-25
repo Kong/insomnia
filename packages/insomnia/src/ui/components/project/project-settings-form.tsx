@@ -20,7 +20,12 @@ import {
   Tabs,
   TextField,
 } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
+
+import { isGitCredentialsOAuth } from '~/models/git-repository';
+import type { StorageRules } from '~/models/organization';
+import { useGitProjectInitCloneActionFetcher } from '~/routes/git.init-clone';
+import { useProjectNewActionFetcher } from '~/routes/organization.$organizationId.project.new';
 
 import type { OauthProviderName } from '../../../models/git-credentials';
 import type { GitRepository } from '../../../models/git-repository';
@@ -31,15 +36,13 @@ import {
   isRemoteProject,
   type Project,
 } from '../../../models/project';
-import type { StorageRules } from '../../organization-utils';
-import type { InitGitCloneResult } from '../../routes/$organizationId.git';
 import {
   scopeToBgColorMap,
   scopeToIconMap,
   scopeToLabelMap,
   scopeToTextColorMap,
-} from '../../routes/$organizationId.project.$projectId';
-import type { UpdateProjectActionResult } from '../../routes/$organizationId.project.$projectId.update';
+} from '../../../routes/organization.$organizationId.project.$projectId._index';
+import { useProjectUpdateActionFetcher } from '../../../routes/organization.$organizationId.project.$projectId.update';
 import { ErrorBoundary } from '../error-boundary';
 import { CustomRepositorySettingsFormGroup } from '../git-credentials/custom-repository-settings-form';
 import { GitHubRepositorySetupFormGroup } from '../git-credentials/github-repository-settings-form';
@@ -121,8 +124,9 @@ export const ProjectSettingsForm: FC<Props> = ({
     connectRepositoryLater: false,
   });
 
-  const initCloneGitRepositoryFetcher = useFetcher<InitGitCloneResult>();
-  const upsertProjectFetcher = useFetcher<UpdateProjectActionResult>();
+  const initCloneGitRepositoryFetcher = useGitProjectInitCloneActionFetcher();
+  const updateProjectFetcher = useProjectUpdateActionFetcher();
+  const newProjectFetcher = useProjectNewActionFetcher();
 
   const showStorageRestrictionMessage =
     !storageRules.enableCloudSync || !storageRules.enableLocalVault || !storageRules.enableGitSync;
@@ -132,16 +136,22 @@ export const ProjectSettingsForm: FC<Props> = ({
       : [];
 
   useEffect(() => {
-    if (upsertProjectFetcher.data && upsertProjectFetcher.data.success && onSuccessUpdate) {
+    if (updateProjectFetcher.data && updateProjectFetcher.data.success && onSuccessUpdate) {
       onSuccessUpdate();
     }
-  }, [onSuccessUpdate, upsertProjectFetcher.data]);
+  }, [onSuccessUpdate, updateProjectFetcher.data]);
 
   useEffect(() => {
-    if (upsertProjectFetcher.state === 'idle' && upsertProjectFetcher.data && upsertProjectFetcher.data?.error) {
-      setError(upsertProjectFetcher.data.error);
+    if (newProjectFetcher.state === 'idle' && newProjectFetcher.data && newProjectFetcher.data?.error) {
+      setError(newProjectFetcher.data.error);
     }
-  }, [upsertProjectFetcher.data, upsertProjectFetcher.state]);
+  }, [newProjectFetcher.data, newProjectFetcher.state]);
+
+  useEffect(() => {
+    if (updateProjectFetcher.state === 'idle' && updateProjectFetcher.data && updateProjectFetcher.data?.error) {
+      setError(updateProjectFetcher.data.error);
+    }
+  }, [updateProjectFetcher.data, updateProjectFetcher.state]);
 
   const onGitRepoFormSubmit = (gitRepositoryPatch: Partial<GitRepository & { ref?: string }>) => {
     const { author, credentials, created, modified, isPrivate, needsFullClone, uriNeedsMigration, ...repoPatch } =
@@ -156,18 +166,34 @@ export const ProjectSettingsForm: FC<Props> = ({
       ref: repoPatch.ref,
     });
 
-    initCloneGitRepositoryFetcher.submit(
-      {
-        ...repoPatch,
-        authorName: author?.name || '',
-        authorEmail: author?.email || '',
-        ...credentials,
-      },
-      {
-        action: `/organization/${organizationId}/git/init-clone`,
-        method: 'POST',
-      },
-    );
+    initCloneGitRepositoryFetcher.submit({
+      ...repoPatch,
+      authorName: author?.name || '',
+      authorEmail: author?.email || '',
+      ...(credentials
+        ? isGitCredentialsOAuth(credentials)
+          ? {
+              credentials: {
+                token: credentials.token || '',
+                oauth2format: credentials.oauth2format || 'github',
+                username: credentials.username || '',
+              },
+            }
+          : {
+              credentials: {
+                password: credentials.password || '',
+                username: credentials.username || '',
+              },
+            }
+        : {
+            credentials: {
+              password: '',
+              username: '',
+            },
+          }),
+      uri: repoPatch.uri || '',
+      organizationId,
+    });
 
     setActiveView('git-results');
   };
@@ -178,21 +204,24 @@ export const ProjectSettingsForm: FC<Props> = ({
       return;
     }
 
-    const action = project
-      ? `/organization/${organizationId}/project/${project._id}/update`
-      : `/organization/${organizationId}/project/new`;
-
-    upsertProjectFetcher.submit(
-      {
-        ...projectData,
-        storageType,
-      },
-      {
-        action,
-        method: 'POST',
-        encType: 'application/json',
-      },
-    );
+    if (project) {
+      updateProjectFetcher.submit({
+        organizationId,
+        projectId: project._id,
+        projectData: {
+          ...projectData,
+          storageType,
+        },
+      });
+    } else {
+      newProjectFetcher.submit({
+        organizationId,
+        projectData: {
+          ...projectData,
+          storageType,
+        },
+      });
+    }
   };
 
   return (
@@ -302,10 +331,12 @@ export const ProjectSettingsForm: FC<Props> = ({
               {storageType !== 'git' && (
                 <Button
                   onPress={onUpsertProject}
-                  isDisabled={upsertProjectFetcher.state !== 'idle'}
+                  isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
                   className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
                 >
-                  {upsertProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
+                  {(updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle') && (
+                    <Icon icon="spinner" className="animate-spin" />
+                  )}
                   <span>{project ? 'Update' : 'Create'}</span>
                 </Button>
               )}
@@ -445,7 +476,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               </div>
             </div>
           )}
-          {insomniaFiles.length === 0 && initCloneGitRepositoryFetcher.state === 'idle' && (
+          {insomniaFiles?.length === 0 && initCloneGitRepositoryFetcher.state === 'idle' && (
             <div className="flex w-full flex-col items-center justify-center gap-2 pt-4">
               <div className="flex w-full flex-col items-center gap-2 rounded-sm bg-[--hl-xs] p-4 text-sm text-[--color-font-success]">
                 <span className="relative flex items-center justify-center">
@@ -463,7 +494,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               </div>
             </div>
           )}
-          {insomniaFiles.length > 0 && (
+          {insomniaFiles && insomniaFiles?.length > 0 && (
             <div className="flex flex-col gap-2">
               <Heading className="text-base">We found {insomniaFiles.length} Insomnia files in your repository</Heading>
               <div className="max-h-96 w-full select-none overflow-y-auto overflow-x-hidden rounded border border-solid border-[--hl-sm]">
@@ -525,7 +556,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               </div>
             </div>
           )}
-          {insomniaFiles.some(file => file.path === '.insomnia') && (
+          {insomniaFiles && insomniaFiles?.some(file => file.path === '.insomnia') && (
             <div className="rounded-sm bg-[rgba(var(--color-warning-rgb),var(--tw-bg-opacity))] bg-opacity-50 p-[--padding-sm] text-[--color-font-warning]">
               <Heading className="flex items-center gap-2 text-lg font-bold">
                 <Icon icon="triangle-exclamation" className="text-[--color-font-warning]" />
@@ -543,7 +574,7 @@ export const ProjectSettingsForm: FC<Props> = ({
           )}
           <div className="flex items-center justify-end gap-2 pb-10">
             <Button
-              isDisabled={upsertProjectFetcher.state !== 'idle'}
+              isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
               onPress={() => {
                 setTab('github');
                 setActiveView('git-clone');
@@ -553,18 +584,18 @@ export const ProjectSettingsForm: FC<Props> = ({
               Back
             </Button>
             <Button
-              isDisabled={upsertProjectFetcher.state !== 'idle'}
+              isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
               onPress={onUpsertProject}
               className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
             >
-              {upsertProjectFetcher.state !== 'idle' ? (
+              {updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle' ? (
                 <>
                   <Icon icon="spinner" className="animate-spin" />
                   <span>Cloning</span>
                 </>
               ) : (
                 <>
-                  <span>{insomniaFiles.length > 0 ? 'Import all' : 'Clone'}</span>
+                  <span>{insomniaFiles && insomniaFiles?.length > 0 ? 'Import all' : 'Clone'}</span>
                 </>
               )}
             </Button>
@@ -691,10 +722,12 @@ export const ProjectSettingsForm: FC<Props> = ({
               </Button>
               <Button
                 onPress={onUpsertProject}
-                isDisabled={upsertProjectFetcher.state !== 'idle'}
+                isDisabled={updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle'}
                 className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
               >
-                {upsertProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
+                {(updateProjectFetcher.state !== 'idle' || newProjectFetcher.state !== 'idle') && (
+                  <Icon icon="spinner" className="animate-spin" />
+                )}
                 <span>Update</span>
               </Button>
             </div>

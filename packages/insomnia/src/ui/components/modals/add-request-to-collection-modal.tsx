@@ -1,6 +1,8 @@
 import React, { type FC, type MouseEventHandler, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
+
+import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 
 import { database } from '../../../common/database';
 import { strings } from '../../../common/strings';
@@ -18,13 +20,21 @@ interface AddRequestModalProps extends ModalProps {
 }
 
 export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }) => {
-  const { organizationId, projectId: currentProjectId, workspaceId: currentWorkspaceId } = useParams();
+  const {
+    organizationId,
+    projectId: currentProjectId,
+    workspaceId: currentWorkspaceId,
+  } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  };
   const [projectOptions, setProjectOptions] = useState<models.BaseModel[]>([]);
   const [workspaceOptions, setWorkspaceOptions] = useState<models.BaseModel[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState('');
 
-  const requestFetcher = useFetcher();
+  const requestFetcher = useRequestNewActionFetcher();
 
   useEffect(() => {
     (async () => {
@@ -55,14 +65,13 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
   const previousRequestFetcherState = useRef('idle');
 
   const createNewRequest = async () => {
-    requestFetcher.submit(
-      { requestType: 'HTTP', parentId: selectedWorkspaceId },
-      {
-        action: `/organization/${organizationId}/project/${selectedProjectId}/workspace/${selectedWorkspaceId}/debug/request/new`,
-        method: 'post',
-        encType: 'application/json',
-      },
-    );
+    requestFetcher.submit({
+      organizationId,
+      projectId: selectedProjectId,
+      workspaceId: selectedWorkspaceId,
+      requestType: 'HTTP',
+      parentId: selectedWorkspaceId,
+    });
     previousRequestFetcherState.current = 'loading';
   };
 
@@ -130,9 +139,6 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
             >
               Collection is required
             </p>
-          )}
-          {requestFetcher.data?.error && (
-            <p className="notice error margin-bottom-sm mt-6">{requestFetcher.data.error}</p>
           )}
         </ModalBody>
         <ModalFooter>

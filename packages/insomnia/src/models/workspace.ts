@@ -1,6 +1,5 @@
 import type { Merge } from 'type-fest';
 
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../common/constants';
 import { database as db } from '../common/database';
 import { strings } from '../common/strings';
 import type { BaseModel } from './index';
@@ -169,10 +168,10 @@ export function isScratchpad(workspace?: Workspace) {
 export const scopeToActivity = (scope: WorkspaceScope) => {
   switch (scope) {
     case WorkspaceScopeKeys.collection: {
-      return ACTIVITY_DEBUG;
+      return 'debug';
     }
     case WorkspaceScopeKeys.design: {
-      return ACTIVITY_SPEC;
+      return 'spec';
     }
     case WorkspaceScopeKeys.mockServer: {
       return 'mock-server';
@@ -181,7 +180,7 @@ export const scopeToActivity = (scope: WorkspaceScope) => {
       return 'environment';
     }
     default: {
-      return ACTIVITY_DEBUG;
+      return 'debug';
     }
   }
 };

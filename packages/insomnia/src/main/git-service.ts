@@ -8,6 +8,8 @@ import { Errors, type HeadStatus, type PromiseFsClient, type StageStatus, type W
 import { v4 } from 'uuid';
 import YAML, { parse } from 'yaml';
 
+import { type GitCredentials } from '~/models/git-repository';
+
 import {
   getApiBaseURL,
   getAppWebsiteBaseURL,
@@ -31,7 +33,6 @@ import GitVCS, {
   GIT_INSOMNIA_DIR,
   GIT_INSOMNIA_DIR_NAME,
   GIT_INTERNAL_DIR,
-  type GitCredentials,
   MergeConflictError,
 } from '../sync/git/git-vcs';
 import { MemClient } from '../sync/git/mem-client';
@@ -593,18 +594,14 @@ export const initGitRepoCloneAction = async ({
   uri,
   authorName,
   authorEmail,
-  token,
-  username,
-  oauth2format,
+  credentials,
   ref,
 }: {
   organizationId: string;
   uri: string;
   authorName: string;
   authorEmail: string;
-  token: string;
-  username: string;
-  oauth2format?: string;
+  credentials: GitCredentials;
   ref?: string;
 }): Promise<
   | {
@@ -630,23 +627,19 @@ export const initGitRepoCloneAction = async ({
   };
 
   // Git Credentials
-  if (oauth2format) {
-    invariant(oauth2format === 'gitlab' || oauth2format === 'github', 'OAuth2 format is required');
-
-    repoSettingsPatch.credentials = {
-      username,
-      token,
-      oauth2format,
-    };
+  if ('oauth2format' in credentials) {
+    invariant(
+      credentials.oauth2format === 'gitlab' || credentials.oauth2format === 'github',
+      'OAuth2 format is required',
+    );
+  } else if ('password' in credentials) {
+    invariant(typeof credentials.username === 'string', 'Username is required');
+    invariant(typeof credentials.password === 'string', 'Password is required');
   } else {
-    invariant(typeof token === 'string', 'Token is required');
-    invariant(typeof username === 'string', 'Username is required');
-
-    repoSettingsPatch.credentials = {
-      password: token,
-      username,
-    };
+    throw new Error('Invalid credentials');
   }
+
+  repoSettingsPatch.credentials = credentials;
 
   repoSettingsPatch.needsFullClone = true;
 
@@ -704,53 +697,41 @@ export const cloneGitRepoAction = async ({
   cloneIntoProjectId,
   name,
   uri,
-  authorName,
-  authorEmail,
-  token,
-  username,
-  oauth2format,
+  author,
+  credentials,
   ref,
 }: {
   organizationId: string;
   projectId?: string;
   cloneIntoProjectId?: string;
+  author: {
+    name: string;
+    email: string;
+  };
+  credentials: GitCredentials;
   name?: string;
   uri: string;
-  authorName: string;
-  authorEmail: string;
-  token: string;
-  username: string;
-  oauth2format?: string;
   ref?: string;
 }) => {
   try {
+    const repoSettingsPatch: Partial<GitRepository> = {};
+    repoSettingsPatch.uri = parseGitToHttpsURL(uri);
+    repoSettingsPatch.author = author;
+
+    // Git Credentials
+    if ('oauth2format' in credentials) {
+      invariant(
+        credentials.oauth2format === 'gitlab' || credentials.oauth2format === 'github',
+        'OAuth2 format is required',
+      );
+    } else if ('password' in credentials) {
+      invariant(typeof credentials.password === 'string', 'Password is required');
+      invariant(typeof credentials.username === 'string', 'Username is required');
+    }
+
+    repoSettingsPatch.credentials = credentials;
+
     if (!projectId) {
-      const repoSettingsPatch: Partial<GitRepository> = {};
-      repoSettingsPatch.uri = parseGitToHttpsURL(uri);
-      repoSettingsPatch.author = {
-        name: authorName,
-        email: authorEmail,
-      };
-
-      // Git Credentials
-      if (oauth2format) {
-        invariant(oauth2format === 'gitlab' || oauth2format === 'github', 'OAuth2 format is required');
-
-        repoSettingsPatch.credentials = {
-          username,
-          token,
-          oauth2format,
-        };
-      } else {
-        invariant(typeof token === 'string', 'Token is required');
-        invariant(typeof username === 'string', 'Username is required');
-
-        repoSettingsPatch.credentials = {
-          password: token,
-          username,
-        };
-      }
-
       trackSegmentEvent(SegmentEvent.vcsSyncStart, vcsSegmentEventProperties('git', 'clone'));
       repoSettingsPatch.needsFullClone = true;
 
@@ -880,32 +861,6 @@ export const cloneGitRepoAction = async ({
 
     const project = await models.project.getById(projectId);
     invariant(project, 'Project not found');
-
-    const repoSettingsPatch: Partial<GitRepository> = {};
-    repoSettingsPatch.uri = parseGitToHttpsURL(uri);
-    repoSettingsPatch.author = {
-      name: authorName,
-      email: authorEmail,
-    };
-
-    // Git Credentials
-    if (oauth2format) {
-      invariant(oauth2format === 'gitlab' || oauth2format === 'github', 'OAuth2 format is required');
-
-      repoSettingsPatch.credentials = {
-        username,
-        token,
-        oauth2format,
-      };
-    } else {
-      invariant(typeof token === 'string', 'Token is required');
-      invariant(typeof username === 'string', 'Username is required');
-
-      repoSettingsPatch.credentials = {
-        password: token,
-        username,
-      };
-    }
 
     trackSegmentEvent(SegmentEvent.vcsSyncStart, vcsSegmentEventProperties('git', 'clone'));
     repoSettingsPatch.needsFullClone = true;
@@ -1099,22 +1054,19 @@ export const cloneGitRepoAction = async ({
 export const updateGitRepoAction = async ({
   projectId,
   workspaceId,
-  authorEmail,
-  authorName,
+  author,
+  credentials,
   uri,
-  oauth2format,
-  username,
-  token,
   ref,
 }: {
   projectId: string;
   workspaceId?: string;
-  authorName: string;
-  authorEmail: string;
+  author: {
+    name: string;
+    email: string;
+  };
+  credentials: GitCredentials;
   uri: string;
-  oauth2format?: string;
-  username: string;
-  token: string;
   ref?: string;
 }) => {
   try {
@@ -1138,26 +1090,21 @@ export const updateGitRepoAction = async ({
     repoSettingsPatch.uri = parseGitToHttpsURL(uri);
 
     // Author
-    repoSettingsPatch.author = {
-      name: authorName,
-      email: authorEmail,
-    };
+    repoSettingsPatch.author = author;
 
     // Git Credentials
-    if (oauth2format) {
-      invariant(oauth2format === 'gitlab' || oauth2format === 'github', 'OAuth2 format is required');
-
-      repoSettingsPatch.credentials = {
-        username,
-        token,
-        oauth2format,
-      };
-    } else {
-      repoSettingsPatch.credentials = {
-        password: token,
-        username,
-      };
+    // Git Credentials
+    if ('oauth2format' in credentials) {
+      invariant(
+        credentials.oauth2format === 'gitlab' || credentials.oauth2format === 'github',
+        'OAuth2 format is required',
+      );
+    } else if ('password' in credentials) {
+      invariant(typeof credentials.password === 'string', 'Password is required');
+      invariant(typeof credentials.username === 'string', 'Username is required');
     }
+
+    repoSettingsPatch.credentials = credentials;
 
     async function setupGitRepository() {
       if (gitRepositoryId && gitRepositoryId !== 'empty') {
@@ -1494,7 +1441,7 @@ export const checkoutGitBranchAction = async ({
       };
     }
 
-    const errorMessage = err instanceof Error ? err.message : err;
+    const errorMessage = err instanceof Error ? err.message : err.toString();
 
     return {
       errors: [errorMessage],

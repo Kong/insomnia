@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { getAppWebsiteBaseURL } from '../../common/constants';
 import type { GitRepository } from '../../models/git-repository';
 import { getOauth2FormatName } from '../../sync/git/utils';

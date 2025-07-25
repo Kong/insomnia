@@ -9,14 +9,13 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import { useFetcher, useParams, useSearchParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 
-import { getCurrentSessionId } from '../../../../account/session';
-import { debounce } from '../../../../common/misc';
-import { SegmentEvent } from '../../../analytics';
-import { insomniaFetch } from '../../../insomniaFetch';
-import type { CollaboratorSearchLoaderResult } from '../../../routes/$organizationId.collaborators-search';
-import { Icon } from '../../icon';
+import { debounce } from '~/common/misc';
+import { useCollaboratorsSearchLoaderFetcher } from '~/routes/organization.$organizationId.collaborators-search';
+import { SegmentEvent } from '~/ui/analytics';
+import { Icon } from '~/ui/components/icon';
+
 import { startInvite } from './encryption';
 import { OrganizationMemberRolesSelector, type Role, SELECTOR_TYPE } from './organization-member-roles-selector';
 
@@ -75,7 +74,7 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
 
   const selectedRoleRef = React.useRef<Role>(allRoles.find(role => role.name === defaultRoleName) as Role);
 
-  const collaboratorSearchLoader = useFetcher<CollaboratorSearchLoaderResult>();
+  const collaboratorSearchLoader = useCollaboratorsSearchLoaderFetcher();
 
   const searchResult = useMemo(() => collaboratorSearchLoader.data || [], [collaboratorSearchLoader.data]);
 
@@ -130,9 +129,7 @@ export const InviteForm = ({ allRoles, onInviteCompleted }: EmailsInputProps) =>
 
   const handleSearch = debounce((query: string) => {
     if (query.trim() !== '') {
-      collaboratorSearchLoader.load(
-        `/organization/${organizationId}/collaborators-search?query=${encodeURIComponent(query)}`,
-      );
+      collaboratorSearchLoader.load({ organizationId, query });
       setSearchParams(getSearchParamsString(searchParams, { query }));
     }
   }, 500);
@@ -342,21 +339,3 @@ const UserItem = (props: ListBoxItemProps & { children: React.ReactNode; isSelec
     </ListBoxItem>
   );
 };
-export interface GroupMemberKey {
-  accountId: string;
-  organizationId: string;
-  projectId: string;
-  encKey: string;
-}
-
-export async function updateInvitationRole(roleId: string, invitationId: string, organizationId: string) {
-  return insomniaFetch({
-    method: 'PATCH',
-    path: `/v1/organizations/${organizationId}/invites/${invitationId}`,
-    data: { roles: [roleId] },
-    sessionId: await getCurrentSessionId(),
-    onlyResolveOnSuccess: true,
-  }).catch(() => {
-    throw new Error('Failed to update organization member roles');
-  });
-}

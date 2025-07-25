@@ -15,7 +15,6 @@ test.describe('Debug-Sidebar', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
     await page.getByLabel('simple').click();
     //Open Properties in Request Sidebar
-    const requestLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'example http' });
     await page.getByLabel('Request Collection').getByRole('row', { name: 'example http' }).click();
     await page
       .getByLabel('Request Collection')

@@ -116,7 +116,7 @@ export async function logout() {
     }
   }
 
-  _unsetSessionData();
+  await _unsetSessionData();
   window.main.loginStateChange();
 }
 

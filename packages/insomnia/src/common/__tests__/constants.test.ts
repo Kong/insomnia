@@ -2,10 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import type { MockServer } from '../../models/mock-server';
 import {
-  ACTIVITY_DEBUG,
-  ACTIVITY_HOME,
-  ACTIVITY_SPEC,
-  ACTIVITY_UNIT_TEST,
   FLEXIBLE_URL_REGEX,
   getContentTypeName,
   getMockServiceBinURL,
@@ -41,22 +37,22 @@ describe('URL Regex', () => {
 
 describe('isWorkspaceActivity', () => {
   it('should return true', () => {
-    expect(isWorkspaceActivity(ACTIVITY_SPEC)).toBe(true);
-    expect(isWorkspaceActivity(ACTIVITY_DEBUG)).toBe(true);
-    expect(isWorkspaceActivity(ACTIVITY_UNIT_TEST)).toBe(true);
+    expect(isWorkspaceActivity('spec')).toBe(true);
+    expect(isWorkspaceActivity('debug')).toBe(true);
+    expect(isWorkspaceActivity('unittest')).toBe(true);
   });
 
   it('should return false', () => {
-    expect(isWorkspaceActivity(ACTIVITY_HOME)).toBe(false);
+    expect(isWorkspaceActivity('home')).toBe(false);
   });
 });
 
 describe('isValidActivity', () => {
   it('should return true', () => {
-    expect(isValidActivity(ACTIVITY_SPEC)).toBe(true);
-    expect(isValidActivity(ACTIVITY_DEBUG)).toBe(true);
-    expect(isValidActivity(ACTIVITY_UNIT_TEST)).toBe(true);
-    expect(isValidActivity(ACTIVITY_HOME)).toBe(true);
+    expect(isValidActivity('spec')).toBe(true);
+    expect(isValidActivity('debug')).toBe(true);
+    expect(isValidActivity('unittest')).toBe(true);
+    expect(isValidActivity('home')).toBe(true);
   });
 
   it('should return false', () => {

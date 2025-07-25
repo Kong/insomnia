@@ -3,18 +3,20 @@ import fs from 'node:fs/promises';
 import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
-import { useFetcher, useRouteLoaderData } from 'react-router';
+import { useRouteLoaderData } from 'react-router';
 
-import { getContentTypeName, getMimeTypeFromContentType } from '../../../common/constants';
-import type { ResponseHeader } from '../../../models/response';
-import { invariant } from '../../../utils/invariant';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
-import type { RequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import type { OrganizationLoaderData } from '~/routes/organization';
+import type { RequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import {
   isInMockContentTypeList,
   useMockRoutePatcher,
-} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
-import type { OrganizationLoaderData } from '../../routes/organization';
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import { useMockRouteNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.new';
+
+import { getContentTypeName, getMimeTypeFromContentType } from '../../../common/constants';
+import type { ResponseHeader } from '../../../models/response';
+import type { WorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { invariant } from '../../../utils/invariant';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
@@ -23,14 +25,18 @@ import { PromptModal } from '../modals/prompt-modal';
 
 export const MockResponseExtractor = () => {
   // file://./../../routes/request.tsx#loader
-  const requestLoaderData = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const requestLoaderData = useRouteLoaderData(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId',
+  ) as RequestLoaderData;
   const { activeResponse } = requestLoaderData;
   let { mockServerAndRoutes } = requestLoaderData;
 
   // file://./../../routes/$organizationId.project.$projectId.workspace.tsx#workspaceLoader
-  const { activeProject, activeWorkspace } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { activeProject, activeWorkspace } = useRouteLoaderData(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
+  ) as WorkspaceLoaderData;
   const isLocalProject = !activeProject?.remoteId;
-  const { currentPlan } = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  const { currentPlan } = useRouteLoaderData('routes/organization') as OrganizationLoaderData;
   const isEnterprise = currentPlan?.type.includes('enterprise');
 
   // In a local project, users are not allowed to create a cloud mock server, only enterprise users can create a self-hosted mock server.
@@ -59,8 +65,12 @@ If you want to create a self-hosted mock server route from a request response in
 
   const patchMockRoute = useMockRoutePatcher();
   const navigate = useNavigate();
-  const { organizationId, projectId, workspaceId } = useParams();
-  const fetcher = useFetcher();
+  const { organizationId, projectId, workspaceId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  };
+  const createMockRouteFetcher = useMockRouteNewActionFetcher();
   const [selectedMockServer, setSelectedMockServer] = useState(
     canOnlyChooseExistingMockServer ? mockServerAndRoutes[0]._id : '',
   );
@@ -123,22 +133,20 @@ If you want to create a self-hosted mock server route from a request response in
                     const headersWithoutContentLength: ResponseHeader[] = activeResponse.headers.filter(
                       h => h.name.toLowerCase() !== 'content-length',
                     );
-                    // file://./../../routes/actions.tsx#createMockRouteAction
-                    fetcher.submit(
-                      JSON.stringify({
+
+                    createMockRouteFetcher.submit({
+                      organizationId,
+                      projectId,
+                      workspaceId,
+                      patch: {
                         name: name,
                         body: body.toString(),
                         mimeType,
                         statusCode: activeResponse.statusCode,
                         headers: headersWithoutContentLength,
                         mockServerName: activeWorkspace.name,
-                      }),
-                      {
-                        encType: 'application/json',
-                        method: 'post',
-                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/new`,
                       },
-                    );
+                    });
                   },
                 });
                 return;
@@ -166,21 +174,19 @@ If you want to create a self-hosted mock server route from a request response in
                     const headersWithoutContentLength: ResponseHeader[] = activeResponse.headers.filter(
                       h => h.name.toLowerCase() !== 'content-length',
                     );
-                    fetcher.submit(
-                      JSON.stringify({
+                    createMockRouteFetcher.submit({
+                      organizationId,
+                      projectId,
+                      workspaceId,
+                      patch: {
                         name: name,
                         parentId: selectedMockServer,
                         body: body.toString(),
                         mimeType,
                         statusCode: activeResponse.statusCode,
                         headers: headersWithoutContentLength,
-                      }),
-                      {
-                        encType: 'application/json',
-                        method: 'post',
-                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/new`,
                       },
-                    );
+                    });
                   },
                 });
               }

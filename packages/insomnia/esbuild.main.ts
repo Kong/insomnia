@@ -22,7 +22,7 @@ export default async function build(options: Options) {
 
   const env: Record<string, string> = __DEV__
     ? {
-        'process.env.APP_RENDER_URL': JSON.stringify(`http://localhost:${PORT}/index.html`),
+        'process.env.APP_RENDER_URL': JSON.stringify(`http://localhost:${PORT}`),
         'process.env.HIDDEN_BROWSER_WINDOW_URL': JSON.stringify(`http://localhost:${PORT}/hidden-window.html`),
         'process.env.NODE_ENV': JSON.stringify('development'),
         'process.env.INSOMNIA_ENV': JSON.stringify('development'),
@@ -53,6 +53,22 @@ export default async function build(options: Options) {
     platform: 'node',
     sourcemap: true,
     format: 'cjs',
+    external: ['electron'],
+    loader: {
+      '.node': 'copy',
+    },
+  };
+
+  const hiddenBrowserWindowBuildOptions: BuildOptions = {
+    entryPoints: ['./src/hidden-window.ts'],
+    // TODO: make all of these outputs use a .min.js convention to simplify ignore files
+    outfile: path.join(outdir, 'hidden-window.js'),
+    target: 'esnext',
+    bundle: true,
+    platform: 'node',
+    sourcemap: true,
+    format: 'cjs',
+    // TODO: remove below, This indicates that libcurl is being imported when it shouldn't be
     external: ['electron'],
     loader: {
       '.node': 'copy',
@@ -114,6 +130,10 @@ export default async function build(options: Options) {
       ...preloadBuildOptions,
       plugins: [restartElectronPlugin('preload')],
     });
+    const hiddenBrowserWindowContext = await esbuild.context({
+      ...hiddenBrowserWindowBuildOptions,
+      plugins: [restartElectronPlugin('hidden-browser-window')],
+    });
     const mainContext = await esbuild.context({
       ...mainBuildOptions,
       plugins: [restartElectronPlugin('main')],
@@ -138,14 +158,16 @@ export default async function build(options: Options) {
     };
 
     const preloadWatch = await preloadContext.watch();
+    const hiddenWindowWatch = await hiddenBrowserWindowContext.watch();
     const mainWatch = await mainContext.watch();
-    const hiddenWindowWatch = await hiddenPreloadContext.watch();
-    return Promise.all([preloadWatch, mainWatch, hiddenWindowWatch]);
+    const hiddenWindowPreloadWatch = await hiddenPreloadContext.watch();
+    return Promise.all([preloadWatch, hiddenWindowPreloadWatch, mainWatch, hiddenWindowWatch]);
   }
   const preload = esbuild.build(preloadBuildOptions);
+  const hiddenBrowserWindow = esbuild.build(hiddenBrowserWindowBuildOptions);
   const hiddenBrowserWindowPreload = esbuild.build(hiddenBrowserWindowPreloadBuildOptions);
   const main = esbuild.build(mainBuildOptions);
-  return Promise.all([main, preload, hiddenBrowserWindowPreload]).catch(err => {
+  return Promise.all([main, preload, hiddenBrowserWindow, hiddenBrowserWindowPreload]).catch(err => {
     console.error('[Build] Build failed:', err);
   });
 }

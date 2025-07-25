@@ -1,6 +1,6 @@
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 
-import { useRootLoaderData } from '../../routes/root';
+import { useRootLoaderData } from '~/root';
 
 const MASK_CHARACTER = '•';
 /** randomly get anywhere between 4 and 11 mask characters on each invocation */

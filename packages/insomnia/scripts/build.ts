@@ -1,8 +1,6 @@
-import childProcess from 'node:child_process';
+import childProcess, { spawn } from 'node:child_process';
 import { cp, mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
-
-import * as vite from 'vite';
 
 import buildMainAndPreload from '../esbuild.main';
 
@@ -35,15 +33,32 @@ export const start = async () => {
   console.log('[build] Removing existing directories');
   await rm(path.resolve(__dirname, buildFolder), { recursive: true, force: true });
 
+  console.log('[build] Building renderer');
+
+  function buildRenderer() {
+    return new Promise((resolve, reject) => {
+      const buildProcess = spawn('react-router', ['build']);
+      buildProcess.stdout.on('data', data => {
+        console.log(`[build] ${data}`);
+      });
+      buildProcess.stderr.on('data', data => {
+        console.error(`[build] ${data}`);
+      });
+      buildProcess.on('close', code => {
+        if (code !== 0) {
+          reject(new Error(`Build process exited with code ${code}`));
+        } else {
+          resolve(true);
+        }
+      });
+    });
+  }
+
+  await buildRenderer();
+
   console.log('[build] Building main.min.js and preload');
   await buildMainAndPreload({
     mode: 'production',
-  });
-
-  console.log('[build] Building renderer');
-
-  await vite.build({
-    configFile: path.join(__dirname, '..', 'vite.config.ts'),
   });
 
   // Copy necessary files
@@ -57,7 +72,9 @@ export const start = async () => {
   await copyFiles('../bin', buildFolder);
   await copyFiles('../src/static', path.join(buildFolder, 'static'));
   await copyFiles('../src/icons', buildFolder);
+  await copyFiles('../build/client', buildFolder);
   await copyFiles('../src/main/lint-process.mjs', path.join(buildFolder, 'main/lint-process.mjs'));
+  await copyFiles('../src/hidden-window.html', path.join(buildFolder, 'hidden-window.html'));
 
   console.log('[build] Complete!');
 };

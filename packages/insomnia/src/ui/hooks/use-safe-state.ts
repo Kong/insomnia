@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
-import { useMountedState } from 'react-use';
+import * as reactUse from 'react-use';
 
 export const useSafeState = <S>(initialValue: S | (() => S)) => {
-  const isMounted = useMountedState();
+  const isMounted = reactUse.useMountedState();
 
   const [state, _setState] = useState(initialValue);
 

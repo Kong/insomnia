@@ -1,9 +1,9 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import React from 'react';
 import { useEffect, useRef } from 'react';
 import { parseColor } from 'react-aria-components';
 
-import { useRootLoaderData } from '../routes/root';
+import { useRootLoaderData } from '~/root';
+
+import { monaco } from './monaco.client';
 
 export const DiffEditor = ({ original, modified }: { original: string; modified: string }) => {
   const monacoEl = useRef(null);

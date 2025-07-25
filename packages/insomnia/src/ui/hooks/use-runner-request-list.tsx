@@ -1,15 +1,21 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useRouteLoaderData } from 'react-router';
 
+import type { RequestRow } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
+import { useRunnerContext } from '~/ui/context/app/runner-context';
+import { invariant } from '~/utils/invariant';
+
 import { isRequest, type Request } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
-import { invariant } from '../../utils/invariant';
-import { useRunnerContext } from '../context/app/runner-context';
-import type { Child, WorkspaceLoaderData } from '../routes/$organizationId.project.$projectId.workspace.$workspaceId';
-import type { RequestRow } from '../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
+import type {
+  Child,
+  WorkspaceLoaderData,
+} from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 
 export const useRunnerRequestList = (organizationId: string, targetFolderId: string, runnerId: string) => {
-  const { collection } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { collection } = useRouteLoaderData(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
+  ) as WorkspaceLoaderData;
   const entityMapRef = useRef(new Map<string, Child>());
 
   const requestRows: RequestRow[] = useMemo(() => {

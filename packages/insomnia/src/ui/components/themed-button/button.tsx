@@ -1,5 +1,4 @@
 import type { ButtonHTMLAttributes } from 'react';
-import React from 'react';
 import type { ValueOf } from 'type-fest';
 export const ButtonSizeEnum = {
   Default: 'default',

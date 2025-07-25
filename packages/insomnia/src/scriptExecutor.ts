@@ -11,8 +11,8 @@ import {
   mergeSettings,
   type RequestContext,
 } from '../../insomnia-scripting-environment/src/objects';
-import { invariant } from '../src/utils/invariant';
 import { requireInterceptor } from './requireInterceptor';
+import { invariant } from './utils/invariant';
 
 export const runScript = async ({
   script,

@@ -1,18 +1,19 @@
-import React from 'react';
 import { useParams, useRouteLoaderData } from 'react-router';
 
+import { useRootLoaderData } from '~/root';
+
+import type { WorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
-import type { ProjectIdLoaderData } from '../routes/$organizationId.project.$projectId';
-import type { WorkspaceLoaderData } from '../routes/$organizationId.project.$projectId.workspace.$workspaceId';
-import { useRootLoaderData } from '../routes/root';
 import { AvatarGroup } from './avatar';
 
 export const PresentUsers = () => {
   const { presence } = useInsomniaEventStreamContext();
   const { workspaceId } = useParams() as { workspaceId: string };
   const { userSession } = useRootLoaderData();
-  const projectData = useRouteLoaderData('/project/:projectId') as ProjectIdLoaderData | null;
-  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
+  const projectData = useRouteLoaderData('routes.organization.$organizationId.project.$projectId');
+  const workspaceData = useRouteLoaderData(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
+  ) as WorkspaceLoaderData | null;
   const remoteId = projectData?.activeProject?.remoteId || workspaceData?.activeProject.remoteId;
 
   if (!presence || !remoteId) {

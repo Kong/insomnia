@@ -3,7 +3,7 @@ import clone from 'clone';
 import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
 import React, { type FC, useCallback, useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
-import { useMount } from 'react-use';
+import * as reactUse from 'react-use';
 
 import { database as db } from '../../../common/database';
 import { docsAfterResponseScript } from '../../../common/documentation';
@@ -97,7 +97,7 @@ export const TagEditor: FC<Props> = props => {
     setState(state => ({ ...state, allDocs, loadingDocs: false }));
   }, [props.workspace]);
 
-  useMount(async () => {
+  reactUse.useMount(async () => {
     const activeTagData = templateUtils.tokenizeTag(props.defaultValue);
     const tagDefinitions = await templating.getTagDefinitions();
     const activeTagDefinition: NunjucksParsedTag | null =

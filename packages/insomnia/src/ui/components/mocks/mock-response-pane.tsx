@@ -4,8 +4,12 @@ import type * as Har from 'har-format';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
 import { useRouteLoaderData } from 'react-router';
-import { useFetcher } from 'react-router';
-import { useInterval } from 'react-use';
+import * as reactUse from 'react-use';
+
+import { useRootLoaderData } from '~/root';
+import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
+import type { MockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import {
   getMockServiceURL,
@@ -24,10 +28,7 @@ import { cancelRequestById } from '../../../network/cancellation';
 import { insomniaFetch } from '../../../ui/insomniaFetch';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { useExecutionState } from '../../hooks/use-execution-state';
-import type { MockRouteLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
-import { useRootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
-import { CodeEditor } from '../codemirror/code-editor';
 import { Pane, PaneHeader } from '../panes/pane';
 import { PlaceholderResponsePane } from '../panes/placeholder-response-pane';
 import { ResponseTimer } from '../response-timer';
@@ -38,6 +39,8 @@ import { getTimeFromNow } from '../time-from-now';
 import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { ResponseViewer } from '../viewers/response-viewer';
+
+const { useInterval } = reactUse;
 
 interface MockbinLogOutput {
   log: {
@@ -57,11 +60,13 @@ interface MockbinLogOutput {
 }
 
 export const MockResponsePane = () => {
-  const { mockServer, mockRoute, activeResponse } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
+  const { mockServer, mockRoute, activeResponse } = useRouteLoaderData(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.mock-server.mock-route.$mockRouteId',
+  ) as MockRouteLoaderData;
   const { settings } = useRootLoaderData();
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const [previewMode, setPreviewMode] = useState<PreviewMode>(PREVIEW_MODE_FRIENDLY);
-  const requestFetcher = useFetcher({ key: 'mock-request-fetcher' });
+  const requestFetcher = useRequestNewMockSendActionFetcher({ key: 'mock-request-fetcher' });
   const { steps } = useExecutionState({ requestId: activeResponse?.parentId });
 
   useEffect(() => {

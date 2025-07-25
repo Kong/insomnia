@@ -12,6 +12,8 @@ import {
   Toolbar,
 } from 'react-aria-components';
 
+import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
+
 import {
   CookieObject,
   Environment,
@@ -27,7 +29,6 @@ import {
 import { ParentFolders } from '../../../../../insomnia-scripting-environment/src/objects/folders';
 import type { Settings } from '../../../models/settings';
 import { translateHandlersInScript } from '../../../utils/importers/importers/postman';
-import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';
 import { Icon } from '../icon';
 
 interface Props {

@@ -13,14 +13,14 @@ import type { WebSocketEvent } from '../../../main/network/websocket';
 import type { Response } from '../../../models/response';
 import { isSocketIOResponse, type SocketIOResponse } from '../../../models/socket-io-response';
 import type { WebSocketResponse } from '../../../models/websocket-response';
-import { deserializeNDJSON } from '../../../utils/ndjson';
-import { useReadyState } from '../../hooks/use-ready-state';
-import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
 import type {
   RequestLoaderData,
   SocketIORequestLoaderData,
   WebSocketRequestLoaderData,
-} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+} from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { deserializeNDJSON } from '../../../utils/ndjson';
+import { useReadyState } from '../../hooks/use-ready-state';
+import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';
 import { Icon } from '../icon';
@@ -39,10 +39,9 @@ import { EventLogView } from './event-log-view';
 import { EventView } from './event-view';
 
 export const RealtimeResponsePane: FC<{ requestId: string }> = () => {
-  const { activeResponse } = useRouteLoaderData('request/:requestId') as
-    | RequestLoaderData
-    | WebSocketRequestLoaderData
-    | SocketIORequestLoaderData;
+  const { activeResponse } = useRouteLoaderData(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId',
+  ) as RequestLoaderData | WebSocketRequestLoaderData | SocketIORequestLoaderData;
 
   if (!activeResponse) {
     return (

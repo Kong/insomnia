@@ -12,19 +12,23 @@ import {
   ModalOverlay,
   TextField,
 } from 'react-aria-components';
-import { useFetcher, useParams, useSearchParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 
-import { getAccountId, getCurrentSessionId } from '../../../../account/session';
-import { getAppWebsiteBaseURL } from '../../../../common/constants';
-import { debounce } from '../../../../common/misc';
-import { invariant } from '../../../../utils/invariant';
-import { SegmentEvent } from '../../../analytics';
-import { insomniaFetch } from '../../../insomniaFetch';
-import type { Collaborator, CollaboratorsListLoaderResult } from '../../../routes/$organizationId.collaborators';
-import { PromptButton } from '../../base/prompt-button';
-import { Icon } from '../../icon';
-import { AlertModal } from '../alert-modal';
-import { showModal } from '../index';
+import { getAccountId, getCurrentSessionId } from '~/account/session';
+import { getAppWebsiteBaseURL } from '~/common/constants';
+import { debounce } from '~/common/misc';
+import { type Collaborator, useCollaboratorsFetcher } from '~/routes/organization.$organizationId.collaborators';
+import { useInviteFetcher } from '~/routes/organization.$organizationId.collaborators.invites.$invitationId';
+import { useReinviteFetcher } from '~/routes/organization.$organizationId.collaborators.invites.$invitationId.reinvite';
+import { useOrganizationMemberRolesActionFetcher } from '~/routes/organization.$organizationId.members.$userId.roles';
+import { SegmentEvent } from '~/ui/analytics';
+import { PromptButton } from '~/ui/components/base/prompt-button';
+import { Icon } from '~/ui/components/icon';
+import { AlertModal } from '~/ui/components/modals/alert-modal';
+import { showModal } from '~/ui/components/modals/index';
+import { insomniaFetch } from '~/ui/insomniaFetch';
+import { invariant } from '~/utils/invariant';
+
 import { InviteForm } from './invite-form';
 import { OrganizationMemberRolesSelector, type Role, SELECTOR_TYPE } from './organization-member-roles-selector';
 
@@ -73,7 +77,7 @@ const InviteModal: FC<{
   const [queryInputString, setQueryInputString] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const collaboratorsListLoader = useFetcher<CollaboratorsListLoaderResult>();
+  const collaboratorsListLoader = useCollaboratorsFetcher();
 
   const page = searchParams.get('page') ? Number(searchParams.get('page')) : 0;
 
@@ -94,30 +98,33 @@ const InviteModal: FC<{
 
   useEffect(() => {
     if (!collaboratorsListLoader.data && collaboratorsListLoader.state === 'idle') {
-      collaboratorsListLoader.load(`/organization/${organizationId}/collaborators?page=0&per_page=${ItemsPerPage}`);
+      collaboratorsListLoader.load({ organizationId, page: 0, per_page: ItemsPerPage });
     }
   }, [collaboratorsListLoader, organizationId]);
 
   const handleSearch = debounce((filter: string) => {
     if (filter.trim() === '') {
-      collaboratorsListLoader.load(`/organization/${organizationId}/collaborators?page=0&per_page=${ItemsPerPage}`);
+      collaboratorsListLoader.load({ organizationId, page: 0, per_page: ItemsPerPage });
       setSearchParams(getSearchParamsString(searchParams, { page: 0, filter: '' }));
     } else {
-      collaboratorsListLoader.load(
-        `/organization/${organizationId}/collaborators?page=0&per_page=${ItemsPerPage}&filter=${encodeURIComponent(filter)}`,
-      );
+      collaboratorsListLoader.load({
+        organizationId,
+        page: 0,
+        per_page: ItemsPerPage,
+        filter: encodeURIComponent(filter),
+      });
       setSearchParams(getSearchParamsString(searchParams, { page: 0, filter }));
     }
   }, 500);
 
   const resetCollaboratorsList = () => {
     setQueryInputString('');
-    collaboratorsListLoader.load(`/organization/${organizationId}/collaborators?page=0&per_page=${ItemsPerPage}`);
+    collaboratorsListLoader.load({ organizationId, page: 0, per_page: ItemsPerPage });
     setSearchParams(getSearchParamsString(searchParams, { page: 0, filter: '' }));
   };
 
   const resetCurrentPage = () => {
-    collaboratorsListLoader.load(`/organization/${organizationId}/collaborators?page=${page}&per_page=${ItemsPerPage}`);
+    collaboratorsListLoader.load({ organizationId, page, per_page: ItemsPerPage });
     setSearchParams(getSearchParamsString(searchParams, { page, filter: queryInputString }));
   };
 
@@ -215,15 +222,12 @@ const InviteModal: FC<{
                     isNextDisabled={total <= ItemsPerPage || total <= (page + 1) * ItemsPerPage}
                     isHidden={total <= ItemsPerPage && page === 0}
                     onPrevPress={() => {
-                      collaboratorsListLoader.load(
-                        `/organization/${organizationId}/collaborators?page=${page - 1}&per_page=${ItemsPerPage}`,
-                      );
+                      collaboratorsListLoader.load({ organizationId, page: page - 1, per_page: ItemsPerPage });
                       setSearchParams(getSearchParamsString(searchParams, { page: page - 1 }));
                     }}
                     onNextPress={() => {
-                      collaboratorsListLoader.load(
-                        `/organization/${organizationId}/collaborators?page=${page + 1}&per_page=${ItemsPerPage}`,
-                      );
+                      collaboratorsListLoader.load({ organizationId, page: page + 1, per_page: ItemsPerPage });
+
                       setSearchParams(getSearchParamsString(searchParams, { page: page + 1 }));
                     }}
                   />
@@ -267,13 +271,13 @@ const MemberListItem: FC<{
   onResetCurrentPage,
   onError,
 }) => {
-  const reinviteCollaboratorFetcher = useFetcher();
+  const reinviteCollaboratorFetcher = useReinviteFetcher();
   const reinviting = reinviteCollaboratorFetcher.state !== 'idle';
 
-  const updateInvitationRoleFetcher = useFetcher();
+  const updateInvitationRoleFetcher = useInviteFetcher();
   const invitationRoleUpdating = updateInvitationRoleFetcher.state !== 'idle';
 
-  const updateMemberRoleFetcher = useFetcher();
+  const updateMemberRoleFetcher = useOrganizationMemberRolesActionFetcher();
   const memberRoleUpdating = updateMemberRoleFetcher.state !== 'idle';
 
   const [isFailed, setIsFailed] = useState(false);
@@ -293,6 +297,7 @@ const MemberListItem: FC<{
     if (
       updateMemberRoleFetcher.data &&
       'error' in updateMemberRoleFetcher.data &&
+      updateMemberRoleFetcher.data.error &&
       updateMemberRoleFetcher.state === 'idle'
     ) {
       onError(updateMemberRoleFetcher.data.error);
@@ -367,13 +372,10 @@ const MemberListItem: FC<{
               }
 
               if (member.metadata.invitationId) {
-                reinviteCollaboratorFetcher.submit(
-                  {},
-                  {
-                    action: `/organization/${organizationId}/invites/${member.metadata.invitationId}/reinvite`,
-                    method: 'POST',
-                  },
-                );
+                reinviteCollaboratorFetcher.submit({
+                  organizationId,
+                  invitationId: member.metadata.invitationId,
+                });
                 window.main.trackSegmentEvent({ event: SegmentEvent.inviteResent });
               }
             }}
@@ -400,25 +402,18 @@ const MemberListItem: FC<{
             className="flex h-6 min-w-[88px] items-center gap-2"
             onRoleChange={async role => {
               if (isAcceptedMember) {
-                updateMemberRoleFetcher.submit(
-                  {
-                    roleId: role.id,
-                  },
-                  {
-                    action: `/organization/${organizationId}/members/${member.metadata.userId}/roles`,
-                    method: 'POST',
-                  },
-                );
+                updateMemberRoleFetcher.submit({
+                  roleId: role.id,
+                  organizationId,
+                  userId: member.metadata.userId!,
+                });
               } else {
-                updateInvitationRoleFetcher.submit(
-                  {
+                member.metadata.invitationId &&
+                  updateInvitationRoleFetcher.submit({
+                    organizationId,
+                    invitationId: member.metadata.invitationId,
                     roleId: role.id,
-                  },
-                  {
-                    action: `/organization/${organizationId}/invites/${member.metadata.invitationId}`,
-                    method: 'POST',
-                  },
-                );
+                  });
               }
             }}
           />

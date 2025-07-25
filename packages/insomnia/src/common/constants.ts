@@ -176,23 +176,19 @@ export const DEFAULT_SIDEBAR_SIZE = 25;
 
 // Activities
 export type GlobalActivity = 'spec' | 'debug' | 'unittest' | 'home';
-export const ACTIVITY_SPEC: GlobalActivity = 'spec';
-export const ACTIVITY_DEBUG: GlobalActivity = 'debug';
-export const ACTIVITY_UNIT_TEST: GlobalActivity = 'unittest';
-export const ACTIVITY_HOME: GlobalActivity = 'home';
 
 export const isWorkspaceActivity = (activity?: string): activity is GlobalActivity =>
   isDesignActivity(activity) || isCollectionActivity(activity);
 
 export const isDesignActivity = (activity?: string): activity is GlobalActivity => {
   switch (activity) {
-    case ACTIVITY_SPEC:
-    case ACTIVITY_DEBUG:
-    case ACTIVITY_UNIT_TEST: {
+    case 'spec':
+    case 'debug':
+    case 'unittest': {
       return true;
     }
 
-    case ACTIVITY_HOME:
+    case 'home':
     default: {
       return false;
     }
@@ -201,13 +197,13 @@ export const isDesignActivity = (activity?: string): activity is GlobalActivity 
 
 export const isCollectionActivity = (activity?: string): activity is GlobalActivity => {
   switch (activity) {
-    case ACTIVITY_DEBUG: {
+    case 'debug': {
       return true;
     }
 
-    case ACTIVITY_SPEC:
-    case ACTIVITY_UNIT_TEST:
-    case ACTIVITY_HOME:
+    case 'spec':
+    case 'unittest':
+    case 'home':
     default: {
       return false;
     }
@@ -216,10 +212,10 @@ export const isCollectionActivity = (activity?: string): activity is GlobalActiv
 
 export const isValidActivity = (activity: string): activity is GlobalActivity => {
   switch (activity) {
-    case ACTIVITY_SPEC:
-    case ACTIVITY_DEBUG:
-    case ACTIVITY_UNIT_TEST:
-    case ACTIVITY_HOME: {
+    case 'spec':
+    case 'debug':
+    case 'unittest':
+    case 'home': {
       return true;
     }
 

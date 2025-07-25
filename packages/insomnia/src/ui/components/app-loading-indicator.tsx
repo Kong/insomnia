@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const AppLoadingIndicator = () => (
   <div
     id="app-loading-indicator"

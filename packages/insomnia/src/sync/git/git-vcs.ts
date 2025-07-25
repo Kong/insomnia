@@ -3,42 +3,12 @@ import path from 'node:path';
 import * as git from 'isomorphic-git';
 import { parse, stringify } from 'yaml';
 
+import type { GitAuthor, GitCredentials, GitRemoteConfig } from '~/models/git-repository';
+
 import type { MergeConflict } from '../types';
 import { httpClient } from './http-client';
 import { convertToPosixSep } from './path-sep';
 import { getAuthorFromGitRepository, gitCallbacks } from './utils';
-
-export interface GitAuthor {
-  name: string;
-  email: string;
-}
-
-export interface GitRemoteConfig {
-  remote: string;
-  url: string;
-}
-
-interface GitCredentialsBase {
-  username: string;
-  password: string;
-}
-
-interface GitCredentialsOAuth {
-  /**
-   * Supported OAuth formats.
-   * This is needed by isomorphic-git to be able to push/pull using an oauth2 token.
-   * https://isomorphic-git.org/docs/en/authentication.html
-   */
-  oauth2format?: 'github' | 'gitlab';
-  username: string;
-  token: string;
-}
-
-export type GitCredentials = GitCredentialsBase | GitCredentialsOAuth;
-
-export const isGitCredentialsOAuth = (credentials: GitCredentials): credentials is GitCredentialsOAuth => {
-  return 'oauth2format' in credentials;
-};
 
 export type GitHash = string;
 

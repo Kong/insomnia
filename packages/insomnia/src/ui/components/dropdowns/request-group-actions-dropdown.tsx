@@ -1,7 +1,13 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useRef, useState } from 'react';
 import { Button, Collection, Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from 'react-aria-components';
-import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router';
+import { useNavigate, useParams, useRouteLoaderData } from 'react-router';
+
+import { useRootLoaderData } from '~/root';
+import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
+import { useRequestGroupDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.delete';
+import { useRequestGroupDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.duplicate';
+import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 
 import { toKebabCase } from '../../../common/misc';
 import type { PlatformKeyCombinations } from '../../../common/settings';
@@ -14,9 +20,8 @@ import * as pluginApp from '../../../plugins/context/app';
 import * as pluginData from '../../../plugins/context/data';
 import * as pluginNetwork from '../../../plugins/context/network';
 import * as pluginStore from '../../../plugins/context/store';
+import type { WorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import type { CreateRequestType } from '../../hooks/use-request';
-import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
-import { useRootLoaderData } from '../../routes/root';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { Icon } from '../icon';
@@ -34,7 +39,9 @@ interface Props extends Partial<DropdownProps> {
 }
 
 export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, onOpenChange, onRename }: Props) => {
-  const { activeProject } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { activeProject } = useRouteLoaderData(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
+  ) as WorkspaceLoaderData;
   const { settings } = useRootLoaderData();
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<RequestGroupAction[]>([]);
@@ -42,7 +49,11 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
   const dropdownRef = useRef<DropdownHandle>(null);
   const navigate = useNavigate();
 
-  const requestFetcher = useFetcher();
+  const newRequestFetcher = useRequestNewActionFetcher();
+  const newRequestGroupFetcher = useRequestGroupNewActionFetcher();
+  const duplicateRequestGroupFetcher = useRequestGroupDuplicateActionFetcher();
+  const deleteRequestGroupFetcher = useRequestGroupDeleteActionFetcher();
+
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -58,10 +69,13 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
     parentId: string;
     req?: Partial<Request>;
   }) =>
-    requestFetcher.submit(JSON.stringify({ requestType, parentId, req }), {
-      encType: 'application/json',
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
-      method: 'post',
+    newRequestFetcher.submit({
+      organizationId,
+      projectId,
+      workspaceId,
+      requestType,
+      parentId,
+      req,
     });
 
   const onOpen = async () => {
@@ -77,14 +91,15 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
       label: 'New Name',
       selectText: true,
       onComplete: async (name: string) => {
-        requestFetcher.submit(
-          { _id: requestGroup._id, name },
-          {
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/duplicate`,
-            method: 'post',
-            encType: 'application/json',
+        duplicateRequestGroupFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+          requestGroupData: {
+            _id: requestGroup._id,
+            name,
           },
-        );
+        });
       },
     });
   };
@@ -99,13 +114,7 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
       onDone: async (isYes: boolean) => {
         if (isYes) {
           models.stats.incrementDeletedRequestsForDescendents(requestGroup);
-          requestFetcher.submit(
-            { id: requestGroup._id },
-            {
-              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/delete`,
-              method: 'post',
-            },
-          );
+          deleteRequestGroupFetcher.submit({ organizationId, projectId, workspaceId, id: requestGroup._id });
         }
       },
     });
@@ -225,13 +234,13 @@ export const RequestGroupActionsDropdown = ({ requestGroup, isOpen, triggerRef, 
               label: 'Name',
               selectText: true,
               onComplete: name =>
-                requestFetcher.submit(
-                  { parentId: requestGroup._id, name },
-                  {
-                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
-                    method: 'post',
-                  },
-                ),
+                newRequestGroupFetcher.submit({
+                  organizationId,
+                  projectId,
+                  workspaceId,
+                  parentId: requestGroup._id,
+                  name,
+                }),
             }),
         },
       ],

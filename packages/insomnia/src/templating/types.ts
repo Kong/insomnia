@@ -14,7 +14,6 @@ import type { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace } from '../models/workspace';
 import type { NodeCurlRequestOptions, NodeCurlResponseType } from '../plugins/context/network';
 import type { PluginStore } from '../plugins/context/store';
-import type { PromptModalOptions } from '../ui/components/modals/prompt-modal';
 import type { extractNunjucksTagFromCoords } from './utils';
 
 export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
@@ -199,6 +198,24 @@ export interface BaseRenderContext {
   getProjectId: () => string | undefined;
   [key: string]: any;
 }
+
+interface PromptModalOptions {
+  title: string;
+  defaultValue?: string;
+  submitName?: string;
+  selectText?: boolean;
+  upperCase?: boolean;
+  hint?: string;
+  inputType?: string;
+  placeholder?: string;
+  validate?: (arg0: string) => string;
+  label?: string;
+  hints?: string[];
+  onComplete?: (arg0: string) => Promise<void> | void;
+  onHide?: () => void;
+  onDeleteHint?: (arg0?: string) => void;
+}
+
 export interface AppContext {
   alert: (title: string, message?: string) => void;
   dialog: (

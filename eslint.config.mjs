@@ -157,6 +157,7 @@ export default tseslint.config(
       '**/*.config.js',
       '**/*.d.ts',
       '**/*.min.js',
+      '**/*.js.map',
       '**/bin/*',
       '**/build/*',
       '**/coverage/*',
@@ -165,6 +166,7 @@ export default tseslint.config(
       '**/docker/*',
       '**/electron/index.js',
       '**/fixtures',
+      '**/hidden-window.js',
       '**/hidden-window-preload.js',
       '**/node_modules/*',
       '**/preload.js',
@@ -172,6 +174,7 @@ export default tseslint.config(
       '**/traces/*',
       '**/verify-pkg.js',
       '**/__mocks__/*',
+      '**/.react-router/*',
     ],
   },
 );

@@ -104,6 +104,7 @@ export interface RendererToMainBridgeAPI {
   updateLatestStepName: (options: { requestId: string; stepName: string }) => void;
   extractJsonFileFromPostmanDataDumpArchive: (archivePath: string) => Promise<any>;
 }
+
 export function registerMainHandlers() {
   ipcMainOn('addExecutionStep', (_, options: { requestId: string; stepName: string }) => {
     addExecutionStep(options.requestId, options.stepName);

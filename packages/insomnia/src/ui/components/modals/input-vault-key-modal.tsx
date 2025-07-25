@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Input, Modal, ModalOverlay } from 'react-aria-components';
-import { useFetcher, useRouteLoaderData } from 'react-router';
+import { useRouteLoaderData } from 'react-router';
 
-import { removeAllSecrets } from '../../../models/environment';
-import type { OrganizationLoaderData } from '../../routes/organization';
-import { useRootLoaderData } from '../../routes/root';
-import { Icon } from '../icon';
-import { VaultKeyDisplayInput } from '../settings/vault-key-panel';
+import { removeAllSecrets } from '~/models/environment';
+import { useRootLoaderData } from '~/root';
+import { useResetVaultKeyFetcher } from '~/routes/auth.reset-vault-key';
+import { useValidateVaultKeyActionFetcher } from '~/routes/auth.validate-vault-key';
+import type { OrganizationLoaderData } from '~/routes/organization';
+import { Icon } from '~/ui/components/icon';
+import { VaultKeyDisplayInput } from '~/ui/components/settings/vault-key-panel';
+
 import { showModal } from '.';
 import { AskModal } from './ask-modal';
 
@@ -21,15 +24,15 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
   const [vaultKey, setVaultKey] = useState('');
   const [error, setError] = useState('');
   const [resetDone, setResetDone] = useState(false);
-  const resetVaultKeyFetcher = useFetcher();
-  const validateVaultKeyFetcher = useFetcher();
-  const { organizations } = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  const resetVaultKeyFetcher = useResetVaultKeyFetcher();
+  const validateVaultKeyFetcher = useValidateVaultKeyActionFetcher();
+  const { organizations } = useRouteLoaderData('routes/organization') as OrganizationLoaderData;
   const isLoading = resetVaultKeyFetcher.state !== 'idle' || validateVaultKeyFetcher.state !== 'idle';
 
   useEffect(() => {
     // close modal and return new vault key after reset
     if (resetVaultKeyFetcher.data && !resetVaultKeyFetcher.data.error && resetVaultKeyFetcher.state === 'idle') {
-      const newVaultKey = resetVaultKeyFetcher.data;
+      const newVaultKey = resetVaultKeyFetcher.data.key || '';
       setVaultKey(newVaultKey);
       setResetDone(true);
     }
@@ -62,17 +65,10 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
 
   const handleValidateVaultKey = () => {
     setError('');
-    validateVaultKeyFetcher.submit(
-      {
-        vaultKey,
-        saveVaultKey: true,
-      },
-      {
-        action: '/auth/validate-vault-key',
-        method: 'POST',
-        encType: 'application/json',
-      },
-    );
+    validateVaultKeyFetcher.submit({
+      vaultKey,
+      saveVaultKey: true,
+    });
   };
 
   const resetVaultKey = () => {
@@ -86,10 +82,7 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
         if (yes) {
           // clear all local secrets first
           await removeAllSecrets(organizations.map(org => org.id));
-          resetVaultKeyFetcher.submit('', {
-            action: '/auth/reset-vault-key',
-            method: 'POST',
-          });
+          resetVaultKeyFetcher.submit();
         }
       },
     });

@@ -1,7 +1,8 @@
 import React, { type FC, memo } from 'react';
 
+import { useRootLoaderData } from '~/root';
+
 import { docsBase } from '../../../common/documentation';
-import { useRootLoaderData } from '../../routes/root';
 import { Link } from '../base/link';
 import { showModal } from '../modals/index';
 import { SettingsModal } from '../modals/settings-modal';

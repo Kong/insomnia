@@ -1,8 +1,9 @@
 import React, { type FC, type ReactNode } from 'react';
 
+import { useRootLoaderData } from '~/root';
+
 import type { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
-import { useRootLoaderData } from '../../routes/root';
 import { HelpTooltip } from '../help-tooltip';
 import { showModal } from '../modals';
 import { AskModal } from '../modals/ask-modal';

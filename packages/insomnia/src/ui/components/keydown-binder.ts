@@ -7,10 +7,11 @@ import {
   tinykeys,
 } from 'tinykeys';
 
+import type { RootLoaderData } from '~/root';
+
 import { getPlatformKeyCombinations } from '../../common/hotkeys';
 import { keyboardKeys } from '../../common/keyboard-keys';
 import type { KeyboardShortcut, KeyCombination } from '../../common/settings';
-import type { RootLoaderData } from '../routes/root';
 
 const keyCombinationToTinyKeyString = ({ ctrl, alt, shift, meta, keyCode }: KeyCombination): string =>
   `${meta ? 'Meta+' : ''}${alt ? 'Alt+' : ''}${ctrl ? 'Control+' : ''}${shift ? 'Shift+' : ''}` +

@@ -106,3 +106,13 @@ inso -w <INSO_NEDB_PATH>
 # using a binary
 ./packages/insomnia-inso/binaries/insomnia-inso -w <INSO_NEDB_PATH>
 ```
+
+## How to debug the bundled assets
+
+```bash
+DEBUG=1 npm run build
+```
+
+This will generate an `artifacts` directory containing information about the bundled assets.
+The meta.json can be uploaded to https://esbuild.github.io/analyze/ to visualize the bundle.
+The bundle-analysis.log can be used to see the dependency tree of the bundle.

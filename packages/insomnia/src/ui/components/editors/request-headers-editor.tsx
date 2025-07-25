@@ -1,12 +1,13 @@
 import React, { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
+import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
+
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { generateId } from '../../../common/misc';
 import type { RequestHeader } from '../../../models/request';
 import { invariant } from '../../../utils/invariant';
 import { useRequestGroupPatcher, useRequestPatcher } from '../../hooks/use-request';
-import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {

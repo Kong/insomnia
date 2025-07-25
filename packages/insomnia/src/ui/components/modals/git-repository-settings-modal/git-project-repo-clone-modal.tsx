@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
-import { useFetcher, useParams } from 'react-router';
+import { useParams } from 'react-router';
+
+import { useGitCloneActionFetcher } from '~/routes/git.clone';
 
 import { docsGitSync } from '../../../../common/documentation';
 import type { GitRepository, OauthProviderName } from '../../../../models/git-repository';
@@ -20,7 +22,7 @@ import { AlertModal } from '../alert-modal';
 export const GitProjectRepositoryCloneModal = (props: ModalProps) => {
   const { organizationId } = useParams() as { organizationId: string };
   const modalRef = useRef<ModalHandle>(null);
-  const cloneGitRepositoryFetcher = useFetcher();
+  const cloneGitRepositoryFetcher = useGitCloneActionFetcher();
 
   const [selectedTab, setTab] = useState<OauthProviderName>('github');
 
@@ -29,22 +31,20 @@ export const GitProjectRepositoryCloneModal = (props: ModalProps) => {
   }, []);
 
   const onSubmit = (gitRepositoryPatch: Partial<GitRepository>) => {
-    const { author, credentials, created, modified, isPrivate, needsFullClone, uriNeedsMigration, ...repoPatch } =
-      gitRepositoryPatch;
+    const { author, credentials, uri } = gitRepositoryPatch;
 
-    cloneGitRepositoryFetcher.submit(
-      {
-        ...repoPatch,
-        authorName: author?.name || '',
-        authorEmail: author?.email || '',
-        ...credentials,
+    cloneGitRepositoryFetcher.submit({
+      organizationId,
+      uri: uri || '',
+      author: {
+        name: author?.name || '',
+        email: author?.email || '',
       },
-      {
-        // file://./../../../routes/git-actions.tsx#cloneGitRepoAction
-        action: `/organization/${organizationId}/git/clone`,
-        method: 'post',
+      credentials: credentials || {
+        username: '',
+        password: '',
       },
-    );
+    });
   };
 
   const isSubmitting = cloneGitRepositoryFetcher.state === 'submitting';

@@ -1,5 +1,5 @@
 import React, { type FC, useCallback, useState } from 'react';
-import { useInterval } from 'react-use';
+import * as reactUse from 'react-use';
 
 import { Button, type ButtonProps } from '../themed-button';
 
@@ -36,7 +36,7 @@ export const CopyButton: FC<Props> = ({
     [content, onClickProp],
   );
 
-  useInterval(() => {
+  reactUse.useInterval(() => {
     setShowConfirmation(false);
   }, 2000);
 

@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
-import { useFetcher } from 'react-router';
 
-import type { GitCredentials } from '../../../models/git-credentials';
-import type { GitRepository } from '../../../models/git-repository';
-import { PromptButton } from '../base/prompt-button';
+import type { GitCredentials } from '~/models/git-credentials';
+import type { GitRepository } from '~/models/git-repository';
+import { useGitHubCredentialsFetcher } from '~/routes/git-credentials.github';
+import { useGithubCompleteSignInFetcher } from '~/routes/git-credentials.github.complete-sign-in';
+import { useInitSignInToGitHubFetcher } from '~/routes/git-credentials.github.init-sign-in';
+import { useGithubSignOutFetcher } from '~/routes/git-credentials.github.sign-out';
+import { PromptButton } from '~/ui/components/base/prompt-button';
+
 import { GitHubRepositorySelect } from './github-repository-select';
 
 interface Props {
@@ -14,11 +18,11 @@ interface Props {
 
 export const GitHubRepositorySetupFormGroup = (props: Props) => {
   const { onSubmit, uri } = props;
-  const githubTokenLoader = useFetcher<GitCredentials>();
+  const githubTokenLoader = useGitHubCredentialsFetcher();
 
   useEffect(() => {
     if (!githubTokenLoader.data && githubTokenLoader.state === 'idle') {
-      githubTokenLoader.load('/git-credentials/github');
+      githubTokenLoader.load();
     }
   }, [githubTokenLoader]);
 
@@ -67,7 +71,7 @@ interface GitHubRepositoryFormProps {
 
 const GitHubRepositoryForm = ({ uri, credentials, onSubmit }: GitHubRepositoryFormProps) => {
   const [error, setError] = useState('');
-  const signOutFetcher = useFetcher();
+  const signOutFetcher = useGithubSignOutFetcher();
 
   return (
     <form
@@ -105,7 +109,7 @@ const GitHubRepositoryForm = ({ uri, credentials, onSubmit }: GitHubRepositoryFo
         <PromptButton
           confirmMessage="Confirm"
           onClick={() => {
-            signOutFetcher.submit({}, { action: '/git-credentials/github/sign-out', method: 'POST' });
+            signOutFetcher.submit();
           }}
         >
           Disconnect
@@ -127,8 +131,8 @@ const GitHubRepositoryForm = ({ uri, credentials, onSubmit }: GitHubRepositoryFo
 const GitHubSignInForm = () => {
   const [error, setError] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const initSignInFetcher = useFetcher();
-  const completeSignInFetcher = useFetcher();
+  const initSignInFetcher = useInitSignInToGitHubFetcher();
+  const completeSignInFetcher = useGithubCompleteSignInFetcher();
 
   return (
     <div className="flex flex-col items-center justify-center border border-solid border-[--hl-sm] p-4">
@@ -138,7 +142,7 @@ const GitHubSignInForm = () => {
         isDisabled={isAuthenticating}
         onPress={() => {
           setIsAuthenticating(true);
-          initSignInFetcher.submit({}, { action: '/git-credentials/github/init-sign-in', method: 'POST' });
+          initSignInFetcher.submit();
         }}
       >
         <i className="fa fa-github" />
@@ -156,7 +160,7 @@ const GitHubSignInForm = () => {
               let parsedURL: URL;
               try {
                 parsedURL = new URL(link);
-              } catch (error) {
+              } catch {
                 setError('Invalid URL');
                 return;
               }
@@ -169,10 +173,7 @@ const GitHubSignInForm = () => {
                 return;
               }
 
-              completeSignInFetcher.submit(
-                { code, state },
-                { action: '/git-credentials/github/complete-sign-in', method: 'POST', encType: 'application/json' },
-              );
+              completeSignInFetcher.submit({ code, state });
             }
           }}
         >

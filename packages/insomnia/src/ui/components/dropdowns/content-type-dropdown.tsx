@@ -28,10 +28,10 @@ import {
   METHOD_POST,
 } from '../../../common/constants';
 import type { Request, RequestBody, RequestHeader, RequestParameter } from '../../../models/request';
+import type { RequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { deconstructQueryStringToParams } from '../../../utils/url/querystring';
 import { SegmentEvent } from '../../analytics';
 import { useRequestPatcher } from '../../hooks/use-request';
-import type { RequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { Icon } from '../icon';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
@@ -115,7 +115,9 @@ const contentTypeSections: {
 ];
 
 export const ContentTypeDropdown: FC = () => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const { activeRequest } = useRouteLoaderData(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId',
+  ) as RequestLoaderData;
   const patchRequest = useRequestPatcher();
   const { requestId } = useParams() as { requestId: string };
   const handleChangeMimeType = async (mimeType: string | null) => {

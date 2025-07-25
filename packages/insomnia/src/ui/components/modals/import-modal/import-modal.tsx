@@ -2,13 +2,14 @@ import classNames from 'classnames';
 import React, { type FC, Fragment, type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
 import { Heading } from 'react-aria-components';
-import { useFetcher } from 'react-router';
+
+import { useImportResourcesFetcher } from '~/routes/import.resources';
+import { useScanResourcesFetcher } from '~/routes/import.scan';
 
 import type { ScanResult } from '../../../../common/import';
 import { isScratchpadProject } from '../../../../models/project';
 import { invariant } from '../../../../utils/invariant';
 import { SegmentEvent } from '../../../analytics';
-import type { ImportResourcesActionResult } from '../../../routes/import.resources';
 import { Modal, type ModalHandle, type ModalProps } from '../../base/modal';
 import { ModalHeader } from '../../base/modal-header';
 import { Icon } from '../../icon';
@@ -190,9 +191,9 @@ export const ImportModal: FC<ImportModalProps> = ({
   onHide,
 }) => {
   const modalRef = useRef<ModalHandle>(null);
-  const scanResourcesFetcher = useFetcher<ScanResult[]>();
+  const scanResourcesFetcher = useScanResourcesFetcher();
   const scanResourcesFetcherData = scanResourcesFetcher.data;
-  const importFetcher = useFetcher<ImportResourcesActionResult>();
+  const importFetcher = useImportResourcesFetcher();
   useEffect(() => {
     modalRef.current?.show();
   }, []);
@@ -252,20 +253,17 @@ export const ImportModal: FC<ImportModalProps> = ({
         <ModalHeader>{header}</ModalHeader>
         {hasAnyDataToImport ? (
           <ImportResourcesForm
-            organizationId={organizationId}
-            defaultProjectId={defaultProjectId}
-            defaultWorkspaceId={shouldImportToWorkspace ? defaultWorkspaceId : ''}
             scanResults={scanResourcesFetcherData as ScanResult[]}
             errors={importErrors}
             loading={importFetcher.state !== 'idle'}
             disabled={importErrors.length > 0}
-            onSubmit={e => {
+            onImport={() => {
               invariant(Array.isArray(scanResourcesFetcherData));
-              e.preventDefault();
-              // file://./../../routes/import.tsx#importResourcesAction
-              importFetcher.submit(e.currentTarget, {
-                method: 'post',
-                action: '/import/resources',
+
+              importFetcher.submit({
+                organizationId,
+                projectId: defaultProjectId || '',
+                workspaceId: shouldImportToWorkspace ? defaultWorkspaceId : undefined,
               });
               scanResourcesFetcherData
                 .filter(({ errors }) => errors.length === 0)
@@ -284,11 +282,8 @@ export const ImportModal: FC<ImportModalProps> = ({
             scanResults={scanResourcesFetcherData}
             onSubmit={e => {
               e.preventDefault();
-              // file://./../../routes/import.tsx#scanForResourcesAction
-              scanResourcesFetcher.submit(e.currentTarget, {
-                method: 'post',
-                action: '/import/scan',
-              });
+
+              scanResourcesFetcher.submit(e.currentTarget);
             }}
             loading={scanResourcesFetcher.state !== 'idle'}
           />
@@ -381,33 +376,21 @@ const ScanResourcesForm = ({
 };
 
 const ImportResourcesForm = ({
+  onImport,
   scanResults,
-  defaultProjectId,
-  defaultWorkspaceId,
-  organizationId,
-  onSubmit,
   errors,
   disabled,
   loading,
 }: {
   scanResults: ScanResult[];
-  organizationId: string;
-  defaultProjectId?: string;
-  defaultWorkspaceId?: string;
   errors?: string[];
-  onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
+  onImport: () => void;
   disabled: boolean;
   loading: boolean;
 }) => {
-  const id = useId();
   return (
     <Fragment>
       <div className="flex max-h-[50vh] flex-col gap-[var(--padding-md)] overflow-auto">
-        <form onSubmit={onSubmit} method="post" action="/import/resources" id={id} className="hidden">
-          <input hidden name="organizationId" readOnly value={organizationId} />
-          <input hidden name="projectId" readOnly value={defaultProjectId} />
-          <input hidden name="workspaceId" readOnly value={defaultWorkspaceId} />
-        </form>
         <div className="overflow-y-auto">
           <ScanResultsTable scanResults={scanResults} />
         </div>
@@ -428,9 +411,8 @@ const ImportResourcesForm = ({
         <Button
           variant="contained"
           bg="surprise"
-          type="submit"
           disabled={disabled}
-          form={id}
+          onClick={onImport}
           className="btn h-10 gap-[var(--padding-sm)]"
         >
           {loading ? (

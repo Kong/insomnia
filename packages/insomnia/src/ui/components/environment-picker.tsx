@@ -12,13 +12,16 @@ import {
   Popover,
   Text,
 } from 'react-aria-components';
-import { useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router';
+import { useNavigate, useParams, useRouteLoaderData } from 'react-router';
+
+import { useSetActiveEnvironmentFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active';
+import { useEnvironmentSetActiveGlobalActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active-global';
 
 import { fuzzyMatch } from '../../common/misc';
 import { isRemoteProject } from '../../models/project';
+import type { WorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import uiEventBus from '../eventBus';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
-import type { WorkspaceLoaderData } from '../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { Icon } from './icon';
 
 export const EnvironmentPicker = ({
@@ -39,7 +42,9 @@ export const EnvironmentPicker = ({
     baseEnvironment,
     globalBaseEnvironments,
     globalSubEnvironments,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  } = useRouteLoaderData(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
+  ) as WorkspaceLoaderData;
 
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
@@ -53,8 +58,8 @@ export const EnvironmentPicker = ({
   const isUsingInsomniaCloudSync = Boolean(isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
 
-  const setActiveEnvironmentFetcher = useFetcher();
-  const setActiveGlobalEnvironmentFetcher = useFetcher();
+  const setActiveEnvironmentFetcher = useSetActiveEnvironmentFetcher();
+  const setActiveGlobalEnvironmentFetcher = useEnvironmentSetActiveGlobalActionFetcher();
 
   const collectionEnvironmentList = [baseEnvironment, ...subEnvironments].map(({ type, ...environment }) => ({
     ...environment,
@@ -170,15 +175,12 @@ export const EnvironmentPicker = ({
                     return;
                   }
 
-                  setActiveGlobalEnvironmentFetcher.submit(
-                    {
-                      environmentId: key.toString(),
-                    },
-                    {
-                      method: 'POST',
-                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active-global`,
-                    },
-                  );
+                  setActiveGlobalEnvironmentFetcher.submit({
+                    organizationId,
+                    projectId,
+                    workspaceId,
+                    environmentId: key.toString(),
+                  });
                 }}
                 defaultInputValue={
                   selectedGlobalBaseEnvironment?.workspaceName ||
@@ -243,15 +245,12 @@ export const EnvironmentPicker = ({
                 }
                 const [environmentId] = keys.values();
 
-                setActiveGlobalEnvironmentFetcher.submit(
-                  {
-                    environmentId,
-                  },
-                  {
-                    method: 'POST',
-                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active-global`,
-                  },
-                );
+                setActiveGlobalEnvironmentFetcher.submit({
+                  organizationId,
+                  projectId,
+                  workspaceId,
+                  environmentId: environmentId.toString(),
+                });
               }}
               className="flex max-h-[fit-content] min-w-max flex-1 select-none flex-col overflow-y-auto p-2 text-sm empty:p-0 focus:outline-none"
             >
@@ -315,15 +314,12 @@ export const EnvironmentPicker = ({
                     return;
                   }
                   const [environmentId] = keys.values();
-                  setActiveEnvironmentFetcher.submit(
-                    {
-                      environmentId,
-                    },
-                    {
-                      method: 'POST',
-                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
-                    },
-                  );
+                  setActiveEnvironmentFetcher.submit({
+                    organizationId,
+                    projectId,
+                    workspaceId,
+                    environmentId: environmentId.toString(),
+                  });
                   uiEventBus.emit('CHANGE_ACTIVE_ENV', workspaceId);
                 }}
                 className="max-h-[fit-content] flex-1 select-none overflow-y-auto p-2 text-sm focus:outline-none"

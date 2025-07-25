@@ -1,13 +1,14 @@
 import React, { type FC, useCallback } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router';
 
+import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
+
 import type { RequestParameter } from '../../../models/request';
-import { useRequestPatcher } from '../../hooks/use-request';
 import type {
   RequestLoaderData,
   WebSocketRequestLoaderData,
-} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { CodeEditor } from '../codemirror/code-editor';
+} from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { useRequestPatcher } from '../../hooks/use-request';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {
@@ -17,7 +18,9 @@ interface Props {
 
 export const RequestParametersEditor: FC<Props> = ({ bulk, disabled = false }) => {
   const { requestId } = useParams() as { requestId: string };
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData | WebSocketRequestLoaderData;
+  const { activeRequest } = useRouteLoaderData(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId',
+  ) as RequestLoaderData | WebSocketRequestLoaderData;
   const patchRequest = useRequestPatcher();
   const handleBulkUpdate = useCallback(
     (paramsString: string) => {
