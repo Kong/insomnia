@@ -16,7 +16,7 @@ import {
 import { ACCEPTED_NODE_CA_FILE_EXTS, NPM_PACKAGE_BASE, PLUGIN_HUB_BASE } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
 import type { Plugin } from '../../../plugins/index';
-import { getPlugins, getPreBundlePluginPath } from '../../../plugins/index';
+import { getPlugins } from '../../../plugins/index';
 import { reload } from '../../../templating/index';
 import { validatePluginName } from '../../../utils/plugin';
 import { useSettingsPatcher } from '../../hooks/use-request';
@@ -37,7 +37,6 @@ interface State {
   isRefreshingPlugins: boolean;
   pluginNodeExtraCerts: string;
 }
-const preBundlePluginDirectory = getPreBundlePluginPath();
 
 export const Plugins: FC = () => {
   const { settings } = useRootLoaderData();
@@ -85,7 +84,7 @@ export const Plugins: FC = () => {
       await getPlugins(true)
     ).filter(p => {
       // Filter out pre-bundled plugins
-      return !p.directory.startsWith(preBundlePluginDirectory);
+      return !p.isBundlePlugin;
     });
 
     reload();

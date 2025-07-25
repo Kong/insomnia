@@ -17,13 +17,13 @@
   "author": "Kong <office@konghq.com>",
   "main": "src/main.min.js",
   "scripts": {
+    "verify-bundle-plugins": "esr --cache ./scripts/verify-bundle-plugins.ts",
     "build": "esr --cache ./scripts/build.ts --noErrorTruncation",
-    "bundle-plugins": "esr scripts/bundle-plugins.ts",
     "generate:schema": "esr ./src/schema.ts",
     "build:main.min.js": "cross-env NODE_ENV=development esr esbuild.main.ts",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
-    "package": "npm run build && npm run bundle-plugins && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js",
-    "package:windows:unpacked": "npm run build && npm run bundle-plugins && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --win squirrel nsis --dir",
+    "package": "npm run build && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js",
+    "package:windows:unpacked": "npm run build && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --win squirrel nsis --dir",
     "package:windows:dist": "cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --win squirrel nsis --prepackaged ./dist/win-unpacked",
     "start": "npx -y concurrently -n browser,main --kill-others \"npm run start:dev-server\" \"npm run start:electron\"",
     "start:autoRestart": "npx -y concurrently -n browser,main --kill-others \"npm run start:dev-server\" \"npm run start:electron:autoRestart\"",
@@ -192,6 +192,9 @@
     "ws": "^8.18.1",
     "xpath": "0.0.34",
     "zod": "^3.25.75"
+  },
+  "optionalDependencies": {
+    "@kong/insomnia-plugin-external-vault": "0.0.1-alpha.2"
   },
   "dev": {
     "dev-server-port": 3334
