@@ -17,7 +17,7 @@ export const isLocalProject = (project: Pick<Project, 'remoteId'>): project is L
 export const isRemoteProject = (project: Pick<Project, 'remoteId'>): project is RemoteProject =>
   !isLocalProject(project);
 export const isGitProject = (project: Project): project is GitProject =>
-  'gitRepositoryId' in project && project.gitRepositoryId !== null;
+  'gitRepositoryId' in project && (project.gitRepositoryId !== null || project.gitRepositoryId === 'empty');
 export const projectHasSettings = (project: Pick<Project, '_id'>) => !isScratchpadProject(project);
 
 interface CommonProject {
