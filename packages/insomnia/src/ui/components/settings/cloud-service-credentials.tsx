@@ -10,7 +10,7 @@ import {
   getProviderDisplayName,
 } from '../../../models/cloud-credential';
 import { executePluginRouterAction } from '../../../plugins';
-import { getActiveBundlePlugins } from '../../../plugins';
+import { getBundlePlugins } from '../../../plugins';
 import { usePlanData } from '../../hooks/use-plan';
 import { useRootLoaderData } from '../../routes/root';
 import { Icon } from '../icon';
@@ -66,7 +66,7 @@ export const CloudServiceCredentialList = () => {
   const deleteCredentialFetcher = useFetcher();
   useEffect(() => {
     const checkVaultPlugin = async () => {
-      const plugins = await getActiveBundlePlugins();
+      const plugins = await getBundlePlugins();
       const vaultPlugin = plugins.find(p => p.name === externalVaultPluginName);
       setIsVaultPluginInstalled(!!vaultPlugin);
     };
