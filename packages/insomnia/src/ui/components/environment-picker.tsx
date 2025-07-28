@@ -18,7 +18,7 @@ import { fuzzyMatch } from '../../common/misc';
 import { isRemoteProject } from '../../models/project';
 import uiEventBus from '../eventBus';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
-import type { WorkspaceLoaderData } from '../routes/workspace';
+import type { WorkspaceLoaderData } from '../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { Icon } from './icon';
 
 export const EnvironmentPicker = ({

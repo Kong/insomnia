@@ -4,6 +4,7 @@ import type { GitServiceAPI } from './main/git-service';
 import type { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
 import type { CurlBridgeAPI } from './main/network/curl';
+import type { SocketIOBridgeAPI } from './main/network/socket-io';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 import { invariant } from './utils/invariant';
 
@@ -33,6 +34,21 @@ const curl: CurlBridgeAPI = {
   },
 };
 
+const socketIO: SocketIOBridgeAPI = {
+  open: options => ipcRenderer.invoke('socketIO.open', options),
+  readyState: {
+    getCurrent: options => ipcRenderer.invoke('socketIO.readyState', options),
+  },
+  close: options => ipcRenderer.send('socketIO.close', options),
+  closeAll: () => ipcRenderer.send('socketIO.closeAll'),
+  event: {
+    findMany: options => ipcRenderer.invoke('socketIO.event.findMany', options),
+    send: options => ipcRenderer.invoke('socketIO.event.send', options),
+    on: options => ipcRenderer.send('socketIO.event.on', options),
+    off: options => ipcRenderer.send('socketIO.event.off', options),
+  },
+};
+
 const grpc: gRPCBridgeAPI = {
   start: options => ipcRenderer.send('grpc.start', options),
   sendMessage: options => ipcRenderer.send('grpc.sendMessage', options),
@@ -54,6 +70,7 @@ const secretStorage: secretStorageBridgeAPI = {
 const git: GitServiceAPI = {
   loadGitRepository: options => ipcRenderer.invoke('git.loadGitRepository', options),
   getGitBranches: options => ipcRenderer.invoke('git.getGitBranches', options),
+  fetchGitRemoteBranches: options => ipcRenderer.invoke('git.fetchGitRemoteBranches', options),
   gitFetchAction: options => ipcRenderer.invoke('git.gitFetchAction', options),
   gitLogLoader: options => ipcRenderer.invoke('git.gitLogLoader', options),
   gitChangesLoader: options => ipcRenderer.invoke('git.gitChangesLoader', options),
@@ -112,11 +129,13 @@ const main: Window['main'] = {
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
   writeFile: options => ipcRenderer.invoke('writeFile', options),
   readFile: options => ipcRenderer.invoke('readFile', options),
+  lintSpec: options => ipcRenderer.invoke('lintSpec', options),
   on: (channel, listener) => {
     ipcRenderer.on(channel, listener);
     return () => ipcRenderer.removeListener(channel, listener);
   },
   webSocket,
+  socketIO,
   git,
   grpc,
   curl,

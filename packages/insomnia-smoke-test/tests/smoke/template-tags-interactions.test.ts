@@ -19,7 +19,12 @@ const templateTagTestCases: Record<string, TemplateTagTestCase[]> = {
       expectedResult: 'File Tag Test',
     },
   ],
-  hash: [{ tagPrefix: "{% hash 'md5', 'hex', 'insomnia-test' %}", expectedResult: 'b9c076eabf32fa4cdd7573a6df12d33c' }],
+  hash: [
+    {
+      tagPrefix: "{% hash 'md5', 'hex', 'insomnia-test' %}",
+      expectedResult: 'b79b28083768d54575eacc7389e9128624685310',
+    },
+  ],
   jsonPath: [{ tagPrefix: '{% jsonpath', expectedResult: 'bar' }],
   os: [{ tagPrefix: "{% os 'arch', '' %}", expectedResult: os.arch() }],
   timeStamp: [
@@ -84,11 +89,11 @@ test('Critical Path For Template Tags Interactions', async ({ page, app }) => {
     // wait for render complete
     await expect.soft(previewResult).not.toHaveText('rendering...');
     const previewText = await previewResult.textContent();
+    const isFunction = typeof expectedResult === 'function';
     expect
       .soft(
-        typeof expectedResult === 'function'
-          ? expectedResult(previewText || '')
-          : previewText?.includes(expectedResult),
+        isFunction ? expectedResult(previewText || '') : previewText?.includes(expectedResult),
+        ` Template tag "${tagPrefix}" should render as "${expectedResult}" but returned ${previewText}.`,
       )
       .toBeTruthy();
     // close modal

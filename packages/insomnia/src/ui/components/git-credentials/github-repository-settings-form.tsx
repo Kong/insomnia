@@ -4,7 +4,7 @@ import { useFetcher } from 'react-router';
 
 import type { GitCredentials } from '../../../models/git-credentials';
 import type { GitRepository } from '../../../models/git-repository';
-import { showAlert } from '../modals';
+import { PromptButton } from '../base/prompt-button';
 import { GitHubRepositorySelect } from './github-repository-select';
 
 interface Props {
@@ -61,7 +61,7 @@ const Avatar = ({ src }: { src: string }) => {
 
 interface GitHubRepositoryFormProps {
   uri?: string;
-  onSubmit: (args: Partial<GitRepository>) => void;
+  onSubmit: (args: Partial<GitRepository & { ref?: string }>) => void;
   credentials: GitCredentials;
 }
 
@@ -77,12 +77,14 @@ const GitHubRepositoryForm = ({ uri, credentials, onSubmit }: GitHubRepositoryFo
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         const uri = formData.get('uri') as string;
+        const ref = formData.get('branch') as string;
         if (!uri) {
           setError('Please select a repository');
           return;
         }
         onSubmit({
           uri,
+          ref,
           credentials: {
             oauth2format: 'github',
             password: '',
@@ -100,22 +102,14 @@ const GitHubRepositoryForm = ({ uri, credentials, onSubmit }: GitHubRepositoryFo
             <span className="text-sm text-[--hl]">{credentials.author.email || 'Signed in'}</span>
           </div>
         </div>
-        <Button
-          type="button"
-          onPress={() => {
-            showAlert({
-              title: 'Sign out of GitHub',
-              message:
-                'Are you sure you want to sign out? You will need to re-authenticate with GitHub to use this feature.',
-              okLabel: 'Sign out',
-              onConfirm: () => {
-                signOutFetcher.submit({}, { action: '/git-credentials/github/sign-out', method: 'POST' });
-              },
-            });
+        <PromptButton
+          confirmMessage="Confirm"
+          onClick={() => {
+            signOutFetcher.submit({}, { action: '/git-credentials/github/sign-out', method: 'POST' });
           }}
         >
-          Sign out
-        </Button>
+          Disconnect
+        </PromptButton>
       </div>
       <GitHubRepositorySelect uri={uri} token={credentials.token} />
       {error && (

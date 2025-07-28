@@ -3,7 +3,10 @@ import { useParams, useRouteLoaderData } from 'react-router';
 
 import type { RequestParameter } from '../../../models/request';
 import { useRequestPatcher } from '../../hooks/use-request';
-import type { RequestLoaderData, WebSocketRequestLoaderData } from '../../routes/request';
+import type {
+  RequestLoaderData,
+  WebSocketRequestLoaderData,
+} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 

@@ -30,10 +30,15 @@ import {
   isRemoteProject,
   type Project,
 } from '../../../models/project';
-import type { UpdateProjectActionResult } from '../../routes/actions';
-import type { InitGitCloneResult } from '../../routes/git-project-actions';
-import type { StorageRules } from '../../routes/organization';
-import { scopeToBgColorMap, scopeToIconMap, scopeToLabelMap, scopeToTextColorMap } from '../../routes/project';
+import type { StorageRules } from '../../organization-utils';
+import type { InitGitCloneResult } from '../../routes/$organizationId.git';
+import {
+  scopeToBgColorMap,
+  scopeToIconMap,
+  scopeToLabelMap,
+  scopeToTextColorMap,
+} from '../../routes/$organizationId.project.$projectId';
+import type { UpdateProjectActionResult } from '../../routes/$organizationId.project.$projectId.update';
 import { ErrorBoundary } from '../error-boundary';
 import { CustomRepositorySettingsFormGroup } from '../git-credentials/custom-repository-settings-form';
 import { GitHubRepositorySetupFormGroup } from '../git-credentials/github-repository-settings-form';
@@ -92,6 +97,7 @@ export const ProjectSettingsForm: FC<Props> = ({
     authorName?: string;
     authorEmail?: string;
     uri?: string;
+    ref?: string;
     username?: string;
     password?: string;
     token?: string;
@@ -139,7 +145,7 @@ export const ProjectSettingsForm: FC<Props> = ({
     }
   }, [storageRules, project]);
 
-  const onGitRepoFormSubmit = (gitRepositoryPatch: Partial<GitRepository>) => {
+  const onGitRepoFormSubmit = (gitRepositoryPatch: Partial<GitRepository & { ref?: string }>) => {
     const { author, credentials, created, modified, isPrivate, needsFullClone, uriNeedsMigration, ...repoPatch } =
       gitRepositoryPatch;
 
@@ -149,6 +155,7 @@ export const ProjectSettingsForm: FC<Props> = ({
       authorName: author?.name || '',
       authorEmail: author?.email || '',
       uri: repoPatch.uri,
+      ref: repoPatch.ref,
     });
 
     initCloneGitRepositoryFetcher.submit(
@@ -509,7 +516,6 @@ export const ProjectSettingsForm: FC<Props> = ({
                 </>
               ) : (
                 <>
-                  <Icon icon={['fab', 'git-alt']} />
                   <span>{insomniaFiles.length > 0 ? 'Import all' : 'Clone'}</span>
                 </>
               )}

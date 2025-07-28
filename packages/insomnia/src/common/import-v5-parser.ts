@@ -290,7 +290,15 @@ export const WebSocketRequestSettingsSchema = z.object({
   followRedirects: z.enum(['global', 'on', 'off']).optional().default('global'),
 });
 
-const RequestPathParametersSchema = z.array(
+export const SocketIORequestSettingsSchema = z.object({
+  encodeUrl: z.boolean().optional().default(true),
+  cookies: z.object({
+    store: z.boolean().optional().default(true),
+    send: z.boolean().optional().default(true),
+  }),
+});
+
+export const RequestPathParametersSchema = z.array(
   z.object({
     name: z.string().optional().default(''),
     value: z.string().optional().default(''),
@@ -393,11 +401,40 @@ export const WebsocketRequestSchema = z.object({
   }).optional(),
 });
 
+export const SocketIOEventListenerSchema = z.object({
+  id: z.string(),
+  eventName: z.string().optional().default(''),
+  desc: z.string().optional().default(''),
+  isOpen: z.boolean().optional().default(false),
+});
+
+export const SocketIORequestSchema = z.object({
+  name: z.string().optional().default(''),
+  url: z.string().optional().default(''),
+  headers: RequestHeadersSchema.optional(),
+  authentication: AuthenticationSchema.optional(),
+  parameters: RequestParametersSchema.optional(),
+  pathParameters: RequestParametersSchema.optional(),
+  settings: SocketIORequestSettingsSchema.optional().default({
+    encodeUrl: true,
+    cookies: {
+      send: true,
+      store: true,
+    },
+  }),
+  eventListeners: SocketIOEventListenerSchema.array().optional(),
+  meta: MetaSchema.extend({
+    id: z.string().startsWith('socketio-req'),
+    sortKey: z.number().optional(),
+  }).optional(),
+});
+
 type Request = z.infer<typeof RequestSchema>;
 type GRPCRequest = z.infer<typeof GRPCRequestSchema>;
 type WebsocketRequest = z.infer<typeof WebsocketRequestSchema>;
+type SocketIORequest = z.infer<typeof SocketIORequestSchema>;
 type RequestGroup = z.input<typeof RequestGroupSchema> & {
-  children?: (Request | GRPCRequest | WebsocketRequest | RequestGroup)[];
+  children?: (Request | GRPCRequest | WebsocketRequest | RequestGroup | SocketIORequest)[];
 };
 
 const RequestGroupWithChildrenSchema: z.ZodType<RequestGroup> = RequestGroupSchema.extend({
@@ -421,6 +458,11 @@ const RequestCollectionSchema = z
       children: z.undefined(),
     }),
     WebsocketRequestSchema.extend({
+      // These undefined properties are added to differentiate between the different types of children in the union
+      children: z.undefined(),
+      method: z.undefined(),
+    }),
+    SocketIORequestSchema.extend({
       // These undefined properties are added to differentiate between the different types of children in the union
       children: z.undefined(),
       method: z.undefined(),
@@ -517,3 +559,4 @@ export type Insomnia_GRPCRequest = z.infer<typeof GRPCRequestSchema>;
 export type Insomnia_RequestGroup = z.infer<typeof RequestGroupWithChildrenSchema>;
 export type Insomnia_Request = z.infer<typeof RequestSchema>;
 export type Insomnia_WebsocketRequest = z.infer<typeof WebsocketRequestSchema>;
+export type Insomnia_SocketIORequest = z.infer<typeof SocketIORequestSchema>;

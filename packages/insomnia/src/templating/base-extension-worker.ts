@@ -1,4 +1,4 @@
-import { getAppPlatform, getAppVersion } from '../common/constants';
+import packageJson from '../../package.json';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Response } from '../models/response';
@@ -14,11 +14,26 @@ export function decodeEncoding<T>(value: T) {
   const results = value.match(/^b64::(.+)::46b$/);
 
   if (results) {
-    return Buffer.from(results[1], 'base64').toString('utf8');
+    const base64 = results[1];
+    try {
+      const binary = atob(base64);
+      const bytes = new Uint8Array([...binary].map(char => char.charCodeAt(0)));
+      return new TextDecoder().decode(bytes);
+    } catch (e) {
+      console.error('Invalid base64 string:', e);
+      return value;
+    }
   }
 
   return value;
 }
+const fetchFromTemplateWorkerDatabase = async (url: string, body: any) => {
+  const resp = await fetch('insomnia-templating-worker-database://' + url, {
+    method: 'post',
+    body: JSON.stringify(body),
+  });
+  return resp.json();
+};
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
 const legacyModeErrorMessage = `This version improves the security around plugins by limiting scope of access by default. This may break some plugins which rely on having the same kind of access Insomnia does. You can still grant elevated access to plugins, should your workflow absolutely require it, by navigating to Preferences > Plugins and checking the box enabling elevated access for plugins.`;
 export default class BaseExtension {
@@ -99,6 +114,8 @@ export default class BaseExtension {
       .slice(0, runArgs.length - 1)
       .filter(a => a !== EMPTY_ARG)
       .map(decodeEncoding);
+    const platform = ({ MacIntel: 'darwin', Win32: 'win32' }[globalThis.navigator.platform] ||
+      'linux') as NodeJS.Platform;
     // Define a helper context with utils
     const helperContext: PluginTemplateTagContext = {
       app: {
@@ -114,7 +131,10 @@ export default class BaseExtension {
         getPath: () => {
           throw new Error(legacyModeErrorMessage);
         },
-        getInfo: () => ({ version: getAppVersion(), platform: getAppPlatform() }),
+        getInfo: () => ({
+          version: packageJson.version,
+          platform,
+        }),
         showSaveDialog: async () => {
           throw new Error(legacyModeErrorMessage);
         },
@@ -131,147 +151,61 @@ export default class BaseExtension {
         },
       },
       store: {
-        hasItem: async (key: string) => {
-          const resp = await fetch('insomnia-templating-worker-database://pluginData.hasItem', {
-            method: 'post',
-            body: JSON.stringify({ pluginName: this._plugin?.name, key }),
-          });
-
-          const body = await resp.json();
-          return body;
-        },
-        setItem: async (key: string, value: string) => {
-          await fetch('insomnia-templating-worker-database://pluginData.setItem', {
-            method: 'post',
-            body: JSON.stringify({ pluginName: this._plugin?.name, key, value }),
-          });
-        },
-        getItem: async (key: string) => {
-          const resp = await fetch('insomnia-templating-worker-database://pluginData.getItem', {
-            method: 'post',
-            body: JSON.stringify({ pluginName: this._plugin?.name, key }),
-          });
-
-          const body = await resp.json();
-          return body;
-        },
-        removeItem: async (key: string) => {
-          await fetch('insomnia-templating-worker-database://pluginData.removeItem', {
-            method: 'post',
-            body: JSON.stringify({ pluginName: this._plugin?.name, key }),
-          });
-        },
-        clear: async () => {
-          await fetch('insomnia-templating-worker-database://pluginData.removeItem', {
-            method: 'post',
-            body: JSON.stringify({ pluginName: this._plugin?.name }),
-          });
-        },
-        all: async (): Promise<{ key: string; value: string }[]> => {
-          const resp = await fetch('insomnia-templating-worker-database://pluginData.getItem', {
-            method: 'post',
-            body: JSON.stringify({ pluginName: this._plugin?.name }),
-          });
-
-          const body = await resp.json();
-          return body;
-        },
+        hasItem: async (key: string) =>
+          fetchFromTemplateWorkerDatabase('pluginData.hasItem', { pluginName: this._plugin?.name, key }),
+        setItem: async (key: string, value: string) =>
+          fetchFromTemplateWorkerDatabase('pluginData.setItem', { pluginName: this._plugin?.name, key, value }),
+        getItem: async (key: string) =>
+          fetchFromTemplateWorkerDatabase('pluginData.getItem', { pluginName: this._plugin?.name, key }),
+        removeItem: async (key: string) =>
+          fetchFromTemplateWorkerDatabase('pluginData.removeItem', { pluginName: this._plugin?.name, key }),
+        clear: async () => fetchFromTemplateWorkerDatabase('pluginData.removeItem', { pluginName: this._plugin?.name }),
+        all: async (): Promise<{ key: string; value: string }[]> =>
+          fetchFromTemplateWorkerDatabase('pluginData.getItem', { pluginName: this._plugin?.name }),
       },
       network: {
-        sendRequest: async (request: Request, extraInfo?: { requestChain: string[] }): Promise<Response> => {
-          const resp = await fetch('insomnia-templating-worker-database://network.sendRequest', {
-            method: 'post',
-            body: JSON.stringify({ request, extraInfo }),
-          });
-
-          const body = await resp.json();
-          return body as Response;
-        },
+        sendRequest: async (request: Request, extraInfo?: { requestChain: string[] }): Promise<Response> =>
+          fetchFromTemplateWorkerDatabase('network.sendRequest', { request, extraInfo }),
       },
       context: renderContext,
       meta: renderMeta,
       renderPurpose,
       util: {
-        render: (str: string) =>
-          templating.render(str, {
-            context: renderContext,
-          }),
+        readFile: async (path: string, encoding?: string) =>
+          fetchFromTemplateWorkerDatabase('readFile', { path, encoding }),
+        nodeOS: async () => fetchFromTemplateWorkerDatabase('nodeOS', {}),
+        decode: async (buffer: Buffer, encoding?: string) =>
+          fetchFromTemplateWorkerDatabase('decode', { buffer, encoding }),
+        render: (str: string) => templating.render(str, { context: renderContext }),
         models: {
           request: {
-            getById: async (id: string) => {
-              const resp = await fetch('insomnia-templating-worker-database://request.getById', {
-                method: 'post',
-                body: JSON.stringify({ id }),
-              });
-
-              const req = await resp.json();
-              return req;
-            },
+            getById: async (id: string) => fetchFromTemplateWorkerDatabase('request.getById', { id }),
             getAncestors: async (request: any) => {
-              const resp = await fetch('insomnia-templating-worker-database://request.getAncestors', {
-                method: 'post',
-                body: JSON.stringify({ request, types: ['RequestGroup', 'Workspace'] }),
-              });
-
-              const ancestors = (await resp.json()) as (Request | RequestGroup | Workspace)[];
+              const ancestors = (await fetchFromTemplateWorkerDatabase('request.getAncestors', {
+                request,
+                types: ['RequestGroup', 'Workspace'],
+              })) as (Request | RequestGroup | Workspace)[];
               return ancestors.filter(doc => doc._id !== request._id);
             },
           },
           workspace: {
-            getById: async (id: string) => {
-              const resp = await fetch('insomnia-templating-worker-database://workspace.getById', {
-                method: 'post',
-                body: JSON.stringify({ id }),
-              });
-
-              const workspace = await resp.json();
-              return workspace;
-            },
+            getById: async (id: string) => fetchFromTemplateWorkerDatabase('workspace.getById', { id }),
           },
           oAuth2Token: {
-            getByRequestId: async (parentId: string) => {
-              const resp = await fetch('insomnia-templating-worker-database://oAuth2Token.getByRequestId', {
-                method: 'post',
-                body: JSON.stringify({ parentId }),
-              });
-
-              const oAuth2Token = await resp.json();
-              return oAuth2Token;
-            },
+            getByRequestId: async (parentId: string) =>
+              fetchFromTemplateWorkerDatabase('oAuth2Token.getByRequestId', { parentId }),
           },
           cookieJar: {
-            getOrCreateForParentId: async (parentId: string) => {
-              const resp = await fetch('insomnia-templating-worker-database://cookieJar.getOrCreateForParentId', {
-                method: 'post',
-                body: JSON.stringify({ parentId }),
-              });
-
-              const cookieJar = await resp.json();
-              return cookieJar;
-            },
+            getOrCreateForParentId: async (parentId: string) =>
+              fetchFromTemplateWorkerDatabase('cookieJar.getOrCreateForParentId', { parentId }),
           },
           response: {
-            getLatestForRequestId: async (requestId: string, environmentId: string | null) => {
-              const resp = await fetch('insomnia-templating-worker-database://response.getLatestForRequestId', {
-                method: 'post',
-                body: JSON.stringify({ requestId, environmentId }),
-              });
-
-              const latest = await resp.json();
-              return latest;
-            },
+            getLatestForRequestId: async (requestId: string, environmentId: string | null) =>
+              fetchFromTemplateWorkerDatabase('response.getLatestForRequestId', { requestId, environmentId }),
             getBodyBuffer: async (
               response?: { bodyPath?: string; bodyCompression?: 'zip' | null | '__NEEDS_MIGRATION__' | undefined },
               readFailureValue?: string,
-            ) => {
-              const resp = await fetch('insomnia-templating-worker-database://response.getBodyBuffer', {
-                method: 'post',
-                body: JSON.stringify({ response, readFailureValue }),
-              });
-
-              const buffer = await resp.json();
-              return buffer;
-            },
+            ) => fetchFromTemplateWorkerDatabase('response.getBodyBuffer', { response, readFailureValue }),
           },
         },
       },

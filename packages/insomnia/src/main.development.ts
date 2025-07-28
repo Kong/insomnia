@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import inspector from 'node:inspector';
 import path from 'node:path';
 
 import electron, { app, session } from 'electron';
@@ -19,6 +20,7 @@ import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
 import { registerSecretStorageHandlers } from './main/ipc/secret-storage';
 import { registerCurlHandlers } from './main/network/curl';
+import { registerSocketIOHandlers } from './main/network/socket-io';
 import { registerWebSocketHandlers } from './main/network/websocket';
 import { watchProxySettings } from './main/proxy';
 import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
@@ -71,6 +73,7 @@ app.on('ready', async () => {
   registergRPCHandlers();
   registerGitServiceAPI();
   registerWebSocketHandlers();
+  registerSocketIOHandlers();
   registerCurlHandlers();
   registerSecretStorageHandlers();
 
@@ -139,7 +142,14 @@ if (defaultProtocolSuccessful) {
     console.error(`[electron client protocol] the default application set for '${fullDefaultProtocol}' was not found`);
   }
 }
-
+app.on('quit', () => {
+  if (isDevelopment()) {
+    // stop the inspector if active to unblock electron app exit in development mode
+    if (inspector.url()) {
+      inspector.close();
+    }
+  }
+});
 // Quit when all windows are closed (except on Mac).
 app.on('window-all-closed', () => {
   if (!isMac()) {

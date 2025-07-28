@@ -68,7 +68,7 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
         saveVaultKey: true,
       },
       {
-        action: '/auth/validateVaultKey',
+        action: '/auth/validate-vault-key',
         method: 'POST',
         encType: 'application/json',
       },
@@ -87,7 +87,7 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
           // clear all local secrets first
           await removeAllSecrets(organizations.map(org => org.id));
           resetVaultKeyFetcher.submit('', {
-            action: '/auth/resetVaultKey',
+            action: '/auth/reset-vault-key',
             method: 'POST',
           });
         }

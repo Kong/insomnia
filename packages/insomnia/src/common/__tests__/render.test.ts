@@ -53,8 +53,8 @@ describe('render tests', () => {
       const rootEnvironment = envBuilder
         .data({
           consume: '{{ replaced }}',
-          hashed: "{% hash 'md5', 'hex', value %}",
-          replaced: "{{ hashed | replace('f67565de946a899a534fd908e7eef872', 'cat') }}",
+          hashed: "{% hash 'sha1', 'hex', value %}",
+          replaced: "{{ hashed | replace('1d8445ef1467a6b7a36dc794ce37cf2e9d945a9f', 'cat') }}",
           value: 'ThisIsATopSecretValue',
         })
         .dataPropertyOrder({
@@ -65,9 +65,9 @@ describe('render tests', () => {
       const context = await renderUtils.buildRenderContext({ ancestors: [], rootEnvironment });
       expect(context).toEqual({
         value: 'ThisIsATopSecretValue',
-        hashed: 'f67565de946a899a534fd908e7eef872',
-        replaced: 'f67565de946a899a534fd908e7eef872',
-        consume: 'f67565de946a899a534fd908e7eef872',
+        hashed: '1d8445ef1467a6b7a36dc794ce37cf2e9d945a9f',
+        replaced: '1d8445ef1467a6b7a36dc794ce37cf2e9d945a9f',
+        consume: '1d8445ef1467a6b7a36dc794ce37cf2e9d945a9f',
       });
       // In runtime, this context is used to render, which re-evaluates the expression for replaced in the rootEnvironment by using the built context
       // Regression test from issue 1917 - https://github.com/Kong/insomnia/issues/1917
@@ -450,8 +450,8 @@ describe('render tests', () => {
       const rootEnvironment = envBuilder
         .data({
           consume: '{{ replaced }}',
-          hashed: "{% hash 'md5', 'hex', value %}",
-          replaced: "{{ hashed | replace('f67565de946a899a534fd908e7eef872', 'cat') }}",
+          hashed: "{% hash 'sha1', 'hex', value %}",
+          replaced: "{{ hashed | replace('1d8445ef1467a6b7a36dc794ce37cf2e9d945a9f', 'cat') }}",
           value: 'ThisIsATopSecretValue',
         })
         .dataPropertyOrder({
@@ -461,7 +461,7 @@ describe('render tests', () => {
       const context = await renderUtils.buildRenderContext({ ancestors: [], rootEnvironment });
       expect(context).toEqual({
         value: 'ThisIsATopSecretValue',
-        hashed: 'f67565de946a899a534fd908e7eef872',
+        hashed: '1d8445ef1467a6b7a36dc794ce37cf2e9d945a9f',
         replaced: 'cat',
         consume: 'cat',
       });

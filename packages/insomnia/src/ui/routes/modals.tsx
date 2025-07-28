@@ -19,7 +19,7 @@ import { SettingsModal } from '../components/modals/settings-modal';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { UpgradeModal } from '../components/modals/upgrade-modal';
 import { WrapperModal } from '../components/modals/wrapper-modal';
-import type { WorkspaceLoaderData } from './workspace';
+import type { WorkspaceLoaderData } from './$organizationId.project.$projectId.workspace.$workspaceId';
 
 const Modals: FC = () => {
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;

@@ -2,7 +2,7 @@ import React from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router';
 
-import type { WorkspaceLoaderData } from '../../routes/workspace';
+import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { CopyButton } from '../base/copy-button';
 import { Icon } from '../icon';
 

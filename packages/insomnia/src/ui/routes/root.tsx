@@ -19,8 +19,8 @@ import { AlertModal } from '../components/modals/alert-modal';
 import { AskModal } from '../components/modals/ask-modal';
 import { ImportModal } from '../components/modals/import-modal';
 import { SettingsModal, TAB_INDEX_PLUGINS, TAB_INDEX_THEMES } from '../components/modals/settings-modal';
+import { Toaster } from '../components/toast-notification';
 import { AppHooks } from '../containers/app-hooks';
-import { AIProvider } from '../context/app/ai-context';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import Modals from './modals';
 
@@ -220,27 +220,26 @@ const Root = () => {
   }, [actionFetcher, navigate]);
 
   return (
-    <AIProvider>
-      <NunjucksEnabledProvider>
-        <ErrorBoundary>
-          <div className="app">
-            <Outlet />
-          </div>
-          <Modals />
-          <AppHooks />
-          {/* triggered by insomnia://app/import */}
-          {importUri && (
-            <ImportModal
-              onHide={() => setImportUri('')}
-              projectName="Insomnia"
-              defaultProjectId={projectId}
-              organizationId={organizationId}
-              from={{ type: 'uri', defaultValue: importUri }}
-            />
-          )}
-        </ErrorBoundary>
-      </NunjucksEnabledProvider>
-    </AIProvider>
+    <NunjucksEnabledProvider>
+      <ErrorBoundary>
+        <div className="app">
+          <Outlet />
+          <Toaster />
+        </div>
+        <Modals />
+        <AppHooks />
+        {/* triggered by insomnia://app/import */}
+        {importUri && (
+          <ImportModal
+            onHide={() => setImportUri('')}
+            projectName="Insomnia"
+            defaultProjectId={projectId}
+            organizationId={organizationId}
+            from={{ type: 'uri', defaultValue: importUri }}
+          />
+        )}
+      </ErrorBoundary>
+    </NunjucksEnabledProvider>
   );
 };
 

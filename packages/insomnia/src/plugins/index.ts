@@ -9,10 +9,10 @@ import * as models from '../models';
 import type { GrpcRequest } from '../models/grpc-request';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
+import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace } from '../models/workspace';
 import type { PluginTemplateTag } from '../templating/types';
-import { showError } from '../ui/components/modals/index';
 import type { PluginTheme } from './misc';
 import themes from './themes';
 
@@ -56,7 +56,7 @@ export type RequestAction = { plugin: Plugin } & {
     context: Record<string, any>,
     models: {
       requestGroup?: RequestGroup;
-      request: Request | GrpcRequest | WebSocketRequest;
+      request: Request | GrpcRequest | WebSocketRequest | SocketIORequest;
     },
   ) => void | Promise<void>;
   label: string;
@@ -171,14 +171,7 @@ async function traversePluginPath(pluginMap: Record<string, Plugin>, allPaths: s
           module: module,
         };
       } catch (err) {
-        showError({
-          title: 'Plugin Error',
-          message:
-            'Failed to load plugin ' +
-            filename +
-            '. Please contact the plugin author sharing the below stack trace to help them to ensure compatibility with the latest Insomnia.',
-          error: err,
-        });
+        console.error(`[plugin] Error while loading plugin from ${p}/${filename}:`, err);
       }
     }
   }
@@ -217,8 +210,8 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
 
     // Store plugins in a map so that plugins with the same name only get added once
     const pluginMap: Record<string, Plugin> = {};
-
     await traversePluginPath(pluginMap, allPaths, allConfigs);
+
     plugins = Object.keys(pluginMap).map(name => pluginMap[name]);
   }
 

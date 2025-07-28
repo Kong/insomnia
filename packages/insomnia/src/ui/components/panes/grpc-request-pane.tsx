@@ -23,10 +23,10 @@ import { setDefaultProtocol } from '../../../utils/url/protocol';
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import type { GrpcRequestState } from '../../routes/debug';
-import type { GrpcRequestLoaderData } from '../../routes/request';
+import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
+import type { GrpcRequestState } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug';
+import type { GrpcRequestLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRootLoaderData } from '../../routes/root';
-import type { WorkspaceLoaderData } from '../../routes/workspace';
 import { GrpcSendButton } from '../buttons/grpc-send-button';
 import { CodeEditor, type CodeEditorHandle } from '../codemirror/code-editor';
 import { OneLineEditor } from '../codemirror/one-line-editor';
@@ -34,7 +34,8 @@ import { GrpcMethodDropdown } from '../dropdowns/grpc-method-dropdown/grpc-metho
 import { ErrorBoundary } from '../error-boundary';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
-import { showAlert, showError, showModal } from '../modals';
+import { showError, showModal } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
 import { ErrorModal } from '../modals/error-modal';
 import { ProtoFilesModal } from '../modals/proto-files-modal';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
@@ -167,7 +168,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
             error: err,
           });
         } else {
-          showAlert({
+          showModal(AlertModal, {
             title: 'Unexpected Request Failure',
             message: (
               <div>

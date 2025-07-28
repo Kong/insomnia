@@ -8,6 +8,7 @@ import {
   MenuSection,
   MenuTrigger,
   Popover,
+  Separator,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
@@ -16,13 +17,13 @@ import { useInterval } from 'react-use';
 
 import type { Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
-import type { SyncDataLoaderData } from '../../routes/remote-collections';
+import type { SyncDataLoaderData } from '../../routes/$organizationId.project.$projectId.remote-collections';
 import { Icon } from '../icon';
-import { showError } from '../modals';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { SyncBranchesModal } from '../modals/sync-branches-modal';
 import { SyncHistoryModal } from '../modals/sync-history-modal';
 import { SyncStagingModal } from '../modals/sync-staging-modal';
+import { showToast } from '../toast-notification';
 
 interface Props {
   workspace: Workspace;
@@ -30,6 +31,7 @@ interface Props {
 }
 
 const ONE_MINUTE_IN_MS = 1000 * 60;
+const cloudSyncIcon = 'earth-americas';
 
 export const SyncDropdown: FC<Props> = () => {
   const { organizationId, projectId, workspaceId } = useParams<{
@@ -43,6 +45,7 @@ export const SyncDropdown: FC<Props> = () => {
   const [isSyncStagingModalOpen, setIsSyncStagingModalOpen] = useState(false);
   const [isSyncBranchesModalOpen, setIsSyncBranchesModalOpen] = useState(false);
   const [isWindowFocused, setIsWindowFocused] = useState(true);
+  const [operationError, setOperationError] = useState<string | null>(null);
 
   const pushFetcher = useFetcher();
   const pullFetcher = useFetcher();
@@ -84,32 +87,72 @@ export const SyncDropdown: FC<Props> = () => {
     };
   }, [triggerSync]);
 
+  useEffect(() => {
+    if (checkoutFetcher.data && 'error' in checkoutFetcher.data && checkoutFetcher.data.error) {
+      setOperationError(checkoutFetcher.data.error);
+      showToast({
+        icon: cloudSyncIcon,
+        title: `Checkout failed`,
+        status: 'error',
+      });
+    } else if (checkoutFetcher.data && 'success' in checkoutFetcher.data && checkoutFetcher.data.success) {
+      showToast({
+        icon: cloudSyncIcon,
+        title: `Checkout completed`,
+        status: 'success',
+      });
+    }
+  }, [checkoutFetcher.data]);
+
+  useEffect(() => {
+    if (pushFetcher.data && 'error' in pushFetcher.data && pushFetcher.data.error) {
+      setOperationError(pushFetcher.data.error);
+      showToast({ icon: cloudSyncIcon, title: `Push failed` });
+    } else if (pushFetcher.data && 'success' in pushFetcher.data && pushFetcher.data.success) {
+      showToast({
+        icon: cloudSyncIcon,
+        title: `Push completed`,
+        status: 'success',
+      });
+    }
+  }, [pushFetcher.data]);
+
+  useEffect(() => {
+    if (pullFetcher.data && 'error' in pullFetcher.data && pullFetcher.data.error) {
+      setOperationError(pullFetcher.data.error);
+      showToast({ icon: cloudSyncIcon, title: `Pull failed` });
+    } else if (pullFetcher.data && 'success' in pullFetcher.data && pullFetcher.data.success) {
+      showToast({
+        icon: cloudSyncIcon,
+        title: `Pull completed`,
+        status: 'success',
+      });
+    }
+  }, [pullFetcher.data]);
+
+  useEffect(() => {
+    if (rollbackFetcher.data && 'error' in rollbackFetcher.data && rollbackFetcher.data.error) {
+      setOperationError(rollbackFetcher.data.error);
+      showToast({
+        icon: cloudSyncIcon,
+        title: `Rollback failed`,
+        status: 'error',
+      });
+    } else if (rollbackFetcher.data && 'success' in rollbackFetcher.data && rollbackFetcher.data.success) {
+      showToast({
+        icon: cloudSyncIcon,
+        title: `Rollback completed`,
+        status: 'success',
+      });
+    }
+  }, [rollbackFetcher.data]);
+
   useInterval(
     () => {
       triggerSync();
     },
     isWindowFocused ? ONE_MINUTE_IN_MS : null,
   );
-
-  const error =
-    checkoutFetcher.data?.error || pullFetcher.data?.error || pushFetcher.data?.error || rollbackFetcher.data?.error;
-
-  useEffect(() => {
-    if (error) {
-      showError({
-        title: 'Sync Error',
-        message: error,
-      });
-    }
-  }, [error]);
-
-  if (syncDataLoaderFetcher.state !== 'idle' && !syncDataLoaderFetcher.data) {
-    return (
-      <Button className="flex h-9 w-full items-center gap-4 rounded-sm px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
-        <Icon icon="refresh" className="animate-spin" /> Initializing
-      </Button>
-    );
-  }
 
   let syncData: Extract<SyncDataLoaderData, { historyCount: number }> = {
     status: {
@@ -143,6 +186,8 @@ export const SyncDropdown: FC<Props> = () => {
 
   const canCreateSnapshot = Object.keys(status.stage).length > 0 || Object.keys(status.unstaged).length > 0;
 
+  const pullCount = behind;
+  const pushCount = ahead;
   const canPush = ahead > 0;
   const canPull = behind > 0;
   const pullToolTipMsg = canPull
@@ -151,7 +196,6 @@ export const SyncDropdown: FC<Props> = () => {
   const pushToolTipMsg = canPush
     ? `There ${ahead === 1 ? 'is' : 'are'} ${ahead} commit${ahead === 1 ? '' : 's'} to push`
     : 'No changes to push';
-  const snapshotToolTipMsg = canCreateSnapshot ? 'Local changes made' : 'No local changes made';
 
   const localBranchesActionList: {
     id: string;
@@ -166,6 +210,8 @@ export const SyncDropdown: FC<Props> = () => {
     icon: 'code-branch',
     isActive: branch === currentBranch,
     action: () => {
+      setOperationError(null);
+      showToast({ icon: cloudSyncIcon, title: `Checking out branch ${branch}` });
       checkoutFetcher.submit(
         {
           branch,
@@ -204,6 +250,9 @@ export const SyncDropdown: FC<Props> = () => {
       icon: 'undo',
       isDisabled: historyCount === 0 || rollbackFetcher.state !== 'idle' || !canCreateSnapshot,
       action: () => {
+        setOperationError(null);
+        showToast({ icon: cloudSyncIcon, title: `Rollback started` });
+
         rollbackFetcher.submit(
           {},
           {
@@ -231,6 +280,12 @@ export const SyncDropdown: FC<Props> = () => {
       icon: pullFetcher.state !== 'idle' ? 'refresh' : 'cloud-download',
       isDisabled: behind === 0 || pullFetcher.state !== 'idle',
       action: () => {
+        setOperationError(null);
+        showToast({
+          icon: cloudSyncIcon,
+          title: `Pull failed`,
+          status: 'error',
+        });
         pullFetcher.submit(
           {},
           {
@@ -251,6 +306,9 @@ export const SyncDropdown: FC<Props> = () => {
       icon: pushFetcher.state !== 'idle' ? 'refresh' : 'cloud-upload',
       isDisabled: ahead === 0 || pushFetcher.state !== 'idle',
       action: () => {
+        setOperationError(null);
+        showToast({ icon: cloudSyncIcon, title: `Push started` });
+
         pushFetcher.submit(
           {},
           {
@@ -262,80 +320,90 @@ export const SyncDropdown: FC<Props> = () => {
     },
   ];
 
-  const isSyncing =
-    checkoutFetcher.state !== 'idle' ||
-    pullFetcher.state !== 'idle' ||
-    pushFetcher.state !== 'idle' ||
-    rollbackFetcher.state !== 'idle';
+  const isPulling = pullFetcher.state !== 'idle';
+  const isPushing = pushFetcher.state !== 'idle';
+  const isRollingBack = rollbackFetcher.state !== 'idle';
+  const isCheckingOut = checkoutFetcher.state !== 'idle';
+  const isSyncing = isRollingBack || isCheckingOut;
 
   const allSyncMenuActionList = [...localBranchesActionList, ...syncMenuActionList];
   const syncError =
     syncDataLoaderFetcher.data && 'error' in syncDataLoaderFetcher.data ? syncDataLoaderFetcher.data.error : null;
+  const isGitDropdownDisabled = isSyncing || isPulling || isPushing;
+
   return (
     <Fragment>
-      <MenuTrigger>
-        <div className="flex h-[--line-height-sm] w-full items-center text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]">
-          <Button
-            aria-label="Insomnia Sync"
-            className="flex h-full flex-1 items-center gap-2 truncate px-[--padding-md]"
-          >
-            <Icon
-              icon={syncError ? 'warning' : isSyncing ? 'refresh' : 'cloud'}
-              className={`w-5 ${syncError ? 'text-[--color-warning]' : isSyncing ? 'animate-spin' : ''}`}
-            />
-            <span className={`truncate ${syncError ? 'text-[--color-warning]' : ''}`}>
-              {syncError ? 'Error syncing with Insomnia Cloud' : currentBranch}
-            </span>
-          </Button>
-          <div className="flex h-full items-center">
-            <TooltipTrigger>
-              <Button className="h-full pl-2">
-                <Icon
-                  icon="cube"
-                  className={`transition-colors ${canCreateSnapshot ? 'text-[--color-warning]' : 'opacity-50'}`}
-                />
-              </Button>
-              <Tooltip
-                placement="top end"
-                offset={8}
-                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
-              >
-                {snapshotToolTipMsg}
-              </Tooltip>
-            </TooltipTrigger>
-            <TooltipTrigger>
-              <Button className="h-full px-2">
-                <Icon
-                  icon="cloud-download"
-                  className={`transition-colors ${canPull ? '' : 'opacity-50'} ${pullFetcher.state !== 'idle' ? 'animate-pulse' : ''}`}
-                />
-              </Button>
-              <Tooltip
-                placement="top end"
-                offset={8}
-                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
-              >
-                {pullToolTipMsg}
-              </Tooltip>
-            </TooltipTrigger>
-
-            <TooltipTrigger>
-              <Button className="h-full pr-[--padding-md]">
-                <Icon
-                  icon="cloud-upload"
-                  className={`transition-colors ${canPush ? '' : 'opacity-50'} ${pushFetcher.state !== 'idle' ? 'animate-pulse' : ''}`}
-                />
-              </Button>
-              <Tooltip
-                placement="top end"
-                offset={8}
-                className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
-              >
-                {pushToolTipMsg}
-              </Tooltip>
-            </TooltipTrigger>
+      {operationError && (
+        <div className="flex gap-2 bg-[rgba(var(--color-danger-rgb),1)] px-2 py-1 text-xs text-[--color-font-danger]">
+          <div className="flex items-center gap-2">
+            <Icon icon="triangle-exclamation" />
+            <span>{operationError}</span>
           </div>
+          <Button onPress={() => setOperationError(null)} className="ml-auto">
+            <Icon icon="xmark" className="mt-0.5" />
+          </Button>
         </div>
+      )}
+      <MenuTrigger>
+        <TooltipTrigger delay={0}>
+          <Button
+            isDisabled={isGitDropdownDisabled}
+            data-testid="git-dropdown"
+            aria-label="Git Sync"
+            className="flex h-[--line-height-sm] w-full items-center gap-2 px-[--padding-md] text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:opacity-100 aria-pressed:bg-[--hl-sm]"
+          >
+            <Icon icon="earth-americas" className="size-4" />
+            <Separator orientation="vertical" className="h-4 border border-solid border-[--hl-sm] bg-[--color-bg]" />
+            <div className="relative flex items-center">
+              <Icon icon="code-branch" className="size-4" />
+              {canCreateSnapshot && (
+                <div className="absolute -bottom-1 -right-1 size-[10px] rounded-full bg-[--color-surprise]" />
+              )}
+            </div>
+            <span className="flex-1 truncate">{syncError ? 'Error syncing with Insomnia Cloud' : currentBranch}</span>
+            <div className="flex flex-shrink-0 items-center gap-1.5 text-xs text-[--color-font-secondary]">
+              {isSyncing && <Icon icon="spinner" className="w-3 animate-spin" />}
+              <div className="flex items-center gap-0.5 overflow-hidden">
+                <span>{pullCount}</span>
+                <Icon icon="arrow-down" className={`w-2 ${isPulling && 'animate-down-loop'}`} />
+              </div>
+              <div className="flex items-center gap-0.5 overflow-hidden">
+                <span>{pushCount}</span>
+                <Icon icon="arrow-up" className={`w-2 ${isPushing && 'animate-up-loop'}`} />
+              </div>
+            </div>
+          </Button>
+          <Tooltip
+            offset={8}
+            className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm text-[--color-font] shadow-lg focus:outline-none"
+          >
+            <div className="flex flex-col gap-1">
+              <div>Encrypted and synced securely to the cloud. Ideal for out of the box collaboration.</div>
+              {canCreateSnapshot && (
+                <div className="flex items-center gap-2">
+                  <div className="size-[10px] rounded-full bg-[--color-surprise]" />
+                  There are pending changes to commit.
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-0.5">
+                  <span>{pullCount}</span>
+                  <Icon icon="arrow-down" className="w-2" />
+                </div>
+                {pullToolTipMsg}
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-0.5">
+                  <span>{pushCount}</span>
+                  <Icon icon="arrow-up" className="w-2" />
+                </div>
+                {pushToolTipMsg}
+              </div>
+              <div className="text-[--color-warning]">{syncError ? `Error: ${syncError}` : ''}</div>
+            </div>
+          </Tooltip>
+        </TooltipTrigger>
+
         <Popover className="min-w-max max-w-lg overflow-hidden" placement="top end" offset={8}>
           <Menu
             aria-label="Insomnia Sync Menu"

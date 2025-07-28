@@ -4,8 +4,9 @@ import { useFetcher } from 'react-router';
 
 import type { GitCredentials } from '../../../models/git-credentials';
 import type { GitRepository } from '../../../models/git-repository';
+import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
-import { showAlert } from '../modals';
+import { GitRemoteBranchSelect } from './git-remote-branch-select';
 
 interface Props {
   uri?: string;
@@ -67,7 +68,7 @@ interface GitLabRepositoryFormProps {
 
 const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFormProps) => {
   const [error, setError] = useState('');
-
+  const [gitlabUri, setGitlabUri] = useState(uri || '');
   const signOutFetcher = useFetcher();
 
   return (
@@ -98,33 +99,35 @@ const GitLabRepositoryForm = ({ uri, credentials, onSubmit }: GitLabRepositoryFo
             <span className="text-sm text-[--hl]">{credentials.author.email || 'Signed in'}</span>
           </div>
         </div>
-        <Button
-          type="button"
-          onPress={() => {
-            showAlert({
-              title: 'Sign out of GitLab',
-              message:
-                'Are you sure you want to sign out? You will need to re-authenticate with GitLab to use this feature.',
-              okLabel: 'Sign out',
-              onConfirm: () => {
-                signOutFetcher.submit({}, { action: '/git-credentials/gitlab/sign-out', method: 'POST' });
-              },
-            });
+        <PromptButton
+          onClick={() => {
+            signOutFetcher.submit({}, { action: '/git-credentials/gitlab/sign-out', method: 'POST' });
           }}
         >
-          Sign out
-        </Button>
+          Disconnect
+        </PromptButton>
       </div>
       <TextField autoFocus name="uri" className="flex w-full flex-col gap-1 px-0.5" isRequired>
         <Label className="text-start text-sm font-semibold">Git URI (https, including .git suffix)</Label>
         <Input
           type="url"
           defaultValue={uri}
+          onChange={e => setGitlabUri(e.currentTarget.value)}
           disabled={Boolean(uri)}
-          placeholder="https://github.com/org/repo.git"
+          placeholder="https://gitlab.com/org/repo.git"
           className="w-full rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] py-1 pl-2 pr-7 text-[--color-font] transition-colors placeholder:text-sm placeholder:italic focus:outline-none focus:ring-1 focus:ring-[--hl-md]"
         />
       </TextField>
+      <GitRemoteBranchSelect
+        credentials={{
+          oauth2format: 'gitlab',
+          token: '',
+          password: '',
+          username: '',
+        }}
+        url={gitlabUri || ''}
+        isDisabled={Boolean(uri)}
+      />
       {error && (
         <p className="notice error margin-bottom-sm">
           <button className="pull-right icon" onClick={() => setError('')}>

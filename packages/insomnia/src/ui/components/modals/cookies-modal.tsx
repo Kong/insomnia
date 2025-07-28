@@ -25,7 +25,7 @@ import { cookieToString } from '../../../common/cookies';
 import { fuzzyMatch } from '../../../common/misc';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
-import type { WorkspaceLoaderData } from '../../routes/workspace';
+import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { PromptButton } from '../base/prompt-button';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 import { Icon } from '../icon';
@@ -67,7 +67,7 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
     updateCookieJarFetcher.submit(JSON.stringify({ patch, cookieJarId }), {
       encType: 'application/json',
       method: 'post',
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cookieJar/update`,
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/update-cookie-jar`,
     });
 
     setFilteredCookies(chunkArray(patch.cookies));

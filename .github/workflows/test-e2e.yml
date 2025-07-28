@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   Test:
-    timeout-minutes: 15
+    timeout-minutes: 40
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout branch

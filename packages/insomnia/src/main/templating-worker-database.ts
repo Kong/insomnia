@@ -1,60 +1,91 @@
+import fs from 'node:fs';
+import os from 'node:os';
+
+import iconv from 'iconv-lite';
+
 import { database as db } from '../common/database';
 import * as models from '../models';
 import type { Request as DBRequest } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
+import type { Response } from '../models/response';
 import type { Workspace } from '../models/workspace';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
-
 export const resolveDbByKey = async (request: Request) => {
   const url = new URL(request.url);
-  let result;
   const body = await request.json();
-  if (url.host === 'request.getById'.toLowerCase()) {
-    result = await models.request.getById(body.id);
-  }
-  if (url.host === 'request.getAncestors'.toLowerCase()) {
-    result = await db.withAncestors<DBRequest | RequestGroup | Workspace>(body.request, body.types);
-  }
-  if (url.host === 'workspace.getById'.toLowerCase()) {
-    result = await models.workspace.getById(body.id);
-  }
-  if (url.host === 'oAuth2Token.getByRequestId'.toLowerCase()) {
-    result = await models.oAuth2Token.getByParentId(body.parentId);
-  }
-  if (url.host === 'cookieJar.getOrCreateForParentId'.toLowerCase()) {
-    result = await models.cookieJar.getOrCreateForParentId(body.parentId);
-  }
-  if (url.host === 'response.getLatestForRequestId'.toLowerCase()) {
-    result = await models.response.getLatestForRequest(body.requestId, body.environmentId);
-  }
-  if (url.host === 'response.getBodyBuffer'.toLowerCase()) {
-    result = await models.response.getBodyBuffer(body.response, body.readFailureValue);
-  }
-  if (url.host === 'pluginData.hasItem'.toLowerCase()) {
+  // url get normalized to lowercase, so we need to normalize the keys to lower case as well
+  const withLowercasedKeys = Object.fromEntries(
+    Object.entries(pluginToMainAPI).map(([key, value]) => [key.toLowerCase(), value]),
+  );
+  const result = await withLowercasedKeys[url.host.toLowerCase()](body);
+  return new Response(JSON.stringify(result));
+};
+
+// These are exposed to the templating worker and can be used by plugins from context.util
+const pluginToMainAPI = {
+  'readFile': async (body: { path: string; encoding: 'utf8' }) => {
+    return await fs.promises.readFile(body.path, { encoding: body.encoding || 'utf8' });
+  },
+  'nodeOS': async () => {
+    return {
+      arch: os.arch(),
+      platform: os.platform(),
+      release: os.release(),
+      cpus: os.cpus(),
+      hostname: os.hostname(),
+      freemem: os.freemem(),
+      userInfo: os.userInfo(),
+    };
+  },
+  'decode': async (body: { buffer: Buffer; encoding: 'utf8' }) => {
+    return iconv.decode(body.buffer, body.encoding || 'utf8');
+  },
+  'request.getById': async (body: { id: string }) => {
+    return await models.request.getById(body.id);
+  },
+  'request.getAncestors': async (body: { request: DBRequest | RequestGroup | Workspace; types: string[] }) => {
+    return await db.withAncestors<DBRequest | RequestGroup | Workspace>(body.request, body.types);
+  },
+  'workspace.getById': async (body: { id: string }) => {
+    return await models.workspace.getById(body.id);
+  },
+  'oAuth2Token.getByRequestId': async (body: { parentId: string }) => {
+    return await models.oAuth2Token.getByParentId(body.parentId);
+  },
+  'cookieJar.getOrCreateForParentId': async (body: { parentId: string }) => {
+    return await models.cookieJar.getOrCreateForParentId(body.parentId);
+  },
+  'response.getLatestForRequestId': async (body: { requestId: string; environmentId: string }) => {
+    return await models.response.getLatestForRequest(body.requestId, body.environmentId);
+  },
+  'response.getBodyBuffer': async (body: { response: Response; readFailureValue: string }) => {
+    return await models.response.getBodyBuffer(body.response, body.readFailureValue);
+  },
+  'pluginData.hasItem': async (body: { pluginName: string; key: string }) => {
     const doc = await models.pluginData.getByKey(body.pluginName, body.key);
-    result = doc !== null;
-  }
-  if (url.host === 'pluginData.setItem'.toLowerCase()) {
-    result = models.pluginData.upsertByKey(body.pluginName, body.key, String(body.value));
-  }
-  if (url.host === 'pluginData.getItem'.toLowerCase()) {
+    return doc !== null;
+  },
+  'pluginData.setItem': async (body: { pluginName: string; key: string; value: string }) => {
+    return models.pluginData.upsertByKey(body.pluginName, body.key, String(body.value));
+  },
+  'pluginData.getItem': async (body: { pluginName: string; key: string }) => {
     const doc = await models.pluginData.getByKey(body.pluginName, body.key);
-    result = doc ? doc.value : null;
-  }
-  if (url.host === 'pluginData.removeItem'.toLowerCase()) {
-    result = models.pluginData.removeByKey(body.pluginName, body.key);
-  }
-  if (url.host === 'pluginData.clear'.toLowerCase()) {
-    result = models.pluginData.removeAll(body.pluginName);
-  }
-  if (url.host === 'pluginData.all'.toLowerCase()) {
+    return doc ? doc.value : null;
+  },
+  'pluginData.removeItem': async (body: { pluginName: string; key: string }) => {
+    return models.pluginData.removeByKey(body.pluginName, body.key);
+  },
+  'pluginData.clear': async (body: { pluginName: string }) => {
+    return models.pluginData.removeAll(body.pluginName);
+  },
+  'pluginData.all': async (body: { pluginName: string }) => {
     const docs = (await models.pluginData.all(body.pluginName)) || [];
-    result = docs.map(d => ({
+    return docs.map(d => ({
       value: d.value,
       key: d.key,
     }));
-  }
-  if (url.host === 'network.sendRequest'.toLowerCase()) {
+  },
+  'network.sendRequest': async (body: { request: DBRequest; extraInfo?: { requestChain: string[] } }) => {
     const { request, environment, settings, clientCertificates, caCert, timelinePath, responseId } =
       await fetchRequestData(body.request._id);
 
@@ -72,8 +103,6 @@ export const resolveDbByKey = async (request: Request) => {
       timelinePath,
       responseId,
     );
-    result = await models.response.create({ ...response, bodyCompression: null }, settings.maxHistoryResponses);
-  }
-
-  return new Response(JSON.stringify(result));
+    return await models.response.create({ ...response, bodyCompression: null }, settings.maxHistoryResponses);
+  },
 };

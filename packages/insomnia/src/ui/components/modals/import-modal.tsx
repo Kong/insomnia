@@ -18,7 +18,7 @@ import type { ScanResult } from '../../../common/import';
 import { isScratchpadProject } from '../../../models/project';
 import { invariant } from '../../../utils/invariant';
 import { SegmentEvent } from '../../analytics';
-import type { ImportResourcesActionResult } from '../../routes/import';
+import type { ImportResourcesActionResult } from '../../routes/import.resources';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalHeader } from '../base/modal-header';
 import { Icon } from '../icon';

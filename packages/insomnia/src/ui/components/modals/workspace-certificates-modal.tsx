@@ -19,7 +19,7 @@ import {
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
 
 import type { ClientCertificate } from '../../../models/client-certificate';
-import type { WorkspaceLoaderData } from '../../routes/workspace';
+import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { Icon } from '../icon';
 import { PasswordViewer } from '../viewers/password-viewer';
 

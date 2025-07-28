@@ -40,14 +40,20 @@ import {
 } from '../models/request';
 import { isRequestGroup, type RequestGroup } from '../models/request-group';
 import type { Settings } from '../models/settings';
+import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
-import * as pluginContexts from '../plugins/context/index';
+import * as pluginApp from '../plugins/context/app';
+import * as pluginData from '../plugins/context/data';
+import * as pluginNetwork from '../plugins/context/network';
+import * as pluginRequest from '../plugins/context/request';
+import * as pluginResponse from '../plugins/context/response';
+import * as pluginStore from '../plugins/context/store';
 import * as plugins from '../plugins/index';
 import { RenderError } from '../templating/render-error';
 import type { RenderedRequest, RenderPurpose } from '../templating/types';
 import { maskOrDecryptVaultDataIfNecessary } from '../templating/utils';
-import { defaultSendActionRuntime, type SendActionRuntime } from '../ui/routes/request';
+import { type SendActionRuntime } from '../ui/routes/$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { invariant } from '../utils/invariant';
 import { serializeNDJSON } from '../utils/ndjson';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../utils/url/querystring';
@@ -61,7 +67,7 @@ export const getOrInheritAuthentication = ({
   request,
   requestGroups,
 }: {
-  request: Request | WebSocketRequest;
+  request: Request | WebSocketRequest | SocketIORequest;
   requestGroups: RequestGroup[];
 }): RequestAuthentication | {} => {
   const hasValidAuth = getAuthObjectOrNull(request.authentication) && isAuthEnabled(request.authentication);
@@ -69,9 +75,9 @@ export const getOrInheritAuthentication = ({
     return request.authentication;
   }
   const hasParentFolders = requestGroups.length > 0;
-  const closestParentFolderWithAuth = requestGroups.find(
-    ({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication),
-  );
+  const closestParentFolderWithAuth = [...requestGroups]
+    .reverse()
+    .find(({ authentication }) => getAuthObjectOrNull(authentication) && isAuthEnabled(authentication));
   const closestAuth = getAuthObjectOrNull(closestParentFolderWithAuth?.authentication);
   const shouldCheckFolderAuth = hasParentFolders && closestAuth;
   if (shouldCheckFolderAuth) {
@@ -773,7 +779,7 @@ export const tryToTransformRequestWithPlugins = async (renderResult: {
   const { request, context } = renderResult;
   try {
     return await _applyRequestPluginHooks(request, context);
-  } catch (err) {
+  } catch {
     throw new Error(`Failed to transform request with plugins: ${request._id}`);
   }
 };
@@ -996,7 +1002,7 @@ export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any;
   }
   try {
     return new URL(location.value, finalUrl).toString();
-  } catch (error) {
+  } catch {
     return finalUrl;
   }
 };
@@ -1006,11 +1012,11 @@ async function _applyRequestPluginHooks(renderedRequest: RenderedRequest, render
 
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
     const context = {
-      ...(pluginContexts.app.init('no-render') as Record<string, any>),
-      ...pluginContexts.data.init(renderedContext.getProjectId()),
-      ...(pluginContexts.store.init(plugin) as Record<string, any>),
-      ...(pluginContexts.request.init(newRenderedRequest, renderedContext) as Record<string, any>),
-      ...(pluginContexts.network.init() as Record<string, any>),
+      ...(pluginApp.init() as Record<string, any>),
+      ...pluginData.init(renderedContext.getProjectId()),
+      ...(pluginStore.init(plugin) as Record<string, any>),
+      ...(pluginRequest.init(newRenderedRequest, renderedContext) as Record<string, any>),
+      ...(pluginNetwork.init() as Record<string, any>),
     };
 
     try {
@@ -1032,14 +1038,15 @@ async function _applyResponsePluginHooks(
   try {
     const newResponse = clone(response);
     const newRequest = clone(renderedRequest);
+
     for (const { plugin, hook } of await plugins.getResponseHooks()) {
       const context = {
-        ...(pluginContexts.app.init('no-render') as Record<string, any>),
-        ...pluginContexts.data.init(renderedContext.getProjectId()),
-        ...(pluginContexts.store.init(plugin) as Record<string, any>),
-        ...(pluginContexts.response.init(newResponse) as Record<string, any>),
-        ...(pluginContexts.request.init(newRequest, renderedContext, true) as Record<string, any>),
-        ...(pluginContexts.network.init() as Record<string, any>),
+        ...(pluginApp.init() as Record<string, any>),
+        ...pluginData.init(renderedContext.getProjectId()),
+        ...(pluginStore.init(plugin) as Record<string, any>),
+        ...(pluginResponse.init(newResponse) as Record<string, any>),
+        ...(pluginRequest.init(newRequest, renderedContext, true) as Record<string, any>),
+        ...(pluginNetwork.init() as Record<string, any>),
       };
 
       try {
@@ -1063,3 +1070,8 @@ async function _applyResponsePluginHooks(
     };
   }
 }
+export const defaultSendActionRuntime = {
+  appendTimeline: async (timelinePath: string, logs: string[]) => {
+    await fs.promises.appendFile(timelinePath, logs.join('\n'));
+  },
+};

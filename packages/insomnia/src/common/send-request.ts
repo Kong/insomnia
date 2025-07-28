@@ -14,7 +14,7 @@ import {
   tryToExecutePreRequestScript,
   tryToInterpolateRequest,
 } from '../network/network';
-import { defaultSendActionRuntime } from '../ui/routes/request';
+import { defaultSendActionRuntime } from '../network/network';
 import { database } from './database';
 
 // The network layer uses settings from the settings model

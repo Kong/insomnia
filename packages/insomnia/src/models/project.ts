@@ -1,6 +1,6 @@
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
-import type { StorageRules } from '../ui/routes/organization';
+import type { StorageRules } from '../ui/organization-utils';
 import { type BaseModel } from './index';
 
 export const name = 'Project';
@@ -17,7 +17,7 @@ export const isLocalProject = (project: Pick<Project, 'remoteId'>): project is L
 export const isRemoteProject = (project: Pick<Project, 'remoteId'>): project is RemoteProject =>
   !isLocalProject(project);
 export const isGitProject = (project: Project): project is GitProject =>
-  'gitRepositoryId' in project && project.gitRepositoryId !== null;
+  'gitRepositoryId' in project && (project.gitRepositoryId !== null || project.gitRepositoryId === 'empty');
 export const projectHasSettings = (project: Pick<Project, '_id'>) => !isScratchpadProject(project);
 
 interface CommonProject {

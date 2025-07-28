@@ -6,11 +6,11 @@ import type {
   SaveDialogOptions,
 } from 'electron';
 import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, shell } from 'electron';
+import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
 
 import { fnOrString } from '../../common/misc';
 import { type NunjucksParsedTagArg, type NunjucksTagContextMenuAction } from '../../templating/types';
 import type { extractNunjucksTagFromCoords } from '../../templating/utils';
-import { localTemplateTags } from '../../ui/components/templating/local-template-tags';
 import { invariant } from '../../utils/invariant';
 
 export type HandleChannels =
@@ -25,6 +25,7 @@ export type HandleChannels =
   | 'grpc.loadMethods'
   | 'grpc.loadMethodsFromReflection'
   | 'installPlugin'
+  | 'lintSpec'
   | 'open-channel-to-hidden-browser-window'
   | 'readCurlResponse'
   | 'restoreBackup'
@@ -34,6 +35,10 @@ export type HandleChannels =
   | 'webSocket.event.send'
   | 'webSocket.open'
   | 'webSocket.readyState'
+  | 'socketIO.open'
+  | 'socketIO.readyState'
+  | 'socketIO.event.send'
+  | 'socketIO.event.findMany'
   | 'writeFile'
   | 'readFile'
   | 'extractJsonFileFromPostmanDataDumpArchive'
@@ -44,6 +49,7 @@ export type HandleChannels =
   | 'secretStorage.decryptString'
   | 'git.loadGitRepository'
   | 'git.getGitBranches'
+  | 'git.fetchGitRemoteBranches'
   | 'git.gitFetchAction'
   | 'git.gitLogLoader'
   | 'git.gitChangesLoader'
@@ -110,6 +116,10 @@ export type MainOnChannels =
   | 'trackSegmentEvent'
   | 'webSocket.close'
   | 'webSocket.closeAll'
+  | 'socketIO.close'
+  | 'socketIO.closeAll'
+  | 'socketIO.event.on'
+  | 'socketIO.event.off'
   | 'writeText'
   | 'addExecutionStep'
   | 'completeExecutionStep'

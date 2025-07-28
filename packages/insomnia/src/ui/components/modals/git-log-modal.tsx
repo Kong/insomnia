@@ -16,7 +16,7 @@ import {
 } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';
 
-import type { GitLogLoaderData } from '../../routes/git-actions';
+import type { GitLogLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId.git';
 import { Icon } from '../icon';
 import { TimeFromNow } from '../time-from-now';
 

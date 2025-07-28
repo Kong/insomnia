@@ -1,20 +1,24 @@
+import { exportRequestsToFile } from 'insomnia/src/ui/components/settings/import-export';
 import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import { Button, Checkbox, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router';
 
-import { exportRequestsToFile } from '../../../common/export';
 import { requestGroup } from '../../../models';
 import { type GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, type Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
+import { isSocketIORequest, type SocketIORequest } from '../../../models/socket-io-request';
 import { isWebSocketRequest, type WebSocketRequest } from '../../../models/websocket-request';
 import { SegmentEvent } from '../../analytics';
-import type { Child, WorkspaceLoaderData } from '../../routes/workspace';
+import type {
+  Child,
+  WorkspaceLoaderData,
+} from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { Icon } from '../icon';
 import { getMethodShortHand } from '../tags/method-tag';
 
 export interface Node {
-  doc: Request | WebSocketRequest | GrpcRequest | RequestGroup;
+  doc: Request | WebSocketRequest | GrpcRequest | RequestGroup | SocketIORequest;
   children: Node[];
   collapsed: boolean;
   totalRequests: number;
@@ -77,7 +81,7 @@ export const RequestGroupRow: FC<{
 export const RequestRow: FC<{
   handleSetItemSelected: (...args: any[]) => any;
   isSelected: boolean;
-  request: Request | WebSocketRequest | GrpcRequest;
+  request: Request | WebSocketRequest | GrpcRequest | SocketIORequest;
 }> = ({ handleSetItemSelected, request, isSelected }) => {
   return (
     <li className="flex items-center gap-2 p-2">
@@ -141,7 +145,7 @@ export const Tree: FC<{
       return null;
     }
 
-    if (isRequest(node.doc) || isWebSocketRequest(node.doc) || isGrpcRequest(node.doc)) {
+    if (isRequest(node.doc) || isWebSocketRequest(node.doc) || isGrpcRequest(node.doc) || isSocketIORequest(node.doc)) {
       return (
         <RequestRow
           key={node.doc._id}

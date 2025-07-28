@@ -1,8 +1,18 @@
 import fs from 'node:fs';
+import path from 'node:path';
 
+import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
 import chardet from 'chardet';
 import type { MarkerRange } from 'codemirror';
-import { app, BrowserWindow, type IpcRendererEvent, type MenuItemConstructorOptions, shell } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  type IpcRendererEvent,
+  type MenuItemConstructorOptions,
+  shell,
+  utilityProcess,
+} from 'electron';
+import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
@@ -23,11 +33,15 @@ import {
   type TimingStep,
   updateLatestStepName,
 } from '../network/request-timing';
+import type { SocketIOBridgeAPI } from '../network/socket-io';
 import type { WebSocketBridgeAPI } from '../network/websocket';
 import { ipcMainHandle, ipcMainOn, type RendererOnChannels } from './electron';
 import extractPostmanDataDumpHandler from './extractPostmanDataDump';
 import type { gRPCBridgeAPI } from './grpc';
 import type { secretStorageBridgeAPI } from './secret-storage';
+
+let lintProcess: Electron.UtilityProcess | null = null;
+
 export interface RendererToMainBridgeAPI {
   loginStateChange: () => void;
   openInBrowser: (url: string) => void;
@@ -46,6 +60,7 @@ export interface RendererToMainBridgeAPI {
   curlRequest: typeof curlRequest;
   on: (channel: RendererOnChannels, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
   webSocket: WebSocketBridgeAPI;
+  socketIO: SocketIOBridgeAPI;
   grpc: gRPCBridgeAPI;
   curl: CurlBridgeAPI;
   git: GitServiceAPI;
@@ -58,7 +73,10 @@ export interface RendererToMainBridgeAPI {
     menuItems: MenuItemConstructorOptions[];
     extra?: Record<string, any>;
   }) => void;
-
+  lintSpec: (options: {
+    documentContent: string;
+    rulesetPath: string;
+  }) => Promise<{ diagnostics?: ISpectralDiagnostic[]; error?: string; cancelled?: boolean }>;
   database: {
     caCertificate: {
       create: (options: { parentId: string; path: string }) => Promise<string>;
@@ -114,6 +132,40 @@ export function registerMainHandlers() {
     } catch (err) {
       throw new Error(err);
     }
+  });
+
+  ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
+    const { documentContent, rulesetPath } = options;
+    return new Promise((resolve, reject) => {
+      // Use a filescoped variable to store and terminate the last open
+      // This ensures we use a last in first out type of process management
+      // We only care about the most recent lint request
+      if (lintProcess) {
+        lintProcess.kill();
+      }
+
+      lintProcess = utilityProcess.fork(path.join(__dirname, 'main/lint-process.mjs'));
+
+      let process: UtilityProcess | null = lintProcess!;
+
+      process.on('exit', code => {
+        console.log('[lint-process] exited with code:', code);
+        resolve({ cancelled: true });
+      });
+
+      process.on('message', msg => {
+        resolve(msg);
+        process?.kill();
+        process = null;
+      });
+
+      process.on('error', err => {
+        console.error('[lint-process] error:', err);
+        reject({ error: err.toString() });
+      });
+
+      process.postMessage({ documentContent, rulesetPath });
+    });
   });
 
   ipcMainHandle('readFile', async (_, options: { path: string; encoding?: string }) => {

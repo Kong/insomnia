@@ -529,6 +529,7 @@ export const KeyValueEditor: FC<Props> = ({
                     className="flex aspect-square h-7 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
                     onChange={isSelected => upsertPair(pairsListItems, { ...pair, disabled: !isSelected })}
                     isSelected={!pair.disabled}
+                    isDisabled={isDisabled}
                   >
                     <Icon icon={pair.disabled ? 'square' : 'check-square'} />
                   </ToggleButton>
