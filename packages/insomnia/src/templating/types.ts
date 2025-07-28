@@ -82,7 +82,6 @@ export interface NunjucksParsedTagArg {
   displayName?: DisplayName;
   quotedBy?: '"' | "'";
   validate?: (value: string) => string;
-  modelFilter?: (model: BaseModel, tagArg: NunjucksParsedTagArg[]) => boolean;
   hide?: (arg0: NunjucksParsedTagArg[]) => boolean;
   model?: string;
   options?: PluginArgumentEnumOption[];
@@ -267,7 +266,7 @@ export interface PluginTemplateTag {
   actions?: NunjucksActionTag[];
   run: (context: PluginTemplateTagContext, ...arg: any[]) => Promise<any> | any;
   deprecated?: boolean;
-  validate?: (value: any) => string | null;
+  validate?: (value: any) => string | null | boolean;
   priority?: number;
 }
 export interface RenderInputType {
