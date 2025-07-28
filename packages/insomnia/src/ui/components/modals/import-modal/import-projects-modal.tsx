@@ -259,7 +259,6 @@ enum ImportStatus {
   FAILED = 'failed',
 }
 
-// Project import item
 interface ProjectImportItem {
   key: string;
   id?: string;
@@ -267,7 +266,7 @@ interface ProjectImportItem {
   status: ImportStatus;
   scanResults: ScanResult[];
   error?: string;
-  folder: ProjectFolder; // Optional, used for the folder structure
+  folder: ProjectFolder;
 }
 
 const ProjectImportStatus = ({ status }: { status: ImportStatus }) => {
@@ -416,7 +415,6 @@ const ImportProjectsList = ({
             ? ImportStatus.SKIPPED
             : ImportStatus.PENDING,
         scanResults: [],
-        expanded: false,
         folder: projectFolder,
       }));
 
