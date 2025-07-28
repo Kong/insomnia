@@ -26,99 +26,98 @@ type CreateProjectData =
     };
 
 export const createProject = async (organizationId: string, newProjectData: CreateProjectData) => {
-  const user = await models.userSession.getOrCreate();
-  const sessionId = user.id;
-  invariant(sessionId, 'User must be logged in to create a project');
+  const createProjectImpl = async (organizationId: string, newProjectData: CreateProjectData) => {
+    const user = await models.userSession.getOrCreate();
+    const sessionId = user.id;
+    invariant(sessionId, 'User must be logged in to create a project');
 
-  if (newProjectData.storageType === 'local') {
+    if (newProjectData.storageType === 'local') {
+      const project = await models.project.create({
+        name: newProjectData.name,
+        parentId: organizationId,
+      });
+
+      return project._id;
+    }
+
+    if (newProjectData.storageType === 'git') {
+      const { projectId, errors } = await window.main.git.cloneGitRepo({
+        organizationId,
+        ...newProjectData,
+      });
+
+      if (errors) {
+        throw new Error(errors.join(', '));
+      }
+
+      return projectId;
+    }
+
+    const newCloudProject = await insomniaFetch<
+      | {
+          id: string;
+          name: string;
+        }
+      | {
+          error: string;
+          message?: string;
+        }
+    >({
+      path: `/v1/organizations/${organizationId}/team-projects`,
+      method: 'POST',
+      data: {
+        name: newProjectData.name,
+      },
+      sessionId,
+    });
+
+    if (!newCloudProject || 'error' in newCloudProject) {
+      let error = 'An unexpected error occurred while creating the project. Please try again.';
+      if (newCloudProject.error === 'FORBIDDEN') {
+        error = 'You do not have permission to create a cloud project in this organization.';
+      }
+
+      if (newCloudProject.error === 'NEEDS_TO_UPGRADE') {
+        error = 'Upgrade your account in order to create new Cloud Projects.';
+      }
+
+      if (newCloudProject.error === 'PROJECT_STORAGE_RESTRICTION') {
+        error = newCloudProject.message ?? 'The owner of the organization allows only Local Vault project creation.';
+      }
+
+      throw new Error(error);
+    }
+
     const project = await models.project.create({
-      name: newProjectData.name,
+      _id: newCloudProject.id,
+      name: newCloudProject.name,
+      remoteId: newCloudProject.id,
       parentId: organizationId,
     });
 
     return project._id;
-  }
+  };
 
-  if (newProjectData.storageType === 'git') {
-    const { projectId, errors } = await window.main.git.cloneGitRepo({
-      organizationId,
-      ...newProjectData,
-    });
-
-    if (errors) {
-      throw new Error(errors.join(', '));
-    }
-
-    return projectId;
-  }
-
-  const newCloudProject = await insomniaFetch<
-    | {
-        id: string;
-        name: string;
-      }
-    | {
-        error: string;
-        message?: string;
-      }
-  >({
-    path: `/v1/organizations/${organizationId}/team-projects`,
-    method: 'POST',
-    data: {
-      name: newProjectData.name,
+  const newProjectId = await createProjectImpl(organizationId, newProjectData);
+  window.main.trackSegmentEvent({
+    event: SegmentEvent.projectCreated,
+    properties: {
+      storage: newProjectData.storageType,
     },
-    sessionId,
   });
 
-  if (!newCloudProject || 'error' in newCloudProject) {
-    let error = 'An unexpected error occurred while creating the project. Please try again.';
-    if (newCloudProject.error === 'FORBIDDEN') {
-      error = 'You do not have permission to create a cloud project in this organization.';
-    }
-
-    if (newCloudProject.error === 'NEEDS_TO_UPGRADE') {
-      error = 'Upgrade your account in order to create new Cloud Projects.';
-    }
-
-    if (newCloudProject.error === 'PROJECT_STORAGE_RESTRICTION') {
-      error = newCloudProject.message ?? 'The owner of the organization allows only Local Vault project creation.';
-    }
-
-    throw new Error(error);
-  }
-
-  const project = await models.project.create({
-    _id: newCloudProject.id,
-    name: newCloudProject.name,
-    remoteId: newCloudProject.id,
-    parentId: organizationId,
-  });
-
-  return project._id;
+  return newProjectId;
 };
 
 export async function action({ request, params }: ActionFunctionArgs) {
   const { organizationId } = params;
 
   invariant(organizationId, 'Organization ID is required');
-  const { withRedirect = true, ...newProjectData } = (await request.json()) as CreateProjectData & {
-    withRedirect?: boolean;
-  };
+  const newProjectData = (await request.json()) as CreateProjectData;
 
   try {
     const newProjectId = await createProject(organizationId, newProjectData);
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.projectCreated,
-      properties: {
-        storage: newProjectData.storageType,
-      },
-    });
-
-    if (withRedirect) {
-      return redirect(`/organization/${organizationId}/project/${newProjectId}`);
-    }
-
-    return { id: newProjectId };
+    return redirect(`/organization/${organizationId}/project/${newProjectId}`);
   } catch (err) {
     console.log(err);
     return {
