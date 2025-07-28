@@ -181,50 +181,14 @@ export const SupportedFormats = () => {
   );
 };
 
-function getImporterSign(scanResult: ScanResult) {
-  let name = '';
-  let icon = null;
-  if (scanResult.type?.id) {
-    const id = scanResult.type.id;
-    if (id.includes('insomnia')) {
-      icon = <InsomniaIcon width={24} height={24} />;
-      name = 'Insomnia';
-    } else if (id.includes('postman')) {
-      icon = <i className="fa-regular fa-file fa-lg" />;
-      name = 'Postman';
-    } else if (id.includes('swagger')) {
-      icon = <SwaggerIcon width={24} height={24} />;
-      name = 'Swagger';
-    } else if (id.includes('openapi')) {
-      icon = <OpenAPIIcon width={24} height={24} />;
-      name = 'OpenAPI';
-    } else if (id.includes('wsdl')) {
-      icon = <i className="fa-regular fa-file fa-lg" />;
-      name = 'WSDL';
-    } else if (id.includes('har')) {
-      icon = <i className="fa-regular fa-file fa-lg" />;
-      name = 'HAR';
-    } else if (id.includes('curl')) {
-      icon = <CurlIcon width={24} height={24} />;
-      name = 'cURL';
-    }
-  }
-  return (
-    <Fragment>
-      {icon}
-      {name}
-    </Fragment>
-  );
-}
-
 export const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const keyRandom = useMemo(() => Math.random(), [scanResults]);
 
   if (!scanResults.length) {
     return (
-      <div className="bg-[color:var(--hl-xxs)] p-[var(--padding-sm)]">
-        <i className="fa-regular fa-file fa-lg mr-2" />
+      <div className="flex items-center gap-[var(--padding-sm)] border border-solid border-[color:var(--hl-md)] bg-[color:var(--hl-xxs)] p-[var(--padding-sm)]">
+        <i className="fa-regular fa-file fa-lg" />
         No valid resources found
       </div>
     );
@@ -341,3 +305,39 @@ export const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] })
     </table>
   );
 };
+
+function getImporterSign(scanResult: ScanResult) {
+  let name = '';
+  let icon = null;
+  if (scanResult.type?.id) {
+    const id = scanResult.type.id;
+    if (id.includes('insomnia')) {
+      icon = <InsomniaIcon width={24} height={24} />;
+      name = 'Insomnia';
+    } else if (id.includes('postman')) {
+      icon = <i className="fa-regular fa-file fa-lg" />;
+      name = 'Postman';
+    } else if (id.includes('swagger')) {
+      icon = <SwaggerIcon width={24} height={24} />;
+      name = 'Swagger';
+    } else if (id.includes('openapi')) {
+      icon = <OpenAPIIcon width={24} height={24} />;
+      name = 'OpenAPI';
+    } else if (id.includes('wsdl')) {
+      icon = <i className="fa-regular fa-file fa-lg" />;
+      name = 'WSDL';
+    } else if (id.includes('har')) {
+      icon = <i className="fa-regular fa-file fa-lg" />;
+      name = 'HAR';
+    } else if (id.includes('curl')) {
+      icon = <CurlIcon width={24} height={24} />;
+      name = 'cURL';
+    }
+  }
+  return (
+    <Fragment>
+      {icon}
+      {name}
+    </Fragment>
+  );
+}
