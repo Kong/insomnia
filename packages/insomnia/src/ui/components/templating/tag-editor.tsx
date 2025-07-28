@@ -10,7 +10,7 @@ import { docsAfterResponseScript } from '../../../common/documentation';
 import { delay, fnOrString } from '../../../common/misc';
 import { metaSortKeySort } from '../../../common/sorting';
 import * as models from '../../../models';
-import { type as cloudCredentialModelType } from '../../../models/cloud-credential';
+import { type CloudProviderCredential, type as cloudCredentialModelType } from '../../../models/cloud-credential';
 import type { BaseModel } from '../../../models/index';
 import { isRequest, type Request } from '../../../models/request';
 import { isRequestGroup, type RequestGroup } from '../../../models/request-group';
@@ -377,10 +377,10 @@ export const TagEditor: FC<Props> = props => {
           } else if (argDefinition.type === 'model') {
             const modelName = typeof argDefinition.model === 'string' ? argDefinition.model : 'unknown';
             let targetDoc = state.allDocs[modelName];
-            const modelFilterFunc = argDefinition.modelFilter;
-            // modelFilterFunc is an optional function that filters the doc display in the dropdown based on tagData
-            if (modelFilterFunc && typeof modelFilterFunc === 'function') {
-              targetDoc = targetDoc.filter(doc => modelFilterFunc(doc, activeTagData.args));
+            // hard coded here to filter cloud credential data by the provider
+            if (modelName === cloudCredentialModelType) {
+              const providerNameFromArgs = activeTagData.args[0].value;
+              targetDoc = targetDoc.filter(doc => (doc as CloudProviderCredential).provider === providerNameFromArgs);
             }
             argInput = state.loadingDocs ? (
               <select disabled={state.loadingDocs}>
