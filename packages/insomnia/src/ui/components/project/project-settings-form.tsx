@@ -339,7 +339,9 @@ export const ProjectSettingsForm: FC<Props> = ({
           </Label>
           {projectData.connectRepositoryLater ? (
             <div className="flex h-full w-full flex-col items-center justify-center rounded-sm border border-dashed border-[--hl-sm] p-4">
-              <p className="text-sm text-[--hl]">You can connect a repository later.</p>
+              <Icon icon="link" className="mb-4 text-[30px] text-[--hl]" />
+              <Heading className="text-lg font-bold text-[--hl]">You're all set to start your project.</Heading>
+              <p className="text-sm text-[--hl]">You can connect a repository anytime from the project settings.</p>
             </div>
           ) : (
             <ErrorBoundary>
