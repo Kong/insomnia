@@ -118,6 +118,7 @@ export const ProjectSettingsForm: FC<Props> = ({
       gitRepository?.credentials && 'oauth2format' in gitRepository.credentials
         ? (gitRepository?.credentials?.oauth2format ?? 'github')
         : undefined,
+    connectRepositoryLater: false,
   });
 
   const initCloneGitRepositoryFetcher = useFetcher<InitGitCloneResult>();
@@ -337,7 +338,15 @@ export const ProjectSettingsForm: FC<Props> = ({
             </Checkbox>
             <span className="text-sm text-[--hl]">Connect repository later</span>
           </Label>
-          {projectData.connectRepositoryLater ? (
+          {project && !gitRepository && projectData.connectRepositoryLater ? (
+            <div className="flex h-full w-full flex-col items-center justify-center rounded-sm border border-dashed border-[--hl-sm] p-4">
+              <Icon icon="link" className="mb-4 text-[30px] text-[--hl]" />
+              <Heading className="text-lg font-bold text-[--hl]">Your project is already set up to start.</Heading>
+              <p className="text-sm text-[--hl]">
+                Want to connect a repository now? You can uncheck “Connect repository later” to do so.
+              </p>
+            </div>
+          ) : projectData.connectRepositoryLater ? (
             <div className="flex h-full w-full flex-col items-center justify-center rounded-sm border border-dashed border-[--hl-sm] p-4">
               <Icon icon="link" className="mb-4 text-[30px] text-[--hl]" />
               <Heading className="text-lg font-bold text-[--hl]">You're all set to start your project.</Heading>
@@ -402,20 +411,27 @@ export const ProjectSettingsForm: FC<Props> = ({
               >
                 Back
               </Button>
-              {projectData.connectRepositoryLater ? (
-                <Button
-                  onPress={onUpsertProject}
-                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
-                >
-                  {project ? 'Update' : 'Create'}
-                </Button>
-              ) : (
+              {!projectData.connectRepositoryLater ? (
                 <Button
                   type="submit"
                   form={selectedTab}
                   className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
                 >
                   Clone
+                </Button>
+              ) : project && projectData.connectRepositoryLater && !gitRepository ? (
+                <Button
+                  onPress={onCancel}
+                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                >
+                  Close
+                </Button>
+              ) : (
+                <Button
+                  onPress={onUpsertProject}
+                  className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-[--hl-md] bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] bg-opacity-100 px-4 py-2 text-sm font-semibold text-[--color-font-surprise] ring-1 ring-transparent transition-all hover:bg-opacity-80 focus:ring-inset focus:ring-[--hl-md] aria-pressed:opacity-80"
+                >
+                  {project ? 'Update' : 'Create'}
                 </Button>
               )}
             </div>
