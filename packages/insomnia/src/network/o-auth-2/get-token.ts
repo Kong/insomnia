@@ -412,6 +412,11 @@ const sendAccessTokenRequest = async (
   const newRequest: Request = await models.initModel(
     models.request.type,
     {
+      // Do not inherit authentication from parent request or group since this is a special request
+      authentication: {
+        type: 'none',
+        disabled: false,
+      },
       headers: [...defaultHeaders, ...headers],
       url: setDefaultProtocol(authentication.accessTokenUrl),
       method: 'POST',
