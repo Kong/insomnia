@@ -496,6 +496,14 @@ const ImportProjectsList = ({
             scanResults,
           });
 
+          if (!scanResults.some(({ errors }) => errors.length === 0)) {
+            console.warn('[Bulk Project Import] No valid scan results found, skipping import for this project');
+            updateProjectItem({
+              status: ImportStatus.SUCCESS,
+            });
+            return;
+          }
+
           const importFormData = new FormData();
           importFormData.append('organizationId', organizationId);
           importFormData.append('projectId', createdProjectId);
@@ -545,9 +553,6 @@ const ImportProjectsList = ({
     (async () => {
       await handleImport(rootFolder, organizationId, skipExisting);
     })();
-
-    // TODO: Interrupt the import process when unmounted, but it shouldn't happen.
-    return () => {};
   }, [handleImport, organizationId, rootFolder, skipExisting]);
 
   const { total, completed, progress } = useMemo(() => {
