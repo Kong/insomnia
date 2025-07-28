@@ -27,7 +27,6 @@ export interface Plugin {
   version: string;
   directory: string;
   config: { disabled: boolean };
-  isBundlePlugin?: boolean;
   module: {
     templateTags?: PluginTemplateTag[];
     requestHooks?: ((requestContext: any) => void)[];
@@ -37,7 +36,8 @@ export interface Plugin {
     requestActions?: OmitInternal<RequestAction>[];
     workspaceActions?: OmitInternal<WorkspaceAction>[];
     documentActions?: OmitInternal<DocumentAction>[];
-    pluginRouterActions?: OmitInternal<PluginAction>[];
+    // Internal use only, not for public plugins
+    unsafePluginRouterActions?: OmitInternal<PluginAction>[];
   };
 }
 
@@ -216,7 +216,6 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
     );
 
     // Also look in node_modules folder in each directory
-    // const basePaths = [pluginPath, preBundlePluginPath, ...extraPaths];
     const basePaths = [pluginPath, ...extraPaths];
     const extendedPaths = basePaths.map(p => path.resolve(p, 'node_modules'));
     const allPaths = [...basePaths, ...extendedPaths];
@@ -224,17 +223,18 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
     // Store plugins in a map so that plugins with the same name only get added once
     const pluginMap: Record<string, Plugin> = {};
     await traversePluginPath(pluginMap, allPaths, allConfigs);
-    await getBundlePlugins(pluginMap);
-    plugins = Object.keys(pluginMap).map(name => pluginMap[name]);
+    const bundlePluginMap = getBundlePluginMap();
+    const fullPluginMap = { ...pluginMap, ...bundlePluginMap };
+    plugins = Object.keys(fullPluginMap).map(name => fullPluginMap[name]);
   }
 
   return plugins;
 }
 
-// dynamic import bundle plugin if exists
-export function getBundlePlugins(pluginMap: Record<string, Plugin>) {
-  const bundlePlugins = getAppBundlePlugins();
-  bundlePlugins.forEach(p => {
+export function getBundlePluginMap() {
+  const appBundlePlugins = getAppBundlePlugins();
+  const bundlePluginMap: Record<string, Plugin> = {};
+  appBundlePlugins.forEach(p => {
     const { name: pluginName, version: pluginVersion, feature } = p;
     try {
       const isExecutedInInso = !process.type;
@@ -249,19 +249,19 @@ export function getBundlePlugins(pluginMap: Record<string, Plugin>) {
       }
       console.log(`[plugin] Loading bundled plugin ${pluginName} from ${bundlePluginPath}`);
       const module = global.require(bundlePluginPath);
-      pluginMap[pluginName] = {
+      bundlePluginMap[pluginName] = {
         name: pluginName,
         description: `Insomnia bundled plugin for ${feature}`,
         version: pluginVersion || 'unknown',
         directory: '',
         config: { disabled: false },
-        isBundlePlugin: true,
         module: module,
       };
     } catch (err) {
       console.error(`[plugin] Failed to load bundled plugin ${pluginName}`, err);
     }
   });
+  return bundlePluginMap;
 }
 
 export async function reloadPlugins() {
@@ -272,8 +272,9 @@ export async function getActivePlugins(): Promise<Plugin[]> {
   return (await getPlugins()).filter(p => !p.config.disabled);
 }
 
-export async function getActiveBundlePlugins(): Promise<Plugin[]> {
-  return (await getActivePlugins()).filter(p => p.isBundlePlugin);
+export async function getBundlePlugins(): Promise<Plugin[]> {
+  const appBundlePluginNames = getAppBundlePlugins().map(p => p.name);
+  return (await getActivePlugins()).filter(p => p.directory === '' && appBundlePluginNames.includes(p.name));
 }
 
 export async function getRequestGroupActions(): Promise<RequestGroupAction[]> {
@@ -362,24 +363,22 @@ export async function getTemplateTags(): Promise<TemplateTag[]> {
 }
 
 export async function isPreBundlePluginTemplateTag(input: string) {
-  if (!input.includes('{%')) {
-    return false;
+  if (input.startsWith('{%') && input.endsWith('%}')) {
+    const bundlePlugins = await getBundlePlugins();
+    const isTagAllowed = bundlePlugins.some(p => {
+      const templateTags = p.module.templateTags || [];
+      return templateTags.some(tt => typeof tt.validate === 'function' && tt.validate(input));
+    });
+    return isTagAllowed;
   }
-  // const bunelPluginNames = getAppBundlePlugins().map(p => p.name);
-  // const activePlugins = await getActiveBundlePlugins();
-  const activeBundlePlugins = await getActiveBundlePlugins();
-  return activeBundlePlugins.some(plugin => {
-    const templateTags = plugin.module.templateTags || [];
-    const tagNames = templateTags.map(tt => tt.name);
-    return tagNames.some(tagName => input.match(new RegExp(`^{% *${tagName} *.+`)));
-  });
+  return false;
 }
 
 export async function getPluginRouterActions(): Promise<PluginAction[]> {
   let extensions: PluginAction[] = [];
 
   for (const plugin of await getActivePlugins()) {
-    const actions = plugin.module.pluginRouterActions || [];
+    const actions = plugin.module.unsafePluginRouterActions || [];
     extensions = [
       ...extensions,
       ...actions.map(p => ({
@@ -403,13 +402,13 @@ export async function executePluginRouterAction({
   context?: Record<string, any>;
   params?: Record<string, any>;
 }): Promise<any> {
-  const plugins = getActiveBundlePlugins();
-  return plugins.then(plugins => {
+  const bundlePlugins = getBundlePlugins();
+  return bundlePlugins.then(plugins => {
     const plugin = plugins.find(p => p.name === pluginName);
     if (!plugin) {
       throw new Error(`Plugin ${pluginName} not found`);
     }
-    const action = plugin.module.pluginRouterActions?.find(p => p.name === actionName);
+    const action = plugin.module.unsafePluginRouterActions?.find(p => p.name === actionName);
     if (!action) {
       throw new Error(`Action ${actionName} not found in plugin ${pluginName}`);
     }
