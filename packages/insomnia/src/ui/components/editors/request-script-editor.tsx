@@ -19,6 +19,7 @@ import {
   InsomniaObject,
   Request as ScriptRequest,
   RequestInfo,
+  Response as ScriptResponse,
   Url,
   Variables,
   Vault,
@@ -546,6 +547,9 @@ export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChan
     editorRef.current?.setCursorLine(cursorRow + snippet.split('\n').length);
   };
 
+  const req = new ScriptRequest({
+    url: new Url('http://placeholder.com'),
+  });
   // TODO(george): Add more to this object to provide improved autocomplete
   const requestScriptSnippets = getRequestScriptSnippets(
     new InsomniaObject({
@@ -564,8 +568,22 @@ export const RequestScriptEditor: FC<Props> = ({ className, defaultValue, onChan
         localVars: new Environment('data', {}),
       }),
       vault: settings.enableVaultInScripts ? new Vault('vault', {}, settings.enableVaultInScripts) : undefined,
-      request: new ScriptRequest({
-        url: new Url('http://placeholder.com'),
+      request: req,
+      response: new ScriptResponse({
+        code: 200,
+        reason: 'OK',
+        header: [
+          { key: 'header1', value: 'val1' },
+          { key: 'header2', value: 'val2' },
+        ],
+        cookie: [
+          { key: 'header1', value: 'val1' },
+          { key: 'header2', value: 'val2' },
+        ],
+        body: '{"key": 888}',
+        stream: undefined,
+        responseTime: 100,
+        originalRequest: req,
       }),
       settings,
       clientCertificates: [],
