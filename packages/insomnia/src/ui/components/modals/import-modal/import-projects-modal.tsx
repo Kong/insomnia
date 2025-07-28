@@ -1,7 +1,8 @@
 import classnames from 'classnames';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type DirectoryDropItem, OverlayContainer, useDrop } from 'react-aria';
-import { useNavigate, useParams } from 'react-router';
+import { Label, ProgressBar } from 'react-aria-components';
+import { useNavigate, useParams, useRevalidator } from 'react-router';
 
 import { database } from '../../../../common/database';
 import type { ScanResult } from '../../../../common/import';
@@ -39,7 +40,7 @@ const selectDir = async () => {
   }
 
   if (!filePath) {
-    console.error('[Bulk Project Import] No file path in directory selection');
+    console.error('[Bulk Project Import] No file path in folder selection');
     return null;
   }
 
@@ -69,7 +70,6 @@ const selectDir = async () => {
     },
   };
 
-  // Create a DirectoryDropItem from the selected folder
   return rootFolder;
 };
 
@@ -96,7 +96,7 @@ const FileField = ({
       const firstDirectory = event.items.find(item => item.kind === 'directory') as DirectoryDropItem | undefined;
 
       if (!firstDirectory) {
-        console.warn('[Bulk Project Import] Could not find a directory in the dropped items');
+        console.warn('[Bulk Project Import] Could not find a folder in the dropped items');
         return;
       }
 
@@ -190,18 +190,18 @@ export const ImportProjectsResourceForm = ({
         Please select a folder that contains all the projects that need to be imported. Each project will be named after
         its source file.
       </p>
-      <FileField rootFolder={rootFolder} onChange={setRootFolder} />
-      <SupportedFormats />
       <p>{disclaimer}</p>
-      <div className="flex items-center justify-between gap-[var(--padding-sm)]">
-        <Checkbox
-          aria-label={'Skip importing projects that already exist'}
-          className="group flex h-full items-center p-0"
-          isSelected={skipExisting}
-          onChange={setSkipExisting}
-        >
-          Skip importing projects that already exist
-        </Checkbox>
+      <Checkbox
+        aria-label={'Skip importing projects that already exist'}
+        className="group flex h-full items-center p-0"
+        isSelected={skipExisting}
+        onChange={setSkipExisting}
+      >
+        Skip importing projects that already exist
+      </Checkbox>
+      <FileField rootFolder={rootFolder} onChange={setRootFolder} />
+      <div className="flex items-end justify-between gap-[var(--padding-sm)]">
+        <SupportedFormats />
         <Button
           disabled={!rootFolder}
           onClick={() =>
@@ -230,7 +230,7 @@ enum ImportStatus {
   IMPORTING = 'importing',
   SKIPPED = 'skipped',
   SUCCESS = 'success',
-  FAIL = 'fail',
+  FAILED = 'failed',
 }
 
 // Project import item
@@ -282,10 +282,10 @@ const ProjectImportStatus = ({ status }: { status: ImportStatus }) => {
           </>
         );
       }
-      case ImportStatus.FAIL: {
+      case ImportStatus.FAILED: {
         return (
           <>
-            <i className="fa fa-exclamation-triangle mr-2" /> Fail
+            <i className="fa fa-exclamation-triangle mr-2" /> Failed
           </>
         );
       }
@@ -299,7 +299,7 @@ const ProjectImportStatus = ({ status }: { status: ImportStatus }) => {
     <div
       className={classnames('flex items-center', {
         'text-success': status === ImportStatus.SUCCESS,
-        'text-danger': status === ImportStatus.FAIL,
+        'text-danger': status === ImportStatus.FAILED,
       })}
     >
       {content}
@@ -309,16 +309,17 @@ const ProjectImportStatus = ({ status }: { status: ImportStatus }) => {
 
 const ProjectItem = ({ project }: { project: ProjectImportItem }) => {
   const [expanded, setExpanded] = useState(false);
-  const extendable = useMemo(
-    () => [ImportStatus.IMPORTING, ImportStatus.SUCCESS, ImportStatus.FAIL].includes(project.status),
+  const expendable = useMemo(
+    () => [ImportStatus.IMPORTING, ImportStatus.SUCCESS, ImportStatus.FAILED].includes(project.status),
     [project.status],
   );
 
   return (
     <div className="rounded-[var(--radius-md)] border border-solid border-[color:var(--hl-md)]">
       <div
-        className="flex cursor-pointer items-center justify-between p-3"
-        onClick={() => extendable && setExpanded(!expanded)}
+        data-expandable={expendable}
+        className="flex items-center justify-between p-3 data-[expandable=true]:cursor-pointer"
+        onClick={() => expendable && setExpanded(!expanded)}
       >
         <div className="font-medium">{project.name}</div>
         <div className="align-center flex items-center gap-2">
@@ -328,20 +329,17 @@ const ProjectItem = ({ project }: { project: ProjectImportItem }) => {
             className={classnames('ml-2 transition-transform duration-200', {
               'rotate-180': expanded,
               'rotate-0': !expanded,
-              'text-[color:var(--hl-xs)]': !extendable,
-              'cursor-pointer': extendable,
-              'cursor-not-allowed': !extendable,
+              'text-[color:var(--hl-xs)]': !expendable,
             })}
           />
         </div>
       </div>
 
-      {/* Project details when expanded */}
-      {expanded && project.status === ImportStatus.FAIL && (
+      {expanded && project.status === ImportStatus.FAILED && (
         <div className="text-danger border-t border-solid border-[color:var(--hl-md)] bg-[color:var(--hl-xs)] p-3">
           <div className="flex items-center gap-2">
             <i className="fa fa-exclamation-circle" />
-            Failed to import: {project.error || 'Unknown error'}
+            Import failed: {project.error || 'Unknown error'}
           </div>
         </div>
       )}
@@ -445,6 +443,14 @@ const ImportProjectsList = ({
             filePaths.splice(archiveFileIndex, 1);
           }
 
+          if (!filePaths.length) {
+            updateProjectItem({
+              status: ImportStatus.SUCCESS,
+              scanResults: [],
+            });
+            return;
+          }
+
           const scanResults = await scanImportResources({
             source: 'file',
             filePaths,
@@ -480,7 +486,7 @@ const ImportProjectsList = ({
         } catch (error) {
           console.error('[Bulk Project Import] Import error:', project.name, error);
           updateProjectItem({
-            status: ImportStatus.FAIL,
+            status: ImportStatus.FAILED,
             error: error instanceof Error ? error.message : String(error),
           });
         }
@@ -518,6 +524,19 @@ const ImportProjectsList = ({
     return () => {};
   }, [handleImport, organizationId, rootFolder, skipExisting]);
 
+  const { total, completed, progress } = useMemo(() => {
+    const total = projectItems.length;
+    const completed = projectItems.filter(item =>
+      [ImportStatus.SUCCESS, ImportStatus.FAILED, ImportStatus.SKIPPED].includes(item.status),
+    ).length;
+
+    return {
+      total,
+      completed,
+      progress: total > 0 ? ((completed / total) * 100) | 0 : 0,
+    };
+  }, [projectItems]);
+
   if (uiStatus === 'loading') {
     return (
       <div className="flex items-center justify-center p-4">
@@ -553,6 +572,25 @@ const ImportProjectsList = ({
     <>
       <p className="text-lg font-bold">Import projects from: {rootFolder.name}</p>
 
+      <ProgressBar value={progress}>
+        {({ percentage, valueText }) => (
+          <>
+            <div className="mb-2 flex items-center justify-between">
+              <Label className="text-sm font-medium">
+                {completed < total ? `Processing folder #${completed + 1} of ${total}` : `Completed`}
+              </Label>
+              <span className="text-sm font-medium text-[color:var(--color-surprise)]">{valueText}</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-[color:var(--hl-xs)]">
+              <div
+                className="fill h-full rounded-full bg-[color:var(--color-surprise)] transition-all duration-300 ease-in-out"
+                style={{ width: percentage + '%' }}
+              />
+            </div>
+          </>
+        )}
+      </ProgressBar>
+
       <div className="mb-4 flex max-h-[50vh] flex-col gap-2 overflow-y-auto">
         {projectItems.map(project => (
           <ProjectItem key={project.key} project={project} />
@@ -583,6 +621,7 @@ export const ImportProjectsModal = ({ organizationId, onHide }: { organizationId
   const modalRef = useRef<ModalHandle>(null);
   const params = useParams();
   const navigate = useNavigate();
+  const { revalidate } = useRevalidator();
 
   useEffect(() => {
     // Hmm, the modal doesn't support to drive by state, so we need to show it manually.
@@ -600,6 +639,8 @@ export const ImportProjectsModal = ({ organizationId, onHide }: { organizationId
     // So we need to navigate to the first project in the imported list.
     if (params.organizationId && !params.projectId && projectItems?.[0]?.id) {
       navigate(`/organization/${params.organizationId}/project/${projectItems[0].id}`);
+    } else {
+      revalidate();
     }
   };
 
@@ -612,6 +653,7 @@ export const ImportProjectsModal = ({ organizationId, onHide }: { organizationId
         keyboardClosable={rootFolder ? false : true}
       >
         <ModalHeader hideCloseButton={!!rootFolder}>Import projects to "{organizationName}" Organization</ModalHeader>
+
         {!rootFolder ? (
           <ImportProjectsResourceForm
             onConfirm={({ rootFolder, skipExisting }) => {

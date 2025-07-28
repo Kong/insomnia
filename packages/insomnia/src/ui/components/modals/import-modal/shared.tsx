@@ -220,6 +220,16 @@ function getImporterSign(scanResult: ScanResult) {
 export const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const keyRandom = useMemo(() => Math.random(), [scanResults]);
+
+  if (!scanResults.length) {
+    return (
+      <div className="bg-[color:var(--hl-xxs)] p-[var(--padding-sm)]">
+        <i className="fa-regular fa-file fa-lg mr-2" />
+        No valid resources found
+      </div>
+    );
+  }
+
   return (
     <table className="table--fancy table--outlined">
       <tbody>
