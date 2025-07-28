@@ -199,14 +199,16 @@ export function registerMainHandlers() {
   ipcMainHandle('readDir', async (_, options: { path: string }) => {
     try {
       const files = await fs.promises.readdir(options.path);
-      return files.map(file => {
-        const filePath = path.join(options.path, file);
-        return {
-          type: fs.statSync(filePath).isDirectory() ? 'directory' : 'file',
-          name: file,
-          path: filePath,
-        };
-      });
+      return files
+        .map(file => {
+          const filePath = path.join(options.path, file);
+          return {
+            type: fs.statSync(filePath).isDirectory() ? 'directory' : fs.statSync(filePath).isFile() ? 'file' : 'other',
+            name: file,
+            path: filePath,
+          };
+        })
+        .filter(file => file.type !== 'other');
     } catch (err) {
       throw new Error(`Failed to read directory: ${err}`);
     }

@@ -1,6 +1,6 @@
 import classnames from 'classnames';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { type DirectoryDropItem, OverlayContainer, useDrop } from 'react-aria';
+import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
 import { Label, ProgressBar } from 'react-aria-components';
 import { useNavigate, useParams, useRevalidator } from 'react-router';
 
@@ -55,12 +55,29 @@ const selectDir = async () => {
             projectFolders.push({
               name: file.name,
               getFilePaths: async () => {
-                return await window.main.readDir({ path: file.path }).then(files => {
-                  return files
-                    .filter(file => file.type === 'file')
-                    .map(file => file.path)
-                    .filter(filePath => validImportExtensions.some(ext => filePath.endsWith(ext)));
-                });
+                const recurse = async (
+                  files: {
+                    type: 'file' | 'directory';
+                    name: string;
+                    path: string;
+                  }[],
+                ) => {
+                  const filePaths: string[] = [];
+                  for await (const file of files) {
+                    if (file.type === 'file') {
+                      if (validImportExtensions.some(ext => file.path.endsWith(ext))) {
+                        filePaths.push(file.path);
+                      }
+                    } else if (file.type === 'directory') {
+                      const subFilePaths = await recurse(await window.main.readDir({ path: file.path }));
+                      filePaths.push(...subFilePaths);
+                    }
+                  }
+                  return filePaths;
+                };
+
+                const filePaths = await recurse(await window.main.readDir({ path: file.path }));
+                return filePaths;
               },
             });
           }
@@ -111,17 +128,26 @@ const FileField = ({
               projectFolders.push({
                 name: entry.name,
                 getFilePaths: async () => {
-                  const files: string[] = [];
-                  const fileEntries = entry.getEntries();
-                  for await (const fileEntry of fileEntries) {
-                    if (fileEntry.kind === 'file') {
-                      const fileObj = await fileEntry.getFile();
-                      const filePath = window.webUtils.getPathForFile(fileObj);
-                      if (validImportExtensions.some(ext => filePath.endsWith(ext))) {
-                        files.push(filePath);
+                  const recurse = async (fileEntries: AsyncIterable<FileDropItem | DirectoryDropItem>) => {
+                    const files: string[] = [];
+                    for await (const fileEntry of fileEntries) {
+                      if (fileEntry.kind === 'file') {
+                        const fileObj = await fileEntry.getFile();
+                        const filePath = window.webUtils.getPathForFile(fileObj);
+                        if (validImportExtensions.some(ext => filePath.endsWith(ext))) {
+                          files.push(filePath);
+                        }
+                      } else if (fileEntry.kind === 'directory') {
+                        const subFiles = await recurse(fileEntry.getEntries());
+                        files.push(...subFiles);
                       }
                     }
-                  }
+                    return files;
+                  };
+
+                  const fileEntries = entry.getEntries();
+                  const files = await recurse(fileEntries);
+
                   return files;
                 },
               });
@@ -432,7 +458,7 @@ const ImportProjectsList = ({
           updateProjectItem({ status: ImportStatus.IMPORTING, id: createdProjectId });
 
           const filePaths = await project.folder.getFilePaths();
-          // Use archive.json to identify Postman environment files
+          // Use archive.json to identify Postman environment files, only consider the first one currently.
           const archiveFileIndex = filePaths.findIndex(
             filePath => filePath.endsWith('/archive.json') || filePath.endsWith('\\archive.json'),
           );
