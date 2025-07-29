@@ -82,10 +82,10 @@ export const Plugins: FC = () => {
     // Get and reload plugins
     const plugins = await (
       await getPlugins(true)
-    ).filter(p => {
+    ).filter(
+      p => !p.directory,
       // Filter out pre-bundled plugins
-      return !p.isBundlePlugin;
-    });
+    );
 
     reload();
 
