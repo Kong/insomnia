@@ -10,6 +10,7 @@ import { isMockRoute, type MockRoute } from '../models/mock-route';
 import { isGitProject } from '../models/project';
 import { isRequest, type Request } from '../models/request';
 import { isRequestGroup } from '../models/request-group';
+import { isSocketIORequest, type SocketIORequest } from '../models/socket-io-request';
 import { isUnitTest, type UnitTest } from '../models/unit-test';
 import { isUnitTestSuite, type UnitTestSuite } from '../models/unit-test-suite';
 import { isWebSocketRequest, type WebSocketRequest } from '../models/websocket-request';
@@ -90,7 +91,7 @@ export async function getFilesFromPostmanExportedDataDump(filePath: string): Pro
 }
 
 export interface ScanResult {
-  requests?: (Request | WebSocketRequest | GrpcRequest)[];
+  requests?: (Request | WebSocketRequest | GrpcRequest | SocketIORequest)[];
   workspaces?: Workspace[];
   environments?: BaseEnvironment[];
   apiSpecs?: ApiSpec[];
@@ -171,6 +172,7 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
       const requests = resources.filter(isRequest);
       const websocketRequests = resources.filter(isWebSocketRequest);
       const grpcRequests = resources.filter(isGrpcRequest);
+      const socketIoRequests = resources.filter(isSocketIORequest);
       const environments = resources.filter(isEnvironment);
       const unitTests = resources.filter(isUnitTest);
       const unitTestSuites = resources.filter(isUnitTestSuite);
@@ -183,7 +185,7 @@ export async function scanResources(importEntries: ImportEntry[]): Promise<ScanR
         type,
         unitTests,
         unitTestSuites,
-        requests: [...requests, ...websocketRequests, ...grpcRequests],
+        requests: [...requests, ...websocketRequests, ...grpcRequests, ...socketIoRequests],
         workspaces,
         environments,
         apiSpecs,

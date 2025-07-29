@@ -87,4 +87,9 @@ export async function updateOrCreateByParentId(parentId: string, patch: Partial<
   return create(newPatch);
 }
 
+export async function getOrCreateByParentId(parentId: string) {
+  const doc = await getByParentId(parentId);
+  return doc || create({ parentId });
+}
+
 export const all = () => database.all<SocketIOPayload>(type);

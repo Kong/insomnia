@@ -23,6 +23,7 @@ import {
   EXPORT_TYPE_MOCK_SERVER,
   EXPORT_TYPE_REQUEST,
   EXPORT_TYPE_REQUEST_GROUP,
+  EXPORT_TYPE_SOCKETIO_REQUEST,
   EXPORT_TYPE_UNIT_TEST,
   EXPORT_TYPE_UNIT_TEST_SUITE,
   EXPORT_TYPE_WEBSOCKET_REQUEST,
@@ -411,7 +412,7 @@ function getCollection(
                   },
                 ),
                 type: 'SocketIORequest',
-                _type: EXPORT_TYPE_REQUEST,
+                _type: EXPORT_TYPE_SOCKETIO_REQUEST,
                 name: item.name || 'Imported Socket.IO Request',
                 parentId,
                 url: data.url,
@@ -620,6 +621,7 @@ export async function getInsomniaV5DataExport({
               headers: resource.headers,
               parameters: resource.parameters,
               pathParameters: resource.pathParameters,
+              eventListeners: resource.eventListeners,
             };
             collection.push(socketIORequest);
           } else if (models.grpcRequest.isGrpcRequest(resource)) {

@@ -68,3 +68,36 @@ export const getById = (_id: string) => database.getWhere<SocketIORequest>(type,
 export const migrate = (doc: SocketIORequest) => doc;
 
 export const remove = (obj: SocketIORequest) => database.remove(obj);
+
+export const update = (obj: SocketIORequest, patch: Partial<SocketIORequest> = {}) => database.docUpdate(obj, patch);
+
+// This is duplicated (lol) from models/request.js
+export async function duplicate(request: SocketIORequest, patch: Partial<SocketIORequest> = {}) {
+  // Only set name and "(Copy)" if the patch does
+  // not define it and the request itself has a name.
+  // Otherwise leave it blank so the request URL can
+  // fill it in automatically.
+  if (!patch.name && request.name) {
+    patch.name = `${request.name} (Copy)`;
+  }
+
+  // Get sort key of next request
+  const q = {
+    metaSortKey: {
+      $gt: request.metaSortKey,
+    },
+  };
+
+  const [nextRequest] = await database.find<SocketIORequest>(type, q, {
+    metaSortKey: 1,
+  });
+  const nextSortKey = nextRequest ? nextRequest.metaSortKey : request.metaSortKey + 100;
+  // Calculate new sort key
+  const sortKeyIncrement = (nextSortKey - request.metaSortKey) / 2;
+  const metaSortKey = request.metaSortKey + sortKeyIncrement;
+  return database.duplicate<SocketIORequest>(request, {
+    name,
+    metaSortKey,
+    ...patch,
+  });
+}
