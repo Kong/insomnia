@@ -152,9 +152,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
     const sessionId = userSession.id;
     if (sessionId) {
       try {
-        const source = new EventSource(
-          `insomnia-event-source://v1/teams/${sanitizeTeamId(organizationId)}/streams?sessionId=${sessionId}`,
-        );
+        const source = new EventSource(`insomnia-event-source://v1/teams/${sanitizeTeamId(organizationId)}/streams`);
 
         source.addEventListener('message', e => {
           try {
