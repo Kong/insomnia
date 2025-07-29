@@ -60,8 +60,8 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
   const updateRequest = (eventListeners: UIEventListener[]) => {
     const arr = eventListeners.map(item => ({
       id: item.id,
-      eventName: item.eventName.trim(),
-      desc: item.desc.trim(),
+      eventName: item.eventName,
+      desc: item.desc,
       isOpen: item.isOpen,
     }));
     requestPatcher(request._id, {
