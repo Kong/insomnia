@@ -16,9 +16,8 @@ import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
 import type { RequestContext } from '../../../../insomnia-scripting-environment/src/objects';
-import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
 import * as models from '../../models';
-import { type Compression, readCurlResponse } from '../../models/response';
+import { type Compression } from '../../models/response';
 import { runScript } from '../../scriptExecutor';
 import type { SegmentEvent } from '../analytics';
 import { trackPageView, trackSegmentEvent } from '../analytics';
@@ -90,7 +89,6 @@ export interface RendererToMainBridgeAPI {
       create: (options: { parentId: string; path: string }) => Promise<string>;
     };
   };
-  hiddenBrowserWindow: HiddenBrowserWindowBridgeAPI;
   getExecution: (options: { requestId: string }) => Promise<TimingStep[]>;
   addExecutionStep: (options: { requestId: string; stepName: string }) => void;
   startExecution: (options: { requestId: string }) => void;

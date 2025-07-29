@@ -12,7 +12,6 @@ import {
   ipcMain,
   Menu,
   type MenuItemConstructorOptions,
-  MessageChannelMain,
   screen,
   shell,
 } from 'electron';
@@ -28,18 +27,15 @@ import {
 } from '../common/constants';
 import { docsBase } from '../common/documentation';
 import * as log from '../common/log';
-import { invariant } from '../utils/invariant';
 import ElectronStorage from './electron-storage';
-import { ipcMainOn } from './ipc/electron';
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
 
-const browserWindows = new Map<'Insomnia' | 'HiddenBrowserWindow', ElectronBrowserWindow>();
+const browserWindows = new Map<'Insomnia', ElectronBrowserWindow>();
 let electronStorage: ElectronStorage | null = null;
-let hiddenWindowIsBusy = false;
 
 interface Bounds {
   height?: number;
@@ -50,124 +46,6 @@ interface Bounds {
 
 export function init() {
   initElectronStorage();
-}
-const stopAndWaitForHiddenBrowserWindow = async (runningHiddenBrowserWindow: BrowserWindow) => {
-  return await new Promise<void>(resolve => {
-    // overwrite the closed handler
-    runningHiddenBrowserWindow.on('closed', () => {
-      console.log('[main] restarting hidden browser window:', runningHiddenBrowserWindow.id);
-      browserWindows.delete('HiddenBrowserWindow');
-
-      resolve();
-    });
-    stopHiddenBrowserWindow();
-  });
-};
-
-export async function createHiddenBrowserWindow() {
-  const mainWindow = browserWindows.get('Insomnia');
-  invariant(mainWindow, 'MainWindow is not defined, please restart the app.');
-
-  console.log('[main] Registering the hidden window restarting handler');
-  ipcMainOn('set-hidden-window-busy-status', (_, busyStatus) => {
-    hiddenWindowIsBusy = busyStatus;
-  });
-  // this avoids registering handler multiple times and output an error
-  ipcMain.removeHandler('open-channel-to-hidden-browser-window');
-  // when the main window runs a script
-  // if the hidden window is down, start it
-  ipcMain.handle('open-channel-to-hidden-browser-window', async (event, isPortAlive: boolean) => {
-    const runningHiddenBrowserWindow = browserWindows.get('HiddenBrowserWindow');
-    const isRunning = !!runningHiddenBrowserWindow;
-    // if window crashed
-    const windowWasClosedUnexpectedly = hiddenWindowIsBusy && !isRunning;
-    if (windowWasClosedUnexpectedly) {
-      hiddenWindowIsBusy = false;
-    }
-
-    const hiddenWindowIsNotBusy = !hiddenWindowIsBusy;
-    const isHealthy = hiddenWindowIsNotBusy && isRunning && isPortAlive;
-    if (isHealthy) {
-      return;
-    }
-
-    // if window froze
-    const isRunningButUnhealthy = isRunning && !isHealthy;
-    if (isRunningButUnhealthy) {
-      // stop and wait for window close event and sync the map and busy status
-      await stopAndWaitForHiddenBrowserWindow(runningHiddenBrowserWindow);
-    }
-
-    console.log('[main] hidden window is down, restarting');
-    const hiddenBrowserWindow = new BrowserWindow({
-      show: false,
-      title: 'HiddenBrowserWindow',
-      width: DEFAULT_WIDTH,
-      height: DEFAULT_HEIGHT,
-      minHeight: MINIMUM_HEIGHT,
-      minWidth: MINIMUM_WIDTH,
-      webPreferences: {
-        contextIsolation: false,
-        nodeIntegration: true,
-        preload: path.join(__dirname, 'hidden-window-preload.js'),
-        spellcheck: false,
-        devTools: process.env.NODE_ENV === 'development',
-      },
-    });
-
-    hiddenBrowserWindow.on('closed', () => {
-      if (browserWindows.get('HiddenBrowserWindow')) {
-        console.log('[main] closing hidden browser window');
-        browserWindows.delete('HiddenBrowserWindow');
-        // @TODO: This should be set when the window closed is event is emmited so it's guaranteed to be realiable
-        // There might be other events we need to listen to also
-        hiddenWindowIsBusy = false;
-      }
-    });
-
-    const hiddenBrowserWindowPath = path.resolve(__dirname, 'hidden-window.html');
-    const hiddenBrowserWindowUrl = process.env.HIDDEN_BROWSER_WINDOW_URL || pathToFileURL(hiddenBrowserWindowPath).href;
-    hiddenBrowserWindow.loadURL(hiddenBrowserWindowUrl);
-    console.log(`[main] Loading ${hiddenBrowserWindowUrl}`);
-
-    ipcMain.removeHandler('renderer-listener-ready');
-    const hiddenWinListenerReady = new Promise<void>(resolve => {
-      ipcMain.handleOnce('renderer-listener-ready', () => {
-        console.log('[main] hidden window listener is ready');
-        resolve();
-      });
-    });
-    await hiddenWinListenerReady;
-
-    ipcMain.removeHandler('hidden-window-received-port');
-    const hiddenWinPortReady = new Promise<void>(resolve => {
-      ipcMain.handleOnce('hidden-window-received-port', () => {
-        console.log('[main] hidden window has received port');
-        resolve();
-      });
-    });
-
-    const { port1, port2 } = new MessageChannelMain();
-    hiddenBrowserWindow.webContents.postMessage('renderer-listener', null, [port1]);
-    await hiddenWinPortReady;
-
-    ipcMain.removeHandler('main-window-script-port-ready');
-    const mainWinPortReady = new Promise<void>(resolve => {
-      ipcMain.handleOnce('main-window-script-port-ready', () => {
-        console.log('[main] main window has received hidden window port');
-        resolve();
-      });
-    });
-
-    event.senderFrame?.postMessage('hidden-browser-window-response-listener', null, [port2]);
-    await mainWinPortReady;
-
-    browserWindows.set('HiddenBrowserWindow', hiddenBrowserWindow);
-  });
-}
-
-export function stopHiddenBrowserWindow() {
-  browserWindows.get('HiddenBrowserWindow')?.destroy();
 }
 
 export function createWindow(): ElectronBrowserWindow {
@@ -635,21 +513,6 @@ export function createWindow(): ElectronBrowserWindow {
           setZoom(() => 4)();
         },
       },
-      {
-        label: 'Show/hide hidden browser window ',
-        click: () => {
-          const hiddenBrowserWindow = browserWindows.get('HiddenBrowserWindow');
-          invariant(hiddenBrowserWindow, 'hiddenBrowserWindow is not defined');
-          hiddenBrowserWindow.isVisible() ? hiddenBrowserWindow.hide() : hiddenBrowserWindow.show();
-        },
-      },
-      {
-        label: 'Stop/start hidden browser window ',
-        click: () => {
-          const hiddenBrowserWindow = browserWindows.get('HiddenBrowserWindow');
-          hiddenBrowserWindow ? stopHiddenBrowserWindow() : createHiddenBrowserWindow();
-        },
-      },
     ],
   };
   const toolsMenu: MenuItemConstructorOptions = {
@@ -807,8 +670,5 @@ export function initElectronStorage() {
 
 export function createWindowsAndReturnMain() {
   const mainWindow = browserWindows.get('Insomnia') ?? createWindow();
-  if (!browserWindows.get('HiddenBrowserWindow')) {
-    createHiddenBrowserWindow();
-  }
   return mainWindow;
 }

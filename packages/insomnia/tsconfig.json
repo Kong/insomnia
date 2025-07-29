@@ -12,7 +12,11 @@
     "module": "ESNext",
     "sourceMap": true,
     /* Runs in the DOM */
-    "lib": ["ES2023", "DOM.Iterable", "DOM"],
+    "lib": [
+      "ES2023",
+      "DOM.Iterable",
+      "DOM"
+    ],
     "jsx": "react",
     /* Strictness */
     "strict": true,
@@ -58,7 +62,6 @@
     "src/coverage",
     "src/main.min.js",
     "src/preload.js",
-    "src/hidden-window-preload.js",
     "./src/__mocks__/@getinsomnia/node-libcurl.ts"
   ]
 }

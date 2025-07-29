@@ -106,7 +106,6 @@ export type MainOnChannels =
   | 'openInBrowser'
   | 'readText'
   | 'restart'
-  | 'set-hidden-window-busy-status'
   | 'setMenuBarVisibility'
   | 'show-nunjucks-context-menu'
   | 'showContextMenu'

@@ -2,7 +2,14 @@ import { appendFile } from 'node:fs/promises';
 
 import * as _ from 'lodash';
 
-import { initInsomniaObject, InsomniaObject } from '../../insomnia-scripting-environment/src/objects';
+import {
+  asyncTasksAllSettled,
+  initInsomniaObject,
+  InsomniaObject,
+  resetAsyncTasks,
+  stopMonitorAsyncTasks,
+  waitForAllTestsDone,
+} from '../../insomnia-scripting-environment/src/objects';
 import {
   getNewConsole,
   mergeClientCertificates,
@@ -44,9 +51,17 @@ export const runScript = async ({
     'setImmediate',
     'queueMicrotask',
     'process',
+    `waitForAllTestsDone`,
+    'resetAsyncTasks',
+    'stopMonitorAsyncTasks',
+    `asyncTasksAllSettled`,
     `
       const $ = insomnia;
+      resetAsyncTasks(); // exclude unnecessary ones
       ${script};
+      await waitForAllTestsDone();
+      stopMonitorAsyncTasks();  // the next one should not be monitored
+      await asyncTasksAllSettled();
       return insomnia;`,
   );
 
@@ -60,6 +75,10 @@ export const runScript = async ({
     undefined,
     undefined,
     undefined,
+    waitForAllTestsDone,
+    resetAsyncTasks,
+    stopMonitorAsyncTasks,
+    asyncTasksAllSettled,
   );
   if (mutatedInsomniaObject == null || !(mutatedInsomniaObject instanceof InsomniaObject)) {
     throw new Error('insomnia object is invalid or script returns earlier than expected.');

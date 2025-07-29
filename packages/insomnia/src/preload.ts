@@ -6,7 +6,6 @@ import type { secretStorageBridgeAPI } from './main/ipc/secret-storage';
 import type { CurlBridgeAPI } from './main/network/curl';
 import type { SocketIOBridgeAPI } from './main/network/socket-io';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
-import { invariant } from './utils/invariant';
 
 const ports = new Map<'hiddenWindowPort', MessagePort>();
 
@@ -150,26 +149,6 @@ const main: Window['main'] = {
     caCertificate: {
       create: options => ipcRenderer.invoke('database.caCertificate.create', options),
     },
-  },
-  hiddenBrowserWindow: {
-    runScript: options =>
-      new Promise(async (resolve, reject) => {
-        const isPortAlive = ports.get('hiddenWindowPort') !== undefined;
-        await ipcRenderer.invoke('open-channel-to-hidden-browser-window', isPortAlive);
-
-        const port = ports.get('hiddenWindowPort');
-        invariant(port, 'hiddenWindowPort is undefined');
-
-        port.onmessage = event => {
-          console.log('[preload] received result:', event.data);
-          if (event.data.error) {
-            reject(new Error(event.data.error));
-          }
-          resolve(event.data);
-        };
-
-        port.postMessage({ ...options, type: 'runPreRequestScript' });
-      }),
   },
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     ipcRenderer.invoke('extractJsonFileFromPostmanDataDumpArchive', archivePath),

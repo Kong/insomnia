@@ -165,7 +165,6 @@ export default tseslint.config(
       '**/docker/*',
       '**/electron/index.js',
       '**/fixtures',
-      '**/hidden-window-preload.js',
       '**/node_modules/*',
       '**/preload.js',
       '**/svgr',

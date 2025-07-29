@@ -23,7 +23,6 @@ export default async function build(options: Options) {
   const env: Record<string, string> = __DEV__
     ? {
         'process.env.APP_RENDER_URL': JSON.stringify(`http://localhost:${PORT}/index.html`),
-        'process.env.HIDDEN_BROWSER_WINDOW_URL': JSON.stringify(`http://localhost:${PORT}/hidden-window.html`),
         'process.env.NODE_ENV': JSON.stringify('development'),
         'process.env.INSOMNIA_ENV': JSON.stringify('development'),
         'process.env.BUILD_DATE': JSON.stringify(new Date()),
@@ -43,20 +42,6 @@ export default async function build(options: Options) {
     sourcemap: true,
     format: 'cjs',
     external: ['electron'],
-  };
-
-  const hiddenBrowserWindowPreloadBuildOptions: BuildOptions = {
-    entryPoints: ['./src/hidden-window-preload.ts'],
-    outfile: path.join(outdir, 'hidden-window-preload.js'),
-    target: 'esnext',
-    bundle: true,
-    platform: 'node',
-    sourcemap: true,
-    format: 'cjs',
-    external: ['electron'],
-    loader: {
-      '.node': 'copy',
-    },
   };
 
   const mainBuildOptions: BuildOptions = {
@@ -118,10 +103,6 @@ export default async function build(options: Options) {
       ...mainBuildOptions,
       plugins: [restartElectronPlugin('main')],
     });
-    const hiddenPreloadContext = await esbuild.context({
-      ...hiddenBrowserWindowPreloadBuildOptions,
-      plugins: [restartElectronPlugin('hidden-browser-window-preload')],
-    });
 
     const restartElectronProcess = () => {
       console.log('[Dev Build] Start restarting Electron');
@@ -139,13 +120,11 @@ export default async function build(options: Options) {
 
     const preloadWatch = await preloadContext.watch();
     const mainWatch = await mainContext.watch();
-    const hiddenWindowWatch = await hiddenPreloadContext.watch();
-    return Promise.all([preloadWatch, mainWatch, hiddenWindowWatch]);
+    return Promise.all([preloadWatch, mainWatch]);
   }
   const preload = esbuild.build(preloadBuildOptions);
-  const hiddenBrowserWindowPreload = esbuild.build(hiddenBrowserWindowPreloadBuildOptions);
   const main = esbuild.build(mainBuildOptions);
-  return Promise.all([main, preload, hiddenBrowserWindowPreload]).catch(err => {
+  return Promise.all([main, preload]).catch(err => {
     console.error('[Build] Build failed:', err);
   });
 }
