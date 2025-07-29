@@ -595,9 +595,10 @@ const UntrackedWorkspace = ({
 
 interface Props {
   hideSettingsModal: () => void;
+  onModalChange?: (isOpen: boolean) => void;
 }
 
-export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
+export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -640,6 +641,10 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isImportProjectsModalOpen, setIsImportProjectsModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+
+  useEffect(() => {
+    onModalChange?.(isImportModalOpen || isImportProjectsModalOpen || isExportModalOpen);
+  }, [isImportModalOpen, isImportProjectsModalOpen, isExportModalOpen, onModalChange]);
 
   const handleExportProjectToFile = () => {
     exportProjectToFile(projectName, workspacesForActiveProject);

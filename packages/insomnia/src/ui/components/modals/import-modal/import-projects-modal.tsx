@@ -502,10 +502,6 @@ const ImportProjectsList = ({
             return;
           }
 
-          const importFormData = new FormData();
-          importFormData.append('organizationId', organizationId);
-          importFormData.append('projectId', createdProjectId);
-
           await importScannedResources({
             organizationId,
             projectId: createdProjectId,

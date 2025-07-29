@@ -31,6 +31,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
   const [defaultTabKey, setDefaultTabKey] = useState('general');
   const { userSession, settings } = useRootLoaderData();
   const modalRef = useRef<ModalHandle>(null);
+  const [keyboardClosable, setKeyboardClosable] = useState(true);
 
   useImperativeHandle(
     ref,
@@ -47,7 +48,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
   );
 
   return (
-    <Modal className="!z-10" ref={modalRef} tall {...props}>
+    <Modal className="!z-10" ref={modalRef} tall keyboardClosable={keyboardClosable} {...props}>
       <ModalHeader>
         {getProductName()} Preferences
         <span className="faint txt-sm">
@@ -142,7 +143,10 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
             </div>
           </TabPanel>
           <TabPanel className="h-full w-full overflow-y-auto p-4" id="data">
-            <ImportExport hideSettingsModal={() => modalRef.current?.hide()} />
+            <ImportExport
+              hideSettingsModal={() => modalRef.current?.hide()}
+              onModalChange={(isOpen: boolean) => setKeyboardClosable(!isOpen)}
+            />
           </TabPanel>
           <TabPanel className="h-full w-full overflow-y-auto p-4" id="themes">
             <ThemePanel />
