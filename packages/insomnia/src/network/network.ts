@@ -60,7 +60,7 @@ import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } fro
 import { getAuthHeader, getAuthObjectOrNull, getAuthQueryParams, isAuthEnabled } from './authentication';
 import { cancellableCurlRequest, cancellableRunScript } from './cancellation';
 import { filterClientCertificates } from './certificate';
-import { type TransformedExecuteScriptContext } from './concurrency';
+import { runScriptConcurrently, type TransformedExecuteScriptContext } from './concurrency';
 import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 
 export const getOrInheritAuthentication = ({
@@ -485,7 +485,8 @@ export const tryToExecuteScript = async (context: RequestAndContextAndOptionalRe
   }
 
   try {
-    const output = await cancellableRunScript({
+    const fn = process.type === 'renderer' ? runScriptConcurrently : cancellableRunScript;
+    const output = await fn({
       script,
       context: {
         request,

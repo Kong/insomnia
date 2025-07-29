@@ -1,6 +1,6 @@
 import type { RequestContext } from '../../../insomnia-scripting-environment/src/objects';
 import type { CurlRequestOptions } from '../main/network/libcurl-promise';
-import { runScript } from '../scriptExecutor';
+import { runScript as nodejsRunScript } from '../scriptExecutor';
 
 const cancelRequestFunctionMap = new Map<string, () => void>();
 
@@ -49,7 +49,7 @@ export const cancellableRunScript = async (options: { script: string; context: R
   try {
     const result = await cancellablePromise({
       signal: controller.signal,
-      fn: runScript(options),
+      fn: process.type === 'renderer' ? window.main.runScript(options) : nodejsRunScript(options),
     });
 
     return result;

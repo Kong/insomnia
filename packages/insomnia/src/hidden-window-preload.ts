@@ -46,7 +46,6 @@ const bridge: HiddenBrowserWindowToMainBridgeAPI = {
   },
   requireInterceptor,
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
-  readCurlResponse: options => ipcRenderer.invoke('readCurlResponse', options),
   setBusy: busy => ipcRenderer.send('set-hidden-window-busy-status', busy),
   // TODO: following methods are for simulating current behavior of running async tasks
   // in the future, it should be better to keep standard way of handling async tasks to avoid confusion

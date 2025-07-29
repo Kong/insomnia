@@ -56,7 +56,7 @@ async function asyncWorker(arg: Task): Promise<any> {
     setTimeout(resolve, timeoutValue, { error: `Executing script timeout: ${timeoutValue}` }),
   );
   const executionPromise = Promise.race([
-    window.main.hiddenBrowserWindow.runScript({ script: arg.script, context: arg.context }),
+    window.main.runScript({ script: arg.script, context: arg.context }),
     timeoutPromise,
   ]);
   const result = await cancellableExecution({ id: arg.context.request._id, fn: executionPromise });

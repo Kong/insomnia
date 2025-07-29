@@ -269,7 +269,8 @@ async function curlOutputToResponse(
       originalRequest,
     });
   }
-  const bodyResult = await readCurlResponse({
+  const nodejsReadCurlResponse = process.type === 'renderer' ? window.main.readCurlResponse : readCurlResponse;
+  const bodyResult = await nodejsReadCurlResponse({
     bodyPath: result.responseBodyPath,
     bodyCompression: result.patch.bodyCompression,
   });

@@ -127,8 +127,10 @@ const main: Window['main'] = {
     ipcRenderer.invoke('installPlugin', lookupName, allowScopedPackageNames),
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
   cancelCurlRequest: options => ipcRenderer.send('cancelCurlRequest', options),
+  readCurlResponse: options => ipcRenderer.invoke('readCurlResponse', options),
   writeFile: options => ipcRenderer.invoke('writeFile', options),
   readFile: options => ipcRenderer.invoke('readFile', options),
+  runScript: options => ipcRenderer.invoke('runScript', options),
   lintSpec: options => ipcRenderer.invoke('lintSpec', options),
   on: (channel, listener) => {
     ipcRenderer.on(channel, listener);

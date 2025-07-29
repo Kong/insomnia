@@ -15,8 +15,11 @@ import {
 import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
+import type { RequestContext } from '../../../../insomnia-scripting-environment/src/objects';
 import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
 import * as models from '../../models';
+import { type Compression, readCurlResponse } from '../../models/response';
+import { runScript } from '../../scriptExecutor';
 import type { SegmentEvent } from '../analytics';
 import { trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
@@ -58,6 +61,11 @@ export interface RendererToMainBridgeAPI {
   readFile: (options: { path: string; encoding?: string }) => Promise<{ content: string; encoding: string }>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
+  readCurlResponse: (options: {
+    bodyPath: string;
+    bodyCompression: Compression;
+  }) => Promise<{ body: string; error: string }>;
+  runScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;
   on: (channel: RendererOnChannels, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
   webSocket: WebSocketBridgeAPI;
   socketIO: SocketIOBridgeAPI;
@@ -133,7 +141,10 @@ export function registerMainHandlers() {
       throw new Error(err);
     }
   });
-
+  ipcMainHandle('runScript', async (_, options: { script: string; context: RequestContext }) => {
+    const { script, context } = options;
+    return runScript({ script, context });
+  });
   ipcMainHandle('lintSpec', async (_, options: { documentContent: string; rulesetPath: string }) => {
     const { documentContent, rulesetPath } = options;
     return new Promise((resolve, reject) => {

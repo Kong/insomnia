@@ -26,6 +26,7 @@ export type HandleChannels =
   | 'grpc.loadMethodsFromReflection'
   | 'installPlugin'
   | 'lintSpec'
+  | 'runScript'
   | 'open-channel-to-hidden-browser-window'
   | 'readCurlResponse'
   | 'restoreBackup'
