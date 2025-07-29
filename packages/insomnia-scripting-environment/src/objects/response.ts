@@ -60,7 +60,7 @@ export class Response extends Property {
     this.originalRequest = options.originalRequest;
     this.responseTime = options.responseTime;
     this.stream = options.stream;
-    this.status = options.reason || RESPONSE_CODE_REASONS[options.code]|| "";
+    this.status = options.reason || RESPONSE_CODE_REASONS[options.code] || '';
     this.bytesRead = options.bytesRead || 0;
   }
 
@@ -394,8 +394,7 @@ export async function readBodyFromPath(
   } else if (!response.bodyPath) {
     return '';
   }
-  const nodejsReadCurlResponse = process.type === 'renderer' ? window.bridge.readCurlResponse : readCurlResponse;
-  const readResponseResult = await nodejsReadCurlResponse({
+  const readResponseResult = await readCurlResponse({
     bodyPath: response.bodyPath,
     bodyCompression: response.bodyCompression,
   });
