@@ -22,7 +22,7 @@ export async function sendRequest(
     try {
       const nodejsCurlRequest =
         process.type === 'renderer'
-          ? window.bridge.curlRequest
+          ? window.main.curlRequest
           : (await import('insomnia/src/main/network/libcurl-promise')).curlRequest;
       nodejsCurlRequest(requestOptions)
         .then((result: any) => {

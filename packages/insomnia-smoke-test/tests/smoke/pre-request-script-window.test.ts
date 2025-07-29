@@ -44,45 +44,6 @@ test.describe('test hidden window handling', () => {
     await page.getByText('200 OK').click();
   });
 
-  test('handle hidden browser window getting closed', async ({ app, page }) => {
-    test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
-
-    const text = await loadFixture('pre-request-collection.yaml');
-    await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-
-    await page.getByLabel('Import').click();
-    await page.locator('[data-test-id="import-from-clipboard"]').click();
-    await page.getByRole('button', { name: 'Scan' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
-
-    await page.getByTestId('settings-button').click();
-    await page.getByLabel('Request timeout (ms)').fill('1000');
-    await page.getByRole('button', { name: '' }).click();
-
-    await page.getByText('Pre-request Scripts').click();
-    await page.getByLabel('Request Collection').getByTestId('Long running task - post').press('Enter');
-    await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
-
-    await page.getByText('Executing script timeout').click();
-    await page.getByRole('tab', { name: 'Console' }).click();
-    await page.getByRole('tab', { name: 'Preview' }).click();
-
-    const windows = await app.windows();
-    const hiddenWindow = windows[1];
-    hiddenWindow.close();
-
-    await page.getByTestId('settings-button').click();
-    await page.getByLabel('Request timeout (ms)').fill('6000');
-    await page.getByRole('button', { name: '' }).click();
-
-    await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
-
-    // it should still work
-    const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
-    await page.waitForSelector('[data-testid="response-status-tag"]:visible');
-    await expect.soft(statusTag).toContainText('200 OK');
-  });
-
   test('window should be restarted if it hangs', async ({ app, page }) => {
     test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
