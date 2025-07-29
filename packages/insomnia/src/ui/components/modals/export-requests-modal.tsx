@@ -253,7 +253,8 @@ export const ExportRequestsModal = ({
   }
 
   const getSelectedRequestIds = (node: Node): string[] => {
-    const docIsRequest = isRequest(node.doc) || isWebSocketRequest(node.doc) || isGrpcRequest(node.doc);
+    const docIsRequest =
+      isRequest(node.doc) || isWebSocketRequest(node.doc) || isGrpcRequest(node.doc) || isSocketIORequest(node.doc);
     if (docIsRequest && node.selectedRequests === node.totalRequests) {
       return [node.doc._id];
     }

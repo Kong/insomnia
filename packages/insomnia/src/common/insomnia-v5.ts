@@ -621,6 +621,7 @@ export async function getInsomniaV5DataExport({
               headers: resource.headers,
               parameters: resource.parameters,
               pathParameters: resource.pathParameters,
+              eventListeners: resource.eventListeners,
             };
             collection.push(socketIORequest);
           } else if (models.grpcRequest.isGrpcRequest(resource)) {
