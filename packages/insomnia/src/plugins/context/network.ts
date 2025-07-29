@@ -70,8 +70,8 @@ export function init(): {
         );
         return models.response.create(responsePatch, settings.maxHistoryResponses);
       },
-      // using node-curl to send a request directly, without context render and save response
-      async nodeCurlRequest(options: NodeCurlRequestOptions): Promise<NodeCurlResponseType> {
+      // using node-curl to send a request directly, without context render and database write for request and response
+      async sendRequestWithoutSideEffects(options: NodeCurlRequestOptions): Promise<NodeCurlResponseType> {
         const requestId = uuidv4();
         const settings = await models.settings.get();
         const settingFollowRedirects = settings?.followRedirects ? 'on' : 'off';
@@ -82,7 +82,7 @@ export function init(): {
             : // when exeucted in Inso;
               (await import('../../main/network/libcurl-promise')).curlRequest;
         const response = await curlRequest({
-          requestId: `plugin-context-request-${requestId}`,
+          requestId: `no-sideEffects-request-${requestId}`,
           req: {
             authentication: {},
             body: {},

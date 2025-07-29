@@ -201,7 +201,7 @@ export interface PluginTemplateTagContext {
         environmentId?: string;
       },
     ): Promise<Response>;
-    nodeCurlRequest(options: NodeCurlRequestOptions): Promise<NodeCurlResponseType>;
+    sendRequestWithoutSideEffects(options: NodeCurlRequestOptions): Promise<NodeCurlResponseType>;
   };
   context: BaseRenderContext & {
     value: string | number;

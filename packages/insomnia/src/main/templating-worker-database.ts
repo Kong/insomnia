@@ -126,11 +126,8 @@ const pluginToMainAPI = {
     );
     return await models.response.create({ ...response, bodyCompression: null }, settings.maxHistoryResponses);
   },
-  // TODO(Kent): Rename this to something more reusable, which can be run by plugins in both inso and app contexts.
-  // insomniaFetch only for renderer/webworker and is intercepted in devtools
-  // network/curlRequest is for renderer and requests appear in the UI
-  // sendRequest which is used inso and tests
-  'network.nodeCurlRequest': async (body: {
+  // use libcurl to send request without side effects(do not write to database about request and response)
+  'network.sendRequestWithoutSideEffects': async (body: {
     options: {
       request: Pick<DBRequest, 'url' | 'method' | 'headers'> & Partial<Pick<DBRequest, 'body' | 'authentication'>>;
       caCertficatePath: string;
@@ -141,7 +138,7 @@ const pluginToMainAPI = {
     const settingFollowRedirects = settings?.followRedirects ? 'on' : 'off';
     const { request: originRequest, caCertficatePath = null } = body.options;
     const response = await curlRequest({
-      requestId: `network-curl-request-${requestId}`,
+      requestId: `no-sideEffects-request-${requestId}`,
       req: {
         authentication: {},
         body: {},

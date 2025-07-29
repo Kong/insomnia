@@ -4,7 +4,7 @@ import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Response } from '../models/response';
 import type { Workspace } from '../models/workspace';
-import type { NodeCurlRequestOptions, NodeCurlResponseType } from '../plugins/context/network';
+import type { NodeCurlRequestOptions } from '../plugins/context/network';
 import type { Plugin } from '../plugins/index';
 import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
 import * as templating from './worker';
@@ -168,15 +168,8 @@ export default class BaseExtension {
       network: {
         sendRequest: async (request: Request, extraInfo?: { requestChain: string[] }): Promise<Response> =>
           fetchFromTemplateWorkerDatabase('network.sendRequest', { request, extraInfo }),
-        nodeCurlRequest: async (options: NodeCurlRequestOptions) => {
-          const resp = await fetch('insomnia-templating-worker-database://network.nodeCurlRequest', {
-            method: 'post',
-            body: JSON.stringify({ options }),
-          });
-
-          const body = await resp.json();
-          return body as NodeCurlResponseType;
-        },
+        sendRequestWithoutSideEffects: async (options: NodeCurlRequestOptions) =>
+          fetchFromTemplateWorkerDatabase('network.sendRequestWithoutSideEffects', { options }),
       },
       context: renderContext,
       meta: renderMeta,
