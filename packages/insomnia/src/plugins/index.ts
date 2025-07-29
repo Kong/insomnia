@@ -247,7 +247,7 @@ export function getBundlePluginMap() {
         // use require.resolve to reliably get the absolute path to the plugin's entry point
         bundlePluginPath = require.resolve(pluginName, { paths: [rootNodeModuleDir] });
       }
-      console.log(`[plugin] Loading bundled plugin ${pluginName} from ${bundlePluginPath}`);
+      console.log('[plugin] Loading bundled plugin %s from %s', pluginName, bundlePluginPath);
       const module = global.require(bundlePluginPath);
       bundlePluginMap[pluginName] = {
         name: pluginName,
