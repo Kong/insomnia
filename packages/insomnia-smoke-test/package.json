@@ -38,7 +38,8 @@
     "toidentifier": "^1.0.1",
     "uuid": "^9.0.1",
     "ws": "^8.18.1",
-    "xvfb-maybe": "^0.2.1"
+    "xvfb-maybe": "^0.2.1",
+    "socket.io": "^4.8.1"
   },
   "description": "[![Playwright](https://img.shields.io/badge/playwright-blue.svg?style=for-the-badge&logo=playwright)](https://github.com/microsoft/playwright)",
   "homepage": "https://github.com/Kong/insomnia#readme",
