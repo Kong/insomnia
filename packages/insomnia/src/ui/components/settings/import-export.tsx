@@ -786,7 +786,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                 {`Import to the "${projectName}" ${strings.project.singular}`}
               </Button>
 
-              {features.bulkImport.enabled && (
+              {features.bulkImport.enabled ? (
                 <Button
                   className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                   isDisabled={workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace)}
@@ -795,6 +795,14 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                   <Icon icon="file-import" />
                   {`Import projects to the "${organizationName}" ${strings.organization.singular}`}
                 </Button>
+              ) : (
+                <p className="text-sm">
+                  Need to import many projects at once? Reach out to{' '}
+                  <a className="text-[--color-surprise]" href="mailto:support@insomnia.rest">
+                    support@insomnia.rest
+                  </a>{' '}
+                  to have multi-project import enabled.
+                </p>
               )}
             </div>
           </div>
