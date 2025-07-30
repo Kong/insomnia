@@ -111,6 +111,7 @@ export const runScript = async ({
       data: mutatedContextObject.variables,
     },
     request: updatedRequest,
+    execution: mutatedContextObject.execution,
     settings: updatedSettings,
     clientCertificates: updatedCertificates,
     cookieJar: updatedCookieJar,
@@ -125,7 +126,7 @@ export const runScript = async ({
       data: mutatedContextObject.baseGlobals,
     },
     requestTestResults: mutatedContextObject.requestTestResults,
-    execution: mutatedContextObject.execution,
+    logs: scriptConsole.dumpLogsAsArray(),
     parentFolders: mutatedContextObject.parentFolders,
   };
 };
