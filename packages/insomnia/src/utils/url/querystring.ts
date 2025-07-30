@@ -257,27 +257,25 @@ export const flexibleEncodeComponent = (str = '', ignore = '') => {
   // will work), so it can change them back later
   // Example: will replace %40 with __LEAVE_40_LEAVE__, and we'll change
   // it back to %40 at the end.
+  const replacements: string[][] = [];
   for (const c of ignore) {
     const code = encodeURIComponent(c).replace('%', '');
+    const raw = `__RAW__${code}`;
+    replacements.push([raw, c]);
     const escaped = c.replace(ESCAPE_REGEX_MATCH, '\\$&');
     const re2 = new RegExp(escaped, 'g');
-    str = str.replace(re2, `__RAW__${code}`);
+    str = str.replace(re2, raw);
   }
 
   // Encode it
   str = encodeURIComponent(str);
 
   // Put back the raw version of the ignored chars
-  for (const match of str.match(/__RAW__([0-9a-fA-F]{2})/g) || []) {
-    const code = match.replace('__RAW__', '');
-    str = str.replace(match, decodeURIComponent(`%${code}`));
+  for (const [raw, c] of replacements) {
+    str = str.replace(new RegExp(raw, 'g'), c);
   }
 
   // Put back the encoded version of the ignored chars
-  for (const match of str.match(/__ENC__([0-9a-fA-F]{2})/g) || []) {
-    const code = match.replace('__ENC__', '');
-    str = str.replace(match, `%${code}`);
-  }
-
+  str = str.replace(/__ENC__([0-9a-fA-F]{2})/g, '%$1');
   return str;
 };

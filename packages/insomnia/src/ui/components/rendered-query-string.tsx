@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React, { type FC, useEffect, useState } from 'react';
+import React, { type FC, useCallback, useEffect, useState } from 'react';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
@@ -52,8 +52,11 @@ async function getQueryParamsFromAuth(
   return addApiKeyToParams(closestAuth);
 }
 
+const MAX_URL_LENGTH = 10 * 1024;
+
 export const RenderedQueryString: FC<Props> = ({ request }) => {
   const [previewString, setPreviewString] = useState(defaultPreview);
+  const [tooLong, setTooLong] = useState(false);
   const { handleRender } = useNunjucks();
 
   useEffect(() => {
@@ -93,11 +96,18 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
 
         const mergedParams = [...parameters, ...renderedAuthQueryParams];
         const qs = buildQueryStringFromParams(mergedParams, false, { encodeParams: request.settingEncodeUrl });
-        const fullUrl = joinUrlAndQueryString(url, qs);
+        let fullUrl = joinUrlAndQueryString(url, qs);
+        if (fullUrl.length > MAX_URL_LENGTH) {
+          setTooLong(true);
+          fullUrl = fullUrl.slice(0, MAX_URL_LENGTH);
+        } else {
+          setTooLong(false);
+        }
         const encoded = smartEncodeUrl(fullUrl, request.settingEncodeUrl, { strictNullHandling: true });
         setPreviewString(encoded === '' ? defaultPreview : encoded);
       } catch (error: unknown) {
         console.warn(error);
+        setTooLong(false);
         setPreviewString(defaultPreview);
       }
     };
@@ -112,6 +122,15 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
     request,
   ]);
 
+  const showTooLongWarning = useCallback(async () => {
+    if (tooLong) {
+      window.showAlert({
+        title: 'URL Too Long',
+        message: `Your URL is quite long, so only the first ${MAX_URL_LENGTH} characters were copied.`,
+      });
+    }
+  }, [tooLong]);
+
   const className = previewString === defaultPreview ? 'super-duper-faint' : 'selectable force-wrap';
 
   return (
@@ -124,6 +143,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         disabled={previewString === defaultPreview}
         title="Copy URL"
         confirmMessage=""
+        onClick={showTooLongWarning}
         className="sticky top-0 self-start"
       >
         <i className="fa fa-copy" />
