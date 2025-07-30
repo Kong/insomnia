@@ -32,6 +32,7 @@ import { useFetcher, useParams } from 'react-router';
 import { useRouteLoaderData } from 'react-router';
 
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
+import { usePlanData } from '../../hooks/use-plan';
 import type { ListWorkspacesLoaderData } from '../../routes/$organizationId.project.$projectId';
 import type { WorkspaceLoaderData } from '../../routes/$organizationId.project.$projectId.workspace.$workspaceId';
 import { AlertModal } from '../modals/alert-modal';
@@ -608,6 +609,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   const organizations = organizationData?.organizations || [];
 
   const { features } = useOrganizationPermissions();
+  const { isEnterprisePlan } = usePlanData();
 
   const untrackedProjectsFetcher = useFetcher<UntrackedProjectsLoaderData>();
 
@@ -790,7 +792,6 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
                 <Icon icon="file-import" />
                 {`Import to the "${projectName}" ${strings.project.singular}`}
               </Button>
-
               {features.bulkImport.enabled ? (
                 <Button
                   className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
@@ -800,7 +801,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
                   <Icon icon="file-import" />
                   {`Import projects to the "${organizationName}" ${strings.organization.singular}`}
                 </Button>
-              ) : (
+              ) : isEnterprisePlan ? (
                 <p className="text-sm">
                   Need to import many projects at once? Reach out to{' '}
                   <a className="text-[--color-surprise]" href="mailto:support@insomnia.rest">
@@ -808,7 +809,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
                   </a>{' '}
                   to have multi-project import enabled.
                 </p>
-              )}
+              ) : null}
             </div>
           </div>
         )}
