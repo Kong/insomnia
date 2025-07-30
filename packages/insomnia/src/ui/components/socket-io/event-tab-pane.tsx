@@ -57,26 +57,37 @@ interface UIEventListener extends SocketIOEventListener {
 export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
   const requestPatcher = useRequestPatcher();
 
-  const rows = useMemo(() => {
-    const listeners: UIEventListener[] = eventListeners?.length > 0 ? eventListeners : [createEmptyListener()];
-    const map = new Map<string, number>();
-    listeners.forEach(item => {
-      const count = map.get(item.eventName) || 0;
-      if (count !== 0) {
-        item.disabled = true;
-        item.warning = 'eventname must be unique';
-      } else {
-        item.disabled = false;
-        item.warning = '';
-        map.set(item.eventName, 1);
-      }
+  const updateRequest = (eventListeners: UIEventListener[]) => {
+    const arr = eventListeners.map(item => ({
+      id: item.id,
+      eventName: item.eventName,
+      desc: item.desc,
+      isOpen: item.isOpen,
+    }));
+    requestPatcher(request._id, {
+      eventListeners: arr,
     });
-    return listeners;
+  };
+
+  const rows = useMemo<UIEventListener[]>(() => {
+    const listeners = eventListeners?.length > 0 ? eventListeners : [createEmptyListener()];
+    const map = new Map<string, number>();
+    return listeners.map(item => {
+      const count = map.get(item.eventName) || 0;
+      let disabled = false;
+      let warning = '';
+      if (count !== 0) {
+        disabled = true;
+        warning = 'eventname must be unique';
+      }
+      map.set(item.eventName, count + 1);
+      return { ...item, disabled, warning };
+    });
   }, [eventListeners]);
 
   const handleDeleteEvent = (deleteItem: SocketIOEventListener) => {
     const newListeners = eventListeners.filter(item => item.id !== deleteItem.id);
-    requestPatcher(request._id, { eventListeners: newListeners });
+    updateRequest(newListeners);
     if (deleteItem.eventName && deleteItem.isOpen) {
       window.main.socketIO.event.off({
         requestId: request._id,
@@ -86,10 +97,10 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
   };
 
   const handleAddEvent = () => {
-    requestPatcher(request._id, { eventListeners: [...rows, createEmptyListener()] });
+    updateRequest([...rows, createEmptyListener()]);
   };
 
-  const handleChange = (newItem: SocketIOEventListener, changeKey: 'isOpen' | 'eventName' | 'desc') => {
+  const handleChange = (newItem: UIEventListener, changeKey: 'isOpen' | 'eventName' | 'desc') => {
     if (changeKey === 'isOpen' && newItem.eventName?.trim() === '') {
       // Socketio todo: focus input element
       return;
@@ -112,7 +123,7 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
       }
       return item;
     });
-    requestPatcher(request._id, { eventListeners: newListeners });
+    updateRequest(newListeners);
 
     if (changeKey === 'isOpen' && newItem.eventName) {
       if (newItem.isOpen) {

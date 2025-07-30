@@ -129,6 +129,11 @@ export const RequestRow: FC<{
             gRPC
           </span>
         )}
+        {isSocketIORequest(request) && (
+          <span className="flex w-10 flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] bg-[rgba(var(--color-notice-rgb),0.5)] text-[0.65rem] text-[--color-font-notice]">
+            IO
+          </span>
+        )}
         <span>{request.name}</span>
       </div>
     </li>
@@ -202,7 +207,11 @@ export const ExportRequestsModal = ({
 
   useEffect(() => {
     const createTreeNode = (child: Child): Node => {
-      const docIsRequest = isRequest(child.doc) || isWebSocketRequest(child.doc) || isGrpcRequest(child.doc);
+      const docIsRequest =
+        isRequest(child.doc) ||
+        isWebSocketRequest(child.doc) ||
+        isGrpcRequest(child.doc) ||
+        isSocketIORequest(child.doc);
       const children = child.children.map((child: Child) => createTreeNode(child));
       const totalRequests = +docIsRequest + children.reduce((acc, { totalRequests }) => acc + totalRequests, 0);
       return {
@@ -244,7 +253,8 @@ export const ExportRequestsModal = ({
   }
 
   const getSelectedRequestIds = (node: Node): string[] => {
-    const docIsRequest = isRequest(node.doc) || isWebSocketRequest(node.doc) || isGrpcRequest(node.doc);
+    const docIsRequest =
+      isRequest(node.doc) || isWebSocketRequest(node.doc) || isGrpcRequest(node.doc) || isSocketIORequest(node.doc);
     if (docIsRequest && node.selectedRequests === node.totalRequests) {
       return [node.doc._id];
     }

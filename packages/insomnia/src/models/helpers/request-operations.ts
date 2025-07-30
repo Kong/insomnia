@@ -44,6 +44,11 @@ export function update<T extends object>(request: T, patch: Partial<T> = {}): Pr
     return models.webSocketRequest.update(request, patch);
   }
   // @ts-expect-error -- TSCONVERSION
+  if (isSocketIORequest(request)) {
+    // @ts-expect-error -- TSCONVERSION
+    return models.socketIORequest.update(request, patch);
+  }
+  // @ts-expect-error -- TSCONVERSION
   return models.request.update(request, patch);
 }
 
@@ -57,6 +62,11 @@ export function duplicate<T extends object>(request: T, patch: Partial<T> = {}):
   if (isWebSocketRequest(request)) {
     // @ts-expect-error -- TSCONVERSION
     return models.webSocketRequest.duplicate(request, patch);
+  }
+  // @ts-expect-error -- TSCONVERSION
+  if (isSocketIORequest(request)) {
+    // @ts-expect-error -- TSCONVERSION
+    return models.socketIORequest.duplicate(request, patch);
   }
   // @ts-expect-error -- TSCONVERSION
   return models.request.duplicate(request, patch);
