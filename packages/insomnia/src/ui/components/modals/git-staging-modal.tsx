@@ -23,8 +23,8 @@ import type {
 import { DiffEditor } from '../diff-view-editor';
 import { ConfigLink } from '../github-app-config-link';
 import { Icon } from '../icon';
-import { showModal } from '.';
 import { AlertModal } from './alert-modal';
+import { showModal } from './index';
 
 export const GitStagingModal: FC<{ onClose: () => void }> = ({ onClose }) => {
   const { organizationId, projectId, workspaceId } = useParams() as {
@@ -80,11 +80,11 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({ onClose }) => {
     );
   }
 
-  function undoUnstagedChanges(paths: string[]) {
+  function undoUnstagedChanges(paths: string[], filesCount: number) {
     showModal(AlertModal, {
-      message:
-        'Are you sure you want to undo your changes? This action cannot be undone and will revert all changes made since the last commit that are unstaged.',
-      title: 'Undo changes',
+      message: `Are you sure you want to discard ${filesCount === 1 ? 'your changes to this file' : `your changes to these ${filesCount} files`}? This action cannot be undone and will discard any changes since your last commit.`,
+      title: 'Discard changes',
+      okLabel: 'Discard',
       onConfirm: () => {
         undoUnstagedChangesFetcher.submit(
           {
@@ -316,7 +316,10 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({ onClose }) => {
                               slot={null}
                               name="Discard all changes"
                               onPress={() => {
-                                undoUnstagedChanges(changes.unstaged.map(entry => entry.path));
+                                undoUnstagedChanges(
+                                  changes.unstaged.map(entry => entry.path),
+                                  changes.unstaged.length,
+                                );
                               }}
                             >
                               <svg
@@ -386,7 +389,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({ onClose }) => {
                                       slot={null}
                                       name="Discard change"
                                       onPress={() => {
-                                        undoUnstagedChanges([item.entry.path]);
+                                        undoUnstagedChanges([item.entry.path], 1);
                                       }}
                                     >
                                       <svg
