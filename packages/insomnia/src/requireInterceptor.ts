@@ -28,17 +28,18 @@ export const requireInterceptor = (moduleName: string): any => {
   if (
     [
       // node.js modules
-      'path',
       'assert',
       'buffer',
-      'util',
-      'url',
+      'crypto',
+      'events',
+      'path',
       'punycode',
       'querystring',
-      'string_decoder',
       'stream',
+      'string_decoder',
       'timers',
-      'events',
+      'url',
+      'util',
       // follows should be npm modules
       // but they are moved to here to avoid introducing additional dependencies
     ].includes(moduleName)
@@ -61,6 +62,9 @@ export const requireInterceptor = (moduleName: string): any => {
       'xml2js',
     ].includes(moduleName)
   ) {
+    if (moduleName == "crypto-js") {
+      console.warn("crypto-js has been decommissioned in favor of NodeJS native \"crypto\" which is available through require. Consider using it instead as support for crypto-js will soon be dropped.")
+    }
     const externalModule = externalModules.get(moduleName);
     if (!externalModule) {
       throw new Error(`no module is found for "${moduleName}"`);
