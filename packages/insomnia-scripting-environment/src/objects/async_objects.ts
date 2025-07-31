@@ -55,12 +55,6 @@ export class ProxiedPromise<T> extends Promise<T> {
     }
     return promise;
   }
-
-  // TODO: Promise.any seems not supported for the compile target (es2021)
-
-  static withResolvers() {
-    return super.reject("'Promise.withResolvers' not supported");
-  }
 }
 
 /** @ignore */

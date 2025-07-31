@@ -112,7 +112,7 @@ export class MemClient {
 
   async writeFile(
     filePath: string,
-    data: Buffer | string,
+    data: Buffer<ArrayBuffer> | string,
     options: BufferEncoding | { encoding?: BufferEncoding; flag?: string } = {},
   ) {
     filePath = path.normalize(filePath);

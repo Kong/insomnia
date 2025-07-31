@@ -12,7 +12,14 @@
     "module": "ESNext",
     "sourceMap": true,
     /* Runs in the DOM */
-    "lib": ["ES2023", "DOM.Iterable", "DOM"],
+    "lib": [
+      "ES2024",
+      "ESNext.Array",
+      "ESNext.Collection",
+      "ESNext.Iterator",
+      "DOM.Iterable",
+      "DOM"
+    ],
     "jsx": "react",
     /* Strictness */
     "strict": true,
