@@ -4,7 +4,7 @@ import os from 'node:os';
 import iconv from 'iconv-lite';
 import { v4 as uuidv4 } from 'uuid';
 
-import { RESPONSE_CODE_REASONS } from '../common/constants';
+import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
 import { database as db } from '../common/database';
 import * as models from '../models';
 import type { CloudProviderCredential } from '../models/cloud-credential';
@@ -14,6 +14,7 @@ import type { Response } from '../models/response';
 import { readCurlResponse } from '../models/response';
 import type { Workspace } from '../models/workspace';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
+import { getPluginCommonContext, type Plugin, type PluginAction } from '../plugins';
 import { curlRequest } from './network/libcurl-promise';
 
 export const resolveDbByKey = async (request: Request) => {
@@ -23,8 +24,13 @@ export const resolveDbByKey = async (request: Request) => {
   const withLowercasedKeys = Object.fromEntries(
     Object.entries(pluginToMainAPI).map(([key, value]) => [key.toLowerCase(), value]),
   );
-  const result = await withLowercasedKeys[url.host.toLowerCase()](body);
-  return new Response(JSON.stringify(result));
+  try {
+    const result = await withLowercasedKeys[url.host.toLowerCase()](body);
+    return new Response(JSON.stringify(result));
+  } catch (err) {
+    console.error(`Error resolving db by key ${url.host}:`, err);
+    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+  }
 };
 
 // These are exposed to the templating worker and can be used by plugins from context.util
@@ -189,5 +195,22 @@ const pluginToMainAPI = {
       },
     };
     return new Response(JSON.stringify(result));
+  },
+  'plugin.executeMainAction': async (body: { params: any; pluginName: string; actionName: string }) => {
+    const { params, pluginName, actionName } = body;
+    const appBundlePluginNames = getAppBundlePlugins().map(p => p.name);
+    if (appBundlePluginNames.includes(pluginName)) {
+      //TODO add plugin cache
+      const module: Plugin['module'] = await require(pluginName);
+      const exportedMainActions = module?.unsafePluginMainActions as PluginAction[];
+      if (exportedMainActions) {
+        const pluginMainAction = exportedMainActions.find(action => action.name === actionName);
+        if (pluginMainAction) {
+          const commonContext = getPluginCommonContext({ name: pluginName });
+          return pluginMainAction.action(commonContext, params);
+        }
+      }
+    }
+    throw new Error(`Unsupported main action ${actionName} for plugin ${pluginName}`);
   },
 };

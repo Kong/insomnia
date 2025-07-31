@@ -16,7 +16,6 @@ import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../network/network';
-import { isPreBundlePluginTemplateTag } from '../plugins';
 import * as templating from '../templating';
 import { RenderError } from '../templating/render-error';
 import type {
@@ -300,9 +299,7 @@ export async function render<T>(
         const pluginsAreRestrictedToRunInWorker = settings?.pluginsAllowElevatedAccess === false;
         const currentProcessIsRendererAndPluginsAreRestricted =
           process.type === 'renderer' && pluginsAreRestrictedToRunInWorker;
-        const inputIsEnterprisePluginTag = await isPreBundlePluginTemplateTag(input);
-        const shouldUseWorker = currentProcessIsRendererAndPluginsAreRestricted && !inputIsEnterprisePluginTag;
-        const renderFork = shouldUseWorker
+        const renderFork = currentProcessIsRendererAndPluginsAreRestricted
           ? (await import('../ui/worker/templating-handler')).renderInWorker
           : renderInThisProcess;
 

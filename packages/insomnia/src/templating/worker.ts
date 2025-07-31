@@ -2,8 +2,11 @@ import { localTemplateTags } from 'insomnia/src/templating/local-template-tags';
 import type { Environment } from 'nunjucks';
 import nunjucks from 'nunjucks/browser/nunjucks';
 
-import BaseExtensionWorker from './base-extension-worker';
+import { getAppBundlePlugins } from '../common/constants';
+import type { Plugin, TemplateTag } from '../plugins';
+import BaseExtensionWorker, { fetchFromTemplateWorkerDatabase } from './base-extension-worker';
 import { extractUndefinedVariableKey, RenderError } from './render-error';
+import type { PluginTemplateTag } from './types';
 
 // Some constants
 export const RENDER_ALL = 'all';
@@ -120,6 +123,36 @@ export async function getTagDefinitions() {
     }));
 }
 
+export async function getBundlePluginTemplateTags(): Promise<TemplateTag[]> {
+  const appBundlePlugins = getAppBundlePlugins();
+  const bundlePluginTemplateTags: TemplateTag[] = [];
+  for (const bundlePlugin of appBundlePlugins) {
+    const { name: pluginName, version: pluginVersion } = bundlePlugin;
+    try {
+      const module: Plugin['module'] = await import(pluginName);
+      const pluginExportedTemplateTags: PluginTemplateTag[] = module?.templateTags || [];
+      const pluginTemplateTags: TemplateTag[] = pluginExportedTemplateTags.map(tt => ({
+        plugin: {
+          name: pluginName,
+          description: 'Bundle plugin',
+          version: pluginVersion,
+          directory: '',
+          config: {
+            disabled: false,
+          },
+          module,
+        },
+        templateTag: tt,
+      }));
+      bundlePluginTemplateTags.push(...pluginTemplateTags);
+    } catch (err) {
+      console.error(`[plugin] Failed to load bundled plugin ${pluginName}`, err);
+    }
+  }
+
+  return [];
+}
+
 async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: boolean): Promise<NunjucksEnvironment> {
   let throwOnUndefined = true;
   if (ignoreUndefinedEnvVariable) {
@@ -173,7 +206,9 @@ async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: bool
   nunjucksEnvironment.addGlobal('range', undefined);
   nunjucksEnvironment.addGlobal('cycler', undefined);
   nunjucksEnvironment.addGlobal('joiner', undefined);
-  const allExtensions = [...localTemplateTags];
+  const bundlePluginTemplateTags = await getBundlePluginTemplateTags();
+
+  const allExtensions = [...localTemplateTags, ...bundlePluginTemplateTags];
 
   for (const extension of allExtensions) {
     const { templateTag, plugin } = extension;

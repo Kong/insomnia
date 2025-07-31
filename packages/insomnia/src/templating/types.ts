@@ -242,6 +242,9 @@ export interface PluginTemplateTagContext {
       };
     };
   };
+  plugin?: {
+    executeMainAction: (actionName: string, ...args: any[]) => Promise<any>;
+  };
 }
 
 export interface PluginTemplateTagActionContext {
