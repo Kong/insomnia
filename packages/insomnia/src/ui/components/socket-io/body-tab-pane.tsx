@@ -293,14 +293,14 @@ export const SocketIOBodyContent = ({
         <CodeEditor
           id="socket-io-message-editor"
           showPrettifyButton={!readonly}
-          uniquenessKey={`${tabs[0].id}:socket-io-payload`}
-          mode={tabs[0].mode}
+          uniquenessKey={`${tabs?.[0]?.id}:socket-io-payload`}
+          mode={tabs?.[0]?.mode}
           readOnly={readonly}
-          ref={ref => editorsRef.current?.set(tabs[0].id, ref)}
-          onChange={readonly ? undefined : value => handleChange?.(tabs[0].id, value)}
+          ref={ref => editorsRef.current?.set(tabs?.[0]?.id, ref)}
+          onChange={readonly ? undefined : value => handleChange?.(tabs?.[0]?.id, value)}
           enableNunjucks
           className="w-full"
-          defaultValue={tabs[0]?.value}
+          defaultValue={tabs?.[0]?.value}
           updateFilter={updateFilter}
           filterHistory={filterHistory}
           filter={filter}

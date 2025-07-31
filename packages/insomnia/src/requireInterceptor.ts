@@ -3,7 +3,7 @@ import chai from 'chai';
 import * as cheerio from 'cheerio';
 import cryptojs from 'crypto-js';
 import * as csvParseSync from 'csv-parse/sync';
-import lodash from 'lodash';
+import esToolkit from 'es-toolkit/compat';
 import moment from 'moment';
 import tv4 from 'tv4';
 import * as uuid from 'uuid';
@@ -17,7 +17,7 @@ const externalModules = new Map<string, object>([
   ['cheerio', cheerio],
   ['crypto-js', cryptojs],
   ['csv-parse/lib/sync', csvParseSync],
-  ['lodash', lodash],
+  ['lodash', esToolkit],
   ['moment', moment],
   ['tv4', tv4],
   ['uuid', uuid],

@@ -1,6 +1,7 @@
 import { parse, stringify } from 'yaml';
 
 import * as models from '../models';
+import { WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP } from '../models';
 import type { ApiSpec } from '../models/api-spec';
 import type { CookieJar } from '../models/cookie-jar';
 import { type Environment, maskVaultEnvironmentData } from '../models/environment';
@@ -23,6 +24,7 @@ import {
   EXPORT_TYPE_MOCK_SERVER,
   EXPORT_TYPE_REQUEST,
   EXPORT_TYPE_REQUEST_GROUP,
+  EXPORT_TYPE_SOCKETIO_REQUEST,
   EXPORT_TYPE_UNIT_TEST,
   EXPORT_TYPE_UNIT_TEST_SUITE,
   EXPORT_TYPE_WEBSOCKET_REQUEST,
@@ -411,7 +413,7 @@ function getCollection(
                   },
                 ),
                 type: 'SocketIORequest',
-                _type: EXPORT_TYPE_REQUEST,
+                _type: EXPORT_TYPE_SOCKETIO_REQUEST,
                 name: item.name || 'Imported Socket.IO Request',
                 parentId,
                 url: data.url,
@@ -487,7 +489,12 @@ export async function getInsomniaV5DataExport({
       throw new Error('Workspace not found');
     }
 
-    const workspaceDescendants = await database.withDescendants(workspace);
+    const workspaceDescendants = await database.withDescendants(
+      workspace,
+      null,
+      [],
+      WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP,
+    );
 
     const exportableTypes = Object.values(models.MODELS_BY_EXPORT_TYPE).map(model => model.type);
 
@@ -620,6 +627,7 @@ export async function getInsomniaV5DataExport({
               headers: resource.headers,
               parameters: resource.parameters,
               pathParameters: resource.pathParameters,
+              eventListeners: resource.eventListeners,
             };
             collection.push(socketIORequest);
           } else if (models.grpcRequest.isGrpcRequest(resource)) {

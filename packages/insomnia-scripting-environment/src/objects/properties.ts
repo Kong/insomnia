@@ -1,6 +1,5 @@
 import clone from 'clone';
 import equal from 'deep-equal';
-import _ from 'lodash';
 
 import { getInterpolator } from './interpolator';
 
@@ -26,7 +25,7 @@ export class PropertyBase {
   }
 
   static propertyUnprefixMeta(_value: any, key: string) {
-    return _.trimStart(key, '_');
+    return key.startsWith('_') ? key.slice(1) : key;
   }
 
   // TODO: temporarily disable this

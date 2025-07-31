@@ -150,7 +150,7 @@ const RealtimeActiveResponsePane: FC<{
       <PaneHeader className="row-spaced">
         <div className="no-wrap scrollable scrollable--no-bars pad-left">
           {isSocketIOResponse(response) ? (
-            <div className={`${readyState ? 'bg-success' : 'bg-danger'} px-2 py-1`}>
+            <div data-testid="response-status-tag" className={`${readyState ? 'bg-success' : 'bg-danger'} px-2 py-1`}>
               {readyState ? 'Connected' : 'Disconnected'}
             </div>
           ) : (

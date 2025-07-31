@@ -58,10 +58,9 @@ export async function registerInsomniaProtocols() {
 
       // here we use libcurl to forward the SSE request because the SSE request sent by net.fetch can not be disconnected correctly in some cases
       // see https://github.com/electron/electron/issues/47097
-      return await new Promise((resolve, reject) => {
+      return await new Promise(async (resolve, reject) => {
         try {
-          const sessionId = new URLSearchParams(url.search).get('sessionId');
-
+          const { id: sessionId } = await _userSession.get();
           const curl = new Curl();
           curl.setOpt(Curl.option.URL, urlStr);
           curl.setOpt(Curl.option.ACCEPT_ENCODING, '');

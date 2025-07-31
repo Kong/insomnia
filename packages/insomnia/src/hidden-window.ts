@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/electron/renderer';
+import * as _ from 'es-toolkit/compat';
 import { SENTRY_OPTIONS } from 'insomnia/src/common/sentry';
-import * as _ from 'lodash';
 
 import {
   initInsomniaObject,

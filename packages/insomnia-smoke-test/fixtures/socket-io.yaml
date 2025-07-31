@@ -1,0 +1,42 @@
+type: collection.insomnia.rest/5.0
+name: Socket.io Collection
+meta:
+  id: wrk_035b5b6b77784becbc88ae771deb8225
+  created: 1753709181016
+  modified: 1753709181016
+  description: ""
+collection:
+  - url: http://localhost:4020
+    name: Socket.IO Request
+    meta:
+      id: socketio-req_46df89d2b8d24d859778670e952f7e4e
+      created: 1753709130534
+      modified: 1753757257862
+      description: ""
+      sortKey: -1753709671501
+    settings:
+      encodeUrl: true
+      cookies:
+        send: true
+        store: true
+    headers:
+      - name: User-Agent
+        value: insomnia/11.4.0-beta.0
+    eventListeners:
+      - id: socketIO-event_a442c354cd434df981547a1532d2bcb2
+        eventName: eventname
+        desc: this is a listener
+        isOpen: false
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_38877b3f330148c1b3d14c7ce3e0ceab
+    created: 1753709124464
+    modified: 1753709124464
+environments:
+  name: Base Environment
+  meta:
+    id: env_3116f732b56e419f82c7f46e3a90d9b9
+    created: 1753709124464
+    modified: 1753709124464
+    isPrivate: false

@@ -680,3 +680,102 @@ describe('withAncestors()', () => {
     await expect(db.withAncestors(grpGrpcReq, [models.workspace.type])).resolves.toStrictEqual([grpGrpcReq]);
   });
 });
+
+describe('withDescendants()', () => {
+  it('should return specified model and all children', async () => {
+    const project = await models.project.create();
+    const workspace = await models.workspace.create({
+      _id: 'w1',
+      parentId: project._id,
+    });
+    const cookieJar1 = await models.cookieJar.create({
+      _id: 'j1',
+      parentId: workspace._id,
+      cookies: [
+        // @ts-expect-error -- TSCONVERSION
+        {
+          id: '1',
+          key: 'foo',
+          value: '1',
+        },
+        // @ts-expect-error -- TSCONVERSION
+        {
+          id: 'j1_1',
+          key: 'j1',
+          value: '1',
+        },
+      ],
+    });
+    const cookieJar2 = await models.cookieJar.create({
+      _id: 'j2',
+      parentId: workspace._id,
+      cookies: [
+        // @ts-expect-error -- TSCONVERSION
+        {
+          id: '1',
+          key: 'foo',
+          value: '2',
+        },
+        // @ts-expect-error -- TSCONVERSION
+        {
+          id: 'j2_1',
+          key: 'j2',
+          value: '2',
+        },
+      ],
+    });
+    const folder1 = await models.requestGroup.create({
+      _id: 'grp1',
+      parentId: workspace._id,
+    });
+    const folder2 = await models.requestGroup.create({
+      _id: 'grp2',
+      parentId: folder1._id,
+    });
+    const request1 = await models.request.create({
+      _id: 'req1',
+      parentId: workspace._id,
+    });
+    const request2 = await models.request.create({
+      _id: 'req2',
+      parentId: folder1._id,
+    });
+
+    await expect(
+      db.withDescendants(workspace, null, [], {
+        Workspace: ['Request', 'CookieJar'],
+      }),
+      'Should return workspace with only top level requests and cookie jars',
+    ).resolves.toEqual([workspace, request1, cookieJar1, cookieJar2]);
+
+    await expect(
+      db.withDescendants(workspace, null, [], {
+        Workspace: ['RequestGroup'],
+        RequestGroup: ['RequestGroup'],
+      }),
+      'Should return workspace with all request groups and requests',
+    ).resolves.toEqual([workspace, folder1, folder2]);
+
+    await expect(
+      db.withDescendants(workspace, null, [], {
+        Workspace: ['RequestGroup', 'Request'],
+        RequestGroup: ['RequestGroup', 'Request'],
+      }),
+      'Should return workspace with all request groups and requests',
+    ).resolves.toEqual([workspace, folder1, request1, folder2, request2]);
+
+    await expect(
+      db.withDescendants(workspace, null, [], {
+        Workspace: ['RequestGroup'],
+      }),
+      'Should return only workspace and top request group',
+    ).resolves.toEqual([workspace, folder1]);
+
+    await expect(
+      db.withDescendants(workspace, null, [], {
+        RequestGroup: ['RequestGroup', 'Request'],
+      }),
+      'Should return only workspace because no workspace descendants are requested',
+    ).resolves.toEqual([workspace]);
+  });
+});

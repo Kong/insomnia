@@ -1,6 +1,6 @@
 import { appendFile } from 'node:fs/promises';
 
-import * as _ from 'lodash';
+import * as _ from 'es-toolkit/compat';
 
 import { initInsomniaObject, InsomniaObject } from '../../insomnia-scripting-environment/src/objects';
 import {

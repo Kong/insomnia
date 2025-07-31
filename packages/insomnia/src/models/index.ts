@@ -259,3 +259,25 @@ export const MODELS_BY_EXPORT_TYPE: Record<string, any> = {
   [EXPORT_TYPE_PROTO_FILE]: protoFile,
   [EXPORT_TYPE_PROTO_DIRECTORY]: protoDirectory,
 };
+
+export const WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP: Record<string, string[]> = {
+  [workspace.type]: [
+    requestGroup.type,
+    request.type,
+    grpcRequest.type,
+    webSocketRequest.type,
+    cookieJar.type,
+    environment.type,
+    apiSpec.type,
+    mockServer.type,
+    unitTestSuite.type,
+    protoDirectory.type,
+    protoFile.type,
+  ],
+  [requestGroup.type]: [requestGroup.type, request.type, grpcRequest.type, webSocketRequest.type],
+  [webSocketRequest.type]: [webSocketPayload.type],
+  [mockServer.type]: [mockRoute.type],
+  [environment.type]: [environment.type],
+  [unitTestSuite.type]: [unitTest.type],
+  [protoDirectory.type]: [protoFile.type],
+};

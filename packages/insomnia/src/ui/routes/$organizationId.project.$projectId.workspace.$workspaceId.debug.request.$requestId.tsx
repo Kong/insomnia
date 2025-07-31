@@ -189,7 +189,7 @@ export const loader: LoaderFunction = async ({
   }
 
   if (isSocketIORequest(activeRequest)) {
-    const socketIOPayload = await models.socketIOPayload.getByParentId(requestId);
+    const socketIOPayload = await models.socketIOPayload.getOrCreateByParentId(requestId);
     return {
       activeRequest,
       activeRequestMeta,
@@ -285,7 +285,6 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
         headers: defaultHeaders,
       })
     )._id;
-    await models.socketIOPayload.create({ parentId: activeRequestId });
   }
   if (requestType === 'From Curl') {
     if (!req) {
