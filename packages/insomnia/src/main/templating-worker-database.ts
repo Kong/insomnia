@@ -14,8 +14,11 @@ import type { Response } from '../models/response';
 import { readCurlResponse } from '../models/response';
 import type { Workspace } from '../models/workspace';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
-import { getPluginCommonContext, type Plugin, type PluginAction } from '../plugins';
+import { getPluginCommonContext, type Plugin, type TemplateTag } from '../plugins';
+import type { PluginTemplateTag, PluginTemplateTagContext } from '../templating/types';
 import { curlRequest } from './network/libcurl-promise';
+
+const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
 
 export const resolveDbByKey = async (request: Request) => {
   const url = new URL(request.url);
@@ -31,6 +34,20 @@ export const resolveDbByKey = async (request: Request) => {
     console.error(`Error resolving db by key ${url.host}:`, err);
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
+};
+
+const getBundlePluginModule = (pluginName: string): Plugin['module'] => {
+  if (pluginName in Object.keys(bundlePluginModuleMap)) {
+    return bundlePluginModuleMap[pluginName];
+  }
+  try {
+    const module = require(pluginName) as Plugin['module'];
+    bundlePluginModuleMap[pluginName] = module;
+    return module;
+  } catch (err) {
+    console.error(`Failed to load bundled plugin ${pluginName}`, err);
+  }
+  return {};
 };
 
 // These are exposed to the templating worker and can be used by plugins from context.util
@@ -196,21 +213,55 @@ const pluginToMainAPI = {
     };
     return new Response(JSON.stringify(result));
   },
-  'plugin.executeMainAction': async (body: { params: any; pluginName: string; actionName: string }) => {
-    const { params, pluginName, actionName } = body;
+  // used to generate the template tags for the bundle plugins and send back to the web worker
+  'plugin.getBundlePluginTemplateTags': async () => {
+    const appBundlePlugins = getAppBundlePlugins();
+    const appBundlePluginTemplateTags: TemplateTag[] = [];
+    appBundlePlugins.forEach(p => {
+      const { name: pluginName, version: pluginVersion } = p;
+      try {
+        const module = getBundlePluginModule(pluginName);
+        const pluginExportedTemplateTags: PluginTemplateTag[] = module?.templateTags || [];
+        const pluginTemplateTags: TemplateTag[] = pluginExportedTemplateTags.map(tt => ({
+          plugin: {
+            name: pluginName,
+            description: 'Bundle plugin',
+            version: pluginVersion,
+            directory: '',
+            config: {
+              disabled: false,
+            },
+            module,
+          },
+          templateTag: tt,
+        }));
+        appBundlePluginTemplateTags.push(...pluginTemplateTags);
+      } catch (err) {
+        console.error(`[plugin] Failed to load bundled plugin ${pluginName}`, err);
+      }
+    });
+    return appBundlePluginTemplateTags;
+  },
+  // execute the plugin tag with the given parameters
+  'plugin.executeTag': async (body: {
+    args: any[];
+    pluginName: string;
+    tagName: string;
+    context: Pick<PluginTemplateTagContext, 'meta' | 'renderPurpose' | 'context'>;
+  }) => {
+    const { tagName, pluginName, args, context: originContext } = body;
+    const { meta, renderPurpose, context } = originContext;
     const appBundlePluginNames = getAppBundlePlugins().map(p => p.name);
     if (appBundlePluginNames.includes(pluginName)) {
-      //TODO add plugin cache
-      const module: Plugin['module'] = await require(pluginName);
-      const exportedMainActions = module?.unsafePluginMainActions as PluginAction[];
-      if (exportedMainActions) {
-        const pluginMainAction = exportedMainActions.find(action => action.name === actionName);
-        if (pluginMainAction) {
-          const commonContext = getPluginCommonContext({ name: pluginName });
-          return pluginMainAction.action(commonContext, params);
-        }
+      const module = getBundlePluginModule(pluginName);
+      const templateTags = module?.templateTags || [];
+      const targetTag = templateTags.find(tag => tag.name === tagName);
+      if (targetTag) {
+        const commonContext = getPluginCommonContext({ plugin: { name: pluginName } });
+        // @ts-expect-error -- TSCONVERSION: Bundle plugin tag context do not have node functions in utils
+        return targetTag.run({ meta, renderPurpose, context, ...commonContext }, ...args);
       }
     }
-    throw new Error(`Unsupported main action ${actionName} for plugin ${pluginName}`);
+    throw new Error(`Unsupported tag ${tagName} for plugin ${pluginName}`);
   },
 };

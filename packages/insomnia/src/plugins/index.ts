@@ -17,7 +17,7 @@ import type { Workspace } from '../models/workspace';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
-import type { PluginTemplateTag } from '../templating/types';
+import type { PluginTemplateTag, PluginTemplateTagContext, RenderPurpose } from '../templating/types';
 import type { PluginTheme } from './misc';
 import themes from './themes';
 
@@ -361,9 +361,15 @@ export async function getTemplateTags(): Promise<TemplateTag[]> {
   return extensions;
 }
 
-export function getPluginCommonContext(plugin: Pick<Plugin, 'name'>) {
+export function getPluginCommonContext({
+  plugin,
+  renderPurpose,
+}: {
+  plugin: Pick<Plugin, 'name'>;
+  renderPurpose?: RenderPurpose;
+}) {
   return {
-    ...pluginApp.init('no-render'),
+    ...pluginApp.init(renderPurpose),
     ...pluginStore.init(plugin),
     ...pluginNetwork.init(),
     util: {
@@ -378,6 +384,10 @@ export function getPluginCommonContext(plugin: Pick<Plugin, 'name'>) {
             ]);
             return ancestors.filter(doc => doc._id !== request._id);
           },
+        },
+        cloudCredential: {
+          getById: models.cloudCredential.getById,
+          update: models.cloudCredential.update,
         },
         workspace: {
           getById: models.workspace.getById,

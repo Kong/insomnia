@@ -29,7 +29,7 @@ export function decodeEncoding<T>(value: T) {
 
   return value;
 }
-const fetchFromTemplateWorkerDatabase = async (url: string, body: any) => {
+export const fetchFromTemplateWorkerDatabase = async (url: string, body: any) => {
   const resp = await fetch('insomnia-templating-worker-database://' + url, {
     method: 'post',
     body: JSON.stringify(body),
@@ -225,14 +225,6 @@ export default class BaseExtension {
             get: async () => fetchFromTemplateWorkerDatabase('settings.get', {}),
           },
         },
-      },
-      plugin: {
-        executeMainAction: (actionName: string, params) =>
-          fetchFromTemplateWorkerDatabase('plugin.executeMainAction', {
-            pluginName: this._plugin?.name,
-            actionName,
-            params,
-          }),
       },
     };
     let result;
