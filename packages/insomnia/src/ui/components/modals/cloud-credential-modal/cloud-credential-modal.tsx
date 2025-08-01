@@ -9,7 +9,7 @@ import {
   type CloudProviderName,
   getProviderDisplayName,
 } from '../../../../models/cloud-credential';
-import { executePluginRouterAction } from '../../../../plugins';
+import { executePluginMainAction } from '../../../../plugins';
 import { Icon } from '../../icon';
 import { AWSCredentialForm } from './aws-credential-form';
 import { GCPCredentialForm } from './gcp-credential-form';
@@ -64,7 +64,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
       const parsedURL = new URL(manulInputUrl);
       const code = parsedURL.searchParams.get('code');
       if (code && typeof code === 'string') {
-        const authResult = await executePluginRouterAction({
+        const authResult = await executePluginMainAction({
           pluginName: getBundlePluginByFeature(FEATURE_NAME_EXTERNAL_VAULT)?.name || '',
           actionName: 'exchangeCode',
           params: { provider: 'azure', code },

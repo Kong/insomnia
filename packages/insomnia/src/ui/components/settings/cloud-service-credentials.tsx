@@ -9,7 +9,7 @@ import {
   type CloudProviderName,
   getProviderDisplayName,
 } from '../../../models/cloud-credential';
-import { executePluginRouterAction } from '../../../plugins';
+import { executePluginMainAction } from '../../../plugins';
 import { getBundlePlugins } from '../../../plugins';
 import { usePlanData } from '../../hooks/use-plan';
 import { useRootLoaderData } from '../../routes/root';
@@ -104,7 +104,7 @@ export const CloudServiceCredentialList = () => {
 
   const handleCreateCloudServiceCredential = async (key: CloudProviderName) => {
     if (key === 'azure') {
-      const { authUrl, error } = await executePluginRouterAction({
+      const { authUrl, error } = await executePluginMainAction({
         pluginName: externalVaultPluginName,
         actionName: 'openAuthUrl',
         params: { provider: 'azure' },
@@ -253,7 +253,7 @@ export const CloudServiceCredentialList = () => {
           <button
             className="pointer mb-[--padding-sm] ml-[--padding-sm] flex h-[--line-height-xs] w-32 items-center gap-2 rounded-[--radius-md] border border-solid border-[--hl-lg] px-[--padding-md] hover:bg-[--hl-xs]"
             onClick={async () =>
-              await executePluginRouterAction({
+              await executePluginMainAction({
                 pluginName: externalVaultPluginName,
                 actionName: 'clearCache',
               })

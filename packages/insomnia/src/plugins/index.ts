@@ -36,8 +36,8 @@ export interface Plugin {
     requestActions?: OmitInternal<RequestAction>[];
     workspaceActions?: OmitInternal<WorkspaceAction>[];
     documentActions?: OmitInternal<DocumentAction>[];
-    // Internal use only, not for public plugins
-    unsafePluginRouterActions?: OmitInternal<PluginAction>[];
+    // Plugin actions which will be executed in main process. For internal use only, not for public plugins
+    unsafePluginMainActions?: OmitInternal<PluginAction>[];
   };
 }
 
@@ -362,23 +362,11 @@ export async function getTemplateTags(): Promise<TemplateTag[]> {
   return extensions;
 }
 
-export async function isPreBundlePluginTemplateTag(input: string) {
-  if (input.startsWith('{%') && input.endsWith('%}')) {
-    const bundlePlugins = await getBundlePlugins();
-    const isTagAllowed = bundlePlugins.some(p => {
-      const templateTags = p.module.templateTags || [];
-      return templateTags.some(tt => typeof tt.validate === 'function' && tt.validate(input));
-    });
-    return isTagAllowed;
-  }
-  return false;
-}
-
 export async function getPluginRouterActions(): Promise<PluginAction[]> {
   let extensions: PluginAction[] = [];
 
   for (const plugin of await getActivePlugins()) {
-    const actions = plugin.module.unsafePluginRouterActions || [];
+    const actions = plugin.module.unsafePluginMainActions || [];
     extensions = [
       ...extensions,
       ...actions.map(p => ({
@@ -391,7 +379,9 @@ export async function getPluginRouterActions(): Promise<PluginAction[]> {
   return extensions;
 }
 
-export async function executePluginRouterAction({
+// This is for insomnia UI to reach out to bundled plugin functions and executed under node(main) context
+// It should only be available to bundled plugins, not for public plugins
+export async function executePluginMainAction({
   pluginName,
   actionName,
   context,
@@ -408,7 +398,7 @@ export async function executePluginRouterAction({
     if (!plugin) {
       throw new Error(`Plugin ${pluginName} not found`);
     }
-    const action = plugin.module.unsafePluginRouterActions?.find(p => p.name === actionName);
+    const action = plugin.module.unsafePluginMainActions?.find(p => p.name === actionName);
     if (!action) {
       throw new Error(`Action ${actionName} not found in plugin ${pluginName}`);
     }
