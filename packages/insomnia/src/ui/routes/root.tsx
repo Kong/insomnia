@@ -9,7 +9,7 @@ import * as models from '../../models';
 import type { CloudProviderCredential } from '../../models/cloud-credential';
 import type { Settings } from '../../models/settings';
 import type { UserSession } from '../../models/user-session';
-import { executePluginRouterAction, reloadPlugins } from '../../plugins';
+import { executePluginMainAction, reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
 import { setTheme } from '../../plugins/misc';
 import { SegmentEvent } from '../analytics';
@@ -205,7 +205,7 @@ const Root = () => {
       if (urlWithoutParams === 'insomnia://oauth/azure/authenticate') {
         const { code, ...restParams } = params;
         if (code && typeof code === 'string') {
-          const authResult = await executePluginRouterAction({
+          const authResult = await executePluginMainAction({
             pluginName: getBundlePluginByFeature(FEATURE_NAME_EXTERNAL_VAULT)?.name || '',
             actionName: 'exchangeCode',
             params: { provider: 'azure', code },

@@ -3,7 +3,7 @@ import { type ActionFunction } from 'react-router';
 import { FEATURE_NAME_EXTERNAL_VAULT, getBundlePluginByFeature } from '../../common/constants';
 import * as models from '../../models';
 import type { BaseCloudCredential } from '../../models/cloud-credential';
-import { executePluginRouterAction } from '../../plugins';
+import { executePluginMainAction } from '../../plugins';
 import { invariant } from '../../utils/invariant';
 
 export const createCloudCredentialAction: ActionFunction = async ({ request }) => {
@@ -22,7 +22,7 @@ export const createCloudCredentialAction: ActionFunction = async ({ request }) =
     }
     return credentials;
   }
-  const authenticateResponse = await executePluginRouterAction({
+  const authenticateResponse = await executePluginMainAction({
     pluginName: getBundlePluginByFeature(FEATURE_NAME_EXTERNAL_VAULT)?.name || '',
     actionName: 'authenticate',
     params: { provider, credentials },
@@ -54,7 +54,7 @@ export const updateCloudCredentialAction: ActionFunction = async ({ request, par
   invariant(name && typeof name === 'string', 'Name is required');
   invariant(provider, 'Cloud Provider name is required');
   invariant(credentials, 'Credentials are required');
-  const authenticateResponse = await executePluginRouterAction({
+  const authenticateResponse = await executePluginMainAction({
     pluginName: getBundlePluginByFeature(FEATURE_NAME_EXTERNAL_VAULT)?.name || '',
     actionName: 'authenticate',
     params: { provider, credentials },
