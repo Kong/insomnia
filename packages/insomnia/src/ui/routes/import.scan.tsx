@@ -16,7 +16,7 @@ export const scanImportResources = async (data: {
   filePaths?: string | string[];
   postmanArchiveFile?: string | null;
 }): Promise<ScanResult[]> => {
-  const { source } = data;
+  const { source, postmanArchiveFile } = data;
 
   invariant(typeof source === 'string', 'Source is required.');
   invariant(['file', 'uri', 'clipboard'].includes(source), 'Unsupported import type');
@@ -73,10 +73,41 @@ export const scanImportResources = async (data: {
       );
     }
 
+    // When a postman environment is uncompressed from a postman bulk export zip file, there's not identifier for us to identify it as a postman environment.
+    // Use the archive.json file to check and set a identifier for it
+    let postmanArchiveJsonData: { environment?: Record<string, boolean> } | null = null;
+    if (postmanArchiveFile) {
+      try {
+        const postmanArchiveFileContent = await window.main.readFile({ path: postmanArchiveFile });
+        postmanArchiveJsonData = JSON.parse(postmanArchiveFileContent.content);
+      } catch (err) {
+        return [
+          {
+            oriFileName: postmanArchiveFile,
+            errors: ['Failed to parse archive.json file'],
+          },
+        ];
+      }
+    }
+
     for (const filePath of nonZipFilePaths) {
       const uri = `file://${filePath}`;
+      let contentStr = await fetchImportContentFromURI({ uri });
+
+      if (postmanArchiveJsonData) {
+        try {
+          const jsonData = JSON.parse(contentStr);
+          if (postmanArchiveJsonData.environment?.[jsonData.id]) {
+            jsonData._postman_variable_scope = 'environment';
+            contentStr = JSON.stringify(jsonData);
+          }
+        } catch (error) {
+          // It's not a valid JSON, shouldn't be a postman environment
+        }
+      }
+
       contentList.push({
-        contentStr: await fetchImportContentFromURI({ uri }),
+        contentStr,
         oriFileName: path.basename(filePath),
         oriFilePath: filePath,
       });
@@ -93,8 +124,7 @@ export const scanImportResources = async (data: {
     throw new Error('No content to import');
   }
 
-  const { postmanArchiveFile } = data;
-  const result = await scanResources(contentList, postmanArchiveFile);
+  const result = await scanResources(contentList);
 
   return result;
 };

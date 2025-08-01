@@ -1,8 +1,9 @@
 import classnames from 'classnames';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
 import { Label, ProgressBar } from 'react-aria-components';
 import { useNavigate, useParams, useRevalidator } from 'react-router';
+import { useLatest } from 'react-use';
 
 import { database } from '../../../../common/database';
 import type { ScanResult } from '../../../../common/import';
@@ -18,6 +19,8 @@ import { Modal, type ModalHandle } from '../../base/modal';
 import { ModalHeader } from '../../base/modal-header';
 import { Icon } from '../../icon';
 import { Button } from '../../themed-button';
+import { showModal } from '..';
+import { AlertModal } from '../alert-modal';
 import { disclaimer, ScanResultsTable, SupportedFormats, validImportExtensions } from './shared';
 
 interface ProjectFolder {
@@ -205,7 +208,7 @@ const FileField = ({
 export const ImportProjectsResourceForm = ({
   onConfirm,
 }: {
-  onConfirm: (importForm: { rootFolder: RootFolder; skipExisting: boolean }) => void;
+  onConfirm: (rootFolder: RootFolder, skipExisting: boolean) => void;
 }) => {
   const [rootFolder, setRootFolder] = useState<RootFolder | null>(null);
   const [skipExisting, setSkipExisting] = useState<boolean>(false);
@@ -230,13 +233,7 @@ export const ImportProjectsResourceForm = ({
         <SupportedFormats />
         <Button
           disabled={!rootFolder}
-          onClick={() =>
-            rootFolder &&
-            onConfirm({
-              rootFolder,
-              skipExisting,
-            })
-          }
+          onClick={() => rootFolder && onConfirm(rootFolder, skipExisting)}
           variant="contained"
           bg="surprise"
           className="gap-[var(--padding-sm)]"
@@ -376,23 +373,167 @@ const ProjectItem = ({ project }: { project: ProjectImportItem }) => {
 };
 
 const ImportProjectsList = ({
-  organizationId,
   rootFolder,
-  skipExisting,
+  projectItems,
+  uiStatus,
+  error,
   onComplete,
+  cancelled,
+  onCancel,
 }: {
-  organizationId: string;
   rootFolder: RootFolder;
-  skipExisting?: boolean;
+  projectItems: ProjectImportItem[];
+  uiStatus: 'loading' | 'importing' | 'error' | 'complete';
+  error: string | null;
   onComplete: (projectItems: ProjectImportItem[]) => void;
+  cancelled: boolean;
+  onCancel: () => void;
 }) => {
+  const { total, completed, progress } = useMemo(() => {
+    const total = projectItems.length;
+    const completed = projectItems.filter(item =>
+      [ImportStatus.SUCCESS, ImportStatus.FAILED, ImportStatus.SKIPPED].includes(item.status),
+    ).length;
+
+    return {
+      total,
+      completed,
+      progress: total > 0 ? ((completed / total) * 100) | 0 : 0,
+    };
+  }, [projectItems]);
+
+  if (uiStatus === 'loading') {
+    return (
+      <div className="flex items-center justify-center p-4">
+        <i className="fa fa-spinner fa-spin fa-2x" />
+        <span className="ml-2">Loading projects...</span>
+      </div>
+    );
+  }
+
+  if (uiStatus === 'error') {
+    return (
+      <>
+        <div className="text-danger py-4">
+          <i className="fa fa-exclamation-triangle mr-2" />
+          <span>Error: {error || 'An unknown error occurred'}</span>
+        </div>
+
+        <div className="mt-4 flex justify-end">
+          <Button
+            variant="contained"
+            bg="surprise"
+            onClick={() => onComplete([])}
+            className="h-10 gap-[var(--padding-sm)]"
+          >
+            Confirm
+          </Button>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <p className="text-lg font-bold">Import projects from: {rootFolder.name}</p>
+
+      <ProgressBar value={progress}>
+        {({ percentage, valueText }) => (
+          <>
+            <div className="mb-2 flex items-center justify-between">
+              <Label className="text-sm font-medium">
+                {completed < total ? `Processing folder #${completed + 1} of ${total}` : `Completed`}
+              </Label>
+              <span className="text-sm font-medium text-[color:var(--color-surprise)]">{valueText}</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-[color:var(--hl-xs)]">
+              <div
+                className="fill h-full rounded-full bg-[color:var(--color-surprise)] transition-all duration-300 ease-in-out"
+                style={{ width: percentage + '%' }}
+              />
+            </div>
+          </>
+        )}
+      </ProgressBar>
+
+      <div className="mb-4 flex max-h-[50vh] flex-col gap-2 overflow-y-auto">
+        {projectItems.map(project => (
+          <ProjectItem key={project.key} project={project} />
+        ))}
+      </div>
+
+      <div className="mt-4 flex justify-end gap-[var(--padding-md)]">
+        {uiStatus === 'importing' && !cancelled && (
+          <Button
+            variant="contained"
+            bg="danger"
+            onClick={() => {
+              showModal(AlertModal, {
+                title: 'Cancel Import?',
+                message:
+                  'If you cancel now, Insomnia will finish importing the current folder then stop. You’ll be able to use projects that have already been imported. Do you wish to cancel?',
+                addCancel: true,
+                onConfirm: onCancel,
+              });
+            }}
+            className="h-10 gap-[var(--padding-sm)]"
+          >
+            Cancel
+          </Button>
+        )}
+        <Button
+          variant="contained"
+          bg="surprise"
+          disabled={uiStatus === 'importing'}
+          onClick={() => onComplete(projectItems)}
+          className="h-10 gap-[var(--padding-sm)]"
+        >
+          Confirm
+        </Button>
+      </div>
+    </>
+  );
+};
+
+/**
+ * Component for importing projects into an organization.
+ */
+export const ImportProjectsModal = ({ organizationId, onHide }: { organizationId: string; onHide: () => void }) => {
+  const [rootFolder, setRootFolder] = useState<RootFolder | null>(null);
+  const modalRef = useRef<ModalHandle>(null);
+  const params = useParams();
+  const navigate = useNavigate();
+  const { revalidate } = useRevalidator();
+
+  useEffect(() => {
+    // Hmm, the modal doesn't support to drive by state, so we need to show it manually.
+    modalRef.current?.show();
+  }, []);
+
+  const organizationData = useOrganizationLoaderData();
+  const organizationName =
+    organizationData?.organizations.find(org => org.id === organizationId)?.display_name || 'Organization';
+
   const [projectItems, setProjectItems] = useState<ProjectImportItem[]>([]);
-  const [uiStatus, setUiStatus] = useState<'loading' | 'importing' | 'error' | 'complete'>('loading');
-  const [error, setError] = useState<string | null>(null);
+  const [processingUIStatus, setProcessingUiStatus] = useState<'loading' | 'importing' | 'error' | 'complete'>(
+    'loading',
+  );
+  const [processingCancelled, setProcessingCancelled] = useState(false);
+  const [processingError, setProcessingError] = useState<string | null>(null);
+  const latestProcessingCancelled = useLatest(processingCancelled);
+
+  // We should use an abort controller to cancel the import process, but currently the import process is not immediate cancelable, so fall back to a flag.
+  const unmountRef = useRef(false);
+  useEffect(() => {
+    unmountRef.current = false;
+    return () => {
+      unmountRef.current = true;
+    };
+  }, []);
 
   // Due to this issue: https://github.com/remix-run/react-router/issues/13712, currently use functions to handle the import process.
   // After the issue is resolved, we can use fetcher to handle the import process.
-  const handleImport = useCallback(async (rootFolder: RootFolder, organizationId: string, skipExisting?: boolean) => {
+  const processBulkProjectImport = async (rootFolder: RootFolder, organizationId: string, skipExisting?: boolean) => {
     try {
       if (!rootFolder) {
         // Should never happen, but just in case
@@ -418,16 +559,16 @@ const ImportProjectsList = ({
         folder: projectFolder,
       }));
 
-      // Sort project items by name
-      projectItems.sort((a, b) => a.name.localeCompare(b.name));
-      setProjectItems(projectItems);
-
       if (projectItems.length === 0) {
         throw new Error('No projects found in the selected directory');
       }
 
+      // Sort project items by name
+      projectItems.sort((a, b) => a.name.localeCompare(b.name));
+      setProjectItems(projectItems);
+
       // Start import process for the projects
-      setUiStatus('importing');
+      setProcessingUiStatus('importing');
 
       const startImportForProject = async (project: ProjectImportItem) => {
         const projectIndex = projectItems.indexOf(project);
@@ -439,6 +580,12 @@ const ImportProjectsList = ({
             return newItems;
           });
         };
+
+        // Only skip the project when it's not in pending status, otherwise we need to add a new status or more to tell the user that the project is created but not imported or xxx.
+        if (latestProcessingCancelled.current || unmountRef.current) {
+          updateProjectItem({ status: ImportStatus.SKIPPED });
+          return;
+        }
 
         try {
           updateProjectItem({ status: ImportStatus.CREATING });
@@ -527,135 +674,18 @@ const ImportProjectsList = ({
         }
       }
 
-      setUiStatus('complete');
+      setProcessingUiStatus('complete');
     } catch (error) {
       console.error('[Bulk Project Import] Import error:', error);
-      setError(error instanceof Error ? error.message : String(error));
-      setUiStatus('error');
+      setProcessingError(error instanceof Error ? error.message : String(error));
+      setProcessingUiStatus('error');
     }
-  }, []);
+  };
 
-  const firstRef = useRef(true);
-  // Load projects from the root folder
-  useEffect(() => {
-    // Only run this effect once
-    if (!firstRef.current) {
-      return;
-    }
-    firstRef.current = false;
-
-    (async () => {
-      await handleImport(rootFolder, organizationId, skipExisting);
-    })();
-  }, [handleImport, organizationId, rootFolder, skipExisting]);
-
-  const { total, completed, progress } = useMemo(() => {
-    const total = projectItems.length;
-    const completed = projectItems.filter(item =>
-      [ImportStatus.SUCCESS, ImportStatus.FAILED, ImportStatus.SKIPPED].includes(item.status),
-    ).length;
-
-    return {
-      total,
-      completed,
-      progress: total > 0 ? ((completed / total) * 100) | 0 : 0,
-    };
-  }, [projectItems]);
-
-  if (uiStatus === 'loading') {
-    return (
-      <div className="flex items-center justify-center p-4">
-        <i className="fa fa-spinner fa-spin fa-2x" />
-        <span className="ml-2">Loading projects...</span>
-      </div>
-    );
-  }
-
-  if (uiStatus === 'error') {
-    return (
-      <>
-        <div className="text-danger py-4">
-          <i className="fa fa-exclamation-triangle mr-2" />
-          <span>Error: {error || 'An unknown error occurred'}</span>
-        </div>
-
-        <div className="mt-4 flex justify-end">
-          <Button
-            variant="contained"
-            bg="surprise"
-            onClick={() => onComplete([])}
-            className="h-10 gap-[var(--padding-sm)]"
-          >
-            Confirm
-          </Button>
-        </div>
-      </>
-    );
-  }
-
-  return (
-    <>
-      <p className="text-lg font-bold">Import projects from: {rootFolder.name}</p>
-
-      <ProgressBar value={progress}>
-        {({ percentage, valueText }) => (
-          <>
-            <div className="mb-2 flex items-center justify-between">
-              <Label className="text-sm font-medium">
-                {completed < total ? `Processing folder #${completed + 1} of ${total}` : `Completed`}
-              </Label>
-              <span className="text-sm font-medium text-[color:var(--color-surprise)]">{valueText}</span>
-            </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-[color:var(--hl-xs)]">
-              <div
-                className="fill h-full rounded-full bg-[color:var(--color-surprise)] transition-all duration-300 ease-in-out"
-                style={{ width: percentage + '%' }}
-              />
-            </div>
-          </>
-        )}
-      </ProgressBar>
-
-      <div className="mb-4 flex max-h-[50vh] flex-col gap-2 overflow-y-auto">
-        {projectItems.map(project => (
-          <ProjectItem key={project.key} project={project} />
-        ))}
-      </div>
-
-      <div className="mt-4 flex justify-end">
-        <Button
-          variant="contained"
-          bg="surprise"
-          disabled={uiStatus === 'importing'}
-          onClick={() => onComplete(projectItems)}
-          className="h-10 gap-[var(--padding-sm)]"
-        >
-          Confirm
-        </Button>
-      </div>
-    </>
-  );
-};
-
-/**
- * Component for importing projects into an organization.
- */
-export const ImportProjectsModal = ({ organizationId, onHide }: { organizationId: string; onHide: () => void }) => {
-  const [rootFolder, setRootFolder] = useState<RootFolder | null>(null);
-  const [skipExisting, setSkipExisting] = useState<boolean>(false);
-  const modalRef = useRef<ModalHandle>(null);
-  const params = useParams();
-  const navigate = useNavigate();
-  const { revalidate } = useRevalidator();
-
-  useEffect(() => {
-    // Hmm, the modal doesn't support to drive by state, so we need to show it manually.
-    modalRef.current?.show();
-  }, []);
-
-  const organizationData = useOrganizationLoaderData();
-  const organizationName =
-    organizationData?.organizations.find(org => org.id === organizationId)?.display_name || 'Organization';
+  const handleConfirm = async (rootFolder: RootFolder, skipExisting: boolean) => {
+    setRootFolder(rootFolder);
+    processBulkProjectImport(rootFolder, organizationId, skipExisting);
+  };
 
   // Handler for completing the import process
   const handleComplete = (projectItems: ProjectImportItem[]) => {
@@ -669,6 +699,11 @@ export const ImportProjectsModal = ({ organizationId, onHide }: { organizationId
     }
   };
 
+  const handleCancel = () => {
+    setProcessingCancelled(true);
+    console.warn('[Bulk Project Import] Import process cancelled by user');
+  };
+
   return (
     <OverlayContainer onClick={e => e.stopPropagation()}>
       <Modal
@@ -680,18 +715,16 @@ export const ImportProjectsModal = ({ organizationId, onHide }: { organizationId
         <ModalHeader hideCloseButton={!!rootFolder}>Import projects to "{organizationName}" Organization</ModalHeader>
 
         {!rootFolder ? (
-          <ImportProjectsResourceForm
-            onConfirm={({ rootFolder, skipExisting }) => {
-              setRootFolder(rootFolder);
-              setSkipExisting(skipExisting);
-            }}
-          />
+          <ImportProjectsResourceForm onConfirm={handleConfirm} />
         ) : (
           <ImportProjectsList
-            organizationId={organizationId}
             rootFolder={rootFolder}
-            skipExisting={skipExisting}
+            projectItems={projectItems}
+            uiStatus={processingUIStatus}
+            error={processingError}
             onComplete={handleComplete}
+            cancelled={processingCancelled}
+            onCancel={handleCancel}
           />
         )}
       </Modal>
