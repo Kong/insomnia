@@ -41,7 +41,17 @@ export const createProject = async (organizationId: string, newProjectData: Crea
       return project._id;
     }
 
-    if (newProjectData.storageType === 'git' && !newProjectData.connectRepositoryLater) {
+    if (newProjectData.storageType === 'git') {
+      if (newProjectData.connectRepositoryLater) {
+        const project = await models.project.create({
+          name: newProjectData.name,
+          parentId: organizationId,
+          gitRepositoryId: 'empty',
+        });
+
+        return project._id;
+      }
+
       const { projectId, errors } = await window.main.git.cloneGitRepo({
         organizationId,
         ...newProjectData,
