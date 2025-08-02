@@ -844,7 +844,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
               </Heading>
               <p className="text-sm text-[--hl]">
                 <Icon icon="info-circle" /> These files are not associated with any project in your account. You can
-                move them to a project in your current organization bellow.
+                move them to a project in your current organization below.
               </p>
             </div>
             <div className="flex flex-col gap-1 divide-y divide-solid divide-[--hl-md] overflow-y-auto">

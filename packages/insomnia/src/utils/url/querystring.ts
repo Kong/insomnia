@@ -14,7 +14,7 @@ const RFC_3986_SUB_DELIMITERS = '$+,;='; // (unintentionally?) missing: !&'()*
 const URL_PATH_CHARACTER_WHITELIST = `${RFC_3986_GENERAL_DELIMITERS}${RFC_3986_SUB_DELIMITERS}`;
 
 interface IQueryStringOptions {
-  // Option to distingush between parameters with(&foo=) and without(&foo) equal signs. Both are converted to empty string by default.
+  // Option to distinguish between parameters with(&foo=) and without(&foo) equal signs. Both are converted to empty string by default.
   strictNullHandling?: boolean;
   // Option to encode parameters, default to true, necessary to disable for request.settingEncodeUrl = false
   encodeParams?: boolean;
@@ -80,7 +80,7 @@ export const buildQueryParameter = (
 
   /** allow empty names and values */
   strict?: boolean,
-  /** extra options like strict hanlde null value */
+  /** extra options like strict handle null value */
   options?: IQueryStringOptions,
 ) => {
   strict = strict === undefined ? true : strict;
@@ -117,7 +117,7 @@ export const buildQueryStringFromParams = (
   parameters: { name: string; value?: StrictNullSearchParamsValueType }[],
   /** allow empty names and values */
   strict?: boolean,
-  /** extra options like strict hanlde null value */
+  /** extra options like strict handle null value */
   options?: IQueryStringOptions,
 ) => {
   strict = strict === undefined ? true : strict;
@@ -145,7 +145,7 @@ export const deconstructQueryStringToParams = <T extends IQueryStringOptions>(
 
   /** allow empty names and values */
   strict?: boolean,
-  /** extra deconstruct options like strict hanlde null value */
+  /** extra deconstruct options like strict handle null value */
   options?: T,
 ): ProcessDeconstructFuncReturnType<T> => {
   strict = strict === undefined ? true : strict;

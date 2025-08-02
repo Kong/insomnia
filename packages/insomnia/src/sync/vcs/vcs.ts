@@ -58,7 +58,7 @@ export function chunkArray<T>(arr: T[], chunkSize: number) {
 }
 
 // Stage/Unstage
-// Staged items are about to be commited
+// Staged items are about to be committed
 // Unstaged items have changed compared to staged or not and can be staged
 //
 export class VCS {

@@ -445,7 +445,7 @@ const openWebSocketConnection = async (
   }
 };
 
-// graphql ws protocl message handler. Refer: https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md
+// graphql ws protocol message handler. Refer: https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md
 const handleGraphQLWsMessage = (data: MessageEvent['data'], request: Request) => {
   const graphqlServerData = parseMessage(data);
   const graphqlServerDataType = graphqlServerData.type;
@@ -467,7 +467,7 @@ const handleGraphQLWsMessage = (data: MessageEvent['data'], request: Request) =>
     });
     sendWebSocketEvent({ payload, requestId });
   } else if (graphqlServerDataType === MessageType.Error || graphqlServerDataType === MessageType.Complete) {
-    // close connection if server responsed with error or complete
+    // close connection if server responded with error or complete
     closeWebSocketConnection({ requestId });
   }
 };

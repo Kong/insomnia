@@ -56,7 +56,7 @@ const deleteSecret = async (key: string) => {
     const secretStorage = getElectronStorage();
     secretStorage.deleteItem(key);
   } catch (error) {
-    console.error(`Can not delele secret ${error.toString()}`);
+    console.error(`Can not delete secret ${error.toString()}`);
     return Promise.reject(error);
   }
 };

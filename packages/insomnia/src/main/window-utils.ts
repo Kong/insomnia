@@ -119,7 +119,7 @@ export async function createHiddenBrowserWindow() {
       if (browserWindows.get('HiddenBrowserWindow')) {
         console.log('[main] closing hidden browser window');
         browserWindows.delete('HiddenBrowserWindow');
-        // @TODO: This should be set when the window closed is event is emmited so it's guaranteed to be realiable
+        // @TODO: This should be set when the window closed is event is emitted so it's guaranteed to be reliable
         // There might be other events we need to listen to also
         hiddenWindowIsBusy = false;
       }
