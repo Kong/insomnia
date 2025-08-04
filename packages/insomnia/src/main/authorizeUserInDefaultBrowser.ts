@@ -33,3 +33,12 @@ export function onDefaultBrowserOAuthRedirect({ url }: { url: string }) {
     }
   } catch (e) {}
 }
+
+export function cancelAuthorizationInDefaultBrowser(reason = '') {
+  try {
+    if (pendingOAuthRejector) {
+      pendingOAuthRejector(new Error(reason));
+      clearPendingResolverAndRejector();
+    }
+  } catch (e) {}
+}

@@ -146,14 +146,16 @@ export const getOAuth2Token = async (
 
       let redirectedTo: string | null = null;
       if (authentication.useDefaultBrowser) {
+        const authCodeUrlStr = authCodeUrl.toString();
         uiEventBus.emit(OAUTH2_AUTHORIZATION_STATUS_CHANGE, {
           status: 'getting_code',
+          authCodeUrlStr,
         });
         // If the user has selected to use the default browser, we will open the
         // authorization URL in the default browser and wait for the user to
         // authorize the application.
         redirectedTo = await window.main.authorizeUserInDefaultBrowser({
-          url: authCodeUrl.toString(),
+          url: authCodeUrlStr,
         });
       } else {
         redirectedTo = await window.main.authorizeUserInWindow({

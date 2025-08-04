@@ -19,7 +19,11 @@ import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
 import * as models from '../../models';
 import type { SegmentEvent } from '../analytics';
 import { trackPageView, trackSegmentEvent } from '../analytics';
-import { authorizeUserInDefaultBrowser, onDefaultBrowserOAuthRedirect } from '../authorizeUserInDefaultBrowser';
+import {
+  authorizeUserInDefaultBrowser,
+  cancelAuthorizationInDefaultBrowser,
+  onDefaultBrowserOAuthRedirect,
+} from '../authorizeUserInDefaultBrowser';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { backup, restoreBackup } from '../backup';
 import type { GitServiceAPI } from '../git-service';
@@ -55,6 +59,7 @@ export interface RendererToMainBridgeAPI {
   authorizeUserInWindow: typeof authorizeUserInWindow;
   authorizeUserInDefaultBrowser: typeof authorizeUserInDefaultBrowser;
   onDefaultBrowserOAuthRedirect: typeof onDefaultBrowserOAuthRedirect;
+  cancelAuthorizationInDefaultBrowser: typeof cancelAuthorizationInDefaultBrowser;
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
   writeFile: (options: { path: string; content: string }) => Promise<string>;
@@ -135,6 +140,12 @@ export function registerMainHandlers() {
   ipcMainHandle('onDefaultBrowserOAuthRedirect', (_, options: Parameters<typeof onDefaultBrowserOAuthRedirect>[0]) => {
     return onDefaultBrowserOAuthRedirect(options);
   });
+  ipcMainHandle(
+    'cancelAuthorizationInDefaultBrowser',
+    (_, options: Parameters<typeof cancelAuthorizationInDefaultBrowser>[0]) => {
+      return cancelAuthorizationInDefaultBrowser(options);
+    },
+  );
 
   ipcMainHandle('writeFile', async (_, options: { path: string; content: string }) => {
     try {

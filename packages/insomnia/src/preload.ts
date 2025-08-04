@@ -124,6 +124,7 @@ const main: Window['main'] = {
   authorizeUserInWindow: options => ipcRenderer.invoke('authorizeUserInWindow', options),
   authorizeUserInDefaultBrowser: options => ipcRenderer.invoke('authorizeUserInDefaultBrowser', options),
   onDefaultBrowserOAuthRedirect: options => ipcRenderer.invoke('onDefaultBrowserOAuthRedirect', options),
+  cancelAuthorizationInDefaultBrowser: options => ipcRenderer.invoke('cancelAuthorizationInDefaultBrowser', options),
   setMenuBarVisibility: options => ipcRenderer.send('setMenuBarVisibility', options),
   installPlugin: (lookupName: string, allowScopedPackageNames = false) =>
     ipcRenderer.invoke('installPlugin', lookupName, allowScopedPackageNames),
