@@ -3,16 +3,18 @@ import { randomUUID } from 'node:crypto';
 import type { Application } from 'express';
 import { json } from 'express';
 
-import type { Collaborator, CollaboratorType } from '../../insomnia/src/ui/routes/invite';
+import type { CurrentPlan } from '../../insomnia/src/ui/insomnia-api-types';
+import type { Collaborator, CollaboratorType } from '../../insomnia/src/ui/routes/$organizationId.collaborators';
 import { getRandomId, getTeamName, getUserEmail } from '../tests/smoke/test-utils';
 
-const currentPlan = {
+const currentPlan: CurrentPlan = {
   isActive: true,
   period: 'year',
-  planId: 'team',
+  planId: 'enterprise',
+  planName: 'Enterprise',
   price: 100,
   quantity: 10,
-  type: 'team',
+  type: 'enterprise',
 };
 
 const projectsByOrgId = new Map(

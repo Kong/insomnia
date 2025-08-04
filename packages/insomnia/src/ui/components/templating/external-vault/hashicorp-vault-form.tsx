@@ -1,7 +1,11 @@
-import React, { useEffect } from 'react';
-import { useFetcher } from 'react-router';
+import React from 'react';
+import { useRouteLoaderData } from 'react-router';
 
-import { HashiCorpCredentialType } from '../../../../models/cloud-credential';
+import {
+  type CloudProviderCredential,
+  type HashiCorpCredential,
+  HashiCorpCredentialType,
+} from '../../../../models/cloud-credential';
 import type { NunjucksParsedTag } from '../../../../templating/types';
 import { HelpTooltip } from '../../help-tooltip';
 import {
@@ -19,6 +23,8 @@ export interface HashiCorpVaultFormProps {
 type KeysOfUnion<T> = T extends T ? keyof T : never;
 
 export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
+  const { credentials } = useRouteLoaderData('cloud-credential') as { credentials: CloudProviderCredential[] };
+
   const { formData, onChange, activeTagData } = props;
   const { secretName } = formData;
   // onPrem secret config
@@ -30,8 +36,8 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
   // cloud secret config
   const { organizationId, projectId, appName, version: cloudSecretVersion } = formData as HCPSecretConfig;
   const credentialId = activeTagData.args[1].value as string;
-  const credentialDataFetcher = useFetcher();
-  const credentialType = credentialDataFetcher.data?.credentials.type;
+  const selectedCredential = credentials.find(c => c._id === credentialId) as unknown as HashiCorpCredential;
+  const credentialType = selectedCredential?.credentials?.type || HashiCorpCredentialType.cloud;
   const handleOnChange = (name: KeysOfUnion<HashiCorpSecretConfig>, newValue: string) => {
     const newConfig = {
       ...formData,
@@ -40,13 +46,6 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
     onChange(newConfig as unknown as HashiCorpSecretConfig);
   };
 
-  useEffect(() => {
-    if (credentialId) {
-      credentialDataFetcher.load(`/cloud-credential/${credentialId}`);
-    }
-    // Omit credentialDataFetcher from the dependency array to avoid infinite re-renders
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [credentialId]);
   return (
     <>
       <div className="form-row">
