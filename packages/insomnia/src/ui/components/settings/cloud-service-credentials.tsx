@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 import { useFetcher } from 'react-router';
 
-import { FEATURE_NAME_EXTERNAL_VAULT, getBundlePluginByFeature } from '../../../common/constants';
+import { FEATURE_NAME_EXTERNAL_VAULT, getAppBundlePlugins } from '../../../common/constants';
 import {
   type AzureOAuthCredential,
   type CloudProviderCredential,
@@ -51,7 +51,7 @@ const createCredentialItemList: createCredentialItemType[] = [
 ];
 const buttonClassName =
   'disabled:opacity-50 h-7 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] transition-all text-sm py-1 px-2';
-const externalVaultPluginName = getBundlePluginByFeature(FEATURE_NAME_EXTERNAL_VAULT)?.name || '';
+const externalVaultPluginName = getAppBundlePlugins().find(p => p.name === FEATURE_NAME_EXTERNAL_VAULT)?.name || '';
 
 export const CloudServiceCredentialList = () => {
   const { isOwner, isEnterprisePlan } = usePlanData();

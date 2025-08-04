@@ -360,7 +360,7 @@ export const sortOrderName: Record<SortOrder, string> = {
 };
 
 // feature name constants
-export const FEATURE_NAME_EXTERNAL_VAULT = 'external-vault';
+export const FEATURE_NAME_EXTERNAL_VAULT = '@kong/insomnia-plugin-external-vault';
 
 export type DashboardSortOrder = 'name-asc' | 'name-desc' | 'created-asc' | 'created-desc' | 'modified-desc';
 
@@ -381,11 +381,6 @@ export const dashboardSortOrderName: Record<DashboardSortOrder, string> = {
 };
 
 export type PreviewMode = 'friendly' | 'source' | 'raw';
-
-export function getBundlePluginByFeature(feature: string) {
-  const bundlePlugins = getAppBundlePlugins();
-  return bundlePlugins.find(p => p.feature === feature);
-}
 
 export function getPreviewModeName(previewMode: PreviewMode, useLong = false) {
   if (previewMode in previewModeMap) {

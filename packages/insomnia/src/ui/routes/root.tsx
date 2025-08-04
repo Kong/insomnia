@@ -4,7 +4,7 @@ import type { IpcRendererEvent } from 'electron';
 import React, { useEffect, useState } from 'react';
 import { type LoaderFunction, Outlet, useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 
-import { FEATURE_NAME_EXTERNAL_VAULT, getBundlePluginByFeature, isDevelopment } from '../../common/constants';
+import { FEATURE_NAME_EXTERNAL_VAULT, getAppBundlePlugins, isDevelopment } from '../../common/constants';
 import * as models from '../../models';
 import type { CloudProviderCredential } from '../../models/cloud-credential';
 import type { Settings } from '../../models/settings';
@@ -206,7 +206,7 @@ const Root = () => {
         const { code, ...restParams } = params;
         if (code && typeof code === 'string') {
           const authResult = await executePluginMainAction({
-            pluginName: getBundlePluginByFeature(FEATURE_NAME_EXTERNAL_VAULT)?.name || '',
+            pluginName: getAppBundlePlugins().find(p => p.name === FEATURE_NAME_EXTERNAL_VAULT)?.name || '',
             actionName: 'exchangeCode',
             params: { provider: 'azure', code },
           });
