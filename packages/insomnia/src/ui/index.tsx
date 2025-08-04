@@ -215,7 +215,6 @@ async function renderApp() {
           },
           {
             path: 'cloud-credential',
-            loader: async (...args) => (await import('./routes/cloud-credentials-action')).loader(...args),
             children: [
               {
                 path: 'new',
