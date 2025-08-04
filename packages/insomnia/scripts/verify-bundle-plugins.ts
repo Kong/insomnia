@@ -5,6 +5,7 @@ const isModuleInstalled = (moduleName: string) => {
     require.resolve(moduleName);
     return true;
   } catch (e) {
+    console.error(`Module ${moduleName} is not found.`, e);
     return false;
   }
 };
