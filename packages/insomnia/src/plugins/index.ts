@@ -36,7 +36,7 @@ export interface Plugin {
     requestActions?: OmitInternal<RequestAction>[];
     workspaceActions?: OmitInternal<WorkspaceAction>[];
     documentActions?: OmitInternal<DocumentAction>[];
-    // Plugin actions which will be executed in node(main processor) context. For internal use only, not for public plugins
+    // Plugin actions which will be executed in main process(node integration) context. For internal use only, not for public plugins
     unsafePluginMainActions?: OmitInternal<PluginAction>[];
   };
 }
@@ -379,7 +379,19 @@ export async function getPluginRouterActions(): Promise<PluginAction[]> {
   return extensions;
 }
 
-// This is for insomnia UI to reach out to bundled plugin functions and executed under node(main processor) context
+export async function isPreBundlePluginTemplateTag(input: string) {
+  if (input.startsWith('{%') && input.endsWith('%}')) {
+    const bundlePlugins = await getBundlePlugins();
+    const isTagAllowed = bundlePlugins.some(p => {
+      const templateTags = p.module.templateTags || [];
+      return templateTags.some(tt => typeof tt.validate === 'function' && tt.validate(input));
+    });
+    return isTagAllowed;
+  }
+  return false;
+}
+
+// This is for insomnia UI to reach out to bundled plugin functions and executed under main process(node integration) context
 // It should only be available to bundled plugins, not for public plugins
 export async function executePluginMainAction({
   pluginName,
