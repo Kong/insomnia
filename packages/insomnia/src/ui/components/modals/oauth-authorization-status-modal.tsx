@@ -45,9 +45,13 @@ export const OAuthAuthorizationStatusModal: FC = () => {
   }, [status]);
 
   return (
-    <Modal centered ref={modalRef} onHide={() => {
-      window.main.cancelAuthorizationInDefaultBrowser('Canceled by user.');
-    }}>
+    <Modal
+      centered
+      ref={modalRef}
+      onHide={() => {
+        window.main.cancelAuthorizationInDefaultBrowser('Canceled by user.');
+      }}
+    >
       <ModalHeader>OAuth 2.0 Authorization</ModalHeader>
       <ModalBody>
         {status === 'none' && 'Not in Authorization'}
@@ -76,7 +80,7 @@ export const OAuthAuthorizationStatusModal: FC = () => {
             </div>
             <p className="text-[rgba(var(--color-font-rgb),0.8))] text-start">
               If the Insomnia app doesn’t open automatically after you complete the authorization in your browser,
-              please copy the full redirect URL from your browser’s address bar and paste it below.
+              please copy the full redirect URL showed in the redirect page and paste it below.
             </p>
             <form
               onSubmit={e => {
