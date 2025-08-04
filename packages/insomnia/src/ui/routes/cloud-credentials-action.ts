@@ -5,10 +5,6 @@ import * as models from '../../models';
 import type { BaseCloudCredential } from '../../models/cloud-credential';
 import { executePluginMainAction } from '../../plugins';
 import { invariant } from '../../utils/invariant';
-export const loader = async () => {
-  const credentials = await models.cloudCredential.all();
-  return { credentials };
-};
 
 export const createCloudCredentialAction: ActionFunction = async ({ request }) => {
   const patch = await request.json();

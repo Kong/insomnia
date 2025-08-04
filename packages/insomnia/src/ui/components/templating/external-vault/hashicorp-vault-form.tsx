@@ -23,7 +23,7 @@ export interface HashiCorpVaultFormProps {
 type KeysOfUnion<T> = T extends T ? keyof T : never;
 
 export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
-  const { credentials } = useRouteLoaderData('cloud-credential') as { credentials: CloudProviderCredential[] };
+  const { cloudCredentials } = useRouteLoaderData('root') as { cloudCredentials: CloudProviderCredential[] };
 
   const { formData, onChange, activeTagData } = props;
   const { secretName } = formData;
@@ -36,7 +36,7 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
   // cloud secret config
   const { organizationId, projectId, appName, version: cloudSecretVersion } = formData as HCPSecretConfig;
   const credentialId = activeTagData.args[1].value as string;
-  const selectedCredential = credentials.find(c => c._id === credentialId) as unknown as HashiCorpCredential;
+  const selectedCredential = cloudCredentials.find(c => c._id === credentialId) as unknown as HashiCorpCredential;
   const credentialType = selectedCredential?.credentials?.type || HashiCorpCredentialType.cloud;
   const handleOnChange = (name: KeysOfUnion<HashiCorpSecretConfig>, newValue: string) => {
     const newConfig = {
