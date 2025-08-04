@@ -5,6 +5,10 @@ import * as models from '../../models';
 import type { BaseCloudCredential } from '../../models/cloud-credential';
 import { executePluginMainAction } from '../../plugins';
 import { invariant } from '../../utils/invariant';
+export const loader = async () => {
+  const credentials = await models.cloudCredential.all();
+  return { credentials };
+};
 
 export const createCloudCredentialAction: ActionFunction = async ({ request }) => {
   const patch = await request.json();
@@ -87,11 +91,4 @@ export const deleteCloudCredentialAction: ActionFunction = async ({ params }) =>
   invariant(cloudCredential, 'Cloud Credential not found');
   await models.cloudCredential.remove(cloudCredential);
   return null;
-};
-
-export const getCloudCredentialAction: ActionFunction = async ({ params }) => {
-  const { cloudCredentialId } = params;
-  invariant(typeof cloudCredentialId === 'string', 'cloudCredentialId is required');
-  console.log('getCloudCredentialAction', cloudCredentialId);
-  return models.cloudCredential.getById(cloudCredentialId);
 };
