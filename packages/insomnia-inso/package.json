@@ -59,8 +59,5 @@
     "picocolors": "^1.1.1",
     "string-argv": "^0.3.2",
     "yaml": "^2.7.1"
-  },
-  "optionalDependencies": {
-    "@kong/insomnia-plugin-external-vault": "0.0.1-alpha.2"
   }
 }

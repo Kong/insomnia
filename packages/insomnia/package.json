@@ -193,9 +193,6 @@
     "xpath": "0.0.34",
     "zod": "^3.25.75"
   },
-  "optionalDependencies": {
-    "@kong/insomnia-plugin-external-vault": "0.0.1-alpha.2"
-  },
   "dev": {
     "dev-server-port": 3334
   },
