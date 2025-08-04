@@ -80,11 +80,9 @@ export const Plugins: FC = () => {
   async function handleReloadPlugins() {
     setState(state => ({ ...state, isRefreshingPlugins: true }));
     // Get and reload plugins
-    const plugins = await (
-      await getPlugins(true)
-    ).filter(
-      p => !p.directory,
+    const plugins = (await getPlugins(true)).filter(
       // Filter out pre-bundled plugins
+      p => p.directory,
     );
 
     reload();
