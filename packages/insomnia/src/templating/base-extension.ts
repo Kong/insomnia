@@ -160,7 +160,7 @@ export default class BaseExtension {
             getBodyBuffer: models.response.getBodyBuffer,
           },
           settings: {
-            getSettings: models.settings.get,
+            get: models.settings.get,
           },
         },
       },
