@@ -100,7 +100,7 @@ const pluginToMainAPI = {
   }) => {
     return await models.cloudCredential.update(body.originCredential, body.patch);
   },
-  'settings.getSettings': async () => {
+  'settings.get': async () => {
     return await models.settings.get();
   },
   'openInBrowser': async (body: { url: string }) => {

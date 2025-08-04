@@ -218,7 +218,7 @@ export default class BaseExtension {
             ) => fetchFromTemplateWorkerDatabase('response.getBodyBuffer', { response, readFailureValue }),
           },
           settings: {
-            getSettings: async () => fetchFromTemplateWorkerDatabase('settings.getSettings', {}),
+            get: async () => fetchFromTemplateWorkerDatabase('settings.get', {}),
           },
         },
       },

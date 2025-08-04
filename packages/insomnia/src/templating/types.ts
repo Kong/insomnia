@@ -238,7 +238,7 @@ export interface PluginTemplateTagContext {
         getBodyBuffer: typeof getBodyBuffer;
       };
       settings: {
-        getSettings: typeof getSettings;
+        get: typeof getSettings;
       };
     };
   };

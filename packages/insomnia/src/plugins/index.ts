@@ -234,8 +234,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
 export function getBundlePluginMap() {
   const appBundlePlugins = getAppBundlePlugins();
   const bundlePluginMap: Record<string, Plugin> = {};
-  appBundlePlugins.forEach(p => {
-    const { name: pluginName, version: pluginVersion, feature } = p;
+  appBundlePlugins.forEach(({ name: pluginName }) => {
     try {
       const isExecutedInInso = !process.type;
       // In Insomnia, the packagePath is just the pluginName
@@ -251,8 +250,8 @@ export function getBundlePluginMap() {
       const module = global.require(bundlePluginPath);
       bundlePluginMap[pluginName] = {
         name: pluginName,
-        description: `Insomnia bundled plugin for ${feature}`,
-        version: pluginVersion || 'unknown',
+        description: `Insomnia bundled plugin for ${pluginName}`,
+        version: 'unknown',
         directory: '',
         config: { disabled: false },
         module: module,
@@ -447,7 +446,7 @@ export async function executePluginMainAction({
             getBodyBuffer: models.response.getBodyBuffer,
           },
           settings: {
-            getSettings: models.settings.get,
+            get: models.settings.get,
           },
         },
       },
