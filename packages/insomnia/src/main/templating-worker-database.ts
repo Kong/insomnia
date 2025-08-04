@@ -218,7 +218,7 @@ const pluginToMainAPI = {
     const appBundlePlugins = getAppBundlePlugins();
     const appBundlePluginTemplateTags: TemplateTag[] = [];
     appBundlePlugins.forEach(p => {
-      const { name: pluginName, version: pluginVersion } = p;
+      const { name: pluginName } = p;
       try {
         const module = getBundlePluginModule(pluginName);
         const pluginExportedTemplateTags: PluginTemplateTag[] = module?.templateTags || [];
@@ -226,7 +226,7 @@ const pluginToMainAPI = {
           plugin: {
             name: pluginName,
             description: 'Bundle plugin',
-            version: pluginVersion,
+            version: 'Unknown',
             directory: '',
             config: {
               disabled: false,

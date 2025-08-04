@@ -17,7 +17,7 @@ import type { Workspace } from '../models/workspace';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
-import type { PluginTemplateTag, PluginTemplateTagContext, RenderPurpose } from '../templating/types';
+import type { PluginTemplateTag, RenderPurpose } from '../templating/types';
 import type { PluginTheme } from './misc';
 import themes from './themes';
 
@@ -435,7 +435,7 @@ export async function executePluginMainAction({
     if (!action) {
       throw new Error(`Action ${actionName} not found in plugin ${pluginName}`);
     }
-    const commonContext = getPluginCommonContext(plugin);
+    const commonContext = getPluginCommonContext({ plugin });
     return action.action({ ...commonContext, ...context }, params);
   });
 }
