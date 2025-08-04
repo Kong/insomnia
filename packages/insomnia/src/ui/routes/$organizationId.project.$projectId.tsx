@@ -78,6 +78,7 @@ import { ImportModal } from '../components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '../components/modals/new-workspace-modal';
 import { ProjectModal } from '../components/modals/project-modal';
 import { NoProjectView } from '../components/panes/no-project-view';
+import { NoSelectedProjectView } from '../components/panes/no-selected-project-view';
 import { ProjectEmptyView } from '../components/project/project-empty-view';
 import { OrganizationTabList } from '../components/tabs/tab-list';
 import { TimeFromNow } from '../components/time-from-now';
@@ -261,7 +262,7 @@ export interface InsomniaFile {
 }
 
 export interface ProjectIdLoaderData {
-  activeProject?: Project;
+  activeProject?: Project | null;
 }
 
 export interface ProjectLoaderData {
@@ -380,9 +381,8 @@ async function getAllLocalFiles({ projectId }: { projectId: string }) {
 async function getAllRemoteFiles({ projectId, organizationId }: { projectId: string; organizationId: string }) {
   try {
     const project = await models.project.getById(projectId);
-    invariant(project, 'Project not found');
 
-    const remoteId = project.remoteId;
+    const remoteId = project?.remoteId;
     console.log(
       '[getAllRemoteFiles] start fetching remote backend workspaces for project',
       projectId,
@@ -438,7 +438,7 @@ async function getAllRemoteFiles({ projectId, organizationId }: { projectId: str
 
 export interface ListWorkspacesLoaderData {
   files: InsomniaFile[];
-  activeProject?: Project;
+  activeProject?: Project | null;
   projects: Project[];
 }
 
@@ -448,7 +448,6 @@ export const listWorkspacesLoader: LoaderFunction = async ({ params }): Promise<
   invariant(projectId, 'Project ID is required');
 
   const project = await models.project.getById(projectId);
-  invariant(project, `Project was not found ${projectId}`);
   const organizationProjects =
     (await database.find<Project>(models.project.type, {
       parentId: organizationId,
@@ -469,7 +468,6 @@ export const projectIdLoader: LoaderFunction = async ({ params }): Promise<Proje
   invariant(projectId, 'Project ID is required');
 
   const project = await models.project.getById(projectId);
-  invariant(project, `Project was not found ${projectId}`);
 
   return {
     activeProject: project,
@@ -587,8 +585,7 @@ export const loader: LoaderFunction = async ({ params }) => {
   invariant(projectId, 'projectId parameter is required');
 
   const project = await models.project.getById(projectId);
-  invariant(project, `Project was not found ${projectId}`);
-  console.log('[project loader] Loading project:', project.name, projectId);
+  console.log('[project loader] Loading project:', project?.name, projectId);
   const [localFiles, organizationProjects = []] = await Promise.all([
     getAllLocalFiles({ projectId }),
     getProjectsWithGitRepositories({ organizationId }),
@@ -601,9 +598,8 @@ export const loader: LoaderFunction = async ({ params }) => {
 
   const projectsSyncStatusPromise = CheckAllProjectSyncStatus(projects);
 
-  const activeProjectGitRepository = isGitProject(project)
-    ? await models.gitRepository.getById(project.gitRepositoryId || '')
-    : null;
+  const activeProjectGitRepository =
+    project && isGitProject(project) ? await models.gitRepository.getById(project.gitRepositoryId || '') : null;
 
   return {
     localFiles,
@@ -1451,6 +1447,8 @@ const ProjectRoute: FC = () => {
                   </GridList>
                 </div>
               </div>
+            ) : projects.length ? (
+              <NoSelectedProjectView />
             ) : (
               <NoProjectView isGitSyncEnabled={isGitSyncEnabled} storageRules={storageRules} />
             )}

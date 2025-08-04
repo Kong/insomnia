@@ -3,6 +3,7 @@ import { type ActionFunctionArgs, redirect } from 'react-router';
 import { database } from '../../common/database';
 import * as models from '../../models';
 import { invariant } from '../../utils/invariant';
+import { getInitialRouteForOrganization } from '../../utils/router';
 import { insomniaFetch } from '../insomniaFetch';
 
 export async function action({ params }: ActionFunctionArgs) {
@@ -47,7 +48,10 @@ export async function action({ params }: ActionFunctionArgs) {
     await models.project.remove(project);
 
     await database.flushChanges(bufferId);
-    return redirect(`/organization/${organizationId}`);
+
+    // When redirect to `/organizations/:organizationId`, it sometimes doesn't reload the index loader, so manually redirect to the initial route for the organization
+    const initialOrganizationRoute = await getInitialRouteForOrganization({ organizationId });
+    return redirect(initialOrganizationRoute);
   } catch (err) {
     console.log(err);
     return {
