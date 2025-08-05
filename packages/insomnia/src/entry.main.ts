@@ -10,7 +10,6 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 import { userDataFolder } from '../config/config.json';
 import { getAppVersion, getProductName, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
-import log, { initializeLogging } from './common/log';
 import { SegmentEvent, trackSegmentEvent } from './main/analytics';
 import { registerInsomniaProtocols } from './main/api.protocol';
 import { backupIfNewerVersionAvailable } from './main/backup';
@@ -19,6 +18,7 @@ import { ipcMainOn, ipcMainOnce, registerElectronHandlers } from './main/ipc/ele
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
 import { registerSecretStorageHandlers } from './main/ipc/secret-storage';
+import log, { initializeLogging } from './main/log';
 import { registerCurlHandlers } from './main/network/curl';
 import { registerSocketIOHandlers } from './main/network/socket-io';
 import { registerWebSocketHandlers } from './main/network/websocket';
