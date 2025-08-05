@@ -23,7 +23,7 @@ export const decryptVaultKeyFromSession = async (vaultKey: string, toJsonWebKey:
   if (process.env.PLAYWRIGHT) {
     const testVaultKey = getInsomniaVaultKey() || '';
     if (testVaultKey) {
-      // return vault key from environmet variable directly when running playwright tests
+      // return vault key from environment variable directly when running playwright tests
       return toJsonWebKey ? base64decode(testVaultKey, true) : testVaultKey;
     }
   }

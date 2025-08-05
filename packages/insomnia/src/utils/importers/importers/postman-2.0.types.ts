@@ -439,7 +439,7 @@ export interface EdgeGridAuthentication {
   [k: string]: unknown;
 }
 /**
- * The attributes for [Hawk Authentication](https://github.com/hueniverse/hawk). e.g. authId, authKey, algorith, user, nonce, extraData, appId, delegation, timestamp.
+ * The attributes for [Hawk Authentication](https://github.com/hueniverse/hawk). e.g. authId, authKey, algorithm, user, nonce, extraData, appId, delegation, timestamp.
  */
 export interface HawkAuthentication {
   [k: string]: unknown;

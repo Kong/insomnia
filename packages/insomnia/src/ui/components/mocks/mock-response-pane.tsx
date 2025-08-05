@@ -202,7 +202,7 @@ const HistoryViewWrapperComponentFactory = ({
       }
       console.log('[mock] Error: fetching logs from remote', { mockbinUrl, res });
     } catch (e) {
-      // network erros will be managed by the upsert trigger, so we can ignore them here
+      // network errors will be managed by the upsert trigger, so we can ignore them here
       console.log({ mockbinUrl, e });
     }
   }, [
@@ -213,7 +213,7 @@ const HistoryViewWrapperComponentFactory = ({
     mockServer.useInsomniaCloud,
     userSession.id,
   ]);
-  // refetches logs whenever the path changes, or a response is recieved, or tenseconds elapses or history tab is click
+  // refetches logs whenever the path changes, or a response is received, or tenseconds elapses or history tab is click
   // chatgpt: answer my called
   useInterval(() => {
     fetchLogs();

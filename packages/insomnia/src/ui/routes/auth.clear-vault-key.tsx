@@ -26,7 +26,7 @@ export async function action({ request }: ActionFunctionArgs) {
   if (resetVaultClientSessionId !== sessionId) {
     // remove all secret environment variables
     await removeAllSecrets(organizations);
-    // Update vault salt and delelte vault key from session
+    // Update vault salt and delete vault key from session
     sessionModel.update(userSession, { vaultSalt: newVaultSalt, vaultKey: '' });
     // show notification
     const notification: ToastNotification = {

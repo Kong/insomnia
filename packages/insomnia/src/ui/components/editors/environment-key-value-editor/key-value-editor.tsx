@@ -130,7 +130,7 @@ export const EnvironmentKVEditor = ({ data, onChange, vaultKey = '', isPrivate =
     const changedItemIdx = kvPairs.findIndex(p => p.id === id);
     if (changedItemIdx !== -1) {
       const changedItem = kvPairs[changedItemIdx];
-      // enable item since user modifies the item unless manual disbale it
+      // enable item since user modifies the item unless manual disable it
       changedItem['enabled'] = true;
       changedItem[changedPropertyName] = newValue;
       // update value to emptfy object json string when switch to json type and current value is empty string

@@ -108,7 +108,7 @@ export function getDataFromKVPair(kvPair: EnvironmentKvPairData[]) {
   };
 }
 
-// mask vault environment varibale if necessary
+// mask vault environment variable if necessary
 export const maskVaultEnvironmentData = (environment: Environment) => {
   if (environment.isPrivate) {
     const { data, kvPairData } = environment;
