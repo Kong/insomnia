@@ -26,10 +26,10 @@ import {
   MNEMONIC_SYM,
 } from '../common/constants';
 import { docsBase } from '../common/documentation';
-import * as log from '../common/log';
 import { invariant } from '../utils/invariant';
 import ElectronStorage from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
+import { getLogDirectory } from './log';
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
@@ -493,7 +493,7 @@ export function createWindow(): ElectronBrowserWindow {
       {
         label: `Show App ${MNEMONIC_SYM}Logs Folder`,
         click: () => {
-          const directory = log.getLogDirectory();
+          const directory = getLogDirectory();
           shell.showItemInFolder(directory);
         },
       },
