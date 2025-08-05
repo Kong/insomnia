@@ -145,6 +145,34 @@ collection:
         store: true
       rebuildPath: true
   - url: http://127.0.0.1:4010/echo
+    name: External Vault Tag
+    meta:
+      id: req_05ce27906a824071ad138cb6d99249d0
+      created: 1748335221312
+      modified: 1748336216272
+      isPrivate: false
+      sortKey: -1748335221312
+    method: GET
+    body:
+      mimeType: text/plain
+      text: |
+        {% vault 'aws', '', '{}' %}
+        {% vault 'gcp', '', '{}' %}
+        {% vault 'hashicorp', '', '{}' %}
+    headers:
+      - name: Content-Type
+        value: text/plain
+      - name: User-Agent
+        value: insomnia/11.1.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true     
+  - url: http://127.0.0.1:4010/echo
     name: Base Response
     meta:
       id: req_60295920e8a9459fb32cacb739a261f5

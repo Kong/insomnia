@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import type { Application } from 'express';
 import { json } from 'express';
 
-import type { CurrentPlan } from '../../insomnia/src/ui/insomnia-api-types';
+import type { CurrentPlan } from '../../insomnia/src/ui/organization-utils';
 import type { Collaborator, CollaboratorType } from '../../insomnia/src/ui/routes/$organizationId.collaborators';
 import { getRandomId, getTeamName, getUserEmail } from '../tests/smoke/test-utils';
 
