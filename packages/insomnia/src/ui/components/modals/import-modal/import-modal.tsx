@@ -319,22 +319,17 @@ const ScanResourcesForm = ({
         >
           <fieldset className="flex flex-col gap-[var(--padding-md)]">
             <div className="flex rounded-[var(--radius-md)] border border-solid border-[color:var(--hl-md)] bg-[color:var(--hl-xs)] p-[var(--padding-xs)]">
-              <Radio
-                onChange={() => setImportFrom('file')}
-                name="importFrom"
-                value="file"
-                checked={importFrom === 'file'}
-              >
+              <Radio onChange={() => setImportFrom('file')} name="source" value="file" checked={importFrom === 'file'}>
                 <i className="fa fa-plus" />
                 File
               </Radio>
-              <Radio onChange={() => setImportFrom('uri')} name="importFrom" value="uri" checked={importFrom === 'uri'}>
+              <Radio onChange={() => setImportFrom('uri')} name="source" value="uri" checked={importFrom === 'uri'}>
                 <i className="fa fa-link" />
                 Url
               </Radio>
               <Radio
                 onChange={() => setImportFrom('clipboard')}
-                name="importFrom"
+                name="source"
                 value="clipboard"
                 checked={importFrom === 'clipboard'}
               >

@@ -1,21 +1,20 @@
 import React, { createContext, type FC, type PropsWithChildren, useContext, useEffect, useState } from 'react';
-import { useParams, useRevalidator, useRouteLoaderData } from 'react-router';
+import { useParams, useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { CDN_INVALIDATION_TTL } from '~/common/constants';
+import type { Organization } from '~/models/organization';
 import { useRootLoaderData } from '~/root';
 import { useClearVaultKeyFetcher } from '~/routes/auth.clear-vault-key';
-import type { ProjectLoaderData } from '~/routes/organization.$organizationId.project.$projectId._index';
+import { useProjectIndexLoaderData } from '~/routes/organization.$organizationId.project.$projectId._index';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useInsomniaSyncDataActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.sync-data';
 import { useStorageRulesActionFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { useOrganizationSyncProjectsActionFetcher } from '~/routes/organization.$organizationId.sync-projects';
 import { useOrganizationSyncActionFetcher } from '~/routes/organization.sync';
-
-import { CDN_INVALIDATION_TTL } from '../../../common/constants';
-import type { Organization } from '../../../models/organization';
-import type { WorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import { VCSInstance } from '../../../sync/vcs/insomnia-sync';
-import { insomniaFetch } from '../../../ui/insomniaFetch';
-import { avatarImageCache } from '../../hooks/image-cache';
+import { VCSInstance } from '~/sync/vcs/insomnia-sync';
+import { avatarImageCache } from '~/ui/hooks/image-cache';
+import { insomniaFetch } from '~/ui/insomniaFetch';
 
 const InsomniaEventStreamContext = createContext<{
   presence: UserPresence[];
@@ -105,21 +104,17 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
     workspaceId: string;
   };
 
-  const { userSession } = useRootLoaderData();
-  const projectData = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId._index',
-  ) as ProjectLoaderData;
-  const workspaceData = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
-  ) as WorkspaceLoaderData | null;
+  const { userSession } = useRootLoaderData()!;
+  const projectData = useProjectIndexLoaderData();
+  const workspaceData = useWorkspaceLoaderData();
   const remoteId = projectData?.activeProject?.remoteId || workspaceData?.activeProject.remoteId;
 
   const [presence, setPresence] = useState<UserPresence[]>([]);
-  const syncOrganizationsFetcher = useOrganizationSyncActionFetcher();
-  const syncStorageRuleFetcher = useStorageRulesActionFetcher();
-  const syncProjectsFetcher = useOrganizationSyncProjectsActionFetcher();
-  const syncDataFetcher = useInsomniaSyncDataActionFetcher();
-  const clearVaultKeyFetcher = useClearVaultKeyFetcher();
+  const { submit: syncOrganizationsSubmit } = useOrganizationSyncActionFetcher();
+  const { submit: syncStorageRulesSubmit } = useStorageRulesActionFetcher();
+  const { submit: syncProjectsSubmit } = useOrganizationSyncProjectsActionFetcher();
+  const { submit: syncDataSubmit } = useInsomniaSyncDataActionFetcher();
+  const { submit: clearVaultKeySubmit } = useClearVaultKeyFetcher();
 
   const latestProjectId = reactUse.useLatest(projectId);
   const latestWorkspaceId = reactUse.useLatest(workspaceId);
@@ -199,13 +194,13 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               if (event.avatar) {
                 window.setTimeout(() => avatarImageCache.invalidate(event.avatar), CDN_INVALIDATION_TTL);
               }
-              syncOrganizationsFetcher.submit();
+              syncOrganizationsSubmit();
             } else if (event.type === 'StorageRuleChanged' && event.team && event.team.includes('org_')) {
-              syncStorageRuleFetcher.submit({
+              syncStorageRulesSubmit({
                 organizationId: event.team,
               });
             } else if (event.type === 'TeamProjectChanged' && event.team === organizationId) {
-              syncProjectsFetcher.submit({
+              syncProjectsSubmit({
                 organizationId,
               });
             } else if (
@@ -222,7 +217,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
               const organizations = JSON.parse(
                 localStorage.getItem(`${accountId}:organizations`) || '[]',
               ) as Organization[];
-              clearVaultKeyFetcher.submit({
+              clearVaultKeySubmit({
                 organizations: organizations?.map(org => org.id) || [],
                 sessionId: event.sessionId,
               });
@@ -234,7 +229,7 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
             ) {
               // If the file changed is the current workspace, we need to sync it
               if (isSameWorkspaceWithRemote(latestWorkspaceId.current, event.file)) {
-                syncDataFetcher.submit({
+                syncDataSubmit({
                   organizationId: organizationId,
                   projectId: latestProjectId.current,
                   workspaceId: latestWorkspaceId.current,
@@ -258,21 +253,16 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
     }
     return;
   }, [
-    clearVaultKeyFetcher,
-    clearVaultKeyFetcher.submit,
+    clearVaultKeySubmit,
     latestProjectId,
     latestRemoteId,
     latestWorkspaceId,
     organizationId,
     revalidate,
-    syncDataFetcher,
-    syncDataFetcher.submit,
-    syncOrganizationsFetcher,
-    syncOrganizationsFetcher.submit,
-    syncProjectsFetcher,
-    syncProjectsFetcher.submit,
-    syncStorageRuleFetcher,
-    syncStorageRuleFetcher.submit,
+    syncDataSubmit,
+    syncOrganizationsSubmit,
+    syncProjectsSubmit,
+    syncStorageRulesSubmit,
     userSession.accountId,
     userSession.id,
   ]);

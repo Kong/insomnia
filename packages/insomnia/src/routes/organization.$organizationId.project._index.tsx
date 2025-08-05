@@ -21,7 +21,7 @@ import {
 } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import type { LoaderFunctionArgs } from 'react-router';
-import { href, redirect, useFetcher, useFetchers, useLoaderData, useNavigate, useParams } from 'react-router';
+import { href, redirect, useFetchers, useLoaderData, useNavigate, useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { logout } from '~/account/session';
@@ -56,7 +56,9 @@ import { isDesign, scopeToActivity, type Workspace, type WorkspaceScope } from '
 import type { WorkspaceMeta } from '~/models/workspace-meta';
 import { useRootLoaderData } from '~/root';
 import { useOrganizationLoaderData } from '~/routes/organization';
-import { type OrganizationStorageLoaderData } from '~/routes/organization.$organizationId.storage-rules';
+import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
+import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.new';
+import { useStorageRulesLoaderFetcher } from '~/routes/organization.$organizationId.storage-rules';
 import { VCSInstance } from '~/sync/vcs/insomnia-sync';
 import { SegmentEvent } from '~/ui/analytics';
 import { AvatarGroup } from '~/ui/components/avatar';
@@ -493,25 +495,25 @@ const Component = () => {
     return remoteFiles ? [...localFiles, ...remoteFiles] : localFiles;
   }, [localFiles, remoteFiles]);
 
-  const { userSession } = useRootLoaderData();
-  const pullFileFetcher = useFetcher();
+  const { userSession } = useRootLoaderData()!;
+  const pullFileFetcher = useInsomniaSyncPullRemoteFileActionFetcher();
   const loadingBackendProjects = useFetchers()
     .filter(
-      fetcher => fetcher.formAction === `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
+      fetcher =>
+        fetcher.formAction === href(`/organization/:organizationId/insomnia-sync/pull-remote-file`, { organizationId }),
     )
     .map(f => f.formData?.get('backendProjectId'));
 
   const organizationData = useOrganizationLoaderData();
   const { presence } = useInsomniaEventStreamContext();
-  const storageRuleFetcher = useFetcher<OrganizationStorageLoaderData>({ key: `storage-rule:${organizationId}` });
-  const createNewWorkspaceFetcher = useFetcher<{ error?: string }>();
+  const storageRuleFetcher = useStorageRulesLoaderFetcher({ key: `storage-rule:${organizationId}` });
+  const createNewWorkspaceFetcher = useWorkspaceNewActionFetcher();
   const { billing, features } = useOrganizationPermissions();
 
   useEffect(() => {
     if (!isScratchpadOrganizationId(organizationId)) {
       const load = storageRuleFetcher.load;
-      // file://./organization.tsx#organizationStorageLoader
-      load(`/organization/${organizationId}/storage-rules`);
+      load({ organizationId });
     }
   }, [organizationId, storageRuleFetcher.load]);
 
@@ -591,13 +593,11 @@ const Component = () => {
         // hack to workaround gridlist not have access to workspace scope
         if (file.scope === 'unsynced') {
           if (activeProject?.remoteId && file.remoteId) {
-            return pullFileFetcher.submit(
-              { backendProjectId: file.remoteId, remoteId: activeProject.remoteId },
-              {
-                method: 'POST',
-                action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
-              },
-            );
+            return pullFileFetcher.submit({
+              backendProjectId: file.remoteId,
+              remoteId: activeProject.remoteId,
+              organizationId,
+            });
           }
 
           return;
@@ -654,17 +654,13 @@ const Component = () => {
       return;
     }
 
-    createNewWorkspaceFetcher.submit(
-      {
-        name: 'My first collection',
-        scope: 'collection',
-        parentId: activeProject._id,
-      },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/new?withRequest=true`,
-        method: 'POST',
-      },
-    );
+    createNewWorkspaceFetcher.submit({
+      organizationId,
+      projectId,
+      name: 'My first collection',
+      scope: 'collection',
+      withRequest: true,
+    });
   };
 
   const isEnterprise = organizationData?.currentPlan?.type.includes('enterprise');

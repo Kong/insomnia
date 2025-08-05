@@ -16,7 +16,7 @@ export const BooleanSetting: FC<{
   confirmMessage?: (isChecked: boolean) => string;
   disabled?: boolean;
 }> = ({ help, label, setting, confirmBeforeToggle = false, confirmMessage, disabled = false }) => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   if (!(setting in settings)) {
     throw new Error(`Invalid boolean setting name ${setting}`);
   }

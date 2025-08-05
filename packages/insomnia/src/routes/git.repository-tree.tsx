@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import type { Route } from './+types/git.repository-tree';
@@ -11,18 +12,21 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
 }
 
 export function useGitProjectRepositoryTreeLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientLoader>(args);
+  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
 
-  function load({ projectId }: { projectId: string }) {
-    const searchParams = new URLSearchParams();
+  const load = useCallback(
+    ({ projectId }: { projectId: string }) => {
+      const searchParams = new URLSearchParams();
 
-    searchParams.set('projectId', projectId);
+      searchParams.set('projectId', projectId);
 
-    return fetcher.load(`${href('/git/repository-tree')}?${searchParams.toString()}`);
-  }
+      return fetcherLoad(`${href('/git/repository-tree')}?${searchParams.toString()}`);
+    },
+    [fetcherLoad],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     load,
   };
 }

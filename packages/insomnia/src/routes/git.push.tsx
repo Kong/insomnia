@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import type { Route } from './+types/git.push';
@@ -15,15 +16,18 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useGitProjectPushActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit(data: PushGitData) {
-    return fetcher.submit(JSON.stringify(data), {
-      method: 'POST',
-      action: href('/git/push'),
-      encType: 'application/json',
-    });
-  }
+  const submit = useCallback(
+    (data: PushGitData) => {
+      return fetcherSubmit(JSON.stringify(data), {
+        method: 'POST',
+        action: href('/git/push'),
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
-  return { ...fetcher, submit };
+  return { ...fetcherRest, submit };
 }

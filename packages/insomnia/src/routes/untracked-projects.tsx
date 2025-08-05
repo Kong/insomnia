@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useFetcher } from 'react-router';
 
 import { database } from '~/common/database';
@@ -46,14 +47,14 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
 }
 
 export function useUntrackedProjectsLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientLoader>(args);
+  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
 
-  function load() {
-    return fetcher.load('/untracked-projects');
-  }
+  const load = useCallback(() => {
+    return fetcherLoad('/untracked-projects');
+  }, [fetcherLoad]);
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     load,
   };
 }

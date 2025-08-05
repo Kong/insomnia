@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import { database } from '~/common/database';
@@ -32,41 +33,44 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 }
 
 export function useSpecUpdateActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    contents,
-    fromSync = false,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    contents: string;
-    fromSync?: boolean;
-  }) {
-    const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/spec/update', {
+  const submit = useCallback(
+    ({
       organizationId,
       projectId,
       workspaceId,
-    });
+      contents,
+      fromSync = false,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      contents: string;
+      fromSync?: boolean;
+    }) => {
+      const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/spec/update', {
+        organizationId,
+        projectId,
+        workspaceId,
+      });
 
-    const formData = new FormData();
-    formData.append('contents', contents);
-    if (fromSync) {
-      formData.append('fromSync', 'true');
-    }
+      const formData = new FormData();
+      formData.append('contents', contents);
+      if (fromSync) {
+        formData.append('fromSync', 'true');
+      }
 
-    return fetcher.submit(formData, {
-      action: url,
-      method: 'POST',
-    });
-  }
+      return fetcherSubmit(formData, {
+        action: url,
+        method: 'POST',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

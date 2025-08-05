@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import { invariant } from '~/utils/invariant';
@@ -19,19 +20,24 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
 }
 
 export function useGitProjectDiffLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientLoader>(args);
+  const {
+    load: fetcherLoad,
+    ...fetcherRest
+  } = useFetcher<typeof clientLoader>(args);
 
-  function load({
-    workspaceId,
-    projectId,
-    filePath,
-    staged,
-  }: {
-    workspaceId?: string;
-    projectId: string;
-    filePath: string;
-    staged: boolean;
-  }) {
+  const load = useCallback((
+    {
+      workspaceId,
+      projectId,
+      filePath,
+      staged,
+    }: {
+      workspaceId?: string;
+      projectId: string;
+      filePath: string;
+      staged: boolean;
+    }
+  ) => {
     const params = new URLSearchParams();
     params.set('filepath', filePath);
     params.set('staged', staged ? 'true' : 'false');
@@ -40,11 +46,11 @@ export function useGitProjectDiffLoaderFetcher(args?: Parameters<typeof useFetch
     }
     params.set('projectId', projectId);
 
-    return fetcher.load(`${href('/git/diff')}?${params.toString()}`);
-  }
+    return fetcherLoad(`${href('/git/diff')}?${params.toString()}`);
+  }, [fetcherLoad]);
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     load,
   };
 }

@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import type { GitCredentials } from '~/models/git-repository';
@@ -29,18 +30,21 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useGitProjectInitCloneActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const {
+    submit: fetcherSubmit,
+    ...fetcherRest
+  } = useFetcher<typeof clientAction>(args);
 
-  function submit(data: RepoInitCloneData) {
-    return fetcher.submit(JSON.stringify(data), {
+  const submit = useCallback((data: RepoInitCloneData) => {
+    return fetcherSubmit(JSON.stringify(data), {
       action: href('/git/init-clone'),
       method: 'POST',
       encType: 'application/json',
     });
-  }
+  }, [fetcherSubmit]);
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import * as models from '~/models';
@@ -25,24 +26,27 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useProjectMoveWorkspaceActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit(organizationId: string, projectId: string, workspaceId: string) {
-    const formData = new FormData();
-    formData.set('projectId', projectId);
-    formData.set('workspaceId', workspaceId);
+  const submit = useCallback(
+    (organizationId: string, projectId: string, workspaceId: string) => {
+      const formData = new FormData();
+      formData.set('projectId', projectId);
+      formData.set('workspaceId', workspaceId);
 
-    return fetcher.submit(formData, {
-      method: 'POST',
-      action: href(`/organization/:organizationId/project/:projectId/move-workspace`, {
-        organizationId,
-        projectId,
-      }),
-    });
-  }
+      return fetcherSubmit(formData, {
+        method: 'POST',
+        action: href(`/organization/:organizationId/project/:projectId/move-workspace`, {
+          organizationId,
+          projectId,
+        }),
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

@@ -1,6 +1,7 @@
 import type * as Har from 'har-format';
+import { useCallback } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
+import { useParams, useRouteLoaderData } from 'react-router';
 
 import {
   CONTENT_TYPE_JSON,
@@ -22,6 +23,7 @@ import type { Request, RequestHeader } from '~/models/request';
 import type { Response } from '~/models/response';
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
+import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 import { Dropdown, DropdownItem, ItemContent } from '~/ui/components/base/dropdown';
 import { MockResponseHeadersEditor } from '~/ui/components/editors/mock-response-headers-editor';
@@ -36,7 +38,7 @@ import { insomniaFetch } from '~/ui/insomniaFetch';
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
-import type { MockServerLoaderData } from './organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server';
+import { useMockServerLoaderData } from './organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server';
 
 export interface MockRouteLoaderData {
   mockServer: MockServer;
@@ -118,28 +120,37 @@ export const mockRouteToHar = ({
 };
 
 export const useMockRoutePatcher = () => {
-  const { organizationId, projectId, workspaceId } = useParams<{
+  const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
-  }>();
-  const fetcher = useFetcher();
-  return (id: string, patch: Partial<MockRoute>) => {
-    fetcher.submit(JSON.stringify(patch), {
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/${id}/update`,
-      method: 'post',
-      encType: 'application/json',
-    });
   };
+  const { submit } = useMockRouteUpdateActionFetcher();
+  return useCallback(
+    (id: string, patch: Partial<MockRoute>) => {
+      submit({
+        mockRouteId: id,
+        organizationId,
+        projectId,
+        workspaceId,
+        patch,
+      });
+    },
+    [organizationId, projectId, submit, workspaceId],
+  );
 };
 
-export const MockRouteRoute = () => {
-  const { mockServer, mockRoute } = useRouteLoaderData(
+export function useMockRouteLoaderData() {
+  return useRouteLoaderData<typeof clientLoader>(
     'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId',
-  ) as MockRouteLoaderData;
-  const { mockRoutes } = useRouteLoaderData('mock-server') as MockServerLoaderData;
+  );
+}
 
-  const { userSession } = useRootLoaderData();
+export const MockRouteRoute = () => {
+  const { mockServer, mockRoute } = useMockRouteLoaderData()!;
+  const { mockRoutes } = useMockServerLoaderData()!;
+
+  const { userSession } = useRootLoaderData()!;
   const patchMockRoute = useMockRoutePatcher();
   const mockbinUrl = mockServer.useInsomniaCloud ? getMockServiceURL() : mockServer.url;
 

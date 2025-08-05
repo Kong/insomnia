@@ -22,7 +22,7 @@ import {
   TooltipTrigger,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { NavLink, useFetcher, useLoaderData, useRouteLoaderData } from 'react-router';
+import { NavLink, useLoaderData } from 'react-router';
 import * as reactUse from 'react-use';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
 import YAML from 'yaml';
@@ -33,7 +33,9 @@ import { debounce, isNotNullOrUndefined } from '~/common/misc';
 import * as models from '~/models/index';
 import { isGitProject } from '~/models/project';
 import { useRootLoaderData } from '~/root';
-import type { WorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useSpecGenerateRequestCollectionActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.generate-request-collection';
+import { useSpecUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.spec.update';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { DesignEmptyState } from '~/ui/components/design-empty-state';
 import { DocumentTab } from '~/ui/components/document-tab';
@@ -140,10 +142,9 @@ const lintOptions = {
 
 const Component = ({ params }: Route.ComponentProps) => {
   const { organizationId, projectId, workspaceId } = params;
-  const { activeProject, activeCookieJar, caCertificate, clientCertificates, activeWorkspace } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
-  ) as WorkspaceLoaderData;
-  const { settings } = useRootLoaderData();
+  const { activeProject, activeCookieJar, caCertificate, clientCertificates, activeWorkspace } =
+    useWorkspaceLoaderData()!;
+  const { settings } = useRootLoaderData()!;
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
@@ -155,8 +156,8 @@ const Component = ({ params }: Route.ComponentProps) => {
   const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
 
   const editor = useRef<CodeEditorHandle>(null);
-  const updateApiSpecFetcher = useFetcher();
-  const generateRequestCollectionFetcher = useFetcher();
+  const { submit: updateApiSpec } = useSpecUpdateActionFetcher();
+  const generateRequestCollectionFetcher = useSpecGenerateRequestCollectionActionFetcher();
   const [isLintPaneOpen, setIsLintPaneOpen] = useState(false);
   const [isSpecPaneOpen, setIsSpecPaneOpen] = useState(Boolean(parsedSpec));
 
@@ -222,19 +223,16 @@ const Component = ({ params }: Route.ComponentProps) => {
 
   const onCodeEditorChange = useMemo(() => {
     const handler = async (contents: string) => {
-      updateApiSpecFetcher.submit(
-        {
-          contents: contents,
-        },
-        {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/spec/update`,
-          method: 'post',
-        },
-      );
+      return updateApiSpec({
+        organizationId,
+        projectId,
+        workspaceId,
+        contents: contents,
+      });
     };
 
     return debounce(handler, 500);
-  }, [organizationId, projectId, updateApiSpecFetcher, workspaceId]);
+  }, [organizationId, projectId, updateApiSpec, workspaceId]);
 
   const handleScrollToSelection = useCallback(
     (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => {
@@ -336,13 +334,11 @@ const Component = ({ params }: Route.ComponentProps) => {
       icon: <Icon className="w-3" icon="file-code" />,
       isDisabled: !apiSpec.contents || lintErrors.length > 0 || generateRequestCollectionFetcher.state !== 'idle',
       action: () =>
-        generateRequestCollectionFetcher.submit(
-          {},
-          {
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/spec/generate-request-collection`,
-            method: 'POST',
-          },
-        ),
+        generateRequestCollectionFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+        }),
     },
     {
       id: 'toggle-preview',
@@ -890,16 +886,13 @@ const Component = ({ params }: Route.ComponentProps) => {
                 {apiSpec.contents ? null : (
                   <DesignEmptyState
                     onImport={value => {
-                      updateApiSpecFetcher.submit(
-                        {
-                          contents: value,
-                          fromSync: 'true',
-                        },
-                        {
-                          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/spec/update`,
-                          method: 'post',
-                        },
-                      );
+                      updateApiSpec({
+                        organizationId,
+                        projectId,
+                        workspaceId,
+                        contents: value,
+                        fromSync: true,
+                      });
                     }}
                   />
                 )}

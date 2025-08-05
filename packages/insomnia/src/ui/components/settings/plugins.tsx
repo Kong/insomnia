@@ -40,7 +40,7 @@ interface State {
 }
 
 export const Plugins: FC = () => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const [showCreatePluginModal, setShowCreatePluginModal] = useState(false);
 
   const [

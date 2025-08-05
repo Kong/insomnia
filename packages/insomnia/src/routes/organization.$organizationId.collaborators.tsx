@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import { userSession } from '~/models';
@@ -75,31 +76,34 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
 }
 
 export function useCollaboratorsFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientLoader>(args);
+  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
 
-  function load({
-    organizationId,
-    page,
-    per_page,
-    filter,
-  }: {
-    organizationId: string;
-    page?: number;
-    per_page?: number;
-    filter?: string;
-  }) {
-    const queryParams = new URLSearchParams();
-    if (page) queryParams.append('page', String(page));
-    if (per_page) queryParams.append('per_page', String(per_page));
-    if (filter) queryParams.append('filter', filter);
+  const load = useCallback(
+    ({
+      organizationId,
+      page,
+      per_page,
+      filter,
+    }: {
+      organizationId: string;
+      page?: number;
+      per_page?: number;
+      filter?: string;
+    }) => {
+      const queryParams = new URLSearchParams();
+      if (page) queryParams.append('page', String(page));
+      if (per_page) queryParams.append('per_page', String(per_page));
+      if (filter) queryParams.append('filter', filter);
 
-    fetcher.load(
-      `${href(`/organization/:organizationId/collaborators`, { organizationId })}?${queryParams.toString()}`,
-    );
-  }
+      fetcherLoad(
+        `${href(`/organization/:organizationId/collaborators`, { organizationId })}?${queryParams.toString()}`,
+      );
+    },
+    [fetcherLoad],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     load,
   };
 }

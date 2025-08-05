@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import type { Route } from './+types/git.branches';
@@ -15,20 +16,26 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
 }
 
 export function useGitProjectBranchesLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientLoader>(args);
+  const {
+    load: fetcherLoad,
+    ...fetcherRest
+  } = useFetcher<typeof clientLoader>(args);
 
-  function load({ projectId, workspaceId }: { workspaceId?: string; projectId: string }) {
-    const searchParams = new URLSearchParams();
+  const load = useCallback(
+    ({ projectId, workspaceId }: { workspaceId?: string; projectId: string }) => {
+      const searchParams = new URLSearchParams();
 
-    if (workspaceId) {
-      searchParams.set('workspaceId', workspaceId);
-    }
-    searchParams.set('projectId', projectId);
-    return fetcher.load(`${href('/git/branches')}?${searchParams.toString()}`);
-  }
+      if (workspaceId) {
+        searchParams.set('workspaceId', workspaceId);
+      }
+      searchParams.set('projectId', projectId);
+      return fetcherLoad(`${href('/git/branches')}?${searchParams.toString()}`);
+    },
+    [fetcherLoad]
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     load,
   };
 }

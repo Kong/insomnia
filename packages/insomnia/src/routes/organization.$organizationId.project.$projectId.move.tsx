@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import * as models from '~/models';
@@ -26,33 +27,36 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 }
 
 export function useProjectMoveActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    currentOrganizationId,
-    projectId,
-    newOrganizationId,
-  }: {
-    currentOrganizationId: string;
-    projectId: string;
-    newOrganizationId: string;
-  }) {
-    return fetcher.submit(
-      {
-        organizationId: newOrganizationId,
-      },
-      {
-        method: 'POST',
-        action: href('/organization/:organizationId/project/:projectId/move', {
-          organizationId: currentOrganizationId,
-          projectId,
-        }),
-      },
-    );
-  }
+  const submit = useCallback(
+    ({
+      currentOrganizationId,
+      projectId,
+      newOrganizationId,
+    }: {
+      currentOrganizationId: string;
+      projectId: string;
+      newOrganizationId: string;
+    }) => {
+      return fetcherSubmit(
+        {
+          organizationId: newOrganizationId,
+        },
+        {
+          method: 'POST',
+          action: href('/organization/:organizationId/project/:projectId/move', {
+            organizationId: currentOrganizationId,
+            projectId,
+          }),
+        },
+      );
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

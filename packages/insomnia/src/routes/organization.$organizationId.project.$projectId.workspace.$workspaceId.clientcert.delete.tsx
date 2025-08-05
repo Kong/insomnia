@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import * as models from '~/models';
@@ -15,34 +16,37 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useClientCertDeleteActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    _id,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    _id: string;
-  }) {
-    const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/clientcert/delete', {
+  const submit = useCallback(
+    ({
       organizationId,
       projectId,
       workspaceId,
-    });
+      _id,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      _id: string;
+    }) => {
+      const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/clientcert/delete', {
+        organizationId,
+        projectId,
+        workspaceId,
+      });
 
-    return fetcher.submit(JSON.stringify({ _id }), {
-      action: url,
-      method: 'POST',
-      encType: 'application/json',
-    });
-  }
+      return fetcherSubmit(JSON.stringify({ _id }), {
+        action: url,
+        method: 'POST',
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

@@ -56,7 +56,7 @@ export const RequestActionsDropdown = ({
   onOpenChange,
   onRename,
 }: Props) => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const patchRequestMeta = useRequestMetaPatcher();
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);

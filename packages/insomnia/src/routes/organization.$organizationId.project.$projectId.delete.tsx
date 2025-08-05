@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, redirect, useFetcher } from 'react-router';
 
 import { database } from '~/common/database';
@@ -66,25 +67,28 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 }
 
 export function useProjectDeleteActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({ organizationId, projectId }: { organizationId: string; projectId: string }) {
-    const url = href('/organization/:organizationId/project/:projectId/delete', {
-      organizationId,
-      projectId,
-    });
+  const submit = useCallback(
+    ({ organizationId, projectId }: { organizationId: string; projectId: string }) => {
+      const url = href('/organization/:organizationId/project/:projectId/delete', {
+        organizationId,
+        projectId,
+      });
 
-    return fetcher.submit(
-      {},
-      {
-        action: url,
-        method: 'POST',
-      },
-    );
-  }
+      return fetcherSubmit(
+        {},
+        {
+          action: url,
+          method: 'POST',
+        },
+      );
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

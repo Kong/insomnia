@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, redirect, useFetcher } from 'react-router';
 
 import { userSession } from '~/models';
@@ -59,18 +60,21 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 }
 
 export function useOrganizationPermissionsLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientLoader>(args);
+  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
 
-  function load({ organizationId }: { organizationId: string }) {
-    return fetcher.load(
-      href('/organization/:organizationId/permissions', {
-        organizationId,
-      }),
-    );
-  }
+  const load = useCallback(
+    ({ organizationId }: { organizationId: string }) => {
+      return fetcherLoad(
+        href('/organization/:organizationId/permissions', {
+          organizationId,
+        }),
+      );
+    },
+    [fetcherLoad],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     load,
   };
 }

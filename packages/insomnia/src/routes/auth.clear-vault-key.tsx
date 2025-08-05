@@ -1,4 +1,5 @@
 import electron from 'electron';
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import { userSession as sessionModel } from '~/models';
@@ -42,17 +43,20 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useClearVaultKeyFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  const submit = (data: { organizations: string[]; sessionId: string }) => {
-    fetcher.submit(data, {
-      action: href('/auth/clear-vault-key'),
-      method: 'POST',
-    });
-  };
+  const submit = useCallback(
+    (data: { organizations: string[]; sessionId: string }) => {
+      fetcherSubmit(data, {
+        action: href('/auth/clear-vault-key'),
+        method: 'POST',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { type ActionFunctionArgs, href, useFetcher } from 'react-router';
 
 import { userSession as sessionModel } from '~/models';
@@ -29,26 +30,23 @@ export async function clientAction({ request }: ActionFunctionArgs) {
 }
 
 export function useValidateVaultKeyActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    vaultKey,
-    saveVaultKey = false,
-  }: {
-    vaultKey: string;
-    saveVaultKey?: boolean;
-  }) {
-    const url = href('/auth/validate-vault-key');
+  const submit = useCallback(
+    ({ vaultKey, saveVaultKey = false }: { vaultKey: string; saveVaultKey?: boolean }) => {
+      const url = href('/auth/validate-vault-key');
 
-    return fetcher.submit(JSON.stringify({ vaultKey, saveVaultKey }), {
-      action: url,
-      method: 'POST',
-      encType: 'application/json',
-    });
-  }
+      return fetcherSubmit(JSON.stringify({ vaultKey, saveVaultKey }), {
+        action: url,
+        method: 'POST',
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

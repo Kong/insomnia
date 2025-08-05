@@ -1,11 +1,12 @@
 import React, { useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
-import { useRouteLoaderData } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { useRootLoaderData } from '~/root';
-import type { MockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
-import { useMockRoutePatcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import {
+  useMockRouteLoaderData,
+  useMockRoutePatcher,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 import type { OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import { getMockServiceBinURL, HTTP_METHODS } from '../../../common/constants';
@@ -26,10 +27,8 @@ export const MockUrlBar = ({
   onPathUpdate: (path: string) => void;
   onSend: (path: string) => void;
 }) => {
-  const { mockServer, mockRoute } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.mock-server.mock-route.$mockRouteId',
-  ) as MockRouteLoaderData;
-  const { settings } = useRootLoaderData();
+  const { mockServer, mockRoute } = useMockRouteLoaderData()!;
+  const { settings } = useRootLoaderData()!;
   const { hotKeyRegistry } = settings;
   const patchMockRoute = useMockRoutePatcher();
   const [pathInput, setPathInput] = useState<string>(mockRoute.name);

@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import * as models from '~/models';
@@ -34,23 +35,26 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 }
 
 export function useOrganizationMemberRolesActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({ organizationId, userId, roleId }: { organizationId: string; userId: string; roleId: string }) {
-    const formData = new FormData();
-    formData.set('roleId', roleId);
+  const submit = useCallback(
+    ({ organizationId, userId, roleId }: { organizationId: string; userId: string; roleId: string }) => {
+      const formData = new FormData();
+      formData.set('roleId', roleId);
 
-    return fetcher.submit(formData, {
-      method: 'POST',
-      action: href(`/organization/:organizationId/members/:userId/roles`, {
-        organizationId,
-        userId,
-      }),
-    });
-  }
+      return fetcherSubmit(formData, {
+        method: 'POST',
+        action: href(`/organization/:organizationId/members/:userId/roles`, {
+          organizationId,
+          userId,
+        }),
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

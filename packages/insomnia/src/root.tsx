@@ -4,7 +4,6 @@ import type { IpcRendererEvent } from 'electron';
 import type { FC } from 'react';
 import { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
-import type { LinksFunction } from 'react-router';
 import {
   href,
   Links,
@@ -16,7 +15,7 @@ import {
   useParams,
   useRouteLoaderData,
 } from 'react-router';
-import { isRouteErrorResponse, useNavigation, useRouteError } from 'react-router';
+import { isRouteErrorResponse, useNavigation } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
 import * as models from '~/models';
@@ -49,11 +48,12 @@ import {
 } from '~/ui/components/modals/settings-modal';
 import { AppHooks } from '~/ui/containers/app-hooks';
 import { NunjucksEnabledProvider } from '~/ui/context/nunjucks/nunjucks-enabled-context';
+import { useThemeChange } from '~/ui/hooks/use-theme-change';
 import Modals from '~/ui/modals';
 
-import type { Route } from '.react-router/types/src/+types/root';
+import type { Route } from './+types/root';
 
-export const links: LinksFunction = () => {
+export const links: Route.LinksFunction = () => {
   return [
     { rel: 'icon', href: '/favicon.ico' },
     { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
@@ -61,8 +61,8 @@ export const links: LinksFunction = () => {
   ];
 };
 
-export const ErrorBoundary: FC<{ defaultMessage?: string }> = ({ defaultMessage }) => {
-  const error = useRouteError();
+export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
+  useThemeChange();
   const getErrorMessage = (err: any) => {
     if (isRouteErrorResponse(err)) {
       return err.data;
@@ -70,10 +70,6 @@ export const ErrorBoundary: FC<{ defaultMessage?: string }> = ({ defaultMessage 
 
     if (err?.message) {
       return err?.message;
-    }
-
-    if (defaultMessage) {
-      return defaultMessage;
     }
 
     return 'Unknown error';
@@ -136,7 +132,7 @@ export interface RootLoaderData {
 }
 
 export const useRootLoaderData = () => {
-  return useRouteLoaderData('root') as RootLoaderData;
+  return useRouteLoaderData<typeof clientLoader>('root');
 };
 
 export async function clientLoader(_args: Route.ClientLoaderArgs) {
@@ -301,12 +297,12 @@ const Root = () => {
   };
 
   const [importUri, setImportUri] = useState('');
-  const authorizeFetcher = useAuthorizeActionFetcher();
-  const logoutFetcher = useLogoutFetcher();
-  const completeSignInToGitHubFetcher = useGithubCompleteSignInFetcher();
-  const completeSignInToGitLabFetcher = useGitLabCompleteSignInFetcher();
-  const redirectToDefaultBrowserFetcher = useDefaultBrowserRedirectActionFetcher();
   const { submit: createCloudCredentials } = useCreateCloudCredentialActionFetcher();
+  const { submit: authorizeSubmit } = useAuthorizeActionFetcher();
+  const { submit: logoutSubmit } = useLogoutFetcher();
+  const { submit: githubCompleteSignInSubmit } = useGithubCompleteSignInFetcher();
+  const { submit: gitLabCompleteSignInSubmit } = useGitLabCompleteSignInFetcher();
+  const { submit: redirectToDefaultBrowserSubmit } = useDefaultBrowserRedirectActionFetcher();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -336,7 +332,7 @@ const Root = () => {
           window.localStorage.setItem('logoutMessage', params.message);
         }
 
-        return logoutFetcher.submit();
+        return logoutSubmit();
       }
       if (urlWithoutParams === 'insomnia://app/import') {
         window.main.trackSegmentEvent({
@@ -413,20 +409,20 @@ const Root = () => {
         urlWithoutParams === 'insomnia://oauth/github-app/authenticate'
       ) {
         const { code, state } = params;
-        return completeSignInToGitHubFetcher.submit({
+        return githubCompleteSignInSubmit({
           code,
           state,
         });
       }
       if (urlWithoutParams === 'insomnia://oauth/gitlab/authenticate') {
         const { code, state } = params;
-        return completeSignInToGitLabFetcher.submit({
+        return gitLabCompleteSignInSubmit({
           code,
           state,
         });
       }
       if (urlWithoutParams === 'insomnia://app/auth/finish') {
-        return authorizeFetcher.submit({
+        return authorizeSubmit({
           code: params.box,
         });
       }
@@ -444,7 +440,7 @@ const Root = () => {
       }
       if (urlWithoutParams === 'insomnia://system-browser-oauth/redirect') {
         const { url: redirectUrl } = params;
-        return redirectToDefaultBrowserFetcher.submit({
+        return redirectToDefaultBrowserSubmit({
           redirectUrl,
         });
       }
@@ -528,13 +524,13 @@ const Root = () => {
       console.log(`Unknown deep link: ${url}`);
     });
   }, [
-    authorizeFetcher,
-    completeSignInToGitHubFetcher,
-    completeSignInToGitLabFetcher,
+    authorizeSubmit,
     createCloudCredentials,
-    logoutFetcher,
+    gitLabCompleteSignInSubmit,
+    githubCompleteSignInSubmit,
+    logoutSubmit,
     navigate,
-    redirectToDefaultBrowserFetcher,
+    redirectToDefaultBrowserSubmit,
   ]);
 
   return (

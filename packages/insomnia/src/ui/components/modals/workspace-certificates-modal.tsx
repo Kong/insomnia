@@ -16,7 +16,7 @@ import {
   Tabs,
   ToggleButton,
 } from 'react-aria-components';
-import { useParams, useRouteLoaderData } from 'react-router';
+import { useParams } from 'react-router';
 
 import { useCaCertDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.cacert.delete';
 import { useCACertNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.cacert.new';
@@ -26,7 +26,7 @@ import { useClientCertNewActionFetcher } from '~/routes/organization.$organizati
 import { useClientCertUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.clientcert.update';
 
 import type { ClientCertificate } from '../../../models/client-certificate';
-import type { WorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { Icon } from '../icon';
 import { PasswordViewer } from '../viewers/password-viewer';
 
@@ -319,9 +319,7 @@ export const CertificatesModal = ({ onClose }: { onClose: () => void }) => {
     workspaceId: string;
   };
 
-  const routeData = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
-  ) as WorkspaceLoaderData;
+  const routeData = useWorkspaceLoaderData()!;
 
   const [isAddClientCertificateModalOpen, setIsAddClientCertificateModalOpen] = useState(false);
 

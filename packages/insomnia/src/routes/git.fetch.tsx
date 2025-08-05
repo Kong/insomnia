@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import type { Route } from './+types/git.fetch';
@@ -14,19 +15,22 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useGitProjectFetchActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const {
+    submit: fetcherSubmit,
+    ...fetcherRest
+  } = useFetcher<typeof clientAction>(args);
 
-  function submit(data: FetchGitData) {
+  const submit = useCallback((data: FetchGitData) => {
     console.log('Submitting git fetch action', data);
-    return fetcher.submit(JSON.stringify(data), {
+    return fetcherSubmit(JSON.stringify(data), {
       method: 'POST',
       action: href('/git/fetch'),
       encType: 'application/json',
     });
-  }
+  }, [fetcherSubmit]);
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

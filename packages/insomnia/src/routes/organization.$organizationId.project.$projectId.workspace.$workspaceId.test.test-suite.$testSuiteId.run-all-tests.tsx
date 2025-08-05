@@ -1,4 +1,5 @@
 import { generate, runTests, type Test, type TestResults } from 'insomnia-testing';
+import { useCallback } from 'react';
 import { href, redirect, useFetcher } from 'react-router';
 
 import { database } from '~/common/database';
@@ -110,34 +111,43 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 }
 
 export function useRunAllTestsActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    testSuiteId,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    testSuiteId: string;
-  }) {
-    const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/test/test-suite/:testSuiteId/run-all-tests', {
+  const submit = useCallback(
+    ({
       organizationId,
       projectId,
       workspaceId,
       testSuiteId,
-    });
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      testSuiteId: string;
+    }) => {
+      const url = href(
+        '/organization/:organizationId/project/:projectId/workspace/:workspaceId/test/test-suite/:testSuiteId/run-all-tests',
+        {
+          organizationId,
+          projectId,
+          workspaceId,
+          testSuiteId,
+        },
+      );
 
-    return fetcher.submit({}, {
-      action: url,
-      method: 'POST',
-    });
-  }
+      return fetcherSubmit(
+        {},
+        {
+          action: url,
+          method: 'POST',
+        },
+      );
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

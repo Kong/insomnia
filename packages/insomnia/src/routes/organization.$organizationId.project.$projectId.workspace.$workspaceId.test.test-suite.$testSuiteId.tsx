@@ -12,7 +12,7 @@ import {
   SelectValue,
   useDragAndDrop,
 } from 'react-aria-components';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router';
+import { useParams, useRouteLoaderData } from 'react-router';
 
 import { database } from '~/common/database';
 import { documentationLinks } from '~/common/documentation';
@@ -22,6 +22,12 @@ import { isRequest, type Request } from '~/models/request';
 import type { UnitTest } from '~/models/unit-test';
 import type { UnitTestSuite } from '~/models/unit-test-suite';
 import { isWebSocketRequest } from '~/models/websocket-request';
+import { useRunAllTestsActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.run-all-tests';
+import { useTestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.$testId.delete';
+import { useTestRunActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.$testId.run';
+import { useTestUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.$testId.update';
+import { useTestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test.new';
+import { useTestSuiteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.update';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { EditableInput } from '~/ui/components/editable-input';
 import { Icon } from '~/ui/components/icon';
@@ -32,6 +38,12 @@ import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId';
 
+export function useUnitTestSuiteLoaderData() {
+  return useRouteLoaderData<typeof clientLoader>(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId',
+  );
+}
+
 const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: boolean }) => {
   const editorRef = useRef<CodeEditorHandle>(null);
   const { projectId, workspaceId, organizationId } = useParams() as {
@@ -39,13 +51,11 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
     projectId: string;
     organizationId: string;
   };
-  const { unitTestSuite, requests } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId',
-  ) as LoaderData;
+  const { unitTestSuite, requests } = useUnitTestSuiteLoaderData()!;
 
-  const deleteUnitTestFetcher = useFetcher();
-  const runTestFetcher = useFetcher();
-  const updateUnitTestFetcher = useFetcher();
+  const deleteUnitTestFetcher = useTestDeleteActionFetcher();
+  const runTestFetcher = useTestRunActionFetcher();
+  const updateUnitTestFetcher = useTestUpdateActionFetcher();
 
   const lintOptions = {
     globals: {
@@ -80,16 +90,16 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
             className="w-full px-1"
             onSubmit={name => {
               if (name) {
-                updateUnitTestFetcher.submit(
-                  {
+                updateUnitTestFetcher.submit({
+                  organizationId,
+                  projectId,
+                  workspaceId,
+                  testSuiteId: unitTestSuite._id,
+                  testId: unitTest._id,
+                  data: {
                     name,
                   },
-                  {
-                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
-                    method: 'POST',
-                    encType: 'application/json',
-                  },
-                );
+                });
               }
             }}
             value={unitTest.name}
@@ -98,17 +108,18 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
         <Select
           className="flex-shrink-0"
           aria-label="Request for test"
-          onSelectionChange={requestId => {
-            updateUnitTestFetcher.submit(
-              {
+          onSelectionChange={key => {
+            const requestId = key.toString();
+            updateUnitTestFetcher.submit({
+              organizationId,
+              projectId,
+              workspaceId,
+              testSuiteId: unitTestSuite._id,
+              testId: unitTest._id,
+              data: {
                 requestId,
               },
-              {
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
-                method: 'post',
-                encType: 'application/json',
-              },
-            );
+            });
           }}
           selectedKey={unitTest.requestId}
         >
@@ -223,13 +234,13 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
               color: 'danger',
               onDone: async (isYes: boolean) => {
                 if (isYes) {
-                  deleteUnitTestFetcher.submit(
-                    {},
-                    {
-                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/delete`,
-                      method: 'POST',
-                    },
-                  );
+                  deleteUnitTestFetcher.submit({
+                    organizationId,
+                    projectId,
+                    workspaceId,
+                    testSuiteId: unitTestSuite._id,
+                    testId: unitTest._id,
+                  });
                 }
               },
             });
@@ -240,13 +251,13 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
         <Button
           className="flex aspect-square h-8 flex-shrink-0 items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
           onPress={() => {
-            runTestFetcher.submit(
-              {},
-              {
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/run`,
-                method: 'post',
-              },
-            );
+            runTestFetcher.submit({
+              organizationId,
+              projectId,
+              workspaceId,
+              testSuiteId: unitTestSuite._id,
+              testId: unitTest._id,
+            });
           }}
         >
           <Icon icon="play" />
@@ -286,16 +297,16 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
           }}
           lintOptions={lintOptions}
           onChange={code =>
-            updateUnitTestFetcher.submit(
-              {
+            updateUnitTestFetcher.submit({
+              organizationId,
+              projectId,
+              workspaceId,
+              testSuiteId: unitTestSuite._id,
+              testId: unitTest._id,
+              data: {
                 code,
               },
-              {
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
-                method: 'post',
-                encType: 'application/json',
-              },
-            )
+            })
           }
           mode="javascript"
           placeholder=""
@@ -304,12 +315,6 @@ const UnitTestItemView = ({ unitTest }: { unitTest: UnitTest; testsRunning: bool
     </div>
   );
 };
-
-interface LoaderData {
-  unitTests: UnitTest[];
-  unitTestSuite: UnitTestSuite;
-  requests: Request[];
-}
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { workspaceId, testSuiteId } = params;
@@ -354,16 +359,18 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 }
 
 const Component = () => {
-  const { organizationId, projectId, workspaceId } = useParams();
+  const { organizationId, projectId, workspaceId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  };
 
-  const { unitTestSuite, unitTests } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId',
-  ) as LoaderData;
+  const { unitTestSuite, unitTests } = useUnitTestSuiteLoaderData()!;
 
-  const createUnitTestFetcher = useFetcher();
-  const runAllTestsFetcher = useFetcher();
-  const updateTestSuiteFetcher = useFetcher();
-  const updateUnitTestFetcher = useFetcher();
+  const createUnitTestFetcher = useTestNewActionFetcher();
+  const runAllTestsFetcher = useRunAllTestsActionFetcher();
+  const updateTestSuiteFetcher = useTestSuiteUpdateActionFetcher();
+  const updateUnitTestFetcher = useTestUpdateActionFetcher();
 
   const testsRunning = runAllTestsFetcher.state === 'submitting';
 
@@ -405,14 +412,16 @@ const Component = () => {
         }
       }
 
-      updateUnitTestFetcher.submit(
-        { metaSortKey: sourceTest.metaSortKey },
-        {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${sourceTest._id}/update`,
-          method: 'POST',
-          encType: 'application/json',
+      updateUnitTestFetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId,
+        testSuiteId: unitTestSuite._id,
+        testId: sourceTest._id,
+        data: {
+          metaSortKey: sourceTest.metaSortKey,
         },
-      );
+      });
     },
     renderDropIndicator(target) {
       return <DropIndicator target={target} className="!border-none outline outline-1 outline-[--color-surprise]" />;
@@ -430,14 +439,13 @@ const Component = () => {
             className="w-full px-1"
             onSubmit={name =>
               name &&
-              updateTestSuiteFetcher.submit(
-                { name },
-                {
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/update`,
-                  method: 'POST',
-                  encType: 'application/json',
-                },
-              )
+              updateTestSuiteFetcher.submit({
+                organizationId,
+                projectId,
+                workspaceId,
+                testSuiteId: unitTestSuite._id,
+                data: { name },
+              })
             }
             value={testSuiteName}
           />
@@ -446,15 +454,13 @@ const Component = () => {
           aria-label="New test"
           className="flex items-center justify-center gap-2 rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
           onPress={() =>
-            createUnitTestFetcher.submit(
-              {
-                name: 'Returns 200',
-              },
-              {
-                method: 'POST',
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/new`,
-              },
-            )
+            createUnitTestFetcher.submit({
+              organizationId,
+              projectId,
+              workspaceId,
+              testSuiteId: unitTestSuite._id,
+              name: 'Returns 200',
+            })
           }
         >
           <Icon icon="plus" />
@@ -464,13 +470,12 @@ const Component = () => {
           aria-label="Run all tests"
           className={`flex items-center justify-center gap-2 rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm] ${testsRunning ? 'animate-pulse' : ''}`}
           onPress={() => {
-            runAllTestsFetcher.submit(
-              {},
-              {
-                method: 'POST',
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/run-all-tests`,
-              },
-            );
+            runAllTestsFetcher.submit({
+              organizationId,
+              projectId,
+              workspaceId,
+              testSuiteId: unitTestSuite._id,
+            });
           }}
         >
           Run tests

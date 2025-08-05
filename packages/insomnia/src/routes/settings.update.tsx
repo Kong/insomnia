@@ -1,12 +1,14 @@
+import { useCallback } from 'react';
 import { useFetcher } from 'react-router';
 
 import * as models from '~/models';
+import type { Settings } from '~/models/settings';
 import { SegmentEvent } from '~/ui/analytics';
 
 import type { Route } from './+types/settings.update';
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
-  const patch = await request.json();
+  const patch = (await request.json()) as Partial<Settings>;
   if ('enableAnalytics' in patch && !patch.enableAnalytics) {
     window.main.trackSegmentEvent({ event: SegmentEvent.analyticsDisabled });
   }
@@ -15,18 +17,21 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useSettingsUpdateActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit(patch: any) {
-    return fetcher.submit(patch, {
-      method: 'POST',
-      action: '/settings/update',
-      encType: 'application/json',
-    });
-  }
+  const submit = useCallback(
+    ({ patch }: { patch: Partial<Settings> }) => {
+      return fetcherSubmit(JSON.stringify(patch), {
+        method: 'POST',
+        action: '/settings/update',
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

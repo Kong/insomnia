@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import * as models from '~/models';
@@ -19,34 +20,37 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useCACertUpdateActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    patch,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    patch: CertificatePatch;
-  }) {
-    const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/cacert/update', {
+  const submit = useCallback(
+    ({
       organizationId,
       projectId,
       workspaceId,
-    });
+      patch,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      patch: CertificatePatch;
+    }) => {
+      const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/cacert/update', {
+        organizationId,
+        projectId,
+        workspaceId,
+      });
 
-    return fetcher.submit(JSON.stringify(patch), {
-      action: url,
-      method: 'POST',
-      encType: 'application/json',
-    });
-  }
+      return fetcherSubmit(JSON.stringify(patch), {
+        action: url,
+        method: 'POST',
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

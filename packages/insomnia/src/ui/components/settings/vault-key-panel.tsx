@@ -73,7 +73,7 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
 };
 
 export const VaultKeyPanel = () => {
-  const { userSession, settings } = useRootLoaderData();
+  const { userSession, settings } = useRootLoaderData()!;
   const { saveVaultKeyLocally } = settings;
   const [isGenerating, setGenerating] = useState(false);
   const [vaultKeyValue, setVaultKeyValue] = useState('');

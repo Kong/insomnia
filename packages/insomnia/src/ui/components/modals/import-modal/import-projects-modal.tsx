@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { type DirectoryDropItem, type FileDropItem, OverlayContainer, useDrop } from 'react-aria';
 import { Label, ProgressBar } from 'react-aria-components';
 import { useNavigate, useParams, useRevalidator } from 'react-router';
-import { useLatest } from 'react-use';
+import * as reactUse from 'react-use';
 
 import { database } from '~/common/database';
 import type { ScanResult } from '~/common/import';
@@ -521,7 +521,7 @@ export const ImportProjectsModal = ({ organizationId, onHide }: { organizationId
   );
   const [processingCancelled, setProcessingCancelled] = useState(false);
   const [processingError, setProcessingError] = useState<string | null>(null);
-  const latestProcessingCancelled = useLatest(processingCancelled);
+  const latestProcessingCancelled = reactUse.useLatest(processingCancelled);
 
   // We should use an abort controller to cancel the import process, but currently the import process is not immediate cancelable, so fall back to a flag.
   const unmountRef = useRef(false);

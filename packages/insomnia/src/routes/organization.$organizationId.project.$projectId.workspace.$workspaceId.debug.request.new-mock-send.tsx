@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import * as models from '~/models';
@@ -59,34 +60,40 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useRequestNewMockSendActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    patch,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    patch: Partial<Request>;
-  }) {
-    const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/new-mock-send', {
+  const submit = useCallback(
+    ({
       organizationId,
       projectId,
       workspaceId,
-    });
+      patch,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      patch: Partial<Request>;
+    }) => {
+      const url = href(
+        '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/new-mock-send',
+        {
+          organizationId,
+          projectId,
+          workspaceId,
+        },
+      );
 
-    return fetcher.submit(JSON.stringify(patch), {
-      action: url,
-      method: 'POST',
-      encType: 'application/json',
-    });
-  }
+      return fetcherSubmit(JSON.stringify(patch), {
+        action: url,
+        method: 'POST',
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

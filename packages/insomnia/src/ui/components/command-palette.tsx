@@ -18,7 +18,7 @@ import {
   Popover,
   Text,
 } from 'react-aria-components';
-import { useNavigate, useParams, useRouteLoaderData } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '~/common/hotkeys';
 import { fuzzyMatch } from '~/common/misc';
@@ -26,7 +26,7 @@ import { isGrpcRequest } from '~/models/grpc-request';
 import { isRequest } from '~/models/request';
 import { isRequestGroup } from '~/models/request-group';
 import { isWebSocketRequest } from '~/models/websocket-request';
-import type { RootLoaderData } from '~/root';
+import { useRootLoaderData } from '~/root';
 import { useCommandsLoaderFetcher } from '~/routes/commands';
 import { useInsomniaSyncPullRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.pull-remote-file';
 import {
@@ -47,7 +47,7 @@ import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-s
 
 export const CommandPalette = memo(function CommandPalette({ style = {} }: { style?: React.CSSProperties }) {
   const [isOpen, setIsOpen] = useState(false);
-  const { settings } = useRouteLoaderData('root') as RootLoaderData;
+  const { settings } = useRootLoaderData()!;
 
   useDocBodyKeyboardShortcuts({
     request_quickSwitch: () => {
@@ -96,7 +96,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
     requestId: string;
   };
 
-  const { userSession } = useRouteLoaderData('root') as RootLoaderData;
+  const { userSession } = useRootLoaderData()!;
   const { presence } = useInsomniaEventStreamContext();
   const pullFileFetcher = useInsomniaSyncPullRemoteFileActionFetcher();
   const setActiveEnvironmentFetcher = useSetActiveEnvironmentFetcher();

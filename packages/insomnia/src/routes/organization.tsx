@@ -10,16 +10,7 @@ import {
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
-import {
-  href,
-  NavLink,
-  Outlet,
-  useFetcher,
-  useLocation,
-  useNavigate,
-  useParams,
-  useRouteLoaderData,
-} from 'react-router';
+import { href, NavLink, Outlet, useLocation, useNavigate, useParams, useRouteLoaderData } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { getAppWebsiteBaseURL } from '~/common/constants';
@@ -29,8 +20,9 @@ import { type CurrentPlan, type UserProfileResponse } from '~/models/organizatio
 import type { Settings } from '~/models/settings';
 import { isScratchpad } from '~/models/workspace';
 import { useRootLoaderData } from '~/root';
-import type { WorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import type { UntrackedProjectsLoaderData } from '~/routes/untracked-projects';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useSyncOrganizationsAndProjectsActionFetcher } from '~/routes/organization.sync-organizations-and-projects';
+import { useUntrackedProjectsLoaderFetcher } from '~/routes/untracked-projects';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { CommandPalette } from '~/ui/components/command-palette';
 import { GitHubStarsButton } from '~/ui/components/github-stars-button';
@@ -198,12 +190,10 @@ const NetworkAndSyncIndicator = ({ user, asyncTaskStatus, settings, sync }: Indi
 
 const Component = ({ loaderData }: Route.ComponentProps) => {
   const { organizations, user, currentPlan } = loaderData;
-  const { userSession, settings } = useRootLoaderData();
+  const { userSession, settings } = useRootLoaderData()!;
   const { billing } = useOrganizationPermissions();
 
-  const workspaceData = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
-  ) as WorkspaceLoaderData | null;
+  const workspaceData = useWorkspaceLoaderData();
 
   const navigate = useNavigate();
   const [isScratchPadBannerDismissed, setIsScratchPadBannerDismissed] = reactUse.useLocalStorage(
@@ -212,7 +202,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   );
   const isScratchpadWorkspace = workspaceData?.activeWorkspace && isScratchpad(workspaceData.activeWorkspace);
   const isScratchPadBannerVisible = !isScratchPadBannerDismissed && isScratchpadWorkspace;
-  const untrackedProjectsFetcher = useFetcher<UntrackedProjectsLoaderData>();
+  const untrackedProjectsFetcher = useUntrackedProjectsLoaderFetcher();
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId?: string;
@@ -222,25 +212,18 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   const location = useLocation();
   const asyncTaskList = location.state?.asyncTaskList as AsyncTask[];
 
-  const syncOrgsAndProjectsFetcher = useFetcher();
+  const syncOrgsAndProjectsFetcher = useSyncOrganizationsAndProjectsActionFetcher();
 
   const asyncTaskStatus = syncOrgsAndProjectsFetcher.data?.error ? 'error' : syncOrgsAndProjectsFetcher.state;
 
   const syncOrgsAndProjects = useCallback(() => {
     const submit = syncOrgsAndProjectsFetcher.submit;
 
-    submit(
-      {
-        organizationId,
-        projectId: projectId || '',
-        asyncTaskList,
-      },
-      {
-        action: '/organization/sync-organizations-and-projects',
-        method: 'POST',
-        encType: 'application/json',
-      },
-    );
+    submit({
+      organizationId,
+      projectId: projectId || '',
+      asyncTaskList,
+    });
   }, [asyncTaskList, organizationId, syncOrgsAndProjectsFetcher.submit, projectId]);
 
   useEffect(() => {
@@ -256,9 +239,9 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
   useEffect(() => {
     const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;
     if (isIdleAndUninitialized) {
-      untrackedProjectsFetcher.load('/untracked-projects');
+      untrackedProjectsFetcher.load();
     }
-  }, [untrackedProjectsFetcher, organizationId]);
+  }, [organizationId, untrackedProjectsFetcher]);
 
   const untrackedProjects = untrackedProjectsFetcher.data?.untrackedProjects || [];
   const untrackedWorkspaces = untrackedProjectsFetcher.data?.untrackedWorkspaces || [];

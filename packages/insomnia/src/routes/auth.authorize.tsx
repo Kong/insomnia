@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, useCallback } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { href, redirect, useFetcher, useFetchers, useNavigate } from 'react-router';
 
@@ -70,18 +70,21 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useAuthorizeActionFetcher(args: { key?: string } = {}) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit(data: { code: string }) {
-    fetcher.submit(data, {
-      action: href('/auth/authorize'),
-      method: 'POST',
-      encType: 'application/json',
-    });
-  }
+  const submit = useCallback(
+    (data: { code: string }) => {
+      fetcherSubmit(data, {
+        action: href('/auth/authorize'),
+        method: 'POST',
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

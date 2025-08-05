@@ -4,7 +4,7 @@ import * as reactUse from 'react-use';
 import { useRootLoaderData } from '~/root';
 
 export const useEditorRefresh = (callback: () => void) => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const { showVariableSourceAndValue, nunjucksPowerUserMode } = settings;
   const previousShowVariableSourceAndValue = reactUse.usePrevious(showVariableSourceAndValue);
   const previousNunjucksPowerUserMode = reactUse.usePrevious(nunjucksPowerUserMode);

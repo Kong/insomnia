@@ -1,4 +1,5 @@
 import { GRAPHQL_TRANSPORT_WS_PROTOCOL, MessageType } from 'graphql-ws';
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import type { ChangeBufferEvent } from '~/common/database';
@@ -104,40 +105,43 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
 }
 
 export function useRequestConnectActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    requestId,
-    connectParams,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    requestId: string;
-    connectParams: ConnectActionParams;
-  }) {
-    const url = href(
-      '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId/connect',
-      {
-        organizationId,
-        projectId,
-        workspaceId,
-        requestId,
-      },
-    );
+  const submit = useCallback(
+    ({
+      organizationId,
+      projectId,
+      workspaceId,
+      requestId,
+      connectParams,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      requestId: string;
+      connectParams: ConnectActionParams;
+    }) => {
+      const url = href(
+        '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId/connect',
+        {
+          organizationId,
+          projectId,
+          workspaceId,
+          requestId,
+        },
+      );
 
-    return fetcher.submit(JSON.stringify(connectParams), {
-      action: url,
-      method: 'POST',
-      encType: 'application/json',
-    });
-  }
+      return fetcherSubmit(JSON.stringify(connectParams), {
+        action: url,
+        method: 'POST',
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

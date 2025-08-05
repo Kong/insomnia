@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import * as models from '~/models';
@@ -32,31 +33,26 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 }
 
 export function useInviteFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    invitationId,
-    roleId,
-  }: {
-    organizationId: string;
-    invitationId: string;
-    roleId: string;
-  }) {
-    return fetcher.submit(
-      { roleId },
-      {
-        action: href(`/organization/:organizationId/collaborators/invites/:invitationId`, {
-          organizationId,
-          invitationId,
-        }),
-        method: 'POST',
-      },
-    );
-  }
+  const submit = useCallback(
+    ({ organizationId, invitationId, roleId }: { organizationId: string; invitationId: string; roleId: string }) => {
+      return fetcherSubmit(
+        { roleId },
+        {
+          action: href(`/organization/:organizationId/collaborators/invites/:invitationId`, {
+            organizationId,
+            invitationId,
+          }),
+          method: 'POST',
+        },
+      );
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

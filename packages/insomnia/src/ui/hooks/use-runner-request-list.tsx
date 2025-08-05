@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { useRouteLoaderData } from 'react-router';
 
 import type { RequestRow } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
 import { useRunnerContext } from '~/ui/context/app/runner-context';
@@ -7,15 +6,13 @@ import { invariant } from '~/utils/invariant';
 
 import { isRequest, type Request } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
-import type {
-  Child,
-  WorkspaceLoaderData,
+import {
+  type Child,
+  useWorkspaceLoaderData,
 } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 
 export const useRunnerRequestList = (organizationId: string, targetFolderId: string, runnerId: string) => {
-  const { collection } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
-  ) as WorkspaceLoaderData;
+  const { collection } = useWorkspaceLoaderData()!;
   const entityMapRef = useRef(new Map<string, Child>());
 
   const requestRows: RequestRow[] = useMemo(() => {

@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import * as models from '~/models';
@@ -82,29 +83,24 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useWorkspaceUpdateActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    patch,
-  }: {
-    organizationId: string;
-    projectId: string;
-    patch: WorkspacePatch;
-  }) {
-    return fetcher.submit(JSON.stringify(patch), {
-      method: 'POST',
-      action: href('/organization/:organizationId/project/:projectId/workspace/update', {
-        organizationId,
-        projectId,
-      }),
-      encType: 'application/json',
-    });
-  }
+  const submit = useCallback(
+    ({ organizationId, projectId, patch }: { organizationId: string; projectId: string; patch: WorkspacePatch }) => {
+      return fetcherSubmit(JSON.stringify(patch), {
+        method: 'POST',
+        action: href('/organization/:organizationId/project/:projectId/workspace/update', {
+          organizationId,
+          projectId,
+        }),
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

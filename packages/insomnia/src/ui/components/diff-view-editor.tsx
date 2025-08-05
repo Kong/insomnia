@@ -9,7 +9,7 @@ export const DiffEditor = ({ original, modified }: { original: string; modified:
   const monacoEl = useRef(null);
   const monacoEditorRef = useRef<monaco.editor.IStandaloneDiffEditor | null>(null);
 
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
 
   useEffect(() => {
     const computedStyles = window.getComputedStyle(document.body);

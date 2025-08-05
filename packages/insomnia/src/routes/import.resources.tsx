@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import { importResourcesToProject, importResourcesToWorkspace } from '~/common/import';
@@ -43,10 +44,15 @@ export const importScannedResources = async ({
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
   try {
-    const formData = await request.formData();
-    const organizationId = formData.get('organizationId')?.toString();
-    const projectId = formData.get('projectId')?.toString();
-    const workspaceId = formData.get('workspaceId')?.toString();
+    const data = (await request.json()) as {
+      organizationId: string;
+      projectId: string;
+      workspaceId?: string;
+    };
+
+    const organizationId = data.organizationId;
+    const projectId = data.projectId;
+    const workspaceId = data.workspaceId;
 
     invariant(typeof organizationId === 'string', 'OrganizationId is required.');
     invariant(typeof projectId === 'string', 'ProjectId is required.');
@@ -66,15 +72,19 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useImportResourcesFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
-  const submit = (data: { organizationId: string; projectId: string; workspaceId?: string }) => {
-    fetcher.submit(data, {
-      action: href('/import/resources'),
-      method: 'POST',
-    });
-  };
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
+  const submit = useCallback(
+    (data: { organizationId: string; projectId: string; workspaceId?: string }) => {
+      fetcherSubmit(JSON.stringify(data), {
+        action: href('/import/resources'),
+        method: 'POST',
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

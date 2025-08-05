@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import { database } from '~/common/database';
@@ -316,29 +317,32 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 }
 
 export function useProjectUpdateActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    projectData,
-  }: {
-    organizationId: string;
-    projectId: string;
-    projectData: UpdateProjectInputData;
-  }) {
-    return fetcher.submit(JSON.stringify(projectData), {
-      method: 'POST',
-      action: href('/organization/:organizationId/project/:projectId/update', {
-        organizationId,
-        projectId,
-      }),
-      encType: 'application/json',
-    });
-  }
+  const submit = useCallback(
+    ({
+      organizationId,
+      projectId,
+      projectData,
+    }: {
+      organizationId: string;
+      projectId: string;
+      projectData: UpdateProjectInputData;
+    }) => {
+      return fetcherSubmit(JSON.stringify(projectData), {
+        method: 'POST',
+        action: href('/organization/:organizationId/project/:projectId/update', {
+          organizationId,
+          projectId,
+        }),
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

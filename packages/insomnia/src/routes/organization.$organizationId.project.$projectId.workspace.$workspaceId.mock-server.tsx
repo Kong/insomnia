@@ -16,7 +16,6 @@ import {
   NavLink,
   Route as RouteComponent,
   Routes,
-  useFetcher,
   useLoaderData,
   useNavigate,
   useParams,
@@ -27,7 +26,10 @@ import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import * as models from '~/models';
 import type { MockRoute } from '~/models/mock-route';
 import { useRootLoaderData } from '~/root';
-import type { WorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useMockRouteDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.delete';
+import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';
+import { useMockRouteNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.new';
 import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
 import { EditableInput } from '~/ui/components/editable-input';
@@ -72,6 +74,12 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   };
 }
 
+export function useMockServerLoaderData() {
+  return useRouteLoaderData<typeof clientLoader>(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server',
+  );
+}
+
 const Component = () => {
   const { organizationId, projectId, workspaceId, mockRouteId } = useParams() as {
     organizationId: string;
@@ -79,14 +87,14 @@ const Component = () => {
     workspaceId: string;
     mockRouteId: string;
   };
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const { mockServerId, mockRoutes } = useLoaderData() as MockServerLoaderData;
 
-  const { activeProject, activeWorkspace } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
-  ) as WorkspaceLoaderData;
+  const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
 
-  const fetcher = useFetcher();
+  const deleteMockRouteFetcher = useMockRouteDeleteActionFetcher();
+  const createMockRouteFetcher = useMockRouteNewActionFetcher();
+  const updateMockRouteFetcher = useMockRouteUpdateActionFetcher();
   const navigate = useNavigate();
   const patchMockRoute = useMockRoutePatcher();
   const mockRouteActionList: {
@@ -143,16 +151,13 @@ const Component = () => {
           noText: 'Cancel',
           onDone: async (isYes: boolean) => {
             if (isYes) {
-              fetcher.submit(
-                {
-                  isSelected: mockRouteId === id,
-                },
-                {
-                  encType: 'application/json',
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/${id}/delete`,
-                  method: 'POST',
-                },
-              );
+              deleteMockRouteFetcher.submit({
+                organizationId,
+                projectId,
+                workspaceId,
+                mockRouteId: id,
+                isSelected: mockRouteId === id,
+              });
             }
           },
         });
@@ -279,17 +284,15 @@ const Component = () => {
                       });
                       return;
                     }
-                    fetcher.submit(
-                      {
+                    createMockRouteFetcher.submit({
+                      organizationId,
+                      projectId,
+                      workspaceId,
+                      patch: {
                         name,
                         parentId: mockServerId,
                       },
-                      {
-                        encType: 'application/json',
-                        method: 'post',
-                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/new`,
-                      },
-                    );
+                    });
                   },
                 });
               }}
@@ -367,14 +370,15 @@ const Component = () => {
                           return;
                         }
                         name &&
-                          fetcher.submit(
-                            { name },
-                            {
-                              encType: 'application/json',
-                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/${item._id}/update`,
-                              method: 'POST',
+                          updateMockRouteFetcher.submit({
+                            organizationId,
+                            projectId,
+                            workspaceId,
+                            mockRouteId: item._id,
+                            patch: {
+                              name,
                             },
-                          );
+                          });
                       }}
                     />
                     <span className="flex-1" />

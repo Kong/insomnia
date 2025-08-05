@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useFetcher } from 'react-router';
 
 import { database } from '~/common/database';
@@ -287,36 +288,39 @@ export async function clientLoader(args: Route.ClientLoaderArgs) {
 }
 
 export function useCommandsLoaderFetcher() {
-  const fetcher = useFetcher<typeof clientLoader>();
+  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>();
 
-  function load({
-    organizationId,
-    projectId,
-    workspaceId,
-    filter,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId?: string;
-    filter?: string;
-  }) {
-    const params = new URLSearchParams();
-    params.set('organizationId', organizationId);
-    params.set('projectId', projectId);
-    if (workspaceId) {
-      params.set('workspaceId', workspaceId);
-    }
-    if (filter) {
-      params.set('filter', filter);
-    }
+  const load = useCallback(
+    ({
+      organizationId,
+      projectId,
+      workspaceId,
+      filter,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId?: string;
+      filter?: string;
+    }) => {
+      const params = new URLSearchParams();
+      params.set('organizationId', organizationId);
+      params.set('projectId', projectId);
+      if (workspaceId) {
+        params.set('workspaceId', workspaceId);
+      }
+      if (filter) {
+        params.set('filter', filter);
+      }
 
-    return fetcher.load(`/commands?${params.toString()}`, {
-      flushSync: true,
-    });
-  }
+      return fetcherLoad(`/commands?${params.toString()}`, {
+        flushSync: true,
+      });
+    },
+    [fetcherLoad],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     load,
   };
 }

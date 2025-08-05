@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import type { Route } from './+types/git.reset';
@@ -14,18 +15,21 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useGitProjectResetActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit(data: ResetGitRepoParams) {
-    return fetcher.submit(JSON.stringify(data), {
-      method: 'POST',
-      action: href('/git/reset'),
-      encType: 'application/json',
-    });
-  }
+  const submit = useCallback(
+    (data: ResetGitRepoParams) => {
+      return fetcherSubmit(JSON.stringify(data), {
+        method: 'POST',
+        action: href('/git/reset'),
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

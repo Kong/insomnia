@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, redirect, useFetcher } from 'react-router';
 
 import * as models from '~/models';
@@ -42,39 +43,45 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
 }
 
 export function useRequestDuplicateActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    requestId,
-    name,
-    parentId,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    requestId: string;
-    name: string;
-    parentId?: string;
-  }) {
-    const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId/duplicate', {
+  const submit = useCallback(
+    ({
       organizationId,
       projectId,
       workspaceId,
       requestId,
-    });
+      name,
+      parentId,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      requestId: string;
+      name: string;
+      parentId?: string;
+    }) => {
+      const url = href(
+        '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId/duplicate',
+        {
+          organizationId,
+          projectId,
+          workspaceId,
+          requestId,
+        },
+      );
 
-    return fetcher.submit(JSON.stringify({ name, parentId }), {
-      action: url,
-      method: 'POST',
-      encType: 'application/json',
-    });
-  }
+      return fetcherSubmit(JSON.stringify({ name, parentId }), {
+        action: url,
+        method: 'POST',
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

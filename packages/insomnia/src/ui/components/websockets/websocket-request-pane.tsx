@@ -1,7 +1,7 @@
 import React, { type FC, Fragment, useEffect, useRef, useState } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton, Toolbar } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { useParams, useRouteLoaderData } from 'react-router';
+import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { useRootLoaderData } from '~/root';
@@ -14,7 +14,10 @@ import type { Environment } from '../../../models/environment';
 import { type AuthTypes, getCombinedPathParametersFromUrl, type RequestPathParameter } from '../../../models/request';
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import { getAuthObjectOrNull } from '../../../network/authentication';
-import type { WebSocketRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import {
+  useRequestLoaderData,
+  type WebSocketRequestLoaderData,
+} from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { RenderError } from '../../../templating/render-error';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import {
@@ -180,9 +183,7 @@ interface Props {
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
 export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
-  const { activeRequest, activeRequestMeta } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId',
-  ) as WebSocketRequestLoaderData;
+  const { activeRequest, activeRequestMeta } = useRequestLoaderData() as WebSocketRequestLoaderData;
 
   const { workspaceId, requestId } = useParams() as {
     organizationId: string;
@@ -191,7 +192,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
     requestId: string;
   };
   const readyState = useReadyState({ requestId: activeRequest._id, protocol: 'webSocket' });
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
 
   const disabled = readyState;
 

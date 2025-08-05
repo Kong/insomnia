@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import React, { type FunctionComponent, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
-import { useParams, useRouteLoaderData } from 'react-router';
+import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { useRootLoaderData } from '~/root';
@@ -20,9 +20,12 @@ import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspa
 import { isRequestGroup, type RequestGroup } from '../../../models/request-group';
 import { getOrInheritHeaders } from '../../../network/network';
 import { urlMatchesCertHost } from '../../../network/url-matches-cert-host';
-import type { WorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import type { GrpcRequestState } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug';
-import type { GrpcRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import {
+  type GrpcRequestLoaderData,
+  useRequestLoaderData,
+} from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { RenderError } from '../../../templating/render-error';
 import { getGrpcConnectionErrorDetails } from '../../../utils/grpc';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
@@ -58,14 +61,10 @@ export const GrpcMethodTypeName = {
 } as const;
 
 export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcState, reloadRequests }) => {
-  const { activeRequest } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId',
-  ) as GrpcRequestLoaderData;
-  const { activeEnvironment } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
-  ) as WorkspaceLoaderData;
+  const { activeRequest } = useRequestLoaderData() as GrpcRequestLoaderData;
+  const { activeEnvironment } = useWorkspaceLoaderData()!;
   const environmentId = activeEnvironment._id;
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
   const { requestMessages, running, methods } = grpcState;
   reactUse.useMount(async () => {

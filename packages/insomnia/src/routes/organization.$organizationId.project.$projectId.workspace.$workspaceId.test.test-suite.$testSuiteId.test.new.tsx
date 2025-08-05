@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import * as models from '~/models';
@@ -27,39 +28,45 @@ expect(response1.status).to.equal(200);`,
 }
 
 export function useTestNewActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    testSuiteId,
-    name,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    testSuiteId: string;
-    name: string;
-  }) {
-    const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/test/test-suite/:testSuiteId/test/new', {
+  const submit = useCallback(
+    ({
       organizationId,
       projectId,
       workspaceId,
       testSuiteId,
-    });
+      name,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      testSuiteId: string;
+      name: string;
+    }) => {
+      const url = href(
+        '/organization/:organizationId/project/:projectId/workspace/:workspaceId/test/test-suite/:testSuiteId/test/new',
+        {
+          organizationId,
+          projectId,
+          workspaceId,
+          testSuiteId,
+        },
+      );
 
-    const formData = new FormData();
-    formData.append('name', name);
+      const formData = new FormData();
+      formData.append('name', name);
 
-    return fetcher.submit(formData, {
-      action: url,
-      method: 'POST',
-    });
-  }
+      return fetcherSubmit(formData, {
+        action: url,
+        method: 'POST',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

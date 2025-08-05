@@ -1,10 +1,12 @@
 import React, { type FC } from 'react';
-import { useRouteLoaderData } from 'react-router';
 
 import { CONTENT_TYPE_JSON } from '../../../common/constants';
 import type { SocketIOEvent, SocketIOMessageEvent } from '../../../main/network/socket-io';
 import * as models from '../../../models';
-import type { RequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import {
+  type RequestLoaderData,
+  useRequestLoaderData,
+} from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { SocketIOBodyContent } from './body-tab-pane';
 
@@ -27,9 +29,7 @@ export const MessageEventView: FC<Props<SocketIOMessageEvent>> = ({ event }) => 
     mode: CONTENT_TYPE_JSON,
   }));
 
-  const { activeRequestMeta, activeResponse } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId',
-  ) as RequestLoaderData;
+  const { activeRequestMeta, activeResponse } = useRequestLoaderData() as RequestLoaderData;
   const patchRequestMeta = useRequestMetaPatcher();
 
   const filterHistory = activeRequestMeta.responseFilterHistory || [];

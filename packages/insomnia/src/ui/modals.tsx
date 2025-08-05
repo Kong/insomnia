@@ -1,6 +1,4 @@
-import { useRouteLoaderData } from 'react-router';
-
-import type { WorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 
 import { ErrorBoundary } from './components/error-boundary';
 import { registerModal } from './components/modals';
@@ -17,14 +15,12 @@ import { RequestRenderErrorModal } from './components/modals/request-render-erro
 import { ResponseDebugModal } from './components/modals/response-debug-modal';
 import { SelectModal } from './components/modals/select-modal';
 import { SettingsModal } from './components/modals/settings-modal';
-// import { SyncMergeModal } from './components/modals/sync-merge-modal';
+import { SyncMergeModal } from './components/modals/sync-merge-modal';
 import { UpgradeModal } from './components/modals/upgrade-modal';
 import { WrapperModal } from './components/modals/wrapper-modal';
 
 const Modals = () => {
-  const workspaceData = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
-  ) as WorkspaceLoaderData | undefined;
+  const workspaceData = useWorkspaceLoaderData();
   const { activeWorkspace, activeEnvironment } = workspaceData || {};
 
   return (
@@ -58,7 +54,7 @@ const Modals = () => {
 
         <AddKeyCombinationModal ref={instance => registerModal(instance, 'AddKeyCombinationModal')} />
 
-        {/* <SyncMergeModal ref={instance => registerModal(instance, 'SyncMergeModal')} /> */}
+        <SyncMergeModal ref={instance => registerModal(instance, 'SyncMergeModal')} />
 
         <UpgradeModal ref={instance => registerModal(instance, 'UpgradeModal')} />
       </ErrorBoundary>

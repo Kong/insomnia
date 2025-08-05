@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import { invariant } from '~/utils/invariant';
@@ -24,17 +25,21 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useGitProjectCommitActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
-  function submit(data: CommitGitRepoData) {
-    return fetcher.submit(JSON.stringify(data), {
+  const {
+    submit: fetcherSubmit,
+    ...fetcherRest
+  } = useFetcher<typeof clientAction>(args);
+
+  const submit = useCallback((data: CommitGitRepoData) => {
+    return fetcherSubmit(JSON.stringify(data), {
       action: href('/git/commit'),
       method: 'POST',
       encType: 'application/json',
     });
-  }
+  }, [fetcherSubmit]);
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

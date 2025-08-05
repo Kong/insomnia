@@ -13,7 +13,7 @@ export const usePlanData = () => {
   let isFreePlan = true;
   let isTeamPlan = false;
   let isEnterprisePlan = false;
-  const { userSession } = useRootLoaderData();
+  const { userSession } = useRootLoaderData()!;
   const { organizationId } = useParams<{ organizationId: string }>();
   const organizationData = useOrganizationLoaderData();
   // ensure user has logged in with valid organization

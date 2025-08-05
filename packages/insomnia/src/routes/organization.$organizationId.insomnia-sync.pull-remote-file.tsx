@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, redirect, useFetcher } from 'react-router';
 
 import * as models from '~/models';
@@ -60,33 +61,36 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 }
 
 export function useInsomniaSyncPullRemoteFileActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    backendProjectId,
-    remoteId,
-  }: {
-    organizationId: string;
-    backendProjectId: string;
-    remoteId: string;
-  }) {
-    const url = href('/organization/:organizationId/insomnia-sync/pull-remote-file', {
+  const submit = useCallback(
+    ({
       organizationId,
-    });
+      backendProjectId,
+      remoteId,
+    }: {
+      organizationId: string;
+      backendProjectId: string;
+      remoteId: string;
+    }) => {
+      const url = href('/organization/:organizationId/insomnia-sync/pull-remote-file', {
+        organizationId,
+      });
 
-    const formData = new FormData();
-    formData.set('backendProjectId', backendProjectId);
-    formData.set('remoteId', remoteId);
+      const formData = new FormData();
+      formData.set('backendProjectId', backendProjectId);
+      formData.set('remoteId', remoteId);
 
-    return fetcher.submit(formData, {
-      action: url,
-      method: 'POST',
-    });
-  }
+      return fetcherSubmit(formData, {
+        action: url,
+        method: 'POST',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

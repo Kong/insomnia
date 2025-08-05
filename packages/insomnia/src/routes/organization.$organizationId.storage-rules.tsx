@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import type { StorageRules } from '~/models/organization';
@@ -23,47 +24,45 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 }
 
 export function useStorageRulesLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientLoader>(args);
+  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
 
-  function load({
-    organizationId,
-  }: {
-    organizationId: string;
-  }) {
-    return fetcher.load(
-      href('/organization/:organizationId/storage-rules', {
-        organizationId,
-      }),
-    );
-  }
+  const load = useCallback(
+    ({ organizationId }: { organizationId: string }) => {
+      return fetcherLoad(
+        href('/organization/:organizationId/storage-rules', {
+          organizationId,
+        }),
+      );
+    },
+    [fetcherLoad],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     load,
   };
 }
 
 export function useStorageRulesActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-  }: {
-    organizationId: string;
-  }) {
-    return fetcher.submit(
-      {},
-      {
-        method: 'POST',
-        action: href('/organization/:organizationId/storage-rules', {
-          organizationId,
-        }),
-      },
-    );
-  }
+  const submit = useCallback(
+    ({ organizationId }: { organizationId: string }) => {
+      return fetcherSubmit(
+        {},
+        {
+          method: 'POST',
+          action: href('/organization/:organizationId/storage-rules', {
+            organizationId,
+          }),
+        },
+      );
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

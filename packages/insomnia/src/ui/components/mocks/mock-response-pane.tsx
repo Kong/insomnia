@@ -3,12 +3,11 @@ import fs from 'node:fs';
 import type * as Har from 'har-format';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { Button, Tab, TabList, TabPanel, Tabs, Toolbar } from 'react-aria-components';
-import { useRouteLoaderData } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
-import type { MockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
 
 import {
@@ -60,10 +59,8 @@ interface MockbinLogOutput {
 }
 
 export const MockResponsePane = () => {
-  const { mockServer, mockRoute, activeResponse } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.mock-server.mock-route.$mockRouteId',
-  ) as MockRouteLoaderData;
-  const { settings } = useRootLoaderData();
+  const { mockServer, mockRoute, activeResponse } = useMockRouteLoaderData()!;
+  const { settings } = useRootLoaderData()!;
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   const [previewMode, setPreviewMode] = useState<PreviewMode>(PREVIEW_MODE_FRIENDLY);
   const requestFetcher = useRequestNewMockSendActionFetcher({ key: 'mock-request-fetcher' });
@@ -186,7 +183,7 @@ const HistoryViewWrapperComponentFactory = ({
 }) => {
   const [logs, setLogs] = useState<MockbinLogOutput | null>(null);
   const [logEntryId, setLogEntryId] = useState<number | null>(null);
-  const { userSession } = useRootLoaderData();
+  const { userSession } = useRootLoaderData()!;
 
   const fetchLogs = useCallback(async () => {
     const compoundId = mockRoute.parentId + mockRoute.name;

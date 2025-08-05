@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import { invariant } from '~/utils/invariant';
@@ -19,18 +20,21 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useGitProjectCheckoutBranchActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit(data: CheckoutGitBranchData) {
-    return fetcher.submit(JSON.stringify(data), {
-      method: 'POST',
-      action: href('/git/branch/checkout'),
-      encType: 'application/json',
-    });
-  }
+  const submit = useCallback(
+    (data: CheckoutGitBranchData) => {
+      return fetcherSubmit(JSON.stringify(data), {
+        method: 'POST',
+        action: href('/git/branch/checkout'),
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

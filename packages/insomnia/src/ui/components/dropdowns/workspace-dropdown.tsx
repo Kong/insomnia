@@ -18,7 +18,7 @@ import {
   ModalOverlay,
   Popover,
 } from 'react-aria-components';
-import { href, useNavigate, useParams, useRouteLoaderData } from 'react-router';
+import { href, useNavigate, useParams } from 'react-router';
 
 import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.delete';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
@@ -37,7 +37,7 @@ import * as pluginApp from '../../../plugins/context/app';
 import * as pluginData from '../../../plugins/context/data';
 import * as pluginNetwork from '../../../plugins/context/network';
 import * as pluginStore from '../../../plugins/context/store';
-import type { WorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { invariant } from '../../../utils/invariant';
 import { SegmentEvent } from '../../analytics';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
@@ -57,9 +57,7 @@ export const WorkspaceDropdown: FC<{}> = () => {
     workspaceId: string;
   }>();
   invariant(organizationId, 'Expected organizationId');
-  const { activeWorkspace, activeWorkspaceMeta, activeProject, activeMockServer } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
-  ) as WorkspaceLoaderData;
+  const { activeWorkspace, activeWorkspaceMeta, activeProject, activeMockServer } = useWorkspaceLoaderData()!;
 
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);

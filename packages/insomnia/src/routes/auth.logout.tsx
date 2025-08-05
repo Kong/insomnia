@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, redirect, useFetcher } from 'react-router';
 
 import { logout } from '~/account/session';
@@ -10,14 +11,14 @@ export async function clientAction(_args: Route.ClientActionArgs) {
 }
 
 export function useLogoutFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit() {
-    return fetcher.submit({}, { action: href('/auth/logout'), method: 'POST' });
-  }
+  const submit = useCallback(() => {
+    return fetcherSubmit({}, { action: href('/auth/logout'), method: 'POST' });
+  }, [fetcherSubmit]);
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

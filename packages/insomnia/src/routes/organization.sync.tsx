@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useFetcher } from 'react-router';
 
 import { userSession } from '~/models';
@@ -16,20 +17,20 @@ export async function clientAction(_args: Route.ClientActionArgs) {
 }
 
 export function useOrganizationSyncActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit() {
-    return fetcher.submit(
+  const submit = useCallback(() => {
+    return fetcherSubmit(
       {},
       {
         method: 'POST',
         action: '/organization/sync',
       },
     );
-  }
+  }, [fetcherSubmit]);
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

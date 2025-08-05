@@ -1,7 +1,7 @@
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
-import { useParams, useRouteLoaderData } from 'react-router';
+import { useParams } from 'react-router';
 
-import type { WorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { CopyButton } from '../base/copy-button';
 import { Icon } from '../icon';
 
@@ -41,9 +41,7 @@ export const CLIPreviewModal = ({
   bail: boolean;
 }) => {
   const { workspaceId } = useParams() as { workspaceId: string };
-  const { activeEnvironment, activeGlobalEnvironment } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
-  ) as WorkspaceLoaderData;
+  const { activeEnvironment, activeGlobalEnvironment } = useWorkspaceLoaderData()!;
   const workspaceIdAndRequestIds = generateCommandArgumentsForRequests(
     workspaceId,
     targetFolderId,

@@ -18,10 +18,11 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 import { type ImperativePanelGroupHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { NavLink, useFetcher, useRouteLoaderData } from 'react-router';
+import { NavLink } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
 import { debounce } from '~/common/misc';
+import { userSession } from '~/models';
 import {
   type Environment,
   type EnvironmentKvPairData,
@@ -30,8 +31,11 @@ import {
   getDataFromKVPair,
 } from '~/models/environment';
 import { isRemoteProject } from '~/models/project';
-import { useRootLoaderData } from '~/root';
-import type { WorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
+import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';
+import { useEnvironmentDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.duplicate';
+import { useEnvironmentUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.update';
 import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
 import { EditableInput } from '~/ui/components/editable-input';
@@ -55,27 +59,32 @@ import { decryptVaultKeyFromSession } from '~/utils/vault';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment';
 
-const Component = ({ params }: Route.ComponentProps) => {
-  const { organizationId, projectId, workspaceId } = params;
+export async function clientLoader(_args: Route.ClientLoaderArgs) {
+  const user = await userSession.get();
 
-  const routeData = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
-  ) as WorkspaceLoaderData;
+  const vaultKey = user.vaultKey ? await decryptVaultKeyFromSession(user.vaultKey, false) : '';
+
+  return {
+    vaultKey,
+  };
+}
+
+const Component = ({ loaderData, params }: Route.ComponentProps) => {
+  const { organizationId, projectId, workspaceId } = params;
+  const { vaultKey } = loaderData;
+  const routeData = useWorkspaceLoaderData()!;
 
   const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);
   const { features } = useOrganizationPermissions();
-  const { userSession } = useRootLoaderData();
-  const { vaultKey: vaultKeyInSession, vaultSalt } = userSession;
 
-  const createEnvironmentFetcher = useFetcher();
-  const deleteEnvironmentFetcher = useFetcher();
-  const updateEnvironmentFetcher = useFetcher();
-  const duplicateEnvironmentFetcher = useFetcher();
+  const createEnvironmentFetcher = useEnvironmentCreateActionFetcher();
+  const deleteEnvironmentFetcher = useEnvironmentDeleteActionFetcher();
+  const updateEnvironmentFetcher = useEnvironmentUpdateActionFetcher();
+  const duplicateEnvironmentFetcher = useEnvironmentDuplicateActionFetcher();
 
   const { activeProject, baseEnvironment, activeEnvironment, subEnvironments, activeWorkspaceMeta, activeWorkspace } =
     routeData;
   const [selectedEnvironmentId, setSelectedEnvironmentId] = useState<string>(activeEnvironment._id);
-  const [vaultKey, setVaultKey] = useState('');
   const isUsingInsomniaCloudSync = Boolean(isRemoteProject(activeProject) && !activeWorkspaceMeta?.gitRepositoryId);
   const isUsingGitSync = Boolean(features.gitSync.enabled && activeWorkspaceMeta?.gitRepositoryId);
 
@@ -89,7 +98,7 @@ const Component = ({ params }: Route.ComponentProps) => {
   const containsSecret = allEnvironment.some(
     env => env.isPrivate && env.kvPairData?.some(pairData => pairData.type === EnvironmentKvPairDataType.SECRET),
   );
-  const shouldShowVaultKeyModal = containsSecret && !vaultKeyInSession;
+  const shouldShowVaultKeyModal = containsSecret && !loaderData.vaultKey;
   const [showInputVaultKeyModal, setShowModal] = useState(shouldShowVaultKeyModal);
 
   const environmentActionsList: {
@@ -103,15 +112,12 @@ const Component = ({ params }: Route.ComponentProps) => {
       name: 'Duplicate',
       icon: 'copy',
       action: async (environment: Environment) => {
-        duplicateEnvironmentFetcher.submit(
-          {
-            environmentId: environment._id,
-          },
-          {
-            method: 'post',
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/duplicate`,
-          },
-        );
+        duplicateEnvironmentFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+          environmentId: environment._id,
+        });
       },
     },
     {
@@ -125,15 +131,12 @@ const Component = ({ params }: Route.ComponentProps) => {
           addCancel: true,
           okLabel: 'Delete',
           onConfirm: async () => {
-            deleteEnvironmentFetcher.submit(
-              {
-                environmentId: environment._id,
-              },
-              {
-                method: 'post',
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/delete`,
-              },
-            );
+            deleteEnvironmentFetcher.submit({
+              organizationId,
+              projectId,
+              workspaceId,
+              environmentId: environment._id,
+            });
 
             setSelectedEnvironmentId(baseEnvironment._id);
           },
@@ -155,16 +158,14 @@ const Component = ({ params }: Route.ComponentProps) => {
       description: `${isUsingGitSync ? 'Synced with Git Sync and exportable' : isUsingInsomniaCloudSync ? 'Synced with Insomnia Sync and exportable' : 'Exportable'}`,
       icon: isUsingGitSync ? ['fab', 'git-alt'] : isUsingInsomniaCloudSync ? 'globe-americas' : 'file-arrow-down',
       action: async () => {
-        createEnvironmentFetcher.submit(
-          {
+        createEnvironmentFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+          params: {
             isPrivate: false,
           },
-          {
-            method: 'post',
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/create`,
-            encType: 'application/json',
-          },
-        );
+        });
       },
     },
     {
@@ -173,16 +174,14 @@ const Component = ({ params }: Route.ComponentProps) => {
       description: 'Local and not exportable',
       icon: 'lock',
       action: async () => {
-        createEnvironmentFetcher.submit(
-          {
+        createEnvironmentFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+          params: {
             isPrivate: true,
           },
-          {
-            method: 'post',
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/create`,
-            encType: 'application/json',
-          },
-        );
+        });
       },
     },
   ];
@@ -191,41 +190,33 @@ const Component = ({ params }: Route.ComponentProps) => {
     if (environmentEditorRef.current?.isValid() && selectedEnvironment) {
       const { object, propertyOrder } = value;
 
-      updateEnvironmentFetcher.submit(
-        {
-          patch: {
-            data: object,
-            dataPropertyOrder: propertyOrder,
-          },
-          environmentId: selectedEnvironment._id,
+      updateEnvironmentFetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId,
+        patch: {
+          data: object,
+          dataPropertyOrder: propertyOrder,
         },
-        {
-          method: 'post',
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
-          encType: 'application/json',
-        },
-      );
+        environmentId: selectedEnvironment._id,
+      });
     }
   }, 500);
 
   const handleKVPairChange = (kvPairData: EnvironmentKvPairData[]) => {
     if (selectedEnvironment) {
       const environmentData = getDataFromKVPair(kvPairData);
-      updateEnvironmentFetcher.submit(
-        JSON.stringify({
-          patch: {
-            data: environmentData.data,
-            dataPropertyOrder: environmentData.dataPropertyOrder,
-            kvPairData,
-          },
-          environmentId: selectedEnvironment._id,
-        }),
-        {
-          method: 'post',
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
-          encType: 'application/json',
+      updateEnvironmentFetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId,
+        patch: {
+          data: environmentData.data,
+          dataPropertyOrder: environmentData.dataPropertyOrder,
+          kvPairData,
         },
-      );
+        environmentId: selectedEnvironment._id,
+      });
     }
   };
 
@@ -258,17 +249,13 @@ const Component = ({ params }: Route.ComponentProps) => {
         }
       }
 
-      updateEnvironmentFetcher.submit(
-        {
-          patch: { metaSortKey: sourceEnv.metaSortKey },
-          environmentId: sourceEnv._id,
-        },
-        {
-          method: 'post',
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
-          encType: 'application/json',
-        },
-      );
+      updateEnvironmentFetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId,
+        patch: { metaSortKey: sourceEnv.metaSortKey },
+        environmentId: sourceEnv._id,
+      });
     },
     renderDropIndicator(target) {
       if (target.type === 'item') {
@@ -300,10 +287,7 @@ const Component = ({ params }: Route.ComponentProps) => {
     sidebarPanelRef.current?.setLayout(layout);
   }
 
-  const handleInputVaultKeyModalClose = (newVaultKey?: string) => {
-    if (newVaultKey) {
-      setVaultKey(newVaultKey);
-    }
+  const handleInputVaultKeyModalClose = () => {
     setShowModal(false);
   };
 
@@ -312,16 +296,6 @@ const Component = ({ params }: Route.ComponentProps) => {
 
     return unsubscribe;
   }, []);
-
-  useEffect(() => {
-    if (vaultKeyInSession && vaultSalt) {
-      async function updateVaultKey(key: string) {
-        const decryptedVaultKey = await decryptVaultKeyFromSession(key, false);
-        setVaultKey(decryptedVaultKey);
-      }
-      updateVaultKey(vaultKeyInSession);
-    }
-  }, [vaultKeyInSession, vaultSalt]);
 
   useDocBodyKeyboardShortcuts({
     sidebar_toggle: toggleSidebar,
@@ -417,19 +391,15 @@ const Component = ({ params }: Route.ComponentProps) => {
                     className="flex-1 px-1 hover:!bg-transparent"
                     onSubmit={name => {
                       name &&
-                        updateEnvironmentFetcher.submit(
-                          {
-                            patch: {
-                              name,
-                            },
-                            environmentId: item._id,
+                        updateEnvironmentFetcher.submit({
+                          organizationId,
+                          projectId,
+                          workspaceId,
+                          patch: {
+                            name,
                           },
-                          {
-                            method: 'post',
-                            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
-                            encType: 'application/json',
-                          },
-                        );
+                          environmentId: item._id,
+                        });
                     }}
                   />
                   {item.parentId !== workspaceId && (
@@ -536,19 +506,15 @@ const Component = ({ params }: Route.ComponentProps) => {
                 className="flex-1 px-1"
                 onSubmit={name => {
                   name &&
-                    updateEnvironmentFetcher.submit(
-                      {
-                        patch: {
-                          name,
-                        },
-                        environmentId: selectedEnvironmentId,
+                    updateEnvironmentFetcher.submit({
+                      organizationId,
+                      projectId,
+                      workspaceId,
+                      patch: {
+                        name,
                       },
-                      {
-                        method: 'post',
-                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
-                        encType: 'application/json',
-                      },
-                    );
+                      environmentId: selectedEnvironmentId,
+                    });
                 }}
               />
             </Heading>
@@ -558,19 +524,15 @@ const Component = ({ params }: Route.ComponentProps) => {
                 <input
                   onChange={e => {
                     const color = e.target.value;
-                    updateEnvironmentFetcher.submit(
-                      {
-                        patch: {
-                          color,
-                        },
-                        environmentId: selectedEnvironment._id,
+                    updateEnvironmentFetcher.submit({
+                      organizationId,
+                      projectId,
+                      workspaceId,
+                      patch: {
+                        color,
                       },
-                      {
-                        method: 'post',
-                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
-                        encType: 'application/json',
-                      },
-                    );
+                      environmentId: selectedEnvironment._id,
+                    });
                   }}
                   type="color"
                   value={selectedEnvironment?.color || ''}
@@ -584,20 +546,16 @@ const Component = ({ params }: Route.ComponentProps) => {
                     newEnvironmentType: EnvironmentType,
                     kvPairData: EnvironmentKvPairData[],
                   ) => {
-                    updateEnvironmentFetcher.submit(
-                      JSON.stringify({
-                        patch: {
-                          environmentType: newEnvironmentType,
-                          kvPairData: kvPairData,
-                        },
-                        environmentId: selectedEnvironment._id,
-                      }),
-                      {
-                        method: 'post',
-                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
-                        encType: 'application/json',
+                    updateEnvironmentFetcher.submit({
+                      organizationId,
+                      projectId,
+                      workspaceId,
+                      patch: {
+                        environmentType: newEnvironmentType,
+                        kvPairData: kvPairData,
                       },
-                    );
+                      environmentId: selectedEnvironment._id,
+                    });
                   };
                   const isValidJSON = !!environmentEditorRef.current?.isValid();
                   handleToggleEnvironmentType(

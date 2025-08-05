@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import * as models from '~/models';
@@ -20,37 +21,43 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 }
 
 export function useRequestGroupUpdateMetaActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    requestGroupId,
-    patch,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    requestGroupId: string;
-    patch: Partial<RequestGroupMeta>;
-  }) {
-    const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request-group/:requestGroupId/update-meta', {
+  const submit = useCallback(
+    ({
       organizationId,
       projectId,
       workspaceId,
       requestGroupId,
-    });
+      patch,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      requestGroupId: string;
+      patch: Partial<RequestGroupMeta>;
+    }) => {
+      const url = href(
+        '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request-group/:requestGroupId/update-meta',
+        {
+          organizationId,
+          projectId,
+          workspaceId,
+          requestGroupId,
+        },
+      );
 
-    return fetcher.submit(JSON.stringify(patch), {
-      action: url,
-      method: 'POST',
-      encType: 'application/json',
-    });
-  }
+      return fetcherSubmit(JSON.stringify(patch), {
+        action: url,
+        method: 'POST',
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

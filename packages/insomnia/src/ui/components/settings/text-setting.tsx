@@ -13,7 +13,7 @@ export const TextSetting: FC<{
   placeholder?: InputHTMLAttributes<HTMLInputElement>['placeholder'];
   setting: SettingsOfType<string | null>;
 }> = ({ disabled, help, label, placeholder, setting }) => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   if (!Object.prototype.hasOwnProperty.call(settings, setting)) {
     throw new Error(`Invalid setting name ${setting}`);
   }

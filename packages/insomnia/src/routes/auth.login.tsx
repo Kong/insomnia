@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { href, redirect, useFetcher, useNavigate } from 'react-router';
 
@@ -49,16 +49,19 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useLoginActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
-  const submit = (data: { provider: string }) => {
-    fetcher.submit(data, {
-      action: href('/auth/login'),
-      method: 'POST',
-    });
-  };
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
+  const submit = useCallback(
+    (data: { provider: string }) => {
+      fetcherSubmit(data, {
+        action: href('/auth/login'),
+        method: 'POST',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

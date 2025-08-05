@@ -1,7 +1,7 @@
 import React, { type FC, Fragment } from 'react';
 import { Button, Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { useParams, useRouteLoaderData } from 'react-router';
+import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { useRootLoaderData } from '~/root';
@@ -9,7 +9,10 @@ import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-edito
 
 import type { Environment } from '../../../models/environment';
 import { getCombinedPathParametersFromUrl, type RequestPathParameter } from '../../../models/request';
-import type { SocketIORequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import {
+  type SocketIORequestLoaderData,
+  useRequestLoaderData,
+} from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
@@ -47,9 +50,7 @@ interface Props {
 }
 
 export const SocketIORequestPane: FC<Props> = ({ environment }) => {
-  const { activeRequest, activeRequestMeta, requestPayload } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId',
-  ) as SocketIORequestLoaderData;
+  const { activeRequest, activeRequestMeta, requestPayload } = useRequestLoaderData() as SocketIORequestLoaderData;
 
   const { requestId } = useParams() as {
     organizationId: string;
@@ -58,7 +59,7 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
     requestId: string;
   };
 
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
 
   const [dismissPathParameterTip, setDismissPathParameterTip] = reactUse.useLocalStorage('dismissPathParameterTip', '');
 

@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import type { Route } from './+types/git.changes';
@@ -15,19 +16,26 @@ export async function clientLoader({ request }: Route.ClientLoaderArgs) {
 }
 
 export function useGitProjectChangesFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientLoader>(args);
-  function load({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) {
-    const searchParams = new URLSearchParams();
-    if (workspaceId) {
-      searchParams.set('workspaceId', workspaceId);
-    }
-    searchParams.set('projectId', projectId);
+  const {
+    load: fetcherLoad,
+    ...fetcherRest
+  } = useFetcher<typeof clientLoader>(args);
 
-    return fetcher.load(`${href('/git/changes')}?${searchParams.toString()}`);
-  }
+  const load = useCallback(
+    ({ projectId, workspaceId }: { projectId: string; workspaceId?: string }) => {
+      const searchParams = new URLSearchParams();
+      if (workspaceId) {
+        searchParams.set('workspaceId', workspaceId);
+      }
+      searchParams.set('projectId', projectId);
+
+      return fetcherLoad(`${href('/git/changes')}?${searchParams.toString()}`);
+    },
+    [fetcherLoad]
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     load,
   };
 }

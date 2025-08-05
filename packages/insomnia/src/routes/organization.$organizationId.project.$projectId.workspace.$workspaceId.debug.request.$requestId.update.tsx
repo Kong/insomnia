@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import * as requestOperations from '~/models/helpers/request-operations';
@@ -45,37 +46,43 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
 }
 
 export function useRequestUpdateActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    requestId,
-    patch,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    requestId: string;
-    patch: any;
-  }) {
-    const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId/update', {
+  const submit = useCallback(
+    ({
       organizationId,
       projectId,
       workspaceId,
       requestId,
-    });
+      patch,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      requestId: string;
+      patch: any;
+    }) => {
+      const url = href(
+        '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId/update',
+        {
+          organizationId,
+          projectId,
+          workspaceId,
+          requestId,
+        },
+      );
 
-    return fetcher.submit(JSON.stringify(patch), {
-      action: url,
-      method: 'POST',
-      encType: 'application/json',
-    });
-  }
+      return fetcherSubmit(JSON.stringify(patch), {
+        action: url,
+        method: 'POST',
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

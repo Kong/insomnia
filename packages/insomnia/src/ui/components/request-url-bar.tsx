@@ -1,6 +1,6 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
-import { useParams, useRouteLoaderData, useSearchParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { useRootLoaderData } from '~/root';
@@ -21,8 +21,11 @@ import type { Request } from '../../models/request';
 import { isEventStreamRequest, isGraphqlSubscriptionRequest } from '../../models/request';
 import { isRequestGroup, type RequestGroup } from '../../models/request-group';
 import { getOrInheritAuthentication, getOrInheritHeaders } from '../../network/network';
-import type { WorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import type { RequestLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import {
+  type RequestLoaderData,
+  useRequestLoaderData,
+} from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
@@ -56,7 +59,7 @@ export interface RequestUrlBarHandle {
 export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
   ({ handleAutocompleteUrls, uniquenessKey, onPaste }, ref) => {
     const [searchParams, setSearchParams] = useSearchParams();
-    const { userSession } = useRootLoaderData();
+    const { userSession } = useRootLoaderData()!;
     const { vaultKey } = userSession;
     const [showEnvVariableMissingModal, setShowEnvVariableMissingModal] = useState(false);
     const [showInputVaultKeyModal, setShowInputVaultKeyModal] = useState(false);
@@ -86,17 +89,13 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
       setSearchParams({});
     }
 
-    const { activeWorkspace, activeEnvironment } = useRouteLoaderData(
-      'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
-    ) as WorkspaceLoaderData;
-    const { settings } = useRootLoaderData();
+    const { activeWorkspace, activeEnvironment } = useWorkspaceLoaderData()!;
+    const { settings } = useRootLoaderData()!;
     const { hotKeyRegistry } = settings;
     const {
       activeRequest,
       activeRequestMeta: { downloadPath },
-    } = useRouteLoaderData(
-      'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId',
-    ) as RequestLoaderData;
+    } = useRequestLoaderData()! as RequestLoaderData;
     const patchRequestMeta = useRequestMetaPatcher();
     const methodDropdownRef = useRef<DropdownHandle>(null);
     const dropdownRef = useRef<DropdownHandle>(null);
@@ -134,9 +133,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
       workspaceId: string;
       requestId: string;
     };
+    const connectSubmit = connectRequestFetcher.submit;
     const connect = useCallback(
       (connectParams: ConnectActionParams) => {
-        connectRequestFetcher.submit({
+        connectSubmit({
           organizationId,
           projectId,
           workspaceId,
@@ -144,11 +144,12 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
           connectParams,
         });
       },
-      [connectRequestFetcher, organizationId, projectId, requestId, workspaceId],
+      [connectSubmit, organizationId, projectId, requestId, workspaceId],
     );
+    const sendRequestSubmit = sendRequestFetcher.submit;
     const send = useCallback(
       (params: SendActionParams) => {
-        sendRequestFetcher.submit({
+        sendRequestSubmit({
           organizationId,
           projectId,
           workspaceId,
@@ -156,7 +157,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
           params,
         });
       },
-      [organizationId, projectId, requestId, sendRequestFetcher, workspaceId],
+      [organizationId, projectId, requestId, sendRequestSubmit, workspaceId],
     );
 
     const sendOrConnect = useCallback(

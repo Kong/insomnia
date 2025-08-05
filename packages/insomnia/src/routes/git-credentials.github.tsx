@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import { gitCredentials } from '~/models';
@@ -11,14 +12,14 @@ export async function clientLoader(_args: Route.ClientActionArgs) {
 }
 
 export function useGitHubCredentialsFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientLoader>(args);
+  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
 
-  function load() {
-    return fetcher.load(href('/git-credentials/github'));
-  }
+  const load = useCallback(() => {
+    return fetcherLoad(href('/git-credentials/github'));
+  }, [fetcherLoad]);
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     load,
   };
 }

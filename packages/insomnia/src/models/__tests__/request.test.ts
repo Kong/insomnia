@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
 
 import { CONTENT_TYPE_GRAPHQL } from '../../common/constants';

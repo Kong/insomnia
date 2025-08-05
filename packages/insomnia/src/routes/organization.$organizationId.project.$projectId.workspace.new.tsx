@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+import { useCallback } from 'react';
 import { href, redirect, useFetcher } from 'react-router';
 
 import { getAppVersion, METHOD_GET } from '~/common/constants';
@@ -21,25 +22,24 @@ interface NewWorkspaceData {
   mockServerType?: 'self-hosted' | 'cloud';
   mockServerUrl?: string;
   fileName?: string;
+  withRequest?: boolean;
 }
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.new';
 
 export async function clientAction({ request, params }: Route.ClientActionArgs) {
   const { organizationId, projectId } = params;
-
   try {
+    const workspaceData = (await request.json()) as NewWorkspaceData;
     const project = await models.project.getById(projectId);
 
     invariant(project, 'Project not found');
 
-    const formData = await request.formData();
-
-    const name = formData.get('name');
+    const name = workspaceData.name;
 
     invariant(typeof name === 'string', 'Name is required');
 
-    const scope = formData.get('scope');
+    const scope = workspaceData.scope;
     invariant(
       scope === 'design' || scope === 'collection' || scope === 'mock-server' || scope === 'environment',
       'Scope is required',
@@ -58,17 +58,17 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     if (isGitProject(project)) {
       const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
-      const fileName = formData.get('fileName')?.toString() || workspace.name;
+      const fileName = workspaceData.fileName || workspace.name;
 
       const safeToUseFileNameWithExtension = safeToUseInsomniaFileNameWithExt(fileName);
 
       await models.workspaceMeta.update(workspaceMeta, {
-        gitFilePath: path.join(formData.get('folderPath')?.toString() || '', safeToUseFileNameWithExtension),
+        gitFilePath: path.join(workspaceData.folderPath || '', safeToUseFileNameWithExtension),
       });
     }
 
     if (scope === 'mock-server') {
-      const mockServerType = formData.get('mockServerType');
+      const mockServerType = workspaceData.mockServerType;
       invariant(mockServerType === 'cloud' || mockServerType === 'self-hosted', 'Mock Server type is required');
 
       const mockServerPatch: Partial<MockServer> = {
@@ -80,7 +80,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       }
 
       if (mockServerType === 'self-hosted') {
-        const mockServerUrl = formData.get('mockServerUrl');
+        const mockServerUrl = workspaceData.mockServerUrl;
         invariant(typeof mockServerUrl === 'string', 'Mock Server URL is required');
         mockServerPatch.useInsomniaCloud = false;
         mockServerPatch.url = mockServerUrl;
@@ -143,13 +143,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
       event: event,
     });
 
-    // Parse the URL from the request
-    const url = new URL(request.url);
-
-    // Get a specific query parameter
-    const withRequest = url.searchParams.get('withRequest');
-
-    if (withRequest) {
+    if (workspaceData.withRequest) {
       const settings = await models.settings.getOrCreate();
       const defaultHeaders = settings.disableAppVersionUserAgent
         ? []
@@ -191,24 +185,28 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 }
 
 export function useWorkspaceNewActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    ...workspaceData
-  }: NewWorkspaceData & { organizationId: string; projectId: string }) {
-    return fetcher.submit(workspaceData, {
-      method: 'POST',
-      action: href('/organization/:organizationId/project/:projectId/workspace/new', {
-        organizationId,
-        projectId,
-      }),
-    });
-  }
+  const submit = useCallback(
+    ({
+      organizationId,
+      projectId,
+      ...workspaceData
+    }: NewWorkspaceData & { organizationId: string; projectId: string }) => {
+      return fetcherSubmit(JSON.stringify(workspaceData), {
+        method: 'POST',
+        action: href('/organization/:organizationId/project/:projectId/workspace/new', {
+          organizationId,
+          projectId,
+        }),
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

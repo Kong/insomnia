@@ -19,12 +19,10 @@ import {
   NavLink,
   Route as RouteComponent,
   Routes,
-  useFetcher,
   useFetchers,
   useLoaderData,
   useNavigate,
   useParams,
-  useRouteLoaderData,
 } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
@@ -33,7 +31,11 @@ import { isNotNullOrUndefined } from '~/common/misc';
 import * as models from '~/models';
 import type { UnitTestSuite } from '~/models/unit-test-suite';
 import { useRootLoaderData } from '~/root';
+import { useTestSuiteDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.delete';
+import { useRunAllTestsActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.run-all-tests';
 import { TestRunStatus } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test-result.$testResultId';
+import { useTestSuiteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.update';
+import { useTestSuiteNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.new';
 import { DocumentTab } from '~/ui/components/document-tab';
 import { WorkspaceDropdown } from '~/ui/components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '~/ui/components/dropdowns/workspace-sync-dropdown';
@@ -54,8 +56,10 @@ import { useInsomniaTab } from '~/ui/hooks/use-insomnia-tab';
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test';
-import type { WorkspaceLoaderData } from './organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import TestSuiteComponent from './organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId';
+import { useWorkspaceLoaderData } from './organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import TestSuiteComponent, {
+  useUnitTestSuiteLoaderData,
+} from './organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId';
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { workspaceId } = params;
@@ -81,7 +85,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 
 const Component = () => {
   const { unitTestSuites } = useLoaderData<typeof clientLoader>();
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const { organizationId, projectId, workspaceId, testSuiteId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -89,24 +93,20 @@ const Component = () => {
     testSuiteId: string;
   };
 
-  const { activeProject, activeWorkspace, activeCookieJar, caCertificate, clientCertificates } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
-  ) as WorkspaceLoaderData;
+  const { activeProject, activeWorkspace, activeCookieJar, caCertificate, clientCertificates } =
+    useWorkspaceLoaderData()!;
 
-  const { unitTestSuite } =
-    (useRouteLoaderData(
-      'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId',
-    ) as { unitTestSuite: UnitTestSuite }) || {};
+  const { unitTestSuite } = useUnitTestSuiteLoaderData() || {};
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
   const [isEnvironmentPickerOpen, setIsEnvironmentPickerOpen] = useState(false);
   const [isCertificatesModalOpen, setCertificatesModalOpen] = useState(false);
 
-  const createUnitTestSuiteFetcher = useFetcher();
-  const deleteUnitTestSuiteFetcher = useFetcher();
-  const updateTestSuiteFetcher = useFetcher();
-  const runAllTestsFetcher = useFetcher();
+  const createUnitTestSuiteFetcher = useTestSuiteNewActionFetcher();
+  const deleteUnitTestSuiteFetcher = useTestSuiteDeleteActionFetcher();
+  const updateTestSuiteFetcher = useTestSuiteUpdateActionFetcher();
+  const runAllTestsFetcher = useRunAllTestsActionFetcher();
   const runningTests = useFetchers()
     .filter(fetcher => fetcher.formAction?.includes('run-all-tests') || fetcher.formAction?.includes('run'))
     .some(({ state }) => state !== 'idle');
@@ -154,13 +154,12 @@ const Component = () => {
       name: 'Run tests',
       icon: 'play',
       action: suiteId => {
-        runAllTestsFetcher.submit(
-          {},
-          {
-            method: 'POST',
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/run-all-tests`,
-          },
-        );
+        runAllTestsFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+          testSuiteId: suiteId,
+        });
       },
     },
     {
@@ -174,14 +173,13 @@ const Component = () => {
           submitName: 'Rename',
           onComplete: name => {
             name &&
-              updateTestSuiteFetcher.submit(
-                { name },
-                {
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/update`,
-                  method: 'POST',
-                  encType: 'application/json',
-                },
-              );
+              updateTestSuiteFetcher.submit({
+                organizationId,
+                projectId,
+                workspaceId,
+                testSuiteId: suiteId,
+                data: { name },
+              });
           },
         });
       },
@@ -199,13 +197,12 @@ const Component = () => {
           color: 'danger',
           onDone: async (isYes: boolean) => {
             if (isYes) {
-              deleteUnitTestSuiteFetcher.submit(
-                {},
-                {
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/delete`,
-                  method: 'POST',
-                },
-              );
+              deleteUnitTestSuiteFetcher.submit({
+                organizationId,
+                projectId,
+                workspaceId,
+                testSuiteId: suiteId,
+              });
             }
           },
         });
@@ -242,14 +239,13 @@ const Component = () => {
         }
       }
 
-      updateTestSuiteFetcher.submit(
-        { metaSortKey: sourceTestSuite.metaSortKey },
-        {
-          method: 'post',
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${sourceTestSuite._id}/update`,
-          encType: 'application/json',
-        },
-      );
+      updateTestSuiteFetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId,
+        testSuiteId: sourceTestSuite._id,
+        data: { metaSortKey: sourceTestSuite.metaSortKey },
+      });
     },
     renderDropIndicator(target) {
       return <DropIndicator target={target} className="outline outline-1 outline-[--color-surprise]" />;
@@ -362,15 +358,12 @@ const Component = () => {
               <Button
                 className="flex items-center justify-center gap-2 rounded-sm px-4 py-1 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                 onPress={() => {
-                  createUnitTestSuiteFetcher.submit(
-                    {
-                      name: 'New Suite',
-                    },
-                    {
-                      method: 'post',
-                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/new`,
-                    },
-                  );
+                  createUnitTestSuiteFetcher.submit({
+                    organizationId,
+                    projectId,
+                    workspaceId,
+                    name: 'New Suite',
+                  });
                 }}
               >
                 <Icon icon="plus" />
@@ -419,14 +412,13 @@ const Component = () => {
                         className="flex-1 px-1 hover:!bg-transparent"
                         onSubmit={name => {
                           name &&
-                            updateTestSuiteFetcher.submit(
-                              { name },
-                              {
-                                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${item._id}/update`,
-                                method: 'POST',
-                                encType: 'application/json',
-                              },
-                            );
+                            updateTestSuiteFetcher.submit({
+                              organizationId,
+                              projectId,
+                              workspaceId,
+                              testSuiteId: item._id,
+                              data: { name },
+                            });
                         }}
                       />
                       <MenuTrigger>

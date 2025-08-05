@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, redirect, useFetcher } from 'react-router';
 
 import { importResourcesToNewWorkspace } from '~/common/import';
@@ -67,40 +68,43 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useWorkspaceMoveActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    workspaceId,
-    orgId,
-    projectId,
-    name,
-  }: {
-    workspaceId: string;
-    orgId: string;
-    projectId: string;
-    name?: string;
-  }) {
-    const formData = new FormData();
-    formData.append('workspaceId', workspaceId);
-    formData.append('orgId', orgId);
-    formData.append('projectId', projectId);
-    if (name) {
-      formData.append('name', name);
-    }
-
-    const url = href('/organization/:organizationId/project/:projectId/workspace/move', {
-      organizationId: orgId,
+  const submit = useCallback(
+    ({
+      workspaceId,
+      orgId,
       projectId,
-    });
+      name,
+    }: {
+      workspaceId: string;
+      orgId: string;
+      projectId: string;
+      name?: string;
+    }) => {
+      const formData = new FormData();
+      formData.append('workspaceId', workspaceId);
+      formData.append('orgId', orgId);
+      formData.append('projectId', projectId);
+      if (name) {
+        formData.append('name', name);
+      }
 
-    return fetcher.submit(formData, {
-      action: url,
-      method: 'POST',
-    });
-  }
+      const url = href('/organization/:organizationId/project/:projectId/workspace/move', {
+        organizationId: orgId,
+        projectId,
+      });
+
+      return fetcherSubmit(formData, {
+        action: url,
+        method: 'POST',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

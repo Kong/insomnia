@@ -24,7 +24,7 @@ import { TextSetting } from './text-setting';
 import { VaultKeyPanel } from './vault-key-panel';
 
 export const General: FC = () => {
-  const { settings, userSession } = useRootLoaderData();
+  const { settings, userSession } = useRootLoaderData()!;
   const isLoggedIn = Boolean(userSession.id);
 
   return (

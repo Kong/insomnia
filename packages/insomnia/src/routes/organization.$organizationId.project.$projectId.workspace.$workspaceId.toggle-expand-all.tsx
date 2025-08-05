@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import { database } from '~/common/database';
@@ -38,34 +39,37 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 }
 
 export function useToggleExpandAllActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    toggle,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    toggle: 'collapse-all' | 'expand-all';
-  }) {
-    const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/toggle-expand-all', {
+  const submit = useCallback(
+    ({
       organizationId,
       projectId,
       workspaceId,
-    });
+      toggle,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      toggle: 'collapse-all' | 'expand-all';
+    }) => {
+      const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/toggle-expand-all', {
+        organizationId,
+        projectId,
+        workspaceId,
+      });
 
-    return fetcher.submit(JSON.stringify({ toggle }), {
-      action: url,
-      method: 'POST',
-      encType: 'application/json',
-    });
-  }
+      return fetcherSubmit(JSON.stringify({ toggle }), {
+        action: url,
+        method: 'POST',
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

@@ -1,4 +1,5 @@
-import { href, Outlet, useFetcher } from 'react-router';
+import { useCallback } from 'react';
+import { href, Outlet, useFetcher, useRouteLoaderData } from 'react-router';
 
 import type { SortOrder } from '~/common/constants';
 import { database } from '~/common/database';
@@ -316,29 +317,38 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   };
 }
 
-export function useWorkspaceLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientLoader>(args);
+export function useWorkspaceLoaderData() {
+  return useRouteLoaderData<typeof clientLoader>(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
+  );
+}
 
-  function load({
-    organizationId,
-    projectId,
-    workspaceId,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-  }) {
-    return fetcher.load(
-      href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId`, {
-        organizationId,
-        projectId,
-        workspaceId,
-      }),
-    );
-  }
+export function useWorkspaceLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
+  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
+
+  const load = useCallback(
+    ({
+      organizationId,
+      projectId,
+      workspaceId,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+    }) => {
+      return fetcherLoad(
+        href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId`, {
+          organizationId,
+          projectId,
+          workspaceId,
+        }),
+      );
+    },
+    [fetcherLoad],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     load,
   };
 }

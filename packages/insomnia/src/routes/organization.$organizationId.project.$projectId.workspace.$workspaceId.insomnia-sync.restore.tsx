@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, redirect, useFetcher } from 'react-router';
 
 import type { Operation } from '~/common/database';
@@ -37,34 +38,37 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 }
 
 export function useInsomniaSyncRestoreActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    id,
-    organizationId,
-    projectId,
-    workspaceId,
-  }: {
-    id: string;
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-  }) {
-    const formData = new FormData();
-    formData.set('id', id);
+  const submit = useCallback(
+    ({
+      id,
+      organizationId,
+      projectId,
+      workspaceId,
+    }: {
+      id: string;
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+    }) => {
+      const formData = new FormData();
+      formData.set('id', id);
 
-    return fetcher.submit(formData, {
-      method: 'POST',
-      action: href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/insomnia-sync/restore`, {
-        organizationId,
-        projectId,
-        workspaceId,
-      }),
-    });
-  }
+      return fetcherSubmit(formData, {
+        method: 'POST',
+        action: href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/insomnia-sync/restore`, {
+          organizationId,
+          projectId,
+          workspaceId,
+        }),
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

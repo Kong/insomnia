@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { type ActionFunctionArgs, href, useFetcher } from 'react-router';
 
 import { userSession as sessionModel } from '~/models';
@@ -21,14 +22,14 @@ export async function clientAction(_args: ActionFunctionArgs) {
 }
 
 export function useUpdateVaultSaltFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit() {
-    return fetcher.submit({}, { action: href('/auth/update-vault-salt'), method: 'POST' });
-  }
+  const submit = useCallback(() => {
+    return fetcherSubmit({}, { action: href('/auth/update-vault-salt'), method: 'POST' });
+  }, [fetcherSubmit]);
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

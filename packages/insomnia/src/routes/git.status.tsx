@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import type { Route } from './+types/git.status';
@@ -14,18 +15,21 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useGitProjectStatusActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit(data: GitStatusData) {
-    return fetcher.submit(JSON.stringify(data), {
-      method: 'POST',
-      action: href('/git/status'),
-      encType: 'application/json',
-    });
-  }
+  const submit = useCallback(
+    (data: GitStatusData) => {
+      return fetcherSubmit(JSON.stringify(data), {
+        method: 'POST',
+        action: href('/git/status'),
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

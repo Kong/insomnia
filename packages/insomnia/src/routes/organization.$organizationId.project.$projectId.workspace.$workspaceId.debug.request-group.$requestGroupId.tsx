@@ -1,4 +1,4 @@
-import { href, redirect } from 'react-router';
+import { href, redirect, useRouteLoaderData } from 'react-router';
 
 import * as models from '~/models';
 import type { RequestGroup } from '~/models/request-group';
@@ -26,4 +26,10 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   return {
     activeRequestGroup,
   };
+}
+
+export function useRequestGroupLoaderData() {
+  return useRouteLoaderData<typeof clientLoader>(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId',
+  );
 }

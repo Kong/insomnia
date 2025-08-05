@@ -17,7 +17,7 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 import { Panel, PanelResizeHandle } from 'react-resizable-panels';
-import { useNavigate, useParams, useRouteLoaderData, useSearchParams, useSubmit } from 'react-router';
+import { useNavigate, useParams, useSearchParams, useSubmit } from 'react-router';
 import * as reactUse from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -30,7 +30,7 @@ import type { RunnerResultPerRequest, RunnerTestResult } from '~/models/runner-t
 import { cancelRequestById } from '~/network/cancellation';
 import { defaultSendActionRuntime } from '~/network/network';
 import { useRootLoaderData } from '~/root';
-import type { OrganizationLoaderData } from '~/routes/organization';
+import { useOrganizationLoaderData } from '~/routes/organization';
 import type { CollectionRunnerContext } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { sendActionImplementation } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.send';
 import { SegmentEvent } from '~/ui/analytics';
@@ -139,7 +139,7 @@ export const Runner: FC<{}> = () => {
   const [searchParams] = useSearchParams();
   const [errorMsg, setErrorMsg] = useState<null | string>(null);
 
-  const { currentPlan } = useRouteLoaderData('routes/organization') as OrganizationLoaderData;
+  const organizationData = useOrganizationLoaderData();
   const targetFolderId = searchParams.get('folder') || '';
 
   const { organizationId, projectId, workspaceId } = useParams() as {
@@ -153,7 +153,7 @@ export const Runner: FC<{}> = () => {
   // For backward compatibility，the runnerId we use for testResult in database is no prefix with 'runner_'
   const runnerId = targetFolderId ? targetFolderId : workspaceId;
 
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showCLIModal, setShowCLIModal] = useState(false);
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
@@ -261,7 +261,7 @@ export const Runner: FC<{}> = () => {
 
     window.main.trackSegmentEvent({
       event: SegmentEvent.collectionRunExecute,
-      properties: { plan: currentPlan?.type || 'scratchpad', iterations: iterationCount },
+      properties: { plan: organizationData?.currentPlan?.type || 'scratchpad', iterations: iterationCount },
     });
 
     const requests = selectedKeys === 'all' ? reqList : reqList.filter(item => (selectedKeys as Set<Key>).has(item.id));

@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import type { GitCredentials } from '~/models/git-repository';
@@ -16,18 +17,21 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useGitRemoteBranchesActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit(data: FetchRemoteBranchesData) {
-    return fetcher.submit(JSON.stringify(data), {
-      method: 'POST',
-      action: href(`/git/remote-branches`),
-      encType: 'application/json',
-    });
-  }
+  const submit = useCallback(
+    (data: FetchRemoteBranchesData) => {
+      return fetcherSubmit(JSON.stringify(data), {
+        method: 'POST',
+        action: href(`/git/remote-branches`),
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

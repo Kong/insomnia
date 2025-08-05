@@ -3,9 +3,9 @@ import { href, matchPath, type PathMatch } from 'react-router';
 import { database } from '../common/database';
 import * as models from '../models';
 import type { Organization } from '../models/organization';
-import { findPersonalOrganization } from '../models/organization';
-import type { Project } from '../models/project';
-import { scopeToActivity } from '../models/workspace';
+import { findPersonalOrganization, SCRATCHPAD_ORGANIZATION_ID } from '../models/organization';
+import { type Project, SCRATCHPAD_PROJECT_ID } from '../models/project';
+import { scopeToActivity, SCRATCHPAD_WORKSPACE_ID } from '../models/workspace';
 export const enum AsyncTask {
   SyncOrganization,
   MigrateProjects,
@@ -54,11 +54,18 @@ export const getInitialRouteForOrganization = async ({
         if (match.params.workspaceId && navigateToWorkspace) {
           const existingWorkspace = await models.workspace.getById(match.params.workspaceId);
           if (existingWorkspace) {
-            return `/organization/${match.params.organizationId}/project/${existingProject._id}/workspace/${existingWorkspace._id}/${scopeToActivity(existingWorkspace.scope)}`;
+            return `${href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId`, {
+              organizationId: match.params.organizationId,
+              projectId: existingProject._id,
+              workspaceId: existingWorkspace._id,
+            })}/${scopeToActivity(existingWorkspace.scope)}`;
           }
         }
 
-        return `/organization/${match?.params.organizationId}/project/${existingProject._id}`;
+        return href(`/organization/:organizationId/project/:projectId`, {
+          organizationId: match.params.organizationId,
+          projectId: existingProject._id,
+        });
       }
     }
   }
@@ -66,10 +73,15 @@ export const getInitialRouteForOrganization = async ({
   const firstProject = await database.getWhere<Project>(models.project.type, { parentId: organizationId });
 
   if (firstProject?._id) {
-    return `/organization/${organizationId}/project/${firstProject?._id}`;
+    return href(`/organization/:organizationId/project/:projectId`, {
+      organizationId,
+      projectId: firstProject._id,
+    });
   }
   // 3. if no project, redirect to the project route
-  return `/organization/${organizationId}/project`;
+  return href(`/organization/:organizationId/project`, {
+    organizationId,
+  });
 };
 
 export const getInitialEntry = async () => {
@@ -80,7 +92,7 @@ export const getInitialEntry = async () => {
     const hasSeenOnboardingV11 = Boolean(window.localStorage.getItem('hasSeenOnboardingV11'));
 
     if (!hasSeenOnboardingV11) {
-      return '/onboarding';
+      return href('/onboarding');
     }
 
     const hasUserLoggedInBefore = window.localStorage.getItem('hasUserLoggedInBefore');
@@ -93,7 +105,7 @@ export const getInitialEntry = async () => {
       const personalOrganization = findPersonalOrganization(organizations, user.accountId);
       // If the personal org is not found in local storage go fetch from org index loader
       if (!personalOrganization) {
-        return '/organization';
+        return href('/organization');
       }
 
       let organizationId = personalOrganization.id;
@@ -119,8 +131,16 @@ export const getInitialEntry = async () => {
       return href('/auth/login');
     }
 
-    return '/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug';
+    return href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
+      organizationId: SCRATCHPAD_ORGANIZATION_ID,
+      projectId: SCRATCHPAD_PROJECT_ID,
+      workspaceId: SCRATCHPAD_WORKSPACE_ID,
+    });
   } catch (e) {
-    return '/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug';
+    return href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
+      organizationId: SCRATCHPAD_ORGANIZATION_ID,
+      projectId: SCRATCHPAD_PROJECT_ID,
+      workspaceId: SCRATCHPAD_WORKSPACE_ID,
+    });
   }
 };

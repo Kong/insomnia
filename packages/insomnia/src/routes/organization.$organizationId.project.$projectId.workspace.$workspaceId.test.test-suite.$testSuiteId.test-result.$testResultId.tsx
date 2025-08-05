@@ -9,10 +9,6 @@ import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test-result.$testResultId';
 
-interface TestResultsData {
-  testResult: UnitTestResult;
-}
-
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { testResultId } = params;
 
@@ -25,10 +21,14 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   };
 }
 
-export const TestRunStatus = () => {
-  const { testResult } = useRouteLoaderData(
+function useTestResultLoaderData() {
+  return useRouteLoaderData<typeof clientLoader>(
     'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.test.test-suite.$testSuiteId.test-result.$testResultId',
-  ) as TestResultsData;
+  );
+}
+
+export const TestRunStatus = () => {
+  const { testResult } = useTestResultLoaderData()!;
 
   if (!testResult) {
     return null;

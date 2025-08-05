@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import * as models from '~/models';
@@ -25,32 +26,35 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 }
 
 export function useEnvironmentCreateActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    params,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    params: { isPrivate: boolean; environmentType?: string };
-  }) {
-    return fetcher.submit(JSON.stringify(params), {
-      method: 'POST',
-      action: href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/environment/create`, {
-        organizationId,
-        projectId,
-        workspaceId,
-      }),
-      encType: 'application/json',
-    });
-  }
+  const submit = useCallback(
+    ({
+      organizationId,
+      projectId,
+      workspaceId,
+      params,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      params: { isPrivate: boolean; environmentType?: string };
+    }) => {
+      return fetcherSubmit(JSON.stringify(params), {
+        method: 'POST',
+        action: href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/environment/create`, {
+          organizationId,
+          projectId,
+          workspaceId,
+        }),
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

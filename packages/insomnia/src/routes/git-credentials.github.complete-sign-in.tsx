@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import type { Route } from './+types/git-credentials.github.complete-sign-in';
@@ -13,14 +14,17 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useGithubCompleteSignInFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit(data: { code: string; state: string }) {
-    return fetcher.submit(data, { action: href('/git-credentials/github/complete-sign-in'), method: 'POST' });
-  }
+  const submit = useCallback(
+    (data: { code: string; state: string }) => {
+      return fetcherSubmit(data, { action: href('/git-credentials/github/complete-sign-in'), method: 'POST' });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

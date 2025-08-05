@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import * as models from '~/models';
@@ -15,7 +16,6 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const environment = await models.environment.getById(environmentId);
 
   invariant(environment, 'Environment not found');
-  invariant(typeof patch.name === 'string', 'Name is required');
 
   const baseEnvironment = await models.environment.getByParentId(workspaceId);
 
@@ -27,36 +27,39 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 }
 
 export function useEnvironmentUpdateActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    environmentId,
-    patch,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    environmentId: string;
-    patch: Partial<Environment>;
-  }) {
-    const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/environment/update', {
+  const submit = useCallback(
+    ({
       organizationId,
       projectId,
       workspaceId,
-    });
+      environmentId,
+      patch,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      environmentId: string;
+      patch: Partial<Environment>;
+    }) => {
+      const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/environment/update', {
+        organizationId,
+        projectId,
+        workspaceId,
+      });
 
-    return fetcher.submit(JSON.stringify({ environmentId, patch }), {
-      action: url,
-      method: 'POST',
-      encType: 'application/json',
-    });
-  }
+      return fetcherSubmit(JSON.stringify({ environmentId, patch }), {
+        action: url,
+        method: 'POST',
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

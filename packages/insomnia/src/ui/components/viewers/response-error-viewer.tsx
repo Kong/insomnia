@@ -12,7 +12,7 @@ interface Props {
 }
 export const ResponseErrorViewer: FC<Props> = memo(({ error }) => {
   let msg: React.ReactNode = null;
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const { editorFontSize } = settings;
 
   if (error?.toLowerCase().indexOf('certificate') !== -1) {

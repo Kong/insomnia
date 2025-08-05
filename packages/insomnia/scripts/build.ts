@@ -1,4 +1,4 @@
-import childProcess, { spawn } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { cp, mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -19,8 +19,7 @@ if (require.main === module) {
 export const start = async () => {
   console.log('[build] Starting build');
 
-  console.log(`[build] npm: ${childProcess.spawnSync('npm', ['--version']).stdout}`.trim());
-  console.log(`[build] node: ${childProcess.spawnSync('node', ['--version']).stdout}`.trim());
+  console.log(`[build] node: ${process.version}`.trim());
 
   if (process.version.indexOf('v22.') !== 0) {
     console.log('[build] Node 22.x.x is required to build');
@@ -72,7 +71,6 @@ export const start = async () => {
   await copyFiles('../bin', buildFolder);
   await copyFiles('../src/static', path.join(buildFolder, 'static'));
   await copyFiles('../src/icons', buildFolder);
-  await copyFiles('../build/client', buildFolder);
   await copyFiles('../src/main/lint-process.mjs', path.join(buildFolder, 'main/lint-process.mjs'));
   await copyFiles('../src/hidden-window.html', path.join(buildFolder, 'hidden-window.html'));
 

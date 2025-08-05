@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import contentDisposition from 'content-disposition';
 import { extension as mimeExtension } from 'mime-types';
+import { useCallback } from 'react';
 import { href, redirect, useFetcher } from 'react-router';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -367,38 +368,41 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 }
 
 export function useDebugRequestSendActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    requestId,
-    params,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    requestId: string;
-    params: { shouldPromptForPathAfterResponse?: boolean; ignoreUndefinedEnvVariable?: boolean };
-  }) {
-    return fetcher.submit(JSON.stringify(params), {
-      method: 'POST',
-      action: href(
-        `/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId/send`,
-        {
-          organizationId,
-          projectId,
-          workspaceId,
-          requestId,
-        },
-      ),
-      encType: 'application/json',
-    });
-  }
+  const submit = useCallback(
+    ({
+      organizationId,
+      projectId,
+      workspaceId,
+      requestId,
+      params,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      requestId: string;
+      params: { shouldPromptForPathAfterResponse?: boolean; ignoreUndefinedEnvVariable?: boolean };
+    }) => {
+      return fetcherSubmit(JSON.stringify(params), {
+        method: 'POST',
+        action: href(
+          `/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/:requestId/send`,
+          {
+            organizationId,
+            projectId,
+            workspaceId,
+            requestId,
+          },
+        ),
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

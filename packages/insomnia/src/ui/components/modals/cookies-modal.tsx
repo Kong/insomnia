@@ -17,7 +17,7 @@ import {
   Tabs,
   TextField,
 } from 'react-aria-components';
-import { useParams, useRouteLoaderData } from 'react-router';
+import { useParams } from 'react-router';
 import { Cookie as ToughCookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -27,7 +27,7 @@ import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-edito
 import { cookieToString } from '../../../common/cookies';
 import { fuzzyMatch } from '../../../common/misc';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
-import type { WorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
@@ -59,9 +59,7 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
     workspaceId: string;
   };
 
-  const { activeCookieJar } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
-  ) as WorkspaceLoaderData;
+  const { activeCookieJar } = useWorkspaceLoaderData()!;
   const updateCookieJarFetcher = useUpdateCookieJarActionFetcher();
 
   const [page, setPage] = useState(0);

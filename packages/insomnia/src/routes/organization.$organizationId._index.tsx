@@ -1,4 +1,4 @@
-import { href, redirect, useFetcher } from 'react-router';
+import { redirect } from 'react-router';
 
 import { syncProjects } from '~/ui/organization-utils';
 import { getInitialRouteForOrganization } from '~/utils/router';
@@ -15,21 +15,4 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   }
   const initialOrganizationRoute = await getInitialRouteForOrganization({ organizationId });
   return redirect(initialOrganizationRoute);
-}
-
-export function useOrganizationIndexLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientLoader>(args);
-
-  function load({ organizationId }: { organizationId: string }) {
-    return fetcher.load(
-      href('/organization/:organizationId', {
-        organizationId,
-      }),
-    );
-  }
-
-  return {
-    ...fetcher,
-    load,
-  };
 }

@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import * as models from '~/models';
@@ -20,42 +21,48 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 }
 
 export function useRequestGroupNewActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    name,
-    parentId,
-    environmentType,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    name: string;
-    parentId?: string;
-    environmentType?: EnvironmentType;
-  }) {
-    const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request-group/new', {
+  const submit = useCallback(
+    ({
       organizationId,
       projectId,
       workspaceId,
-    });
+      name,
+      parentId,
+      environmentType,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      name: string;
+      parentId?: string;
+      environmentType?: EnvironmentType;
+    }) => {
+      const url = href(
+        '/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request-group/new',
+        {
+          organizationId,
+          projectId,
+          workspaceId,
+        },
+      );
 
-    const formData = new FormData();
-    formData.set('name', name);
-    if (parentId) formData.set('parentId', parentId);
-    if (environmentType) formData.set('environmentType', environmentType);
+      const formData = new FormData();
+      formData.set('name', name);
+      if (parentId) formData.set('parentId', parentId);
+      if (environmentType) formData.set('environmentType', environmentType);
 
-    return fetcher.submit(formData, {
-      action: url,
-      method: 'POST',
-    });
-  }
+      return fetcherSubmit(formData, {
+        action: url,
+        method: 'POST',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

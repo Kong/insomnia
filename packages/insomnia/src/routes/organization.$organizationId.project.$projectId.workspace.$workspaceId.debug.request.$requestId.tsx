@@ -1,4 +1,4 @@
-import { redirect } from 'react-router';
+import { redirect, useRouteLoaderData } from 'react-router';
 
 import { database } from '~/common/database';
 import type { BaseModel } from '~/models';
@@ -159,4 +159,10 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
     requestVersions: await models.requestVersion.findByParentId(requestId),
     mockServerAndRoutes,
   } as RequestLoaderData | WebSocketRequestLoaderData;
+}
+
+export function useRequestLoaderData() {
+  return useRouteLoaderData<typeof clientLoader>(
+    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId',
+  );
 }

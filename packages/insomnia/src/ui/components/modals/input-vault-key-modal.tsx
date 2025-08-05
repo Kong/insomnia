@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Input, Modal, ModalOverlay } from 'react-aria-components';
-import { useRouteLoaderData } from 'react-router';
 
 import { removeAllSecrets } from '~/models/environment';
 import { useRootLoaderData } from '~/root';
 import { useResetVaultKeyFetcher } from '~/routes/auth.reset-vault-key';
 import { useValidateVaultKeyActionFetcher } from '~/routes/auth.validate-vault-key';
-import type { OrganizationLoaderData } from '~/routes/organization';
+import { useOrganizationLoaderData } from '~/routes/organization';
 import { Icon } from '~/ui/components/icon';
 import { VaultKeyDisplayInput } from '~/ui/components/settings/vault-key-panel';
 
@@ -20,13 +19,13 @@ export interface InputVaultKeyModalProps {
 
 export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
   const { onClose, allowClose = true } = props;
-  const { userSession } = useRootLoaderData();
+  const { userSession } = useRootLoaderData()!;
   const [vaultKey, setVaultKey] = useState('');
   const [error, setError] = useState('');
   const [resetDone, setResetDone] = useState(false);
   const resetVaultKeyFetcher = useResetVaultKeyFetcher();
   const validateVaultKeyFetcher = useValidateVaultKeyActionFetcher();
-  const { organizations } = useRouteLoaderData('routes/organization') as OrganizationLoaderData;
+  const { organizations } = useOrganizationLoaderData()!;
   const isLoading = resetVaultKeyFetcher.state !== 'idle' || validateVaultKeyFetcher.state !== 'idle';
 
   useEffect(() => {

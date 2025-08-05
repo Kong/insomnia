@@ -1,8 +1,8 @@
 import React, { type FC, useCallback } from 'react';
-import { useParams, useRouteLoaderData } from 'react-router';
+import { useParams } from 'react-router';
 
 import {
-  type MockRouteLoaderData,
+  useMockRouteLoaderData,
   useMockRoutePatcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
@@ -18,9 +18,7 @@ interface Props {
 }
 
 export const MockResponseHeadersEditor: FC<Props> = ({ bulk, isDisabled, onBlur }) => {
-  const { mockRoute } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId',
-  ) as MockRouteLoaderData;
+  const { mockRoute } = useMockRouteLoaderData()!;
   const patchMockRoute = useMockRoutePatcher();
 
   const { mockRouteId } = useParams() as { mockRouteId: string };

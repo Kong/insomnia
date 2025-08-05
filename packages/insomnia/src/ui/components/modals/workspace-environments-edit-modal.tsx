@@ -18,7 +18,7 @@ import {
   ToggleButton,
   useDragAndDrop,
 } from 'react-aria-components';
-import { useParams, useRouteLoaderData } from 'react-router';
+import { useParams } from 'react-router';
 
 import { useEnvironmentCreateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.create';
 import { useEnvironmentDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.delete';
@@ -35,7 +35,7 @@ import {
   getDataFromKVPair,
 } from '../../../models/environment';
 import { isRemoteProject } from '../../../models/project';
-import type { WorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { responseTagRegex } from '../../../templating/utils';
 import { useOrganizationPermissions } from '../../hooks/use-organization-features';
 import { EditableInput } from '../editable-input';
@@ -57,9 +57,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
   invariant(projectId, 'Project ID is required');
   invariant(workspaceId, 'Workspace ID is required');
 
-  const routeData = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
-  ) as WorkspaceLoaderData;
+  const routeData = useWorkspaceLoaderData()!;
   const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);
 
   const { features } = useOrganizationPermissions();

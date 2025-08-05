@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import { userSession } from '~/models';
@@ -36,16 +37,19 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
 }
 
 export function useCollaboratorsSearchLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientLoader>(args);
+  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
 
-  function load({ organizationId, query }: { organizationId: string; query?: string }) {
-    return fetcher.load(
-      `${href(`/organization/:organizationId/collaborators-search`, { organizationId })}?${encodeURIComponent(query || '')}`,
-    );
-  }
+  const load = useCallback(
+    ({ organizationId, query }: { organizationId: string; query?: string }) => {
+      return fetcherLoad(
+        `${href(`/organization/:organizationId/collaborators-search`, { organizationId })}?${encodeURIComponent(query || '')}`,
+      );
+    },
+    [fetcherLoad],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     load,
   };
 }

@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import { database } from '~/common/database';
@@ -24,37 +25,43 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 }
 
 export function useTestSuiteUpdateActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    testSuiteId,
-    data,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    testSuiteId: string;
-    data: Partial<UnitTestSuite>;
-  }) {
-    const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/test/test-suite/:testSuiteId/update', {
+  const submit = useCallback(
+    ({
       organizationId,
       projectId,
       workspaceId,
       testSuiteId,
-    });
+      data,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      testSuiteId: string;
+      data: Partial<UnitTestSuite>;
+    }) => {
+      const url = href(
+        '/organization/:organizationId/project/:projectId/workspace/:workspaceId/test/test-suite/:testSuiteId/update',
+        {
+          organizationId,
+          projectId,
+          workspaceId,
+          testSuiteId,
+        },
+      );
 
-    return fetcher.submit(JSON.stringify(data), {
-      action: url,
-      method: 'POST',
-      encType: 'application/json',
-    });
-  }
+      return fetcherSubmit(JSON.stringify(data), {
+        action: url,
+        method: 'POST',
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

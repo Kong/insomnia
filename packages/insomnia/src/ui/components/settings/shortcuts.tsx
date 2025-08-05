@@ -28,7 +28,7 @@ export const isKeyCombinationInRegistry = (
   );
 
 export const Shortcuts: FC = () => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const { hotKeyRegistry } = settings;
   const patchSettings = useSettingsPatcher();
 

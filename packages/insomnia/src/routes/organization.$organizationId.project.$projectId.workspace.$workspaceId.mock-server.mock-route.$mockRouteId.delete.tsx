@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, redirect, useFetcher } from 'react-router';
 
 import * as models from '~/models';
@@ -26,37 +27,43 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 }
 
 export function useMockRouteDeleteActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    mockRouteId,
-    isSelected,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    mockRouteId: string;
-    isSelected: boolean;
-  }) {
-    const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server/mock-route/:mockRouteId/delete', {
+  const submit = useCallback(
+    ({
       organizationId,
       projectId,
       workspaceId,
       mockRouteId,
-    });
+      isSelected,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      mockRouteId: string;
+      isSelected: boolean;
+    }) => {
+      const url = href(
+        '/organization/:organizationId/project/:projectId/workspace/:workspaceId/mock-server/mock-route/:mockRouteId/delete',
+        {
+          organizationId,
+          projectId,
+          workspaceId,
+          mockRouteId,
+        },
+      );
 
-    return fetcher.submit(JSON.stringify({ isSelected }), {
-      action: url,
-      method: 'POST',
-      encType: 'application/json',
-    });
-  }
+      return fetcherSubmit(JSON.stringify({ isSelected }), {
+        action: url,
+        method: 'POST',
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

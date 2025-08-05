@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import * as models from '~/models';
@@ -22,36 +23,42 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 }
 
 export function useSetActiveEnvironmentFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    environmentId,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    environmentId: string;
-  }) {
-    return fetcher.submit(
-      {
-        environmentId,
-      },
-      {
-        method: 'POST',
-        action: href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/environment/set-active', {
-          organizationId,
-          projectId,
-          workspaceId,
-        }),
-      },
-    );
-  }
+  const submit = useCallback(
+    ({
+      organizationId,
+      projectId,
+      workspaceId,
+      environmentId,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      environmentId: string;
+    }) => {
+      return fetcherSubmit(
+        {
+          environmentId,
+        },
+        {
+          method: 'POST',
+          action: href(
+            '/organization/:organizationId/project/:projectId/workspace/:workspaceId/environment/set-active',
+            {
+              organizationId,
+              projectId,
+              workspaceId,
+            },
+          ),
+        },
+      );
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

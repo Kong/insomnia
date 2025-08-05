@@ -1,7 +1,7 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type { ServiceError, StatusObject } from '@grpc/grpc-js';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import React, { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import {
   Breadcrumb,
   Breadcrumbs,
@@ -33,11 +33,9 @@ import {
   redirect,
   Route as RouteComponent,
   Routes,
-  useFetcher,
   useFetchers,
   useNavigate,
   useParams,
-  useRouteLoaderData,
   useSearchParams,
 } from 'react-router';
 
@@ -65,18 +63,19 @@ import { isSocketIORequest, isSocketIORequestId, type SocketIORequest } from '~/
 import { isWebSocketRequest, isWebSocketRequestId, type WebSocketRequest } from '~/models/websocket-request';
 import { isDesign } from '~/models/workspace';
 import { useRootLoaderData } from '~/root';
-import type {
-  Child,
-  WorkspaceLoaderData,
+import {
+  type Child,
+  useWorkspaceLoaderData,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import type {
-  GrpcRequestLoaderData,
-  RequestLoaderData,
-  SocketIORequestLoaderData,
-  WebSocketRequestLoaderData,
-} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import type { RequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
+import { useDebugReorderActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.reorder';
+import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
+import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.delete';
+import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
+import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
+import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import Runner from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
+import { useToggleExpandAllActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.toggle-expand-all';
 import { DropdownHint } from '~/ui/components/base/dropdown/dropdown-hint';
 import { DocumentTab } from '~/ui/components/document-tab';
 import { RequestActionsDropdown } from '~/ui/components/dropdowns/request-actions-dropdown';
@@ -235,14 +234,15 @@ const Debug = () => {
     clientCertificates,
     grpcRequests,
     collection,
-  } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
-  ) as WorkspaceLoaderData;
-  const requestData = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId',
-  ) as RequestLoaderData | GrpcRequestLoaderData | WebSocketRequestLoaderData | SocketIORequestLoaderData | undefined;
+  } = useWorkspaceLoaderData()!;
+
+  const requestData = useRequestLoaderData();
   const { activeRequest } = requestData || {};
-  const requestFetcher = useFetcher();
+
+  const deleteRequestFetcher = useRequestDeleteActionFetcher();
+  const duplicateRequestFetcher = useRequestDuplicateActionFetcher();
+  const createRequestFetcher = useRequestNewActionFetcher();
+  const createRequestGroupFetcher = useRequestGroupNewActionFetcher();
 
   const [isPasteCurlModalOpen, setPasteCurlModalOpen] = useState(false);
   const [pastedCurl, setPastedCurl] = useState('');
@@ -255,10 +255,7 @@ const Debug = () => {
     requestGroupId?: string;
   };
 
-  const { activeRequestGroup } =
-    (useRouteLoaderData(
-      'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId',
-    ) as RequestGroupLoaderData) || {};
+  const { activeRequestGroup } = useRequestGroupLoaderData() || {};
 
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>(
     grpcRequests.map(r => ({
@@ -287,7 +284,7 @@ const Debug = () => {
     });
   }, []);
 
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
 
   const grpcState = grpcStates.find(s => s.requestId === requestId);
   const setGrpcState = (newState: GrpcRequestState) =>
@@ -397,20 +394,19 @@ const Debug = () => {
           color: 'danger',
           onDone: async (confirmed: boolean) => {
             if (confirmed) {
-              requestFetcher.submit(
-                { id: requestId },
-                {
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete`,
-                  method: 'post',
-                },
-              );
+              deleteRequestFetcher.submit({
+                organizationId,
+                projectId,
+                workspaceId,
+                id: requestId,
+              });
             }
           },
         });
       }
     },
     request_showDuplicate: () => {
-      if (activeRequest) {
+      if (activeRequest && requestId) {
         showModal(PromptModal, {
           title: 'Duplicate Request',
           defaultValue: activeRequest.name,
@@ -418,28 +414,26 @@ const Debug = () => {
           label: 'New Name',
           selectText: true,
           onComplete: async (name: string) => {
-            requestFetcher.submit(
-              { name },
-              {
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/duplicate`,
-                method: 'post',
-                encType: 'application/json',
-              },
-            );
+            duplicateRequestFetcher.submit({
+              organizationId,
+              projectId,
+              requestId,
+              workspaceId,
+              name,
+            });
           },
         });
       }
     },
     request_createHTTP: async () => {
       const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
-      requestFetcher.submit(
-        { requestType: 'HTTP', parentId },
-        {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
-          method: 'post',
-          encType: 'application/json',
-        },
-      );
+      createRequestFetcher.submit({
+        organizationId,
+        projectId,
+        workspaceId,
+        requestType: 'HTTP',
+        parentId,
+      });
     },
     request_showCreateFolder: () => {
       const parentId = activeRequest ? activeRequest.parentId : workspaceId;
@@ -450,13 +444,13 @@ const Debug = () => {
         label: 'Name',
         selectText: true,
         onComplete: name =>
-          requestFetcher.submit(
-            { parentId, name },
-            {
-              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
-              method: 'post',
-            },
-          ),
+          createRequestGroupFetcher.submit({
+            organizationId,
+            projectId,
+            workspaceId,
+            parentId,
+            name,
+          }),
       });
     },
     environment_showEditor: () => setEnvironmentModalOpen(true),
@@ -494,14 +488,17 @@ const Debug = () => {
     parentId: string;
     req?: Partial<Request>;
   }) =>
-    requestFetcher.submit(JSON.stringify({ requestType, parentId, req }), {
-      encType: 'application/json',
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
-      method: 'post',
+    createRequestFetcher.submit({
+      organizationId,
+      projectId,
+      workspaceId,
+      requestType,
+      parentId,
+      req,
     });
 
   const groupMetaPatcher = useRequestGroupMetaPatcher();
-  const reorderFetcher = useFetcher();
+  const reorderFetcher = useDebugReorderActionFetcher();
 
   const navigate = useNavigate();
 
@@ -574,19 +571,17 @@ const Debug = () => {
       }
 
       if (metaSortKey) {
-        reorderFetcher.submit(
-          {
+        reorderFetcher.submit({
+          organizationId,
+          projectId,
+          workspaceId,
+          params: {
             targetId,
             id,
             dropPosition: event.target.dropPosition,
             metaSortKey,
           },
-          {
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/reorder`,
-            method: 'POST',
-            encType: 'application/json',
-          },
-        );
+        });
       }
     },
     renderDropIndicator(target) {
@@ -641,13 +636,13 @@ const Debug = () => {
               label: 'Name',
               selectText: true,
               onComplete: name =>
-                requestFetcher.submit(
-                  { parentId: workspaceId, name },
-                  {
-                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
-                    method: 'post',
-                  },
-                ),
+                createRequestGroupFetcher.submit({
+                  organizationId,
+                  projectId,
+                  workspaceId,
+                  parentId: workspaceId,
+                  name,
+                }),
             }),
         },
         {
@@ -737,7 +732,7 @@ const Debug = () => {
   // const allCollapsed = collection.every(item => item.hidden);
   const [allExpanded, setAllExpanded] = useState(false);
 
-  const toggleExpandAllFetcher = useFetcher();
+  const toggleExpandAllFetcher = useToggleExpandAllActionFetcher();
 
   const visibleCollection = collection.filter(item => !item.hidden);
 
@@ -749,17 +744,6 @@ const Debug = () => {
     overscan: 30,
     getItemKey: index => visibleCollection[index].doc._id,
   });
-
-  const expandAllForRequestFetcher = useFetcher();
-
-  useLayoutEffect(() => {
-    if (expandAllForRequestFetcher.state !== 'idle' && expandAllForRequestFetcher.data && requestId) {
-      setTimeout(() => {
-        const activeIndex = collection.findIndex(item => item.doc._id === requestId);
-        activeIndex && virtualizer.scrollToIndex(activeIndex);
-      }, 100);
-    }
-  }, [collection, expandAllForRequestFetcher.data, expandAllForRequestFetcher.state, requestId, virtualizer]);
 
   const [direction, setDirection] = useState<'horizontal' | 'vertical'>(
     settings.forceVerticalLayout ? 'vertical' : 'horizontal',
@@ -946,16 +930,12 @@ const Debug = () => {
                   defaultSelected={allExpanded}
                   onChange={() => {
                     setAllExpanded(!allExpanded);
-                    toggleExpandAllFetcher.submit(
-                      {
-                        toggle: allExpanded ? 'collapse-all' : 'expand-all',
-                      },
-                      {
-                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/toggle-expand-all`,
-                        method: 'POST',
-                        encType: 'application/json',
-                      },
-                    );
+                    toggleExpandAllFetcher.submit({
+                      organizationId,
+                      projectId,
+                      workspaceId,
+                      toggle: allExpanded ? 'collapse-all' : 'expand-all',
+                    });
                   }}
                   className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md]"
                 >

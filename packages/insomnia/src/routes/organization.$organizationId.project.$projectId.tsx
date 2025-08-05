@@ -1,3 +1,5 @@
+import { useRouteLoaderData } from 'react-router';
+
 import * as models from '~/models';
 import { invariant } from '~/utils/invariant';
 
@@ -13,4 +15,8 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   return {
     activeProject: project,
   };
+}
+
+export function useProjectLoaderData() {
+  return useRouteLoaderData<typeof clientLoader>('routes/organization.$organizationId.project.$projectId');
 }

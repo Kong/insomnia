@@ -9,7 +9,7 @@ import { applyColorScheme, type PluginTheme } from '../../plugins/misc';
 import { useSettingsPatcher } from './use-request';
 
 export const useThemes = () => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const { lightTheme, darkTheme, autoDetectColorScheme, theme, pluginConfig } = settings;
 
   const [themes, setThemes] = useState<PluginTheme[]>([]);

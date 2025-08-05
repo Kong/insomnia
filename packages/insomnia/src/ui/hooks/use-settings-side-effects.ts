@@ -7,7 +7,7 @@ const updateFontStyle = (key: string, value: string | null) =>
 
 // as a general rule, if the body effect in this file is more than one line, extract into a separate function.
 export const useSettingsSideEffects = () => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
 
   useLayoutEffect(() => {
     updateFontStyle('--font-default', settings.fontInterface);

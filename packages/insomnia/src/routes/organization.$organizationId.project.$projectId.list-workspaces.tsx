@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import { parseApiSpec, type ParsedApiSpec } from '~/common/api-specs';
@@ -135,19 +136,22 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 }
 
 export function useProjectListWorkspacesLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientLoader>(args);
+  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
 
-  function load({ organizationId, projectId }: { organizationId: string; projectId: string }) {
-    return fetcher.load(
-      href('/organization/:organizationId/project/:projectId/list-workspaces', {
-        organizationId,
-        projectId,
-      }),
-    );
-  }
+  const load = useCallback(
+    ({ organizationId, projectId }: { organizationId: string; projectId: string }) => {
+      return fetcherLoad(
+        href('/organization/:organizationId/project/:projectId/list-workspaces', {
+          organizationId,
+          projectId,
+        }),
+      );
+    },
+    [fetcherLoad],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     load,
   };
 }

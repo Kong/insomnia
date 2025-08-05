@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, redirect, useFetcher } from 'react-router';
 
 import * as models from '~/models';
@@ -33,36 +34,39 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
 }
 
 export function useRequestDeleteActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    id,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    id: string;
-  }) {
-    const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/delete', {
+  const submit = useCallback(
+    ({
       organizationId,
       projectId,
       workspaceId,
-    });
+      id,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      id: string;
+    }) => {
+      const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/delete', {
+        organizationId,
+        projectId,
+        workspaceId,
+      });
 
-    const formData = new FormData();
-    formData.append('id', id);
+      const formData = new FormData();
+      formData.append('id', id);
 
-    return fetcher.submit(formData, {
-      action: url,
-      method: 'POST',
-    });
-  }
+      return fetcherSubmit(formData, {
+        action: url,
+        method: 'POST',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

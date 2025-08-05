@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import { createVaultKey } from '~/ui/vault-key.client';
@@ -9,14 +10,14 @@ export async function clientAction(_args: Route.ClientActionArgs) {
 }
 
 export function useCreateVaultKeyFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  const submit = () => {
-    fetcher.submit({}, { action: href('/auth/create-vault-key'), method: 'POST' });
-  };
+  const submit = useCallback(() => {
+    fetcherSubmit({}, { action: href('/auth/create-vault-key'), method: 'POST' });
+  }, [fetcherSubmit]);
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

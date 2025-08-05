@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import { database } from '~/common/database';
@@ -60,28 +61,31 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
 }
 
 export function useInsomniaSyncLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientLoader>(args);
+  const { load: fetcherLoad, ...fetcherRest } = useFetcher<typeof clientLoader>(args);
 
-  function load({
-    organizationId,
-    projectId,
-    workspaceId,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-  }) {
-    const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/insomnia-sync', {
+  const load = useCallback(
+    ({
       organizationId,
       projectId,
       workspaceId,
-    });
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+    }) => {
+      const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/insomnia-sync', {
+        organizationId,
+        projectId,
+        workspaceId,
+      });
 
-    return fetcher.load(url);
-  }
+      return fetcherLoad(url);
+    },
+    [fetcherLoad],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     load,
   };
 }

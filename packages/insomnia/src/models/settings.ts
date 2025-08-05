@@ -108,9 +108,9 @@ export async function update(settings: Settings, patch: Partial<Settings>) {
   return updatedSettings;
 }
 
-export async function patch(patch: Partial<Settings>) {
+export async function patch(settingsPatch: Partial<Settings>) {
   const settings = await getOrCreate();
-  const updatedSettings = await db.docUpdate<Settings>(settings, patch);
+  const updatedSettings = await db.docUpdate<Settings>(settings, settingsPatch);
   return updatedSettings;
 }
 

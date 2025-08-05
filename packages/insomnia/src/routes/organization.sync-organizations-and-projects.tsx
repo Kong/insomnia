@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, redirect, useFetcher } from 'react-router';
 
 import { database } from '~/common/database';
@@ -74,30 +75,33 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useSyncOrganizationsAndProjectsActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcher } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    asyncTaskList,
-  }: {
-    organizationId: string;
-    projectId?: string;
-    asyncTaskList: AsyncTask[];
-  }) {
-    return fetcher.submit(
-      JSON.stringify({
-        organizationId,
-        projectId,
-        asyncTaskList,
-      }),
-      {
-        method: 'POST',
-        action: '/organization/sync-organizations-and-projects',
-        encType: 'application/json',
-      },
-    );
-  }
+  const submit = useCallback(
+    function submit({
+      organizationId,
+      projectId,
+      asyncTaskList,
+    }: {
+      organizationId: string;
+      projectId?: string;
+      asyncTaskList: AsyncTask[];
+    }) {
+      return fetcherSubmit(
+        JSON.stringify({
+          organizationId,
+          projectId,
+          asyncTaskList,
+        }),
+        {
+          method: 'POST',
+          action: '/organization/sync-organizations-and-projects',
+          encType: 'application/json',
+        },
+      );
+    },
+    [fetcherSubmit],
+  );
 
   return {
     ...fetcher,

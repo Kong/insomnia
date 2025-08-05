@@ -3,7 +3,6 @@ import fs from 'node:fs';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { Button, Input, SearchField, Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { useRouteLoaderData } from 'react-router';
 
 import { getSetCookieHeaders } from '../../../common/misc';
 import type { CurlEvent } from '../../../main/network/curl';
@@ -13,11 +12,7 @@ import type { WebSocketEvent } from '../../../main/network/websocket';
 import type { Response } from '../../../models/response';
 import { isSocketIOResponse, type SocketIOResponse } from '../../../models/socket-io-response';
 import type { WebSocketResponse } from '../../../models/websocket-response';
-import type {
-  RequestLoaderData,
-  SocketIORequestLoaderData,
-  WebSocketRequestLoaderData,
-} from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { useRequestLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { deserializeNDJSON } from '../../../utils/ndjson';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
@@ -39,9 +34,7 @@ import { EventLogView } from './event-log-view';
 import { EventView } from './event-view';
 
 export const RealtimeResponsePane: FC<{ requestId: string }> = () => {
-  const { activeResponse } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId',
-  ) as RequestLoaderData | WebSocketRequestLoaderData | SocketIORequestLoaderData;
+  const { activeResponse } = useRequestLoaderData()!;
 
   if (!activeResponse) {
     return (

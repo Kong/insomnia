@@ -1,4 +1,4 @@
-import { getInsomniaVaultKey } from '../common/constants';
+import { getInsomniaVaultKey, PLAYWRIGHT } from '../common/constants';
 import { settings } from '../models';
 
 export const base64encode = (input: string | JsonWebKey) => {
@@ -6,7 +6,9 @@ export const base64encode = (input: string | JsonWebKey) => {
   return Buffer.from(inputStr, 'utf-8').toString('base64');
 };
 
-export const base64decode = (base64Str: string, toObject: boolean) => {
+export function base64decode(base64Str: string, toObject: true): object;
+export function base64decode(base64Str: string, toObject: false): string;
+export function base64decode(base64Str: string, toObject: boolean): string | object {
   try {
     const decodedStr = Buffer.from(base64Str, 'base64').toString('utf-8');
     if (toObject) {
@@ -17,10 +19,12 @@ export const base64decode = (base64Str: string, toObject: boolean) => {
     console.error(`failed to base64 decode string ${base64Str}`);
   }
   return base64Str;
-};
+}
 
-export const decryptVaultKeyFromSession = async (vaultKey: string, toJsonWebKey: boolean) => {
-  if (process.env.PLAYWRIGHT) {
+export function decryptVaultKeyFromSession(vaultKey: string, toJsonWebKey: true): Promise<object>;
+export function decryptVaultKeyFromSession(vaultKey: string, toJsonWebKey: false): Promise<string>;
+export async function decryptVaultKeyFromSession(vaultKey: string, toJsonWebKey: boolean): Promise<string | object> {
+  if (PLAYWRIGHT) {
     const testVaultKey = getInsomniaVaultKey() || '';
     if (testVaultKey) {
       // return vault key from environment variable directly when running playwright tests
@@ -35,7 +39,7 @@ export const decryptVaultKeyFromSession = async (vaultKey: string, toJsonWebKey:
     return decryptedVaultKey;
   }
   return '';
-};
+}
 
 const getVaultSecretKey = (accountId: string) => `vault_${accountId}`;
 

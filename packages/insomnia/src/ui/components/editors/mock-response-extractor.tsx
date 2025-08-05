@@ -3,10 +3,9 @@ import fs from 'node:fs/promises';
 import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
 import { useNavigate, useParams } from 'react-router';
-import { useRouteLoaderData } from 'react-router';
 
-import type { OrganizationLoaderData } from '~/routes/organization';
-import type { RequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { useOrganizationLoaderData } from '~/routes/organization';
+import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import {
   isInMockContentTypeList,
   useMockRoutePatcher,
@@ -15,7 +14,7 @@ import { useMockRouteNewActionFetcher } from '~/routes/organization.$organizatio
 
 import { getContentTypeName, getMimeTypeFromContentType } from '../../../common/constants';
 import type { ResponseHeader } from '../../../models/response';
-import type { WorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { invariant } from '../../../utils/invariant';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
@@ -24,19 +23,13 @@ import { AlertModal } from '../modals/alert-modal';
 import { PromptModal } from '../modals/prompt-modal';
 
 export const MockResponseExtractor = () => {
-  // file://./../../routes/request.tsx#loader
-  const requestLoaderData = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId',
-  ) as RequestLoaderData;
+  const requestLoaderData = useRequestLoaderData()!;
   const { activeResponse } = requestLoaderData;
-  let { mockServerAndRoutes } = requestLoaderData;
+  let mockServerAndRoutes = 'mockServerAndRoutes' in requestLoaderData ? requestLoaderData.mockServerAndRoutes : [];
 
-  // file://./../../routes/$organizationId.project.$projectId.workspace.tsx#workspaceLoader
-  const { activeProject, activeWorkspace } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
-  ) as WorkspaceLoaderData;
+  const { activeProject, activeWorkspace } = useWorkspaceLoaderData()!;
   const isLocalProject = !activeProject?.remoteId;
-  const { currentPlan } = useRouteLoaderData('routes/organization') as OrganizationLoaderData;
+  const { currentPlan } = useOrganizationLoaderData()!;
   const isEnterprise = currentPlan?.type.includes('enterprise');
 
   // In a local project, users are not allowed to create a cloud mock server, only enterprise users can create a self-hosted mock server.
@@ -101,7 +94,7 @@ If you want to create a self-hosted mock server route from a request response in
             onSubmit={async e => {
               e.preventDefault();
               if (selectedMockServer && selectedMockRoute) {
-                if (activeResponse) {
+                if (activeResponse && 'bodyPath' in activeResponse) {
                   // TODO: move this out of the renderer, and upsert mock
                   const body = await fs.readFile(activeResponse.bodyPath);
 
@@ -128,7 +121,7 @@ If you want to create a self-hosted mock server route from a request response in
                   label: 'Name',
                   onComplete: async name => {
                     invariant(activeResponse, 'Active response must be defined');
-                    const body = await fs.readFile(activeResponse.bodyPath);
+                    const body = 'bodyPath' in activeResponse ? await fs.readFile(activeResponse.bodyPath) : '';
                     // auth mechanism is too sensitive to allow content length checks
                     const headersWithoutContentLength: ResponseHeader[] = activeResponse.headers.filter(
                       h => h.name.toLowerCase() !== 'content-length',
@@ -159,7 +152,7 @@ If you want to create a self-hosted mock server route from a request response in
                   label: 'Name',
                   onComplete: async name => {
                     invariant(activeResponse, 'Active response must be defined');
-                    const body = await fs.readFile(activeResponse.bodyPath);
+                    const body = 'bodyPath' in activeResponse ? await fs.readFile(activeResponse.bodyPath) : '';
                     const hasRouteInServer = mockServerAndRoutes
                       .find(s => s._id === selectedMockServer)
                       ?.routes.find(r => r.name === name && r.method.toUpperCase() === 'GET');

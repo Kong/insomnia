@@ -7,7 +7,7 @@ import { SettingsModal, TAB_INDEX_SHORTCUTS } from '../components/modals/setting
 import { useSettingsPatcher } from './use-request';
 
 export const useGlobalKeyboardShortcuts = () => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   const patchSettings = useSettingsPatcher();
 
   useDocBodyKeyboardShortcuts({

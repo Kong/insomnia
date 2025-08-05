@@ -12,14 +12,14 @@ import {
   Popover,
   Text,
 } from 'react-aria-components';
-import { useNavigate, useParams, useRouteLoaderData } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 import { useSetActiveEnvironmentFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active';
 import { useEnvironmentSetActiveGlobalActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.set-active-global';
 
 import { fuzzyMatch } from '../../common/misc';
 import { isRemoteProject } from '../../models/project';
-import type { WorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import uiEventBus from '../eventBus';
 import { useOrganizationPermissions } from '../hooks/use-organization-features';
 import { Icon } from './icon';
@@ -42,9 +42,7 @@ export const EnvironmentPicker = ({
     baseEnvironment,
     globalBaseEnvironments,
     globalSubEnvironments,
-  } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
-  ) as WorkspaceLoaderData;
+  } = useWorkspaceLoaderData()!;
 
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;

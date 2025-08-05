@@ -64,7 +64,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   ) => {
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
     const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
-    const { settings } = useRootLoaderData();
+    const { settings } = useRootLoaderData()!;
     const { isOwner, isEnterprisePlan } = usePlanData();
     const { handleRender, handleGetRenderContext } = useNunjucks();
 

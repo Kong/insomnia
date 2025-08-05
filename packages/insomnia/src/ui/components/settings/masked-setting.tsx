@@ -16,7 +16,7 @@ export const MaskedSetting: FC<{
 }> = ({ disabled, help, label, placeholder, setting }) => {
   const [isHidden, setHidden] = reactUse.useToggle(true);
 
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
 
   if (!(setting in settings)) {
     throw new Error(`Invalid setting name ${setting}`);

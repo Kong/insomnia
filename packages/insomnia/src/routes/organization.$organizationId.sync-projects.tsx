@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import { syncProjects } from '~/ui/organization-utils';
@@ -13,21 +14,25 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 }
 
 export function useOrganizationSyncProjectsActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({ organizationId }: { organizationId: string }) {
-    return fetcher.submit(
-      {},
-      {
-        method: 'POST',
-        action: href(`/organization/:organizationId/sync-projects`, {
-          organizationId,
-        }),
-      },
-    );
-  }
+  const submit = useCallback(
+    ({ organizationId }: { organizationId: string }) => {
+      return fetcherSubmit(
+        {},
+        {
+          method: 'POST',
+          action: href(`/organization/:organizationId/sync-projects`, {
+            organizationId,
+          }),
+        },
+      );
+    },
+    [fetcherSubmit],
+  );
+
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

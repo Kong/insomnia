@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, redirect, useFetcher } from 'react-router';
 
 import {
@@ -129,38 +130,41 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
 }
 
 export function useRequestNewActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    requestType,
-    parentId,
-    req,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    requestType: CreateRequestType;
-    parentId?: string;
-    req?: Partial<Request>;
-  }) {
-    const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/new', {
+  const submit = useCallback(
+    ({
       organizationId,
       projectId,
       workspaceId,
-    });
+      requestType,
+      parentId,
+      req,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      requestType: CreateRequestType;
+      parentId?: string;
+      req?: Partial<Request>;
+    }) => {
+      const url = href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/request/new', {
+        organizationId,
+        projectId,
+        workspaceId,
+      });
 
-    return fetcher.submit(JSON.stringify({ requestType, parentId, req }), {
-      action: url,
-      method: 'POST',
-      encType: 'application/json',
-    });
-  }
+      return fetcherSubmit(JSON.stringify({ requestType, parentId, req }), {
+        action: url,
+        method: 'POST',
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

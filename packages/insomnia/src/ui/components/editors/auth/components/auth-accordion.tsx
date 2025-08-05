@@ -1,10 +1,12 @@
 import classnames from 'classnames';
 import React, { type FC, type PropsWithChildren } from 'react';
-import { useRouteLoaderData } from 'react-router';
 
-import type { RequestAccordionKeys } from '../../../../../models/request-meta';
-import type { RequestLoaderData } from '../../../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-import { useRequestMetaPatcher } from '../../../../hooks/use-request';
+import type { RequestAccordionKeys } from '~/models/request-meta';
+import {
+  type RequestLoaderData,
+  useRequestLoaderData,
+} from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { useRequestMetaPatcher } from '~/ui/hooks/use-request';
 
 interface Props {
   label: string;
@@ -12,9 +14,7 @@ interface Props {
 }
 
 export const AuthAccordion: FC<PropsWithChildren<Props>> = ({ accordionKey, label, children }) => {
-  const reqData = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId',
-  ) as RequestLoaderData;
+  const reqData = useRequestLoaderData() as RequestLoaderData;
   const expanded = !reqData || Boolean(reqData.activeRequestMeta?.expandedAccordionKeys[accordionKey]);
   const patchRequestMeta = useRequestMetaPatcher();
   const toggle = () => {

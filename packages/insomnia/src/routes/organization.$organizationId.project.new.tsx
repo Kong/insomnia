@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, redirect, useFetcher } from 'react-router';
 
 import * as models from '~/models';
@@ -169,20 +170,23 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 }
 
 export function useProjectNewActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({ organizationId, projectData }: { organizationId: string; projectData: CreateProjectData }) {
-    return fetcher.submit(JSON.stringify(projectData), {
-      method: 'POST',
-      action: href('/organization/:organizationId/project/new', {
-        organizationId,
-      }),
-      encType: 'application/json',
-    });
-  }
+  const submit = useCallback(
+    ({ organizationId, projectData }: { organizationId: string; projectData: CreateProjectData }) => {
+      return fetcherSubmit(JSON.stringify(projectData), {
+        method: 'POST',
+        action: href('/organization/:organizationId/project/new', {
+          organizationId,
+        }),
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

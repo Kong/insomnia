@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import { database } from '~/common/database';
@@ -42,36 +43,39 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 }
 
 export function useInsomniaSyncFetchActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    organizationId,
-    projectId,
-    workspaceId,
-    branch,
-  }: {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    branch: string;
-  }) {
-    return fetcher.submit(
-      {
-        branch,
-      },
-      {
-        method: 'POST',
-        action: href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/insomnia-sync/fetch', {
-          organizationId,
-          projectId,
-          workspaceId,
-        }),
-      },
-    );
-  }
+  const submit = useCallback(
+    ({
+      organizationId,
+      projectId,
+      workspaceId,
+      branch,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      branch: string;
+    }) => {
+      return fetcherSubmit(
+        {
+          branch,
+        },
+        {
+          method: 'POST',
+          action: href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/insomnia-sync/fetch', {
+            organizationId,
+            projectId,
+            workspaceId,
+          }),
+        },
+      );
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

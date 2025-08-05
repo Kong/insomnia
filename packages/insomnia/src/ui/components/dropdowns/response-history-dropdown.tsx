@@ -1,7 +1,6 @@
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
 import React, { useCallback, useRef } from 'react';
 import { Button } from 'react-aria-components';
-import { useRouteLoaderData } from 'react-router';
 import { useParams } from 'react-router';
 
 import { useRequestResponseDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.response.delete';
@@ -14,10 +13,11 @@ import type { Response } from '../../../models/response';
 import { isSocketIOResponse, type SocketIOResponse } from '../../../models/socket-io-response';
 import type { WebSocketRequest } from '../../../models/websocket-request';
 import { isWebSocketResponse, type WebSocketResponse } from '../../../models/websocket-response';
-import type { WorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
-import type {
-  RequestLoaderData,
-  WebSocketRequestLoaderData,
+import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
+import {
+  type RequestLoaderData,
+  useRequestLoaderData,
+  type WebSocketRequestLoaderData,
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { Dropdown, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -41,12 +41,8 @@ export const ResponseHistoryDropdown = ({
   };
   const dropdownRef = useRef<DropdownHandle>(null);
   const patchRequestMeta = useRequestMetaPatcher();
-  const { activeEnvironment } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId',
-  ) as WorkspaceLoaderData;
-  const { responses, requestVersions } = useRouteLoaderData(
-    'routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId',
-  ) as RequestLoaderData | WebSocketRequestLoaderData;
+  const { activeEnvironment } = useWorkspaceLoaderData()!;
+  const { responses, requestVersions } = useRequestLoaderData() as RequestLoaderData | WebSocketRequestLoaderData;
   const now = new Date();
   const categories: Record<string, (Response | WebSocketResponse)[]> = {
     minutes: [],
@@ -78,20 +74,22 @@ export const ResponseHistoryDropdown = ({
     [patchRequestMeta],
   );
 
+  const deleteResponsesSubmit = deleteAllReponsesFetcher.submit;
   const handleDeleteResponses = useCallback(async () => {
     if (isWebSocketResponse(activeResponse)) {
       window.main.webSocket.close({ requestId });
     } else if (isSocketIOResponse(activeResponse)) {
       window.main.socketIO.close({ requestId });
     }
-    deleteAllReponsesFetcher.submit({
+    deleteResponsesSubmit({
       organizationId,
       projectId,
       workspaceId,
       requestId,
     });
-  }, [activeResponse, deleteAllReponsesFetcher, organizationId, projectId, requestId, workspaceId]);
+  }, [activeResponse, deleteResponsesSubmit, organizationId, projectId, requestId, workspaceId]);
 
+  const deleteResponseSubmit = deleteReponseFetcher.submit;
   const handleDeleteResponse = useCallback(async () => {
     if (activeResponse) {
       if (isWebSocketResponse(activeResponse)) {
@@ -100,8 +98,8 @@ export const ResponseHistoryDropdown = ({
         window.main.socketIO.close({ requestId });
       }
     }
-    deleteReponseFetcher.submit({ organizationId, projectId, workspaceId, requestId, responseId: activeResponse._id });
-  }, [activeResponse, deleteReponseFetcher, organizationId, projectId, workspaceId, requestId]);
+    deleteResponseSubmit({ organizationId, projectId, workspaceId, requestId, responseId: activeResponse._id });
+  }, [activeResponse, deleteResponseSubmit, organizationId, projectId, workspaceId, requestId]);
 
   responses.forEach((response: Response | WebSocketResponse) => {
     const responseTime = new Date(response.created);

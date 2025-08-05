@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import * as models from '~/models';
@@ -46,32 +47,40 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useDebugReorderActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit(
-    organizationId: string,
-    projectId: string,
-    workspaceId: string,
-    params: {
-      id: string;
-      targetId: string;
-      dropPosition: string;
-      metaSortKey: number;
+  const submit = useCallback(
+    ({
+      organizationId,
+      projectId,
+      workspaceId,
+      params,
+    }: {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      params: {
+        id: string;
+        targetId: string;
+        dropPosition: string;
+        metaSortKey: number;
+      };
+    }) => {
+      return fetcherSubmit(JSON.stringify(params), {
+        method: 'POST',
+        action: href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/reorder`, {
+          organizationId,
+          projectId,
+          workspaceId,
+        }),
+        encType: 'application/json',
+      });
     },
-  ) {
-    return fetcher.submit(JSON.stringify(params), {
-      method: 'POST',
-      action: href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/reorder`, {
-        organizationId,
-        projectId,
-        workspaceId,
-      }),
-      encType: 'application/json',
-    });
-  }
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

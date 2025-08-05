@@ -21,7 +21,7 @@ export const EnumSetting = <T extends string | number>({
   setting,
   values,
 }: PropsWithChildren<Props<T>>) => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
 
   const patchSettings = useSettingsPatcher();
 

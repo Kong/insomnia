@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import { isNotNullOrUndefined } from '~/common/misc';
@@ -34,32 +35,35 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 }
 
 export function useInsomniaSyncStageActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  function submit({
-    keys,
-    organizationId,
-    projectId,
-    workspaceId,
-  }: {
-    keys: string[];
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-  }) {
-    return fetcher.submit(JSON.stringify({ keys }), {
-      method: 'POST',
-      action: href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/insomnia-sync/stage`, {
-        organizationId,
-        projectId,
-        workspaceId,
-      }),
-      encType: 'application/json',
-    });
-  }
+  const submit = useCallback(
+    ({
+      keys,
+      organizationId,
+      projectId,
+      workspaceId,
+    }: {
+      keys: string[];
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+    }) => {
+      return fetcherSubmit(JSON.stringify({ keys }), {
+        method: 'POST',
+        action: href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/insomnia-sync/stage`, {
+          organizationId,
+          projectId,
+          workspaceId,
+        }),
+        encType: 'application/json',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+import { useCallback } from 'react';
 import { type ActionFunctionArgs, href, useFetcher } from 'react-router';
 
 import type { ScanResult } from '~/common/import';
@@ -153,16 +154,19 @@ export async function clientAction({ request }: ActionFunctionArgs) {
 }
 
 export function useScanResourcesFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const fetcher = useFetcher<typeof clientAction>(args);
-  const submit = (data: FormData | HTMLFormElement) => {
-    return fetcher.submit(data, {
-      action: href('/import/scan'),
-      method: 'POST',
-    });
-  };
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
+  const submit = useCallback(
+    (data: FormData | HTMLFormElement) => {
+      return fetcherSubmit(data, {
+        action: href('/import/scan'),
+        method: 'POST',
+      });
+    },
+    [fetcherSubmit],
+  );
 
   return {
-    ...fetcher,
+    ...fetcherRest,
     submit,
   };
 }

@@ -19,7 +19,7 @@ import { AlertModal } from './ui/components/modals/alert-modal';
 import { PromptModal } from './ui/components/modals/prompt-modal';
 import { WrapperModal } from './ui/components/modals/wrapper-modal';
 import { initializeSentry } from './ui/sentry';
-// import { getInitialEntry } from './utils/router';
+import { getInitialEntry } from './utils/router';
 
 initializeSentry();
 initializeLogging();
@@ -87,7 +87,12 @@ if (appSettings.clearOAuth2SessionOnRestart) {
 
 await applyColorScheme(appSettings);
 
-// const initialEntry = await getInitialEntry();
+const initialEntry = await getInitialEntry();
+
+if (typeof initialEntry === 'string' && window.location.pathname !== initialEntry) {
+  console.log('[entry.client] Initial entry:', initialEntry);
+  window.location.pathname = initialEntry;
+}
 
 startTransition(() => {
   hydrateRoot(
