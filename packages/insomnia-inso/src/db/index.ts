@@ -90,9 +90,23 @@ export const loadDb = async ({ pathToSearch, filterTypes }: Options) => {
   }
 
   logger.warn(
-    `No git, app data store or Insomnia V4 export file found at path "${pathToSearch}",
-     --workingDir/-w should point to a git repository root, an Insomnia export file or a directory containing Insomnia data.
-      re-run with --verbose to see tracing information`,
+    `Error: No data source found at path "${pathToSearch}".
+  TIP: Use "--workingDir/-w" to specify one of the following:
+    - A Git repository root
+    - An Insomnia export file
+    - A directory containing Insomnia data
+  
+  Examples:
+    1. Using a (legacy) Git repository:
+       $ inso run collection --workingDir /path/to/git-repo
+  
+    2. Using an Insomnia export file or inside a Git project:
+       $ inso run collection --workingDir /path/to/insomnia-file.yaml
+  
+    3. Using a directory with Insomnia app data:
+       $ inso run collection --workingDir /path/to/insomnia-data
+  
+  Re-run with "--verbose" for more details.`,
   );
 
   return emptyDb();
