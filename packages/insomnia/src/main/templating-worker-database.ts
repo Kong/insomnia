@@ -27,11 +27,12 @@ export const resolveDbByKey = async (request: Request) => {
   const withLowercasedKeys = Object.fromEntries(
     Object.entries(pluginToMainAPI).map(([key, value]) => [key.toLowerCase(), value]),
   );
+  const urlHostLowerCase = url.host.toLowerCase();
   try {
-    const result = await withLowercasedKeys[url.host.toLowerCase()](body);
+    const result = await withLowercasedKeys[urlHostLowerCase](body);
     return new Response(JSON.stringify(result));
   } catch (err) {
-    console.error(`Error resolving db by key ${url.host}:`, err);
+    console.error(`Error resolving db by key ${urlHostLowerCase}:`, err);
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
 };
