@@ -607,6 +607,83 @@ export const database = {
   },
 
   /**
+   * Get a document and its descendants. Will use the descendant map to determine which types to query.
+   * @param doc - The document to get descendants for.
+   * @param exportOnly - If true, only export documents that are relevant for export
+   * @param types - Only query specified types, if provided
+   * @returns A promise that resolves to an array of documents
+   */
+  getWithDescendants: async function <T extends BaseModel>(
+    doc: T,
+    {
+      exportOnly,
+    }: {
+      exportOnly?: boolean;
+      types?: string[];
+    },
+  ) {
+    if (db._empty) {
+      return _send<T[]>('getWithDescendants', ...arguments);
+    }
+
+    if (!doc) return [];
+
+    let docsToReturn: BaseModel[] = [doc];
+    // Models actually contains a lot of other stuff, only get the real models here.
+    const realModels = models.all();
+    const modelMap = new Map<string, (typeof realModels)[number]>();
+    realModels.forEach(m => {
+      modelMap.set(m.type, m);
+    });
+
+    const queryTypesDescendantMap = exportOnly ? models.WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP : models.DESCENDANT_MAP;
+
+    async function findDescendants(docs: BaseModel[]): Promise<BaseModel[]> {
+      let foundDocs: BaseModel[] = [];
+
+      if (docs.length > 0) {
+        // Find all descendants of the current docs
+        const promises: Promise<BaseModel[]>[] = [];
+
+        const uniqueDescendantTypes = new Set<string>();
+        const parentIdsMap = new Map<string, (string | null)[]>();
+
+        for (const d of docs) {
+          if (d.type) {
+            queryTypesDescendantMap[d.type]?.forEach(t => {
+              uniqueDescendantTypes.add(t);
+              parentIdsMap.set(t, [...(parentIdsMap.get(t) || []), d._id]);
+            });
+          }
+        }
+
+        const queryTypes = Array.from(uniqueDescendantTypes);
+
+        for (const type of queryTypes) {
+          // If the doc is null, we want to search for parentId === null
+          const promise = database.find(type, { parentId: { $in: parentIdsMap.get(type) || [] } });
+          promises.push(promise);
+        }
+
+        for (const more of await Promise.all(promises)) {
+          foundDocs = [...foundDocs, ...more];
+        }
+      }
+
+      if (foundDocs.length === 0) {
+        // Didn't find anything. We're done
+        return docsToReturn;
+      }
+
+      // Continue searching for children
+      docsToReturn = [...docsToReturn, ...foundDocs];
+      return findDescendants(foundDocs);
+    }
+
+    return findDescendants([doc]);
+  },
+
+  /**
    * Get all descendants of a document.
    *
    * This function retrieves all descendant documents of a given document from the database.
