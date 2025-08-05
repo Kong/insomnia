@@ -635,7 +635,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
   }, [organizationId, projectId, workspacesFetcher]);
   const projectLoaderData = workspacesFetcher?.data;
   const workspacesForActiveProject = projectLoaderData?.files.map(w => w.workspace).filter(isNotNullOrUndefined) || [];
-  const projectName = projectLoaderData?.activeProject?.name ?? getProductName();
+  const activeProject = projectLoaderData?.activeProject;
+  const projectName = activeProject?.name ?? getProductName();
   const projects = projectLoaderData?.projects || [];
   const organizationName =
     organizationData?.organizations.find(org => org.id === organizationId)?.display_name || 'Organization';
@@ -652,7 +653,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
     exportProjectToFile(projectName, workspacesForActiveProject);
     hideSettingsModal();
   };
-  const isLoggedIn = userSession.id || organizationId || projectLoaderData?.activeProject;
+  const isLoggedIn = userSession.id || organizationId || activeProject;
   const isScratchPadWorkspace = isScratchpad(workspaceData?.activeWorkspace);
   const hasUntrackedWorkspaces = untrackedWorkspaces.length > 0;
   const hasUntrackedProjects = untrackedProjects.length > 0;
@@ -711,21 +712,22 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
             <Icon icon="file-export" /> Export
           </Heading>
           <div className="flex flex-wrap gap-2">
-            {workspaceData?.activeWorkspace ? (
-              <ExportSection
-                workspace={workspaceData.activeWorkspace}
-                projectName={projectName}
-                setIsExportModalOpen={setIsExportModalOpen}
-                handleExportProjectToFile={handleExportProjectToFile}
-              />
-            ) : (
-              <Button
-                className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                onPress={handleExportProjectToFile}
-              >
-                {`Export files from the "${projectName}" ${strings.project.singular}`}
-              </Button>
-            )}
+            {activeProject &&
+              (workspaceData?.activeWorkspace ? (
+                <ExportSection
+                  workspace={workspaceData.activeWorkspace}
+                  projectName={projectName}
+                  setIsExportModalOpen={setIsExportModalOpen}
+                  handleExportProjectToFile={handleExportProjectToFile}
+                />
+              ) : (
+                <Button
+                  className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  onPress={handleExportProjectToFile}
+                >
+                  {`Export files from the "${projectName}" ${strings.project.singular}`}
+                </Button>
+              ))}
             <Button
               className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
               onPress={async () => {
@@ -784,14 +786,16 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
               <Icon icon="file-import" /> Import
             </Heading>
             <div className="flex flex-wrap gap-2">
-              <Button
-                className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                isDisabled={workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace)}
-                onPress={() => setIsImportModalOpen(true)}
-              >
-                <Icon icon="file-import" />
-                {`Import to the "${projectName}" ${strings.project.singular}`}
-              </Button>
+              {activeProject && (
+                <Button
+                  className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                  isDisabled={workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace)}
+                  onPress={() => setIsImportModalOpen(true)}
+                >
+                  <Icon icon="file-import" />
+                  {`Import to the "${projectName}" ${strings.project.singular}`}
+                </Button>
+              )}
               {features.bulkImport.enabled ? (
                 <Button
                   className="flex items-center justify-center gap-2 rounded-sm border border-solid border-[--hl-md] px-4 py-1 text-sm font-semibold text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
