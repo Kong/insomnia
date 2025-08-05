@@ -3,7 +3,6 @@ import { type LoaderFunction, Outlet } from 'react-router';
 
 import type { SortOrder } from '../../common/constants';
 import { database } from '../../common/database';
-import { fuzzyMatchAll } from '../../common/misc';
 import { sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import type { ApiSpec } from '../../models/api-spec';
@@ -143,7 +142,6 @@ export const workspaceLoader: LoaderFunction = async ({ request, params }): Prom
   const projects = sortProjects(organizationProjects);
 
   const searchParams = new URL(request.url).searchParams;
-  const filter = searchParams.get('filter');
   const sortOrder = searchParams.get('sortOrder') as SortOrder;
   const sortFunction = sortMethodMap[sortOrder] || sortMethodMap['type-manual'];
 
@@ -195,24 +193,16 @@ export const workspaceLoader: LoaderFunction = async ({ request, params }): Prom
   }): Promise<Child[]> => {
     const levelReqs = allRequests.filter(r => r.parentId === parentId);
 
+    // parentIsCollapsed is always false if filter is set.
+    // so child.collapsed is always false and child.hidden is definitely determined by filter
     const childrenWithChildren: Child[] = await Promise.all(
       levelReqs.sort(sortFunction).map(async (doc): Promise<Child> => {
-        const isMatched = (filter: string): boolean =>
-          Boolean(
-            fuzzyMatchAll(filter, [doc.name, doc.description, ...(isRequestGroup(doc) ? [] : [doc.url])], {
-              splitSpace: false,
-              loose: true,
-            })?.indexes,
-          );
-        const shouldHide = Boolean(filter && !isMatched(filter));
-        const hidden = parentIsCollapsed || shouldHide;
-
+        const hidden = parentIsCollapsed;
         const pinned = (!isRequestGroup(doc) && grpcAndRequestMetas.find(m => m.parentId === doc._id)?.pinned) || false;
-        const collapsed = filter
-          ? false
-          : parentIsCollapsed ||
-            (isRequestGroup(doc) && requestGroupMetas.find(m => m.parentId === doc._id)?.collapsed) ||
-            false;
+        const collapsed =
+          parentIsCollapsed ||
+          (isRequestGroup(doc) && requestGroupMetas.find(m => m.parentId === doc._id)?.collapsed) ||
+          false;
 
         const docAncestors = [...ancestors, parentId];
 
