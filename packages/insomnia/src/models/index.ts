@@ -263,7 +263,10 @@ export const MODELS_BY_EXPORT_TYPE: Record<string, any> = {
   [EXPORT_TYPE_PROTO_DIRECTORY]: protoDirectory,
 };
 
-export const WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP: Record<string, string[]> = {
+const EXPORT_TYPES: string[] = Object.values(MODELS_BY_EXPORT_TYPE).map(m => m.type);
+const EXPORT_TYPES_SET = new Set(EXPORT_TYPES);
+
+export const DESCENDANT_MAP: Record<string, string[]> = {
   [workspace.type]: [
     requestGroup.type,
     request.type,
@@ -285,3 +288,15 @@ export const WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP: Record<string, string[]> = {
   [unitTestSuite.type]: [unitTest.type],
   [protoDirectory.type]: [protoFile.type],
 };
+
+export const WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP: Record<string, string[]> = (() => {
+  const map: Record<string, string[]> = {};
+  for (const [parent, children] of Object.entries(DESCENDANT_MAP)) {
+    if (EXPORT_TYPES_SET.has(parent)) {
+      map[parent] = children.filter(c => EXPORT_TYPES_SET.has(c));
+    }
+  }
+  return map;
+})();
+
+console.log(DESCENDANT_MAP, WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP);
