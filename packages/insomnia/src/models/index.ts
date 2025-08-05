@@ -274,7 +274,7 @@ export const WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP: Record<string, string[]> = {
     protoDirectory.type,
     protoFile.type,
   ],
-  [requestGroup.type]: [requestGroup.type, request.type, grpcRequest.type, webSocketRequest.type],
+  [requestGroup.type]: [requestGroup.type, request.type, grpcRequest.type, webSocketRequest.type, socketIORequest.type],
   [webSocketRequest.type]: [webSocketPayload.type],
   [mockServer.type]: [mockRoute.type],
   [environment.type]: [environment.type],

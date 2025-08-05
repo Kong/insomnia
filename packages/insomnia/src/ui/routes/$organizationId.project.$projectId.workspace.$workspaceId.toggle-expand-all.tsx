@@ -16,7 +16,10 @@ export async function action({ request, params }: ActionFunctionArgs) {
   };
   const isCollapsed = data.toggle === 'collapse-all';
 
-  const descendants = await database.withDescendants(workspace);
+  const descendants = await database.withDescendants(workspace, null, [], {
+    [workspace.type]: [models.requestGroup.type],
+    [models.requestGroup.type]: [models.requestGroup.type, models.requestGroupMeta.type],
+  });
   const requestGroups = descendants.filter(isRequestGroup);
   const requestGroupMetas = descendants.filter(isRequestGroupMeta);
   await Promise.all(
