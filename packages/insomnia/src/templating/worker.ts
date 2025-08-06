@@ -184,7 +184,7 @@ async function getNunjucks(renderMode: string, ignoreUndefinedEnvVariable?: bool
     const tagName = templateTag.name;
     // default run method to send context, parsed args, plugin name, and tag name to main for execution
     templateTag.run = async (context, ...args) =>
-      await fetchFromTemplateWorkerDatabase('plugin.executeTag', { context, args, pluginName, tagName });
+      await fetchFromTemplateWorkerDatabase('plugin.executeBundlePluginTag', { context, args, pluginName, tagName });
   });
   const allExtensions = [...localTemplateTags, ...bundlePluginTemplateTags];
 
