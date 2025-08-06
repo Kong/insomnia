@@ -156,6 +156,7 @@ const OAuth2AuthenticationSchema = z.object({
   username: z.string().optional(),
   password: z.string().optional(),
   redirectUrl: z.string().optional(),
+  useDefaultBrowser: z.boolean().optional(),
   credentialsInBody: z.boolean().optional(),
   state: z.string().optional(),
   code: z.string().optional(),
