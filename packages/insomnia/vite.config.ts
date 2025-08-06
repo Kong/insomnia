@@ -42,6 +42,7 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       exclude: ['@getinsomnia/node-libcurl'],
       force: true, // wipe vite cache
+      include: ['codemirror-graphql/utils/SchemaReference', '@stoplight/spectral-core', 'isomorphic-git'],
     },
     plugins: [
       // Allows us to import modules that will be resolved by Node's require() function.
