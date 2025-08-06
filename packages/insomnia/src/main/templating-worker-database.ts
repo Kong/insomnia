@@ -15,7 +15,7 @@ import { readCurlResponse } from '../models/response';
 import type { Workspace } from '../models/workspace';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
 import { getPluginCommonContext, type Plugin, type TemplateTag } from '../plugins';
-import type { PluginTemplateTag, PluginTemplateTagContext } from '../templating/types';
+import type { PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from '../templating/types';
 import { curlRequest } from './network/libcurl-promise';
 
 const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
@@ -52,7 +52,7 @@ const getBundlePluginModule = (pluginName: string): Plugin['module'] => {
 };
 
 // These are exposed to the templating worker and can be used by plugins from context.util
-const pluginToMainAPI = {
+const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<any>> = {
   'readFile': async (body: { path: string; encoding: 'utf8' }) => {
     return await fs.promises.readFile(body.path, { encoding: body.encoding || 'utf8' });
   },
@@ -244,7 +244,7 @@ const pluginToMainAPI = {
     return appBundlePluginTemplateTags;
   },
   // execute the plugin tag with the given parameters
-  'plugin.executeTag': async (body: {
+  'plugin.executeBundlePluginTag': async (body: {
     args: any[];
     pluginName: string;
     tagName: string;

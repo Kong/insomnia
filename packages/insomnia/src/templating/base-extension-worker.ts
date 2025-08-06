@@ -6,7 +6,7 @@ import type { Response } from '../models/response';
 import type { Workspace } from '../models/workspace';
 import type { NodeCurlRequestOptions } from '../plugins/context/network';
 import type { Plugin } from '../plugins/index';
-import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
+import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from './types';
 import * as templating from './worker';
 export function decodeEncoding<T>(value: T) {
   if (typeof value !== 'string') {
@@ -29,14 +29,14 @@ export function decodeEncoding<T>(value: T) {
 
   return value;
 }
-export const fetchFromTemplateWorkerDatabase = async (url: string, body: any) => {
-  const resp = await fetch('insomnia-templating-worker-database://' + url, {
+export const fetchFromTemplateWorkerDatabase = async (path: PluginToMainAPIPaths, body: any) => {
+  const resp = await fetch('insomnia-templating-worker-database://' + path, {
     method: 'post',
     body: JSON.stringify(body),
   });
   const result = await resp.json();
   if (!resp.ok) {
-    throw new Error(result.error || JSON.stringify(result));
+    throw new Error(result?.error || JSON.stringify(result));
   }
   return result;
 };
