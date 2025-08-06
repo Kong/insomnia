@@ -212,18 +212,6 @@ export class RequestBody extends PropertyBase {
   }
 
   update(opts: RequestBodyOptions) {
-    if (opts.mode === 'file' || opts.file) {
-      const settings = getGlobalSettings();
-      const dataFolder = settings?.dataFolder.trim() || '';
-      const allowed = dataFolder !== '' && opts.file?.startsWith(dataFolder);
-
-      if (!allowed) {
-        throw new Error(
-          `insomnia.request.body.update: Accessing file in "${opts.file}" was rejected, please set the directory as the data folder in preferences`,
-        );
-      }
-    }
-
     const transformedOpts = getClassFields(opts);
     this.mode = transformedOpts.mode;
     this.file = transformedOpts.file;

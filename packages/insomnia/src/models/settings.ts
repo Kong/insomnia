@@ -75,7 +75,7 @@ export function init(): BaseSettings {
     saveVaultKeyToOSSecretManager: true,
     // The duration in mins for which the external vault secret is cached
     vaultSecretCacheDuration: 30,
-    dataFolder: '',
+    dataFolders: [],
   };
 }
 
