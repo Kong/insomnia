@@ -106,6 +106,7 @@ export const Plugins: FC = () => {
             disabled.
           </p>
           <Checkbox
+            aria-label="Allow elevated access for plugins"
             slot={null}
             isSelected={Boolean(settings.pluginsAllowElevatedAccess)}
             onChange={isSelected => {
