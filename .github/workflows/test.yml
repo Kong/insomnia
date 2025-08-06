@@ -37,7 +37,6 @@ jobs:
         env: 
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-
       - name: Lint
         run: npm run lint
 
