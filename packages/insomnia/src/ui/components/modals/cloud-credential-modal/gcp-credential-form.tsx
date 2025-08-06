@@ -92,7 +92,7 @@ export const GCPCredentialForm = (props: GCPCredentialFormProps) => {
             onChange={e => setInputKeyPath(e.target.value)}
           />
           <Button
-            className="border-[--hl-`sm] flex-shrink-0 items-center justify-center rounded-sm border border-solid px-4 py-1 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]"
+            className="flex-shrink-0 items-center justify-center rounded-sm border border-solid border-[--hl-sm] px-4 py-1 text-base text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset aria-pressed:bg-[--hl-sm] aria-selected:bg-[--hl-sm]"
             onPress={handleSelectFile}
           >
             <Icon icon="file" className="mr-2" />

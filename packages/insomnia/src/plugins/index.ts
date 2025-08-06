@@ -425,19 +425,17 @@ export async function executePluginMainAction({
   context?: Record<string, any>;
   params?: Record<string, any>;
 }): Promise<any> {
-  const bundlePlugins = getBundlePlugins();
-  return bundlePlugins.then(plugins => {
-    const plugin = plugins.find(p => p.name === pluginName);
-    if (!plugin) {
-      throw new Error(`Plugin ${pluginName} not found`);
-    }
-    const action = plugin.module.unsafePluginMainActions?.find(p => p.name === actionName);
-    if (!action) {
-      throw new Error(`Action ${actionName} not found in plugin ${pluginName}`);
-    }
-    const commonContext = getPluginCommonContext({ plugin });
-    return action.action({ ...commonContext, ...context }, params);
-  });
+  const bundlePlugins = await getBundlePlugins();
+  const plugin = bundlePlugins.find(p => p.name === pluginName);
+  if (!plugin) {
+    throw new Error(`Plugin ${pluginName} not found`);
+  }
+  const action = plugin.module.unsafePluginMainActions?.find(p => p.name === actionName);
+  if (!action) {
+    throw new Error(`Action ${actionName} not found in plugin ${pluginName}`);
+  }
+  const commonContext = getPluginCommonContext({ plugin });
+  return action.action({ ...commonContext, ...context }, params);
 }
 
 export async function getRequestHooks(): Promise<RequestHook[]> {
