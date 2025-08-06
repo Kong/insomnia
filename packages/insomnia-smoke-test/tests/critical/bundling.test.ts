@@ -6,7 +6,7 @@ import { test } from '../../playwright/test';
 test('can use bundled plugins, node-libcurl, httpsnippet, hidden browser window', async ({ app, page }) => {
   await page.getByTestId('settings-button').click();
   await page.getByRole('tab', { name: 'Cloud Credentials' }).click();
-  await page.getByText('No cloud service provider').click();
+  await page.getByRole('button', { name: 'Create Credential' }).click();
   await page.getByRole('dialog').press('Escape');
 
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
