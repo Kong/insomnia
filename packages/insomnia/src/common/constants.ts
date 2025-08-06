@@ -359,8 +359,7 @@ export const sortOrderName: Record<SortOrder, string> = {
   [SORT_TYPE_ASC]: 'Requests First',
 };
 
-// feature name constants
-export const FEATURE_NAME_EXTERNAL_VAULT = '@kong/insomnia-plugin-external-vault';
+export const EXTERNAL_VAULT_PLUGIN_NAME = getAppBundlePlugins()[0].name;
 
 export type DashboardSortOrder = 'name-asc' | 'name-desc' | 'created-asc' | 'created-desc' | 'modified-desc';
 

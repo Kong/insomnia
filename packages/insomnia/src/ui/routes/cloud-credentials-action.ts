@@ -1,6 +1,6 @@
 import { type ActionFunction } from 'react-router';
 
-import { FEATURE_NAME_EXTERNAL_VAULT, getAppBundlePlugins } from '../../common/constants';
+import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../common/constants';
 import * as models from '../../models';
 import type { BaseCloudCredential } from '../../models/cloud-credential';
 import { executePluginMainAction } from '../../plugins';
@@ -23,7 +23,7 @@ export const createCloudCredentialAction: ActionFunction = async ({ request }) =
     return credentials;
   }
   const authenticateResponse = await executePluginMainAction({
-    pluginName: getAppBundlePlugins().find(p => p.name === FEATURE_NAME_EXTERNAL_VAULT)?.name || '',
+    pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
     actionName: 'authenticate',
     params: { provider, credentials },
   });
@@ -55,7 +55,7 @@ export const updateCloudCredentialAction: ActionFunction = async ({ request, par
   invariant(provider, 'Cloud Provider name is required');
   invariant(credentials, 'Credentials are required');
   const authenticateResponse = await executePluginMainAction({
-    pluginName: getAppBundlePlugins().find(p => p.name === FEATURE_NAME_EXTERNAL_VAULT)?.name || '',
+    pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
     actionName: 'authenticate',
     params: { provider, credentials },
   });
