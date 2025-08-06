@@ -1,5 +1,5 @@
-import React, { type ChangeEventHandler, type FC, type InputHTMLAttributes, useCallback, useState } from 'react';
-import { Button, ListBox, ListBoxItem } from 'react-aria-components';
+import React, { type FC, type InputHTMLAttributes, useCallback, useState } from 'react';
+import { ListBox, ListBoxItem } from 'react-aria-components';
 
 import type { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';

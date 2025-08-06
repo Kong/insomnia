@@ -16,7 +16,6 @@ import { Property, PropertyBase, PropertyList } from './properties';
 import { ProxyConfig, type ProxyConfigOptions } from './proxy-configs';
 import type { Url } from './urls';
 import { QueryParam, toUrlObject } from './urls';
-import { getGlobalSettings } from './utils';
 import type { Variable, VariableList } from './variables';
 
 export type RequestBodyMode = undefined | 'formdata' | 'urlencoded' | 'raw' | 'file' | 'graphql';
