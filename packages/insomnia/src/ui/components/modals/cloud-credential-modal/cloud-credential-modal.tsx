@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useFetcher } from 'react-router';
 
-import { FEATURE_NAME_EXTERNAL_VAULT, getAppBundlePlugins } from '../../../../common/constants';
+import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../../common/constants';
 import {
   type BaseCloudCredential,
   type CloudProviderCredential,
@@ -65,7 +65,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
       const code = parsedURL.searchParams.get('code');
       if (code && typeof code === 'string') {
         const authResult = await executePluginMainAction({
-          pluginName: getAppBundlePlugins().find(p => p.name === FEATURE_NAME_EXTERNAL_VAULT)?.name || '',
+          pluginName: EXTERNAL_VAULT_PLUGIN_NAME,
           actionName: 'exchangeCode',
           params: { provider: 'azure', code },
         });

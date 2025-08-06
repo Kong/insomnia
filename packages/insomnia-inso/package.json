@@ -25,6 +25,10 @@
       "../../node_modules/@kong/**/*.js"
     ]
   },
+  "//": [
+    "pkg attributes is used to manually include modules in the packing process of pkg",
+    "See: https://github.com/yao-pkg/pkg?tab=readme-ov-file#config"
+  ],
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "test:unit": "cross-env NO_COLOR=1 vitest run --exclude '**/cli.test.ts'",

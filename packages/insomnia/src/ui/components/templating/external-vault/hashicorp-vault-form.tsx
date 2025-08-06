@@ -1,12 +1,8 @@
 import React from 'react';
-import { useRouteLoaderData } from 'react-router';
 
-import {
-  type CloudProviderCredential,
-  type HashiCorpCredential,
-  HashiCorpCredentialType,
-} from '../../../../models/cloud-credential';
+import { type HashiCorpCredential, HashiCorpCredentialType } from '../../../../models/cloud-credential';
 import type { NunjucksParsedTag } from '../../../../templating/types';
+import { useRootLoaderData } from '../../../routes/root';
 import { HelpTooltip } from '../../help-tooltip';
 import {
   type HashiCorpSecretConfig,
@@ -23,7 +19,7 @@ export interface HashiCorpVaultFormProps {
 type KeysOfUnion<T> = T extends T ? keyof T : never;
 
 export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
-  const { cloudCredentials } = useRouteLoaderData('root') as { cloudCredentials: CloudProviderCredential[] };
+  const { cloudCredentials } = useRootLoaderData();
 
   const { formData, onChange, activeTagData } = props;
   const { secretName } = formData;
@@ -37,7 +33,7 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
   const { organizationId, projectId, appName, version: cloudSecretVersion } = formData as HCPSecretConfig;
   const credentialId = activeTagData.args[1].value as string;
   const selectedCredential = cloudCredentials.find(c => c._id === credentialId) as unknown as HashiCorpCredential;
-  const credentialType = selectedCredential?.credentials?.type || HashiCorpCredentialType.cloud;
+  const credentialType = selectedCredential?.credentials?.type;
   const handleOnChange = (name: KeysOfUnion<HashiCorpSecretConfig>, newValue: string) => {
     const newConfig = {
       ...formData,
