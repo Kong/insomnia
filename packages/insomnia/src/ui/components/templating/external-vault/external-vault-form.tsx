@@ -2,7 +2,11 @@ import React, { useMemo, useState } from 'react';
 import { Button } from 'react-aria-components';
 
 import { debounce } from '../../../../common/misc';
-import { type CloudProviderCredential, type CloudProviderName, type } from '../../../../models/cloud-credential';
+import {
+  type CloudProviderCredential,
+  type CloudProviderName,
+  type as cloudCredentialType,
+} from '../../../../models/cloud-credential';
 import { Icon } from '../../icon';
 import { CloudCredentialModal } from '../../modals/cloud-credential-modal/cloud-credential-modal';
 import type { ArgConfigFormProps } from '../tag-editor-arg-sub-form';
@@ -26,7 +30,7 @@ export const ExternalVaultForm = (props: ArgConfigFormProps) => {
     return JSON.parse(configValue) as ExternalVaultConfig;
   }, [configValue]);
   const selectedCredentialId = activeTagData.args[1].value;
-  const cloudCredentialDocs = (docs[type] as CloudProviderCredential[]) || [];
+  const cloudCredentialDocs = (docs[cloudCredentialType] as CloudProviderCredential[]) || [];
   const selectedCredentialDoc = cloudCredentialDocs.find(d => d._id === selectedCredentialId);
 
   const handleFormChange = debounce((newConfig: ExternalVaultConfig) => {

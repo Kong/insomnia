@@ -71,7 +71,7 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
                   checked={kvVersion === 'v1'}
                   onChange={() => handleOnChange('kvVersion', 'v1')}
                 />
-                <label className="mr-8 pt-0" htmlFor="hashiCorpEnvironmentTypeChoice-onPrem">
+                <label className="mr-8 pt-0" htmlFor="kvVersionChoice-v1">
                   V1
                 </label>
 
@@ -84,7 +84,7 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
                   checked={kvVersion === 'v2'}
                   onChange={() => handleOnChange('kvVersion', 'v2')}
                 />
-                <label className="pt-0" htmlFor="hashiCorpEnvironmentTypeChoice-cloud">
+                <label className="pt-0" htmlFor="kvVersionChoice-v2">
                   V2
                 </label>
               </div>
