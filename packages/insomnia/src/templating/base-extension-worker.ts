@@ -6,7 +6,7 @@ import type { Response } from '../models/response';
 import type { Workspace } from '../models/workspace';
 import type { NodeCurlRequestOptions } from '../plugins/context/network';
 import type { Plugin } from '../plugins/index';
-import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext } from './types';
+import type { BaseRenderContext, PluginTemplateTag, PluginTemplateTagContext, PluginToMainAPIPaths } from './types';
 import * as templating from './worker';
 export function decodeEncoding<T>(value: T) {
   if (typeof value !== 'string') {
@@ -29,12 +29,16 @@ export function decodeEncoding<T>(value: T) {
 
   return value;
 }
-const fetchFromTemplateWorkerDatabase = async (url: string, body: any) => {
-  const resp = await fetch('insomnia-templating-worker-database://' + url, {
+export const fetchFromTemplateWorkerDatabase = async (path: PluginToMainAPIPaths, body: any) => {
+  const resp = await fetch('insomnia-templating-worker-database://' + path, {
     method: 'post',
     body: JSON.stringify(body),
   });
-  return resp.json();
+  const result = await resp.json();
+  if (!resp.ok) {
+    throw new Error(result?.error || JSON.stringify(result));
+  }
+  return result;
 };
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
 const legacyModeErrorMessage = `This version improves the security around plugins by limiting scope of access by default. This may break some plugins which rely on having the same kind of access Insomnia does. You can still grant elevated access to plugins, should your workflow absolutely require it, by navigating to Preferences > Plugins and checking the box enabling elevated access for plugins.`;

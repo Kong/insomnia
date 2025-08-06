@@ -17,7 +17,7 @@ import type { Workspace } from '../models/workspace';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
-import type { PluginTemplateTag } from '../templating/types';
+import type { PluginTemplateTag, RenderPurpose } from '../templating/types';
 import type { PluginTheme } from './misc';
 import themes from './themes';
 
@@ -361,33 +361,55 @@ export async function getTemplateTags(): Promise<TemplateTag[]> {
   return extensions;
 }
 
-export async function getPluginRouterActions(): Promise<PluginAction[]> {
-  let extensions: PluginAction[] = [];
-
-  for (const plugin of await getActivePlugins()) {
-    const actions = plugin.module.unsafePluginMainActions || [];
-    extensions = [
-      ...extensions,
-      ...actions.map(p => ({
-        plugin,
-        ...p,
-      })),
-    ];
-  }
-
-  return extensions;
-}
-
-export async function isPreBundlePluginTemplateTag(input: string) {
-  if (input.startsWith('{%') && input.endsWith('%}')) {
-    const bundlePlugins = await getBundlePlugins();
-    const isTagAllowed = bundlePlugins.some(p => {
-      const templateTags = p.module.templateTags || [];
-      return templateTags.some(tt => typeof tt.validate === 'function' && tt.validate(input));
-    });
-    return isTagAllowed;
-  }
-  return false;
+export function getPluginCommonContext({
+  plugin,
+  renderPurpose,
+}: {
+  plugin: Pick<Plugin, 'name'>;
+  renderPurpose?: RenderPurpose;
+}) {
+  return {
+    ...pluginApp.init(renderPurpose),
+    ...pluginStore.init(plugin),
+    ...pluginNetwork.init(),
+    util: {
+      openInBrowser: (url: string) => window.main.openInBrowser(url),
+      models: {
+        request: {
+          getById: models.request.getById,
+          getAncestors: async (request: any) => {
+            const ancestors = await db.withAncestors<Request | RequestGroup | Workspace>(request, [
+              models.requestGroup.type,
+              models.workspace.type,
+            ]);
+            return ancestors.filter(doc => doc._id !== request._id);
+          },
+        },
+        cloudCredential: {
+          getById: models.cloudCredential.getById,
+          update: models.cloudCredential.update,
+        },
+        workspace: {
+          getById: models.workspace.getById,
+        },
+        oAuth2Token: {
+          getByRequestId: models.oAuth2Token.getByParentId,
+        },
+        cookieJar: {
+          getOrCreateForParentId: (parentId: string) => {
+            return models.cookieJar.getOrCreateForParentId(parentId);
+          },
+        },
+        response: {
+          getLatestForRequestId: models.response.getLatestForRequest,
+          getBodyBuffer: models.response.getBodyBuffer,
+        },
+        settings: {
+          get: models.settings.get,
+        },
+      },
+    },
+  };
 }
 
 // This is for insomnia UI to reach out to bundled plugin functions and executed under main process(node integration) context
@@ -413,44 +435,7 @@ export async function executePluginMainAction({
     if (!action) {
       throw new Error(`Action ${actionName} not found in plugin ${pluginName}`);
     }
-    const commonContext = {
-      ...pluginApp.init('no-render'),
-      ...pluginStore.init(plugin),
-      ...pluginNetwork.init(),
-      util: {
-        openInBrowser: (url: string) => window.main.openInBrowser(url),
-        models: {
-          request: {
-            getById: models.request.getById,
-            getAncestors: async (request: any) => {
-              const ancestors = await db.withAncestors<Request | RequestGroup | Workspace>(request, [
-                models.requestGroup.type,
-                models.workspace.type,
-              ]);
-              return ancestors.filter(doc => doc._id !== request._id);
-            },
-          },
-          workspace: {
-            getById: models.workspace.getById,
-          },
-          oAuth2Token: {
-            getByRequestId: models.oAuth2Token.getByParentId,
-          },
-          cookieJar: {
-            getOrCreateForParentId: (parentId: string) => {
-              return models.cookieJar.getOrCreateForParentId(parentId);
-            },
-          },
-          response: {
-            getLatestForRequestId: models.response.getLatestForRequest,
-            getBodyBuffer: models.response.getBodyBuffer,
-          },
-          settings: {
-            get: models.settings.get,
-          },
-        },
-      },
-    };
+    const commonContext = getPluginCommonContext({ plugin });
     return action.action({ ...commonContext, ...context }, params);
   });
 }

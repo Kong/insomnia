@@ -18,6 +18,31 @@ import type { PromptModalOptions } from '../ui/components/modals/prompt-modal';
 import type { extractNunjucksTagFromCoords } from './utils';
 
 export type RenderPurpose = 'send' | 'general' | 'preview' | 'script' | 'no-render';
+export type PluginToMainAPIPaths =
+  | 'readFile'
+  | 'nodeOS'
+  | 'decode'
+  | 'request.getById'
+  | 'request.getAncestors'
+  | 'workspace.getById'
+  | 'oAuth2Token.getByRequestId'
+  | 'cookieJar.getOrCreateForParentId'
+  | 'response.getLatestForRequestId'
+  | 'response.getBodyBuffer'
+  | 'pluginData.hasItem'
+  | 'pluginData.setItem'
+  | 'pluginData.getItem'
+  | 'pluginData.removeItem'
+  | 'pluginData.clear'
+  | 'pluginData.all'
+  | 'cloudCredential.getById'
+  | 'cloudCredential.update'
+  | 'settings.get'
+  | 'openInBrowser'
+  | 'network.sendRequest'
+  | 'network.sendRequestWithoutSideEffects'
+  | 'plugin.getBundlePluginTemplateTags'
+  | 'plugin.executeBundlePluginTag';
 
 export type RenderedRequest = Request & {
   cookies: {
