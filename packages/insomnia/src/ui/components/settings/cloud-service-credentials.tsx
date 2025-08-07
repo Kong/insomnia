@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
+import { useRootLoaderData } from '~/root';
 import { useDeleteCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.delete';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../common/constants';
@@ -13,7 +14,6 @@ import {
 import { executePluginMainAction } from '../../../plugins';
 import { getBundlePlugins } from '../../../plugins';
 import { usePlanData } from '../../hooks/use-plan';
-import { useRootLoaderData } from '../../routes/root';
 import { Icon } from '../icon';
 import { showError, showModal } from '../modals';
 import { AskModal } from '../modals/ask-modal';
@@ -56,7 +56,7 @@ const externalVaultPluginName = EXTERNAL_VAULT_PLUGIN_NAME;
 
 export const CloudServiceCredentialList = () => {
   const { isOwner, isEnterprisePlan } = usePlanData();
-  const { cloudCredentials } = useRootLoaderData();
+  const { cloudCredentials } = useRootLoaderData()!;
   const [modalState, setModalState] = useState<{
     show: boolean;
     provider: CloudProviderName;

@@ -3,7 +3,7 @@ import { href, useFetcher } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '~/common/constants';
 import * as models from '~/models';
-import type { BaseCloudCredential, CloudProviderName } from '~/models/cloud-credential';
+import type { BaseCloudCredential } from '~/models/cloud-credential';
 import { executePluginMainAction } from '~/plugins';
 import { invariant } from '~/utils/invariant';
 

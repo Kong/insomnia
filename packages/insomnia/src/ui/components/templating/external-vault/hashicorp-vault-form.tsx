@@ -1,8 +1,9 @@
 import React from 'react';
 
-import { type HashiCorpCredential, HashiCorpCredentialType } from '../../../../models/cloud-credential';
-import type { NunjucksParsedTag } from '../../../../templating/types';
-import { useRootLoaderData } from '../../../routes/root';
+import { type HashiCorpCredential, HashiCorpCredentialType } from '~/models/cloud-credential';
+import { useRootLoaderData } from '~/root';
+import type { NunjucksParsedTag } from '~/templating/types';
+
 import { HelpTooltip } from '../../help-tooltip';
 import {
   type HashiCorpSecretConfig,
@@ -19,7 +20,7 @@ export interface HashiCorpVaultFormProps {
 type KeysOfUnion<T> = T extends T ? keyof T : never;
 
 export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
-  const { cloudCredentials } = useRootLoaderData();
+  const { cloudCredentials } = useRootLoaderData()!;
 
   const { formData, onChange, activeTagData } = props;
   const { secretName } = formData;
