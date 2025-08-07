@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 
-import { loadFixture } from '../../playwright/paths';
+import { getFixturePath, loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 const testVaultKey =
@@ -79,6 +79,11 @@ test.describe('Check vault used in environment', () => {
   });
 
   test('test global private sub environment to store vaults', async ({ page, app }) => {
+    await page.getByTestId('settings-button').click();
+    await page.getByTestId('dataFolders').fill(getFixturePath('vault-collection.yaml'));
+    await page.getByTestId('dataFolders-btn').click();
+    await page.locator('.app').press('Escape');
+    
     // import requests
     const requestColText = await loadFixture('vault-collection.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), requestColText);
@@ -205,6 +210,6 @@ test.describe('Check vault used in environment', () => {
     await page.getByTestId('legacy-invalid-vault').getByLabel('GET legacy-invalid-vault', { exact: true }).click();
     await page.getByRole('button', { name: 'Send' }).click(); // Expect to see error message
     await expect.soft(page.getByText('Unexpected Request Failure')).toBeVisible();
-    await expect.soft(page.getByText('vault is a reserved key for insomnia vault')).toBeVisible();
+    await expect.soft(page.getByText('Error: vault is a reserved')).toBeVisible();
   });
 });

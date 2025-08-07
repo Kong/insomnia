@@ -76,6 +76,7 @@ test('Critical Path For Template Tags Interactions', async ({ page, app }) => {
 
   await page.getByTestId('settings-button').click();
   await page.getByTestId('dataFolders').fill(getFixturePath('files/template-file.txt'));
+  await page.getByTestId('dataFolders-btn').click();
   await page.locator('.app').press('Escape');
 
   // test common template tags
