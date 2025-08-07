@@ -46,6 +46,7 @@ import {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '~/ui/components/modals/settings-modal';
+import { Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
 import { NunjucksEnabledProvider } from '~/ui/context/nunjucks/nunjucks-enabled-context';
 import { useThemeChange } from '~/ui/hooks/use-theme-change';
@@ -538,6 +539,7 @@ const Root = () => {
       <ErrorView>
         <div className="app">
           <Outlet />
+          <Toaster />
         </div>
         <Modals />
         <AppHooks />
