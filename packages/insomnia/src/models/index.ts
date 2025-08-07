@@ -290,8 +290,8 @@ export const DESCENDANT_MAP: Record<string, string[]> = {
   [protoDirectory.type]: [protoFile.type],
 };
 
-export const generateDescendantMap = (types: ModelTypes): Record<string, string[]> => {
-  const map: Record<string, string[]> = {};
+export const generateDescendantMap = (queryTypes: ModelTypes): Record<string, string[]> => {
+  const result: Record<string, string[]> = {};
 
   const childToParents: Record<string, string[]> = {};
   for (const [parent, children] of Object.entries(DESCENDANT_MAP)) {
@@ -300,36 +300,30 @@ export const generateDescendantMap = (types: ModelTypes): Record<string, string[
       childToParents[child].push(parent);
     }
   }
-  console.log('childToParents:', childToParents);
 
-  const x = (child: string, map: Record<string, string[]>, visited = new Set()) => {
+  const visited = new Set<string>();
+  const collectAncestors = (child: string) => {
     if (!child || visited.has(child)) {
       return;
     }
     visited.add(child);
     const parents = childToParents[child];
-    if (parents && parents.length) {
+    if (parents?.length) {
       for (const p of parents) {
-        if (!map[p]) {
-          map[p] = [];
+        if (!result[p]) {
+          result[p] = [];
         }
-        if (!map[p].includes(child)) {
-          map[p].push(child);
-        }
-        x(p, map, visited);
+        result[p].push(child);
+        collectAncestors(p);
       }
     }
   };
 
-  for (const type of types) {
-    x(type, map);
+  for (const type of queryTypes) {
+    collectAncestors(type);
   }
 
-  return map;
+  return result;
 };
 
 export const WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP = generateDescendantMap(EXPORTABLE_TYPES);
-
-console.log('WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP:', WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP);
-
-console.log(`DESCENDANT_MAP:`, generateDescendantMap([webSocketPayload.type]));
