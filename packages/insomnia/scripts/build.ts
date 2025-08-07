@@ -36,7 +36,7 @@ export const start = async () => {
 
   function buildRenderer() {
     return new Promise((resolve, reject) => {
-      const buildProcess = spawn('react-router', ['build']);
+      const buildProcess = spawn('react-router', ['build'], { shell: true });
       buildProcess.stdout.on('data', data => {
         console.log(`[build] ${data}`);
       });
