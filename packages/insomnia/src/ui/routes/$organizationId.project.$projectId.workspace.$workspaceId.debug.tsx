@@ -52,6 +52,7 @@ import {
 import { type ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId, isNotNullOrUndefined } from '../../common/misc';
 import type { PlatformKeyCombinations } from '../../common/settings';
+import { useStore } from '../../common/store';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
 import type { Environment } from '../../models/environment';
@@ -111,6 +112,7 @@ import { WebSocketRequestPane } from '../components/websockets/websocket-request
 import { INSOMNIA_TAB_HEIGHT } from '../constant';
 import { useCloseConnection } from '../hooks/use-close-connection';
 import { useExecutionState } from '../hooks/use-execution-state';
+import { useFilteredRequests } from '../hooks/use-filtered-requests';
 import { useInsomniaTab } from '../hooks/use-insomnia-tab';
 import { useReadyState } from '../hooks/use-ready-state';
 import {
@@ -235,8 +237,11 @@ export const Debug: FC = () => {
     caCertificate,
     clientCertificates,
     grpcRequests,
-    collection,
+    collection: _collection,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const [{ filter, setFilter }] = useStore();
+  const collection = useFilteredRequests(_collection, filter);
+
   const requestData = useRouteLoaderData('request/:requestId') as
     | RequestLoaderData
     | GrpcRequestLoaderData
@@ -873,13 +878,8 @@ export const Debug: FC = () => {
               <SearchField
                 aria-label="Request filter"
                 className="group relative flex-1"
-                defaultValue={searchParams.get('filter')?.toString() ?? ''}
-                onChange={filter => {
-                  setSearchParams({
-                    ...Object.fromEntries(searchParams.entries()),
-                    filter,
-                  });
-                }}
+                value={filter ?? ''}
+                onChange={setFilter}
               >
                 <Input
                   placeholder="Filter"
