@@ -38,6 +38,8 @@
     "test:smoke:build": "npm run test:build -w insomnia-smoke-test -- --project=Smoke",
     "test:smoke:package": "npm run test:package -w insomnia-smoke-test -- --project=Smoke",
     "test:crit:package": "npm run test:package -w insomnia-smoke-test -- --project=Critical",
+    "test:e2e:dev": "npm run test:dev -w insomnia-smoke-test -- --project=Workflow",
+    "test:report": "npm run test:report -w insomnia-smoke-test",
     "postinstall": "patch-package"
   },
   "devDependencies": {
