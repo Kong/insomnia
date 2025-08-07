@@ -493,15 +493,11 @@ export async function getInsomniaV5DataExport({
     // console.timeEnd('withDescendants');
 
     console.time('getWithDescendants');
-    const workspaceDescendants = await database.getWithDescendants(workspace, {
-      exportOnly: true,
-    });
+    const workspaceDescendants = await database.getWithDescendants(workspace, models.EXPORTABLE_TYPES);
     console.timeEnd('getWithDescendants');
 
-    const exportableTypes = Object.values(models.MODELS_BY_EXPORT_TYPE).map(model => model.type);
-
     const exportableResources = workspaceDescendants.filter(resource => {
-      if (exportableTypes.includes(resource.type)) {
+      if ((models.EXPORTABLE_TYPES as string[]).includes(resource.type)) {
         return true;
       }
 

@@ -163,6 +163,8 @@ export function types() {
   return all().map(model => model.type);
 }
 
+export type ModelTypes = ReturnType<typeof types>;
+
 export function canSync(d: BaseModel) {
   if (d.isPrivate) {
     return false;
@@ -241,7 +243,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
   return migratedDoc as T;
 }
 
-export const MODELS_BY_EXPORT_TYPE: Record<string, any> = {
+export const MODELS_BY_EXPORT_TYPE: Record<string, ReturnType<typeof all>[number]> = {
   [EXPORT_TYPE_REQUEST]: request,
   [EXPORT_TYPE_WEBSOCKET_PAYLOAD]: webSocketPayload,
   [EXPORT_TYPE_WEBSOCKET_REQUEST]: webSocketRequest,
@@ -263,8 +265,7 @@ export const MODELS_BY_EXPORT_TYPE: Record<string, any> = {
   [EXPORT_TYPE_PROTO_DIRECTORY]: protoDirectory,
 };
 
-const EXPORT_TYPES: string[] = Object.values(MODELS_BY_EXPORT_TYPE).map(m => m.type);
-const EXPORT_TYPES_SET = new Set(EXPORT_TYPES);
+export const EXPORTABLE_TYPES = Object.values(MODELS_BY_EXPORT_TYPE).map(m => m.type);
 
 export const DESCENDANT_MAP: Record<string, string[]> = {
   [workspace.type]: [
@@ -289,14 +290,46 @@ export const DESCENDANT_MAP: Record<string, string[]> = {
   [protoDirectory.type]: [protoFile.type],
 };
 
-export const WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP: Record<string, string[]> = (() => {
+export const generateDescendantMap = (types: ModelTypes): Record<string, string[]> => {
   const map: Record<string, string[]> = {};
+
+  const childToParents: Record<string, string[]> = {};
   for (const [parent, children] of Object.entries(DESCENDANT_MAP)) {
-    if (EXPORT_TYPES_SET.has(parent)) {
-      map[parent] = children.filter(c => EXPORT_TYPES_SET.has(c));
+    for (const child of children) {
+      if (!childToParents[child]) childToParents[child] = [];
+      childToParents[child].push(parent);
     }
   }
-  return map;
-})();
+  console.log('childToParents:', childToParents);
 
-console.log(DESCENDANT_MAP, WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP);
+  const x = (child: string, map: Record<string, string[]>, visited = new Set()) => {
+    if (!child || visited.has(child)) {
+      return;
+    }
+    visited.add(child);
+    const parents = childToParents[child];
+    if (parents && parents.length) {
+      for (const p of parents) {
+        if (!map[p]) {
+          map[p] = [];
+        }
+        if (!map[p].includes(child)) {
+          map[p].push(child);
+        }
+        x(p, map, visited);
+      }
+    }
+  };
+
+  for (const type of types) {
+    x(type, map);
+  }
+
+  return map;
+};
+
+export const WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP = generateDescendantMap(EXPORTABLE_TYPES);
+
+console.log('WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP:', WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP);
+
+console.log(`DESCENDANT_MAP:`, generateDescendantMap([webSocketPayload.type]));
