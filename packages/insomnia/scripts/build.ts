@@ -1,5 +1,4 @@
-import { spawn } from 'node:child_process';
-import { cp, mkdir, rm } from 'node:fs/promises';
+import { cp, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 
 import buildMainAndPreload from '../esbuild.main';
@@ -27,33 +26,6 @@ export const start = async () => {
   }
 
   const buildFolder = path.join('../build');
-
-  // Remove folders first
-  console.log('[build] Removing existing directories');
-  await rm(path.resolve(__dirname, buildFolder), { recursive: true, force: true });
-
-  console.log('[build] Building renderer');
-
-  function buildRenderer() {
-    return new Promise((resolve, reject) => {
-      const buildProcess = spawn('react-router', ['build'], { shell: true });
-      buildProcess.stdout.on('data', data => {
-        console.log(`[build] ${data}`);
-      });
-      buildProcess.stderr.on('data', data => {
-        console.error(`[build] ${data}`);
-      });
-      buildProcess.on('close', code => {
-        if (code !== 0) {
-          reject(new Error(`Build process exited with code ${code}`));
-        } else {
-          resolve(true);
-        }
-      });
-    });
-  }
-
-  await buildRenderer();
 
   console.log('[build] Building main.min.js and preload');
   await buildMainAndPreload({

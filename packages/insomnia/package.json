@@ -18,7 +18,7 @@
   "main": "src/main.min.js",
   "scripts": {
     "verify-bundle-plugins": "esr --cache ./scripts/verify-bundle-plugins.ts",
-    "build": "esr --cache ./scripts/build.ts --noErrorTruncation",
+    "build": "react-router build && esr --cache ./scripts/build.ts --noErrorTruncation",
     "build:react-router": "react-router build",
     "generate:schema": "esr ./src/schema.ts",
     "build:main.min.js": "cross-env NODE_ENV=development esr esbuild.main.ts",
