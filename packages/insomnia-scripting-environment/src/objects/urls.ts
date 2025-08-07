@@ -299,7 +299,10 @@ export class Url extends PropertyBase {
   }
 
   getQueryString() {
-    return this.queryParams.map(param => param.toRawString()).join('&');
+    return this.queryParams
+      .filter(param => !param.disabled)
+      .map(param => param.toRawString())
+      .join('&');
   }
 
   getRemote(_forcePort?: boolean) {
