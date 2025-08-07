@@ -21,7 +21,7 @@ test('Setup external vault and used in request', async ({ app, page }) => {
   await page.getByRole('tab', { name: 'Cloud Credentials' }).click();
   // create aws credential
   const awsCredentialName = 'smoke-test-aws';
-  await page.getByRole('button', { name: 'Create cloud credential' }).click();
+  await page.getByRole('button', { name: 'Create Credential' }).click();
   await page.getByRole('menuitemradio', { name: 'AWS' }).click();
   await page.getByRole('textbox', { name: 'Credential Name:' }).fill(awsCredentialName);
   await page.getByRole('radio', { name: 'Credential File' }).check();
@@ -29,6 +29,24 @@ test('Setup external vault and used in request', async ({ app, page }) => {
   await page.getByRole('textbox', { name: 'Region:' }).fill('aws-region');
   await page.getByRole('button', { name: 'Create' }).click();
   await expect.soft(page.getByRole('cell', { name: awsCredentialName })).toBeVisible();
+  // create gcp credential
+  const gcpCredentialName = 'smoke-test-gcp';
+  await page.getByRole('button', { name: 'Create Credential' }).click();
+  await page.getByRole('menuitemradio', { name: 'GCP' }).click();
+  await page.getByRole('textbox', { name: 'Credential Name:' }).fill(gcpCredentialName);
+  await page.getByRole('textbox', { name: 'Input Service Account Key Path' }).fill('gcp-path');
+  await page.getByRole('button', { name: 'Create' }).click();
+  await expect.soft(page.getByRole('cell', { name: gcpCredentialName })).toBeVisible();
+  // create hashicorp credential
+  const hashicorpCredentialName = 'smoke-test-hashicorp';
+  await page.getByRole('button', { name: 'Create Credential' }).click();
+  await page.getByRole('menuitemradio', { name: 'HashiCorp' }).click();
+  await page.getByRole('textbox', { name: 'Credential Name:' }).fill(hashicorpCredentialName);
+  await page.getByRole('textbox', { name: 'Server Address:' }).fill('http://127.0.0.1');
+  await page.getByRole('textbox', { name: 'Role Id:' }).fill('role-id');
+  await page.getByRole('textbox', { name: 'Secret Id:' }).fill('secret-id');
+  await page.getByRole('button', { name: 'Create' }).click();
+  await expect.soft(page.getByRole('cell', { name: hashicorpCredentialName })).toBeVisible();
   // close the settings
   await page.locator('.app').press('Escape');
 
@@ -40,6 +58,14 @@ test('Setup external vault and used in request', async ({ app, page }) => {
       tagPrefix: "{% vault 'aws'",
       expectedResult: 'aws-secret-value',
     },
+    gcp: {
+      tagPrefix: "{% vault 'gcp'",
+      expectedResult: 'gcp-secret-value',
+    },
+    hashicorp: {
+      tagPrefix: "{% vault 'hashicorp'",
+      expectedResult: 'hashicorp-secret-value',
+    },
   };
   // test aws vault tag
   await page.locator(`[data-template^="${externalVaultTestCases.aws.tagPrefix}"]`).click();
@@ -47,9 +73,35 @@ test('Setup external vault and used in request', async ({ app, page }) => {
   const previewText = page.getByRole('dialog').getByLabel('Live Preview');
   await expect.soft(previewText).toHaveText(externalVaultTestCases.aws.expectedResult);
   await page.getByRole('button', { name: 'Done' }).click();
+  // test gcp vault tag
+  await page.locator(`[data-template^="${externalVaultTestCases.gcp.tagPrefix}"]`).click();
+  await page.getByLabel('Credential For Vault Service').selectOption(gcpCredentialName);
+  const gcpPreviewText = page.getByRole('dialog').getByLabel('Live Preview');
+  await expect.soft(gcpPreviewText).toHaveText(externalVaultTestCases.gcp.expectedResult);
+  await page.getByRole('button', { name: 'Done' }).click();
+  // test hashicorp vault tag
+  await page.locator(`[data-template^="${externalVaultTestCases.hashicorp.tagPrefix}"]`).click();
+  await page.getByLabel('Credential For Vault Service').selectOption(hashicorpCredentialName);
+  const hashicorpPreviewText = page.getByRole('dialog').getByLabel('Live Preview');
+  await expect.soft(hashicorpPreviewText).toHaveText(externalVaultTestCases.hashicorp.expectedResult);
+  await page.getByRole('button', { name: 'Done' }).click();
+  await page.getByText('Params', { exact: true }).click();
+  await page.getByText('Body', { exact: true }).click();
   // send request
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await page.getByRole('tab', { name: 'Console' }).click();
   const responsePane = page.getByTestId('response-pane');
+  await expect.soft(responsePane).toContainText(externalVaultTestCases.aws.expectedResult);
+  await expect.soft(responsePane).toContainText(externalVaultTestCases.gcp.expectedResult);
+  await expect.soft(responsePane).toContainText(externalVaultTestCases.hashicorp.expectedResult);
+  // enable elevated access and execute again in renderer process
+  await page.getByTestId('settings-button').click();
+  await page.getByRole('tab', { name: 'Plugins' }).click();
+  await page.getByText('Allow elevated access for plugins').click();
+  // close the settings
+  await page.locator('.app').press('Escape');
+  // send request and execute the tags in renderer process
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+  await page.getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responsePane).toContainText(externalVaultTestCases.aws.expectedResult);
 });
