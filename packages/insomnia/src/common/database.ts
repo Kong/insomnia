@@ -609,19 +609,10 @@ export const database = {
   /**
    * Get a document and its descendants. Will use the descendant map to determine which types to query.
    * @param doc - The document to get descendants for.
-   * @param exportOnly - If true, only export documents that are relevant for export
    * @param types - Only query specified types, if provided
    * @returns A promise that resolves to an array of documents
    */
-  getWithDescendants: async function <T extends BaseModel>(
-    doc: T,
-    {
-      exportOnly,
-    }: {
-      exportOnly?: boolean;
-      types?: string[];
-    },
-  ) {
+  getWithDescendants: async function <T extends BaseModel>(doc: T, types: models.ModelTypes) {
     if (db._empty) {
       return _send<T[]>('getWithDescendants', ...arguments);
     }
@@ -629,14 +620,8 @@ export const database = {
     if (!doc) return [];
 
     let docsToReturn: BaseModel[] = [doc];
-    // Models actually contains a lot of other stuff, only get the real models here.
-    const realModels = models.all();
-    const modelMap = new Map<string, (typeof realModels)[number]>();
-    realModels.forEach(m => {
-      modelMap.set(m.type, m);
-    });
 
-    const queryTypesDescendantMap = exportOnly ? models.WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP : models.DESCENDANT_MAP;
+    const queryTypesDescendantMap = types?.length ? models.generateDescendantMap(types) : models.DESCENDANT_MAP;
 
     async function findDescendants(docs: BaseModel[]): Promise<BaseModel[]> {
       let foundDocs: BaseModel[] = [];
