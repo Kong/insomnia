@@ -32,7 +32,7 @@ export interface AWSSSOCredential {
   region: string;
 }
 // GCP Credentials
-export interface GCPCredentials {
+export interface GCPCredential {
   serviceAccountKeyFilePath: string;
 }
 
@@ -83,7 +83,7 @@ type BaseCloudCredential =
     }
   | {
       provider: 'gcp';
-      credentials: GCPCredentials;
+      credentials: GCPCredential;
     }
   | { provider: 'azure'; credentials: AzureOAuthCredential }
   | {
