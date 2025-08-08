@@ -1,8 +1,10 @@
-import { href, redirect } from 'react-router';
+import { href, Outlet, redirect } from 'react-router';
 
 import * as models from '~/models';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.test._index';
+
+export default Outlet;
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId } = params;

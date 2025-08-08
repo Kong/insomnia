@@ -49,7 +49,6 @@ import {
 import { Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
 import { NunjucksEnabledProvider } from '~/ui/context/nunjucks/nunjucks-enabled-context';
-import { useThemeChange } from '~/ui/hooks/use-theme-change';
 import Modals from '~/ui/modals';
 
 import type { Route } from './+types/root';
@@ -63,7 +62,6 @@ export const links: Route.LinksFunction = () => {
 };
 
 export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
-  useThemeChange();
   const getErrorMessage = (err: any) => {
     if (isRouteErrorResponse(err)) {
       return err.data;

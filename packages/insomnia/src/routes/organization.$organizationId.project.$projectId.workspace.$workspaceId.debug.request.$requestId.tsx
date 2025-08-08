@@ -1,4 +1,4 @@
-import { redirect, useRouteLoaderData } from 'react-router';
+import { Outlet, redirect, useRouteLoaderData } from 'react-router';
 
 import { database } from '~/common/database';
 import type { BaseModel } from '~/models';
@@ -21,7 +21,7 @@ import { isWebSocketResponse, type WebSocketResponse } from '~/models/websocket-
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
-
+export default Outlet;
 export interface WebSocketRequestLoaderData {
   activeRequest: WebSocketRequest;
   activeRequestMeta: RequestMeta;
