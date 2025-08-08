@@ -254,7 +254,7 @@ export function createWindow(): ElectronBrowserWindow {
   });
 
   // Load the html of the app.
-  const appUrl = process.env.APP_RENDER_URL || 'https://insomnia-app.com';
+  const appUrl = process.env.APP_RENDER_URL || 'https://insomnia-app.local';
 
   console.log(`[main] Loading ${appUrl}`);
 

@@ -174,25 +174,21 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
       default-src
             *
             insomnia://*
-            file:
       ;
       img-src
             blob:
             data:
             *
             insomnia://*
-            file:
       ;
       script-src
             'self'
             'unsafe-eval'
             'unsafe-inline'
-            file:
       ;
       style-src
             'self'
             'unsafe-inline'
-            file:
       ;
       media-src
             blob:
@@ -200,7 +196,6 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
             mediastream:
             *
             insomnia://*
-            file:
       ;
       "
         />
