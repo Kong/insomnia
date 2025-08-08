@@ -20,7 +20,7 @@ env:
 
 jobs:
   publish:
-    timeout-minutes: 15
+    timeout-minutes: 30
     runs-on: ubuntu-22.04
     outputs:
       NOTARY_REPOSITORY: ${{ env.NOTARY_REPOSITORY }}

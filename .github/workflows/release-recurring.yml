@@ -17,7 +17,7 @@ env:
   PR_NUMBER: ${{ github.event.number }}
 jobs:
   build-and-upload-artifacts:
-    timeout-minutes: 15
+    timeout-minutes: 30
     # Skip jobs for release PRs
     # windows on recurring should be portable
     if: ${{ !startsWith(github.head_ref, 'release/') }}
@@ -62,7 +62,7 @@ jobs:
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
 
-      - name: Verify secure wrapper (Windows)
+      - name: Build and verify secure wrapper (Windows)
         if: ${{ matrix.os == 'windows-latest' }}
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' ./build-secure-wrapper.sh
