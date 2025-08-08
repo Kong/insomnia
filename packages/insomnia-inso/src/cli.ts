@@ -389,7 +389,7 @@ export const go = (args?: string[]) => {
       'Comma separated list of hostnames that do not require a proxy to get reached, even if one is specified.',
       proxySettings.noProxy,
     )
-    .option('-d, --dataFolders [dataFolders...]', 'This allows you to control what folders Insomnia (and scripts within Insomnia) can read/write to.', [])
+    .option('-f, --dataFolders [dataFolders...]', 'This allows you to control what folders Insomnia (and scripts within Insomnia) can read/write to.', [])
     .action(
       async (
         identifier,
@@ -520,7 +520,7 @@ export const go = (args?: string[]) => {
       'Comma separated list of hostnames that do not require a proxy to get reached, even if one is specified.',
       proxySettings.noProxy,
     )
-    .option('-d, --dataFolders [dataFolders...]', 'This allows you to control what folders Insomnia (and scripts within Insomnia) can read/write to.', [])
+    .option('-f, --dataFolders [dataFolders...]', 'This allows you to control what folders Insomnia (and scripts within Insomnia) can read/write to.', [])
     .action(
       async (
         identifier,
