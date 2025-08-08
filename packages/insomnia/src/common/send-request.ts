@@ -16,6 +16,7 @@ import {
 } from '../network/network';
 import { defaultSendActionRuntime } from '../network/network';
 import { database } from './database';
+import { isFsAccessingAllowed } from './validator';
 
 // The network layer uses settings from the settings model
 // We want to give consumers the ability to override certain settings
