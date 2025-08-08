@@ -6,7 +6,6 @@ import { useSettingsPatcher } from '../../hooks/use-request';
 import { useRootLoaderData } from '../../routes/root';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
-import { RenderedText } from '../rendered-text';
 
 export const TextArraySetting: FC<{
   disabled?: InputHTMLAttributes<HTMLInputElement>['disabled'];
@@ -22,29 +21,29 @@ export const TextArraySetting: FC<{
   const patchSettings = useSettingsPatcher();
   const [folderToAdd, setFolderToAdd] = useState("");
 
-  let defaultValue = settings[setting];
-  if (!Array.isArray(defaultValue)) {
-    defaultValue = [];
+  let currentValue = settings[setting];
+  if (!Array.isArray(currentValue)) {
+    currentValue = [];
   }
 
   const onAddDataFolder = useCallback(
     async () => {
       const validValue = folderToAdd ? folderToAdd.trim() : "";
-      const exists = defaultValue.includes(validValue);
+      const exists = currentValue.includes(validValue);
       if (folderToAdd !== "" && !exists) {
-        const updatedValue = [...defaultValue, validValue];
+        const updatedValue = [...currentValue, validValue];
         patchSettings({ [setting]: updatedValue });
       }
       setFolderToAdd("");
     },
-    [patchSettings, setting, defaultValue, folderToAdd],
+    [patchSettings, setting, currentValue, folderToAdd],
   );
 
   const onDeleteDataFolder = useCallback((dataFolder: string) => {
-    const updatedValue = defaultValue.filter(folder => folder !== dataFolder);
+    const updatedValue = currentValue.filter(folder => folder !== dataFolder);
 
     patchSettings({ [setting]: updatedValue });
-  }, [defaultValue, patchSettings, setting]);
+  }, [currentValue, patchSettings, setting]);
 
   return (
     <div className="form-control form-control--outlined">
@@ -53,7 +52,6 @@ export const TextArraySetting: FC<{
         {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
         <div className="flex justify-between gap-2">
           <input
-            defaultValue={folderToAdd || ''}
             value={folderToAdd}
             disabled={disabled}
             name={setting}
@@ -73,18 +71,19 @@ export const TextArraySetting: FC<{
         </div>
       </label>
 
-      <ListBox aria-label="data folders" className="flex w-full flex-col margin-top-sm max-h-64 overflow-y-auto">
-        {defaultValue.map((dataFolderPath, index) => {
+      <ListBox aria-label="data folders" className="flex w-full flex-col margin-top-sm overflow-y-auto">
+        {currentValue.map((dataFolderPath, index) => {
+          const key = `${dataFolderPath}-${index}`;
           return (
             <ListBoxItem
-              key={dataFolderPath}
+              key={key}
               id={dataFolderPath}
               data-testid={`data-folder-${index}`}
               textValue={dataFolderPath}
-              className="flex min-h-[30px] justify-between gap-2 rounded-sm px-2 py-1 leading-[36px] outline-none odd:bg-[--hl-xs]"
+              className="flex min-h-[30px] justify-between gap-2 rounded-sm px-2 py-1 outline-none odd:bg-[--hl-xs]"
             >
-              <span className="flex min-w-[70%] items-center break-all leading-relaxed" data-testid="cookie-domain">
-                <RenderedText>{dataFolderPath || ''}</RenderedText>
+              <span className="flex min-w-[70%] items-center break-all" data-testid="cookie-domain">
+                <span>{dataFolderPath || ''}</span>
               </span>
               <div className="flex min-w-[30%] items-center justify-end gap-1">
                 <PromptButton

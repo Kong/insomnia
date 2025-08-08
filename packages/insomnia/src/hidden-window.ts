@@ -15,7 +15,6 @@ import {
   mergeSettings,
   type RequestContext,
 } from '../../insomnia-scripting-environment/src/objects';
-import { initGlobalSettings } from '../../insomnia-scripting-environment/src/objects/utils';
 
 export interface HiddenBrowserWindowBridgeAPI {
   runScript: (options: { script: string; context: RequestContext }) => Promise<RequestContext>;
@@ -38,7 +37,7 @@ window.bridge.onmessage(async (data, callback) => {
     const result = await window.bridge.Promise.race([timeoutPromise, runScript(data)]);
     callback(result);
   } catch (err) {
-    const errMessage = err.message ? `Pre-request or after-response script error:\n${err.message};` : err;
+    const errMessage = err.message ? `Error from Pre-request or after-response script:\n${err.message};` : err;
     const errStack = err.stack ? `Stack: ${err.stack};` : '';
     const fullErrMessage = `${errMessage}\n${errStack}`;
     Sentry.captureException(errMessage, {
@@ -58,7 +57,6 @@ const runScript = async ({ script, context }: { script: string; context: Request
   const scriptConsole = getNewConsole();
 
   const executionContext = await initInsomniaObject(context, scriptConsole.log);
-  initGlobalSettings(context.settings);
 
   const AsyncFunction = (async () => {}).constructor;
   const executeScript = AsyncFunction(
