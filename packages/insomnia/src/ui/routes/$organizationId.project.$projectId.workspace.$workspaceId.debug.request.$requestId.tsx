@@ -18,6 +18,7 @@ import {
 } from '../../common/constants';
 import { type ChangeBufferEvent, database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
+import { isFsAccessingAllowed } from '../../common/validators';
 import type { ResponsePatch } from '../../main/network/libcurl-promise';
 import type { TimingStep } from '../../main/network/request-timing';
 import type { BaseModel } from '../../models';
@@ -44,7 +45,6 @@ import { isRequestMeta, type RequestMeta } from '../../models/request-meta';
 import type { RequestVersion } from '../../models/request-version';
 import type { Response } from '../../models/response';
 import type { ResponseInfo, RunnerResultPerRequestPerIteration } from '../../models/runner-test-result';
-import type { Settings } from '../../models/settings';
 import type { SocketIOPayload } from '../../models/socket-io-payload';
 import { isSocketIORequest, isSocketIORequestId, type SocketIORequest } from '../../models/socket-io-request';
 import type { SocketIOResponse } from '../../models/socket-io-response';
@@ -600,34 +600,6 @@ export interface RunnerContextForRequest {
   size: number;
   results: RequestTestResult[];
   responseId: string;
-}
-
-function isFsAccessingAllowed(renderedRequest: RenderedRequest, settings: Settings) {
-  const throwError = (fileName: string) => {
-    throw `Insomnia cannot access the file ‘${fileName}’. You can adjust this in Preferences → Security.`;
-  }
-  
-  // case1: check request body (set by scripts or request body editor)
-  if (renderedRequest.body.fileName !== undefined && renderedRequest.body.fileName !== '') {
-    const allowed = settings?.dataFolders.some(folder => folder !== '' && renderedRequest.body.fileName?.startsWith(folder));
-    if (!allowed) {
-      throwError(renderedRequest.body.fileName);
-    }
-  }
-
-  // case2: check the body form data - "file" type params
-  if (Array.isArray(renderedRequest.body.params)) {
-    renderedRequest.body.params.forEach(param => {
-      if (param.type === "file" && !param.disabled) {
-        const allowed = settings?.dataFolders.some(folder => folder !== '' && param.fileName?.startsWith(folder));
-        if (!allowed) {
-          throwError(param.fileName || param.value);
-        }
-      }
-    });
-  }
-
-  // case3: check "file" template tags, which is checked in tag utils
 }
 
 export const sendActionImplementation = async (options: {

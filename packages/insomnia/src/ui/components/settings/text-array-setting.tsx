@@ -19,31 +19,31 @@ export const TextArraySetting: FC<{
     throw new Error(`Invalid setting name ${setting}`);
   }
   const patchSettings = useSettingsPatcher();
-  const [folderToAdd, setFolderToAdd] = useState("");
+  const [folderToAdd, setFolderToAdd] = useState('');
 
   let currentValue = settings[setting];
   if (!Array.isArray(currentValue)) {
     currentValue = [];
   }
 
-  const onAddDataFolder = useCallback(
-    async () => {
-      const validValue = folderToAdd ? folderToAdd.trim() : "";
-      const exists = currentValue.includes(validValue);
-      if (folderToAdd !== "" && !exists) {
-        const updatedValue = [...currentValue, validValue];
-        patchSettings({ [setting]: updatedValue });
-      }
-      setFolderToAdd("");
+  const onAddDataFolder = useCallback(async () => {
+    const validValue = folderToAdd ? folderToAdd.trim() : '';
+    const exists = currentValue.includes(validValue);
+    if (folderToAdd !== '' && !exists) {
+      const updatedValue = [...currentValue, validValue];
+      patchSettings({ [setting]: updatedValue });
+    }
+    setFolderToAdd('');
+  }, [patchSettings, setting, currentValue, folderToAdd]);
+
+  const onDeleteDataFolder = useCallback(
+    (dataFolder: string) => {
+      const updatedValue = currentValue.filter(folder => folder !== dataFolder);
+
+      patchSettings({ [setting]: updatedValue });
     },
-    [patchSettings, setting, currentValue, folderToAdd],
+    [currentValue, patchSettings, setting],
   );
-
-  const onDeleteDataFolder = useCallback((dataFolder: string) => {
-    const updatedValue = currentValue.filter(folder => folder !== dataFolder);
-
-    patchSettings({ [setting]: updatedValue });
-  }, [currentValue, patchSettings, setting]);
 
   return (
     <div className="form-control form-control--outlined">
@@ -71,7 +71,7 @@ export const TextArraySetting: FC<{
         </div>
       </label>
 
-      <ListBox aria-label="data folders" className="flex w-full flex-col margin-top-sm overflow-y-auto">
+      <ListBox aria-label="data folders" className="margin-top-sm flex w-full flex-col overflow-y-auto">
         {currentValue.map((dataFolderPath, index) => {
           const key = `${dataFolderPath}-${index}`;
           return (
