@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
 
 import {
-  type BaseCloudCredential,
   type CloudProviderCredential,
   type CloudProviderName,
-  type HashiCorpCredentials,
   HashiCorpCredentialType,
   HashiCorpVaultAuthMethod,
   type HCPCredential,
@@ -16,9 +14,10 @@ import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 
 type HashiCorpOnPremCredential = VaultAppRoleCredential | VaultTokenCredential;
+type HashiCorpCredential = Extract<CloudProviderCredential, { provider: 'hashicorp' }>;
 export interface HashiCorpCredentialFormProps {
-  data?: CloudProviderCredential;
-  onSubmit: (newData: BaseCloudCredential) => void;
+  data?: HashiCorpCredential;
+  onSubmit: (newData: HashiCorpCredential) => void;
   isLoading: boolean;
   errorMessage?: string;
 }
@@ -37,7 +36,7 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
   const isEdit = !!data;
   const { name, credentials } = data || initialFormValue;
   const [isValidUrl, setIsValidUrl] = useState(true);
-  const { type } = credentials as HashiCorpCredentials;
+  const { type } = credentials as HashiCorpCredential['credentials'];
   const [credentialType, setCredentialType] = useState<HashiCorpCredentialType>(type);
   const [credentialAuthMethod, setAuthMethod] = useState<HashiCorpVaultAuthMethod>(
     (credentials as VaultTokenCredential | VaultAppRoleCredential).authMethod,
@@ -108,7 +107,7 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
             },
           };
         }
-        onSubmit(newData as BaseCloudCredential);
+        onSubmit(newData as HashiCorpCredential);
       }}
     >
       <TextField className="flex flex-col gap-2" defaultValue={name}>

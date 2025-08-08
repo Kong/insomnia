@@ -4,9 +4,7 @@ import { Button, Input, Label, TextField } from 'react-aria-components';
 import {
   AWSCredentialType,
   type AWSFileCredential,
-  type AWSServiceCredential,
   type AWSTemporaryCredential,
-  type BaseCloudCredential,
   type CloudProviderCredential,
   type CloudProviderName,
 } from '../../../../models/cloud-credential';
@@ -14,13 +12,14 @@ import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
 import { FilePicker } from './file-picker';
 
+type AWSCloudCredential = Extract<CloudProviderCredential, { provider: 'aws' }>;
 export interface AWSCredentialFormProps {
   data?: CloudProviderCredential;
-  onSubmit: (newData: BaseCloudCredential) => void;
+  onSubmit: (newData: AWSCloudCredential) => void;
   isLoading: boolean;
   errorMessage?: string;
 }
-const initialFormValue: { name: string; credentials: AWSServiceCredential } = {
+const initialFormValue: { name: string; credentials: AWSCloudCredential['credentials'] } = {
   name: '',
   credentials: {
     type: AWSCredentialType.temp,
@@ -35,7 +34,10 @@ export const providerType: CloudProviderName = 'aws';
 export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
   const { data, onSubmit, isLoading, errorMessage } = props;
   const isEdit = !!data;
-  const { name, credentials } = (data || initialFormValue) as { name: string; credentials: AWSServiceCredential };
+  const { name, credentials } = (data || initialFormValue) as {
+    name: string;
+    credentials: AWSCloudCredential['credentials'];
+  };
   const { type, region } = credentials;
   const [hideValueItemNames, setHideValueItemNames] = useState(['accessKeyId', 'secretAccessKey', 'sessionToken']);
   const [credentialFilePath, setCredentialFilePath] = useState(
@@ -112,7 +114,7 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
             },
           };
         }
-        onSubmit(newData);
+        onSubmit(newData as AWSCloudCredential);
       }}
     >
       <div className="flex flex-col gap-2">

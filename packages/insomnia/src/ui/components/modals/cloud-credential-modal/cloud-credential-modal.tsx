@@ -6,7 +6,6 @@ import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credential
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../../common/constants';
 import {
-  type BaseCloudCredential,
   type CloudProviderCredential,
   type CloudProviderName,
   getProviderDisplayName,
@@ -17,6 +16,7 @@ import { AWSCredentialForm } from './aws-credential-form';
 import { GCPCredentialForm } from './gcp-credential-form';
 import { HashiCorpCredentialForm } from './hashicorp-credential-form';
 
+type BaseCloudCredential = Pick<CloudProviderCredential, 'credentials' | 'provider' | 'name'>;
 export interface CloudCredentialModalProps {
   provider: CloudProviderName;
   providerCredential?: CloudProviderCredential;
@@ -46,13 +46,11 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
 
     if (isEditing) {
       return updateCloudCredentialsFetcher.submit({
-        // @ts-expect-error: TODO - @cwangsmv Type inference doesn't work well with BaseCloudCredential
         patch: { name, credentials, provider },
         cloudCredentialId: providerCredential._id,
       });
     }
 
-    // @ts-expect-error: TODO - @cwangsmv Type inference doesn't work well with BaseCloudCredential
     return createCloudCredentialsFetcher.submit({
       name,
       credentials,
@@ -147,16 +145,16 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
               )}
               {provider === 'gcp' && (
                 <GCPCredentialForm
-                  data={providerCredential}
                   isLoading={isLoading}
+                  data={providerCredential as Extract<CloudProviderCredential, { provider: 'gcp' }>}
                   onSubmit={handleFormSubmit}
                   errorMessage={fetchErrorMessage}
                 />
               )}
               {provider === 'hashicorp' && (
                 <HashiCorpCredentialForm
-                  data={providerCredential}
                   isLoading={isLoading}
+                  data={providerCredential as Extract<CloudProviderCredential, { provider: 'hashicorp' }>}
                   onSubmit={handleFormSubmit}
                   errorMessage={fetchErrorMessage}
                 />
