@@ -133,6 +133,7 @@ export const curlRequest = (options: CurlRequestOptions) =>
         authHeader,
         noDecompress = false,
       } = options;
+      invariant(!finalUrl.startsWith('file://'), 'Local file URIs are not supported');
       const caCert = caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString();
 
       const { curl, debugTimeline } = createConfiguredCurlInstance({

@@ -121,9 +121,8 @@ const openCurlConnection = async (
   const caCertificate = caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString();
 
   try {
-    if (!options.url) {
-      throw new Error('URL is required');
-    }
+    invariant(options.url, 'URL must be defined');
+    invariant(!options.url.startsWith('file://'), 'Local file URIs are not supported');
     const readyStateChannel = `curl.${request._id}.readyState`;
 
     const settings = await models.settings.get();
