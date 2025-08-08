@@ -189,6 +189,8 @@ export default class BaseExtension {
         nodeOS: async () => fetchFromTemplateWorkerDatabase('nodeOS', {}),
         decode: async (buffer: Buffer, encoding?: string) =>
           fetchFromTemplateWorkerDatabase('decode', { buffer, encoding }),
+        encode: async (input: string, encoding?: string) =>
+          fetchFromTemplateWorkerDatabase('encode', { input, encoding }),
         render: (str: string) => templating.render(str, { context: renderContext }),
         openInBrowser: (url: string) => fetchFromTemplateWorkerDatabase('openInBrowser', { url }),
         models: {

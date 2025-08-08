@@ -126,9 +126,8 @@ export default class BaseExtension {
           const content = await fs.promises.readFile(path);
           return encoding === 'utf8' ? content.toString(encoding) : content;
         },
-        decode: async (buffer: Buffer, encoding = 'utf8') => {
-          return iconv.decode(buffer, encoding);
-        },
+        decode: async (buffer: Buffer, encoding = 'utf8') => iconv.decode(buffer, encoding),
+        encode: async (input: string, encoding = 'utf8') => iconv.encode(input, encoding),
         render: (str: string) =>
           templating.render(str, {
             context: renderContext,

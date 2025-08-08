@@ -21,6 +21,7 @@ export type PluginToMainAPIPaths =
   | 'readFile'
   | 'nodeOS'
   | 'decode'
+  | 'encode'
   | 'request.getById'
   | 'request.getAncestors'
   | 'workspace.getById'
@@ -258,6 +259,7 @@ export interface PluginTemplateTagContext {
     }>;
     readFile: (path: string, encoding?: string) => Promise<string | Buffer>;
     decode: (buffer: Buffer, encoding?: string) => Promise<string>;
+    encode: (input: string, encoding?: string) => Promise<Buffer>;
     render: (str: string) => string | Promise<string | null>;
     openInBrowser?: (url: string) => void;
     models: {
