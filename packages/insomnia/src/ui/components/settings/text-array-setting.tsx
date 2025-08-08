@@ -60,6 +60,7 @@ export const TextArraySetting: FC<{
             }}
             placeholder={placeholder}
             type={'text'}
+            data-testid={setting}
           />
           <button
             className="btn btn--outlined btn--super-compact flex items-center gap-2"
