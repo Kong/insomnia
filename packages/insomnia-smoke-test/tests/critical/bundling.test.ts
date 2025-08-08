@@ -37,6 +37,10 @@ test('can use bundled plugins, node-libcurl, httpsnippet, hidden browser window'
   await page.getByRole('button', { name: 'Done' }).click();
 
   await page.getByLabel('Request Collection').getByTestId('sends request with pre-request script').press('Enter');
+  await expect
+    .soft(page.getByTestId('request-pane').getByTestId('OneLineEditor').getByText(`http://127.0.0.1:4010/echo`))
+    .toBeVisible();
+
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect.soft(statusTag).toContainText('200 OK');
   await page.getByRole('tab', { name: 'Console' }).click();
