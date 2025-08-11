@@ -348,7 +348,27 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         }
 
         const cookieJar = await context.util.models.cookieJar.getOrCreateForParentId(workspace._id);
-        const found = cookieJar.cookies.find(cookie => cookie.key === name);
+
+        function cookieDomainMatches(cookieDomain: string, urlHost: string) {
+          if (!cookieDomain) return false;
+          const domain = cookieDomain.toLowerCase();
+          const host = urlHost.toLowerCase();
+
+          if (domain.startsWith('.')) {
+            return host === domain.slice(1) || host.endsWith(domain);
+          }
+          return host === domain;
+        }
+
+        const { hostname: hostName, pathname: pathName } = new URL(url);
+
+        const found = cookieJar.cookies.find(
+          c =>
+            c.key === name &&
+            cookieDomainMatches(c.domain, hostName) &&
+            (pathName.startsWith(c.path || '/') || !c.path),
+        );
+
         invariant(
           found,
           `No cookie with name "${name}" found in cookie jar for url "${url}"\nChoices are [\n\t${cookieJar.cookies.map(c => c.key)}\n] for`,
