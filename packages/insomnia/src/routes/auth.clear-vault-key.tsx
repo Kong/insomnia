@@ -50,6 +50,7 @@ export function useClearVaultKeyFetcher(args?: Parameters<typeof useFetcher>[0])
       fetcherSubmit(data, {
         action: href('/auth/clear-vault-key'),
         method: 'POST',
+        encType: 'application/json',
       });
     },
     [fetcherSubmit],

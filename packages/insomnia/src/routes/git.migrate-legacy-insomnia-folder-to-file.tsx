@@ -11,22 +11,23 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 }
 
 export function useGitProjectMigrateLegacyInsomniaFolderActionFetcher(args?: Parameters<typeof useFetcher>[0]) {
-  const {
-    submit: fetcherSubmit,
-    ...fetcherRest
-  } = useFetcher<typeof clientAction>(args);
+  const { submit: fetcherSubmit, ...fetcherRest } = useFetcher<typeof clientAction>(args);
 
-  const submit = useCallback(({ projectId }: { projectId: string }) => {
-    return fetcherSubmit(
-      {
-        projectId,
-      },
-      {
-        method: 'POST',
-        action: href('/git/migrate-legacy-insomnia-folder-to-file'),
-      },
-    );
-  }, [fetcherSubmit]);
+  const submit = useCallback(
+    ({ projectId }: { projectId: string }) => {
+      return fetcherSubmit(
+        {
+          projectId,
+        },
+        {
+          method: 'POST',
+          action: href('/git/migrate-legacy-insomnia-folder-to-file'),
+          encType: 'application/json',
+        },
+      );
+    },
+    [fetcherSubmit],
+  );
 
   return {
     ...fetcherRest,

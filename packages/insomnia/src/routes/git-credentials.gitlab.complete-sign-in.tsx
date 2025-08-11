@@ -18,7 +18,11 @@ export function useGitLabCompleteSignInFetcher(args?: Parameters<typeof useFetch
 
   const submit = useCallback(
     (data: { code: string; state: string }) => {
-      return fetcherSubmit(data, { action: href('/git-credentials/gitlab/complete-sign-in'), method: 'POST' });
+      return fetcherSubmit(data, {
+        action: href('/git-credentials/gitlab/complete-sign-in'),
+        method: 'POST',
+        encType: 'application/json',
+      });
     },
     [fetcherSubmit],
   );

@@ -17,7 +17,7 @@ import {
   useDragAndDrop,
 } from 'react-aria-components';
 import { Panel, PanelResizeHandle } from 'react-resizable-panels';
-import { useNavigate, useParams, useSearchParams, useSubmit } from 'react-router';
+import { href, useNavigate, useParams, useSearchParams, useSubmit } from 'react-router';
 import * as reactUse from 'react-use';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -289,9 +289,13 @@ export const Runner: FC<{}> = () => {
       targetFolderId: targetFolderId || '',
     };
     submit(JSON.stringify(actionInput), {
-      method: 'post',
+      method: 'POST',
       encType: 'application/json',
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/runner`,
+      action: href(`/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug/runner`, {
+        organizationId,
+        projectId,
+        workspaceId,
+      }),
       navigate: false,
     });
   };
