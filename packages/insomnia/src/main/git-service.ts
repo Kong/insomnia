@@ -33,6 +33,7 @@ import GitVCS, {
   GIT_INSOMNIA_DIR,
   GIT_INSOMNIA_DIR_NAME,
   GIT_INTERNAL_DIR,
+  GitVCSOperationErrors,
   MergeConflictError,
 } from '../sync/git/git-vcs';
 import { MemClient } from '../sync/git/mem-client';
@@ -77,6 +78,12 @@ function getErrorMessage(error: unknown): string {
       message.includes('net::ERR_NAME_NOT_RESOLVED')
     ) {
       return 'A network error occurred.';
+    }
+
+    // Isomorphic-git return this error when it cannot find the remote branch
+    // TODO: Handle this error more gracefully
+    if (message.includes("Cannot read properties of null (reading 'length')")) {
+      return 'Cannot find remote branch.';
     }
 
     // Default fallback
@@ -1317,9 +1324,7 @@ export const commitAndPushToGitRepoAction = async ({
   } catch (err: unknown) {
     if (err instanceof Errors.PushRejectedError && err.data.reason === 'not-fast-forward') {
       return {
-        errors: [
-          'Push Rejected. It seems that the remote repository has changes that you do not have locally. Please pull the changes and try again.',
-        ],
+        errors: [GitVCSOperationErrors.RequiredPullRemoteChangesError],
       };
     }
 
@@ -1631,9 +1636,8 @@ export const pushToGitRemoteAction = async ({
   } catch (err: unknown) {
     if (err instanceof Errors.PushRejectedError && err.data.reason === 'not-fast-forward') {
       return {
-        errors: [
-          'Push Rejected. It seems that the remote repository has changes that you do not have locally. Please pull the changes and try again.',
-        ],
+        errors: [GitVCSOperationErrors.RequiredPullRemoteChangesError],
+
         gitRepository,
       };
     }
@@ -1695,7 +1699,7 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
     const gitRepository = await getGitRepository({ projectId, workspaceId });
     const providerName = getOauth2FormatName(gitRepository.credentials);
     const bufferId = await database.bufferChanges();
-    await GitVCS.pull(gitRepository.credentials);
+    await GitVCS.pullWithConflictSupport(gitRepository.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, {
       ...vcsSegmentEventProperties('git', 'pull'),
       providerName,
@@ -1712,7 +1716,9 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
 
     await database.flushChanges(bufferId);
 
-    return {};
+    return {
+      success: true,
+    };
   } catch (err: unknown) {
     if (err instanceof MergeConflictError) {
       return err.data;
@@ -1723,9 +1729,11 @@ export async function pullFromGitRemote({ projectId, workspaceId }: { projectId:
     if (err instanceof Errors.HttpError) {
       errorMessage = `${err.message}, ${err.data.response}`;
     }
+
     trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'pull', errorMessage));
 
     return {
+      success: false,
       errors: [errorMessage],
     };
   }
@@ -1800,6 +1808,7 @@ export const discardChangesAction = async ({
   workspaceId?: string;
   paths: string[];
 }): Promise<{
+  success?: boolean;
   errors?: string[];
 }> => {
   try {
@@ -1814,10 +1823,13 @@ export const discardChangesAction = async ({
       cachedGitLastCommitTime: Date.now(),
     });
 
-    return {};
+    return {
+      success: true,
+    };
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Error while rolling back changes';
     return {
+      success: false,
       errors: [errorMessage],
     };
   }
