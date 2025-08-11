@@ -6,29 +6,24 @@ import { useThemes } from '../../hooks/theme';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 
-const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme: { name: themeName } }) => (
+const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme }) => (
   <svg
-    // @ts-expect-error -- something about themes
-
-    theme={themeName}
     className="theme-preview"
     width="100%"
     height="100%"
     viewBox="0 0 500 300"
+    style={
+      {
+        '--color-bg': theme.theme.background?.default,
+        '--color-success': theme.theme.background?.success,
+        '--color-info': theme.theme.background?.info,
+        '--color-warning': theme.theme.background?.warning,
+        '--color-danger': theme.theme.background?.danger,
+        '--color-surprise': theme.theme.background?.surprise,
+      } as React.CSSProperties
+    }
   >
-    {/*
-      A WORD TO THE WISE: If you, dear traveler from the future, are here
-      for the purpose of theming things due to changes in the app structure,
-      please remember to add `--sub` to your classes or else the selected class'
-      theme variables will apply to all theme previews.  Search your codebase
-      for `--sub` to see more.
-    */}
-
-    <g
-      // @ts-expect-error -- something about themes
-
-      subtheme={themeName}
-    >
+    <g>
       {/* App Header */}
       <g className="theme--app-header--sub">
         <rect x="0" y="0" width="100%" height="10%" style={{ fill: 'var(--color-bg)' }} />

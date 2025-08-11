@@ -85,7 +85,7 @@ if (appSettings.clearOAuth2SessionOnRestart) {
   initNewOAuthSession();
 }
 
-await applyColorScheme(appSettings);
+applyColorScheme(appSettings);
 
 const initialEntry = await getInitialEntry();
 

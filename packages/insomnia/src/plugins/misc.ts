@@ -147,7 +147,6 @@ export const generateThemeCSS = (pluginTheme: PluginTheme) => {
   let css = '';
   // For the top-level variables, merge with the base theme to ensure that we have everything we need.
   css += wrapStyles(
-    name,
     '',
     getThemeBlockCSS({
       ...theme,
@@ -160,29 +159,29 @@ export const generateThemeCSS = (pluginTheme: PluginTheme) => {
   if (theme.styles) {
     const styles = theme.styles;
     // Dropdown Menus
-    css += wrapStyles(name, '.theme--dropdown__menu', getThemeBlockCSS(styles.dropdown || styles.dialog));
+    css += wrapStyles('.theme--dropdown__menu', getThemeBlockCSS(styles.dropdown || styles.dialog));
     // Tooltips
-    css += wrapStyles(name, '.theme--tooltip', getThemeBlockCSS(styles.tooltip || styles.dialog));
+    css += wrapStyles('.theme--tooltip', getThemeBlockCSS(styles.tooltip || styles.dialog));
     // Overlay
-    css += wrapStyles(name, '.theme--transparent-overlay', getThemeBlockCSS(styles.transparentOverlay));
+    css += wrapStyles('.theme--transparent-overlay', getThemeBlockCSS(styles.transparentOverlay));
     // Dialogs
-    css += wrapStyles(name, '.theme--dialog', getThemeBlockCSS(styles.dialog));
-    css += wrapStyles(name, '.theme--dialog__header', getThemeBlockCSS(styles.dialogHeader));
-    css += wrapStyles(name, '.theme--dialog__footer', getThemeBlockCSS(styles.dialogFooter));
+    css += wrapStyles('.theme--dialog', getThemeBlockCSS(styles.dialog));
+    css += wrapStyles('.theme--dialog__header', getThemeBlockCSS(styles.dialogHeader));
+    css += wrapStyles('.theme--dialog__footer', getThemeBlockCSS(styles.dialogFooter));
     // Panes
-    css += wrapStyles(name, '.theme--pane', getThemeBlockCSS(styles.pane));
-    css += wrapStyles(name, '.theme--pane__header', getThemeBlockCSS(styles.paneHeader));
-    css += wrapStyles(name, '.theme--app-header', getThemeBlockCSS(styles.appHeader));
+    css += wrapStyles('.theme--pane', getThemeBlockCSS(styles.pane));
+    css += wrapStyles('.theme--pane__header', getThemeBlockCSS(styles.paneHeader));
+    css += wrapStyles('.theme--app-header', getThemeBlockCSS(styles.appHeader));
     // Sidebar Styles
-    css += wrapStyles(name, '.theme--sidebar', getThemeBlockCSS(styles.sidebar));
-    css += wrapStyles(name, '.theme--sidebar__list', getThemeBlockCSS(styles.sidebarList));
-    css += wrapStyles(name, '.theme--sidebar__header', getThemeBlockCSS(styles.sidebarHeader));
+    css += wrapStyles('.theme--sidebar', getThemeBlockCSS(styles.sidebar));
+    css += wrapStyles('.theme--sidebar__list', getThemeBlockCSS(styles.sidebarList));
+    css += wrapStyles('.theme--sidebar__header', getThemeBlockCSS(styles.sidebarHeader));
     // Link
-    css += wrapStyles(name, '.theme--link', getThemeBlockCSS(styles.link));
+    css += wrapStyles('.theme--link', getThemeBlockCSS(styles.link));
     // Code Editors
-    css += wrapStyles(name, '.theme--editor', getThemeBlockCSS(styles.editor));
+    css += wrapStyles('.theme--editor', getThemeBlockCSS(styles.editor));
     // HACK: Dialog styles for CodeMirror dialogs too
-    css += wrapStyles(name, '.CodeMirror-info', getThemeBlockCSS(styles.dialog));
+    css += wrapStyles('.CodeMirror-info', getThemeBlockCSS(styles.dialog));
   }
 
   css += '\n';
@@ -270,19 +269,18 @@ function getThemeBlockCSS(block?: ThemeBlock) {
   return css.replace(/\s+$/, '');
 }
 
-function wrapStyles(theme: string, selector: string, styles: string) {
+function wrapStyles(selector: string, styles: string) {
   if (!styles) {
     return '';
   }
 
-  return [
-    `[theme="${theme}"] ${selector}, `,
-    `[subtheme="${theme}"] ${selector ? selector + '--sub' : ''} {`,
-    styles,
-    '}',
-    '',
-    '',
-  ].join('\n');
+  // Remove theme attribute dependency - use :root for global variables
+  if (selector === '') {
+    return `:root {\n${styles}\n}\n\n`;
+  }
+
+  // For specific selectors, no theme wrapping needed
+  return `${selector} {\n${styles}\n}\n\n`;
 }
 
 export function getColorScheme({ autoDetectColorScheme }: ThemeSettings): ColorScheme {
@@ -301,22 +299,22 @@ export function getColorScheme({ autoDetectColorScheme }: ThemeSettings): ColorS
   return 'default';
 }
 
-export async function applyColorScheme(settings: ThemeSettings) {
+export function applyColorScheme(settings: ThemeSettings) {
   const scheme = getColorScheme(settings);
 
   switch (scheme) {
     case 'light': {
-      await setTheme(settings.lightTheme);
+      setTheme(settings.lightTheme);
       break;
     }
 
     case 'dark': {
-      await setTheme(settings.darkTheme);
+      setTheme(settings.darkTheme);
       break;
     }
 
     case 'default': {
-      await setTheme(settings.theme);
+      setTheme(settings.theme);
       break;
     }
 
@@ -325,47 +323,42 @@ export async function applyColorScheme(settings: ThemeSettings) {
     }
   }
 }
+const themeStyleSheets = new Map<string, CSSStyleSheet>();
 
 export async function setTheme(themeName: string) {
-  if (!document) {
-    return;
-  }
-
-  const head = document.head;
-  const body = document.body;
-
-  if (!head || !body) {
+  if (!document || !('adoptedStyleSheets' in document)) {
     return;
   }
 
   const themes: Theme[] = await getThemes();
+  let selectedTheme = themes.find(t => t.theme.name === themeName);
 
-  // If theme isn't installed for some reason, set to the default
-  if (!themes.find(t => t.theme.name === themeName)) {
+  if (!selectedTheme) {
     console.log(`[theme] Theme not found ${themeName}`);
     themeName = getAppDefaultTheme();
+    const fallbackTheme = themes.find(t => t.theme.name === themeName);
+    if (!fallbackTheme) return;
+    selectedTheme = fallbackTheme;
   }
 
-  body.setAttribute('theme', themeName);
+  // Clear existing theme stylesheets
+  document.adoptedStyleSheets = document.adoptedStyleSheets.filter(
+    sheet => !Array.from(themeStyleSheets.values()).includes(sheet),
+  );
 
-  for (const theme of themes) {
-    let themeCSS = generateThemeCSS(theme.theme);
-    const { name } = theme.theme;
-    const { rawCss } = theme.theme.theme;
-    let s = document.querySelector(`style[data-theme-name="${name}"]`);
+  // Only inject the selected theme
+  let themeCSS = generateThemeCSS(selectedTheme.theme);
+  const { rawCss } = selectedTheme.theme.theme;
 
-    if (!s) {
-      s = document.createElement('style');
-      s.setAttribute('data-theme-name', name);
-      head.appendChild(s);
-    }
-
-    if (typeof rawCss === 'string' && name === themeName) {
-      themeCSS += '\n\n' + rawCss;
-    }
-
-    s.innerHTML = themeCSS;
+  if (typeof rawCss === 'string') {
+    themeCSS += '\n\n' + rawCss;
   }
+
+  const styleSheet = new CSSStyleSheet();
+  await styleSheet.replace(themeCSS);
+  themeStyleSheets.set(themeName, styleSheet);
+
+  document.adoptedStyleSheets = [...document.adoptedStyleSheets, styleSheet];
 }
 
 export const baseTheme: CompleteStyleBlock = {

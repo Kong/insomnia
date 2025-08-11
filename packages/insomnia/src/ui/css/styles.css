@@ -1,3 +1,4 @@
+@import '@fortawesome/fontawesome-svg-core/styles.css';
 @import 'codemirror/addon/dialog/dialog.css';
 @import 'codemirror/addon/fold/foldgutter.css';
 @import 'codemirror/addon/hint/show-hint.css';
@@ -6,8 +7,8 @@
 @import 'codemirror/lib/codemirror.css';
 @import './lib/codemirror/codemirror.css';
 @import './lib/codemirror/material.css';
-@import './main.css';
 @import 'monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css';
+@import './main.css';
 
 @tailwind base;
 @tailwind components;

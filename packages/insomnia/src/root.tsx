@@ -1,5 +1,4 @@
-import '~/ui/css/styles.css';
-
+import { config } from '@fortawesome/fontawesome-svg-core';
 import type { IpcRendererEvent } from 'electron';
 import type { FC } from 'react';
 import { useEffect, useState } from 'react';
@@ -49,12 +48,16 @@ import {
 import { Toaster } from '~/ui/components/toast-notification';
 import { AppHooks } from '~/ui/containers/app-hooks';
 import { NunjucksEnabledProvider } from '~/ui/context/nunjucks/nunjucks-enabled-context';
+import cssHref from '~/ui/css/styles.css?url';
 import Modals from '~/ui/modals';
 
 import type { Route } from './+types/root';
 
+config.autoAddCss = false;
+
 export const links: Route.LinksFunction = () => {
   return [
+    { rel: 'stylesheet', href: cssHref, type: 'text/css' },
     { rel: 'icon', href: '/favicon.ico' },
     { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
     { rel: 'mask-icon', href: '/safari-pinned-tab.svg', color: '#5bbad5' },
