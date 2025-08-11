@@ -27,7 +27,7 @@ export const start = async () => {
 
   const buildFolder = path.join('../build');
 
-  console.log('[build] Building main.min.js and preload');
+  console.log('[build] Building entry.main.min.js and entry.preload.min.js');
   await buildMainAndPreload({
     mode: 'production',
   });

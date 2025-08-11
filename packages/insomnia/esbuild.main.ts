@@ -75,8 +75,8 @@ export default async function build(options: Options) {
   };
 
   const mainBuildOptions: BuildOptions = {
-    entryPoints: ['./src/main.development.ts'],
-    outfile: path.join(outdir, 'main.min.js'),
+    entryPoints: ['./src/entry.main.ts'],
+    outfile: path.join(outdir, 'entry.main.min.js'),
     bundle: true,
     platform: 'node',
     sourcemap: true,
