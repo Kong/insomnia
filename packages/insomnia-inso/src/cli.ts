@@ -564,10 +564,10 @@ export const go = (args?: string[]) => {
             if (!globalEnv) {
               logger.warn(
                 `Error: No global environment found with ID or name "${options.globals}".
-                TIP: If you're running "inso" inside a Git project, specify the path to the Insomnia YAML file containing the global environment using the "--globals" option.
-                
-                Example:
-                  $ inso run collection --globals /path/to/global-environment.yaml
+  TIP: If you're running "inso" inside a Git project, specify the path to the Insomnia YAML file containing the global environment using the "--globals" option.
+  
+  Example:
+    $ inso run collection --globals /path/to/global-environment.yaml
                 `,
               );
               return process.exit(1);
@@ -904,11 +904,10 @@ export const go = (args?: string[]) => {
       program.parseAsync(scriptArgs).catch(logErrorAndExit);
     });
 
-  program.command('generate-docs')
-    .action(() => {
-      generateDocumentation(program);
-      return process.exit(1);
-    });
+  program.command('generate-docs').action(() => {
+    generateDocumentation(program);
+    return process.exit(1);
+  });
 
   program.parseAsync(args || process.argv).catch(logErrorAndExit);
 };
