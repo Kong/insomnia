@@ -40,7 +40,7 @@ export interface GlobalOptions {
   config: string;
   printOptions: boolean;
   verbose: boolean;
-  workingDir: string
+  workingDir: string;
 }
 
 export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: string) => {
@@ -150,7 +150,7 @@ export const logErrorAndExit = (err?: Error) => {
 };
 const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
   const oldConsoleLog = console.log;
-  console.log = () => {};
+  console.log = () => { };
   try {
     return await callback();
   } finally {
@@ -313,9 +313,9 @@ export const go = (args?: string[]) => {
     cmd: T,
   ): Promise<
     GlobalOptions &
-      T & {
-        configFileContent: Awaited<ReturnType<typeof tryToReadInsoConfigFile>>;
-      }
+    T & {
+      configFileContent: Awaited<ReturnType<typeof tryToReadInsoConfigFile>>;
+    }
   > => {
     const globals: GlobalOptions = program.optsWithGlobals();
 
@@ -805,7 +805,7 @@ export const go = (args?: string[]) => {
       let isIdentifierAFile = false;
       try {
         isIdentifierAFile = identifier && (await fs.promises.stat(identifierAsAbsPath)).isFile();
-      } catch (err) {}
+      } catch (err) { }
       const pathToSearch = '';
       let specContent;
       let rulesetFileName;
