@@ -48,6 +48,7 @@ export interface SyncMergeModalOptions {
   conflicts?: MergeConflict[];
   labels: { ours: string; theirs: string };
   handleDone?: (conflicts?: MergeConflict[]) => void;
+  handleClose?: () => void;
 }
 export interface SyncMergeModalHandle {
   show: (options: SyncMergeModalOptions) => void;
@@ -73,10 +74,11 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
     ref,
     () => ({
       hide: reset,
-      show: ({ conflicts, labels, handleDone }) => {
+      show: ({ conflicts, labels, handleDone, handleClose }) => {
         setState({
           conflicts,
           handleDone,
+          handleClose,
           isOpen: true,
           labels,
         });
@@ -91,7 +93,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
     [reset],
   );
 
-  const { conflicts, handleDone } = state;
+  const { conflicts, handleDone, handleClose } = state;
 
   const [selectedConflict, setSelectedConflict] = useState<MergeConflict | null>(null);
 
@@ -104,6 +106,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
         !isOpen && reset();
 
         !isOpen && handleDone?.();
+        !isOpen && handleClose?.();
       }}
       isDismissable
       className="fixed left-0 top-0 z-10 flex h-[--visual-viewport-height] w-full items-center justify-center bg-black/30"
@@ -113,6 +116,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
           !isOpen && reset();
 
           !isOpen && handleDone?.();
+          !isOpen && handleClose?.();
         }}
         className="flex h-[calc(100%-var(--padding-xl))] max-h-full w-[calc(100%-var(--padding-xl))] flex-col rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] p-[--padding-lg] text-[--color-font]"
       >
