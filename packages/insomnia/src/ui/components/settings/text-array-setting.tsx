@@ -1,9 +1,10 @@
 import React, { type FC, type InputHTMLAttributes, useCallback, useState } from 'react';
 import { ListBox, ListBoxItem } from 'react-aria-components';
 
+import { useRootLoaderData } from '~/root';
+
 import type { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
-import { useRootLoaderData } from '../../routes/root';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
 
@@ -14,7 +15,7 @@ export const TextArraySetting: FC<{
   placeholder?: InputHTMLAttributes<HTMLInputElement>['placeholder'];
   setting: SettingsOfType<string[] | null>;
 }> = ({ disabled, help, label, placeholder, setting }) => {
-  const { settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData()!;
   if (!Object.prototype.hasOwnProperty.call(settings, setting)) {
     throw new Error(`Invalid setting name ${setting}`);
   }
