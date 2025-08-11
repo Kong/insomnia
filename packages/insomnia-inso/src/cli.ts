@@ -40,8 +40,7 @@ export interface GlobalOptions {
   config: string;
   printOptions: boolean;
   verbose: boolean;
-  workingDir: string;
-  dataFolders: string[];
+  workingDir: string
 }
 
 export const tryToReadInsoConfigFile = async (configFile?: string, workingDir?: string) => {
