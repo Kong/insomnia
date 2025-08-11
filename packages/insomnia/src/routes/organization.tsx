@@ -357,12 +357,10 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                             }) ? (
                               <div className="flex items-center justify-center">
                                 <Icon icon="home" />
-                                {
-                                  <Icon
-                                    className={`absolute -right-1 -top-1 z-20 h-4 w-4 transition-opacity ease-in-out ${billing?.expirationErrorMessage ? 'text-[var(--color-danger)]' : 'text-[var(--color-warning)]'} ${isActive && (billing.expirationErrorMessage || billing.expirationWarningMessage) ? 'opacity-100' : 'opacity-0'} `}
-                                    icon="exclamation-circle"
-                                  />
-                                }
+                                <Icon
+                                  className={`absolute -right-1 -top-1 z-10 h-4 w-4 transition-opacity ease-in-out ${billing?.expirationErrorMessage ? 'text-[var(--color-danger)]' : 'text-[var(--color-warning)]'} ${isActive && (billing.expirationErrorMessage || billing.expirationWarningMessage) ? 'opacity-100' : 'opacity-0'} `}
+                                  icon="exclamation-circle"
+                                />
                               </div>
                             ) : (
                               <div className="flex items-center justify-center">
@@ -370,12 +368,11 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                                   alt={organization.display_name}
                                   src={organization.branding?.logo_url || ''}
                                 />
-                                {
-                                  <Icon
-                                    className={`absolute -right-1 -top-1 z-20 h-4 w-4 transition-opacity ease-in-out ${billing?.expirationErrorMessage ? 'text-[var(--color-danger)]' : 'text-[var(--color-warning)]'} ${isActive && (billing.expirationErrorMessage || billing.expirationWarningMessage) ? 'opacity-100' : 'opacity-0'} `}
-                                    icon="exclamation-circle"
-                                  />
-                                }
+
+                                <Icon
+                                  className={`absolute -right-1 -top-1 z-10 h-4 w-4 transition-opacity ease-in-out ${billing?.expirationErrorMessage ? 'text-[var(--color-danger)]' : 'text-[var(--color-warning)]'} ${isActive && (billing.expirationErrorMessage || billing.expirationWarningMessage) ? 'opacity-100' : 'opacity-0'} `}
+                                  icon="exclamation-circle"
+                                />
                               </div>
                             )}
                           </div>
