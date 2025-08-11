@@ -50,9 +50,9 @@ jobs:
           - os: ubuntu-22.04
             csc_link_secret: ''
             csc_key_password_secret: ''
-          - os: ubuntu-22.04-arm
-            csc_link_secret: ''
-            csc_key_password_secret: ''
+          # - os: ubuntu-22.04-arm
+          #   csc_link_secret: ''
+          #   csc_key_password_secret: ''
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4
@@ -170,6 +170,18 @@ jobs:
           npm run package -w insomnia-inso
         env:
           VERSION: ${{ env.INSO_VERSION }}
+
+      - name: Code-sign inso exe (Windows only)
+        if: runner.os == 'Windows'
+        uses: sslcom/esigner-codesign@3b2dc3b6075c05ef889d88b761a1fd0183b28c6a # develop
+        with:
+          command: sign
+          username: ${{secrets.ES_USERNAME}}
+          password: ${{secrets.ES_PASSWORD}}
+          credential_id: ${{secrets.ES_CREDENTIAL_ID}}
+          totp_secret: ${{secrets.ES_TOTP_SECRET}}
+          file_path: packages/insomnia-inso/binaries/inso.exe
+          override: true
 
       - name: Code-sign & create Inso CLI installer (macOS only)
         if: runner.os == 'macOS'

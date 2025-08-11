@@ -16,7 +16,6 @@ env:
   ARTIFACTS_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts
   INSO_DOCKER_IMAGE: kong/inso # By default, registry is docker.io
   NOTARY_REPOSITORY: 'kong/notary' # All signatures will be pushed to public notary repository
-  ARTIFACTS_REPOSITORY: ${{  vars.ARTIFACTS_REPOSITORY }}
 
 jobs:
   publish:
@@ -24,9 +23,11 @@ jobs:
     runs-on: ubuntu-22.04
     outputs:
       NOTARY_REPOSITORY: ${{ env.NOTARY_REPOSITORY }}
+      INSO_BINARY_ARTIFACTS_SUBJECTS_AS_FILE: ${{ steps.cli_binary_hashes.outputs.handle }}
       INSO_DOCKER_IMAGE: ${{ env.INSO_DOCKER_IMAGE }}
       INSO_DOCKER_IMAGE_DIGEST: ${{ steps.image_manifest_metadata.outputs.inso_image_sha }}
       INSOMNIA_RELEASE_TAG: ${{ env.RELEASE_CORE_TAG }}
+      ELECTRON_BINARY_ARTIFACTS_SUBJECTS_AS_FILE: ${{ steps.electron_binary_hashes.outputs.handle }}
     permissions:
       id-token: write # needed for signing the images
       actions: read # For getting workflow run info for keyless signing of docker image
@@ -50,22 +51,90 @@ jobs:
       - name: Install packages
         run: npm ci
 
-      - name: Check if Release Exists
-        id: check_release
-        run: |
-          release_id=$(gh release view core@${{ env.RELEASE_VERSION }} --json id --jq ".id" 2>/dev/null)
-          if [ -z "$release_id" ]; then
-            echo "Release core@${{ env.RELEASE_VERSION }} does not exist. Aborting workflow."
-            exit 1
-          fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download all artifacts from release-build.yml
+        uses: dawidd6/action-download-artifact@268677152d06ba59fcec7a7f0b5d961b6ccd7e1e # v2
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          workflow: release-build.yml
+          workflow_conclusion: success
+          branch: ${{ env.RELEASE_BRANCH }} # Branch workflow ran on != branch the workflow created
+          path: ${{ env.ARTIFACTS_DOWNLOAD_PATH }} # Base path to download all release workflow assets
 
-      - name: Download release assets
+      - name: Set publish metadata # Checksum for provenance must be calculated before moving artifacts temporarily
+        id: metadata
         run: |
-          gh release download core@${{ env.RELEASE_VERSION }} --dir=${{ env.ARTIFACTS_DOWNLOAD_PATH }} --skip-existing
+          INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)
+          echo "INSO_VERSION=${INSO_VERSION}" >> $GITHUB_ENV
+          echo "CLI_ARTIFACT_BASE64_FILE=${{env.CLI_ARTIFACT_BASE64_FILE}}" >> $GITHUB_ENV
+          echo "ELECTRON_ARTIFACT_BASE64_FILE=${{env.ELECTRON_ARTIFACT_BASE64_FILE}}" >> $GITHUB_ENV
+          ./.github/scripts/generate-binary-digest.sh
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARTIFACT_PATH: "${{ env.ARTIFACTS_DOWNLOAD_PATH }}"
+          CLI_ARTIFACT_SHAFILE: ${{runner.temp}}/cli.sha256
+          ELECTRON_ARTIFACT_SHAFILE: ${{runner.temp}}/electron.sha256
+          CLI_ARTIFACT_BASE64_FILE: ${{runner.temp}}/cli_digests_file.text
+          ELECTRON_ARTIFACT_BASE64_FILE: ${{runner.temp}}/electron_digests_file.text
+
+      - name: Calculate CLI Binary base64 file handle
+        uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@5a775b367a56d5bd118a224a811bba288150a563 # v2.0.0
+        id: cli_binary_hashes
+        with:
+          path: ${{ env.CLI_ARTIFACT_BASE64_FILE }}
+
+      - name: Calculate Electron Binary base64 file handle
+        uses: slsa-framework/slsa-github-generator/actions/generator/generic/create-base64-subjects-from-file@5a775b367a56d5bd118a224a811bba288150a563 # v2.0.0
+        id: electron_binary_hashes
+        with:
+          path: ${{ env.ELECTRON_ARTIFACT_BASE64_FILE }}
+
+      # - name: Create Tag and Release
+      #   uses: ncipollo/release-action@440c8c1cb0ed28b9f43e4d1d670870f059653174 # v1
+      #   id: core_tag_and_release
+      #   with:
+      #     tag: ${{ env.RELEASE_CORE_TAG }}
+      #     name: "${{ env.RELEASE_VERSION }} 📦"
+      #     generateReleaseNotes: true
+      #     commit: ${{ env.RELEASE_BRANCH }}
+      #     prerelease: ${{ env.IS_PRERELEASE }}
+      #     draft: false
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts to release
+        uses: xresloader/upload-to-github-release@d29300fdff9f0fcd7c3eb960c490b2a6640fbf50 # v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_id: ${{ steps.core_tag_and_release.outputs.id }}
+          tag_name: ${{ env.RELEASE_CORE_TAG }}
+          file: "./artifacts/*-artifacts/insomnia/dist/Insomnia.*;./artifacts/*-artifacts/insomnia/dist/{alpha,beta,latest}.yml;./artifacts/*-artifacts/insomnia/dist/squirrel-windows/*;./artifacts/*-artifacts/insomnia-inso/artifacts/inso-*;./artifacts/**/*sbom.{spdx,cyclonedx}.json"
+          prerelease: ${{ env.IS_PRERELEASE }}
+          draft: false
+          overwrite: true
+
+      - name: Upload sourcemaps to Sentry
+        env:
+          SENTRY_AUTH_TOKEN: "${{ secrets.SENTRY_AUTH_TOKEN }}"
+          SENTRY_ORG: "${{ secrets.SENTRY_ORG }}"
+          SENTRY_PROJECT: "${{ secrets.SENTRY_PROJECT }}"
+        run: |
+          curl -sL https://sentry.io/get-cli/ | SENTRY_CLI_VERSION="2.2.0" bash
+
+          sentry-cli releases new ${{ env.RELEASE_VERSION }}
+          sentry-cli releases set-commits ${{ env.RELEASE_VERSION }} --commit 'Kong/insomnia@${{ env.RELEASE_BRANCH }}'
+          sentry-cli sourcemaps upload -r ${{ env.RELEASE_VERSION }} ./artifacts/*-latest-sentry
+
+      # TODO: also take care of aarch64 image
+      - name: Load the Inso CLI Docker Archive
+        run: |
+          docker load -i ./artifacts/Linux-X64-artifacts/insomnia-inso/artifacts/inso-docker-image.tar
+          docker image ls
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc # v2.1.0
+        with:
+          username: ${{ secrets.DOCKER_REGISTRY_USER }}
+          password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
 
       - name: Docker meta for Inso CLI Docker Image
         id: inso_docker_meta
@@ -79,6 +148,15 @@ jobs:
             type=raw,value=beta,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'beta') }}
           sep-tags: ','
 
+      - name: Push Inso CLI docker image tags to Docker Hub
+        run: |
+          for tag in ${IMAGE_TAGS//,/ }; do \
+            docker tag insomnia-inso:temp $tag
+            docker push $tag; \
+          done
+        env:
+          IMAGE_TAGS: ${{ steps.inso_docker_meta.outputs.tags }}
+
       # Setup regctl to parse platform specific image digest from image manifest
       - name: Install regctl
         uses: regclient/actions/regctl-installer@ce5fd131e371ffcdd7508b478cb223b3511a9183 # main
@@ -91,44 +169,20 @@ jobs:
           inso_image_sha="$(regctl image digest "${INSO_IMAGE}")"
           echo "inso_image_sha=${inso_image_sha}" >> $GITHUB_OUTPUT
 
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@4959ce089c160fddf62f7b42464195ba1a56d382
-
-      - name: Verify Inso Container Image Signature produced on insomnia-ee
-        run: |
-          cosign verify \
-          kong/inso:${{env.RELEASE_VERSION}}@${{steps.image_manifest_metadata.outputs.inso_image_sha}} \
-          --certificate-oidc-issuer='https://token.actions.githubusercontent.com' \
-          --certificate-identity-regexp='https://github.com/Kong/insomnia-ee/.github/workflows/release-publish.yml'
-        env:
-          COSIGN_REPOSITORY: ${{env.NOTARY_REPOSITORY}}
-
-      - name: Install slsa verifier
-        uses: slsa-framework/slsa-verifier/actions/installer@6657aada084353c65e5dde35394b1a010289fab0
-
-      - name: Verify Inso Container Image Provenance produced on insomnia-ee
-        run: |
-          slsa-verifier verify-image \
-          kong/inso:${{env.RELEASE_VERSION}}@${{steps.image_manifest_metadata.outputs.inso_image_sha}} \
-          --print-provenance \
-          --provenance-repository ${{env.NOTARY_REPOSITORY}} \
-          --source-uri 'github.com/Kong/insomnia-ee'
-
-      - name: Verify Inso Binary Provenance for artifacts produced on insomnia-ee
-        run: |
-          slsa-verifier verify-artifact \
-          --print-provenance \
-          --provenance-path '${{env.ARTIFACTS_DOWNLOAD_PATH}}/inso-provenance.intoto.jsonl' \
-          --source-uri 'github.com/Kong/insomnia-ee' \
-          ${{env.ARTIFACTS_DOWNLOAD_PATH}}/inso-*-${{env.RELEASE_VERSION}}.{zip,tar.xz,pkg}
-
-      - name: Verify Insomnia App Binary Provenance for artifacts produced on insomnia-ee
-        run: |
-          slsa-verifier verify-artifact \
-          --print-provenance \
-          --provenance-path '${{env.ARTIFACTS_DOWNLOAD_PATH}}/insomnia-provenance.intoto.jsonl' \
-          --source-uri 'github.com/Kong/insomnia-ee' \
-          ${{env.ARTIFACTS_DOWNLOAD_PATH}}/Insomnia.Core-${{env.RELEASE_VERSION}}.{snap,tar.gz,zip,rpm,dmg,deb,AppImage,exe}
+      # Signing images requires image manifest digest
+      - name: Sign images
+        id: sign_images
+        if: ${{ steps.image_manifest_metadata.outputs.inso_image_sha != '' }}
+        uses: Kong/public-shared-actions/security-actions/sign-docker-image@2f02738ecb1670f01391162e43fe3f5d4e7942a1 # v2.2.2
+        with:
+          image_digest: ${{ steps.image_manifest_metadata.outputs.inso_image_sha }}
+          tags: ${{ steps.inso_docker_meta.outputs.tags }}
+          registry_username: ${{ secrets.DOCKER_REGISTRY_USER }}
+          registry_password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+          # Optional: Central notary repository for image signatures
+          signature_registry_username: ${{ secrets.DOCKER_REGISTRY_USER }}
+          signature_registry_password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+          signature_registry: ${{ env.NOTARY_REPOSITORY }}
 
       - name: Publish release
         run: |
@@ -181,7 +235,7 @@ jobs:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN_FILE_NEW }}
         with:
           # TODO-ARM64: Replace to *-amd64.snap when we have ARM64 build from insomnia-ee
-          snap: artifacts/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap
+          snap: artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap
           release: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
       # TODO: also release for aarch64 Linux?
@@ -223,3 +277,105 @@ jobs:
           git push "${remote_repo}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  artifact-provenance:
+    needs: [publish]
+    permissions:
+      id-token: write # needed for signing the images
+      actions: read # For getting workflow run info to build provenance
+      packages: write # Required for publishing provenance. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
+      contents: write
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - product: insomnia
+            binary_artifacts_subject_as_file: ${{ needs.publish.outputs.ELECTRON_BINARY_ARTIFACTS_SUBJECTS_AS_FILE }}
+          - product: inso
+            binary_artifacts_subject_as_file: ${{ needs.publish.outputs.INSO_BINARY_ARTIFACTS_SUBJECTS_AS_FILE }}
+    # need to use non hash version because of: https://github.com/slsa-framework/slsa-github-generator/issues/3498
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    with:
+      base64-subjects-as-file: "${{ matrix.binary_artifacts_subject_as_file }}"
+      upload-assets: true
+      upload-tag-name: ${{ needs.publish.outputs.INSOMNIA_RELEASE_TAG }}
+      provenance-name: ${{ matrix.product }}-provenance.intoto.jsonl
+      draft-release: false
+
+  inso-image-provenance:
+    needs: [publish]
+    permissions:
+      id-token: write # needed for signing the images
+      actions: read # For getting workflow run info to build provenance
+      packages: write # Required for publishing provenance. Issue: https://github.com/slsa-framework/slsa-github-generator/tree/main/internal/builders/container#known-issues
+      # need to use non hash version because of: https://github.com/slsa-framework/slsa-github-generator/issues/3498
+      contents: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+    with:
+      image: ${{ needs.publish.outputs.INSO_DOCKER_IMAGE }}
+      digest: ${{ needs.publish.outputs.INSO_DOCKER_IMAGE_DIGEST }}
+      provenance-repository: "${{ needs.publish.outputs.NOTARY_REPOSITORY }}"
+    secrets:
+      registry-username: ${{ secrets.DOCKER_REGISTRY_USER }}
+      registry-password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+      provenance-registry-username: ${{ secrets.DOCKER_REGISTRY_USER }}
+      provenance-registry-password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
+
+
+      # TODO: if we still need to check provenance of the release artifacts ?
+      # - name: Check if Release Exists
+      #   id: check_release
+      #   run: |
+      #     release_id=$(gh release view core@${{ env.RELEASE_VERSION }} --json id --jq ".id" 2>/dev/null)
+      #     if [ -z "$release_id" ]; then
+      #       echo "Release core@${{ env.RELEASE_VERSION }} does not exist. Aborting workflow."
+      #       exit 1
+      #     fi
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Download release assets
+      #   run: |
+      #     gh release download core@${{ env.RELEASE_VERSION }} --dir=${{ env.ARTIFACTS_DOWNLOAD_PATH }} --skip-existing
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+
+      # - name: Install Cosign
+      #   uses: sigstore/cosign-installer@4959ce089c160fddf62f7b42464195ba1a56d382
+
+      # - name: Verify Inso Container Image Signature produced on insomnia-ee
+      #   run: |
+      #     cosign verify \
+      #     kong/inso:${{env.RELEASE_VERSION}}@${{steps.image_manifest_metadata.outputs.inso_image_sha}} \
+      #     --certificate-oidc-issuer='https://token.actions.githubusercontent.com' \
+      #     --certificate-identity-regexp='https://github.com/Kong/insomnia-ee/.github/workflows/release-publish.yml'
+      #   env:
+      #     COSIGN_REPOSITORY: ${{env.NOTARY_REPOSITORY}}
+
+      # - name: Install slsa verifier
+      #   uses: slsa-framework/slsa-verifier/actions/installer@6657aada084353c65e5dde35394b1a010289fab0
+
+      # - name: Verify Inso Container Image Provenance produced on insomnia-ee
+      #   run: |
+      #     slsa-verifier verify-image \
+      #     kong/inso:${{env.RELEASE_VERSION}}@${{steps.image_manifest_metadata.outputs.inso_image_sha}} \
+      #     --print-provenance \
+      #     --provenance-repository ${{env.NOTARY_REPOSITORY}} \
+      #     --source-uri 'github.com/Kong/insomnia-ee'
+
+      # - name: Verify Inso Binary Provenance for artifacts produced on insomnia-ee
+      #   run: |
+      #     slsa-verifier verify-artifact \
+      #     --print-provenance \
+      #     --provenance-path '${{env.ARTIFACTS_DOWNLOAD_PATH}}/inso-provenance.intoto.jsonl' \
+      #     --source-uri 'github.com/Kong/insomnia-ee' \
+      #     ${{env.ARTIFACTS_DOWNLOAD_PATH}}/inso-*-${{env.RELEASE_VERSION}}.{zip,tar.xz,pkg}
+
+      # - name: Verify Insomnia App Binary Provenance for artifacts produced on insomnia-ee
+      #   run: |
+      #     slsa-verifier verify-artifact \
+      #     --print-provenance \
+      #     --provenance-path '${{env.ARTIFACTS_DOWNLOAD_PATH}}/insomnia-provenance.intoto.jsonl' \
+      #     --source-uri 'github.com/Kong/insomnia-ee' \
+      #     ${{env.ARTIFACTS_DOWNLOAD_PATH}}/Insomnia.Core-${{env.RELEASE_VERSION}}.{snap,tar.gz,zip,rpm,dmg,deb,AppImage,exe}
