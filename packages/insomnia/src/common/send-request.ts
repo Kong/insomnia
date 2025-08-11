@@ -98,7 +98,12 @@ export async function getSendRequestCallbackMemDb(
     // skip plugins
     const renderedRequest = renderedResult.request;
 
-    isFsAccessingAllowed(renderedRequest, mutatedContext.settings);
+    isFsAccessingAllowed(
+      renderedRequest,
+      mutatedContext.settings,
+      mutatedContext.clientCertificates,
+      requestData.caCert,
+    );
 
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,
