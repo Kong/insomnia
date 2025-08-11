@@ -3,7 +3,7 @@ import { href, useFetcher } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '~/common/constants';
 import * as models from '~/models';
-import type { BaseCloudCredential } from '~/models/cloud-credential';
+import type { CloudProviderCredential } from '~/models/cloud-credential';
 import { executePluginMainAction } from '~/plugins';
 import { invariant } from '~/utils/invariant';
 
@@ -12,7 +12,7 @@ import type { Route } from './+types/cloud-credentials.$cloudCredentialId.update
 export async function clientAction({ params, request }: Route.ClientActionArgs) {
   const { cloudCredentialId } = params;
   invariant(typeof cloudCredentialId === 'string', 'Credential ID is required');
-  const patch = (await request.json()) as BaseCloudCredential;
+  const patch = (await request.json()) as CloudProviderCredential;
   const { name, provider, credentials } = patch;
   invariant(name && typeof name === 'string', 'Name is required');
   invariant(provider, 'Cloud Provider name is required');
@@ -47,7 +47,13 @@ export function useUpdateCloudCredentialActionFetcher(args?: Parameters<typeof u
   const { submit: fetcherSubmit, ...fetcher } = useFetcher<typeof clientAction>(args);
 
   const submit = useCallback(
-    function submit({ cloudCredentialId, patch }: { cloudCredentialId: string; patch: BaseCloudCredential }) {
+    function submit({
+      cloudCredentialId,
+      patch,
+    }: {
+      cloudCredentialId: string;
+      patch: Partial<CloudProviderCredential>;
+    }) {
       return fetcherSubmit(JSON.stringify(patch), {
         method: 'POST',
         action: href('/cloud-credentials/:cloudCredentialId/update', {
