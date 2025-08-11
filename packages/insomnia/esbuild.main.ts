@@ -36,7 +36,7 @@ export default async function build(options: Options) {
 
   const preloadBuildOptions: BuildOptions = {
     entryPoints: ['./src/preload.ts'],
-    outfile: path.join(outdir, 'preload.js'),
+    outfile: path.join(outdir, 'preload.min.js'),
     target: 'esnext',
     bundle: true,
     platform: 'node',
@@ -47,7 +47,7 @@ export default async function build(options: Options) {
 
   const hiddenBrowserWindowPreloadBuildOptions: BuildOptions = {
     entryPoints: ['./src/hidden-window-preload.ts'],
-    outfile: path.join(outdir, 'hidden-window-preload.js'),
+    outfile: path.join(outdir, 'hidden-window-preload.min.js'),
     target: 'esnext',
     bundle: true,
     platform: 'node',
@@ -61,8 +61,7 @@ export default async function build(options: Options) {
 
   const hiddenBrowserWindowBuildOptions: BuildOptions = {
     entryPoints: ['./src/hidden-window.ts'],
-    // TODO: make all of these outputs use a .min.js convention to simplify ignore files
-    outfile: path.join(outdir, 'hidden-window.js'),
+    outfile: path.join(outdir, 'hidden-window.min.js'),
     target: 'esnext',
     bundle: true,
     platform: 'node',
