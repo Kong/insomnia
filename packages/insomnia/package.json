@@ -21,7 +21,7 @@
     "build": "react-router build && esr --cache ./scripts/build.ts --noErrorTruncation",
     "build:react-router": "react-router build",
     "generate:schema": "esr ./src/schema.ts",
-    "build:electron-entrypoints": "cross-env NODE_ENV=development esr esbuild.main.ts",
+    "build:electron-entrypoints": "cross-env NODE_ENV=development esr esbuild.entrypoints.ts",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "package": "npm run build && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js",
     "package:windows:unpacked": "npm run build && cross-env USE_HARD_LINKS=false electron-builder build --config electron-builder.config.js --win squirrel nsis --dir",
@@ -29,18 +29,18 @@
     "start": "npx -y concurrently -n browser,main --kill-others \"npm run start:dev-server\" \"npm run start:electron\"",
     "start:autoRestart": "npx -y concurrently -n browser,main --kill-others \"npm run start:dev-server\" \"npm run start:electron:autoRestart\"",
     "start:dev-server": "vite dev",
-    "start:electron": "cross-env NODE_ENV=development esr esbuild.main.ts && electron --inspect=5858 .",
-    "start:electron:autoRestart": "cross-env NODE_ENV=development esr esbuild.main.ts --autoRestart",
+    "start:electron": "cross-env NODE_ENV=development esr esbuild.entrypoints.ts && electron --inspect=5858 .",
+    "start:electron:autoRestart": "cross-env NODE_ENV=development esr esbuild.entrypoints.ts --autoRestart",
     "test": "vitest run",
     "type-check": "react-router typegen && tsc --noEmit --project tsconfig.json",
     "type-check:watch": "npm run type-check -- --watch",
     "convert-svg": "npm_config_yes=true npx @svgr/cli@6.4.0 --no-index --config-file svgr.config.js --out-dir src/ui/components/assets/svgr src/ui/components/assets/"
   },
   "//": [
-    "dependencies will be external to the vite bundle and electron main (commonjs)",
+    "dependencies will be external to the vite bundle and electron entrypoints (commonjs)",
     "devDependencies will be included in the vite bundle (esm)",
     "See: packages/insomnia/vite.config.ts",
-    "and: packages/insomnia/esbuild.main.ts"
+    "and: packages/insomnia/esbuild.entrypoints.ts"
   ],
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.3.6",
