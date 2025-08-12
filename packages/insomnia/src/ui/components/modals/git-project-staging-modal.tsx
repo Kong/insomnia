@@ -23,7 +23,6 @@ import { useGitProjectStageActionFetcher } from '~/routes/git.stage';
 import { useGitProjectUnstageActionFetcher } from '~/routes/git.unstage';
 
 import { GitVCSOperationErrors } from '../../../sync/git/git-vcs';
-
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 import { AlertModal } from './alert-modal';
@@ -115,17 +114,17 @@ export const GitProjectStagingModal: FC<{
     statusNames: {},
   };
 
-  const isCommiting = commitFetcher.state !== 'idle';
+  const isCommitting = commitFetcher.state !== 'idle';
 
   useEffect(() => {
-    if (data && data.errors && data.errors.length > 0) {
-      if (data.errors.includes(GitVCSOperationErrors.RequiredPullRemoteChangesError)) {
+    if (commitFetcher.data && commitFetcher.data.errors && commitFetcher.data.errors.length > 0) {
+      if (commitFetcher.data.errors.includes(GitVCSOperationErrors.RequiredPullRemoteChangesError)) {
         setIsGitPullRequiredModalOpen(true);
       } else {
-        setOperationError(data.errors.join('\n'));
+        setOperationError(commitFetcher.data.errors.join('\n'));
       }
     }
-  }, [data]);
+  }, [commitFetcher.data]);
 
   const previewDiffItem = diffChangesFetcher.data && 'diff' in diffChangesFetcher.data ? diffChangesFetcher.data : null;
 
@@ -190,21 +189,21 @@ export const GitProjectStagingModal: FC<{
                 <div className="grid h-full gap-2 divide-x divide-solid divide-[--hl-md] overflow-hidden [grid-template-columns:300px_1fr]">
                   <div className="flex flex-1 flex-col gap-4 overflow-hidden">
                     <form
-                    onSubmit={e => {
-                      e.preventDefault();
-                      const submitter = e.nativeEvent instanceof SubmitEvent ? e.nativeEvent.submitter : null;
-                      const formData = new FormData(e.currentTarget, submitter);
-                      const message = formData.get('message')?.toString() || '';
-                      const push = Boolean(formData.get('push') === 'true');
+                      onSubmit={e => {
+                        e.preventDefault();
+                        const submitter = e.nativeEvent instanceof SubmitEvent ? e.nativeEvent.submitter : null;
+                        const formData = new FormData(e.currentTarget, submitter);
+                        const message = formData.get('message')?.toString() || '';
+                        const push = Boolean(formData.get('push') === 'true');
 
-                      commitFetcher.submit({
-                        projectId,
-                        message,
-                        push,
-                      });
-                    }}
-                    className="flex flex-col gap-2"
-                  >
+                        commitFetcher.submit({
+                          projectId,
+                          message,
+                          push,
+                        });
+                      }}
+                      className="flex flex-col gap-2"
+                    >
                       <TextField className="flex flex-shrink-0 flex-col gap-2">
                         <Label className="font-bold">Message</Label>
                         <TextArea
@@ -224,8 +223,8 @@ export const GitProjectStagingModal: FC<{
                           className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                         >
                           <Icon
-                            icon={isCommiting ? 'spinner' : 'check'}
-                            className={`w-5 ${isCommiting ? 'animate-spin' : ''}`}
+                            icon={isCommitting ? 'spinner' : 'check'}
+                            className={`w-5 ${isCommitting ? 'animate-spin' : ''}`}
                           />{' '}
                           {mode === 'commit-and-pull' ? 'Commit and pull' : 'Commit'}
                         </Button>
@@ -257,8 +256,8 @@ export const GitProjectStagingModal: FC<{
                             className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                           >
                             <Icon
-                              icon={isCommiting ? 'spinner' : 'cloud-arrow-up'}
-                              className={`w-5 ${isCommiting ? 'animate-spin' : ''}`}
+                              icon={isCommitting ? 'spinner' : 'cloud-arrow-up'}
+                              className={`w-5 ${isCommitting ? 'animate-spin' : ''}`}
                             />{' '}
                             Commit and push
                           </Button>
@@ -269,7 +268,7 @@ export const GitProjectStagingModal: FC<{
                           <Icon icon="exclamation-triangle" /> {operationError}
                         </p>
                       )}
-                    </Form>
+                    </form>
 
                     <div className="grid auto-rows-auto gap-2 overflow-y-auto">
                       <div className="flex max-h-96 w-full flex-col gap-2 overflow-hidden">
@@ -340,7 +339,7 @@ export const GitProjectStagingModal: FC<{
                                         Unstage change
                                       </Tooltip>
                                     </TooltipTrigger>
-                                    </div>
+                                  </div>
                                 </GridListItem>
                               );
                             }}
@@ -359,9 +358,9 @@ export const GitProjectStagingModal: FC<{
                                 isDisabled={changes.unstaged.length === 0}
                                 onPress={() => {
                                   undoUnstagedChanges(
-                                  changes.unstaged.map(entry => entry.path),
-                                  changes.unstaged.length,
-                                );
+                                    changes.unstaged.map(entry => entry.path),
+                                    changes.unstaged.length,
+                                  );
                                 }}
                               >
                                 <svg
@@ -520,15 +519,14 @@ export const GitProjectStagingModal: FC<{
         <ConfirmDiscardModal
           message={`Are you sure you want to discard ${changes.unstaged.length === 1 ? 'your changes to this file' : `your changes to these ${changes.unstaged.length} files`}? This action cannot be undone and will discard any changes since your last commit.`}
           onConfirm={async () => {
-            const result = await discardChanges({
-              projectId,
-              paths: changes.unstaged.map(entry => entry.path),
-            });
-
-            if (result.success) {
-              setShowConfirmModal(false);
-              onPullAfterCommit();
-            }
+            // const result = await discardChanges({
+            //   projectId,
+            //   paths: changes.unstaged.map(entry => entry.path),
+            // });
+            // if (result.success) {
+            //   setShowConfirmModal(false);
+            //   onPullAfterCommit();
+            // }
           }}
           onClose={() => setShowConfirmModal(false)}
         />
