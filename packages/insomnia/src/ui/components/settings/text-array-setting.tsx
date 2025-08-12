@@ -65,6 +65,7 @@ export const TextArraySetting: FC<{
           />
           <button
             className="btn btn--outlined btn--super-compact flex items-center gap-2"
+            data-testid={`${setting}-btn`}
             disabled={disabled}
             onClick={onAddDataFolder}
             data-testid={`${setting}-btn`}

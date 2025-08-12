@@ -7,6 +7,11 @@ test('can send request with custom ca root certificate', async ({ app, page }) =
   const text = await loadFixture('smoke-test-collection.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
+  await page.getByTestId('settings-button').click();
+  await page.getByTestId('dataFolders').fill(getFixturePath('smoke-test-collection.yaml'));
+  await page.getByTestId('dataFolders-btn').click();
+  await page.locator('.app').press('Escape');
+
   await page.getByLabel('Import').click();
   await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
