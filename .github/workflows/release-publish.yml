@@ -379,3 +379,4 @@ jobs:
       #     --provenance-path '${{env.ARTIFACTS_DOWNLOAD_PATH}}/insomnia-provenance.intoto.jsonl' \
       #     --source-uri 'github.com/Kong/insomnia-ee' \
       #     ${{env.ARTIFACTS_DOWNLOAD_PATH}}/Insomnia.Core-${{env.RELEASE_VERSION}}.{snap,tar.gz,zip,rpm,dmg,deb,AppImage,exe}
+
