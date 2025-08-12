@@ -25,9 +25,7 @@ import { useGitProjectUnstageActionFetcher } from '~/routes/git.unstage';
 import { GitVCSOperationErrors } from '../../../sync/git/git-vcs';
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
-import { AlertModal } from './alert-modal';
 import { GitPullRequiredModal } from './git-pull-required-modal';
-import { showModal } from './index';
 
 export type StagingModalMode = 'default' | 'commit-and-pull';
 
@@ -35,6 +33,11 @@ export const StagingModalModes = {
   default: 'default' as StagingModalMode,
   commitAndPull: 'commit-and-pull' as StagingModalMode,
 };
+
+interface DiscardData {
+  paths: string[];
+  filesCount: number;
+}
 
 export const GitProjectStagingModal: FC<{
   mode?: StagingModalMode;
@@ -50,7 +53,8 @@ export const GitProjectStagingModal: FC<{
 
   const [operationError, setOperationError] = useState<string | null>(null);
   const [isGitPullRequiredModalOpen, setIsGitPullRequiredModalOpen] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = React.useState(false);
+  const [showConfirmDiscardAndPullModal, setShowConfirmDiscardAndPullModal] = React.useState(false);
+  const [discardData, setDiscardData] = React.useState<DiscardData | null>(null);
 
   const gitChangesFetcher = useGitProjectChangesFetcher();
 
@@ -59,6 +63,8 @@ export const GitProjectStagingModal: FC<{
   const undoUnstagedChangesFetcher = useGitProjectDiscardActionFetcher();
   const diffChangesFetcher = useGitProjectDiffLoaderFetcher();
   const commitFetcher = useGitProjectCommitActionFetcher();
+
+  const [message, setMessage] = useState('');
 
   function diffChanges({ path, staged }: { path: string; staged: boolean }) {
     diffChangesFetcher.load({
@@ -79,21 +85,6 @@ export const GitProjectStagingModal: FC<{
     unstageChangesFetcher.submit({
       projectId,
       paths,
-    });
-  }
-
-  function undoUnstagedChanges(paths: string[], filesCount: number) {
-    showModal(AlertModal, {
-      message: `Are you sure you want to discard ${filesCount === 1 ? 'your changes to this file' : `your changes to these ${filesCount} files`}? This action cannot be undone and will discard any changes since your last commit.`,
-      title: 'Discard changes',
-      okLabel: 'Discard',
-      onConfirm: () => {
-        undoUnstagedChangesFetcher.submit({
-          projectId,
-          paths,
-        });
-      },
-      addCancel: true,
     });
   }
 
@@ -135,13 +126,23 @@ export const GitProjectStagingModal: FC<{
 
   useEffect(() => {
     if (allChangesLength === 0 && hasNoCommitErrors) {
-      if (mode === 'commit-and-pull') {
+      if (mode === StagingModalModes.commitAndPull) {
         onPullAfterCommit();
       }
 
       onClose();
     }
   }, [allChangesLength, onClose, hasNoCommitErrors, mode, onPullAfterCommit]);
+
+  useEffect(() => {
+    if (commitFetcher.data && hasNoCommitErrors) {
+      setMessage('');
+    }
+  }, [commitFetcher.data, hasNoCommitErrors]);
+
+  // These used only when the mode is commitAndPull
+  const canCommit = changes.staged.length > 0 && changes.unstaged.length > 0;
+  const canCommitAndPull = changes.staged.length > 0 && changes.unstaged.length === 0;
 
   return (
     <>
@@ -167,7 +168,7 @@ export const GitProjectStagingModal: FC<{
               <div className="flex flex-1 flex-col gap-4 overflow-hidden">
                 <div className="flex flex-shrink-0 items-center justify-between gap-2">
                   <Heading slot="title" className="flex items-center gap-2 text-2xl">
-                    {mode === 'commit-and-pull' ? 'Uncommitted changes' : 'Commit Changes'}{' '}
+                    {mode === StagingModalModes.commitAndPull ? 'Uncommitted changes' : 'Commit Changes'}{' '}
                     {gitChangesFetcher.state === 'loading' && <Icon icon="spinner" className="animate-spin" />}
                   </Heading>
 
@@ -178,7 +179,7 @@ export const GitProjectStagingModal: FC<{
                     <Icon icon="x" />
                   </Button>
                 </div>
-                {mode === 'commit-and-pull' && (
+                {mode === StagingModalModes.commitAndPull && (
                   <div className="'text-[--color-font-warning] flex flex-wrap items-center justify-between gap-2 rounded border border-solid border-[--hl-md] bg-[rgba(var(--color-warning-rgb),0.5)] p-[--padding-sm]">
                     <p className="text-base">
                       <Icon icon="exclamation-triangle" className="mr-2" />
@@ -212,46 +213,77 @@ export const GitProjectStagingModal: FC<{
                           className="resize-none rounded-sm border border-solid border-[--hl-sm] p-2 placeholder:text-[--hl-md]"
                           placeholder="This is a helpful message that describes the changes made in this commit."
                           required
+                          value={message}
+                          onChange={e => setMessage(e.target.value)}
                         />
                       </TextField>
-
-                      <div className="flex flex-shrink-0 items-center justify-stretch gap-2">
-                        <Button
-                          type="submit"
-                          isDisabled={commitFetcher.state !== 'idle' || changes.staged.length === 0}
-                          formAction={`/organization/${organizationId}/project/${projectId}/git/commit`}
-                          className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                        >
-                          <Icon
-                            icon={isCommitting ? 'spinner' : 'check'}
-                            className={`w-5 ${isCommitting ? 'animate-spin' : ''}`}
-                          />{' '}
-                          {mode === 'commit-and-pull' ? 'Commit and pull' : 'Commit'}
-                        </Button>
-
-                        {mode === 'commit-and-pull' ? (
-                          <Button
-                            type="button"
-                            isDisabled={commitFetcher.state !== 'idle'}
-                            className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                            onPress={() => {
-                              setShowConfirmModal(true);
-                            }}
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              fill="currentColor"
-                              className="size-4"
+                      {mode === StagingModalModes.commitAndPull ? (
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="submit"
+                              isDisabled={isCommitting || !canCommit}
+                              formAction={`/organization/${organizationId}/project/${projectId}/git/commit`}
+                              className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                             >
-                              <path d="M5.828 7l2.536 2.535L6.95 10.95 2 6l4.95-4.95 1.414 1.415L5.828 5H13a8 8 0 110 16H4v-2h9a6 6 0 000-12H5.828z" />
-                            </svg>
-                            Discard and pull
-                          </Button>
-                        ) : (
+                              <Icon
+                                icon={isCommitting && canCommit ? 'spinner' : 'check'}
+                                className={`w-5 ${isCommitting && canCommit ? 'animate-spin' : ''}`}
+                              />
+                              Commit
+                            </Button>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="submit"
+                              isDisabled={isCommitting || !canCommitAndPull}
+                              formAction={`/organization/${organizationId}/project/${projectId}/git/commit`}
+                              className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                            >
+                              <Icon
+                                icon={isCommitting && canCommitAndPull ? 'spinner' : 'cloud-arrow-down'}
+                                className={`w-5 ${isCommitting && canCommitAndPull ? 'animate-spin' : ''}`}
+                              />
+                              Commit and pull
+                            </Button>
+                            <Button
+                              type="button"
+                              isDisabled={isCommitting}
+                              className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                              onPress={() => {
+                                setShowConfirmDiscardAndPullModal(true);
+                              }}
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                className="size-4"
+                              >
+                                <path d="M5.828 7l2.536 2.535L6.95 10.95 2 6l4.95-4.95 1.414 1.415L5.828 5H13a8 8 0 110 16H4v-2h9a6 6 0 000-12H5.828z" />
+                              </svg>
+                              Discard and pull
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-shrink-0 items-center justify-stretch gap-2">
                           <Button
                             type="submit"
-                            isDisabled={commitFetcher.state !== 'idle' || changes.staged.length === 0}
+                            isDisabled={isCommitting || changes.staged.length === 0}
+                            formAction={`/organization/${organizationId}/project/${projectId}/git/commit`}
+                            className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                          >
+                            <Icon
+                              icon={isCommitting ? 'spinner' : 'check'}
+                              className={`w-5 ${isCommitting ? 'animate-spin' : ''}`}
+                            />{' '}
+                            Commit
+                          </Button>
+
+                          <Button
+                            type="submit"
+                            isDisabled={isCommitting || changes.staged.length === 0}
                             formAction={`/organization/${organizationId}/project/${projectId}/git/commit-and-push`}
                             className="flex h-8 flex-1 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-sm text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
                           >
@@ -261,8 +293,8 @@ export const GitProjectStagingModal: FC<{
                             />{' '}
                             Commit and push
                           </Button>
-                        )}
-                      </div>
+                        </div>
+                      )}
                       {operationError && (
                         <p className="rounded-sm bg-[rgba(var(--color-danger-rgb),var(--tw-bg-opacity))] bg-opacity-20 p-2 text-sm text-[--color-font-danger]">
                           <Icon icon="exclamation-triangle" /> {operationError}
@@ -357,10 +389,10 @@ export const GitProjectStagingModal: FC<{
                                 name="Discard all changes"
                                 isDisabled={changes.unstaged.length === 0}
                                 onPress={() => {
-                                  undoUnstagedChanges(
-                                    changes.unstaged.map(entry => entry.path),
-                                    changes.unstaged.length,
-                                  );
+                                  setDiscardData({
+                                    paths: changes.unstaged.map(entry => entry.path),
+                                    filesCount: changes.unstaged.length,
+                                  });
                                 }}
                               >
                                 <svg
@@ -431,7 +463,10 @@ export const GitProjectStagingModal: FC<{
                                         slot={null}
                                         name="Discard change"
                                         onPress={() => {
-                                          undoUnstagedChanges([item.entry.path], 1);
+                                          setDiscardData({
+                                            paths: [item.entry.path],
+                                            filesCount: 1,
+                                          });
                                         }}
                                       >
                                         <svg
@@ -515,20 +550,33 @@ export const GitProjectStagingModal: FC<{
           </Dialog>
         </Modal>
       </ModalOverlay>
-      {showConfirmModal && (
+      {showConfirmDiscardAndPullModal && (
         <ConfirmDiscardModal
-          message={`Are you sure you want to discard ${changes.unstaged.length === 1 ? 'your changes to this file' : `your changes to these ${changes.unstaged.length} files`}? This action cannot be undone and will discard any changes since your last commit.`}
+          message={`Are you sure you want to discard ${changes.unstaged.length + changes.staged.length === 1 ? 'your changes to this file' : `your changes to these ${changes.unstaged.length + changes.staged.length} files`}? This action cannot be undone and will discard any changes since your last commit.`}
           onConfirm={async () => {
-            // const result = await discardChanges({
-            //   projectId,
-            //   paths: changes.unstaged.map(entry => entry.path),
-            // });
-            // if (result.success) {
-            //   setShowConfirmModal(false);
-            //   onPullAfterCommit();
-            // }
+            await undoUnstagedChangesFetcher.submit({
+              projectId,
+              paths: [...changes.unstaged.map(entry => entry.path), ...changes.staged.map(entry => entry.path)],
+            });
+
+            setShowConfirmDiscardAndPullModal(false);
+            onPullAfterCommit();
           }}
-          onClose={() => setShowConfirmModal(false)}
+          onClose={() => setShowConfirmDiscardAndPullModal(false)}
+        />
+      )}
+      {discardData && (
+        <ConfirmDiscardModal
+          message={`Are you sure you want to discard ${discardData.filesCount === 1 ? 'your changes to this file' : `your changes to these ${discardData.filesCount} files`}? This action cannot be undone and will discard any changes since your last commit.`}
+          onConfirm={async () => {
+            await undoUnstagedChangesFetcher.submit({
+              projectId,
+              paths: discardData.paths,
+            });
+
+            setDiscardData(null);
+          }}
+          onClose={() => setDiscardData(null)}
         />
       )}
       {isGitPullRequiredModalOpen && (
