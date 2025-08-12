@@ -68,6 +68,6 @@
     "vitest": "^3.1.1"
   },
   "dependencies": {
-    "@getinsomnia/node-libcurl": "^2.35.0"
+    "@getinsomnia/node-libcurl": "^2.36.12"
   }
 }
