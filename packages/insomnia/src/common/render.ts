@@ -11,7 +11,7 @@ import {
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
 import { isProject } from '../models/project';
 import { PATH_PARAMETER_REGEX, type Request } from '../models/request';
-import { isRequestGroup } from '../models/request-group';
+import { isRequestGroup, type RequestGroup } from '../models/request-group';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, type Workspace } from '../models/workspace';
@@ -704,7 +704,7 @@ function _getOrderedEnvironmentKeys(finalRenderContext: Record<string, any>): st
 }
 
 export async function getRenderContextAncestors(
-  base?: Request | GrpcRequest | WebSocketRequest | SocketIORequest | Workspace,
+  base?: Request | GrpcRequest | WebSocketRequest | SocketIORequest | RequestGroup | Workspace,
 ): Promise<RenderContextAncestor[]> {
   return await db.withAncestors<RenderContextAncestor>(base || null, [
     models.request.type,

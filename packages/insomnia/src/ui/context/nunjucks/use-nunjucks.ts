@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { getRenderContext, getRenderContextAncestors, render } from '~/common/render';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useRequestLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
+import { useRequestGroupLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.$requestGroupId';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '~/templating';
 import type { HandleRender, RenderContextOptions } from '~/templating/types';
 import { getKeys } from '~/templating/utils';
@@ -23,10 +24,13 @@ initializeNunjucksRenderPromiseCache();
  */
 export const useNunjucks = (options?: UseNunjucksOptions) => {
   const requestData = useRequestLoaderData();
+  const { activeRequestGroup } = useRequestGroupLoaderData() || {};
   const workspaceData = useWorkspaceLoaderData();
 
   const fetchRenderContext = useCallback(async () => {
-    const ancestors = await getRenderContextAncestors(requestData?.activeRequest || workspaceData?.activeWorkspace);
+    const ancestors = await getRenderContextAncestors(
+      requestData?.activeRequest || activeRequestGroup || workspaceData?.activeWorkspace,
+    );
     return getRenderContext({
       request: requestData?.activeRequest || undefined,
       environment: workspaceData?.activeEnvironment._id,
@@ -38,6 +42,7 @@ export const useNunjucks = (options?: UseNunjucksOptions) => {
     workspaceData?.activeWorkspace,
     workspaceData?.activeEnvironment._id,
     options?.renderContext,
+    activeRequestGroup,
   ]);
 
   const handleGetRenderContext = useCallback(
