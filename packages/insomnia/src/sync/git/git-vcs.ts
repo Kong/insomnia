@@ -11,8 +11,6 @@ import { convertToPosixSep } from './path-sep';
 import { getAuthorFromGitRepository, gitCallbacks } from './utils';
 
 export const GitVCSOperationErrors = {
-  MergeConflictError: git.Errors.MergeConflictError,
-  MergeNotSupportedError: git.Errors.MergeNotSupportedError,
   UncommittedChangesError: 'UncommittedChangesError',
   RequiredPullRemoteChangesError: 'RequiredPullRemoteChangesError',
 };
@@ -698,6 +696,7 @@ export class GitVCS {
 
       // merge not supported by native pull: fallback
       if (err instanceof git.Errors.MergeNotSupportedError) {
+        console.log('[git] Falling back to manual diff UI (merge driver not supported)');
         try {
           await this.fetch({
             singleBranch: true,
@@ -952,29 +951,6 @@ export class GitVCS {
       ours: match[1].trim(),
       theirs: match[2].trim(),
     };
-  }
-
-  async pull(gitCredentials?: GitCredentials | null) {
-    const hasUncommittedChanges = await this.hasUncommittedChanges();
-    if (hasUncommittedChanges) {
-      throw new Error('Cannot pull with uncommitted changes, please commit local changes first.');
-    }
-    console.log('[git] Pull remote=origin', await this.getCurrentBranch());
-    return git
-      .pull({
-        ...this._baseOpts,
-        ...gitCallbacks(gitCredentials),
-        remote: 'origin',
-        singleBranch: true,
-      })
-      .catch(async err => {
-        if (err instanceof git.Errors.MergeConflictError) {
-          const { oursBranch, theirsBranch } = await this.getBranchPair();
-
-          return await this.collectMergeConflicts(err, oursBranch, theirsBranch);
-        }
-        throw err;
-      });
   }
 
   // Collect merge conflict details from isomorphic-git git.Errors.MergeConflictError and throw a MergeConflictError which will be used to display the conflicts in the SyncMergeModal
