@@ -403,6 +403,11 @@ test.describe('pre-request features tests', () => {
     const responsePane = page.getByTestId('response-pane');
     const fixturePath = getFixturePath('certificates');
 
+    await page.getByTestId('settings-button').click();
+    await page.getByTestId('dataFolders').fill(getFixturePath('fake.pfx'));
+    await page.getByTestId('dataFolders-btn').click();
+    await page.locator('.app').press('Escape');
+
     // update proxy configuration
     await page.locator('text=Add Certificates').click();
     await page.locator('text=Add client certificate').click();
@@ -432,6 +437,13 @@ test.describe('pre-request features tests', () => {
   test('insomnia.request / update clientCertificate', async ({ page }) => {
     const responsePane = page.getByTestId('response-pane');
     await page.getByLabel('Request Collection').getByTestId('test certificate manipulation').press('Enter');
+
+    await page.getByTestId('settings-button').click();
+    await page.getByTestId('dataFolders').fill("invalid.key");
+    await page.getByTestId('dataFolders-btn').click();
+    await page.getByTestId('dataFolders').fill("invalid.cert");
+    await page.getByTestId('dataFolders-btn').click();
+    await page.locator('.app').press('Escape');
 
     // send
     await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();

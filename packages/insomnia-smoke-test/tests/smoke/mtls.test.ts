@@ -11,6 +11,11 @@ test('can use client certificate for mTLS', async ({ app, page }) => {
     has: page.locator('.CodeMirror-activeline'),
   });
 
+  await page.getByTestId('settings-button').click();
+  await page.getByTestId('dataFolders').fill(getFixturePath('client-certs.yaml'));
+  await page.getByTestId('dataFolders-btn').click();
+  await page.locator('.app').press('Escape');
+
   const clientCertsCollectionText = await loadFixture('client-certs.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), clientCertsCollectionText);
 
