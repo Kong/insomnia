@@ -141,7 +141,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
         });
         setOperationError(errors.join('\n'));
       }
-    } else if (gitPushFetcher.data && 'success' in gitPushFetcher.data && gitPushFetcher.data.success) {
+    } else if (gitPushFetcher.data && 'success' in gitPushFetcher.data && gitPushFetcher.data.success && !isPulling) {
       showToast({
         icon,
         title: `Push completed`,
@@ -361,7 +361,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
         {
           id: 'commit',
           icon: 'check',
-          isDisabled: false,
+          isDisabled: status?.localChanges === 0,
           label: 'Commit',
           action: () => setIsGitStagingModalOpen(true),
         },
