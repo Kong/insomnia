@@ -407,6 +407,11 @@ test.describe('pre-request features tests', () => {
     await page.getByTestId('dataFolders').fill(getFixturePath('fake.pfx'));
     await page.getByTestId('dataFolders-btn').click();
     await expect.soft(page.getByText('fake.pfx')).toBeVisible();
+
+    await page.getByTestId('dataFolders').fill('invalid');
+    await page.getByTestId('dataFolders-btn').click();
+    await expect.soft(page.getByText('invalid')).toBeVisible();
+
     await page.locator('.app').press('Escape');
 
     // update proxy configuration
