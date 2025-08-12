@@ -406,6 +406,7 @@ test.describe('pre-request features tests', () => {
     await page.getByTestId('settings-button').click();
     await page.getByTestId('dataFolders').fill(getFixturePath('fake.pfx'));
     await page.getByTestId('dataFolders-btn').click();
+    await expect.soft(page.getByText('fake.pfx')).toBeVisible();
     await page.locator('.app').press('Escape');
 
     // update proxy configuration
@@ -439,10 +440,9 @@ test.describe('pre-request features tests', () => {
     await page.getByLabel('Request Collection').getByTestId('test certificate manipulation').press('Enter');
 
     await page.getByTestId('settings-button').click();
-    await page.getByTestId('dataFolders').fill("invalid.key");
+    await page.getByTestId('dataFolders').fill("invalid");
     await page.getByTestId('dataFolders-btn').click();
-    await page.getByTestId('dataFolders').fill("invalid.cert");
-    await page.getByTestId('dataFolders-btn').click();
+    await expect.soft(page.getByText('invalid')).toBeVisible();
     await page.locator('.app').press('Escape');
 
     // send
