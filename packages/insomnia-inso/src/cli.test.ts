@@ -144,8 +144,12 @@ describe('inso dev bundle', () => {
     });
 
     it('send request with client cert and key', async () => {
+      const allowedFolders = ["/"];
+      [...new Array(26).keys()].forEach(offset => allowedFolders.push(`${String.fromCharCode(65+offset)}:`))
+      const allowedFolderOpts = allowedFolders.map(folder => `-f '${folder}'`).join(" ");
+
       const input =
-        '$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withCertAndCA" --verbose "Insomnia Designer" wrk_0b96eff';
+        `$PWD/packages/insomnia-inso/bin/inso run collection -w packages/insomnia-inso/src/db/fixtures/nedb --requestNamePattern "withCertAndCA" --verbose "Insomnia Designer" wrk_0b96eff ${allowedFolderOpts}`;
       const result = await runCliFromRoot(input);
       if (result.code !== 0) {
         console.log(result);
