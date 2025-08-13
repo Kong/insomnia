@@ -255,15 +255,15 @@ jobs:
         with:
           username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
 
-      - name: Merge git branch into develop
-        run: |
-          remote_repo="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git checkout develop
-          git merge --no-ff ${{ env.RELEASE_BRANCH }}
-          git status
-          git push "${remote_repo}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Merge git branch into develop
+      #   run: |
+      #     remote_repo="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+      #     git checkout develop
+      #     git merge --no-ff ${{ env.RELEASE_BRANCH }}
+      #     git status
+      #     git push "${remote_repo}"
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   artifact-provenance:
     needs: [publish]
