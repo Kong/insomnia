@@ -34,12 +34,13 @@ export function isFsAccessingAllowed(
   }
 
   // case3: check the caCert path
-  if (!caCert?.disabled && caCert?.path) {
-    const allowed = settings?.dataFolders.some(folder => folder !== '' && caCert.path?.startsWith(folder));
-    if (!allowed) {
-      throwError(caCert.path);
-    }
-  }
+  // Enable this if really needed as it is uploaded by user and can't be changed by scripts
+  // if (!caCert?.disabled && caCert?.path) {
+  //   const allowed = settings?.dataFolders.some(folder => folder !== '' && caCert.path?.startsWith(folder));
+  //   if (!allowed) {
+  //     throwError(caCert.path);
+  //   }
+  // }
 
   // case4: check paths of client certificates
   if (Array.isArray(clientCertificates)) {
