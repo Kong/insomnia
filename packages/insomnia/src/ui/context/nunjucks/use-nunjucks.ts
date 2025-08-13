@@ -23,7 +23,9 @@ initializeNunjucksRenderPromiseCache();
  * Access to functions useful for Nunjucks rendering
  */
 export const useNunjucks = (options?: UseNunjucksOptions) => {
+  // for all types of requests
   const requestData = useRequestLoaderData();
+  // for request group (folder)
   const { activeRequestGroup } = useRequestGroupLoaderData() || {};
   const workspaceData = useWorkspaceLoaderData();
 
