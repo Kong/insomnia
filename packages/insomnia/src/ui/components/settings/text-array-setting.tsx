@@ -68,7 +68,6 @@ export const TextArraySetting: FC<{
             data-testid={`${setting}-btn`}
             disabled={disabled}
             onClick={onAddDataFolder}
-            data-testid={`${setting}-btn`}
           >
             Add
           </button>
