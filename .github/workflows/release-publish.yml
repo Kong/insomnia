@@ -14,6 +14,7 @@ env:
   RELEASE_BRANCH: release/${{ github.event.inputs.version }}
   IS_PRERELEASE: ${{ contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta') }}
   ARTIFACTS_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts
+  ARTIFACTS_VERIFY_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts_verify
   INSO_DOCKER_IMAGE: kong/inso # By default, registry is docker.io
   NOTARY_REPOSITORY: 'kong/notary' # All signatures will be pushed to public notary repository
 
@@ -312,7 +313,7 @@ jobs:
       provenance-registry-username: ${{ secrets.DOCKER_REGISTRY_USER }}
       provenance-registry-password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
     
-  verify:
+  verify-provenance:
     runs-on: ubuntu-22.04
     needs: [publish, artifact-provenance, inso-image-provenance]
     permissions:
@@ -333,6 +334,19 @@ jobs:
       - name: Install slsa verifier
         uses: slsa-framework/slsa-verifier/actions/installer@6657aada084353c65e5dde35394b1a010289fab0
 
+      - name: Checkout branch # Check out the release branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_BRANCH }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download release assets
+        run: |
+          gh release download core@${{ env.RELEASE_VERSION }} --dir=${{ env.ARTIFACTS_VERIFY_DOWNLOAD_PATH }} --skip-existing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Verify Inso Container Image Provenance produced
         run: |
           slsa-verifier verify-image \
@@ -345,14 +359,14 @@ jobs:
         run: |
           slsa-verifier verify-artifact \
           --print-provenance \
-          --provenance-path '${{env.ARTIFACTS_DOWNLOAD_PATH}}/inso-provenance.intoto.jsonl' \
+          --provenance-path '${{env.ARTIFACTS_VERIFY_DOWNLOAD_PATH}}/inso-provenance.intoto.jsonl' \
           --source-uri 'github.com/Kong/insomnia' \
-          ${{env.ARTIFACTS_DOWNLOAD_PATH}}/inso-*-${{env.RELEASE_VERSION}}.{zip,tar.xz,pkg}
+          ${{env.ARTIFACTS_VERIFY_DOWNLOAD_PATH}}/inso-*-${{env.RELEASE_VERSION}}.{zip,tar.xz,pkg}
 
       - name: Verify Insomnia App Binary Provenance for artifacts produced
         run: |
           slsa-verifier verify-artifact \
           --print-provenance \
-          --provenance-path '${{env.ARTIFACTS_DOWNLOAD_PATH}}/insomnia-provenance.intoto.jsonl' \
+          --provenance-path '${{env.ARTIFACTS_VERIFY_DOWNLOAD_PATH}}/insomnia-provenance.intoto.jsonl' \
           --source-uri 'github.com/Kong/insomnia' \
-          ${{env.ARTIFACTS_DOWNLOAD_PATH}}/Insomnia.Core-${{env.RELEASE_VERSION}}.{snap,tar.gz,zip,rpm,dmg,deb,AppImage,exe}
+          ${{env.ARTIFACTS_VERIFY_DOWNLOAD_PATH}}/Insomnia.Core-${{env.RELEASE_VERSION}}.{snap,tar.gz,zip,rpm,dmg,deb,AppImage,exe}
