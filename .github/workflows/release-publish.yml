@@ -315,6 +315,8 @@ jobs:
   verify:
     runs-on: ubuntu-22.04
     needs: [publish, artifact-provenance, inso-image-provenance]
+    permissions:
+      contents: read
     steps:
       - name: Install Cosign
         uses: sigstore/cosign-installer@4959ce089c160fddf62f7b42464195ba1a56d382
