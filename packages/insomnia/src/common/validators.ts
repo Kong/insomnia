@@ -7,7 +7,7 @@ export function isFsAccessingAllowed(
   renderedRequest: RenderedRequest,
   settings: Settings,
   clientCertificates: ClientCertificate[],
-  // caCert?: CaCertificate | null,
+  _?: CaCertificate | null,
 ) {
   const throwError = (fileName: string) => {
     throw `Insomnia cannot access the file ‘${fileName}’. You can adjust this in Preferences → Security.`;
