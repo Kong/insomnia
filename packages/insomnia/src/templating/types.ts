@@ -1,3 +1,5 @@
+import type { BinaryToTextEncoding } from 'node:crypto';
+
 import type { CloudProviderCredential } from '../models/cloud-credential';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
@@ -259,7 +261,7 @@ export interface PluginTemplateTagContext {
     }>;
     readFile: (path: string, encoding?: string) => Promise<string | Buffer>;
     decode: (buffer: Buffer, encoding?: string) => Promise<string>;
-    encode: (input: string, encoding?: string) => Promise<Buffer>;
+    encode: (input: string, encoding: BinaryToTextEncoding) => Promise<string>;
     render: (str: string) => string | Promise<string | null>;
     openInBrowser?: (url: string) => void;
     models: {

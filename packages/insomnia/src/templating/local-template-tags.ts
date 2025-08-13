@@ -226,8 +226,8 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           placeholder: 'Value to hash',
         },
       ],
-      async run(context, algorithm: 'md5' | 'sha1' | 'sha256' | 'sha512', encoding, value = '') {
-        if (encoding !== 'hex' && encoding !== 'latin1' && encoding !== 'base64') {
+      async run(context, algorithm: 'md5' | 'sha1' | 'sha256' | 'sha512', encoding: 'hex' | 'base64', value = '') {
+        if (encoding !== 'hex' && encoding !== 'base64') {
           throw new Error(`Invalid encoding ${encoding}. Choices are hex, latin1, base64`);
         }
 
@@ -252,9 +252,6 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
         if (encoding === 'base64') {
           return btoa(String.fromCharCode.apply(null, hashArray));
-        }
-        if (encoding === 'latin1') {
-          return String.fromCharCode.apply(null, hashArray);
         }
         // hex
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');

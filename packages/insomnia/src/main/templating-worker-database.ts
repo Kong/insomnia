@@ -1,3 +1,5 @@
+import type { BinaryToTextEncoding } from 'node:crypto';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 
@@ -71,8 +73,8 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
   'decode': async (body: { buffer: Buffer; encoding: 'utf8' }) => {
     return iconv.decode(body.buffer, body.encoding || 'utf8');
   },
-  'encode': async (body: { input: string; encoding: 'utf8' }) => {
-    return iconv.encode(body.input, body.encoding || 'utf8');
+  'encode': async (body: { input: string; encoding: BinaryToTextEncoding }) => {
+    return crypto.createHash('md5').update(body.input).digest(body.encoding);
   },
   'request.getById': async (body: { id: string }) => {
     return await models.request.getById(body.id);

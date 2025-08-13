@@ -1,3 +1,5 @@
+import type { BinaryToTextEncoding } from 'node:crypto';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 
@@ -127,7 +129,8 @@ export default class BaseExtension {
           return encoding === 'utf8' ? content.toString(encoding) : content;
         },
         decode: async (buffer: Buffer, encoding = 'utf8') => iconv.decode(buffer, encoding),
-        encode: async (input: string, encoding = 'utf8') => iconv.encode(input, encoding),
+        encode: async (input: string, encoding: BinaryToTextEncoding) =>
+          crypto.createHash('md5').update(input).digest(encoding),
         render: (str: string) =>
           templating.render(str, {
             context: renderContext,
