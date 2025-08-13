@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { href, redirect, useFetcher } from 'react-router';
 
 import { database } from '~/common/database';
+import { projectLock } from '~/common/project';
 import * as models from '~/models';
 import { insomniaFetch } from '~/ui/insomniaFetch';
 import { invariant } from '~/utils/invariant';
@@ -21,6 +22,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
   invariant(sessionId, 'User must be logged in to delete a project');
 
   try {
+    await projectLock.lock();
     const bufferId = await database.bufferChanges();
     if (project.remoteId) {
       const response = await insomniaFetch<void | {
@@ -63,6 +65,8 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
           ? err.message
           : `An unexpected error occurred while deleting the project. Please try again. ${err}`,
     };
+  } finally {
+    await projectLock.unlock();
   }
 }
 

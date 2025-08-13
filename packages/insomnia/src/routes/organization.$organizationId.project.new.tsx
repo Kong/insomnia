@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { href, redirect, useFetcher } from 'react-router';
 
+import { projectLock } from '~/common/project';
 import * as models from '~/models';
 import type { GitCredentials, OauthProviderName } from '~/models/git-repository';
 import { SegmentEvent } from '~/ui/analytics';
@@ -137,7 +138,7 @@ export const createProject = async (organizationId: string, newProjectData: Crea
     return project._id;
   };
 
-  const newProjectId = await createProjectImpl(organizationId, newProjectData);
+  const newProjectId = await projectLock.wrapWithLock(createProjectImpl)(organizationId, newProjectData);
   window.main.trackSegmentEvent({
     event: SegmentEvent.projectCreated,
     properties: {

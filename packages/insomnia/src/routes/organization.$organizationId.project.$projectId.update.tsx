@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import { database } from '~/common/database';
+import { projectLock } from '~/common/project';
 import * as models from '~/models';
 import type { OauthProviderName } from '~/models/git-credentials';
 import type { GitCredentials } from '~/models/git-repository';
@@ -41,6 +42,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
   const sessionId = user.id;
 
   try {
+    await projectLock.lock();
     // If its a cloud project, and we are renaming, then patch
     if (sessionId && project.remoteId && storageType === 'remote' && name !== project.name) {
       const response = await insomniaFetch<void | {
@@ -313,6 +315,8 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
           ? err.message
           : `An unexpected error occurred while renaming the project. Please try again. ${err}`,
     };
+  } finally {
+    await projectLock.unlock();
   }
 }
 
