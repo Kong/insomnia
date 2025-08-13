@@ -326,7 +326,7 @@ jobs:
           cosign verify \
           kong/inso:${{env.RELEASE_VERSION}}@${{needs.publish.outputs.INSO_DOCKER_IMAGE_DIGEST}} \
           --certificate-oidc-issuer='https://token.actions.githubusercontent.com' \
-          --certificate-identity-regexp='https://github.com/Kong/insomnia-ee/.github/workflows/release-publish.yml'
+          --certificate-identity-regexp='https://github.com/Kong/insomnia/.github/workflows/release-publish.yml'
         env:
           COSIGN_REPOSITORY: ${{env.NOTARY_REPOSITORY}}
 
@@ -339,14 +339,14 @@ jobs:
           kong/inso:${{env.RELEASE_VERSION}}@${{needs.publish.outputs.INSO_DOCKER_IMAGE_DIGEST}} \
           --print-provenance \
           --provenance-repository ${{env.NOTARY_REPOSITORY}} \
-          --source-uri 'github.com/Kong/insomnia-ee'
+          --source-uri 'github.com/Kong/insomnia'
 
       - name: Verify Inso Binary Provenance for artifacts produced
         run: |
           slsa-verifier verify-artifact \
           --print-provenance \
           --provenance-path '${{env.ARTIFACTS_DOWNLOAD_PATH}}/inso-provenance.intoto.jsonl' \
-          --source-uri 'github.com/Kong/insomnia-ee' \
+          --source-uri 'github.com/Kong/insomnia' \
           ${{env.ARTIFACTS_DOWNLOAD_PATH}}/inso-*-${{env.RELEASE_VERSION}}.{zip,tar.xz,pkg}
 
       - name: Verify Insomnia App Binary Provenance for artifacts produced
@@ -354,5 +354,5 @@ jobs:
           slsa-verifier verify-artifact \
           --print-provenance \
           --provenance-path '${{env.ARTIFACTS_DOWNLOAD_PATH}}/insomnia-provenance.intoto.jsonl' \
-          --source-uri 'github.com/Kong/insomnia-ee' \
+          --source-uri 'github.com/Kong/insomnia' \
           ${{env.ARTIFACTS_DOWNLOAD_PATH}}/Insomnia.Core-${{env.RELEASE_VERSION}}.{snap,tar.gz,zip,rpm,dmg,deb,AppImage,exe}
