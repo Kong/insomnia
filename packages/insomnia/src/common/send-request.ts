@@ -103,6 +103,7 @@ export async function getSendRequestCallbackMemDb(
       mutatedContext.settings,
       mutatedContext.clientCertificates,
       requestData.caCert,
+      true,
     );
 
     const response = await sendCurlAndWriteTimeline(

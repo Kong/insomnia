@@ -8,9 +8,14 @@ export function isFsAccessingAllowed(
   settings: Settings,
   clientCertificates: ClientCertificate[],
   _?: CaCertificate | null,
+  fromCli?: boolean,
 ) {
   const throwError = (fileName: string) => {
-    throw `Insomnia cannot access the file ‘${fileName}’. You can adjust this in Preferences → Security.`;
+    if (fromCli) {
+      throw `Insomnia cannot access the file ‘${fileName}’. You can specify paths with one or more "--dataFolders <directory>" or "-f <directory>" to allow accessing.`;
+    } else {
+      throw `Insomnia cannot access the file ‘${fileName}’. You can adjust this in Preferences → Security.`;
+    }
   }
 
   // case1: check request body (set by scripts or request body editor)
