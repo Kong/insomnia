@@ -3,13 +3,16 @@ import { href, useFetcher } from 'react-router';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '~/common/constants';
 import * as models from '~/models';
-import type { BaseCloudCredential } from '~/models/cloud-credential';
+import type { CloudProviderCredential } from '~/models/cloud-credential';
 import { executePluginMainAction } from '~/plugins';
 import { invariant } from '~/utils/invariant';
 
 import type { Route } from './+types/cloud-credentials.create';
 
-type CreateCloudCredentialsData = BaseCloudCredential & { isAuthenticated?: boolean; provider: string };
+type CreateCloudCredentialsData = Pick<CloudProviderCredential, 'name' | 'provider' | 'credentials'> & {
+  isAuthenticated?: boolean;
+  provider: string;
+};
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const patch = await request.json();

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { type HashiCorpCredential, HashiCorpCredentialType } from '~/models/cloud-credential';
+import { type CloudProviderCredential, HashiCorpCredentialType } from '~/models/cloud-credential';
 import { useRootLoaderData } from '~/root';
 import type { NunjucksParsedTag } from '~/templating/types';
 
@@ -17,6 +17,7 @@ export interface HashiCorpVaultFormProps {
   onChange: (newConfig: HashiCorpSecretConfig) => void;
   activeTagData: NunjucksParsedTag;
 }
+type HashiCorpCredential = Extract<CloudProviderCredential, { provider: 'hashicorp' }>;
 type KeysOfUnion<T> = T extends T ? keyof T : never;
 
 export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
