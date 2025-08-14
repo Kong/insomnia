@@ -228,7 +228,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
       ],
       async run(context, algorithm: 'md5' | 'sha1' | 'sha256' | 'sha512', encoding: 'hex' | 'base64', value = '') {
         if (encoding !== 'hex' && encoding !== 'base64') {
-          throw new Error(`Invalid encoding ${encoding}. Choices are hex, latin1, base64`);
+          throw new Error(`Invalid encoding ${encoding}. Choices are hex, base64`);
         }
 
         const valueType = typeof value;
