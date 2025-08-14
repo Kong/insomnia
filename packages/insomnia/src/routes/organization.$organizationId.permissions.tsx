@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { href, redirect, useFetcher } from 'react-router';
+import { href, redirect, type ShouldRevalidateFunctionArgs, useFetcher } from 'react-router';
 
 import { userSession } from '~/models';
 import { isScratchpadOrganizationId, type Organization } from '~/models/organization';
@@ -57,6 +57,10 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
       billingPromise: Promise.resolve(fallbackBilling),
     };
   }
+}
+
+export function shouldRevalidate(args: ShouldRevalidateFunctionArgs) {
+  return args.currentParams.organizationId !== args.nextParams.organizationId;
 }
 
 export function useOrganizationPermissionsLoaderFetcher(args?: Parameters<typeof useFetcher>[0]) {
