@@ -257,14 +257,14 @@ async function syncTeamProjects({
   );
 }
 
-export const syncProjects = async (organizationId: string) => {
+export const syncProjects = projectLock.wrapWithLock(async (organizationId: string) => {
   const user = await userSession.getOrCreate();
   const teamProjects = await getAllTeamProjects(organizationId);
   // ensure we don't sync projects in the wrong place
   if (Array.isArray(teamProjects) && user.id && !isScratchpadOrganizationId(organizationId)) {
-    await projectLock.wrapWithLock(syncTeamProjects)({
+    await syncTeamProjects({
       organizationId,
       teamProjects,
     });
   }
-};
+});
