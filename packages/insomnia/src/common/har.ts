@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-
 import clone from 'clone';
 import type * as Har from 'har-format';
 import { Cookie as ToughCookie } from 'tough-cookie';
@@ -27,13 +25,13 @@ import { getRenderedRequestAndContext } from './render';
 
 const getDocWithDescendants =
   (includePrivateDocs = false) =>
-  async (parentDoc: BaseModel | null) => {
-    const docs = parentDoc ? await database.getWithDescendants(parentDoc) : [];
-    return docs.filter(
-      // Don't include if private, except if we want to
-      doc => !doc?.isPrivate || includePrivateDocs,
-    );
-  };
+    async (parentDoc: BaseModel | null) => {
+      const docs = parentDoc ? await database.getWithDescendants(parentDoc) : [];
+      return docs.filter(
+        // Don't include if private, except if we want to
+        doc => !doc?.isPrivate || includePrivateDocs,
+      );
+    };
 
 export async function exportWorkspacesHAR(workspaces: Workspace[], includePrivateDocs = false) {
   const promises = workspaces.map(getDocWithDescendants(includePrivateDocs));
@@ -316,7 +314,7 @@ export async function exportHarWithRenderedRequest(renderedRequest: RenderedRequ
     cookies: getRequestCookies(renderedRequest),
     headers: getRequestHeaders(renderedRequest),
     queryString: getRequestQueryString(renderedRequest),
-    postData: getRequestPostData(renderedRequest),
+    postData: await getRequestPostData(renderedRequest),
     headersSize: -1,
     bodySize: -1,
   };
@@ -346,7 +344,7 @@ export function getResponseCookiesFromHeaders(headers: Har.Cookie[]) {
 
     try {
       cookie = ToughCookie.parse(harCookie.value || '', { loose: true });
-    } catch (error) {}
+    } catch (error) { }
 
     if (cookie === null || cookie === undefined) {
       return accumulator;
@@ -442,12 +440,14 @@ function getRequestQueryString(renderedRequest: RenderedRequest): Har.QueryStrin
   }));
 }
 
-function getRequestPostData(renderedRequest: RenderedRequest): Har.PostData | undefined {
+async function getRequestPostData(renderedRequest: RenderedRequest): Promise<Har.PostData | undefined> {
   let body;
   if (renderedRequest.body.fileName) {
     try {
+      const text = (await window.main.secureReadFile({ path: renderedRequest.body.fileName })).content;
+
       body = {
-        text: fs.readFileSync(renderedRequest.body.fileName, 'base64'),
+        text
       };
     } catch (error) {
       console.warn('[code gen] Failed to read file', error);

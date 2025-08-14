@@ -27,6 +27,12 @@ test('can send gRPC requests using mTLS requests (with reflection)', async ({ ap
   // add root CA and client certificate
   const fixturePath = getFixturePath('certificates');
 
+  // add the path to allowed data folder list
+  await page.getByTestId('settings-button').click();
+  await page.getByTestId('dataFolders').fill(getFixturePath('certificates'));
+  await page.getByTestId('dataFolders-btn').click();
+  await page.locator('.app').press('Escape');
+
   await page.getByRole('button', { name: 'Add Certificates' }).click();
   let fileChooserPromise = page.waitForEvent('filechooser');
   await page.getByRole('button', { name: 'Add CA Certificate' }).click();

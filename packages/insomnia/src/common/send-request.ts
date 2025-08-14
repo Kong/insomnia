@@ -1,6 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+import { isFsAccessingAllowed } from '~/common/validators';
+
 import { type BaseModel } from '../models';
 import * as models from '../models';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
@@ -16,7 +18,6 @@ import {
 } from '../network/network';
 import { defaultSendActionRuntime } from '../network/network';
 import { database } from './database';
-import { isFsAccessingAllowed } from './validators';
 
 // The network layer uses settings from the settings model
 // We want to give consumers the ability to override certain settings

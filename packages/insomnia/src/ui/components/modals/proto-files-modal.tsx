@@ -1,4 +1,3 @@
-import fs from 'node:fs';
 import path from 'node:path';
 
 import * as protoLoader from '@grpc/proto-loader';
@@ -229,10 +228,12 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
     if (!(await isProtofileValid(filePath))) {
       return;
     }
-    const contents = await fs.promises.readFile(filePath, 'utf-8');
+    // allow to read the file as it is chosen by user
+    const { content } = await window.main.secureReadFile({ path: filePath, overrideDataFolders: [filePath] });
+
     const updatedFile = await models.protoFile.update(protoFile, {
       name: path.basename(filePath),
-      protoText: contents,
+      protoText: content,
     });
     const impacted = await models.grpcRequest.findByProtoFileId(updatedFile._id);
     const requestIds = impacted.map(g => g._id);
@@ -282,11 +283,13 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
     if (!(await isProtofileValid(filePath))) {
       return;
     }
-    const contents = await fs.promises.readFile(filePath, 'utf-8');
+    // allow to read the file as it is chosen by user
+    const { content } = await window.main.secureReadFile({ path: filePath, overrideDataFolders: [filePath] });
+
     const newFile = await models.protoFile.create({
       name: path.basename(filePath),
       parentId: workspaceId,
-      protoText: contents,
+      protoText: content,
     });
     setSelectedId(newFile._id);
   };

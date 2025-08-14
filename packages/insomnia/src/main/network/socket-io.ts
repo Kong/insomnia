@@ -20,6 +20,7 @@ import { filterClientCertificates } from '../../network/certificate';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
+import { secureReadFile } from '../secure-read-file';
 
 export interface SocketIOpenEvent {
   _id: string;
@@ -146,8 +147,9 @@ const getCertificates = async ({
   const caCert = await models.caCertificate.findByParentId(workspaceId);
   const caCertficatePath = !caCert?.disabled ? caCert?.path : '';
   // attempt to read CA Certificate PEM from disk, fallback to root certificates
+  // allow to read the file as it is chosen by user
   const caCertificate =
-    (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
+    (caCertficatePath && (await secureReadFile(caCertficatePath, undefined, [caCertficatePath])).toString()) || tls.rootCertificates.join('\n');
 
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const filteredClientCertificates = filterClientCertificates(clientCertificates, url, 'wss:');

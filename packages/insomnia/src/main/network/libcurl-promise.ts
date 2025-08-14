@@ -28,6 +28,7 @@ import { describeByteSize, hasAuthHeader } from '../../common/misc';
 import type { ClientCertificate } from '../../models/client-certificate';
 import type { RequestHeader } from '../../models/request';
 import type { ResponseHeader } from '../../models/response';
+import { secureReadFile } from '../secure-read-file';
 import { buildMultipart } from './multipart';
 import { parseHeaderStrings } from './parse-header-strings';
 export interface CurlRequestOptions {
@@ -66,6 +67,7 @@ interface SettingsUsedHere {
   httpProxy: string;
   httpsProxy: string;
   noProxy: string;
+  dataFolders: string[];
 }
 
 export interface ResponseTimelineEntry {
@@ -126,7 +128,8 @@ export const curlRequest = (options: CurlRequestOptions) =>
         authHeader,
         noDecompress = false,
       } = options;
-      const caCert = caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString();
+      // allow reading the file as the caCert is chosen by user
+      const caCert = caCertficatePath && (await secureReadFile(caCertficatePath, undefined, [caCertficatePath])).toString();
 
       const { curl, debugTimeline } = createConfiguredCurlInstance({
         req,

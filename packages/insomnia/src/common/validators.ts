@@ -1,9 +1,19 @@
+import path from 'node:path';
+
 import type { CaCertificate } from '../models/ca-certificate';
 import type { ClientCertificate } from '../models/client-certificate';
 import type { Settings } from '../models/settings';
 import type { RenderedRequest } from '../templating/types';
 
 const PREF_SECURITY = 'Insomnia’s Preferences → Security';
+
+export const throwError = (fileName: string, fromCli: boolean) => {
+  if (fromCli) {
+    throw `Insomnia cannot access the file ‘${fileName}’. You can specify paths with one or more "--dataFolders <directory>" or "-f <directory>" to allow accessing.`;
+  } else {
+    throw `Insomnia cannot access the file ‘${fileName}’. You must specify which directories Insomnia can access in ${PREF_SECURITY}.`;
+  }
+};
 
 export function isFsAccessingAllowed(
   renderedRequest: RenderedRequest,
@@ -12,21 +22,20 @@ export function isFsAccessingAllowed(
   _?: CaCertificate | null,
   fromCli?: boolean,
 ) {
-  const throwError = (fileName: string) => {
-    if (fromCli) {
-      throw `Insomnia cannot access the file ‘${fileName}’. You can specify paths with one or more "--dataFolders <directory>" or "-f <directory>" to allow accessing.`;
-    } else {
-      throw `Insomnia cannot access the file ‘${fileName}’. You must specify which directories Insomnia can access in ${PREF_SECURITY}.`;
-    }
-  };
+
 
   // case1: check request body (set by scripts or request body editor)
   if (renderedRequest.body.fileName !== undefined && renderedRequest.body.fileName !== '') {
+    const bodyPath = path.resolve(renderedRequest.body.fileName);
+
     const allowed = settings?.dataFolders.some(
-      folder => folder !== '' && renderedRequest.body.fileName?.startsWith(folder),
-    );
+      folder => {
+        const absFolder = path.resolve(folder);
+        return absFolder !== '' && bodyPath.startsWith(absFolder);
+      });
+
     if (!allowed) {
-      throwError(renderedRequest.body.fileName);
+      throwError(renderedRequest.body.fileName, fromCli || false);
     }
   }
 
@@ -34,9 +43,15 @@ export function isFsAccessingAllowed(
   if (Array.isArray(renderedRequest.body.params)) {
     renderedRequest.body.params.forEach(param => {
       if (param.type === 'file' && !param.disabled) {
-        const allowed = settings?.dataFolders.some(folder => folder !== '' && param.fileName?.startsWith(folder));
+        const absFilePath = path.resolve(param.fileName || '');
+
+        const allowed = settings?.dataFolders.some(allowedfolder => {
+          const absFolder = path.resolve(allowedfolder);
+          return absFolder !== '' && absFilePath?.startsWith(absFolder);
+        });
+
         if (!allowed) {
-          throwError(param.fileName || param.value);
+          throwError(absFilePath || param.value, fromCli || false);
         }
       }
     });
@@ -47,7 +62,7 @@ export function isFsAccessingAllowed(
   // if (!caCert?.disabled && caCert?.path) {
   //   const allowed = settings?.dataFolders.some(folder => folder !== '' && caCert.path?.startsWith(folder));
   //   if (!allowed) {
-  //     throwError(caCert.path);
+  //     throwError(caCert.path, fromCli || false);
   //   }
   // }
 
@@ -60,11 +75,16 @@ export function isFsAccessingAllowed(
 
       [cert.key, cert.cert, cert.pfx].forEach(targetPath => {
         if (targetPath) {
+          const absTargetPath = path.resolve(targetPath);
+
           const allowed = settings?.dataFolders.some(
-            folder => folder !== '' && targetPath !== '' && targetPath?.startsWith(folder),
+            allowedFolder => {
+              const absFolder = path.resolve(allowedFolder);
+              return absFolder !== '' && absTargetPath !== '' && absTargetPath?.startsWith(absFolder);
+            }
           );
           if (!allowed) {
-            throwError(targetPath);
+            throwError(absTargetPath, fromCli || false);
           }
         }
       });
