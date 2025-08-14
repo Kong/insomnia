@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 
+import { shell } from 'electron';
 import iconv from 'iconv-lite';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -128,7 +129,11 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     return await models.settings.get();
   },
   'openInBrowser': async (body: { url: string }) => {
-    return window.main.openInBrowser(body.url);
+    const { url } = body;
+    const { protocol } = new URL(url);
+    if (protocol === 'http:' || protocol === 'https:') {
+      return shell.openExternal(url);
+    }
   },
   'network.sendRequest': async (body: { request: DBRequest; extraInfo?: { requestChain: string[] } }) => {
     const { request, environment, settings, clientCertificates, caCert, timelinePath, responseId } =
