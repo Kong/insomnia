@@ -463,7 +463,7 @@ export const database = {
 
     const flushId = await database.bufferChanges();
 
-    const docs = await database.withDescendants(doc);
+    const docs = await database.getWithDescendants(doc);
     const docIds = docs.map(d => d._id);
     const types = [...new Set(docs.map(d => d.type))];
 
@@ -492,7 +492,7 @@ export const database = {
     const flushId = await database.bufferChanges();
 
     for (const doc of await database.find<T>(type, query)) {
-      const docs = await database.withDescendants(doc);
+      const docs = await database.getWithDescendants(doc);
       const docIds = docs.map(d => d._id);
       const types = [...new Set(docs.map(d => d.type))];
 
@@ -612,7 +612,7 @@ export const database = {
    * @param types - Only query specified types, if provided
    * @returns A promise that resolves to an array of documents
    */
-  getWithDescendants: async function <T extends BaseModel>(doc: T, types: models.ModelTypes) {
+  getWithDescendants: async function <T extends BaseModel>(doc: T, types: models.ModelTypes = []) {
     if (db._empty) {
       return _send<T[]>('getWithDescendants', ...arguments);
     }
@@ -622,7 +622,6 @@ export const database = {
     let docsToReturn: BaseModel[] = [doc];
 
     const queryTypesDescendantMap = types?.length ? models.generateDescendantMap(types) : models.DESCENDANT_MAP;
-
     async function findDescendants(docs: BaseModel[]): Promise<BaseModel[]> {
       let foundDocs: BaseModel[] = [];
 

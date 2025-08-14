@@ -28,7 +28,7 @@ import { getRenderedRequestAndContext } from './render';
 const getDocWithDescendants =
   (includePrivateDocs = false) =>
   async (parentDoc: BaseModel | null) => {
-    const docs = await database.withDescendants(parentDoc);
+    const docs = parentDoc ? await database.getWithDescendants(parentDoc) : [];
     return docs.filter(
       // Don't include if private, except if we want to
       doc => !doc?.isPrivate || includePrivateDocs,

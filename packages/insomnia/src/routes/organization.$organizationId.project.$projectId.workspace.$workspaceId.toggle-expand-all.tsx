@@ -18,10 +18,10 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     toggle: 'collapse-all' | 'expand-all';
   };
   const isCollapsed = data.toggle === 'collapse-all';
-  const descendants = await database.withDescendants(workspace, null, [], {
-    [workspace.type]: [models.requestGroup.type],
-    [models.requestGroup.type]: [models.requestGroup.type, models.requestGroupMeta.type],
-  });
+  const descendants = await database.getWithDescendants(workspace, [
+    models.requestGroup.type,
+    models.requestGroupMeta.type,
+  ]);
 
   const requestGroups = descendants.filter(isRequestGroup);
   const requestGroupMetas = descendants.filter(isRequestGroupMeta);
