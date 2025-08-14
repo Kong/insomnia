@@ -69,34 +69,34 @@ jobs:
           )"
         env:
           GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
-  create-draft-release:
-    timeout-minutes: 10
+
+  trigger-release-build:
+    timeout-minutes: 5
     runs-on: ubuntu-22.04
-    permissions:
-      actions: read # For getting workflow run info for keyless signing of docker image
-      contents: write # Required to upload assets
-      packages: write
     steps:
-      - name: Checkout branch # Check out the develop branch
+
+      - name: Checkout branch
         uses: actions/checkout@v4
         with:
-          ref: develop
-          fetch-depth: 0
+          ref: ${{ env.RELEASE_BRANCH }}
+          repository: kong/insomnia
           persist-credentials: false
-      - name: Download release assets
+
+      - name: Configure Git user
+        id: configure_git_user
+        uses: Homebrew/actions/git-user-config@266845213695c3047d210b2e8fbc42ecdaf45802 # master
+        with:
+          username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
+
+      - name: Git Commit
+        run: git commit -am "Trigger release/${{ env.RELEASE_VERSION}} build" --allow-empty
+
+      - name: Git Push changes
         run: |
-          gh release download core@${{ env.RELEASE_VERSION }} \
-          --dir=${{ env.ARTIFACTS_DOWNLOAD_PATH }} \
-          --clobber
+          remote_repo="https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/kong/insomnia.git"
+          git push "${remote_repo}" --follow-tags
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Upload release assets
-        run: |
-          gh release upload core@${{ env.RELEASE_VERSION }} \
-          ${{ env.ARTIFACTS_DOWNLOAD_PATH }}/* \
-          --repo=kong/insomnia
-        env:
-          GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
       
 
 
