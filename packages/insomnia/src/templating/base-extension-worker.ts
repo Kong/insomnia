@@ -179,8 +179,13 @@ export default class BaseExtension {
       meta: renderMeta,
       renderPurpose,
       util: {
-        readFile: async (path: string, encoding?: string) =>
-          fetchFromTemplateWorkerDatabase('readFile', { path, encoding }),
+        readFile: async (path: string, encoding?: string) => {
+          const allowed = renderContext?.getSettings().dataFolders.some((folder: string) => folder !== '' && path.startsWith(folder));
+          if (!allowed) {
+            throw `Insomnia cannot access the file ‘${path}’. You can adjust this in Preferences → Security.`;
+          }
+          return fetchFromTemplateWorkerDatabase('readFile', { path, encoding });
+        },
         nodeOS: async () => fetchFromTemplateWorkerDatabase('nodeOS', {}),
         decode: async (buffer: Buffer, encoding?: string) =>
           fetchFromTemplateWorkerDatabase('decode', { buffer, encoding }),

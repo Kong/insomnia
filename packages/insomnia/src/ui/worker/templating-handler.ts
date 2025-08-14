@@ -22,6 +22,7 @@ export function renderInWorker({ input, context, path, ignoreUndefinedEnvVariabl
       keysContext: context.getKeysContext(),
       projectId: context.getProjectId(),
       purpose: context.getPurpose(),
+      settings: context.getSettings(),
     },
   };
 

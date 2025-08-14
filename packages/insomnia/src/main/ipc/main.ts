@@ -15,7 +15,7 @@ import {
 import type { UtilityProcess } from 'electron/main';
 import iconv from 'iconv-lite';
 
-import type { HiddenBrowserWindowBridgeAPI } from '../../hidden-window';
+import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import * as models from '../../models';
 import type { PluginTemplateTag } from '../../templating/types';
 import type { SegmentEvent } from '../analytics';

@@ -56,7 +56,7 @@ Unexplored ideas in this area.
 
 There are a few notable directories inside it:
 
-- `/main.development.js` Entry for Electron.
+- `/entry.main.js` Entry for Electron.
 - `/src/main` Stuff that runs inside Electron's main process.
 - `/src/ui` React components and styling.
 - `/src/common` Utilities used across both main and render processes.

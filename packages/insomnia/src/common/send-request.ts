@@ -16,10 +16,11 @@ import {
 } from '../network/network';
 import { defaultSendActionRuntime } from '../network/network';
 import { database } from './database';
+import { isFsAccessingAllowed } from './validators';
 
 // The network layer uses settings from the settings model
 // We want to give consumers the ability to override certain settings
-type SettingsOverride = Pick<Settings, 'validateSSL'>;
+type SettingsOverride = Pick<Settings, 'validateSSL' | 'dataFolders'>;
 const wrapAroundIterationOverIterationData = (
   list?: UserUploadEnvironment[],
   currentIteration?: number,
@@ -96,6 +97,14 @@ export async function getSendRequestCallbackMemDb(
     });
     // skip plugins
     const renderedRequest = renderedResult.request;
+
+    isFsAccessingAllowed(
+      renderedRequest,
+      mutatedContext.settings,
+      mutatedContext.clientCertificates,
+      requestData.caCert,
+      true,
+    );
 
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,

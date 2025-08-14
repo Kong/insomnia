@@ -27,6 +27,7 @@ self.onmessage = async event => {
     context.getKeysContext = () => context.serializedFunctions.keysContext;
     context.getProjectId = () => context.serializedFunctions.projectId;
     context.getPurpose = () => context.serializedFunctions.purpose;
+    context.getSettings = () => context.serializedFunctions.settings;
     const result = await performJob({ input, context, path, ignoreUndefinedEnvVariable });
     self.postMessage({ id, result });
   } catch (err) {

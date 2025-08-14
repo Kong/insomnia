@@ -110,7 +110,7 @@ export async function createHiddenBrowserWindow() {
       webPreferences: {
         contextIsolation: false,
         nodeIntegration: true,
-        preload: path.join(__dirname, 'hidden-window-preload.js'),
+        preload: path.join(__dirname, 'entry.hidden-window-preload.min.js'),
         spellcheck: false,
         devTools: process.env.NODE_ENV === 'development',
       },
@@ -209,7 +209,7 @@ export function createWindow(): ElectronBrowserWindow {
     acceptFirstMouse: true,
     icon: path.resolve(__dirname, appLogo),
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, 'entry.preload.min.js'),
       zoomFactor: getZoomFactor(),
       nodeIntegration: true,
       nodeIntegrationInWorker: false, // must remain false to ensure the nunjucks web worker sandbox does not have access to Node.js APIs

@@ -201,7 +201,12 @@ export const sendActionImplementation = async (options: {
 
   invariant(requestMeta, 'RequestMeta not found');
 
-  isFsAccessingAllowed(renderedRequest, requestData.settings);
+  isFsAccessingAllowed(
+    renderedRequest,
+    mutatedContext.settings,
+    mutatedContext.clientCertificates,
+    requestData.caCert,
+  );
 
   window.main.addExecutionStep({ requestId, stepName: 'Sending request' });
   const response = await sendCurlAndWriteTimeline(

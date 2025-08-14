@@ -478,6 +478,8 @@ export async function getRenderContext({
     getKeySource(transientVariables.data || {}, inKey, transientVariables.name || 'scriptLocalVariables');
   }
 
+  const settings = await models.settings.get();
+
   // Add meta data helper function
   const baseContext: BaseRenderContext = {
     getMeta: () => ({
@@ -493,6 +495,7 @@ export async function getRenderContext({
     getGlobalEnvironmentId: () => subGlobalEnvironment?._id || rootGlobalEnvironment?._id,
     // It is possible for a project to not exist because this code path can be reached via Inso which has no concept of a project.
     getProjectId: () => project?._id,
+    getSettings: () => ({ dataFolders: settings.dataFolders }),
   };
 
   // Generate the context we need to render
@@ -577,7 +580,7 @@ export async function getRenderedRequestAndContext({
       o.query = o.query.replace(/#}/g, '# }');
       request.body.text = JSON.stringify(o);
     }
-  } catch (err) {}
+  } catch (err) { }
 
   // Render description separately because it's lower priority
   const description = request.description;

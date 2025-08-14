@@ -14,6 +14,7 @@ import type { SocketIORequest } from '../../models/socket-io-request';
 import type { WebSocketRequest } from '../../models/websocket-request';
 import { getAuthObjectOrNull, isAuthEnabled } from '../../network/authentication';
 import { getOrInheritAuthentication } from '../../network/network';
+import { RenderError } from '../../templating/render-error';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../utils/url/querystring';
 import { useNunjucks } from '../context/nunjucks/use-nunjucks';
 import { CopyButton } from './base/copy-button';
@@ -108,7 +109,11 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
       } catch (error: unknown) {
         console.warn(error);
         setTooLong(false);
-        setPreviewString(defaultPreview);
+        if (typeof error === 'object' && error instanceof RenderError) {
+          setPreviewString(error.message);
+        } else {
+          setPreviewString(defaultPreview);
+        }
       }
     };
     fn();
