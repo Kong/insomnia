@@ -184,11 +184,13 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
               url: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/debug/request/${doc._id}`,
             });
           } else if (isRequestGroup(doc)) {
-            const folderEntities = await database.withDescendants(doc, models.request.type, [
+            const folderEntities = await database.getWithDescendants(doc, [
               models.request.type,
+              models.grpcRequest.type,
+              models.webSocketRequest.type,
+              models.socketIORequest.type,
               models.requestGroup.type,
             ]);
-            console.log('folderEntities:', folderEntities);
             const batchUpdates = [doc, ...folderEntities].map(entity => {
               return {
                 id: entity._id,

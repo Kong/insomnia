@@ -170,34 +170,8 @@ export class NeDBClient {
       ];
     } else if (type !== null && id === null) {
       const workspace = await db.get(models.workspace.type, this._workspaceId);
-      let typeFilter = [type];
 
-      const modelTypesWithinFolders = [models.request.type, models.grpcRequest.type, models.webSocketRequest.type];
-      if (modelTypesWithinFolders.includes(type)) {
-        typeFilter = [models.requestGroup.type, type];
-      }
-
-      if (type === models.unitTest.type) {
-        typeFilter = [models.unitTestSuite.type, type];
-      }
-
-      if (type === models.protoFile.type) {
-        typeFilter = [models.protoDirectory.type, type];
-      }
-
-      if (type === models.mockRoute.type) {
-        typeFilter = [models.mockServer.type, type];
-      }
-
-      if (type === models.webSocketPayload.type) {
-        typeFilter = [models.webSocketRequest.type, type];
-      }
-
-      if (type === models.socketIOPayload.type) {
-        typeFilter = [models.socketIORequest.type, type];
-      }
-
-      const children = await db.withDescendants(workspace, null, typeFilter);
+      const children = workspace ? await db.getWithDescendants(workspace, [type] as models.ModelTypes) : [];
       docs = children.filter(d => d.type === type && !d.isPrivate);
     } else {
       throw this._errMissing(filePath);

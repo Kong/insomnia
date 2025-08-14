@@ -361,8 +361,11 @@ export const revalidateWorkspaceActiveRequest = async (requestId: string, worksp
 };
 
 export const revalidateWorkspaceActiveRequestByFolder = async (requestGroup: RequestGroup, workspaceId: string) => {
-  const docs = await database.withDescendants(requestGroup, models.request.type, [
+  const docs = await database.getWithDescendants(requestGroup, [
     models.request.type,
+    models.grpcRequest.type,
+    models.webSocketRequest.type,
+    models.socketIORequest.type,
     models.requestGroup.type,
   ]);
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);

@@ -9,7 +9,6 @@ import {
   EXPORT_TYPE_PROTO_FILE,
   EXPORT_TYPE_REQUEST,
   EXPORT_TYPE_REQUEST_GROUP,
-  EXPORT_TYPE_RUNNER_TEST_RESULT,
   EXPORT_TYPE_SOCKETIO_PAYLOAD,
   EXPORT_TYPE_SOCKETIO_REQUEST,
   EXPORT_TYPE_UNIT_TEST,
@@ -252,8 +251,6 @@ export const MODELS_BY_EXPORT_TYPE: Record<string, ReturnType<typeof all>[number
   [EXPORT_TYPE_MOCK_SERVER]: mockServer,
   [EXPORT_TYPE_MOCK_ROUTE]: mockRoute,
   [EXPORT_TYPE_GRPC_REQUEST]: grpcRequest,
-  // @TODO Maybe we don't need this to be exported
-  [EXPORT_TYPE_RUNNER_TEST_RESULT]: runnerTestResult,
   [EXPORT_TYPE_REQUEST_GROUP]: requestGroup,
   [EXPORT_TYPE_UNIT_TEST_SUITE]: unitTestSuite,
   [EXPORT_TYPE_UNIT_TEST]: unitTest,
@@ -281,9 +278,21 @@ export const DESCENDANT_MAP: Record<string, string[]> = {
     unitTestSuite.type,
     protoDirectory.type,
     protoFile.type,
+    workspaceMeta.type,
+    runnerTestResult.type,
   ],
-  [requestGroup.type]: [requestGroup.type, request.type, grpcRequest.type, webSocketRequest.type, socketIORequest.type],
+  [requestGroup.type]: [
+    requestGroup.type,
+    request.type,
+    grpcRequest.type,
+    webSocketRequest.type,
+    socketIORequest.type,
+    runnerTestResult.type,
+    requestGroupMeta.type,
+  ],
+  [request.type]: [requestMeta.type, response.type, requestVersion.type],
   [webSocketRequest.type]: [webSocketPayload.type],
+  [socketIORequest.type]: [socketIOPayload.type],
   [mockServer.type]: [mockRoute.type],
   [environment.type]: [environment.type],
   [unitTestSuite.type]: [unitTest.type],
@@ -325,5 +334,3 @@ export const generateDescendantMap = (queryTypes: ModelTypes): Record<string, st
 
   return result;
 };
-
-export const WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP = generateDescendantMap(EXPORTABLE_TYPES);

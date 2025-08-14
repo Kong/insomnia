@@ -165,7 +165,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
       }
 
       // Try parse all loaded proto files to make sure they are valid
-      const loadedEntities = await db.withDescendants(createdDir);
+      const loadedEntities = await db.getWithDescendants(createdDir);
       const loadedFiles = loadedEntities.filter(isProtoFile);
 
       for (const protoFile of loadedFiles) {

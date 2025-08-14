@@ -488,10 +488,6 @@ export async function getInsomniaV5DataExport({
       throw new Error('Workspace not found');
     }
 
-    // console.time('withDescendants');
-    // const workspaceDescendants1 = await database.withDescendants(workspace);
-    // console.timeEnd('withDescendants');
-
     console.time('getWithDescendants');
     const workspaceDescendants = await database.getWithDescendants(workspace, models.EXPORTABLE_TYPES);
     console.timeEnd('getWithDescendants');
