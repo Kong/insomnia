@@ -61,12 +61,12 @@ export async function update(patch: Partial<Stats>) {
 }
 
 export async function get() {
-  const results = (await db.find<Stats>(type)) || [];
+  const result = await db.findOne<Stats>(type);
 
-  if (results.length === 0) {
+  if (!result) {
     return create();
   }
-  return results[0];
+  return result;
 }
 
 export function all() {
