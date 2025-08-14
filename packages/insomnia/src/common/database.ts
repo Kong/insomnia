@@ -38,14 +38,14 @@ export type ChangeType = 'insert' | 'update' | 'remove';
 export const database = {
   // Get all documents of a certain type
   all: async function <T extends BaseModel>(type: string) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<T[]>('all', ...arguments);
     }
     return database.find<T>(type);
   },
 
   batchModifyDocs: async function ({ upsert = [], remove = [] }: Operation) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<void>('batchModifyDocs', ...arguments);
     }
     const flushId = await database.bufferChanges();
@@ -60,7 +60,7 @@ export const database = {
   /** buffers database changes and returns a buffer id, automatically call flushChanges in millis,
    * bufferChanges and flushChanges should be called in pair every time documents changes are made to trigger change listeners */
   bufferChanges: async function (millis = 1000) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<number>('bufferChanges', ...arguments);
     }
     bufferingChanges = true;
@@ -70,7 +70,7 @@ export const database = {
 
   /** buffers database changes and returns a buffer id */
   bufferChangesIndefinitely: async function () {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<number>('bufferChangesIndefinitely', ...arguments);
     }
     bufferingChanges = true;
@@ -79,11 +79,11 @@ export const database = {
 
   /** return count num of documents matching query */
   count: async function <T extends BaseModel>(type: string, query: Query<T> = {}) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<number>('count', ...arguments);
     }
     return new Promise<number>((resolve, reject) => {
-      (db[type] as NeDB<T>).count(query, (err, count) => {
+      (nedbBucket[type] as NeDB<T>).count(query, (err, count) => {
         if (err) {
           return reject(err);
         }
@@ -122,7 +122,7 @@ export const database = {
 
   /** duplicate doc and its descendents recursively */
   duplicate: async function <T extends BaseModel>(originalDoc: T, patch: Patch<T> = {}) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<T>('duplicate', ...arguments);
     }
     const flushId = await database.bufferChanges();
@@ -167,16 +167,16 @@ export const database = {
 
   /** find documents matching query */
   find: async function <T extends BaseModel>(type: string, query: Query<T> | string = {}, sort: Sort = { created: 1 }) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<T[]>('find', ...arguments);
     }
     return new Promise<T[]>((resolve, reject) => {
-      if (!db[type]) {
+      if (!nedbBucket[type]) {
         console.warn(`[db] No collection for type "${type}"`);
         resolve([]);
         return;
       }
-      (db[type] as NeDB<T>)
+      (nedbBucket[type] as NeDB<T>)
         .find(query)
         .sort(sort)
         .exec(async (err, rawDocs) => {
@@ -201,11 +201,11 @@ export const database = {
     query: Query<T> = {},
     limit: number | null = null,
   ) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<T[]>('findMostRecentlyModified', ...arguments);
     }
     return new Promise<T[]>(resolve => {
-      (db[type] as NeDB<T>)
+      (nedbBucket[type] as NeDB<T>)
         .find(query)
         .sort({
           modified: -1,
@@ -232,7 +232,7 @@ export const database = {
 
   /** trigger all changeListeners */
   flushChanges: async function (id = 0, fake = false) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<void>('flushChanges', ...arguments);
     }
 
@@ -271,7 +271,7 @@ export const database = {
 
   /** get the exact document by id */
   get: async function <T extends BaseModel>(type: string, id?: string) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<T>('get', ...arguments);
     }
 
@@ -283,7 +283,7 @@ export const database = {
   },
 
   getMostRecentlyModified: async function <T extends BaseModel>(type: string, query: Query<T> = {}) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<T>('getMostRecentlyModified', ...arguments);
     }
     const docs = await database.findMostRecentlyModified<T>(type, query, 1);
@@ -292,7 +292,7 @@ export const database = {
 
   /** get the first document matching query */
   getWhere: async function <T extends BaseModel>(type: string, query: Query<T>) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<T>('getWhere', ...arguments);
     }
     const docs = await database.find<T>(type, query);
@@ -309,18 +309,18 @@ export const database = {
     if (forceReset) {
       changeListeners = [];
 
-      for (const attr of Object.keys(db)) {
+      for (const attr of Object.keys(nedbBucket)) {
         if (attr === '_empty') {
           continue;
         }
 
-        delete db[attr];
+        delete nedbBucket[attr];
       }
     }
 
     // Fill in the defaults
     for (const modelType of types) {
-      if (db[modelType]) {
+      if (nedbBucket[modelType]) {
         consoleLog(`[db] Already initialized DB.${modelType}`);
         continue;
       }
@@ -337,10 +337,9 @@ export const database = {
         ),
       );
 
-      db[modelType] = collection;
+      nedbBucket[modelType] = collection;
     }
 
-    delete db._empty;
     electron.ipcMain.on('db.fn', async (e, fnName, replyChannel, ...args) => {
       try {
         // @ts-expect-error -- mapping unsoundness
@@ -373,7 +372,7 @@ export const database = {
   },
 
   insert: async function <T extends BaseModel>(doc: T, fromSync = false, initializeModel = true) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<T>('insert', ...arguments);
     }
     return new Promise<T>(async (resolve, reject) => {
@@ -389,7 +388,7 @@ export const database = {
         return reject(err);
       }
 
-      (db[doc.type] as NeDB<T>).insert(docWithDefaults, (err, newDoc: T) => {
+      (nedbBucket[doc.type] as NeDB<T>).insert(docWithDefaults, (err, newDoc: T) => {
         if (err) {
           return reject(err);
         }
@@ -411,7 +410,7 @@ export const database = {
 
   /** remove doc and its descendants */
   remove: async function <T extends BaseModel>(doc: T, fromSync = false) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<void>('remove', ...arguments);
     }
 
@@ -423,7 +422,7 @@ export const database = {
 
     // Don't really need to wait for this to be over;
     types.map(t =>
-      db[t].remove(
+      nedbBucket[t].remove(
         {
           _id: {
             $in: docIds,
@@ -440,7 +439,7 @@ export const database = {
   },
 
   removeWhere: async function <T extends BaseModel>(type: string, query: Query<T>) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<void>('removeWhere', ...arguments);
     }
     const flushId = await database.bufferChanges();
@@ -452,7 +451,7 @@ export const database = {
 
       // Don't really need to wait for this to be over;
       types.map(t =>
-        db[t].remove(
+        nedbBucket[t].remove(
           {
             _id: {
               $in: docIds,
@@ -471,16 +470,16 @@ export const database = {
 
   /** Removes entries without removing their children */
   unsafeRemove: async function <T extends BaseModel>(doc: T, fromSync = false) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<void>('unsafeRemove', ...arguments);
     }
 
-    (db[doc.type] as NeDB<T>).remove({ _id: doc._id });
+    (nedbBucket[doc.type] as NeDB<T>).remove({ _id: doc._id });
     notifyOfChange('remove', doc, fromSync);
   },
 
   update: async function <T extends BaseModel>(doc: T, fromSync = false, patches: Patch<T>[] = []) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<T>('update', ...arguments);
     }
 
@@ -493,7 +492,7 @@ export const database = {
         return reject(err);
       }
 
-      (db[doc.type] as NeDB<T>).update(
+      (nedbBucket[doc.type] as NeDB<T>).update(
         { _id: docWithDefaults._id },
         docWithDefaults,
         // TODO(TSCONVERSION) see comment below, upsert can happen automatically as part of the update
@@ -513,7 +512,7 @@ export const database = {
 
   // TODO(TSCONVERSION) the update method above can now take an upsert property
   upsert: async function <T extends BaseModel>(doc: T, fromSync = false) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<T>('upsert', ...arguments);
     }
     const existingDoc = await database.get<T>(doc.type, doc._id);
@@ -526,7 +525,7 @@ export const database = {
 
   /** get all ancestors of specified types of a document */
   withAncestors: async function <T extends BaseModel>(doc: T | null, types: string[] = allTypes()) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<T[]>('withAncestors', ...arguments);
     }
 
@@ -567,7 +566,7 @@ export const database = {
    * @returns A promise that resolves to an array of documents
    */
   getWithDescendants: async function <T extends BaseModel>(doc: T, types: models.ModelTypes = []) {
-    if (db._empty) {
+    if (process.type === 'renderer') {
       return _send<T[]>('getWithDescendants', ...arguments);
     }
 
@@ -623,16 +622,12 @@ export const database = {
 
 type DB = Record<string, NeDB>;
 
-// @ts-expect-error -- TSCONVERSION _empty doesn't match the index signature, use something other than _empty in future
-const db: DB = {
-  // _empty is true if it's in the renderer process
-  _empty: true,
-} as DB;
+const nedbBucket: DB = {} as DB;
 
 // ~~~~~~~ //
 // HELPERS //
 // ~~~~~~~ //
-const allTypes = () => Object.keys(db);
+const allTypes = () => Object.keys(nedbBucket);
 
 function getDBFilePath(modelType: string) {
   // NOTE: Do not EVER change this. EVER!
