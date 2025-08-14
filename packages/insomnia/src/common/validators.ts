@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import type { CaCertificate } from "../models/ca-certificate";
 import type { ClientCertificate } from "../models/client-certificate";
 import type { Settings } from "../models/settings";
@@ -20,7 +22,7 @@ export function isFsAccessingAllowed(
 
   // case1: check request body (set by scripts or request body editor)
   if (renderedRequest.body.fileName !== undefined && renderedRequest.body.fileName !== '') {
-    const allowed = settings?.dataFolders.some(folder => folder !== '' && renderedRequest.body.fileName?.startsWith(folder));
+    const allowed = settings?.dataFolders.some(folder => folder !== '' && path.normalize(renderedRequest.body.fileName || "").startsWith(folder));
     if (!allowed) {
       throwError(renderedRequest.body.fileName);
     }
@@ -30,7 +32,7 @@ export function isFsAccessingAllowed(
   if (Array.isArray(renderedRequest.body.params)) {
     renderedRequest.body.params.forEach(param => {
       if (param.type === "file" && !param.disabled) {
-        const allowed = settings?.dataFolders.some(folder => folder !== '' && param.fileName?.startsWith(folder));
+        const allowed = settings?.dataFolders.some(folder => folder !== '' && path.normalize(param.fileName || "").startsWith(folder));
         if (!allowed) {
           throwError(param.fileName || param.value);
         }
@@ -56,7 +58,7 @@ export function isFsAccessingAllowed(
 
       [cert.key, cert.cert, cert.pfx].forEach(targetPath => {
         if (targetPath) {
-          const allowed = settings?.dataFolders.some(folder => folder !== '' && targetPath !== "" && targetPath?.startsWith(folder));
+          const allowed = settings?.dataFolders.some(folder => folder !== '' && path.normalize(targetPath || "").startsWith(folder));
           if (!allowed) {
             throwError(targetPath);
           }
