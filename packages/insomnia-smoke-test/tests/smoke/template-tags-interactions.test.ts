@@ -22,7 +22,7 @@ const templateTagTestCases: Record<string, TemplateTagTestCase[]> = {
   hash: [
     {
       tagPrefix: "{% hash 'md5', 'hex', 'insomnia-test' %}",
-      expectedResult: 'b79b28083768d54575eacc7389e9128624685310',
+      expectedResult: 'b9c076eabf32fa4cdd7573a6df12d33c',
     },
   ],
   jsonPath: [{ tagPrefix: '{% jsonpath', expectedResult: 'bar' }],
