@@ -56,7 +56,7 @@ export async function updateOrCreateForParentId(workspaceId: string, patch: Part
 }
 
 export async function all() {
-  return db.all<ApiSpec>(type);
+  return db.find<ApiSpec>(type);
 }
 
 export function update(apiSpec: ApiSpec, patch: Partial<ApiSpec> = {}) {

@@ -64,5 +64,5 @@ export function remove(credentials: GitCredentials) {
 }
 
 export function all() {
-  return db.all<GitCredentials>(type);
+  return db.find<GitCredentials>(type);
 }

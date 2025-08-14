@@ -75,7 +75,7 @@ export function remove(requestGroup: RequestGroup) {
 }
 
 export function all() {
-  return db.all<RequestGroup>(type);
+  return db.find<RequestGroup>(type);
 }
 
 export async function duplicate(requestGroup: RequestGroup, patch: Partial<RequestGroup> = {}) {

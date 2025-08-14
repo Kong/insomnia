@@ -86,5 +86,5 @@ export async function getOrCreateByParentId(parentId: string) {
 }
 
 export function all() {
-  return db.all<OAuth2Token>(type);
+  return db.find<OAuth2Token>(type);
 }

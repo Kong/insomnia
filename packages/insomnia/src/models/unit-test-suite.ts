@@ -57,5 +57,5 @@ export function findByParentId(parentId: string) {
 export const getById = (_id: string) => db.getWhere<UnitTestSuite>(type, { _id });
 
 export function all() {
-  return db.all<UnitTestSuite>(type);
+  return db.find<UnitTestSuite>(type);
 }

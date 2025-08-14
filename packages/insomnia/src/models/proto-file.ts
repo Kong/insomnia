@@ -72,5 +72,5 @@ export function findByParentId(parentId: string) {
 }
 
 export function all() {
-  return db.all<ProtoFile>(type);
+  return db.find<ProtoFile>(type);
 }

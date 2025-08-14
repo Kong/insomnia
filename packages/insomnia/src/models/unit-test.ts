@@ -55,5 +55,5 @@ export function getByParentId(parentId: string) {
 }
 
 export function all() {
-  return db.all<UnitTest>(type);
+  return db.find<UnitTest>(type);
 }

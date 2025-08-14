@@ -58,5 +58,5 @@ export function getById(_id: string) {
 }
 
 export function all() {
-  return db.all<UnitTestResult>(type);
+  return db.find<UnitTestResult>(type);
 }

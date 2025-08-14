@@ -145,5 +145,5 @@ export function getByName(name: string, provider: CloudProviderName) {
 }
 
 export function all() {
-  return db.all<CloudProviderCredential>(type);
+  return db.find<CloudProviderCredential>(type);
 }

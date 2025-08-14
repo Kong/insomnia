@@ -69,5 +69,5 @@ export function remove(cert: ClientCertificate) {
 }
 
 export function all() {
-  return db.all<ClientCertificate>(type);
+  return db.find<ClientCertificate>(type);
 }

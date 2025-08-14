@@ -77,7 +77,7 @@ export async function updateOrCreateByParentId(parentId: string, patch: Partial<
 }
 
 export function all() {
-  return db.all<GrpcRequestMeta>(type);
+  return db.find<GrpcRequestMeta>(type);
 }
 
 function expectParentToBeGrpcRequest(parentId: string | null) {

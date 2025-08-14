@@ -136,5 +136,5 @@ function _diffRequests(
 }
 
 export function all() {
-  return db.all<RequestVersion>(type);
+  return db.find<RequestVersion>(type);
 }

@@ -84,7 +84,7 @@ export function getById(_id: string) {
 }
 
 export function all() {
-  return db.all<RunnerTestResult>(type);
+  return db.find<RunnerTestResult>(type);
 }
 
 export function remove(item: RunnerTestResult) {

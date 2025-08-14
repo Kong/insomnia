@@ -80,7 +80,7 @@ export async function getOrCreateForParentId(parentId: string) {
 }
 
 export async function all() {
-  return db.all<BaseModel>(type);
+  return db.find<BaseModel>(type);
 }
 
 export async function getById(id: string): Promise<CookieJar | null> {

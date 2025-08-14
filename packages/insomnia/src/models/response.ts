@@ -106,7 +106,7 @@ export function findByParentId(parentId: string) {
 }
 
 export async function all() {
-  return db.all<Response>(type);
+  return db.find<Response>(type);
 }
 
 export async function removeForRequest(parentId: string, environmentId?: string | null) {

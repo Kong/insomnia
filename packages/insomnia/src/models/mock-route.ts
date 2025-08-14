@@ -73,5 +73,5 @@ export function remove(mockRoute: MockRoute) {
 }
 
 export function all() {
-  return db.all<MockRoute>(type);
+  return db.find<MockRoute>(type);
 }

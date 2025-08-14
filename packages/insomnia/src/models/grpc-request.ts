@@ -128,5 +128,5 @@ export async function duplicate(request: GrpcRequest, patch: Partial<GrpcRequest
 }
 
 export function all() {
-  return db.all<GrpcRequest>(type);
+  return db.find<GrpcRequest>(type);
 }

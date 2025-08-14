@@ -71,5 +71,5 @@ export async function batchRemoveIds(ids: string[]) {
 }
 
 export function all() {
-  return db.all<ProtoDirectory>(type);
+  return db.find<ProtoDirectory>(type);
 }

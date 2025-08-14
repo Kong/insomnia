@@ -36,14 +36,6 @@ export interface SpecificQuery {
 
 export type ChangeType = 'insert' | 'update' | 'remove';
 export const database = {
-  // Get all documents of a certain type
-  all: async function <T extends BaseModel>(type: string) {
-    if (process.type === 'renderer') {
-      return _send<T[]>('all', ...arguments);
-    }
-    return database.find<T>(type);
-  },
-
   batchModifyDocs: async function ({ upsert = [], remove = [] }: Operation) {
     if (process.type === 'renderer') {
       return _send<void>('batchModifyDocs', ...arguments);

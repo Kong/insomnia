@@ -75,7 +75,7 @@ export function remove(repo: GitRepository) {
 }
 
 export function all() {
-  return db.all<GitRepository>(type);
+  return db.find<GitRepository>(type);
 }
 export interface GitAuthor {
   name: string;

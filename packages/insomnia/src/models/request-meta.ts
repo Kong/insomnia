@@ -91,5 +91,5 @@ export async function updateOrCreateByParentId(parentId: string, patch: Partial<
 }
 
 export function all() {
-  return db.all<RequestMeta>(type);
+  return db.find<RequestMeta>(type);
 }

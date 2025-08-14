@@ -288,5 +288,5 @@ export function remove(environment: Environment) {
 }
 
 export function all() {
-  return db.all<Environment>(type);
+  return db.find<Environment>(type);
 }

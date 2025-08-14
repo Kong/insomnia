@@ -47,5 +47,5 @@ export function getByParentId(parentId: string) {
 }
 
 export function all() {
-  return db.all<RequestGroupMeta>(type);
+  return db.find<RequestGroupMeta>(type);
 }

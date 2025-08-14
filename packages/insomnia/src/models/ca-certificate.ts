@@ -61,5 +61,5 @@ export function removeWhere(parentId: string) {
 }
 
 export function all() {
-  return db.all<CaCertificate>(type);
+  return db.find<CaCertificate>(type);
 }

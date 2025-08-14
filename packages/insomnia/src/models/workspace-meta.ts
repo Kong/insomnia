@@ -77,5 +77,5 @@ export async function getOrCreateByParentId(parentId: string) {
 }
 
 export function all() {
-  return db.all<WorkspaceMeta>(type);
+  return db.find<WorkspaceMeta>(type);
 }

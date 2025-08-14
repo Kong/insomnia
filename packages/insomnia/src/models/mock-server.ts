@@ -79,5 +79,5 @@ export function remove(mockServer: MockServer) {
 }
 
 export function all() {
-  return db.all<MockServer>(type);
+  return db.find<MockServer>(type);
 }

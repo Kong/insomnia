@@ -70,7 +70,7 @@ export async function get() {
 }
 
 export function all() {
-  return db.all<Stats>(type) || [];
+  return db.find<Stats>(type) || [];
 }
 
 export async function incrementRequestStats({ createdRequests, deletedRequests, executedRequests }: Partial<Stats>) {

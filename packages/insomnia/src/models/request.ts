@@ -387,7 +387,7 @@ export function remove(request: Request) {
 }
 
 export async function all() {
-  return db.all<Request>(type);
+  return db.find<Request>(type);
 }
 
 // ~~~~~~~~~~ //
