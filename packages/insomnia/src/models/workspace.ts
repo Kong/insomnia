@@ -73,7 +73,7 @@ export async function create(patch: Partial<Workspace> = {}) {
 }
 
 export async function all() {
-  return await db.all<Workspace>(type);
+  return await db.find<Workspace>(type);
 }
 
 export function count() {

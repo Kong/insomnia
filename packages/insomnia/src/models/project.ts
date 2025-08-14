@@ -90,7 +90,7 @@ export function update(project: Project, patch: Partial<Project>) {
 }
 
 export async function all() {
-  const projects = await db.all<Project>(type);
+  const projects = await db.find<Project>(type);
   return projects;
 }
 

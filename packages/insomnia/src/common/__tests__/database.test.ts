@@ -13,7 +13,7 @@ describe('init()', () => {
     await db.init(models.types(), {
       inMemoryOnly: true,
     });
-    expect((await db.all(models.request.type)).length).toBe(0);
+    expect((await db.find(models.request.type)).length).toBe(0);
   });
 });
 

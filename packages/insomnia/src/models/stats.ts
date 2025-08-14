@@ -61,7 +61,7 @@ export async function update(patch: Partial<Stats>) {
 }
 
 export async function get() {
-  const results = (await db.all<Stats>(type)) || [];
+  const results = (await db.find<Stats>(type)) || [];
 
   if (results.length === 0) {
     return create();
