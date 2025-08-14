@@ -360,52 +360,6 @@ export const database = {
       await _repairDatabase();
       consoleLog(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
     }
-
-    // This isn't the best place for this but w/e
-    // Listen for response deletions and delete corresponding response body files
-    database.onChange(async (changes: ChangeBufferEvent[]) => {
-      for (const [type, doc] of changes) {
-        // TODO(TSCONVERSION) what's returned here is the entire model implementation, not just a model
-        // The type definition will be a little confusing
-        const m: Record<string, any> | null = models.getModel(doc.type);
-
-        if (!m) {
-          continue;
-        }
-
-        if (type === 'remove' && typeof m.hookRemove === 'function') {
-          try {
-            await m.hookRemove(doc, consoleLog);
-          } catch (err) {
-            consoleLog(`[db] Delete hook failed for ${type} ${doc._id}: ${err.message}`);
-          }
-        }
-
-        if (type === 'insert' && typeof m.hookInsert === 'function') {
-          try {
-            await m.hookInsert(doc, consoleLog);
-          } catch (err) {
-            consoleLog(`[db] Insert hook failed for ${type} ${doc._id}: ${err.message}`);
-          }
-        }
-
-        if (type === 'update' && typeof m.hookUpdate === 'function') {
-          try {
-            await m.hookUpdate(doc, consoleLog);
-          } catch (err) {
-            consoleLog(`[db] Update hook failed for ${type} ${doc._id}: ${err.message}`);
-          }
-        }
-      }
-    });
-
-    for (const model of models.all()) {
-      // @ts-expect-error -- TSCONVERSION optional type on response
-      if (typeof model.hookDatabaseInit === 'function') {
-        // @ts-expect-error -- TSCONVERSION optional type on response
-        await model.hookDatabaseInit?.(consoleLog);
-      }
-    }
   },
 
   /** init in renderer process */

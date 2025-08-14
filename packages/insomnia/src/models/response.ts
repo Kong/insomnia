@@ -97,20 +97,6 @@ export function migrate(doc: Response) {
     throw e;
   }
 }
-
-export function hookDatabaseInit(consoleLog: typeof console.log = console.log) {
-  consoleLog('[db] Init responses DB');
-}
-
-export function hookRemove(doc: Response, consoleLog: typeof console.log = console.log) {
-  fs.unlink(doc.bodyPath, () => {
-    consoleLog(`[response] Delete body ${doc.bodyPath}`);
-  });
-  fs.unlink(doc.timelinePath, () => {
-    consoleLog(`[response] Delete timeline ${doc.timelinePath}`);
-  });
-}
-
 export function getById(id: string) {
   return db.get<Response>(type, id);
 }
@@ -135,13 +121,19 @@ export async function removeForRequest(parentId: string, environmentId?: string 
   if (environmentId !== undefined && settings.filterResponsesByEnv) {
     query.environmentId = environmentId;
   }
-
+  const toDelete = await db.find<Response>(type, query);
+  for (const doc of toDelete) {
+    fs.promises.unlink(doc.bodyPath);
+    fs.promises.unlink(doc.timelinePath);
+  }
   // Also delete legacy responses here or else the user will be confused as to
   // why some responses are still showing in the UI.
   await db.removeWhere(type, query);
 }
 
 export function remove(response: Response) {
+  fs.promises.unlink(response.bodyPath);
+  fs.promises.unlink(response.timelinePath);
   return db.remove(response);
 }
 

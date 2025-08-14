@@ -62,20 +62,6 @@ export function migrate(doc: WebSocketResponse) {
   return doc;
 }
 
-export function hookDatabaseInit(consoleLog: typeof console.log = console.log) {
-  consoleLog('[db] Init websocket-responses DB');
-}
-
-export function hookRemove(doc: WebSocketResponse, consoleLog: typeof console.log = console.log) {
-  fs.unlink(doc.eventLogPath, () => {
-    consoleLog(`[response] Delete body ${doc.eventLogPath}`);
-  });
-
-  fs.unlink(doc.timelinePath, () => {
-    consoleLog(`[response] Delete timeline ${doc.timelinePath}`);
-  });
-}
-
 export function getById(id: string) {
   return db.get<WebSocketResponse>(type, id);
 }
@@ -100,13 +86,19 @@ export async function removeForRequest(parentId: string, environmentId?: string 
   if (environmentId !== undefined && settings.filterResponsesByEnv) {
     query.environmentId = environmentId;
   }
-
+  const toDelete = await db.find<WebSocketResponse>(type, query);
+  for (const doc of toDelete) {
+    fs.promises.unlink(doc.eventLogPath);
+    fs.promises.unlink(doc.timelinePath);
+  }
   // Also delete legacy responses here or else the user will be confused as to
   // why some responses are still showing in the UI.
   await db.removeWhere(type, query);
 }
 
 export function remove(response: WebSocketResponse) {
+  fs.promises.unlink(response.eventLogPath);
+  fs.promises.unlink(response.timelinePath);
   return db.remove(response);
 }
 

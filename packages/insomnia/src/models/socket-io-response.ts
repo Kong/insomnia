@@ -51,20 +51,6 @@ export function update(doc: SocketIOResponse, patch: Partial<SocketIOResponse>) 
   return db.docUpdate(doc, patch);
 }
 
-export function hookDatabaseInit(consoleLog: typeof console.log = console.log) {
-  consoleLog('[db] Init SocketIO-responses DB');
-}
-
-export function hookRemove(doc: SocketIOResponse, consoleLog: typeof console.log = console.log) {
-  fs.unlink(doc.eventLogPath, () => {
-    consoleLog(`[response] Delete body ${doc.eventLogPath}`);
-  });
-
-  fs.unlink(doc.timelinePath, () => {
-    consoleLog(`[response] Delete timeline ${doc.timelinePath}`);
-  });
-}
-
 export function getById(id: string) {
   return db.get<SocketIOResponse>(type, id);
 }
@@ -89,13 +75,19 @@ export async function removeForRequest(parentId: string, environmentId?: string 
   if (environmentId !== undefined && settings.filterResponsesByEnv) {
     query.environmentId = environmentId;
   }
-
+  const toDelete = await db.find<SocketIOResponse>(type, query);
+  for (const doc of toDelete) {
+    fs.promises.unlink(doc.eventLogPath);
+    fs.promises.unlink(doc.timelinePath);
+  }
   // Also delete legacy responses here or else the user will be confused as to
   // why some responses are still showing in the UI.
   await db.removeWhere(type, query);
 }
 
 export function remove(response: SocketIOResponse) {
+  fs.promises.unlink(response.eventLogPath);
+  fs.promises.unlink(response.timelinePath);
   return db.remove(response);
 }
 
