@@ -64,7 +64,6 @@
     "decompress": "^4.2.1",
     "dompurify": "^3.2.5",
     "electron-context-menu": "^3.6.1",
-    "electron-log": "^4.4.8",
     "electron-updater": "^6.6.2",
     "fastq": "^1.19.1",
     "graphql": "^16.10.0",
@@ -196,7 +195,8 @@
     "vkbeautify": "^0.99.3",
     "ws": "^8.18.1",
     "xpath": "0.0.34",
-    "zod": "^3.25.75"
+    "zod": "^3.25.75",
+    "electron-log": "^5.4.2"
   },
   "optionalDependencies": {
     "@kong/insomnia-plugin-external-vault": "0.1.0-alpha.1"
