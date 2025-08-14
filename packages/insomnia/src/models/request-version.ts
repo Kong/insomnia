@@ -49,7 +49,7 @@ export function migrate(doc: RequestVersion) {
 }
 
 export function getById(id: string) {
-  return db.get<RequestVersion>(type, id);
+  return db.findOne<RequestVersion>(type, { _id: id });
 }
 
 export function findByParentId(parentId: string) {

@@ -128,7 +128,7 @@ export class GitProjectNeDBClient {
       throw this._errMissing(filePath);
     }
 
-    const doc = await db.get(models.workspace.type, workspaceId);
+    const doc = await db.findOne(models.workspace.type, { _id: workspaceId });
 
     if (!doc) {
       return;

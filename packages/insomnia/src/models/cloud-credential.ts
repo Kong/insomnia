@@ -129,7 +129,7 @@ export function create(patch: Partial<CloudProviderCredential> = {}) {
 }
 
 export async function getById(id: string) {
-  return db.getWhere<CloudProviderCredential>(type, { _id: id });
+  return db.findOne<CloudProviderCredential>(type, { _id: id });
 }
 
 export function update(credential: CloudProviderCredential, patch: Partial<CloudProviderCredential>) {

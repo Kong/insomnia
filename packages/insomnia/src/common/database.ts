@@ -156,7 +156,12 @@ export const database = {
     await database.flushChanges(flushId);
     return createdDoc;
   },
-
+  findOne: async function <T extends BaseModel>(type: string, query: Query<T> | string = {}): Promise<T | null> {
+    if (process.type === 'renderer') {
+      return _send<T>('findOne', ...arguments);
+    }
+    return (nedbBucket[type] as NeDB<T>).findOneAsync(query);
+  },
   /** find documents matching query */
   find: async function <T extends BaseModel>(type: string, query: Query<T> | string = {}, sort: Sort = { created: 1 }) {
     if (process.type === 'renderer') {
@@ -261,33 +266,11 @@ export const database = {
     }
   },
 
-  /** get the exact document by id */
-  get: async function <T extends BaseModel>(type: string, id?: string) {
-    if (process.type === 'renderer') {
-      return _send<T>('get', ...arguments);
-    }
-
-    // Short circuit IDs used to represent nothing
-    if (!id || id === 'n/a') {
-      return null;
-    }
-    return database.getWhere<T>(type, { _id: id });
-  },
-
   getMostRecentlyModified: async function <T extends BaseModel>(type: string, query: Query<T> = {}) {
     if (process.type === 'renderer') {
       return _send<T>('getMostRecentlyModified', ...arguments);
     }
     const docs = await database.findMostRecentlyModified<T>(type, query, 1);
-    return docs.length ? docs[0] : null;
-  },
-
-  /** get the first document matching query */
-  getWhere: async function <T extends BaseModel>(type: string, query: Query<T>) {
-    if (process.type === 'renderer') {
-      return _send<T>('getWhere', ...arguments);
-    }
-    const docs = await database.find<T>(type, query);
     return docs.length ? docs[0] : null;
   },
 
@@ -507,7 +490,7 @@ export const database = {
     if (process.type === 'renderer') {
       return _send<T>('upsert', ...arguments);
     }
-    const existingDoc = await database.get<T>(doc.type, doc._id);
+    const existingDoc = await database.findOne<T>(doc.type, { _id: doc._id });
 
     if (existingDoc) {
       return database.update<T>(doc, fromSync);
@@ -533,7 +516,7 @@ export const database = {
       for (const d of docs) {
         for (const type of types) {
           // If the doc is null, we want to search for parentId === null
-          const another = await database.get<T>(type, d.parentId);
+          const another = await database.findOne<T>(type, { _id: d.parentId });
           another && foundDocs.push(another);
         }
       }

@@ -74,11 +74,11 @@ export function create(patch: Partial<Project> = {}) {
 }
 
 export function getById(_id: string) {
-  return db.getWhere<Project>(type, { _id });
+  return db.findOne<Project>(type, { _id });
 }
 
 export function getByRemoteId(remoteId: string) {
-  return db.getWhere<Project>(type, { remoteId });
+  return db.findOne<Project>(type, { remoteId });
 }
 
 export function remove(project: Project) {

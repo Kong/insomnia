@@ -70,7 +70,7 @@ export function update(testResult: RunnerTestResult, patch: Partial<RunnerTestRe
 }
 
 export function getByParentId(parentId: string) {
-  return db.getWhere<RunnerTestResult>(type, { parentId });
+  return db.findOne<RunnerTestResult>(type, { parentId });
 }
 
 export function getLatestByParentId(parentId: string) {
@@ -78,7 +78,7 @@ export function getLatestByParentId(parentId: string) {
 }
 
 export function getById(_id: string) {
-  return db.getWhere<RunnerTestResult>(type, {
+  return db.findOne<RunnerTestResult>(type, {
     _id,
   });
 }

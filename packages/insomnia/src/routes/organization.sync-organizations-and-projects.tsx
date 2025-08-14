@@ -53,7 +53,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
     // When user switch to a new organization, there is no project in db cache, we need to redirect to the first project after sync project
     if (!projectId && asyncTaskList.includes(AsyncTask.SyncProjects)) {
-      const firstProject = await database.getWhere<Project>(project.type, { parentId: organizationId });
+      const firstProject = await database.findOne<Project>(project.type, { parentId: organizationId });
       if (firstProject?._id) {
         return redirect(
           href('/organization/:organizationId/project/:projectId', {

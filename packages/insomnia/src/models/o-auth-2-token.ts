@@ -68,11 +68,11 @@ export function remove(token: OAuth2Token) {
 }
 
 export function getByParentId(parentId: string) {
-  return db.getWhere<OAuth2Token>(type, { parentId });
+  return db.findOne<OAuth2Token>(type, { parentId });
 }
 
 export async function getOrCreateByParentId(parentId: string) {
-  let token = await db.getWhere<OAuth2Token>(type, {
+  let token = await db.findOne<OAuth2Token>(type, {
     parentId,
   });
 

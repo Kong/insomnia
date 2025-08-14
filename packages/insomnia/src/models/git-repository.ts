@@ -63,7 +63,7 @@ export function create(patch: Partial<GitRepository> = {}) {
 }
 
 export async function getById(id: string) {
-  return db.getWhere<GitRepository>(type, { _id: id });
+  return db.findOne<GitRepository>(type, { _id: id });
 }
 
 export function update(repo: GitRepository, patch: Partial<GitRepository>) {

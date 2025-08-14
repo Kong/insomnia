@@ -119,11 +119,11 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
   });
 
   const activeEnvironment =
-    (await database.getWhere<Environment>(models.environment.type, {
+    (await database.findOne<Environment>(models.environment.type, {
       _id: activeWorkspaceMeta.activeEnvironmentId,
     })) || baseEnvironment;
 
-  const activeGlobalEnvironment = await database.getWhere<Environment>(models.environment.type, {
+  const activeGlobalEnvironment = await database.findOne<Environment>(models.environment.type, {
     _id: activeWorkspaceMeta.activeGlobalEnvironmentId,
   });
 

@@ -84,7 +84,7 @@ export async function all() {
 }
 
 export async function getById(id: string): Promise<CookieJar | null> {
-  return db.get(type, id);
+  return db.findOne<CookieJar>(type, { _id: id });
 }
 
 export async function update(cookieJar: CookieJar, patch: Partial<CookieJar> = {}) {

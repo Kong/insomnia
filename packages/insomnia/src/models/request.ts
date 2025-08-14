@@ -336,11 +336,11 @@ export function create(patch: Partial<Request> = {}) {
 }
 
 export function getById(id: string): Promise<Request | null> {
-  return db.get(type, id);
+  return db.findOne<Request>(type, { _id: id });
 }
 
 export function getByParentId(parentId: string) {
-  return db.getWhere<Request>(type, { parentId: parentId });
+  return db.findOne<Request>(type, { parentId: parentId });
 }
 
 export function findByParentId(parentId: string) {

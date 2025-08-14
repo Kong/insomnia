@@ -563,25 +563,25 @@ describe('_repairDatabase()', async () => {
       uri: 'https://github.com/foo/bar',
     });
     await _repairDatabase();
-    expect(await db.get(models.gitRepository.type, oldRepoWithSuffix._id)).toEqual(
+    expect(await db.findOne(models.gitRepository.type, { _id: oldRepoWithSuffix._id })).toEqual(
       expect.objectContaining({
         uri: 'https://github.com/foo/bar.git',
         uriNeedsMigration: false,
       }),
     );
-    expect(await db.get(models.gitRepository.type, oldRepoWithoutSuffix._id)).toEqual(
+    expect(await db.findOne(models.gitRepository.type, { _id: oldRepoWithoutSuffix._id })).toEqual(
       expect.objectContaining({
         uri: 'https://github.com/foo/bar.git',
         uriNeedsMigration: false,
       }),
     );
-    expect(await db.get(models.gitRepository.type, newRepoWithSuffix._id)).toEqual(
+    expect(await db.findOne(models.gitRepository.type, { _id: newRepoWithSuffix._id })).toEqual(
       expect.objectContaining({
         uri: 'https://github.com/foo/bar.git',
         uriNeedsMigration: false,
       }),
     );
-    expect(await db.get(models.gitRepository.type, newRepoWithoutSuffix._id)).toEqual(
+    expect(await db.findOne(models.gitRepository.type, { _id: newRepoWithoutSuffix._id })).toEqual(
       expect.objectContaining({
         uri: 'https://github.com/foo/bar',
         uriNeedsMigration: false,

@@ -57,7 +57,7 @@ export function update(mockRoute: MockRoute, patch: Partial<MockRoute> = {}) {
 }
 
 export function getById(id: string) {
-  return db.get<MockRoute>(type, id);
+  return db.findOne<MockRoute>(type, { _id: id });
 }
 
 export function findByParentId(parentId: string) {

@@ -98,7 +98,7 @@ export function migrate(doc: Response) {
   }
 }
 export function getById(id: string) {
-  return db.get<Response>(type, id);
+  return db.findOne<Response>(type, { _id: id });
 }
 
 export function findByParentId(parentId: string) {

@@ -13,7 +13,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
 
   const data = (await request.json()) as Partial<UnitTestSuite>;
 
-  const unitTestSuite = await database.getWhere<UnitTestSuite>(models.unitTestSuite.type, {
+  const unitTestSuite = await database.findOne<UnitTestSuite>(models.unitTestSuite.type, {
     _id: testSuiteId,
   });
 

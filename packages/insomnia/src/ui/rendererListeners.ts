@@ -29,7 +29,7 @@ if (isDevelopment()) {
         if (type) {
           const bufferId = await database.bufferChanges();
           console.log(`[developer] clearing all "${type}" entities`);
-          const allEntities = await database.all(type);
+          const allEntities = await database.find(type);
           await database.batchModifyDocs({ remove: allEntities });
           database.flushChanges(bufferId);
         }
@@ -52,7 +52,7 @@ if (isDevelopment()) {
             .reverse()
             .map(async type => {
               console.log(`[developer] clearing all "${type}" entities`);
-              const allEntities = await database.all(type);
+              const allEntities = await database.find(type);
               await database.batchModifyDocs({ remove: allEntities });
             });
           await Promise.all(promises);

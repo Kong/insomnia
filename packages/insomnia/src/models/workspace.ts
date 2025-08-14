@@ -60,7 +60,7 @@ export function migrate(doc: Workspace) {
 }
 
 export function getById(id?: string) {
-  return db.get<Workspace>(type, id);
+  return db.findOne<Workspace>(type, { _id: id });
 }
 
 export function findByParentId(parentId: string) {

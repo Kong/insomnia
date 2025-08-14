@@ -52,7 +52,7 @@ export function update(doc: SocketIOResponse, patch: Partial<SocketIOResponse>) 
 }
 
 export function getById(id: string) {
-  return db.get<SocketIOResponse>(type, id);
+  return db.findOne<SocketIOResponse>(type, { _id: id });
 }
 
 export function findByParentId(parentId: string) {

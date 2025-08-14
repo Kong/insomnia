@@ -258,11 +258,11 @@ export async function getOrCreateForParentId(parentId: string) {
 }
 
 export function getById(id: string): Promise<Environment | null> {
-  return db.get(type, id);
+  return db.findOne<Environment>(type, { _id: id });
 }
 
 export function getByParentId(parentId: string): Promise<Environment | null> {
-  return db.getWhere<Environment>(type, { parentId });
+  return db.findOne<Environment>(type, { parentId });
 }
 
 export async function duplicate(environment: Environment) {

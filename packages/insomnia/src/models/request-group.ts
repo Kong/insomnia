@@ -63,7 +63,7 @@ export function update(requestGroup: RequestGroup, patch: Partial<RequestGroup> 
 }
 
 export function getById(id: string) {
-  return db.get<RequestGroup>(type, id);
+  return db.findOne<RequestGroup>(type, { _id: id });
 }
 
 export function findByParentId(parentId: string) {

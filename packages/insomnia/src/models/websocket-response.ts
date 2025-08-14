@@ -63,7 +63,7 @@ export function migrate(doc: WebSocketResponse) {
 }
 
 export function getById(id: string) {
-  return db.get<WebSocketResponse>(type, id);
+  return db.findOne<WebSocketResponse>(type, { _id: id });
 }
 
 export function findByParentId(parentId: string) {

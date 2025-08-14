@@ -53,7 +53,7 @@ export class NeDBClient {
       throw this._errMissing(filePath);
     }
 
-    const doc = await db.get(type, id);
+    const doc = await db.findOne(type, { _id: id });
 
     if (!doc || doc.isPrivate) {
       throw this._errMissing(filePath);
@@ -128,7 +128,7 @@ export class NeDBClient {
       throw new Error(`Cannot unlink file ${filePath}`);
     }
 
-    const doc = await db.get(type, id);
+    const doc = await db.findOne(type, { _id: id });
 
     if (!doc) {
       return;
@@ -169,8 +169,7 @@ export class NeDBClient {
         models.socketIORequest.type,
       ];
     } else if (type !== null && id === null) {
-      const workspace = await db.get(models.workspace.type, this._workspaceId);
-
+      const workspace = await db.findOne(models.workspace.type, { _id: this._workspaceId });
       const children = workspace ? await db.getWithDescendants(workspace, [type] as models.ModelTypes) : [];
       docs = children.filter(d => d.type === type && !d.isPrivate);
     } else {

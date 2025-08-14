@@ -44,7 +44,7 @@ export function update(unitTest: UnitTestResult, patch: Partial<UnitTestResult>)
 }
 
 export function getByParentId(parentId: string) {
-  return db.getWhere<UnitTestResult>(type, { parentId });
+  return db.findOne<UnitTestResult>(type, { parentId });
 }
 
 export function getLatestByParentId(parentId: string) {
@@ -52,7 +52,7 @@ export function getLatestByParentId(parentId: string) {
 }
 
 export function getById(_id: string) {
-  return db.getWhere<UnitTestResult>(type, {
+  return db.findOne<UnitTestResult>(type, {
     _id,
   });
 }
