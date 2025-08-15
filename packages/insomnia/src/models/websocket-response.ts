@@ -153,9 +153,3 @@ export async function getLatestForRequest(requestId: string, environmentId: stri
   const response = responses[0] as WebSocketResponse | null | undefined;
   return response || null;
 }
-
-export function getLatestByParentId(parentId: string) {
-  return db.getMostRecentlyModified<WebSocketResponse>(type, {
-    parentId,
-  });
-}

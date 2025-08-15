@@ -29,7 +29,7 @@ export const baseModelSchema: Schema<BaseModel> = {
   modified: () => 5678,
   name: () => 'name',
   parentId: () => '',
-  type: () => 'base',
+  type: () => 'Request',
 };
 
 export const workspaceModelSchema: Schema<Workspace> = {

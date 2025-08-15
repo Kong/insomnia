@@ -79,7 +79,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
   'request.getById': async (body: { id: string }) => {
     return await models.request.getById(body.id);
   },
-  'request.getAncestors': async (body: { request: DBRequest | RequestGroup | Workspace; types: string[] }) => {
+  'request.getAncestors': async (body: { request: DBRequest | RequestGroup | Workspace; types: models.AllTypes[] }) => {
     return await db.withAncestors<DBRequest | RequestGroup | Workspace>(body.request, body.types);
   },
   'workspace.getById': async (body: { id: string }) => {

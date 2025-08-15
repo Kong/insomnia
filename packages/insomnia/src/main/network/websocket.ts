@@ -10,6 +10,8 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 import { v4 as uuidV4 } from 'uuid';
 import { type CloseEvent, type ErrorEvent, type Event, type MessageEvent, WebSocket } from 'ws';
 
+import { database } from '~/common/database';
+
 import { AUTH_API_KEY, AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
 import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
@@ -535,7 +537,9 @@ const sendPayload = async (ws: WebSocket, options: { payload: string; requestId:
   };
 
   eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(lastMessage) + '\n');
-  const response = await models.webSocketResponse.getLatestByParentId(options.requestId);
+  const response = database.getMostRecentlyModified<WebSocketResponse>('WebSocketResponse', {
+    parentId: options.requestId,
+  });
   if (!response) {
     console.error('something went wrong');
     return;

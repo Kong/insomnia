@@ -60,7 +60,7 @@ import * as _workspaceMeta from './workspace-meta';
 
 export interface BaseModel {
   _id: string;
-  type: string;
+  type: AllTypes;
   // TSCONVERSION -- parentId is always required for all models, except 4:
   //   - Stats, Settings, and Project, which never have a parentId
   //   - Workspace optionally has a parentId (which will be the id of a Project)
@@ -157,13 +157,54 @@ export function all() {
     cloudCredential,
   ] as const;
 }
-
 export function types() {
   return all().map(model => model.type);
 }
+export type AllTypes =
+  | 'ApiSpec'
+  | 'CaCertificate'
+  | 'ClientCertificate'
+  | 'CloudCredential'
+  | 'CookieJar'
+  | 'Environment'
+  | 'GitCredentials'
+  | 'GitRepository'
+  | 'GrpcRequest'
+  | 'GrpcRequestMeta'
+  | 'MockRoute'
+  | 'MockServer'
+  | 'OAuth2Token'
+  | 'PluginData'
+  | 'Project'
+  | 'ProtoDirectory'
+  | 'ProtoFile'
+  | 'Request'
+  | 'RequestGroup'
+  | 'RequestGroupMeta'
+  | 'RequestMeta'
+  | 'RequestVersion'
+  | 'Response'
+  | 'RunnerTestResult'
+  | 'Settings'
+  | 'SocketIOPayload'
+  | 'SocketIORequest'
+  | 'SocketIOResponse'
+  | 'Stats'
+  | 'UnitTest'
+  | 'UnitTestResult'
+  | 'UnitTestSuite'
+  | 'UserSession'
+  | 'WebSocketPayload'
+  | 'WebSocketRequest'
+  | 'WebSocketResponse'
+  | 'Workspace'
+  | 'WorkspaceMeta';
 
 export type ModelTypes = ReturnType<typeof types>;
 
+export const isValidType = (type: string): type is AllTypes => {
+  return types().includes(type as AllTypes);
+};
 export function canSync(d: BaseModel) {
   if (d.isPrivate) {
     return false;
@@ -265,7 +306,7 @@ export const MODELS_BY_EXPORT_TYPE: Record<string, ReturnType<typeof all>[number
 export const EXPORTABLE_TYPES = Object.values(MODELS_BY_EXPORT_TYPE).map(m => m.type);
 
 // Use function instead of object to avoid issues with circular dependencies
-export const getAllDescendantMap = (): Record<string, string[]> => {
+export const getAllDescendantMap = (): Partial<Record<AllTypes, AllTypes[]>> => {
   return {
     [workspace.type]: [
       requestGroup.type,
@@ -307,28 +348,28 @@ export const getAllDescendantMap = (): Record<string, string[]> => {
   };
 };
 
-let childToParentMap: Record<string, string[]> | undefined = undefined;
+let childToParentMap: Partial<Record<AllTypes, AllTypes[]>> | undefined = undefined;
 
 const getChildToParentMap = () => {
   if (childToParentMap) {
     return childToParentMap;
   }
-  const childToParents: Record<string, string[]> = {};
+  const childToParents: Partial<Record<AllTypes, AllTypes[]>> = {};
   for (const [parent, children] of Object.entries(getAllDescendantMap())) {
     for (const child of children) {
       if (!childToParents[child]) childToParents[child] = [];
-      childToParents[child].push(parent);
+      childToParents[child].push(parent as AllTypes);
     }
   }
   childToParentMap = childToParents;
   return childToParents;
 };
 
-export const generateDescendantMap = (queryTypes: ModelTypes): Record<string, string[]> => {
-  const result: Record<string, string[]> = {};
+export const generateDescendantMap = (queryTypes: ModelTypes): Partial<Record<AllTypes, AllTypes[]>> => {
+  const result: Partial<Record<AllTypes, AllTypes[]>> = {};
 
   const visited = new Set<string>();
-  const collectAncestors = (child: string) => {
+  const collectAncestors = (child: AllTypes) => {
     if (!child || visited.has(child)) {
       return;
     }

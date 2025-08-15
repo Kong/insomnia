@@ -11,7 +11,7 @@ import { mustGetModel } from '../models';
 import type { CookieJar } from '../models/cookie-jar';
 import { type Environment } from '../models/environment';
 import type { GitRepository } from '../models/git-repository';
-import type { BaseModel } from '../models/index';
+import type { AllTypes, BaseModel } from '../models/index';
 import * as models from '../models/index';
 import type { Workspace } from '../models/workspace';
 import { generateId } from './misc';
@@ -70,7 +70,7 @@ export const database = {
   },
 
   /** return count num of documents matching query */
-  count: async function <T extends BaseModel>(type: string, query: Query<T> = {}) {
+  count: async function <T extends BaseModel>(type: AllTypes, query: Query<T> = {}) {
     if (process.type === 'renderer') {
       return _send<number>('count', ...arguments);
     }
@@ -85,7 +85,7 @@ export const database = {
     });
   },
 
-  docCreate: async <T extends BaseModel>(type: string, ...patches: Patch<T>[]) => {
+  docCreate: async <T extends BaseModel>(type: AllTypes, ...patches: Patch<T>[]) => {
     const doc = await models.initModel<T>(
       type,
       ...patches,
@@ -156,14 +156,18 @@ export const database = {
     await database.flushChanges(flushId);
     return createdDoc;
   },
-  findOne: async function <T extends BaseModel>(type: string, query: Query<T> | string = {}): Promise<T | null> {
+  findOne: async function <T extends BaseModel>(type: AllTypes, query: Query<T> | string = {}): Promise<T | null> {
     if (process.type === 'renderer') {
       return _send<T>('findOne', ...arguments);
     }
     return (nedbBucket[type] as NeDB<T>).findOneAsync(query);
   },
   /** find documents matching query */
-  find: async function <T extends BaseModel>(type: string, query: Query<T> | string = {}, sort: Sort = { created: 1 }) {
+  find: async function <T extends BaseModel>(
+    type: AllTypes,
+    query: Query<T> | string = {},
+    sort: Sort = { created: 1 },
+  ) {
     if (process.type === 'renderer') {
       return _send<T[]>('find', ...arguments);
     }
@@ -194,7 +198,7 @@ export const database = {
   },
 
   findMostRecentlyModified: async function <T extends BaseModel>(
-    type: string,
+    type: AllTypes,
     query: Query<T> = {},
     limit: number | null = null,
   ) {
@@ -266,7 +270,7 @@ export const database = {
     }
   },
 
-  getMostRecentlyModified: async function <T extends BaseModel>(type: string, query: Query<T> = {}) {
+  getMostRecentlyModified: async function <T extends BaseModel>(type: AllTypes, query: Query<T> = {}) {
     if (process.type === 'renderer') {
       return _send<T>('getMostRecentlyModified', ...arguments);
     }
@@ -276,7 +280,7 @@ export const database = {
 
   /** init in main process */
   init: async (
-    types: string[],
+    types: AllTypes[],
     config: NeDB.DataStoreOptions = {},
     forceReset = false,
     consoleLog: typeof console.log = console.log,
@@ -332,7 +336,6 @@ export const database = {
     // TODO: Figure out why this makes tests hang
     if (!config.inMemoryOnly) {
       await _repairDatabase();
-      consoleLog(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
     }
   },
 
@@ -413,7 +416,7 @@ export const database = {
     await database.flushChanges(flushId);
   },
 
-  removeWhere: async function <T extends BaseModel>(type: string, query: Query<T>) {
+  removeWhere: async function <T extends BaseModel>(type: AllTypes, query: Query<T>) {
     if (process.type === 'renderer') {
       return _send<void>('removeWhere', ...arguments);
     }
@@ -499,7 +502,7 @@ export const database = {
   },
 
   /** get all ancestors of specified types of a document */
-  withAncestors: async function <T extends BaseModel>(doc: T | null, types: string[] = allTypes()) {
+  withAncestors: async function <T extends BaseModel>(doc: T | null, types: AllTypes[] = allTypes()) {
     if (process.type === 'renderer') {
       return _send<T[]>('withAncestors', ...arguments);
     }
@@ -557,8 +560,8 @@ export const database = {
         // Find all descendants of the current docs
         const promises: Promise<BaseModel[]>[] = [];
 
-        const uniqueDescendantTypes = new Set<string>();
-        const parentIdsMap = new Map<string, (string | null)[]>();
+        const uniqueDescendantTypes = new Set<AllTypes>();
+        const parentIdsMap = new Map<AllTypes, (string | null)[]>();
 
         for (const d of docs) {
           if (d.type) {
@@ -602,9 +605,9 @@ const nedbBucket: DB = {} as DB;
 // ~~~~~~~ //
 // HELPERS //
 // ~~~~~~~ //
-const allTypes = () => Object.keys(nedbBucket);
+const allTypes = () => Object.keys(nedbBucket) as AllTypes[];
 
-function getDBFilePath(modelType: string) {
+function getDBFilePath(modelType: AllTypes) {
   // NOTE: Do not EVER change this. EVER!
   return fsPath.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), `insomnia.${modelType}.db`);
 }

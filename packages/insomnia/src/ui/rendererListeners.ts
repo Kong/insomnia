@@ -26,13 +26,15 @@ if (isDevelopment()) {
       value: options[0].value,
       options,
       onDone: async (type: string | null) => {
-        if (type) {
-          const bufferId = await database.bufferChanges();
-          console.log(`[developer] clearing all "${type}" entities`);
-          const allEntities = await database.find(type);
-          await database.batchModifyDocs({ remove: allEntities });
-          database.flushChanges(bufferId);
+        if (!type || !models.isValidType(type)) {
+          console.error(`[developer] invalid model type: ${type}`);
+          return;
         }
+        const bufferId = await database.bufferChanges();
+        console.log(`[developer] clearing all "${type}" entities`);
+        const allEntities = await database.find(type);
+        await database.batchModifyDocs({ remove: allEntities });
+        database.flushChanges(bufferId);
       },
     });
   });
