@@ -46,18 +46,6 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
 
   return (
     <>
-      <div className="form-row">
-        <div className="form-control">
-          <label>
-            Secret Name:
-            <input
-              name="secretName"
-              defaultValue={secretName}
-              onChange={e => handleOnChange('secretName', e.target.value)}
-            />
-          </label>
-        </div>
-      </div>
       {credentialType === HashiCorpCredentialType.onPrem && (
         <>
           <div className="form-row">
@@ -95,11 +83,23 @@ export const HashiCorpVaultForm = (props: HashiCorpVaultFormProps) => {
           <div className="form-row">
             <div className="form-control">
               <label>
-                Secret Engine Path:
+                Secret Engine Name:
                 <input
                   name="secretEnginePath"
                   defaultValue={secretEnginePath}
                   onChange={e => handleOnChange('secretEnginePath', e.target.value)}
+                />
+              </label>
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-control">
+              <label>
+                Secret Path:
+                <input
+                  name="secretName"
+                  defaultValue={secretName}
+                  onChange={e => handleOnChange('secretName', e.target.value)}
                 />
               </label>
             </div>
