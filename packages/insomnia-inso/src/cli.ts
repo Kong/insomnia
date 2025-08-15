@@ -9,8 +9,8 @@ import consola, { BasicReporter, FancyReporter, LogLevel } from 'consola';
 import { cosmiconfig } from 'cosmiconfig';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from 'insomnia/src/common/constants';
 import { getSendRequestCallbackMemDb } from 'insomnia/src/common/send-request';
-import type { UserUploadEnvironment } from 'insomnia/src/models/environment';
-import { init, type as EnvironmentType } from 'insomnia/src/models/environment';
+import type { Environment, UserUploadEnvironment } from 'insomnia/src/models/environment';
+import { init } from 'insomnia/src/models/environment';
 import type { Request } from 'insomnia/src/models/request';
 import type { RequestGroup } from 'insomnia/src/models/request-group';
 import { deserializeNDJSON } from 'insomnia/src/utils/ndjson';
@@ -150,7 +150,7 @@ export const logErrorAndExit = (err?: Error) => {
 };
 const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {
   const oldConsoleLog = console.log;
-  console.log = () => { };
+  console.log = () => {};
   try {
     return await callback();
   } finally {
@@ -313,9 +313,9 @@ export const go = (args?: string[]) => {
     cmd: T,
   ): Promise<
     GlobalOptions &
-    T & {
-      configFileContent: Awaited<ReturnType<typeof tryToReadInsoConfigFile>>;
-    }
+      T & {
+        configFileContent: Awaited<ReturnType<typeof tryToReadInsoConfigFile>>;
+      }
   > => {
     const globals: GlobalOptions = program.optsWithGlobals();
 
@@ -388,7 +388,11 @@ export const go = (args?: string[]) => {
       'Comma separated list of hostnames that do not require a proxy to get reached, even if one is specified.',
       proxySettings.noProxy,
     )
-    .option('-f, --dataFolders [dataFolders...]', 'This allows you to control what folders Insomnia (and scripts within Insomnia) can read/write to.', [])
+    .option(
+      '-f, --dataFolders [dataFolders...]',
+      'This allows you to control what folders Insomnia (and scripts within Insomnia) can read/write to.',
+      [],
+    )
     .action(
       async (
         identifier,
@@ -440,10 +444,10 @@ export const go = (args?: string[]) => {
           return process.exit(1);
         }
 
-        const transientVariables = {
+        const transientVariables: Environment = {
           ...init(),
           _id: uuidv4(),
-          type: EnvironmentType,
+          type: 'Environment',
           parentId: '',
           modified: 0,
           created: Date.now(),
@@ -519,7 +523,11 @@ export const go = (args?: string[]) => {
       'Comma separated list of hostnames that do not require a proxy to get reached, even if one is specified.',
       proxySettings.noProxy,
     )
-    .option('-f, --dataFolders [dataFolders...]', 'This allows you to control what folders Insomnia (and scripts within Insomnia) can read/write to.', [])
+    .option(
+      '-f, --dataFolders [dataFolders...]',
+      'This allows you to control what folders Insomnia (and scripts within Insomnia) can read/write to.',
+      [],
+    )
     .action(
       async (
         identifier,
@@ -697,10 +705,10 @@ export const go = (args?: string[]) => {
           const iterationCount = parseInt(options.iterationCount, 10);
 
           const iterationData = await pathToIterationData(options.iterationData, options.envVar);
-          const transientVariables = {
+          const transientVariables: Environment = {
             ...init(),
             _id: uuidv4(),
-            type: EnvironmentType,
+            type: 'Environment',
             parentId: '',
             modified: 0,
             created: Date.now(),
@@ -805,7 +813,7 @@ export const go = (args?: string[]) => {
       let isIdentifierAFile = false;
       try {
         isIdentifierAFile = identifier && (await fs.promises.stat(identifierAsAbsPath)).isFile();
-      } catch (err) { }
+      } catch (err) {}
       const pathToSearch = '';
       let specContent;
       let rulesetFileName;

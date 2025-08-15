@@ -1,6 +1,6 @@
 import deepEqual from 'deep-equal';
 
-import { database as db } from '../common/database';
+import { database, database as db } from '../common/database';
 import { compressObject, decompressObject } from '../common/misc';
 import * as requestOperations from '../models/helpers/request-operations';
 import type { GrpcRequest } from './grpc-request';
@@ -62,7 +62,10 @@ export async function create(request: Request | WebSocketRequest | GrpcRequest |
   }
 
   const parentId = request._id;
-  const latestRequestVersion: RequestVersion | null = await getLatestByParentId(parentId);
+  const versions = await database.findMostRecentlyModified<RequestVersion>('RequestVersion', {
+    parentId,
+  });
+  const latestRequestVersion = versions.length ? versions[0] : null;
   const latestRequest = latestRequestVersion
     ? decompressObject<Request | WebSocketRequest | SocketIORequest>(latestRequestVersion.compressedRequest)
     : null;
@@ -79,10 +82,6 @@ export async function create(request: Request | WebSocketRequest | GrpcRequest |
   }
   // Re-use the latest version if not modified since
   return latestRequestVersion;
-}
-
-export function getLatestByParentId(parentId: string) {
-  return db.getMostRecentlyModified<RequestVersion>(type, { parentId });
 }
 
 export async function restore(requestVersionId: string) {

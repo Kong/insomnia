@@ -142,9 +142,3 @@ export async function getLatestForRequest(requestId: string, environmentId: stri
   const response = responses[0] as SocketIOResponse | null | undefined;
   return response || null;
 }
-
-export function getLatestByParentId(parentId: string) {
-  return db.getMostRecentlyModified<SocketIOResponse>(type, {
-    parentId,
-  });
-}

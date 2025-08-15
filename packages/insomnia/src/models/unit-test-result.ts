@@ -47,10 +47,6 @@ export function getByParentId(parentId: string) {
   return db.findOne<UnitTestResult>(type, { parentId });
 }
 
-export function getLatestByParentId(parentId: string) {
-  return db.getMostRecentlyModified<UnitTestResult>(type, { parentId });
-}
-
 export function getById(_id: string) {
   return db.findOne<UnitTestResult>(type, {
     _id,

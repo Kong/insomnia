@@ -190,12 +190,6 @@ export async function create(patch: Partial<Response> = {}, maxResponses = 20): 
   return db.docCreate(type, patch);
 }
 
-export function getLatestByParentId(parentId: string) {
-  return db.getMostRecentlyModified<Response>(type, {
-    parentId,
-  });
-}
-
 export const getBodyStream = (
   response?: { bodyPath?: string; bodyCompression?: Compression },
   readFailureValue?: string,

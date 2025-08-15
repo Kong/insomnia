@@ -270,14 +270,6 @@ export const database = {
     }
   },
 
-  getMostRecentlyModified: async function <T extends BaseModel>(type: AllTypes, query: Query<T> = {}) {
-    if (process.type === 'renderer') {
-      return _send<T>('getMostRecentlyModified', ...arguments);
-    }
-    const docs = await database.findMostRecentlyModified<T>(type, query, 1);
-    return docs.length ? docs[0] : null;
-  },
-
   /** init in main process */
   init: async (
     types: AllTypes[],
