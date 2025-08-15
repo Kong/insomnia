@@ -136,9 +136,9 @@ export type MainOnChannels =
   | 'startExecution';
 
 export type RendererOnChannels =
+  | 'db.changes'
   | 'clear-all-models'
   | 'clear-model'
-  | 'nunjucks-context-menu-command'
   | 'contextMenuCommand'
   | 'grpc.data'
   | 'grpc.end'
@@ -146,14 +146,15 @@ export type RendererOnChannels =
   | 'grpc.start'
   | 'grpc.status'
   | 'loggedIn'
+  | 'mainWindowFocusChange'
+  | 'nunjucks-context-menu-command'
   | 'reload-plugins'
   | 'shell:open'
   | 'show-notification'
   | 'toggle-preferences-shortcuts'
   | 'toggle-preferences'
   | 'toggle-sidebar'
-  | 'updaterStatus'
-  | 'mainWindowFocusChange';
+  | 'updaterStatus';
 
 export const ipcMainOn = (
   channel: MainOnChannels,

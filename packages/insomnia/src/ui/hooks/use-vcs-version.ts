@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 
-import { type ChangeBufferEvent, database } from '../../common/database';
+import { type ChangeBufferEvent } from '../../common/database';
 import type { BaseModel } from '../../models';
 import { useProjectIndexLoaderData } from '../../routes/organization.$organizationId.project.$projectId._index';
 import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -14,7 +14,14 @@ export function useActiveRequestSyncVCSVersion() {
   useEffect(() => {
     const isRequestUpdatedFromSync = (changes: ChangeBufferEvent<BaseModel>[]) =>
       changes.find(([, doc, fromSync]) => requestId === doc._id && fromSync);
-    database.onChange(changes => isRequestUpdatedFromSync(changes) && setVersion(v => v + 1));
+    const unsubscribe = window.main.on('db.changes', async (_, changes) => {
+      if (isRequestUpdatedFromSync(changes)) {
+        setVersion(v => v + 1);
+      }
+    });
+    return () => {
+      unsubscribe();
+    };
   }, [requestId]);
 
   return version;
@@ -29,7 +36,14 @@ export function useActiveApiSpecSyncVCSVersion() {
   useEffect(() => {
     const isRequestUpdatedFromSync = (changes: ChangeBufferEvent<BaseModel>[]) =>
       changes.find(([, doc, fromSync]) => workspaceData?.activeApiSpec?._id === doc._id && fromSync);
-    database.onChange(changes => isRequestUpdatedFromSync(changes) && setVersion(v => v + 1));
+    const unsubscribe = window.main.on('db.changes', async (_, changes) => {
+      if (isRequestUpdatedFromSync(changes)) {
+        setVersion(v => v + 1);
+      }
+    });
+    return () => {
+      unsubscribe();
+    };
   }, [workspaceData?.activeApiSpec?._id]);
 
   return version;

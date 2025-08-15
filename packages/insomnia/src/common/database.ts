@@ -331,16 +331,6 @@ export const database = {
     }
   },
 
-  /** init in renderer process */
-  initClient: async () => {
-    electron.ipcRenderer.on('db.changes', async (_e, changes) => {
-      for (const fn of changeListeners) {
-        await fn(changes);
-      }
-    });
-    console.log('[db] Initialized DB client');
-  },
-
   insert: async function <T extends BaseModel>(doc: T, fromSync = false, initializeModel = true) {
     if (process.type === 'renderer') {
       return _send<T>('insert', ...arguments);

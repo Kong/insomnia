@@ -8,7 +8,6 @@ import { HydratedRouter } from 'react-router/dom';
 
 import { migrateFromLocalStorage, setSessionData, setVaultSessionData } from './account/session';
 import { getInsomniaSession, getInsomniaVaultKey, getInsomniaVaultSalt, getSkipOnboarding } from './common/constants';
-import { database } from './common/database';
 import { settings } from './models';
 import { initNewOAuthSession } from './network/o-auth-2/get-token';
 import { init as initPlugins } from './plugins';
@@ -23,7 +22,6 @@ import { getInitialEntry } from './utils/router';
 
 initializeSentry();
 
-await database.initClient();
 await initPlugins();
 
 await migrateFromLocalStorage();

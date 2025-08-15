@@ -213,7 +213,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
 
   useEffect(() => {
     // sync tabList with database
-    const callback = async (changes: ChangeBufferEvent[]) => {
+    const unsubscribe = window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
         const changeType = change[0];
         const doc = change[1];
@@ -226,11 +226,10 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
           }
         }
       }
-    };
-    database.onChange(callback);
+    });
 
     return () => {
-      database.offChange(callback);
+      unsubscribe();
     };
   }, [handleDelete, handleUpdate]);
 

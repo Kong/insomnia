@@ -122,7 +122,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
   }, [workspaceId]);
 
   useEffect(() => {
-    db.onChange(async (changes: ChangeBufferEvent[]) => {
+    const unsubscribe = window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
         const [, doc] = change;
         if (isProtoFile(doc) || isProtoDirectory(doc)) {
@@ -130,6 +130,9 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
         }
       }
     });
+    return () => {
+      unsubscribe();
+    };
   }, [workspaceId]);
 
   const handleAddDirectory = async () => {

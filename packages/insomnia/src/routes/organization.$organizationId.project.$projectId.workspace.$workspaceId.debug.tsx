@@ -40,7 +40,7 @@ import {
 } from 'react-router';
 
 import { DEFAULT_SIDEBAR_SIZE, getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '~/common/constants';
-import { type ChangeBufferEvent, database as db } from '~/common/database';
+import { type ChangeBufferEvent } from '~/common/database';
 import { generateId, isNotNullOrUndefined } from '~/common/misc';
 import type { PlatformKeyCombinations } from '~/common/settings';
 import type { GrpcMethodInfo } from '~/main/ipc/grpc';
@@ -274,7 +274,7 @@ const Debug = () => {
   const patchGroup = useRequestGroupPatcher();
   const patchRequestMeta = useRequestMetaPatcher();
   useEffect(() => {
-    db.onChange(async (changes: ChangeBufferEvent[]) => {
+    const unsubscribe = window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
         const [event, doc] = change;
         if (isGrpcRequest(doc) && event === 'insert') {
@@ -282,6 +282,9 @@ const Debug = () => {
         }
       }
     });
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const { settings } = useRootLoaderData()!;

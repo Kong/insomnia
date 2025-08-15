@@ -3,7 +3,6 @@ import { useCallback } from 'react';
 import { href, useFetcher } from 'react-router';
 
 import type { ChangeBufferEvent } from '~/common/database';
-import { database } from '~/common/database';
 import type { CookieJar } from '~/models/cookie-jar';
 import * as requestOperations from '~/models/helpers/request-operations';
 import type { RequestAuthentication, RequestHeader } from '~/models/request';
@@ -93,11 +92,13 @@ export async function clientAction({ params, request }: Route.ClientActionArgs) 
   }
   // HACK: even more elaborate hack to get the request to update
   return new Promise(resolve => {
-    database.onChange(async (changes: ChangeBufferEvent[]) => {
+    const unsubscribe = window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
         const [event, doc] = change;
         if (isRequestMeta(doc) && doc.parentId === requestId && event === 'update') {
           resolve(null);
+          unsubscribe();
+          return;
         }
       }
     });
