@@ -43,18 +43,6 @@ export function remove(protoFile: ProtoFile) {
   return db.remove(protoFile);
 }
 
-export async function batchRemoveIds(ids: string[]) {
-  const files = await db.find(type, {
-    _id: {
-      $in: ids,
-    },
-  });
-  await db.batchModifyDocs({
-    upsert: [],
-    remove: files,
-  });
-}
-
 export function update(protoFile: ProtoFile, patch: Partial<ProtoFile> = {}) {
   return db.docUpdate<ProtoFile>(protoFile, patch);
 }

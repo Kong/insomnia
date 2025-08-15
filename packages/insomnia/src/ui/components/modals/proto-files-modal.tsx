@@ -137,7 +137,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
 
   const handleAddDirectory = async () => {
     let rollback = false;
-    let createdIds: string[];
+    let createdIds: string[] = [];
     const bufferId = await db.bufferChangesIndefinitely();
     const filePath = await tryToSelectFolderPath();
     if (!filePath) {
@@ -202,10 +202,22 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
       await db.flushChanges(bufferId, rollback);
 
       if (rollback) {
-        // @ts-expect-error -- TSCONVERSION
-        await models.protoDirectory.batchRemoveIds(createdIds);
-        // @ts-expect-error -- TSCONVERSION
-        await models.protoFile.batchRemoveIds(createdIds);
+        const dirs = await db.find('ProtoDirectory', {
+          _id: {
+            $in: createdIds,
+          },
+        });
+        for (const dir of dirs) {
+          await db.unsafeRemove(dir);
+        }
+        const files = await db.find('ProtoFile', {
+          _id: {
+            $in: createdIds,
+          },
+        });
+        for (const file of files) {
+          await db.unsafeRemove(file);
+        }
       }
     }
   };
