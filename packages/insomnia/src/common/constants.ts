@@ -136,8 +136,8 @@ export enum UpdateURL {
 export const getOauthRedirectUrl = () => env.OAUTH_REDIRECT_URL || 'https://app.insomnia.rest/oauth/redirect';
 
 // API
-export const getApiBaseURL = () => env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
-export const getMockServiceURL = () => env.INSOMNIA_MOCK_API_URL || 'https://mock.insomnia.run';
+export const getApiBaseURL = () => env.INSOMNIA_API_URL || 'https://api.insomnia.moe';
+export const getMockServiceURL = () => env.INSOMNIA_MOCK_API_URL || 'https://mock.insomnia.moe';
 
 export const getMockServiceBinURL = (mockServer: MockServer, path: string) => {
   if (!mockServer.useInsomniaCloud) {
@@ -154,7 +154,7 @@ export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai-helper.i
 export const getUpdatesBaseURL = () => env.INSOMNIA_UPDATES_URL || 'https://updates.insomnia.rest';
 
 // App website
-export const getAppWebsiteBaseURL = () => env.INSOMNIA_APP_WEBSITE_URL || 'https://app.insomnia.rest';
+export const getAppWebsiteBaseURL = () => env.INSOMNIA_APP_WEBSITE_URL || 'https://app.insomnia.moe';
 
 // GitHub API
 export const getGitHubRestApiUrl = () => env.INSOMNIA_GITHUB_REST_API_URL || 'https://api.github.com';
