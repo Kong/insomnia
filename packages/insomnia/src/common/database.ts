@@ -74,15 +74,7 @@ export const database = {
     if (process.type === 'renderer') {
       return _send<number>('count', ...arguments);
     }
-    return new Promise<number>((resolve, reject) => {
-      (nedbBucket[type] as NeDB<T>).count(query, (err, count) => {
-        if (err) {
-          return reject(err);
-        }
-
-        resolve(count);
-      });
-    });
+    return (nedbBucket[type] as NeDB<T>).countAsync(query);
   },
 
   docCreate: async <T extends BaseModel>(type: AllTypes, ...patches: Patch<T>[]) => {
@@ -171,64 +163,30 @@ export const database = {
     if (process.type === 'renderer') {
       return _send<T[]>('find', ...arguments);
     }
-    return new Promise<T[]>((resolve, reject) => {
-      if (!nedbBucket[type]) {
-        console.warn(`[db] No collection for type "${type}"`);
-        resolve([]);
-        return;
-      }
-      (nedbBucket[type] as NeDB<T>)
-        .find(query)
-        .sort(sort)
-        .exec(async (err, rawDocs) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-
-          const docs: T[] = [];
-
-          for (const rawDoc of rawDocs) {
-            docs.push(await models.initModel(type, rawDoc));
-          }
-
-          resolve(docs);
-        });
-    });
+    if (!nedbBucket[type]) {
+      console.warn(`[db] No collection for type "${type}"`);
+      return [];
+    }
+    const docs = await nedbBucket[type].findAsync(query).sort(sort);
+    // TODO: create a db init phase for migrations rather than doing it on every find.
+    const migrated = [];
+    for (const rawDoc of docs) {
+      migrated.push(await models.initModel(type, rawDoc));
+    }
+    return migrated;
   },
 
-  findMostRecentlyModified: async function <T extends BaseModel>(
-    type: AllTypes,
-    query: Query<T> = {},
-    limit: number | null = null,
-  ) {
+  findMostRecentlyModified: async function <T extends BaseModel>(type: AllTypes, query: Query<T> = {}, limit = 1) {
     if (process.type === 'renderer') {
       return _send<T[]>('findMostRecentlyModified', ...arguments);
     }
-    return new Promise<T[]>(resolve => {
-      (nedbBucket[type] as NeDB<T>)
-        .find(query)
-        .sort({
-          modified: -1,
-        })
-        // @ts-expect-error -- TSCONVERSION limit shouldn't be applied if it's null, or default to something that means no-limit
-        .limit(limit)
-        .exec(async (err, rawDocs) => {
-          if (err) {
-            console.warn('[db] Failed to find docs', err);
-            resolve([]);
-            return;
-          }
-
-          const docs: T[] = [];
-
-          for (const rawDoc of rawDocs) {
-            docs.push(await models.initModel(type, rawDoc));
-          }
-
-          resolve(docs);
-        });
-    });
+    const docs = await (nedbBucket[type] as NeDB<T>).findAsync(query).sort({ modified: -1 }).limit(limit);
+    // TODO: create a db init phase for migrations rather than doing it on every find.
+    const migrated = [];
+    for (const rawDoc of docs) {
+      migrated.push(await models.initModel(type, rawDoc));
+    }
+    return migrated;
   },
 
   /** trigger all changeListeners */
@@ -335,29 +293,10 @@ export const database = {
     if (process.type === 'renderer') {
       return _send<T>('insert', ...arguments);
     }
-    return new Promise<T>(async (resolve, reject) => {
-      let docWithDefaults: T | null = null;
-
-      try {
-        if (initializeModel) {
-          docWithDefaults = await models.initModel<T>(doc.type, doc);
-        } else {
-          docWithDefaults = doc;
-        }
-      } catch (err) {
-        return reject(err);
-      }
-
-      (nedbBucket[doc.type] as NeDB<T>).insert(docWithDefaults, (err, newDoc: T) => {
-        if (err) {
-          return reject(err);
-        }
-
-        resolve(newDoc);
-        // NOTE: This needs to be after we resolve
-        notifyOfChange('insert', newDoc, fromSync);
-      });
-    });
+    const docWithDefaults = initializeModel ? await models.initModel<T>(doc.type, doc) : doc;
+    const newDoc = await (nedbBucket[doc.type] as NeDB<T>).insertAsync(docWithDefaults);
+    notifyOfChange('insert', newDoc, fromSync);
+    return newDoc;
   },
 
   onChange: (callback: ChangeListener) => {
@@ -443,31 +382,10 @@ export const database = {
       return _send<T>('update', ...arguments);
     }
 
-    return new Promise<T>(async (resolve, reject) => {
-      let docWithDefaults: T;
-
-      try {
-        docWithDefaults = await models.initModel<T>(doc.type, doc);
-      } catch (err) {
-        return reject(err);
-      }
-
-      (nedbBucket[doc.type] as NeDB<T>).update(
-        { _id: docWithDefaults._id },
-        docWithDefaults,
-        // TODO(TSCONVERSION) see comment below, upsert can happen automatically as part of the update
-        // @ts-expect-error -- TSCONVERSION expects 4 args but only sent 3. Need to validate what UpdateOptions should be.
-        err => {
-          if (err) {
-            return reject(err);
-          }
-
-          resolve(docWithDefaults);
-          // NOTE: This needs to be after we resolve
-          notifyOfChange('update', docWithDefaults, fromSync, patches);
-        },
-      );
-    });
+    const docWithDefaults = await models.initModel<T>(doc.type, doc);
+    const newDoc = await (nedbBucket[doc.type] as NeDB<T>).updateAsync({ _id: docWithDefaults._id }, docWithDefaults);
+    notifyOfChange('update', docWithDefaults, fromSync, patches);
+    return newDoc;
   },
 
   // TODO(TSCONVERSION) the update method above can now take an upsert property
