@@ -552,7 +552,7 @@ async function importLegacyInsomniaFolder({ fsClient, projectId }: { fsClient: P
         });
       }
 
-      await database.upsert(doc, true);
+      await database.update(doc, true);
       changes.push({
         path: legacyInsomniaFile.filePath,
         // It existed and was removed from the git repository

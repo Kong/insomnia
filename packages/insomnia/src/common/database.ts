@@ -43,7 +43,7 @@ export const database = {
     const flushId = await database.bufferChanges();
 
     // Perform from least to most dangerous
-    await Promise.all(upsert.map(doc => database.upsert(doc, true)));
+    await Promise.all(upsert.map(doc => database.update(doc, true)));
     await Promise.all(remove.map(doc => database.unsafeRemove(doc, true)));
 
     await database.flushChanges(flushId);
@@ -364,22 +364,9 @@ export const database = {
     }
 
     const docWithDefaults = await models.initModel<T>(doc.type, doc);
-    await nedbBucket[doc.type]?.updateAsync({ _id: docWithDefaults._id }, docWithDefaults);
+    await nedbBucket[doc.type]?.updateAsync({ _id: docWithDefaults._id }, docWithDefaults, { upsert: true });
     notifyOfChange('update', docWithDefaults, fromSync, patches);
     return docWithDefaults;
-  },
-
-  // TODO(TSCONVERSION) the update method above can now take an upsert property
-  upsert: async function <T extends BaseModel>(doc: T, fromSync = false) {
-    if (process.type === 'renderer') {
-      return _send<T>('upsert', ...arguments);
-    }
-    const existingDoc = await database.findOne<T>(doc.type, { _id: doc._id });
-
-    if (existingDoc) {
-      return database.update<T>(doc, fromSync);
-    }
-    return database.insert<T>(doc, fromSync);
   },
 
   /** get all ancestors of specified types of a document including the original */

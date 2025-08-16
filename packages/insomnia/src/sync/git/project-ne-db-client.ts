@@ -114,7 +114,7 @@ export class GitProjectNeDBClient {
         await models.workspaceMeta.update(workspaceMeta, { gitFilePath: filePath });
       }
 
-      await db.upsert(doc, true);
+      await db.update(doc, true);
     }
 
     await db.flushChanges(bufferId);

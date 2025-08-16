@@ -119,7 +119,7 @@ export class NeDBClient {
       doc.parentId = this._projectId;
     }
 
-    await db.upsert(doc, true);
+    await db.update(doc, true);
   }
 
   async unlink(filePath: string) {
