@@ -18,12 +18,6 @@ import * as models from '../models/index';
 import type { Workspace } from '../models/workspace';
 import { generateId } from './misc';
 
-export type Query<T extends BaseModel = BaseModel> = {
-  [key in keyof T]?: string | SpecificQuery | null | undefined;
-};
-
-type Sort = Record<string, any>;
-
 export interface Operation {
   upsert?: BaseModel[];
   remove?: BaseModel[];
@@ -35,6 +29,10 @@ export interface SpecificQuery {
   $nin?: string[];
   $ne?: string | null;
 }
+
+export type Query<T extends BaseModel = BaseModel> = {
+  [key in keyof T]?: string | SpecificQuery | null | undefined;
+};
 
 export type ChangeType = 'insert' | 'update' | 'remove';
 export const database = {
@@ -80,7 +78,7 @@ export const database = {
     return total || 0;
   },
 
-  docCreate: async <T extends BaseModel>(type: AllTypes, ...patches: Patch<T>[]) => {
+  docCreate: async <T extends BaseModel>(type: AllTypes, ...patches: Partial<T>[]) => {
     const doc = await models.initModel<T>(
       type,
       ...patches,
@@ -92,7 +90,7 @@ export const database = {
     return database.insert<T>(doc);
   },
 
-  docUpdate: async <T extends BaseModel>(originalDoc: T, ...patches: Patch<T>[]) => {
+  docUpdate: async <T extends BaseModel>(originalDoc: T, ...patches: Partial<T>[]) => {
     // No need to re-initialize the model during update; originalDoc will be in a valid state by virtue of loading
     const doc = await models.initModel<T>(
       originalDoc.type,
@@ -108,13 +106,13 @@ export const database = {
   },
 
   /** duplicate doc and its descendents recursively */
-  duplicate: async function <T extends BaseModel>(originalDoc: T, patch: Patch<T> = {}) {
+  duplicate: async function <T extends BaseModel>(originalDoc: T, patch: Partial<T> = {}) {
     if (process.type === 'renderer') {
       return _send<T>('duplicate', ...arguments);
     }
     const flushId = await database.bufferChanges();
 
-    async function next<T extends BaseModel>(docToCopy: T, patch: Patch<T>) {
+    async function next<T extends BaseModel>(docToCopy: T, patch: Partial<T>) {
       const model = mustGetModel(docToCopy.type);
       const overrides = {
         _id: generateId(model.prefix),
@@ -124,7 +122,7 @@ export const database = {
       };
 
       // 1. Copy the doc
-      const newDoc = Object.assign({}, docToCopy, patch, overrides);
+      const newDoc = { ...docToCopy, ...patch, ...overrides };
 
       // Don't initialize the model during insert, and simply duplicate
       const createdDoc = await database.insert(newDoc, false, false);
@@ -136,10 +134,7 @@ export const database = {
           continue;
         }
 
-        const parentId = docToCopy._id;
-        const children = await database.find(type, { parentId });
-
-        for (const doc of children) {
+        for (const doc of await database.find(type, { parentId: docToCopy._id })) {
           await next(doc, { parentId: createdDoc._id });
         }
       }
@@ -154,7 +149,7 @@ export const database = {
   findOne: async function <T extends BaseModel>(
     type: AllTypes,
     query: Query<T> | string = {},
-    sort: Sort = { created: 1 },
+    sort: Record<string, any> = { created: 1 },
   ): Promise<T | undefined> {
     if (process.type === 'renderer') {
       return _send<T>('findOne', ...arguments);
@@ -165,7 +160,7 @@ export const database = {
   find: async function <T extends BaseModel>(
     type: AllTypes,
     query: Query<T> | string = {},
-    sort: Sort = { created: 1 },
+    sort: Record<string, any> = { created: 1 },
     limit = 0,
   ): Promise<T[]> {
     if (process.type === 'renderer') {
@@ -242,19 +237,17 @@ export const database = {
         continue;
       }
 
-      const filePath = getDBFilePath(modelType);
-      const collection = new NeDB(
-        Object.assign(
-          {
-            autoload: true,
-            filename: filePath,
-            corruptAlertThreshold: 0.9,
-          },
-          config,
-        ),
+      const filePath = fsPath.join(
+        process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'),
+        `insomnia.${modelType}.db`,
       );
 
-      nedbBucket[modelType] = collection;
+      nedbBucket[modelType] = new NeDB({
+        autoload: true,
+        filename: filePath,
+        corruptAlertThreshold: 0.9,
+        ...config,
+      });
     }
 
     electron.ipcMain.on('db.fn', async (e, fnName, replyChannel, ...args) => {
@@ -366,7 +359,7 @@ export const database = {
     notifyOfChange('remove', doc, fromSync);
   },
 
-  update: async function <T extends BaseModel>(doc: T, fromSync = false, patches: Patch<T>[] = []) {
+  update: async function <T extends BaseModel>(doc: T, fromSync = false, patches: Partial<T>[] = []) {
     if (process.type === 'renderer') {
       return _send<T>('update', ...arguments);
     }
@@ -390,7 +383,7 @@ export const database = {
     return database.insert<T>(doc, fromSync);
   },
 
-  /** get all ancestors of specified types of a document */
+  /** get all ancestors of specified types of a document including the original */
   withAncestors: async function <T extends BaseModel>(doc: T | undefined, types: AllTypes[] = []) {
     if (process.type === 'renderer') {
       return _send<T[]>('withAncestors', ...arguments);
@@ -400,7 +393,7 @@ export const database = {
       return [];
     }
 
-    let docsToReturn: T[] = doc ? [doc] : [];
+    let docsToReturn: T[] = [];
     if (types.length === 0) {
       types = Object.keys(nedbBucket) as AllTypes[];
     }
@@ -410,13 +403,12 @@ export const database = {
       for (const d of docs) {
         for (const type of types) {
           // If the doc is null, we want to search for parentId === null
-          const another = await database.findOne<T>(type, { _id: d.parentId });
-          another && foundDocs.push(another);
+          const parent = await database.findOne<T>(type, { _id: d.parentId });
+          parent && foundDocs.push(parent);
         }
       }
 
       if (foundDocs.length === 0) {
-        // Didn't find anything. We're done
         return docsToReturn;
       }
 
@@ -491,15 +483,6 @@ export const database = {
 
 let nedbBucket: Partial<Record<AllTypes, NeDB>> = {};
 
-// ~~~~~~~ //
-// HELPERS //
-// ~~~~~~~ //
-
-function getDBFilePath(modelType: AllTypes) {
-  // NOTE: Do not EVER change this. EVER!
-  return fsPath.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), `insomnia.${modelType}.db`);
-}
-
 // ~~~~~~~~~~~~~~~~ //
 // Change Listeners //
 // ~~~~~~~~~~~~~~~~ //
@@ -510,7 +493,7 @@ export type ChangeBufferEvent<T extends BaseModel = BaseModel> = [
   event: ChangeType,
   doc: T,
   fromSync: boolean,
-  patches: Patch<T>[],
+  patches: Partial<T>[],
 ];
 
 let changeBuffer: ChangeBufferEvent[] = [];
@@ -525,7 +508,7 @@ async function notifyOfChange<T extends BaseModel>(
   event: ChangeType,
   doc: T,
   fromSync: boolean,
-  patches: Patch<T>[] = [],
+  patches: Partial<T>[] = [],
 ) {
   const updatedDoc = doc;
 
@@ -538,27 +521,15 @@ async function notifyOfChange<T extends BaseModel>(
   }
 }
 
-// ~~~~~~~~~~~~~~~~~~~ //
-// DEFAULT MODEL STUFF //
-// ~~~~~~~~~~~~~~~~~~~ //
-
-type Patch<T> = Partial<T>;
-
 // ~~~~~~~ //
 // Helpers //
 // ~~~~~~~ //
-// If you call database.x methods within the render process, you can obtain results by this helper function. In renderer process, db._empty is true.
+// If you call database.x methods within the render process, you can obtain results by this helper function
 async function _send<T>(fnName: string, ...args: any[]) {
   return new Promise<T>((resolve, reject) => {
     const replyChannel = `db.fn.reply:${uuidv4()}`;
     electron.ipcRenderer.send('db.fn', fnName, replyChannel, ...args);
-    electron.ipcRenderer.once(replyChannel, (_e, err, result: T) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(result);
-      }
-    });
+    electron.ipcRenderer.once(replyChannel, (_e, err, result: T) => (err ? reject(err) : resolve(result)));
   });
 }
 
