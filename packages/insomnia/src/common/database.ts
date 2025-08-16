@@ -124,9 +124,8 @@ export const database = {
       // 1. Copy the doc
       const newDoc = { ...docToCopy, ...patch, ...overrides };
 
-      // Don't initialize the model during insert, and simply duplicate
-      const createdDoc = await database.insert(newDoc, false, false);
-
+      const createdDoc = await nedbBucket[docToCopy.type]?.insertAsync(newDoc);
+      invariant(createdDoc, `Failed to duplicate document of type ${docToCopy.type}`);
       // 2. Get all the children
       for (const type of Object.keys(nedbBucket) as AllTypes[]) {
         // Note: We never want to duplicate a response
@@ -270,11 +269,11 @@ export const database = {
     }
   },
 
-  insert: async function <T extends BaseModel>(doc: T, fromSync = false, initializeModel = true) {
+  insert: async function <T extends BaseModel>(doc: T, fromSync = false) {
     if (process.type === 'renderer') {
       return _send<T>('insert', ...arguments);
     }
-    const docWithDefaults = initializeModel ? await models.initModel<T>(doc.type, doc) : doc;
+    const docWithDefaults = await models.initModel<T>(doc.type, doc);
     const newDoc = await nedbBucket[doc.type]?.insertAsync(docWithDefaults);
     invariant(newDoc, `Failed to insert document of type ${doc.type}`);
     notifyOfChange('insert', newDoc, fromSync);
