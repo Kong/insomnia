@@ -33,7 +33,7 @@ export interface WebSocketRequestLoaderData {
 export interface SocketIORequestLoaderData {
   activeRequest: SocketIORequest;
   activeRequestMeta: RequestMeta;
-  activeResponse: null;
+  activeResponse: SocketIOResponse;
   responses: SocketIOResponse[];
   requestVersions: RequestVersion[];
   requestPayload: SocketIOPayload;

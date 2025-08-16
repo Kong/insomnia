@@ -8,10 +8,13 @@ import type { Route } from './+types/organization.$organizationId.project.$proje
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const { organizationId, projectId, workspaceId, testSuiteId } = params;
 
-  const testResults = await database.findMostRecentlyModified<UnitTestResult>('UnitTestResult', {
-    parentId: workspaceId,
-  });
-  const testResult = testResults[0];
+  const testResult = await database.findOne<UnitTestResult>(
+    'UnitTestResult',
+    {
+      parentId: workspaceId,
+    },
+    { modified: -1 },
+  );
   if (testResult) {
     return redirect(
       href(

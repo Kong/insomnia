@@ -144,15 +144,15 @@ export async function getLatestForRequestId(
   // Filter responses by environment if setting is enabled
   const shouldFilter = (await models.settings.get()).filterResponsesByEnv;
 
-  const responses = await db.findMostRecentlyModified<Response>(
+  const response = await db.findOne<Response>(
     type,
     {
       parentId: requestId,
       ...(shouldFilter ? { environmentId } : {}),
     },
-    1,
+    { modified: -1 },
   );
-  return responses[0];
+  return response;
 }
 
 export async function create(patch: Partial<Response> = {}, maxResponses = 20): Promise<Response> {
@@ -175,7 +175,10 @@ export async function create(patch: Partial<Response> = {}, maxResponses = 20): 
   };
 
   // Delete all other responses before creating the new one
-  const allResponses = await db.findMostRecentlyModified<Response>(type, query, Math.max(1, maxResponses));
+  const responsesToShow = Math.max(1, maxResponses);
+
+  const allResponses = await db.find<Response>(type, query, { modified: -1 }, responsesToShow);
+
   const recentIds = allResponses.map(r => r._id);
   // Remove all that were in the last query, except the first `maxResponses` IDs
   await db.removeWhere(type, {

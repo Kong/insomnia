@@ -537,10 +537,13 @@ const sendPayload = async (ws: WebSocket, options: { payload: string; requestId:
   };
 
   eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(lastMessage) + '\n');
-  const responses = await database.findMostRecentlyModified<WebSocketResponse>('WebSocketResponse', {
-    parentId: options.requestId,
-  });
-  const response = responses[0];
+  const response = await database.findOne<WebSocketResponse>(
+    'WebSocketResponse',
+    {
+      parentId: options.requestId,
+    },
+    { modified: -1 },
+  );
   if (!response) {
     console.error('something went wrong');
     return;

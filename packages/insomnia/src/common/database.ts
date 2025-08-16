@@ -151,17 +151,22 @@ export const database = {
     await database.flushChanges(flushId);
     return createdDoc;
   },
-  findOne: async function <T extends BaseModel>(type: AllTypes, query: Query<T> | string = {}): Promise<T | undefined> {
+  findOne: async function <T extends BaseModel>(
+    type: AllTypes,
+    query: Query<T> | string = {},
+    sort: Sort = { created: 1 },
+  ): Promise<T | undefined> {
     if (process.type === 'renderer') {
       return _send<T>('findOne', ...arguments);
     }
-    return await nedbBucket[type]?.findOneAsync<T>(query);
+    return await nedbBucket[type]?.findOneAsync<T>(query).sort(sort);
   },
   /** find documents matching query */
   find: async function <T extends BaseModel>(
     type: AllTypes,
     query: Query<T> | string = {},
     sort: Sort = { created: 1 },
+    limit = 0,
   ): Promise<T[]> {
     if (process.type === 'renderer') {
       return _send<T[]>('find', ...arguments);
@@ -170,23 +175,10 @@ export const database = {
       console.warn(`[db] No collection for type "${type}"`);
       return [];
     }
-    const docs = await nedbBucket[type].findAsync<T>(query).sort(sort);
+    const docs = await nedbBucket[type].findAsync<T>(query).sort(sort).limit(limit);
     // TODO: create a db init phase for migrations rather than doing it on every find.
     const migrated = [];
     for (const rawDoc of docs) {
-      migrated.push(await models.initModel<T>(type, rawDoc));
-    }
-    return migrated;
-  },
-
-  findMostRecentlyModified: async function <T extends BaseModel>(type: AllTypes, query: Query<T> = {}, limit = 1) {
-    if (process.type === 'renderer') {
-      return _send<T[]>('findMostRecentlyModified', ...arguments);
-    }
-    const docs = await nedbBucket[type]?.findAsync<T>(query).sort({ modified: -1 }).limit(limit);
-    // TODO: create a db init phase for migrations rather than doing it on every find.
-    const migrated = [];
-    for (const rawDoc of docs || []) {
       migrated.push(await models.initModel<T>(type, rawDoc));
     }
     return migrated;

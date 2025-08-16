@@ -122,7 +122,10 @@ export async function create(patch: Partial<WebSocketResponse> = {}, maxResponse
   }
 
   // Delete all other responses before creating the new one
-  const allResponses = await db.findMostRecentlyModified<WebSocketResponse>(type, query, Math.max(1, maxResponses));
+  const responsesToShow = Math.max(1, maxResponses);
+
+  const allResponses = await db.find<WebSocketResponse>(type, query, { modified: -1 }, responsesToShow);
+
   const recentIds = allResponses.map(r => r._id);
   // Remove all that were in the last query, except the first `maxResponses` IDs
   await db.removeWhere(type, {
@@ -140,14 +143,13 @@ export async function getLatestForRequestId(requestId: string, environmentId: st
 
   const shouldFilter = (await models.settings.get()).filterResponsesByEnv;
 
-  const responses = await db.findMostRecentlyModified<WebSocketResponse>(
+  const response = await db.findOne<WebSocketResponse>(
     type,
     {
       parentId: requestId,
       ...(shouldFilter ? { environmentId } : {}),
     },
-    1,
+    { modified: -1 },
   );
-  const response = responses[0] as WebSocketResponse | null | undefined;
-  return response || null;
+  return response;
 }

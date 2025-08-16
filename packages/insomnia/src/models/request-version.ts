@@ -62,10 +62,13 @@ export async function create(request: Request | WebSocketRequest | GrpcRequest |
   }
 
   const parentId = request._id;
-  const versions = await database.findMostRecentlyModified<RequestVersion>('RequestVersion', {
-    parentId,
-  });
-  const latestRequestVersion = versions.length ? versions[0] : null;
+  const latestRequestVersion = await database.findOne<RequestVersion>(
+    'RequestVersion',
+    {
+      parentId,
+    },
+    { modified: -1 },
+  );
   const latestRequest = latestRequestVersion
     ? decompressObject<Request | WebSocketRequest | SocketIORequest>(latestRequestVersion.compressedRequest)
     : null;
