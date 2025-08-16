@@ -7,6 +7,8 @@ import NeDB from '@seald-io/nedb';
 import electron from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 
+import { invariant } from '~/utils/invariant';
+
 import { mustGetModel } from '../models';
 import type { CookieJar } from '../models/cookie-jar';
 import { type Environment } from '../models/environment';
@@ -288,7 +290,8 @@ export const database = {
       return _send<T>('insert', ...arguments);
     }
     const docWithDefaults = initializeModel ? await models.initModel<T>(doc.type, doc) : doc;
-    const newDoc = await (nedbBucket[doc.type] as NeDB<T>).insertAsync(docWithDefaults);
+    const newDoc = await nedbBucket[doc.type]?.insertAsync(docWithDefaults);
+    invariant(newDoc, `Failed to insert document of type ${doc.type}`);
     notifyOfChange('insert', newDoc, fromSync);
     return newDoc;
   },
@@ -367,7 +370,7 @@ export const database = {
       return _send<void>('unsafeRemove', ...arguments);
     }
 
-    (nedbBucket[doc.type] as NeDB<T>).remove({ _id: doc._id });
+    nedbBucket[doc.type]?.remove({ _id: doc._id });
     notifyOfChange('remove', doc, fromSync);
   },
 
@@ -377,7 +380,7 @@ export const database = {
     }
 
     const docWithDefaults = await models.initModel<T>(doc.type, doc);
-    await (nedbBucket[doc.type] as NeDB<T>).updateAsync({ _id: docWithDefaults._id }, docWithDefaults);
+    await nedbBucket[doc.type]?.updateAsync({ _id: docWithDefaults._id }, docWithDefaults);
     notifyOfChange('update', docWithDefaults, fromSync, patches);
     return docWithDefaults;
   },
