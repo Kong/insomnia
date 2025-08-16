@@ -257,11 +257,11 @@ export async function getOrCreateForParentId(parentId: string) {
   return environments[environments.length - 1];
 }
 
-export function getById(id: string): Promise<Environment | null> {
+export function getById(id: string): Promise<Environment | undefined> {
   return db.findOne<Environment>(type, { _id: id });
 }
 
-export function getByParentId(parentId: string): Promise<Environment | null> {
+export function getByParentId(parentId: string): Promise<Environment | undefined> {
   return db.findOne<Environment>(type, { parentId });
 }
 

@@ -74,7 +74,8 @@ export const database = {
     if (process.type === 'renderer') {
       return _send<number>('count', ...arguments);
     }
-    return (nedbBucket[type] as NeDB<T>).countAsync(query);
+    const total = await nedbBucket[type]?.countAsync(query);
+    return total || 0;
   },
 
   docCreate: async <T extends BaseModel>(type: AllTypes, ...patches: Patch<T>[]) => {
@@ -127,7 +128,7 @@ export const database = {
       const createdDoc = await database.insert(newDoc, false, false);
 
       // 2. Get all the children
-      for (const type of allTypes()) {
+      for (const type of Object.keys(nedbBucket) as AllTypes[]) {
         // Note: We never want to duplicate a response
         if (!models.canDuplicate(type)) {
           continue;
@@ -148,18 +149,18 @@ export const database = {
     await database.flushChanges(flushId);
     return createdDoc;
   },
-  findOne: async function <T extends BaseModel>(type: AllTypes, query: Query<T> | string = {}): Promise<T | null> {
+  findOne: async function <T extends BaseModel>(type: AllTypes, query: Query<T> | string = {}): Promise<T | undefined> {
     if (process.type === 'renderer') {
       return _send<T>('findOne', ...arguments);
     }
-    return (nedbBucket[type] as NeDB<T>).findOneAsync(query);
+    return await nedbBucket[type]?.findOneAsync<T>(query);
   },
   /** find documents matching query */
   find: async function <T extends BaseModel>(
     type: AllTypes,
     query: Query<T> | string = {},
     sort: Sort = { created: 1 },
-  ) {
+  ): Promise<T[]> {
     if (process.type === 'renderer') {
       return _send<T[]>('find', ...arguments);
     }
@@ -167,11 +168,11 @@ export const database = {
       console.warn(`[db] No collection for type "${type}"`);
       return [];
     }
-    const docs = await nedbBucket[type].findAsync(query).sort(sort);
+    const docs = await nedbBucket[type].findAsync<T>(query).sort(sort);
     // TODO: create a db init phase for migrations rather than doing it on every find.
     const migrated = [];
     for (const rawDoc of docs) {
-      migrated.push(await models.initModel(type, rawDoc));
+      migrated.push(await models.initModel<T>(type, rawDoc));
     }
     return migrated;
   },
@@ -180,11 +181,11 @@ export const database = {
     if (process.type === 'renderer') {
       return _send<T[]>('findMostRecentlyModified', ...arguments);
     }
-    const docs = await (nedbBucket[type] as NeDB<T>).findAsync(query).sort({ modified: -1 }).limit(limit);
+    const docs = await nedbBucket[type]?.findAsync<T>(query).sort({ modified: -1 }).limit(limit);
     // TODO: create a db init phase for migrations rather than doing it on every find.
     const migrated = [];
-    for (const rawDoc of docs) {
-      migrated.push(await models.initModel(type, rawDoc));
+    for (const rawDoc of docs || []) {
+      migrated.push(await models.initModel<T>(type, rawDoc));
     }
     return migrated;
   },
@@ -237,14 +238,7 @@ export const database = {
   ) => {
     if (forceReset) {
       changeListeners = [];
-
-      for (const attr of Object.keys(nedbBucket)) {
-        if (attr === '_empty') {
-          continue;
-        }
-
-        delete nedbBucket[attr];
-      }
+      nedbBucket = {} as Record<AllTypes, NeDB>;
     }
 
     // Fill in the defaults
@@ -321,7 +315,7 @@ export const database = {
 
     // Don't really need to wait for this to be over;
     types.map(t =>
-      nedbBucket[t].remove(
+      nedbBucket[t]?.remove(
         {
           _id: {
             $in: docIds,
@@ -350,7 +344,7 @@ export const database = {
 
       // Don't really need to wait for this to be over;
       types.map(t =>
-        nedbBucket[t].remove(
+        nedbBucket[t]?.remove(
           {
             _id: {
               $in: docIds,
@@ -383,9 +377,9 @@ export const database = {
     }
 
     const docWithDefaults = await models.initModel<T>(doc.type, doc);
-    const newDoc = await (nedbBucket[doc.type] as NeDB<T>).updateAsync({ _id: docWithDefaults._id }, docWithDefaults);
+    await (nedbBucket[doc.type] as NeDB<T>).updateAsync({ _id: docWithDefaults._id }, docWithDefaults);
     notifyOfChange('update', docWithDefaults, fromSync, patches);
-    return newDoc;
+    return docWithDefaults;
   },
 
   // TODO(TSCONVERSION) the update method above can now take an upsert property
@@ -402,7 +396,7 @@ export const database = {
   },
 
   /** get all ancestors of specified types of a document */
-  withAncestors: async function <T extends BaseModel>(doc: T | null, types: AllTypes[] = allTypes()) {
+  withAncestors: async function <T extends BaseModel>(doc: T | undefined, types: AllTypes[] = []) {
     if (process.type === 'renderer') {
       return _send<T[]>('withAncestors', ...arguments);
     }
@@ -412,7 +406,9 @@ export const database = {
     }
 
     let docsToReturn: T[] = doc ? [doc] : [];
-
+    if (types.length === 0) {
+      types = Object.keys(nedbBucket) as AllTypes[];
+    }
     async function next(docs: T[]): Promise<T[]> {
       const foundDocs: T[] = [];
 
@@ -498,14 +494,11 @@ export const database = {
   },
 };
 
-type DB = Record<string, NeDB>;
-
-const nedbBucket: DB = {} as DB;
+let nedbBucket: Partial<Record<AllTypes, NeDB>> = {};
 
 // ~~~~~~~ //
 // HELPERS //
 // ~~~~~~~ //
-const allTypes = () => Object.keys(nedbBucket) as AllTypes[];
 
 function getDBFilePath(modelType: AllTypes) {
   // NOTE: Do not EVER change this. EVER!
@@ -598,14 +591,10 @@ export async function _repairDatabase() {
  */
 async function _applyApiSpecName(workspace: Workspace) {
   const apiSpec = await models.apiSpec.getByParentId(workspace._id);
-  if (apiSpec === null) {
-    return;
-  }
-
-  if (!apiSpec.fileName || apiSpec.fileName === models.apiSpec.init().fileName) {
-    await models.apiSpec.update(apiSpec, {
-      fileName: workspace.name,
-    });
+  const existsAndFilenameIsDefaultOrMissing =
+    apiSpec && (!apiSpec.fileName || apiSpec.fileName === models.apiSpec.init().fileName);
+  if (existsAndFilenameIsDefaultOrMissing) {
+    await models.apiSpec.update(apiSpec, { fileName: workspace.name });
   }
 }
 

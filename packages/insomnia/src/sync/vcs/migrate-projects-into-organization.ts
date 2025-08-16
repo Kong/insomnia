@@ -27,7 +27,7 @@ export const shouldMigrateProjectUnderOrganization = async () => {
     }),
   ]);
 
-  return localProjectCount > 0 || legacyRemoteProjectCount > 0;
+  return (localProjectCount ?? 0) > 0 || (legacyRemoteProjectCount ?? 0) > 0;
 };
 
 export const migrateProjectsIntoOrganization = async ({

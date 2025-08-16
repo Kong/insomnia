@@ -153,8 +153,7 @@ async function _findRecentForRequest(requestId: string, environmentId: string | 
 
 export async function getLatestForRequest(requestId: string, environmentId: string | null) {
   const responses = await _findRecentForRequest(requestId, environmentId, 1);
-  const response = responses[0] as Response | null | undefined;
-  return response || null;
+  return responses[0];
 }
 
 export async function create(patch: Partial<Response> = {}, maxResponses = 20): Promise<Response> {

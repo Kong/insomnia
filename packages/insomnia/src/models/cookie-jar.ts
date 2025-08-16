@@ -83,7 +83,7 @@ export async function all() {
   return db.find<BaseModel>(type);
 }
 
-export async function getById(id: string): Promise<CookieJar | null> {
+export async function getById(id: string): Promise<CookieJar | undefined> {
   return db.findOne<CookieJar>(type, { _id: id });
 }
 

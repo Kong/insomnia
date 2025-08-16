@@ -266,18 +266,18 @@ export interface PluginTemplateTagContext {
     openInBrowser?: (url: string) => void;
     models: {
       request: {
-        getById: (id: string) => Promise<Request | null>;
+        getById: (id: string) => Promise<Request | undefined>;
         getAncestors: (request: Request) => Promise<(Request | RequestGroup | Workspace)[]>;
       };
       cloudCredential: {
-        getById: (id: string) => Promise<CloudProviderCredential | null>;
+        getById: (id: string) => Promise<CloudProviderCredential | undefined>;
         update: (
           originCredential: CloudProviderCredential,
           patch: Partial<CloudProviderCredential>,
         ) => Promise<CloudProviderCredential>;
       };
-      workspace: { getById: (id: string) => Promise<Workspace | null> };
-      oAuth2Token: { getByRequestId: (id: string) => Promise<OAuth2Token | null> };
+      workspace: { getById: (id: string) => Promise<Workspace | undefined> };
+      oAuth2Token: { getByRequestId: (id: string) => Promise<OAuth2Token | undefined> };
       cookieJar: { getOrCreateForParentId: (parentId: string) => Promise<CookieJar> };
       response: {
         getLatestForRequestId: typeof getLatestForRequest;

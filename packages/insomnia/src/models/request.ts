@@ -335,7 +335,7 @@ export function create(patch: Partial<Request> = {}) {
   return db.docCreate<Request>(type, patch);
 }
 
-export function getById(id: string): Promise<Request | null> {
+export function getById(id: string): Promise<Request | undefined> {
   return db.findOne<Request>(type, { _id: id });
 }
 
