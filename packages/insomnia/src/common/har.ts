@@ -154,7 +154,7 @@ export async function exportHar(exportRequests: ExportRequest[]) {
     if (exportRequest.responseId) {
       response = await models.response.getById(exportRequest.responseId);
     } else {
-      response = await models.response.getLatestForRequest(
+      response = await models.response.getLatestForRequestId(
         exportRequest.requestId,
         exportRequest.environmentId || null,
       );

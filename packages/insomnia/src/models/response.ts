@@ -3,7 +3,7 @@ import type { Readable } from 'node:stream';
 import zlib from 'node:zlib';
 
 import type { RequestTestResult } from '../../../insomnia-scripting-environment/src/objects';
-import { database as db, type Query } from '../common/database';
+import { database as db } from '../common/database';
 import type { ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as requestOperations from '../models/helpers/request-operations';
 import { deserializeNDJSON } from '../utils/ndjson';
@@ -137,22 +137,21 @@ export function remove(response: Response) {
   return db.remove(response);
 }
 
-async function _findRecentForRequest(requestId: string, environmentId: string | null, limit: number) {
-  const query: Query<Response> = {
-    parentId: requestId,
-  };
-
+export async function getLatestForRequestId(
+  requestId: string,
+  environmentId: string | null,
+): Promise<Response | undefined> {
   // Filter responses by environment if setting is enabled
-  const settings = await models.settings.get();
-  if (environmentId && settings?.filterResponsesByEnv) {
-    query.environmentId = environmentId;
-  }
+  const shouldFilter = (await models.settings.get()).filterResponsesByEnv;
 
-  return db.findMostRecentlyModified<Response>(type, query, limit);
-}
-
-export async function getLatestForRequest(requestId: string, environmentId: string | null) {
-  const responses = await _findRecentForRequest(requestId, environmentId, 1);
+  const responses = await db.findMostRecentlyModified<Response>(
+    type,
+    {
+      parentId: requestId,
+      ...(shouldFilter ? { environmentId } : {}),
+    },
+    1,
+  );
   return responses[0];
 }
 

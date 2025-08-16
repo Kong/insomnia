@@ -8,8 +8,7 @@ import type { OAuth2Token } from '../models/o-auth-2-token';
 import type { Project } from '../models/project';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
-import type { Response } from '../models/response';
-import type { getBodyBuffer, getLatestForRequest } from '../models/response';
+import type { getBodyBuffer, getLatestForRequestId, Response } from '../models/response';
 import type { get as getSettings } from '../models/settings';
 import type { SocketIORequest } from '../models/socket-io-request';
 import type { WebSocketRequest } from '../models/websocket-request';
@@ -280,7 +279,7 @@ export interface PluginTemplateTagContext {
       oAuth2Token: { getByRequestId: (id: string) => Promise<OAuth2Token | undefined> };
       cookieJar: { getOrCreateForParentId: (parentId: string) => Promise<CookieJar> };
       response: {
-        getLatestForRequestId: typeof getLatestForRequest;
+        getLatestForRequestId: typeof getLatestForRequestId;
         getBodyBuffer: typeof getBodyBuffer;
       };
       settings: {

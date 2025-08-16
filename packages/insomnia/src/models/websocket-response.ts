@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 
-import { database as db, type Query } from '../common/database';
+import { database as db } from '../common/database';
 import * as requestOperations from './helpers/request-operations';
 import type { BaseModel } from './index';
 import * as models from './index';
@@ -135,21 +135,19 @@ export async function create(patch: Partial<WebSocketResponse> = {}, maxResponse
   return db.docCreate(type, patch);
 }
 
-async function _findRecentForRequest(requestId: string, environmentId: string | null, limit: number) {
-  const query: Query<WebSocketResponse> = {
-    parentId: requestId,
-  };
-
+export async function getLatestForRequestId(requestId: string, environmentId: string | null) {
   // Filter responses by environment if setting is enabled
-  if ((await models.settings.get()).filterResponsesByEnv) {
-    query.environmentId = environmentId;
-  }
 
-  return db.findMostRecentlyModified<WebSocketResponse>(type, query, limit);
-}
+  const shouldFilter = (await models.settings.get()).filterResponsesByEnv;
 
-export async function getLatestForRequest(requestId: string, environmentId: string | null) {
-  const responses = await _findRecentForRequest(requestId, environmentId, 1);
+  const responses = await db.findMostRecentlyModified<WebSocketResponse>(
+    type,
+    {
+      parentId: requestId,
+      ...(shouldFilter ? { environmentId } : {}),
+    },
+    1,
+  );
   const response = responses[0] as WebSocketResponse | null | undefined;
   return response || null;
 }

@@ -25,7 +25,11 @@ const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
 
 export const resolveDbByKey = async (request: Request) => {
   const url = new URL(request.url);
-  const body = await request.json();
+  let body;
+  try {
+    // We expect this to throw if a db call returns undefined
+    body = await request.json();
+  } catch {}
   // url get normalized to lowercase, so we need to normalize the keys to lower case as well
   const withLowercasedKeys = Object.fromEntries(
     Object.entries(pluginToMainAPI).map(([key, value]) => [key.toLowerCase(), value]),
@@ -92,7 +96,7 @@ const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => Promise<
     return await models.cookieJar.getOrCreateForParentId(body.parentId);
   },
   'response.getLatestForRequestId': async (body: { requestId: string; environmentId: string }) => {
-    return await models.response.getLatestForRequest(body.requestId, body.environmentId);
+    return await models.response.getLatestForRequestId(body.requestId, body.environmentId);
   },
   'response.getBodyBuffer': async (body: { response: Response; readFailureValue: string }) => {
     return await models.response.getBodyBuffer(body.response, body.readFailureValue);
