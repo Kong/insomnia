@@ -23,6 +23,11 @@ import { getInitialEntry } from './utils/router';
 
 initializeSentry();
 
+await database.initClient();
+await initPlugins();
+
+await migrateFromLocalStorage();
+
 try {
   window.showAlert = options => showModal(AlertModal, options);
   window.showPrompt = options =>
@@ -47,11 +52,6 @@ try {
 } catch (e) {
   console.log('[onboarding] Failed to parse session data', e);
 }
-
-await database.initClient();
-await initPlugins();
-
-await migrateFromLocalStorage();
 
 // Check if there is a Session provided by an env variable and use this
 const insomniaSession = getInsomniaSession();

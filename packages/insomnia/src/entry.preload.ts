@@ -175,6 +175,7 @@ const main: Window['main'] = {
   },
   extractJsonFileFromPostmanDataDumpArchive: archivePath =>
     ipcRenderer.invoke('extractJsonFileFromPostmanDataDumpArchive', archivePath),
+  getLocalStorageDataFromFileOrigin: () => ipcRenderer.invoke('getLocalStorageDataFromFileOrigin'),
 };
 
 ipcRenderer.on('hidden-browser-window-response-listener', event => {

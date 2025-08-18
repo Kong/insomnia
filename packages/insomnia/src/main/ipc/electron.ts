@@ -89,7 +89,8 @@ export type HandleChannels =
   | 'git.getGitHubRepository'
   | 'git.initSignInToGitLab'
   | 'git.completeSignInToGitLab'
-  | 'git.signOutOfGitLab';
+  | 'git.signOutOfGitLab'
+  | 'getLocalStorageDataFromFileOrigin';
 
 export const ipcMainHandle = (
   channel: HandleChannels,

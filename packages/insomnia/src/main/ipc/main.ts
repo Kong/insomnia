@@ -103,6 +103,7 @@ export interface RendererToMainBridgeAPI {
   completeExecutionStep: (options: { requestId: string }) => void;
   updateLatestStepName: (options: { requestId: string; stepName: string }) => void;
   extractJsonFileFromPostmanDataDumpArchive: (archivePath: string) => Promise<any>;
+  getLocalStorageDataFromFileOrigin: () => Promise<Record<string, any>>;
 }
 
 export function registerMainHandlers() {
@@ -273,4 +274,45 @@ export function registerMainHandlers() {
   });
 
   ipcMainHandle('extractJsonFileFromPostmanDataDumpArchive', extractPostmanDataDumpHandler);
+
+  ipcMainHandle('getLocalStorageDataFromFileOrigin', async () => {
+    const tmpDir = app.getPath('userData');
+    const tmpHTMLFile = path.join(tmpDir, 'file.html');
+    // Create a temporary HTML file to load the file:// origin
+    await fs.promises.writeFile(tmpHTMLFile, '<html><body></body></html>', { encoding: 'utf8' });
+
+    // Create a hidden BrowserWindow to load the file:// origin
+    // This is necessary to access the localStorage of the file:// origin
+    // and retrieve the data.
+    const fileOriginWindow = new BrowserWindow({
+      show: false,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        sandbox: true,
+      },
+    });
+
+    fileOriginWindow.loadURL(`file:${tmpHTMLFile}`);
+
+    return new Promise<Record<string, any>>((resolve, reject) => {
+      fileOriginWindow.webContents.on('did-finish-load', async () => {
+        const localStorageData = await fileOriginWindow.webContents.executeJavaScript(
+          'JSON.stringify(localStorage)',
+          true,
+        );
+        // Close the hidden window after retrieving localStorage data
+        fileOriginWindow.close();
+        // Clean up the temporary file
+        fs.unlinkSync(tmpHTMLFile);
+        resolve(JSON.parse(localStorageData));
+      });
+      fileOriginWindow.webContents.on('did-fail-load', () => {
+        // Close the hidden window and clean up the temporary file on failure
+        fileOriginWindow.close();
+        tmpHTMLFile && fs.unlinkSync(tmpHTMLFile);
+        reject(new Error('Failed to load file:// origin to get localStorage data'));
+      });
+    });
+  });
 }
