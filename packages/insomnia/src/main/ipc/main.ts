@@ -301,6 +301,9 @@ export function registerMainHandlers() {
           'JSON.stringify(localStorage)',
           true,
         );
+
+        // Clear the localStorage of the file:// origin
+        await fileOriginWindow.webContents.executeJavaScript('localStorage.clear();', true);
         // Close the hidden window after retrieving localStorage data
         fileOriginWindow.close();
         // Clean up the temporary file
