@@ -136,9 +136,12 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository }) => {
       if (errors.includes(GitVCSOperationErrors.RequiredPullRemoteChangesError)) {
         if (!prevHadPullError.current && !isGitPullRequiredModalOpen && !isPulling) {
           setIsGitPullRequiredModalOpen(true);
+          prevHadPullError.current = false;
         }
         return;
       }
+
+      prevHadPullError.current = false;
 
       // Other errors
       showToast({
