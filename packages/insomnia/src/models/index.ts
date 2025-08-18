@@ -304,9 +304,7 @@ export const DESCENDANT_MAP: Record<string, string[]> = {
   [protoDirectory.type]: [protoFile.type],
 };
 
-export const generateDescendantMap = (queryTypes: ModelTypes): Record<string, string[]> => {
-  const result: Record<string, string[]> = {};
-
+const CHILD_TO_PARENT_MAP = (() => {
   const childToParents: Record<string, string[]> = {};
   for (const [parent, children] of Object.entries(DESCENDANT_MAP)) {
     for (const child of children) {
@@ -314,6 +312,11 @@ export const generateDescendantMap = (queryTypes: ModelTypes): Record<string, st
       childToParents[child].push(parent);
     }
   }
+  return childToParents;
+})();
+
+export const generateDescendantMap = (queryTypes: ModelTypes): Record<string, string[]> => {
+  const result: Record<string, string[]> = {};
 
   const visited = new Set<string>();
   const collectAncestors = (child: string) => {
@@ -321,7 +324,7 @@ export const generateDescendantMap = (queryTypes: ModelTypes): Record<string, st
       return;
     }
     visited.add(child);
-    const parents = childToParents[child];
+    const parents = CHILD_TO_PARENT_MAP[child];
     if (parents?.length) {
       for (const p of parents) {
         if (!result[p]) {
