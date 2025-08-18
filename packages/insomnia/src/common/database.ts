@@ -7,8 +7,6 @@ import NeDB from '@seald-io/nedb';
 import electron from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 
-import { invariant } from '~/utils/invariant';
-
 import { mustGetModel } from '../models';
 import type { CookieJar } from '../models/cookie-jar';
 import { type Environment } from '../models/environment';
@@ -464,7 +462,7 @@ export const database = {
   },
 };
 
-let nedbBucket: Record<AllTypes, NeDB>;
+let nedbBucket: Record<AllTypes, NeDB> = {} as Record<AllTypes, NeDB>;
 
 // ~~~~~~~~~~~~~~~~ //
 // Change Listeners //
