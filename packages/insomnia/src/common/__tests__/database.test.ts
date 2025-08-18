@@ -19,7 +19,7 @@ describe('init()', () => {
 
 describe('onChange()', () => {
   beforeEach(async () => {
-    await db.init({ inMemoryOnly: true }, true, () => {});
+    await db.init({ inMemoryOnly: true }, true);
   });
   it('handles change listeners', async () => {
     const doc = {
@@ -206,7 +206,7 @@ describe('requestCreate()', () => {
 
 describe('_repairDatabase()', async () => {
   beforeEach(async () => {
-    await db.init({ inMemoryOnly: true }, true, () => {});
+    await db.init({ inMemoryOnly: true }, true);
   });
 
   it('fixes duplicate environments', async () => {

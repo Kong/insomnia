@@ -48,7 +48,6 @@ export async function getSendRequestCallbackMemDb(
       inMemoryOnly: true,
     },
     true,
-    () => {},
   );
   const docs: BaseModel[] = [];
 

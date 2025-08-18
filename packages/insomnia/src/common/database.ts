@@ -3,7 +3,6 @@
 /* eslint-disable prefer-rest-params -- don't want to change ...arguments usage for these sensitive functions without more testing */
 import fsPath from 'node:path';
 
-import { Api } from '@bufbuild/protobuf';
 import NeDB from '@seald-io/nedb';
 import electron from 'electron';
 import { v4 as uuidv4 } from 'uuid';
@@ -221,11 +220,7 @@ export const database = {
   },
 
   /** init in main process */
-  init: async (
-    config: NeDB.DataStoreOptions = {},
-    forceReset = false,
-    consoleLog: typeof console.log = console.log,
-  ) => {
+  init: async (config: NeDB.DataStoreOptions = {}, forceReset = false) => {
     if (forceReset) {
       changeListeners = [];
       nedbBucket = {} as Record<AllTypes, NeDB>;
