@@ -92,7 +92,9 @@ export const getInitialEntry = async () => {
     const hasSeenOnboardingV11 = Boolean(window.localStorage.getItem('hasSeenOnboardingV11'));
 
     if (!hasSeenOnboardingV11) {
-      return href('/onboarding');
+      return href('/onboarding/*', {
+        '*': '',
+      });
     }
 
     const hasUserLoggedInBefore = window.localStorage.getItem('hasUserLoggedInBefore');
