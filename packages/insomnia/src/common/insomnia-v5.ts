@@ -539,10 +539,7 @@ export async function getInsomniaV5DataExport({
               parameters: resource.parameters,
               headers: resource.headers,
               authentication: resource.authentication,
-              scripts: {
-                preRequest: resource.preRequestScript,
-                afterResponse: resource.afterResponseScript,
-              },
+              scripts: getScriptFromResources(resource),
               settings: {
                 renderRequestBody: !resource.settingDisableRenderRequestBody,
                 encodeUrl: resource.settingEncodeUrl,
@@ -568,10 +565,7 @@ export async function getInsomniaV5DataExport({
                 description: resource.description,
               },
               children: getCollectionFromResources(resources, resource._id),
-              scripts: {
-                afterResponse: resource.afterResponseScript,
-                preRequest: resource.preRequestScript,
-              },
+              scripts: getScriptFromResources(resource),
               authentication: resource.authentication,
               environment: resource.environment,
               environmentPropertyOrder: resource.environmentPropertyOrder,
@@ -654,6 +648,25 @@ export async function getInsomniaV5DataExport({
         });
 
       return collection;
+    }
+
+    function getScriptFromResources(resource: Request | RequestGroup) {
+      const hasPreRequest = !!resource?.preRequestScript;
+      const hasAfterResponse = !!resource?.afterResponseScript;
+
+      if (!hasPreRequest && !hasAfterResponse) {
+        return undefined;
+      }
+
+      const scripts: { preRequest?: string; afterResponse?: string } = {};
+      if (hasPreRequest) {
+        scripts.preRequest = resource.preRequestScript;
+      }
+      if (hasAfterResponse) {
+        scripts.afterResponse = resource.afterResponseScript;
+      }
+
+      return scripts;
     }
 
     function getEnvironmentsFromResources(
