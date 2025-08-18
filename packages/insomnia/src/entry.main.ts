@@ -100,7 +100,7 @@ app.on('ready', async () => {
   }
 
   // Init some important things first
-  await database.init(models.types());
+  await database.init();
   await _createModelInstances();
   sentryWatchAnalyticsEnabled();
   watchProxySettings();

@@ -20,7 +20,7 @@ describe('NeDBClient', () => {
   beforeEach(async () => {
     workspaceBuilder.reset();
     setupDateMocks();
-    await db.init(models.types(), { inMemoryOnly: true }, true, () => {});
+    await db.init({ inMemoryOnly: true }, true, () => {});
     // Create some sample models
     await models.project.create({
       _id: 'proj_1',

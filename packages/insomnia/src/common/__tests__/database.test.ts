@@ -7,10 +7,10 @@ import { _repairDatabase, database as db } from '../database';
 
 describe('init()', () => {
   it('handles being initialized twice', async () => {
-    await db.init(models.types(), {
+    await db.init({
       inMemoryOnly: true,
     });
-    await db.init(models.types(), {
+    await db.init({
       inMemoryOnly: true,
     });
     expect((await db.find(models.request.type)).length).toBe(0);
@@ -19,7 +19,7 @@ describe('init()', () => {
 
 describe('onChange()', () => {
   beforeEach(async () => {
-    await db.init(models.types(), { inMemoryOnly: true }, true, () => {});
+    await db.init({ inMemoryOnly: true }, true, () => {});
   });
   it('handles change listeners', async () => {
     const doc = {
@@ -206,7 +206,7 @@ describe('requestCreate()', () => {
 
 describe('_repairDatabase()', async () => {
   beforeEach(async () => {
-    await db.init(models.types(), { inMemoryOnly: true }, true, () => {});
+    await db.init({ inMemoryOnly: true }, true, () => {});
   });
 
   it('fixes duplicate environments', async () => {

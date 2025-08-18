@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { type BaseModel, types as modelTypes } from '../models';
+import { type BaseModel } from '../models';
 import * as models from '../models';
 import type { Environment, UserUploadEnvironment } from '../models/environment';
 import { getBodyBuffer } from '../models/response';
@@ -44,7 +44,6 @@ export async function getSendRequestCallbackMemDb(
 ) {
   // Initialize the DB in-memory and fill it with data if we're given one
   await database.init(
-    modelTypes(),
     {
       inMemoryOnly: true,
     },
