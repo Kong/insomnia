@@ -74,8 +74,7 @@ export const database = {
     if (process.type === 'renderer') {
       return _send<number>('count', ...arguments);
     }
-    const total = await nedbBucket[type]?.countAsync(query);
-    return total || 0;
+    return nedbBucket[type].countAsync(query);
   },
 
   docCreate: async <T extends BaseModel>(type: AllTypes, ...patches: Partial<T>[]) => {
@@ -124,8 +123,7 @@ export const database = {
       // 1. Copy the doc
       const newDoc = { ...docToCopy, ...patch, ...overrides };
 
-      const createdDoc = await nedbBucket[docToCopy.type]?.insertAsync(newDoc);
-      invariant(createdDoc, `Failed to duplicate document of type ${docToCopy.type}`);
+      const createdDoc = await nedbBucket[docToCopy.type].insertAsync(newDoc);
       // 2. Get all the children
       for (const type of Object.keys(nedbBucket) as AllTypes[]) {
         // Note: We never want to duplicate a response
@@ -153,7 +151,7 @@ export const database = {
     if (process.type === 'renderer') {
       return _send<T>('findOne', ...arguments);
     }
-    return await nedbBucket[type]?.findOneAsync<T>(query).sort(sort);
+    return nedbBucket[type].findOneAsync<T>(query).sort(sort);
   },
   /** find documents matching query */
   find: async function <T extends BaseModel>(
@@ -231,7 +229,7 @@ export const database = {
 
     // Fill in the defaults
     for (const modelType of types) {
-      if (nedbBucket[modelType]) {
+      if (nedbBucket?.[modelType]) {
         consoleLog(`[db] Already initialized DB.${modelType}`);
         continue;
       }
@@ -274,8 +272,7 @@ export const database = {
       return _send<T>('insert', ...arguments);
     }
     const docWithDefaults = await models.initModel<T>(doc.type, doc);
-    const newDoc = await nedbBucket[doc.type]?.insertAsync(docWithDefaults);
-    invariant(newDoc, `Failed to insert document of type ${doc.type}`);
+    const newDoc = await nedbBucket[doc.type].insertAsync(docWithDefaults);
     notifyOfChange('insert', newDoc, fromSync);
     return newDoc;
   },
@@ -354,7 +351,7 @@ export const database = {
       return _send<void>('unsafeRemove', ...arguments);
     }
 
-    nedbBucket[doc.type]?.remove({ _id: doc._id });
+    nedbBucket[doc.type].remove({ _id: doc._id });
     notifyOfChange('remove', doc, fromSync);
   },
 
@@ -364,7 +361,7 @@ export const database = {
     }
 
     const docWithDefaults = await models.initModel<T>(doc.type, doc);
-    await nedbBucket[doc.type]?.updateAsync({ _id: docWithDefaults._id }, docWithDefaults, { upsert: true });
+    await nedbBucket[doc.type].updateAsync({ _id: docWithDefaults._id }, docWithDefaults, { upsert: true });
     notifyOfChange('update', docWithDefaults, fromSync, patches);
     return docWithDefaults;
   },
@@ -467,7 +464,7 @@ export const database = {
   },
 };
 
-let nedbBucket: Partial<Record<AllTypes, NeDB>> = {};
+let nedbBucket: Record<AllTypes, NeDB>;
 
 // ~~~~~~~~~~~~~~~~ //
 // Change Listeners //
