@@ -301,7 +301,7 @@ export const DESCENDANT_MAP: Record<string, string[]> = {
   [environment.type]: [environment.type],
   [unitTestSuite.type]: [unitTest.type, unitTestResult.type],
   [unitTest.type]: [unitTestResult.type],
-  [protoDirectory.type]: [protoFile.type],
+  [protoDirectory.type]: [protoDirectory.type, protoFile.type],
 };
 
 const CHILD_TO_PARENT_MAP = (() => {
