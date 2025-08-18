@@ -27,6 +27,7 @@ export async function clientAction({ request, params }: Route.ClientActionArgs) 
     throw err;
   }
   try {
+    // This is to synchronize the local database with the branch changes
     await database.batchModifyDocs(delta as Operation);
     delete remoteCompareCache[workspaceId];
   } catch (err) {

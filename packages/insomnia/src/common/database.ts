@@ -379,7 +379,7 @@ export const database = {
       return [];
     }
 
-    let docsToReturn: T[] = [];
+    let docsToReturn: T[] = doc ? [doc] : [];
     if (types.length === 0) {
       types = Object.keys(nedbBucket) as AllTypes[];
     }

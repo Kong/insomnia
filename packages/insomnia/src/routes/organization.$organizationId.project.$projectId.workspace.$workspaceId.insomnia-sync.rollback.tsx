@@ -15,6 +15,7 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
     const vcs = VCSInstance();
     const { syncItems } = await getSyncItems({ workspaceId });
     const delta = await vcs.rollbackToLatest(syncItems);
+    // This is to synchronize the local database with the branch changes
     await database.batchModifyDocs(delta as unknown as Operation);
     delete remoteCompareCache[workspaceId];
   } catch (err) {

@@ -61,7 +61,8 @@ export async function getSendRequestCallbackMemDb(
       docs.push(doc);
     }
   }
-
+  // init database with the provided documents
+  // TODO: this could be done with database.init instead
   await database.batchModifyDocs({
     upsert: docs,
     remove: [],

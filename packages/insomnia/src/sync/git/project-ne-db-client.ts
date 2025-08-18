@@ -94,6 +94,7 @@ export class GitProjectNeDBClient {
       const originDocs = await database.getWithDescendants(workspace);
       // If the workspace already exists, we need to remove any documents that are not in the new data
       const deletedDocs = originDocs.filter(originDoc => !dataToImport.some(doc => doc._id === originDoc._id));
+      // TODO: this could be done with a removeMany
       await database.batchModifyDocs({
         remove: deletedDocs,
       });
