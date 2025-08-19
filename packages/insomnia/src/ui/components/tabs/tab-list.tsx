@@ -12,6 +12,9 @@ import {
 } from 'react-aria-components';
 import { useParams } from 'react-router';
 
+import { isGrpcRequest } from '~/models/grpc-request';
+import { isSocketIORequest } from '~/models/socket-io-request';
+import { isWebSocketRequest } from '~/models/websocket-request';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 
 import { type ChangeBufferEvent, type ChangeType, database } from '../../../common/database';
@@ -177,7 +180,7 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
       if (patchObj.parentId && !patchObj.metaSortKey && (patchObj.parentId as string).startsWith('wrk_')) {
         const workspace = await models.workspace.getById(patchObj.parentId);
         if (workspace) {
-          if (isRequest(doc)) {
+          if (isRequest(doc) || isWebSocketRequest(doc) || isGrpcRequest(doc) || isSocketIORequest(doc)) {
             updateTabById?.(doc._id, {
               workspaceId: workspace._id,
               workspaceName: workspace.name,
