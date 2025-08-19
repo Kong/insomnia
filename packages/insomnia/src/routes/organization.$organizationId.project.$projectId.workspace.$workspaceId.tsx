@@ -261,6 +261,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
 
   const userSession = await models.userSession.getOrCreate();
   const isLoggedinIsCloudProjectAndIsNotGitRepo = userSession.id && activeProject.remoteId && !gitRepository;
+  let vcsVersion = null;
   if (isLoggedinIsCloudProjectAndIsNotGitRepo) {
     try {
       const vcs = VCSInstance();
@@ -268,6 +269,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
       if (activeWorkspaceMeta.pushSnapshotOnInitialize) {
         await pushSnapshotOnInitialize({ vcs, workspace: activeWorkspace, project: activeProject });
       }
+      vcsVersion = await vcs.getVersion();
     } catch (err) {
       console.warn('Failed to initialize VCS', err);
     }
@@ -314,6 +316,7 @@ export async function clientLoader({ params, request }: Route.ClientLoaderArgs) 
     // TODO: remove this state hack when the grpc responses go somewhere else
     grpcRequests: grpcReqs,
     collection,
+    vcsVersion,
   };
 }
 

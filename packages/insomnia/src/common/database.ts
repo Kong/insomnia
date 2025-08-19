@@ -47,8 +47,8 @@ export const database = {
     const flushId = await database.bufferChanges();
 
     // Perform from least to most dangerous
-    await Promise.all(upsert.map(doc => database.update(doc, true)));
-    await Promise.all(remove.map(doc => database.unsafeRemove(doc, true)));
+    await Promise.all(upsert.map(doc => database.update(doc)));
+    await Promise.all(remove.map(doc => database.unsafeRemove(doc)));
 
     await database.flushChanges(flushId);
   },
@@ -105,7 +105,7 @@ export const database = {
       },
       ...patches,
     );
-    return database.update<T>(doc, false, patches);
+    return database.update<T>(doc, patches);
   },
 
   /** duplicate doc and its descendents recursively */
@@ -407,13 +407,13 @@ export const database = {
     }
   },
 
-  insert: async function <T extends BaseModel>(doc: T, fromSync = false) {
+  insert: async function <T extends BaseModel>(doc: T) {
     if (process.type === 'renderer') {
       return _send<T>('insert', ...arguments);
     }
     const docWithDefaults = await models.initModel<T>(doc.type, doc);
     const newDoc = await nedbBucket[doc.type].insertAsync(docWithDefaults);
-    notifyOfChange('insert', newDoc, fromSync);
+    notifyOfChange('insert', newDoc);
     return newDoc;
   },
 
@@ -422,7 +422,7 @@ export const database = {
   },
 
   /** remove doc and its descendants */
-  remove: async function <T extends BaseModel>(doc: T, fromSync = false) {
+  remove: async function <T extends BaseModel>(doc: T) {
     if (process.type === 'renderer') {
       return _send<void>('remove', ...arguments);
     }
@@ -447,7 +447,7 @@ export const database = {
       ),
     );
 
-    docs.map(d => notifyOfChange('remove', d, fromSync));
+    docs.map(d => notifyOfChange('remove', d));
     await database.flushChanges(flushId);
   },
 
@@ -475,30 +475,30 @@ export const database = {
           },
         ),
       );
-      docs.map(d => notifyOfChange('remove', d, false));
+      docs.map(d => notifyOfChange('remove', d));
     }
 
     await database.flushChanges(flushId);
   },
 
   /** Removes entries without removing their children */
-  unsafeRemove: async function <T extends BaseModel>(doc: T, fromSync = false) {
+  unsafeRemove: async function <T extends BaseModel>(doc: T) {
     if (process.type === 'renderer') {
       return _send<void>('unsafeRemove', ...arguments);
     }
 
     nedbBucket[doc.type].remove({ _id: doc._id });
-    notifyOfChange('remove', doc, fromSync);
+    notifyOfChange('remove', doc);
   },
 
-  update: async function <T extends BaseModel>(doc: T, fromSync = false, patches: Partial<T>[] = []) {
+  update: async function <T extends BaseModel>(doc: T, patches: Partial<T>[] = []) {
     if (process.type === 'renderer') {
       return _send<T>('update', ...arguments);
     }
 
     const docWithDefaults = await models.initModel<T>(doc.type, doc);
     await nedbBucket[doc.type].updateAsync({ _id: docWithDefaults._id }, docWithDefaults, { upsert: true });
-    notifyOfChange('update', docWithDefaults, fromSync, patches);
+    notifyOfChange('update', docWithDefaults, patches);
     return docWithDefaults;
   },
 
@@ -608,12 +608,7 @@ let nedbBucket: Record<AllTypes, NeDB> = {} as Record<AllTypes, NeDB>;
 let bufferingChanges = false;
 let bufferChangesId = 1;
 
-export type ChangeBufferEvent<T extends BaseModel = BaseModel> = [
-  event: ChangeType,
-  doc: T,
-  fromSync: boolean,
-  patches: Partial<T>[],
-];
+export type ChangeBufferEvent<T extends BaseModel = BaseModel> = [event: ChangeType, doc: T, patches: Partial<T>[]];
 
 let changeBuffer: ChangeBufferEvent[] = [];
 
@@ -623,16 +618,11 @@ let changeListeners: ChangeListener[] = [];
 
 /** push changes into the buffer, so that changeListeners can get change contents when database.flushChanges is called,
  * this method should be called whenever a document change happens */
-async function notifyOfChange<T extends BaseModel>(
-  event: ChangeType,
-  doc: T,
-  fromSync: boolean,
-  patches: Partial<T>[] = [],
-) {
+async function notifyOfChange<T extends BaseModel>(event: ChangeType, doc: T, patches: Partial<T>[] = []) {
   const updatedDoc = doc;
 
   // TODO: Use object is better than array
-  changeBuffer.push([event, updatedDoc, fromSync, patches]);
+  changeBuffer.push([event, updatedDoc, patches]);
 
   // Flush right away if we're not buffering
   if (!bufferingChanges) {

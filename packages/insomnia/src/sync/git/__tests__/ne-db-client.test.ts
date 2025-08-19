@@ -153,7 +153,7 @@ describe('NeDBClient', () => {
       await neDbClient.writeFile(filePath, YAML.stringify(env));
       // Assert
       expect(updateSpy).toHaveBeenCalledTimes(1);
-      expect(updateSpy).toHaveBeenCalledWith(env, true);
+      expect(updateSpy).toHaveBeenCalledWith(env);
       // Cleanup
       updateSpy.mockRestore();
     });
@@ -178,7 +178,7 @@ describe('NeDBClient', () => {
 
       // Assert
       expect(updateSpy).toHaveBeenCalledTimes(1);
-      expect(updateSpy).toHaveBeenCalledWith(workspaceInDb, true);
+      expect(updateSpy).toHaveBeenCalledWith(workspaceInDb);
 
       // Cleanup
       updateSpy.mockRestore();

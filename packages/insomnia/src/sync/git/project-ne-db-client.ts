@@ -114,7 +114,7 @@ export class GitProjectNeDBClient {
         await models.workspaceMeta.update(workspaceMeta, { gitFilePath: filePath });
       }
 
-      await db.update(doc, true);
+      await db.update(doc);
     }
 
     await db.flushChanges(bufferId);
@@ -134,7 +134,7 @@ export class GitProjectNeDBClient {
       return;
     }
 
-    await db.unsafeRemove(doc, true);
+    await db.unsafeRemove(doc);
   }
 
   async readdir(filePath: string) {

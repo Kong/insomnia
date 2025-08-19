@@ -117,7 +117,7 @@ export class NeDBClient {
       doc.parentId = this._projectId;
     }
 
-    await db.update(doc, true);
+    await db.update(doc);
   }
 
   async unlink(filePath: string) {
@@ -134,7 +134,7 @@ export class NeDBClient {
       return;
     }
 
-    await db.unsafeRemove(doc, true);
+    await db.unsafeRemove(doc);
   }
 
   // recurses over each .insomnia subfolder, ApiSpec, Workspace, Request etc..

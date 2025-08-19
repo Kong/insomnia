@@ -19,7 +19,7 @@ import {
 } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
-import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
+import { useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { BodyEditor } from '../editors/body/body-editor';
 import { readOnlyHttpPairs, RequestHeadersEditor } from '../editors/request-headers-editor';
@@ -75,11 +75,10 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
     }
   };
   const gitVersion = useGitVCSVersion();
-  const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
 
-  const { activeEnvironment } = useWorkspaceLoaderData()!;
+  const { activeEnvironment, vcsVersion } = useWorkspaceLoaderData()!;
   // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniqueKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
+  const uniqueKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${vcsVersion}::${activeRequestMeta?.activeResponseId}`;
 
   if (!activeRequest) {
     return <PlaceholderRequestPane />;

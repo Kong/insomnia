@@ -62,6 +62,10 @@ export function chunkArray<T>(arr: T[], chunkSize: number) {
 // Unstaged items have changed compared to staged or not and can be staged
 //
 export class VCS {
+  async getVersion(): Promise<string> {
+    const branch = await this._getCurrentBranch();
+    return branch.modified.toISOString();
+  }
   _store: Store;
   _driver: BaseDriver;
   // stored by key `/projects/${project.id}/meta.json`

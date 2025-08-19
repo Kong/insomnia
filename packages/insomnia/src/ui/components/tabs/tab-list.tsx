@@ -215,13 +215,12 @@ export const OrganizationTabList = ({ showActiveStatus = true, currentPage = '' 
     // sync tabList with database
     const unsubscribe = window.main.on('db.changes', async (_, changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
-        const changeType = change[0];
-        const doc = change[1];
+        const [changeType, doc, patches] = change;
+
         if (needHandleChange(changeType, doc.type)) {
           if (changeType === 'remove') {
             handleDelete(doc._id, doc.type);
           } else if (changeType === 'update') {
-            const patches = change[3];
             handleUpdate(doc, patches);
           }
         }

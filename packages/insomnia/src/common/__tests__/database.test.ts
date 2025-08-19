@@ -38,7 +38,7 @@ describe('onChange()', () => {
     const updatedDoc = await models.request.update(newDoc, {
       name: 'bar',
     });
-    expect(changesSeen).toEqual([[['insert', newDoc, false, []]], [['update', updatedDoc, false, [{ name: 'bar' }]]]]);
+    expect(changesSeen).toEqual([[['insert', newDoc, []]], [['update', updatedDoc, [{ name: 'bar' }]]]]);
   });
 });
 
@@ -59,23 +59,23 @@ describe('bufferChanges()', () => {
     await db.bufferChanges();
     const newDoc = await models.request.create(doc);
     // @ts-expect-error -- TSCONVERSION appears to be genuine
-    const updatedDoc = await models.request.update(newDoc, true);
+    const updatedDoc = await models.request.update(newDoc);
     // Assert no change seen before flush
     expect(changesSeen.length).toBe(0);
     // Assert changes seen after flush
     await db.flushChanges();
     expect(changesSeen).toEqual([
       [
-        ['insert', newDoc, false, []],
-        ['update', updatedDoc, false, [true]],
+        ['insert', newDoc, []],
+        ['update', updatedDoc, [undefined]],
       ],
     ]);
     // Assert no more changes seen after flush again
     await db.flushChanges();
     expect(changesSeen).toEqual([
       [
-        ['insert', newDoc, false, []],
-        ['update', updatedDoc, false, [true]],
+        ['insert', newDoc, []],
+        ['update', updatedDoc, [undefined]],
       ],
     ]);
   });
@@ -96,13 +96,13 @@ describe('bufferChanges()', () => {
     await db.bufferChanges();
     const newDoc = await models.request.create(doc);
     // @ts-expect-error -- TSCONVERSION appears to be genuine
-    const updatedDoc = await models.request.update(newDoc, true);
+    const updatedDoc = await models.request.update(newDoc);
     // Default flush timeout is 1000ms after starting buffering
     await new Promise(resolve => setTimeout(resolve, 1500));
     expect(changesSeen).toEqual([
       [
-        ['insert', newDoc, false, []],
-        ['update', updatedDoc, false, [true]],
+        ['insert', newDoc, []],
+        ['update', updatedDoc, [undefined]],
       ],
     ]);
   });
@@ -123,12 +123,12 @@ describe('bufferChanges()', () => {
     await db.bufferChanges(500);
     const newDoc = await models.request.create(doc);
     // @ts-expect-error -- TSCONVERSION appears to be genuine
-    const updatedDoc = await models.request.update(newDoc, true);
+    const updatedDoc = await models.request.update(newDoc);
     await new Promise(resolve => setTimeout(resolve, 1000));
     expect(changesSeen).toEqual([
       [
-        ['insert', newDoc, false, []],
-        ['update', updatedDoc, false, [true]],
+        ['insert', newDoc, []],
+        ['update', updatedDoc, [undefined]],
       ],
     ]);
   });
@@ -151,7 +151,7 @@ describe('bufferChangesIndefinitely()', () => {
     await db.bufferChangesIndefinitely();
     const newDoc = await models.request.create(doc);
     // @ts-expect-error -- TSCONVERSION appears to be genuine
-    const updatedDoc = await models.request.update(newDoc, true);
+    const updatedDoc = await models.request.update(newDoc);
     // Default flush timeout is 1000ms after starting buffering
     await new Promise(resolve => setTimeout(resolve, 1500));
     // Assert no change seen before flush
@@ -160,8 +160,8 @@ describe('bufferChangesIndefinitely()', () => {
     await db.flushChanges();
     expect(changesSeen).toEqual([
       [
-        ['insert', newDoc, false, []],
-        ['update', updatedDoc, false, [true]],
+        ['insert', newDoc, []],
+        ['update', updatedDoc, [undefined]],
       ],
     ]);
   });

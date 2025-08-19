@@ -5,6 +5,7 @@ import { useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { useRootLoaderData } from '~/root';
+import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 
 import type { Environment } from '../../../models/environment';
@@ -16,7 +17,7 @@ import {
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
-import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
+import { useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { readOnlyWebsocketPairs, RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
@@ -51,7 +52,7 @@ interface Props {
 
 export const SocketIORequestPane: FC<Props> = ({ environment }) => {
   const { activeRequest, activeRequestMeta, requestPayload } = useRequestLoaderData() as SocketIORequestLoaderData;
-
+  const { vcsVersion } = useWorkspaceLoaderData()!;
   const { requestId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -95,11 +96,10 @@ export const SocketIORequestPane: FC<Props> = ({ environment }) => {
   };
 
   const gitVersion = useGitVCSVersion();
-  const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const patchRequest = useRequestPatcher();
   const urlHasQueryParameters = activeRequest.url.includes('?');
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniqueKey = `${environment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta.activeResponseId}`;
+  const uniqueKey = `${environment?.modified}::${requestId}::${gitVersion}::${vcsVersion}::${activeRequestMeta.activeResponseId}`;
 
   const readyState = useReadyState({ requestId: activeRequest._id, protocol: 'socketIO' });
   const disabled = readyState;
