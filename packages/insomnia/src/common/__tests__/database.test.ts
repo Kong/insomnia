@@ -263,8 +263,8 @@ describe('_repairDatabase()', async () => {
       },
     });
     // Make sure we have 6 environments and one workspace
-    expect((await db.withDescendants(workspace)).length).toBe(7);
-    const descendants = (await db.withDescendants(workspace)).map(d => ({
+    expect((await db.getWithDescendants(workspace)).length).toBe(7);
+    const descendants = (await db.getWithDescendants(workspace)).map(d => ({
       _id: d._id,
       parentId: d.parentId,
       // @ts-expect-error -- TSCONVERSION appears to be genuine
@@ -326,7 +326,7 @@ describe('_repairDatabase()', async () => {
     await _repairDatabase();
 
     // Make sure things get adjusted
-    const descendants2 = (await db.withDescendants(workspace)).map(d => ({
+    const descendants2 = (await db.getWithDescendants(workspace)).map(d => ({
       _id: d._id,
       parentId: d.parentId,
       // @ts-expect-error -- TSCONVERSION appears to be genuine
@@ -388,7 +388,7 @@ describe('_repairDatabase()', async () => {
       _id: 'w1',
       parentId: project._id,
     });
-    expect((await db.withDescendants(workspace)).length).toBe(1);
+    expect((await db.getWithDescendants(workspace)).length).toBe(1);
     // Create one set of sub environments
     await models.cookieJar.create({
       _id: 'j1',
@@ -427,8 +427,8 @@ describe('_repairDatabase()', async () => {
       ],
     });
     // Make sure we have 2 cookie jars and one workspace
-    expect((await db.withDescendants(workspace)).length).toBe(3);
-    const descendants = (await db.withDescendants(workspace)).map(d => ({
+    expect((await db.getWithDescendants(workspace)).length).toBe(3);
+    const descendants = (await db.getWithDescendants(workspace)).map(d => ({
       _id: d._id,
       // @ts-expect-error -- TSCONVERSION
       cookies: d.cookies || null,
@@ -476,7 +476,7 @@ describe('_repairDatabase()', async () => {
     // Run the fix algorithm
     await _repairDatabase();
     // Make sure things get adjusted
-    const descendants2 = (await db.withDescendants(workspace)).map(d => ({
+    const descendants2 = (await db.getWithDescendants(workspace)).map(d => ({
       _id: d._id,
       // @ts-expect-error -- TSCONVERSION
       cookies: d.cookies || null,
@@ -681,7 +681,7 @@ describe('withAncestors()', () => {
   });
 });
 
-describe('withDescendants()', () => {
+describe('getWithDescendants()', () => {
   it('should return specified model and all children', async () => {
     const project = await models.project.create();
     const workspace = await models.workspace.create({
@@ -740,42 +740,70 @@ describe('withDescendants()', () => {
       _id: 'req2',
       parentId: folder1._id,
     });
+    const grpcRequest1 = await models.grpcRequest.create({
+      _id: 'grpc1',
+      parentId: workspace._id,
+    });
+    const websocketRequest1 = await models.webSocketRequest.create({
+      _id: 'ws1',
+      parentId: workspace._id,
+    });
+    const socketIORequest1 = await models.socketIORequest.create({
+      _id: 'socket1',
+      parentId: workspace._id,
+    });
+
+    const environment1 = await models.environment.create({
+      _id: 'env1',
+      parentId: workspace._id,
+    });
+
+    const environment2 = await models.environment.create({
+      _id: 'env2',
+      parentId: environment1._id,
+    });
+
+    await expect(db.getWithDescendants(workspace), 'Should return workspace with all descendants').resolves.toEqual(
+      expect.arrayContaining([
+        workspace,
+        folder1,
+        folder2,
+        request1,
+        request2,
+        grpcRequest1,
+        websocketRequest1,
+        socketIORequest1,
+        cookieJar1,
+        cookieJar2,
+        environment1,
+        environment2,
+      ]),
+    );
 
     await expect(
-      db.withDescendants(workspace, null, [], {
-        Workspace: ['Request', 'CookieJar'],
-      }),
-      'Should return workspace with only top level requests and cookie jars',
-    ).resolves.toEqual([workspace, request1, cookieJar1, cookieJar2]);
+      db.getWithDescendants(workspace, [models.requestGroup.type]),
+      'Should return workspace with all request groups',
+    ).resolves.toEqual(expect.arrayContaining([workspace, folder1, folder2]));
 
     await expect(
-      db.withDescendants(workspace, null, [], {
-        Workspace: ['RequestGroup'],
-        RequestGroup: ['RequestGroup'],
-      }),
+      db.getWithDescendants(workspace, [
+        models.request.type,
+        models.grpcRequest.type,
+        models.webSocketRequest.type,
+        models.socketIORequest.type,
+      ]),
       'Should return workspace with all request groups and requests',
-    ).resolves.toEqual([workspace, folder1, folder2]);
-
-    await expect(
-      db.withDescendants(workspace, null, [], {
-        Workspace: ['RequestGroup', 'Request'],
-        RequestGroup: ['RequestGroup', 'Request'],
-      }),
-      'Should return workspace with all request groups and requests',
-    ).resolves.toEqual([workspace, folder1, request1, folder2, request2]);
-
-    await expect(
-      db.withDescendants(workspace, null, [], {
-        Workspace: ['RequestGroup'],
-      }),
-      'Should return only workspace and top request group',
-    ).resolves.toEqual([workspace, folder1]);
-
-    await expect(
-      db.withDescendants(workspace, null, [], {
-        RequestGroup: ['RequestGroup', 'Request'],
-      }),
-      'Should return only workspace because no workspace descendants are requested',
-    ).resolves.toEqual([workspace]);
+    ).resolves.toEqual(
+      expect.arrayContaining([
+        workspace,
+        folder1,
+        request1,
+        folder2,
+        request2,
+        grpcRequest1,
+        websocketRequest1,
+        socketIORequest1,
+      ]),
+    );
   });
 });
