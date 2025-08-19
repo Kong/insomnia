@@ -269,6 +269,7 @@ export const WORKSPACE_EXPORT_TYPES_DESCENDANT_MAP: Record<string, string[]> = {
     request.type,
     grpcRequest.type,
     webSocketRequest.type,
+    socketIORequest.type,
     cookieJar.type,
     environment.type,
     apiSpec.type,
