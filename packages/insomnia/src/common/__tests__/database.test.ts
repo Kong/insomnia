@@ -39,9 +39,6 @@ describe('onChange()', () => {
       name: 'bar',
     });
     expect(changesSeen).toEqual([[['insert', newDoc, false, []]], [['update', updatedDoc, false, [{ name: 'bar' }]]]]);
-    db.offChange(callback);
-    await models.request.create(doc);
-    expect(changesSeen.length).toBe(2);
   });
 });
 

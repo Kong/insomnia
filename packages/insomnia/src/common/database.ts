@@ -386,24 +386,6 @@ export const database = {
         filename: fsPath.join(dbPath, 'insomnia.WorkspaceMeta.db'),
       }),
     };
-    // for (const modelType of types) {
-    //   if (nedbBucket?.[modelType]) {
-    //     consoleLog(`[db] Already initialized DB.${modelType}`);
-    //     continue;
-    //   }
-
-    //   const filePath = fsPath.join(
-    //     process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'),
-    //     `insomnia.${modelType}.db`,
-    //   );
-
-    //   nedbBucket[modelType] = new NeDB({
-    //     autoload: true,
-    //     filename: filePath,
-    //     corruptAlertThreshold: 0.9,
-    //     ...config,
-    //   });
-    // }
 
     electron.ipcMain.on('db.fn', async (e, fnName, replyChannel, ...args) => {
       try {
@@ -437,10 +419,6 @@ export const database = {
 
   onChange: (callback: ChangeListener) => {
     changeListeners.push(callback);
-  },
-
-  offChange: (callback: ChangeListener) => {
-    changeListeners = changeListeners.filter(l => l !== callback);
   },
 
   /** remove doc and its descendants */
