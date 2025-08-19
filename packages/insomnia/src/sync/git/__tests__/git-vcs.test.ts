@@ -94,8 +94,8 @@ describe('Git-VCS', () => {
           name: '',
           path: '.insomnia/foo.txt',
           status: [0, 2, 2],
-          symbol: 'U',
-          type: 'untracked',
+          symbol: 'A',
+          type: 'added',
         },
       ]);
 
@@ -166,6 +166,8 @@ describe('Git-VCS', () => {
           name: '',
           path: '.insomnia/foo.txt',
           status: [0, 2, 2],
+          symbol: 'A',
+          type: 'added',
         },
       ]);
       expect(status2.unstaged).toEqual([
@@ -173,6 +175,8 @@ describe('Git-VCS', () => {
           name: '',
           path: '.insomnia/bar.txt',
           status: [0, 2, 0],
+          symbol: 'U',
+          type: 'untracked',
         },
       ]);
 
