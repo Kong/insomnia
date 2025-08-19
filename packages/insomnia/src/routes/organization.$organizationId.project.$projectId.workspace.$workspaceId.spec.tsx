@@ -890,6 +890,7 @@ const Component = ({ params }: Route.ComponentProps) => {
                         projectId,
                         workspaceId,
                         contents: value,
+                        fromTemplate: true,
                       });
                     }}
                   />
