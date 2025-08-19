@@ -22,7 +22,7 @@ import { useGitProjectDiscardActionFetcher } from '~/routes/git.discard';
 import { useGitProjectStageActionFetcher } from '~/routes/git.stage';
 import { useGitProjectUnstageActionFetcher } from '~/routes/git.unstage';
 
-import { GitVCSOperationErrors } from '../../../sync/git/git-vcs';
+import { GitFileType, GitVCSOperationErrors } from '../../../sync/git/git-vcs';
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
 import { GitPullRequiredModal } from './git-pull-required-modal';
@@ -37,6 +37,38 @@ export const StagingModalModes = {
 interface DiscardData {
   paths: string[];
   filesCount: number;
+}
+
+function getModificationClassName(type: string) {
+  switch (type) {
+    case GitFileType.Added: {
+      return 'text-[#73c991]';
+    }
+    case GitFileType.Deleted: {
+      return 'text-[#f14c4c]';
+    }
+    case GitFileType.Modified: {
+      return 'text-[#e2c08d]';
+    }
+    case GitFileType.Renamed: {
+      return 'text-[#519aba]';
+    }
+    case GitFileType.Copied: {
+      return 'text-[#4ec9b0]';
+    }
+    case GitFileType.Untracked: {
+      return 'text-[#73c991]';
+    }
+    case GitFileType.Ignored: {
+      return 'text-[#8c8c8c]';
+    }
+    case GitFileType.Conflicted: {
+      return 'text-[#d670d6]';
+    }
+    default: {
+      return '';
+    }
+  }
 }
 
 export const GitProjectStagingModal: FC<{
@@ -308,7 +340,7 @@ export const GitProjectStagingModal: FC<{
                           <span className="flex-1">Staged changes</span>
                           <TooltipTrigger>
                             <Button
-                              className="flex aspect-square h-6 items-center justify-center rounded-sm text-base text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] disabled:text-[rgba(var(--color-font-rgb),0.5)] group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
+                              className="flex aspect-square h-6 items-center justify-center rounded-sm text-base text-[--color-font] opacity-100 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:text-[rgba(var(--color-font-rgb),0.5)] aria-pressed:bg-[--hl-sm]"
                               slot={null}
                               name="Unstage all changes"
                               isDisabled={changes.staged.length === 0}
@@ -351,7 +383,11 @@ export const GitProjectStagingModal: FC<{
                             {item => {
                               return (
                                 <GridListItem className="group flex w-full select-none items-center justify-between overflow-hidden px-2 py-1 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font]">
-                                  <span className="truncate">{item.entry.path}</span>
+                                  <span
+                                    className={`truncate ${item.entry.type === GitFileType.Deleted ? 'line-through' : ''}`}
+                                  >
+                                    {item.entry.path}
+                                  </span>
                                   <div className="flex items-center gap-1">
                                     <TooltipTrigger>
                                       <Button
@@ -371,6 +407,19 @@ export const GitProjectStagingModal: FC<{
                                         Unstage change
                                       </Tooltip>
                                     </TooltipTrigger>
+                                    <TooltipTrigger>
+                                      <Button
+                                        className={`cursor-default text-sm ${getModificationClassName(item.entry.type)}`}
+                                      >
+                                        {item.entry.symbol}
+                                      </Button>
+                                      <Tooltip
+                                        offset={8}
+                                        className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm capitalize text-[--color-font] shadow-lg focus:outline-none"
+                                      >
+                                        {item.entry.type}
+                                      </Tooltip>
+                                    </TooltipTrigger>
                                   </div>
                                 </GridListItem>
                               );
@@ -384,7 +433,7 @@ export const GitProjectStagingModal: FC<{
                           <div className="flex items-center gap-2">
                             <TooltipTrigger>
                               <Button
-                                className="flex aspect-square h-6 items-center justify-center rounded-sm text-base text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] disabled:text-[rgba(var(--color-font-rgb),0.5)] group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
+                                className="flex aspect-square h-6 items-center justify-center rounded-sm text-base text-[--color-font] opacity-100 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:text-[rgba(var(--color-font-rgb),0.5)] group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
                                 slot={null}
                                 name="Discard all changes"
                                 isDisabled={changes.unstaged.length === 0}
@@ -413,7 +462,7 @@ export const GitProjectStagingModal: FC<{
                             </TooltipTrigger>
                             <TooltipTrigger>
                               <Button
-                                className="flex aspect-square h-6 items-center justify-center gap-2 rounded-sm px-2 text-base text-[--color-font] opacity-0 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] hover:opacity-100 focus:opacity-100 focus:ring-inset focus:ring-[--hl-md] disabled:text-[rgba(var(--color-font-rgb),0.5)] group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
+                                className="flex aspect-square h-6 items-center justify-center gap-2 rounded-sm px-2 text-base text-[--color-font] opacity-100 ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] disabled:text-[rgba(var(--color-font-rgb),0.5)] aria-pressed:bg-[--hl-sm] data-[pressed]:opacity-100"
                                 slot={null}
                                 name="Stage all changes"
                                 isDisabled={changes.unstaged.length === 0}
@@ -455,7 +504,11 @@ export const GitProjectStagingModal: FC<{
                             {item => {
                               return (
                                 <GridListItem className="group flex w-full select-none items-center justify-between overflow-hidden px-2 py-1 text-[--hl] outline-none transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] aria-selected:bg-[--hl-sm] aria-selected:text-[--color-font]">
-                                  <span className="truncate">{item.entry.path}</span>
+                                  <span
+                                    className={`truncate ${item.entry.type === GitFileType.Deleted ? 'line-through' : ''}`}
+                                  >
+                                    {item.entry.path}
+                                  </span>
                                   <div className="flex items-center gap-1">
                                     <TooltipTrigger>
                                       <Button
@@ -503,17 +556,19 @@ export const GitProjectStagingModal: FC<{
                                         Stage change
                                       </Tooltip>
                                     </TooltipTrigger>
-                                    {/* <TooltipTrigger>
-                                    <Button className="cursor-default">
-                                      {'added' in item.entry ? 'U' : 'deleted' in item.entry ? 'D' : 'M'}
-                                    </Button>
-                                    <Tooltip
-                                      offset={8}
-                                      className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                                    >
-                                      {'added' in item.entry ? 'Untracked' : 'deleted' in item.entry ? 'Deleted' : 'Modified'}
-                                    </Tooltip>
-                                  </TooltipTrigger> */}
+                                    <TooltipTrigger>
+                                      <Button
+                                        className={`cursor-default text-sm ${getModificationClassName(item.entry.type)}`}
+                                      >
+                                        {item.entry.symbol}
+                                      </Button>
+                                      <Tooltip
+                                        offset={8}
+                                        className="max-h-[85vh] max-w-xs select-none overflow-y-auto rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] px-4 py-2 text-sm capitalize text-[--color-font] shadow-lg focus:outline-none"
+                                      >
+                                        {item.entry.type}
+                                      </Tooltip>
+                                    </TooltipTrigger>
                                   </div>
                                 </GridListItem>
                               );
