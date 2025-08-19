@@ -190,6 +190,8 @@ describe('Git-VCS', () => {
           name: '',
           path: '.insomnia/bar.txt',
           status: [0, 2, 0],
+          symbol: 'U',
+          type: 'untracked',
         },
       ]);
 
