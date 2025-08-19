@@ -115,6 +115,7 @@ jobs:
           file: "./artifacts/*-artifacts/insomnia/dist/Insomnia.*;./artifacts/*-artifacts/insomnia/dist/{alpha,beta,latest}.yml;./artifacts/*-artifacts/insomnia/dist/squirrel-windows/*;./artifacts/*-artifacts/insomnia-inso/artifacts/inso-*;./artifacts/**/*sbom.{spdx,cyclonedx}.json"
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
+          overwrite: true
 
       - name: Upload sourcemaps to Sentry
         env:
