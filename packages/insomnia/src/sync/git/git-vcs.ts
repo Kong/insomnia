@@ -58,6 +58,26 @@ interface InitFromCloneOptions {
   repoId: string;
 }
 
+export type GitFileStatus = 'untracked' | 'added' | 'modified' | 'deleted' | 'clean' | 'unknown';
+
+export enum GitFileType {
+  Added = 'added',
+  Modified = 'modified',
+  Deleted = 'deleted',
+  Renamed = 'renamed',
+  Copied = 'copied',
+  Untracked = 'untracked',
+  Ignored = 'ignored',
+  Conflicted = 'conflicted',
+}
+
+export type GitFileStatusSymbol = 'U' | 'A' | 'M' | 'D' | '-';
+
+interface FileStatus {
+  type: GitFileStatus;
+  symbol: GitFileStatusSymbol;
+}
+
 /**
  * isomorphic-git internally will default an empty ('') clone directory to '.'
  *
@@ -509,9 +529,61 @@ export class GitVCS {
     return status;
   }
 
+  classifyStatus(head: git.StageStatus, workdir: git.WorkdirStatus, stage: git.StageStatus): FileStatus {
+    // Untracked
+    if (head === 0 && stage === 0 && workdir === 2) {
+      return { type: 'untracked', symbol: 'U' };
+    }
+
+    // Added (staged new file)
+    if (head === 0 && (stage === 2 || stage === 3)) {
+      return { type: 'added', symbol: 'A' };
+    }
+
+    // Modified (unstaged)
+    if (head === 1 && stage === 1 && workdir === 2) {
+      return { type: 'modified', symbol: 'M' };
+    }
+
+    // Staged modification
+    if (head === 1 && stage === 2) {
+      return { type: 'modified', symbol: 'M' };
+    }
+
+    // Deleted (unstaged)
+    if (head === 1 && stage === 1 && workdir === 0) {
+      return { type: 'deleted', symbol: 'D' };
+    }
+
+    // Staged deletion
+    if (head === 1 && stage === 0 && workdir === 0) {
+      return { type: 'deleted', symbol: 'D' };
+    }
+
+    // Clean
+    if (head === 1 && stage === 1 && workdir === 1) {
+      return { type: 'clean', symbol: '-' };
+    }
+
+    // Default (unknown state)
+    return { type: 'unknown', symbol: '-' };
+  }
+
   async status(): Promise<{
-    staged: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus]; name: string }[];
-    unstaged: { path: string; status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus]; name: string }[];
+    staged: {
+      path: string;
+      status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus];
+      name: string;
+      type: GitFileStatus;
+      symbol: GitFileStatusSymbol;
+    }[];
+    unstaged: {
+      path: string;
+      status: [git.HeadStatus, git.WorkdirStatus, git.StageStatus];
+      name: string;
+      type: GitFileStatus;
+      symbol: GitFileStatusSymbol;
+    }[];
   }> {
     const status = await this.statusWithContent();
 
@@ -519,16 +591,28 @@ export class GitVCS {
     const stagedChanges = status.filter(({ head, stage }) => stage.status !== head.status);
 
     return {
-      staged: stagedChanges.map(({ filepath, head, workdir, stage }) => ({
-        path: filepath,
-        status: [head.status, workdir.status, stage.status],
-        name: stage.name || head.name || workdir.name || '',
-      })),
-      unstaged: unstagedChanges.map(({ filepath, head, workdir, stage }) => ({
-        path: filepath,
-        status: [head.status, workdir.status, stage.status],
-        name: workdir.name || stage.name || head.name || '',
-      })),
+      staged: stagedChanges.map(({ filepath, head, workdir, stage }) => {
+        const classification = this.classifyStatus(head.status, workdir.status, stage.status);
+
+        return {
+          path: filepath,
+          status: [head.status, workdir.status, stage.status],
+          type: classification.type,
+          symbol: classification.symbol,
+          name: stage.name || head.name || workdir.name || '',
+        };
+      }),
+      unstaged: unstagedChanges.map(({ filepath, head, workdir, stage }) => {
+        const classification = this.classifyStatus(head.status, workdir.status, stage.status);
+
+        return {
+          path: filepath,
+          status: [head.status, workdir.status, stage.status],
+          type: classification.type,
+          symbol: classification.symbol,
+          name: workdir.name || stage.name || head.name || '',
+        };
+      }),
     };
   }
 
