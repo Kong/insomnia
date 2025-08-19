@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react';
+import { forwardRef, useCallback, useImperativeHandle, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -158,12 +158,10 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                 <div className="grid h-full gap-2 divide-x divide-solid divide-[--hl-md] overflow-hidden [grid-template-columns:300px_1fr]">
                   {conflicts && conflicts.length > 0 && (
                     <div className="flex flex-col gap-2 overflow-hidden">
-                      <Button
-                        type="submit"
-                        className="flex h-10 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
-                      >
-                        <Icon icon="code-merge" className="w-5" /> Resolve conflicts
-                      </Button>
+                      <Heading className="flex items-center gap-2 font-bold">
+                        <Icon icon="code-compare" />
+                        Merge changes
+                      </Heading>
                       <div className="w-full flex-1 select-none overflow-y-auto">
                         <GridList
                           aria-label="Conflicted changes"
@@ -204,14 +202,14 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                                     className="flex flex-1 items-center gap-2 rounded border border-solid border-[--hl-md] px-2 py-1 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[selected]:bg-[rgba(var(--color-surprise-rgb),0.3)] data-[selected]:text-[--color-font] data-[selected]:ring-[--color-surprise]"
                                   >
                                     <Icon icon="laptop" />
-                                    <span>Ours</span>
+                                    <span>Current</span>
                                   </Radio>
                                   <Radio
                                     value={item.theirsBlob || ''}
                                     className="flex flex-1 items-center gap-2 rounded border border-solid border-[--hl-md] px-2 py-1 transition-colors hover:bg-[--hl-xs] focus:bg-[--hl-sm] focus:outline-none data-[selected]:border-[--color-surprise] data-[selected]:bg-[rgba(var(--color-surprise-rgb),0.3)] data-[selected]:text-[--color-font-surprise] data-[selected]:ring-[--color-surprise]"
                                   >
                                     <Icon icon="globe" />
-                                    <span>Theirs</span>
+                                    <span>Incoming</span>
                                   </Radio>
                                 </div>
                               </RadioGroup>
@@ -219,6 +217,12 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                           )}
                         </GridList>
                       </div>
+                      <Button
+                        type="submit"
+                        className="flex h-10 items-center justify-center gap-2 rounded-sm bg-[--hl-xxs] px-4 text-[--color-font] ring-1 ring-transparent transition-all hover:bg-[--hl-xs] focus:ring-inset focus:ring-[--hl-md] aria-pressed:bg-[--hl-sm]"
+                      >
+                        <Icon icon="code-merge" className="w-5" /> Resolve conflicts
+                      </Button>
                     </div>
                   )}
 
