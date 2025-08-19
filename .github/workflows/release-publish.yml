@@ -16,7 +16,7 @@ env:
   ARTIFACTS_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts
   ARTIFACTS_VERIFY_DOWNLOAD_PATH: ${{ github.workspace }}/artifacts_verify
   INSO_DOCKER_IMAGE: kong/inso # By default, registry is docker.io
-  NOTARY_REPOSITORY: 'kong/notary' # All signatures will be pushed to public notary repository
+  NOTARY_REPOSITORY: "kong/notary" # All signatures will be pushed to public notary repository
 
 jobs:
   publish:
@@ -45,11 +45,11 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+          node-version-file: ".nvmrc"
+          cache: "npm"
           cache-dependency-path: package-lock.json
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@kong'
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@kong"
 
       - name: Install packages
         run: npm ci
@@ -101,8 +101,7 @@ jobs:
           tag_name: ${{ env.RELEASE_CORE_TAG }}
           file: "./artifacts/*-artifacts/insomnia/dist/Insomnia.*;./artifacts/*-artifacts/insomnia/dist/{alpha,beta,latest}.yml;./artifacts/*-artifacts/insomnia/dist/squirrel-windows/*;./artifacts/*-artifacts/insomnia-inso/artifacts/inso-*;./artifacts/**/*sbom.{spdx,cyclonedx}.json"
           prerelease: ${{ env.IS_PRERELEASE }}
-          draft: true
-          overwrite: true
+          draft: false
 
       - name: Upload sourcemaps to Sentry
         env:
@@ -138,7 +137,7 @@ jobs:
             type=raw,value=latest,enable=${{ env.IS_PRERELEASE == 'false' }}
             type=raw,value=alpha,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'alpha') }}
             type=raw,value=beta,enable=${{ env.IS_PRERELEASE == 'true' && contains(github.event.inputs.version, 'beta') }}
-          sep-tags: ','
+          sep-tags: ","
 
       - name: Push Inso CLI docker image tags to Docker Hub
         run: |
@@ -175,16 +174,6 @@ jobs:
           signature_registry_username: ${{ secrets.DOCKER_REGISTRY_USER }}
           signature_registry_password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
           signature_registry: ${{ env.NOTARY_REPOSITORY }}
-
-      - name: Publish release
-        run: |
-          gh release edit core@${{ env.RELEASE_VERSION }} \
-          --tag=${{ env.RELEASE_CORE_TAG }} \
-          --target=${{ env.RELEASE_BRANCH }} \
-          --prerelease=${{ env.IS_PRERELEASE }} \
-          --draft=false
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish beta/stable of Insomnia to Insomnia API
         if: ${{ !contains(github.event.inputs.version, 'alpha') }}
@@ -240,7 +229,7 @@ jobs:
           PULP_HOST: ${{ secrets.PULP_HOST }}
           VERBOSE: ${{ runner.debug == '1' && '1' || '' }}
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-          CLOUDSMITH_DRY_RUN: ''
+          CLOUDSMITH_DRY_RUN: ""
           IGNORE_CLOUDSMITH_FAILURES: ${{ vars.IGNORE_CLOUDSMITH_FAILURES }}
           USE_CLOUDSMITH: ${{ vars.USE_CLOUDSMITH }}
           USE_PULP: ${{ vars.USE_PULP }}
@@ -249,7 +238,7 @@ jobs:
           # TODO-ARM64: Replace to *-amd64.deb when we have arm64 builds from insomnia-ee
           args: >
             release
-            --file artifacts/Insomnia.Core-${{ env.RELEASE_VERSION }}.deb
+            --file artifacts/Linux-X64-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.deb
             --dist-name ubuntu
             --dist-version focal
             --package-type insomnia
@@ -312,61 +301,3 @@ jobs:
       registry-password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
       provenance-registry-username: ${{ secrets.DOCKER_REGISTRY_USER }}
       provenance-registry-password: ${{ secrets.DOCKER_REGISTRY_TOKEN }}
-    
-  verify-provenance:
-    runs-on: ubuntu-22.04
-    needs: [publish, artifact-provenance, inso-image-provenance]
-    permissions:
-      contents: read
-    steps:
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@4959ce089c160fddf62f7b42464195ba1a56d382
-
-      - name: Verify Inso Container Image Signature produced
-        run: |
-          cosign verify \
-          kong/inso:${{env.RELEASE_VERSION}}@${{needs.publish.outputs.INSO_DOCKER_IMAGE_DIGEST}} \
-          --certificate-oidc-issuer='https://token.actions.githubusercontent.com' \
-          --certificate-identity-regexp='https://github.com/Kong/insomnia/.github/workflows/release-publish.yml'
-        env:
-          COSIGN_REPOSITORY: ${{env.NOTARY_REPOSITORY}}
-
-      - name: Install slsa verifier
-        uses: slsa-framework/slsa-verifier/actions/installer@6657aada084353c65e5dde35394b1a010289fab0
-
-      - name: Checkout branch # Check out the release branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.RELEASE_BRANCH }}
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Download release assets
-        run: |
-          gh release download core@${{ env.RELEASE_VERSION }} --dir=${{ env.ARTIFACTS_VERIFY_DOWNLOAD_PATH }} --skip-existing
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Verify Inso Container Image Provenance produced
-        run: |
-          slsa-verifier verify-image \
-          kong/inso:${{env.RELEASE_VERSION}}@${{needs.publish.outputs.INSO_DOCKER_IMAGE_DIGEST}} \
-          --print-provenance \
-          --provenance-repository ${{env.NOTARY_REPOSITORY}} \
-          --source-uri 'github.com/Kong/insomnia'
-
-      - name: Verify Inso Binary Provenance for artifacts produced
-        run: |
-          slsa-verifier verify-artifact \
-          --print-provenance \
-          --provenance-path '${{env.ARTIFACTS_VERIFY_DOWNLOAD_PATH}}/inso-provenance.intoto.jsonl' \
-          --source-uri 'github.com/Kong/insomnia' \
-          ${{env.ARTIFACTS_VERIFY_DOWNLOAD_PATH}}/inso-*-${{env.RELEASE_VERSION}}.{zip,tar.xz,pkg}
-
-      - name: Verify Insomnia App Binary Provenance for artifacts produced
-        run: |
-          slsa-verifier verify-artifact \
-          --print-provenance \
-          --provenance-path '${{env.ARTIFACTS_VERIFY_DOWNLOAD_PATH}}/insomnia-provenance.intoto.jsonl' \
-          --source-uri 'github.com/Kong/insomnia' \
-          ${{env.ARTIFACTS_VERIFY_DOWNLOAD_PATH}}/Insomnia.Core-${{env.RELEASE_VERSION}}.{snap,tar.gz,zip,rpm,dmg,deb,AppImage,exe}
