@@ -43,11 +43,15 @@ describe('Git-VCS', () => {
           name: '',
           path: '.insomnia/bar.txt',
           status: [0, 2, 0],
+          symbol: 'U',
+          type: 'untracked',
         },
         {
           name: '',
           path: '.insomnia/foo.txt',
           status: [0, 2, 0],
+          symbol: 'U',
+          type: 'untracked',
         },
       ]);
 
@@ -60,6 +64,8 @@ describe('Git-VCS', () => {
           name: '',
           path: '.insomnia/foo.txt',
           status: [0, 2, 2],
+          symbol: 'A',
+          type: 'added',
         },
       ]);
       expect(status2.unstaged).toEqual([
@@ -67,6 +73,8 @@ describe('Git-VCS', () => {
           name: '',
           path: '.insomnia/bar.txt',
           status: [0, 2, 0],
+          symbol: 'U',
+          type: 'untracked',
         },
       ]);
 
@@ -79,11 +87,15 @@ describe('Git-VCS', () => {
           name: '',
           path: '.insomnia/bar.txt',
           status: [0, 2, 2],
+          symbol: 'A',
+          type: 'added',
         },
         {
           name: '',
           path: '.insomnia/foo.txt',
           status: [0, 2, 2],
+          symbol: 'U',
+          type: 'untracked',
         },
       ]);
 
@@ -96,6 +108,8 @@ describe('Git-VCS', () => {
             name: '',
             path: '.insomnia/bar.txt',
             status: [0, 2, 2],
+            symbol: 'A',
+            type: 'added',
           },
         ],
         unstaged: [
@@ -103,6 +117,8 @@ describe('Git-VCS', () => {
             name: '',
             path: '.insomnia/foo.txt',
             status: [0, 2, 0],
+            symbol: 'U',
+            type: 'untracked',
           },
         ],
       });
@@ -291,6 +307,8 @@ First commit!
             name: '',
             path: '.insomnia/folder/bar.txt',
             status: [1, 2, 1],
+            symbol: 'M',
+            type: 'modified',
           },
         ],
       });
@@ -347,6 +365,8 @@ First commit!
             name: '',
             path: '.insomnia/foo3.txt',
             status: [1, 2, 1],
+            symbol: 'M',
+            type: 'modified',
           },
         ],
       });
