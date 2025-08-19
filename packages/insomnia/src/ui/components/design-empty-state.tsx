@@ -100,7 +100,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
           <span>Enter your OpenAPI specification here</span>
         </Heading>
         <div className="flex w-full flex-1 flex-col items-center justify-between p-[--padding-sm] pt-10">
-          <p className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <div className="flex flex-col items-center gap-6 truncate">
               <span>Or quick start:</span>
               <div className="flex gap-4">
@@ -165,7 +165,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport }) => {
                 </Button>
               </div>
             </div>
-          </p>
+          </div>
           <ul className="flex flex-col gap-2">
             <li>
               <a
