@@ -195,6 +195,7 @@ async function _unsetSessionData() {
   });
 }
 
+// TODO: v12 remove this function and getLocalStorageDataFromFileOrigin from main
 export async function migrateFromLocalStorage() {
   if (!window.localStorage.getItem('file-origin-localStorage-migrated')) {
     console.log('[migration] Migrating localStorage data from file origin');
