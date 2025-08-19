@@ -33,6 +33,8 @@ import GitVCS, {
   GIT_INSOMNIA_DIR,
   GIT_INSOMNIA_DIR_NAME,
   GIT_INTERNAL_DIR,
+  type GitFileStatus,
+  type GitFileStatusSymbol,
   GitVCSOperationErrors,
   MergeConflictError,
 } from '../sync/git/git-vcs';
@@ -344,10 +346,16 @@ export interface GitChangesLoaderData {
     staged: {
       name: string;
       path: string;
+      status: [HeadStatus, WorkdirStatus, StageStatus];
+      type: GitFileStatus;
+      symbol: GitFileStatusSymbol;
     }[];
     unstaged: {
       name: string;
       path: string;
+      status: [HeadStatus, WorkdirStatus, StageStatus];
+      type: GitFileStatus;
+      symbol: GitFileStatusSymbol;
     }[];
   };
   branch: string;
